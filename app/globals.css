@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --quantum-void: #000008;
+  --quantum-dark: #0a0f1e;
+  --quantum-neural: #141925;
+  
+  --core-financial: #00E5FF;
+  --core-risk: #FF3D71;
+  --core-ops: #7CFFB2;
+  --core-customer: #FFD166;
+  --core-regtech: #C77DFF;
+  
+  --glass-primary: rgba(10, 15, 30, 0.95);
+  --glass-secondary: rgba(15, 20, 35, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-hover: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background: var(--quantum-void);
+  color: white;
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00E5FF, #C77DFF);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #00E5FF, #FF3D71);
+}
+
+/* Quantum Animations */
+@keyframes quantum-field-rotation {
+  0% { transform: rotate(0deg) scale(1); filter: hue-rotate(0deg); }
+  50% { transform: rotate(180deg) scale(1.05); filter: hue-rotate(180deg); }
+  100% { transform: rotate(360deg) scale(1); filter: hue-rotate(360deg); }
+}
+
+@keyframes quantum-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px currentColor; }
+  50% { box-shadow: 0 0 40px currentColor, 0 0 60px currentColor; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Glass Morphism */
+.glass {
+  background: var(--glass-primary);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-hover:hover {
+  background: var(--glass-hover);
+  border-color: var(--core-financial);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #00E5FF 0%, #C77DFF 50%, #FFD166 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Quantum Background */
+.quantum-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(0, 229, 255, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(255, 61, 113, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 40% 80%, rgba(124, 255, 178, 0.10) 0%, transparent 50%),
+    radial-gradient(circle at 70% 20%, rgba(199, 125, 255, 0.08) 0%, transparent 40%);
+  animation: quantum-field-rotation 120s linear infinite;
+}
+
+/* Status Indicators */
+.status-active {
+  color: #7CFFB2;
+}
+
+.status-inactive {
+  color: #6b7280;
+}
+
+.status-error {
+  color: #FF3D71;
+}
+
+/* Card Styles */
+.card-glow {
+  transition: all 0.3s ease;
+}
+
+.card-glow:hover {
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.3), 0 0 60px rgba(199, 125, 255, 0.2);
+  transform: translateY(-5px);
+}
