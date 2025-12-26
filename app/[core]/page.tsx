@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import AgentCard from '@/components/ui/AgentCard';
 import { CORES_CONFIG } from '@/config/cores';
-import { api } from '@/lib/api';
 
 interface Agent {
   id: string;
@@ -14,29 +14,40 @@ interface Agent {
   category?: string;
 }
 
+interface CoreData {
+  total: number;
+  agents: Agent[];
+  display_name?: string;
+}
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
+
 export default function CorePage() {
   const params = useParams();
   const coreId = params.core as string;
   const coreConfig = CORES_CONFIG[coreId];
   
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [coreData, setCoreData] = useState<CoreData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadAgents() {
+    async function fetchCoreData() {
       setLoading(true);
       try {
-        const data = await api.getAgents(coreId);
-        if (data?.agents) {
-          setAgents(data.agents);
+        const res = await fetch(`${API_URL}/api/catalog/${coreId}/agents`, {
+          cache: 'no-store'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCoreData(data);
         }
-      } catch (error) {
-        console.error('Error loading agents:', error);
+      } catch (e) {
+        console.error('Error fetching core data:', e);
       } finally {
         setLoading(false);
       }
     }
-    if (coreId) loadAgents();
+    if (coreId) fetchCoreData();
   }, [coreId]);
 
   if (!coreConfig) {
@@ -52,20 +63,29 @@ export default function CorePage() {
     );
   }
 
+  const agentCount = coreData?.total || coreConfig.agentCount;
+  const agents = coreData?.agents || [];
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-80">
         <Header 
           title={coreConfig.displayName}
-          subtitle={`${coreConfig.agentCount} agentes - ${coreConfig.description}`}
+          subtitle={`${agentCount} agentes - ${coreConfig.description}`}
           coreColor={coreConfig.color}
         />
         <div className="p-8">
+          {/* Boton volver */}
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors">
+            <span>←</span> Volver al Dashboard
+          </Link>
+
+          {/* Stats */}
           <div className="grid grid-cols-4 gap-6 mb-8">
             <div className="glass rounded-2xl p-6 text-center">
               <div className="text-4xl font-bold font-mono" style={{color: coreConfig.color}}>
-                {coreConfig.agentCount}
+                {loading ? '...' : agentCount}
               </div>
               <div className="text-sm text-gray-400 mt-2">Agentes</div>
             </div>
@@ -107,7 +127,6 @@ export default function CorePage() {
                   category={agent.category}
                   status="active"
                   coreColor={coreConfig.color}
-                  onClick={() => console.log(agent.id)}
                 />
               ))}
             </div>
