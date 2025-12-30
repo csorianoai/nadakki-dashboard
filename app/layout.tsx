@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import Providers from '@/components/Providers';
 
 export const metadata: Metadata = {
   title: 'NADAKKI CONSCIOUSNESS v5000',
@@ -17,10 +18,11 @@ export default function RootLayout({
       <body className="antialiased bg-quantum-void text-white min-h-screen">
         {/* Quantum Background Effect */}
         <div className="quantum-bg" />
-        
         {/* Main Content */}
         <div className="relative z-10">
-          {children}
+          <Providers>
+            {children}
+          </Providers>
         </div>
       </body>
     </html>
