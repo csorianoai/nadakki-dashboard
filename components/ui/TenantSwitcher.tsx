@@ -21,14 +21,14 @@ export default function TenantSwitcher() {
         Tenant Activo
       </label>
       <select
-        value={currentTenant?.tenant_id || ''}
+        value={currentTenant?.tenant_id || ""}
         onChange={(e) => {
           const tenant = tenants.find(t => t.tenant_id === e.target.value);
           if (tenant) setCurrentTenant(tenant);
         }}
         className={cn(
           "w-full px-3 py-2 rounded-lg",
-          "bg-glass-bg border border-glass-border",
+          "bg-black/50 border border-glass-border",
           "text-white text-sm font-medium",
           "focus:outline-none focus:border-core-financial",
           "transition-colors cursor-pointer"
@@ -63,3 +63,4 @@ export default function TenantSwitcher() {
     </div>
   );
 }
+

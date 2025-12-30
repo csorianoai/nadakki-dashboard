@@ -144,7 +144,7 @@ export default function DecisionsPage() {
             </div>
             <div className="glass rounded-2xl p-6 text-center">
               <div className="text-3xl font-bold font-mono text-yellow-400">
-                ${decisions.reduce((sum, d) => sum + (d.business_impact?.pipeline_value || 0), 0).toLocaleString()}
+                ${(decisions.reduce((sum, d) => sum + (d.business_impact?.pipeline_value || 0), 0) || 0).toLocaleString()}
               </div>
               <div className="text-sm text-gray-400 mt-2">Total Pipeline</div>
             </div>
@@ -247,4 +247,5 @@ export default function DecisionsPage() {
     </div>
   );
 }
+
 
