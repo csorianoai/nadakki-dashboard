@@ -69,7 +69,7 @@ export default function DecisionsPage() {
       <main className="flex-1 ml-80">
         <Header
           title="📋 Decision History"
-          subtitle={`Hash Chain Inmutable • ${currentTenant?.name || 'Loading...'}`}
+          subtitle={`Hash Chain Inmutable • Nadakki AI Suite`}
         />
 
         <div className="p-8">
@@ -247,3 +247,4 @@ export default function DecisionsPage() {
     </div>
   );
 }
+

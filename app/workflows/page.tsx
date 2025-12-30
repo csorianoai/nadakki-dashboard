@@ -57,6 +57,10 @@ export default function WorkflowsPage() {
     }
   };
 
+  const selectedWf = workflows.find(w => w.id === selectedWorkflow);
+
+  
+
   const executeWorkflow = async () => {
     if (!selectedWorkflow || !currentTenant) return;
     
@@ -91,7 +95,7 @@ export default function WorkflowsPage() {
     }
   };
 
-  const selectedWf = workflows.find(w => w.id === selectedWorkflow);
+  
 
   return (
     <div className="flex min-h-screen">
@@ -100,7 +104,7 @@ export default function WorkflowsPage() {
       <main className="flex-1 ml-80">
         <Header
           title="🚀 Workflow Execution"
-          subtitle={`${workflows.length} workflows disponibles • ${currentTenant?.name || 'Loading...'}`}
+          subtitle={`${workflows.length} workflows disponibles • Nadakki AI Suite`}
         />
 
         <div className="p-8">
@@ -268,4 +272,5 @@ export default function WorkflowsPage() {
     </div>
   );
 }
+
 
