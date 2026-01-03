@@ -144,3 +144,420 @@ body {
   box-shadow: 0 0 30px rgba(0, 229, 255, 0.3), 0 0 60px rgba(199, 125, 255, 0.2);
   transform: translateY(-5px);
 }
+
+
+/* ============================================
+   NADAKKI DESIGN SYSTEM v2.0
+   ============================================ */
+
+:root {
+  /* Colors - Primary */
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #7c3aed;
+  --color-primary-light: rgba(139, 92, 246, 0.1);
+  
+  /* Colors - Accent */
+  --color-cyan: #00E5FF;
+  --color-purple: #a855f7;
+  --color-green: #22c55e;
+  --color-yellow: #f59e0b;
+  --color-red: #ef4444;
+  --color-blue: #3b82f6;
+  
+  /* Colors - Background */
+  --bg-primary: #0a0f1c;
+  --bg-secondary: rgba(30, 41, 59, 0.5);
+  --bg-tertiary: rgba(0, 0, 0, 0.3);
+  --bg-glass: rgba(30, 41, 59, 0.7);
+  
+  /* Colors - Border */
+  --border-subtle: rgba(51, 65, 85, 0.5);
+  --border-active: rgba(139, 92, 246, 0.5);
+  
+  /* Colors - Text */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  
+  /* Shadows */
+  --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.3);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+  
+  /* Typography */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* ============================================
+   BASE COMPONENTS
+   ============================================ */
+
+/* Glass Effect */
+.ndk-glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Card Base */
+.ndk-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: all var(--transition-normal);
+}
+
+.ndk-card:hover {
+  border-color: var(--border-active);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Button Base */
+.ndk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+  outline: none;
+}
+
+.ndk-btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.ndk-btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.ndk-btn-primary:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.ndk-btn-primary:active {
+  transform: translateY(0);
+}
+
+.ndk-btn-secondary {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.ndk-btn-secondary:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-active);
+}
+
+.ndk-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.ndk-btn-ghost:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Navigation Button */
+.ndk-nav-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ndk-nav-btn:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Input Base */
+.ndk-input {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all var(--transition-fast);
+}
+
+.ndk-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.ndk-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Textarea */
+.ndk-textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: var(--font-mono);
+}
+
+/* Select */
+.ndk-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* Badge */
+.ndk-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ndk-badge-success {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-green);
+}
+
+.ndk-badge-warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--color-yellow);
+}
+
+.ndk-badge-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-red);
+}
+
+.ndk-badge-info {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--color-blue);
+}
+
+/* Status Dot */
+.ndk-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.ndk-status-dot.active {
+  background: var(--color-green);
+  box-shadow: 0 0 8px var(--color-green);
+}
+
+.ndk-status-dot.warning {
+  background: var(--color-yellow);
+}
+
+.ndk-status-dot.error {
+  background: var(--color-red);
+}
+
+/* Table */
+.ndk-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ndk-table th {
+  padding: var(--space-md);
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg-tertiary);
+}
+
+.ndk-table td {
+  padding: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.ndk-table tr:hover td {
+  background: var(--bg-tertiary);
+}
+
+/* Stat Card */
+.ndk-stat {
+  text-align: center;
+  padding: var(--space-lg);
+}
+
+.ndk-stat-value {
+  font-size: 32px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.ndk-stat-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: var(--space-sm);
+}
+
+/* Loader */
+.ndk-loader {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: ndk-spin 0.8s linear infinite;
+}
+
+@keyframes ndk-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton */
+.ndk-skeleton {
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: ndk-shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes ndk-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Tooltip */
+.ndk-tooltip {
+  position: relative;
+}
+
+.ndk-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 6px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.ndk-tooltip:hover::after {
+  opacity: 1;
+}
+
+/* ============================================
+   LAYOUT UTILITIES
+   ============================================ */
+
+.ndk-page {
+  padding: var(--space-xl);
+  background: var(--bg-primary);
+  min-height: 100vh;
+}
+
+.ndk-page-header {
+  margin-bottom: var(--space-xl);
+}
+
+.ndk-page-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.ndk-page-subtitle {
+  color: var(--text-secondary);
+  margin-top: var(--space-sm);
+}
+
+.ndk-grid {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.ndk-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.ndk-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.ndk-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.ndk-flex {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.ndk-flex-between {
+  justify-content: space-between;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+.ndk-fade-in {
+  animation: ndk-fadeIn var(--transition-normal) ease-out;
+}
+
+@keyframes ndk-fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ndk-slide-in {
+  animation: ndk-slideIn var(--transition-normal) ease-out;
+}
+
+@keyframes ndk-slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
