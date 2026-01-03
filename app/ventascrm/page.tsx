@@ -22,7 +22,7 @@ export default function ventascrmPage() {
     setResult(null);
     setShowModal(true);
     try {
-      const response = await fetch(+""+https://nadakki-ai-suite.onrender.com/agents/ventascrm/+""+{agentId}/execute, {
+      const response = await fetch("https://nadakki-ai-suite.onrender.com/agents/ventascrm/" + agentId + "/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input_data: { test: true }, tenant_id: "credicefi" })
@@ -80,3 +80,4 @@ export default function ventascrmPage() {
     </div>
   );
 }
+
