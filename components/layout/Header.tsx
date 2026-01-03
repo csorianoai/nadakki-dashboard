@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import SearchModal from '@/components/ui/SearchModal';
 
 interface HeaderProps {
@@ -31,14 +32,44 @@ export default function Header({ title, subtitle, coreColor = '#00E5FF' }: Heade
   return (
     <>
       <header className="h-20 glass border-b border-glass-border flex items-center justify-between px-8 sticky top-0 z-40">
-        <div>
-          <h1 className="text-2xl font-quantum font-bold" style={{ color: coreColor }}>
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="text-sm text-gray-400 font-mono mt-1">{subtitle}</p>
-          )}
+        <div className="flex items-center gap-4">
+          {/* Navigation Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.back()}
+              className="w-9 h-9 rounded-lg glass border border-glass-border hover:border-cyan-500 hover:bg-cyan-500/10 transition-all flex items-center justify-center text-gray-400 hover:text-cyan-400"
+              title="Atras"
+            >
+              ←
+            </button>
+            <button
+              onClick={() => router.forward()}
+              className="w-9 h-9 rounded-lg glass border border-glass-border hover:border-cyan-500 hover:bg-cyan-500/10 transition-all flex items-center justify-center text-gray-400 hover:text-cyan-400"
+              title="Adelante"
+            >
+              →
+            </button>
+            <Link href="/">
+              <button
+                className="w-9 h-9 rounded-lg glass border border-glass-border hover:border-purple-500 hover:bg-purple-500/10 transition-all flex items-center justify-center text-gray-400 hover:text-purple-400"
+                title="Dashboard Principal"
+              >
+                🏠
+              </button>
+            </Link>
+          </div>
+          
+          {/* Title */}
+          <div className="ml-2">
+            <h1 className="text-2xl font-quantum font-bold" style={{ color: coreColor }}>
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-sm text-gray-400 font-mono mt-1">{subtitle}</p>
+            )}
+          </div>
         </div>
+        
         <div className="flex items-center gap-4">
           <button
             onClick={() => setSearchOpen(true)}
