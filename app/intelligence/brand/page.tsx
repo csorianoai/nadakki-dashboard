@@ -1,89 +1,28 @@
 "use client";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { Building2, TrendingUp, MessageSquare, Heart } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatCard from "@/components/ui/StatCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
-const mentions = [
-  { id: 1, platform: "x", user: "@tech_news", content: "Increíble el nuevo producto de @nadakki! 🔥", sentiment: "positive", reach: "45K", time: "Hace 15 min" },
-  { id: 2, platform: "instagram", user: "@lifestyle_blogger", content: "Probando la solución de Nadakki para mi negocio", sentiment: "positive", reach: "23K", time: "Hace 1 hora" },
-  { id: 3, platform: "linkedin", user: "CEO de TechCorp", content: "Recomiendo Nadakki para automatización de marketing", sentiment: "positive", reach: "12K", time: "Hace 2 horas" },
-  { id: 4, platform: "facebook", user: "Usuario Anónimo", content: "Tuve problemas con el soporte de Nadakki...", sentiment: "negative", reach: "500", time: "Hace 3 horas" },
-];
-
-export default function BrandMonitorPage() {
-  const [data] = useState(mentions);
-
-  const sentimentColors: Record<string, string> = { positive: "#22c55e", negative: "#ef4444", neutral: "#64748b" };
-  const platformIcons: Record<string, string> = { x: "🐦", instagram: "📸", linkedin: "💼", facebook: "📘" };
-
-  const positiveCount = data.filter(m => m.sentiment === "positive").length;
-  const sentimentScore = Math.round((positiveCount / data.length) * 100);
-
+export default function IntelligenceBrandPage() {
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", margin: 0 }}>👁️ Brand Monitor</h1>
-        <p style={{ color: "#94a3b8", marginTop: 8 }}>Monitoreo de menciones con SentimentAnalyzerIA</p>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/intelligence"><StatusBadge status="active" label="Brand Intel" size="lg" /></NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/30"><Building2 className="w-8 h-8 text-purple-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Brand Intelligence</h1><p className="text-gray-400">Monitoreo y analisis de tu marca</p></div>
+        </div>
+      </motion.div>
+      <div className="grid grid-cols-4 gap-6 mb-8">
+        <StatCard value="89%" label="Sentiment Positivo" icon={<Heart className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="12.5K" label="Menciones/mes" icon={<MessageSquare className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
+        <StatCard value="+15%" label="Brand Awareness" icon={<TrendingUp className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
+        <StatCard value="4.8" label="Rating Promedio" icon={<Heart className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
-
-      {/* Overview */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-        <div style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 16, padding: 20 }}>
-          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Menciones Hoy</p>
-          <p style={{ color: "#f8fafc", fontSize: 36, fontWeight: 700, margin: "8px 0 0 0" }}>{data.length}</p>
-        </div>
-        <div style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 16, padding: 20 }}>
-          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Sentimiento General</p>
-          <p style={{ color: sentimentScore >= 70 ? "#22c55e" : "#f59e0b", fontSize: 36, fontWeight: 700, margin: "8px 0 0 0" }}>{sentimentScore}%</p>
-        </div>
-        <div style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 16, padding: 20 }}>
-          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Alcance Total</p>
-          <p style={{ color: "#3b82f6", fontSize: 36, fontWeight: 700, margin: "8px 0 0 0" }}>80.5K</p>
-        </div>
-        <div style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 16, padding: 20 }}>
-          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Alertas</p>
-          <p style={{ color: "#ef4444", fontSize: 36, fontWeight: 700, margin: "8px 0 0 0" }}>1</p>
-        </div>
-      </div>
-
-      {/* Mentions Feed */}
-      <div style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 16, padding: 24 }}>
-        <h2 style={{ color: "#f8fafc", fontSize: 18, marginBottom: 20 }}>📢 Feed de Menciones</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {data.map(mention => (
-            <div key={mention.id} style={{
-              backgroundColor: mention.sentiment === "negative" ? "rgba(239,68,68,0.1)" : "rgba(0,0,0,0.2)",
-              border: mention.sentiment === "negative" ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(51,65,85,0.3)",
-              borderRadius: 12, padding: 16
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <span style={{ fontSize: 24 }}>{platformIcons[mention.platform]}</span>
-                  <div>
-                    <p style={{ color: "#f8fafc", fontWeight: 600, margin: 0 }}>{mention.user}</p>
-                    <p style={{ color: "#94a3b8", fontSize: 14, margin: "8px 0 0 0", lineHeight: 1.5 }}>{mention.content}</p>
-                  </div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <span style={{
-                    backgroundColor: `${sentimentColors[mention.sentiment]}20`,
-                    color: sentimentColors[mention.sentiment],
-                    padding: "4px 10px", borderRadius: 20, fontSize: 11
-                  }}>
-                    {mention.sentiment === "positive" ? "😊 Positivo" : mention.sentiment === "negative" ? "😟 Negativo" : "😐 Neutral"}
-                  </span>
-                  <p style={{ color: "#64748b", fontSize: 12, margin: "8px 0 0 0" }}>{mention.time}</p>
-                  <p style={{ color: "#3b82f6", fontSize: 12, margin: "4px 0 0 0" }}>👁️ {mention.reach} alcance</p>
-                </div>
-              </div>
-              {mention.sentiment === "negative" && (
-                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                  <button style={{ padding: "6px 12px", backgroundColor: "#8b5cf6", border: "none", borderRadius: 6, color: "white", cursor: "pointer", fontSize: 12 }}>🤖 Responder con IA</button>
-                  <button style={{ padding: "6px 12px", backgroundColor: "rgba(255,255,255,0.1)", border: "none", borderRadius: 6, color: "white", cursor: "pointer", fontSize: 12 }}>📋 Crear ticket</button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      <GlassCard className="p-6"><p className="text-gray-400">Dashboard de brand intelligence en desarrollo...</p></GlassCard>
     </div>
   );
 }

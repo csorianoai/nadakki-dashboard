@@ -1,42 +1,45 @@
 "use client";
-export default function CampaignHistoryPage() {
-  const history = [
-    { name: "Cyber Monday 2025", dates: "Nov 25 - Dic 2", budget: 25000, leads: 890, roi: 520, status: "success" },
-    { name: "Summer Sale", dates: "Jul 1 - Jul 15", budget: 15000, leads: 450, roi: 280, status: "success" },
-    { name: "Spring Promo", dates: "Mar 1 - Mar 15", budget: 8000, leads: 120, roi: 85, status: "underperformed" },
-  ];
+import { motion } from "framer-motion";
+import { History, Eye, Download } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
+const HISTORY = [
+  { name: "Cyber Monday 2024", date: "Nov 2024", sent: "45K", opens: "38%", clicks: "12%", roi: "320%" },
+  { name: "Halloween Promo", date: "Oct 2024", sent: "32K", opens: "42%", clicks: "15%", roi: "280%" },
+  { name: "Back to School", date: "Sep 2024", sent: "28K", opens: "35%", clicks: "10%", roi: "195%" },
+];
+
+export default function CampaignsHistoryPage() {
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 32 }}>📊 Histórico de Campañas</h1>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {history.map((c, i) => (
-          <div key={i} style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, padding: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-              <div>
-                <h3 style={{ color: "#f8fafc", fontSize: 20, margin: 0 }}>{c.name}</h3>
-                <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0 0" }}>{c.dates}</p>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/campaigns"><StatusBadge status="inactive" label="Historial" size="lg" /></NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-yellow-500/20 border border-yellow-500/30"><History className="w-8 h-8 text-yellow-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Historial de Campanas</h1><p className="text-gray-400">Campanas completadas</p></div>
+        </div>
+      </motion.div>
+      <div className="space-y-4">
+        {HISTORY.map((c, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <GlassCard className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div><h3 className="font-bold text-white">{c.name}</h3><p className="text-sm text-gray-400">{c.date}</p></div>
+                <div className="flex gap-2">
+                  <button className="p-2 hover:bg-white/10 rounded-lg"><Eye className="w-4 h-4 text-gray-400" /></button>
+                  <button className="p-2 hover:bg-white/10 rounded-lg"><Download className="w-4 h-4 text-gray-400" /></button>
+                </div>
               </div>
-              <span style={{ backgroundColor: c.status === "success" ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-                color: c.status === "success" ? "#22c55e" : "#ef4444", padding: "6px 14px", borderRadius: 20, fontSize: 12 }}>
-                {c.status === "success" ? "✓ Exitosa" : "⚠ Bajo rendimiento"}
-              </span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-              <div style={{ backgroundColor: "rgba(0,0,0,0.2)", padding: 12, borderRadius: 8 }}>
-                <p style={{ color: "#64748b", fontSize: 11, margin: 0 }}>Presupuesto</p>
-                <p style={{ color: "#f8fafc", fontSize: 18, fontWeight: 600, margin: "4px 0 0 0" }}>${c.budget.toLocaleString()}</p>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center"><p className="text-lg font-bold text-white">{c.sent}</p><p className="text-xs text-gray-500">Enviados</p></div>
+                <div className="text-center"><p className="text-lg font-bold text-blue-400">{c.opens}</p><p className="text-xs text-gray-500">Opens</p></div>
+                <div className="text-center"><p className="text-lg font-bold text-purple-400">{c.clicks}</p><p className="text-xs text-gray-500">Clicks</p></div>
+                <div className="text-center"><p className="text-lg font-bold text-green-400">{c.roi}</p><p className="text-xs text-gray-500">ROI</p></div>
               </div>
-              <div style={{ backgroundColor: "rgba(0,0,0,0.2)", padding: 12, borderRadius: 8 }}>
-                <p style={{ color: "#64748b", fontSize: 11, margin: 0 }}>Leads</p>
-                <p style={{ color: "#f8fafc", fontSize: 18, fontWeight: 600, margin: "4px 0 0 0" }}>{c.leads}</p>
-              </div>
-              <div style={{ backgroundColor: "rgba(0,0,0,0.2)", padding: 12, borderRadius: 8 }}>
-                <p style={{ color: "#64748b", fontSize: 11, margin: 0 }}>ROI</p>
-                <p style={{ color: c.roi > 200 ? "#22c55e" : "#f59e0b", fontSize: 18, fontWeight: 600, margin: "4px 0 0 0" }}>{c.roi}%</p>
-              </div>
-            </div>
-          </div>
+            </GlassCard>
+          </motion.div>
         ))}
       </div>
     </div>
