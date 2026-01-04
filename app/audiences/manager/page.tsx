@@ -1,34 +1,53 @@
 "use client";
-export default function AudienceManagerPage() {
-  const audiences = [
-    { name: "High-Value Customers", size: "12,450", criteria: "LTV > $1000", lastUpdated: "Hace 1 hora" },
-    { name: "Engaged Subscribers", size: "45,230", criteria: "Open rate > 50%", lastUpdated: "Hace 2 horas" },
-    { name: "At-Risk Customers", size: "3,120", criteria: "No activity 30+ days", lastUpdated: "Hace 30 min" },
-    { name: "New Leads This Month", size: "890", criteria: "Created date = this month", lastUpdated: "Hace 15 min" },
-  ];
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Users, Search, Plus, Edit, Trash2 } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+
+const SEGMENTS = [
+  { id: 1, name: "Clientes VIP", contacts: 1234, engagement: "92%", lastUpdate: "Hace 2 dias" },
+  { id: 2, name: "Leads Calientes", contacts: 567, engagement: "78%", lastUpdate: "Hace 1 dia" },
+  { id: 3, name: "Newsletter", contacts: 8900, engagement: "45%", lastUpdate: "Hoy" },
+  { id: 4, name: "Inactivos 30d", contacts: 2345, engagement: "12%", lastUpdate: "Hace 1 semana" },
+];
+
+export default function AudiencesManagerPage() {
+  const [search, setSearch] = useState("");
+  const filtered = SEGMENTS.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
+
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", margin: 0 }}>👥 Audience Manager</h1>
-          <p style={{ color: "#94a3b8", marginTop: 8 }}>Segmentación con AudienceSegmenterIA</p>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/audiences">
+        <motion.button whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg font-medium text-white text-sm flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Nuevo Segmento
+        </motion.button>
+      </NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/30"><Users className="w-8 h-8 text-purple-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Gestor de Audiencias</h1><p className="text-gray-400">{SEGMENTS.length} segmentos</p></div>
         </div>
-        <button style={{ padding: "12px 24px", backgroundColor: "#22c55e", border: "none", borderRadius: 10, color: "white", fontWeight: 600, cursor: "pointer" }}>+ Crear Audiencia</button>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-        {audiences.map((a, i) => (
-          <div key={i} style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 16, padding: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <h3 style={{ color: "#f8fafc", fontSize: 18, fontWeight: 600, margin: 0 }}>{a.name}</h3>
-              <span style={{ color: "#8b5cf6", fontSize: 24, fontWeight: 700 }}>{a.size}</span>
-            </div>
-            <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Criterio: {a.criteria}</p>
-            <p style={{ color: "#64748b", fontSize: 12, margin: "8px 0 0 0" }}>Actualizado: {a.lastUpdated}</p>
-            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button style={{ flex: 1, padding: 10, backgroundColor: "#8b5cf6", border: "none", borderRadius: 8, color: "white", cursor: "pointer" }}>📢 Crear Campaña</button>
-              <button style={{ padding: 10, backgroundColor: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, color: "white", cursor: "pointer" }}>✏️</button>
-            </div>
-          </div>
+      </motion.div>
+      <GlassCard className="p-4 mb-6">
+        <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input type="text" placeholder="Buscar segmentos..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500" /></div>
+      </GlassCard>
+      <div className="space-y-4">
+        {filtered.map((seg, i) => (
+          <motion.div key={seg.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <GlassCard className="p-5">
+              <div className="flex items-center justify-between">
+                <div><h3 className="font-bold text-white">{seg.name}</h3><p className="text-sm text-gray-400">{seg.contacts.toLocaleString()} contactos - {seg.engagement} engagement</p></div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">{seg.lastUpdate}</span>
+                  <button className="p-2 hover:bg-white/10 rounded-lg"><Edit className="w-4 h-4 text-gray-400" /></button>
+                  <button className="p-2 hover:bg-red-500/20 rounded-lg"><Trash2 className="w-4 h-4 text-gray-400" /></button>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
         ))}
       </div>
     </div>

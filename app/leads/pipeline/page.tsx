@@ -1,83 +1,40 @@
 "use client";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { Filter, Users } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
-const stages = [
-  { id: "new", name: "Nuevos", color: "#3b82f6", leads: [
-    { id: 1, name: "María García", company: "TechCorp", value: 15000 },
-    { id: 2, name: "Carlos López", company: "StartupXYZ", value: 8000 },
-  ]},
-  { id: "contacted", name: "Contactados", color: "#8b5cf6", leads: [
-    { id: 3, name: "Ana Martínez", company: "BigEnterprise", value: 45000 },
-  ]},
-  { id: "qualified", name: "Calificados", color: "#f59e0b", leads: [
-    { id: 4, name: "Pedro Sánchez", company: "MidMarket", value: 22000 },
-    { id: 5, name: "Laura Torres", company: "InnovateCo", value: 18000 },
-  ]},
-  { id: "proposal", name: "Propuesta", color: "#ec4899", leads: [
-    { id: 6, name: "Roberto Díaz", company: "GlobalTech", value: 65000 },
-  ]},
-  { id: "negotiation", name: "Negociación", color: "#22c55e", leads: [
-    { id: 7, name: "Sandra Ruiz", company: "MegaCorp", value: 120000 },
-  ]},
+const STAGES = [
+  { name: "Nuevo", count: 45, value: "$125K", color: "#3b82f6" },
+  { name: "Contactado", count: 32, value: "$89K", color: "#8b5cf6" },
+  { name: "Calificado", count: 18, value: "$67K", color: "#f59e0b" },
+  { name: "Propuesta", count: 12, value: "$45K", color: "#ec4899" },
+  { name: "Negociacion", count: 8, value: "$32K", color: "#22c55e" },
 ];
 
-export default function LeadPipelinePage() {
-  const [pipeline] = useState(stages);
-
-  const totalValue = pipeline.reduce((acc, stage) => acc + stage.leads.reduce((a, l) => a + l.value, 0), 0);
-  const totalLeads = pipeline.reduce((acc, stage) => acc + stage.leads.length, 0);
-
+export default function LeadsPipelinePage() {
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", margin: 0 }}>🚀 Lead Pipeline</h1>
-          <p style={{ color: "#94a3b8", marginTop: 8 }}>{totalLeads} leads • ${totalValue.toLocaleString()} valor total</p>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/leads"><StatusBadge status="active" label="Pipeline" size="lg" /></NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-blue-500/20 border border-blue-500/30"><Filter className="w-8 h-8 text-blue-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Pipeline de Ventas</h1><p className="text-gray-400">Visualiza tu embudo de conversion</p></div>
         </div>
-        <button style={{ padding: "12px 24px", backgroundColor: "#22c55e", border: "none", borderRadius: 10, color: "white", fontWeight: 600, cursor: "pointer" }}>
-          + Agregar Lead
-        </button>
-      </div>
-
-      {/* Pipeline Kanban */}
-      <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 20 }}>
-        {pipeline.map(stage => (
-          <div key={stage.id} style={{ minWidth: 280, backgroundColor: "rgba(30,41,59,0.3)", borderRadius: 16, padding: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: stage.color }} />
-                <h3 style={{ color: "#f8fafc", fontSize: 16, fontWeight: 600, margin: 0 }}>{stage.name}</h3>
+      </motion.div>
+      <div className="grid grid-cols-5 gap-4">
+        {STAGES.map((stage, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-white">{stage.name}</h3>
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.color }} />
               </div>
-              <span style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "#94a3b8", padding: "2px 8px", borderRadius: 10, fontSize: 12 }}>
-                {stage.leads.length}
-              </span>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {stage.leads.map(lead => (
-                <div key={lead.id} style={{
-                  backgroundColor: "rgba(30,41,59,0.8)", border: "1px solid rgba(51,65,85,0.5)",
-                  borderRadius: 12, padding: 16, cursor: "grab"
-                }}>
-                  <p style={{ color: "#f8fafc", fontWeight: 600, margin: 0 }}>{lead.name}</p>
-                  <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0 0" }}>{lead.company}</p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-                    <span style={{ color: "#22c55e", fontWeight: 700 }}>${lead.value.toLocaleString()}</span>
-                    <button style={{ padding: "4px 8px", backgroundColor: "rgba(255,255,255,0.1)", border: "none", borderRadius: 4, color: "#94a3b8", cursor: "pointer", fontSize: 12 }}>
-                      •••
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 16, padding: 12, backgroundColor: "rgba(0,0,0,0.2)", borderRadius: 8 }}>
-              <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>Valor en etapa</p>
-              <p style={{ color: stage.color, fontSize: 18, fontWeight: 700, margin: "4px 0 0 0" }}>
-                ${stage.leads.reduce((a, l) => a + l.value, 0).toLocaleString()}
-              </p>
-            </div>
-          </div>
+              <p className="text-3xl font-bold" style={{ color: stage.color }}>{stage.count}</p>
+              <p className="text-sm text-gray-400">{stage.value}</p>
+            </GlassCard>
+          </motion.div>
         ))}
       </div>
     </div>

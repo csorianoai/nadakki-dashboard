@@ -1,42 +1,52 @@
 "use client";
+import { motion } from "framer-motion";
 import Link from "next/link";
+import { Target, Users, TrendingUp, Filter, ArrowRight } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatCard from "@/components/ui/StatCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+
+const MODULES = [
+  { id: "scoring", name: "Lead Scoring", desc: "Puntuacion automatica con IA", href: "/leads/scoring", color: "#22c55e" },
+  { id: "pipeline", name: "Pipeline", desc: "Visualiza tu embudo de ventas", href: "/leads/pipeline", color: "#3b82f6" },
+];
 
 export default function LeadsPage() {
-  const stats = [
-    { label: "Total Leads", value: "1,247", color: "#3b82f6" },
-    { label: "Hot Leads", value: "234", color: "#ef4444" },
-    { label: "Warm Leads", value: "567", color: "#f59e0b" },
-    { label: "Cold Leads", value: "446", color: "#64748b" },
-  ];
-
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 32 }}>👥 Gestión de Leads</h1>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
-        {stats.map((s, i) => (
-          <div key={i} style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, padding: 20 }}>
-            <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>{s.label}</p>
-            <p style={{ color: s.color, fontSize: 32, fontWeight: 700, margin: "8px 0 0 0" }}>{s.value}</p>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/marketing">
+        <StatusBadge status="active" label="Lead Management" size="lg" />
+      </NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-green-500/20 border border-green-500/30">
+            <Target className="w-8 h-8 text-green-400" />
           </div>
-        ))}
+          <div>
+            <h1 className="text-3xl font-bold text-white">Lead Management</h1>
+            <p className="text-gray-400">Gestion y scoring de leads con IA</p>
+          </div>
+        </div>
+      </motion.div>
+      <div className="grid grid-cols-4 gap-6 mb-8">
+        <StatCard value="1,234" label="Total Leads" icon={<Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
+        <StatCard value="234" label="Hot Leads" icon={<TrendingUp className="w-6 h-6 text-red-400" />} color="#ef4444" />
+        <StatCard value="87%" label="Conversion" icon={<Target className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="4.2" label="Avg Score" icon={<Filter className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-        <Link href="/leads/scoring" style={{ textDecoration: "none" }}>
-          <div style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, padding: 24, cursor: "pointer" }}>
-            <span style={{ fontSize: 32 }}>🎯</span>
-            <h3 style={{ color: "#f8fafc", margin: "12px 0 8px 0" }}>Lead Scoring</h3>
-            <p style={{ color: "#64748b", margin: 0 }}>Puntuación automática con IA</p>
-          </div>
-        </Link>
-        <Link href="/leads/pipeline" style={{ textDecoration: "none" }}>
-          <div style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, padding: 24, cursor: "pointer" }}>
-            <span style={{ fontSize: 32 }}>🚀</span>
-            <h3 style={{ color: "#f8fafc", margin: "12px 0 8px 0" }}>Pipeline</h3>
-            <p style={{ color: "#64748b", margin: 0 }}>Visualización Kanban</p>
-          </div>
-        </Link>
+      <div className="grid grid-cols-2 gap-6">
+        {MODULES.map((m, i) => (
+          <motion.div key={m.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+            <Link href={m.href}>
+              <GlassCard className="p-6 cursor-pointer group">
+                <h3 className="text-lg font-bold text-white group-hover:text-green-400">{m.name}</h3>
+                <p className="text-sm text-gray-400 mt-1">{m.desc}</p>
+                <ArrowRight className="w-5 h-5 text-gray-500 mt-4 group-hover:translate-x-1 transition-transform" />
+              </GlassCard>
+            </Link>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
