@@ -1,88 +1,105 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { 
+  Mail, Plus, Search, Calendar, Users, 
+  TrendingUp, Play, Pause, Settings, Eye
+} from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatCard from "@/components/ui/StatCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
-interface Agent { id: string; name: string; category: string; }
+const CAMPAIGNS = [
+  { id: 1, name: "Welcome Series", type: "Email Automation", status: "active", sent: 12450, opened: 8920, clicked: 2340, converted: 567 },
+  { id: 2, name: "Black Friday 2024", type: "Promotional", status: "completed", sent: 45000, opened: 28500, clicked: 8900, converted: 2340 },
+  { id: 3, name: "Newsletter Semanal", type: "Newsletter", status: "active", sent: 8900, opened: 5670, clicked: 1230, converted: 234 },
+  { id: 4, name: "Re-engagement Q1", type: "Win-back", status: "scheduled", sent: 0, opened: 0, clicked: 0, converted: 0 },
+];
 
-export default function MarketingcampaignsPage() {
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [executing, setExecuting] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
-  const [showModal, setShowModal] = useState(false);
+export default function MarketingCampaignsPage() {
+  const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    fetch("https://nadakki-ai-suite.onrender.com/api/catalog/marketing/agents")
-      .then((res) => res.json())
-      .then((data) => {
-        const filtered = (data.agents || []).filter((a: Agent) => 
-          a.name?.toLowerCase().includes("campaign") || 
-          a.category?.toLowerCase().includes("campaign")
-        );
-        setAgents(filtered.length > 0 ? filtered : data.agents?.slice(0, 8) || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const executeAgent = async (agentId: string) => {
-    setExecuting(agentId);
-    setResult(null);
-    setShowModal(true);
-    try {
-      const response = await fetch("https://nadakki-ai-suite.onrender.com/agents/marketing/" + agentId + "/execute", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input_data: { test: true }, tenant_id: "credicefi" })
-      });
-      const data = await response.json();
-      setResult({ status: "success", data });
-    } catch (err: any) {
-      setResult({ status: "error", error: err.message });
-    } finally {
-      setExecuting(null);
-    }
-  };
-
-  if (loading) return <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}><div style={{ color: "#94a3b8" }}>Cargando agentes de Campaign Management...</div></div>;
+  const filteredCampaigns = CAMPAIGNS.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>Campaign Management</h1>
-      <p style={{ color: "#94a3b8", marginBottom: 32 }}>{agents.length} agentes en esta categoria</p>
-      
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-        {agents.map((agent) => (
-          <div key={agent.id} style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: 20 }}>
-            <h3 style={{ color: "#f8fafc", fontSize: 16, fontWeight: 600, marginBottom: 8 }}>{agent.name}</h3>
-            <p style={{ color: "#64748b", fontSize: 12, marginBottom: 4 }}>ID: {agent.id}</p>
-            <p style={{ color: "#94a3b8", fontSize: 13 }}>{agent.category}</p>
-            <button onClick={() => executeAgent(agent.id)} disabled={executing === agent.id} style={{
-              marginTop: 16, width: "100%", padding: 10,
-              backgroundColor: executing === agent.id ? "#6b7280" : "#F97316",
-              border: "none", borderRadius: 8, color: "white", fontWeight: 600,
-              cursor: executing === agent.id ? "not-allowed" : "pointer"
-            }}>
-              {executing === agent.id ? "Ejecutando..." : "Ejecutar"}
-            </button>
-          </div>
-        ))}
-      </div>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/marketing">
+        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg font-medium text-white text-sm flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Nueva Campaña
+        </motion.button>
+      </NavigationBar>
 
-      {showModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.8)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }} onClick={() => setShowModal(false)}>
-          <div style={{ backgroundColor: "#1e293b", borderRadius: 16, padding: 32, maxWidth: 600, width: "90%", maxHeight: "80vh", overflow: "auto" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-              <h2 style={{ color: "#f8fafc", fontSize: 20, margin: 0 }}>{executing ? "Ejecutando..." : result?.status === "error" ? "Error" : "Resultado"}</h2>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 24, cursor: "pointer" }}>x</button>
-            </div>
-            {result && (
-              <div style={{ backgroundColor: "rgba(0,0,0,0.3)", borderRadius: 8, padding: 16 }}>
-                <pre style={{ color: "#94a3b8", fontSize: 12, margin: 0, whiteSpace: "pre-wrap" }}>{JSON.stringify(result, null, 2)}</pre>
-              </div>
-            )}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-pink-500/20 border border-pink-500/30">
+            <Mail className="w-8 h-8 text-pink-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Campaign Management</h1>
+            <p className="text-gray-400">Automatización y gestión de campañas de marketing</p>
           </div>
         </div>
-      )}
+      </motion.div>
+
+      <div className="grid grid-cols-4 gap-6 mb-8">
+        <StatCard value={CAMPAIGNS.length} label="Campañas" icon={<Mail className="w-6 h-6 text-pink-400" />} color="#ec4899" />
+        <StatCard value={CAMPAIGNS.filter(c => c.status === "active").length} label="Activas" icon={<Play className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="66.2K" label="Enviados" icon={<Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
+        <StatCard value="3.1K" label="Conversiones" icon={<TrendingUp className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
+      </div>
+
+      <GlassCard className="p-4 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input type="text" placeholder="Buscar campañas..." value={search} onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50" />
+        </div>
+      </GlassCard>
+
+      <div className="space-y-4">
+        {filteredCampaigns.map((campaign, i) => (
+          <motion.div key={campaign.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <GlassCard className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
+                    <Mail className="w-6 h-6 text-pink-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white">{campaign.name}</h3>
+                    <p className="text-sm text-gray-400">{campaign.type}</p>
+                  </div>
+                </div>
+                <StatusBadge 
+                  status={campaign.status === "active" ? "active" : campaign.status === "completed" ? "inactive" : "warning"} 
+                  label={campaign.status === "active" ? "Activa" : campaign.status === "completed" ? "Completada" : "Programada"} 
+                />
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="p-3 bg-white/5 rounded-lg text-center">
+                  <p className="text-xl font-bold text-white">{campaign.sent.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">Enviados</p>
+                </div>
+                <div className="p-3 bg-white/5 rounded-lg text-center">
+                  <p className="text-xl font-bold text-blue-400">{campaign.opened.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">Abiertos</p>
+                </div>
+                <div className="p-3 bg-white/5 rounded-lg text-center">
+                  <p className="text-xl font-bold text-yellow-400">{campaign.clicked.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">Clicks</p>
+                </div>
+                <div className="p-3 bg-white/5 rounded-lg text-center">
+                  <p className="text-xl font-bold text-green-400">{campaign.converted.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">Conversiones</p>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
