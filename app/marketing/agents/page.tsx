@@ -1,10 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { 
-  Bot, Search, Filter, Play, Zap, 
-  TrendingUp, CheckCircle
-} from "lucide-react";
+import Link from "next/link";
+import { Bot, Search, Play, Zap, TrendingUp, CheckCircle, ArrowRight } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
@@ -15,6 +13,24 @@ interface Agent { id: string; name: string; category: string; }
 
 const CATEGORIES = ["Todos", "Leads", "Content", "Social", "Analytics", "Campaigns"];
 
+const MOCK_AGENTS: Agent[] = [
+  { id: "leadscoringia", name: "Lead Scoring IA", category: "Leads" },
+  { id: "leadqualifieria", name: "Lead Qualifier IA", category: "Leads" },
+  { id: "leadnurturingia", name: "Lead Nurturing IA", category: "Leads" },
+  { id: "contentgeneratoria", name: "Content Generator IA", category: "Content" },
+  { id: "copywriteria", name: "Copywriter IA", category: "Content" },
+  { id: "blogwriteria", name: "Blog Writer IA", category: "Content" },
+  { id: "seooptimizeria", name: "SEO Optimizer IA", category: "Content" },
+  { id: "socialpostgeneratoria", name: "Social Post Generator IA", category: "Social" },
+  { id: "hashtagoptimizeria", name: "Hashtag Optimizer IA", category: "Social" },
+  { id: "engagementanalyzeria", name: "Engagement Analyzer IA", category: "Social" },
+  { id: "sentimentanalyzeria", name: "Sentiment Analyzer IA", category: "Analytics" },
+  { id: "trenddetectoria", name: "Trend Detector IA", category: "Analytics" },
+  { id: "campaignoptimizeria", name: "Campaign Optimizer IA", category: "Campaigns" },
+  { id: "emailsequencemasteria", name: "Email Sequence Master IA", category: "Campaigns" },
+  { id: "abTestingIA", name: "A/B Testing IA", category: "Campaigns" },
+];
+
 export default function MarketingAgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,32 +39,23 @@ export default function MarketingAgentsPage() {
   const [apiStatus, setApiStatus] = useState<"live" | "mock">("mock");
 
   useEffect(() => {
-    fetch("https://nadakki-ai-suite.onrender.com/api/catalog/marketing/agents")
-      .then(res => res.json())
-      .then(data => {
-        if (data.agents) {
+    const fetchAgents = async () => {
+      try {
+        const res = await fetch("https://nadakki-ai-suite.onrender.com/api/catalog/marketing/agents");
+        const data = await res.json();
+        if (data.agents && data.agents.length > 0) {
           setAgents(data.agents);
           setApiStatus("live");
+        } else {
+          setAgents(MOCK_AGENTS);
         }
-      })
-      .catch(() => {
-        setAgents([
-          { id: "leadscoringia", name: "Lead Scoring IA", category: "Leads" },
-          { id: "leadqualifieria", name: "Lead Qualifier IA", category: "Leads" },
-          { id: "leadnurturingia", name: "Lead Nurturing IA", category: "Leads" },
-          { id: "contentgeneratoria", name: "Content Generator IA", category: "Content" },
-          { id: "copywriteria", name: "Copywriter IA", category: "Content" },
-          { id: "blogwriteria", name: "Blog Writer IA", category: "Content" },
-          { id: "seooptimizeria", name: "SEO Optimizer IA", category: "Content" },
-          { id: "socialpostgeneratoria", name: "Social Post Generator IA", category: "Social" },
-          { id: "hashtagoptimizeria", name: "Hashtag Optimizer IA", category: "Social" },
-          { id: "engagementanalyzeria", name: "Engagement Analyzer IA", category: "Social" },
-          { id: "sentimentanalyzeria", name: "Sentiment Analyzer IA", category: "Analytics" },
-          { id: "campaignoptimizeria", name: "Campaign Optimizer IA", category: "Campaigns" },
-          { id: "emailsequencemasteria", name: "Email Sequence Master IA", category: "Campaigns" },
-        ]);
-      })
-      .finally(() => setLoading(false));
+      } catch {
+        setAgents(MOCK_AGENTS);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAgents();
   }, []);
 
   const filteredAgents = agents.filter(agent => {
@@ -76,9 +83,9 @@ export default function MarketingAgentsPage() {
       </motion.div>
 
       <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard value={agents.length} label="Total Agentes" icon={<Bot className="w-6 h-6 text-cyan-400" />} color="#06b6d4" />
-        <StatCard value={agents.length} label="Activos" icon={<CheckCircle className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value="98.5%" label="Precisión" icon={<TrendingUp className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
+        <StatCard value={agents.length.toString()} label="Total Agentes" icon={<Bot className="w-6 h-6 text-cyan-400" />} color="#06b6d4" />
+        <StatCard value={agents.length.toString()} label="Activos" icon={<CheckCircle className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="98.5%" label="Precision" icon={<TrendingUp className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
         <StatCard value="45ms" label="Latencia" icon={<Zap className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
       </div>
 
@@ -106,18 +113,23 @@ export default function MarketingAgentsPage() {
         <div className="grid grid-cols-3 gap-4">
           {filteredAgents.map((agent, i) => (
             <motion.div key={agent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-              <GlassCard className="p-5 cursor-pointer group">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                    <Bot className="w-6 h-6 text-cyan-400" />
+              <Link href={`/marketing/agents/${agent.id}`}>
+                <GlassCard className="p-5 cursor-pointer group h-full">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                      <Bot className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors">{agent.name}</h3>
+                      <p className="text-xs text-gray-400">{agent.category}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors">{agent.name}</h3>
-                    <p className="text-xs text-gray-400">{agent.category || "Marketing"}</p>
-                  </div>
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                </div>
-              </GlassCard>
+                </GlassCard>
+              </Link>
             </motion.div>
           ))}
         </div>
