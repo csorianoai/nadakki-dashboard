@@ -2,8 +2,8 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
-  Sparkles, Wand2, FileText, Image, Video, 
-  MessageSquare, ArrowRight, Zap
+  Sparkles, Wand2, FileText, Image, History, 
+  Settings, Bot, ArrowRight, Zap, BookOpen
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
@@ -12,15 +12,15 @@ import StatusBadge from "@/components/ui/StatusBadge";
 
 const AI_TOOLS = [
   { id: "generate", name: "Content Generator", icon: Wand2, desc: "Genera contenido con IA", href: "/ai-studio/generate", color: "#8b5cf6", badge: "Popular" },
-  { id: "copywriting", name: "AI Copywriting", icon: FileText, desc: "Textos persuasivos y copy", href: "/ai-studio/copywriting", color: "#22c55e" },
-  { id: "images", name: "Image Generation", icon: Image, desc: "Crea imágenes con DALL-E", href: "/ai-studio/images", color: "#f59e0b", badge: "Beta" },
-  { id: "video", name: "Video Scripts", icon: Video, desc: "Scripts para videos", href: "/ai-studio/video", color: "#ef4444" },
-  { id: "chat", name: "AI Assistant", icon: MessageSquare, desc: "Chat con agentes IA", href: "/ai-studio/chat", color: "#06b6d4" },
-  { id: "agents", name: "Custom Agents", icon: Sparkles, desc: "Agentes personalizados", href: "/ai-studio/agents", color: "#ec4899" },
+  { id: "templates", name: "Templates", icon: FileText, desc: "Plantillas predefinidas", href: "/ai-studio/templates", color: "#22c55e" },
+  { id: "history", name: "Historial", icon: History, desc: "Generaciones anteriores", href: "/ai-studio/history", color: "#f59e0b" },
+  { id: "agents", name: "Mis Agentes", icon: Bot, desc: "Agentes personalizados", href: "/ai-studio/agents", color: "#ec4899" },
+  { id: "prompts", name: "Prompt Library", icon: BookOpen, desc: "Biblioteca de prompts", href: "/library/prompts", color: "#06b6d4" },
+  { id: "settings", name: "Configuración", icon: Settings, desc: "Ajustes de generación", href: "/ai-studio/settings", color: "#6b7280" },
 ];
 
 const STATS = [
-  { value: "8", label: "Herramientas IA", icon: <Wand2 className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
+  { value: "6", label: "Herramientas", icon: <Wand2 className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
   { value: "15K", label: "Generaciones", icon: <FileText className="w-6 h-6 text-green-400" />, color: "#22c55e" },
   { value: "4.8", label: "Rating", icon: <Sparkles className="w-6 h-6 text-yellow-400" />, color: "#f59e0b" },
   { value: "99%", label: "Uptime", icon: <Zap className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
@@ -33,7 +33,6 @@ export default function AIStudioPage() {
         <StatusBadge status="active" label="AI Studio" size="lg" />
       </NavigationBar>
 
-      {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-4 mb-2">
           <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
@@ -48,14 +47,12 @@ export default function AIStudioPage() {
         </div>
       </motion.div>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-6 mb-8">
         {STATS.map((stat, i) => (
           <StatCard key={i} {...stat} delay={i * 0.1} />
         ))}
       </div>
 
-      {/* Tools Grid */}
       <h2 className="text-xl font-bold text-white mb-4">Herramientas Disponibles</h2>
       <div className="grid grid-cols-3 gap-6 mb-8">
         {AI_TOOLS.map((tool, index) => (
@@ -72,7 +69,7 @@ export default function AIStudioPage() {
                     <tool.icon className="w-6 h-6" style={{ color: tool.color }} />
                   </div>
                   {tool.badge && (
-                    <span className={`text-xs px-2 py-1 rounded-full ${tool.badge === "Popular" ? "bg-purple-500/20 text-purple-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+                    <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-400">
                       {tool.badge}
                     </span>
                   )}
@@ -92,7 +89,6 @@ export default function AIStudioPage() {
         ))}
       </div>
 
-      {/* Quick Start */}
       <GlassCard className="p-6">
         <div className="flex items-center justify-between">
           <div>

@@ -1,29 +1,107 @@
 "use client";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { 
+  History, Search, Copy, Trash2, Eye,
+  Instagram, Twitter, Linkedin, Mail, Check
+} from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+
+const HISTORY_ITEMS = [
+  { id: 1, type: "instagram", content: "🚀 ¡Transforma tu negocio hoy! Nuestra solución de IA...", date: "Hace 2 horas", tokens: 145 },
+  { id: 2, type: "email", content: "Asunto: Oferta especial de fin de año...", date: "Hace 5 horas", tokens: 320 },
+  { id: 3, type: "twitter", content: "¿Sabías que el 73% de las empresas exitosas ya usan IA?...", date: "Ayer", tokens: 89 },
+  { id: 4, type: "linkedin", content: "Nos complace anunciar el lanzamiento de nuestra nueva...", date: "Hace 2 días", tokens: 256 },
+  { id: 5, type: "instagram", content: "ANTES: 8 horas creando contenido 😩...", date: "Hace 3 días", tokens: 178 },
+];
+
+const ICON_MAP: Record<string, any> = {
+  instagram: Instagram,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  email: Mail,
+};
+
+const COLOR_MAP: Record<string, string> = {
+  instagram: "#E1306C",
+  twitter: "#1DA1F2",
+  linkedin: "#0A66C2",
+  email: "#22c55e",
+};
+
 export default function AIHistoryPage() {
-  const history = [
-    { date: "Hoy 14:32", type: "Social Post", platform: "Instagram", status: "published" },
-    { date: "Hoy 10:15", type: "Email", platform: "Mailchimp", status: "scheduled" },
-    { date: "Ayer 16:45", type: "Ad Copy", platform: "Facebook Ads", status: "published" },
-    { date: "Ayer 09:20", type: "Blog Post", platform: "WordPress", status: "draft" },
-  ];
-  const statusColors: Record<string, string> = { published: "#22c55e", scheduled: "#3b82f6", draft: "#f59e0b" };
+  const [search, setSearch] = useState("");
+  const [copied, setCopied] = useState<number | null>(null);
+
+  const filteredHistory = HISTORY_ITEMS.filter(item => 
+    item.content.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const copyToClipboard = (text: string, id: number) => {
+    navigator.clipboard.writeText(text);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2000);
+  };
 
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 32 }}>📜 Historial de Generación</h1>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {history.map((h, i) => (
-          <div key={i} style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 12, padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>{h.date}</p>
-              <p style={{ color: "#f8fafc", fontWeight: 600, margin: "4px 0 0 0" }}>{h.type}</p>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <span style={{ color: "#64748b", fontSize: 13 }}>{h.platform}</span>
-              <span style={{ backgroundColor: `${statusColors[h.status]}20`, color: statusColors[h.status], padding: "4px 12px", borderRadius: 20, fontSize: 12 }}>{h.status}</span>
-            </div>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/ai-studio">
+        <StatusBadge status="active" label={`${HISTORY_ITEMS.length} generaciones`} size="lg" />
+      </NavigationBar>
+
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-yellow-500/20 border border-yellow-500/30">
+            <History className="w-8 h-8 text-yellow-400" />
           </div>
-        ))}
+          <div>
+            <h1 className="text-3xl font-bold text-white">Historial de Generaciones</h1>
+            <p className="text-gray-400">Todo el contenido que has generado con IA</p>
+          </div>
+        </div>
+      </motion.div>
+
+      <GlassCard className="p-4 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input type="text" placeholder="Buscar en historial..." value={search} onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50" />
+        </div>
+      </GlassCard>
+
+      <div className="space-y-4">
+        {filteredHistory.map((item, i) => {
+          const Icon = ICON_MAP[item.type] || Mail;
+          const color = COLOR_MAP[item.type] || "#8b5cf6";
+          return (
+            <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+              <GlassCard className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-xl" style={{ backgroundColor: color + "20" }}>
+                    <Icon className="w-5 h-5" style={{ color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white line-clamp-2">{item.content}</p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                      <span>{item.date}</span>
+                      <span>{item.tokens} tokens</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => copyToClipboard(item.content, item.id)} className="p-2 hover:bg-white/10 rounded-lg">
+                      {copied === item.id ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                    </button>
+                    <button className="p-2 hover:bg-white/10 rounded-lg">
+                      <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-400" />
+                    </button>
+                  </div>
+                </div>
+              </GlassCard>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
