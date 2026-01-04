@@ -1,41 +1,41 @@
 "use client";
-export default function AnalyticsCampaignsPage() {
-  const campaigns = [
-    { name: "Black Friday 2026", impressions: "2.4M", clicks: "89K", conversions: 2340, ctr: "3.7%", cost: 15000, revenue: 78000 },
-    { name: "Lanzamiento Q1", impressions: "890K", clicks: "32K", conversions: 890, ctr: "3.6%", cost: 8000, revenue: 34000 },
-    { name: "Brand Awareness", impressions: "5.2M", clicks: "145K", conversions: 567, ctr: "2.8%", cost: 20000, revenue: 45000 },
-  ];
+import { motion } from "framer-motion";
+import { BarChart3, TrendingUp, DollarSign } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatCard from "@/components/ui/StatCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
+const CAMPAIGNS = [
+  { name: "Black Friday", impressions: "1.2M", clicks: "45K", conversions: "2.3K", roi: "320%" },
+  { name: "Newsletter Q4", impressions: "450K", clicks: "12K", conversions: "890", roi: "180%" },
+  { name: "Social Ads", impressions: "890K", clicks: "34K", conversions: "1.5K", roi: "245%" },
+];
+
+export default function AnalyticsCampaignsPage() {
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 32 }}>📢 Analytics por Campaña</h1>
-      <div style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ backgroundColor: "rgba(0,0,0,0.2)" }}>
-              {["Campaña", "Impresiones", "Clicks", "Conv.", "CTR", "Costo", "Revenue", "ROI"].map(h => (
-                <th key={h} style={{ padding: 16, textAlign: "left", color: "#94a3b8", fontSize: 13 }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {campaigns.map((c, i) => {
-              const roi = Math.round(((c.revenue - c.cost) / c.cost) * 100);
-              return (
-                <tr key={i} style={{ borderTop: "1px solid rgba(51,65,85,0.3)" }}>
-                  <td style={{ padding: 16, color: "#f8fafc", fontWeight: 600 }}>{c.name}</td>
-                  <td style={{ padding: 16, color: "#f8fafc" }}>{c.impressions}</td>
-                  <td style={{ padding: 16, color: "#f8fafc" }}>{c.clicks}</td>
-                  <td style={{ padding: 16, color: "#22c55e", fontWeight: 600 }}>{c.conversions}</td>
-                  <td style={{ padding: 16, color: "#f8fafc" }}>{c.ctr}</td>
-                  <td style={{ padding: 16, color: "#f8fafc" }}>${c.cost.toLocaleString()}</td>
-                  <td style={{ padding: 16, color: "#22c55e" }}>${c.revenue.toLocaleString()}</td>
-                  <td style={{ padding: 16, color: roi > 200 ? "#22c55e" : "#f59e0b", fontWeight: 700 }}>{roi}%</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/analytics"><StatusBadge status="active" label="Campaign Analytics" size="lg" /></NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/30"><BarChart3 className="w-8 h-8 text-purple-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Analytics de Campanas</h1><p className="text-gray-400">Rendimiento detallado de campanas</p></div>
+        </div>
+      </motion.div>
+      <div className="space-y-4">
+        {CAMPAIGNS.map((c, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <GlassCard className="p-5">
+              <h3 className="font-bold text-white mb-4">{c.name}</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="p-3 bg-white/5 rounded-lg text-center"><p className="text-xl font-bold text-white">{c.impressions}</p><p className="text-xs text-gray-500">Impresiones</p></div>
+                <div className="p-3 bg-white/5 rounded-lg text-center"><p className="text-xl font-bold text-blue-400">{c.clicks}</p><p className="text-xs text-gray-500">Clicks</p></div>
+                <div className="p-3 bg-white/5 rounded-lg text-center"><p className="text-xl font-bold text-purple-400">{c.conversions}</p><p className="text-xs text-gray-500">Conversiones</p></div>
+                <div className="p-3 bg-white/5 rounded-lg text-center"><p className="text-xl font-bold text-green-400">{c.roi}</p><p className="text-xs text-gray-500">ROI</p></div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        ))}
       </div>
     </div>
   );

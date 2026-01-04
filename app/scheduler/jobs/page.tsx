@@ -1,33 +1,45 @@
 "use client";
-export default function SchedulerJobsPage() {
-  const jobs = [
-    { name: "Daily Social Post", schedule: "Diario 10:00 AM", nextRun: "Mañana", status: "active", runs: 45 },
-    { name: "Weekly Newsletter", schedule: "Lunes 9:00 AM", nextRun: "En 3 días", status: "active", runs: 12 },
-    { name: "Lead Scoring Update", schedule: "Cada 6 horas", nextRun: "En 2 horas", status: "active", runs: 234 },
-    { name: "Competitor Analysis", schedule: "Diario 6:00 AM", nextRun: "Mañana", status: "paused", runs: 30 },
-  ];
+import { motion } from "framer-motion";
+import { Clock, Play, Pause, Trash2 } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
+const JOBS = [
+  { name: "Daily Report Generator", schedule: "0 9 * * *", lastRun: "Hoy 09:00", status: "active" },
+  { name: "Weekly Newsletter", schedule: "0 10 * * 1", lastRun: "Lun 10:00", status: "active" },
+  { name: "Data Sync", schedule: "*/15 * * * *", lastRun: "Hace 5 min", status: "active" },
+  { name: "Cleanup Old Data", schedule: "0 2 * * 0", lastRun: "Dom 02:00", status: "paused" },
+];
+
+export default function SchedulerJobsPage() {
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 32 }}>📋 Trabajos Programados</h1>
-      
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {jobs.map((j, i) => (
-          <div key={i} style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 12, padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: j.status === "active" ? "#22c55e" : "#64748b" }} />
-              <div>
-                <p style={{ color: "#f8fafc", fontWeight: 600, margin: 0 }}>{j.name}</p>
-                <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0 0" }}>{j.schedule} • Próximo: {j.nextRun}</p>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/scheduler"><StatusBadge status="active" label="Jobs" size="lg" /></NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-orange-500/20 border border-orange-500/30"><Clock className="w-8 h-8 text-orange-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Jobs Programados</h1><p className="text-gray-400">{JOBS.length} tareas configuradas</p></div>
+        </div>
+      </motion.div>
+      <div className="space-y-4">
+        {JOBS.map((j, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <GlassCard className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-orange-500/20"><Clock className="w-5 h-5 text-orange-400" /></div>
+                  <div><h3 className="font-bold text-white">{j.name}</h3><p className="text-sm text-gray-400 font-mono">{j.schedule}</p></div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs text-gray-500">{j.lastRun}</span>
+                  <StatusBadge status={j.status === "active" ? "active" : "warning"} label={j.status === "active" ? "Activo" : "Pausado"} size="sm" />
+                  <button className="p-2 hover:bg-white/10 rounded-lg">{j.status === "active" ? <Pause className="w-4 h-4 text-yellow-400" /> : <Play className="w-4 h-4 text-green-400" />}</button>
+                  <button className="p-2 hover:bg-red-500/20 rounded-lg"><Trash2 className="w-4 h-4 text-gray-400" /></button>
+                </div>
               </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <span style={{ color: "#94a3b8", fontSize: 13 }}>{j.runs} ejecuciones</span>
-              <button style={{ padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.1)", border: "none", borderRadius: 6, color: "white", cursor: "pointer" }}>
-                {j.status === "active" ? "⏸️" : "▶️"}
-              </button>
-            </div>
-          </div>
+            </GlassCard>
+          </motion.div>
         ))}
       </div>
     </div>

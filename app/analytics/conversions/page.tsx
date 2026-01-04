@@ -1,47 +1,28 @@
 "use client";
+import { motion } from "framer-motion";
+import { Target, TrendingUp } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatCard from "@/components/ui/StatCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+
 export default function AnalyticsConversionsPage() {
-  const funnel = [
-    { stage: "Visitantes", value: 50000, percentage: 100 },
-    { stage: "Leads", value: 2500, percentage: 5 },
-    { stage: "MQL", value: 750, percentage: 1.5 },
-    { stage: "SQL", value: 225, percentage: 0.45 },
-    { stage: "Clientes", value: 68, percentage: 0.14 },
-  ];
-
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 32 }}>🎯 Funnel de Conversión</h1>
-
-      <div style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, padding: 32 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {funnel.map((f, i) => (
-            <div key={i}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ color: "#f8fafc", fontWeight: 600 }}>{f.stage}</span>
-                <span style={{ color: "#8b5cf6" }}>{f.value.toLocaleString()} ({f.percentage}%)</span>
-              </div>
-              <div style={{ height: 40, backgroundColor: "rgba(0,0,0,0.3)", borderRadius: 8, overflow: "hidden" }}>
-                <div style={{ width: `${f.percentage}%`, height: "100%", backgroundColor: "#8b5cf6", minWidth: f.percentage < 1 ? "2%" : undefined }} />
-              </div>
-            </div>
-          ))}
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/analytics"><StatusBadge status="active" label="Conversions" size="lg" /></NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-green-500/20 border border-green-500/30"><Target className="w-8 h-8 text-green-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Conversion Analytics</h1><p className="text-gray-400">Analisis de conversiones y embudos</p></div>
         </div>
-
-        <div style={{ marginTop: 32, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-          <div style={{ backgroundColor: "rgba(0,0,0,0.2)", padding: 16, borderRadius: 12 }}>
-            <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>Tasa Lead → MQL</p>
-            <p style={{ color: "#22c55e", fontSize: 24, fontWeight: 700, margin: "8px 0 0 0" }}>30%</p>
-          </div>
-          <div style={{ backgroundColor: "rgba(0,0,0,0.2)", padding: 16, borderRadius: 12 }}>
-            <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>Tasa MQL → SQL</p>
-            <p style={{ color: "#f59e0b", fontSize: 24, fontWeight: 700, margin: "8px 0 0 0" }}>30%</p>
-          </div>
-          <div style={{ backgroundColor: "rgba(0,0,0,0.2)", padding: 16, borderRadius: 12 }}>
-            <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>Tasa SQL → Cliente</p>
-            <p style={{ color: "#3b82f6", fontSize: 24, fontWeight: 700, margin: "8px 0 0 0" }}>30.2%</p>
-          </div>
-        </div>
+      </motion.div>
+      <div className="grid grid-cols-4 gap-6 mb-8">
+        <StatCard value="12.5K" label="Conversiones" icon={<Target className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="3.8%" label="Tasa Conversion" icon={<TrendingUp className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
+        <StatCard value="$45" label="CPA Promedio" icon={<Target className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
+        <StatCard value="+15%" label="vs Mes Anterior" icon={<TrendingUp className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
       </div>
+      <GlassCard className="p-6"><p className="text-gray-400">Funnel de conversion en desarrollo...</p></GlassCard>
     </div>
   );
 }
