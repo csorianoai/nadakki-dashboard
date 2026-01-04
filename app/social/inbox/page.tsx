@@ -1,137 +1,90 @@
 "use client";
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { MessageSquare, Search, Instagram, Twitter, Linkedin, Reply, Heart, MoreHorizontal } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
-const mockMessages = [
-  { id: 1, platform: "instagram", user: "@maria_garcia", avatar: "👩", message: "Me encanta este producto! Donde puedo comprarlo?", time: "Hace 5 min", status: "unread", sentiment: "positive" },
-  { id: 2, platform: "facebook", user: "Carlos Rodriguez", avatar: "👨", message: "Tuve un problema con mi pedido #12345", time: "Hace 12 min", status: "unread", sentiment: "negative" },
-  { id: 3, platform: "x", user: "@tech_lover", avatar: "🧑", message: "Increible la nueva funcionalidad! 🔥", time: "Hace 25 min", status: "read", sentiment: "positive" },
-  { id: 4, platform: "linkedin", user: "Ana Martinez", avatar: "👩‍💼", message: "Interesada en partnership para nuestra empresa", time: "Hace 1 hora", status: "read", sentiment: "neutral" },
-  { id: 5, platform: "tiktok", user: "@viral_content", avatar: "🎵", message: "Podemos hacer una colaboracion?", time: "Hace 2 horas", status: "read", sentiment: "positive" },
+const MESSAGES = [
+  { id: 1, platform: "instagram", user: "@maria_lopez", avatar: "M", content: "Excelente contenido! Tienen mas info?", time: "Hace 5 min", read: false },
+  { id: 2, platform: "twitter", user: "@tech_carlos", avatar: "T", content: "Interesante articulo sobre IA", time: "Hace 15 min", read: false },
+  { id: 3, platform: "linkedin", user: "Ana Martinez", avatar: "A", content: "Me gustaria conectar para colaboraciones", time: "Hace 1 hora", read: true },
+  { id: 4, platform: "instagram", user: "@startup_mx", avatar: "S", content: "Hacen demos personalizadas?", time: "Hace 2 horas", read: true },
 ];
 
+const PLATFORM_CONFIG: Record<string, { icon: any; color: string }> = {
+  instagram: { icon: Instagram, color: "#E1306C" },
+  twitter: { icon: Twitter, color: "#1DA1F2" },
+  linkedin: { icon: Linkedin, color: "#0A66C2" },
+};
+
 export default function SocialInboxPage() {
-  const [messages, setMessages] = useState(mockMessages);
-  const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [filter, setFilter] = useState("all");
-  const [reply, setReply] = useState("");
-
-  const platformIcons: Record<string, string> = { instagram: "📸", facebook: "📘", x: "🐦", linkedin: "💼", tiktok: "🎵" };
-  const sentimentColors: Record<string, string> = { positive: "#22c55e", negative: "#ef4444", neutral: "#64748b" };
-
-  const filteredMessages = filter === "all" ? messages : messages.filter(m => m.status === filter);
-  const unreadCount = messages.filter(m => m.status === "unread").length;
-
-  const sendReply = () => {
-    if (reply && selectedMessage) {
-      alert(`Respuesta enviada a ${selectedMessage.user}: "${reply}"`);
-      setReply("");
-    }
-  };
-
-  const generateAIReply = () => {
-    setReply("¡Hola! Gracias por contactarnos. Estaremos encantados de ayudarte. Un miembro de nuestro equipo se pondrá en contacto contigo en breve. 🙌");
-  };
+  const unreadCount = MESSAGES.filter(m => !m.read).length;
+  const filteredMessages = MESSAGES.filter(m => filter === "all" || m.platform === filter);
 
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", margin: 0 }}>📬 Social Inbox</h1>
-        <p style={{ color: "#94a3b8", marginTop: 8 }}>{unreadCount} mensajes sin leer • Bandeja unificada</p>
-      </div>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/social">
+        <StatusBadge status={unreadCount > 0 ? "warning" : "active"} label={unreadCount + " sin leer"} size="lg" />
+      </NavigationBar>
 
-      <div style={{ display: "grid", gridTemplateColumns: "350px 1fr", gap: 24, height: "calc(100vh - 200px)" }}>
-        {/* Messages List */}
-        <div style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: 16, borderBottom: "1px solid rgba(51,65,85,0.5)" }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["all", "unread", "read"].map(f => (
-                <button key={f} onClick={() => setFilter(f)} style={{
-                  padding: "6px 12px", backgroundColor: filter === f ? "#8b5cf6" : "transparent",
-                  border: "none", borderRadius: 6, color: "white", cursor: "pointer", fontSize: 13
-                }}>
-                  {f === "all" ? "Todos" : f === "unread" ? `Sin leer (${unreadCount})` : "Leídos"}
-                </button>
-              ))}
-            </div>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-blue-500/20 border border-blue-500/30">
+            <MessageSquare className="w-8 h-8 text-blue-400" />
           </div>
-          
-          <div style={{ flex: 1, overflow: "auto" }}>
-            {filteredMessages.map(msg => (
-              <div key={msg.id} onClick={() => { setSelectedMessage(msg); setMessages(prev => prev.map(m => m.id === msg.id ? {...m, status: "read"} : m)); }}
-                style={{
-                  padding: 16, borderBottom: "1px solid rgba(51,65,85,0.3)", cursor: "pointer",
-                  backgroundColor: selectedMessage?.id === msg.id ? "rgba(139,92,246,0.1)" : msg.status === "unread" ? "rgba(59,130,246,0.05)" : "transparent"
-                }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <span style={{ fontSize: 28 }}>{msg.avatar}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <p style={{ color: "#f8fafc", fontSize: 14, fontWeight: 600, margin: 0 }}>{msg.user}</p>
-                      <span style={{ fontSize: 16 }}>{platformIcons[msg.platform]}</span>
-                    </div>
-                    <p style={{ color: "#94a3b8", fontSize: 13, margin: "4px 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{msg.message}</p>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ color: "#64748b", fontSize: 11 }}>{msg.time}</span>
-                      <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: sentimentColors[msg.sentiment] }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Social Inbox</h1>
+            <p className="text-gray-400">Mensajes, comentarios y menciones</p>
+          </div>
+        </div>
+      </motion.div>
+
+      <GlassCard className="p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input type="text" placeholder="Buscar mensajes..." className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500" />
+          </div>
+          <div className="flex items-center gap-2">
+            {["all", "instagram", "twitter", "linkedin"].map(p => (
+              <button key={p} onClick={() => setFilter(p)} className={`px-3 py-2 rounded-lg text-sm font-medium ${filter === p ? "bg-blue-500 text-white" : "bg-white/5 text-gray-400"}`}>
+                {p === "all" ? "Todos" : p.charAt(0).toUpperCase() + p.slice(1)}
+              </button>
             ))}
           </div>
         </div>
+      </GlassCard>
 
-        {/* Message Detail */}
-        <div style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, display: "flex", flexDirection: "column" }}>
-          {selectedMessage ? (
-            <>
-              <div style={{ padding: 24, borderBottom: "1px solid rgba(51,65,85,0.5)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <span style={{ fontSize: 48 }}>{selectedMessage.avatar}</span>
-                  <div>
-                    <h3 style={{ color: "#f8fafc", fontSize: 18, margin: 0 }}>{selectedMessage.user}</h3>
-                    <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0 0" }}>{platformIcons[selectedMessage.platform]} {selectedMessage.platform} • {selectedMessage.time}</p>
+      <div className="space-y-3">
+        {filteredMessages.map((msg, i) => {
+          const config = PLATFORM_CONFIG[msg.platform];
+          const Icon = config.icon;
+          return (
+            <motion.div key={msg.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
+              <GlassCard className={`p-4 cursor-pointer hover:bg-white/5 ${!msg.read ? "border-l-2 border-l-blue-500" : ""}`}>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: config.color }}>{msg.avatar}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-white">{msg.user}</span>
+                      <Icon className="w-4 h-4" style={{ color: config.color }} />
+                      <span className="text-xs text-gray-500">{msg.time}</span>
+                      {!msg.read && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                    </div>
+                    <p className="text-sm text-gray-300">{msg.content}</p>
                   </div>
-                  <div style={{ marginLeft: "auto", backgroundColor: `${sentimentColors[selectedMessage.sentiment]}20`, padding: "6px 12px", borderRadius: 20 }}>
-                    <span style={{ color: sentimentColors[selectedMessage.sentiment], fontSize: 12, fontWeight: 600 }}>
-                      {selectedMessage.sentiment === "positive" ? "😊 Positivo" : selectedMessage.sentiment === "negative" ? "😟 Negativo" : "😐 Neutral"}
-                    </span>
+                  <div className="flex items-center gap-1">
+                    <button className="p-2 hover:bg-white/10 rounded-lg"><Reply className="w-4 h-4 text-gray-400" /></button>
+                    <button className="p-2 hover:bg-white/10 rounded-lg"><Heart className="w-4 h-4 text-gray-400" /></button>
                   </div>
                 </div>
-              </div>
-              
-              <div style={{ flex: 1, padding: 24, overflow: "auto" }}>
-                <div style={{ backgroundColor: "rgba(0,0,0,0.2)", padding: 16, borderRadius: 12 }}>
-                  <p style={{ color: "#f8fafc", fontSize: 15, lineHeight: 1.6, margin: 0 }}>{selectedMessage.message}</p>
-                </div>
-              </div>
-
-              <div style={{ padding: 24, borderTop: "1px solid rgba(51,65,85,0.5)" }}>
-                <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-                  <button onClick={generateAIReply} style={{ padding: "8px 16px", backgroundColor: "rgba(139,92,246,0.2)", border: "none", borderRadius: 8, color: "#8b5cf6", cursor: "pointer", fontWeight: 600 }}>
-                    🤖 Generar con IA
-                  </button>
-                  <button style={{ padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, color: "white", cursor: "pointer" }}>📋 Plantillas</button>
-                </div>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Escribe tu respuesta..."
-                    style={{ flex: 1, padding: 12, backgroundColor: "rgba(0,0,0,0.3)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 8, color: "#f8fafc", resize: "none", minHeight: 60 }}
-                  />
-                  <button onClick={sendReply} style={{ padding: "0 24px", backgroundColor: "#22c55e", border: "none", borderRadius: 8, color: "white", fontWeight: 600, cursor: "pointer" }}>
-                    Enviar →
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
-              <div style={{ textAlign: "center" }}>
-                <p style={{ fontSize: 48, margin: "0 0 16px 0" }}>📬</p>
-                <p>Selecciona un mensaje para ver los detalles</p>
-              </div>
-            </div>
-          )}
-        </div>
+              </GlassCard>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,152 +1,88 @@
 "use client";
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { Calendar, Plus, Clock, Instagram, Twitter, Linkedin, Edit, Trash2 } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
-const scheduledPosts = [
-  { id: 1, content: "🚀 Nuevo lanzamiento! Descubre...", platforms: ["meta", "linkedin"], scheduledFor: "2026-01-02 10:00", status: "scheduled" },
-  { id: 2, content: "Tips para mejorar tu productividad...", platforms: ["x", "tiktok"], scheduledFor: "2026-01-02 14:00", status: "scheduled" },
-  { id: 3, content: "Behind the scenes de nuestro equipo...", platforms: ["meta"], scheduledFor: "2026-01-03 09:00", status: "draft" },
+const SCHEDULED_POSTS = [
+  { id: 1, content: "Nuevo lanzamiento proximamente...", platform: "instagram", date: "2025-01-06", time: "10:00", status: "scheduled" },
+  { id: 2, content: "La IA puede transformar tu marketing", platform: "twitter", date: "2025-01-06", time: "14:00", status: "scheduled" },
+  { id: 3, content: "Caso de exito: Conversiones 150%", platform: "linkedin", date: "2025-01-07", time: "09:00", status: "scheduled" },
+  { id: 4, content: "Tips de productividad", platform: "instagram", date: "2025-01-07", time: "18:00", status: "draft" },
 ];
 
-export default function PostSchedulerPage() {
-  const [posts, setPosts] = useState(scheduledPosts);
-  const [newPost, setNewPost] = useState({ content: "", platforms: [] as string[], scheduledFor: "" });
-  const [showForm, setShowForm] = useState(false);
+const PLATFORM_CONFIG: Record<string, { icon: any; color: string; name: string }> = {
+  instagram: { icon: Instagram, color: "#E1306C", name: "Instagram" },
+  twitter: { icon: Twitter, color: "#1DA1F2", name: "Twitter" },
+  linkedin: { icon: Linkedin, color: "#0A66C2", name: "LinkedIn" },
+};
 
-  const platformIcons: Record<string, string> = {
-    meta: "📘", x: "🐦", tiktok: "🎵", linkedin: "💼", youtube: "▶️"
-  };
-
-  const togglePlatform = (platform: string) => {
-    setNewPost(prev => ({
-      ...prev,
-      platforms: prev.platforms.includes(platform) 
-        ? prev.platforms.filter(p => p !== platform)
-        : [...prev.platforms, platform]
-    }));
-  };
-
-  const schedulePost = () => {
-    if (newPost.content && newPost.platforms.length > 0 && newPost.scheduledFor) {
-      setPosts(prev => [...prev, {
-        id: Date.now(),
-        content: newPost.content,
-        platforms: newPost.platforms,
-        scheduledFor: newPost.scheduledFor,
-        status: "scheduled"
-      }]);
-      setNewPost({ content: "", platforms: [], scheduledFor: "" });
-      setShowForm(false);
-    }
-  };
+export default function SocialSchedulerPage() {
+  const [filter, setFilter] = useState("all");
+  const filteredPosts = SCHEDULED_POSTS.filter(post => filter === "all" || post.platform === filter);
 
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", margin: 0 }}>📅 Programador de Posts</h1>
-          <p style={{ color: "#94a3b8", marginTop: 8 }}>{posts.filter(p => p.status === "scheduled").length} posts programados</p>
-        </div>
-        <button onClick={() => setShowForm(!showForm)} style={{
-          padding: "12px 24px", backgroundColor: "#22c55e", border: "none",
-          borderRadius: 10, color: "white", fontWeight: 600, cursor: "pointer"
-        }}>
-          + Programar Post
-        </button>
-      </div>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/social">
+        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg font-medium text-white text-sm flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Programar Post
+        </motion.button>
+      </NavigationBar>
 
-      {showForm && (
-        <div style={{ backgroundColor: "rgba(30,41,59,0.8)", border: "2px solid #22c55e", borderRadius: 16, padding: 24, marginBottom: 24 }}>
-          <h3 style={{ color: "#f8fafc", marginBottom: 16 }}>Nuevo Post</h3>
-          
-          <textarea
-            value={newPost.content}
-            onChange={(e) => setNewPost(prev => ({ ...prev, content: e.target.value }))}
-            placeholder="Escribe tu post aquí..."
-            style={{
-              width: "100%", minHeight: 100, padding: 16,
-              backgroundColor: "rgba(0,0,0,0.3)", border: "1px solid rgba(51,65,85,0.5)",
-              borderRadius: 8, color: "#f8fafc", fontSize: 14, resize: "vertical"
-            }}
-          />
-
-          <div style={{ marginTop: 16 }}>
-            <p style={{ color: "#94a3b8", marginBottom: 8 }}>Plataformas:</p>
-            <div style={{ display: "flex", gap: 12 }}>
-              {Object.entries(platformIcons).map(([platform, icon]) => (
-                <button key={platform} onClick={() => togglePlatform(platform)} style={{
-                  padding: "10px 16px",
-                  backgroundColor: newPost.platforms.includes(platform) ? "#22c55e" : "rgba(0,0,0,0.3)",
-                  border: "none", borderRadius: 8, fontSize: 20, cursor: "pointer"
-                }}>
-                  {icon}
-                </button>
-              ))}
-            </div>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-green-500/20 border border-green-500/30">
+            <Calendar className="w-8 h-8 text-green-400" />
           </div>
-
-          <div style={{ marginTop: 16 }}>
-            <p style={{ color: "#94a3b8", marginBottom: 8 }}>Fecha y hora:</p>
-            <input
-              type="datetime-local"
-              value={newPost.scheduledFor}
-              onChange={(e) => setNewPost(prev => ({ ...prev, scheduledFor: e.target.value }))}
-              style={{
-                padding: 12, backgroundColor: "rgba(0,0,0,0.3)",
-                border: "1px solid rgba(51,65,85,0.5)", borderRadius: 8,
-                color: "#f8fafc", fontSize: 14
-              }}
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-            <button onClick={schedulePost} style={{
-              padding: "12px 24px", backgroundColor: "#22c55e", border: "none",
-              borderRadius: 8, color: "white", fontWeight: 600, cursor: "pointer"
-            }}>
-              ✓ Programar
-            </button>
-            <button onClick={() => setShowForm(false)} style={{
-              padding: "12px 24px", backgroundColor: "rgba(255,255,255,0.1)", border: "none",
-              borderRadius: 8, color: "white", cursor: "pointer"
-            }}>
-              Cancelar
-            </button>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Programador de Posts</h1>
+            <p className="text-gray-400">{SCHEDULED_POSTS.length} posts programados</p>
           </div>
         </div>
-      )}
+      </motion.div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {posts.map((post) => (
-          <div key={post.id} style={{
-            backgroundColor: "rgba(30,41,59,0.5)",
-            border: "1px solid rgba(51,65,85,0.5)",
-            borderRadius: 16,
-            padding: 20
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ color: "#f8fafc", fontSize: 15, margin: 0, lineHeight: 1.5 }}>{post.content}</p>
-                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                  {post.platforms.map(p => (
-                    <span key={p} style={{ fontSize: 18 }}>{platformIcons[p]}</span>
-                  ))}
+      <GlassCard className="p-4 mb-6">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setFilter("all")} className={`px-4 py-2 rounded-lg text-sm font-medium ${filter === "all" ? "bg-green-500 text-white" : "bg-white/5 text-gray-400"}`}>Todos</button>
+          {Object.entries(PLATFORM_CONFIG).map(([key, config]) => (
+            <button key={key} onClick={() => setFilter(key)} className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${filter === key ? "bg-green-500 text-white" : "bg-white/5 text-gray-400"}`}>
+              <config.icon className="w-4 h-4" /> {config.name}
+            </button>
+          ))}
+        </div>
+      </GlassCard>
+
+      <div className="space-y-4">
+        {filteredPosts.map((post, i) => {
+          const config = PLATFORM_CONFIG[post.platform];
+          const Icon = config.icon;
+          return (
+            <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+              <GlassCard className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-xl" style={{ backgroundColor: config.color + "20" }}>
+                    <Icon className="w-5 h-5" style={{ color: config.color }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white mb-2">{post.content}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {post.date}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.time}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={post.status === "scheduled" ? "active" : "warning"} label={post.status === "scheduled" ? "Programado" : "Borrador"} size="sm" />
+                    <button className="p-2 hover:bg-white/10 rounded-lg"><Edit className="w-4 h-4 text-gray-400" /></button>
+                    <button className="p-2 hover:bg-red-500/20 rounded-lg"><Trash2 className="w-4 h-4 text-gray-400" /></button>
+                  </div>
                 </div>
-              </div>
-              <div style={{ textAlign: "right", marginLeft: 20 }}>
-                <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>Programado para</p>
-                <p style={{ color: "#f8fafc", fontSize: 14, fontWeight: 600, margin: "4px 0 0 0" }}>{post.scheduledFor}</p>
-                <span style={{
-                  display: "inline-block", marginTop: 8,
-                  backgroundColor: post.status === "scheduled" ? "rgba(34,197,94,0.1)" : "rgba(245,158,11,0.1)",
-                  color: post.status === "scheduled" ? "#22c55e" : "#f59e0b",
-                  padding: "4px 12px", borderRadius: 20, fontSize: 11
-                }}>
-                  {post.status === "scheduled" ? "✓ Programado" : "📝 Borrador"}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
+              </GlassCard>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
