@@ -1,53 +1,47 @@
 "use client";
-import { useState } from "react";
+import { motion } from "framer-motion";
+import { Eye, TrendingUp, AlertTriangle, Hash } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatCard from "@/components/ui/StatCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+
+const KEYWORDS = [
+  { keyword: "#credicefi", mentions: 234, sentiment: "positive", trend: "+15%" },
+  { keyword: "fintech mexico", mentions: 89, sentiment: "neutral", trend: "+5%" },
+  { keyword: "credito digital", mentions: 156, sentiment: "positive", trend: "+22%" },
+];
 
 export default function SocialMonitoringPage() {
-  const [feed] = useState([
-    { platform: "instagram", type: "comment", user: "@maria_garcia", content: "Me encanta este producto!", time: "Hace 5 min", sentiment: "positive" },
-    { platform: "x", type: "mention", user: "@tech_news", content: "Gran artículo de @nadakki sobre IA", time: "Hace 12 min", sentiment: "positive" },
-    { platform: "facebook", type: "comment", user: "Carlos López", content: "¿Cuándo estará disponible en mi país?", time: "Hace 25 min", sentiment: "neutral" },
-    { platform: "linkedin", type: "share", user: "Ana CEO", content: "Compartió tu publicación", time: "Hace 1 hora", sentiment: "positive" },
-    { platform: "tiktok", type: "comment", user: "@viral_content", content: "🔥🔥🔥", time: "Hace 2 horas", sentiment: "positive" },
-  ]);
-
-  const platformIcons: Record<string, string> = { instagram: "📸", x: "🐦", facebook: "📘", linkedin: "💼", tiktok: "🎵" };
-  const sentimentColors: Record<string, string> = { positive: "#22c55e", negative: "#ef4444", neutral: "#64748b" };
-
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>📡 Social Monitoring</h1>
-      <p style={{ color: "#94a3b8", marginBottom: 32 }}>Engagement en tiempo real • {feed.length} interacciones recientes</p>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, marginBottom: 32 }}>
-        {Object.entries(platformIcons).map(([p, icon]) => (
-          <div key={p} style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 12, padding: 16, textAlign: "center" }}>
-            <span style={{ fontSize: 28 }}>{icon}</span>
-            <p style={{ color: "#f8fafc", fontSize: 20, fontWeight: 700, margin: "8px 0 4px 0" }}>{feed.filter(f => f.platform === p).length}</p>
-            <p style={{ color: "#64748b", fontSize: 12, margin: 0, textTransform: "capitalize" }}>{p}</p>
-          </div>
-        ))}
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/social"><StatusBadge status="active" label="Monitoring" size="lg" /></NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/30"><Eye className="w-8 h-8 text-purple-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Social Monitoring</h1><p className="text-gray-400">Monitoreo de menciones y keywords</p></div>
+        </div>
+      </motion.div>
+      <div className="grid grid-cols-3 gap-6 mb-8">
+        <StatCard value="479" label="Menciones/dia" icon={<Hash className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
+        <StatCard value="89%" label="Sentiment Positivo" icon={<TrendingUp className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="3" label="Alertas" icon={<AlertTriangle className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
-
-      <div style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, padding: 24 }}>
-        <h2 style={{ color: "#f8fafc", fontSize: 18, marginBottom: 20 }}>Feed en Tiempo Real</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {feed.map((f, i) => (
-            <div key={i} style={{ backgroundColor: "rgba(0,0,0,0.2)", borderRadius: 12, padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                <span style={{ fontSize: 24 }}>{platformIcons[f.platform]}</span>
-                <div>
-                  <p style={{ color: "#f8fafc", fontWeight: 600, margin: 0 }}>{f.user}</p>
-                  <p style={{ color: "#94a3b8", fontSize: 13, margin: "4px 0 0 0" }}>{f.content}</p>
+      <h2 className="text-xl font-bold text-white mb-4">Keywords Monitoreados</h2>
+      <div className="space-y-4">
+        {KEYWORDS.map((k, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <GlassCard className="p-5">
+              <div className="flex items-center justify-between">
+                <div><h3 className="font-bold text-white">{k.keyword}</h3><p className="text-sm text-gray-400">{k.mentions} menciones</p></div>
+                <div className="flex items-center gap-4">
+                  <StatusBadge status={k.sentiment === "positive" ? "active" : "warning"} label={k.sentiment} size="sm" />
+                  <span className="text-green-400 font-medium">{k.trend}</span>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <span style={{ color: "#64748b", fontSize: 12 }}>{f.time}</span>
-                <span style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: sentimentColors[f.sentiment] }} />
-                <button style={{ padding: "6px 12px", backgroundColor: "#8b5cf6", border: "none", borderRadius: 6, color: "white", cursor: "pointer", fontSize: 12 }}>Responder</button>
-              </div>
-            </div>
-          ))}
-        </div>
+            </GlassCard>
+          </motion.div>
+        ))}
       </div>
     </div>
   );

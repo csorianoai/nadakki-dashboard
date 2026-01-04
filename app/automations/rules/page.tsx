@@ -1,38 +1,45 @@
 "use client";
-import { useState } from "react";
-export default function AutomationsPage() {
-  const [rules] = useState([
-    { id: 1, name: "Lead Score > 80 → Notify Sales", status: "active", triggers: 45, lastRun: "Hace 10 min" },
-    { id: 2, name: "New Follower → Welcome DM", status: "active", triggers: 234, lastRun: "Hace 2 min" },
-    { id: 3, name: "Negative Mention → Alert Team", status: "active", triggers: 12, lastRun: "Hace 1 hora" },
-    { id: 4, name: "Cart Abandoned → Email Sequence", status: "paused", triggers: 89, lastRun: "Hace 2 días" },
-  ]);
+import { motion } from "framer-motion";
+import { Settings, Plus, Edit, Trash2, ToggleRight } from "lucide-react";
+import NavigationBar from "@/components/ui/NavigationBar";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+
+const RULES = [
+  { name: "Lead Score > 90", action: "Notificar ventas", status: "active" },
+  { name: "Carrito abandonado", action: "Enviar email", status: "active" },
+  { name: "Sin actividad 30d", action: "Campana reactivacion", status: "paused" },
+  { name: "Nuevo registro", action: "Welcome sequence", status: "active" },
+];
+
+export default function AutomationsRulesPage() {
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", margin: 0 }}>⚡ Automations</h1>
-          <p style={{ color: "#94a3b8", marginTop: 8 }}>Reglas y triggers automáticos</p>
+    <div className="ndk-page ndk-fade-in">
+      <NavigationBar backHref="/automations">
+        <motion.button whileHover={{ scale: 1.05 }} className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg font-medium text-white text-sm flex items-center gap-2">
+          <Plus className="w-4 h-4" /> Nueva Regla
+        </motion.button>
+      </NavigationBar>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-yellow-500/20 border border-yellow-500/30"><Settings className="w-8 h-8 text-yellow-400" /></div>
+          <div><h1 className="text-3xl font-bold text-white">Reglas de Automatizacion</h1><p className="text-gray-400">{RULES.length} reglas configuradas</p></div>
         </div>
-        <button style={{ padding: "12px 24px", backgroundColor: "#8b5cf6", border: "none", borderRadius: 10, color: "white", fontWeight: 600, cursor: "pointer" }}>+ Nueva Regla</button>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {rules.map(rule => (
-          <div key={rule.id} style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: rule.status === "active" ? "#22c55e" : "#64748b" }} />
-              <div>
-                <p style={{ color: "#f8fafc", fontWeight: 600, margin: 0 }}>{rule.name}</p>
-                <p style={{ color: "#64748b", fontSize: 13, margin: "4px 0 0 0" }}>Ejecutado {rule.triggers} veces • {rule.lastRun}</p>
+      </motion.div>
+      <div className="space-y-4">
+        {RULES.map((r, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <GlassCard className="p-5">
+              <div className="flex items-center justify-between">
+                <div><h3 className="font-bold text-white">{r.name}</h3><p className="text-sm text-gray-400">Accion: {r.action}</p></div>
+                <div className="flex items-center gap-3">
+                  <StatusBadge status={r.status === "active" ? "active" : "warning"} label={r.status === "active" ? "Activa" : "Pausada"} size="sm" />
+                  <button className="p-2 hover:bg-white/10 rounded-lg"><Edit className="w-4 h-4 text-gray-400" /></button>
+                  <button className="p-2 hover:bg-red-500/20 rounded-lg"><Trash2 className="w-4 h-4 text-gray-400" /></button>
+                </div>
               </div>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button style={{ padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.1)", border: "none", borderRadius: 6, color: "white", cursor: "pointer" }}>✏️</button>
-              <button style={{ padding: "8px 16px", backgroundColor: rule.status === "active" ? "rgba(239,68,68,0.1)" : "rgba(34,197,94,0.1)", border: "none", borderRadius: 6, color: rule.status === "active" ? "#ef4444" : "#22c55e", cursor: "pointer" }}>
-                {rule.status === "active" ? "⏸️" : "▶️"}
-              </button>
-            </div>
-          </div>
+            </GlassCard>
+          </motion.div>
         ))}
       </div>
     </div>
