@@ -1,11 +1,13 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import Providers from '@/components/Providers';
+import type { Metadata } from "next";
+import "./globals.css";
+import Providers from "@/components/Providers";
+import SystemStatus from "@/components/ui/SystemStatus";
+import HelpCenter from "@/components/ui/HelpCenter";
 
 export const metadata: Metadata = {
-  title: 'NADAKKI CONSCIOUSNESS v5000',
-  description: '20 AI Cores • 247 Agents • Enterprise Multi-Tenant Platform',
-  icons: { icon: '/favicon.ico' },
+  title: "NADAKKI AI Suite",
+  description: "20 AI Cores - 245 Agents - Enterprise Multi-Tenant Platform",
+  icons: { icon: "/favicon.ico" },
 };
 
 export default function RootLayout({
@@ -15,13 +17,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className="dark">
-      <body className="antialiased bg-quantum-void text-white min-h-screen">
-        {/* Quantum Background Effect */}
+      <body className="antialiased bg-[#0a0f1c] text-white min-h-screen">
         <div className="quantum-bg" />
-        {/* Main Content */}
         <div className="relative z-10">
           <Providers>
             {children}
+            <SystemStatus />
+            <HelpCenter />
           </Providers>
         </div>
       </body>
