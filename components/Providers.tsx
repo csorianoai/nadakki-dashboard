@@ -1,13 +1,11 @@
-'use client';
-
-// components/Providers.tsx - Client-side providers wrapper
-import { TenantProvider } from '@/context/TenantContext';
-import { ReactNode } from 'react';
+"use client";
+import { ReactNode } from "react";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
-    <TenantProvider>
+    <ThemeProvider>
       {children}
-    </TenantProvider>
+    </ThemeProvider>
   );
 }
