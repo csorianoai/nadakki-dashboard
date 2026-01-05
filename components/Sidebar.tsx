@@ -9,10 +9,18 @@ import {
   Calculator, Truck, Brain, ChevronDown, ChevronRight,
   Sparkles, Building2, Menu, X, GraduationCap, Search,
   ShoppingCart, BookOpen, Heart, Zap, Cog, Server,
-  RefreshCw, Eye, PieChart
+  RefreshCw, Eye, PieChart, LucideIcon
 } from "lucide-react";
 
-const MENU_ITEMS = [
+interface MenuItem {
+  name: string;
+  href?: string;
+  icon: LucideIcon;
+  badge?: string;
+  children?: MenuItem[];
+}
+
+const MENU_ITEMS: MenuItem[] = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Marketing Hub", href: "/marketing", icon: Target, badge: "36" },
   { name: "AI Studio", href: "/ai-studio", icon: Sparkles },
@@ -116,8 +124,8 @@ export default function Sidebar() {
                   {expandedMenus.includes(item.name) && !collapsed && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden ml-4 mt-1 space-y-1">
                       {item.children.map((child) => (
-                        <Link key={child.href} href={child.href}>
-                          <div className={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all " + (isActive(child.href) ? "bg-purple-500/20 text-purple-400 border-l-2 border-purple-500" : "text-gray-500 hover:text-gray-300 hover:bg-white/5")}>
+                        <Link key={child.href} href={child.href || "#"}>
+                          <div className={"flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all " + (child.href && isActive(child.href) ? "bg-purple-500/20 text-purple-400 border-l-2 border-purple-500" : "text-gray-500 hover:text-gray-300 hover:bg-white/5")}>
                             <child.icon className="w-4 h-4" />
                             <span className="flex-1">{child.name}</span>
                             {child.badge && <span className="px-1.5 py-0.5 text-xs rounded bg-white/10 text-gray-400">{child.badge}</span>}
@@ -129,8 +137,8 @@ export default function Sidebar() {
                 </AnimatePresence>
               </>
             ) : (
-              <Link href={item.href}>
-                <div className={"flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all " + (isActive(item.href) ? "bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-white border border-purple-500/30" : "text-gray-400 hover:bg-white/5 hover:text-white")}>
+              <Link href={item.href || "#"}>
+                <div className={"flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all " + (item.href && isActive(item.href) ? "bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-white border border-purple-500/30" : "text-gray-400 hover:bg-white/5 hover:text-white")}>
                   <item.icon className="w-5 h-5 shrink-0" />
                   {!collapsed && (
                     <>
