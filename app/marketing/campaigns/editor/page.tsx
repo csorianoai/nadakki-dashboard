@@ -301,9 +301,9 @@ export default function InAppEditorPage() {
                 <label className="text-xs text-gray-400 block mb-1">Alignment</label>
                 <div className="flex gap-1">
                   {[
-                    { value: "left", icon: AlignLeft },
-                    { value: "center", icon: AlignCenter },
-                    { value: "right", icon: AlignRight },
+                    { value: "left" as const, icon: AlignLeft },
+                    { value: "center" as const, icon: AlignCenter },
+                    { value: "right" as const, icon: AlignRight },
                   ].map(align => (
                     <button
                       key={align.value}
@@ -374,4 +374,5 @@ export default function InAppEditorPage() {
     </div>
   );
 }
+
 
