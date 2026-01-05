@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -53,7 +53,7 @@ const CONVERSION_EVENTS = [
   { id: "review", name: "Left a Review", icon: "⭐" },
 ];
 
-export default function NewCampaignPage() {
+function CampaignWizardContent() {
   const searchParams = useSearchParams();
   const campaignType = searchParams.get("type") || "email";
   const typeConfig = CAMPAIGN_TYPES[campaignType] || CAMPAIGN_TYPES.email;
@@ -66,22 +66,17 @@ export default function NewCampaignPage() {
     description: "",
     type: campaignType,
     tags: [] as string[],
-    // Step 1: Compose
     variants: [{ id: "v1", name: "Variant 1", content: "" }],
     selectedTemplate: "",
-    // Step 2: Schedule
     scheduleType: "immediate" as "immediate" | "scheduled" | "action-based" | "recurring",
     scheduledDate: "",
     scheduledTime: "",
     timezone: "America/New_York",
     recurringFrequency: "daily",
-    // Step 3: Target
     targetSegments: [] as string[],
     excludeSegments: [] as string[],
-    // Step 4: Conversions
     conversionEvents: [] as string[],
     conversionWindow: 7,
-    // Step 5: Review (computed)
   });
 
   const [newTag, setNewTag] = useState("");
@@ -132,7 +127,6 @@ export default function NewCampaignPage() {
     setSaving(true);
     await new Promise(r => setTimeout(r, 1000));
     setSaving(false);
-    // Would save to API here
   };
 
   const launchCampaign = async () => {
@@ -146,7 +140,7 @@ export default function NewCampaignPage() {
       case 1: return campaign.name.length > 0;
       case 2: return campaign.scheduleType === "immediate" || campaign.scheduledDate;
       case 3: return campaign.targetSegments.length > 0;
-      case 4: return true; // Optional
+      case 4: return true;
       case 5: return true;
       default: return true;
     }
@@ -172,32 +166,19 @@ export default function NewCampaignPage() {
               <TypeIcon className="w-5 h-5" style={{ color: typeConfig.color }} />
             </div>
             <div>
-              <input
-                type="text"
-                value={campaign.name}
-                onChange={(e) => updateCampaign("name", e.target.value)}
-                placeholder="Campaign Name"
-                className="text-lg font-bold bg-transparent border-none text-white focus:outline-none w-64"
-              />
+              <input type="text" value={campaign.name} onChange={(e) => updateCampaign("name", e.target.value)}
+                placeholder="Campaign Name" className="text-lg font-bold bg-transparent border-none text-white focus:outline-none w-64" />
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">{typeConfig.label}</span>
                 {campaign.tags.map(tag => (
                   <span key={tag} className="px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded text-xs flex items-center gap-1">
-                    {tag}
-                    <button onClick={() => removeTag(tag)}><X className="w-2 h-2" /></button>
+                    {tag}<button onClick={() => removeTag(tag)}><X className="w-2 h-2" /></button>
                   </span>
                 ))}
                 {showTagInput ? (
-                  <input
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addTag()}
-                    onBlur={() => { addTag(); setShowTagInput(false); }}
-                    placeholder="Tag name"
-                    autoFocus
-                    className="px-2 py-0.5 bg-white/10 rounded text-xs text-white w-20 focus:outline-none"
-                  />
+                  <input type="text" value={newTag} onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addTag()} onBlur={() => { addTag(); setShowTagInput(false); }}
+                    placeholder="Tag" autoFocus className="px-2 py-0.5 bg-white/10 rounded text-xs text-white w-20 focus:outline-none" />
                 ) : (
                   <button onClick={() => setShowTagInput(true)} className="flex items-center gap-1 text-xs text-gray-500 hover:text-purple-400">
                     <Tag className="w-3 h-3" /> Tags
@@ -209,8 +190,7 @@ export default function NewCampaignPage() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={saveDraft} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save as Draft
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save as Draft
           </button>
         </div>
       </div>
@@ -220,28 +200,17 @@ export default function NewCampaignPage() {
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {STEPS.map((step, i) => {
-              const StepIcon = step.icon;
               const isCompleted = currentStep > step.id;
               const isCurrent = currentStep === step.id;
               return (
                 <div key={step.id} className="flex items-center">
-                  <button
-                    onClick={() => setCurrentStep(step.id)}
-                    className={`flex flex-col items-center gap-2 ${isCurrent ? "opacity-100" : "opacity-60 hover:opacity-80"}`}
-                  >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                      isCompleted ? "bg-green-500" : isCurrent ? "bg-purple-500" : "bg-white/10"
-                    }`}>
-                      {isCompleted ? <Check className="w-5 h-5 text-white" /> : 
-                       <span className="text-white font-bold">{step.id}</span>}
+                  <button onClick={() => setCurrentStep(step.id)} className={`flex flex-col items-center gap-2 ${isCurrent ? "opacity-100" : "opacity-60 hover:opacity-80"}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isCompleted ? "bg-green-500" : isCurrent ? "bg-purple-500" : "bg-white/10"}`}>
+                      {isCompleted ? <Check className="w-5 h-5 text-white" /> : <span className="text-white font-bold">{step.id}</span>}
                     </div>
-                    <span className={`text-sm font-medium ${isCurrent ? "text-white" : "text-gray-400"}`}>
-                      {step.label}
-                    </span>
+                    <span className={`text-sm font-medium ${isCurrent ? "text-white" : "text-gray-400"}`}>{step.label}</span>
                   </button>
-                  {i < STEPS.length - 1 && (
-                    <div className={`w-24 h-0.5 mx-4 ${isCompleted ? "bg-green-500" : "bg-white/10"}`} />
-                  )}
+                  {i < STEPS.length - 1 && <div className={`w-24 h-0.5 mx-4 ${isCompleted ? "bg-green-500" : "bg-white/10"}`} />}
                 </div>
               );
             })}
@@ -252,7 +221,6 @@ export default function NewCampaignPage() {
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
-          {/* Step 1: Compose */}
           {currentStep === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6 mb-6">
@@ -263,75 +231,44 @@ export default function NewCampaignPage() {
                     <input type="text" value={campaign.name} onChange={(e) => updateCampaign("name", e.target.value)}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" placeholder="e.g., Welcome Series" />
                   </div>
-                  <div>
-                    <button className="text-purple-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add description</button>
-                  </div>
+                  <button className="text-purple-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add description</button>
                   <div>
                     <label className="text-sm text-gray-400 block mb-2">Campaign ID</label>
                     <div className="flex items-center gap-2">
                       <input type="text" value={generateCampaignId()} readOnly className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 font-mono text-sm" />
-                      <button className="px-4 py-3 bg-purple-500 hover:bg-purple-600 rounded-xl text-white flex items-center gap-2">
-                        <Copy className="w-4 h-4" /> Copy
-                      </button>
+                      <button className="px-4 py-3 bg-purple-500 hover:bg-purple-600 rounded-xl text-white flex items-center gap-2"><Copy className="w-4 h-4" /> Copy</button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Use this ID to trigger the campaign via API</p>
                   </div>
                 </div>
               </GlassCard>
-
               <GlassCard className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-white">Message Composer</h2>
-                  <button className="text-purple-400 text-sm">Manage Content</button>
-                </div>
+                <h2 className="text-xl font-bold text-white mb-4">Message Composer</h2>
                 <div className="mb-4">
                   <label className="text-sm text-gray-400 block mb-2">Variants</label>
                   <div className="flex items-center gap-2">
-                    {campaign.variants.map((variant, i) => (
-                      <button key={variant.id}
-                        className={`px-4 py-2 rounded-lg border ${i === 0 ? "border-purple-500 bg-purple-500/20 text-white" : "border-white/10 text-gray-400"}`}>
-                        {variant.name}
-                      </button>
+                    {campaign.variants.map((v, i) => (
+                      <button key={v.id} className={`px-4 py-2 rounded-lg border ${i === 0 ? "border-purple-500 bg-purple-500/20 text-white" : "border-white/10 text-gray-400"}`}>{v.name}</button>
                     ))}
-                    <button onClick={addVariant} className="p-2 border border-dashed border-white/20 rounded-lg text-gray-400 hover:text-white hover:border-white/40">
-                      <Plus className="w-5 h-5" />
-                    </button>
+                    <button onClick={addVariant} className="p-2 border border-dashed border-white/20 rounded-lg text-gray-400 hover:text-white"><Plus className="w-5 h-5" /></button>
                   </div>
                 </div>
-                <div>
-                  <label className="text-sm text-gray-400 block mb-2">Compose {typeConfig.label}</label>
-                  <div className="flex items-center gap-4 mb-4">
-                    <button className="p-2 border-2 border-purple-500 rounded-lg"><Smartphone className="w-5 h-5 text-purple-400" /></button>
-                    <button className="p-2 border border-white/10 rounded-lg text-gray-400 hover:text-white"><Smartphone className="w-5 h-5" style={{ transform: "rotate(90deg)" }} /></button>
-                    <button className="p-2 border border-white/10 rounded-lg text-gray-400 hover:text-white"><Globe className="w-5 h-5" /></button>
+                <div className="flex gap-6">
+                  <div className="w-48 space-y-2">
+                    {MESSAGE_TEMPLATES.map(t => (
+                      <button key={t.id} onClick={() => updateCampaign("selectedTemplate", t.id)}
+                        className={`w-full p-3 text-left rounded-lg border ${campaign.selectedTemplate === t.id ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"}`}>
+                        <div className="text-sm text-white font-medium">{t.name}</div>
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex gap-6">
-                    <div className="w-48 space-y-2">
-                      {MESSAGE_TEMPLATES.map(template => (
-                        <button key={template.id}
-                          onClick={() => updateCampaign("selectedTemplate", template.id)}
-                          className={`w-full p-3 text-left rounded-lg border transition-all ${
-                            campaign.selectedTemplate === template.id ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"
-                          }`}>
-                          <div className="text-sm text-white font-medium">{template.name}</div>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex-1 flex justify-center">
-                      <div className="w-72 h-[500px] bg-gray-900 rounded-3xl border-4 border-gray-700 p-2 overflow-hidden">
-                        <div className="w-full h-full bg-white rounded-2xl flex items-center justify-center">
-                          <div className="text-center p-6">
-                            <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                              <TypeIcon className="w-8 h-8 text-purple-500" />
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-800 mb-2">Preview</h3>
-                            <p className="text-sm text-gray-500">
-                              {MESSAGE_TEMPLATES.find(t => t.id === campaign.selectedTemplate)?.preview || "Select a template to preview"}
-                            </p>
-                            <button className="mt-4 px-6 py-2 bg-purple-500 text-white rounded-lg text-sm">
-                              Action Button
-                            </button>
-                          </div>
+                  <div className="flex-1 flex justify-center">
+                    <div className="w-72 h-[400px] bg-gray-900 rounded-3xl border-4 border-gray-700 p-2">
+                      <div className="w-full h-full bg-white rounded-2xl flex items-center justify-center">
+                        <div className="text-center p-6">
+                          <TypeIcon className="w-12 h-12 text-purple-500 mx-auto mb-4" />
+                          <h3 className="text-lg font-bold text-gray-800 mb-2">Preview</h3>
+                          <p className="text-sm text-gray-500">{MESSAGE_TEMPLATES.find(t => t.id === campaign.selectedTemplate)?.preview || "Select a template"}</p>
+                          <button className="mt-4 px-6 py-2 bg-purple-500 text-white rounded-lg text-sm">Action</button>
                         </div>
                       </div>
                     </div>
@@ -340,190 +277,106 @@ export default function NewCampaignPage() {
               </GlassCard>
             </motion.div>
           )}
-
-          {/* Step 2: Schedule */}
           {currentStep === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6">
                 <h2 className="text-xl font-bold text-white mb-6">Schedule Delivery</h2>
                 <div className="space-y-4">
                   {[
-                    { id: "immediate", label: "Send Immediately", desc: "Campaign will be sent as soon as it's launched", icon: Zap },
-                    { id: "scheduled", label: "Schedule for Later", desc: "Choose a specific date and time", icon: Calendar },
-                    { id: "action-based", label: "Action-Based", desc: "Trigger when user performs an action", icon: Target },
-                    { id: "recurring", label: "Recurring", desc: "Send on a recurring schedule", icon: Clock },
-                  ].map(option => {
-                    const OptionIcon = option.icon;
-                    return (
-                      <button key={option.id}
-                        onClick={() => updateCampaign("scheduleType", option.id)}
-                        className={`w-full p-4 text-left rounded-xl border transition-all flex items-start gap-4 ${
-                          campaign.scheduleType === option.id ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"
-                        }`}>
-                        <div className={`p-3 rounded-lg ${campaign.scheduleType === option.id ? "bg-purple-500" : "bg-white/10"}`}>
-                          <OptionIcon className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <div className="text-white font-medium">{option.label}</div>
-                          <div className="text-sm text-gray-400">{option.desc}</div>
-                        </div>
-                        <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                          campaign.scheduleType === option.id ? "border-purple-500 bg-purple-500" : "border-white/20"
-                        }`}>
-                          {campaign.scheduleType === option.id && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                      </button>
-                    );
-                  })}
+                    { id: "immediate", label: "Send Immediately", desc: "Send as soon as launched", icon: Zap },
+                    { id: "scheduled", label: "Schedule for Later", desc: "Choose date and time", icon: Calendar },
+                    { id: "action-based", label: "Action-Based", desc: "Trigger on user action", icon: Target },
+                    { id: "recurring", label: "Recurring", desc: "Send on schedule", icon: Clock },
+                  ].map(o => (
+                    <button key={o.id} onClick={() => updateCampaign("scheduleType", o.id)}
+                      className={`w-full p-4 text-left rounded-xl border flex items-start gap-4 ${campaign.scheduleType === o.id ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"}`}>
+                      <div className={`p-3 rounded-lg ${campaign.scheduleType === o.id ? "bg-purple-500" : "bg-white/10"}`}><o.icon className="w-5 h-5 text-white" /></div>
+                      <div><div className="text-white font-medium">{o.label}</div><div className="text-sm text-gray-400">{o.desc}</div></div>
+                      <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${campaign.scheduleType === o.id ? "border-purple-500 bg-purple-500" : "border-white/20"}`}>
+                        {campaign.scheduleType === o.id && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                    </button>
+                  ))}
                 </div>
                 {campaign.scheduleType === "scheduled" && (
                   <div className="mt-6 grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm text-gray-400 block mb-2">Date</label>
-                      <input type="date" value={campaign.scheduledDate} onChange={(e) => updateCampaign("scheduledDate", e.target.value)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" />
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-400 block mb-2">Time</label>
-                      <input type="time" value={campaign.scheduledTime} onChange={(e) => updateCampaign("scheduledTime", e.target.value)}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" />
-                    </div>
+                    <div><label className="text-sm text-gray-400 block mb-2">Date</label><input type="date" value={campaign.scheduledDate} onChange={(e) => updateCampaign("scheduledDate", e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" /></div>
+                    <div><label className="text-sm text-gray-400 block mb-2">Time</label><input type="time" value={campaign.scheduledTime} onChange={(e) => updateCampaign("scheduledTime", e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" /></div>
                   </div>
                 )}
               </GlassCard>
             </motion.div>
           )}
-
-          {/* Step 3: Target */}
           {currentStep === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6">
                 <h2 className="text-xl font-bold text-white mb-2">Target Audiences</h2>
-                <p className="text-gray-400 mb-6">Select one or more segments to target with this campaign</p>
+                <p className="text-gray-400 mb-6">Select segments to target</p>
                 <div className="grid grid-cols-2 gap-4">
-                  {SEGMENTS.map(segment => (
-                    <button key={segment.id}
-                      onClick={() => toggleSegment(segment.id)}
-                      className={`p-4 text-left rounded-xl border transition-all ${
-                        campaign.targetSegments.includes(segment.id) ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"
-                      }`}>
+                  {SEGMENTS.map(s => (
+                    <button key={s.id} onClick={() => toggleSegment(s.id)}
+                      className={`p-4 text-left rounded-xl border ${campaign.targetSegments.includes(s.id) ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"}`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-white font-medium">{segment.name}</span>
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                          campaign.targetSegments.includes(segment.id) ? "border-purple-500 bg-purple-500" : "border-white/20"
-                        }`}>
-                          {campaign.targetSegments.includes(segment.id) && <Check className="w-3 h-3 text-white" />}
+                        <span className="text-white font-medium">{s.name}</span>
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${campaign.targetSegments.includes(s.id) ? "border-purple-500 bg-purple-500" : "border-white/20"}`}>
+                          {campaign.targetSegments.includes(s.id) && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
-                      <div className="text-2xl font-bold text-white">{segment.count.toLocaleString()}</div>
+                      <div className="text-2xl font-bold text-white">{s.count.toLocaleString()}</div>
                       <div className="text-xs text-gray-500">users</div>
                     </button>
                   ))}
                 </div>
                 {campaign.targetSegments.length > 0 && (
-                  <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Estimated Reach</span>
-                      <span className="text-2xl font-bold text-white">{getEstimatedReach().toLocaleString()} users</span>
-                    </div>
+                  <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-between">
+                    <span className="text-gray-400">Estimated Reach</span>
+                    <span className="text-2xl font-bold text-white">{getEstimatedReach().toLocaleString()} users</span>
                   </div>
                 )}
               </GlassCard>
             </motion.div>
           )}
-
-          {/* Step 4: Conversions */}
           {currentStep === 4 && (
             <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6">
                 <h2 className="text-xl font-bold text-white mb-2">Assign Conversion Events</h2>
-                <p className="text-gray-400 mb-6">Track which actions users take after receiving this campaign (optional)</p>
+                <p className="text-gray-400 mb-6">Track actions after campaign (optional)</p>
                 <div className="space-y-3">
-                  {CONVERSION_EVENTS.map(event => (
-                    <button key={event.id}
-                      onClick={() => toggleConversion(event.id)}
-                      className={`w-full p-4 text-left rounded-xl border transition-all flex items-center gap-4 ${
-                        campaign.conversionEvents.includes(event.id) ? "border-green-500 bg-green-500/10" : "border-white/10 hover:border-white/20"
-                      }`}>
-                      <span className="text-2xl">{event.icon}</span>
-                      <span className="text-white font-medium flex-1">{event.name}</span>
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                        campaign.conversionEvents.includes(event.id) ? "border-green-500 bg-green-500" : "border-white/20"
-                      }`}>
-                        {campaign.conversionEvents.includes(event.id) && <Check className="w-3 h-3 text-white" />}
+                  {CONVERSION_EVENTS.map(e => (
+                    <button key={e.id} onClick={() => toggleConversion(e.id)}
+                      className={`w-full p-4 text-left rounded-xl border flex items-center gap-4 ${campaign.conversionEvents.includes(e.id) ? "border-green-500 bg-green-500/10" : "border-white/10 hover:border-white/20"}`}>
+                      <span className="text-2xl">{e.icon}</span>
+                      <span className="text-white font-medium flex-1">{e.name}</span>
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${campaign.conversionEvents.includes(e.id) ? "border-green-500 bg-green-500" : "border-white/20"}`}>
+                        {campaign.conversionEvents.includes(e.id) && <Check className="w-3 h-3 text-white" />}
                       </div>
                     </button>
                   ))}
                 </div>
                 <div className="mt-6">
                   <label className="text-sm text-gray-400 block mb-2">Conversion Window</label>
-                  <select value={campaign.conversionWindow} onChange={(e) => updateCampaign("conversionWindow", parseInt(e.target.value))}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white">
-                    <option value={1}>1 day</option>
-                    <option value={3}>3 days</option>
-                    <option value={7}>7 days</option>
-                    <option value={14}>14 days</option>
-                    <option value={30}>30 days</option>
+                  <select value={campaign.conversionWindow} onChange={(e) => updateCampaign("conversionWindow", parseInt(e.target.value))} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white">
+                    <option value={1}>1 day</option><option value={3}>3 days</option><option value={7}>7 days</option><option value={14}>14 days</option><option value={30}>30 days</option>
                   </select>
                 </div>
               </GlassCard>
             </motion.div>
           )}
-
-          {/* Step 5: Review */}
           {currentStep === 5 && (
             <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6 mb-6">
                 <h2 className="text-xl font-bold text-white mb-6">Review Campaign</h2>
-                <div className="space-y-6">
-                  <div className="flex items-start justify-between p-4 bg-white/5 rounded-xl">
-                    <div>
-                      <div className="text-sm text-gray-400 mb-1">Campaign Name</div>
-                      <div className="text-white font-medium">{campaign.name || "Untitled Campaign"}</div>
-                    </div>
-                    <button onClick={() => setCurrentStep(1)} className="text-purple-400 text-sm">Edit</button>
-                  </div>
-                  <div className="flex items-start justify-between p-4 bg-white/5 rounded-xl">
-                    <div>
-                      <div className="text-sm text-gray-400 mb-1">Campaign Type</div>
-                      <div className="flex items-center gap-2">
-                        <TypeIcon className="w-5 h-5" style={{ color: typeConfig.color }} />
-                        <span className="text-white">{typeConfig.label}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start justify-between p-4 bg-white/5 rounded-xl">
-                    <div>
-                      <div className="text-sm text-gray-400 mb-1">Schedule</div>
-                      <div className="text-white capitalize">{campaign.scheduleType.replace("-", " ")}</div>
-                      {campaign.scheduleType === "scheduled" && (
-                        <div className="text-sm text-gray-400">{campaign.scheduledDate} at {campaign.scheduledTime}</div>
-                      )}
-                    </div>
-                    <button onClick={() => setCurrentStep(2)} className="text-purple-400 text-sm">Edit</button>
-                  </div>
-                  <div className="flex items-start justify-between p-4 bg-white/5 rounded-xl">
-                    <div>
-                      <div className="text-sm text-gray-400 mb-1">Target Audience</div>
-                      <div className="text-white">{campaign.targetSegments.length} segments selected</div>
-                      <div className="text-2xl font-bold text-purple-400">{getEstimatedReach().toLocaleString()} users</div>
-                    </div>
-                    <button onClick={() => setCurrentStep(3)} className="text-purple-400 text-sm">Edit</button>
-                  </div>
-                  <div className="flex items-start justify-between p-4 bg-white/5 rounded-xl">
-                    <div>
-                      <div className="text-sm text-gray-400 mb-1">Conversion Tracking</div>
-                      <div className="text-white">{campaign.conversionEvents.length} events • {campaign.conversionWindow} day window</div>
-                    </div>
-                    <button onClick={() => setCurrentStep(4)} className="text-purple-400 text-sm">Edit</button>
-                  </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 rounded-xl flex justify-between"><div><div className="text-sm text-gray-400">Name</div><div className="text-white font-medium">{campaign.name || "Untitled"}</div></div><button onClick={() => setCurrentStep(1)} className="text-purple-400 text-sm">Edit</button></div>
+                  <div className="p-4 bg-white/5 rounded-xl flex justify-between"><div><div className="text-sm text-gray-400">Type</div><div className="flex items-center gap-2"><TypeIcon className="w-5 h-5" style={{ color: typeConfig.color }} /><span className="text-white">{typeConfig.label}</span></div></div></div>
+                  <div className="p-4 bg-white/5 rounded-xl flex justify-between"><div><div className="text-sm text-gray-400">Schedule</div><div className="text-white capitalize">{campaign.scheduleType.replace("-", " ")}</div></div><button onClick={() => setCurrentStep(2)} className="text-purple-400 text-sm">Edit</button></div>
+                  <div className="p-4 bg-white/5 rounded-xl flex justify-between"><div><div className="text-sm text-gray-400">Audience</div><div className="text-white">{campaign.targetSegments.length} segments</div><div className="text-2xl font-bold text-purple-400">{getEstimatedReach().toLocaleString()} users</div></div><button onClick={() => setCurrentStep(3)} className="text-purple-400 text-sm">Edit</button></div>
+                  <div className="p-4 bg-white/5 rounded-xl flex justify-between"><div><div className="text-sm text-gray-400">Conversions</div><div className="text-white">{campaign.conversionEvents.length} events • {campaign.conversionWindow} days</div></div><button onClick={() => setCurrentStep(4)} className="text-purple-400 text-sm">Edit</button></div>
                 </div>
               </GlassCard>
               <div className="flex justify-center">
-                <button onClick={launchCampaign} disabled={saving}
-                  className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 rounded-xl text-white font-bold text-lg disabled:opacity-50">
-                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
-                  {saving ? "Launching..." : "Launch Campaign"}
+                <button onClick={launchCampaign} disabled={saving} className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 rounded-xl text-white font-bold text-lg disabled:opacity-50">
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />} {saving ? "Launching..." : "Launch Campaign"}
                 </button>
               </div>
             </motion.div>
@@ -531,41 +384,39 @@ export default function NewCampaignPage() {
         </AnimatePresence>
       </div>
 
-      {/* Footer Navigation */}
+      {/* Footer */}
       <div className="fixed bottom-0 left-0 right-0 h-16 border-t border-white/10 bg-[#0d1117] px-4 flex items-center justify-between">
-        <button onClick={() => setCurrentStep(Math.max(1, currentStep - 1))} disabled={currentStep === 1}
-          className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white disabled:opacity-30">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-8">
-          {STEPS.map(step => (
-            <button key={step.id} onClick={() => setCurrentStep(step.id)}
-              className={`flex items-center gap-2 ${currentStep === step.id ? "text-white" : "text-gray-500"}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                currentStep > step.id ? "bg-green-500 text-white" : currentStep === step.id ? "bg-purple-500 text-white" : "bg-white/10"
-              }`}>
-                {currentStep > step.id ? <Check className="w-3 h-3" /> : step.id}
+        <button onClick={() => setCurrentStep(Math.max(1, currentStep - 1))} disabled={currentStep === 1} className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white disabled:opacity-30"><ChevronLeft className="w-5 h-5" /></button>
+        <div className="flex items-center gap-6">
+          {STEPS.map(s => (
+            <button key={s.id} onClick={() => setCurrentStep(s.id)} className={`flex items-center gap-2 ${currentStep === s.id ? "text-white" : "text-gray-500"}`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${currentStep > s.id ? "bg-green-500 text-white" : currentStep === s.id ? "bg-purple-500 text-white" : "bg-white/10"}`}>
+                {currentStep > s.id ? <Check className="w-3 h-3" /> : s.id}
               </div>
-              <span className="text-sm">{step.name}</span>
+              <span className="text-sm hidden md:block">{s.name}</span>
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/marketing/campaigns" className="px-4 py-2 text-gray-400 hover:text-white">
-            ← Back to Analytics
-          </Link>
           {currentStep < 5 ? (
-            <button onClick={() => setCurrentStep(currentStep + 1)} disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium disabled:opacity-50">
-              Next <ChevronRight className="w-4 h-4" />
-            </button>
+            <button onClick={() => setCurrentStep(currentStep + 1)} disabled={!canProceed()} className="flex items-center gap-2 px-6 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium disabled:opacity-50">Next <ChevronRight className="w-4 h-4" /></button>
           ) : (
-            <button onClick={saveDraft} className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium">
-              Save as Draft
-            </button>
+            <button onClick={saveDraft} className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium">Save Draft</button>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewCampaignPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a0f1c] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+      </div>
+    }>
+      <CampaignWizardContent />
+    </Suspense>
   );
 }
