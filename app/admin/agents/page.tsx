@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { Bot, Search, Zap, TrendingUp, CheckCircle, RefreshCw, Server } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
@@ -84,7 +85,7 @@ export default function AdminAgentsPage() {
           <div className="flex gap-2 overflow-x-auto">
             {cores.map(c => (
               <button key={c} onClick={() => setSelectedCore(c)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${selectedCore === c ? "bg-purple-500 text-white" : "bg-white/5 text-gray-400"}`}>
+                className={"px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap " + (selectedCore === c ? "bg-purple-500 text-white" : "bg-white/5 text-gray-400")}>
                 {c.charAt(0).toUpperCase() + c.slice(1)}
               </button>
             ))}
@@ -101,16 +102,18 @@ export default function AdminAgentsPage() {
         <div className="grid grid-cols-4 gap-3">
           {filteredAgents.map((agent, i) => (
             <motion.div key={agent.id + agent.core} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.01 }}>
-              <GlassCard className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center"><Bot className="w-5 h-5 text-purple-400" /></div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white text-sm truncate">{agent.name}</h3>
-                    <p className="text-xs text-gray-500">{agent.core} - {agent.category}</p>
+              <Link href={'/' + agent.core + '/' + agent.id}>
+                <GlassCard className="p-4 cursor-pointer group hover:bg-white/10 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center"><Bot className="w-5 h-5 text-purple-400" /></div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-white text-sm truncate group-hover:text-purple-400 transition-colors">{agent.name}</h3>
+                      <p className="text-xs text-gray-500">{agent.core} - {agent.category}</p>
+                    </div>
+                    <div className="w-2 h-2 rounded-full bg-green-500" />
                   </div>
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                </div>
-              </GlassCard>
+                </GlassCard>
+              </Link>
             </motion.div>
           ))}
         </div>
