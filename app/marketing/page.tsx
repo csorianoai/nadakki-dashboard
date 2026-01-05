@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
-  Megaphone, Bot, Target, BarChart3, FileText, Share2, Sparkles, ArrowRight,
-  Wand2, Users, Split, Brain, TrendingUp, GitBranch, Layers, Database,
-  Zap, Play
+  GitBranch, Sparkles, Database, Target, FlaskConical, TrendingUp,
+  Bot, Megaphone, FileText, Share2, BarChart3, Users, Zap, Globe,
+  Map, Trophy, UserPlus, ArrowRight, Play, Pause, RefreshCw
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
@@ -14,122 +14,306 @@ import StatusBadge from "@/components/ui/StatusBadge";
 
 const API_URL = "https://nadakki-ai-suite.onrender.com";
 
-const PHASE3_MODULES = [
-  { id: "journeys", name: "Journey Builder", desc: "Canvas visual drag & drop", href: "/marketing/journeys", icon: GitBranch, color: "#8b5cf6", badge: "NUEVO", featured: true },
-  { id: "templates", name: "Templates IA", desc: "Plantillas optimizadas por IA", href: "/marketing/templates", icon: Layers, color: "#ec4899", badge: "NUEVO", featured: true },
-  { id: "integrations", name: "Integraciones", desc: "CDP/CRM Enterprise", href: "/marketing/integrations", icon: Database, color: "#3b82f6", badge: "NUEVO", featured: true },
-  { id: "campaign-builder", name: "Campaign Builder", desc: "Crea campañas multicanal", href: "/marketing/campaigns", icon: Wand2, color: "#10b981", badge: "POPULAR" },
+// ═══════════════════════════════════════════════════════════════
+// FASE 1 - CORE MARKETING
+// ═══════════════════════════════════════════════════════════════
+const CORE_MODULES = [
+  { 
+    id: "campaigns", 
+    name: "Campaigns", 
+    desc: "Crea campañas multicanal con wizard de 5 pasos",
+    href: "/marketing/campaigns", 
+    icon: Megaphone, 
+    color: "#ec4899",
+    badge: "POPULAR",
+    features: ["Email", "SMS", "Push", "In-App", "WhatsApp"]
+  },
+  { 
+    id: "journeys", 
+    name: "Customer Journeys", 
+    desc: "Automatiza el ciclo de vida del cliente",
+    href: "/marketing/journeys", 
+    icon: GitBranch, 
+    color: "#8b5cf6",
+    badge: "NEW",
+    features: ["Visual Canvas", "Triggers", "Conditions"]
+  },
+  { 
+    id: "templates", 
+    name: "Templates IA", 
+    desc: "Plantillas optimizadas por inteligencia artificial",
+    href: "/marketing/templates", 
+    icon: Sparkles, 
+    color: "#f59e0b",
+    features: ["Onboarding", "Nurturing", "Retention"]
+  },
+  { 
+    id: "segments", 
+    name: "Segmentación Avanzada", 
+    desc: "Crea segmentos dinámicos con reglas complejas",
+    href: "/marketing/segments", 
+    icon: Target, 
+    color: "#22c55e",
+    features: ["RFM", "Behavioral", "Predictive"]
+  },
 ];
 
-const PHASE2_MODULES = [
-  { id: "segments", name: "Segmentación", desc: "Audiencias dinámicas", href: "/marketing/segments", icon: Users, color: "#22c55e" },
-  { id: "ab-testing", name: "A/B Testing", desc: "Experimentos controlados", href: "/marketing/ab-testing", icon: Split, color: "#f59e0b" },
-  { id: "predictive", name: "Métricas Predictivas", desc: "IA para decisiones", href: "/marketing/predictive", icon: Brain, color: "#8b5cf6" },
+// ═══════════════════════════════════════════════════════════════
+// FASE 2 - TESTING & ANALYTICS
+// ═══════════════════════════════════════════════════════════════
+const TESTING_MODULES = [
+  { 
+    id: "ab-testing", 
+    name: "A/B Testing", 
+    desc: "Experimenta y optimiza tus campañas",
+    href: "/marketing/ab-testing", 
+    icon: FlaskConical, 
+    color: "#06b6d4",
+    features: ["Variants", "Statistics", "Auto-winner"]
+  },
+  { 
+    id: "predictive", 
+    name: "Predictive Analytics", 
+    desc: "Métricas predictivas con machine learning",
+    href: "/marketing/predictive", 
+    icon: TrendingUp, 
+    color: "#8b5cf6",
+    features: ["Churn Risk", "LTV", "Next Action"]
+  },
+  { 
+    id: "attribution", 
+    name: "Attribution", 
+    desc: "Analiza el impacto de cada canal",
+    href: "/marketing/attribution", 
+    icon: Map, 
+    color: "#f97316",
+    features: ["Multi-touch", "First/Last Click", "Custom"]
+  },
+  { 
+    id: "analytics", 
+    name: "Analytics Dashboard", 
+    desc: "Métricas en tiempo real de todas las campañas",
+    href: "/marketing/analytics", 
+    icon: BarChart3, 
+    color: "#3b82f6",
+    features: ["Real-time", "Custom Reports", "Export"]
+  },
 ];
 
-const OTHER_MODULES = [
-  { id: "agents", name: "AI Agents", desc: "36 agentes de marketing", href: "/marketing/agents", icon: Bot, color: "#06b6d4" },
-  { id: "campaigns", name: "Campañas", desc: "Campañas activas", href: "/marketing/campaigns", icon: Megaphone, color: "#ec4899" },
-  { id: "content", name: "Contenido", desc: "Generación con IA", href: "/marketing/content", icon: FileText, color: "#f59e0b" },
-  { id: "social", name: "Social Media", desc: "Gestión de redes", href: "/marketing/social", icon: Share2, color: "#3b82f6" },
-  { id: "analytics", name: "Analytics", desc: "Métricas y reportes", href: "/marketing/analytics", icon: BarChart3, color: "#ef4444" },
+// ═══════════════════════════════════════════════════════════════
+// FASE 3 - CHANNELS & INTEGRATIONS
+// ═══════════════════════════════════════════════════════════════
+const CHANNEL_MODULES = [
+  { 
+    id: "agents", 
+    name: "AI Agents", 
+    desc: "Agentes inteligentes para automatización",
+    href: "/marketing/agents", 
+    icon: Bot, 
+    color: "#10b981",
+    badge: "AI",
+    features: ["Chatbots", "Email Agent", "Support"]
+  },
+  { 
+    id: "content", 
+    name: "Content Studio", 
+    desc: "Genera contenido con IA",
+    href: "/marketing/content", 
+    icon: FileText, 
+    color: "#6366f1",
+    features: ["AI Writer", "Images", "Templates"]
+  },
+  { 
+    id: "social", 
+    name: "Social Media", 
+    desc: "Gestiona tus redes sociales",
+    href: "/marketing/social", 
+    icon: Share2, 
+    color: "#0ea5e9",
+    features: ["Scheduler", "Analytics", "Inbox"]
+  },
+  { 
+    id: "integrations", 
+    name: "Integraciones", 
+    desc: "Conecta con tu stack de herramientas",
+    href: "/marketing/integrations", 
+    icon: Database, 
+    color: "#14b8a6",
+    features: ["CRM", "CDP", "Analytics"]
+  },
 ];
 
-export default function MarketingPage() {
-  const [stats, setStats] = useState({ agents: 36, campaigns: 12, openRate: 35, clickRate: 12 });
+// ═══════════════════════════════════════════════════════════════
+// FASE 4 - ADVANCED
+// ═══════════════════════════════════════════════════════════════
+const ADVANCED_MODULES = [
+  { 
+    id: "leads", 
+    name: "Lead Scoring", 
+    desc: "Califica y prioriza tus leads automáticamente",
+    href: "/marketing/leads", 
+    icon: UserPlus, 
+    color: "#84cc16",
+    features: ["Scoring Rules", "MQL/SQL", "Alerts"]
+  },
+  { 
+    id: "competitive", 
+    name: "Competitive Intel", 
+    desc: "Monitorea a tu competencia",
+    href: "/marketing/competitive", 
+    icon: Trophy, 
+    color: "#eab308",
+    features: ["Tracking", "Alerts", "Reports"]
+  },
+  { 
+    id: "command-center", 
+    name: "Command Center", 
+    desc: "Centro de control en tiempo real",
+    href: "/marketing/command-center", 
+    icon: Globe, 
+    color: "#ef4444",
+    features: ["Live Dashboard", "Alerts", "Actions"]
+  },
+];
+
+export default function MarketingHubPage() {
+  const [stats, setStats] = useState({ 
+    campaigns: 12, 
+    activeJourneys: 5, 
+    contacts: 125000, 
+    conversionRate: 3.2 
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch(API_URL + "/api/campaigns/stats/summary?tenant_id=credicefi")
+    // Fetch stats from API
+    fetch(`${API_URL}/api/campaigns/stats/summary?tenant_id=credicefi`)
       .then(r => r.json())
-      .then(d => setStats({ agents: 36, campaigns: d.summary?.total_campaigns || 12, openRate: d.summary?.open_rate || 35, clickRate: d.summary?.click_rate || 12 }))
+      .then(d => {
+        if (d.summary) {
+          setStats(prev => ({
+            ...prev,
+            campaigns: d.summary.total_campaigns || 12,
+          }));
+        }
+      })
       .catch(() => {});
   }, []);
+
+  const renderModuleCard = (m: any, i: number, delay: number = 0) => (
+    <motion.div 
+      key={m.id} 
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      transition={{ delay: delay + i * 0.05 }}
+    >
+      <Link href={m.href}>
+        <GlassCard className="p-5 cursor-pointer group h-full hover:border-purple-500/30 transition-all relative overflow-hidden">
+          {m.badge && (
+            <span className={`absolute top-3 right-3 px-2 py-0.5 text-xs font-bold rounded-full ${
+              m.badge === "NEW" ? "bg-green-500/20 text-green-400" :
+              m.badge === "AI" ? "bg-purple-500/20 text-purple-400" :
+              "bg-pink-500/20 text-pink-400"
+            }`}>
+              {m.badge}
+            </span>
+          )}
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl" style={{ backgroundColor: m.color + "20" }}>
+              <m.icon className="w-6 h-6" style={{ color: m.color }} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-white group-hover:text-purple-400 transition-colors">
+                {m.name}
+              </h3>
+              <p className="text-sm text-gray-400 mt-1">{m.desc}</p>
+              {m.features && (
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {m.features.slice(0, 3).map((f: string) => (
+                    <span key={f} className="px-2 py-0.5 text-xs bg-white/5 rounded-full text-gray-500">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+          </div>
+        </GlassCard>
+      </Link>
+    </motion.div>
+  );
 
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/">
-        <StatusBadge status="active" label="Marketing Hub" size="lg" />
+        <StatusBadge status="active" label="Marketing Suite" size="lg" />
       </NavigationBar>
 
+      {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-blue-500/20 border border-pink-500/30">
-            <Megaphone className="w-10 h-10 text-pink-400" />
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+            <Megaphone className="w-10 h-10 text-purple-400" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">Marketing Hub</h1>
-            <p className="text-gray-400 mt-1">Automatización de marketing con IA - Visual Studio Edition</p>
+            <h1 className="text-3xl font-bold text-white">Marketing Suite</h1>
+            <p className="text-gray-400">Automatización, campañas y analytics en un solo lugar</p>
           </div>
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard value={stats.agents.toString()} label="AI Agents" icon={<Bot className="w-6 h-6 text-cyan-400" />} color="#06b6d4" />
-        <StatCard value={stats.campaigns.toString()} label="Campañas" icon={<Megaphone className="w-6 h-6 text-pink-400" />} color="#ec4899" />
-        <StatCard value={stats.openRate + "%"} label="Open Rate" icon={<Target className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value={stats.clickRate + "%"} label="Click Rate" icon={<TrendingUp className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-6 mb-10">
+        <StatCard value={stats.campaigns.toString()} label="Campañas Activas" icon={<Megaphone className="w-6 h-6 text-pink-400" />} color="#ec4899" />
+        <StatCard value={stats.activeJourneys.toString()} label="Journeys Activos" icon={<GitBranch className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
+        <StatCard value={(stats.contacts / 1000).toFixed(0) + "K"} label="Contactos" icon={<Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
+        <StatCard value={stats.conversionRate + "%"} label="Conversión" icon={<TrendingUp className="w-6 h-6 text-green-400" />} color="#22c55e" />
       </div>
 
-      {/* Phase 3 Featured */}
-      <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Sparkles className="w-5 h-5 text-purple-400" /> Fase 3 - Visual Studio</h2>
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        {PHASE3_MODULES.map((m, i) => (
-          <motion.div key={m.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className={m.featured ? "col-span-1" : ""}>
-            <Link href={m.href}>
-              <GlassCard className={`p-5 cursor-pointer group h-full hover:border-purple-500/30 transition-all ${m.featured ? "border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent" : ""}`}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="p-3 rounded-xl" style={{ backgroundColor: m.color + "20" }}><m.icon className="w-6 h-6" style={{ color: m.color }} /></div>
-                  {m.badge && <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${m.badge === "NUEVO" ? "bg-purple-500/20 text-purple-400" : "bg-green-500/20 text-green-400"}`}>{m.badge}</span>}
-                </div>
-                <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">{m.name}</h3>
-                <p className="text-sm text-gray-400 mt-1">{m.desc}</p>
-                <div className="flex items-center justify-end mt-3 pt-3 border-t border-white/5"><ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" /></div>
-              </GlassCard>
-            </Link>
-          </motion.div>
-        ))}
+      {/* Core Marketing */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <Zap className="w-5 h-5 text-purple-400" />
+          <h2 className="text-xl font-bold text-white">Core Marketing</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          {CORE_MODULES.map((m, i) => renderModuleCard(m, i, 0.1))}
+        </div>
       </div>
 
-      {/* Phase 2 */}
-      <h2 className="text-xl font-bold text-white mb-4">Fase 2 - Segmentación & Testing</h2>
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        {PHASE2_MODULES.map((m, i) => (
-          <motion.div key={m.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 + i * 0.05 }}>
-            <Link href={m.href}>
-              <GlassCard className="p-6 cursor-pointer group h-full hover:border-green-500/30 transition-all">
-                <div className="p-3 rounded-xl mb-4 w-fit" style={{ backgroundColor: m.color + "20" }}><m.icon className="w-6 h-6" style={{ color: m.color }} /></div>
-                <h3 className="text-lg font-bold text-white group-hover:text-green-400 transition-colors">{m.name}</h3>
-                <p className="text-sm text-gray-400 mt-1">{m.desc}</p>
-                <div className="flex items-center justify-end mt-4 pt-4 border-t border-white/5"><ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-green-400 group-hover:translate-x-1 transition-all" /></div>
-              </GlassCard>
-            </Link>
-          </motion.div>
-        ))}
+      {/* Testing & Analytics */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <BarChart3 className="w-5 h-5 text-cyan-400" />
+          <h2 className="text-xl font-bold text-white">Testing & Analytics</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          {TESTING_MODULES.map((m, i) => renderModuleCard(m, i, 0.2))}
+        </div>
       </div>
 
-      {/* Other Modules */}
-      <h2 className="text-xl font-bold text-white mb-4">Todos los Módulos</h2>
-      <div className="grid grid-cols-5 gap-4">
-        {OTHER_MODULES.map((m, i) => (
-          <motion.div key={m.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 + i * 0.05 }}>
-            <Link href={m.href}>
-              <GlassCard className="p-4 cursor-pointer group h-full hover:border-pink-500/30 transition-all">
-                <div className="p-2 rounded-lg mb-3 w-fit" style={{ backgroundColor: m.color + "20" }}><m.icon className="w-5 h-5" style={{ color: m.color }} /></div>
-                <h3 className="text-sm font-bold text-white group-hover:text-pink-400 transition-colors">{m.name}</h3>
-                <p className="text-xs text-gray-500 mt-1">{m.desc}</p>
-              </GlassCard>
-            </Link>
-          </motion.div>
-        ))}
+      {/* Channels & Integrations */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <Share2 className="w-5 h-5 text-blue-400" />
+          <h2 className="text-xl font-bold text-white">Channels & Integrations</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          {CHANNEL_MODULES.map((m, i) => renderModuleCard(m, i, 0.3))}
+        </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-6 mt-8">
-        <GlassCard className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-lg bg-green-500/20"><Play className="w-5 h-5 text-green-400" /></div><div><div className="text-sm text-gray-400">Journeys Activos</div><div className="text-xl font-bold text-white">8</div></div></div></GlassCard>
-        <GlassCard className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-lg bg-blue-500/20"><Database className="w-5 h-5 text-blue-400" /></div><div><div className="text-sm text-gray-400">Integraciones</div><div className="text-xl font-bold text-white">6/8</div></div></div></GlassCard>
-        <GlassCard className="p-4"><div className="flex items-center gap-3"><div className="p-2 rounded-lg bg-purple-500/20"><Layers className="w-5 h-5 text-purple-400" /></div><div><div className="text-sm text-gray-400">Templates</div><div className="text-xl font-bold text-white">12</div></div></div></GlassCard>
+      {/* Advanced */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <Trophy className="w-5 h-5 text-yellow-400" />
+          <h2 className="text-xl font-bold text-white">Advanced</h2>
+        </div>
+        <div className="grid grid-cols-3 gap-6">
+          {ADVANCED_MODULES.map((m, i) => renderModuleCard(m, i, 0.4))}
+        </div>
       </div>
     </div>
   );
 }
-
