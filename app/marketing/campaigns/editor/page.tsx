@@ -17,7 +17,7 @@ interface ElementStyle {
   color?: string;
   fontSize?: number;
   fontWeight?: string;
-  textAlign?: string;
+  textAlign?: "left" | "center" | "right";
   padding?: number;
   borderRadius?: number;
   width?: string;
@@ -374,3 +374,4 @@ export default function InAppEditorPage() {
     </div>
   );
 }
+
