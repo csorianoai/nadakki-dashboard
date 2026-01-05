@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
@@ -48,15 +47,16 @@ export default function AgentDetailPage() {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-80">
-        <Header 
+        <Header
           title={agentId}
-          subtitle={`${coreConfig.displayName} - Agente de IA`}
+          subtitle={coreConfig.displayName + ' - Agente de IA'}
           coreColor={coreConfig.color}
         />
         <div className="p-8">
           <button onClick={() => router.back()} className="mb-6 text-gray-400 hover:text-white">
             Volver
           </button>
+
           <div className="grid grid-cols-2 gap-8">
             <div className="glass rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4" style={{color: coreConfig.color}}>Input</h2>
@@ -74,6 +74,7 @@ export default function AgentDetailPage() {
                 {loading ? 'Ejecutando...' : 'Ejecutar'}
               </button>
             </div>
+
             <div className="glass rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4 text-green-400">Resultado</h2>
               {error && <div className="bg-red-500/20 p-4 rounded-xl mb-4 text-red-400">{error}</div>}
