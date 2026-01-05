@@ -1,70 +1,52 @@
 "use client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { 
-  Package, Layers, Tag, Sparkles,
-  Bot, CheckCircle, TrendingUp, Settings
-} from "lucide-react";
+import Link from "next/link";
+import { Package, Bot, CheckCircle, Clock, Search, ArrowRight, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const PRODUCT_TYPES = [
-  { name: "Crédito Personal", products: 5, active: 4, color: "#22c55e" },
-  { name: "Crédito Empresarial", products: 3, active: 3, color: "#3b82f6" },
-  { name: "Tarjetas", products: 4, active: 3, color: "#8b5cf6" },
-  { name: "Inversiones", products: 6, active: 5, color: "#f59e0b" },
-];
+interface Agent { id: string; name: string; category: string; }
 
 export default function ProductosPage() {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  const fetchAgents = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("https://nadakki-ai-suite.onrender.com/api/catalog/productos/agents");
+      const data = await res.json();
+      if (data.agents) setAgents(data.agents);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchAgents(); }, []);
+  const filteredAgents = agents.filter(a => a.name.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/">
-        <StatusBadge status="active" label="Productos Core" size="lg" />
-      </NavigationBar>
-
+      <NavigationBar backHref="/"><button onClick={fetchAgents} className="p-2 hover:bg-white/10 rounded-lg"><RefreshCw className="w-5 h-5 text-gray-400" /></button><StatusBadge status="active" label="Productos" size="lg" /></NavigationBar>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/30">
-            <Package className="w-10 h-10 text-indigo-400" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-              Catálogo de Productos
-            </h1>
-            <p className="text-gray-400 mt-1">8 agentes de IA para gestión de productos</p>
-          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-pink-500/20 border border-fuchsia-500/30"><Package className="w-10 h-10 text-fuchsia-400" /></div>
+          <div><h1 className="text-4xl font-bold bg-gradient-to-r from-fuchsia-400 to-pink-400 bg-clip-text text-transparent">Productos</h1><p className="text-gray-400 mt-1">{agents.length} agentes de IA</p></div>
         </div>
       </motion.div>
-
       <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard value="8" label="Agentes" icon={<Bot className="w-6 h-6 text-indigo-400" />} color="#6366f1" />
-        <StatCard value="18" label="Productos" icon={<Package className="w-6 h-6 text-violet-400" />} color="#8b5cf6" />
-        <StatCard value="15" label="Activos" icon={<CheckCircle className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value="4" label="Categorías" icon={<Layers className="w-6 h-6 text-cyan-400" />} color="#06b6d4" />
+        <StatCard value={agents.length.toString()} label="Agentes" icon={<Bot className="w-6 h-6 text-fuchsia-400" />} color="#d946ef" />
+        <StatCard value="20" label="Productos" icon={<Package className="w-6 h-6 text-pink-400" />} color="#ec4899" />
+        <StatCard value="99%" label="Precision" icon={<CheckCircle className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="< 2s" label="Tiempo" icon={<Clock className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
-
-      <h2 className="text-xl font-bold text-white mb-4">Tipos de Producto</h2>
-      <div className="grid grid-cols-2 gap-6">
-        {PRODUCT_TYPES.map((type, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <GlassCard className="p-6 cursor-pointer group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-xl" style={{ backgroundColor: type.color + "20" }}>
-                  <Package className="w-6 h-6" style={{ color: type.color }} />
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">
-                  {type.active}/{type.products} activos
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors">{type.name}</h3>
-              <div className="mt-4 h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: (type.active/type.products)*100 + "%", backgroundColor: type.color }} />
-              </div>
-            </GlassCard>
-          </motion.div>
-        ))}
-      </div>
+      <GlassCard className="p-4 mb-6"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /><input type="text" placeholder="Buscar agentes..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500" /></div></GlassCard>
+      {loading ? (<div className="flex flex-col items-center py-20"><div className="w-12 h-12 border-4 border-fuchsia-500/30 border-t-fuchsia-500 rounded-full animate-spin mb-4" /><p className="text-gray-400">Cargando agentes...</p></div>) : agents.length > 0 ? (
+        <div className="grid grid-cols-3 gap-4">{filteredAgents.map((agent, i) => (<motion.div key={agent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}><Link href={'/productos/' + agent.id}><GlassCard className="p-5 cursor-pointer group h-full hover:bg-white/10 transition-all"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-pink-500/20 flex items-center justify-center"><Package className="w-6 h-6 text-fuchsia-400" /></div><div className="flex-1 min-w-0"><h3 className="font-bold text-white truncate group-hover:text-fuchsia-400 transition-colors">{agent.name}</h3><p className="text-xs text-gray-400">{agent.category}</p></div><ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-fuchsia-400 transition-all" /></div></GlassCard></Link></motion.div>))}</div>
+      ) : (<GlassCard className="p-8 text-center"><p className="text-gray-400">API en desarrollo - Agentes proximamente</p></GlassCard>)}
     </div>
   );
 }
