@@ -11,7 +11,6 @@ const TENANT_ID = "credicefi";
 
 interface Connection {
   id: string;
-  platform: string;
   name: string;
   icon: string;
   color: string;
@@ -21,17 +20,17 @@ interface Connection {
   lastSync?: string;
 }
 
-const PLATFORMS = [
-  { id: "facebook", name: "Facebook", icon: "📘", color: "#1877F2", oauthUrl: "https://www.facebook.com/v18.0/dialog/oauth" },
-  { id: "instagram", name: "Instagram", icon: "📸", color: "#E1306C", oauthUrl: "https://api.instagram.com/oauth/authorize" },
-  { id: "twitter", name: "Twitter/X", icon: "🐦", color: "#1DA1F2", oauthUrl: "https://twitter.com/i/oauth2/authorize" },
-  { id: "linkedin", name: "LinkedIn", icon: "💼", color: "#0A66C2", oauthUrl: "https://www.linkedin.com/oauth/v2/authorization" },
-  { id: "tiktok", name: "TikTok", icon: "🎵", color: "#000000", oauthUrl: "https://www.tiktok.com/auth/authorize" },
-  { id: "youtube", name: "YouTube", icon: "▶️", color: "#FF0000", oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth" },
+const PLATFORMS: Connection[] = [
+  { id: "facebook", name: "Facebook", icon: "📘", color: "#1877F2", connected: false },
+  { id: "instagram", name: "Instagram", icon: "📸", color: "#E1306C", connected: false },
+  { id: "twitter", name: "Twitter/X", icon: "🐦", color: "#1DA1F2", connected: false },
+  { id: "linkedin", name: "LinkedIn", icon: "💼", color: "#0A66C2", connected: false },
+  { id: "tiktok", name: "TikTok", icon: "🎵", color: "#000000", connected: false },
+  { id: "youtube", name: "YouTube", icon: "▶️", color: "#FF0000", connected: false },
 ];
 
 export default function SocialConnectionsPage() {
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const [connections, setConnections] = useState<Connection[]>(PLATFORMS);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
 
@@ -45,32 +44,33 @@ export default function SocialConnectionsPage() {
       const res = await fetch(API_URL + "/api/social/connections?tenant_id=" + TENANT_ID);
       if (res.ok) {
         const data = await res.json();
-        const merged = PLATFORMS.map(p => {
-          const conn = data.connections?.find((c: any) => c.platform === p.id);
+        const merged: Connection[] = PLATFORMS.map(p => {
+          const conn = data.connections?.find((c: { platform: string }) => c.platform === p.id);
           return {
-            ...p,
+            id: p.id,
+            name: p.name,
+            icon: p.icon,
+            color: p.color,
             connected: conn?.connected || false,
-            account: conn?.account || null,
-            followers: conn?.followers || null,
-            lastSync: conn?.lastSync || null
+            account: conn?.account || undefined,
+            followers: conn?.followers || undefined,
+            lastSync: conn?.lastSync || undefined
           };
         });
         setConnections(merged);
-      } else {
-        setConnections(PLATFORMS.map(p => ({ ...p, connected: false })));
       }
     } catch (err) {
-      setConnections(PLATFORMS.map(p => ({ ...p, connected: false })));
+      console.error("Error fetching connections:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleConnect = async (platform: string) => {
-    setConnecting(platform);
+  const handleConnect = async (platformId: string) => {
+    setConnecting(platformId);
     try {
       const redirectUri = encodeURIComponent(window.location.origin + "/social/connections");
-      const res = await fetch(API_URL + "/api/social/" + platform + "/auth-url?tenant_id=" + TENANT_ID + "&redirect_uri=" + redirectUri);
+      const res = await fetch(API_URL + "/api/social/" + platformId + "/auth-url?tenant_id=" + TENANT_ID + "&redirect_uri=" + redirectUri);
       if (res.ok) {
         const data = await res.json();
         if (data.auth_url) {
@@ -78,18 +78,20 @@ export default function SocialConnectionsPage() {
           return;
         }
       }
-      alert("Para conectar " + platform + ", necesitas configurar las credenciales OAuth en el backend.\n\nDocumentacion:\n- Facebook/Instagram: developers.facebook.com\n- Twitter: developer.twitter.com\n- LinkedIn: linkedin.com/developers");
+      const platform = PLATFORMS.find(p => p.id === platformId);
+      alert("Para conectar " + (platform?.name || platformId) + ", necesitas configurar las credenciales OAuth en el backend.\n\nDocumentacion:\n- Facebook/Instagram: developers.facebook.com\n- Twitter: developer.twitter.com\n- LinkedIn: linkedin.com/developers");
     } catch (err) {
-      alert("Error conectando con " + platform + ". Verifica la configuracion del backend.");
+      alert("Error conectando. Verifica la configuracion del backend.");
     } finally {
       setConnecting(null);
     }
   };
 
-  const handleDisconnect = async (platform: string) => {
-    if (!confirm("¿Desconectar " + platform + "?")) return;
+  const handleDisconnect = async (platformId: string) => {
+    const platform = PLATFORMS.find(p => p.id === platformId);
+    if (!confirm("Desconectar " + (platform?.name || platformId) + "?")) return;
     try {
-      await fetch(API_URL + "/api/social/" + platform + "/disconnect?tenant_id=" + TENANT_ID, { method: "POST" });
+      await fetch(API_URL + "/api/social/" + platformId + "/disconnect?tenant_id=" + TENANT_ID, { method: "POST" });
       fetchConnections();
     } catch (err) {
       console.error(err);
@@ -125,8 +127,7 @@ export default function SocialConnectionsPage() {
           <div>
             <p className="text-yellow-400 font-medium">Configuracion OAuth Requerida</p>
             <p className="text-sm text-gray-400 mt-1">
-              Para conectar redes sociales, necesitas configurar las credenciales OAuth en el backend. 
-              Cada plataforma requiere crear una app de desarrollador y configurar los Client ID y Secret.
+              Para conectar redes sociales, necesitas configurar las credenciales OAuth en el backend.
             </p>
           </div>
         </div>
@@ -152,11 +153,7 @@ export default function SocialConnectionsPage() {
                       {conn.connected && conn.account && <p className="text-sm text-gray-400">{conn.account}</p>}
                     </div>
                   </div>
-                  {conn.connected ? (
-                    <CheckCircle className="w-6 h-6 text-green-400" />
-                  ) : (
-                    <XCircle className="w-6 h-6 text-gray-500" />
-                  )}
+                  {conn.connected ? <CheckCircle className="w-6 h-6 text-green-400" /> : <XCircle className="w-6 h-6 text-gray-500" />}
                 </div>
 
                 {conn.connected ? (
@@ -165,12 +162,6 @@ export default function SocialConnectionsPage() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400">Seguidores</span>
                         <span className="text-white font-medium">{conn.followers}</span>
-                      </div>
-                    )}
-                    {conn.lastSync && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">Ultima sincronizacion</span>
-                        <span className="text-gray-500">{conn.lastSync}</span>
                       </div>
                     )}
                     <div className="flex gap-2 pt-3 border-t border-white/10">
@@ -185,10 +176,10 @@ export default function SocialConnectionsPage() {
                     </div>
                   </div>
                 ) : (
-                  <motion.button 
+                  <motion.button
                     onClick={() => handleConnect(conn.id)}
                     disabled={connecting === conn.id}
-                    whileHover={{ scale: 1.02 }} 
+                    whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-all"
                     style={{ backgroundColor: conn.color + "20", color: conn.color }}>
@@ -206,18 +197,18 @@ export default function SocialConnectionsPage() {
       )}
 
       <GlassCard className="p-6 mt-8">
-        <h3 className="text-lg font-bold text-white mb-4">Documentacion de Configuracion</h3>
+        <h3 className="text-lg font-bold text-white mb-4">Documentacion</h3>
         <div className="grid grid-cols-3 gap-4">
           <a href="https://developers.facebook.com/docs/facebook-login" target="_blank" rel="noopener noreferrer"
-            className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-sm text-gray-400 flex items-center gap-2 transition-colors">
-            <ExternalLink className="w-4 h-4" /> Facebook/Instagram OAuth
+            className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-sm text-gray-400 flex items-center gap-2">
+            <ExternalLink className="w-4 h-4" /> Facebook/Instagram
           </a>
           <a href="https://developer.twitter.com/en/docs/authentication" target="_blank" rel="noopener noreferrer"
-            className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-sm text-gray-400 flex items-center gap-2 transition-colors">
-            <ExternalLink className="w-4 h-4" /> Twitter OAuth 2.0
+            className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-sm text-gray-400 flex items-center gap-2">
+            <ExternalLink className="w-4 h-4" /> Twitter OAuth
           </a>
           <a href="https://learn.microsoft.com/en-us/linkedin/shared/authentication" target="_blank" rel="noopener noreferrer"
-            className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-sm text-gray-400 flex items-center gap-2 transition-colors">
+            className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-sm text-gray-400 flex items-center gap-2">
             <ExternalLink className="w-4 h-4" /> LinkedIn OAuth
           </a>
         </div>
