@@ -18,7 +18,7 @@ const PHASE3_MODULES = [
   { id: "journeys", name: "Journey Builder", desc: "Canvas visual drag & drop", href: "/marketing/journeys", icon: GitBranch, color: "#8b5cf6", badge: "NUEVO", featured: true },
   { id: "templates", name: "Templates IA", desc: "Plantillas optimizadas por IA", href: "/marketing/templates", icon: Layers, color: "#ec4899", badge: "NUEVO", featured: true },
   { id: "integrations", name: "Integraciones", desc: "CDP/CRM Enterprise", href: "/marketing/integrations", icon: Database, color: "#3b82f6", badge: "NUEVO", featured: true },
-  { id: "campaign-builder", name: "Campaign Builder", desc: "Crea campañas multicanal", href: "/marketing/campaign-builder", icon: Wand2, color: "#10b981", badge: "POPULAR" },
+  { id: "campaign-builder", name: "Campaign Builder", desc: "Crea campañas multicanal", href: "/marketing/campaigns", icon: Wand2, color: "#10b981", badge: "POPULAR" },
 ];
 
 const PHASE2_MODULES = [
@@ -132,3 +132,4 @@ export default function MarketingPage() {
     </div>
   );
 }
+
