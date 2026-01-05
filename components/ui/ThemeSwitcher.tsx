@@ -11,6 +11,7 @@ const THEME_ICONS: Record<ThemeId, string> = {
   navy: "🌊",
   gradient: "🎨",
   olive: "🌿",
+  arctic: "🧊",
 };
 
 export default function ThemeSwitcher() {
@@ -123,3 +124,4 @@ export default function ThemeSwitcher() {
     </div>
   );
 }
+

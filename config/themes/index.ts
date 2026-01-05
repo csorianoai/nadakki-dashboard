@@ -1,7 +1,7 @@
 // NADAKKI AI - Sistema de Temas Enterprise
 // Default: Graphite Pro (reduce fatiga visual, estándar enterprise)
 
-export type ThemeId = "graphite" | "quantum" | "navy" | "gradient" | "olive";
+export type ThemeId = "graphite" | "quantum" | "navy" | "gradient" | "olive" | "arctic";
 
 export interface ThemeColors {
   bgPrimary: string;
@@ -214,8 +214,45 @@ export const THEME_OLIVE: Theme = {
   }
 };
 
+
+// TEMA 6: ARCTIC TURQUOISE (Light Theme - Turquesa con Blanco)
+export const THEME_ARCTIC: Theme = {
+  id: "arctic",
+  name: "Arctic Turquoise",
+  description: "Tema claro con turquesa y blanco. Fresco, moderno y profesional para uso diurno.",
+  preview: "#f0fdfa",
+  category: "premium",
+  recommendedFor: ["day-use", "presentations", "fresh-look", "modern"],
+  colors: {
+    bgPrimary: "#f0fdfa",
+    bgSecondary: "#ffffff",
+    bgTertiary: "#e0f2fe",
+    bgCard: "rgba(6, 182, 212, 0.08)",
+    bgHover: "rgba(6, 182, 212, 0.12)",
+    bgActive: "rgba(6, 182, 212, 0.18)",
+    accentPrimary: "#0891b2",
+    accentSecondary: "#06b6d4",
+    accentGradientFrom: "#0891b2",
+    accentGradientTo: "#22d3ee",
+    textPrimary: "#0f172a",
+    textSecondary: "#475569",
+    textMuted: "#64748b",
+    borderPrimary: "rgba(6, 182, 212, 0.2)",
+    borderSecondary: "rgba(6, 182, 212, 0.1)",
+    success: "#10b981",
+    warning: "#f59e0b",
+    error: "#ef4444",
+    info: "#0ea5e9",
+    sidebarBg: "rgba(240, 253, 250, 0.98)",
+    sidebarBorder: "rgba(6, 182, 212, 0.2)",
+    sidebarHover: "rgba(6, 182, 212, 0.1)",
+    sidebarActive: "rgba(6, 182, 212, 0.2)",
+  }
+};
+
 // Export all themes
 export const THEMES: Record<ThemeId, Theme> = {
+  arctic: THEME_ARCTIC,
   graphite: THEME_GRAPHITE,
   quantum: THEME_QUANTUM,
   navy: THEME_NAVY,
@@ -227,4 +264,5 @@ export const THEMES: Record<ThemeId, Theme> = {
 export const DEFAULT_THEME: ThemeId = "graphite";
 
 // Theme order for UI display
-export const THEME_ORDER: ThemeId[] = ["graphite", "quantum", "navy", "gradient", "olive"];
+export const THEME_ORDER: ThemeId[] = ["graphite", "quantum", "navy", "gradient", "olive", "arctic"];
+
