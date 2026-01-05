@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className="dark">
-      <body className="antialiased bg-[#0a0f1c] text-white min-h-screen">
+      <body className="antialiased min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
         <div className="quantum-bg" />
         <div className="relative z-10">
           <Providers>

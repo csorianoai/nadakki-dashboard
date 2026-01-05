@@ -29,21 +29,21 @@ export default function HomePage() {
   const coresArray = Object.entries(CORES_CONFIG).slice(0, 6);
 
   return (
-    <div className="flex min-h-screen bg-[#0a0f1c]">
+    <div className="flex min-h-screen bg-[var(--bg-primary)]">
       <Sidebar />
       <main className="flex-1 ml-80">
         {/* Header */}
         <motion.header 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="sticky top-0 z-40 px-8 py-6 bg-[#0a0f1c]/80 backdrop-blur-xl border-b border-white/10"
+          className="sticky top-0 z-40 px-8 py-6 bg-[var(--bg-primary)]/80 backdrop-blur-xl border-b border-[var(--border-primary)]"
         >
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
                 Global Dashboard
               </h1>
-              <p className="text-gray-400 mt-1">NADAKKI AI Suite • Enterprise Multi-Tenant Platform</p>
+              <p className="text-[var(--text-secondary)] mt-1">NADAKKI AI Suite • Enterprise Multi-Tenant Platform</p>
             </div>
             <div className="flex items-center gap-3">
               <StatusBadge status="active" label="Sistema Operativo" size="lg" />
@@ -98,9 +98,9 @@ export default function HomePage() {
                             <h3 className="font-bold text-white truncate group-hover:text-purple-400 transition-colors">
                               {core.displayName}
                             </h3>
-                            <p className="text-sm text-gray-400 truncate">{core.description}</p>
+                            <p className="text-sm text-[var(--text-secondary)] truncate">{core.description}</p>
                             <div className="flex items-center gap-3 mt-2">
-                              <span className="text-xs px-2 py-1 rounded-full bg-white/5 text-gray-400">
+                              <span className="text-xs px-2 py-1 rounded-full bg-white/5 text-[var(--text-secondary)]">
                                 {core.agentCount} agentes
                               </span>
                               <StatusBadge status="active" size="sm" />
@@ -141,7 +141,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">{activity.agent}</p>
-                        <p className="text-xs text-gray-400 truncate">{activity.action}</p>
+                        <p className="text-xs text-[var(--text-secondary)] truncate">{activity.action}</p>
                       </div>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Clock className="w-3 h-3" />
@@ -184,3 +184,4 @@ export default function HomePage() {
     </div>
   );
 }
+
