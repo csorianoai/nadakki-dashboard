@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -26,7 +25,7 @@ export default function CorePage() {
   const params = useParams();
   const coreId = params.core as string;
   const coreConfig = CORES_CONFIG[coreId];
-  
+
   const [coreData, setCoreData] = useState<CoreData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +33,7 @@ export default function CorePage() {
     async function fetchCoreData() {
       setLoading(true);
       try {
-        const res = await fetch(`${API_URL}/api/catalog/${coreId}/agents`, {
+        const res = await fetch(API_URL + '/api/catalog/' + coreId + '/agents', {
           cache: 'no-store'
         });
         if (res.ok) {
@@ -70,18 +69,16 @@ export default function CorePage() {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-80">
-        <Header 
+        <Header
           title={coreConfig.displayName}
-          subtitle={`${agentCount} agentes - ${coreConfig.description}`}
+          subtitle={agentCount + ' agentes - ' + coreConfig.description}
           coreColor={coreConfig.color}
         />
         <div className="p-8">
-          {/* Boton volver */}
           <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors">
             <span>←</span> Volver al Dashboard
           </Link>
 
-          {/* Stats */}
           <div className="grid grid-cols-4 gap-6 mb-8">
             <div className="glass rounded-2xl p-6 text-center">
               <div className="text-4xl font-bold font-mono" style={{color: coreConfig.color}}>
@@ -102,11 +99,11 @@ export default function CorePage() {
               <div className="text-sm text-gray-400 mt-2">Estado</div>
             </div>
           </div>
-          
+
           <h2 className="text-xl font-bold mb-6" style={{color: coreConfig.color}}>
             Agentes Disponibles
           </h2>
-          
+
           {loading ? (
             <div className="grid grid-cols-2 gap-4">
               {[1,2,3,4,5,6].map((i) => (
@@ -140,6 +137,3 @@ export default function CorePage() {
     </div>
   );
 }
-// Updated: 2025-12-26 20:18:23
-
-
