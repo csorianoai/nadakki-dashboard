@@ -1,68 +1,52 @@
 "use client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { 
-  Truck, Package, MapPin, Clock,
-  Bot, CheckCircle, TrendingUp, Warehouse
-} from "lucide-react";
+import Link from "next/link";
+import { Truck, Bot, CheckCircle, Clock, Search, ArrowRight, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const LOGISTICS_MODULES = [
-  { name: "Inventario", desc: "Gestión de stock en tiempo real", agents: 6, icon: Warehouse, color: "#22c55e" },
-  { name: "Rutas", desc: "Optimización de rutas de entrega", agents: 5, icon: MapPin, color: "#3b82f6" },
-  { name: "Entregas", desc: "Tracking y gestión de entregas", agents: 6, icon: Truck, color: "#f59e0b" },
-  { name: "Proveedores", desc: "Gestión de cadena de suministro", agents: 6, icon: Package, color: "#8b5cf6" },
-];
+interface Agent { id: string; name: string; category: string; }
 
 export default function LogisticaPage() {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  const fetchAgents = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("https://nadakki-ai-suite.onrender.com/api/catalog/logistica/agents");
+      const data = await res.json();
+      if (data.agents) setAgents(data.agents);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchAgents(); }, []);
+  const filteredAgents = agents.filter(a => a.name.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/">
-        <StatusBadge status="active" label="Logística Core" size="lg" />
-      </NavigationBar>
-
+      <NavigationBar backHref="/"><button onClick={fetchAgents} className="p-2 hover:bg-white/10 rounded-lg"><RefreshCw className="w-5 h-5 text-gray-400" /></button><StatusBadge status="active" label="Logistica" size="lg" /></NavigationBar>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/30">
-            <Truck className="w-10 h-10 text-orange-400" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
-              Logística Inteligente
-            </h1>
-            <p className="text-gray-400 mt-1">23 agentes de IA para cadena de suministro</p>
-          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-500/30"><Truck className="w-10 h-10 text-amber-400" /></div>
+          <div><h1 className="text-4xl font-bold bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent">Logistica</h1><p className="text-gray-400 mt-1">{agents.length} agentes de IA</p></div>
         </div>
       </motion.div>
-
       <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard value="23" label="Agentes" icon={<Bot className="w-6 h-6 text-orange-400" />} color="#f97316" />
-        <StatCard value="4" label="Módulos" icon={<Package className="w-6 h-6 text-amber-400" />} color="#f59e0b" />
-        <StatCard value="98.5%" label="Entregas a tiempo" icon={<CheckCircle className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value="-15%" label="Costos" icon={<TrendingUp className="w-6 h-6 text-cyan-400" />} color="#06b6d4" />
+        <StatCard value={agents.length.toString()} label="Agentes" icon={<Bot className="w-6 h-6 text-amber-400" />} color="#f59e0b" />
+        <StatCard value="23" label="Rutas" icon={<Truck className="w-6 h-6 text-yellow-400" />} color="#eab308" />
+        <StatCard value="99%" label="Precision" icon={<CheckCircle className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="< 3s" label="Tiempo" icon={<Clock className="w-6 h-6 text-cyan-400" />} color="#06b6d4" />
       </div>
-
-      <h2 className="text-xl font-bold text-white mb-4">Módulos de Logística</h2>
-      <div className="grid grid-cols-2 gap-6">
-        {LOGISTICS_MODULES.map((module, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <GlassCard className="p-6 cursor-pointer group">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl" style={{ backgroundColor: module.color + "20" }}>
-                  <module.icon className="w-6 h-6" style={{ color: module.color }} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white group-hover:text-orange-400 transition-colors">{module.name}</h3>
-                  <p className="text-sm text-gray-400 mt-1">{module.desc}</p>
-                  <p className="text-xs text-gray-500 mt-3">{module.agents} agentes</p>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        ))}
-      </div>
+      <GlassCard className="p-4 mb-6"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /><input type="text" placeholder="Buscar agentes..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500" /></div></GlassCard>
+      {loading ? (<div className="flex flex-col items-center py-20"><div className="w-12 h-12 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mb-4" /><p className="text-gray-400">Cargando agentes...</p></div>) : (
+        <div className="grid grid-cols-3 gap-4">{filteredAgents.map((agent, i) => (<motion.div key={agent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}><Link href={'/logistica/' + agent.id}><GlassCard className="p-5 cursor-pointer group h-full hover:bg-white/10 transition-all"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center"><Truck className="w-6 h-6 text-amber-400" /></div><div className="flex-1 min-w-0"><h3 className="font-bold text-white truncate group-hover:text-amber-400 transition-colors">{agent.name}</h3><p className="text-xs text-gray-400">{agent.category}</p></div><ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-amber-400 transition-all" /></div></GlassCard></Link></motion.div>))}</div>
+      )}
     </div>
   );
 }

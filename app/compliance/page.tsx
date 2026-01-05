@@ -1,70 +1,52 @@
 "use client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { 
-  Shield, AlertTriangle, CheckCircle, FileSearch,
-  Bot, Clock, Eye, Lock
-} from "lucide-react";
+import Link from "next/link";
+import { Shield, Bot, CheckCircle, Clock, Search, ArrowRight, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const COMPLIANCE_AREAS = [
-  { name: "KYC/AML", desc: "Verificación de identidad y anti-lavado", agents: 2, status: "ok", color: "#22c55e" },
-  { name: "Regulatorio", desc: "Cumplimiento normativo", agents: 1, status: "ok", color: "#3b82f6" },
-  { name: "Riesgo Operacional", desc: "Evaluación de riesgos", agents: 1, status: "warning", color: "#f59e0b" },
-  { name: "Auditoría Interna", desc: "Controles internos", agents: 1, status: "ok", color: "#8b5cf6" },
-];
+interface Agent { id: string; name: string; category: string; }
 
 export default function CompliancePage() {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  const fetchAgents = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("https://nadakki-ai-suite.onrender.com/api/catalog/compliance/agents");
+      const data = await res.json();
+      if (data.agents) setAgents(data.agents);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchAgents(); }, []);
+  const filteredAgents = agents.filter(a => a.name.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/">
-        <StatusBadge status="active" label="Compliance Core" size="lg" />
-      </NavigationBar>
-
+      <NavigationBar backHref="/"><button onClick={fetchAgents} className="p-2 hover:bg-white/10 rounded-lg"><RefreshCw className="w-5 h-5 text-gray-400" /></button><StatusBadge status="active" label="Compliance" size="lg" /></NavigationBar>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30">
-            <Shield className="w-10 h-10 text-emerald-400" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-              Compliance & Risk
-            </h1>
-            <p className="text-gray-400 mt-1">5 agentes de IA para cumplimiento regulatorio</p>
-          </div>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30"><Shield className="w-10 h-10 text-red-400" /></div>
+          <div><h1 className="text-4xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">Compliance</h1><p className="text-gray-400 mt-1">{agents.length} agentes de IA</p></div>
         </div>
       </motion.div>
-
       <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard value="5" label="Agentes" icon={<Bot className="w-6 h-6 text-emerald-400" />} color="#10b981" />
-        <StatCard value="98%" label="Cumplimiento" icon={<CheckCircle className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value="24/7" label="Monitoreo" icon={<Eye className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-        <StatCard value="0" label="Alertas Críticas" icon={<AlertTriangle className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
+        <StatCard value={agents.length.toString()} label="Agentes" icon={<Bot className="w-6 h-6 text-red-400" />} color="#ef4444" />
+        <StatCard value="5" label="Regulaciones" icon={<Shield className="w-6 h-6 text-orange-400" />} color="#f97316" />
+        <StatCard value="99.5%" label="Precision" icon={<CheckCircle className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value="< 1s" label="Tiempo" icon={<Clock className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
-
-      <h2 className="text-xl font-bold text-white mb-4">Áreas de Compliance</h2>
-      <div className="grid grid-cols-2 gap-6">
-        {COMPLIANCE_AREAS.map((area, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <GlassCard className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl" style={{ backgroundColor: area.color + "20" }}>
-                  <Shield className="w-6 h-6" style={{ color: area.color }} />
-                </div>
-                <StatusBadge status={area.status === "ok" ? "active" : "warning"} label={area.status === "ok" ? "OK" : "Revisar"} size="sm" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">{area.name}</h3>
-              <p className="text-sm text-gray-400 mb-4">{area.desc}</p>
-              <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                <span className="text-xs text-gray-500">{area.agents} agentes activos</span>
-                <button className="text-xs text-emerald-400 hover:text-emerald-300">Ver detalles →</button>
-              </div>
-            </GlassCard>
-          </motion.div>
-        ))}
-      </div>
+      <GlassCard className="p-4 mb-6"><div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /><input type="text" placeholder="Buscar agentes..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500" /></div></GlassCard>
+      {loading ? (<div className="flex flex-col items-center py-20"><div className="w-12 h-12 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin mb-4" /><p className="text-gray-400">Cargando agentes...</p></div>) : (
+        <div className="grid grid-cols-3 gap-4">{filteredAgents.map((agent, i) => (<motion.div key={agent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}><Link href={'/compliance/' + agent.id}><GlassCard className="p-5 cursor-pointer group h-full hover:bg-white/10 transition-all"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center"><Shield className="w-6 h-6 text-red-400" /></div><div className="flex-1 min-w-0"><h3 className="font-bold text-white truncate group-hover:text-red-400 transition-colors">{agent.name}</h3><p className="text-xs text-gray-400">{agent.category}</p></div><ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-red-400 transition-all" /></div></GlassCard></Link></motion.div>))}</div>
+      )}
     </div>
   );
 }
