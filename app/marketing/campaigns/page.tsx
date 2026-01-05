@@ -1,105 +1,305 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
-  Mail, Plus, Search, Calendar, Users, 
-  TrendingUp, Play, Pause, Settings, Eye
+  Plus, Search, Filter, Columns, X, Mail, MessageSquare, Bell, 
+  Smartphone, Globe, Image, MoreVertical, Play, Pause, Trash2,
+  Copy, Edit, Calendar, Users, TrendingUp, ChevronDown, RefreshCw,
+  Loader2, HelpCircle, Megaphone
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const CAMPAIGNS = [
-  { id: 1, name: "Welcome Series", type: "Email Automation", status: "active", sent: 12450, opened: 8920, clicked: 2340, converted: 567 },
-  { id: 2, name: "Black Friday 2024", type: "Promotional", status: "completed", sent: 45000, opened: 28500, clicked: 8900, converted: 2340 },
-  { id: 3, name: "Newsletter Semanal", type: "Newsletter", status: "active", sent: 8900, opened: 5670, clicked: 1230, converted: 234 },
-  { id: 4, name: "Re-engagement Q1", type: "Win-back", status: "scheduled", sent: 0, opened: 0, clicked: 0, converted: 0 },
+const API_URL = "https://nadakki-ai-suite.onrender.com";
+const TENANT_ID = "credicefi";
+
+interface Campaign {
+  id: string;
+  name: string;
+  status: "draft" | "active" | "paused" | "completed";
+  type: "email" | "sms" | "push" | "in-app" | "banner" | "multichannel" | "whatsapp";
+  schedule: "one-time" | "action-based" | "recurring";
+  sent: number;
+  stopDate?: string;
+  createdAt: string;
+  tags: string[];
+}
+
+const CAMPAIGN_TYPES = {
+  email: { icon: Mail, color: "#3b82f6", label: "Email" },
+  sms: { icon: MessageSquare, color: "#22c55e", label: "SMS" },
+  push: { icon: Bell, color: "#f59e0b", label: "Push" },
+  "in-app": { icon: Smartphone, color: "#8b5cf6", label: "In-App Message" },
+  banner: { icon: Image, color: "#ec4899", label: "Banner" },
+  multichannel: { icon: Megaphone, color: "#06b6d4", label: "Multichannel" },
+  whatsapp: { icon: MessageSquare, color: "#25D366", label: "WhatsApp" },
+};
+
+const SAMPLE_CAMPAIGNS: Campaign[] = [
+  { id: "c1", name: "Referral Banner", status: "draft", type: "banner", schedule: "one-time", sent: 0, createdAt: "2024-01-15", tags: ["promo"] },
+  { id: "c2", name: "Email Drag & Drop Tour", status: "draft", type: "email", schedule: "action-based", sent: 0, createdAt: "2024-01-14", tags: ["onboarding"] },
+  { id: "c3", name: "Weekly Newsletter", status: "draft", type: "multichannel", schedule: "recurring", sent: 0, createdAt: "2024-01-13", tags: ["newsletter"] },
+  { id: "c4", name: "Onboarding IAM", status: "draft", type: "in-app", schedule: "action-based", sent: 0, createdAt: "2024-01-12", tags: ["onboarding"] },
+  { id: "c5", name: "Abandoned Onboarding", status: "draft", type: "whatsapp", schedule: "one-time", sent: 0, createdAt: "2024-01-11", tags: ["retention"] },
+  { id: "c6", name: "Black Friday Promo", status: "active", type: "email", schedule: "one-time", sent: 15420, createdAt: "2024-01-10", tags: ["promo", "sale"] },
+  { id: "c7", name: "Welcome Series", status: "active", type: "email", schedule: "action-based", sent: 8750, createdAt: "2024-01-09", tags: ["onboarding"] },
+  { id: "c8", name: "Push Notification Test", status: "paused", type: "push", schedule: "one-time", sent: 2340, createdAt: "2024-01-08", tags: ["test"] },
+  { id: "c9", name: "SMS Reminder", status: "completed", type: "sms", schedule: "recurring", sent: 45000, createdAt: "2024-01-07", tags: ["reminder"] },
 ];
 
-export default function MarketingCampaignsPage() {
+export default function CampaignsListPage() {
+  const [campaigns, setCampaigns] = useState<Campaign[]>(SAMPLE_CAMPAIGNS);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [tagFilter, setTagFilter] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
-  const filteredCampaigns = CAMPAIGNS.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredCampaigns = campaigns.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+    const matchesTag = !tagFilter || c.tags.includes(tagFilter);
+    return matchesSearch && matchesStatus && matchesTag;
+  });
+
+  const addFilter = (filter: string) => {
+    if (!activeFilters.includes(filter)) {
+      setActiveFilters([...activeFilters, filter]);
+    }
+  };
+
+  const removeFilter = (filter: string) => {
+    setActiveFilters(activeFilters.filter(f => f !== filter));
+    if (filter.startsWith("Status:")) setStatusFilter("all");
+    if (filter.startsWith("Tag:")) setTagFilter("");
+  };
+
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
+      draft: "bg-gray-500/20 text-gray-400",
+      active: "bg-green-500/20 text-green-400",
+      paused: "bg-yellow-500/20 text-yellow-400",
+      completed: "bg-blue-500/20 text-blue-400",
+    };
+    return styles[status] || styles.draft;
+  };
+
+  const allTags = [...new Set(campaigns.flatMap(c => c.tags))];
 
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/marketing">
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-          className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg font-medium text-white text-sm flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Nueva Campaña
-        </motion.button>
+        <StatusBadge status="active" label="Campaigns" size="lg" />
       </NavigationBar>
 
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-pink-500/20 border border-pink-500/30">
-            <Mail className="w-8 h-8 text-pink-400" />
-          </div>
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-start justify-between mb-2">
           <div>
-            <h1 className="text-3xl font-bold text-white">Campaign Management</h1>
-            <p className="text-gray-400">Automatización y gestión de campañas de marketing</p>
+            <h1 className="text-3xl font-bold text-white">Campaigns</h1>
+            <p className="text-gray-400 mt-1">
+              Campaigns let you send a single, targeted message through email, push, SMS, and more, 
+              ensuring timely communication with your audience
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400">
+              <HelpCircle className="w-5 h-5" />
+            </button>
+            <button className="px-4 py-2 border border-white/20 rounded-lg text-white hover:bg-white/5">
+              Take a tour
+            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowCreateMenu(!showCreateMenu)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium"
+              >
+                Create campaign <ChevronDown className="w-4 h-4" />
+              </button>
+              {showCreateMenu && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute right-0 top-full mt-2 w-64 bg-[#1a1f2e] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden"
+                >
+                  {Object.entries(CAMPAIGN_TYPES).map(([type, config]) => {
+                    const Icon = config.icon;
+                    return (
+                      <Link
+                        key={type}
+                        href={`/marketing/campaigns/new?type=${type}`}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
+                        onClick={() => setShowCreateMenu(false)}
+                      >
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: config.color + "20" }}>
+                          <Icon className="w-4 h-4" style={{ color: config.color }} />
+                        </div>
+                        <span className="text-white">{config.label}</span>
+                      </Link>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
-      </motion.div>
-
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard value={CAMPAIGNS.length} label="Campañas" icon={<Mail className="w-6 h-6 text-pink-400" />} color="#ec4899" />
-        <StatCard value={CAMPAIGNS.filter(c => c.status === "active").length} label="Activas" icon={<Play className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value="66.2K" label="Enviados" icon={<Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-        <StatCard value="3.1K" label="Conversiones" icon={<TrendingUp className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
 
-      <GlassCard className="p-4 mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input type="text" placeholder="Buscar campañas..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-pink-500/50" />
+      {/* Filters Bar */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-400">Status</label>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              if (e.target.value !== "all") addFilter(`Status: ${e.target.value}`);
+            }}
+            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+          >
+            <option value="all">All</option>
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+          </select>
         </div>
-      </GlassCard>
 
-      <div className="space-y-4">
-        {filteredCampaigns.map((campaign, i) => (
-          <motion.div key={campaign.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <GlassCard className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
-                    <Mail className="w-6 h-6 text-pink-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-white">{campaign.name}</h3>
-                    <p className="text-sm text-gray-400">{campaign.type}</p>
-                  </div>
-                </div>
-                <StatusBadge 
-                  status={campaign.status === "active" ? "active" : campaign.status === "completed" ? "inactive" : "warning"} 
-                  label={campaign.status === "active" ? "Activa" : campaign.status === "completed" ? "Completada" : "Programada"} 
-                />
-              </div>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="p-3 bg-white/5 rounded-lg text-center">
-                  <p className="text-xl font-bold text-white">{campaign.sent.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">Enviados</p>
-                </div>
-                <div className="p-3 bg-white/5 rounded-lg text-center">
-                  <p className="text-xl font-bold text-blue-400">{campaign.opened.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">Abiertos</p>
-                </div>
-                <div className="p-3 bg-white/5 rounded-lg text-center">
-                  <p className="text-xl font-bold text-yellow-400">{campaign.clicked.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">Clicks</p>
-                </div>
-                <div className="p-3 bg-white/5 rounded-lg text-center">
-                  <p className="text-xl font-bold text-green-400">{campaign.converted.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">Conversiones</p>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        ))}
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-400">Tag</label>
+          <select 
+            value={tagFilter} 
+            onChange={(e) => {
+              setTagFilter(e.target.value);
+              if (e.target.value) addFilter(`Tag: ${e.target.value}`);
+            }}
+            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+          >
+            <option value="">Select...</option>
+            {allTags.map(tag => (
+              <option key={tag} value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
+
+        <button 
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-lg text-white hover:bg-white/5"
+        >
+          <Filter className="w-4 h-4" /> Filters
+        </button>
+
+        <button className="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-lg text-white hover:bg-white/5">
+          <Columns className="w-4 h-4" /> Columns
+        </button>
+
+        <button 
+          onClick={() => { setStatusFilter("all"); setTagFilter(""); setActiveFilters([]); }}
+          className="text-purple-400 hover:text-purple-300 text-sm"
+        >
+          Reset filters
+        </button>
+
+        <div className="flex-1" />
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-64 pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 text-sm"
+          />
+        </div>
       </div>
+
+      {/* Active Filters */}
+      {activeFilters.length > 0 && (
+        <div className="flex items-center gap-2 mb-4">
+          {activeFilters.map(filter => (
+            <span key={filter} className="flex items-center gap-1 px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">
+              {filter}
+              <button onClick={() => removeFilter(filter)}>
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Results Count */}
+      <div className="mb-4">
+        <span className="text-white font-medium">{filteredCampaigns.length} Results</span>
+      </div>
+
+      {/* Table */}
+      <GlassCard className="overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-white/10">
+              <th className="text-left p-4 text-sm font-medium text-gray-400">
+                <input type="checkbox" className="rounded" />
+              </th>
+              <th className="text-left p-4 text-sm font-medium text-gray-400">Name</th>
+              <th className="text-left p-4 text-sm font-medium text-gray-400">Status</th>
+              <th className="text-left p-4 text-sm font-medium text-gray-400">Stop date</th>
+              <th className="text-left p-4 text-sm font-medium text-gray-400">Campaign type</th>
+              <th className="text-left p-4 text-sm font-medium text-gray-400">Entry schedule</th>
+              <th className="text-left p-4 text-sm font-medium text-gray-400">Sent</th>
+              <th className="text-left p-4 text-sm font-medium text-gray-400"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredCampaigns.map((campaign, i) => {
+              const typeConfig = CAMPAIGN_TYPES[campaign.type];
+              const Icon = typeConfig?.icon || Mail;
+              return (
+                <motion.tr 
+                  key={campaign.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                >
+                  <td className="p-4">
+                    <input type="checkbox" className="rounded" />
+                  </td>
+                  <td className="p-4">
+                    <Link href={`/marketing/campaigns/${campaign.id}`} className="text-white hover:text-purple-400 font-medium">
+                      {campaign.name}
+                    </Link>
+                  </td>
+                  <td className="p-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(campaign.status)}`}>
+                      {campaign.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-gray-400 text-sm">{campaign.stopDate || "-"}</td>
+                  <td className="p-4">
+                    <span className="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium w-fit" 
+                      style={{ backgroundColor: typeConfig?.color + "20", color: typeConfig?.color }}>
+                      <Icon className="w-3 h-3" />
+                      {typeConfig?.label}
+                    </span>
+                  </td>
+                  <td className="p-4 text-gray-400 text-sm capitalize">{campaign.schedule.replace("-", " ")}</td>
+                  <td className="p-4 text-white">{campaign.sent.toLocaleString()}</td>
+                  <td className="p-4">
+                    <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400">
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                  </td>
+                </motion.tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </GlassCard>
     </div>
   );
 }
