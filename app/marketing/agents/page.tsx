@@ -2,61 +2,46 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Bot, Search, Play, Zap, TrendingUp, CheckCircle, ArrowRight } from "lucide-react";
+import { Bot, Search, Zap, TrendingUp, CheckCircle, ArrowRight, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface Agent { id: string; name: string; category: string; }
-
-const CATEGORIES = ["Todos", "Leads", "Content", "Social", "Analytics", "Campaigns"];
-
-const MOCK_AGENTS: Agent[] = [
-  { id: "leadscoringia", name: "Lead Scoring IA", category: "Leads" },
-  { id: "leadqualifieria", name: "Lead Qualifier IA", category: "Leads" },
-  { id: "leadnurturingia", name: "Lead Nurturing IA", category: "Leads" },
-  { id: "contentgeneratoria", name: "Content Generator IA", category: "Content" },
-  { id: "copywriteria", name: "Copywriter IA", category: "Content" },
-  { id: "blogwriteria", name: "Blog Writer IA", category: "Content" },
-  { id: "seooptimizeria", name: "SEO Optimizer IA", category: "Content" },
-  { id: "socialpostgeneratoria", name: "Social Post Generator IA", category: "Social" },
-  { id: "hashtagoptimizeria", name: "Hashtag Optimizer IA", category: "Social" },
-  { id: "engagementanalyzeria", name: "Engagement Analyzer IA", category: "Social" },
-  { id: "sentimentanalyzeria", name: "Sentiment Analyzer IA", category: "Analytics" },
-  { id: "trenddetectoria", name: "Trend Detector IA", category: "Analytics" },
-  { id: "campaignoptimizeria", name: "Campaign Optimizer IA", category: "Campaigns" },
-  { id: "emailsequencemasteria", name: "Email Sequence Master IA", category: "Campaigns" },
-  { id: "abTestingIA", name: "A/B Testing IA", category: "Campaigns" },
-];
 
 export default function MarketingAgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Todos");
-  const [apiStatus, setApiStatus] = useState<"live" | "mock">("mock");
+
+  const fetchAgents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("https://nadakki-ai-suite.onrender.com/api/catalog/marketing/agents");
+      if (!res.ok) throw new Error("Error en la API");
+      const data = await res.json();
+      if (data.agents && Array.isArray(data.agents)) {
+        setAgents(data.agents);
+      } else {
+        throw new Error("Formato de respuesta invalido");
+      }
+    } catch (err) {
+      setError("Error cargando agentes. Intenta de nuevo.");
+      console.error("Error fetching agents:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAgents = async () => {
-      try {
-        const res = await fetch("https://nadakki-ai-suite.onrender.com/api/catalog/marketing/agents");
-        const data = await res.json();
-        if (data.agents && data.agents.length > 0) {
-          setAgents(data.agents);
-          setApiStatus("live");
-        } else {
-          setAgents(MOCK_AGENTS);
-        }
-      } catch {
-        setAgents(MOCK_AGENTS);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchAgents();
   }, []);
+
+  const categories = ["Todos", ...Array.from(new Set(agents.map(a => a.category)))];
 
   const filteredAgents = agents.filter(agent => {
     const matchSearch = agent.name.toLowerCase().includes(search.toLowerCase());
@@ -67,7 +52,7 @@ export default function MarketingAgentsPage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/marketing">
-        <StatusBadge status={apiStatus === "live" ? "active" : "warning"} label={apiStatus === "live" ? "API Live" : "Demo Mode"} size="lg" />
+        <StatusBadge status={agents.length > 0 ? "active" : "warning"} label={agents.length + " Agentes"} size="lg" />
       </NavigationBar>
 
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -96,10 +81,10 @@ export default function MarketingAgentsPage() {
             <input type="text" placeholder="Buscar agentes..." value={search} onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50" />
           </div>
-          <div className="flex items-center gap-2">
-            {CATEGORIES.map(cat => (
+          <div className="flex items-center gap-2 overflow-x-auto">
+            {categories.slice(0, 6).map(cat => (
               <button key={cat} onClick={() => setCategory(cat)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${category === cat ? "bg-cyan-500 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
+                className={`px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${category === cat ? "bg-cyan-500 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
                 {cat}
               </button>
             ))}
@@ -108,12 +93,22 @@ export default function MarketingAgentsPage() {
       </GlassCard>
 
       {loading ? (
-        <div className="flex justify-center py-12"><LoadingSpinner size="lg" text="Cargando agentes..." /></div>
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mb-4" />
+          <p className="text-gray-400">Cargando agentes desde API...</p>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={fetchAgents} className="px-4 py-2 bg-cyan-500 text-white rounded-lg flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" /> Reintentar
+          </button>
+        </div>
       ) : (
         <div className="grid grid-cols-3 gap-4">
           {filteredAgents.map((agent, i) => (
-            <motion.div key={agent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-              <Link href={`/marketing/agents/${agent.id}`}>
+            <motion.div key={agent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}>
+              <Link href={"/marketing/agents/" + agent.id}>
                 <GlassCard className="p-5 cursor-pointer group h-full">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
