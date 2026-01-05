@@ -1,5 +1,4 @@
 'use client';
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -27,9 +26,9 @@ export default function AgentCard({
 }: AgentCardProps) {
   const pathname = usePathname();
   const coreId = pathname?.split('/')[1] || 'marketing';
-  
+
   return (
-    <Link href={`/${coreId}/${id}`}>
+    <Link href={'/' + coreId + '/' + id}>
       <div
         className={cn(
           'glass rounded-xl p-4 cursor-pointer transition-all duration-300',
@@ -40,10 +39,10 @@ export default function AgentCard({
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className={cn(
                 'w-3 h-3 rounded-full',
-                status === 'active' ? 'bg-green-400 animate-pulse' : 
+                status === 'active' ? 'bg-green-400 animate-pulse' :
                 status === 'error' ? 'bg-red-400' : 'bg-gray-500'
               )}
             />
@@ -60,18 +59,18 @@ export default function AgentCard({
 
         <div className="flex items-center justify-between">
           {category && (
-            <span 
+            <span
               className="text-xs px-2 py-1 rounded-full bg-white/10"
               style={{ color: coreColor }}
             >
               {category}
             </span>
           )}
-          <span 
+          <span
             className="text-xs opacity-0 group-hover:opacity-100 transition-opacity font-medium"
             style={{ color: coreColor }}
           >
-            Ejecutar →
+            Ejecutar
           </span>
         </div>
       </div>
