@@ -4,9 +4,13 @@ import { motion } from "framer-motion";
 import { 
   Brain, TrendingUp, TrendingDown, Users, Target, Zap,
   AlertTriangle, CheckCircle, Clock, RefreshCw, Loader2,
-  BarChart3, PieChart, Activity, DollarSign, ArrowUp, ArrowDown,
-  Calendar, Filter, Download, Sparkles
+  BarChart3, Activity, DollarSign, ArrowUp, ArrowDown,
+  Download, Sparkles
 } from "lucide-react";
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, Area, ComposedChart, Legend
+} from "recharts";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
@@ -14,9 +18,6 @@ import StatusBadge from "@/components/ui/StatusBadge";
 
 const API_URL = "https://nadakki-ai-suite.onrender.com";
 
-// ═══════════════════════════════════════
-// TYPES
-// ═══════════════════════════════════════
 interface SegmentPrediction {
   id: string;
   name: string;
@@ -45,76 +46,19 @@ interface ChurnAlert {
   suggestedAction: string;
 }
 
-// ═══════════════════════════════════════
-// SAMPLE DATA
-// ═══════════════════════════════════════
 const SEGMENT_PREDICTIONS: SegmentPrediction[] = [
-  {
-    id: "seg-1",
-    name: "Leads Calientes",
-    size: 1850,
-    conversionProbability: 0.28,
-    churnRisk: 0.05,
-    expectedRevenue: 92500,
-    trend: "up",
-    confidence: 0.94,
-    recommendations: ["Enviar oferta personalizada", "Llamada de seguimiento en 48h", "Activar secuencia de nurturing"]
-  },
-  {
-    id: "seg-2",
-    name: "Usuarios Premium Activos",
-    size: 890,
-    conversionProbability: 0.18,
-    churnRisk: 0.08,
-    expectedRevenue: 178000,
-    trend: "stable",
-    confidence: 0.91,
-    recommendations: ["Programa de fidelizacion", "Oferta de upgrade", "Encuesta de satisfaccion"]
-  },
-  {
-    id: "seg-3",
-    name: "En Riesgo de Churn",
-    size: 1240,
-    conversionProbability: 0.05,
-    churnRisk: 0.72,
-    expectedRevenue: 12400,
-    trend: "down",
-    confidence: 0.89,
-    recommendations: ["Campana de retencion urgente", "Descuento especial", "Contacto directo del CS"]
-  },
-  {
-    id: "seg-4",
-    name: "Nuevos Registros (7d)",
-    size: 456,
-    conversionProbability: 0.15,
-    churnRisk: 0.25,
-    expectedRevenue: 22800,
-    trend: "up",
-    confidence: 0.87,
-    recommendations: ["Onboarding automatizado", "Email de bienvenida personalizado", "Webinar introductorio"]
-  },
-  {
-    id: "seg-5",
-    name: "Usuarios Inactivos",
-    size: 2340,
-    conversionProbability: 0.03,
-    churnRisk: 0.85,
-    expectedRevenue: 4680,
-    trend: "down",
-    confidence: 0.92,
-    recommendations: ["Campana de win-back", "Encuesta de salida", "Oferta de reactivacion"]
-  },
-  {
-    id: "seg-6",
-    name: "Alto LTV",
-    size: 520,
-    conversionProbability: 0.22,
-    churnRisk: 0.04,
-    expectedRevenue: 260000,
-    trend: "up",
-    confidence: 0.95,
-    recommendations: ["Programa VIP", "Acceso anticipado a features", "Account manager dedicado"]
-  }
+  { id: "seg-1", name: "Leads Calientes", size: 1850, conversionProbability: 0.28, churnRisk: 0.05, expectedRevenue: 92500, trend: "up", confidence: 0.94,
+    recommendations: ["Enviar oferta personalizada", "Llamada de seguimiento en 48h", "Activar secuencia de nurturing"] },
+  { id: "seg-2", name: "Usuarios Premium Activos", size: 890, conversionProbability: 0.18, churnRisk: 0.08, expectedRevenue: 178000, trend: "stable", confidence: 0.91,
+    recommendations: ["Programa de fidelizacion", "Oferta de upgrade", "Encuesta de satisfaccion"] },
+  { id: "seg-3", name: "En Riesgo de Churn", size: 1240, conversionProbability: 0.05, churnRisk: 0.72, expectedRevenue: 12400, trend: "down", confidence: 0.89,
+    recommendations: ["Campana de retencion urgente", "Descuento especial", "Contacto directo del CS"] },
+  { id: "seg-4", name: "Nuevos Registros (7d)", size: 456, conversionProbability: 0.15, churnRisk: 0.25, expectedRevenue: 22800, trend: "up", confidence: 0.87,
+    recommendations: ["Onboarding automatizado", "Email de bienvenida", "Webinar introductorio"] },
+  { id: "seg-5", name: "Usuarios Inactivos", size: 2340, conversionProbability: 0.03, churnRisk: 0.85, expectedRevenue: 4680, trend: "down", confidence: 0.92,
+    recommendations: ["Campana de win-back", "Encuesta de salida", "Oferta de reactivacion"] },
+  { id: "seg-6", name: "Alto LTV", size: 520, conversionProbability: 0.22, churnRisk: 0.04, expectedRevenue: 260000, trend: "up", confidence: 0.95,
+    recommendations: ["Programa VIP", "Acceso anticipado a features", "Account manager dedicado"] }
 ];
 
 const REVENUE_FORECAST: MetricForecast[] = [
@@ -135,9 +79,22 @@ const CHURN_ALERTS: ChurnAlert[] = [
   { userId: "u-5", userName: "StartupXYZ", riskScore: 0.71, lastActivity: "hace 25 dias", suggestedAction: "Demo de nuevas features" },
 ];
 
-// ═══════════════════════════════════════
-// MAIN COMPONENT  
-// ═══════════════════════════════════════
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-3 shadow-xl">
+        <p className="text-white font-medium mb-2">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
+            {entry.name}: ${(entry.value / 1000).toFixed(1)}K
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function PredictivePage() {
   const [loading, setLoading] = useState(true);
   const [predictions, setPredictions] = useState<SegmentPrediction[]>([]);
@@ -153,10 +110,7 @@ export default function PredictivePage() {
 
   const loadData = async () => {
     setLoading(true);
-    
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1200));
-    
     setPredictions(SEGMENT_PREDICTIONS);
     setForecast(REVENUE_FORECAST);
     setChurnAlerts(CHURN_ALERTS);
@@ -166,33 +120,19 @@ export default function PredictivePage() {
   const refreshPredictions = async () => {
     setRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Simulate updated predictions with slight variations
     setPredictions(predictions.map(p => ({
       ...p,
       conversionProbability: Math.min(1, Math.max(0, p.conversionProbability + (Math.random() - 0.5) * 0.05)),
       churnRisk: Math.min(1, Math.max(0, p.churnRisk + (Math.random() - 0.5) * 0.05)),
       expectedRevenue: Math.round(p.expectedRevenue * (0.95 + Math.random() * 0.1))
     })));
-    
     setRefreshing(false);
   };
 
-  // Calculate totals
   const totalExpectedRevenue = predictions.reduce((acc, p) => acc + p.expectedRevenue, 0);
-  const avgConversion = predictions.reduce((acc, p) => acc + p.conversionProbability, 0) / predictions.length;
+  const avgConversion = predictions.reduce((acc, p) => acc + p.conversionProbability, 0) / Math.max(predictions.length, 1);
   const highRiskUsers = predictions.filter(p => p.churnRisk > 0.5).reduce((acc, p) => acc + p.size, 0);
-  const modelAccuracy = predictions.reduce((acc, p) => acc + p.confidence, 0) / predictions.length;
-
-  // Chart dimensions
-  const chartWidth = 600;
-  const chartHeight = 200;
-  const maxValue = Math.max(...forecast.map(f => f.upper));
-  const minValue = Math.min(...forecast.map(f => f.lower));
-  const valueRange = maxValue - minValue;
-
-  const getY = (value: number) => chartHeight - ((value - minValue) / valueRange * chartHeight * 0.8) - 20;
-  const getX = (index: number) => (index / (forecast.length - 1)) * (chartWidth - 60) + 30;
+  const modelAccuracy = predictions.reduce((acc, p) => acc + p.confidence, 0) / Math.max(predictions.length, 1);
 
   return (
     <div className="ndk-page ndk-fade-in">
@@ -238,35 +178,14 @@ export default function PredictivePage() {
         </div>
       ) : (
         <>
-          {/* Stats */}
           <div className="grid grid-cols-4 gap-6 mb-8">
-            <StatCard 
-              value={"$" + (totalExpectedRevenue / 1000).toFixed(0) + "K"} 
-              label="Revenue Esperado (30d)" 
-              icon={<DollarSign className="w-6 h-6 text-green-400" />} 
-              color="#22c55e" 
-            />
-            <StatCard 
-              value={(avgConversion * 100).toFixed(1) + "%"} 
-              label="Conversion Promedio" 
-              icon={<Target className="w-6 h-6 text-blue-400" />} 
-              color="#3b82f6" 
-            />
-            <StatCard 
-              value={highRiskUsers.toLocaleString()} 
-              label="Usuarios en Riesgo" 
-              icon={<AlertTriangle className="w-6 h-6 text-red-400" />} 
-              color="#ef4444" 
-            />
-            <StatCard 
-              value={(modelAccuracy * 100).toFixed(0) + "%"} 
-              label="Precision del Modelo" 
-              icon={<Sparkles className="w-6 h-6 text-purple-400" />} 
-              color="#8b5cf6" 
-            />
+            <StatCard value={"$" + (totalExpectedRevenue / 1000).toFixed(0) + "K"} label="Revenue Esperado (30d)" icon={<DollarSign className="w-6 h-6 text-green-400" />} color="#22c55e" />
+            <StatCard value={(avgConversion * 100).toFixed(1) + "%"} label="Conversion Promedio" icon={<Target className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
+            <StatCard value={highRiskUsers.toLocaleString()} label="Usuarios en Riesgo" icon={<AlertTriangle className="w-6 h-6 text-red-400" />} color="#ef4444" />
+            <StatCard value={(modelAccuracy * 100).toFixed(0) + "%"} label="Precision del Modelo" icon={<Sparkles className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
           </div>
 
-          {/* Revenue Forecast Chart */}
+          {/* Gráfico con Recharts */}
           <GlassCard className="p-6 mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -278,62 +197,44 @@ export default function PredictivePage() {
               </button>
             </div>
 
-            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-48">
-              {/* Confidence interval */}
-              <path
-                d={`M ${forecast.map((f, i) => `${getX(i)},${getY(f.upper)}`).join(" L ")} L ${forecast.map((f, i) => `${getX(forecast.length - 1 - i)},${getY(forecast[forecast.length - 1 - i].lower)}`).join(" L ")} Z`}
-                fill="url(#gradient)" opacity="0.3"
-              />
-              
-              {/* Predicted line */}
-              <path
-                d={`M ${forecast.map((f, i) => `${getX(i)},${getY(f.predicted)}`).join(" L ")}`}
-                fill="none" stroke="#8b5cf6" strokeWidth="2"
-              />
-              
-              {/* Actual points */}
-              {forecast.map((f, i) => f.actual && (
-                <circle key={i} cx={getX(i)} cy={getY(f.actual)} r="4" fill="#22c55e" />
-              ))}
-              
-              {/* Predicted points */}
-              {forecast.map((f, i) => !f.actual && (
-                <circle key={i} cx={getX(i)} cy={getY(f.predicted)} r="4" fill="#8b5cf6" strokeDasharray="2" />
-              ))}
-              
-              {/* Labels */}
-              {forecast.map((f, i) => (
-                <text key={i} x={getX(i)} y={chartHeight - 5} textAnchor="middle" className="text-[10px] fill-gray-500">
-                  {f.date}
-                </text>
-              ))}
-              
-              <defs>
-                <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-            </svg>
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart data={forecast} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="colorConfidence" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={{ stroke: '#374151' }} />
+                <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={{ stroke: '#374151' }}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ paddingTop: 20 }} />
+                <Area type="monotone" dataKey="upper" stroke="transparent" fill="url(#colorConfidence)" name="Intervalo Superior" />
+                <Area type="monotone" dataKey="lower" stroke="transparent" fill="#0a0f1c" name="Intervalo Inferior" />
+                <Line type="monotone" dataKey="predicted" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }} name="Prediccion" activeDot={{ r: 6, fill: '#8b5cf6' }} />
+                <Line type="monotone" dataKey="actual" stroke="#22c55e" strokeWidth={3} dot={{ fill: '#22c55e', strokeWidth: 2, r: 5 }} name="Actual" connectNulls={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
 
-            <div className="flex items-center justify-center gap-6 mt-4">
+            <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-white/10">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-purple-500" />
-                <span className="text-xs text-gray-400">Prediccion</span>
+                <span className="text-xs text-gray-400">Prediccion IA</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-xs text-gray-400">Actual</span>
+                <span className="text-xs text-gray-400">Datos Reales</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-purple-500/30" style={{ width: 24 }} />
+                <div className="w-8 h-3 rounded bg-purple-500/30" />
                 <span className="text-xs text-gray-400">Intervalo 95%</span>
               </div>
             </div>
           </GlassCard>
 
           <div className="grid grid-cols-3 gap-6 mb-8">
-            {/* Segment Predictions */}
             <div className="col-span-2">
               <h3 className="text-lg font-bold text-white mb-4">Predicciones por Segmento</h3>
               <div className="space-y-3">
@@ -344,7 +245,7 @@ export default function PredictivePage() {
                       onClick={() => setSelectedSegment(selectedSegment?.id === pred.id ? null : pred)}>
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={"p-2 rounded-lg " + 
+                          <div className={"p-2 rounded-lg " +
                             (pred.churnRisk > 0.5 ? "bg-red-500/20" : pred.conversionProbability > 0.15 ? "bg-green-500/20" : "bg-blue-500/20")}>
                             {pred.churnRisk > 0.5 ? <AlertTriangle className="w-5 h-5 text-red-400" /> :
                              pred.conversionProbability > 0.15 ? <TrendingUp className="w-5 h-5 text-green-400" /> :
@@ -386,7 +287,7 @@ export default function PredictivePage() {
                       </div>
 
                       {selectedSegment?.id === pred.id && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} 
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
                           className="mt-4 pt-4 border-t border-white/10">
                           <p className="text-xs text-gray-400 mb-2">Acciones Recomendadas:</p>
                           <div className="flex flex-wrap gap-2">
@@ -404,7 +305,6 @@ export default function PredictivePage() {
               </div>
             </div>
 
-            {/* Churn Alerts */}
             <div>
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
@@ -430,13 +330,11 @@ export default function PredictivePage() {
                     </motion.div>
                   ))}
                 </div>
-                
                 <button className="w-full mt-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 text-sm font-medium transition-colors">
-                  Ver todos los alertas ({churnAlerts.length})
+                  Ver todos ({churnAlerts.length})
                 </button>
               </GlassCard>
 
-              {/* Model Info */}
               <GlassCard className="p-4 mt-4">
                 <h4 className="font-medium text-white mb-3 flex items-center gap-2">
                   <Brain className="w-4 h-4 text-purple-400" />
