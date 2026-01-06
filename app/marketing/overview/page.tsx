@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Users, TrendingUp, TrendingDown, Calendar, Target, Mail, CheckCircle, Circle, ChevronRight, ExternalLink, Sparkles, BarChart3, Zap, BookOpen, Video, Activity } from "lucide-react";
+import { Users, TrendingUp, TrendingDown, Calendar, Target, Mail, CheckCircle, Circle, ChevronRight, ChevronLeft, ExternalLink, Sparkles, BarChart3, Zap, BookOpen, Video, Activity, Home, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import Sidebar from "@/components/layout/Sidebar";
 
 const userMetrics = {
   mau: { value: 45200, change: 12.4, trend: "up" as const },
@@ -87,134 +88,166 @@ export default function MarketingOverviewPage() {
   const accentPrimary = theme?.colors?.accentPrimary || "#8b5cf6";
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: bgPrimary }}>
-      <header className="sticky top-0 z-40 backdrop-blur-xl" style={{ backgroundColor: `${bgSecondary}ee`, borderBottom: `1px solid ${borderColor}` }}>
-        <div className="max-w-[1600px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold" style={{ color: textPrimary }}>Hola, <span style={{ color: accentPrimary }}>Marketing Team</span> 👋</h1>
-              <p className="text-sm" style={{ color: textSecondary }}>{new Date().toLocaleDateString("es", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: isLight ? "#f1f5f9" : "rgba(255,255,255,0.05)" }}>
-                {["24h", "7d", "30d", "90d"].map((r) => (
-                  <button key={r} onClick={() => setDateRange(r)} className="px-3 py-1.5 text-sm font-medium rounded-md transition-all"
-                    style={{ backgroundColor: dateRange === r ? (isLight ? "#fff" : "rgba(255,255,255,0.1)") : "transparent", color: dateRange === r ? accentPrimary : textSecondary, boxShadow: dateRange === r ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>{r}</button>
-                ))}
-                <button className="px-3 py-1.5 text-sm font-medium flex items-center gap-1" style={{ color: textSecondary }}><Calendar className="w-4 h-4" /> Custom</button>
-              </div>
-              <select value={selectedApp} onChange={(e) => setSelectedApp(e.target.value)} className="px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}`, color: textPrimary }}>
-                <option value="all">Todas las Apps</option><option value="web">Web App</option><option value="ios">iOS App</option><option value="android">Android App</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-[1600px] mx-auto px-6 py-8">
-        {progress < 100 && (
-          <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg" style={{ backgroundColor: `${accentPrimary}20` }}><Sparkles className="w-5 h-5" style={{ color: accentPrimary }} /></div>
-                <div><h2 className="text-lg font-semibold" style={{ color: textPrimary }}>Comenzar con NADAKKI</h2><p className="text-sm" style={{ color: textSecondary }}>Completa la configuración</p></div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right"><span className="text-2xl font-bold" style={{ color: accentPrimary }}>{progress}%</span><p className="text-xs" style={{ color: textMuted }}>completado</p></div>
-                <div className="w-32 h-2 rounded-full overflow-hidden" style={{ backgroundColor: isLight ? "#e5e7eb" : "rgba(255,255,255,0.1)" }}><motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${accentPrimary}, ${theme?.colors?.accentSecondary || "#06b6d4"})` }} /></div>
-              </div>
-            </div>
-            <div className="grid grid-cols-6 gap-3">
-              {onboardingSteps.map((step, i) => (
-                <motion.div key={step.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }} className="p-4 rounded-xl cursor-pointer transition-all"
-                  style={{ backgroundColor: step.done ? (isLight ? "#ecfdf5" : "rgba(16,185,129,0.1)") : bgSecondary, border: `2px solid ${step.done ? (isLight ? "#a7f3d0" : "rgba(16,185,129,0.3)") : borderColor}` }}>
-                  <div className="flex items-center gap-2 mb-2">{step.done ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5" style={{ color: textMuted }} />}<step.icon className="w-4 h-4" style={{ color: step.done ? "#10b981" : textMuted }} /></div>
-                  <h4 className="text-sm font-medium" style={{ color: step.done ? "#047857" : textPrimary }}>{step.title}</h4>
-                  <p className="text-xs mt-1" style={{ color: textMuted }}>{step.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-4" style={{ color: textPrimary }}>Acciones rápidas</h2>
-          <div className="grid grid-cols-4 gap-4">
-            {quickActions.map((action, i) => (
-              <Link key={i} href={action.href}>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} whileHover={{ y: -4 }} className="relative overflow-hidden rounded-xl p-5 cursor-pointer group" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}` }}>
-                  <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${action.gradient} opacity-10 rounded-bl-full`} />
-                  <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ backgroundColor: `${accentPrimary}20`, color: accentPrimary }}>{action.tag}</span>
-                  <div className="text-4xl my-3">{action.emoji}</div>
-                  <h3 className="font-semibold transition-colors" style={{ color: textPrimary }}>{action.title}</h3>
-                  <p className="text-sm mt-1" style={{ color: textMuted }}>{action.desc}</p>
-                  <ChevronRight className="absolute bottom-4 right-4 w-5 h-5 transition-colors" style={{ color: textMuted }} />
-                </motion.div>
+    <div className="flex min-h-screen" style={{ backgroundColor: bgPrimary }}>
+      <Sidebar />
+      <main className="flex-1 ml-80">
+        {/* Navigation Header */}
+        <header className="sticky top-0 z-40 backdrop-blur-xl" style={{ backgroundColor: `${bgSecondary}ee`, borderBottom: `1px solid ${borderColor}` }}>
+          <div className="px-6 py-4">
+            {/* Breadcrumb Navigation */}
+            <div className="flex items-center gap-2 mb-3">
+              <Link href="/" className="flex items-center gap-1 text-sm transition-colors hover:opacity-80" style={{ color: textMuted }}>
+                <Home className="w-4 h-4" />
+                <span>Inicio</span>
               </Link>
-            ))}
-          </div>
-        </section>
+              <ChevronRight className="w-4 h-4" style={{ color: textMuted }} />
+              <Link href="/marketing" className="text-sm transition-colors hover:opacity-80" style={{ color: textMuted }}>
+                Marketing
+              </Link>
+              <ChevronRight className="w-4 h-4" style={{ color: textMuted }} />
+              <span className="text-sm font-medium" style={{ color: accentPrimary }}>Overview</span>
+            </div>
 
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-4" style={{ color: textPrimary }}>Métricas de Usuarios</h2>
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <MetricCard title="Monthly Active Users" subtitle="EN ESTE MES" value={userMetrics.mau.value} change={userMetrics.mau.change} trend={userMetrics.mau.trend} data={sparklines.mau} theme={theme} />
-            <MetricCard title="Daily Active Users" subtitle="PROMEDIO" value={userMetrics.dau.value} change={userMetrics.dau.change} trend={userMetrics.dau.trend} data={sparklines.dau} theme={theme} />
-            <MetricCard title="New Users" subtitle="TOTAL" value={userMetrics.newUsers.value} change={userMetrics.newUsers.change} trend={userMetrics.newUsers.trend} data={sparklines.newUsers} theme={theme} />
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <MetricCard title="Stickiness" subtitle="DAU/MAU RATIO" value={userMetrics.stickiness.value} change={userMetrics.stickiness.change} trend={userMetrics.stickiness.trend} data={sparklines.stickiness} format="percent" theme={theme} />
-            <MetricCard title="Daily Sessions" subtitle="PROMEDIO" value={userMetrics.dailySessions.value} change={userMetrics.dailySessions.change} trend={userMetrics.dailySessions.trend} data={sparklines.dailySessions} theme={theme} />
-            <MetricCard title="Sessions per MAU" subtitle="PROMEDIO" value={userMetrics.sessionsPerMau.value} change={userMetrics.sessionsPerMau.change} trend={userMetrics.sessionsPerMau.trend} data={sparklines.sessionsPerMau} format="decimal" theme={theme} />
-          </div>
-        </section>
-
-        <section className="mb-8">
-          <div className="rounded-xl p-6" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}` }}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold" style={{ color: textPrimary }}>Performance Over Time</h2>
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div><label className="text-xs block mb-1" style={{ color: textMuted }}>Statistics For</label><select value={statistic} onChange={(e) => setStatistic(e.target.value)} className="px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: isLight ? "#f9fafb" : "rgba(255,255,255,0.05)", border: `1px solid ${borderColor}`, color: textPrimary }}><option value="sessions">Sessions</option><option value="users">Active Users</option><option value="events">Events</option></select></div>
-                <div><label className="text-xs block mb-1" style={{ color: textMuted }}>Breakdown</label><select value={breakdown} onChange={(e) => setBreakdown(e.target.value)} className="px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: isLight ? "#f9fafb" : "rgba(255,255,255,0.05)", border: `1px solid ${borderColor}`, color: textPrimary }}><option value="all">All</option><option value="channel">By Channel</option><option value="device">By Device</option></select></div>
+                <Link href="/marketing" className="p-2 rounded-lg transition-colors hover:opacity-80" style={{ backgroundColor: `${accentPrimary}20` }}>
+                  <ArrowLeft className="w-5 h-5" style={{ color: accentPrimary }} />
+                </Link>
+                <div>
+                  <h1 className="text-2xl font-bold" style={{ color: textPrimary }}>Marketing Overview</h1>
+                  <p className="text-sm" style={{ color: textSecondary }}>{new Date().toLocaleDateString("es", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                {/* Date Range */}
+                <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: isLight ? "#f1f5f9" : "rgba(255,255,255,0.05)" }}>
+                  {["24h", "7d", "30d", "90d"].map((r) => (
+                    <button key={r} onClick={() => setDateRange(r)} className="px-3 py-1.5 text-sm font-medium rounded-md transition-all"
+                      style={{ backgroundColor: dateRange === r ? (isLight ? "#fff" : "rgba(255,255,255,0.1)") : "transparent", color: dateRange === r ? accentPrimary : textSecondary, boxShadow: dateRange === r ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}>{r}</button>
+                  ))}
+                  <button className="px-3 py-1.5 text-sm font-medium flex items-center gap-1" style={{ color: textSecondary }}><Calendar className="w-4 h-4" /> Custom</button>
+                </div>
+
+                {/* App Filter */}
+                <select value={selectedApp} onChange={(e) => setSelectedApp(e.target.value)} className="px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}`, color: textPrimary }}>
+                  <option value="all">Todas las Apps</option><option value="web">Web App</option><option value="ios">iOS App</option><option value="android">Android App</option>
+                </select>
               </div>
             </div>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "#e5e7eb" : "rgba(255,255,255,0.1)"} />
-                  <XAxis dataKey="date" tick={{ fontSize: 12, fill: textMuted }} axisLine={{ stroke: borderColor }} />
-                  <YAxis tick={{ fontSize: 12, fill: textMuted }} axisLine={{ stroke: borderColor }} />
-                  <Tooltip contentStyle={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}`, borderRadius: "8px", color: textPrimary }} />
-                  <Legend />
-                  <Line type="monotone" dataKey={statistic} stroke={accentPrimary} strokeWidth={2} dot={{ r: 3, fill: accentPrimary }} activeDot={{ r: 6 }} name={statistic === "sessions" ? "Sessions" : statistic === "users" ? "Active Users" : "Events"} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
           </div>
-        </section>
+        </header>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="rounded-xl p-6" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}` }}>
-            <div className="flex items-center justify-between mb-4"><h3 className="font-semibold" style={{ color: textPrimary }}>Campañas Recientes</h3><Link href="/marketing/campaigns" className="text-sm font-medium" style={{ color: accentPrimary }}>Ver todas →</Link></div>
-            <div className="space-y-3">
-              {[{ name: "Welcome Series", status: "active", sent: "12.4K", opened: "45%" },{ name: "Black Friday Promo", status: "completed", sent: "89.2K", opened: "38%" },{ name: "Cart Abandonment", status: "active", sent: "5.6K", opened: "52%" },{ name: "Newsletter Enero", status: "draft", sent: "-", opened: "-" }].map((c, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: isLight ? "#f9fafb" : "rgba(255,255,255,0.03)" }}>
-                  <div className="flex items-center gap-3"><div className={`w-2 h-2 rounded-full ${c.status === "active" ? "bg-green-500" : c.status === "completed" ? "bg-blue-500" : "bg-gray-400"}`} /><span className="font-medium" style={{ color: textPrimary }}>{c.name}</span></div>
-                  <div className="flex items-center gap-4 text-sm" style={{ color: textMuted }}><span>Sent: {c.sent}</span><span>Opened: {c.opened}</span></div>
+        <div className="p-6">
+          {/* Onboarding */}
+          {progress < 100 && (
+            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg" style={{ backgroundColor: `${accentPrimary}20` }}><Sparkles className="w-5 h-5" style={{ color: accentPrimary }} /></div>
+                  <div><h2 className="text-lg font-semibold" style={{ color: textPrimary }}>Comenzar con NADAKKI</h2><p className="text-sm" style={{ color: textSecondary }}>Completa la configuración</p></div>
                 </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right"><span className="text-2xl font-bold" style={{ color: accentPrimary }}>{progress}%</span><p className="text-xs" style={{ color: textMuted }}>completado</p></div>
+                  <div className="w-32 h-2 rounded-full overflow-hidden" style={{ backgroundColor: isLight ? "#e5e7eb" : "rgba(255,255,255,0.1)" }}><motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${accentPrimary}, ${theme?.colors?.accentSecondary || "#06b6d4"})` }} /></div>
+                </div>
+              </div>
+              <div className="grid grid-cols-6 gap-3">
+                {onboardingSteps.map((step, i) => (
+                  <motion.div key={step.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }} className="p-4 rounded-xl cursor-pointer transition-all"
+                    style={{ backgroundColor: step.done ? (isLight ? "#ecfdf5" : "rgba(16,185,129,0.1)") : bgSecondary, border: `2px solid ${step.done ? (isLight ? "#a7f3d0" : "rgba(16,185,129,0.3)") : borderColor}` }}>
+                    <div className="flex items-center gap-2 mb-2">{step.done ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5" style={{ color: textMuted }} />}<step.icon className="w-4 h-4" style={{ color: step.done ? "#10b981" : textMuted }} /></div>
+                    <h4 className="text-sm font-medium" style={{ color: step.done ? "#047857" : textPrimary }}>{step.title}</h4>
+                    <p className="text-xs mt-1" style={{ color: textMuted }}>{step.desc}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {/* Quick Actions */}
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: textPrimary }}>Acciones rápidas</h2>
+            <div className="grid grid-cols-4 gap-4">
+              {quickActions.map((action, i) => (
+                <Link key={i} href={action.href}>
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} whileHover={{ y: -4 }} className="relative overflow-hidden rounded-xl p-5 cursor-pointer group" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}` }}>
+                    <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${action.gradient} opacity-10 rounded-bl-full`} />
+                    <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ backgroundColor: `${accentPrimary}20`, color: accentPrimary }}>{action.tag}</span>
+                    <div className="text-4xl my-3">{action.emoji}</div>
+                    <h3 className="font-semibold transition-colors" style={{ color: textPrimary }}>{action.title}</h3>
+                    <p className="text-sm mt-1" style={{ color: textMuted }}>{action.desc}</p>
+                    <ChevronRight className="absolute bottom-4 right-4 w-5 h-5 transition-colors" style={{ color: textMuted }} />
+                  </motion.div>
+                </Link>
               ))}
             </div>
-          </div>
-          <div className="rounded-xl p-6" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}` }}>
-            <div className="flex items-center justify-between mb-4"><h3 className="font-semibold" style={{ color: textPrimary }}>Recursos de Aprendizaje</h3><Link href="#" className="text-sm font-medium" style={{ color: accentPrimary }}>Ver todos →</Link></div>
-            <div className="space-y-3">
-              {[{ title: "Guía de Segmentación", type: "guide", time: "10 min", Icon: BookOpen },{ title: "Crear tu primer Journey", type: "video", time: "5 min", Icon: Video },{ title: "Email Marketing Tips", type: "guide", time: "15 min", Icon: BookOpen },{ title: "A/B Testing Setup", type: "video", time: "8 min", Icon: Video }].map((r, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors" style={{ backgroundColor: isLight ? "#f9fafb" : "rgba(255,255,255,0.03)" }}>
-                  <div className="p-2 rounded-lg" style={{ backgroundColor: r.type === "video" ? "rgba(239,68,68,0.1)" : "rgba(59,130,246,0.1)" }}><r.Icon className="w-4 h-4" style={{ color: r.type === "video" ? "#ef4444" : "#3b82f6" }} /></div>
-                  <div className="flex-1"><span className="font-medium text-sm" style={{ color: textPrimary }}>{r.title}</span><div className="flex items-center gap-2 text-xs" style={{ color: textMuted }}><span className="capitalize">{r.type}</span><span>•</span><span>{r.time}</span></div></div>
-                  <ExternalLink className="w-4 h-4" style={{ color: textMuted }} />
+          </section>
+
+          {/* User Metrics */}
+          <section className="mb-8">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: textPrimary }}>Métricas de Usuarios</h2>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <MetricCard title="Monthly Active Users" subtitle="EN ESTE MES" value={userMetrics.mau.value} change={userMetrics.mau.change} trend={userMetrics.mau.trend} data={sparklines.mau} theme={theme} />
+              <MetricCard title="Daily Active Users" subtitle="PROMEDIO" value={userMetrics.dau.value} change={userMetrics.dau.change} trend={userMetrics.dau.trend} data={sparklines.dau} theme={theme} />
+              <MetricCard title="New Users" subtitle="TOTAL" value={userMetrics.newUsers.value} change={userMetrics.newUsers.change} trend={userMetrics.newUsers.trend} data={sparklines.newUsers} theme={theme} />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <MetricCard title="Stickiness" subtitle="DAU/MAU RATIO" value={userMetrics.stickiness.value} change={userMetrics.stickiness.change} trend={userMetrics.stickiness.trend} data={sparklines.stickiness} format="percent" theme={theme} />
+              <MetricCard title="Daily Sessions" subtitle="PROMEDIO" value={userMetrics.dailySessions.value} change={userMetrics.dailySessions.change} trend={userMetrics.dailySessions.trend} data={sparklines.dailySessions} theme={theme} />
+              <MetricCard title="Sessions per MAU" subtitle="PROMEDIO" value={userMetrics.sessionsPerMau.value} change={userMetrics.sessionsPerMau.change} trend={userMetrics.sessionsPerMau.trend} data={sparklines.sessionsPerMau} format="decimal" theme={theme} />
+            </div>
+          </section>
+
+          {/* Performance Over Time */}
+          <section className="mb-8">
+            <div className="rounded-xl p-6" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}` }}>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold" style={{ color: textPrimary }}>Performance Over Time</h2>
+                <div className="flex items-center gap-4">
+                  <div><label className="text-xs block mb-1" style={{ color: textMuted }}>Statistics For</label><select value={statistic} onChange={(e) => setStatistic(e.target.value)} className="px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: isLight ? "#f9fafb" : "rgba(255,255,255,0.05)", border: `1px solid ${borderColor}`, color: textPrimary }}><option value="sessions">Sessions</option><option value="users">Active Users</option><option value="events">Events</option></select></div>
+                  <div><label className="text-xs block mb-1" style={{ color: textMuted }}>Breakdown</label><select value={breakdown} onChange={(e) => setBreakdown(e.target.value)} className="px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: isLight ? "#f9fafb" : "rgba(255,255,255,0.05)", border: `1px solid ${borderColor}`, color: textPrimary }}><option value="all">All</option><option value="channel">By Channel</option><option value="device">By Device</option></select></div>
                 </div>
-              ))}
+              </div>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={performanceData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "#e5e7eb" : "rgba(255,255,255,0.1)"} />
+                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: textMuted }} axisLine={{ stroke: borderColor }} />
+                    <YAxis tick={{ fontSize: 12, fill: textMuted }} axisLine={{ stroke: borderColor }} />
+                    <Tooltip contentStyle={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}`, borderRadius: "8px", color: textPrimary }} />
+                    <Legend />
+                    <Line type="monotone" dataKey={statistic} stroke={accentPrimary} strokeWidth={2} dot={{ r: 3, fill: accentPrimary }} activeDot={{ r: 6 }} name={statistic === "sessions" ? "Sessions" : statistic === "users" ? "Active Users" : "Events"} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </section>
+
+          {/* Bottom Grid */}
+          <div className="grid grid-cols-2 gap-6">
+            <div className="rounded-xl p-6" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}` }}>
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold" style={{ color: textPrimary }}>Campañas Recientes</h3><Link href="/marketing/campaigns" className="text-sm font-medium" style={{ color: accentPrimary }}>Ver todas →</Link></div>
+              <div className="space-y-3">
+                {[{ name: "Welcome Series", status: "active", sent: "12.4K", opened: "45%" },{ name: "Black Friday Promo", status: "completed", sent: "89.2K", opened: "38%" },{ name: "Cart Abandonment", status: "active", sent: "5.6K", opened: "52%" },{ name: "Newsletter Enero", status: "draft", sent: "-", opened: "-" }].map((c, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: isLight ? "#f9fafb" : "rgba(255,255,255,0.03)" }}>
+                    <div className="flex items-center gap-3"><div className={`w-2 h-2 rounded-full ${c.status === "active" ? "bg-green-500" : c.status === "completed" ? "bg-blue-500" : "bg-gray-400"}`} /><span className="font-medium" style={{ color: textPrimary }}>{c.name}</span></div>
+                    <div className="flex items-center gap-4 text-sm" style={{ color: textMuted }}><span>Sent: {c.sent}</span><span>Opened: {c.opened}</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl p-6" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}` }}>
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold" style={{ color: textPrimary }}>Recursos de Aprendizaje</h3><Link href="#" className="text-sm font-medium" style={{ color: accentPrimary }}>Ver todos →</Link></div>
+              <div className="space-y-3">
+                {[{ title: "Guía de Segmentación", type: "guide", time: "10 min", Icon: BookOpen },{ title: "Crear tu primer Journey", type: "video", time: "5 min", Icon: Video },{ title: "Email Marketing Tips", type: "guide", time: "15 min", Icon: BookOpen },{ title: "A/B Testing Setup", type: "video", time: "8 min", Icon: Video }].map((r, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors" style={{ backgroundColor: isLight ? "#f9fafb" : "rgba(255,255,255,0.03)" }}>
+                    <div className="p-2 rounded-lg" style={{ backgroundColor: r.type === "video" ? "rgba(239,68,68,0.1)" : "rgba(59,130,246,0.1)" }}><r.Icon className="w-4 h-4" style={{ color: r.type === "video" ? "#ef4444" : "#3b82f6" }} /></div>
+                    <div className="flex-1"><span className="font-medium text-sm" style={{ color: textPrimary }}>{r.title}</span><div className="flex items-center gap-2 text-xs" style={{ color: textMuted }}><span className="capitalize">{r.type}</span><span>•</span><span>{r.time}</span></div></div>
+                    <ExternalLink className="w-4 h-4" style={{ color: textMuted }} />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
