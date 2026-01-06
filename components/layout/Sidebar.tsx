@@ -17,6 +17,7 @@ const navigationStructure: NavCore[] = [
     { id: 'settings', icon: '🔧', label: 'Configuración', href: '/settings' },
   ]},
   { id: 'marketing', title: 'MARKETING', icon: '🎯', color: '#F97316', modules: [
+    { id: 'mkt-overview', icon: '📊', label: 'Overview', href: '/marketing/overview', isNew: true },
     { id: 'mkt-hub', icon: '🚀', label: 'Marketing Hub', href: '/marketing', badge: '15' },
     { id: 'mkt-campaigns', icon: '📢', label: 'Campaigns', href: '/marketing/campaigns', isNew: true },
     { id: 'mkt-journeys', icon: '🗺️', label: 'Customer Journeys', href: '/marketing/journeys', isNew: true },
@@ -305,3 +306,4 @@ export default function Sidebar() {
     </nav>
   );
 }
+
