@@ -37,6 +37,7 @@ export interface Theme {
   preview: string;
   category: "standard" | "premium" | "exclusive";
   recommendedFor: string[];
+  isLight?: boolean;
 }
 
 // TEMA 1: GRAPHITE PRO (DEFAULT - Enterprise Standard)
@@ -214,50 +215,50 @@ export const THEME_OLIVE: Theme = {
   }
 };
 
-
-// TEMA 6: ARCTIC TURQUOISE (Light Theme - Turquesa con Blanco)
+// TEMA 6: ARCTIC TURQUOISE (Light Theme - TODO texto oscuro)
 export const THEME_ARCTIC: Theme = {
   id: "arctic",
   name: "Arctic Turquoise",
-  description: "Tema claro con turquesa y blanco. Fresco, moderno y profesional para uso diurno.",
+  description: "Tema claro con turquesa. Fresco y profesional para uso diurno.",
   preview: "#f8fafc",
   category: "premium",
   recommendedFor: ["day-use", "presentations", "fresh-look", "modern"],
+  isLight: true,
   colors: {
     bgPrimary: "#f8fafc",
     bgSecondary: "#ffffff",
     bgTertiary: "#f1f5f9",
-    bgCard: "rgba(15, 23, 42, 0.03)",
-    bgHover: "rgba(15, 23, 42, 0.06)",
-    bgActive: "rgba(15, 23, 42, 0.09)",
-    accentPrimary: "#0d9488",
+    bgCard: "rgba(15, 118, 110, 0.06)",
+    bgHover: "rgba(15, 118, 110, 0.10)",
+    bgActive: "rgba(15, 118, 110, 0.15)",
+    accentPrimary: "#0f766e",
     accentSecondary: "#0891b2",
-    accentGradientFrom: "#0d9488",
+    accentGradientFrom: "#0f766e",
     accentGradientTo: "#0891b2",
     textPrimary: "#0f172a",
-    textSecondary: "#334155",
-    textMuted: "#64748b",
-    borderPrimary: "rgba(15, 23, 42, 0.1)",
-    borderSecondary: "rgba(15, 23, 42, 0.05)",
-    success: "#059669",
-    warning: "#d97706",
-    error: "#dc2626",
-    info: "#0284c7",
+    textSecondary: "#1e293b",
+    textMuted: "#475569",
+    borderPrimary: "rgba(15, 23, 42, 0.15)",
+    borderSecondary: "rgba(15, 23, 42, 0.08)",
+    success: "#047857",
+    warning: "#b45309",
+    error: "#b91c1c",
+    info: "#0369a1",
     sidebarBg: "#ffffff",
-    sidebarBorder: "rgba(15, 23, 42, 0.08)",
-    sidebarHover: "rgba(13, 148, 136, 0.08)",
-    sidebarActive: "rgba(13, 148, 136, 0.15)",
+    sidebarBorder: "rgba(15, 23, 42, 0.1)",
+    sidebarHover: "rgba(15, 118, 110, 0.08)",
+    sidebarActive: "rgba(15, 118, 110, 0.15)",
   }
 };
 
 // Export all themes
 export const THEMES: Record<ThemeId, Theme> = {
-  arctic: THEME_ARCTIC,
   graphite: THEME_GRAPHITE,
   quantum: THEME_QUANTUM,
   navy: THEME_NAVY,
   gradient: THEME_GRADIENT,
   olive: THEME_OLIVE,
+  arctic: THEME_ARCTIC,
 };
 
 // DEFAULT: Graphite (enterprise standard, reduce eye strain)
@@ -265,5 +266,3 @@ export const DEFAULT_THEME: ThemeId = "graphite";
 
 // Theme order for UI display
 export const THEME_ORDER: ThemeId[] = ["graphite", "quantum", "navy", "gradient", "olive", "arctic"];
-
-
