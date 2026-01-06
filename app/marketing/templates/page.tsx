@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/providers/ThemeProvider";
-import Sidebar from "@/components/layout/Sidebar";
+// Sidebar removido para pantalla completa
 
 // ═══════════════════════════════════════════════════════════════
 // TIPOS Y CONFIGURACIÓN
@@ -717,9 +717,8 @@ export default function TemplatesPage() {
   const handleUseTemplate = (template: Template) => console.log("Using template:", template.name);
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: bgPrimary }}>
-      <Sidebar />
-      <main className="flex-1 ml-80">
+    <div className="min-h-screen">
+      <main className="flex-1">
         {/* Header */}
         <header className="sticky top-0 z-40 backdrop-blur-xl" style={{ backgroundColor: `${bgSecondary}ee`, borderBottom: `1px solid ${borderColor}` }}>
           <div className="px-6 py-4">
@@ -885,3 +884,4 @@ export default function TemplatesPage() {
     </div>
   );
 }
+
