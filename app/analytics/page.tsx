@@ -1,159 +1,334 @@
 "use client";
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback, memo } from "react";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { TrendingUp, TrendingDown, Users, Activity, DollarSign, Eye, RefreshCw, ChevronRight, Home, Loader2, AlertCircle, Zap, Target, BarChart3, ShoppingCart } from "lucide-react";
 import Link from "next/link";
-import { 
-  BarChart3, TrendingUp, Users, Target, 
-  ArrowUpRight, ArrowDownRight, Activity
-} from "lucide-react";
-import NavigationBar from "@/components/ui/NavigationBar";
-import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
-import StatusBadge from "@/components/ui/StatusBadge";
+import { useTheme } from "@/components/providers/ThemeProvider";
+import Sidebar from "@/components/layout/Sidebar";
+import { analyticsAPI, cancelAllRequests } from "@/lib/api";
+import type { AnalyticsOverview, PerformanceChartData, MetricValue, KPI, CampaignPerformance } from "@/lib/api";
 
-const METRICS = [
-  { label: "Ejecuciones Totales", value: "45,892", change: 12.5, positive: true },
-  { label: "Tasa de Éxito", value: "98.7%", change: 2.1, positive: true },
-  { label: "Tiempo Promedio", value: "245ms", change: -8.3, positive: true },
-  { label: "Errores", value: "127", change: 15.2, positive: false },
-];
+const COLORS = ["#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
-const TOP_AGENTS = [
-  { name: "LeadScoringIA", executions: 12450, success: 99.2 },
-  { name: "ContentGeneratorIA", executions: 8920, success: 97.8 },
-  { name: "SentimentAnalyzerIA", executions: 7650, success: 98.5 },
-  { name: "EmailSequenceMaster", executions: 5430, success: 96.1 },
-  { name: "CampaignOptimizerIA", executions: 4280, success: 99.0 },
-];
+// ═══════════════════════════════════════════════════════════════
+// MEMOIZED COMPONENTS
+// ═══════════════════════════════════════════════════════════════
 
-const WEEKLY_DATA = [
-  { day: "Lun", value: 65 },
-  { day: "Mar", value: 78 },
-  { day: "Mie", value: 82 },
-  { day: "Jue", value: 71 },
-  { day: "Vie", value: 90 },
-  { day: "Sab", value: 45 },
-  { day: "Dom", value: 38 },
-];
+interface MetricCardProps {
+  title: string;
+  metric: MetricValue;
+  icon: any;
+  format?: "number" | "currency" | "percent";
+  colors: { bgCard: string; borderColor: string; textPrimary: string; textMuted: string; accentPrimary: string };
+}
 
-export default function AnalyticsPage() {
-  const maxValue = Math.max(...WEEKLY_DATA.map(d => d.value));
+const MetricCard = memo(function MetricCard({ title, metric, icon: Icon, format = "number", colors }: MetricCardProps) {
+  const { bgCard, borderColor, textPrimary, textMuted, accentPrimary } = colors;
+  const isPositive = metric.trend === "up";
+  const formatValue = (v: number) => {
+    if (format === "currency") return "\$" + v.toLocaleString();
+    if (format === "percent") return v + "%";
+    return v.toLocaleString();
+  };
+  return (
+    <div className="p-5 rounded-xl" style={{ backgroundColor: bgCard, border: "1px solid " + borderColor }}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm" style={{ color: textMuted }}>{title}</span>
+        <div className="p-2 rounded-lg" style={{ backgroundColor: accentPrimary + "15" }}>
+          <Icon className="w-4 h-4" style={{ color: accentPrimary }} />
+        </div>
+      </div>
+      <div className="text-2xl font-bold" style={{ color: textPrimary }}>{formatValue(metric.current)}</div>
+      <div className="flex items-center gap-1 mt-1">
+        {isPositive ? <TrendingUp className="w-3 h-3 text-green-500" /> : <TrendingDown className="w-3 h-3 text-red-500" />}
+        <span className={"text-xs font-medium " + (isPositive ? "text-green-500" : "text-red-500")}>{Math.abs(metric.change)}%</span>
+        <span className="text-xs" style={{ color: textMuted }}>vs anterior</span>
+      </div>
+    </div>
+  );
+});
+
+interface TrendChartProps {
+  data: { date: string; value: number }[];
+  colors: { bgCard: string; borderColor: string; textPrimary: string; textMuted: string; accentPrimary: string; bgPrimary: string };
+  metric: string;
+  onMetricChange: (m: string) => void;
+  total: number;
+  average: number;
+}
+
+const TrendChart = memo(function TrendChart({ data, colors, metric, onMetricChange, total, average }: TrendChartProps) {
+  const { bgCard, borderColor, textPrimary, textMuted, accentPrimary, bgPrimary } = colors;
+  return (
+    <div className="p-6 rounded-xl" style={{ backgroundColor: bgCard, border: "1px solid " + borderColor }}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold" style={{ color: textPrimary }}>Tendencia: {metric}</h3>
+        <select value={metric} onChange={(e) => onMetricChange(e.target.value)} className="px-2 py-1 rounded text-sm" style={{ backgroundColor: bgPrimary, border: "1px solid " + borderColor, color: textPrimary }}>
+          <option value="sessions">Sesiones</option>
+          <option value="users">Usuarios</option>
+          <option value="revenue">Revenue</option>
+          <option value="events">Eventos</option>
+        </select>
+      </div>
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={accentPrimary} stopOpacity={0.3}/>
+                <stop offset="95%" stopColor={accentPrimary} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
+            <XAxis dataKey="date" stroke={textMuted} fontSize={12} tickFormatter={(v) => v.slice(5)} />
+            <YAxis stroke={textMuted} fontSize={12} />
+            <Tooltip contentStyle={{ backgroundColor: bgCard, border: "1px solid " + borderColor, borderRadius: 8, color: textPrimary }} />
+            <Area type="monotone" dataKey="value" stroke={accentPrimary} fillOpacity={1} fill="url(#colorMetric)" strokeWidth={2} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex items-center justify-between mt-4 pt-4" style={{ borderTop: "1px solid " + borderColor }}>
+        <div><span className="text-sm" style={{ color: textMuted }}>Total:</span><span className="ml-2 font-semibold" style={{ color: textPrimary }}>{total.toLocaleString()}</span></div>
+        <div><span className="text-sm" style={{ color: textMuted }}>Promedio:</span><span className="ml-2 font-semibold" style={{ color: textPrimary }}>{Math.round(average).toLocaleString()}</span></div>
+      </div>
+    </div>
+  );
+});
+
+interface CampaignBarChartProps {
+  campaigns: CampaignPerformance[];
+  colors: { bgCard: string; borderColor: string; textPrimary: string; textMuted: string; accentPrimary: string };
+}
+
+const CampaignBarChart = memo(function CampaignBarChart({ campaigns, colors }: CampaignBarChartProps) {
+  const { bgCard, borderColor, textPrimary, textMuted, accentPrimary } = colors;
+  return (
+    <div className="p-6 rounded-xl" style={{ backgroundColor: bgCard, border: "1px solid " + borderColor }}>
+      <h3 className="font-semibold mb-4" style={{ color: textPrimary }}>Performance por Campaña</h3>
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={campaigns.slice(0, 5)} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke={borderColor} />
+            <XAxis type="number" stroke={textMuted} fontSize={12} />
+            <YAxis dataKey="name" type="category" stroke={textMuted} fontSize={11} width={100} tickFormatter={(v: string) => v.length > 12 ? v.slice(0,12) + "..." : v} />
+            <Tooltip contentStyle={{ backgroundColor: bgCard, border: "1px solid " + borderColor, borderRadius: 8 }} />
+            <Bar dataKey="opened" fill="#10b981" name="Abiertos" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="clicked" fill={accentPrimary} name="Clicks" radius={[0, 4, 4, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+
+export default function AnalyticsDashboardPage() {
+  const { theme } = useTheme();
+  const isLight = theme?.isLight;
+  
+  const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
+  const [chartData, setChartData] = useState<PerformanceChartData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState("30d");
+  const [selectedMetric, setSelectedMetric] = useState("sessions");
+
+  const colors = {
+    bgPrimary: isLight ? "#f8fafc" : theme?.colors?.bgPrimary || "#0F172A",
+    bgSecondary: isLight ? "#ffffff" : theme?.colors?.bgSecondary || "#111827",
+    bgCard: isLight ? "#ffffff" : theme?.colors?.bgCard || "rgba(30,41,59,0.5)",
+    textPrimary: isLight ? "#0f172a" : theme?.colors?.textPrimary || "#f1f5f9",
+    textMuted: isLight ? "#64748b" : theme?.colors?.textMuted || "#64748b",
+    borderColor: isLight ? "rgba(0,0,0,0.1)" : theme?.colors?.borderPrimary || "rgba(255,255,255,0.1)",
+    accentPrimary: theme?.colors?.accentPrimary || "#8b5cf6",
+  };
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [ov, perf] = await Promise.all([
+        analyticsAPI.getOverview("default", period),
+        analyticsAPI.getPerformance(selectedMetric, period, "default")
+      ]);
+      setOverview(ov);
+      setChartData(perf);
+    } catch (err) {
+      if (err instanceof Error && err.message === "Request cancelled") return;
+      setError("Error al cargar datos");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [period, selectedMetric]);
+
+  useEffect(() => {
+    fetchData();
+    return () => cancelAllRequests();
+  }, [fetchData]);
+
+  if (loading && !overview) {
+    return (
+      <div className="flex min-h-screen" style={{ backgroundColor: colors.bgPrimary }}>
+        <Sidebar />
+        <main className="flex-1 ml-80 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" style={{ color: colors.accentPrimary }} />
+            <p style={{ color: colors.textMuted }}>Cargando analytics...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/">
-        <StatusBadge status="active" label="Real-time" size="lg" />
-      </NavigationBar>
-
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-cyan-500/20 border border-cyan-500/30">
-            <BarChart3 className="w-8 h-8 text-cyan-400" />
+    <div className="flex min-h-screen" style={{ backgroundColor: colors.bgPrimary }}>
+      <Sidebar />
+      <main className="flex-1 ml-80">
+        <header className="sticky top-0 z-40 backdrop-blur-xl" style={{ backgroundColor: colors.bgSecondary + "ee", borderBottom: "1px solid " + colors.borderColor }}>
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Link href="/" className="flex items-center gap-1 text-sm" style={{ color: colors.textMuted }}><Home className="w-4 h-4" /> Inicio</Link>
+              <ChevronRight className="w-4 h-4" style={{ color: colors.textMuted }} />
+              <span className="text-sm font-medium" style={{ color: colors.accentPrimary }}>Analytics</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: colors.textPrimary }}>
+                  <BarChart3 className="w-6 h-6" style={{ color: colors.accentPrimary }} /> Analytics Dashboard
+                </h1>
+                <p className="text-sm" style={{ color: colors.textMuted }}>
+                  {overview?.data_source === "database" ? "🟢 Base de datos" : "🟡 API"} • {overview ? new Date(overview.generated_at).toLocaleTimeString() : "..."}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <select value={period} onChange={(e) => setPeriod(e.target.value)} className="px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: colors.bgCard, border: "1px solid " + colors.borderColor, color: colors.textPrimary }}>
+                  <option value="24h">24 horas</option>
+                  <option value="7d">7 días</option>
+                  <option value="30d">30 días</option>
+                  <option value="90d">90 días</option>
+                </select>
+                <button onClick={fetchData} disabled={loading} className="px-4 py-2 rounded-lg text-sm flex items-center gap-2" style={{ backgroundColor: colors.accentPrimary + "20", color: colors.accentPrimary }}>
+                  <RefreshCw className={"w-4 h-4 " + (loading ? "animate-spin" : "")} /> Actualizar
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Analytics Dashboard</h1>
-            <p className="text-gray-400">Métricas y rendimiento de los agentes IA</p>
-          </div>
-        </div>
-      </motion.div>
+        </header>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        {METRICS.map((metric, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-          >
-            <GlassCard className="p-6">
-              <p className="text-sm text-gray-400 mb-2">{metric.label}</p>
-              <div className="flex items-end justify-between">
-                <p className="text-3xl font-bold text-white">{metric.value}</p>
-                <div className={`flex items-center gap-1 text-sm ${metric.positive ? "text-green-400" : "text-red-400"}`}>
-                  {metric.positive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                  {Math.abs(metric.change)}%
+        <div className="p-6">
+          {error && (
+            <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <span className="text-red-500">{error}</span>
+              <button onClick={fetchData} className="ml-auto px-3 py-1 rounded text-sm bg-red-500 text-white">Reintentar</button>
+            </div>
+          )}
+
+          {overview && (
+            <>
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                <MetricCard title="MAU" metric={overview.mau} icon={Users} colors={colors} />
+                <MetricCard title="DAU" metric={overview.dau} icon={Activity} colors={colors} />
+                <MetricCard title="Sesiones" metric={overview.daily_sessions} icon={Eye} colors={colors} />
+                <MetricCard title="Revenue" metric={overview.total_revenue} icon={DollarSign} format="currency" colors={colors} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 mb-6">
+                <TrendChart data={chartData?.data || []} colors={colors} metric={selectedMetric} onMetricChange={setSelectedMetric} total={chartData?.total || 0} average={chartData?.average || 0} />
+                <CampaignBarChart campaigns={overview.top_campaigns} colors={colors} />
+              </div>
+
+              <div className="grid grid-cols-3 gap-6">
+                {/* KPIs */}
+                <div className="p-6 rounded-xl" style={{ backgroundColor: colors.bgCard, border: "1px solid " + colors.borderColor }}>
+                  <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: colors.textPrimary }}>
+                    <Target className="w-5 h-5" style={{ color: colors.accentPrimary }} /> KPIs
+                  </h3>
+                  <div className="space-y-4">
+                    {overview.kpis.map((kpi) => {
+                      const progress = (kpi.value / kpi.target) * 100;
+                      return (
+                        <div key={kpi.id}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm" style={{ color: colors.textPrimary }}>{kpi.name}</span>
+                            <span className="text-sm font-medium" style={{ color: progress >= 100 ? "#10b981" : colors.accentPrimary }}>
+                              {kpi.unit === "USD" ? "\$" : ""}{kpi.value.toLocaleString()}{kpi.unit === "%" ? "%" : ""} / {kpi.target.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: colors.borderColor }}>
+                            <div className="h-full rounded-full" style={{ width: Math.min(progress, 100) + "%", backgroundColor: progress >= 100 ? "#10b981" : colors.accentPrimary }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Funnel */}
+                <div className="p-6 rounded-xl" style={{ backgroundColor: colors.bgCard, border: "1px solid " + colors.borderColor }}>
+                  <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: colors.textPrimary }}>
+                    <Zap className="w-5 h-5" style={{ color: colors.accentPrimary }} /> Funnel
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      { label: "Enviados", value: overview.top_campaigns.reduce((a, c) => a + c.sent, 0), color: "#64748b" },
+                      { label: "Entregados", value: overview.top_campaigns.reduce((a, c) => a + c.delivered, 0), color: "#06b6d4" },
+                      { label: "Abiertos", value: overview.top_campaigns.reduce((a, c) => a + c.opened, 0), color: "#10b981" },
+                      { label: "Clicks", value: overview.top_campaigns.reduce((a, c) => a + c.clicked, 0), color: colors.accentPrimary },
+                      { label: "Conversiones", value: overview.top_campaigns.reduce((a, c) => a + c.converted, 0), color: "#f59e0b" },
+                    ].map((step, i, arr) => {
+                      const maxVal = arr[0].value || 1;
+                      const pct = Math.round((step.value / maxVal) * 100);
+                      return (
+                        <div key={step.label}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm" style={{ color: colors.textMuted }}>{step.label}</span>
+                            <span className="text-sm font-medium" style={{ color: colors.textPrimary }}>{step.value.toLocaleString()} ({pct}%)</span>
+                          </div>
+                          <div className="h-5 rounded" style={{ backgroundColor: colors.borderColor }}>
+                            <div className="h-full rounded" style={{ width: pct + "%", backgroundColor: step.color, minWidth: "20px" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Top Campaigns */}
+                <div className="p-6 rounded-xl" style={{ backgroundColor: colors.bgCard, border: "1px solid " + colors.borderColor }}>
+                  <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: colors.textPrimary }}>
+                    <ShoppingCart className="w-5 h-5" style={{ color: colors.accentPrimary }} /> Top Campaigns
+                  </h3>
+                  <div className="space-y-3">
+                    {overview.top_campaigns.slice(0, 5).map((c, i) => (
+                      <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg" style={{ backgroundColor: colors.bgPrimary }}>
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: COLORS[i % COLORS.length] + "20", color: COLORS[i % COLORS.length] }}>{i + 1}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate" style={{ color: colors.textPrimary }}>{c.name}</p>
+                          <p className="text-xs" style={{ color: colors.textMuted }}>{c.ctr}% CTR</p>
+                        </div>
+                        <p className="text-sm font-semibold text-green-500">\</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link href="/marketing/campaigns" className="mt-4 w-full py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2" style={{ backgroundColor: colors.accentPrimary + "10", color: colors.accentPrimary }}>
+                    Ver todas <ChevronRight className="w-4 h-4" />
+                  </Link>
                 </div>
               </div>
-            </GlassCard>
-          </motion.div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        {/* Chart */}
-        <div className="col-span-2">
-          <GlassCard className="p-6 h-full">
-            <h3 className="text-lg font-bold text-white mb-6">Ejecuciones por Día</h3>
-            <div className="flex items-end justify-between h-48 gap-4">
-              {WEEKLY_DATA.map((data, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${(data.value / maxValue) * 100}%` }}
-                  transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
-                  className="flex-1 flex flex-col items-center gap-2"
-                >
-                  <div 
-                    className="w-full bg-gradient-to-t from-cyan-500 to-purple-500 rounded-t-lg relative group cursor-pointer"
-                    style={{ height: "100%" }}
-                  >
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-white/10 rounded text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      {data.value}%
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-400">{data.day}</span>
-                </motion.div>
-              ))}
-            </div>
-          </GlassCard>
-        </div>
-
-        {/* Top Agents */}
-        <div>
-          <GlassCard className="p-6 h-full">
-            <h3 className="text-lg font-bold text-white mb-4">Top Agentes</h3>
-            <div className="space-y-4">
-              {TOP_AGENTS.map((agent, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1 }}
-                  className="flex items-center gap-3"
-                >
-                  <span className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-cyan-400">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{agent.name}</p>
-                    <p className="text-xs text-gray-500">{agent.executions.toLocaleString()} exec</p>
-                  </div>
-                  <span className="text-sm text-green-400">{agent.success}%</span>
-                </motion.div>
-              ))}
-            </div>
-          </GlassCard>
-        </div>
-      </div>
-
-      {/* Quick Links */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: "Ver Logs Detallados", href: "/admin/logs", icon: Activity },
-          { label: "Gestionar Agentes", href: "/admin/agents", icon: Users },
-          { label: "Configurar Alertas", href: "/settings", icon: Target },
-        ].map((link, i) => (
-          <Link key={i} href={link.href}>
-            <GlassCard className="p-4 cursor-pointer group">
-              <div className="flex items-center gap-3">
-                <link.icon className="w-5 h-5 text-gray-400 group-hover:text-cyan-400" />
-                <span className="text-sm text-gray-300 group-hover:text-white">{link.label}</span>
+              <div className="mt-6 flex items-center justify-center gap-2 text-xs" style={{ color: colors.textMuted }}>
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span>Dashboard en vivo • {overview.active_campaigns} campañas activas</span>
               </div>
-            </GlassCard>
-          </Link>
-        ))}
-      </div>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
