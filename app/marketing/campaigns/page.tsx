@@ -1,305 +1,302 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
-import { 
-  Plus, Search, Filter, Columns, X, Mail, MessageSquare, Bell, 
-  Smartphone, Globe, Image, MoreVertical, Play, Pause, Trash2,
-  Copy, Edit, Calendar, Users, TrendingUp, ChevronDown, RefreshCw,
-  Loader2, HelpCircle, Megaphone
+import {
+  Plus, Search, MoreVertical, Mail, MessageSquare, Bell,
+  Smartphone, Play, Pause, Copy, Trash2, Edit, BarChart2, Users,
+  Calendar, ChevronRight, Home, ArrowLeft, Loader2, AlertCircle,
+  CheckCircle2, Clock, Archive, RefreshCw
 } from "lucide-react";
-import NavigationBar from "@/components/ui/NavigationBar";
-import GlassCard from "@/components/ui/GlassCard";
-import StatusBadge from "@/components/ui/StatusBadge";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTheme } from "@/components/providers/ThemeProvider";
+import Sidebar from "@/components/layout/Sidebar";
+import { campaignsAPI, type Campaign, type CampaignStatus, type CampaignType, cancelAllRequests } from "@/lib/api";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
-const TENANT_ID = "credicefi";
-
-interface Campaign {
-  id: string;
-  name: string;
-  status: "draft" | "active" | "paused" | "completed";
-  type: "email" | "sms" | "push" | "in-app" | "banner" | "multichannel" | "whatsapp";
-  schedule: "one-time" | "action-based" | "recurring";
-  sent: number;
-  stopDate?: string;
-  createdAt: string;
-  tags: string[];
-}
-
-const CAMPAIGN_TYPES = {
-  email: { icon: Mail, color: "#3b82f6", label: "Email" },
-  sms: { icon: MessageSquare, color: "#22c55e", label: "SMS" },
-  push: { icon: Bell, color: "#f59e0b", label: "Push" },
-  "in-app": { icon: Smartphone, color: "#8b5cf6", label: "In-App Message" },
-  banner: { icon: Image, color: "#ec4899", label: "Banner" },
-  multichannel: { icon: Megaphone, color: "#06b6d4", label: "Multichannel" },
-  whatsapp: { icon: MessageSquare, color: "#25D366", label: "WhatsApp" },
+const statusConfig: Record<CampaignStatus, { label: string; color: string; icon: any }> = {
+  draft: { label: "Borrador", color: "#64748b", icon: Edit },
+  scheduled: { label: "Programada", color: "#f59e0b", icon: Clock },
+  active: { label: "Activa", color: "#10b981", icon: Play },
+  paused: { label: "Pausada", color: "#ef4444", icon: Pause },
+  completed: { label: "Completada", color: "#6366f1", icon: CheckCircle2 },
+  archived: { label: "Archivada", color: "#475569", icon: Archive },
 };
 
-const SAMPLE_CAMPAIGNS: Campaign[] = [
-  { id: "c1", name: "Referral Banner", status: "draft", type: "banner", schedule: "one-time", sent: 0, createdAt: "2024-01-15", tags: ["promo"] },
-  { id: "c2", name: "Email Drag & Drop Tour", status: "draft", type: "email", schedule: "action-based", sent: 0, createdAt: "2024-01-14", tags: ["onboarding"] },
-  { id: "c3", name: "Weekly Newsletter", status: "draft", type: "multichannel", schedule: "recurring", sent: 0, createdAt: "2024-01-13", tags: ["newsletter"] },
-  { id: "c4", name: "Onboarding IAM", status: "draft", type: "in-app", schedule: "action-based", sent: 0, createdAt: "2024-01-12", tags: ["onboarding"] },
-  { id: "c5", name: "Abandoned Onboarding", status: "draft", type: "whatsapp", schedule: "one-time", sent: 0, createdAt: "2024-01-11", tags: ["retention"] },
-  { id: "c6", name: "Black Friday Promo", status: "active", type: "email", schedule: "one-time", sent: 15420, createdAt: "2024-01-10", tags: ["promo", "sale"] },
-  { id: "c7", name: "Welcome Series", status: "active", type: "email", schedule: "action-based", sent: 8750, createdAt: "2024-01-09", tags: ["onboarding"] },
-  { id: "c8", name: "Push Notification Test", status: "paused", type: "push", schedule: "one-time", sent: 2340, createdAt: "2024-01-08", tags: ["test"] },
-  { id: "c9", name: "SMS Reminder", status: "completed", type: "sms", schedule: "recurring", sent: 45000, createdAt: "2024-01-07", tags: ["reminder"] },
-];
+const typeConfig: Record<CampaignType, { label: string; icon: any }> = {
+  email: { label: "Email", icon: Mail },
+  sms: { label: "SMS", icon: MessageSquare },
+  push: { label: "Push", icon: Bell },
+  "in-app": { label: "In-App", icon: Smartphone },
+  whatsapp: { label: "WhatsApp", icon: MessageSquare },
+  "multi-channel": { label: "Multi-Canal", icon: BarChart2 },
+};
+
+function CampaignCard({ campaign, theme, onAction, isLoading }: { campaign: Campaign; theme: any; onAction: (action: string, id: string) => void; isLoading: string | null }) {
+  const isLight = theme?.isLight;
+  const bgCard = isLight ? "#ffffff" : theme?.colors?.bgCard || "rgba(30,41,59,0.5)";
+  const borderColor = isLight ? "rgba(0,0,0,0.1)" : theme?.colors?.borderPrimary || "rgba(255,255,255,0.1)";
+  const textPrimary = isLight ? "#0f172a" : theme?.colors?.textPrimary || "#f1f5f9";
+  const textMuted = isLight ? "#64748b" : theme?.colors?.textMuted || "#64748b";
+  const accentPrimary = theme?.colors?.accentPrimary || "#8b5cf6";
+
+  const status = statusConfig[campaign.status];
+  const type = typeConfig[campaign.type];
+  const StatusIcon = status.icon;
+  const TypeIcon = type.icon;
+  const [showMenu, setShowMenu] = useState(false);
+  const isCardLoading = isLoading === campaign.id;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-xl relative group"
+      style={{ backgroundColor: bgCard, border: `1px solid ${borderColor}`, opacity: isCardLoading ? 0.7 : 1 }}>
+      {isCardLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-xl z-10">
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: accentPrimary }} />
+        </div>
+      )}
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg" style={{ backgroundColor: `${accentPrimary}15` }}>
+            <TypeIcon className="w-5 h-5" style={{ color: accentPrimary }} />
+          </div>
+          <div>
+            <h3 className="font-semibold" style={{ color: textPrimary }}>{campaign.name}</h3>
+            <p className="text-xs" style={{ color: textMuted }}>{type.label} • v{campaign.version}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1"
+            style={{ backgroundColor: `${status.color}20`, color: status.color }}>
+            <StatusIcon className="w-3 h-3" />{status.label}
+          </span>
+          <div className="relative">
+            <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ backgroundColor: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)" }}>
+              <MoreVertical className="w-4 h-4" style={{ color: textMuted }} />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-8 w-40 py-1 rounded-lg shadow-xl z-20"
+                style={{ backgroundColor: bgCard, border: `1px solid ${borderColor}` }}>
+                <Link href={`/marketing/campaigns/${campaign.id}`} className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/5" style={{ color: textPrimary }}>
+                  <Edit className="w-4 h-4" /> Editar
+                </Link>
+                <button onClick={() => { onAction("duplicate", campaign.id); setShowMenu(false); }} className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/5" style={{ color: textPrimary }}>
+                  <Copy className="w-4 h-4" /> Duplicar
+                </button>
+                {campaign.status === "active" && (
+                  <button onClick={() => { onAction("pause", campaign.id); setShowMenu(false); }} className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/5" style={{ color: "#f59e0b" }}>
+                    <Pause className="w-4 h-4" /> Pausar
+                  </button>
+                )}
+                {(campaign.status === "draft" || campaign.status === "paused") && (
+                  <button onClick={() => { onAction("activate", campaign.id); setShowMenu(false); }} className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/5" style={{ color: "#10b981" }}>
+                    <Play className="w-4 h-4" /> Activar
+                  </button>
+                )}
+                <button onClick={() => { onAction("delete", campaign.id); setShowMenu(false); }} className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/5" style={{ color: "#ef4444" }}>
+                  <Trash2 className="w-4 h-4" /> Archivar
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <p className="text-sm mb-4 line-clamp-2" style={{ color: textMuted }}>{campaign.description || "Sin descripción"}</p>
+      <div className="grid grid-cols-4 gap-2 p-3 rounded-lg" style={{ backgroundColor: isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)" }}>
+        <div className="text-center">
+          <div className="text-sm font-bold" style={{ color: textPrimary }}>{campaign.metrics.sent.toLocaleString()}</div>
+          <div className="text-[10px]" style={{ color: textMuted }}>Enviados</div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm font-bold text-green-500">{campaign.metrics.opened.toLocaleString()}</div>
+          <div className="text-[10px]" style={{ color: textMuted }}>Abiertos</div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm font-bold" style={{ color: accentPrimary }}>{campaign.metrics.clicked.toLocaleString()}</div>
+          <div className="text-[10px]" style={{ color: textMuted }}>Clicks</div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm font-bold text-cyan-500">{campaign.metrics.converted.toLocaleString()}</div>
+          <div className="text-[10px]" style={{ color: textMuted }}>Conv.</div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid ${borderColor}` }}>
+        <div className="flex items-center gap-2 text-xs" style={{ color: textMuted }}>
+          <Users className="w-3 h-3" /><span>{campaign.audience_size.toLocaleString()} usuarios</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs" style={{ color: textMuted }}>
+          <Calendar className="w-3 h-3" /><span>{new Date(campaign.updated_at).toLocaleDateString()}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function CampaignsListPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(SAMPLE_CAMPAIGNS);
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [tagFilter, setTagFilter] = useState<string>("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [showCreateMenu, setShowCreateMenu] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const { theme } = useTheme();
+  const router = useRouter();
+  const isLight = theme?.isLight;
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<CampaignStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<CampaignType | "all">("all");
 
-  const filteredCampaigns = campaigns.filter(c => {
-    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    const matchesTag = !tagFilter || c.tags.includes(tagFilter);
-    return matchesSearch && matchesStatus && matchesTag;
-  });
+  const bgPrimary = isLight ? "#f8fafc" : theme?.colors?.bgPrimary || "#0F172A";
+  const bgSecondary = isLight ? "#ffffff" : theme?.colors?.bgSecondary || "#111827";
+  const textPrimary = isLight ? "#0f172a" : theme?.colors?.textPrimary || "#f1f5f9";
+  const textSecondary = isLight ? "#475569" : theme?.colors?.textSecondary || "#94a3b8";
+  const textMuted = isLight ? "#64748b" : theme?.colors?.textMuted || "#64748b";
+  const borderColor = isLight ? "rgba(0,0,0,0.1)" : theme?.colors?.borderPrimary || "rgba(255,255,255,0.1)";
+  const accentPrimary = theme?.colors?.accentPrimary || "#8b5cf6";
 
-  const addFilter = (filter: string) => {
-    if (!activeFilters.includes(filter)) {
-      setActiveFilters([...activeFilters, filter]);
+  const fetchCampaigns = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const status = statusFilter !== "all" ? statusFilter : undefined;
+      const type = typeFilter !== "all" ? typeFilter : undefined;
+      const data = await campaignsAPI.list("default", status, type);
+      setCampaigns(data);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Request cancelled') return;
+      setError("Error al cargar campañas");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, typeFilter]);
+
+  useEffect(() => {
+    fetchCampaigns();
+    return () => cancelAllRequests();
+  }, [fetchCampaigns]);
+
+  const handleAction = async (action: string, campaignId: string) => {
+    setActionLoading(campaignId);
+    try {
+      switch (action) {
+        case "duplicate":
+          const duplicated = await campaignsAPI.duplicate(campaignId);
+          router.push(`/marketing/campaigns/${duplicated.id}`);
+          break;
+        case "activate":
+          await campaignsAPI.activate(campaignId);
+          break;
+        case "pause":
+          await campaignsAPI.pause(campaignId);
+          break;
+        case "delete":
+          await campaignsAPI.delete(campaignId);
+          break;
+      }
+      await fetchCampaigns();
+    } catch (err) {
+      console.error(`Action ${action} failed:`, err);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const removeFilter = (filter: string) => {
-    setActiveFilters(activeFilters.filter(f => f !== filter));
-    if (filter.startsWith("Status:")) setStatusFilter("all");
-    if (filter.startsWith("Tag:")) setTagFilter("");
-  };
-
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      draft: "bg-gray-500/20 text-gray-400",
-      active: "bg-green-500/20 text-green-400",
-      paused: "bg-yellow-500/20 text-yellow-400",
-      completed: "bg-blue-500/20 text-blue-400",
-    };
-    return styles[status] || styles.draft;
-  };
-
-  const allTags = [...new Set(campaigns.flatMap(c => c.tags))];
+  const filteredCampaigns = campaigns.filter((c) =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.description || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/marketing">
-        <StatusBadge status="active" label="Campaigns" size="lg" />
-      </NavigationBar>
-
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Campaigns</h1>
-            <p className="text-gray-400 mt-1">
-              Campaigns let you send a single, targeted message through email, push, SMS, and more, 
-              ensuring timely communication with your audience
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400">
-              <HelpCircle className="w-5 h-5" />
-            </button>
-            <button className="px-4 py-2 border border-white/20 rounded-lg text-white hover:bg-white/5">
-              Take a tour
-            </button>
-            <div className="relative">
-              <button 
-                onClick={() => setShowCreateMenu(!showCreateMenu)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium"
-              >
-                Create campaign <ChevronDown className="w-4 h-4" />
-              </button>
-              {showCreateMenu && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute right-0 top-full mt-2 w-64 bg-[#1a1f2e] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden"
-                >
-                  {Object.entries(CAMPAIGN_TYPES).map(([type, config]) => {
-                    const Icon = config.icon;
-                    return (
-                      <Link
-                        key={type}
-                        href={`/marketing/campaigns/new?type=${type}`}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors"
-                        onClick={() => setShowCreateMenu(false)}
-                      >
-                        <div className="p-2 rounded-lg" style={{ backgroundColor: config.color + "20" }}>
-                          <Icon className="w-4 h-4" style={{ color: config.color }} />
-                        </div>
-                        <span className="text-white">{config.label}</span>
-                      </Link>
-                    );
-                  })}
-                </motion.div>
-              )}
+    <div className="flex min-h-screen" style={{ backgroundColor: bgPrimary }}>
+      <Sidebar />
+      <main className="flex-1 ml-80">
+        <header className="sticky top-0 z-40 backdrop-blur-xl" style={{ backgroundColor: `${bgSecondary}ee`, borderBottom: `1px solid ${borderColor}` }}>
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Link href="/" className="flex items-center gap-1 text-sm hover:opacity-80" style={{ color: textMuted }}><Home className="w-4 h-4" /> Inicio</Link>
+              <ChevronRight className="w-4 h-4" style={{ color: textMuted }} />
+              <Link href="/marketing" className="text-sm hover:opacity-80" style={{ color: textMuted }}>Marketing</Link>
+              <ChevronRight className="w-4 h-4" style={{ color: textMuted }} />
+              <span className="text-sm font-medium" style={{ color: accentPrimary }}>Campaigns</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Link href="/marketing" className="p-2 rounded-lg" style={{ backgroundColor: `${accentPrimary}20` }}>
+                  <ArrowLeft className="w-5 h-5" style={{ color: accentPrimary }} />
+                </Link>
+                <div>
+                  <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: textPrimary }}>
+                    <Mail className="w-6 h-6" style={{ color: accentPrimary }} />Campaigns
+                  </h1>
+                  <p className="text-sm" style={{ color: textSecondary }}>{campaigns.length} campañas • Persistencia real</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={fetchCampaigns} disabled={loading} className="p-2 rounded-lg" style={{ backgroundColor: `${accentPrimary}20` }}>
+                  <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} style={{ color: accentPrimary }} />
+                </button>
+                <Link href="/marketing/campaigns/new" className="px-4 py-2 rounded-lg font-medium text-sm text-white flex items-center gap-2" style={{ backgroundColor: accentPrimary }}>
+                  <Plus className="w-4 h-4" /> Nueva Campaña
+                </Link>
+              </div>
             </div>
           </div>
+        </header>
+
+        <div className="p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: textMuted }} />
+              <input type="text" placeholder="Buscar campañas..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-lg text-sm" style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}`, color: textPrimary }} />
+            </div>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="px-3 py-2 rounded-lg text-sm"
+              style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}`, color: textPrimary }}>
+              <option value="all">Todos los estados</option>
+              {Object.entries(statusConfig).map(([key, val]) => <option key={key} value={key}>{val.label}</option>)}
+            </select>
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)} className="px-3 py-2 rounded-lg text-sm"
+              style={{ backgroundColor: bgSecondary, border: `1px solid ${borderColor}`, color: textPrimary }}>
+              <option value="all">Todos los tipos</option>
+              {Object.entries(typeConfig).map(([key, val]) => <option key={key} value={key}>{val.label}</option>)}
+            </select>
+          </div>
+
+          {loading && (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-12 h-12 animate-spin" style={{ color: accentPrimary }} />
+            </div>
+          )}
+
+          {error && !loading && (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
+                <p className="text-red-500 mb-4">{error}</p>
+                <button onClick={fetchCampaigns} className="px-4 py-2 rounded-lg font-medium text-white" style={{ backgroundColor: accentPrimary }}>Reintentar</button>
+              </div>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="grid grid-cols-2 gap-4">
+              {filteredCampaigns.map((campaign) => (
+                <CampaignCard key={campaign.id} campaign={campaign} theme={theme} onAction={handleAction} isLoading={actionLoading} />
+              ))}
+            </div>
+          )}
+
+          {!loading && !error && filteredCampaigns.length === 0 && (
+            <div className="text-center py-20">
+              <Mail className="w-16 h-16 mx-auto mb-4" style={{ color: textMuted }} />
+              <h3 className="text-lg font-semibold mb-2" style={{ color: textPrimary }}>No hay campañas</h3>
+              <p className="mb-4" style={{ color: textMuted }}>Crea tu primera campaña para empezar</p>
+              <Link href="/marketing/campaigns/new" className="px-6 py-3 rounded-lg font-medium text-white inline-flex items-center gap-2" style={{ backgroundColor: accentPrimary }}>
+                <Plus className="w-5 h-5" /> Crear Campaña
+              </Link>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Filters Bar */}
-      <div className="flex items-center gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-400">Status</label>
-          <select 
-            value={statusFilter} 
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              if (e.target.value !== "all") addFilter(`Status: ${e.target.value}`);
-            }}
-            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
-          >
-            <option value="all">All</option>
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-400">Tag</label>
-          <select 
-            value={tagFilter} 
-            onChange={(e) => {
-              setTagFilter(e.target.value);
-              if (e.target.value) addFilter(`Tag: ${e.target.value}`);
-            }}
-            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
-          >
-            <option value="">Select...</option>
-            {allTags.map(tag => (
-              <option key={tag} value={tag}>{tag}</option>
-            ))}
-          </select>
-        </div>
-
-        <button 
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-lg text-white hover:bg-white/5"
-        >
-          <Filter className="w-4 h-4" /> Filters
-        </button>
-
-        <button className="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-lg text-white hover:bg-white/5">
-          <Columns className="w-4 h-4" /> Columns
-        </button>
-
-        <button 
-          onClick={() => { setStatusFilter("all"); setTagFilter(""); setActiveFilters([]); }}
-          className="text-purple-400 hover:text-purple-300 text-sm"
-        >
-          Reset filters
-        </button>
-
-        <div className="flex-1" />
-
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-64 pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Active Filters */}
-      {activeFilters.length > 0 && (
-        <div className="flex items-center gap-2 mb-4">
-          {activeFilters.map(filter => (
-            <span key={filter} className="flex items-center gap-1 px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">
-              {filter}
-              <button onClick={() => removeFilter(filter)}>
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Results Count */}
-      <div className="mb-4">
-        <span className="text-white font-medium">{filteredCampaigns.length} Results</span>
-      </div>
-
-      {/* Table */}
-      <GlassCard className="overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left p-4 text-sm font-medium text-gray-400">
-                <input type="checkbox" className="rounded" />
-              </th>
-              <th className="text-left p-4 text-sm font-medium text-gray-400">Name</th>
-              <th className="text-left p-4 text-sm font-medium text-gray-400">Status</th>
-              <th className="text-left p-4 text-sm font-medium text-gray-400">Stop date</th>
-              <th className="text-left p-4 text-sm font-medium text-gray-400">Campaign type</th>
-              <th className="text-left p-4 text-sm font-medium text-gray-400">Entry schedule</th>
-              <th className="text-left p-4 text-sm font-medium text-gray-400">Sent</th>
-              <th className="text-left p-4 text-sm font-medium text-gray-400"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCampaigns.map((campaign, i) => {
-              const typeConfig = CAMPAIGN_TYPES[campaign.type];
-              const Icon = typeConfig?.icon || Mail;
-              return (
-                <motion.tr 
-                  key={campaign.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                >
-                  <td className="p-4">
-                    <input type="checkbox" className="rounded" />
-                  </td>
-                  <td className="p-4">
-                    <Link href={`/marketing/campaigns/${campaign.id}`} className="text-white hover:text-purple-400 font-medium">
-                      {campaign.name}
-                    </Link>
-                  </td>
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(campaign.status)}`}>
-                      {campaign.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-gray-400 text-sm">{campaign.stopDate || "-"}</td>
-                  <td className="p-4">
-                    <span className="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium w-fit" 
-                      style={{ backgroundColor: typeConfig?.color + "20", color: typeConfig?.color }}>
-                      <Icon className="w-3 h-3" />
-                      {typeConfig?.label}
-                    </span>
-                  </td>
-                  <td className="p-4 text-gray-400 text-sm capitalize">{campaign.schedule.replace("-", " ")}</td>
-                  <td className="p-4 text-white">{campaign.sent.toLocaleString()}</td>
-                  <td className="p-4">
-                    <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                  </td>
-                </motion.tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </GlassCard>
+      </main>
     </div>
   );
 }
