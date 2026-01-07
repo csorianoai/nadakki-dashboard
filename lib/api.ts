@@ -1,7 +1,7 @@
 /**
  * API Layer for NADAKKI AI Suite
  * Enterprise-grade API client with abort controllers, error handling, and type safety
- * @version 2.0
+ * @version 2.1 - Complete with all endpoints
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
@@ -13,7 +13,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.on
 const abortControllers = new Map<string, AbortController>();
 
 function getAbortController(key: string): AbortController {
-  // Cancel previous request with same key
   if (abortControllers.has(key)) {
     abortControllers.get(key)?.abort();
   }
@@ -190,14 +189,6 @@ export interface CampaignUpdate {
   status?: CampaignStatus;
 }
 
-export interface CampaignDraft {
-  campaign_id: string;
-  version?: number;
-  content: Record<string, any>;
-  auto_save?: boolean;
-  tenant_id?: string;
-}
-
 // ═══════════════════════════════════════════════════════════════
 // AI GENERATION TYPES
 // ═══════════════════════════════════════════════════════════════
@@ -268,7 +259,6 @@ export const analyticsAPI = {
   getRealtime: (tenantId = 'default') =>
     apiFetch<any>(`/analytics/realtime?tenant_id=${tenantId}`),
   
-  // Fixed: Using query params instead of JSON body
   trackEvent: (tenantId: string, eventName: string, eventData: Record<string, any> = {}) =>
     apiFetch<any>(
       `/analytics/events?tenant_id=${tenantId}&event_name=${encodeURIComponent(eventName)}`,
@@ -379,16 +369,6 @@ export const aiAPI = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// UTILITY: Cancel all pending requests
-// ═══════════════════════════════════════════════════════════════
-
-export function cancelAllRequests(): void {
-  abortControllers.forEach((controller) => controller.abort());
-  abortControllers.clear();
-}
-
-
-// ═══════════════════════════════════════════════════════════════
 // AGENTS API (for core agent execution)
 // ═══════════════════════════════════════════════════════════════
 
@@ -413,6 +393,15 @@ export async function executeAgent(coreId: string, agentId: string, input: Recor
   return agentsAPI.execute(coreId, agentId, input);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+export function cancelAllRequests(): void {
+  abortControllers.forEach((controller) => controller.abort());
+  abortControllers.clear();
+}
+
 // Export unified API object
 export const api = {
   analytics: analyticsAPI,
@@ -424,4 +413,3 @@ export const api = {
 };
 
 export default api;
-
