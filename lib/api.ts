@@ -387,12 +387,41 @@ export function cancelAllRequests(): void {
   abortControllers.clear();
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// AGENTS API (for core agent execution)
+// ═══════════════════════════════════════════════════════════════
+
+export const agentsAPI = {
+  list: (coreId?: string) => {
+    const url = coreId ? `/marketing/agents?core=${coreId}` : '/marketing/agents';
+    return apiFetch<any[]>(url);
+  },
+  
+  get: (agentId: string) =>
+    apiFetch<any>(`/marketing/agents/${agentId}`),
+  
+  execute: (coreId: string, agentId: string, input: Record<string, any>) =>
+    apiFetch<any>(`/marketing/agents/${agentId}/execute`, {
+      method: 'POST',
+      body: JSON.stringify({ core: coreId, input }),
+    }),
+};
+
+// Legacy function for backward compatibility
+export async function executeAgent(coreId: string, agentId: string, input: Record<string, any>) {
+  return agentsAPI.execute(coreId, agentId, input);
+}
+
 // Export unified API object
 export const api = {
   analytics: analyticsAPI,
   campaigns: campaignsAPI,
   ai: aiAPI,
+  agents: agentsAPI,
+  executeAgent,
   cancelAll: cancelAllRequests,
 };
 
 export default api;
+
