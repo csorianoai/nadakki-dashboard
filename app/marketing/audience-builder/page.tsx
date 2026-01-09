@@ -97,7 +97,7 @@ export default function AudienceBuilderPage() {
   };
 
   const addRule = (groupId: string) => {
-    setGroups(groups.map(g => 
+    setGroups(groups?.map(g => 
       g.id === groupId 
         ? { ...g, rules: [...g.rules, { id: `r-${Date.now()}`, field: "", operator: "", value: "" }] }
         : g
@@ -105,15 +105,15 @@ export default function AudienceBuilderPage() {
   };
 
   const updateRule = (groupId: string, ruleId: string, updates: Partial<Rule>) => {
-    setGroups(groups.map(g => 
+    setGroups(groups?.map(g => 
       g.id === groupId 
-        ? { ...g, rules: g.rules.map(r => r.id === ruleId ? { ...r, ...updates } : r) }
+        ? { ...g, rules: g?.rules?.map(r => r.id === ruleId ? { ...r, ...updates } : r) }
         : g
     ));
   };
 
   const deleteRule = (groupId: string, ruleId: string) => {
-    setGroups(groups.map(g => 
+    setGroups(groups?.map(g => 
       g.id === groupId 
         ? { ...g, rules: g.rules.filter(r => r.id !== ruleId) }
         : g
@@ -125,7 +125,7 @@ export default function AudienceBuilderPage() {
   };
 
   const toggleConnector = (groupId: string) => {
-    setGroups(groups.map(g => 
+    setGroups(groups?.map(g => 
       g.id === groupId ? { ...g, connector: g.connector === "AND" ? "OR" : "AND" } : g
     ));
   };
@@ -187,7 +187,7 @@ export default function AudienceBuilderPage() {
             <h3 className="text-lg font-bold text-white mb-4">Define Your Audience</h3>
             <p className="text-gray-400 text-sm mb-6">Add rules to filter users based on their properties, behavior, and engagement.</p>
 
-            {groups.map((group, gIdx) => (
+            {groups?.map((group, gIdx) => (
               <div key={group.id} className="mb-6">
                 {gIdx > 0 && (
                   <div className="flex items-center gap-4 my-4">
@@ -210,7 +210,7 @@ export default function AudienceBuilderPage() {
                     )}
                   </div>
 
-                  {group.rules.map((rule, rIdx) => {
+                  {group?.rules?.map((rule, rIdx) => {
                     const fieldConfig = getFieldConfig(rule.field);
                     const operators = fieldConfig ? OPERATORS[fieldConfig.type as keyof typeof OPERATORS] || OPERATORS.string : [];
                     
@@ -232,9 +232,9 @@ export default function AudienceBuilderPage() {
                             className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
                           >
                             <option value="">Select field...</option>
-                            {FIELD_OPTIONS.map(cat => (
+                            {FIELD_OPTIONS?.map(cat => (
                               <optgroup key={cat.category} label={cat.category}>
-                                {cat.fields.map(f => (
+                                {cat?.fields?.map(f => (
                                   <option key={f.id} value={f.id}>{f.label}</option>
                                 ))}
                               </optgroup>
@@ -249,7 +249,7 @@ export default function AudienceBuilderPage() {
                             className="w-40 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm disabled:opacity-50"
                           >
                             <option value="">Select...</option>
-                            {operators.map(op => (
+                            {operators?.map(op => (
                               <option key={op.id} value={op.id}>{op.label}</option>
                             ))}
                           </select>
@@ -262,7 +262,7 @@ export default function AudienceBuilderPage() {
                               className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
                             >
                               <option value="">Select...</option>
-                              {DATE_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
+                              {DATE_VALUES?.map(v => <option key={v} value={v}>{v}</option>)}
                             </select>
                           ) : fieldConfig?.type === "select" ? (
                             <select
@@ -367,3 +367,4 @@ export default function AudienceBuilderPage() {
     </div>
   );
 }
+

@@ -170,7 +170,7 @@ export default function SocialPage() {
             </Link>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
-            {connectedPlatforms.map(conn => (
+            {connectedPlatforms?.map(conn => (
               <div key={conn.platform} className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl">
                 <span className="text-lg">{getPlatformIcon(conn.platform)}</span>
                 <span className="text-sm text-gray-300">{conn.account || conn.platform}</span>
@@ -195,3 +195,4 @@ function getPlatformIcon(platform: string): string {
   };
   return icons[platform] || "🌐";
 }
+

@@ -246,7 +246,7 @@ export default function IntegrationsPage() {
         // Merge API data with available integrations
         if (data.integrations) {
           setIntegrations(prevIntegrations => 
-            prevIntegrations.map(int => {
+            prevIntegrations?.map(int => {
               const apiInt = data.integrations.find((a: any) => a.id === int.id);
               if (apiInt) {
                 return { ...int, status: apiInt.status, lastSync: apiInt.last_sync, stats: apiInt.stats };
@@ -285,7 +285,7 @@ export default function IntegrationsPage() {
       // Simulamos conexión exitosa después de unos segundos
       setConnecting(true);
       setTimeout(() => {
-        setIntegrations(prev => prev.map(i => 
+        setIntegrations(prev => prev?.map(i => 
           i.id === integration.id 
             ? { ...i, status: "connected", lastSync: new Date().toISOString() }
             : i
@@ -315,7 +315,7 @@ export default function IntegrationsPage() {
       });
       
       if (res.ok) {
-        setIntegrations(prev => prev.map(i => 
+        setIntegrations(prev => prev?.map(i => 
           i.id === selectedIntegration.id 
             ? { ...i, status: "connected", lastSync: new Date().toISOString(), config: { api_key: "••••••••" } }
             : i
@@ -338,7 +338,7 @@ export default function IntegrationsPage() {
         body: JSON.stringify({ tenant_id: TENANT_ID }),
       });
       
-      setIntegrations(prev => prev.map(i => 
+      setIntegrations(prev => prev?.map(i => 
         i.id === integration.id 
           ? { ...i, status: "disconnected", lastSync: undefined, stats: undefined, config: undefined }
           : i
@@ -357,7 +357,7 @@ export default function IntegrationsPage() {
         body: JSON.stringify({ tenant_id: TENANT_ID }),
       });
       
-      setIntegrations(prev => prev.map(i => 
+      setIntegrations(prev => prev?.map(i => 
         i.id === integration.id 
           ? { ...i, lastSync: new Date().toISOString() }
           : i
@@ -473,7 +473,7 @@ export default function IntegrationsPage() {
             No se encontraron integraciones
           </div>
         ) : (
-          filteredIntegrations.map((integration, i) => {
+          filteredIntegrations?.map((integration, i) => {
             const categoryInfo = CATEGORY_LABELS[integration.category];
             return (
               <motion.div
@@ -682,3 +682,4 @@ export default function IntegrationsPage() {
     </div>
   );
 }
+

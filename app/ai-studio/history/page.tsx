@@ -72,7 +72,7 @@ export default function AIHistoryPage() {
       </GlassCard>
 
       <div className="space-y-4">
-        {filteredHistory.map((item, i) => {
+        {filteredHistory?.map((item, i) => {
           const Icon = ICON_MAP[item.type] || Mail;
           const color = COLOR_MAP[item.type] || "#8b5cf6";
           return (
@@ -106,3 +106,4 @@ export default function AIHistoryPage() {
     </div>
   );
 }
+

@@ -89,7 +89,7 @@ export default function SocialMediaPage() {
 
       {/* Platform Cards */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        {PLATFORMS.map(p => {
+        {PLATFORMS?.map(p => {
           const Icon = p.icon;
           return (
             <GlassCard key={p.id} className="p-4 cursor-pointer hover:border-white/20 transition-all"
@@ -150,7 +150,7 @@ export default function SocialMediaPage() {
           <GlassCard className="p-5">
             <h3 className="text-lg font-bold text-white mb-4">This Week</h3>
             <div className="grid grid-cols-7 gap-2">
-              {CALENDAR_DAYS.map((d, i) => (
+              {CALENDAR_DAYS?.map((d, i) => (
                 <div key={i} className={`text-center p-2 rounded-lg ${i === 0 ? "bg-purple-500/20 border border-purple-500" : "bg-white/5"}`}>
                   <div className="text-xs text-gray-400">{d.day}</div>
                   <div className="text-lg font-bold text-white">{d.date}</div>
@@ -174,7 +174,7 @@ export default function SocialMediaPage() {
                 <select value={selectedPlatform} onChange={(e) => setSelectedPlatform(e.target.value)}
                   className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
                   <option value="all">All Platforms</option>
-                  {PLATFORMS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {PLATFORMS?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div className="space-y-3">
@@ -218,7 +218,7 @@ export default function SocialMediaPage() {
         <GlassCard className="p-5">
           <h3 className="text-lg font-bold text-white mb-4">Social Inbox</h3>
           <div className="space-y-3">
-            {INBOX_MESSAGES.map(msg => {
+            {INBOX_MESSAGES?.map(msg => {
               const PlatformIcon = getPlatformIcon(msg.platform);
               return (
                 <div key={msg.id} className={`p-4 rounded-xl flex items-start gap-3 cursor-pointer transition-all ${
@@ -249,7 +249,7 @@ export default function SocialMediaPage() {
           <GlassCard className="p-6">
             <h3 className="text-lg font-bold text-white mb-4">Engagement by Platform</h3>
             <div className="space-y-4">
-              {PLATFORMS.map(p => {
+              {PLATFORMS?.map(p => {
                 const Icon = p.icon;
                 return (
                   <div key={p.id}>
@@ -306,7 +306,7 @@ export default function SocialMediaPage() {
             </div>
             <div className="p-6">
               <div className="flex gap-2 mb-4">
-                {PLATFORMS.map(p => {
+                {PLATFORMS?.map(p => {
                   const Icon = p.icon;
                   return (
                     <button key={p.id} className="p-2 rounded-lg border border-white/10 hover:border-white/30" style={{ backgroundColor: p.color + "10" }}>
@@ -340,3 +340,4 @@ export default function SocialMediaPage() {
     </div>
   );
 }
+

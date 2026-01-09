@@ -39,7 +39,7 @@ export default function SocialAnalyticsPage() {
       </motion.div>
 
       <div className="grid grid-cols-4 gap-6 mb-8">
-        {METRICS.map((metric, i) => (
+        {METRICS?.map((metric, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -58,7 +58,7 @@ export default function SocialAnalyticsPage() {
 
       <h2 className="text-xl font-bold text-white mb-4">Rendimiento por Plataforma</h2>
       <div className="grid grid-cols-2 gap-6">
-        {PLATFORM_STATS.map((stat, i) => (
+        {PLATFORM_STATS?.map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.1 }}>
             <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -77,3 +77,4 @@ export default function SocialAnalyticsPage() {
     </div>
   );
 }
+

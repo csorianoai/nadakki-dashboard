@@ -23,7 +23,7 @@ export default function AnalyticsAgentsPage() {
         </div>
       </motion.div>
       <div className="grid grid-cols-2 gap-4">
-        {AGENTS.map((a, i) => (
+        {AGENTS?.map((a, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <GlassCard className="p-5">
               <div className="flex items-center gap-4">
@@ -38,3 +38,4 @@ export default function AnalyticsAgentsPage() {
     </div>
   );
 }
+

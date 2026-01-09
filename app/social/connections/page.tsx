@@ -44,7 +44,7 @@ export default function SocialConnectionsPage() {
       const res = await fetch(API_URL + "/api/social/connections?tenant_id=" + TENANT_ID);
       if (res.ok) {
         const data = await res.json();
-        const merged: Connection[] = PLATFORMS.map(p => {
+        const merged: Connection[] = PLATFORMS?.map(p => {
           const conn = data.connections?.find((c: { platform: string }) => c.platform === p.id);
           return {
             id: p.id,
@@ -140,7 +140,7 @@ export default function SocialConnectionsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-6">
-          {connections.map((conn, i) => (
+          {connections?.map((conn, i) => (
             <motion.div key={conn.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <GlassCard className={"p-6 " + (conn.connected ? "border-green-500/30" : "")}>
                 <div className="flex items-start justify-between mb-4">
@@ -216,4 +216,5 @@ export default function SocialConnectionsPage() {
     </div>
   );
 }
+
 

@@ -278,7 +278,7 @@ export default function MarketingHubPage() {
           <h2 className="text-xl font-bold text-white">Core Marketing</h2>
         </div>
         <div className="grid grid-cols-2 gap-6">
-          {CORE_MODULES.map((m, i) => renderModuleCard(m, i, 0.1))}
+          {CORE_MODULES?.map((m, i) => renderModuleCard(m, i, 0.1))}
         </div>
       </div>
 
@@ -289,7 +289,7 @@ export default function MarketingHubPage() {
           <h2 className="text-xl font-bold text-white">Testing & Analytics</h2>
         </div>
         <div className="grid grid-cols-2 gap-6">
-          {TESTING_MODULES.map((m, i) => renderModuleCard(m, i, 0.2))}
+          {TESTING_MODULES?.map((m, i) => renderModuleCard(m, i, 0.2))}
         </div>
       </div>
 
@@ -300,7 +300,7 @@ export default function MarketingHubPage() {
           <h2 className="text-xl font-bold text-white">Channels & Integrations</h2>
         </div>
         <div className="grid grid-cols-2 gap-6">
-          {CHANNEL_MODULES.map((m, i) => renderModuleCard(m, i, 0.3))}
+          {CHANNEL_MODULES?.map((m, i) => renderModuleCard(m, i, 0.3))}
         </div>
       </div>
 
@@ -311,10 +311,11 @@ export default function MarketingHubPage() {
           <h2 className="text-xl font-bold text-white">Advanced</h2>
         </div>
         <div className="grid grid-cols-3 gap-6">
-          {ADVANCED_MODULES.map((m, i) => renderModuleCard(m, i, 0.4))}
+          {ADVANCED_MODULES?.map((m, i) => renderModuleCard(m, i, 0.4))}
         </div>
       </div>
     </div>
   );
 }
+
 

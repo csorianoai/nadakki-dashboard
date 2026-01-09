@@ -113,7 +113,7 @@ export default function EmailBuilderPage() {
   };
 
   const updateBlock = (id: string, updates: Partial<EmailBlock>) => {
-    setBlocks(blocks.map(b => b.id === id ? { ...b, ...updates } : b));
+    setBlocks(blocks?.map(b => b.id === id ? { ...b, ...updates } : b));
   };
 
   const deleteBlock = (id: string) => {
@@ -225,7 +225,7 @@ export default function EmailBuilderPage() {
         <div className="w-64 border-r border-white/10 bg-[#0d1117] p-4 overflow-y-auto">
           <h3 className="text-sm font-medium text-gray-400 mb-3">CONTENT BLOCKS</h3>
           <div className="grid grid-cols-2 gap-2">
-            {BLOCK_TYPES.map(block => (
+            {BLOCK_TYPES?.map(block => (
               <button
                 key={block.type}
                 onClick={() => addBlock(block.type as EmailBlock["type"])}
@@ -244,7 +244,7 @@ export default function EmailBuilderPage() {
             className="mx-auto bg-white shadow-xl"
             style={{ width: viewMode === "desktop" ? 600 : 375, minHeight: 800 }}
           >
-            {blocks.map((block, idx) => (
+            {blocks?.map((block, idx) => (
               <div
                 key={block.id}
                 onClick={() => setSelectedBlock(block.id)}
@@ -359,3 +359,4 @@ export default function EmailBuilderPage() {
     </div>
   );
 }
+

@@ -29,7 +29,7 @@ export default function CommandCenterPage() {
 
       {/* KPIs Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 16, marginBottom: 32 }}>
-        {kpis.map((kpi, i) => (
+        {kpis?.map((kpi, i) => (
           <div key={i} style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: 16 }}>
             <p style={{ color: "#64748b", fontSize: 11, margin: 0 }}>{kpi.label}</p>
             <p style={{ color: "#f8fafc", fontSize: 24, fontWeight: 700, margin: "8px 0 4px 0" }}>{kpi.value}</p>
@@ -52,7 +52,7 @@ export default function CommandCenterPage() {
             </tr>
           </thead>
           <tbody>
-            {channels.map((ch, i) => (
+            {channels?.map((ch, i) => (
               <tr key={i} style={{ borderTop: "1px solid rgba(51,65,85,0.3)" }}>
                 <td style={{ padding: 16, display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: ch.color }} />
@@ -72,3 +72,4 @@ export default function CommandCenterPage() {
     </div>
   );
 }
+

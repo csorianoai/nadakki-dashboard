@@ -70,7 +70,7 @@ export default function ContentStudioPage() {
             <div className="mb-6">
               <label className="text-sm text-gray-400 mb-3 block">Plataforma</label>
               <div className="grid grid-cols-2 gap-2">
-                {PLATFORMS.map(p => (
+                {PLATFORMS?.map(p => (
                   <button key={p.id} onClick={() => setPlatform(p.id)}
                     className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${platform === p.id ? "border-purple-500 bg-purple-500/10" : "border-white/10 bg-white/5 hover:bg-white/10"}`}>
                     <p.icon className="w-5 h-5" style={{ color: p.color }} />
@@ -83,7 +83,7 @@ export default function ContentStudioPage() {
             <div className="mb-6">
               <label className="text-sm text-gray-400 mb-3 block">Tono</label>
               <div className="flex flex-wrap gap-2">
-                {TONES.map(t => (
+                {TONES?.map(t => (
                   <button key={t} onClick={() => setTone(t)}
                     className={`px-3 py-2 rounded-lg text-sm transition-all ${tone === t ? "bg-purple-500 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
                     {t}
@@ -119,7 +119,7 @@ export default function ContentStudioPage() {
 
             {results.length > 0 ? (
               <div className="space-y-4">
-                {results.map((result, i) => (
+                {results?.map((result, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                     className="p-5 bg-white/5 border border-white/10 rounded-xl">
                     <div className="flex items-start justify-between gap-4 mb-3">
@@ -147,3 +147,4 @@ export default function ContentStudioPage() {
     </div>
   );
 }
+

@@ -48,14 +48,14 @@ export default function AIStudioPage() {
       </motion.div>
 
       <div className="grid grid-cols-4 gap-6 mb-8">
-        {STATS.map((stat, i) => (
+        {STATS?.map((stat, i) => (
           <StatCard key={i} {...stat} delay={i * 0.1} />
         ))}
       </div>
 
       <h2 className="text-xl font-bold text-white mb-4">Herramientas Disponibles</h2>
       <div className="grid grid-cols-3 gap-6 mb-8">
-        {AI_TOOLS.map((tool, index) => (
+        {AI_TOOLS?.map((tool, index) => (
           <motion.div
             key={tool.id}
             initial={{ opacity: 0, y: 20 }}
@@ -110,3 +110,4 @@ export default function AIStudioPage() {
     </div>
   );
 }
+

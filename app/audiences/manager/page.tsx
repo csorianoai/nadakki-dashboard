@@ -35,7 +35,7 @@ export default function AudiencesManagerPage() {
         <input type="text" placeholder="Buscar segmentos..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500" /></div>
       </GlassCard>
       <div className="space-y-4">
-        {filtered.map((seg, i) => (
+        {filtered?.map((seg, i) => (
           <motion.div key={seg.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-5">
               <div className="flex items-center justify-between">
@@ -53,3 +53,4 @@ export default function AudiencesManagerPage() {
     </div>
   );
 }
+

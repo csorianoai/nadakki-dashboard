@@ -59,7 +59,7 @@ export default function AdminPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-6 mb-8">
-        {SYSTEM_STATS.map((stat, i) => (
+        {SYSTEM_STATS?.map((stat, i) => (
           <StatCard key={i} {...stat} delay={i * 0.1} />
         ))}
       </div>
@@ -70,7 +70,7 @@ export default function AdminPage() {
         <div className="col-span-2">
           <h2 className="text-xl font-bold text-white mb-4">Módulos de Administración</h2>
           <div className="grid grid-cols-2 gap-4">
-            {ADMIN_MODULES.map((module, index) => (
+            {ADMIN_MODULES?.map((module, index) => (
               <motion.div
                 key={module.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -113,7 +113,7 @@ export default function AdminPage() {
           <h2 className="text-xl font-bold text-white mb-4">Eventos Recientes</h2>
           <GlassCard className="p-4">
             <div className="space-y-4">
-              {RECENT_EVENTS.map((event, i) => (
+              {RECENT_EVENTS?.map((event, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: 20 }}
@@ -148,3 +148,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

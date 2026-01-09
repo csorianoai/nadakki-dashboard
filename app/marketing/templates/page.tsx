@@ -102,7 +102,7 @@ function AIRecommendationPanel({ templates, theme }: any) {
         </div>
       </div>
       <div className="space-y-2">
-        {recommendations.map((t: Template) => (
+        {recommendations?.map((t: Template) => (
           <div key={t.id} className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-white/5"
             style={{ backgroundColor: isLight ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.2)" }}>
             <span className="text-xl">{t.thumbnail}</span>
@@ -201,7 +201,7 @@ function PreviewModal({ template, onClose, onUse, theme }: any) {
         <div className="flex flex-1 overflow-hidden">
           <div className="flex-1 flex flex-col">
             <div className="flex gap-1 p-3" style={{ borderBottom: `1px solid ${borderColor}` }}>
-              {template.channels.map((ch: string) => (<button key={ch} onClick={() => setActiveChannel(ch)} className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5" style={{ backgroundColor: activeChannel === ch ? accentPrimary : "transparent", color: activeChannel === ch ? "white" : textMuted }}>{ch === "email" ? <Mail className="w-4 h-4" /> : ch === "sms" ? <MessageSquare className="w-4 h-4" /> : ch === "push" ? <Bell className="w-4 h-4" /> : ch === "whatsapp" ? <MessageCircle className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}{ch}</button>))}
+              {template?.channels?.map((ch: string) => (<button key={ch} onClick={() => setActiveChannel(ch)} className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5" style={{ backgroundColor: activeChannel === ch ? accentPrimary : "transparent", color: activeChannel === ch ? "white" : textMuted }}>{ch === "email" ? <Mail className="w-4 h-4" /> : ch === "sms" ? <MessageSquare className="w-4 h-4" /> : ch === "push" ? <Bell className="w-4 h-4" /> : ch === "whatsapp" ? <MessageCircle className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}{ch}</button>))}
             </div>
             <div className="flex-1 p-6 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${accentPrimary}05, rgba(6,182,212,0.05))` }}>
               <div className="text-center"><span className="text-6xl mb-4 block">{template.thumbnail}</span><p className="text-sm" style={{ color: textMuted }}>Vista previa: {activeChannel.toUpperCase()}</p><p className="text-xs mt-2 px-3 py-1 rounded-lg" style={{ backgroundColor: `${accentPrimary}10`, color: accentPrimary }}>Tono: {selectedTone}</p></div>
@@ -209,8 +209,8 @@ function PreviewModal({ template, onClose, onUse, theme }: any) {
           </div>
           <div className="w-72 p-4 overflow-y-auto" style={{ borderLeft: `1px solid ${borderColor}` }}>
             {template.isAIOptimized && (<div className="mb-4 p-3 rounded-xl" style={{ background: `linear-gradient(135deg, ${accentPrimary}10, rgba(6,182,212,0.1))` }}><h4 className="font-semibold text-sm mb-2 flex items-center gap-2" style={{ color: textPrimary }}><Brain className="w-4 h-4" style={{ color: accentPrimary }} />AI Capabilities</h4><div className="space-y-1 text-xs">{template.aiCapabilities.personalization && <div className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /><span style={{ color: textMuted }}>Personalización</span></div>}{template.aiCapabilities.autoCopyRewrite && <div className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /><span style={{ color: textMuted }}>Reescritura IA</span></div>}{template.aiCapabilities.channelOptimization && <div className="flex items-center gap-1"><Check className="w-3 h-3 text-green-500" /><span style={{ color: textMuted }}>Optimización multicanal</span></div>}</div></div>)}
-            <div className="mb-4"><h4 className="text-sm font-semibold mb-2" style={{ color: textPrimary }}>Tono</h4><div className="flex flex-wrap gap-1">{template.aiCapabilities.toneVariants.map((tone: string) => (<button key={tone} onClick={() => setSelectedTone(tone)} className="px-2 py-1 rounded text-xs font-medium" style={{ backgroundColor: selectedTone === tone ? accentPrimary : isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: selectedTone === tone ? "white" : textMuted }}>{tone}</button>))}</div></div>
-            <div className="mb-4"><h4 className="text-sm font-semibold mb-2" style={{ color: textPrimary }}>Campos dinámicos</h4><div className="flex flex-wrap gap-1">{template.aiCapabilities.dynamicFields.map((field: string) => (<span key={field} className="px-2 py-1 rounded text-[10px] font-mono" style={{ backgroundColor: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: textMuted }}>{`{{${field}}}`}</span>))}</div></div>
+            <div className="mb-4"><h4 className="text-sm font-semibold mb-2" style={{ color: textPrimary }}>Tono</h4><div className="flex flex-wrap gap-1">{template?.aiCapabilities?.toneVariants?.map((tone: string) => (<button key={tone} onClick={() => setSelectedTone(tone)} className="px-2 py-1 rounded text-xs font-medium" style={{ backgroundColor: selectedTone === tone ? accentPrimary : isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: selectedTone === tone ? "white" : textMuted }}>{tone}</button>))}</div></div>
+            <div className="mb-4"><h4 className="text-sm font-semibold mb-2" style={{ color: textPrimary }}>Campos dinámicos</h4><div className="flex flex-wrap gap-1">{template?.aiCapabilities?.dynamicFields?.map((field: string) => (<span key={field} className="px-2 py-1 rounded text-[10px] font-mono" style={{ backgroundColor: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: textMuted }}>{`{{${field}}}`}</span>))}</div></div>
             <div className="p-3 rounded-xl" style={{ backgroundColor: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.03)" }}><h4 className="text-sm font-semibold mb-2 flex items-center gap-1" style={{ color: textPrimary }}><BarChart3 className="w-4 h-4" style={{ color: accentPrimary }} />Performance</h4><div className="space-y-2 text-sm"><div className="flex justify-between"><span style={{ color: textMuted }}>CTR</span><span className="font-bold text-green-500">{template.performance.ctr}%</span></div><div className="flex justify-between"><span style={{ color: textMuted }}>Conversión</span><span className="font-bold" style={{ color: accentPrimary }}>{template.performance.conversion}%</span></div><div className="flex justify-between"><span style={{ color: textMuted }}>Respuesta</span><span className="font-bold text-cyan-500">{template.performance.avgResponseTime}</span></div><div className="flex justify-between"><span style={{ color: textMuted }}>Mejor canal</span><span className="font-bold" style={{ color: textPrimary }}>{template.performance.bestChannel}</span></div></div></div>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function TemplatesPage() {
           <div className="mb-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>Objetivo</h3>
             <div className="space-y-0.5">
-              {goals.map((g) => (
+              {goals?.map((g) => (
                 <button key={g.id} onClick={() => setSelectedGoal(selectedGoal === g.id ? null : g.id)} className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-sm" style={{ backgroundColor: selectedGoal === g.id ? `${accentPrimary}20` : "transparent", color: selectedGoal === g.id ? accentPrimary : textSecondary }}>
                   <span>{g.icon}</span><span className="truncate">{g.name}</span>
                 </button>
@@ -322,7 +322,7 @@ export default function TemplatesPage() {
           <div className="mb-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>Canal</h3>
             <div className="space-y-0.5">
-              {categories.map((c) => (
+              {categories?.map((c) => (
                 <button key={c.id} onClick={() => setSelectedCategory(c.id)} className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm" style={{ backgroundColor: selectedCategory === c.id ? `${accentPrimary}20` : "transparent", color: selectedCategory === c.id ? accentPrimary : textSecondary }}>
                   <div className="flex items-center gap-2"><c.icon className="w-4 h-4" /><span>{c.name}</span></div>
                   <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: isLight ? "#f1f5f9" : "rgba(255,255,255,0.1)" }}>{c.count}</span>
@@ -335,7 +335,7 @@ export default function TemplatesPage() {
           <div className="mb-4">
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>Industria</h3>
             <div className="space-y-0.5">
-              {industries.map((i) => (
+              {industries?.map((i) => (
                 <button key={i.id} onClick={() => setSelectedIndustry(i.id)} className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-left" style={{ backgroundColor: selectedIndustry === i.id ? `${accentPrimary}20` : "transparent", color: selectedIndustry === i.id ? accentPrimary : textSecondary }}>
                   <span>{i.icon}</span><span>{i.name}</span>
                 </button>
@@ -347,7 +347,7 @@ export default function TemplatesPage() {
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: textMuted }}>Colecciones</h3>
             <div className="space-y-1">
-              {collections.map((col) => (
+              {collections?.map((col) => (
                 <div key={col.id} className="p-2 rounded-lg cursor-pointer hover:bg-white/5" style={{ backgroundColor: isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)" }}>
                   <div className="flex items-center gap-2"><span>{col.icon}</span><div className="flex-1 min-w-0"><div className="text-sm font-medium truncate" style={{ color: textPrimary }}>{col.name}</div><div className="text-xs" style={{ color: textMuted }}>{col.count} templates</div></div></div>
                 </div>
@@ -377,7 +377,7 @@ export default function TemplatesPage() {
 
           {/* Grid */}
           <div className={`grid gap-4 ${viewMode === "grid" ? "grid-cols-4" : "grid-cols-1"}`}>
-            {filteredTemplates.map((t) => (
+            {filteredTemplates?.map((t) => (
               <TemplateCard key={t.id} template={t} theme={theme} onPreview={setPreviewTemplate} onUse={() => {}} isFavorite={favorites.includes(t.id)} onToggleFavorite={toggleFavorite} />
             ))}
           </div>
@@ -397,3 +397,4 @@ export default function TemplatesPage() {
     </div>
   );
 }
+

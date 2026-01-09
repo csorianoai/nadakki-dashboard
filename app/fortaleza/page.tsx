@@ -35,7 +35,7 @@ export default function FortalezaPage() {
       <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 24 }}>Fortaleza Financiera</h1>
       <p style={{ color: "#94a3b8", marginBottom: 32 }}>Analisis de fortaleza y pruebas de estres</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
-        {AGENTS.map((agent) => (
+        {AGENTS?.map((agent) => (
           <div key={agent.id} style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 16, padding: 24 }}>
             <h3 style={{ color: "#f8fafc", fontSize: 18, fontWeight: 600, margin: "0 0 8px 0" }}>{agent.name}</h3>
             <p style={{ color: "#94a3b8", fontSize: 14, margin: "0 0 16px 0" }}>{agent.desc}</p>
@@ -58,3 +58,4 @@ export default function FortalezaPage() {
     </div>
   );
 }
+

@@ -24,7 +24,7 @@ export default function NotificationsPage() {
         </div>
       </motion.div>
       <div className="space-y-3">
-        {NOTIFICATIONS.map((n, i) => (
+        {NOTIFICATIONS?.map((n, i) => (
           <motion.div key={n.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className={`p-4 ${!n.read ? "border-l-2 border-l-yellow-500" : ""}`}>
               <div className="flex items-start justify-between">
@@ -45,3 +45,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

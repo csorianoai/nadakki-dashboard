@@ -53,7 +53,7 @@ export default function SocialEditorPage() {
           <GlassCard className="p-6">
             <label className="text-sm text-gray-400 mb-3 block">Plataformas</label>
             <div className="flex gap-2 mb-6">
-              {PLATFORMS.map(p => (
+              {PLATFORMS?.map(p => (
                 <button key={p.id} onClick={() => togglePlatform(p.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${selectedPlatforms.includes(p.id) ? "border-white/30 bg-white/10" : "border-white/10 bg-white/5"}`}>
                   <p.icon className="w-5 h-5" style={{ color: selectedPlatforms.includes(p.id) ? p.color : "#6b7280" }} />
@@ -99,3 +99,4 @@ export default function SocialEditorPage() {
     </div>
   );
 }
+

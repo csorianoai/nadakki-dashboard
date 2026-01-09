@@ -78,7 +78,7 @@ export default function MarketingLeadsPage() {
       </GlassCard>
 
       <div className="space-y-4">
-        {filteredLeads.map((lead, i) => {
+        {filteredLeads?.map((lead, i) => {
           const scoreStyle = SCORE_COLORS[lead.status as keyof typeof SCORE_COLORS];
           return (
             <motion.div key={lead.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
@@ -113,3 +113,4 @@ export default function MarketingLeadsPage() {
     </div>
   );
 }
+

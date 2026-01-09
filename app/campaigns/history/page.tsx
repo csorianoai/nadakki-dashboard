@@ -22,7 +22,7 @@ export default function CampaignsHistoryPage() {
         </div>
       </motion.div>
       <div className="space-y-4">
-        {HISTORY.map((c, i) => (
+        {HISTORY?.map((c, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-5">
               <div className="flex items-center justify-between mb-4">
@@ -45,3 +45,4 @@ export default function CampaignsHistoryPage() {
     </div>
   );
 }
+

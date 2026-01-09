@@ -24,7 +24,7 @@ export default function LeadsPipelinePage() {
         </div>
       </motion.div>
       <div className="grid grid-cols-5 gap-4">
-        {STAGES.map((stage, i) => (
+        {STAGES?.map((stage, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <GlassCard className="p-4">
               <div className="flex items-center justify-between mb-4">
@@ -40,3 +40,4 @@ export default function LeadsPipelinePage() {
     </div>
   );
 }
+

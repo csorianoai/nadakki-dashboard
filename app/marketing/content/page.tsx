@@ -107,7 +107,7 @@ export default function ContentStudioPage() {
           <GlassCard className="p-5">
             <h3 className="text-lg font-bold text-white mb-4">Content Type</h3>
             <div className="space-y-2">
-              {CONTENT_TYPES.map(type => (
+              {CONTENT_TYPES?.map(type => (
                 <button key={type.id} onClick={() => setSelectedType(type.id)}
                   className={`w-full p-3 text-left rounded-xl border transition-all flex items-center gap-3 ${
                     selectedType === type.id ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"
@@ -213,7 +213,7 @@ export default function ContentStudioPage() {
           <GlassCard className="p-6">
             <h3 className="text-lg font-bold text-white mb-4">Recent Content</h3>
             <div className="space-y-3">
-              {RECENT_CONTENT.map(c => (
+              {RECENT_CONTENT?.map(c => (
                 <div key={c.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-gray-400" />
@@ -232,3 +232,4 @@ export default function ContentStudioPage() {
     </div>
   );
 }
+

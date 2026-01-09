@@ -41,14 +41,14 @@ export default function EmailPage() {
       </motion.div>
 
       <div className="grid grid-cols-4 gap-6 mb-8">
-        {STATS.map((stat, i) => (
+        {STATS?.map((stat, i) => (
           <StatCard key={i} {...stat} delay={i * 0.1} />
         ))}
       </div>
 
       <h2 className="text-xl font-bold text-white mb-4">Modulos</h2>
       <div className="grid grid-cols-2 gap-6">
-        {EMAIL_MODULES.map((module, i) => (
+        {EMAIL_MODULES?.map((module, i) => (
           <motion.div key={module.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }}>
             <Link href={module.href}>
               <GlassCard className="p-6 cursor-pointer group">
@@ -70,3 +70,4 @@ export default function EmailPage() {
     </div>
   );
 }
+

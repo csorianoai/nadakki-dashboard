@@ -75,7 +75,7 @@ export default function LibraryAssetsPage() {
       </GlassCard>
 
       <div className="grid grid-cols-3 gap-4">
-        {filteredAssets.map((asset, i) => {
+        {filteredAssets?.map((asset, i) => {
           const config = TYPE_CONFIG[asset.type];
           const Icon = config.icon;
           return (
@@ -109,3 +109,4 @@ export default function LibraryAssetsPage() {
     </div>
   );
 }
+

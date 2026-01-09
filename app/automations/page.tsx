@@ -30,7 +30,7 @@ export default function AutomationsPage() {
         <StatCard value="6K" label="Ejecuciones" icon={<Settings className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
       </div>
       <div className="space-y-4">
-        {AUTOMATIONS.map((auto, i) => (
+        {AUTOMATIONS?.map((auto, i) => (
           <motion.div key={auto.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-5">
               <div className="flex items-center justify-between">
@@ -50,3 +50,4 @@ export default function AutomationsPage() {
     </div>
   );
 }
+

@@ -70,7 +70,7 @@ export default function AgentsPage() {
   };
 
   const toggleStatus = (id: string) => {
-    setAgents(agents.map(a => a.id === id ? { ...a, status: a.status === "active" ? "paused" : "active" } : a));
+    setAgents(agents?.map(a => a.id === id ? { ...a, status: a.status === "active" ? "paused" : "active" } : a));
   };
 
   const duplicateAgent = (agent: Agent) => {
@@ -132,7 +132,7 @@ export default function AgentsPage() {
 
       {/* Agents Grid */}
       <div className="grid grid-cols-2 gap-6">
-        {filteredAgents.map((agent, i) => {
+        {filteredAgents?.map((agent, i) => {
           const typeConfig = AGENT_TYPES[agent.type];
           const TypeIcon = typeConfig.icon;
           return (
@@ -217,7 +217,7 @@ export default function AgentsPage() {
               <div className="p-6">
                 <h4 className="text-sm font-medium text-gray-400 mb-4">TEMPLATES</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  {TEMPLATES.map(t => (
+                  {TEMPLATES?.map(t => (
                     <button key={t.id} className="p-4 border border-white/10 rounded-xl hover:border-green-500 hover:bg-green-500/5 text-left transition-all group">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 rounded-lg bg-white/10 group-hover:bg-green-500/20">
@@ -249,3 +249,4 @@ export default function AgentsPage() {
     </div>
   );
 }
+

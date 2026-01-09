@@ -1,0 +1,19 @@
+app/marketing/campaigns/page.tsx(121,77): error TS2339: Property 'converted' does not exist on type '{ sent: number; opened: number; clicked: number; conversions: number; }'.
+app/marketing/campaigns/page.tsx(127,47): error TS18048: 'campaign.audience_size' is possibly 'undefined'.
+app/marketing/campaigns/page.tsx(163,39): error TS2339: Property 'list' does not exist on type '{ getAll: (signal?: AbortSignal | undefined) => Promise<Campaign[]>; getById: (id: string, signal?: AbortSignal | undefined) => Promise<Campaign>; create: (data: Partial<...>) => Promise<...>; update: (id: string, data: Partial<...>) => Promise<...>; delete: (id: string) => Promise<...>; }'.
+app/marketing/campaigns/page.tsx(184,49): error TS2339: Property 'duplicate' does not exist on type '{ getAll: (signal?: AbortSignal | undefined) => Promise<Campaign[]>; getById: (id: string, signal?: AbortSignal | undefined) => Promise<Campaign>; create: (data: Partial<...>) => Promise<...>; update: (id: string, data: Partial<...>) => Promise<...>; delete: (id: string) => Promise<...>; }'.
+app/marketing/campaigns/page.tsx(188,30): error TS2339: Property 'activate' does not exist on type '{ getAll: (signal?: AbortSignal | undefined) => Promise<Campaign[]>; getById: (id: string, signal?: AbortSignal | undefined) => Promise<Campaign>; create: (data: Partial<...>) => Promise<...>; update: (id: string, data: Partial<...>) => Promise<...>; delete: (id: string) => Promise<...>; }'.
+app/marketing/campaigns/page.tsx(191,30): error TS2339: Property 'pause' does not exist on type '{ getAll: (signal?: AbortSignal | undefined) => Promise<Campaign[]>; getById: (id: string, signal?: AbortSignal | undefined) => Promise<Campaign>; create: (data: Partial<...>) => Promise<...>; update: (id: string, data: Partial<...>) => Promise<...>; delete: (id: string) => Promise<...>; }'.
+app/marketing/overview/page.tsx(223,66): error TS2339: Property 'new_users' does not exist on type 'AnalyticsOverview'.
+app/marketing/overview/page.tsx(224,71): error TS2339: Property 'stickiness' does not exist on type 'AnalyticsOverview'.
+app/marketing/overview/page.tsx(225,63): error TS2339: Property 'sessions_per_mau' does not exist on type 'AnalyticsOverview'.
+app/marketing/overview/page.tsx(256,63): error TS2339: Property 'id' does not exist on type '{ name: string; value: number; target: number; unit: string; }'.
+app/marketing/overview/page.tsx(263,62): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+hooks/useTracking.ts(36,30): error TS2339: Property 'trackEvent' does not exist on type '{ getOverview: (tenantId?: string, period?: string, signal?: AbortSignal | undefined) => Promise<AnalyticsOverview>; getMetrics: (tenantId?: string, signal?: AbortSignal | undefined) => Promise<...>; getRealtime: (tenantId?: string, signal?: AbortSignal | undefined) => Promise<...>; getTimeSeries: (period?: string, ...'.
+hooks/useTracking.ts(68,20): error TS2339: Property 'trackEvent' does not exist on type '{ getOverview: (tenantId?: string, period?: string, signal?: AbortSignal | undefined) => Promise<AnalyticsOverview>; getMetrics: (tenantId?: string, signal?: AbortSignal | undefined) => Promise<...>; getRealtime: (tenantId?: string, signal?: AbortSignal | undefined) => Promise<...>; getTimeSeries: (period?: string, ...'.

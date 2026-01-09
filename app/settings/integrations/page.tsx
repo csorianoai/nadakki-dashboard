@@ -13,7 +13,7 @@ export default function IntegrationsPage() {
       <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 32 }}>🔗 Integraciones</h1>
       
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {integrations.map((i, idx) => (
+        {integrations?.map((i, idx) => (
           <div key={idx} style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 12, padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <span style={{ fontSize: 28 }}>{i.icon}</span>
@@ -33,3 +33,4 @@ export default function IntegrationsPage() {
     </div>
   );
 }
+

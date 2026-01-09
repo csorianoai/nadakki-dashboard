@@ -81,7 +81,7 @@ export default function AIGeneratePage() {
             <div className="mb-6">
               <label className="text-sm text-gray-400 mb-3 block">Plataforma</label>
               <div className="grid grid-cols-2 gap-2">
-                {PLATFORMS.map(p => (
+                {PLATFORMS?.map(p => (
                   <button
                     key={p.id}
                     onClick={() => setPlatform(p.id)}
@@ -98,7 +98,7 @@ export default function AIGeneratePage() {
             <div className="mb-6">
               <label className="text-sm text-gray-400 mb-3 block">Tono</label>
               <div className="flex flex-wrap gap-2">
-                {TONES.map(t => (
+                {TONES?.map(t => (
                   <button
                     key={t}
                     onClick={() => setTone(t)}
@@ -157,7 +157,7 @@ export default function AIGeneratePage() {
                   animate={{ opacity: 1 }}
                   className="space-y-4"
                 >
-                  {results.map((result, i) => (
+                  {results?.map((result, i) => (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, y: 20 }}
@@ -204,3 +204,4 @@ export default function AIGeneratePage() {
     </div>
   );
 }
+

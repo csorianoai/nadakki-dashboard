@@ -83,7 +83,7 @@ export default function AdminAgentsPage() {
               className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500" />
           </div>
           <div className="flex gap-2 overflow-x-auto">
-            {cores.map(c => (
+            {cores?.map(c => (
               <button key={c} onClick={() => setSelectedCore(c)}
                 className={"px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap " + (selectedCore === c ? "bg-purple-500 text-white" : "bg-white/5 text-gray-400")}>
                 {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -100,7 +100,7 @@ export default function AdminAgentsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-4 gap-3">
-          {filteredAgents.map((agent, i) => (
+          {filteredAgents?.map((agent, i) => (
             <motion.div key={agent.id + agent.core} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.01 }}>
               <Link href={'/' + agent.core + '/' + agent.id}>
                 <GlassCard className="p-4 cursor-pointer group hover:bg-white/10 transition-all">
@@ -121,3 +121,4 @@ export default function AdminAgentsPage() {
     </div>
   );
 }
+

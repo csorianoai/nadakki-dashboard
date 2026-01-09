@@ -84,7 +84,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-3 shadow-xl">
         <p className="text-white font-medium mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload?.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}: ${(entry.value / 1000).toFixed(1)}K
           </p>
@@ -120,7 +120,7 @@ export default function PredictivePage() {
   const refreshPredictions = async () => {
     setRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
-    setPredictions(predictions.map(p => ({
+    setPredictions(predictions?.map(p => ({
       ...p,
       conversionProbability: Math.min(1, Math.max(0, p.conversionProbability + (Math.random() - 0.5) * 0.05)),
       churnRisk: Math.min(1, Math.max(0, p.churnRisk + (Math.random() - 0.5) * 0.05)),
@@ -238,7 +238,7 @@ export default function PredictivePage() {
             <div className="col-span-2">
               <h3 className="text-lg font-bold text-white mb-4">Predicciones por Segmento</h3>
               <div className="space-y-3">
-                {predictions.map((pred, i) => (
+                {predictions?.map((pred, i) => (
                   <motion.div key={pred.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
                     <GlassCard className={"p-4 cursor-pointer hover:border-purple-500/30 transition-colors " +
                       (selectedSegment?.id === pred.id ? "border-purple-500/50" : "")}
@@ -291,7 +291,7 @@ export default function PredictivePage() {
                           className="mt-4 pt-4 border-t border-white/10">
                           <p className="text-xs text-gray-400 mb-2">Acciones Recomendadas:</p>
                           <div className="flex flex-wrap gap-2">
-                            {pred.recommendations.map((rec, ri) => (
+                            {pred?.recommendations?.map((rec, ri) => (
                               <span key={ri} className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-lg">
                                 {rec}
                               </span>
@@ -312,7 +312,7 @@ export default function PredictivePage() {
               </h3>
               <GlassCard className="p-4">
                 <div className="space-y-3">
-                  {churnAlerts.map((alert, i) => (
+                  {churnAlerts?.map((alert, i) => (
                     <motion.div key={alert.userId} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}
                       className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
                       <div className="flex items-center justify-between mb-2">
@@ -366,3 +366,4 @@ export default function PredictivePage() {
     </div>
   );
 }
+

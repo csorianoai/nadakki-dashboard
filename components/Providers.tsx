@@ -1,7 +1,7 @@
 "use client";
 import { ReactNode } from "react";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { TenantProvider } from "@/context/TenantContext";
+import { TenantProvider } from "@/contexts/TenantContext";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
@@ -12,3 +12,4 @@ export default function Providers({ children }: { children: ReactNode }) {
     </TenantProvider>
   );
 }
+

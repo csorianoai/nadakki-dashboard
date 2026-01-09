@@ -127,7 +127,7 @@ export default function AdminLogsPage() {
       {/* Timeline */}
       <GlassCard className="p-6">
         <div className="space-y-4">
-          {filteredLogs.map((log, i) => {
+          {filteredLogs?.map((log, i) => {
             const config = LEVEL_CONFIG[log.level];
             const Icon = config.icon;
             return (
@@ -161,3 +161,4 @@ export default function AdminLogsPage() {
     </div>
   );
 }
+

@@ -47,7 +47,7 @@ export default function EmailCampaignsPage() {
       </GlassCard>
 
       <div className="space-y-4">
-        {filteredCampaigns.map((campaign, i) => (
+        {filteredCampaigns?.map((campaign, i) => (
           <motion.div key={campaign.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-5">
               <div className="flex items-center justify-between mb-4">
@@ -95,3 +95,4 @@ export default function EmailCampaignsPage() {
     </div>
   );
 }
+

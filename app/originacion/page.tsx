@@ -66,7 +66,7 @@ export default function OriginacionPage() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-4">
-          {filteredAgents.map((agent, i) => (
+          {filteredAgents?.map((agent, i) => (
             <motion.div key={agent.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }}>
               <Link href={'/originacion/' + agent.id}>
                 <GlassCard className="p-5 cursor-pointer group h-full hover:bg-white/10 transition-all">
@@ -89,3 +89,4 @@ export default function OriginacionPage() {
     </div>
   );
 }
+

@@ -1,0 +1,54 @@
+"use client";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+
+export interface TenantSettings {
+  name: string;
+  logo?: string;
+  primaryColor: string;
+  timezone: string;
+  language: string;
+  currency: string;
+  dateFormat: string;
+  features: { aiGeneration: boolean; abTesting: boolean; advancedAnalytics: boolean; whatsapp: boolean; sms: boolean; };
+  limits: { maxCampaigns: number; maxContacts: number; maxEmailsPerMonth: number; };
+  plan: "free" | "starter" | "pro" | "enterprise";
+}
+
+interface TenantContextType {
+  tenantId: string;
+  settings: TenantSettings;
+  setTenantId: (id: string) => void;
+  updateSettings: (updates: Partial<TenantSettings>) => void;
+  isFeatureEnabled: (feature: keyof TenantSettings["features"]) => boolean;
+  checkLimit: (limit: keyof TenantSettings["limits"], current: number) => boolean;
+}
+
+const DEFAULT_SETTINGS: TenantSettings = {
+  name: "NADAKKI Demo", primaryColor: "#8b5cf6", timezone: "America/New_York", language: "es", currency: "USD", dateFormat: "MM/DD/YYYY",
+  features: { aiGeneration: true, abTesting: true, advancedAnalytics: true, whatsapp: false, sms: true },
+  limits: { maxCampaigns: 50, maxContacts: 10000, maxEmailsPerMonth: 50000 }, plan: "pro",
+};
+
+const DEFAULT_CONTEXT: TenantContextType = {
+  tenantId: "default", settings: DEFAULT_SETTINGS, setTenantId: () => {}, updateSettings: () => {}, isFeatureEnabled: () => true, checkLimit: () => true,
+};
+
+const TenantContext = createContext<TenantContextType | null>(null);
+
+export function TenantProvider({ children }: { children: ReactNode }) {
+  const [tenantId, setTenantIdState] = useState("default");
+  const [settings, setSettings] = useState<TenantSettings>(DEFAULT_SETTINGS);
+  const setTenantId = useCallback((id: string) => setTenantIdState(id), []);
+  const updateSettings = useCallback((updates: Partial<TenantSettings>) => setSettings(s => ({ ...s, ...updates })), []);
+  const isFeatureEnabled = useCallback((feature: keyof TenantSettings["features"]): boolean => settings.features[feature] ?? false, [settings.features]);
+  const checkLimit = useCallback((limit: keyof TenantSettings["limits"], current: number): boolean => current < settings.limits[limit], [settings.limits]);
+  return (<TenantContext.Provider value={{ tenantId, settings, setTenantId, updateSettings, isFeatureEnabled, checkLimit }}>{children}</TenantContext.Provider>);
+}
+
+export function useTenant(): TenantContextType {
+  const context = useContext(TenantContext);
+  if (!context) return DEFAULT_CONTEXT;
+  return context;
+}
+
+export default TenantContext;

@@ -23,7 +23,7 @@ export default function AnalyticsCampaignsPage() {
         </div>
       </motion.div>
       <div className="space-y-4">
-        {CAMPAIGNS.map((c, i) => (
+        {CAMPAIGNS?.map((c, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-5">
               <h3 className="font-bold text-white mb-4">{c.name}</h3>
@@ -40,3 +40,4 @@ export default function AnalyticsCampaignsPage() {
     </div>
   );
 }
+

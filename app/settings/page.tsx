@@ -67,7 +67,7 @@ export default function SettingsPage() {
         {/* Tabs */}
         <div className="col-span-1">
           <GlassCard className="p-2">
-            {TABS.map(tab => (
+            {TABS?.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -173,3 +173,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

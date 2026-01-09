@@ -29,7 +29,7 @@ export default function SocialMonitoringPage() {
       </div>
       <h2 className="text-xl font-bold text-white mb-4">Keywords Monitoreados</h2>
       <div className="space-y-4">
-        {KEYWORDS.map((k, i) => (
+        {KEYWORDS?.map((k, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-5">
               <div className="flex items-center justify-between">
@@ -46,3 +46,4 @@ export default function SocialMonitoringPage() {
     </div>
   );
 }
+

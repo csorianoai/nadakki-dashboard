@@ -262,8 +262,8 @@ const validateSegment = (name: string, groups: ConditionGroup[]): ValidationResu
 const generateSQLPreview = (groups: ConditionGroup[]): string => {
   if (groups.length === 0) return "SELECT * FROM users";
   
-  const groupsSQL = groups.map(group => {
-    const conditionsSQL = group.conditions.map(cond => {
+  const groupsSQL = groups?.map(group => {
+    const conditionsSQL = group?.conditions?.map(cond => {
       const op = cond.operator === "eq" ? "=" : 
                  cond.operator === "neq" ? "!=" :
                  cond.operator === "gt" ? ">" :
@@ -388,7 +388,7 @@ export default function SegmentsPage() {
     }
   };
 
-  const getDefaultSegments = (): Segment[] => PRESET_SEGMENTS.map((s, i) => ({
+  const getDefaultSegments = (): Segment[] => PRESET_SEGMENTS?.map((s, i) => ({
     id: "seg-" + (i + 1),
     name: s.name,
     description: s.desc,
@@ -411,11 +411,11 @@ export default function SegmentsPage() {
   };
 
   const updateGroupType = (groupId: string, type: "AND" | "OR") => {
-    setConditionGroups(conditionGroups.map(g => g.id === groupId ? { ...g, type } : g));
+    setConditionGroups(conditionGroups?.map(g => g.id === groupId ? { ...g, type } : g));
   };
 
   const addCondition = (groupId: string) => {
-    setConditionGroups(conditionGroups.map(g => 
+    setConditionGroups(conditionGroups?.map(g => 
       g.id === groupId 
         ? { ...g, conditions: [...g.conditions, { id: generateId(), field: "activity_days", operator: "lte", value: "" }] }
         : g
@@ -423,15 +423,15 @@ export default function SegmentsPage() {
   };
 
   const updateCondition = (groupId: string, condId: string, updates: Partial<Condition>) => {
-    setConditionGroups(conditionGroups.map(g => 
+    setConditionGroups(conditionGroups?.map(g => 
       g.id === groupId 
-        ? { ...g, conditions: g.conditions.map(c => c.id === condId ? { ...c, ...updates } : c) }
+        ? { ...g, conditions: g?.conditions?.map(c => c.id === condId ? { ...c, ...updates } : c) }
         : g
     ));
   };
 
   const removeCondition = (groupId: string, condId: string) => {
-    setConditionGroups(conditionGroups.map(g => 
+    setConditionGroups(conditionGroups?.map(g => 
       g.id === groupId 
         ? { ...g, conditions: g.conditions.filter(c => c.id !== condId) }
         : g
@@ -471,7 +471,7 @@ export default function SegmentsPage() {
     } catch {}
 
     if (editingSegment) {
-      setSegments(segments.map(s => s.id === editingSegment.id ? newSegment : s));
+      setSegments(segments?.map(s => s.id === editingSegment.id ? newSegment : s));
       addNotification("success", "Segmento actualizado correctamente");
     } else {
       setSegments([newSegment, ...segments]);
@@ -531,7 +531,7 @@ export default function SegmentsPage() {
   const usePreset = (preset: typeof PRESET_SEGMENTS[0]) => {
     setSegmentName(preset.name);
     setSegmentDesc(preset.desc);
-    setConditionGroups(preset.groups.map(g => ({ ...g, id: generateId(), conditions: g.conditions.map(c => ({ ...c, id: generateId() })) })));
+    setConditionGroups(preset.groups?.map(g => ({ ...g, id: generateId(), conditions: g?.conditions?.map(c => ({ ...c, id: generateId() })) })));
   };
 
   // Export/Import
@@ -589,7 +589,7 @@ export default function SegmentsPage() {
       {/* Notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         <AnimatePresence>
-          {notifications.map(n => (
+          {notifications?.map(n => (
             <motion.div key={n.id} initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 100 }}
               className={"px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 " +
                 (n.type === "success" ? "bg-green-500" : n.type === "error" ? "bg-red-500" : n.type === "warning" ? "bg-yellow-500" : "bg-blue-500")}>
@@ -694,7 +694,7 @@ export default function SegmentsPage() {
                   <label className="text-sm text-gray-400">Plantillas rapidas</label>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {PRESET_SEGMENTS.map((p, i) => (
+                  {PRESET_SEGMENTS?.map((p, i) => (
                     <button key={i} onClick={() => usePreset(p)}
                       className="text-xs px-3 py-1.5 bg-white/5 hover:bg-green-500/20 hover:text-green-400 border border-white/10 rounded-lg text-gray-400 transition-colors">
                       {p.name}
@@ -708,7 +708,7 @@ export default function SegmentsPage() {
                 <label className="text-sm text-gray-400 mb-3 block">Grupos de Condiciones</label>
                 
                 <div className="space-y-4">
-                  {conditionGroups.map((group, gi) => (
+                  {conditionGroups?.map((group, gi) => (
                     <div key={group.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
@@ -726,7 +726,7 @@ export default function SegmentsPage() {
                       </div>
 
                       <div className="space-y-2">
-                        {group.conditions.map((cond, ci) => {
+                        {group?.conditions?.map((cond, ci) => {
                           const field = FIELD_OPTIONS.find(f => f.id === cond.field);
                           const operators = OPERATORS[field?.type || "text"] || OPERATORS.text;
                           
@@ -742,7 +742,7 @@ export default function SegmentsPage() {
                               <div className="relative group/tooltip flex-1">
                                 <select value={cond.field} onChange={(e) => updateCondition(group.id, cond.id, { field: e.target.value, value: "" })}
                                   className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
-                                  {FIELD_OPTIONS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
+                                  {FIELD_OPTIONS?.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
                                 </select>
                                 {field?.tooltip && (
                                   <div className="absolute invisible group-hover/tooltip:visible bottom-full mb-2 left-0 w-64 p-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-gray-300 z-50">
@@ -753,14 +753,14 @@ export default function SegmentsPage() {
 
                               <select value={cond.operator} onChange={(e) => updateCondition(group.id, cond.id, { operator: e.target.value })}
                                 className="w-36 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
-                                {operators.map(op => <option key={op.id} value={op.id}>{op.label}</option>)}
+                                {operators?.map(op => <option key={op.id} value={op.id}>{op.label}</option>)}
                               </select>
 
                               {field?.type === "select" && field.options ? (
                                 <select value={cond.value} onChange={(e) => updateCondition(group.id, cond.id, { value: e.target.value })}
                                   className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm">
                                   <option value="">Seleccionar...</option>
-                                  {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                  {field?.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                 </select>
                               ) : (
                                 <input 
@@ -872,7 +872,7 @@ export default function SegmentsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4">
-          {filteredSegments.map((segment, i) => (
+          {filteredSegments?.map((segment, i) => (
             <motion.div key={segment.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
               <GlassCard className="p-5 group hover:border-green-500/30 transition-colors">
                 <div className="flex items-start justify-between mb-3">
@@ -948,3 +948,4 @@ export default function SegmentsPage() {
     </div>
   );
 }
+

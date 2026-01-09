@@ -230,7 +230,7 @@ export default function ABTestingPage() {
     if (variants.length >= 4) return;
     const newTraffic = Math.floor(100 / (variants.length + 1));
     setVariants([
-      ...variants.map(v => ({ ...v, traffic: newTraffic })),
+      ...variants?.map(v => ({ ...v, traffic: newTraffic })),
       { name: `Variante ${String.fromCharCode(65 + variants.length)}`, content: "", traffic: newTraffic }
     ]);
   };
@@ -239,11 +239,11 @@ export default function ABTestingPage() {
     if (variants.length <= 2) return;
     const newVariants = variants.filter((_, i) => i !== index);
     const newTraffic = Math.floor(100 / newVariants.length);
-    setVariants(newVariants.map(v => ({ ...v, traffic: newTraffic })));
+    setVariants(newVariants?.map(v => ({ ...v, traffic: newTraffic })));
   };
 
   const updateVariant = (index: number, updates: Partial<typeof variants[0]>) => {
-    setVariants(variants.map((v, i) => i === index ? { ...v, ...updates } : v));
+    setVariants(variants?.map((v, i) => i === index ? { ...v, ...updates } : v));
   };
 
   const createExperiment = () => {
@@ -258,7 +258,7 @@ export default function ABTestingPage() {
       description: expDesc,
       type: expType as Experiment["type"],
       status: "draft",
-      variants: variants.map((v, i) => ({
+      variants: variants?.map((v, i) => ({
         id: "v" + (i + 1),
         name: v.name,
         content: v.content,
@@ -293,21 +293,21 @@ export default function ABTestingPage() {
   };
 
   const startExperiment = (id: string) => {
-    setExperiments(experiments.map(exp => 
+    setExperiments(experiments?.map(exp => 
       exp.id === id ? { ...exp, status: "running", startDate: new Date().toISOString().split("T")[0] } : exp
     ));
     addNotification("success", "Experimento iniciado");
   };
 
   const pauseExperiment = (id: string) => {
-    setExperiments(experiments.map(exp => 
+    setExperiments(experiments?.map(exp => 
       exp.id === id ? { ...exp, status: "paused" } : exp
     ));
     addNotification("info", "Experimento pausado");
   };
 
   const completeExperiment = (id: string) => {
-    setExperiments(experiments.map(exp => {
+    setExperiments(experiments?.map(exp => {
       if (exp.id !== id) return exp;
       
       const bestVariant = exp.variants.reduce((best, v) => 
@@ -343,7 +343,7 @@ export default function ABTestingPage() {
       startDate: "",
       endDate: null,
       created_at: new Date().toISOString(),
-      variants: exp.variants.map(v => ({
+      variants: exp.variants?.map(v => ({
         ...v,
         id: "v" + generateId(),
         metrics: { impressions: 0, clicks: 0, conversions: 0, ctr: 0, conversionRate: 0 }
@@ -372,7 +372,7 @@ export default function ABTestingPage() {
       {/* Notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         <AnimatePresence>
-          {notifications.map(n => (
+          {notifications?.map(n => (
             <motion.div key={n.id} initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 100 }}
               className={"px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-white " +
                 (n.type === "success" ? "bg-green-500" : n.type === "error" ? "bg-red-500" : "bg-blue-500")}>
@@ -442,7 +442,7 @@ export default function ABTestingPage() {
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Tipo de Experimento</label>
                   <div className="grid grid-cols-5 gap-2">
-                    {EXPERIMENT_TYPES.map(t => (
+                    {EXPERIMENT_TYPES?.map(t => (
                       <button key={t.id} onClick={() => setExpType(t.id)}
                         className={"p-3 rounded-xl border text-center transition-all " +
                           (expType === t.id ? "border-yellow-500 bg-yellow-500/20" : "border-white/10 bg-white/5 hover:bg-white/10")}>
@@ -455,7 +455,7 @@ export default function ABTestingPage() {
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Objetivo Principal</label>
                   <div className="grid grid-cols-3 gap-2">
-                    {GOALS.map(g => (
+                    {GOALS?.map(g => (
                       <button key={g.id} onClick={() => setExpGoal(g.id)}
                         className={"p-3 rounded-xl border text-center transition-all " +
                           (expGoal === g.id ? "border-yellow-500 bg-yellow-500/20" : "border-white/10 bg-white/5 hover:bg-white/10")}>
@@ -477,7 +477,7 @@ export default function ABTestingPage() {
                   )}
                 </div>
                 <div className="space-y-3">
-                  {variants.map((v, i) => (
+                  {variants?.map((v, i) => (
                     <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
                       <div className={"w-10 h-10 rounded-lg flex items-center justify-center font-bold " +
                         (i === 0 ? "bg-blue-500/20 text-blue-400" : "bg-yellow-500/20 text-yellow-400")}>
@@ -572,7 +572,7 @@ export default function ABTestingPage() {
 
                 {/* Variants Comparison */}
                 <div className="space-y-4">
-                  {selectedExperiment.variants.map((variant, i) => {
+                  {selectedExperiment.variants?.map((variant, i) => {
                     const isWinner = variant.id === selectedExperiment.winner;
                     const control = selectedExperiment.variants[0];
                     const improvement = control.metrics.conversionRate > 0 
@@ -685,7 +685,7 @@ export default function ABTestingPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4">
-          {experiments.map((exp, i) => (
+          {experiments?.map((exp, i) => (
             <motion.div key={exp.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
               <GlassCard className="p-5 cursor-pointer group hover:border-yellow-500/30 transition-colors" onClick={() => setSelectedExperiment(exp)}>
                 <div className="flex items-start justify-between mb-3">
@@ -746,3 +746,4 @@ export default function ABTestingPage() {
     </div>
   );
 }
+

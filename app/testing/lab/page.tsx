@@ -33,7 +33,7 @@ export default function TestingLabPage() {
         </div>
       </motion.div>
       <div className="space-y-3">
-        {TESTS.map((t, i) => (
+        {TESTS?.map((t, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-4">
               <div className="flex items-center justify-between">
@@ -53,3 +53,4 @@ export default function TestingLabPage() {
     </div>
   );
 }
+

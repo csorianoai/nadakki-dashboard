@@ -187,7 +187,7 @@ export default function AnalyticsPage() {
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie data={CHANNEL_DATA} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
-                {CHANNEL_DATA.map((entry, index) => (
+                {CHANNEL_DATA?.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
@@ -195,7 +195,7 @@ export default function AnalyticsPage() {
             </PieChart>
           </ResponsiveContainer>
           <div className="flex flex-wrap justify-center gap-4 mt-4">
-            {CHANNEL_DATA.map(c => (
+            {CHANNEL_DATA?.map(c => (
               <div key={c.name} className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }} />
                 <span className="text-sm text-gray-400">{c.name} ({c.value}%)</span>
@@ -261,7 +261,7 @@ export default function AnalyticsPage() {
             </tr>
           </thead>
           <tbody>
-            {CAMPAIGN_PERFORMANCE.map((c, i) => (
+            {CAMPAIGN_PERFORMANCE?.map((c, i) => (
               <tr key={c.name} className="border-b border-white/5 hover:bg-white/5">
                 <td className="p-3 text-white font-medium">{c.name}</td>
                 <td className="p-3 text-right text-gray-300">{c.sent.toLocaleString()}</td>
@@ -277,3 +277,4 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+

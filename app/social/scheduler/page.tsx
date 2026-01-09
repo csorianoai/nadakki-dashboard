@@ -56,7 +56,7 @@ export default function SocialSchedulerPage() {
       </GlassCard>
 
       <div className="space-y-4">
-        {filteredPosts.map((post, i) => {
+        {filteredPosts?.map((post, i) => {
           const config = PLATFORM_CONFIG[post.platform];
           const Icon = config.icon;
           return (
@@ -87,3 +87,4 @@ export default function SocialSchedulerPage() {
     </div>
   );
 }
+

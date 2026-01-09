@@ -66,7 +66,7 @@ export default function EmailTemplatesPage() {
       </GlassCard>
 
       <div className="grid grid-cols-3 gap-4">
-        {filteredTemplates.map((template, i) => (
+        {filteredTemplates?.map((template, i) => (
           <motion.div key={template.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-5 cursor-pointer group">
               <div className="h-32 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg mb-4 flex items-center justify-center">
@@ -93,3 +93,4 @@ export default function EmailTemplatesPage() {
     </div>
   );
 }
+

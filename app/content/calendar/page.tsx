@@ -86,7 +86,7 @@ export default function ContentCalendarPage() {
         </div>
 
         <div className="grid grid-cols-7 gap-2 mb-4">
-          {DAYS.map(day => (
+          {DAYS?.map(day => (
             <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">{day}</div>
           ))}
         </div>
@@ -110,7 +110,7 @@ export default function ContentCalendarPage() {
               >
                 <div className={`text-sm font-medium ${isToday ? "text-purple-400" : "text-gray-400"}`}>{day}</div>
                 <div className="mt-1 space-y-1">
-                  {posts.map((post, j) => (
+                  {posts?.map((post, j) => (
                     <div key={j} className="w-full h-1.5 rounded-full" style={{ backgroundColor: PLATFORM_COLORS[post.platform] }} title={post.title} />
                   ))}
                 </div>
@@ -131,3 +131,4 @@ export default function ContentCalendarPage() {
     </div>
   );
 }
+

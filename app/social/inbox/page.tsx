@@ -59,7 +59,7 @@ export default function SocialInboxPage() {
       </GlassCard>
 
       <div className="space-y-3">
-        {filteredMessages.map((msg, i) => {
+        {filteredMessages?.map((msg, i) => {
           const config = PLATFORM_CONFIG[msg.platform];
           const Icon = config.icon;
           return (
@@ -89,3 +89,4 @@ export default function SocialInboxPage() {
     </div>
   );
 }
+

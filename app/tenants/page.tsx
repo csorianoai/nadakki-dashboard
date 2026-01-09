@@ -99,7 +99,7 @@ export default function TenantsPage() {
 
       {/* Tenants Grid */}
       <div className="grid grid-cols-2 gap-6">
-        {filteredTenants.map((tenant, index) => {
+        {filteredTenants?.map((tenant, index) => {
           const planStyle = PLAN_COLORS[tenant.plan];
           return (
             <motion.div
@@ -162,3 +162,4 @@ export default function TenantsPage() {
     </div>
   );
 }
+

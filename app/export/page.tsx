@@ -26,7 +26,7 @@ export default function ExportPage() {
 
       <div style={{ backgroundColor: "rgba(30,41,59,0.5)", borderRadius: 16, padding: 24 }}>
         <h3 style={{ color: "#f8fafc", marginBottom: 16 }}>Exportaciones Recientes</h3>
-        {exports.map((e, i) => (
+        {exports?.map((e, i) => (
           <div key={i} style={{ backgroundColor: "rgba(0,0,0,0.2)", borderRadius: 8, padding: 16, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p style={{ color: "#f8fafc", fontWeight: 600, margin: 0 }}>{e.name}</p>
@@ -39,3 +39,4 @@ export default function ExportPage() {
     </div>
   );
 }
+

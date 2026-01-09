@@ -29,7 +29,7 @@ export default function ContentPage() {
         <StatCard value="98%" label="Engagement" icon={<FolderOpen className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
       </div>
       <div className="grid grid-cols-2 gap-6">
-        {MODULES.map((m, i) => (
+        {MODULES?.map((m, i) => (
           <motion.div key={m.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <Link href={m.href}><GlassCard className="p-6 cursor-pointer group">
               <h3 className="text-lg font-bold text-white group-hover:text-purple-400">{m.name}</h3>
@@ -42,3 +42,4 @@ export default function ContentPage() {
     </div>
   );
 }
+

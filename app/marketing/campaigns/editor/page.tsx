@@ -100,11 +100,11 @@ export default function InAppEditorPage() {
   const selectedEl = elements.find(e => e.id === selectedElement);
 
   const updateElement = (id: string, updates: Partial<CanvasElement>) => {
-    setElements(elements.map(el => el.id === id ? { ...el, ...updates } : el));
+    setElements(elements?.map(el => el.id === id ? { ...el, ...updates } : el));
   };
 
   const updateElementStyle = (id: string, styleUpdates: Partial<ElementStyle>) => {
-    setElements(elements.map(el => 
+    setElements(elements?.map(el => 
       el.id === id ? { ...el, style: { ...el.style, ...styleUpdates } } : el
     ));
   };
@@ -183,7 +183,7 @@ export default function InAppEditorPage() {
 
           <h3 className="text-sm font-medium text-gray-400 mb-3">TEMPLATES</h3>
           <div className="space-y-2">
-            {TEMPLATES.map(t => (
+            {TEMPLATES?.map(t => (
               <button key={t.id} className="w-full p-3 border border-white/10 rounded-lg hover:border-white/20 text-left flex items-center gap-3">
                 <span className="text-2xl">{t.preview}</span>
                 <span className="text-sm text-white">{t.name}</span>
@@ -320,7 +320,7 @@ export default function InAppEditorPage() {
               <div className="mb-4">
                 <label className="text-xs text-gray-400 block mb-1">Text Color</label>
                 <div className="flex flex-wrap gap-1">
-                  {COLORS.map(color => (
+                  {COLORS?.map(color => (
                     <button
                       key={color}
                       onClick={() => updateElementStyle(selectedEl.id, { color })}
@@ -335,7 +335,7 @@ export default function InAppEditorPage() {
                 <div className="mb-4">
                   <label className="text-xs text-gray-400 block mb-1">Background Color</label>
                   <div className="flex flex-wrap gap-1">
-                    {COLORS.map(color => (
+                    {COLORS?.map(color => (
                       <button
                         key={color}
                         onClick={() => updateElementStyle(selectedEl.id, { backgroundColor: color })}
@@ -374,5 +374,6 @@ export default function InAppEditorPage() {
     </div>
   );
 }
+
 
 

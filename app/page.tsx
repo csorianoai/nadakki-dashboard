@@ -1,187 +1,290 @@
 "use client";
-import { motion } from "framer-motion";
+
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { 
-  Cpu, Bot, Workflow, TrendingUp, Zap, Activity,
-  ArrowUpRight, Clock, CheckCircle, AlertCircle
+import { useTenant } from "@/contexts/TenantContext";
+import { fetchWithTimeout } from "@/lib/api/base";
+import { CORES_CONFIG, CORE_CATEGORIES, getAllCores, getTotalAgents } from "@/config/cores";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import {
+  Activity, Zap, Bot, Layers, CheckCircle2, AlertCircle, Loader2,
+  RefreshCw, ChevronRight, TrendingUp, Clock, BarChart3,
 } from "lucide-react";
-import Sidebar from "@/components/layout/Sidebar";
-import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
-import StatusBadge from "@/components/ui/StatusBadge";
-import { CORES_CONFIG } from "@/config/cores";
 
-const STATS = [
-  { value: "225", label: "Agentes IA", icon: <Bot className="w-6 h-6 text-purple-400" />, color: "#8b5cf6", trend: { value: 12, isPositive: true } },
-  { value: "20", label: "AI Cores", icon: <Cpu className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
-  { value: "10", label: "Workflows", icon: <Workflow className="w-6 h-6 text-green-400" />, color: "#22c55e" },
-  { value: "99.7%", label: "Uptime", icon: <Activity className="w-6 h-6 text-yellow-400" />, color: "#f59e0b" },
-];
-
-const RECENT_ACTIVITY = [
-  { agent: "LeadScoringIA", action: "Procesó 150 leads", time: "Hace 2 min", status: "success" },
-  { agent: "ContentGeneratorIA", action: "Generó 5 posts", time: "Hace 8 min", status: "success" },
-  { agent: "SentimentAnalyzerIA", action: "Analizó 500 menciones", time: "Hace 15 min", status: "success" },
-  { agent: "EmailSequenceMaster", action: "Error de conexión SMTP", time: "Hace 22 min", status: "error" },
-];
-
-export default function HomePage() {
-  const coresArray = Object.entries(CORES_CONFIG).slice(0, 6);
-
-  return (
-    <div className="flex min-h-screen bg-[var(--bg-primary)]">
-      <Sidebar />
-      <main className="flex-1 ml-80">
-        {/* Header */}
-        <motion.header 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="sticky top-0 z-40 px-8 py-6 bg-[var(--bg-primary)]/80 backdrop-blur-xl border-b border-[var(--border-primary)]"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
-                Global Dashboard
-              </h1>
-              <p className="text-[var(--text-secondary)] mt-1">NADAKKI AI Suite • Enterprise Multi-Tenant Platform</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <StatusBadge status="active" label="Sistema Operativo" size="lg" />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl font-bold text-white shadow-lg shadow-purple-500/25"
-              >
-                <Zap className="w-4 h-4 inline mr-2" />
-                Ejecutar
-              </motion.button>
-            </div>
-          </div>
-        </motion.header>
-
-        <div className="p-8">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-4 gap-6 mb-8">
-            {STATS.map((stat, i) => (
-              <StatCard key={i} {...stat} delay={i * 0.1} />
-            ))}
-          </div>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            {/* AI Cores Section */}
-            <div className="col-span-2">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">AI Cores Disponibles</h2>
-                <Link href="/admin" className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1">
-                  Ver todos <ArrowUpRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {coresArray.map(([id, core], index) => (
-                  <motion.div
-                    key={id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + index * 0.05 }}
-                  >
-                    <Link href={"/" + id}>
-                      <GlassCard className="p-5 cursor-pointer group">
-                        <div className="flex items-start gap-4">
-                          <div 
-                            className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                            style={{ backgroundColor: core.color + "20" }}
-                          >
-                            {core.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-white truncate group-hover:text-purple-400 transition-colors">
-                              {core.displayName}
-                            </h3>
-                            <p className="text-sm text-[var(--text-secondary)] truncate">{core.description}</p>
-                            <div className="flex items-center gap-3 mt-2">
-                              <span className="text-xs px-2 py-1 rounded-full bg-white/5 text-[var(--text-secondary)]">
-                                {core.agentCount} agentes
-                              </span>
-                              <StatusBadge status="active" size="sm" />
-                            </div>
-                          </div>
-                        </div>
-                      </GlassCard>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* Activity Feed */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">Actividad Reciente</h2>
-                <Link href="/admin/logs" className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1">
-                  Ver logs <ArrowUpRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <GlassCard className="p-4">
-                <div className="space-y-4">
-                  {RECENT_ACTIVITY.map((activity, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + i * 0.1 }}
-                      className="flex items-start gap-3 pb-4 border-b border-white/5 last:border-0 last:pb-0"
-                    >
-                      <div className={`p-2 rounded-lg ${activity.status === "success" ? "bg-green-500/10" : "bg-red-500/10"}`}>
-                        {activity.status === "success" ? (
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                        ) : (
-                          <AlertCircle className="w-4 h-4 text-red-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{activity.agent}</p>
-                        <p className="text-xs text-[var(--text-secondary)] truncate">{activity.action}</p>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Clock className="w-3 h-3" />
-                        {activity.time}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </GlassCard>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-4 gap-4">
-            {[
-              { label: "Marketing Hub", href: "/marketing", icon: "🎯", color: "#f97316" },
-              { label: "Workflows", href: "/workflows", icon: "🔄", color: "#8b5cf6" },
-              { label: "AI Studio", href: "/ai-studio", icon: "✨", color: "#06b6d4" },
-              { label: "Administración", href: "/admin", icon: "⚙️", color: "#64748b" },
-            ].map((action, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + i * 0.1 }}
-              >
-                <Link href={action.href}>
-                  <GlassCard className="p-4 cursor-pointer text-center group">
-                    <span className="text-3xl mb-2 block">{action.icon}</span>
-                    <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
-                      {action.label}
-                    </span>
-                  </GlassCard>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+interface SystemHealth {
+  status: string;
+  version: string;
+  agents_loaded: number;
+  cores_active: number;
 }
 
+interface RecentActivity {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  status: "success" | "warning" | "error" | "info";
+}
+
+export default function DashboardPage() {
+  const { tenantId, settings } = useTenant();
+  const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  const allCores = getAllCores();
+
+  const fetchHealth = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await fetchWithTimeout<SystemHealth>("/health", { tenantId, timeout: 15000 });
+      setHealth(data);
+      setError(null);
+      setLastUpdate(new Date());
+    } catch {
+      setError("No se pudo conectar al backend");
+    } finally {
+      setLoading(false);
+    }
+  }, [tenantId]);
+
+  useEffect(() => {
+    fetchHealth();
+    const interval = setInterval(fetchHealth, 30000);
+    return () => clearInterval(interval);
+  }, [fetchHealth]);
+
+  const activities: RecentActivity[] = [
+    { id: "1", type: "workflow", title: "Workflow Marketing ejecutado", description: "Customer Acquisition Intelligence completado", timestamp: "Hace 2 min", status: "success" },
+    { id: "2", type: "decision", title: "Decisión de crédito procesada", description: "Score: 78/100 - Aprobado", timestamp: "Hace 5 min", status: "success" },
+    { id: "3", type: "agent", title: "Agente PredictiveLeadIA activo", description: "Procesando 1,234 leads", timestamp: "Hace 12 min", status: "info" },
+    { id: "4", type: "alert", title: "Límite de API cercano", description: "85% del límite utilizado", timestamp: "Hace 1 hora", status: "warning" },
+  ];
+
+  const statusIcons: Record<string, JSX.Element> = {
+    success: <CheckCircle2 className="h-4 w-4 text-green-400" />,
+    warning: <AlertCircle className="h-4 w-4 text-yellow-400" />,
+    error: <AlertCircle className="h-4 w-4 text-red-400" />,
+    info: <Activity className="h-4 w-4 text-blue-400" />,
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="p-6 bg-gray-950 min-h-screen">
+        {/* Header con Status */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">Dashboard Principal</h1>
+            <p className="text-gray-400 text-sm">Bienvenido a NADAKKI AI Suite - {settings.name}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            {/* System Status */}
+            {health?.status === "healthy" ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/30">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span className="text-sm text-green-400">Sistema Operativo</span>
+              </div>
+            ) : error ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30">
+                <AlertCircle className="h-4 w-4 text-red-400" />
+                <span className="text-sm text-red-400">Sin conexión</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/30">
+                <Loader2 className="h-4 w-4 animate-spin text-yellow-400" />
+                <span className="text-sm text-yellow-400">Conectando...</span>
+              </div>
+            )}
+            
+            {/* Refresh */}
+            <button
+              onClick={fetchHealth}
+              disabled={loading}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <RefreshCw className={`h-5 w-5 text-gray-400 ${loading ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-400">{error}</p>
+              <p className="text-xs text-red-400/70">El backend puede estar iniciándose (30-60s en Render free tier)</p>
+            </div>
+            <button onClick={fetchHealth} className="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm hover:bg-red-500/30">
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="rounded-2xl border border-green-500/30 bg-gradient-to-br from-green-500/10 to-green-600/5 p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Estado Backend</p>
+                <p className="text-2xl font-bold text-white">{health?.status === "healthy" ? "Operativo" : loading ? "..." : "Offline"}</p>
+                {health && <p className="text-xs text-gray-500 mt-1">v{health.version}</p>}
+              </div>
+              <div className="p-2 rounded-lg bg-green-500/20">
+                <Activity className="h-5 w-5 text-green-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Agentes Cargados</p>
+                <p className="text-2xl font-bold text-white">{health?.agents_loaded || getTotalAgents()}</p>
+                <p className="text-xs text-gray-500 mt-1">Disponibles</p>
+              </div>
+              <div className="p-2 rounded-lg bg-purple-500/20">
+                <Bot className="h-5 w-5 text-purple-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Cores Activos</p>
+                <p className="text-2xl font-bold text-white">{health?.cores_active || 20}</p>
+                <p className="text-xs text-gray-500 mt-1">de {allCores.length} totales</p>
+              </div>
+              <div className="p-2 rounded-lg bg-cyan-500/20">
+                <Layers className="h-5 w-5 text-cyan-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Workflows Activos</p>
+                <p className="text-2xl font-bold text-white">10</p>
+                <p className="text-xs text-gray-500 mt-1">En ejecución</p>
+              </div>
+              <div className="p-2 rounded-lg bg-yellow-500/20">
+                <Zap className="h-5 w-5 text-yellow-400" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Grid */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Quick Actions */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Zap className="h-5 w-5 text-yellow-400" />
+                Acciones Rápidas
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Link href="/workflows" className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all group">
+                  <div className="p-3 rounded-lg bg-purple-500/20">
+                    <Layers className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-white">Ejecutar Workflow</p>
+                    <p className="text-sm text-gray-400">10 workflows disponibles</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" />
+                </Link>
+
+                <Link href="/marketing" className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-orange-500/30 transition-all group">
+                  <div className="p-3 rounded-lg bg-orange-500/20">
+                    <Bot className="h-6 w-6 text-orange-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-white">Marketing Agents</p>
+                    <p className="text-sm text-gray-400">35 agentes activos</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" />
+                </Link>
+
+                <Link href="/analytics" className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/30 transition-all group">
+                  <div className="p-3 rounded-lg bg-blue-500/20">
+                    <BarChart3 className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-white">Analytics</p>
+                    <p className="text-sm text-gray-400">Métricas en tiempo real</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                </Link>
+
+                <Link href="/decision" className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-pink-500/30 transition-all group">
+                  <div className="p-3 rounded-lg bg-pink-500/20">
+                    <Activity className="h-6 w-6 text-pink-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-white">Motor de Decisiones</p>
+                    <p className="text-sm text-gray-400">Scoring en tiempo real</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-500 group-hover:text-pink-400 group-hover:translate-x-1 transition-all" />
+                </Link>
+              </div>
+            </div>
+
+            {/* System Info */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <h2 className="text-lg font-semibold text-white mb-4">Información del Sistema</h2>
+              <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                <div className="flex justify-between p-3 rounded-lg bg-white/5">
+                  <span className="text-gray-400">Tenant</span>
+                  <span className="text-white font-medium">{settings.name}</span>
+                </div>
+                <div className="flex justify-between p-3 rounded-lg bg-white/5">
+                  <span className="text-gray-400">Plan</span>
+                  <span className="text-purple-400 font-medium">{settings.plan.toUpperCase()}</span>
+                </div>
+                <div className="flex justify-between p-3 rounded-lg bg-white/5">
+                  <span className="text-gray-400">Backend Version</span>
+                  <span className="text-white font-mono">{health?.version || "..."}</span>
+                </div>
+                <div className="flex justify-between p-3 rounded-lg bg-white/5">
+                  <span className="text-gray-400">Última actualización</span>
+                  <span className="text-white">{lastUpdate?.toLocaleTimeString() || "..."}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Activity Feed */}
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Clock className="h-5 w-5 text-blue-400" />
+                Actividad Reciente
+              </h2>
+              <Link href="/admin/logs" className="text-xs text-purple-400 hover:text-purple-300">Ver todo</Link>
+            </div>
+            <div className="space-y-3">
+              {activities.map((activity) => (
+                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div className="mt-0.5">{statusIcons[activity.status]}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{activity.title}</p>
+                    <p className="text-xs text-gray-400 truncate">{activity.description}</p>
+                  </div>
+                  <span className="text-xs text-gray-500 whitespace-nowrap">{activity.timestamp}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}

@@ -84,7 +84,7 @@ export default function JourneysListPage() {
       await fetch(`${API_URL}/api/journeys/${journeyId}/${endpoint}?tenant_id=${TENANT_ID}`, {
         method: "POST"
       });
-      setJourneys(journeys.map(j => j.id === journeyId ? { ...j, status: newStatus } : j));
+      setJourneys(journeys?.map(j => j.id === journeyId ? { ...j, status: newStatus } : j));
     } catch (error) {
       console.error("Error toggling status:", error);
     }
@@ -255,7 +255,7 @@ export default function JourneysListPage() {
         </GlassCard>
       ) : (
         <div className="space-y-4">
-          {filteredJourneys.map((journey, i) => (
+          {filteredJourneys?.map((journey, i) => (
             <motion.div
               key={journey.id}
               initial={{ opacity: 0, y: 20 }}
@@ -405,3 +405,4 @@ export default function JourneysListPage() {
     </div>
   );
 }
+

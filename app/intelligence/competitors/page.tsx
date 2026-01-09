@@ -23,7 +23,7 @@ export default function IntelligenceCompetitorsPage() {
         </div>
       </motion.div>
       <div className="space-y-4">
-        {COMPETITORS.map((c, i) => (
+        {COMPETITORS?.map((c, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className={`p-5 ${c.name === "Tu Marca" ? "border border-purple-500/50" : ""}`}>
               <div className="flex items-center justify-between">
@@ -44,3 +44,4 @@ export default function IntelligenceCompetitorsPage() {
     </div>
   );
 }
+

@@ -79,7 +79,7 @@ export default function LibraryPromptsPage() {
               className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50" />
           </div>
           <div className="flex items-center gap-2">
-            {CATEGORIES.map(cat => (
+            {CATEGORIES?.map(cat => (
               <button key={cat} onClick={() => setCategory(cat)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${category === cat ? "bg-cyan-500 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"}`}>
                 {cat}
@@ -90,7 +90,7 @@ export default function LibraryPromptsPage() {
       </GlassCard>
 
       <div className="space-y-4">
-        {filteredPrompts.map((prompt, i) => {
+        {filteredPrompts?.map((prompt, i) => {
           const Icon = PLATFORM_ICONS[prompt.platform] || BookOpen;
           return (
             <motion.div key={prompt.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
@@ -122,3 +122,4 @@ export default function LibraryPromptsPage() {
     </div>
   );
 }
+
