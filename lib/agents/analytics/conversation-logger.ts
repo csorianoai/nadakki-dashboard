@@ -1,8 +1,5 @@
 // lib/agents/analytics/conversation-logger.ts
 
-import fs from 'fs';
-import path from 'path';
-
 export interface ConversationLog {
   id: string;
   tenantId: string;
@@ -38,46 +35,11 @@ export interface AnalyticsSummary {
   lowConfidenceQueries: ConversationLog[];
 }
 
+// In-memory storage (resets on serverless cold start)
+// For production, use a database like Vercel KV, Supabase, or MongoDB
+let logs: ConversationLog[] = [];
+
 class ConversationLogger {
-  private dataDir: string;
-  private logsFile: string;
-
-  constructor() {
-    this.dataDir = path.join(process.cwd(), 'data', 'copilot-logs');
-    this.logsFile = path.join(this.dataDir, 'conversations.json');
-    this.ensureDataDir();
-  }
-
-  private ensureDataDir(): void {
-    try {
-      if (!fs.existsSync(this.dataDir)) {
-        fs.mkdirSync(this.dataDir, { recursive: true });
-      }
-      if (!fs.existsSync(this.logsFile)) {
-        fs.writeFileSync(this.logsFile, JSON.stringify([], null, 2));
-      }
-    } catch (error) {
-      console.error('Error creating data directory:', error);
-    }
-  }
-
-  private readLogs(): ConversationLog[] {
-    try {
-      const data = fs.readFileSync(this.logsFile, 'utf-8');
-      return JSON.parse(data);
-    } catch {
-      return [];
-    }
-  }
-
-  private writeLogs(logs: ConversationLog[]): void {
-    try {
-      fs.writeFileSync(this.logsFile, JSON.stringify(logs, null, 2));
-    } catch (error) {
-      console.error('Error writing logs:', error);
-    }
-  }
-
   private generateId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
@@ -116,9 +78,12 @@ class ConversationLogger {
       metadata: params.metadata || {}
     };
 
-    const logs = this.readLogs();
     logs.push(log);
-    this.writeLogs(logs);
+
+    // Keep only last 1000 logs in memory
+    if (logs.length > 1000) {
+      logs = logs.slice(-1000);
+    }
 
     console.log('📝 Logged conversation:', {
       id: log.id,
@@ -131,13 +96,11 @@ class ConversationLogger {
   }
 
   addFeedback(logId: string, feedback: 'positive' | 'negative', comment?: string): boolean {
-    const logs = this.readLogs();
     const log = logs.find(l => l.id === logId);
     
     if (log) {
       log.feedback = feedback;
       log.feedbackComment = comment;
-      this.writeLogs(logs);
       console.log('👍 Feedback recorded:', { logId, feedback });
       return true;
     }
@@ -145,15 +108,13 @@ class ConversationLogger {
   }
 
   getByTenant(tenantId: string, limit: number = 100): ConversationLog[] {
-    const logs = this.readLogs();
     return logs
       .filter(log => log.tenantId === tenantId)
       .slice(-limit);
   }
 
   getAnalytics(tenantId?: string): AnalyticsSummary {
-    const allLogs = this.readLogs();
-    const logs = tenantId ? allLogs.filter(l => l.tenantId === tenantId) : allLogs;
+    const filteredLogs = tenantId ? logs.filter(l => l.tenantId === tenantId) : logs;
 
     const intentDistribution: Record<string, number> = {};
     const sourceDistribution: Record<string, number> = {};
@@ -166,7 +127,7 @@ class ConversationLogger {
     let noFeedbackCount = 0;
     const lowConfidenceQueries: ConversationLog[] = [];
 
-    logs.forEach(log => {
+    filteredLogs.forEach(log => {
       sessionIds.add(log.sessionId);
       intentDistribution[log.intent] = (intentDistribution[log.intent] || 0) + 1;
       sourceDistribution[log.source] = (sourceDistribution[log.source] || 0) + 1;
@@ -191,8 +152,8 @@ class ConversationLogger {
 
     return {
       totalConversations: sessionIds.size,
-      totalMessages: logs.length,
-      avgResponseTime: logs.length > 0 ? Math.round(totalResponseTime / logs.length) : 0,
+      totalMessages: filteredLogs.length,
+      avgResponseTime: filteredLogs.length > 0 ? Math.round(totalResponseTime / filteredLogs.length) : 0,
       intentDistribution,
       sourceDistribution,
       feedbackSummary: {
@@ -210,10 +171,9 @@ class ConversationLogger {
     llmQueries: Array<{ query: string; response: string; feedback?: string }>;
     improvementOpportunities: Array<{ query: string; issue: string }>;
   } {
-    const allLogs = this.readLogs();
-    const logs = tenantId ? allLogs.filter(l => l.tenantId === tenantId) : allLogs;
+    const filteredLogs = tenantId ? logs.filter(l => l.tenantId === tenantId) : logs;
 
-    const systemQueries = logs
+    const systemQueries = filteredLogs
       .filter(l => l.source === 'system' && l.feedback === 'positive')
       .map(l => ({
         query: l.query,
@@ -221,7 +181,7 @@ class ConversationLogger {
         feedback: l.feedbackComment
       }));
 
-    const llmQueries = logs
+    const llmQueries = filteredLogs
       .filter(l => l.source === 'llm')
       .map(l => ({
         query: l.query,
@@ -229,7 +189,7 @@ class ConversationLogger {
         feedback: l.feedback || undefined
       }));
 
-    const improvementOpportunities = logs
+    const improvementOpportunities = filteredLogs
       .filter(l => l.feedback === 'negative' || l.confidence < 0.5)
       .map(l => ({
         query: l.query,
