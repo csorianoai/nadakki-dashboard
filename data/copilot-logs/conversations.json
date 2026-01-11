@@ -1,0 +1,66 @@
+[
+  {
+    "id": "1768138551294-hfj1r6i39",
+    "tenantId": "default",
+    "sessionId": "session_1768138551290_mz11al3w5",
+    "timestamp": "2026-01-11T13:35:51.294Z",
+    "query": "¿Cómo funciona Campaign Optimization?",
+    "response": "**Campaign Optimization Workflow**\n\n**Campaign Optimization** es un workflow CORE con 5 agentes de IA.\n\n**Propósito:** Optimizar campañas de marketing para maximizar ROI.\n\n**Agentes en secuencia:**\n1. **AudienceAnalyzerAI** - Segmenta audiencias usando ML clustering y análisis predictivo\n   - Inputs: Descripción de audiencia, datos históricos\n   - Outputs: Segmentos priorizados, buyer personas, scores de afinidad\n\n2. **BudgetOptimizerAI** - Distribuye presupuesto óptimamente\n   - Tecnología: Optimización convexa, Simulación Monte Carlo\n   - Outputs: Distribución por canal, proyecciones de rendimiento\n\n3. **ContentGeneratorAI** - Genera copies y creativos\n   - Tecnología: GPT-4, análisis de sentimiento\n   - Outputs: Headlines, CTAs, variantes A/B\n\n4. **ROIPredictorAI** - Predice retorno de inversión\n   - Tecnología: Regresión avanzada, series temporales\n   - Outputs: ROI proyectado, intervalos de confianza, escenarios\n\n5. **RecommendationEngineAI** - Sintetiza recomendaciones\n   - Outputs: Plan de acción priorizado, quick wins, timeline\n\n**Cómo usar:**\n1. Ve a Workflows → Campaign Optimization\n2. Configura nombre, objetivo, canal, presupuesto\n3. Describe tu audiencia objetivo (opcional)\n4. Haz clic en \"Ejecutar Workflow\"\n5. Espera 2-4 segundos\n6. Revisa resultados y recomendaciones\n\n**Casos de uso:**\n- Lanzamiento de nuevas campañas\n- Optimización de campañas con bajo rendimiento\n- Redistribución de presupuesto\n- Predicción de ROI antes de invertir\n\n---\n**Relacionado:**\n• Cores Funcionales - Resumen\n• Tiers de Workflows (CORE, EXECUTION, INTELLIGENCE)",
+    "intent": "workflow-specific",
+    "source": "system",
+    "confidence": 0.95,
+    "responseTime": 4,
+    "feedback": "positive",
+    "metadata": {
+      "page": "/"
+    }
+  },
+  {
+    "id": "1768138671778-e63xw01bn",
+    "tenantId": "default",
+    "sessionId": "session_1768138551290_mz11al3w5",
+    "timestamp": "2026-01-11T13:37:51.778Z",
+    "query": "¿Qué agentes tiene?",
+    "response": "**¿Qué es un workflow?**\n\nUn **workflow** es una secuencia automatizada de agentes de IA que trabajan juntos.\n\n**Características:**\n- Múltiples agentes ejecutan en secuencia\n- Cada agente recibe inputs del anterior\n- El resultado es consolidado automáticamente\n- Tiempo de ejecución: 2-6 segundos\n\n**Ejemplo:** Campaign Optimization usa 5 agentes:\n1. AudienceAnalyzerAI analiza la audiencia\n2. BudgetOptimizerAI optimiza presupuesto\n3. ContentGeneratorAI genera contenido\n4. ROIPredictorAI predice ROI\n5. RecommendationEngineAI da recomendaciones\n\nTodo automático, tú solo configuras y ejecutas.\n\n---\n**Relacionado:**\n• ¿Qué es un agente de IA?\n• Cores Funcionales - Resumen",
+    "intent": "system-knowledge",
+    "source": "system",
+    "confidence": 0.95,
+    "responseTime": 6,
+    "feedback": "negative",
+    "metadata": {
+      "page": "/"
+    }
+  },
+  {
+    "id": "1768138674758-yprn5rspb",
+    "tenantId": "default",
+    "sessionId": "session_1768138551290_mz11al3w5",
+    "timestamp": "2026-01-11T13:37:54.758Z",
+    "query": "¿Qué otros workflows hay?",
+    "response": "**¿Qué es un workflow?**\n\nUn **workflow** es una secuencia automatizada de agentes de IA que trabajan juntos.\n\n**Características:**\n- Múltiples agentes ejecutan en secuencia\n- Cada agente recibe inputs del anterior\n- El resultado es consolidado automáticamente\n- Tiempo de ejecución: 2-6 segundos\n\n**Ejemplo:** Campaign Optimization usa 5 agentes:\n1. AudienceAnalyzerAI analiza la audiencia\n2. BudgetOptimizerAI optimiza presupuesto\n3. ContentGeneratorAI genera contenido\n4. ROIPredictorAI predice ROI\n5. RecommendationEngineAI da recomendaciones\n\nTodo automático, tú solo configuras y ejecutas.\n\n---\n**Relacionado:**\n• Tiers de Workflows (CORE, EXECUTION, INTELLIGENCE)\n• ¿Qué puedo hacer después de ejecutar un workflow?",
+    "intent": "system-knowledge",
+    "source": "system",
+    "confidence": 0.95,
+    "responseTime": 2,
+    "feedback": "positive",
+    "metadata": {
+      "page": "/"
+    }
+  },
+  {
+    "id": "1768138678139-d0t4tztl9",
+    "tenantId": "default",
+    "sessionId": "session_1768138551290_mz11al3w5",
+    "timestamp": "2026-01-11T13:37:58.139Z",
+    "query": "¿Cómo ejecuto este workflow?",
+    "response": "**Cómo ejecutar un workflow**\n\n**Guía paso a paso para ejecutar un workflow:**\n\n1. **Navegar al workflow**\n   - Ve al menú lateral → WORKFLOWS\n   - Selecciona el workflow deseado\n\n2. **Configurar parámetros**\n   - **Nombre:** Identificador de la ejecución\n   - **Objetivo:** Qué quieres lograr (leads, conversiones, etc.)\n   - **Canal:** Dónde se aplicará (email, social, ads)\n   - **Presupuesto:** Inversión disponible en USD\n   - **Audiencia:** (Opcional) Descripción del target\n\n3. **Ejecutar**\n   - Clic en el botón morado \"Ejecutar Workflow\"\n   - Verás una barra de progreso\n   - Tiempo típico: 2-6 segundos\n\n4. **Revisar resultados**\n   - Resumen de éxito/error\n   - Pasos ejecutados con duración\n   - Output detallado (expandible)\n   - Recomendaciones de acción\n\n5. **Tomar acción**\n   - Crear campaña basada en resultados\n   - Exportar a PDF\n   - Ejecutar workflow relacionado\n\n---\n**Relacionado:**\n• ¿Qué es un workflow?\n• ¿Cuánto tiempo tarda un workflow?",
+    "intent": "system-knowledge",
+    "source": "system",
+    "confidence": 0.95,
+    "responseTime": 39,
+    "feedback": "negative",
+    "metadata": {
+      "page": "/"
+    }
+  }
+]
