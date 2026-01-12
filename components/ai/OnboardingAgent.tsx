@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { 
   Bot, X, Send, Loader2, Minimize2, Maximize2, 
-  Lightbulb, Sparkles, BookOpen, Zap, MessageCircle,
-  ThumbsUp, ThumbsDown, RefreshCw
+  Lightbulb, Sparkles, BookOpen, Zap,
+  ThumbsUp, ThumbsDown, RefreshCw, MessageSquare,
+  Brain, Cpu
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -22,7 +23,7 @@ interface Message {
 const INITIAL_SUGGESTIONS = [
   "¿Cómo funciona Campaign Optimization?",
   "Explícame los workflows disponibles",
-  "¿Cómo ejecuto mi primer workflow?"
+  "¿Cuáles son los tiers de workflows?"
 ];
 
 export default function OnboardingAgent() {
@@ -34,7 +35,9 @@ export default function OnboardingAgent() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,22 +52,26 @@ export default function OnboardingAgent() {
       const welcomeMessage: Message = {
         id: "welcome",
         role: "assistant",
-        content: `¡Hola! 👋 Soy el **NADAKKI AI Copilot**.
+        content: `¡Hola! 👋 Soy **NADA**, tu copiloto de inteligencia artificial.
 
-Estás en **${settings.name}**. Puedo ayudarte con:
+Estoy aquí para ayudarte a aprovechar al máximo **${settings.name}**.
 
-- **Workflows** - Los 10 workflows de marketing
-- **Agentes** - Los 225 agentes de IA
-- **Tutoriales** - Guías paso a paso
-- **Preguntas generales** - Marketing y estrategia
+Puedo asistirte con:
+- **Workflows** — Los 10 workflows de marketing automatizado
+- **Agentes** — Los 225 agentes de IA especializados  
+- **Tutoriales** — Guías paso a paso
+- **Estrategia** — Mejores prácticas de marketing
 
-¿En qué puedo ayudarte?`,
+¿Cómo puedo ayudarte hoy?`,
         timestamp: new Date(),
         source: "greeting",
         suggestions: INITIAL_SUGGESTIONS
       };
       setMessages([welcomeMessage]);
       setHasInitialized(true);
+    }
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
     }
   }, [isOpen, hasInitialized, settings.name]);
 
@@ -81,6 +88,7 @@ Estás en **${settings.name}**. Puedo ayudarte con:
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    setIsTyping(true);
 
     try {
       const response = await fetch("/api/ai/copilot", {
@@ -99,10 +107,12 @@ Estás en **${settings.name}**. Puedo ayudarte con:
 
       const data = await response.json();
 
-      // Guardar sessionId
       if (data.sessionId && !sessionId) {
         setSessionId(data.sessionId);
       }
+
+      // Simular typing effect
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       const assistantMessage: Message = {
         id: `assistant_${Date.now()}`,
@@ -127,14 +137,13 @@ Estás en **${settings.name}**. Puedo ayudarte con:
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setIsTyping(false);
     }
   };
 
   const sendFeedback = async (messageId: string, logId: string, feedback: "positive" | "negative") => {
-    console.log('🔔 Sending feedback:', { messageId, logId, feedback });
-    
     try {
-      const response = await fetch("/api/ai/analytics", {
+      await fetch("/api/ai/analytics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -144,18 +153,11 @@ Estás en **${settings.name}**. Puedo ayudarte con:
         })
       });
 
-      console.log('📥 Response status:', response.status);
-      const data = await response.json();
-      console.log('📦 Response data:', data);
-
-      // Actualizar UI
       setMessages(prev => prev.map(msg => 
         msg.id === messageId ? { ...msg, feedback } : msg
       ));
-      
-      console.log('✅ UI updated');
     } catch (error) {
-      console.error("❌ Error sending feedback:", error);
+      console.error("Error sending feedback:", error);
     }
   };
 
@@ -174,27 +176,37 @@ Estás en **${settings.name}**. Puedo ayudarte con:
 
   const formatContent = (content: string) => {
     return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-purple-300">$1</strong>')
-      .replace(/^• /gm, '<span class="text-purple-400">•</span> ')
-      .replace(/^(\d+)\. /gm, '<span class="text-cyan-400">$1.</span> ')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-white">$1</strong>')
+      .replace(/^• /gm, '<span class="text-purple-400 mr-1">•</span>')
+      .replace(/^(\d+)\. /gm, '<span class="text-cyan-400 font-medium mr-1">$1.</span>')
       .replace(/\n/g, '<br/>');
   };
 
-  const getSourceIcon = (source?: string) => {
+  const getSourceBadge = (source?: string) => {
     switch (source) {
-      case 'system': return <BookOpen className="w-3 h-3 text-purple-400" />;
-      case 'llm': return <Sparkles className="w-3 h-3 text-cyan-400" />;
-      case 'hybrid': return <Zap className="w-3 h-3 text-green-400" />;
-      default: return null;
-    }
-  };
-
-  const getSourceLabel = (source?: string) => {
-    switch (source) {
-      case 'system': return 'NADAKKI';
-      case 'llm': return 'Conocimiento General';
-      case 'hybrid': return 'NADAKKI + IA';
-      default: return '';
+      case 'system': 
+        return (
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-purple-500/20 border border-purple-500/30">
+            <BookOpen className="w-3 h-3 text-purple-400" />
+            <span className="text-[10px] font-medium text-purple-300">NADAKKI</span>
+          </div>
+        );
+      case 'llm': 
+        return (
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30">
+            <Brain className="w-3 h-3 text-cyan-400" />
+            <span className="text-[10px] font-medium text-cyan-300">IA General</span>
+          </div>
+        );
+      case 'hybrid': 
+        return (
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/20 border border-green-500/30">
+            <Zap className="w-3 h-3 text-green-400" />
+            <span className="text-[10px] font-medium text-green-300">Híbrido</span>
+          </div>
+        );
+      default: 
+        return null;
     }
   };
 
@@ -204,141 +216,80 @@ Estás en **${settings.name}**. Puedo ayudarte con:
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            zIndex: 99999,
-            width: "60px",
-            height: "60px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 4px 20px rgba(139, 92, 246, 0.5)",
-            transition: "transform 0.2s, box-shadow 0.2s"
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "scale(1.1)";
-            e.currentTarget.style.boxShadow = "0 6px 30px rgba(139, 92, 246, 0.7)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "scale(1)";
-            e.currentTarget.style.boxShadow = "0 4px 20px rgba(139, 92, 246, 0.5)";
-          }}
+          className="fixed bottom-6 right-6 z-[99999] group"
         >
-          <Bot style={{ width: "28px", height: "28px", color: "white" }} />
-          <span style={{
-            position: "absolute",
-            top: "-2px",
-            right: "-2px",
-            width: "14px",
-            height: "14px",
-            background: "#22c55e",
-            borderRadius: "50%",
-            border: "2px solid #111827"
-          }} />
+          <div className="relative">
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-500 rounded-full blur-lg opacity-50 group-hover:opacity-75 transition-opacity" />
+            
+            {/* Button */}
+            <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 via-purple-500 to-cyan-500 rounded-full flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all duration-300">
+              <Bot className="w-7 h-7 text-white" />
+            </div>
+            
+            {/* Status indicator */}
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse" />
+            
+            {/* Tooltip */}
+            <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              AI Copilot
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 border-4 border-transparent border-l-gray-800" />
+            </div>
+          </div>
         </button>
       )}
 
       {/* Chat Window */}
       {isOpen && (
         <div
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            zIndex: 99999,
-            width: isMinimized ? "320px" : "420px",
-            height: isMinimized ? "56px" : "600px",
-            maxHeight: "80vh",
-            background: "#0f172a",
-            borderRadius: "16px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            transition: "all 0.3s ease"
-          }}
+          className={`fixed bottom-6 right-6 z-[99999] bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
+            isMinimized ? 'w-80 h-14' : 'w-[420px] h-[600px] max-h-[80vh]'
+          }`}
         >
           {/* Header */}
-          <div style={{
-            padding: "12px 16px",
-            borderBottom: isMinimized ? "none" : "1px solid rgba(255,255,255,0.1)",
-            background: "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.15))",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexShrink: 0
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ 
-                padding: "8px", 
-                borderRadius: "10px", 
-                background: "rgba(139,92,246,0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}>
-                <Bot style={{ width: "20px", height: "20px", color: "#a78bfa" }} />
+          <div className={`px-4 py-3 bg-gradient-to-r from-purple-900/50 via-gray-900/50 to-cyan-900/50 border-b border-gray-700/50 flex items-center justify-between ${isMinimized ? '' : ''}`}>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-cyan-500 rounded-xl flex items-center justify-center">
+                  <Cpu className="w-5 h-5 text-white" />
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900" />
               </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: "white" }}>
-                  NADAKKI AI Copilot
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  NADA
+                  <span className="text-[10px] font-normal text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded">AI Copilot</span>
                 </h3>
                 {!isMinimized && (
-                  <p style={{ margin: 0, fontSize: "11px", color: "#9ca3af" }}>
-                    {settings.name}
-                  </p>
+                  <p className="text-[11px] text-gray-400">{settings.name}</p>
                 )}
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            
+            <div className="flex items-center gap-1">
               {!isMinimized && (
                 <button
                   onClick={resetChat}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                   title="Reiniciar chat"
-                  style={{
-                    padding: "6px",
-                    borderRadius: "8px",
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer"
-                  }}
                 >
-                  <RefreshCw style={{ width: "14px", height: "14px", color: "#9ca3af" }} />
+                  <RefreshCw className="w-4 h-4 text-gray-400 hover:text-white" />
                 </button>
               )}
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
-                style={{
-                  padding: "6px",
-                  borderRadius: "8px",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer"
-                }}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
               >
                 {isMinimized ? 
-                  <Maximize2 style={{ width: "14px", height: "14px", color: "#9ca3af" }} /> : 
-                  <Minimize2 style={{ width: "14px", height: "14px", color: "#9ca3af" }} />
+                  <Maximize2 className="w-4 h-4 text-gray-400 hover:text-white" /> : 
+                  <Minimize2 className="w-4 h-4 text-gray-400 hover:text-white" />
                 }
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                style={{
-                  padding: "6px",
-                  borderRadius: "8px",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer"
-                }}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
               >
-                <X style={{ width: "14px", height: "14px", color: "#9ca3af" }} />
+                <X className="w-4 h-4 text-gray-400 hover:text-white" />
               </button>
             </div>
           </div>
@@ -346,198 +297,77 @@ Estás en **${settings.name}**. Puedo ayudarte con:
           {/* Messages */}
           {!isMinimized && (
             <>
-              <div style={{ 
-                flex: 1, 
-                overflowY: "auto", 
-                padding: "16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px"
-              }}>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
                 {messages.map((message) => (
                   <div 
                     key={message.id} 
-                    style={{ 
-                      display: "flex", 
-                      flexDirection: "column",
-                      alignItems: message.role === "user" ? "flex-end" : "flex-start"
-                    }}
+                    className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}
                   >
-                    {/* Source indicator */}
+                    {/* Source badge */}
                     {message.role === "assistant" && message.source && message.source !== "greeting" && (
-                      <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        marginBottom: "4px",
-                        paddingLeft: "4px"
-                      }}>
-                        {getSourceIcon(message.source)}
-                        <span style={{ fontSize: "10px", color: "#6b7280" }}>
-                          {getSourceLabel(message.source)}
-                        </span>
+                      <div className="mb-1.5 ml-1">
+                        {getSourceBadge(message.source)}
                       </div>
                     )}
                     
                     {/* Message bubble */}
-                    <div style={{
-                      maxWidth: "90%",
-                      padding: "12px 16px",
-                      borderRadius: message.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                      background: message.role === "user" 
-                        ? "linear-gradient(135deg, #8b5cf6, #7c3aed)" 
-                        : "rgba(255,255,255,0.05)",
-                      border: message.role === "user" ? "none" : "1px solid rgba(255,255,255,0.1)"
-                    }}>
+                    <div 
+                      className={`max-w-[85%] px-4 py-3 rounded-2xl ${
+                        message.role === "user" 
+                          ? "bg-gradient-to-br from-purple-600 to-purple-700 text-white rounded-br-md" 
+                          : "bg-gray-800/80 border border-gray-700/50 text-gray-100 rounded-bl-md"
+                      }`}
+                    >
                       <div 
-                        style={{ 
-                          fontSize: "14px", 
-                          color: message.role === "user" ? "white" : "#e5e7eb",
-                          lineHeight: 1.6
-                        }}
+                        className="text-sm leading-relaxed"
                         dangerouslySetInnerHTML={{ __html: formatContent(message.content) }}
                       />
                     </div>
 
                     {/* Feedback buttons */}
                     {message.role === "assistant" && message.logId && message.source !== "greeting" && (
-                      <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        marginTop: "8px",
-                        paddingLeft: "4px"
-                      }}>
-                        <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: 500 }}>
-                          ¿Te fue útil?
-                        </span>
+                      <div className="flex items-center gap-2 mt-2 ml-1">
+                        <span className="text-[10px] text-gray-500">¿Útil?</span>
                         <button
                           onClick={() => sendFeedback(message.id, message.logId!, "positive")}
-                          style={{
-                            padding: "6px 10px",
-                            borderRadius: "8px",
-                            background: message.feedback === "positive" 
-                              ? "rgba(34,197,94,0.3)" 
-                              : "rgba(34,197,94,0.1)",
-                            border: message.feedback === "positive"
-                              ? "1px solid #22c55e"
-                              : "1px solid rgba(34,197,94,0.3)",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            transition: "all 0.2s"
-                          }}
-                          onMouseEnter={(e) => {
-                            if (message.feedback !== "positive") {
-                              e.currentTarget.style.background = "rgba(34,197,94,0.2)";
-                              e.currentTarget.style.borderColor = "rgba(34,197,94,0.5)";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (message.feedback !== "positive") {
-                              e.currentTarget.style.background = "rgba(34,197,94,0.1)";
-                              e.currentTarget.style.borderColor = "rgba(34,197,94,0.3)";
-                            }
-                          }}
+                          className={`p-1.5 rounded-lg transition-all ${
+                            message.feedback === "positive" 
+                              ? "bg-green-500/30 border border-green-500/50" 
+                              : "hover:bg-green-500/20 border border-transparent hover:border-green-500/30"
+                          }`}
                         >
-                          <ThumbsUp style={{ 
-                            width: "14px", 
-                            height: "14px", 
-                            color: message.feedback === "positive" ? "#22c55e" : "#4ade80" 
-                          }} />
-                          <span style={{ 
-                            fontSize: "11px", 
-                            color: message.feedback === "positive" ? "#22c55e" : "#4ade80",
-                            fontWeight: 500
-                          }}>
-                            Sí
-                          </span>
+                          <ThumbsUp className={`w-3.5 h-3.5 ${
+                            message.feedback === "positive" ? "text-green-400" : "text-gray-500 hover:text-green-400"
+                          }`} />
                         </button>
                         <button
                           onClick={() => sendFeedback(message.id, message.logId!, "negative")}
-                          style={{
-                            padding: "6px 10px",
-                            borderRadius: "8px",
-                            background: message.feedback === "negative" 
-                              ? "rgba(239,68,68,0.3)" 
-                              : "rgba(239,68,68,0.1)",
-                            border: message.feedback === "negative"
-                              ? "1px solid #ef4444"
-                              : "1px solid rgba(239,68,68,0.3)",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            transition: "all 0.2s"
-                          }}
-                          onMouseEnter={(e) => {
-                            if (message.feedback !== "negative") {
-                              e.currentTarget.style.background = "rgba(239,68,68,0.2)";
-                              e.currentTarget.style.borderColor = "rgba(239,68,68,0.5)";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (message.feedback !== "negative") {
-                              e.currentTarget.style.background = "rgba(239,68,68,0.1)";
-                              e.currentTarget.style.borderColor = "rgba(239,68,68,0.3)";
-                            }
-                          }}
+                          className={`p-1.5 rounded-lg transition-all ${
+                            message.feedback === "negative" 
+                              ? "bg-red-500/30 border border-red-500/50" 
+                              : "hover:bg-red-500/20 border border-transparent hover:border-red-500/30"
+                          }`}
                         >
-                          <ThumbsDown style={{ 
-                            width: "14px", 
-                            height: "14px", 
-                            color: message.feedback === "negative" ? "#ef4444" : "#f87171" 
-                          }} />
-                          <span style={{ 
-                            fontSize: "11px", 
-                            color: message.feedback === "negative" ? "#ef4444" : "#f87171",
-                            fontWeight: 500
-                          }}>
-                            No
-                          </span>
+                          <ThumbsDown className={`w-3.5 h-3.5 ${
+                            message.feedback === "negative" ? "text-red-400" : "text-gray-500 hover:text-red-400"
+                          }`} />
                         </button>
                       </div>
                     )}
+
                     {/* Suggestions */}
                     {message.suggestions && message.suggestions.length > 0 && (
-                      <div style={{ 
-                        display: "flex", 
-                        flexDirection: "column", 
-                        gap: "6px",
-                        marginTop: "8px",
-                        width: "100%",
-                        maxWidth: "90%"
-                      }}>
+                      <div className="flex flex-col gap-2 mt-3 w-full max-w-[85%]">
                         {message.suggestions.map((suggestion, i) => (
                           <button
                             key={i}
                             onClick={() => sendMessage(suggestion)}
-                            style={{
-                              padding: "8px 12px",
-                              borderRadius: "10px",
-                              background: "rgba(139,92,246,0.1)",
-                              border: "1px solid rgba(139,92,246,0.3)",
-                              color: "#c4b5fd",
-                              fontSize: "12px",
-                              textAlign: "left",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              transition: "all 0.2s"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = "rgba(139,92,246,0.2)";
-                              e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = "rgba(139,92,246,0.1)";
-                              e.currentTarget.style.borderColor = "rgba(139,92,246,0.3)";
-                            }}
+                            className="group flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/40 transition-all text-left"
                           >
-                            <Lightbulb style={{ width: "12px", height: "12px", color: "#fbbf24", flexShrink: 0 }} />
-                            <span>{suggestion}</span>
+                            <Lightbulb className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
+                            <span className="text-xs text-purple-200 group-hover:text-white transition-colors">
+                              {suggestion}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -545,10 +375,16 @@ Estás en **${settings.name}**. Puedo ayudarte con:
                   </div>
                 ))}
 
-                {isLoading && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#9ca3af" }}>
-                    <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} />
-                    <span style={{ fontSize: "13px" }}>Pensando...</span>
+                {/* Typing indicator */}
+                {isTyping && (
+                  <div className="flex items-start">
+                    <div className="bg-gray-800/80 border border-gray-700/50 px-4 py-3 rounded-2xl rounded-bl-md">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -556,51 +392,40 @@ Estás en **${settings.name}**. Puedo ayudarte con:
               </div>
 
               {/* Input */}
-              <div style={{
-                padding: "12px 16px",
-                borderTop: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(0,0,0,0.2)",
-                flexShrink: 0
-              }}>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Pregúntame lo que quieras..."
-                    style={{
-                      flex: 1,
-                      padding: "12px 16px",
-                      borderRadius: "12px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      color: "white",
-                      fontSize: "14px",
-                      outline: "none"
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                    }}
-                  />
+              <div className="p-4 border-t border-gray-700/50 bg-gray-900/50">
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Escribe tu pregunta..."
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all"
+                    />
+                  </div>
                   <button 
                     onClick={() => sendMessage(input)}
                     disabled={!input.trim() || isLoading}
-                    style={{
-                      padding: "12px",
-                      borderRadius: "12px",
-                      background: input.trim() && !isLoading 
-                        ? "linear-gradient(135deg, #8b5cf6, #7c3aed)" 
-                        : "rgba(255,255,255,0.1)",
-                      border: "none",
-                      cursor: input.trim() && !isLoading ? "pointer" : "not-allowed"
-                    }}
+                    className={`px-4 rounded-xl flex items-center justify-center transition-all ${
+                      input.trim() && !isLoading 
+                        ? "bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white shadow-lg shadow-purple-500/25" 
+                        : "bg-gray-800 text-gray-500 cursor-not-allowed"
+                    }`}
                   >
-                    <Send style={{ width: "18px", height: "18px", color: "white" }} />
+                    {isLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
                   </button>
+                </div>
+                
+                {/* Quick tip */}
+                <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-gray-500">
+                  <MessageSquare className="w-3 h-3" />
+                  <span>Presiona Enter para enviar</span>
                 </div>
               </div>
             </>
@@ -609,9 +434,9 @@ Estás en **${settings.name}**. Puedo ayudarte con:
       )}
 
       <style jsx global>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
         }
       `}</style>
     </>
