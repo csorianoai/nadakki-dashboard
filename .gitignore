@@ -37,3 +37,7 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Test results
+*.csv
+marketing_test_results_*.csv
