@@ -1,14 +1,37 @@
 ﻿'use client';
+
 import { useState } from 'react';
+
 interface CoreAgentCardProps {
-  agent: { id: string; name: string; fileName: string; type: 'IA' | 'Agent'; status: 'active' | 'inactive'; inactiveReason?: string; path: string; module: string; backendModule: string };
+  agent: {
+    id: string;
+    name: string;
+    fileName: string;
+    type: 'IA' | 'Agent';
+    status: 'active' | 'inactive';
+    inactiveReason?: string;
+    path: string;
+    module: string;
+    backendModule: string;
+  };
   showDetails?: boolean;
 }
+
 export default function CoreAgentCard({ agent, showDetails = false }: CoreAgentCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const getStatusColor = (status: string) => status === 'active' ? 'border-l-green-500 bg-green-50' : 'border-l-yellow-500 bg-yellow-50';
-  const getStatusText = (status: string) => status === 'active' ? '✅ Activo' : '⏸️ Inactivo';
-  const getTypeColor = (type: string) => type === 'IA' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+
+  const getStatusColor = (status: string) => {
+    return status === 'active' ? 'border-l-green-500 bg-green-50' : 'border-l-yellow-500 bg-yellow-50';
+  };
+
+  const getStatusText = (status: string) => {
+    return status === 'active' ? '✅ Activo' : '⏸️ Inactivo';
+  };
+
+  const getTypeColor = (type: string) => {
+    return type === 'IA' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+  };
+
   const getInactiveReason = (reason?: string) => {
     if (!reason) return '';
     switch (reason) {
@@ -18,20 +41,76 @@ export default function CoreAgentCard({ agent, showDetails = false }: CoreAgentC
       default: return '';
     }
   };
+
   return (
-    <div className={\order-l-4 rounded-r-lg p-4 mb-3 transition-all hover:shadow-md cursor-pointer \\} onClick={() => setExpanded(!expanded)}>
+    <div 
+      className={`border-l-4 rounded-r-lg p-4 mb-3 transition-all hover:shadow-md cursor-pointer ${getStatusColor(agent.status)}`}
+      onClick={() => setExpanded(!expanded)}
+    >
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2"><h3 className="font-semibold text-gray-900">{agent.name}</h3><span className={\	ext-xs px-2 py-1 rounded-full \\}>{agent.type}</span></div>
-          <div className="flex items-center gap-3 text-sm"><span className={\px-2 py-1 rounded-full text-xs font-medium \\}>{getStatusText(agent.status)}</span>{agent.status === 'inactive' && agent.inactiveReason && <span className="text-gray-500 text-xs">{getInactiveReason(agent.inactiveReason)}</span>}</div>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <h3 className="font-semibold text-gray-900">{agent.name}</h3>
+            <span className={`text-xs px-2 py-1 rounded-full ${getTypeColor(agent.type)}`}>
+              {agent.type}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-3 text-sm flex-wrap">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              agent.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            }`}>
+              {getStatusText(agent.status)}
+            </span>
+            
+            {agent.status === 'inactive' && agent.inactiveReason && (
+              <span className="text-gray-500 text-xs">
+                {getInactiveReason(agent.inactiveReason)}
+              </span>
+            )}
+          </div>
         </div>
-        <button className="ml-2 text-gray-400 hover:text-gray-600" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}>{expanded ? '▲' : '▼'}</button>
+        
+        <button 
+          className="ml-2 text-gray-400 hover:text-gray-600 flex-shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded(!expanded);
+          }}
+          aria-label="Expandir/Contraer"
+        >
+          {expanded ? '▲' : '▼'}
+        </button>
       </div>
+      
       {expanded && (
         <div className="mt-3 pt-3 border-t border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <div><div className="text-gray-500 mb-1">Archivo</div><div className="font-mono text-xs bg-gray-100 p-2 rounded">{agent.fileName}</div></div>
-            <div><div className="text-gray-500 mb-1">Core</div><div className="text-xs font-medium px-2 py-1 bg-gray-200 rounded">{agent.backendModule || 'N/A'}</div></div>
+            <div>
+              <div className="text-gray-500 mb-1 font-semibold">Archivo</div>
+              <div className="font-mono text-xs bg-gray-100 p-2 rounded break-all">{agent.fileName}</div>
+            </div>
+            
+            <div>
+              <div className="text-gray-500 mb-1 font-semibold">Core Backend</div>
+              <div className="text-xs font-medium px-2 py-1 bg-gray-200 rounded inline-block">
+                {agent.backendModule || 'Sin clasificar'}
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-gray-500 mb-1 font-semibold">Módulo Frontend</div>
+              <div className="text-xs font-medium px-2 py-1 bg-gray-200 rounded inline-block">
+                {agent.module}
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-gray-500 mb-1 font-semibold">Ruta</div>
+              <div className="text-xs text-gray-600 truncate" title={agent.path}>
+                📁 {agent.path}
+              </div>
+            </div>
           </div>
         </div>
       )}
