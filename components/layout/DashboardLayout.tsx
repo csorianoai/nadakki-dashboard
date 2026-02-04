@@ -275,7 +275,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         
         {/* Stats */}
         <div style={{ padding: '8px 10px', margin: '10px', borderRadius: '8px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'space-around' }}>
-          <div style={{ textAlign: 'center' }}><div style={{ fontSize: '14px', fontWeight: 800, color: colors.neon.purple }}>225</div><div style={{ fontSize: '7px', color: colors.text.muted }}>AGENTES</div></div>
+          <div style={{ textAlign: 'center' }}><div style={{ fontSize: '14px', fontWeight: 800, color: colors.neon.purple }}><AgentCountDisplay /></div><div style={{ fontSize: '7px', color: colors.text.muted }}>AGENTES</div></div>
           <div style={{ textAlign: 'center' }}><div style={{ fontSize: '14px', fontWeight: 800, color: colors.neon.green }}>20</div><div style={{ fontSize: '7px', color: colors.text.muted }}>CORES</div></div>
           <div style={{ textAlign: 'center' }}><div style={{ fontSize: '14px', fontWeight: 800, color: colors.neon.blue }}>10</div><div style={{ fontSize: '7px', color: colors.text.muted }}>WORKFLOWS</div></div>
         </div>
