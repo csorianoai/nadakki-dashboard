@@ -1,5 +1,6 @@
-'use client';
+﻿'use client';
 import React, { useState, ReactNode } from 'react';
+import { AgentCountDisplay } from './AgentCountDisplay';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
@@ -8,69 +9,69 @@ interface NavModule { id: string; icon: string; label: string; href: string; bad
 interface NavCore { id: string; title: string; icon: string; color: string; gradient: string; modules: NavModule[]; }
 
 const navigationStructure: NavCore[] = [
-  { id: 'system', title: 'SISTEMA', icon: '🚀', color: '#00d4ff', gradient: 'linear-gradient(135deg, #00d4ff, #0099cc)', modules: [
-    { id: 'dashboard', icon: '🏠', label: 'Dashboard Principal', href: '/', badge: '∞' },
-    { id: 'tenants', icon: '🏢', label: 'Multi-Tenant', href: '/tenants', badge: 'NEW' },
-    { id: 'settings', icon: '⚙️', label: 'Configuración', href: '/settings' },
+  { id: 'system', title: 'SISTEMA', icon: 'ðŸš€', color: '#00d4ff', gradient: 'linear-gradient(135deg, #00d4ff, #0099cc)', modules: [
+    { id: 'dashboard', icon: 'ðŸ ', label: 'Dashboard Principal', href: '/', badge: 'âˆž' },
+    { id: 'tenants', icon: 'ðŸ¢', label: 'Multi-Tenant', href: '/tenants', badge: 'NEW' },
+    { id: 'settings', icon: 'âš™ï¸', label: 'ConfiguraciÃ³n', href: '/settings' },
   ]},
-  { id: 'workflows', title: 'WORKFLOWS', icon: '🔄', color: '#8B5CF6', gradient: 'linear-gradient(135deg, #8B5CF6, #6366F1)', modules: [
-    { id: 'wf-all', icon: '📋', label: 'Todos los Workflows', href: '/workflows', badge: '10' },
-    { id: 'wf-campaign', icon: '📢', label: 'Campaign Optimization', href: '/workflows/campaign-optimization' },
-    { id: 'wf-acquisition', icon: '🎯', label: 'Customer Acquisition', href: '/workflows/customer-acquisition-intelligence' },
-    { id: 'wf-lifecycle', icon: '♻️', label: 'Customer Lifecycle', href: '/workflows/customer-lifecycle-revenue' },
-    { id: 'wf-content', icon: '📝', label: 'Content Performance', href: '/workflows/content-performance-engine' },
-    { id: 'wf-social', icon: '📱', label: 'Social Intelligence', href: '/workflows/social-media-intelligence' },
-    { id: 'wf-email', icon: '✉️', label: 'Email Automation', href: '/workflows/email-automation-master' },
-    { id: 'wf-attribution', icon: '📊', label: 'Multi-Channel Attribution', href: '/workflows/multi-channel-attribution' },
-    { id: 'wf-competitive', icon: '🔍', label: 'Competitive Intel', href: '/workflows/competitive-intelligence-hub' },
-    { id: 'wf-abtesting', icon: '🧪', label: 'A/B Testing', href: '/workflows/ab-testing-experimentation' },
-    { id: 'wf-influencer', icon: '⭐', label: 'Influencer Engine', href: '/workflows/influencer-partnership-engine' },
+  { id: 'workflows', title: 'WORKFLOWS', icon: 'ðŸ”„', color: '#8B5CF6', gradient: 'linear-gradient(135deg, #8B5CF6, #6366F1)', modules: [
+    { id: 'wf-all', icon: 'ðŸ“‹', label: 'Todos los Workflows', href: '/workflows', badge: '10' },
+    { id: 'wf-campaign', icon: 'ðŸ“¢', label: 'Campaign Optimization', href: '/workflows/campaign-optimization' },
+    { id: 'wf-acquisition', icon: 'ðŸŽ¯', label: 'Customer Acquisition', href: '/workflows/customer-acquisition-intelligence' },
+    { id: 'wf-lifecycle', icon: 'â™»ï¸', label: 'Customer Lifecycle', href: '/workflows/customer-lifecycle-revenue' },
+    { id: 'wf-content', icon: 'ðŸ“', label: 'Content Performance', href: '/workflows/content-performance-engine' },
+    { id: 'wf-social', icon: 'ðŸ“±', label: 'Social Intelligence', href: '/workflows/social-media-intelligence' },
+    { id: 'wf-email', icon: 'âœ‰ï¸', label: 'Email Automation', href: '/workflows/email-automation-master' },
+    { id: 'wf-attribution', icon: 'ðŸ“Š', label: 'Multi-Channel Attribution', href: '/workflows/multi-channel-attribution' },
+    { id: 'wf-competitive', icon: 'ðŸ”', label: 'Competitive Intel', href: '/workflows/competitive-intelligence-hub' },
+    { id: 'wf-abtesting', icon: 'ðŸ§ª', label: 'A/B Testing', href: '/workflows/ab-testing-experimentation' },
+    { id: 'wf-influencer', icon: 'â­', label: 'Influencer Engine', href: '/workflows/influencer-partnership-engine' },
   ]},
-  { id: 'marketing', title: 'MARKETING', icon: '🎯', color: '#F97316', gradient: 'linear-gradient(135deg, #F97316, #EA580C)', modules: [
-    { id: 'mkt-all', icon: '🎯', label: 'Marketing Hub', href: '/marketing', badge: '35' },
-    { id: 'mkt-agents', icon: '🤖', label: 'Agentes', href: '/marketing/agents' },
-    { id: 'mkt-campaigns', icon: '📢', label: 'Campañas', href: '/marketing/campaigns' },
-    { id: 'mkt-leads', icon: '📊', label: 'Lead Management', href: '/marketing/leads' },
-    { id: 'mkt-content', icon: '✍️', label: 'Content Generation', href: '/marketing/content' },
-    { id: 'mkt-social', icon: '📱', label: 'Social Media', href: '/marketing/social' },
-    { id: 'mkt-analytics', icon: '📈', label: 'Analytics', href: '/marketing/analytics' },
+  { id: 'marketing', title: 'MARKETING', icon: 'ðŸŽ¯', color: '#F97316', gradient: 'linear-gradient(135deg, #F97316, #EA580C)', modules: [
+    { id: 'mkt-all', icon: 'ðŸŽ¯', label: 'Marketing Hub', href: '/marketing', badge: '35' },
+    { id: 'mkt-agents', icon: 'ðŸ¤–', label: 'Agentes', href: '/marketing/agents' },
+    { id: 'mkt-campaigns', icon: 'ðŸ“¢', label: 'CampaÃ±as', href: '/marketing/campaigns' },
+    { id: 'mkt-leads', icon: 'ðŸ“Š', label: 'Lead Management', href: '/marketing/leads' },
+    { id: 'mkt-content', icon: 'âœï¸', label: 'Content Generation', href: '/marketing/content' },
+    { id: 'mkt-social', icon: 'ðŸ“±', label: 'Social Media', href: '/marketing/social' },
+    { id: 'mkt-analytics', icon: 'ðŸ“ˆ', label: 'Analytics', href: '/marketing/analytics' },
   ]},
-  { id: 'analytics', title: 'ANALYTICS', icon: '📊', color: '#3B82F6', gradient: 'linear-gradient(135deg, #3B82F6, #2563EB)', modules: [
-    { id: 'analytics-main', icon: '📊', label: 'Dashboard Analytics', href: '/analytics' },
-    { id: 'analytics-reports', icon: '📑', label: 'Reportes', href: '/analytics/reports' },
-    { id: 'analytics-roi', icon: '💰', label: 'ROI', href: '/analytics/roi' },
+  { id: 'analytics', title: 'ANALYTICS', icon: 'ðŸ“Š', color: '#3B82F6', gradient: 'linear-gradient(135deg, #3B82F6, #2563EB)', modules: [
+    { id: 'analytics-main', icon: 'ðŸ“Š', label: 'Dashboard Analytics', href: '/analytics' },
+    { id: 'analytics-reports', icon: 'ðŸ“‘', label: 'Reportes', href: '/analytics/reports' },
+    { id: 'analytics-roi', icon: 'ðŸ’°', label: 'ROI', href: '/analytics/roi' },
   ]},
-  { id: 'finanzas', title: 'FINANZAS', icon: '🏦', color: '#EC4899', gradient: 'linear-gradient(135deg, #EC4899, #DB2777)', modules: [
-    { id: 'originacion', icon: '📝', label: 'Originación', href: '/originacion', badge: '10' },
-    { id: 'decision', icon: '⚖️', label: 'Decisión', href: '/decision', badge: '5' },
-    { id: 'recuperacion', icon: '💳', label: 'Recuperación', href: '/recuperacion', badge: '5' },
-    { id: 'contabilidad', icon: '📊', label: 'Contabilidad', href: '/contabilidad', badge: '22' },
-    { id: 'presupuesto', icon: '💰', label: 'Presupuesto', href: '/presupuesto', badge: '13' },
+  { id: 'finanzas', title: 'FINANZAS', icon: 'ðŸ¦', color: '#EC4899', gradient: 'linear-gradient(135deg, #EC4899, #DB2777)', modules: [
+    { id: 'originacion', icon: 'ðŸ“', label: 'OriginaciÃ³n', href: '/originacion', badge: '10' },
+    { id: 'decision', icon: 'âš–ï¸', label: 'DecisiÃ³n', href: '/decision', badge: '5' },
+    { id: 'recuperacion', icon: 'ðŸ’³', label: 'RecuperaciÃ³n', href: '/recuperacion', badge: '5' },
+    { id: 'contabilidad', icon: 'ðŸ“Š', label: 'Contabilidad', href: '/contabilidad', badge: '22' },
+    { id: 'presupuesto', icon: 'ðŸ’°', label: 'Presupuesto', href: '/presupuesto', badge: '13' },
   ]},
-  { id: 'compliance', title: 'COMPLIANCE', icon: '🛡️', color: '#EF4444', gradient: 'linear-gradient(135deg, #EF4444, #DC2626)', modules: [
-    { id: 'regtech', icon: '📋', label: 'RegTech', href: '/regtech', badge: '8' },
-    { id: 'compliance', icon: '✅', label: 'Compliance', href: '/compliance', badge: '5' },
-    { id: 'legal', icon: '⚖️', label: 'Legal', href: '/legal', badge: '32' },
-    { id: 'vigilancia', icon: '👁️', label: 'Vigilancia', href: '/vigilancia', badge: '4' },
+  { id: 'compliance', title: 'COMPLIANCE', icon: 'ðŸ›¡ï¸', color: '#EF4444', gradient: 'linear-gradient(135deg, #EF4444, #DC2626)', modules: [
+    { id: 'regtech', icon: 'ðŸ“‹', label: 'RegTech', href: '/regtech', badge: '8' },
+    { id: 'compliance', icon: 'âœ…', label: 'Compliance', href: '/compliance', badge: '5' },
+    { id: 'legal', icon: 'âš–ï¸', label: 'Legal', href: '/legal', badge: '32' },
+    { id: 'vigilancia', icon: 'ðŸ‘ï¸', label: 'Vigilancia', href: '/vigilancia', badge: '4' },
   ]},
-  { id: 'operaciones', title: 'OPERACIONES', icon: '⚙️', color: '#14B8A6', gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)', modules: [
-    { id: 'operacional', icon: '⚙️', label: 'Operacional', href: '/operacional', badge: '5' },
-    { id: 'rrhh', icon: '👥', label: 'RRHH', href: '/rrhh', badge: '10' },
-    { id: 'logistica', icon: '🚚', label: 'Logística', href: '/logistica', badge: '23' },
-    { id: 'orchestration', icon: '🎛️', label: 'Orchestration', href: '/orchestration', badge: '5' },
+  { id: 'operaciones', title: 'OPERACIONES', icon: 'âš™ï¸', color: '#14B8A6', gradient: 'linear-gradient(135deg, #14B8A6, #0D9488)', modules: [
+    { id: 'operacional', icon: 'âš™ï¸', label: 'Operacional', href: '/operacional', badge: '5' },
+    { id: 'rrhh', icon: 'ðŸ‘¥', label: 'RRHH', href: '/rrhh', badge: '10' },
+    { id: 'logistica', icon: 'ðŸšš', label: 'LogÃ­stica', href: '/logistica', badge: '23' },
+    { id: 'orchestration', icon: 'ðŸŽ›ï¸', label: 'Orchestration', href: '/orchestration', badge: '5' },
   ]},
-  { id: 'otros', title: 'ESPECIALIDADES', icon: '🎓', color: '#64748B', gradient: 'linear-gradient(135deg, #64748B, #475569)', modules: [
-    { id: 'ventascrm', icon: '🤝', label: 'Ventas CRM', href: '/ventascrm', badge: '9' },
-    { id: 'educacion', icon: '🎓', label: 'Educación', href: '/educacion', badge: '9' },
-    { id: 'experiencia', icon: '😊', label: 'Experiencia', href: '/experiencia', badge: '5' },
-    { id: 'inteligencia', icon: '🧠', label: 'Inteligencia', href: '/inteligencia', badge: '5' },
-    { id: 'investigacion', icon: '🔬', label: 'Investigación', href: '/investigacion', badge: '9' },
-    { id: 'fortaleza', icon: '🏰', label: 'Fortaleza', href: '/fortaleza', badge: '5' },
+  { id: 'otros', title: 'ESPECIALIDADES', icon: 'ðŸŽ“', color: '#64748B', gradient: 'linear-gradient(135deg, #64748B, #475569)', modules: [
+    { id: 'ventascrm', icon: 'ðŸ¤', label: 'Ventas CRM', href: '/ventascrm', badge: '9' },
+    { id: 'educacion', icon: 'ðŸŽ“', label: 'EducaciÃ³n', href: '/educacion', badge: '9' },
+    { id: 'experiencia', icon: 'ðŸ˜Š', label: 'Experiencia', href: '/experiencia', badge: '5' },
+    { id: 'inteligencia', icon: 'ðŸ§ ', label: 'Inteligencia', href: '/inteligencia', badge: '5' },
+    { id: 'investigacion', icon: 'ðŸ”¬', label: 'InvestigaciÃ³n', href: '/investigacion', badge: '9' },
+    { id: 'fortaleza', icon: 'ðŸ°', label: 'Fortaleza', href: '/fortaleza', badge: '5' },
   ]},
-  { id: 'admin', title: 'ADMIN', icon: '🔧', color: '#6366F1', gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)', modules: [
-    { id: 'admin-main', icon: '🔧', label: 'Panel Admin', href: '/admin' },
-    { id: 'admin-agents', icon: '🤖', label: 'Gestión Agentes', href: '/admin/agents' },
-    { id: 'admin-logs', icon: '📜', label: 'Logs', href: '/admin/logs' },
+  { id: 'admin', title: 'ADMIN', icon: 'ðŸ”§', color: '#6366F1', gradient: 'linear-gradient(135deg, #6366F1, #4F46E5)', modules: [
+    { id: 'admin-main', icon: 'ðŸ”§', label: 'Panel Admin', href: '/admin' },
+    { id: 'admin-agents', icon: 'ðŸ¤–', label: 'GestiÃ³n Agentes', href: '/admin/agents' },
+    { id: 'admin-logs', icon: 'ðŸ“œ', label: 'Logs', href: '/admin/logs' },
   ]},
 ];
 
@@ -124,7 +125,7 @@ function CoreSection({ core, currentPath, isExpanded, onToggle }: { core: NavCor
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '10px', fontWeight: 700, color: isExpanded ? core.color : colors.text.secondary, textTransform: 'uppercase' }}>{core.title}</div>
         </div>
-        <span style={{ fontSize: '9px', color: colors.text.muted, transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>▼</span>
+        <span style={{ fontSize: '9px', color: colors.text.muted, transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>â–¼</span>
       </div>
       <div style={{ maxHeight: isExpanded ? '600px' : '0px', overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
         {core.modules.map((module) => (
@@ -135,7 +136,7 @@ function CoreSection({ core, currentPath, isExpanded, onToggle }: { core: NavCor
   );
 }
 
-// Componente de navegación superior
+// Componente de navegaciÃ³n superior
 function TopNavigation() {
   const router = useRouter();
   const pathname = usePathname();
@@ -161,7 +162,7 @@ function TopNavigation() {
       top: 0,
       zIndex: 30,
     }}>
-      {/* Botones de navegación */}
+      {/* Botones de navegaciÃ³n */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <button
           onClick={() => router.back()}
@@ -265,7 +266,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       }}>
         {/* Logo */}
         <div style={{ padding: '16px 14px', borderBottom: `1px solid ${colors.border.subtle}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🚀</div>
+          <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>ðŸš€</div>
           <div>
             <div style={{ fontSize: '15px', fontWeight: 800, background: 'linear-gradient(135deg, #667eea, #764ba2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>NADAKKI AI</div>
             <div style={{ fontSize: '8px', color: colors.text.muted }}>Enterprise Suite v4.0.1</div>
@@ -289,7 +290,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Footer */}
         <div style={{ padding: '10px', borderTop: `1px solid ${colors.border.subtle}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '8px', background: 'rgba(51, 65, 85, 0.3)' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🏦</div>
+            <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg, #667eea, #764ba2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>ðŸ¦</div>
             <div style={{ flex: 1 }}><div style={{ fontSize: '11px', fontWeight: 600, color: colors.text.primary }}>NADAKKI Demo</div><div style={{ fontSize: '8px', color: colors.text.muted }}>Pro Plan</div></div>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#26de81' }} />
           </div>
