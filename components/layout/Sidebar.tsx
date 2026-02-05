@@ -184,7 +184,7 @@ export default function Sidebar() {
       >
         <div className="flex justify-around text-center">
           <div>
-            <div className="text-sm font-bold" style={{ color: theme.colors.accentPrimary }}>225</div>
+            <div className="text-sm font-bold" style={{ color: theme.colors.accentPrimary }}><AgentCountDisplay /></div>
             <div className="text-[10px]" style={{ color: theme.colors.textMuted }}>AGENTES</div>
           </div>
           <div className="w-px" style={{ backgroundColor: theme.colors.borderPrimary }} />
