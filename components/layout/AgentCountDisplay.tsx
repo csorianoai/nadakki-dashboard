@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useAgents } from '@/hooks/useAgents';
+import { useAgents } from '@/app/hooks/useAgents';
 
 interface AgentCountDisplayProps {
   format?: 'number' | 'text' | 'badge' | 'full';
