@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { Bot, X, Send, Loader2, Minimize2, Lightbulb, RefreshCw } from "lucide-react";
@@ -31,9 +31,9 @@ export default function OnboardingAgent() {
       setMessages([{
         id: "welcome",
         role: "assistant",
-        content: "¡Hola! 👋 Soy NADA, tu copiloto de IA.\n\nPuedo ayudarte con:\n• Workflows de marketing\n• Los 225 agentes de IA\n• Tutoriales y guías\n\n¿En qué te ayudo?",
+        content: "Â¡Hola! ðŸ‘‹ Soy NADA, tu copiloto de IA.\n\nPuedo ayudarte con:\nâ€¢ Workflows de marketing\nâ€¢ Los 239 agentes de IA\nâ€¢ Tutoriales y guÃ­as\n\nÂ¿En quÃ© te ayudo?",
         source: "greeting",
-        suggestions: ["¿Qué es un workflow?", "¿Qué workflows hay?", "¿Cómo ejecuto un workflow?"]
+        suggestions: ["Â¿QuÃ© es un workflow?", "Â¿QuÃ© workflows hay?", "Â¿CÃ³mo ejecuto un workflow?"]
       }]);
     }
   }, [isOpen, messages.length]);
@@ -53,7 +53,7 @@ export default function OnboardingAgent() {
       const data = await res.json();
       
       // Debug log
-      console.log("📥 API Response:", JSON.stringify(data, null, 2));
+      console.log("ðŸ“¥ API Response:", JSON.stringify(data, null, 2));
       
       if (data.sessionId) setSessionId(data.sessionId);
       
@@ -67,23 +67,23 @@ export default function OnboardingAgent() {
         feedback: null
       };
       
-      console.log("📝 New message logId:", newMessage.logId);
+      console.log("ðŸ“ New message logId:", newMessage.logId);
       
       setMessages(prev => [...prev, newMessage]);
     } catch (err) {
-      console.error("❌ API Error:", err);
-      setMessages(prev => [...prev, { id: `e${Date.now()}`, role: "assistant", content: "Error de conexión." }]);
+      console.error("âŒ API Error:", err);
+      setMessages(prev => [...prev, { id: `e${Date.now()}`, role: "assistant", content: "Error de conexiÃ³n." }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const sendFeedback = async (msgId: string, logId: string | undefined, fb: "positive" | "negative") => {
-    console.log("🔔 Sending feedback:", { msgId, logId, fb });
+    console.log("ðŸ”” Sending feedback:", { msgId, logId, fb });
     
     if (!logId) {
-      console.warn("⚠️ No logId available, feedback not sent to server");
-      // Aún así actualizar UI
+      console.warn("âš ï¸ No logId available, feedback not sent to server");
+      // AÃºn asÃ­ actualizar UI
       setMessages(prev => prev.map(m => m.id === msgId ? { ...m, feedback: fb } : m));
       return;
     }
@@ -95,10 +95,10 @@ export default function OnboardingAgent() {
         body: JSON.stringify({ action: "feedback", logId, feedback: fb })
       });
       const result = await res.json();
-      console.log("✅ Feedback response:", result);
+      console.log("âœ… Feedback response:", result);
       setMessages(prev => prev.map(m => m.id === msgId ? { ...m, feedback: fb } : m));
     } catch (err) {
-      console.error("❌ Feedback error:", err);
+      console.error("âŒ Feedback error:", err);
     }
   };
 
@@ -109,7 +109,7 @@ export default function OnboardingAgent() {
 
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
-        <span style={{ fontSize: "12px", color: "#888" }}>¿Útil?</span>
+        <span style={{ fontSize: "12px", color: "#888" }}>Â¿Ãštil?</span>
         <button
           onClick={() => sendFeedback(msg.id, msg.logId, "positive")}
           style={{
@@ -123,7 +123,7 @@ export default function OnboardingAgent() {
             cursor: "pointer"
           }}
         >
-          👍 Sí
+          ðŸ‘ SÃ­
         </button>
         <button
           onClick={() => sendFeedback(msg.id, msg.logId, "negative")}
@@ -138,7 +138,7 @@ export default function OnboardingAgent() {
             cursor: "pointer"
           }}
         >
-          👎 No
+          ðŸ‘Ž No
         </button>
       </div>
     );
@@ -183,7 +183,7 @@ export default function OnboardingAgent() {
                 
                 {msg.role === "assistant" && msg.source && msg.source !== "greeting" && (
                   <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", marginBottom: "4px", background: msg.source === "system" ? "#7c3aed" : "#0891b2", color: "#fff" }}>
-                    {msg.source === "system" ? "📚 NADAKKI" : "🤖 IA General"}
+                    {msg.source === "system" ? "ðŸ“š NADAKKI" : "ðŸ¤– IA General"}
                   </span>
                 )}
 

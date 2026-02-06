@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -22,7 +22,7 @@ interface Tenant {
 }
 
 const TENANTS: Tenant[] = [
-  { id: "credicefi", name: "CrediCefi", domain: "credicefi.com", plan: "enterprise", status: "active", agents: 225, created: "2024-01-15", apiKey: "sk-cred-xxx" },
+  { id: "credicefi", name: "CrediCefi", domain: "credicefi.com", plan: "enterprise", status: "active", agents: 239, created: "2024-01-15", apiKey: "sk-cred-xxx" },
   { id: "sfrentals", name: "SF Rentals", domain: "sfrentals.com", plan: "pro", status: "active", agents: 45, created: "2024-12-28", apiKey: "sk-sfr-xxx" },
   { id: "techstartup", name: "Tech Startup", domain: "techstartup.io", plan: "starter", status: "pending", agents: 10, created: "2025-01-02", apiKey: "sk-tech-xxx" },
   { id: "financeplus", name: "Finance Plus", domain: "financeplus.mx", plan: "pro", status: "active", agents: 78, created: "2024-06-20", apiKey: "sk-fin-xxx" },
@@ -162,4 +162,5 @@ export default function TenantsPage() {
     </div>
   );
 }
+
 

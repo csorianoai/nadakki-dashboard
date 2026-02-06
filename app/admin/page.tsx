@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
@@ -11,17 +11,17 @@ import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const ADMIN_MODULES = [
-  { id: "agents", name: "Agentes IA", icon: Bot, desc: "Activar, desactivar y configurar agentes", href: "/admin/agents", color: "#8b5cf6", badge: "225" },
+  { id: "agents", name: "Agentes IA", icon: Bot, desc: "Activar, desactivar y configurar agentes", href: "/admin/agents", color: "#8b5cf6", badge: "239" },
   { id: "logs", name: "Logs del Sistema", icon: FileText, desc: "Historial de ejecuciones y errores", href: "/admin/logs", color: "#22c55e" },
-  { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "Gestión de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
-  { id: "settings", name: "Configuración", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
+  { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "GestiÃ³n de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
+  { id: "settings", name: "ConfiguraciÃ³n", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
 ];
 
 const SYSTEM_STATS = [
-  { value: "225", label: "Agentes Totales", icon: <Bot className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
+  { value: "239", label: "Agentes Totales", icon: <Bot className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
   { value: "4", label: "Tenants Activos", icon: <Users className="w-6 h-6 text-blue-400" />, color: "#3b82f6" },
   { value: "99.7%", label: "Uptime", icon: <Activity className="w-6 h-6 text-green-400" />, color: "#22c55e" },
-  { value: "v3.2", label: "Versión", icon: <Server className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
+  { value: "v3.2", label: "VersiÃ³n", icon: <Server className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
 ];
 
 const RECENT_EVENTS = [
@@ -50,9 +50,9 @@ export default function AdminPage() {
           </div>
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 bg-clip-text text-transparent">
-              Panel de Administración
+              Panel de AdministraciÃ³n
             </h1>
-            <p className="text-gray-400 mt-1">Gestiona agentes, tenants, logs y configuración del sistema</p>
+            <p className="text-gray-400 mt-1">Gestiona agentes, tenants, logs y configuraciÃ³n del sistema</p>
           </div>
         </div>
       </motion.div>
@@ -68,7 +68,7 @@ export default function AdminPage() {
       <div className="grid grid-cols-3 gap-6">
         {/* Admin Modules */}
         <div className="col-span-2">
-          <h2 className="text-xl font-bold text-white mb-4">Módulos de Administración</h2>
+          <h2 className="text-xl font-bold text-white mb-4">MÃ³dulos de AdministraciÃ³n</h2>
           <div className="grid grid-cols-2 gap-4">
             {ADMIN_MODULES?.map((module, index) => (
               <motion.div
@@ -148,4 +148,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
 
