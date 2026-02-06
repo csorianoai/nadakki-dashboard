@@ -1,67 +1,50 @@
-"use client";
-
-// hooks/useTenantServer.ts
-// Hook seguro para Server Components - NO usa React Context
-
-import { DEFAULT_SETTINGS } from '@/contexts/TenantContext';
+﻿// Hook seguro para Server Components - NO usa React Context
 
 export type TenantSettings = {
   name: string;
-  features: {
-    email: boolean;
-    push: boolean;
-    advancedAnalytics: boolean;
-    whatsapp: boolean;
-    sms: boolean;
-  };
-  limits: {
-    maxCampaigns: number;
-    maxContacts: number;
-    maxEmailsPerMonth: number;
-  };
   plan: string;
+  features: Record<string, boolean>;
+  limits: Record<string, number>;
 };
 
-export type TenantData = {
-  tenantId: string;
+// ✅ DEFINIDO ANTES DE USARSE
+export const DEFAULT_SETTINGS: TenantSettings = {
+  name: "Default Tenant",
+  plan: "base",
+  features: {
+    aiAgents: true,
+    analytics: true,
+    multiTenant: true,
+    apiAccess: true,
+    customDomains: false,
+    prioritySupport: false,
+  },
+  limits: {
+    agents: 1000,
+    users: 50,
+    requestsPerDay: 10000,
+    storageMB: 1024,
+    workspaces: 5,
+  },
+};
+
+export type TenantContextType = {
+  tenantId: string | null;
   settings: TenantSettings;
-  isFeatureEnabled: (feature: keyof TenantSettings['features']) => boolean;
-  checkLimit: (limit: keyof TenantSettings['limits'], current: number) => boolean;
+  isFeatureEnabled: (feature: string) => boolean;
+  checkLimit: (limit: string, current: number) => boolean;
   isLoading: boolean;
-  source: 'server' | 'client';
 };
 
-/**
- * Hook para Server Components - No depende de React Context
- * Solo lee de cookies/headers/database
- */
-export async function useTenantServer(): Promise<TenantData> {
-  // En server components, obtenemos tenant de cookies/headers
-  // Esta función es ASÍNCRONA y no usa React hooks
-  
-  // TODO: Implementar lógica real de obtención de tenant
-  // Por ahora retorna valores por defecto
-  
-  return {
-    tenantId: "default",
-    settings: DEFAULT_SETTINGS,
-    isFeatureEnabled: (feature) => DEFAULT_SETTINGS.features[feature] ?? false,
-    checkLimit: (limit, current) => current < DEFAULT_SETTINGS.limits[limit],
-    isLoading: false,
-    source: 'server',
-  };
-}
+export function useTenantServer(): TenantContextType {
+  // Server-safe: NO context, NO hooks, NO browser APIs.
+  // En producción: aquí se reemplaza por fetch a DB/API según tenant.
 
-/**
- * Versión síncrona para Client Components que puedan importar desde server
- */
-export function getTenantData(): TenantData {
   return {
     tenantId: "default",
     settings: DEFAULT_SETTINGS,
     isFeatureEnabled: (feature) => DEFAULT_SETTINGS.features[feature] ?? false,
-    checkLimit: (limit, current) => current < DEFAULT_SETTINGS.limits[limit],
+    checkLimit: (limit, current) => current < (DEFAULT_SETTINGS.limits[limit] ?? Number.POSITIVE_INFINITY),
     isLoading: false,
-    source: 'client',
   };
 }

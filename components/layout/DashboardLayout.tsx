@@ -1,6 +1,6 @@
 ﻿'use client';
 import React, { useState, ReactNode } from 'react';
-import { AgentCountDisplay } from './AgentCountDisplay';
+import AgentCountDisplay from "./AgentCountDisplay";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
@@ -323,4 +323,5 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
 

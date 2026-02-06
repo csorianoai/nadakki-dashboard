@@ -64,7 +64,14 @@ const navigationStructure: NavCore[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { theme } = useTheme();
-  const { data: agents, isLoading } = useAgents();
+  // Theme puede ser objeto o string según implementación.
+  // NO comparamos Theme tipado con string directamente.
+  const isDark =
+    (typeof theme === "string" && theme === "dark") ||
+    ((theme as any)?.mode === "dark") ||
+    ((theme as any)?.name === "dark") ||
+    ((theme as any)?.id === "dark");
+const { data: agents, isLoading } = useAgents();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const activeCore = navigationStructure.find((core) =>
@@ -76,7 +83,7 @@ export default function Sidebar() {
       className={`fixed left-0 top-0 h-screen overflow-y-auto border-r transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       } ${
-        theme === "dark"
+        isDark
           ? "border-gray-800 bg-gradient-to-b from-gray-950 via-gray-900 to-black"
           : "border-gray-200 bg-gradient-to-b from-white to-gray-50"
       } p-4`}
@@ -104,7 +111,7 @@ export default function Sidebar() {
             {/* Agent Count */}
             <div
               className={`rounded-lg p-3 ${
-                theme === "dark" ? "bg-gray-900" : "bg-gray-100"
+                isDark ? "bg-gray-900" : "bg-gray-100"
               }`}
             >
               {isLoading ? (
@@ -185,3 +192,5 @@ export default function Sidebar() {
     </aside>
   );
 }
+
+

@@ -1,40 +1,50 @@
-﻿'use client';
+﻿"use client";
 
-import { useAgents } from '@/app/hooks/useAgents';
+import React from "react";
+import { useAgents } from "@/app/hooks/useAgents";
 
-interface AgentCountDisplayProps {
-  format?: 'number' | 'text' | 'badge' | 'full';
+type Props = {
+  /** Si se pasa, se usa este conteo (no hace fetch adicional) */
+  count?: number;
+  /** Mostrar etiqueta 'AGENTES' */
   showLabel?: boolean;
-}
+  /** Clase extra opcional */
+  className?: string;
+};
 
-export function AgentCountDisplay({
-  format = 'number',
-  showLabel = true
-}: AgentCountDisplayProps) {
-  const { totalAgents, loading, error } = useAgents();
+export default function AgentCountDisplay({
+  count,
+  showLabel = true,
+  className = "",
+}: Props) {
+  // Hook real: { data: Agent[]; isLoading: boolean; }
+  const { data, isLoading } = useAgents();
 
-  if (loading) return <span>—</span>;
-  if (error || totalAgents === null) return <span title={error || 'Error'}>?</span>;
+  // Determina conteo sin mentir:
+  // - Si hay count explícito, úsalo.
+  // - Si no, usa data.length si está disponible.
+  const resolvedCount =
+    typeof count === "number"
+      ? count
+      : Array.isArray(data)
+      ? data.length
+      : null;
 
-  if (format === 'full') {
+  if (isLoading) {
     return (
-      <div style={{
-        padding: '8px 10px',
-        margin: '10px',
-        borderRadius: '8px',
-        background: 'rgba(139, 92, 246, 0.1)',
-        display: 'flex',
-        justifyContent: 'space-around'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', fontWeight: 800, color: '#a55eea' }}>
-            {totalAgents}
-          </div>
-          <div style={{ fontSize: '7px', color: '#64748b' }}>AGENTES</div>
-        </div>
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+        <span className="text-sm text-gray-400">Cargando agentes...</span>
       </div>
     );
   }
 
-  return <span>{totalAgents}</span>;
+  return (
+    <div className={`flex items-baseline justify-between ${className}`}>
+      <div className="text-lg font-bold">
+        {resolvedCount ?? "—"}
+      </div>
+      {showLabel && <div className="text-xs text-gray-500">AGENTES</div>}
+    </div>
+  );
 }
