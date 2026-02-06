@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useAgents } from '@/hooks/useAgents';
+import { useAgents } from '@/app/hooks/useAgents';
 
 export function SyncIndicator() {
   const { loading, error, totalAgents } = useAgents();
@@ -18,3 +18,4 @@ export function SyncIndicator() {
     </div>
   );
 }
+

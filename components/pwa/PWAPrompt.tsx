@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { Download, X, Wifi, WifiOff, RefreshCw } from "lucide-react";
-import { usePWA } from "@/hooks/usePWA";
+import { usePWA } from "@/app/hooks/usePWA";
 
 export default function PWAPrompt() {
   const { isInstalled, isOnline, canInstall, isUpdateAvailable, install, update } = usePWA();
@@ -29,7 +29,7 @@ export default function PWAPrompt() {
             <div className="flex-1">
               <h3 className="font-semibold text-white">Instalar NADAKKI</h3>
               <p className="text-sm text-slate-400 mt-1">
-                Instala la app para acceso rápido y uso offline.
+                Instala la app para acceso rÃ¡pido y uso offline.
               </p>
               <div className="flex gap-2 mt-3">
                 <button
@@ -63,8 +63,8 @@ export default function PWAPrompt() {
           <div className="flex items-center gap-3">
             <RefreshCw className="w-6 h-6 text-blue-400" />
             <div className="flex-1">
-              <h3 className="font-semibold text-white">Actualización disponible</h3>
-              <p className="text-sm text-blue-200">Nueva versión lista para instalar.</p>
+              <h3 className="font-semibold text-white">ActualizaciÃ³n disponible</h3>
+              <p className="text-sm text-blue-200">Nueva versiÃ³n lista para instalar.</p>
             </div>
             <button
               onClick={update}
@@ -84,7 +84,7 @@ export default function PWAPrompt() {
       <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-slide-down">
         <div className="bg-amber-900/90 border border-amber-700 rounded-full px-4 py-2 shadow-xl flex items-center gap-2">
           <WifiOff className="w-4 h-4 text-amber-400" />
-          <span className="text-sm text-amber-200">Sin conexión</span>
+          <span className="text-sm text-amber-200">Sin conexiÃ³n</span>
         </div>
       </div>
     );
