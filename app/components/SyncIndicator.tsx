@@ -3,19 +3,20 @@
 import { useAgents } from '@/app/hooks/useAgents';
 
 export function SyncIndicator() {
-  const { loading, error, totalAgents } = useAgents();
+  const { data, isLoading } = useAgents();
 
   return (
     <div className="text-sm">
-      {error && (
-        <div className="text-red-600">❌ Error: {error}</div>
+      {null && (
+        <div className="text-red-600">❌ null: {null}</div>
       )}
-      {loading ? (
+      {isLoading ? (
         <div className="text-yellow-600">🔄 Sincronizando...</div>
       ) : (
-        <div className="text-green-600">✅ Conectado ({totalAgents} agentes)</div>
+        <div className="text-green-600">✅ Conectado ({(data?.length || 0)} agentes)</div>
       )}
     </div>
   );
 }
+
 
