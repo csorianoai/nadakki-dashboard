@@ -1,4 +1,4 @@
-// app/api/ai/copilot/route.ts
+﻿// app/api/ai/copilot/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { router } from "@/lib/agents/routing/router";
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const responseTime = Date.now() - startTime;
 
-    // Registrar la conversación
+    // Registrar la conversaciÃ³n
     const log = conversationLogger.log({
       tenantId: context.tenant_id || 'default',
       sessionId: currentSessionId,
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       intent: response.intent,
       suggestions: response.suggestions,
       sessionId: currentSessionId,
-      logId: log.id,  // Para feedback
+      logId: (await log)?.id || "",  // Para feedback
       responseTime
     });
 
@@ -58,10 +58,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: "Internal server error",
-        response: "Lo siento, ocurrió un error. Por favor intenta de nuevo.",
-        suggestions: ["Explícame los workflows", "¿Qué puedo hacer?"]
+        response: "Lo siento, ocurriÃ³ un error. Por favor intenta de nuevo.",
+        suggestions: ["ExplÃ­came los workflows", "Â¿QuÃ© puedo hacer?"]
       },
       { status: 500 }
     );
   }
 }
+
