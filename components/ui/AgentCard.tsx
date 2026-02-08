@@ -1,79 +1,81 @@
-'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
+﻿'use client';
+import React from 'react';
+
+interface Metric {
+  label: string;
+  value: string | number;
+}
 
 interface AgentCardProps {
   id: string;
   name: string;
-  displayName: string;
-  description?: string;
-  category?: string;
-  status: 'active' | 'inactive' | 'error';
-  version?: string;
-  coreColor?: string;
-  onClick?: () => void;
+  description: string;
+  icon?: string;
+  status: 'active' | 'inactive' | 'pending';
+  metrics?: Metric[];
+  isSelected?: boolean;
+  onSelect?: () => void;
+  onExecute?: () => void;
 }
 
-export default function AgentCard({
+export function AgentCard({
   id,
-  displayName,
+  name,
   description,
-  category,
+  icon = '??',
   status,
-  version = '3.2.0',
-  coreColor = '#00E5FF',
+  metrics,
+  isSelected = false,
+  onSelect,
+  onExecute,
 }: AgentCardProps) {
-  const pathname = usePathname();
-  const coreId = pathname?.split('/')[1] || 'marketing';
+  const statusColors: Record<string, string> = {
+    active: 'bg-green-100 text-green-800 border-green-200',
+    inactive: 'bg-gray-100 text-gray-800 border-gray-200',
+    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  };
 
   return (
-    <Link href={'/' + coreId + '/' + id}>
-      <div
-        className={cn(
-          'glass rounded-xl p-4 cursor-pointer transition-all duration-300',
-          'hover:bg-white/10 hover:translate-y-[-2px] hover:scale-[1.02]',
-          'border border-transparent hover:border-white/20',
-          'group'
-        )}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                'w-3 h-3 rounded-full',
-                status === 'active' ? 'bg-green-400 animate-pulse' :
-                status === 'error' ? 'bg-red-400' : 'bg-gray-500'
-              )}
-            />
-            <h4 className="font-medium text-white group-hover:text-cyan-400 transition-colors">
-              {displayName}
-            </h4>
+    <div
+      onClick={onSelect}
+      className={`border-2 rounded-lg p-5 cursor-pointer transition-all ${
+        isSelected ? 'border-blue-500 bg-blue-50 shadow-lg' : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+      }`}
+      data-agent-id={id}
+    >
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-start gap-3">
+          <span className="text-3xl">{icon}</span>
+          <div>
+            <h3 className="font-bold text-lg">{name}</h3>
+            <p className="text-sm text-gray-600 mt-1">{description}</p>
           </div>
-          <span className="text-xs font-mono text-gray-500">v{version}</span>
         </div>
-
-        {description && (
-          <p className="text-sm text-gray-400 line-clamp-2 mb-2">{description}</p>
-        )}
-
-        <div className="flex items-center justify-between">
-          {category && (
-            <span
-              className="text-xs px-2 py-1 rounded-full bg-white/10"
-              style={{ color: coreColor }}
-            >
-              {category}
-            </span>
-          )}
-          <span
-            className="text-xs opacity-0 group-hover:opacity-100 transition-opacity font-medium"
-            style={{ color: coreColor }}
-          >
-            Ejecutar
-          </span>
-        </div>
+        <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${statusColors[status] || statusColors.inactive}`}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
       </div>
-    </Link>
+
+      {metrics && metrics.length > 0 && (
+        <div className="mt-4 grid grid-cols-2 gap-3 py-3 border-t border-gray-200">
+          {metrics.map((metric, idx) => (
+            <div key={idx} className="text-center">
+              <div className="font-bold text-lg text-blue-600">{metric.value}</div>
+              <div className="text-xs text-gray-500">{metric.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {onExecute && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onExecute(); }}
+          className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded font-semibold"
+          type="button"
+        >
+          Ejecutar
+        </button>
+      )}
+    </div>
   );
 }

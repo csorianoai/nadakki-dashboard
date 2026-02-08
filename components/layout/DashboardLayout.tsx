@@ -44,10 +44,10 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #10b981, #059669)",
     modules: [
       { id: "advertising-hub", icon: "📣", label: "Publicidad (Hub)", href: "/advertising" },
-      { id: "google-ads", icon: "🔎", label: "Google Ads", href: "/google-ads", badge: "MVP" },
-      { id: "meta-ads", icon: "📘", label: "Meta Ads", href: "/meta-ads" },
-      { id: "tiktok-ads", icon: "🎵", label: "TikTok Ads", href: "/tiktok-ads" },
-      { id: "linkedin-ads", icon: "💼", label: "LinkedIn Ads", href: "/linkedin-ads" },
+      { id: "google-ads", icon: "🔎", label: "Google Ads", href: "/advertising/google-ads", badge: "MVP" },
+      { id: "meta-ads", icon: "📘", label: "Meta Ads", href: "/advertising/meta-ads" },
+      { id: "tiktok-ads", icon: "🎵", label: "TikTok Ads", href: "/advertising/tiktok-ads" },
+      { id: "linkedin-ads", icon: "💼", label: "LinkedIn Ads", href: "/advertising/linkedin-ads" },
     ],
   },
 
@@ -573,3 +573,4 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
