@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React from 'react';
 
 interface Metric {
@@ -79,3 +79,6 @@ export function AgentCard({
     </div>
   );
 }
+
+
+export default AgentCard;

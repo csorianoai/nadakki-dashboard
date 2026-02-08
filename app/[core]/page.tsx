@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import AgentCard from '@/components/ui/AgentCard';
+import { AgentCard } from '@/components/ui/AgentCard';
 import { CORES_CONFIG } from '@/config/cores';
 
 interface Agent {
@@ -137,3 +137,4 @@ export default function CorePage() {
     </div>
   );
 }
+
