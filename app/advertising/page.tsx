@@ -1,33 +1,30 @@
-﻿'use client';
-
-import AgentsPanel from './components/AgentsPanel';
+﻿import Link from 'next/link';
 
 export default function AdvertisingPage() {
+  const platforms = [
+    { name: 'Google Ads', href: '/advertising/advertising/google-ads', icon: '??' },
+    { name: 'Meta Ads', href: '/advertising/advertising/meta-ads', icon: '??' },
+    { name: 'LinkedIn Ads', href: '/advertising/advertising/linkedin-ads', icon: '??' },
+    { name: 'TikTok Ads', href: '/advertising/advertising/tiktok-ads', icon: '??' },
+    { name: 'Vista Unificada', href: '/advertising/advertising/unified', icon: '??' },
+  ];
+
   return (
-    <div style={{minHeight: '100vh', padding: '32px', backgroundColor: '#f9fafb'}}>
-      <h1 style={{fontSize: '36px', fontWeight: 'bold', marginBottom: '16px'}}>
-        Advertising Manager
-      </h1>
-      <p style={{color: '#666', marginBottom: '32px'}}>
-        Multi-platform advertising with AI agents
-      </p>
-      <div style={{marginBottom: '32px', padding: '24px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px'}}>
-        <p style={{color: '#166534'}}>System Status: Connected and Ready</p>
-      </div>
-      <AgentsPanel />
-      <div style={{marginTop: '48px', padding: '24px', backgroundColor: '#111827', color: 'white', borderRadius: '8px'}}>
-        <h2 style={{fontSize: '24px', fontWeight: 'bold', marginBottom: '16px'}}>
-          API Documentation
-        </h2>
-        <a 
-          href="https://nadakki-ai-suite.onrender.com/docs" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          style={{display: 'inline-block', padding: '12px 24px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '6px', textDecoration: 'none'}}
-        >
-          View API Docs
-        </a>
+    <div className="p-6 max-w-7xl mx-auto">
+      <h1 className="text-4xl font-bold mb-12">??? Hub de Publicidad</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {platforms.map((p) => (
+          <Link
+            key={p.name}
+            href={p.href}
+            className="block border-2 border-gray-200 rounded-xl p-6 hover:border-blue-500 hover:bg-blue-50 transition-all"
+          >
+            <div className="text-3xl mb-3">{p.icon}</div>
+            <h3 className="text-xl font-bold">{p.name}</h3>
+          </Link>
+        ))}
       </div>
     </div>
   );
 }
+

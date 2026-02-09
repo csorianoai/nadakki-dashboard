@@ -1,16 +1,21 @@
-'use client';
+﻿'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import AgentCard from '@/components/ui/AgentCard';
+import { AgentCard } from '@/components/ui/AgentCard';
 import { CORES_CONFIG } from '@/config/cores';
 
 interface Agent {
   id: string;
   name: string;
+  description?: string;
+  icon?: string;
   category?: string;
+  status?: "active" | "inactive" | "pending";
+  displayName?: string;
+  coreColor?: string;
 }
 
 interface CoreData {
@@ -76,7 +81,7 @@ export default function CorePage() {
         />
         <div className="p-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors">
-            <span>←</span> Volver al Dashboard
+            <span>â†</span> Volver al Dashboard
           </Link>
 
           <div className="grid grid-cols-4 gap-6 mb-8">
@@ -119,10 +124,10 @@ export default function CorePage() {
                 <AgentCard
                   key={agent.id}
                   id={agent.id}
-                  name={agent.id}
+                  name={agent.name}
                   displayName={agent.name}
                   category={agent.category}
-                  status="active"
+                  icon={agent.icon || "⚙️"} status="active"
                   coreColor={coreConfig.color}
                 />
               ))}
@@ -137,3 +142,6 @@ export default function CorePage() {
     </div>
   );
 }
+
+
+
