@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { CORES_CONFIG } from '@/config/cores';
 import { api } from '@/lib/api';
@@ -34,7 +35,8 @@ export default function AgentDetailPage() {
   if (!coreConfig) {
     return (
       <div className="flex min-h-screen">
-<main className="flex-1 flex items-center justify-center">
+        <Sidebar />
+        <main className="flex-1 ml-80 flex items-center justify-center">
           <h1 className="text-4xl font-bold text-gray-400">Core no encontrado</h1>
         </main>
       </div>
@@ -43,7 +45,8 @@ export default function AgentDetailPage() {
 
   return (
     <div className="flex min-h-screen">
-<main className="flex-1 ">
+      <Sidebar />
+      <main className="flex-1 ml-80">
         <Header
           title={agentId}
           subtitle={coreConfig.displayName + ' - Agente de IA'}
@@ -91,5 +94,3 @@ export default function AgentDetailPage() {
     </div>
   );
 }
-
-

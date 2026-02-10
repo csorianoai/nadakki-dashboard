@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import Sidebar from "@/components/Sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
 
 export default function SegmentsPage() {
@@ -13,8 +14,9 @@ export default function SegmentsPage() {
       className="flex min-h-screen"
       style={{ backgroundColor: bgPrimary }}
     >
-<main
-        className="flex-1 p-6"
+      <Sidebar />
+      <main
+        className="flex-1 ml-80 p-6"
         style={{ borderLeft: "1px solid " + borderColor }}
       >
         <h2>Segments</h2>
@@ -22,5 +24,3 @@ export default function SegmentsPage() {
     </div>
   );
 }
-
-
