@@ -71,7 +71,7 @@ export default function Sidebar() {
     ((theme as any)?.mode === "dark") ||
     ((theme as any)?.name === "dark") ||
     ((theme as any)?.id === "dark");
-const { data: agents, isLoading } = useAgents();
+const { agents, loading: isLoading } = useAgents();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const activeCore = navigationStructure.find((core) =>
@@ -192,5 +192,6 @@ const { data: agents, isLoading } = useAgents();
     </aside>
   );
 }
+
 
 
