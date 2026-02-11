@@ -179,8 +179,6 @@ const ADVANCED_MODULES = [
 
 export default function MarketingHubPage() {
   const { stats, loading, error, lastUpdated, refresh } = useMarketingStats("credicefi");
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     // Fetch stats from API
     fetch(`${API_URL}/api/campaigns/stats/summary?tenant_id=credicefi`)
@@ -313,6 +311,7 @@ export default function MarketingHubPage() {
     </div>
   );
 }
+
 
 
 
