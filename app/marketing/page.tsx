@@ -179,20 +179,7 @@ const ADVANCED_MODULES = [
 
 export default function MarketingHubPage() {
   const { stats, loading, error, lastUpdated, refresh } = useMarketingStats("credicefi");
-  useEffect(() => {
-    // Fetch stats from API
-    fetch(`${API_URL}/api/campaigns/stats/summary?tenant_id=credicefi`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.summary) {
-          setStats(prev => ({
-            ...prev,
-            campaigns: d.summary.total_campaigns || 12,
-          }));
-        }
-      })
-      .catch(() => {});
-  }, []);
+  
 
   const renderModuleCard = (m: any, i: number, delay: number = 0) => (
     <motion.div 
@@ -311,6 +298,7 @@ export default function MarketingHubPage() {
     </div>
   );
 }
+
 
 
 
