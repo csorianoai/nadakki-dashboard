@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -11,7 +11,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 const TENANT_ID = "credicefi";
 
 interface Integration {
@@ -33,7 +33,7 @@ interface Integration {
   config?: Record<string, string>;
 }
 
-// Integraciones reales con URLs de OAuth/conexión correctas
+// Integraciones reales con URLs de OAuth/conexiÃ³n correctas
 const AVAILABLE_INTEGRATIONS: Integration[] = [
   // CRM
   {
@@ -50,7 +50,7 @@ const AVAILABLE_INTEGRATIONS: Integration[] = [
   {
     id: "salesforce",
     name: "Salesforce",
-    description: "CRM líder para ventas y servicio",
+    description: "CRM lÃ­der para ventas y servicio",
     category: "crm",
     logo: "https://c1.sfdcstatic.com/content/dam/sfdc-docs/www/logos/logo-salesforce.svg",
     status: "disconnected",
@@ -61,7 +61,7 @@ const AVAILABLE_INTEGRATIONS: Integration[] = [
   {
     id: "pipedrive",
     name: "Pipedrive",
-    description: "CRM de ventas diseñado para equipos pequeños",
+    description: "CRM de ventas diseÃ±ado para equipos pequeÃ±os",
     category: "crm",
     logo: "https://www.pipedrive.com/favicon.ico",
     status: "disconnected",
@@ -84,7 +84,7 @@ const AVAILABLE_INTEGRATIONS: Integration[] = [
   {
     id: "segment",
     name: "Segment",
-    description: "Customer Data Platform líder",
+    description: "Customer Data Platform lÃ­der",
     category: "cdp",
     logo: "https://segment.com/favicon.ico",
     status: "disconnected",
@@ -115,7 +115,7 @@ const AVAILABLE_INTEGRATIONS: Integration[] = [
   {
     id: "google-analytics",
     name: "Google Analytics 4",
-    description: "Analítica web y app de Google",
+    description: "AnalÃ­tica web y app de Google",
     category: "analytics",
     logo: "https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg",
     status: "disconnected",
@@ -167,7 +167,7 @@ const AVAILABLE_INTEGRATIONS: Integration[] = [
   {
     id: "intercom",
     name: "Intercom",
-    description: "Mensajería y soporte al cliente",
+    description: "MensajerÃ­a y soporte al cliente",
     category: "communication",
     logo: "https://www.intercom.com/favicon.ico",
     status: "disconnected",
@@ -191,7 +191,7 @@ const AVAILABLE_INTEGRATIONS: Integration[] = [
   {
     id: "zapier",
     name: "Zapier",
-    description: "Conecta +5000 apps sin código",
+    description: "Conecta +5000 apps sin cÃ³digo",
     category: "other",
     logo: "https://zapier.com/favicon.ico",
     status: "disconnected",
@@ -279,10 +279,10 @@ export default function IntegrationsPage() {
     setApiKeyInput("");
     
     if (integration.authType === "oauth" && integration.authUrl) {
-      // Para OAuth, abrir ventana de autorización
-      // En producción, esto debería redirigir al backend para manejar OAuth
+      // Para OAuth, abrir ventana de autorizaciÃ³n
+      // En producciÃ³n, esto deberÃ­a redirigir al backend para manejar OAuth
       window.open(integration.authUrl, "_blank", "width=600,height=700");
-      // Simulamos conexión exitosa después de unos segundos
+      // Simulamos conexiÃ³n exitosa despuÃ©s de unos segundos
       setConnecting(true);
       setTimeout(() => {
         setIntegrations(prev => prev?.map(i => 
@@ -317,7 +317,7 @@ export default function IntegrationsPage() {
       if (res.ok) {
         setIntegrations(prev => prev?.map(i => 
           i.id === selectedIntegration.id 
-            ? { ...i, status: "connected", lastSync: new Date().toISOString(), config: { api_key: "••••••••" } }
+            ? { ...i, status: "connected", lastSync: new Date().toISOString(), config: { api_key: "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" } }
             : i
         ));
         setShowConnectModal(false);
@@ -329,7 +329,7 @@ export default function IntegrationsPage() {
   };
 
   const handleDisconnect = async (integration: Integration) => {
-    if (!confirm(`¿Estás seguro de desconectar ${integration.name}?`)) return;
+    if (!confirm(`Â¿EstÃ¡s seguro de desconectar ${integration.name}?`)) return;
     
     try {
       await fetch(`${API_URL}/api/integrations/${integration.id}/disconnect`, {
@@ -445,7 +445,7 @@ export default function IntegrationsPage() {
           onChange={(e) => setCategoryFilter(e.target.value)}
           className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
         >
-          <option value="all">Todas las categorías</option>
+          <option value="all">Todas las categorÃ­as</option>
           {Object.entries(CATEGORY_LABELS).map(([key, val]) => (
             <option key={key} value={key}>{val.label}</option>
           ))}
@@ -528,7 +528,7 @@ export default function IntegrationsPage() {
                   {integration.lastSync && (
                     <div className="text-xs text-gray-500 mb-4 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      Última sincronización: {new Date(integration.lastSync).toLocaleString()}
+                      Ãšltima sincronizaciÃ³n: {new Date(integration.lastSync).toLocaleString()}
                     </div>
                   )}
 
@@ -539,7 +539,7 @@ export default function IntegrationsPage() {
                       rel="noopener noreferrer"
                       className="text-sm text-gray-400 hover:text-white flex items-center gap-1"
                     >
-                      <FileText className="w-4 h-4" /> Documentación
+                      <FileText className="w-4 h-4" /> DocumentaciÃ³n
                     </a>
 
                     <div className="flex gap-2">
@@ -622,7 +622,7 @@ export default function IntegrationsPage() {
                     <p className="text-xs text-gray-500 mt-2">
                       Encuentra tu API Key en{" "}
                       <a href={selectedIntegration.docsUrl} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">
-                        la documentación de {selectedIntegration.name}
+                        la documentaciÃ³n de {selectedIntegration.name}
                       </a>
                     </p>
                   </div>
@@ -646,7 +646,7 @@ export default function IntegrationsPage() {
                       </button>
                     </div>
                     <p className="text-xs text-gray-500 mt-2">
-                      Copia esta URL y configúrala en {selectedIntegration.name}
+                      Copia esta URL y configÃºrala en {selectedIntegration.name}
                     </p>
                   </div>
                 )}
@@ -682,4 +682,5 @@ export default function IntegrationsPage() {
     </div>
   );
 }
+
 

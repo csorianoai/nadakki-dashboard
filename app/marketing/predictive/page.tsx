@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -16,7 +16,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 
 interface SegmentPrediction {
   id: string;
@@ -185,7 +185,7 @@ export default function PredictivePage() {
             <StatCard value={(modelAccuracy * 100).toFixed(0) + "%"} label="Precision del Modelo" icon={<Sparkles className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
           </div>
 
-          {/* Gráfico con Recharts */}
+          {/* GrÃ¡fico con Recharts */}
           <GlassCard className="p-6 mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -366,4 +366,5 @@ export default function PredictivePage() {
     </div>
   );
 }
+
 

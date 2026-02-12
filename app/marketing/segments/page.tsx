@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -12,13 +12,13 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 const STORAGE_KEY = "nadakki_segments_v2";
 const CACHE_TTL = 5 * 60 * 1000;
 
-// ═══════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // TYPES & INTERFACES
-// ═══════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 interface Condition {
   id: string;
   field: string;
@@ -60,9 +60,9 @@ interface Notification {
   message: string;
 }
 
-// ═══════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // CONSTANTS & CONFIG
-// ═══════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const FIELD_OPTIONS = [
   { id: "activity_days", label: "Dias desde ultima actividad", type: "number", weight: 0.2, tooltip: "Dias desde la ultima interaccion con la plataforma" },
   { id: "total_purchases", label: "Total de compras", type: "number", weight: 0.3, tooltip: "Numero total de compras realizadas" },
@@ -157,9 +157,9 @@ const PRESET_SEGMENTS = [
   },
 ];
 
-// ═══════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // UTILITY FUNCTIONS
-// ═══════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 const getFieldWeight = (field: string): number => {
@@ -286,9 +286,9 @@ const generateSQLPreview = (groups: ConditionGroup[]): string => {
   return `SELECT * FROM users WHERE ${groupsSQL}`;
 };
 
-// ═══════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // MAIN COMPONENT
-// ═══════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export default function SegmentsPage() {
   // State
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -664,8 +664,8 @@ export default function SegmentsPage() {
                     <div>
                       <p className="text-red-400 font-medium text-sm">Corrige los siguientes errores:</p>
                       <ul className="text-red-300 text-xs mt-1 space-y-1">
-                        {validationErrors.slice(0, 3).map((err, i) => <li key={i}>• {err}</li>)}
-                        {validationErrors.length > 3 && <li>• +{validationErrors.length - 3} mas...</li>}
+                        {validationErrors.slice(0, 3).map((err, i) => <li key={i}>â€¢ {err}</li>)}
+                        {validationErrors.length > 3 && <li>â€¢ +{validationErrors.length - 3} mas...</li>}
                       </ul>
                     </div>
                   </div>
@@ -948,4 +948,5 @@ export default function SegmentsPage() {
     </div>
   );
 }
+
 

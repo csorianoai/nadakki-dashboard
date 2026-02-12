@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -12,16 +12,16 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FASE 1 - CORE MARKETING
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const CORE_MODULES = [
   { 
     id: "campaigns", 
     name: "Campaigns", 
-    desc: "Crea campañas multicanal con wizard de 5 pasos",
+    desc: "Crea campaÃ±as multicanal con wizard de 5 pasos",
     href: "/marketing/campaigns", 
     icon: Megaphone, 
     color: "#ec4899",
@@ -49,8 +49,8 @@ const CORE_MODULES = [
   },
   { 
     id: "segments", 
-    name: "Segmentación Avanzada", 
-    desc: "Crea segmentos dinámicos con reglas complejas",
+    name: "SegmentaciÃ³n Avanzada", 
+    desc: "Crea segmentos dinÃ¡micos con reglas complejas",
     href: "/marketing/segments", 
     icon: Target, 
     color: "#22c55e",
@@ -58,14 +58,14 @@ const CORE_MODULES = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FASE 2 - TESTING & ANALYTICS
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const TESTING_MODULES = [
   { 
     id: "ab-testing", 
     name: "A/B Testing", 
-    desc: "Experimenta y optimiza tus campañas",
+    desc: "Experimenta y optimiza tus campaÃ±as",
     href: "/marketing/ab-testing", 
     icon: FlaskConical, 
     color: "#06b6d4",
@@ -74,7 +74,7 @@ const TESTING_MODULES = [
   { 
     id: "predictive", 
     name: "Predictive Analytics", 
-    desc: "Métricas predictivas con machine learning",
+    desc: "MÃ©tricas predictivas con machine learning",
     href: "/marketing/predictive", 
     icon: TrendingUp, 
     color: "#8b5cf6",
@@ -92,7 +92,7 @@ const TESTING_MODULES = [
   { 
     id: "analytics", 
     name: "Analytics Dashboard", 
-    desc: "Métricas en tiempo real de todas las campañas",
+    desc: "MÃ©tricas en tiempo real de todas las campaÃ±as",
     href: "/marketing/analytics", 
     icon: BarChart3, 
     color: "#3b82f6",
@@ -100,14 +100,14 @@ const TESTING_MODULES = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FASE 3 - CHANNELS & INTEGRATIONS
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const CHANNEL_MODULES = [
   { 
     id: "agents", 
     name: "AI Agents", 
-    desc: "Agentes inteligentes para automatización",
+    desc: "Agentes inteligentes para automatizaciÃ³n",
     href: "/marketing/agents", 
     icon: Bot, 
     color: "#10b981",
@@ -143,14 +143,14 @@ const CHANNEL_MODULES = [
   },
 ];
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FASE 4 - ADVANCED
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const ADVANCED_MODULES = [
   { 
     id: "leads", 
     name: "Lead Scoring", 
-    desc: "Califica y prioriza tus leads automáticamente",
+    desc: "Califica y prioriza tus leads automÃ¡ticamente",
     href: "/marketing/leads", 
     icon: UserPlus, 
     color: "#84cc16",
@@ -258,17 +258,17 @@ export default function MarketingHubPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">Marketing Suite</h1>
-            <p className="text-gray-400">Automatización, campañas y analytics en un solo lugar</p>
+            <p className="text-gray-400">AutomatizaciÃ³n, campaÃ±as y analytics en un solo lugar</p>
           </div>
         </div>
       </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-6 mb-10">
-        <StatCard value={stats.campaigns.toString()} label="Campañas Activas" icon={<Megaphone className="w-6 h-6 text-pink-400" />} color="#ec4899" />
+        <StatCard value={stats.campaigns.toString()} label="CampaÃ±as Activas" icon={<Megaphone className="w-6 h-6 text-pink-400" />} color="#ec4899" />
         <StatCard value={stats.activeJourneys.toString()} label="Journeys Activos" icon={<GitBranch className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
         <StatCard value={(stats.contacts / 1000).toFixed(0) + "K"} label="Contactos" icon={<Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-        <StatCard value={stats.conversionRate + "%"} label="Conversión" icon={<TrendingUp className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value={stats.conversionRate + "%"} label="ConversiÃ³n" icon={<TrendingUp className="w-6 h-6 text-green-400" />} color="#22c55e" />
       </div>
 
       {/* Core Marketing */}
@@ -317,5 +317,6 @@ export default function MarketingHubPage() {
     </div>
   );
 }
+
 
 

@@ -20,7 +20,7 @@ export default function AgentsPanel() {
     const fetchAgents = async () => {
       try {
         const response = await fetch(
-          'https://nadakki-ai-suite.onrender.com/api/v1/agents'
+          '${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/agents'
         );
         
         if (!response.ok) throw new Error('Failed to fetch agents');
@@ -43,7 +43,7 @@ export default function AgentsPanel() {
     
     try {
       const response = await fetch(
-        `https://nadakki-ai-suite.onrender.com/api/v1/agents/${agentId}/execute`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/agents/${agentId}/execute`,
         {
           method: 'POST',
           headers: {
@@ -117,3 +117,4 @@ export default function AgentsPanel() {
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || "credicefi";
 
 export interface SocialConnection {
@@ -78,3 +78,4 @@ export const useSocialConnect = () => {
     refresh: fetchConnections
   };
 };
+

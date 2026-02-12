@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -18,7 +18,7 @@ export default function OperacionalPage() {
   const fetchAgents = async () => {
     setLoading(true);
     try {
-      const res = await fetch("https://nadakki-ai-suite.onrender.com/api/catalog/operacional/agents");
+      const res = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/api/catalog/operacional/agents");
       const data = await res.json();
       if (data.agents) setAgents(data.agents);
     } catch (err) { console.error(err); }
@@ -50,4 +50,5 @@ export default function OperacionalPage() {
     </div>
   );
 }
+
 

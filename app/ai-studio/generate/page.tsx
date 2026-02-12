@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -30,16 +30,16 @@ export default function AIGeneratePage() {
     if (!prompt.trim()) return;
     setGenerating(true);
     try {
-      await fetch("https://nadakki-ai-suite.onrender.com/agents/marketing/contentgeneratoria/execute", {
+      await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/marketing/contentgeneratoria/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input_data: { prompt, platform, tone }, tenant_id: "credicefi" })
       });
       // Simulated results
       setResults([
-        "🚀 ¡Transforma tu negocio hoy! Nuestra solución de IA automatiza tu marketing en minutos. 💡 Resultados garantizados en 7 días. ¿Listo para el cambio? 👇 #Marketing #AI #Innovación",
-        "¿Sabías que el 73% de las empresas exitosas ya usan IA para marketing? 📊 No te quedes atrás → Descubre cómo en el link de nuestra bio ✨ #TransformaciónDigital",
-        "ANTES: 8 horas creando contenido 😩\nDESPUÉS: 30 minutos con nuestra IA 🎯\n\n¿La diferencia? Automatización inteligente.\n\n👉 Agenda tu demo gratuita #ProductividadMaxima"
+        "ðŸš€ Â¡Transforma tu negocio hoy! Nuestra soluciÃ³n de IA automatiza tu marketing en minutos. ðŸ’¡ Resultados garantizados en 7 dÃ­as. Â¿Listo para el cambio? ðŸ‘‡ #Marketing #AI #InnovaciÃ³n",
+        "Â¿SabÃ­as que el 73% de las empresas exitosas ya usan IA para marketing? ðŸ“Š No te quedes atrÃ¡s â†’ Descubre cÃ³mo en el link de nuestra bio âœ¨ #TransformaciÃ³nDigital",
+        "ANTES: 8 horas creando contenido ðŸ˜©\nDESPUÃ‰S: 30 minutos con nuestra IA ðŸŽ¯\n\nÂ¿La diferencia? AutomatizaciÃ³n inteligente.\n\nðŸ‘‰ Agenda tu demo gratuita #ProductividadMaxima"
       ]);
     } finally {
       setGenerating(false);
@@ -75,7 +75,7 @@ export default function AIGeneratePage() {
         {/* Config Panel */}
         <div className="col-span-2">
           <GlassCard className="p-6">
-            <h3 className="text-lg font-bold text-white mb-6">Configuración</h3>
+            <h3 className="text-lg font-bold text-white mb-6">ConfiguraciÃ³n</h3>
             
             {/* Platform */}
             <div className="mb-6">
@@ -112,7 +112,7 @@ export default function AIGeneratePage() {
 
             {/* Prompt */}
             <div className="mb-6">
-              <label className="text-sm text-gray-400 mb-3 block">Descripción del contenido</label>
+              <label className="text-sm text-gray-400 mb-3 block">DescripciÃ³n del contenido</label>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -194,7 +194,7 @@ export default function AIGeneratePage() {
                     <Sparkles className="w-8 h-8 text-purple-400" />
                   </div>
                   <p className="text-gray-400">Configura y genera contenido con IA</p>
-                  <p className="text-sm text-gray-500 mt-2">Los resultados aparecerán aquí</p>
+                  <p className="text-sm text-gray-500 mt-2">Los resultados aparecerÃ¡n aquÃ­</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -204,4 +204,5 @@ export default function AIGeneratePage() {
     </div>
   );
 }
+
 

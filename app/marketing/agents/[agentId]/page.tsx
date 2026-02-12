@@ -33,7 +33,7 @@ export default function AgentDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("https://nadakki-ai-suite.onrender.com/api/catalog/marketing/agents");
+      const res = await fetch("http://localhost:8000/api/catalog/marketing/agents");
       if (!res.ok) throw new Error("Error en la API");
       const data = await res.json();
       const found = data.agents?.find((a: any) => a.id === agentId);
@@ -66,7 +66,7 @@ export default function AgentDetailPage() {
     setExecuting(true);
     setResult(null);
     try {
-      const res = await fetch("https://nadakki-ai-suite.onrender.com/api/agent/" + agentId + "/execute", {
+      const res = await fetch("http://localhost:8000/api/agent/" + agentId + "/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input: "test execution" })
