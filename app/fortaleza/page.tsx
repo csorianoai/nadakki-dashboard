@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 
 const AGENTS = [
@@ -15,7 +15,7 @@ export default function FortalezaPage() {
     setLoading(true);
     setShowModal(true);
     try {
-      const url = "https://nadakki-ai-suite.onrender.com/agents/fortaleza/" + agentId + "/execute";
+      const url = "${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/fortaleza/" + agentId + "/execute";
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,4 +58,5 @@ export default function FortalezaPage() {
     </div>
   );
 }
+
 

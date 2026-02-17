@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 
 const SOCIAL_MODULES = [
   { id: "connections", name: "Conexiones", icon: Settings, desc: "Conecta tus redes sociales", href: "/social/connections", color: "#06b6d4", priority: true },
@@ -106,9 +106,9 @@ export default function SocialPage() {
 
       <div className="grid grid-cols-4 gap-6 mb-8">
         <StatCard value={stats.connected.toString()} label="Redes Conectadas" icon={<Share2 className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-        <StatCard value={hasConnections ? "—" : "0"} label="Seguidores Total" icon={<MessageSquare className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value={hasConnections ? "—" : "0"} label="Posts Este Mes" icon={<Calendar className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
-        <StatCard value={hasConnections ? "—" : "0%"} label="Engagement Rate" icon={<BarChart3 className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
+        <StatCard value={hasConnections ? "â€”" : "0"} label="Seguidores Total" icon={<MessageSquare className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value={hasConnections ? "â€”" : "0"} label="Posts Este Mes" icon={<Calendar className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
+        <StatCard value={hasConnections ? "â€”" : "0%"} label="Engagement Rate" icon={<BarChart3 className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
 
       <Link href="/social/connections">
@@ -166,7 +166,7 @@ export default function SocialPage() {
               <p className="text-sm text-gray-400">Gestiona tus redes sociales</p>
             </div>
             <Link href="/social/connections" className="text-sm text-cyan-400 hover:text-cyan-300">
-              Gestionar →
+              Gestionar â†’
             </Link>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
@@ -186,13 +186,14 @@ export default function SocialPage() {
 
 function getPlatformIcon(platform: string): string {
   const icons: Record<string, string> = {
-    facebook: "📘",
-    instagram: "📸",
-    twitter: "🐦",
-    linkedin: "💼",
-    tiktok: "🎵",
-    youtube: "▶️"
+    facebook: "ðŸ“˜",
+    instagram: "ðŸ“¸",
+    twitter: "ðŸ¦",
+    linkedin: "ðŸ’¼",
+    tiktok: "ðŸŽµ",
+    youtube: "â–¶ï¸"
   };
-  return icons[platform] || "🌐";
+  return icons[platform] || "ðŸŒ";
 }
+
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Settings, Plus, CheckCircle, XCircle, RefreshCw, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
@@ -6,7 +6,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 const TENANT_ID = "credicefi";
 
 interface Connection {
@@ -21,12 +21,12 @@ interface Connection {
 }
 
 const PLATFORMS: Connection[] = [
-  { id: "facebook", name: "Facebook", icon: "📘", color: "#1877F2", connected: false },
-  { id: "instagram", name: "Instagram", icon: "📸", color: "#E1306C", connected: false },
-  { id: "twitter", name: "Twitter/X", icon: "🐦", color: "#1DA1F2", connected: false },
-  { id: "linkedin", name: "LinkedIn", icon: "💼", color: "#0A66C2", connected: false },
-  { id: "tiktok", name: "TikTok", icon: "🎵", color: "#000000", connected: false },
-  { id: "youtube", name: "YouTube", icon: "▶️", color: "#FF0000", connected: false },
+  { id: "facebook", name: "Facebook", icon: "ðŸ“˜", color: "#1877F2", connected: false },
+  { id: "instagram", name: "Instagram", icon: "ðŸ“¸", color: "#E1306C", connected: false },
+  { id: "twitter", name: "Twitter/X", icon: "ðŸ¦", color: "#1DA1F2", connected: false },
+  { id: "linkedin", name: "LinkedIn", icon: "ðŸ’¼", color: "#0A66C2", connected: false },
+  { id: "tiktok", name: "TikTok", icon: "ðŸŽµ", color: "#000000", connected: false },
+  { id: "youtube", name: "YouTube", icon: "â–¶ï¸", color: "#FF0000", connected: false },
 ];
 
 export default function SocialConnectionsPage() {
@@ -216,5 +216,6 @@ export default function SocialConnectionsPage() {
     </div>
   );
 }
+
 
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 
 const QUICK_LINKS = [
   { name: "Campaign Builder", href: "/marketing/campaign-builder" },
@@ -294,3 +294,4 @@ function getLocalResponse(question: string): string {
   
   return "Gracias por tu pregunta. Puedo ayudarte con:\n\n- Campanas de marketing (Campaign Builder)\n- Conexiones de redes sociales\n- Agentes de IA (245 disponibles)\n- Workflows automatizados\n- Navegacion de la plataforma\n\nPor favor, se mas especifico o selecciona una de las opciones de acceso rapido abajo.";
 }
+

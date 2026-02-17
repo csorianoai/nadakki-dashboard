@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -82,7 +82,7 @@ export default function WorkflowExecutor({ config }: Props) {
         setCurrentStep(prev => Math.min(prev + 1, config.agents));
       }, 800);
 
-      const response = await fetch(`https://nadakki-ai-suite.onrender.com/workflows/${config.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/workflows/${config.id}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -117,7 +117,7 @@ export default function WorkflowExecutor({ config }: Props) {
       setExecutionHistory(prev => [workflowResult, ...prev].slice(0, 5));
       setCurrentStep(config.agents);
     } catch (err: any) {
-      setError(err.message || "Error de conexión");
+      setError(err.message || "Error de conexiÃ³n");
     } finally {
       setIsExecuting(false);
     }
@@ -189,7 +189,7 @@ export default function WorkflowExecutor({ config }: Props) {
             <button onClick={() => setShowConfig(!showConfig)} className="w-full flex items-center justify-between p-4 hover:bg-white/5">
               <div className="flex items-center gap-3">
                 <Settings className="w-5 h-5 text-gray-400" />
-                <span className="font-medium text-white">Configuración</span>
+                <span className="font-medium text-white">ConfiguraciÃ³n</span>
               </div>
               {showConfig ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
             </button>
@@ -331,7 +331,7 @@ export default function WorkflowExecutor({ config }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div className="text-center p-3 rounded-xl bg-black/20">
                 <p className="text-xl font-bold text-green-400">94%</p>
-                <p className="text-xs text-gray-400">Éxito</p>
+                <p className="text-xs text-gray-400">Ã‰xito</p>
               </div>
               <div className="text-center p-3 rounded-xl bg-black/20">
                 <p className="text-xl font-bold text-blue-400">2.3s</p>

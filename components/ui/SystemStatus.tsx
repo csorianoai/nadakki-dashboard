@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, AlertTriangle, XCircle, ChevronDown, ExternalLink, RefreshCw } from "lucide-react";
@@ -22,7 +22,7 @@ export default function SystemStatus() {
   const checkStatus = async () => {
     try {
       const start = Date.now();
-      const res = await fetch("https://nadakki-ai-suite.onrender.com/health");
+      const res = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/health");
       const latency = Date.now() - start;
       
       if (res.ok) {
@@ -116,3 +116,4 @@ export default function SystemStatus() {
     </div>
   );
 }
+

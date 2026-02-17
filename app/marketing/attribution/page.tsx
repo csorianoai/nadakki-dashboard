@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 
 interface Agent { id: string; name: string; category: string; }
@@ -11,7 +11,7 @@ export default function MarketingattributionPage() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetch("https://nadakki-ai-suite.onrender.com/api/catalog/marketing/agents")
+    fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/api/catalog/marketing/agents")
       .then((res) => res.json())
       .then((data) => {
         const filtered = (data.agents || []).filter((a: Agent) => 
@@ -29,7 +29,7 @@ export default function MarketingattributionPage() {
     setResult(null);
     setShowModal(true);
     try {
-      const response = await fetch("https://nadakki-ai-suite.onrender.com/agents/marketing/" + agentId + "/execute", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/marketing/" + agentId + "/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input_data: { test: true }, tenant_id: "credicefi" })
@@ -86,4 +86,5 @@ export default function MarketingattributionPage() {
     </div>
   );
 }
+
 

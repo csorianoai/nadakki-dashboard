@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -13,7 +13,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 const TENANT_ID = "credicefi";
 
 interface Journey {
@@ -377,7 +377,7 @@ export default function JourneysListPage() {
               </div>
             </div>
             <p className="text-gray-300 mb-6">
-              ¿Estas seguro de que quieres eliminar este journey? Todos los datos asociados se perderan.
+              Â¿Estas seguro de que quieres eliminar este journey? Todos los datos asociados se perderan.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -405,4 +405,5 @@ export default function JourneysListPage() {
     </div>
   );
 }
+
 

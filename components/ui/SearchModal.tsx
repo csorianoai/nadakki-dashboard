@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,7 @@ interface SearchResult {
   coreName?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_BASE_URL}';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -99,7 +99,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-2xl mx-4 glass rounded-2xl border border-glass-border shadow-2xl">
         <div className="flex items-center gap-3 p-4 border-b border-glass-border">
-          <span className="text-xl">🔍</span>
+          <span className="text-xl">ðŸ”</span>
           <input
             ref={searchRef}
             type="text"
@@ -118,7 +118,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 onClick={() => handleSelect(result)}
                 className="w-full p-3 rounded-xl hover:bg-white/10 flex items-center gap-3 text-left transition-colors"
               >
-                <span className="text-xl">{result.type === 'core' ? '📦' : '🤖'}</span>
+                <span className="text-xl">{result.type === 'core' ? 'ðŸ“¦' : 'ðŸ¤–'}</span>
                 <div>
                   <div className="text-white font-medium">{result.name}</div>
                   {result.type === 'agent' && (

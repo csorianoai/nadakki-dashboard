@@ -1,5 +1,5 @@
-// lib/api/base.ts - Configuración base con manejo de errores TOP 0.1%
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
+﻿// lib/api/base.ts - ConfiguraciÃ³n base con manejo de errores TOP 0.1%
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_BASE_URL}';
 
 export { API_BASE };
 
@@ -58,3 +58,4 @@ export async function fetchWithTimeout<T>(
     throw error;
   }
 }
+

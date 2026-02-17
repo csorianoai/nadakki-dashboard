@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 
 interface Agent { id: string; name: string; category: string; }
@@ -11,7 +11,7 @@ export default function regtechPage() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetch("https://nadakki-ai-suite.onrender.com/api/catalog/regtech/agents")
+    fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/api/catalog/regtech/agents")
       .then((res) => res.json())
       .then((data) => { setAgents(data.agents || []); setLoading(false); })
       .catch(() => setLoading(false));
@@ -22,7 +22,7 @@ export default function regtechPage() {
     setResult(null);
     setShowModal(true);
     try {
-      const response = await fetch("https://nadakki-ai-suite.onrender.com/agents/regtech/" + agentId + "/execute", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/regtech/" + agentId + "/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input_data: { test: true }, tenant_id: "credicefi" })
@@ -40,7 +40,7 @@ export default function regtechPage() {
 
   return (
     <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>📋 RegTech Core</h1>
+      <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>ðŸ“‹ RegTech Core</h1>
       <p style={{ color: "#94a3b8", marginBottom: 32 }}>{agents.length} agentes disponibles</p>
       
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
@@ -55,7 +55,7 @@ export default function regtechPage() {
               border: "none", borderRadius: 8, color: "white", fontWeight: 600,
               cursor: executing === agent.id ? "not-allowed" : "pointer"
             }}>
-              {executing === agent.id ? "⏳ Ejecutando..." : "🚀 Ejecutar"}
+              {executing === agent.id ? "â³ Ejecutando..." : "ðŸš€ Ejecutar"}
             </button>
           </div>
         ))}
@@ -65,10 +65,10 @@ export default function regtechPage() {
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.8)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }} onClick={() => setShowModal(false)}>
           <div style={{ backgroundColor: "#1e293b", borderRadius: 16, padding: 32, maxWidth: 600, width: "90%", maxHeight: "80vh", overflow: "auto" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-              <h2 style={{ color: "#f8fafc", fontSize: 20, margin: 0 }}>{executing ? "⏳ Ejecutando..." : result?.status === "error" ? "❌ Error" : "✅ Resultado"}</h2>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 24, cursor: "pointer" }}>×</button>
+              <h2 style={{ color: "#f8fafc", fontSize: 20, margin: 0 }}>{executing ? "â³ Ejecutando..." : result?.status === "error" ? "âŒ Error" : "âœ… Resultado"}</h2>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: 24, cursor: "pointer" }}>Ã—</button>
             </div>
-            {executing && <div style={{ textAlign: "center", padding: 40 }}><div style={{ fontSize: 48 }}>🔄</div><p style={{ color: "#94a3b8" }}>Procesando...</p></div>}
+            {executing && <div style={{ textAlign: "center", padding: 40 }}><div style={{ fontSize: 48 }}>ðŸ”„</div><p style={{ color: "#94a3b8" }}>Procesando...</p></div>}
             {result && !executing && (
               <div style={{ backgroundColor: "rgba(0,0,0,0.3)", borderRadius: 8, padding: 16 }}>
                 <pre style={{ color: "#94a3b8", fontSize: 12, margin: 0, whiteSpace: "pre-wrap" }}>{JSON.stringify(result, null, 2)}</pre>
@@ -80,5 +80,6 @@ export default function regtechPage() {
     </div>
   );
 }
+
 
 

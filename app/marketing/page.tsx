@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -13,7 +13,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "https://nadakki-ai-suite.onrender.com";
+const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // FASE 1 - CORE MARKETING
@@ -298,9 +298,3 @@ export default function MarketingHubPage() {
     </div>
   );
 }
-
-
-
-
-
-
