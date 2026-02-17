@@ -36,6 +36,7 @@ const navigationStructure: NavCore[] = [
       { id: "dashboard", icon: "📊", label: "Dashboard Principal", href: "/" },
       { id: "tenants", icon: "👥", label: "Multi-Tenant", href: "/tenants" },
       { id: "agents", icon: "🤖", label: "Agentes IA", href: "/agents" },
+      { id: "agents-execute", icon: "⚙️", label: "Ejecutar Agentes", href: "/agents/execute" },
     ],
   },
   {
