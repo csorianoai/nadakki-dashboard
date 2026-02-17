@@ -13,70 +13,70 @@ interface Agent {
 const MARKETING_AGENTS: Agent[] = [
   // LEAD MANAGEMENT (3)
   { id: "leadscoria__leadscoragentoperative", name: "Lead Scorer", category: "Lead Management", description: "Scoring predictivo de leads con ML" },
-  { id: "leadscoringia__leadscoringagentoperative", name: "Lead Scoring", category: "Lead Management", description: "Calificación automática de leads" },
-  { id: "predictiveleadia__predictiveleadagentoperative", name: "Predictive Lead", category: "Lead Management", description: "Predicción de conversión de leads" },
+  { id: "leadscoringia__leadscoringagentoperative", name: "Lead Scoring", category: "Lead Management", description: "Calificacion automatica de leads" },
+  { id: "predictiveleadia__predictiveleadagentoperative", name: "Predictive Lead", category: "Lead Management", description: "Prediccion de conversion de leads" },
 
   // EXPERIMENTATION (2)
-  { id: "abtestingia__abtestingagentoperative", name: "A/B Testing", category: "Experimentation", description: "Análisis de pruebas A/B" },
-  { id: "abtestingimpactia__abtestingimpactagentoperative", name: "A/B Testing Impact", category: "Experimentation", description: "Medición de impacto A/B" },
+  { id: "abtestingia__abtestingagentoperative", name: "A/B Testing", category: "Experimentation", description: "Analisis de pruebas A/B" },
+  { id: "abtestingimpactia__abtestingimpactagentoperative", name: "A/B Testing Impact", category: "Experimentation", description: "Medicion de impacto A/B" },
 
   // CAMPAIGN (1)
-  { id: "campaignoptimizeria__campaignoptimizeragentoperative", name: "Campaign Optimizer", category: "Campaign", description: "Optimización de campañas publicitarias" },
+  { id: "campaignoptimizeria__campaignoptimizeragentoperative", name: "Campaign Optimizer", category: "Campaign", description: "Optimizacion de campanas publicitarias" },
 
   // CONTENT (2)
-  { id: "contentgeneratoria__contentgeneratoragentoperative", name: "Content Generator", category: "Content", description: "Generación de contenido con IA" },
-  { id: "contentperformanceia__contentperformanceagentoperative", name: "Content Performance", category: "Content", description: "Análisis de rendimiento de contenido" },
+  { id: "contentgeneratoria__contentgeneratoragentoperative", name: "Content Generator", category: "Content", description: "Generacion de contenido con IA" },
+  { id: "contentperformanceia__contentperformanceagentoperative", name: "Content Performance", category: "Content", description: "Analisis de rendimiento de contenido" },
 
   // SOCIAL MEDIA (2)
-  { id: "socialpostgeneratoria__socialpostgeneratoragentoperative", name: "Social Post Generator", category: "Social Media", description: "Generación de posts para redes" },
+  { id: "socialpostgeneratoria__socialpostgeneratoragentoperative", name: "Social Post Generator", category: "Social Media", description: "Generacion de posts para redes" },
   { id: "sociallisteningia__sociallisteningagentoperative", name: "Social Listening", category: "Social Media", description: "Monitor de redes sociales" },
 
   // ANALYTICS (2)
-  { id: "sentimentanalyzeria__sentimentanalyzeragentoperative", name: "Sentiment Analyzer", category: "Analytics", description: "Análisis de sentimiento" },
-  { id: "conversioncohortia__conversioncohortagentoperative", name: "Conversion Cohort", category: "Analytics", description: "Análisis de cohortes de conversión" },
+  { id: "sentimentanalyzeria__sentimentanalyzeragentoperative", name: "Sentiment Analyzer", category: "Analytics", description: "Analisis de sentimiento" },
+  { id: "conversioncohortia__conversioncohortagentoperative", name: "Conversion Cohort", category: "Analytics", description: "Analisis de cohortes de conversion" },
 
   // INTELLIGENCE (2)
-  { id: "competitoranalyzeria__competitoranalyzeragentoperative", name: "Competitor Analyzer", category: "Intelligence", description: "Análisis de competencia" },
+  { id: "competitoranalyzeria__competitoranalyzeragentoperative", name: "Competitor Analyzer", category: "Intelligence", description: "Analisis de competencia" },
   { id: "competitorintelligenceia__competitorintelligenceagentoperative", name: "Competitor Intelligence", category: "Intelligence", description: "Inteligencia competitiva avanzada" },
 
   // ATTRIBUTION (2)
-  { id: "channelattributia__channelattributagentoperative", name: "Channel Attribution", category: "Attribution", description: "Atribución de canales" },
-  { id: "attributionmodelia__attributionmodelagentoperative", name: "Attribution Model", category: "Attribution", description: "Modelado de atribución" },
+  { id: "channelattributia__channelattributagentoperative", name: "Channel Attribution", category: "Attribution", description: "Atribucion de canales" },
+  { id: "attributionmodelia__attributionmodelagentoperative", name: "Attribution Model", category: "Attribution", description: "Modelado de atribucion" },
 
   // FORECASTING (2)
-  { id: "budgetforecastia__budgetforecastagentoperative", name: "Budget Forecast", category: "Forecasting", description: "Pronóstico de presupuesto" },
+  { id: "budgetforecastia__budgetforecastagentoperative", name: "Budget Forecast", category: "Forecasting", description: "Pronostico de presupuesto" },
   { id: "marketingmixmodelia__marketingmixmodelagentoperative", name: "Marketing Mix Model", category: "Forecasting", description: "Modelado de mix marketing" },
 
   // SEGMENTATION (3)
-  { id: "audiencesegmenteria__audiencesegmenteragentoperative", name: "Audience Segmenter", category: "Segmentation", description: "Segmentación de audiencias" },
-  { id: "customersegmentatonia__customersegmentationagentoperative", name: "Customer Segmentation", category: "Segmentation", description: "Segmentación de clientes" },
-  { id: "geosegmentationia__geosegmentationagentoperative", name: "Geo Segmentation", category: "Segmentation", description: "Segmentación geográfica" },
+  { id: "audiencesegmenteria__audiencesegmenteragentoperative", name: "Audience Segmenter", category: "Segmentation", description: "Segmentacion de audiencias" },
+  { id: "customersegmentatonia__customersegmentationagentoperative", name: "Customer Segmentation", category: "Segmentation", description: "Segmentacion de clientes" },
+  { id: "geosegmentationia__geosegmentationagentoperative", name: "Geo Segmentation", category: "Segmentation", description: "Segmentacion geografica" },
 
   // PERSONALIZATION (1)
-  { id: "personalizationengineia__personalizationengineagentoperative", name: "Personalization Engine", category: "Personalization", description: "Motor de personalización" },
+  { id: "personalizationengineia__personalizationengineagentoperative", name: "Personalization Engine", category: "Personalization", description: "Motor de personalizacion" },
 
   // EMAIL (1)
-  { id: "emailautomationia__emailautomationagentoperative", name: "Email Automation", category: "Email", description: "Automatización de email marketing" },
+  { id: "emailautomationia__emailautomationagentoperative", name: "Email Automation", category: "Email", description: "Automatizacion de email marketing" },
 
   // INFLUENCER (2)
   { id: "influencermatchingia__influencermatchingagentoperative", name: "Influencer Matching", category: "Influencer", description: "Matching de influencers" },
   { id: "influencermatcheria__influencermatcheragentoperative", name: "Influencer Matcher", category: "Influencer", description: "Buscador de influencers" },
 
   // CUSTOMER JOURNEY (1)
-  { id: "journeyoptimizeria__journeyoptimizeragentoperative", name: "Journey Optimizer", category: "Customer Journey", description: "Optimización del customer journey" },
+  { id: "journeyoptimizeria__journeyoptimizeragentoperative", name: "Journey Optimizer", category: "Customer Journey", description: "Optimizacion del customer journey" },
 
   // RETENTION (2)
-  { id: "retentionpredictoria__retentionpredictoragentoperative", name: "Retention Predictor", category: "Retention", description: "Predicción de retención" },
-  { id: "retentionpredictorea__retentionpredictoragentoperative", name: "Retention Predictor EA", category: "Retention", description: "Predictor de retención enterprise" },
+  { id: "retentionpredictoria__retentionpredictoragentoperative", name: "Retention Predictor", category: "Retention", description: "Prediccion de retencion" },
+  { id: "retentionpredictorea__retentionpredictoragentoperative", name: "Retention Predictor EA", category: "Retention", description: "Predictor de retencion enterprise" },
 
   // PRODUCT (1)
   { id: "productaffinityia__productaffinityagentoperative", name: "Product Affinity", category: "Product", description: "Afinidad de productos" },
 
   // PRICING (1)
-  { id: "pricingoptimizeria__pricingoptimizeragentoperative", name: "Pricing Optimizer", category: "Pricing", description: "Optimización de precios" },
+  { id: "pricingoptimizeria__pricingoptimizeragentoperative", name: "Pricing Optimizer", category: "Pricing", description: "Optimizacion de precios" },
 
   // CREATIVE (1)
-  { id: "creativeanalyzeria__creativeanalyzeragentoperative", name: "Creative Analyzer", category: "Creative", description: "Análisis de creatividades" },
+  { id: "creativeanalyzeria__creativeanalyzeragentoperative", name: "Creative Analyzer", category: "Creative", description: "Analisis de creatividades" },
 
   // DATA QUALITY (1)
   { id: "contactqualityia__contactqualityagentoperative", name: "Contact Quality", category: "Data Quality", description: "Calidad de datos de contacto" },
@@ -85,11 +85,16 @@ const MARKETING_AGENTS: Agent[] = [
   { id: "cashofferfilteria__cashofferfilteragentoperative", name: "Cash Offer Filter", category: "Offers", description: "Filtro de ofertas de efectivo" },
 
   // FORMS (1)
-  { id: "minimalformia__minimalformagentoperative", name: "Minimal Form", category: "Forms", description: "Optimización de formularios" },
+  { id: "minimalformia__minimalformagentoperative", name: "Minimal Form", category: "Forms", description: "Optimizacion de formularios" },
 
   // ORCHESTRATION (2)
   { id: "marketingorchestratorea__marketingorchestratoragentoperative", name: "Marketing Orchestrator", category: "Orchestration", description: "Orquestador de marketing" },
-  { id: "campaignstrategyorchestratoria__campaignstrategyorchestratoragentoperative", name: "Campaign Strategy Orchestrator", category: "Orchestration", description: "Orquestador de estrategia de campaña" },
+  { id: "campaignstrategyorchestratoria__campaignstrategyorchestratoragentoperative", name: "Campaign Strategy Orchestrator", category: "Orchestration", description: "Orquestador de estrategia de campana" },
+  { id: "email_bridge__emailoperationalwrapper", name: "Email Bridge", description: "Puente operativo de email", category: "Email" },
+  { id: "action_plan_executor__actionplanexecutor", name: "Action Plan Executor", description: "Ejecutor de planes Google Ads", category: "Google Ads" },
+  { id: "connector__googleadsconnector", name: "Google Ads Connector", description: "Conector con Google Ads API", category: "Google Ads" },
+  { id: "registry__operationregistry", name: "Operation Registry", description: "Registro de operaciones Google Ads", category: "Google Ads" },
+  { id: "executor__googleadsexecutor", name: "Google Ads Executor", description: "Ejecutor de campanas Google Ads", category: "Google Ads" },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -177,7 +182,7 @@ export default function AgentExecutePage() {
           </div>
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
             <div className="text-2xl font-bold text-green-700">{categories.length - 1}</div>
-            <div className="text-xs text-green-500">Categorías</div>
+            <div className="text-xs text-green-500">Categorias</div>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
             <div className="text-2xl font-bold text-purple-700">v2.0</div>
@@ -194,7 +199,7 @@ export default function AgentExecutePage() {
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Buscar agente por nombre, categoría o descripción..."
+          placeholder="Buscar agente por nombre, categoria o descripcion..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -254,7 +259,7 @@ export default function AgentExecutePage() {
       {filtered.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <p className="text-lg mb-2">No se encontraron agentes</p>
-          <p className="text-sm">Intenta con otro término de búsqueda o categoría</p>
+          <p className="text-sm">Intenta con otro termino de busqueda o categoria</p>
         </div>
       )}
     </div>
