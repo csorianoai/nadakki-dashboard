@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { AgentCard } from '@/components/ui/AgentCard';
 import { CORES_CONFIG } from '@/config/cores';
@@ -57,8 +56,7 @@ export default function CorePage() {
   if (!coreConfig) {
     return (
       <div className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 ml-80 flex items-center justify-center">
+<main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-400">Core no encontrado</h1>
           </div>
@@ -72,8 +70,7 @@ export default function CorePage() {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 ml-80">
+<main className="flex-1 ">
         <Header
           title={coreConfig.displayName}
           subtitle={agentCount + ' agentes - ' + coreConfig.description}
@@ -142,6 +139,8 @@ export default function CorePage() {
     </div>
   );
 }
+
+
 
 
 

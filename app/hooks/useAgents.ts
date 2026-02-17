@@ -190,10 +190,11 @@ export function useAgents(): UseAgentsResult {
 
   const apiCandidates = useMemo(() => {
     const relativeEndpoints = [
-      "/api/agents",
-      "/api/catalog",
-      "/api/ai-studio/agents",
-    ];
+  "/api/v1/agents",  // ← agregar esta ruta
+  "/api/agents",
+  "/api/catalog",
+  "/api/ai-studio/agents",
+];
     if (!apiBase) {
       return relativeEndpoints;
     }

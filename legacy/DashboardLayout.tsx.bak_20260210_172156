@@ -408,9 +408,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <aside
         style={{
           width: sidebarOpen ? 280 : 0,
-          
-          pointerEvents: sidebarOpen ? "auto" : "none",
-backgroundColor: colors.bg.sidebar,
+          backgroundColor: colors.bg.sidebar,
           borderRight: `1px solid ${colors.border.subtle}`,
           position: "fixed",
           left: 0,
@@ -540,9 +538,9 @@ backgroundColor: colors.bg.sidebar,
       <main
         style={{
           flex: 1,
-          paddingLeft: sidebarOpen ? 280 : 0,
+          marginLeft: sidebarOpen ? 280 : 0,
           minHeight: "100vh",
-          transition: "padding-left 0.3s ease",
+          transition: "margin-left 0.3s ease",
         }}
       >
         <TopNavigation />
@@ -575,7 +573,4 @@ backgroundColor: colors.bg.sidebar,
     </div>
   );
 }
-
-
-
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -7,6 +7,7 @@ import {
   Bot, Megaphone, FileText, Share2, BarChart3, Users, Zap, Globe,
   Map, Trophy, UserPlus, ArrowRight, Play, Pause, RefreshCw
 } from "lucide-react";
+import { useMarketingStats } from "@/app/hooks/useMarketingStats";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
@@ -177,28 +178,8 @@ const ADVANCED_MODULES = [
 ];
 
 export default function MarketingHubPage() {
-  const [stats, setStats] = useState({ 
-    campaigns: 12, 
-    activeJourneys: 5, 
-    contacts: 125000, 
-    conversionRate: 3.2 
-  });
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    // Fetch stats from API
-    fetch(`${API_URL}/api/campaigns/stats/summary?tenant_id=credicefi`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.summary) {
-          setStats(prev => ({
-            ...prev,
-            campaigns: d.summary.total_campaigns || 12,
-          }));
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const { stats, loading, error, lastUpdated, refresh } = useMarketingStats("credicefi");
+  
 
   const renderModuleCard = (m: any, i: number, delay: number = 0) => (
     <motion.div 
@@ -317,6 +298,3 @@ export default function MarketingHubPage() {
     </div>
   );
 }
-
-
-
