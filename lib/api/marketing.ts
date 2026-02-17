@@ -43,8 +43,18 @@ export async function fetchSocialStatus(tenantId = TENANT_ID) {
       signal: ctrl.signal,
     });
     clearTimeout(timer);
-    if (r.ok) return { data: await r.json(), error: null };
-    return { data: null, error: `HTTP ${r.status}` };
+    if (!r.ok) {
+      return { data: null, error: `HTTP ${r.status}` };
+    }
+
+    // Backend puede envolver la respuesta en { success, data: { ... } }
+    const json = await r.json();
+    const payload =
+      json && typeof json === "object" && "data" in (json as Record<string, unknown>)
+        ? (json as { data: unknown }).data
+        : json;
+
+    return { data: payload, error: null };
   } catch {
     return { data: null, error: "Not available yet" };
   }

@@ -47,6 +47,7 @@ const navigationStructure: NavCore[] = [
       { id: "advertising", icon: "📢", label: "Publicidad", href: "/advertising" },
       { id: "content", icon: "📝", label: "Contenido", href: "/content" },
       { id: "social", icon: "💬", label: "Redes Sociales", href: "/social" },
+      { id: "marketing-social-connections", icon: "🔗", label: "Social Connections", href: "/marketing/social-connections" },
     ],
   },
   {
