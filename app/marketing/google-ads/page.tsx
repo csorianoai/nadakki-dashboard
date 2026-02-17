@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import OverviewClient from "./OverviewClient";
+import GoogleAdsClient from "./GoogleAdsClient";
 
 function LoadingFallback() {
   return (
@@ -9,10 +9,10 @@ function LoadingFallback() {
   );
 }
 
-export default function MarketingOverviewPage() {
+export default function GoogleAdsPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <OverviewClient />
+      <GoogleAdsClient />
     </Suspense>
   );
 }
