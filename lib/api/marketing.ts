@@ -49,10 +49,12 @@ export async function fetchSocialStatus(tenantId = TENANT_ID) {
 
     // Backend puede envolver la respuesta en { success, data: { ... } }
     const json = await r.json();
+    console.log("[marketing.fetchSocialStatus] raw json", json);
     const payload =
       json && typeof json === "object" && "data" in (json as Record<string, unknown>)
         ? (json as { data: unknown }).data
         : json;
+    console.log("[marketing.fetchSocialStatus] payload", payload);
 
     return { data: payload, error: null };
   } catch {

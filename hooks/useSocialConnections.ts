@@ -49,20 +49,42 @@ export function useSocialConnections(): UseSocialConnectionsResult {
       setPlatforms([]);
       return;
     }
-    const data = result.data as Record<string, unknown>;
+    const data = result.data as Record<string, unknown> | null | undefined;
     let list: SocialPlatform[] = [];
-    if (Array.isArray(data?.platforms)) {
-      list = data.platforms as SocialPlatform[];
-    } else if (Array.isArray(data?.connections)) {
-      list = data.connections as SocialPlatform[];
-    } else if (data && typeof data === "object" && !Array.isArray(data)) {
-      // Shape: { meta: { connected, ... }, google: { connected, ... } }
-      list = Object.entries(data).map(([platform, info]) => ({
-        platform,
-        ...(typeof info === "object" && info ? (info as Record<string, unknown>) : {}),
-        connected: (info as Record<string, unknown>)?.connected === true,
-      }));
+
+    console.log("[useSocialConnections] social status payload", data);
+
+    if (data && typeof data === "object") {
+      const anyData = data as any;
+      const platformsValue = anyData.platforms;
+
+      if (Array.isArray(platformsValue)) {
+        // Shape: { platforms: [ { platform, connected, ... } ] }
+        list = platformsValue as SocialPlatform[];
+      } else if (platformsValue && typeof platformsValue === "object") {
+        // Shape: { tenant_id, platforms: { meta: { connected, ... }, google: { connected, ... }, ... } }
+        list = Object.entries(platformsValue as Record<string, unknown>).map(
+          ([platform, info]) => ({
+            platform,
+            ...(typeof info === "object" && info ? (info as Record<string, unknown>) : {}),
+            connected: (info as Record<string, unknown>)?.connected === true,
+          })
+        );
+      } else if (Array.isArray(anyData.connections)) {
+        // Shape: { connections: [ ... ] }
+        list = anyData.connections as SocialPlatform[];
+      } else {
+        // Fallback: tratar el objeto completo como mapa de plataformas
+        list = Object.entries(anyData as Record<string, unknown>)
+          .filter(([key]) => key !== "tenant_id")
+          .map(([platform, info]) => ({
+            platform,
+            ...(typeof info === "object" && info ? (info as Record<string, unknown>) : {}),
+            connected: (info as Record<string, unknown>)?.connected === true,
+          }));
+      }
     }
+
     setPlatforms(list);
     setError(null);
   }, []);
