@@ -30,35 +30,35 @@ const navigationStructure: NavCore[] = [
   {
     id: "system",
     title: "SISTEMA",
-    icon: "🚀",
+    icon: "ðŸš€",
     color: "#00d4ff",
     modules: [
-      { id: "dashboard", icon: "📊", label: "Dashboard Principal", href: "/" },
-      { id: "tenants", icon: "👥", label: "Multi-Tenant", href: "/tenants" },
-      { id: "agents", icon: "🤖", label: "Agentes IA", href: "/agents" },
-      { id: "agents-execute", icon: "⚙️", label: "Ejecutar Agentes", href: "/agents/execute" },
+      { id: "dashboard", icon: "ðŸ“Š", label: "Dashboard Principal", href: "/" },
+      { id: "tenants", icon: "ðŸ‘¥", label: "Multi-Tenant", href: "/tenants" },
+      { id: "agents", icon: "ðŸ¤–", label: "Agentes IA", href: "/agents" },
+      { id: "agents-execute", icon: "âš™ï¸", label: "Ejecutar Agentes", href: "/agents/execute" },
     ],
   },
   {
     id: "marketing",
     title: "MARKETING",
-    icon: "📈",
+    icon: "ðŸ“ˆ",
     color: "#10b981",
     modules: [
-      { id: "advertising", icon: "📢", label: "Publicidad", href: "/advertising" },
-      { id: "content", icon: "📝", label: "Contenido", href: "/content" },
-      { id: "social", icon: "💬", label: "Redes Sociales", href: "/social" },
-      { id: "marketing-social-connections", icon: "🔗", label: "Social Connections", href: "/marketing/social-connections" },
+      { id: "advertising", icon: "ðŸ“¢", label: "Publicidad", href: "/advertising" },
+      { id: "content", icon: "ðŸ“", label: "Contenido", href: "/content" },
+      { id: "social", icon: "ðŸ’¬", label: "Redes Sociales", href: "/social" },
+      { id: "marketing-social-connections", icon: "ðŸ”—", label: "Social Connections", href: "/marketing/social-connections" },
     ],
   },
   {
     id: "sales",
     title: "VENTAS",
-    icon: "💰",
+    icon: "ðŸ’°",
     color: "#f59e0b",
     modules: [
-      { id: "crm", icon: "📞", label: "CRM", href: "/sales/crm" },
-      { id: "leads", icon: "🎯", label: "Leads", href: "/sales/leads" },
+      { id: "crm", icon: "ðŸ“ž", label: "CRM", href: "/sales/crm" },
+      { id: "leads", icon: "ðŸŽ¯", label: "Leads", href: "/sales/leads" },
     ],
   },
 ];
@@ -66,7 +66,7 @@ const navigationStructure: NavCore[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { theme } = useTheme();
-  // Theme puede ser objeto o string según implementación.
+  // Theme puede ser objeto o string segÃºn implementaciÃ³n.
   // NO comparamos Theme tipado con string directamente.
   const isDark =
     (typeof theme === "string" && theme === "dark") ||
@@ -104,7 +104,7 @@ const { agents, loading: isLoading } = useAgents();
             className="ml-auto rounded-lg p-2 hover:bg-gray-800"
             aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
           >
-            {isCollapsed ? "»" : "«"}
+            {isCollapsed ? "Â»" : "Â«"}
           </button>
         </div>
 
@@ -187,7 +187,7 @@ const { agents, loading: isLoading } = useAgents();
             <ThemeSwitcher />
           </div>
           <div className="text-xs text-gray-500">
-            <div className="truncate">v1.0.0 • {agents?.length || 0} agentes activos</div>
+            <div className="truncate">v1.0.0 â€¢ {agents?.length || 0} agentes activos</div>
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { ReactNode, useState } from "react";
 import Link from "next/link";
@@ -33,6 +33,7 @@ const navigationStructure: NavCore[] = [
       { id: "dashboard", icon: "🏠", label: "Dashboard Principal", href: "/", badge: "∞" },
       { id: "tenants", icon: "🏢", label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
       { id: "settings", icon: "⚙️", label: "Configuración", href: "/settings" },
+      { id: "agents-execute", icon: "▶️", label: "Ejecutar Agentes", href: "/agents/execute", badge: "42" },
     ],
   },
 
@@ -79,12 +80,16 @@ const navigationStructure: NavCore[] = [
     color: "#F97316",
     gradient: "linear-gradient(135deg, #F97316, #EA580C)",
     modules: [
-      { id: "mkt-all", icon: "🎯", label: "Marketing Hub", href: "/marketing", badge: "35" },
+      { id: "mkt-all", icon: "🎯", label: "Marketing Hub", href: "/marketing", badge: "42" },
       { id: "mkt-agents", icon: "🤖", label: "Agentes", href: "/marketing/agents" },
       { id: "mkt-campaigns", icon: "📢", label: "Campañas", href: "/marketing/campaigns" },
       { id: "mkt-leads", icon: "📈", label: "Lead Management", href: "/marketing/leads" },
       { id: "mkt-content", icon: "✍️", label: "Content Generation", href: "/marketing/content" },
       { id: "mkt-social", icon: "📱", label: "Social Media", href: "/marketing/social" },
+      { id: "mkt-google-ads", icon: "📊", label: "Google Ads", href: "/marketing/google-ads" },
+      { id: "mkt-attribution", icon: "🔗", label: "Attribution", href: "/marketing/attribution" },
+      { id: "mkt-ab-testing", icon: "🧪", label: "A/B Testing", href: "/marketing/ab-testing" },
+      { id: "mkt-predictive", icon: "🔮", label: "Predictive", href: "/marketing/predictive" },
       { id: "mkt-analytics", icon: "📊", label: "Analytics", href: "/marketing/analytics" },
     ],
   },

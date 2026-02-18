@@ -122,6 +122,33 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Orchestration": "bg-blue-100 text-blue-700 border-blue-200",
 };
 
+function getCategoryFromId(id: string): string {
+  const map: Record<string, string> = {
+    leadscori: "Lead Management", leadscoringia: "Lead Management", predictiveleadia: "Lead Management",
+    abtestingia: "Experimentation", abtestingimpactia: "Experimentation",
+    campaignoptimizeria: "Campaign", campaignstrategyorchestratoria: "Orchestration",
+    contentgeneratoria: "Content", contentperformanceia: "Content",
+    socialpostgeneratoria: "Social Media", sociallisteningia: "Social Media",
+    sentimentanalyzeria: "Analytics", conversioncohortia: "Analytics",
+    competitoranalyzeria: "Intelligence", competitorintelligenceia: "Intelligence",
+    channelattributia: "Attribution", attributionmodelia: "Attribution",
+    budgetforecastia: "Forecasting", marketingmixmodelia: "Forecasting",
+    audiencesegmenteria: "Segmentation", customersegmentatonia: "Segmentation", geosegmentationia: "Segmentation",
+    personalizationengineia: "Personalization",
+    emailautomationia: "Email", email_bridge: "Email",
+    influencermatchingia: "Influencer", influencermatcheria: "Influencer",
+    journeyoptimizeria: "Customer Journey",
+    retentionpredictoria: "Retention", retentionpredictorea: "Retention",
+    productaffinityia: "Product", pricingoptimizeria: "Pricing",
+    creativeanalyzeria: "Creative", contactqualityia: "Data Quality",
+    cashofferfilteria: "Offers", minimalformia: "Forms",
+    marketingorchestratorea: "Orchestration",
+    action_plan_executor: "Google Ads", connector: "Google Ads", registry: "Google Ads", executor: "Google Ads",
+  };
+  const prefix = id.split("__")[0];
+  return map[prefix] || "General";
+}
+
 function getCategoryCounts(agents: Agent[]): Record<string, number> {
   return agents.reduce((acc, a) => {
     acc[a.category] = (acc[a.category] || 0) + 1;
@@ -133,6 +160,7 @@ export default function AgentExecutePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
+  const [agents, setAgents] = useState<Agent[]>(MARKETING_AGENTS);
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
@@ -141,10 +169,29 @@ export default function AgentExecutePage() {
       .catch(() => setBackendStatus("offline"));
   }, []);
 
-  const categories = ["all", ...Array.from(new Set(MARKETING_AGENTS.map(a => a.category))).sort()];
-  const categoryCounts = getCategoryCounts(MARKETING_AGENTS);
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+    fetch(`${apiUrl}/api/catalog?module=marketing&limit=300`)
+      .then(r => r.json())
+      .then(data => {
+        const catalogAgents = data?.data?.agents
+          ?.filter((a: any) => a.action_methods?.includes("execute"))
+          ?.filter((a: any) => !a.id.includes("database__") && !a.id.includes("mock") && !a.id.includes("operative_wrapper") && !a.id.includes("email_executor") && !a.id.includes("meta_executor") && !a.label?.includes("template") && !a.id.includes("backup_") && !a.id.includes("operational_wrapper") && !a.id.includes("leadscoringia_backup"))
+          ?.map((a: any) => ({
+            id: a.id,
+            name: a.class_name?.replace("AgentOperative", "")?.replace("Operative", "")?.replace(/([A-Z])/g, " $1")?.trim() || a.id,
+            category: getCategoryFromId(a.id),
+            description: a.description || `${a.class_name} - ${a.status}`,
+          })) || [];
+        if (catalogAgents.length > 0) setAgents(catalogAgents);
+      })
+      .catch(() => {});
+  }, []);
 
-  const filtered = MARKETING_AGENTS
+  const categories = ["all", ...Array.from(new Set(agents.map(a => a.category))).sort()];
+  const categoryCounts = getCategoryCounts(agents);
+
+  const filtered = agents
     .filter(a => selectedCategory === "all" || a.category === selectedCategory)
     .filter(a =>
       searchTerm === "" ||
@@ -171,13 +218,13 @@ export default function AgentExecutePage() {
           </div>
         </div>
         <p className="text-gray-500 mb-4">
-          {MARKETING_AGENTS.length} agentes operativos con Decision Layer v2.0, Compliance y Audit Trail. Modo DRY RUN por defecto.
+          {agents.length} agentes operativos con Decision Layer v2.0, Compliance y Audit Trail. Modo DRY RUN por defecto.
         </p>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-blue-700">{MARKETING_AGENTS.length}</div>
+            <div className="text-2xl font-bold text-blue-700">{agents.length}</div>
             <div className="text-xs text-blue-500">Agentes Totales</div>
           </div>
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
@@ -218,14 +265,14 @@ export default function AgentExecutePage() {
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            {cat === "all" ? `Todos (${MARKETING_AGENTS.length})` : `${cat} (${categoryCounts[cat] || 0})`}
+            {cat === "all" ? `Todos (${agents.length})` : `${cat} (${categoryCounts[cat] || 0})`}
           </button>
         ))}
       </div>
 
       {/* Results count */}
       <p className="text-sm text-gray-400 mb-4">
-        Mostrando {filtered.length} de {MARKETING_AGENTS.length} agentes
+        Mostrando {filtered.length} de {agents.length} agentes
       </p>
 
       {/* Agent Grid */}
