@@ -107,7 +107,7 @@ export default function AgentExecutePage() {
         setTotalCatalog(d.data?.total ?? raw.length);
         const filtered = raw
           .filter((a: { action_methods?: string[] }) => a.action_methods?.includes("execute"))
-          .filter((a: { agent_id?: string }) => !String(a.agent_id || a.id || "").includes("_backup_"))
+          .filter((a: { agent_id?: string; id?: string }) => !String(a.agent_id || a.id || "").includes("_backup_"))
           .map((a: { agent_id?: string; id?: string; name?: string; category?: string; class_name?: string; description?: string }) => ({
             agent_id: a.agent_id || a.id || "",
             name: a.name || a.class_name?.replace(/AgentOperative|Operative/g, "").replace(/([A-Z])/g, " $1").trim() || "",
