@@ -1,4 +1,8 @@
-"use client";
+const fs = require("fs");
+let c = fs.readFileSync("app/advertising/google-ads/page.tsx", "utf8");
+
+// Replace the entire file with connected version
+const newContent = `"use client";
 import { useState } from "react";
 import { AgentCard } from "@/components/ui/AgentCard";
 
@@ -13,11 +17,11 @@ interface Agent {
 }
 
 const AGENTS: Agent[] = [
-  { id: "budget-pacing", backendId: "action_plan_executor__actionplanexecutor", name: "Budget Pacing Agent", description: "Optimiza presupuesto por hora", icon: "💰", status: "active", metrics: [{ label: "Presupuesto", value: "$500" }, { label: "Paced", value: "45%" }] },
-  { id: "strategist", backendId: "connector__googleadsconnector", name: "Strategist Agent", description: "Analisis estrategico", icon: "📊", status: "active", metrics: [{ label: "Analisis", value: 24 }, { label: "Efectividad", value: "92%" }] },
-  { id: "orchestrator", backendId: "registry__operationregistry", name: "Orchestrator Agent", description: "Coordinador maestro", icon: "👑", status: "active", metrics: [{ label: "Tareas", value: 156 }, { label: "Exito", value: "98%" }] },
-  { id: "rsa-copy-generator", backendId: "executor__googleadsexecutor", name: "RSA Copy Generator", description: "Genera anuncios", icon: "📝", status: "active", metrics: [{ label: "Ads", value: 342 }, { label: "CTR", value: "5.2%" }] },
-  { id: "search-terms-cleaner", backendId: "email_bridge__emailoperationalwrapper", name: "Search Terms Cleaner", description: "Limpia terminos negativos", icon: "🧹", status: "active", metrics: [{ label: "Terminos", value: 1203 }, { label: "Filtrados", value: "18%" }] },
+  { id: "budget-pacing", backendId: "action_plan_executor__actionplanexecutor", name: "Budget Pacing Agent", description: "Optimiza presupuesto por hora", icon: "\uD83D\uDCB0", status: "active", metrics: [{ label: "Presupuesto", value: "$500" }, { label: "Paced", value: "45%" }] },
+  { id: "strategist", backendId: "connector__googleadsconnector", name: "Strategist Agent", description: "Analisis estrategico", icon: "\uD83D\uDCCA", status: "active", metrics: [{ label: "Analisis", value: 24 }, { label: "Efectividad", value: "92%" }] },
+  { id: "orchestrator", backendId: "registry__operationregistry", name: "Orchestrator Agent", description: "Coordinador maestro", icon: "\uD83D\uDC51", status: "active", metrics: [{ label: "Tareas", value: 156 }, { label: "Exito", value: "98%" }] },
+  { id: "rsa-copy-generator", backendId: "executor__googleadsexecutor", name: "RSA Copy Generator", description: "Genera anuncios", icon: "\uD83D\uDCDD", status: "active", metrics: [{ label: "Ads", value: 342 }, { label: "CTR", value: "5.2%" }] },
+  { id: "search-terms-cleaner", backendId: "email_bridge__emailoperationalwrapper", name: "Search Terms Cleaner", description: "Limpia terminos negativos", icon: "\uD83E\uDDF9", status: "active", metrics: [{ label: "Terminos", value: 1203 }, { label: "Filtrados", value: "18%" }] },
 ];
 
 export default function GoogleAdsPage() {
@@ -30,7 +34,7 @@ export default function GoogleAdsPage() {
     setLoading((prev) => ({ ...prev, [agent.id]: true }));
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
-      const res = await fetch(`${apiUrl}/api/v1/agents/${agent.backendId}/execute`, {
+      const res = await fetch(\`\${apiUrl}/api/v1/agents/\${agent.backendId}/execute\`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": "default" },
         body: JSON.stringify({ payload: {}, dry_run: true }),
@@ -47,7 +51,7 @@ export default function GoogleAdsPage() {
   return (
     <div className="space-y-8 p-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-4xl font-bold mb-2">💰 Google Ads Hub</h1>
+        <h1 className="text-4xl font-bold mb-2">\uD83D\uDCB0 Google Ads Hub</h1>
         <p className="text-gray-600">Agentes especializados de automatizacion - Conectados al Backend</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -94,8 +98,8 @@ export default function GoogleAdsPage() {
               <button className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded font-semibold" type="button">Programar</button>
             </div>
             {results[selected.id] && (
-              <div className={`mt-4 p-4 rounded ${results[selected.id].success ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
-                <p className={`font-semibold ${results[selected.id].success ? "text-green-700" : "text-red-700"}`}>
+              <div className={\`mt-4 p-4 rounded \${results[selected.id].success ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}\`}>
+                <p className={\`font-semibold \${results[selected.id].success ? "text-green-700" : "text-red-700"}\`}>
                   {results[selected.id].success ? "Exito - DRY RUN" : "Error"}
                 </p>
                 <pre className="text-xs mt-2 overflow-auto max-h-40">
@@ -108,4 +112,7 @@ export default function GoogleAdsPage() {
       )}
     </div>
   );
-}
+}`;
+
+fs.writeFileSync("app/advertising/google-ads/page.tsx", newContent, "utf8");
+console.log("Google Ads page connected to backend");
