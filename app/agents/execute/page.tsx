@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import AgentExecuteButton from "@/components/agents/AgentExecuteButton";
 
-const TENANT_STORAGE_KEY = "nadakki_tenant_id";
+const TENANT_STORAGE_KEY = "nadakki_tenant_id_id";
 const DEFAULT_TENANT = "default";
 
 function getStoredTenant(): string {
@@ -390,7 +390,7 @@ export default function AgentExecutePage() {
           >
             <h3 className="text-lg font-bold text-gray-900 mb-2">Activar modo LIVE</h3>
             <p className="text-gray-600 mb-4">
-              ¿Activar LIVE para tenant <strong>{tenantId}</strong>? Las ejecuciones afectarán datos reales.
+              Â¿Activar LIVE para tenant <strong>{tenantId}</strong>? Las ejecuciones afectarÃ¡n datos reales.
             </p>
             <div className="flex gap-3 justify-end">
               <button

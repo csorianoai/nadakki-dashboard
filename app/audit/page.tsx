@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const TENANT_STORAGE_KEY = "nadakki_tenant_id";
+const TENANT_STORAGE_KEY = "nadakki_tenant_id_id";
 const DEFAULT_TENANT = "default";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
@@ -39,7 +39,7 @@ export default function AuditPage() {
       if (!res.ok) {
         setAvailable(false);
         setLogs([]);
-        setError("Audit aún no disponible (backend en progreso)");
+        setError("Audit aÃºn no disponible (backend en progreso)");
         return;
       }
       const data = await res.json();
@@ -49,7 +49,7 @@ export default function AuditPage() {
     } catch {
       setAvailable(false);
       setLogs([]);
-      setError("Audit aún no disponible (backend en progreso)");
+      setError("Audit aÃºn no disponible (backend en progreso)");
     } finally {
       setLoading(false);
     }
@@ -127,12 +127,12 @@ export default function AuditPage() {
                 ) : (
                   logs.map((log, i) => (
                     <tr key={i} className="border-t border-gray-100 hover:bg-gray-50">
-                      <td className="px-4 py-2 text-gray-600">{log.timestamp ?? "—"}</td>
-                      <td className="px-4 py-2 font-mono text-xs">{log.agent_id ?? "—"}</td>
-                      <td className="px-4 py-2">{log.mode ?? "—"}</td>
-                      <td className="px-4 py-2">{log.status ?? "—"}</td>
-                      <td className="px-4 py-2">{log.latency_ms ?? "—"}</td>
-                      <td className="px-4 py-2 font-mono text-xs">{log.trace_id ?? "—"}</td>
+                      <td className="px-4 py-2 text-gray-600">{log.timestamp ?? "â€”"}</td>
+                      <td className="px-4 py-2 font-mono text-xs">{log.agent_id ?? "â€”"}</td>
+                      <td className="px-4 py-2">{log.mode ?? "â€”"}</td>
+                      <td className="px-4 py-2">{log.status ?? "â€”"}</td>
+                      <td className="px-4 py-2">{log.latency_ms ?? "â€”"}</td>
+                      <td className="px-4 py-2 font-mono text-xs">{log.trace_id ?? "â€”"}</td>
                     </tr>
                   ))
                 )}
