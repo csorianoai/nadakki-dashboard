@@ -1,5 +1,5 @@
-﻿"use client";
-import { useState } from "react";
+"use client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Users, Building2, Plus, Search, MoreVertical,
@@ -21,8 +21,8 @@ interface Tenant {
   apiKey: string;
 }
 
-const TENANTS: Tenant[] = [
-  { id: "credicefi", name: "CrediCefi", domain: "credicefi.com", plan: "enterprise", status: "active", agents: 239, created: "2024-01-15", apiKey: "sk-cred-xxx" },
+const TENANTS_INITIAL: Tenant[] = [
+  { id: "credicefi", name: "CrediCefi", domain: "credicefi.com", plan: "enterprise", status: "active", agents: 0, created: "2024-01-15", apiKey: "sk-cred-xxx" },
   { id: "sfrentals", name: "SF Rentals", domain: "sfrentals.com", plan: "pro", status: "active", agents: 45, created: "2024-12-28", apiKey: "sk-sfr-xxx" },
   { id: "techstartup", name: "Tech Startup", domain: "techstartup.io", plan: "starter", status: "pending", agents: 10, created: "2025-01-02", apiKey: "sk-tech-xxx" },
   { id: "financeplus", name: "Finance Plus", domain: "financeplus.mx", plan: "pro", status: "active", agents: 78, created: "2024-06-20", apiKey: "sk-fin-xxx" },
@@ -37,16 +37,31 @@ const PLAN_COLORS = {
 export default function TenantsPage() {
   const [search, setSearch] = useState("");
   const [showNewModal, setShowNewModal] = useState(false);
+  const [tenants, setTenants] = useState<Tenant[]>(TENANTS_INITIAL);
 
-  const filteredTenants = TENANTS.filter(t => 
+  useEffect(() => {
+    fetch("/api/ai-studio/agents")
+      .then((r) => r.json())
+      .then((d) => {
+        const total = d.data?.total ?? d.data?.agents?.length;
+        if (total != null) {
+          setTenants((prev) =>
+            prev.map((t) => (t.id === "credicefi" ? { ...t, agents: total } : t))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const filteredTenants = tenants.filter(t => 
     t.name.toLowerCase().includes(search.toLowerCase()) || 
     t.domain.toLowerCase().includes(search.toLowerCase())
   );
 
   const stats = {
-    total: TENANTS.length,
-    active: TENANTS.filter(t => t.status === "active").length,
-    totalAgents: TENANTS.reduce((acc, t) => acc + t.agents, 0),
+    total: tenants.length,
+    active: tenants.filter(t => t.status === "active").length,
+    totalAgents: tenants.reduce((acc, t) => acc + t.agents, 0),
   };
 
   return (

@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
@@ -10,18 +11,11 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const ADMIN_MODULES = [
-  { id: "agents", name: "Agentes IA", icon: Bot, desc: "Activar, desactivar y configurar agentes", href: "/admin/agents", color: "#8b5cf6", badge: "239" },
+const ADMIN_MODULES_BASE = [
+  { id: "agents", name: "Agentes IA", icon: Bot, desc: "Activar, desactivar y configurar agentes", href: "/admin/agents", color: "#8b5cf6", badgeKey: "agents" },
   { id: "logs", name: "Logs del Sistema", icon: FileText, desc: "Historial de ejecuciones y errores", href: "/admin/logs", color: "#22c55e" },
-  { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "GestiÃ³n de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
-  { id: "settings", name: "ConfiguraciÃ³n", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
-];
-
-const SYSTEM_STATS = [
-  { value: "239", label: "Agentes Totales", icon: <Bot className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
-  { value: "4", label: "Tenants Activos", icon: <Users className="w-6 h-6 text-blue-400" />, color: "#3b82f6" },
-  { value: "99.7%", label: "Uptime", icon: <Activity className="w-6 h-6 text-green-400" />, color: "#22c55e" },
-  { value: "v3.2", label: "VersiÃ³n", icon: <Server className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
+  { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "Gestión de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
+  { id: "settings", name: "Configuración", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
 ];
 
 const RECENT_EVENTS = [
@@ -32,6 +26,30 @@ const RECENT_EVENTS = [
 ];
 
 export default function AdminPage() {
+  const [agentTotal, setAgentTotal] = useState<string>("—");
+
+  useEffect(() => {
+    fetch("/api/ai-studio/agents")
+      .then((r) => r.json())
+      .then((d) => {
+        const total = d.data?.total ?? d.data?.agents?.length;
+        if (total != null) setAgentTotal(String(total));
+      })
+      .catch(() => {});
+  }, []);
+
+  const adminModules = ADMIN_MODULES_BASE.map((m) => ({
+    ...m,
+    badge: m.badge ?? (m.badgeKey === "agents" ? agentTotal : undefined),
+  }));
+
+  const systemStats = [
+    { value: agentTotal, label: "Agentes Totales", icon: <Bot className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
+    { value: "4", label: "Tenants Activos", icon: <Users className="w-6 h-6 text-blue-400" />, color: "#3b82f6" },
+    { value: "99.7%", label: "Uptime", icon: <Activity className="w-6 h-6 text-green-400" />, color: "#22c55e" },
+    { value: "v3.2", label: "Versión", icon: <Server className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
+  ];
+
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/">
@@ -59,7 +77,7 @@ export default function AdminPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-6 mb-8">
-        {SYSTEM_STATS?.map((stat, i) => (
+        {systemStats?.map((stat, i) => (
           <StatCard key={i} {...stat} delay={i * 0.1} />
         ))}
       </div>
@@ -70,7 +88,7 @@ export default function AdminPage() {
         <div className="col-span-2">
           <h2 className="text-xl font-bold text-white mb-4">MÃ³dulos de AdministraciÃ³n</h2>
           <div className="grid grid-cols-2 gap-4">
-            {ADMIN_MODULES?.map((module, index) => (
+            {adminModules?.map((module, index) => (
               <motion.div
                 key={module.id}
                 initial={{ opacity: 0, y: 20 }}

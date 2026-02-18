@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { Bot, X, Send, Loader2, Minimize2, Lightbulb, RefreshCw } from "lucide-react";
@@ -27,15 +27,30 @@ export default function OnboardingAgent() {
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      setMessages([{
+    if (!isOpen || messages.length > 0) return;
+    fetch("/api/ai-studio/agents")
+      .then((r) => r.json())
+      .then((d) => {
+        const total = d.data?.total ?? d.data?.agents?.length ?? 0;
+        const countText = total > 0 ? `Los ${total} agentes de IA` : "Agentes de IA";
+        const welcomeContent = `¡Hola! 👋 Soy NADA, tu copiloto de IA.\n\nPuedo ayudarte con:\n• Workflows de marketing\n• ${countText}\n• Tutoriales y guías\n\n¿En qué te ayudo?`;
+        setMessages([{
         id: "welcome",
         role: "assistant",
-        content: "Â¡Hola! ðŸ‘‹ Soy NADA, tu copiloto de IA.\n\nPuedo ayudarte con:\nâ€¢ Workflows de marketing\nâ€¢ Los 239 agentes de IA\nâ€¢ Tutoriales y guÃ­as\n\nÂ¿En quÃ© te ayudo?",
+        content: welcomeContent,
         source: "greeting",
-        suggestions: ["Â¿QuÃ© es un workflow?", "Â¿QuÃ© workflows hay?", "Â¿CÃ³mo ejecuto un workflow?"]
+        suggestions: ["¿Qué es un workflow?", "¿Qué workflows hay?", "¿Cómo ejecuto un workflow?"]
       }]);
-    }
+      })
+      .catch(() => {
+        setMessages([{
+          id: "welcome",
+          role: "assistant",
+          content: "¡Hola! 👋 Soy NADA, tu copiloto de IA.\n\nPuedo ayudarte con:\n• Workflows de marketing\n• Agentes de IA\n• Tutoriales y guías\n\n¿En qué te ayudo?",
+          source: "greeting",
+          suggestions: ["¿Qué es un workflow?", "¿Qué workflows hay?", "¿Cómo ejecuto un workflow?"]
+        }]);
+      });
   }, [isOpen, messages.length]);
 
   const sendMessage = async (content: string) => {
