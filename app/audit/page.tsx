@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const TENANT_STORAGE_KEY = "nadakki_tenant_id_id";
+const TENANT_STORAGE_KEY = "nadakki_tenant_id";
 const DEFAULT_TENANT = "default";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
@@ -39,7 +39,7 @@ export default function AuditPage() {
       if (!res.ok) {
         setAvailable(false);
         setLogs([]);
-        setError("Audit aÃºn no disponible (backend en progreso)");
+        setError("Backend no disponible o endpoint de audit en progreso.");
         return;
       }
       const data = await res.json();
@@ -49,7 +49,7 @@ export default function AuditPage() {
     } catch {
       setAvailable(false);
       setLogs([]);
-      setError("Audit aÃºn no disponible (backend en progreso)");
+      setError("Backend no disponible o endpoint de audit en progreso.");
     } finally {
       setLoading(false);
     }
@@ -121,7 +121,7 @@ export default function AuditPage() {
                 {logs.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                      No hay registros
+                      No logs yet for this tenant.
                     </td>
                   </tr>
                 ) : (

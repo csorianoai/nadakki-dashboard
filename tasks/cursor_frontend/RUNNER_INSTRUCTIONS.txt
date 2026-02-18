@@ -1,0 +1,3 @@
+﻿# Cursor instruction (no paste)
+Tell Cursor:
+"Open tasks/cursor_frontend/CURSOR_FRONTEND.md and implement all tasks. Keep changes minimal and safe."

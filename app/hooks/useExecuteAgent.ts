@@ -46,6 +46,7 @@ export function useExecuteAgent(): UseExecuteAgentReturn {
         headers: {
           "Content-Type": "application/json",
           "X-Tenant-ID": tenantId,
+          "X-Role": process.env.NEXT_PUBLIC_DEV_ROLE || "user",
         },
         body: JSON.stringify({
           payload: bodyPayload,

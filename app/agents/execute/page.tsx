@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import AgentExecuteButton from "@/components/agents/AgentExecuteButton";
 
-const TENANT_STORAGE_KEY = "nadakki_tenant_id_id";
+const TENANT_STORAGE_KEY = "nadakki_tenant_id";
 const DEFAULT_TENANT = "default";
 
 function getStoredTenant(): string {
@@ -171,6 +171,7 @@ export default function AgentExecutePage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
   const [agents, setAgents] = useState<Agent[]>(MARKETING_AGENTS);
+  const [catalogFromApi, setCatalogFromApi] = useState<boolean>(false);
   const [tenantId, setTenantId] = useState<string>(DEFAULT_TENANT);
   const [isLive, setIsLive] = useState<boolean>(false);
   const [showLiveModal, setShowLiveModal] = useState<boolean>(false);
@@ -220,9 +221,12 @@ export default function AgentExecutePage() {
             category: getCategoryFromId(a.id),
             description: a.description || `${a.class_name} - ${a.status}`,
           })) || [];
-        if (catalogAgents.length > 0) setAgents(catalogAgents);
+        if (catalogAgents.length > 0) {
+          setAgents(catalogAgents);
+          setCatalogFromApi(true);
+        }
       })
-      .catch(() => {});
+      .catch(() => setCatalogFromApi(false));
   }, []);
 
   const categories = ["all", ...Array.from(new Set(agents.map(a => a.category))).sort()];
@@ -275,6 +279,12 @@ export default function AgentExecutePage() {
               isLive ? "bg-red-100 text-red-700 border border-red-200" : "bg-amber-100 text-amber-700 border border-amber-200"
             }`}>
               MODE: {isLive ? "LIVE" : "DRY_RUN"}
+            </span>
+            {/* Dynamic Catalog badge */}
+            <span className={`px-2 py-1 rounded text-xs font-medium ${
+              catalogFromApi ? "bg-green-100 text-green-700 border border-green-200" : "bg-gray-100 text-gray-600 border border-gray-200"
+            }`}>
+              Dynamic Catalog: {catalogFromApi ? "ON" : "OFF (fallback)"}
             </span>
             <div className="flex items-center gap-2">
               <div className={`w-2.5 h-2.5 rounded-full ${
