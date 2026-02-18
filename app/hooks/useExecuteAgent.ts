@@ -11,7 +11,12 @@ interface ExecuteResult {
 }
 
 interface UseExecuteAgentReturn {
-  execute: (agentId: string, payload?: Record<string, any>, dryRun?: boolean) => Promise<void>;
+  execute: (
+    agentId: string,
+    payload?: Record<string, any>,
+    dryRun?: boolean,
+    tenantId?: string
+  ) => Promise<void>;
   result: ExecuteResult | null;
   loading: boolean;
   error: string | null;
@@ -26,22 +31,26 @@ export function useExecuteAgent(): UseExecuteAgentReturn {
   const execute = useCallback(async (
     agentId: string,
     payload: Record<string, any> = {},
-    dryRun: boolean = true
+    dryRun: boolean = true,
+    tenantId: string = "default"
   ) => {
     try {
       setLoading(true);
       setError(null);
       setResult(null);
 
+      const bodyPayload = { ...payload, tenant_id: tenantId };
+
       const response = await fetch(`${API_URL}/api/v1/agents/${agentId}/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Tenant-ID": "default",
+          "X-Tenant-ID": tenantId,
         },
         body: JSON.stringify({
-          payload,
+          payload: bodyPayload,
           dry_run: dryRun,
+          live: !dryRun,
           auto_publish: false,
           auto_email: false,
         }),

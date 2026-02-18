@@ -6,14 +6,22 @@ import { useExecuteAgent } from "@/app/hooks/useExecuteAgent";
 interface AgentExecuteButtonProps {
   agentId: string;
   agentName?: string;
+  tenantId?: string;
+  isLive?: boolean;
 }
 
-export default function AgentExecuteButton({ agentId, agentName }: AgentExecuteButtonProps) {
+export default function AgentExecuteButton({
+  agentId,
+  agentName,
+  tenantId = "default",
+  isLive = false,
+}: AgentExecuteButtonProps) {
   const { execute, result, loading, error, clear } = useExecuteAgent();
   const [showResult, setShowResult] = useState(false);
 
   const handleExecute = async () => {
-    await execute(agentId, { test: true }, true);
+    const dryRun = !isLive;
+    await execute(agentId, { test: true }, dryRun, tenantId);
     setShowResult(true);
   };
 

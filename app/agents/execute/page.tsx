@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import AgentExecuteButton from "@/components/agents/AgentExecuteButton";
 
+const TENANT_STORAGE_KEY = "nadakki_tenant_id";
+const DEFAULT_TENANT = "default";
+
+function getStoredTenant(): string {
+  if (typeof window === "undefined") return DEFAULT_TENANT;
+  return localStorage.getItem(TENANT_STORAGE_KEY) || DEFAULT_TENANT;
+}
+
 interface Agent {
   id: string;
   name: string;
@@ -156,11 +164,40 @@ function getCategoryCounts(agents: Agent[]): Record<string, number> {
   }, {} as Record<string, number>);
 }
 
+const TENANT_OPTIONS = ["default", "tenant_credicefi", "tenant_demo"];
+
 export default function AgentExecutePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
   const [agents, setAgents] = useState<Agent[]>(MARKETING_AGENTS);
+  const [tenantId, setTenantId] = useState<string>(DEFAULT_TENANT);
+  const [isLive, setIsLive] = useState<boolean>(false);
+  const [showLiveModal, setShowLiveModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    setTenantId(getStoredTenant());
+  }, []);
+
+  const handleTenantChange = (t: string) => {
+    setTenantId(t);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TENANT_STORAGE_KEY, t);
+    }
+  };
+
+  const handleLiveToggle = (checked: boolean) => {
+    if (checked) {
+      setShowLiveModal(true);
+    } else {
+      setIsLive(false);
+    }
+  };
+
+  const confirmLive = () => {
+    setIsLive(true);
+    setShowLiveModal(false);
+  };
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
@@ -204,17 +241,51 @@ export default function AgentExecutePage() {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
           <h1 className="text-3xl font-bold text-gray-900">Ejecutar Agentes de Marketing</h1>
-          <div className="flex items-center gap-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${
-              backendStatus === "online" ? "bg-green-500" :
-              backendStatus === "offline" ? "bg-red-500" : "bg-yellow-500 animate-pulse"
-            }`} />
-            <span className="text-sm text-gray-500">
-              {backendStatus === "online" ? "Backend Online" :
-               backendStatus === "offline" ? "Backend Offline" : "Verificando..."}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Tenant selector */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="tenant-select" className="text-sm text-gray-600">Tenant:</label>
+              <select
+                id="tenant-select"
+                value={tenantId}
+                onChange={(e) => handleTenantChange(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {TENANT_OPTIONS.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            {/* LIVE toggle */}
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-sm text-gray-600">LIVE</span>
+                <input
+                  type="checkbox"
+                  checked={isLive}
+                  onChange={(e) => handleLiveToggle(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+              </label>
+            </div>
+            {/* Mode badge */}
+            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+              isLive ? "bg-red-100 text-red-700 border border-red-200" : "bg-amber-100 text-amber-700 border border-amber-200"
+            }`}>
+              MODE: {isLive ? "LIVE" : "DRY_RUN"}
             </span>
+            <div className="flex items-center gap-2">
+              <div className={`w-2.5 h-2.5 rounded-full ${
+                backendStatus === "online" ? "bg-green-500" :
+                backendStatus === "offline" ? "bg-red-500" : "bg-yellow-500 animate-pulse"
+              }`} />
+              <span className="text-sm text-gray-500">
+                {backendStatus === "online" ? "Backend Online" :
+                 backendStatus === "offline" ? "Backend Offline" : "Verificando..."}
+              </span>
+            </div>
           </div>
         </div>
         <p className="text-gray-500 mb-4">
@@ -296,11 +367,48 @@ export default function AgentExecutePage() {
                   {agent.category}
                 </span>
               </div>
-              <AgentExecuteButton agentId={agent.id} agentName={agent.name} />
+              <AgentExecuteButton
+                agentId={agent.id}
+                agentName={agent.name}
+                tenantId={tenantId}
+                isLive={isLive}
+              />
             </div>
           );
         })}
       </div>
+
+      {/* LIVE confirmation modal */}
+      {showLiveModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowLiveModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl p-6 max-w-md shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Activar modo LIVE</h3>
+            <p className="text-gray-600 mb-4">
+              ¿Activar LIVE para tenant <strong>{tenantId}</strong>? Las ejecuciones afectarán datos reales.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowLiveModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmLive}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Activar LIVE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Empty state */}
       {filtered.length === 0 && (
