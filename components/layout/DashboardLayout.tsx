@@ -104,6 +104,8 @@ const navigationStructure: NavCore[] = [
       { id: "admin-main", icon: "🛠️", label: "Panel Admin", href: "/admin" },
       { id: "admin-agents", icon: "🤖", label: "Gestión Agentes", href: "/admin/agents" },
       { id: "admin-logs", icon: "📜", label: "Logs", href: "/admin/logs" },
+      { id: "admin-compliance", icon: "🛡️", label: "Compliance", href: "/compliance" },
+      { id: "admin-testing", icon: "🧪", label: "Testing Lab", href: "/testing" },
     ],
   },
 ];
