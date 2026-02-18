@@ -14,6 +14,9 @@ import StatusBadge from "@/components/ui/StatusBadge";
 const ADMIN_MODULES_BASE = [
   { id: "agents", name: "Agentes IA", icon: Bot, desc: "Activar, desactivar y configurar agentes", href: "/admin/agents", color: "#8b5cf6", badgeKey: "agents" },
   { id: "logs", name: "Logs del Sistema", icon: FileText, desc: "Historial de ejecuciones y errores", href: "/admin/logs", color: "#22c55e" },
+  { id: "gates", name: "Gates", icon: Shield, desc: "Gates de configuración (Security, Data, Quality, Pilot)", href: "/admin/gates", color: "#f59e0b" },
+  { id: "config", name: "Config", icon: Settings, desc: "Configuración de tenant y canales en vivo", href: "/admin/config", color: "#8b5cf6" },
+  { id: "db", name: "Database Status", icon: Database, desc: "Estado de conexión y esquema DB", href: "/admin/db", color: "#06b6d4" },
   { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "Gestión de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
   { id: "settings", name: "Configuración", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
 ];

@@ -61,6 +61,17 @@ const navigationStructure: NavCore[] = [
       { id: "leads", icon: "ðŸŽ¯", label: "Leads", href: "/sales/leads" },
     ],
   },
+  {
+    id: "admin",
+    title: "ADMIN",
+    icon: "⚙️",
+    color: "#8b5cf6",
+    modules: [
+      { id: "admin-gates", icon: "🚧", label: "Gates", href: "/admin/gates" },
+      { id: "admin-config", icon: "⚙️", label: "Config", href: "/admin/config" },
+      { id: "admin-db", icon: "🗄️", label: "Database Status", href: "/admin/db" },
+    ],
+  },
 ];
 
 export default function Sidebar() {
