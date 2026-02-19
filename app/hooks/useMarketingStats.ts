@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useCallback } from "react";
 
 export interface MarketingStats {
@@ -33,7 +33,7 @@ export function useMarketingStats(tenantId: string = "credicefi"): UseMarketingS
     try {
       setLoading(true);
       setError(null);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
       const response = await fetch(`${apiUrl}/api/marketing/dashboard?tenant_id=${tenantId}`, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(10000) });
       
       if (response.ok) {

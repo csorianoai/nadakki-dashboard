@@ -50,7 +50,7 @@ export class IntelligentRouter {
 Estás en **${tenantName}**. Puedo ayudarte con:
 
 - **Workflows** - Los 10 workflows de marketing
-- **Agentes** - Los 225 agentes de IA
+- **Agentes** - Agentes de IA especializados
 - **Tutoriales** - Guías paso a paso
 - **Preguntas generales** - Marketing y estrategia
 

@@ -20,6 +20,8 @@ interface AgentDetails {
   lastRun: string;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+
 export default function AgentDetailPage() {
   const params = useParams();
   const agentId = params.agentId as string;
@@ -33,14 +35,16 @@ export default function AgentDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/catalog/marketing/agents");
+      const res = await fetch(`${API_URL}/api/catalog?module=marketing&limit=300`);
       if (!res.ok) throw new Error("Error en la API");
       const data = await res.json();
-      const found = data.agents?.find((a: any) => a.id === agentId);
+      const agents = data.data?.agents || data.agents || [];
+      const found = agents.find((a: any) => (a.agent_id || a.id) === agentId);
       if (found) {
+        const id = found.agent_id || found.id;
         setAgent({
-          id: found.id,
-          name: found.name,
+          id,
+          name: found.name || found.class_name,
           description: found.description || "Agente de IA especializado en " + found.category,
           category: found.category,
           executions: Math.floor(Math.random() * 10000) + 1000,
@@ -66,7 +70,7 @@ export default function AgentDetailPage() {
     setExecuting(true);
     setResult(null);
     try {
-      const res = await fetch("http://localhost:8000/api/agent/" + agentId + "/execute", {
+      const res = await fetch(`${API_URL}/api/v1/agents/${agentId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input: "test execution" })

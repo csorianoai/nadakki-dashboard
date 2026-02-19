@@ -17,7 +17,7 @@ const documents: SystemDocument[] = [
     content: `NADAKKI AI Suite es una plataforma enterprise de automatización de marketing con inteligencia artificial.
 
 Características principales:
-- 225 agentes de IA especializados
+- Agentes de IA especializados
 - 20 cores funcionales
 - 10 workflows de marketing automatizados
 - Dashboard multi-tenant
@@ -451,7 +451,7 @@ Total: 10 workflows, 43 agentes de marketing.`,
   {
     id: 'cores-overview',
     title: 'Cores Funcionales - Resumen',
-    content: `NADAKKI tiene 20 cores funcionales con 225 agentes distribuidos:
+    content: `NADAKKI tiene 20 cores funcionales con agentes de IA distribuidos:
 
 MARKETING (35 agentes):
 - Automatización de campañas
@@ -547,7 +547,7 @@ Tips:
 
 Sección Superior - Métricas en Tiempo Real:
 - Estado del Backend: Indica si la API está operativa
-- Agentes Cargados: 225 agentes disponibles
+- Agentes Cargados: agentes disponibles desde catálogo
 - Cores Activos: 20 cores funcionales
 - Workflows Activos: 10 workflows listos
 
@@ -669,7 +669,7 @@ Tipos de agentes:
 - Optimizadores (mejoran métricas)
 - Recomendadores (sugieren acciones)
 
-NADAKKI tiene 225 agentes distribuidos en 20 cores.
+NADAKKI tiene agentes distribuidos en 20 cores.
 
 Ejemplo:
 AudienceAnalyzerAI:

@@ -37,6 +37,7 @@ const navigationStructure: NavCore[] = [
       { id: "tenants", icon: "ðŸ‘¥", label: "Multi-Tenant", href: "/tenants" },
       { id: "agents", icon: "ðŸ¤–", label: "Agentes IA", href: "/agents" },
       { id: "agents-execute", icon: "âš™ï¸", label: "Ejecutar Agentes", href: "/agents/execute" },
+      { id: "reports", icon: "📊", label: "Reports", href: "/reports" },
     ],
   },
   {
@@ -45,7 +46,8 @@ const navigationStructure: NavCore[] = [
     icon: "ðŸ“ˆ",
     color: "#10b981",
     modules: [
-      { id: "advertising", icon: "ðŸ“¢", label: "Publicidad", href: "/advertising" },
+      { id: "marketing-hub", icon: "ðŸ“¢", label: "Marketing", href: "/marketing" },
+      { id: "advertising", icon: "ðŸ"¢", label: "Publicidad", href: "/advertising" },
       { id: "content", icon: "ðŸ“", label: "Contenido", href: "/content" },
       { id: "social", icon: "ðŸ’¬", label: "Redes Sociales", href: "/social" },
       { id: "marketing-social-connections", icon: "ðŸ”—", label: "Social Connections", href: "/marketing/social-connections" },

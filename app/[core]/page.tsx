@@ -23,7 +23,7 @@ interface CoreData {
   display_name?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
 
 export default function CorePage() {
   const params = useParams();
