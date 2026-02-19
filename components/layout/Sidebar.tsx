@@ -71,7 +71,11 @@ const navigationStructure: NavCore[] = [
     modules: [
       { id: "admin-gates", icon: "🚧", label: "Gates", href: "/admin/gates" },
       { id: "admin-config", icon: "⚙️", label: "Config", href: "/admin/config" },
-      { id: "admin-db", icon: "🗄️", label: "Database Status", href: "/admin/db" },
+      { id: "admin-db", icon: "🗄️", label: "Database", href: "/admin/db" },
+      { id: "admin-billing", icon: "💳", label: "Billing", href: "/admin/billing" },
+      { id: "admin-usage", icon: "📊", label: "Usage", href: "/admin/usage" },
+      { id: "admin-api-keys", icon: "🔑", label: "API Keys", href: "/admin/api-keys" },
+      { id: "admin-system", icon: "🖥️", label: "System Info", href: "/admin/system" },
     ],
   },
 ];

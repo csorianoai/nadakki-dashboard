@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
   Settings, Bot, FileText, Shield, Database, 
-  Users, Activity, Server, ArrowRight, Cog
+  Users, Activity, Server, ArrowRight, Cog,
+  CreditCard, BarChart3, Key, Monitor
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
@@ -17,6 +18,10 @@ const ADMIN_MODULES_BASE = [
   { id: "gates", name: "Gates", icon: Shield, desc: "Gates de configuración (Security, Data, Quality, Pilot)", href: "/admin/gates", color: "#f59e0b" },
   { id: "config", name: "Config", icon: Settings, desc: "Configuración de tenant y canales en vivo", href: "/admin/config", color: "#8b5cf6" },
   { id: "db", name: "Database Status", icon: Database, desc: "Estado de conexión y esquema DB", href: "/admin/db", color: "#06b6d4" },
+  { id: "billing", name: "Billing", icon: CreditCard, desc: "Planes y facturación", href: "/admin/billing", color: "#10b981" },
+  { id: "usage", name: "Usage", icon: BarChart3, desc: "Ejecuciones y límites por tenant", href: "/admin/usage", color: "#f59e0b" },
+  { id: "api-keys", name: "API Keys", icon: Key, desc: "Gestión de claves API", href: "/admin/api-keys", color: "#8b5cf6" },
+  { id: "system", name: "System Info", icon: Monitor, desc: "Estado del sistema", href: "/admin/system", color: "#06b6d4" },
   { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "Gestión de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
   { id: "settings", name: "Configuración", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
 ];
