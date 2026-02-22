@@ -2,21 +2,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
+import AgentCountDisplay from "@/components/layout/AgentCountDisplay";
 
 interface NavModule { id: string; icon: string; label: string; href: string; badge?: string; isNew?: boolean; }
 interface NavCore { id: string; title: string; icon: string; color: string; modules: NavModule[]; }
 
 const NAV: NavCore[] = [
-  { id: "system", title: "SISTEMA", icon: "[SYS]", color: "#00d4ff", modules: [
-    { id: "dashboard", icon: "[D]", label: "Dashboard Principal", href: "/" },
+  { id: "system", title: "SISTEMA", icon: "⚙️", color: "#00d4ff", modules: [
+    { id: "dashboard", icon: "📊", label: "Dashboard Principal", href: "/" },
     { id: "tenants", icon: "[T]", label: "Multi-Tenant", href: "/tenants" },
     { id: "agents", icon: "[A]", label: "Agentes IA", href: "/agents" },
     { id: "agents-execute", icon: "[E]", label: "Ejecutar Agentes", href: "/agents/execute" },
     { id: "reports", icon: "[R]", label: "Reports", href: "/reports" },
   ]},
   { id: "marketing", title: "MARKETING", icon: "[MKT]", color: "#10b981", modules: [
-    { id: "marketing-hub", icon: "[M]", label: "Marketing", href: "/marketing" },
-    { id: "advertising", icon: "[Ad]", label: "Publicidad", href: "/advertising" },
+    { id: "marketing-hub", icon: "📣", label: "Marketing", href: "/marketing" },
+    { id: "advertising", icon: "📢", label: "Publicidad", href: "/advertising" },
     { id: "content", icon: "[C]", label: "Contenido", href: "/content" },
     { id: "social", icon: "[S]", label: "Redes Sociales", href: "/social" },
     { id: "marketing-social-connections", icon: "[SC]", label: "Social Connections", href: "/marketing/social-connections" },
@@ -40,6 +41,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo"><span className="logo-text">NADAKKI AI</span></div>
+      <AgentCountDisplay showLabel={true} className="px-4 py-2" />
       <nav className="sidebar-nav">
         {NAV.map((core) => (
           <div key={core.id} className="nav-section">
