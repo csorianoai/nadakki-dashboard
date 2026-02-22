@@ -7,6 +7,7 @@ import { Home, ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 import AgentCountDisplay from "./AgentCountDisplay";
 import TenantSelector from "@/components/ui/TenantSelector";
 import { useTenant } from "@/contexts/TenantContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavModule {
   id: string;
@@ -408,6 +409,7 @@ const NO_TENANT_PATHS = ["/tenants"];
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { tenantId } = useTenant();
+  const { logout } = useAuth();
   const [expandedCores, setExpandedCores] = useState<string[]>(["system", "advertising", "workflows"]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -545,6 +547,12 @@ backgroundColor: colors.bg.sidebar,
             <div style={{ flex: 1 }}>
               <TenantSelector />
               <div style={{ fontSize: "8px", color: colors.text.muted }}>Pro Plan</div>
+              <button
+                onClick={logout}
+                style={{ marginTop: "4px", fontSize: "10px", color: "#94a3b8", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+              >
+                Cerrar sesión
+              </button>
             </div>
             <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#26de81" }} />
           </div>

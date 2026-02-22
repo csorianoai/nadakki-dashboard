@@ -6,8 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import PWAPrompt from "@/components/pwa/PWAPrompt";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import OnboardingAgent from "@/components/ai/OnboardingAgent";
+import AppGate from "@/components/auth/AppGate";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -53,11 +52,7 @@ export default function RootLayout({
           <AuthProvider>
             <TenantProvider>
               <ToastProvider>
-                <DashboardLayout>
-                  {children}
-                </DashboardLayout>
-                <OnboardingAgent />
-                <PWAPrompt />
+                <AppGate>{children}</AppGate>
               </ToastProvider>
             </TenantProvider>
           </AuthProvider>

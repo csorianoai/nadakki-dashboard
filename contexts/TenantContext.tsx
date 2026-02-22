@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TENANT_STORAGE_KEY = "nadakki_tenant_id";
 
@@ -95,12 +96,22 @@ const defaultContextValue: TenantContextType = {
 const TenantContext = createContext<TenantContextType>(defaultContextValue);
 
 export function TenantProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated, tenantId: authTenantId } = useAuth();
   const [tenantId, setTenantIdState] = useState<string | null>(null);
   const [settings, setSettings] = useState<TenantSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     setTenantIdState(getStoredTenantId());
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && authTenantId && !tenantId) {
+      setTenantIdState(authTenantId);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(TENANT_STORAGE_KEY, authTenantId);
+      }
+    }
+  }, [isAuthenticated, authTenantId, tenantId]);
 
   const setTenantId = useCallback((id: string) => {
     if (typeof window !== "undefined") {
