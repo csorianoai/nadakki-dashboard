@@ -13,7 +13,8 @@ export interface TenantOption {
 function normalizeTenants(raw: unknown): TenantOption[] {
   if (!raw || typeof raw !== "object") return [];
   const obj = raw as Record<string, unknown>;
-  const arr = (obj.tenants ?? obj.data ?? []) as unknown[];
+  const nested = obj.data as Record<string, unknown> | undefined;
+  const arr = (obj.tenants ?? nested?.tenants ?? obj.data ?? []) as unknown[];
   if (!Array.isArray(arr)) return [];
   return arr
     .map((t) => {
