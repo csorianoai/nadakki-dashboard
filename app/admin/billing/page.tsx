@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { CreditCard, Check, Loader2, RefreshCw, Zap } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { useTenant } from "@/contexts/TenantContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
@@ -23,13 +24,17 @@ const DEFAULT_PLANS: Plan[] = [
 ];
 
 export default function AdminBillingPage() {
+  const { tenantId } = useTenant();
   const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
   const [currentPlan, setCurrentPlan] = useState<string>("starter");
-  const [tenantId, setTenantId] = useState("credicefi");
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     Promise.all([
       fetch(`${API_URL}/api/v1/billing/plans`)
@@ -83,14 +88,7 @@ export default function AdminBillingPage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/admin">
-        <select
-          value={tenantId}
-          onChange={(e) => setTenantId(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm"
-        >
-          <option value="credicefi">credicefi</option>
-          <option value="default">default</option>
-        </select>
+        <span className="text-sm text-gray-400">Tenant: {tenantId ?? "—"}</span>
       </NavigationBar>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-3xl font-bold text-white">Billing</h1>

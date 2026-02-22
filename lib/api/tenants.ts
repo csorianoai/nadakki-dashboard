@@ -44,6 +44,12 @@ export interface PricingResponse {
 }
 
 export const tenantsAPI = {
+  /** GET /api/v1/tenants - requires X-Role: admin (auth mock) */
+  getListForSelector: () =>
+    fetchAPI<TenantListResponse | { tenants?: unknown[]; data?: unknown[] }>('/api/v1/tenants', {
+      role: 'admin',
+    }),
+
   getAll: () =>
     fetchAPI<TenantListResponse>('/tenants'),
     

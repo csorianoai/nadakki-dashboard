@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+
+const TENANT_STORAGE_KEY = "nadakki_tenant_id";
+
+function getStoredTenantId(): string | null {
+  if (typeof window === "undefined") return null;
+  const v = localStorage.getItem(TENANT_STORAGE_KEY);
+  return v && v.trim() ? v : null;
+}
 
 export interface TenantSettings {
   name: string;
@@ -25,7 +33,7 @@ export interface TenantSettings {
 }
 
 interface TenantContextType {
-  tenantId: string;
+  tenantId: string | null;
   settings: TenantSettings;
   setTenantId: (id: string) => void;
   updateSettings: (updates: Partial<TenantSettings>) => void;
@@ -34,7 +42,7 @@ interface TenantContextType {
 }
 
 const DEFAULT_SETTINGS: TenantSettings = {
-  name: "NADAKKI Demo",
+  name: "—",
   primaryColor: "#8b5cf6",
   timezone: "America/New_York",
   language: "es",
@@ -57,7 +65,7 @@ const DEFAULT_SETTINGS: TenantSettings = {
 
 // VALOR POR DEFECTO SEGURO - NUNCA UNDEFINED
 const defaultContextValue: TenantContextType = {
-  tenantId: "default",
+  tenantId: null,
   settings: DEFAULT_SETTINGS,
   setTenantId: () => {
     if (process.env.NODE_ENV === "development") {
@@ -87,10 +95,17 @@ const defaultContextValue: TenantContextType = {
 const TenantContext = createContext<TenantContextType>(defaultContextValue);
 
 export function TenantProvider({ children }: { children: ReactNode }) {
-  const [tenantId, setTenantIdState] = useState("default");
+  const [tenantId, setTenantIdState] = useState<string | null>(null);
   const [settings, setSettings] = useState<TenantSettings>(DEFAULT_SETTINGS);
-  
+
+  useEffect(() => {
+    setTenantIdState(getStoredTenantId());
+  }, []);
+
   const setTenantId = useCallback((id: string) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TENANT_STORAGE_KEY, id);
+    }
     setTenantIdState(id);
   }, []);
   

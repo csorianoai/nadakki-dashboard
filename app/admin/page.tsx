@@ -22,6 +22,7 @@ const ADMIN_MODULES_BASE = [
   { id: "usage", name: "Usage", icon: BarChart3, desc: "Ejecuciones y límites por tenant", href: "/admin/usage", color: "#f59e0b" },
   { id: "api-keys", name: "API Keys", icon: Key, desc: "Gestión de claves API", href: "/admin/api-keys", color: "#8b5cf6" },
   { id: "system", name: "System Info", icon: Monitor, desc: "Estado del sistema", href: "/admin/system", color: "#06b6d4" },
+  { id: "qa", name: "QA Piloto", icon: Activity, desc: "Verificación operativa del tenant", href: "/admin/qa", color: "#22c55e" },
   { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "Gestión de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
   { id: "settings", name: "Configuración", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
 ];

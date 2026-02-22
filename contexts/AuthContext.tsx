@@ -9,7 +9,7 @@ export interface User {
   name: string;
   avatar?: string;
   role: UserRole;
-  tenantId: string;
+  tenantId: string | null;
   tenantName: string;
   permissions: string[];
   createdAt: string;
@@ -61,8 +61,8 @@ const MOCK_USER: User = {
   name: "Admin User",
   avatar: undefined,
   role: "admin",
-  tenantId: "default",
-  tenantName: "NADAKKI Demo",
+  tenantId: null,
+  tenantName: "—",
   permissions: ROLE_PERMISSIONS.admin,
   createdAt: new Date().toISOString(),
   lastLogin: new Date().toISOString(),

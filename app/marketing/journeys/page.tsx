@@ -1,5 +1,7 @@
-﻿"use client";
+"use client";
+
 import { useState, useEffect } from "react";
+import { useTenant } from "@/contexts/TenantContext";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
@@ -13,8 +15,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
-const TENANT_ID = "credicefi";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 interface Journey {
   id: string;
@@ -29,6 +30,7 @@ interface Journey {
 }
 
 export default function JourneysListPage() {
+  const { tenantId } = useTenant();
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -43,7 +45,7 @@ export default function JourneysListPage() {
   const fetchJourneys = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/journeys?tenant_id=${TENANT_ID}`);
+      const res = await fetch(`${API_URL}/api/journeys?tenant_id=${tenantId}`);
       const data = await res.json();
       setJourneys(data.journeys || []);
     } catch (error) {
@@ -59,7 +61,7 @@ export default function JourneysListPage() {
 
   const createNewJourney = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/journeys?tenant_id=${TENANT_ID}`, {
+      const res = await fetch(`${API_URL}/api/journeys?tenant_id=${tenantId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Nuevo Journey", description: "Sin descripcion" })
@@ -81,7 +83,7 @@ export default function JourneysListPage() {
     const endpoint = newStatus === "active" ? "activate" : "pause";
     
     try {
-      await fetch(`${API_URL}/api/journeys/${journeyId}/${endpoint}?tenant_id=${TENANT_ID}`, {
+      await fetch(`${API_URL}/api/journeys/${journeyId}/${endpoint}?tenant_id=${tenantId}`, {
         method: "POST"
       });
       setJourneys(journeys?.map(j => j.id === journeyId ? { ...j, status: newStatus } : j));
@@ -94,7 +96,7 @@ export default function JourneysListPage() {
   const duplicateJourney = async (journey: Journey) => {
     setActionLoading(journey.id);
     try {
-      const res = await fetch(`${API_URL}/api/journeys?tenant_id=${TENANT_ID}`, {
+      const res = await fetch(`${API_URL}/api/journeys?tenant_id=${tenantId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -117,7 +119,7 @@ export default function JourneysListPage() {
   const deleteJourney = async (journeyId: string) => {
     setActionLoading(journeyId);
     try {
-      await fetch(`${API_URL}/api/journeys/${journeyId}?tenant_id=${TENANT_ID}`, {
+      await fetch(`${API_URL}/api/journeys/${journeyId}?tenant_id=${tenantId}`, {
         method: "DELETE"
       });
       setJourneys(journeys.filter(j => j.id !== journeyId));

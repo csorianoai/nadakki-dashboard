@@ -1,5 +1,7 @@
-﻿"use client";
+"use client";
+
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTenant } from "@/contexts/TenantContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, Plus, Filter, Save, Trash2, Search, Download, Upload,
@@ -12,7 +14,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 const STORAGE_KEY = "nadakki_segments_v2";
 const CACHE_TTL = 5 * 60 * 1000;
 
@@ -290,6 +292,7 @@ const generateSQLPreview = (groups: ConditionGroup[]): string => {
 // MAIN COMPONENT
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 export default function SegmentsPage() {
+  const { tenantId } = useTenant();
   // State
   const [segments, setSegments] = useState<Segment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -331,8 +334,9 @@ export default function SegmentsPage() {
         console.warn("Error parsing saved segments:", e);
       }
     }
-    fetchSegments();
-  }, []);
+    if (tenantId) fetchSegments();
+    else setLoading(false);
+  }, [tenantId]);
 
   // Save to localStorage when segments change
   useEffect(() => {
@@ -367,9 +371,12 @@ export default function SegmentsPage() {
   }, [segmentName, conditionGroups, showBuilder]);
 
   const fetchSegments = async () => {
+    if (!tenantId) return;
     setLoading(true);
     try {
-      const res = await fetch(API_URL + "/api/segments?tenant_id=credicefi");
+      const res = await fetch(`${API_URL}/api/segments?tenant_id=${encodeURIComponent(tenantId)}`, {
+        headers: { "X-Tenant-ID": tenantId },
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.segments && data.segments.length > 0) {
@@ -462,11 +469,12 @@ export default function SegmentsPage() {
       stats: editingSegment?.stats || { campaigns_used: 0, avg_open_rate: 0, avg_click_rate: 0 }
     };
 
+    if (!tenantId) return;
     try {
-      await fetch(API_URL + "/api/segments", {
+      await fetch(`${API_URL}/api/segments`, {
         method: editingSegment ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...newSegment, tenant_id: "credicefi" })
+        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
+        body: JSON.stringify({ ...newSegment, tenant_id: tenantId }),
       });
     } catch {}
 
@@ -518,10 +526,14 @@ export default function SegmentsPage() {
   };
 
   const deleteSegment = async (id: string) => {
+    if (!tenantId) return;
     if (!confirm("Eliminar este segmento? Esta accion no se puede deshacer.")) return;
     
     try {
-      await fetch(API_URL + "/api/segments/" + id + "?tenant_id=credicefi", { method: "DELETE" });
+      await fetch(`${API_URL}/api/segments/${id}?tenant_id=${encodeURIComponent(tenantId)}`, {
+        method: "DELETE",
+        headers: { "X-Tenant-ID": tenantId },
+      });
     } catch {}
     
     setSegments(segments.filter(s => s.id !== id));

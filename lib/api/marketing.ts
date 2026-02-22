@@ -1,5 +1,4 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || "tenant_credicefi";
 
 // Fallback chain: LOCAL y PROD tienen endpoints diferentes
 async function fetchWithFallback(
@@ -35,11 +34,12 @@ export async function fetchMarketingAgents(limit = 1000) {
   return { agents, total, error: null };
 }
 
-export async function fetchSocialStatus(tenantId = TENANT_ID) {
+export async function fetchSocialStatus(tenantId: string) {
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 10000);
     const r = await fetch(`${API_URL}/api/social/status/${tenantId}`, {
+      headers: { "X-Tenant-ID": tenantId },
       signal: ctrl.signal,
     });
     clearTimeout(timer);
@@ -62,11 +62,11 @@ export async function fetchSocialStatus(tenantId = TENANT_ID) {
   }
 }
 
-export function getOAuthConnectUrl(platform: string, tenantId = TENANT_ID) {
+export function getOAuthConnectUrl(platform: string, tenantId: string) {
   return `${API_URL}/auth/${platform}/connect/${tenantId}`;
 }
 
-export async function disconnectPlatform(platform: string, tenantId = TENANT_ID) {
+export async function disconnectPlatform(platform: string, tenantId: string) {
   return fetch(`${API_URL}/auth/${platform}/disconnect/${tenantId}`, {
     method: "DELETE",
   });

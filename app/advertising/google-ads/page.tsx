@@ -1,6 +1,8 @@
 "use client";
+
 import { useState } from "react";
 import { AgentCard } from "@/components/ui/AgentCard";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface Agent {
   id: string;
@@ -21,18 +23,20 @@ const AGENTS: Agent[] = [
 ];
 
 export default function GoogleAdsPage() {
+  const { tenantId } = useTenant();
   const [selectedId, setSelectedId] = useState("budget-pacing");
   const [results, setResults] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const selected = AGENTS.find((a) => a.id === selectedId);
 
   const executeAgent = async (agent: Agent) => {
+    if (!tenantId) return;
     setLoading((prev) => ({ ...prev, [agent.id]: true }));
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
       const res = await fetch(`${apiUrl}/api/v1/agents/${agent.backendId}/execute`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Tenant-ID": "default" },
+        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
         body: JSON.stringify({ payload: {}, dry_run: true }),
       });
       const data = await res.json();

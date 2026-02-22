@@ -1,5 +1,8 @@
-﻿// lib/api/base.ts - ConfiguraciÃ³n base con manejo de errores TOP 0.1%
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_BASE_URL}';
+// lib/api/base.ts - Configuración base con manejo de errores TOP 0.1%
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://nadakki-ai-suite.onrender.com";
 
 export { API_BASE };
 
@@ -9,34 +12,51 @@ export interface APIError {
   error: { message: string; detail?: any };
 }
 
+export type FetchAPIOptions = RequestInit & {
+  tenantId?: string;
+  adminKey?: string;
+  /** X-Role: admin - required for GET /api/v1/tenants */
+  role?: 'admin' | string;
+};
+
 export async function fetchAPI<T>(
   endpoint: string,
-  options: RequestInit & { tenantId?: string; adminKey?: string } = {}
+  options: FetchAPIOptions = {}
 ): Promise<T> {
-  const { tenantId, adminKey, ...fetchOptions } = options;
-  
+  const { tenantId, adminKey, role, ...fetchOptions } = options;
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
+    'Accept': 'application/json',
+    ...((fetchOptions.headers ?? {}) as Record<string, string>),
   };
-  
+
   if (tenantId) headers['X-Tenant-ID'] = tenantId;
   if (adminKey) headers['X-Admin-Key'] = adminKey;
-  
+  if (role) headers['X-Role'] = role;
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...fetchOptions,
     headers,
   });
-  
+
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
+    const msg =
+      response.status === 401
+        ? 'No autorizado'
+        : response.status === 403
+          ? 'Acceso denegado'
+          : response.status === 404
+            ? 'Recurso no encontrado'
+            : (errorBody?.error?.message ?? errorBody?.message ?? `HTTP ${response.status}`);
     throw {
       status: response.status,
       endpoint,
-      error: errorBody || { message: `HTTP ${response.status}` },
+      error: { message: msg, detail: errorBody },
     } as APIError;
   }
-  
+
   return response.json();
 }
 

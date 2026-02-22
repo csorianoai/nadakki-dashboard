@@ -8,7 +8,7 @@ interface Props {
   tenantId?: string;
 }
 
-const RealtimeMetrics = memo(function RealtimeMetrics({ theme, tenantId = "default" }: Props) {
+const RealtimeMetrics = memo(function RealtimeMetrics({ theme, tenantId }: Props) {
   const [data, setData] = useState<any>(null);
   const isLight = theme?.isLight;
   const bgCard = isLight ? "#ffffff" : theme?.colors?.bgCard || "rgba(30,41,59,0.5)";
@@ -18,6 +18,7 @@ const RealtimeMetrics = memo(function RealtimeMetrics({ theme, tenantId = "defau
   const accentPrimary = theme?.colors?.accentPrimary || "#8b5cf6";
 
   useEffect(() => {
+    if (!tenantId) return;
     let mounted = true;
     const fetchRealtime = async () => {
       try {

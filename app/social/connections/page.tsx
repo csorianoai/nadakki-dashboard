@@ -1,13 +1,14 @@
-﻿"use client";
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Settings, Plus, CheckCircle, XCircle, RefreshCw, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
-const TENANT_ID = "credicefi";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 interface Connection {
   id: string;
@@ -30,18 +31,23 @@ const PLATFORMS: Connection[] = [
 ];
 
 export default function SocialConnectionsPage() {
+  const { tenantId } = useTenant();
   const [connections, setConnections] = useState<Connection[]>(PLATFORMS);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchConnections();
-  }, []);
+    if (tenantId) fetchConnections();
+    else setLoading(false);
+  }, [tenantId]);
 
   const fetchConnections = async () => {
+    if (!tenantId) return;
     setLoading(true);
     try {
-      const res = await fetch(API_URL + "/api/social/connections?tenant_id=" + TENANT_ID);
+      const res = await fetch(`${API_URL}/api/social/connections?tenant_id=${encodeURIComponent(tenantId)}`, {
+        headers: { "X-Tenant-ID": tenantId },
+      });
       if (res.ok) {
         const data = await res.json();
         const merged: Connection[] = PLATFORMS?.map(p => {
@@ -67,10 +73,13 @@ export default function SocialConnectionsPage() {
   };
 
   const handleConnect = async (platformId: string) => {
+    if (!tenantId) return;
     setConnecting(platformId);
     try {
       const redirectUri = encodeURIComponent(window.location.origin + "/social/connections");
-      const res = await fetch(API_URL + "/api/social/" + platformId + "/auth-url?tenant_id=" + TENANT_ID + "&redirect_uri=" + redirectUri);
+      const res = await fetch(`${API_URL}/api/social/${platformId}/auth-url?tenant_id=${encodeURIComponent(tenantId!)}&redirect_uri=${redirectUri}`, {
+        headers: tenantId ? { "X-Tenant-ID": tenantId } : undefined,
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.auth_url) {
@@ -88,10 +97,14 @@ export default function SocialConnectionsPage() {
   };
 
   const handleDisconnect = async (platformId: string) => {
+    if (!tenantId) return;
     const platform = PLATFORMS.find(p => p.id === platformId);
     if (!confirm("Desconectar " + (platform?.name || platformId) + "?")) return;
     try {
-      await fetch(API_URL + "/api/social/" + platformId + "/disconnect?tenant_id=" + TENANT_ID, { method: "POST" });
+      await fetch(`${API_URL}/api/social/${platformId}/disconnect?tenant_id=${encodeURIComponent(tenantId!)}`, {
+        method: "POST",
+        headers: tenantId ? { "X-Tenant-ID": tenantId } : undefined,
+      });
       fetchConnections();
     } catch (err) {
       console.error(err);

@@ -1,5 +1,7 @@
-﻿"use client";
+"use client";
+
 import { useState } from "react";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AgentExecutorProps {
   agentId: string;
@@ -8,27 +10,28 @@ interface AgentExecutorProps {
   defaultInput?: Record<string, any>;
 }
 
-const API_BASE = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 export default function AgentExecutor({ agentId, agentName, color, defaultInput = {} }: AgentExecutorProps) {
+  const { tenantId } = useTenant();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   const executeAgent = async () => {
+    if (!tenantId) return;
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      // RUTA CORRECTA CONFIRMADA: /agents/marketing/{agent_id}/execute
       const response = await fetch(`${API_BASE}/agents/marketing/${agentId}/execute`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
         body: JSON.stringify({
-          input_data: { ...defaultInput, tenant_id: "credicefi", timestamp: new Date().toISOString() }
-        })
+          input_data: { ...defaultInput, tenant_id: tenantId, timestamp: new Date().toISOString() },
+        }),
       });
 
       const data = await response.json();

@@ -2,14 +2,7 @@
 
 import { useState, useEffect } from "react";
 import AgentExecuteButton from "@/components/agents/AgentExecuteButton";
-
-const TENANT_STORAGE_KEY = "nadakki_tenant_id";
-const DEFAULT_TENANT = "default";
-
-function getStoredTenant(): string {
-  if (typeof window === "undefined") return DEFAULT_TENANT;
-  return localStorage.getItem(TENANT_STORAGE_KEY) || DEFAULT_TENANT;
-}
+import { useTenant } from "@/contexts/TenantContext";
 
 interface Agent {
   agent_id: string;
@@ -52,9 +45,8 @@ function getCategoryCounts(agents: Agent[]): Record<string, number> {
   }, {} as Record<string, number>);
 }
 
-const TENANT_OPTIONS = ["default", "tenant_credicefi", "tenant_demo"];
-
 export default function AgentExecutePage() {
+  const { tenantId } = useTenant();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
@@ -62,20 +54,8 @@ export default function AgentExecutePage() {
   const [totalCatalog, setTotalCatalog] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [tenantId, setTenantId] = useState<string>(DEFAULT_TENANT);
   const [isLive, setIsLive] = useState<boolean>(false);
   const [showLiveModal, setShowLiveModal] = useState<boolean>(false);
-
-  useEffect(() => {
-    setTenantId(getStoredTenant());
-  }, []);
-
-  const handleTenantChange = (t: string) => {
-    setTenantId(t);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(TENANT_STORAGE_KEY, t);
-    }
-  };
 
   const handleLiveToggle = (checked: boolean) => {
     if (checked) {
@@ -166,23 +146,9 @@ export default function AgentExecutePage() {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
           <h1 className="text-3xl font-bold text-gray-900">Ejecutar Agentes de Marketing</h1>
           <div className="flex flex-wrap items-center gap-4">
-            {/* Tenant selector */}
             <div className="flex items-center gap-2">
-              <label htmlFor="tenant-select" className="text-sm text-gray-600">
-                Tenant:
-              </label>
-              <select
-                id="tenant-select"
-                value={tenantId}
-                onChange={(e) => handleTenantChange(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {TENANT_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+              <span className="text-sm text-gray-600">Tenant:</span>
+              <span className="text-sm font-medium">{tenantId ?? "—"}</span>
             </div>
             {/* LIVE toggle */}
             <div className="flex items-center gap-2">

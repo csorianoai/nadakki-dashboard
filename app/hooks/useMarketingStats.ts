@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect, useCallback } from "react";
 
 export interface MarketingStats {
@@ -23,18 +24,26 @@ const DEFAULT_STATS: MarketingStats = {
   conversionRate: 3.2
 };
 
-export function useMarketingStats(tenantId: string = "credicefi"): UseMarketingStatsResult {
+export function useMarketingStats(tenantId: string | null): UseMarketingStatsResult {
   const [stats, setStats] = useState<MarketingStats>(DEFAULT_STATS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchStats = useCallback(async () => {
+    if (!tenantId) {
+      setLoading(false);
+      setStats(DEFAULT_STATS);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
-      const response = await fetch(`${apiUrl}/api/marketing/dashboard?tenant_id=${tenantId}`, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(10000) });
+      const response = await fetch(`${apiUrl}/api/marketing/dashboard?tenant_id=${tenantId}`, {
+        headers: { "Accept": "application/json", "X-Tenant-ID": tenantId },
+        signal: AbortSignal.timeout(10000),
+      });
       
       if (response.ok) {
         const data = await response.json();

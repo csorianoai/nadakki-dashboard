@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTenant } from "@/contexts/TenantContext";
 
-const TENANT_STORAGE_KEY = "nadakki_tenant_id";
-const DEFAULT_TENANT = "default";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 interface AuditLog {
@@ -15,27 +14,21 @@ interface AuditLog {
   trace_id?: string;
 }
 
-function getStoredTenant(): string {
-  if (typeof window === "undefined") return DEFAULT_TENANT;
-  return localStorage.getItem(TENANT_STORAGE_KEY) || DEFAULT_TENANT;
-}
-
-const TENANT_OPTIONS = ["default", "tenant_credicefi", "tenant_demo"];
-
 export default function AuditPage() {
-  const [tenantId, setTenantId] = useState<string>(DEFAULT_TENANT);
+  const { tenantId } = useTenant();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [available, setAvailable] = useState<boolean | null>(null);
 
   const fetchLogs = useCallback(async () => {
+    if (!tenantId) return;
     setLoading(true);
     setError(null);
     setAvailable(null);
     try {
       const url = `${API_URL}/api/v1/audit/logs?tenant_id=${encodeURIComponent(tenantId)}&limit=50`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: { "X-Tenant-ID": tenantId } });
       if (!res.ok) {
         setAvailable(false);
         setLogs([]);
@@ -56,38 +49,15 @@ export default function AuditPage() {
   }, [tenantId]);
 
   useEffect(() => {
-    setTenantId(getStoredTenant());
-  }, []);
-
-  useEffect(() => {
     if (tenantId) fetchLogs();
   }, [tenantId, fetchLogs]);
-
-  const handleTenantChange = (t: string) => {
-    setTenantId(t);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(TENANT_STORAGE_KEY, t);
-    }
-  };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Audit Logs</h1>
 
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <label htmlFor="audit-tenant" className="text-sm text-gray-600">Tenant:</label>
-          <select
-            id="audit-tenant"
-            value={tenantId}
-            onChange={(e) => handleTenantChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {TENANT_OPTIONS.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
+        <span className="text-sm text-gray-600">Tenant: {tenantId ?? "—"}</span>
         <button
           onClick={fetchLogs}
           disabled={loading}

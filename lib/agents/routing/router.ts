@@ -43,7 +43,7 @@ export class IntelligentRouter {
   }
 
   private handleGreeting(context?: any): AgentResponse {
-    const tenantName = context?.tenant_name || 'NADAKKI Demo';
+    const tenantName = context?.tenant_name || '—';
     return {
       content: `¡Hola! 👋 Soy el **NADAKKI AI Copilot**.
 

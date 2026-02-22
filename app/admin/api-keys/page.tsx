@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Key, Plus, Trash2, Copy, Loader2, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { useTenant } from "@/contexts/TenantContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
@@ -17,17 +18,20 @@ interface ApiKeyItem {
 }
 
 export default function AdminApiKeysPage() {
+  const { tenantId } = useTenant();
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tenantId, setTenantId] = useState("credicefi");
   const [generating, setGenerating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [newKeyModal, setNewKeyModal] = useState<string | null>(null);
   const [newKeyName, setNewKeyName] = useState("");
 
   const fetchKeys = () => {
+    if (!tenantId) return;
     setLoading(true);
-    fetch(`${API_URL}/api/v1/tenants/${tenantId}/api-keys`)
+    fetch(`${API_URL}/api/v1/tenants/${tenantId}/api-keys`, {
+      headers: { "X-Tenant-ID": tenantId },
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const list = d?.keys || d?.data?.keys || d || [];
@@ -38,7 +42,8 @@ export default function AdminApiKeysPage() {
   };
 
   useEffect(() => {
-    fetchKeys();
+    if (tenantId) fetchKeys();
+    else setLoading(false);
   }, [tenantId]);
 
   const handleGenerate = () => {
@@ -46,7 +51,7 @@ export default function AdminApiKeysPage() {
     setGenerating(true);
     fetch(`${API_URL}/api/v1/tenants/${tenantId}/api-keys`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
       body: JSON.stringify({ name: newKeyName.trim() }),
     })
       .then((r) => r.json())
@@ -64,7 +69,10 @@ export default function AdminApiKeysPage() {
 
   const handleDelete = (keyId: string) => {
     setDeleting(keyId);
-    fetch(`${API_URL}/api/v1/tenants/${tenantId}/api-keys/${keyId}`, { method: "DELETE" })
+    fetch(`${API_URL}/api/v1/tenants/${tenantId}/api-keys/${keyId}`, {
+      method: "DELETE",
+      headers: { "X-Tenant-ID": tenantId },
+    })
       .then((r) => r.ok && fetchKeys())
       .catch(() => {})
       .finally(() => setDeleting(null));
@@ -77,14 +85,7 @@ export default function AdminApiKeysPage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/admin">
-        <select
-          value={tenantId}
-          onChange={(e) => setTenantId(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm"
-        >
-          <option value="credicefi">credicefi</option>
-          <option value="default">default</option>
-        </select>
+        <span className="text-sm text-gray-400">Tenant: {tenantId ?? "—"}</span>
         <button
           onClick={fetchKeys}
           disabled={loading}

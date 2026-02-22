@@ -8,6 +8,7 @@ import {
   disconnectPlatform,
 } from "@/lib/api/marketing";
 import { useToast } from "@/components/ui/Toast";
+import { useTenant } from "@/contexts/TenantContext";
 
 export type SocialPlatform = {
   platform: string;
@@ -17,9 +18,6 @@ export type SocialPlatform = {
   user_email?: string;
   [k: string]: unknown;
 };
-
-const TENANT_ID =
-  process.env.NEXT_PUBLIC_TENANT_ID || "tenant_credicefi";
 
 export type UseSocialConnectionsResult = {
   platforms: SocialPlatform[];
@@ -32,6 +30,7 @@ export type UseSocialConnectionsResult = {
 };
 
 export function useSocialConnections(): UseSocialConnectionsResult {
+  const { tenantId } = useTenant();
   const [platforms, setPlatforms] = useState<SocialPlatform[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +38,16 @@ export function useSocialConnections(): UseSocialConnectionsResult {
   const searchParams = useSearchParams();
   const toast = useToast();
 
-  const fetchStatus = useCallback(async (tenantId = TENANT_ID) => {
+  const fetchStatus = useCallback(async (tid?: string) => {
+    const t = tid ?? tenantId;
+    if (!t) {
+      setLoading(false);
+      setPlatforms([]);
+      return;
+    }
     setLoading(true);
     setError(null);
-    const result = await fetchSocialStatus(tenantId);
+    const result = await fetchSocialStatus(t);
     setLoading(false);
     if (result.error) {
       setError(result.error);
@@ -87,11 +92,15 @@ export function useSocialConnections(): UseSocialConnectionsResult {
 
     setPlatforms(list);
     setError(null);
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => {
-    fetchStatus();
-  }, [fetchStatus]);
+    if (tenantId) fetchStatus();
+    else {
+      setLoading(false);
+      setPlatforms([]);
+    }
+  }, [tenantId, fetchStatus]);
 
   // Detect ?success= and ?error= URL params
   useEffect(() => {
@@ -110,24 +119,28 @@ export function useSocialConnections(): UseSocialConnectionsResult {
   }, [searchParams, toast, fetchStatus]);
 
   const connect = useCallback(
-    (platform: string, tenantId = TENANT_ID) => {
+    (platform: string, tid?: string) => {
+      const t = tid ?? tenantId;
+      if (!t) return;
       setConnecting(true);
-      window.location.href = getOAuthConnectUrl(platform, tenantId);
+      window.location.href = getOAuthConnectUrl(platform, t);
     },
-    []
+    [tenantId]
   );
 
   const disconnect = useCallback(
-    async (platform: string, tenantId = TENANT_ID) => {
-      const resp = await disconnectPlatform(platform, tenantId);
+    async (platform: string, tid?: string) => {
+      const t = tid ?? tenantId;
+      if (!t) return;
+      const resp = await disconnectPlatform(platform, t);
       if (resp.ok) {
         toast.success("Desconectado", `${platform} desconectado correctamente.`);
-        await fetchStatus(tenantId);
+        await fetchStatus(t);
       } else {
         toast.error("Error", `No se pudo desconectar ${platform}.`);
       }
     },
-    [toast, fetchStatus]
+    [toast, fetchStatus, tenantId]
   );
 
   return {

@@ -7,7 +7,7 @@ import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const KEYWORDS = [
-  { keyword: "#credicefi", mentions: 234, sentiment: "positive", trend: "+15%" },
+  { keyword: "#tenant", mentions: 234, sentiment: "positive", trend: "+15%" },
   { keyword: "fintech mexico", mentions: 89, sentiment: "neutral", trend: "+5%" },
   { keyword: "credito digital", mentions: 156, sentiment: "positive", trend: "+22%" },
 ];

@@ -13,13 +13,15 @@ interface AgentExecuteButtonProps {
 export default function AgentExecuteButton({
   agentId,
   agentName,
-  tenantId = "default",
+  tenantId,
   isLive = false,
 }: AgentExecuteButtonProps) {
   const { execute, result, loading, error, clear } = useExecuteAgent();
   const [showResult, setShowResult] = useState(false);
+  const canExecute = Boolean(tenantId);
 
   const handleExecute = async () => {
+    if (!tenantId) return;
     const dryRun = !isLive;
     await execute(agentId, { test: true }, dryRun, tenantId);
     setShowResult(true);
@@ -30,7 +32,7 @@ export default function AgentExecuteButton({
       {/* Botón Ejecutar */}
       <button
         onClick={handleExecute}
-        disabled={loading}
+        disabled={loading || !canExecute}
         className={`
           px-4 py-2 rounded-lg font-medium text-sm transition-all
           ${loading

@@ -1,7 +1,9 @@
-﻿import { useState, useEffect } from "react";
+"use client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_BASE_URL}";
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || "credicefi";
+import { useState, useEffect } from "react";
+import { useTenant } from "@/contexts/TenantContext";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 export interface SocialConnection {
   id: string;
@@ -15,14 +17,21 @@ export interface SocialConnection {
 }
 
 export const useSocialConnect = () => {
+  const { tenantId } = useTenant();
   const [connections, setConnections] = useState<SocialConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchConnections = async () => {
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch(API_URL + "/api/social/connections?tenant_id=" + TENANT_ID);
+      const res = await fetch(`${API_URL}/api/social/connections?tenant_id=${encodeURIComponent(tenantId)}`, {
+        headers: { "X-Tenant-ID": tenantId },
+      });
       if (res.ok) {
         const data = await res.json();
         setConnections(data.connections || []);
@@ -35,12 +44,14 @@ export const useSocialConnect = () => {
   };
 
   useEffect(() => {
-    fetchConnections();
-  }, []);
+    if (tenantId) fetchConnections();
+    else setLoading(false);
+  }, [tenantId]);
 
   const getOAuthUrl = (platform: string) => {
+    if (!tenantId) return "";
     const redirectUri = encodeURIComponent(window.location.origin + "/social/connections/callback");
-    return API_URL + "/api/social/" + platform + "/connect?tenant_id=" + TENANT_ID + "&redirect_uri=" + redirectUri;
+    return `${API_URL}/api/social/${platform}/connect?tenant_id=${encodeURIComponent(tenantId)}&redirect_uri=${redirectUri}`;
   };
 
   const connect = (platform: string) => {
@@ -50,8 +61,9 @@ export const useSocialConnect = () => {
 
   const disconnect = async (platform: string) => {
     try {
-      const res = await fetch(API_URL + "/api/social/" + platform + "/disconnect?tenant_id=" + TENANT_ID, {
-        method: "POST"
+      const res = await fetch(`${API_URL}/api/social/${platform}/disconnect?tenant_id=${encodeURIComponent(tenantId!)}`, {
+        method: "POST",
+        headers: { "X-Tenant-ID": tenantId },
       });
       if (res.ok) {
         await fetchConnections();

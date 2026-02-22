@@ -1,14 +1,16 @@
-﻿"use client";
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Share2, Calendar, MessageSquare, BarChart3, Rss, Settings, ArrowRight, AlertTriangle, RefreshCw, Plus } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 const SOCIAL_MODULES = [
   { id: "connections", name: "Conexiones", icon: Settings, desc: "Conecta tus redes sociales", href: "/social/connections", color: "#06b6d4", priority: true },
@@ -27,18 +29,23 @@ interface Connection {
 }
 
 export default function SocialPage() {
+  const { tenantId } = useTenant();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, connected: 0 });
 
   useEffect(() => {
-    fetchConnections();
-  }, []);
+    if (tenantId) fetchConnections();
+    else setLoading(false);
+  }, [tenantId]);
 
   const fetchConnections = async () => {
+    if (!tenantId) return;
     setLoading(true);
     try {
-      const res = await fetch(API_URL + "/api/social/connections?tenant_id=credicefi");
+      const res = await fetch(`${API_URL}/api/social/connections?tenant_id=${encodeURIComponent(tenantId)}`, {
+        headers: { "X-Tenant-ID": tenantId },
+      });
       if (res.ok) {
         const data = await res.json();
         setConnections(data.connections || []);

@@ -7,6 +7,7 @@ import {
   Bot, Megaphone, FileText, Share2, BarChart3, Users, Zap, Globe,
   Map, Trophy, UserPlus, ArrowRight, Play, Pause, RefreshCw
 } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 import { useMarketingStats } from "@/app/hooks/useMarketingStats";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
@@ -177,7 +178,8 @@ const ADVANCED_MODULES = [
 ];
 
 export default function MarketingHubPage() {
-  const { stats, loading, error, lastUpdated, refresh } = useMarketingStats("credicefi");
+  const { tenantId } = useTenant();
+  const { stats, loading, error, lastUpdated, refresh } = useMarketingStats(tenantId);
   
 
   const renderModuleCard = (m: any, i: number, delay: number = 0) => (

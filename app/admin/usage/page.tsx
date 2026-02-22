@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BarChart3, List, Loader2, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { useTenant } from "@/contexts/TenantContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
@@ -32,11 +33,12 @@ const EXAMPLE_USAGE: UsageData = {
 };
 
 export default function AdminUsagePage() {
+  const { tenantId } = useTenant();
   const [data, setData] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tenantId, setTenantId] = useState("credicefi");
 
   const fetchUsage = () => {
+    if (!tenantId) return;
     setLoading(true);
     fetch(`${API_URL}/api/v1/tenants/${tenantId}/usage`)
       .then((r) => (r.ok ? r.json() : null))
@@ -53,7 +55,8 @@ export default function AdminUsagePage() {
   };
 
   useEffect(() => {
-    fetchUsage();
+    if (tenantId) fetchUsage();
+    else setLoading(false);
   }, [tenantId]);
 
   const usage = data || EXAMPLE_USAGE;
@@ -65,14 +68,7 @@ export default function AdminUsagePage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/admin">
-        <select
-          value={tenantId}
-          onChange={(e) => setTenantId(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm"
-        >
-          <option value="credicefi">credicefi</option>
-          <option value="default">default</option>
-        </select>
+        <span className="text-sm text-gray-400">Tenant: {tenantId || "—"}</span>
         <button
           onClick={fetchUsage}
           disabled={loading}

@@ -1,9 +1,14 @@
-﻿"use client";
+"use client";
+
 import { useState, useEffect } from "react";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface Agent { id: string; name: string; category: string; }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+
 export default function vigilanciaPage() {
+  const { tenantId } = useTenant();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [executing, setExecuting] = useState<string | null>(null);
@@ -11,21 +16,22 @@ export default function vigilanciaPage() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/api/catalog/vigilancia/agents")
+    fetch(`${API_URL}/api/catalog/vigilancia/agents`)
       .then((res) => res.json())
       .then((data) => { setAgents(data.agents || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
   const executeAgent = async (agentId: string) => {
+    if (!tenantId) return;
     setExecuting(agentId);
     setResult(null);
     setShowModal(true);
     try {
-      const response = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/vigilancia/" + agentId + "/execute", {
+      const response = await fetch(`${API_URL}/agents/vigilancia/${agentId}/execute`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input_data: { test: true }, tenant_id: "credicefi" })
+        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
+        body: JSON.stringify({ input_data: { test: true }, tenant_id: tenantId }),
       });
       const data = await response.json();
       setResult({ status: "success", data });

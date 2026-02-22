@@ -22,7 +22,7 @@ interface Tenant {
 }
 
 const TENANTS_INITIAL: Tenant[] = [
-  { id: "credicefi", name: "CrediCefi", domain: "credicefi.com", plan: "enterprise", status: "active", agents: 0, created: "2024-01-15", apiKey: "sk-cred-xxx" },
+  { id: "tenant-enterprise-1", name: "Enterprise One", domain: "enterprise1.example.com", plan: "enterprise", status: "active", agents: 0, created: "2024-01-15", apiKey: "sk-ent-xxx" },
   { id: "sfrentals", name: "SF Rentals", domain: "sfrentals.com", plan: "pro", status: "active", agents: 45, created: "2024-12-28", apiKey: "sk-sfr-xxx" },
   { id: "techstartup", name: "Tech Startup", domain: "techstartup.io", plan: "starter", status: "pending", agents: 10, created: "2025-01-02", apiKey: "sk-tech-xxx" },
   { id: "financeplus", name: "Finance Plus", domain: "financeplus.mx", plan: "pro", status: "active", agents: 78, created: "2024-06-20", apiKey: "sk-fin-xxx" },
@@ -46,7 +46,7 @@ export default function TenantsPage() {
         const total = d.data?.total ?? d.data?.agents?.length;
         if (total != null) {
           setTenants((prev) =>
-            prev.map((t) => (t.id === "credicefi" ? { ...t, agents: total } : t))
+            prev.length ? prev.map((t, i) => (i === 0 ? { ...t, agents: total } : t)) : prev
           );
         }
       })

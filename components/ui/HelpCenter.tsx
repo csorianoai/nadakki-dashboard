@@ -1,5 +1,7 @@
-﻿"use client";
+"use client";
+
 import { useState, useRef, useEffect } from "react";
+import { useTenant } from "@/contexts/TenantContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   HelpCircle, X, Send, Bot, User, Sparkles, 
@@ -7,7 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 const QUICK_LINKS = [
   { name: "Campaign Builder", href: "/marketing/campaign-builder" },
@@ -32,6 +34,7 @@ interface Message {
 }
 
 export default function HelpCenter() {
+  const { tenantId } = useTenant();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -77,7 +80,7 @@ export default function HelpCenter() {
         body: JSON.stringify({
           message: text,
           context: "help_center",
-          tenant_id: "credicefi"
+          tenant_id: tenantId ?? ""
         })
       });
 

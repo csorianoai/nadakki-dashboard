@@ -1,5 +1,7 @@
-﻿"use client";
+"use client";
+
 import { useState, useEffect } from "react";
+import { useTenant } from "@/contexts/TenantContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Database, Link2, Unlink, RefreshCw, Check, X, ExternalLink,
@@ -11,8 +13,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
-const TENANT_ID = "credicefi";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 interface Integration {
   id: string;
@@ -221,6 +222,7 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export default function IntegrationsPage() {
+  const { tenantId } = useTenant();
   const [integrations, setIntegrations] = useState<Integration[]>(AVAILABLE_INTEGRATIONS);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -240,7 +242,7 @@ export default function IntegrationsPage() {
   const fetchIntegrations = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/integrations?tenant_id=${TENANT_ID}`);
+      const res = await fetch(`${API_URL}/api/integrations?tenant_id=${tenantId ?? ""}`);
       if (res.ok) {
         const data = await res.json();
         // Merge API data with available integrations
@@ -308,7 +310,7 @@ export default function IntegrationsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          tenant_id: TENANT_ID, 
+          tenant_id: tenantId ?? "", 
           api_key: apiKeyInput,
           config: { api_key: apiKeyInput }
         }),
@@ -335,7 +337,7 @@ export default function IntegrationsPage() {
       await fetch(`${API_URL}/api/integrations/${integration.id}/disconnect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenant_id: TENANT_ID }),
+        body: JSON.stringify({ tenant_id: tenantId ?? "" }),
       });
       
       setIntegrations(prev => prev?.map(i => 
@@ -354,7 +356,7 @@ export default function IntegrationsPage() {
       await fetch(`${API_URL}/api/integrations/${integration.id}/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenant_id: TENANT_ID }),
+        body: JSON.stringify({ tenant_id: tenantId ?? "" }),
       });
       
       setIntegrations(prev => prev?.map(i => 
@@ -634,12 +636,12 @@ export default function IntegrationsPage() {
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        value={`${API_URL}/webhooks/${TENANT_ID}/${selectedIntegration.id}`}
+                        value={`${API_URL}/webhooks/${tenantId ?? ""}/${selectedIntegration.id}`}
                         readOnly
                         className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono text-sm"
                       />
                       <button
-                        onClick={() => navigator.clipboard.writeText(`${API_URL}/webhooks/${TENANT_ID}/${selectedIntegration.id}`)}
+                        onClick={() => navigator.clipboard.writeText(`${API_URL}/webhooks/${tenantId ?? ""}/${selectedIntegration.id}`)}
                         className="px-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white"
                       >
                         Copiar

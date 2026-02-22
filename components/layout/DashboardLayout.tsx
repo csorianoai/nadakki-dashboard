@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 import AgentCountDisplay from "./AgentCountDisplay";
+import TenantSelector from "@/components/ui/TenantSelector";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface NavModule {
   id: string;
@@ -106,6 +108,7 @@ const navigationStructure: NavCore[] = [
       { id: "admin-logs", icon: "📜", label: "Logs", href: "/admin/logs" },
       { id: "admin-compliance", icon: "🛡️", label: "Compliance", href: "/compliance" },
       { id: "admin-testing", icon: "🧪", label: "Testing Lab", href: "/testing" },
+      { id: "admin-qa", icon: "✔️", label: "QA Piloto", href: "/admin/qa" },
     ],
   },
 ];
@@ -394,16 +397,22 @@ function TopNavigation() {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <div style={{ fontSize: "11px", color: "#94a3b8" }}>Tenant: NADAKKI Demo</div>
+        <TenantSelector />
       </div>
     </div>
   );
 }
 
+const NO_TENANT_PATHS = ["/tenants"];
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { tenantId } = useTenant();
   const [expandedCores, setExpandedCores] = useState<string[]>(["system", "advertising", "workflows"]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const needsTenant = !NO_TENANT_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  const blocked = needsTenant && !tenantId;
 
   const toggleCore = (coreId: string) =>
     setExpandedCores((prev) =>
@@ -534,9 +543,7 @@ backgroundColor: colors.bg.sidebar,
               🧠
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "11px", fontWeight: 600, color: colors.text.primary }}>
-                NADAKKI Demo
-              </div>
+              <TenantSelector />
               <div style={{ fontSize: "8px", color: colors.text.muted }}>Pro Plan</div>
             </div>
             <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#26de81" }} />
@@ -553,7 +560,42 @@ backgroundColor: colors.bg.sidebar,
         }}
       >
         <TopNavigation />
-        <div style={{ minHeight: "calc(100vh - 61px)" }}>{children}</div>
+        <div style={{ minHeight: "calc(100vh - 61px)" }}>
+          {blocked ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: "calc(100vh - 61px)",
+                padding: "24px",
+                color: "#94a3b8",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ fontSize: "16px", marginBottom: "8px" }}>
+                Selecciona un tenant para continuar
+              </p>
+              <p style={{ fontSize: "12px" }}>
+                Usa el selector de tenant en la barra superior o en el menú lateral.
+              </p>
+              <Link
+                href="/tenants"
+                style={{
+                  marginTop: "16px",
+                  color: "#8b5cf6",
+                  textDecoration: "underline",
+                  fontSize: "14px",
+                }}
+              >
+                Ir a Multi-Tenant
+              </Link>
+            </div>
+          ) : (
+            children
+          )}
+        </div>
       </main>
 
       <button

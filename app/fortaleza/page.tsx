@@ -1,5 +1,9 @@
-﻿"use client";
+"use client";
+
 import { useState } from "react";
+import { useTenant } from "@/contexts/TenantContext";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 const AGENTS = [
   { id: "fortaleza-analyzer", name: "Analizador de Fortaleza", desc: "Analiza la fortaleza financiera" },
@@ -7,19 +11,20 @@ const AGENTS = [
 ];
 
 export default function FortalezaPage() {
+  const { tenantId } = useTenant();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
 
   const executeAgent = async (agentId: string) => {
+    if (!tenantId) return;
     setLoading(true);
     setShowModal(true);
     try {
-      const url = "${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/fortaleza/" + agentId + "/execute";
-      const response = await fetch(url, {
+      const response = await fetch(`${API_URL}/agents/fortaleza/${agentId}/execute`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input_data: { test: true }, tenant_id: "credicefi" })
+        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
+        body: JSON.stringify({ input_data: { test: true }, tenant_id: tenantId }),
       });
       const data = await response.json();
       setResult(data);

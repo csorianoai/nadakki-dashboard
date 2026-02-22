@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Settings, Save, RefreshCw, Loader2 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { useTenant } from "@/contexts/TenantContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
@@ -20,12 +21,10 @@ interface SocialStatus {
   sendgrid?: { connected?: boolean };
 }
 
-const TENANT_OPTIONS = ["credicefi", "default", "tenant_demo"];
-
 export default function AdminConfigPage() {
+  const { tenantId } = useTenant();
   const [config, setConfig] = useState<ConfigState>({});
   const [socialStatus, setSocialStatus] = useState<SocialStatus | null>(null);
-  const [tenantId, setTenantId] = useState("credicefi");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -48,10 +47,11 @@ export default function AdminConfigPage() {
   }, []);
 
   const handleSave = () => {
+    if (!tenantId) return;
     setSaving(true);
     fetch(`${API_URL}/api/v1/tenants/${tenantId}/config`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
       body: JSON.stringify({
         meta_live: config.meta_live,
         sendgrid_live: config.sendgrid_live,
@@ -127,22 +127,14 @@ export default function AdminConfigPage() {
 
           <div className="mb-6">
             <label className="block text-gray-400 text-sm mb-2">Tenant</label>
-            <select
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-purple-500/50"
-            >
-              {TENANT_OPTIONS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+            <div className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white">
+              {tenantId ?? "—"}
+            </div>
           </div>
 
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !tenantId}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 text-white font-medium disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}

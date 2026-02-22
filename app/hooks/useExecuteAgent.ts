@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { resolveExecutableAgentId } from "@/lib/api/agents";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
@@ -32,16 +33,21 @@ export function useExecuteAgent(): UseExecuteAgentReturn {
     agentId: string,
     payload: Record<string, any> = {},
     dryRun: boolean = true,
-    tenantId: string = "default"
+    tenantId?: string | null
   ) => {
+    if (!tenantId) {
+      setError("Selecciona un tenant para ejecutar");
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
       setResult(null);
 
+      const resolvedId = await resolveExecutableAgentId(agentId, tenantId);
       const bodyPayload = { ...payload, tenant_id: tenantId };
 
-      const response = await fetch(`${API_URL}/api/v1/agents/${agentId}/execute`, {
+      const response = await fetch(`${API_URL}/api/v1/agents/${resolvedId}/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

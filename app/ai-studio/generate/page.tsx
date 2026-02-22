@@ -1,10 +1,12 @@
-﻿"use client";
+"use client";
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Wand2, Sparkles, Copy, Check, RefreshCw, 
   Send, Loader2, Instagram, Twitter, Linkedin, Mail
 } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -18,7 +20,10 @@ const PLATFORMS = [
 
 const TONES = ["Profesional", "Casual", "Divertido", "Urgente", "Inspiracional"];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+
 export default function AIGeneratePage() {
+  const { tenantId } = useTenant();
   const [platform, setPlatform] = useState("instagram");
   const [tone, setTone] = useState("Profesional");
   const [prompt, setPrompt] = useState("");
@@ -27,13 +32,13 @@ export default function AIGeneratePage() {
   const [copied, setCopied] = useState<number | null>(null);
 
   const generate = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || !tenantId) return;
     setGenerating(true);
     try {
-      await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/agents/marketing/contentgeneratoria/execute", {
+      await fetch(`${API_URL}/agents/marketing/contentgeneratoria/execute`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input_data: { prompt, platform, tone }, tenant_id: "credicefi" })
+        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
+        body: JSON.stringify({ input_data: { prompt, platform, tone }, tenant_id: tenantId }),
       });
       // Simulated results
       setResults([
