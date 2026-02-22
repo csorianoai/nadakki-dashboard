@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import AgentCountDisplay from "@/components/dashboard/AgentCountDisplay";
 import ThemeSwitcher from "@/components/ui/ThemeSwitcher";
 
 interface NavModule { id: string; icon: string; label: string; href: string; badge?: string; isNew?: boolean; }
@@ -57,7 +56,6 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
-      <AgentCountDisplay />
       <ThemeSwitcher />
     </aside>
   );
