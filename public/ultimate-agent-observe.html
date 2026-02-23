@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Observability - NADAKKI</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: #0F172A;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #f1f5f9;
+      padding: 1rem;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #334155;
+    }
+    h1 { font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .badge-demo {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.4rem;
+      background: #f59e0b;
+      color: #0F172A;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .badge-live { background: #10b981; color: #fff; }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    label { font-size: 0.85rem; color: #94a3b8; }
+    select, input {
+      padding: 0.4rem 0.6rem;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      color: #f1f5f9;
+    }
+    input.agent-id { min-width: 200px; }
+    button {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-primary { background: #8b5cf6; color: white; }
+    .btn-primary:hover { background: #7c3aed; }
+    .btn-danger { background: #dc2626; color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: #1e293b;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 0.75rem 1rem;
+      background: #334155;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .card-body { padding: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid #334155; }
+    th { color: #94a3b8; font-weight: 500; }
+    tr:hover { background: rgba(139, 92, 246, 0.08); }
+    tr.cursor { background: rgba(139, 92, 246, 0.15); }
+    .status { font-size: 0.75rem; padding: 0.15rem 0.4rem; border-radius: 4px; }
+    .status-running { background: #065f46; color: #6ee7b7; }
+    .status-done { background: #1e3a5f; color: #93c5fd; }
+    .status-failed { background: #7f1d1d; color: #fca5a5; }
+    .tabs { display: flex; gap: 0; margin-bottom: 0.5rem; }
+    .tab {
+      padding: 0.4rem 0.8rem;
+      background: #334155;
+      border: 1px solid #475569;
+      border-right: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .tab:first-child { border-radius: 6px 0 0 0; }
+    .tab.active { background: #475569; color: #f1f5f9; }
+    .tab:last-child { border-right: 1px solid #475569; border-radius: 0 6px 0 0; }
+    .console {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.8rem;
+      background: #0F172A;
+      padding: 1rem;
+      border-radius: 6px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .console-empty { color: #64748b; font-style: italic; }
+    .console-line { margin: 0.1rem 0; }
+    .console-time { color: #64748b; margin-right: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>
+        Agent Observability
+        <span id="badge-mode" class="badge-demo badge-live" style="display:none;">LIVE</span>
+        <span id="badge-demo" class="badge-demo" style="display:none;">DEMO</span>
+      </h1>
+      <div class="controls">
+        <label>Tenant:</label>
+        <select id="tenant-select">
+          <option value="demo">demo</option>
+          <option value="default">default</option>
+        </select>
+        <label>Agent ID:</label>
+        <input type="text" id="agent-id" class="agent-id" placeholder="test-agent o UUID" value="test-agent">
+        <button id="btn-run" class="btn-primary">Run Agent Dry-Run</button>
+        <button id="btn-cancel" class="btn-danger" disabled>Cancel Run</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">Runs recientes</div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Run ID</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="runs-tbody">
+              <tr><td colspan="3" class="console-empty">Cargando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">Live Console</div>
+        <div class="card-body">
+          <div class="tabs">
+            <span class="tab active" data-tab="logs">Logs</span>
+            <span class="tab" data-tab="output">Output</span>
+          </div>
+          <div id="console-logs" class="console console-empty">Selecciona un run o ejecuta uno nuevo.</div>
+          <div id="console-output" class="console console-empty" style="display:none;">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.NADAKKI_OBSERVE_CONFIG = {
+      apiBase: window.NADAKKI_API_BASE || null,
+      pollIntervalMs: 10000,
+    };
+  </script>
+  <script src="/static/js/observability.js"></script>
+</body>
+</html>
