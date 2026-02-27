@@ -90,6 +90,7 @@ const navigationStructure: NavCore[] = [
       { id: "mkt-content", icon: "✍️", label: "Content Generation", href: "/marketing/content" },
       { id: "mkt-social", icon: "📱", label: "Social Media", href: "/marketing/social" },
       { id: "mkt-google-ads", icon: "📊", label: "Google Ads", href: "/marketing/google-ads" },
+      { id: "mkt-social-connections", icon: "🔗", label: "Social Connections", href: "/marketing/social-connections" },
       { id: "mkt-attribution", icon: "🔗", label: "Attribution", href: "/marketing/attribution" },
       { id: "mkt-ab-testing", icon: "🧪", label: "A/B Testing", href: "/marketing/ab-testing" },
       { id: "mkt-predictive", icon: "🔮", label: "Predictive", href: "/marketing/predictive" },
