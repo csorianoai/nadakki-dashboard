@@ -38,11 +38,14 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const headers = useCallback((opts?: { sse?: boolean }) => ({
-    "Content-Type": "application/json",
-    "X-Tenant-ID": tenantId,
-    ...(opts?.sse ? { Accept: "text/event-stream" as const } : {}),
-  }), [tenantId]);
+  const headers = useCallback((opts?: { sse?: boolean }) => {
+    const h: Record<string, string> = {
+      "Content-Type": "application/json",
+      "X-Tenant-ID": tenantId || "credicefi",
+      ...(opts?.sse ? { Accept: "text/event-stream" as const } : {}),
+    };
+    return h;
+  }, [tenantId]);
 
   const base = apiUrl.replace(/\/$/, "");
 
@@ -50,7 +53,13 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
     try {
       setError(null);
       const res = await fetch(`${base}/api/v1/tenants/${tenantId}/runs?limit=20`, { headers: headers({}) });
-      if (!res.ok) throw new Error(`loadRuns: ${res.status}`);
+      if (!res.ok) {
+        if (res.status === 500 || res.status === 503) {
+          setRuns([]);
+          return;
+        }
+        throw new Error(`loadRuns: ${res.status}`);
+      }
       const data = await res.json();
       const list = Array.isArray(data?.runs) ? data.runs : data?.data?.runs ?? [];
       setRuns(list);
@@ -85,7 +94,17 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
       });
       if (!res.ok) {
         const txt = await res.text();
-        throw new Error(`startRun: ${res.status} ${txt}`);
+        if (process.env.NODE_ENV === "development") {
+          console.debug("[Observability] startRun", res.status, base, tenantId, agentId, txt.slice(0, 400));
+        }
+        let detail = txt;
+        try {
+          const parsed = txt ? JSON.parse(txt) : null;
+          detail = parsed?.error ?? parsed?.detail ?? parsed?.message ?? txt;
+        } catch {
+          /* use raw txt */
+        }
+        throw new Error(`startRun: ${res.status} ${typeof detail === "string" ? detail : JSON.stringify(detail)}`);
       }
       const data = await res.json();
       const runId = data.run_id;
@@ -125,7 +144,11 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
           try {
             const res = await fetch(url, { headers: h, signal: abortRef.current!.signal });
             if (!res.ok) {
-              setError(`SSE: ${res.status}`);
+              const txt = await res.text().catch(() => "");
+              if (process.env.NODE_ENV === "development") {
+                console.debug("[Observability] SSE", res.status, url, txt.slice(0, 200));
+              }
+              setError(`SSE: ${res.status}${txt ? ` — ${txt.slice(0, 150)}` : ""}`);
               onTerminal?.();
               resolve();
               return;

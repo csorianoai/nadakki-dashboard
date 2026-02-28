@@ -21,6 +21,9 @@ async function proxyRequest(
       "Content-Type": "application/json",
       "X-Tenant-ID": tenantId,
     };
+    if (path[0] === "tenants" && path.length === 1) {
+      headers["X-Role"] = "admin";
+    }
     if (req.headers.get("Accept")?.includes("text/event-stream")) {
       headers["Accept"] = "text/event-stream";
     }

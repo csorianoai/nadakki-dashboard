@@ -56,10 +56,17 @@ export default function LivePanelPage() {
         setTenantErr(null);
         const res = await fetch("/api/tenants", { cache: "no-store" });
         const text = await res.text().catch(() => "");
-        if (!res.ok)
-          throw new Error(
-            `HTTP ${res.status} ${res.statusText} | /api/tenants | ${text.slice(0, 300)}`
-          );
+        if (!res.ok) {
+          let msg = `HTTP ${res.status} ${res.statusText} | /api/tenants`;
+          try {
+            const body = text ? JSON.parse(text) : null;
+            const detail = body?.error ?? body?.details ?? text.slice(0, 400);
+            if (detail) msg += ` | ${typeof detail === "string" ? detail : JSON.stringify(detail)}`;
+          } catch {
+            if (text) msg += ` | ${text.slice(0, 400)}`;
+          }
+          throw new Error(msg);
+        }
         const json = text ? JSON.parse(text) : null;
         const list =
           json?.data?.tenants ?? json?.tenants ?? json?.data ?? json ?? [];
@@ -110,19 +117,33 @@ export default function LivePanelPage() {
     const load = async () => {
       setLoadingAgents(true);
       try {
-        const res = await fetch(`/api/ai-studio/agents?limit=200`, {
-          headers: { "X-Tenant-ID": tenantId },
+        const res = await fetch("/api/v1/agents/ids", {
+          headers: { "X-Tenant-ID": tenantId, "Content-Type": "application/json" },
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          const txt = await res.text();
+          if (process.env.NODE_ENV === "development") {
+            console.debug("[Live] agents/ids", res.status, txt.slice(0, 300));
+          }
+          return;
+        }
         const data = await res.json();
-        const list = data?.data?.agents ?? data?.agents ?? [];
-        const executable = list.filter((a: AgentOption) => a.execute_endpoint != null);
+        const raw = (data?.data ?? data) as Record<string, string> | undefined;
+        const map = raw && typeof raw === "object" ? raw : {};
+        const executable: AgentOption[] = Object.entries(map).map(([name, id]) => ({
+          id,
+          name,
+          execute_endpoint: `/api/v1/tenants/${tenantId}/agents/${id}/run`,
+        }));
         setAgents(executable);
         if (executable.length > 0 && !selectedAgentId) {
           const preferred = executable.find((a: AgentOption) => a.id === DEFAULT_AGENT_ID);
           setSelectedAgentId(preferred?.id ?? executable[0].id);
         }
-      } catch {
+      } catch (e) {
+        if (process.env.NODE_ENV === "development") {
+          console.debug("[Live] agents load error", e);
+        }
         setAgents([]);
       } finally {
         setLoadingAgents(false);
@@ -136,7 +157,7 @@ export default function LivePanelPage() {
   }, [tenantId, obs.loadRuns]);
 
   const handleExecute = useCallback(async () => {
-    if (!selectedAgentId) return;
+    if (!selectedAgentId || !tenantId) return;
     try {
       const input = inputPayload.trim() ? JSON.parse(inputPayload) : {};
       const { runId, streamUrl } = await obs.startRun(selectedAgentId, {
@@ -151,7 +172,7 @@ export default function LivePanelPage() {
     } catch {
       /* error already set in obs */
     }
-  }, [selectedAgentId, inputPayload, dryRun, obs]);
+  }, [tenantId, selectedAgentId, inputPayload, dryRun, obs]);
 
   const handleCancel = useCallback(async () => {
     const run = obs.currentRun;

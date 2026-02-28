@@ -11,8 +11,9 @@ export async function GET(req: NextRequest) {
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "X-Role": "admin",
-        "X-Tenant-ID": req.headers.get("X-Tenant-ID") || "credicefi",
+        "X-Tenant-ID": req.headers.get("X-Tenant-ID") ?? req.headers.get("x-tenant-id") ?? "credicefi",
       },
     });
     const text = await res.text().catch(() => "");
