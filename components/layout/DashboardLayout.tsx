@@ -34,6 +34,8 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #00d4ff, #0099cc)",
     modules: [
       { id: "dashboard", icon: "🏠", label: "Dashboard Principal", href: "/", badge: "∞" },
+      /* Live Panel: was missing from nav - no gating. Visible to all users with sidebar access (same as Ejecutar Agentes). */
+      { id: "live-panel", icon: "▶️", label: "Live Panel", href: "/agents/live" },
       { id: "tenants", icon: "🏢", label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
       { id: "settings", icon: "⚙️", label: "Configuración", href: "/settings" },
       { id: "agents-execute", icon: "▶️", label: "Ejecutar Agentes", href: "/agents/execute", badge: "42" },
