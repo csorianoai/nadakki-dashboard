@@ -36,9 +36,24 @@ async function proxyRequest(
 
     const res = await fetch(target, { ...init, cache: "no-store" });
     const text = await res.text().catch(() => "");
+
+    const isRunsPath =
+      Array.isArray(path) &&
+      path.length >= 3 &&
+      path[0] === "tenants" &&
+      path[2] === "runs";
+
     if (!res.ok) {
+      if (isRunsPath && (res.status === 500 || res.status === 503)) {
+        const limit = Number(req.nextUrl.searchParams.get("limit") ?? "20") || 20;
+        const offset = Number(req.nextUrl.searchParams.get("offset") ?? "0") || 0;
+        return NextResponse.json(
+          { runs: [], pagination: { limit, offset, total: 0 } },
+          { status: 200 }
+        );
+      }
       return NextResponse.json(
-        { error: `HTTP ${res.status} ${res.statusText} | ${pathStr} | ${text.slice(0, 300)}` },
+        { error: `Upstream error ${res.status}`, details: text.slice(0, 500) },
         { status: res.status }
       );
     }
