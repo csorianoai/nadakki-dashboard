@@ -407,7 +407,8 @@ function TopNavigation() {
   );
 }
 
-const NO_TENANT_PATHS = ["/tenants"];
+/* Paths that work without global tenant (e.g. Live Panel has own tenant selector). live-panel same visibility as agents-execute. */
+const NO_TENANT_PATHS = ["/tenants", "/agents/live"];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
