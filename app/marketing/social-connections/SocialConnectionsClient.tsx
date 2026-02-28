@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
 import {
@@ -117,7 +117,7 @@ export default function SocialConnectionsClient() {
                         className="p-3 rounded-xl"
                         style={{ backgroundColor: config.color + "20" }}
                       >
-                        <Icon className="w-6 h-6" style={{ color: config.color }} />
+                        <span style={{ color: config.color }}><Icon className="w-6 h-6" /></span>
                       </div>
                       <div>
                         <h3 className="font-bold text-white">{config.name}</h3>
@@ -129,12 +129,12 @@ export default function SocialConnectionsClient() {
                             </span>
                             {platformData?.page_name && (
                               <span className="text-sm text-gray-500">
-                                • {platformData.page_name}
+                                â€¢ {platformData.page_name}
                               </span>
                             )}
                             {platformData?.user_email && (
                               <span className="text-sm text-gray-500">
-                                • {platformData.user_email}
+                                â€¢ {platformData.user_email}
                               </span>
                             )}
                             {needsRefresh && (
@@ -147,7 +147,7 @@ export default function SocialConnectionsClient() {
                           <p className="text-sm text-gray-500 mt-1">
                             {config.enabled
                               ? "No conectado"
-                              : "Próximamente"}
+                              : "PrÃ³ximamente"}
                           </p>
                         )}
                       </div>
@@ -174,7 +174,7 @@ export default function SocialConnectionsClient() {
                           disabled
                           className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 text-sm cursor-not-allowed"
                         >
-                          Próximamente
+                          PrÃ³ximamente
                         </button>
                       )}
                     </div>
@@ -188,3 +188,4 @@ export default function SocialConnectionsClient() {
     </div>
   );
 }
+
