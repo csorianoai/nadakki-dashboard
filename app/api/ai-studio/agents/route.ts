@@ -1,16 +1,23 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
-  const base = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
+export async function GET(request: NextRequest) {
+  const base = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'https://nadakki-ai-suite.onrender.com').replace(/\/$/, '');
+  const limit = Math.min(Math.max(Number(request.nextUrl.searchParams.get('limit')) || 200, 1), 1000);
+  const offset = Math.max(Number(request.nextUrl.searchParams.get('offset')) || 0, 0);
+  const tenantId = request.headers.get('x-tenant-id') || request.headers.get('X-Tenant-ID') || undefined;
+
+  const url = `${base}/api/ai-studio/agents?limit=${limit}&offset=${offset}`;
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (tenantId) headers['X-Tenant-ID'] = tenantId;
+
   try {
-    const res = await fetch(base + '/api/catalog?module=marketing&limit=300', {
-      next: { revalidate: 300 },
-    });
+    const res = await fetch(url, { headers, next: { revalidate: 300 } });
     if (!res.ok) throw new Error('Backend ' + res.status);
-    return NextResponse.json(await res.json());
+    const data = await res.json();
+    return NextResponse.json(data);
   } catch (e) {
     return NextResponse.json(
-      { data: { agents: [], total: 0 }, error: String(e) },
+      { success: false, data: { agents: [], pagination: { total: 0, limit, offset } }, error: String(e) },
       { status: 502 }
     );
   }
