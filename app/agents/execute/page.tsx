@@ -71,8 +71,7 @@ export default function AgentExecutePage() {
   };
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
-    fetch(`${apiUrl}/health`)
+    fetch("/api/health")
       .then((r) => (r.ok ? setBackendStatus("online") : setBackendStatus("offline")))
       .catch(() => setBackendStatus("offline"));
   }, []);

@@ -1,8 +1,5 @@
 // lib/api/base.ts - Configuración base con manejo de errores TOP 0.1%
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://nadakki-ai-suite.onrender.com";
+const API_BASE = "";
 
 export { API_BASE };
 

@@ -11,6 +11,8 @@ export interface AgentOption {
 interface AgentRunnerProps {
   tenantId: string;
   onTenantChange: (v: string) => void;
+  tenants?: Array<{ id?: string; slug: string; name?: string; display_name?: string }>;
+  tenantErr?: string | null;
   agents: AgentOption[];
   loadingAgents: boolean;
   selectedAgentId: string;
@@ -29,6 +31,8 @@ interface AgentRunnerProps {
 export function AgentRunner({
   tenantId,
   onTenantChange,
+  tenants = [],
+  tenantErr,
   agents,
   loadingAgents,
   selectedAgentId,
@@ -64,14 +68,33 @@ export function AgentRunner({
 
       <div className="space-y-3">
         <div>
-          <label className="block text-xs text-slate-400 mb-1">Tenant ID</label>
-          <input
-            type="text"
-            value={tenantId}
-            onChange={(e) => onTenantChange(e.target.value)}
-            className="w-full rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
-            placeholder="tenant_credicefi"
-          />
+          <label className="block text-xs text-slate-400 mb-1">Tenant</label>
+          {tenants.length > 0 ? (
+            <select
+              value={tenantId}
+              onChange={(e) => onTenantChange(e.target.value)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2 text-sm text-slate-200 focus:border-cyan-500 focus:outline-none"
+            >
+              {tenants.map((t) => (
+                <option key={t.slug} value={t.slug}>
+                  {(t.display_name || t.name || t.slug) + ` (${t.slug})`}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              value={tenantId}
+              onChange={(e) => onTenantChange(e.target.value)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-800/80 px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
+              placeholder="tenant slug (ej: sfrentals)"
+            />
+          )}
+          {tenantErr ? (
+            <div className="mt-1 text-xs text-red-400 whitespace-pre-wrap">
+              {tenantErr}
+            </div>
+          ) : null}
         </div>
 
         <div>

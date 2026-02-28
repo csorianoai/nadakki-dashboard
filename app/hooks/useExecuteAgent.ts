@@ -1,8 +1,6 @@
 import { useState, useCallback } from "react";
 import { resolveExecutableAgentId } from "@/lib/api/agents";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
-
 interface ExecuteResult {
   success: boolean;
   agent_id: string;
@@ -47,7 +45,7 @@ export function useExecuteAgent(): UseExecuteAgentReturn {
       const resolvedId = await resolveExecutableAgentId(agentId, tenantId);
       const bodyPayload = { ...payload, tenant_id: tenantId };
 
-      const response = await fetch(`${API_URL}/api/v1/agents/${resolvedId}/execute`, {
+      const response = await fetch(`/api/v1/agents/${resolvedId}/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,8 +62,17 @@ export function useExecuteAgent(): UseExecuteAgentReturn {
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || `Error ${response.status}`);
+        const text = await response.text().catch(() => "");
+        let errData: Record<string, unknown> = {};
+        try {
+          errData = text ? JSON.parse(text) : {};
+        } catch {
+          /* ignore */
+        }
+        const msg =
+          (typeof errData?.detail === "string" ? errData.detail : errData?.error) ||
+          `HTTP ${response.status} ${text.slice(0, 150)}`;
+        throw new Error(String(msg));
       }
 
       const data = await response.json();

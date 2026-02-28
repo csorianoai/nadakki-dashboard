@@ -14,12 +14,7 @@ const DEFAULT_TENANT = "credicefi";
 const DEFAULT_AGENT_ID = "abtestingia__abtestingagentoperative";
 
 function getApiUrl(): string {
-  if (typeof window === "undefined") return "http://localhost:8000";
-  return (
-    process.env.NEXT_PUBLIC_RENDER_API_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    "http://localhost:8000"
-  );
+  return "";
 }
 
 function getInitialTenant(): string {
@@ -40,6 +35,10 @@ interface AgentOption {
 
 export default function LivePanelPage() {
   const [tenantId, setTenantIdState] = useState(DEFAULT_TENANT);
+  const [tenants, setTenants] = useState<
+    Array<{ id?: string; slug: string; name?: string; display_name?: string }>
+  >([]);
+  const [tenantErr, setTenantErr] = useState<string | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState("");
   const [inputPayload, setInputPayload] = useState('{"query": "test"}');
   const [dryRun, setDryRun] = useState(true);
@@ -48,6 +47,48 @@ export default function LivePanelPage() {
 
   useEffect(() => {
     setTenantIdState(getInitialTenant());
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setTenantErr(null);
+        const res = await fetch("/api/tenants", { cache: "no-store" });
+        const text = await res.text().catch(() => "");
+        if (!res.ok)
+          throw new Error(
+            `HTTP ${res.status} ${res.statusText} | /api/tenants | ${text.slice(0, 300)}`
+          );
+        const json = text ? JSON.parse(text) : null;
+        const list =
+          json?.data?.tenants ?? json?.tenants ?? json?.data ?? json ?? [];
+        const normalized = (Array.isArray(list) ? list : [])
+          .map((t: any) => ({
+            id: t.id,
+            slug: String(t.slug ?? t.tenant_id ?? t.name ?? ""),
+            name: t.name,
+            display_name: t.display_name,
+          }))
+          .filter((t: any) => t.slug);
+        if (!alive) return;
+        setTenants(normalized);
+        const preferred =
+          normalized.find((t) => t.slug === "sfrentals")?.slug ??
+          normalized.find((t) => t.slug === "sf-rentals-nadaki-excursions")?.slug ??
+          normalized[0]?.slug ??
+          "";
+        if (preferred)
+          setTenantIdState((prev) => prev || preferred);
+      } catch (e: unknown) {
+        if (!alive) return;
+        setTenantErr(e instanceof Error ? e.message : String(e));
+        setTenants([]);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const persistTenant = useCallback((v: string) => {
@@ -150,6 +191,8 @@ export default function LivePanelPage() {
           <AgentRunner
             tenantId={tenantId}
             onTenantChange={persistTenant}
+            tenants={tenants}
+            tenantErr={tenantErr}
             agents={agents}
             loadingAgents={loadingAgents}
             selectedAgentId={selectedAgentId}
