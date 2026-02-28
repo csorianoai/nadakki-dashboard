@@ -10,6 +10,7 @@ Write-Host "=== 1. List Tenants (X-Role: admin) ===" -ForegroundColor Cyan
 try {
   $h = @{
     "Content-Type" = "application/json"
+    "Accept" = "application/json"
     "X-Role" = "admin"
     "X-Tenant-ID" = $TenantId
   }
@@ -26,6 +27,7 @@ Write-Host "=== 2. Get Executable Agent IDs ===" -ForegroundColor Cyan
 try {
   $h = @{
     "Content-Type" = "application/json"
+    "Accept" = "application/json"
     "X-Tenant-ID" = $TenantId
   }
   $r = Invoke-RestMethod -Uri "$Base/api/v1/agents/ids" -Method Get -Headers $h
@@ -41,16 +43,13 @@ Write-Host ""
 Write-Host "=== 3. Start Agent Run (dry_run) ===" -ForegroundColor Cyan
 try {
   $body = @{
-    mode = "dry_run"
     input = @{ query = "smoke test" }
-    payload = @{ query = "smoke test" }
-    priority = 5
-    tags = @()
-    triggered_by = "manual"
+    dry_run = $true
   } | ConvertTo-Json -Depth 5
 
   $h = @{
     "Content-Type" = "application/json"
+    "Accept" = "application/json"
     "X-Tenant-ID" = $TenantId
   }
   $r = Invoke-RestMethod -Uri "$Base/api/v1/tenants/$TenantId/agents/$AgentId/run" `
@@ -66,6 +65,28 @@ try {
     $reader.BaseStream.Position = 0
     Write-Host "  Body: $($reader.ReadToEnd())"
   }
+}
+
+Write-Host ""
+Write-Host "=== 4. Start Run for credicefi ===" -ForegroundColor Cyan
+try {
+  $body = @{ input = @{ query = "smoke test" }; dry_run = $true } | ConvertTo-Json -Depth 5
+  $h = @{ "Content-Type" = "application/json"; "Accept" = "application/json"; "X-Tenant-ID" = "credicefi" }
+  $r = Invoke-RestMethod -Uri "$Base/api/v1/tenants/credicefi/agents/$AgentId/run" -Method Post -Headers $h -Body $body
+  Write-Host "credicefi run: $($r.run_id)" -ForegroundColor Green
+} catch {
+  Write-Host "credicefi: $_" -ForegroundColor Red
+}
+
+Write-Host ""
+Write-Host "=== 5. Start Run for sf-rentals-nadaki-excursions ===" -ForegroundColor Cyan
+try {
+  $body = @{ input = @{ query = "smoke test" }; dry_run = $true } | ConvertTo-Json -Depth 5
+  $h = @{ "Content-Type" = "application/json"; "Accept" = "application/json"; "X-Tenant-ID" = "sf-rentals-nadaki-excursions" }
+  $r = Invoke-RestMethod -Uri "$Base/api/v1/tenants/sf-rentals-nadaki-excursions/agents/$AgentId/run" -Method Post -Headers $h -Body $body
+  Write-Host "sf-rentals run: $($r.run_id)" -ForegroundColor Green
+} catch {
+  Write-Host "sf-rentals: $_" -ForegroundColor Red
 }
 
 Write-Host ""

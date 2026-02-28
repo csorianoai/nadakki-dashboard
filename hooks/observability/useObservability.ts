@@ -77,17 +77,17 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
     setError(null);
     setEvents([]);
     try {
-      const mode = options.dryRun !== false ? "dry_run" : (options.mode ?? "dry_run");
       const inputData = options.input ?? {};
-      const body = {
-        mode,
+      const dryRun = options.dryRun !== false;
+      const body: { input: Record<string, unknown>; dry_run: boolean } = {
         input: inputData,
-        payload: inputData,
-        priority: 5,
-        tags: [],
-        triggered_by: "manual",
+        dry_run: dryRun,
       };
-      const res = await fetch(`${base}/api/v1/tenants/${tenantId}/agents/${agentId}/run`, {
+      const url = `${base}/api/v1/tenants/${tenantId}/agents/${agentId}/run`;
+      if (process.env.NODE_ENV === "development") {
+        console.debug("[Observability] startRun", { url, body, tenantId, agentId });
+      }
+      const res = await fetch(url, {
         method: "POST",
         headers: headers({}),
         body: JSON.stringify(body),
@@ -112,7 +112,7 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
       setCurrentRun({
         run_id: runId,
         agent_id: agentId,
-        mode: data.mode ?? mode,
+        mode: data.mode ?? (dryRun ? "dry_run" : "live"),
         status: data.status ?? "queued",
         progress: data.progress ?? 0,
         created_at: data.created_at,

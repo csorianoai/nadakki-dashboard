@@ -158,11 +158,28 @@ export default function LivePanelPage() {
 
   const handleExecute = useCallback(async () => {
     if (!selectedAgentId || !tenantId) return;
+    const selectedSlug = String(tenantId).trim();
+    if (!selectedSlug) {
+      setTenantErr("Tenant required. Select a tenant before Execute.");
+      return;
+    }
     try {
-      const input = inputPayload.trim() ? JSON.parse(inputPayload) : {};
+      const raw = inputPayload.trim() ? JSON.parse(inputPayload) : {};
+      const normalizedInput: Record<string, unknown> = (() => {
+        if (raw && typeof raw === "object" && !Array.isArray(raw) && "input" in raw) {
+          const val = (raw as Record<string, unknown>).input;
+          return (val && typeof val === "object" && !Array.isArray(val)) ? (val as Record<string, unknown>) : { query: val };
+        }
+        if (raw && typeof raw === "object" && !Array.isArray(raw) && Object.keys(raw).length > 0) {
+          return raw as Record<string, unknown>;
+        }
+        if (typeof raw === "string") {
+          return { query: raw };
+        }
+        return (raw && typeof raw === "object") ? (raw as Record<string, unknown>) : {};
+      })();
       const { runId, streamUrl } = await obs.startRun(selectedAgentId, {
-        mode: "dry_run",
-        input,
+        input: normalizedInput,
         dryRun,
       });
       obs.streamEvents(runId, streamUrl, () => {
