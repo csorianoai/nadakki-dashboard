@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "dev:stable": "next dev --webpack -p 3001"
   },
   "dependencies": {
     "@vercel/kv": "^3.0.0",

@@ -1,0 +1,57 @@
+﻿{
+    "summary":  {
+                    "pass":  5,
+                    "fail":  0,
+                    "backend_fail":  0
+                },
+    "tenants":  {
+                    "statusCode":  200,
+                    "status":  "PASS"
+                },
+    "n":  5,
+    "static_scan":  {
+                        "status":  "PASS",
+                        "findings":  [
+
+                                     ]
+                    },
+    "agents":  [
+                   {
+                       "notes":  "",
+                       "status":  "PASS",
+                       "agentId":  "abtestingia__abtestingagentoperative",
+                       "statusCode":  200
+                   },
+                   {
+                       "notes":  "",
+                       "status":  "PASS",
+                       "agentId":  "abtestingimpactia__abtestingimpactagentoperative",
+                       "statusCode":  200
+                   },
+                   {
+                       "notes":  "",
+                       "status":  "PASS",
+                       "agentId":  "executor__googleadsexecutor",
+                       "statusCode":  200
+                   },
+                   {
+                       "notes":  "",
+                       "status":  "PASS",
+                       "agentId":  "attributionmodelia__attributionmodelagentoperative",
+                       "statusCode":  200
+                   },
+                   {
+                       "notes":  "",
+                       "status":  "PASS",
+                       "agentId":  "audiencesegmenteria__audiencesegmenteragentoperative",
+                       "statusCode":  200
+                   }
+               ],
+    "timestamp":  "20260301_145155",
+    "health":  {
+                   "statusCode":  200,
+                   "status":  "PASS"
+               },
+    "baseUrl":  "http://localhost:3001",
+    "tenant":  "sf-rentals-nadaki-excursions"
+}

@@ -54,7 +54,7 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
       setError(null);
       const res = await fetch(`${base}/api/v1/tenants/${tenantId}/runs?limit=20`, { headers: headers({}) });
       if (!res.ok) {
-        if (res.status === 500 || res.status === 503) {
+        if (res.status === 404 || res.status === 500 || res.status === 503) {
           setRuns([]);
           return;
         }
@@ -79,11 +79,11 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
     try {
       const inputData = options.input ?? {};
       const dryRun = options.dryRun !== false;
-      const body: { input: Record<string, unknown>; dry_run: boolean } = {
-        input: inputData,
+      const body: { payload: Record<string, unknown>; dry_run: boolean } = {
+        payload: inputData,
         dry_run: dryRun,
       };
-      const url = `${base}/api/v1/tenants/${tenantId}/agents/${agentId}/run`;
+      const url = `${base}/api/v1/agents/${agentId}/execute`;
       if (process.env.NODE_ENV === "development") {
         console.debug("[Observability] startRun", { url, body, tenantId, agentId });
       }
@@ -107,16 +107,28 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
         throw new Error(`startRun: ${res.status} ${typeof detail === "string" ? detail : JSON.stringify(detail)}`);
       }
       const data = await res.json();
-      const runId = data.run_id;
-      const streamUrl = data.stream_url ?? `/api/v1/runs/${runId}/events`;
+      const runId = data.run_id || data.trace_id || `exec_${Date.now()}`;
+      const streamUrl = data.stream_url ?? null;
+      const status = data.status ?? (data.error ? "failed" : "succeeded");
       setCurrentRun({
         run_id: runId,
         agent_id: agentId,
         mode: data.mode ?? (dryRun ? "dry_run" : "live"),
-        status: data.status ?? "queued",
-        progress: data.progress ?? 0,
+        status,
+        progress: data.progress ?? (status === "succeeded" ? 100 : 0),
         created_at: data.created_at,
       });
+      if (!streamUrl && (status === "succeeded" || status === "failed")) {
+        setEvents((prev) => [
+          ...prev,
+          {
+            type: status === "succeeded" ? "done" : "run.failed",
+            severity: status === "succeeded" ? "info" : "error",
+            message: data.error ?? data.message ?? status,
+            data: data.result ?? data.output ?? data,
+          },
+        ]);
+      }
       return { runId, streamUrl };
     } catch (e) {
       setError((e as Error).message);
@@ -148,7 +160,7 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
               if (process.env.NODE_ENV === "development") {
                 console.debug("[Observability] SSE", res.status, url, txt.slice(0, 200));
               }
-              setError(`SSE: ${res.status}${txt ? ` — ${txt.slice(0, 150)}` : ""}`);
+              setError(`SSE: ${res.status}${txt ? ` â€” ${txt.slice(0, 150)}` : ""}`);
               onTerminal?.();
               resolve();
               return;

@@ -1,3 +1,4 @@
+// NEVER forward to /run (RLS bug on backend).
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL =
@@ -11,10 +12,19 @@ async function proxyRequest(
   method: string
 ): Promise<NextResponse> {
   const pathStr = path.join("/");
+  if (pathStr.includes("/run") || path[path.length - 1] === "run") {
+    return NextResponse.json(
+      { error: "/run is disabled; use /execute instead (RLS bug)" },
+      { status: 400 }
+    );
+  }
   const url = new URL(req.url);
   const query = url.search;
   const target = `${BACKEND_URL}/api/v1/${pathStr}${query}`;
-  const tenantId = req.headers.get("X-Tenant-ID") || "credicefi";
+  const tenantId =
+    req.headers.get("X-Tenant-ID") ||
+    req.headers.get("x-tenant-id") ||
+    "credicefi";
 
   try {
     const headers: Record<string, string> = {

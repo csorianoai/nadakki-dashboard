@@ -1,3 +1,4 @@
+// NEVER forward to /run (RLS bug on backend).
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL =
@@ -10,7 +11,10 @@ export async function POST(
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   const { agentId } = await params;
-  const tenantId = req.headers.get("X-Tenant-ID") || "";
+  const tenantId =
+    req.headers.get("X-Tenant-ID") ||
+    req.headers.get("x-tenant-id") ||
+    "";
   if (!tenantId) {
     return NextResponse.json(
       { error: "X-Tenant-ID header required" },
@@ -25,7 +29,7 @@ export async function POST(
         "Content-Type": "application/json",
         "X-Tenant-ID": tenantId,
       },
-      body: body || JSON.stringify({ input: "test execution" }),
+      body: body || JSON.stringify({ payload: {}, dry_run: true }),
     });
     const text = await res.text().catch(() => "");
     if (!res.ok) {

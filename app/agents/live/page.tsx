@@ -133,7 +133,7 @@ export default function LivePanelPage() {
         const executable: AgentOption[] = Object.entries(map).map(([name, id]) => ({
           id,
           name,
-          execute_endpoint: `/api/v1/tenants/${tenantId}/agents/${id}/run`,
+          execute_endpoint: `/api/v1/agents/${id}/execute`,
         }));
         setAgents(executable);
         if (executable.length > 0 && !selectedAgentId) {
@@ -182,10 +182,14 @@ export default function LivePanelPage() {
         input: normalizedInput,
         dryRun,
       });
-      obs.streamEvents(runId, streamUrl, () => {
-        obs.getRun(runId);
+      if (streamUrl) {
+        obs.streamEvents(runId, streamUrl, () => {
+          obs.getRun(runId);
+          obs.loadRuns();
+        });
+      } else {
         obs.loadRuns();
-      });
+      }
     } catch {
       /* error already set in obs */
     }
