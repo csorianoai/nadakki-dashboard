@@ -40,9 +40,27 @@ export default function TenantSelector() {
       const res = await tenantsAPI.getListForSelector();
       const list = normalizeTenants(res);
       setTenants(list);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al cargar tenants");
+    } catch {
+      try {
+        const fallback = await fetch("/api/tenants", { cache: "no-store" });
+        const text = await fallback.text().catch(() => "");
+        if (fallback.ok && text) {
+          const json = JSON.parse(text);
+          const list = normalizeTenants(json?.data ?? json);
+          if (list.length > 0) {
+            setTenants(list);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
       setTenants([]);
+      setError("manual");
+      if (process.env.NODE_ENV === "development") {
+        console.debug("[TenantSelector] Tenants load failed; using Modo manual.");
+      }
     } finally {
       setLoading(false);
     }
@@ -63,10 +81,26 @@ export default function TenantSelector() {
       <div style={{ fontSize: "11px", color: "#64748b" }}>Cargando tenant…</div>
     );
   }
-  if (error) {
+  if (error === "manual") {
     return (
-      <div style={{ fontSize: "11px", color: "#ef4444" }} title={error}>
-        {error}
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "11px", color: "#94a3b8" }}>Modo manual</span>
+        <input
+          type="text"
+          placeholder="tenant_id"
+          value={tenantId ?? ""}
+          onChange={(e) => setTenantId(e.target.value)}
+          style={{
+            fontSize: "11px",
+            padding: "4px 8px",
+            width: "100px",
+            borderRadius: "6px",
+            border: "1px solid rgba(51, 65, 85, 0.8)",
+            backgroundColor: "rgba(15, 23, 42, 0.9)",
+            color: "#94a3b8",
+          }}
+          title="Introduce el tenant (ej. credicefi)"
+        />
       </div>
     );
   }
