@@ -106,8 +106,20 @@ function Test-Tenants {
 }
 
 # --- PHASE: Execute agents ---
-$agentIds = @("abtestingia__abtestingagentoperative")
-# Try to fetch agent ids if endpoint exists
+$staticAgentIds = @(
+  "abtestingia__abtestingagentoperative",
+  "abtestingimpactia__abtestingimpactagentoperative",
+  "executor__googleadsexecutor",
+  "attributionmodelia__attributionmodelagentoperative",
+  "audiencesegmenteria__audiencesegmenteragentoperative",
+  "budgetforecastia__budgetforecastagentoperative",
+  "campaignoptimizeria__campaignoptimizeragentoperative",
+  "cashofferfilteria__cashofferfilteragentoperative",
+  "channelattributia__channelattributagentoperative",
+  "competitoranalyzeria__competitoranalyzeragentoperative"
+)
+$agentIds = $staticAgentIds | Select-Object -First $N
+# Try to fetch agent ids if endpoint exists (overrides static list)
 try {
   $r = Invoke-WebRequest -Uri "$BaseUrl/api/v1/agents/ids" -Method GET -Headers @{ "X-Tenant-ID" = $Tenant; "Content-Type" = "application/json" } -UseBasicParsing -TimeoutSec 5
   if ($r.StatusCode -eq 200) {
@@ -119,11 +131,12 @@ try {
       foreach ($id in $ids) {
         if ($id) { $agentIds += [string]$id }
       }
-      # Ensure default agent is included
       if ("abtestingia__abtestingagentoperative" -notin $agentIds) {
         $agentIds = @("abtestingia__abtestingagentoperative") + $agentIds
       }
       $agentIds = $agentIds | Select-Object -First $N
+    } else {
+      $agentIds = $staticAgentIds | Select-Object -First $N
     }
   }
 } catch {
