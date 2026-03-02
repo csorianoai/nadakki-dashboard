@@ -50,11 +50,23 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
   const base = apiUrl.replace(/\/$/, "");
 
   const loadRuns = useCallback(async () => {
+    const tid = (tenantId ?? "").toString().trim();
+    if (!tid || tid === "undefined") {
+      setRuns([]);
+      setError(null);
+      if (process.env.NODE_ENV === "development") {
+        console.debug("[Observability] loadRuns skipped: no tenantId");
+      }
+      return;
+    }
     try {
       setError(null);
-      const res = await fetch(`${base}/api/v1/tenants/${tenantId}/runs?limit=20`, { headers: headers({}) });
+      const res = await fetch(`${base}/api/v1/tenants/${tid}/runs?limit=20`, { headers: headers({}) });
       if (!res.ok) {
-        if (res.status === 404 || res.status === 500 || res.status === 503) {
+        if (res.status === 400 || res.status === 404 || res.status === 500 || res.status === 503) {
+          if (process.env.NODE_ENV === "development" && res.status === 400) {
+            console.debug("[Observability] loadRuns", res.status, "for tenant", tid);
+          }
           setRuns([]);
           return;
         }
@@ -63,9 +75,9 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
       const data = await res.json();
       const list = Array.isArray(data?.runs) ? data.runs : data?.data?.runs ?? [];
       setRuns(list);
-    } catch (e) {
-      setError((e as Error).message);
+    } catch {
       setRuns([]);
+      /* Do not set error: keep banner for execution/SSE/cancel only; runs failure is non-blocking */
     }
   }, [base, tenantId, headers]);
 
