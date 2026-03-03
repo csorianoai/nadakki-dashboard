@@ -1,0 +1,15 @@
+{
+  "agents": [
+    { "id": "abtestingia__abtestingagentoperative", "name": "AB Testing" },
+    { "id": "attributionmodelia__attributionmodelagentoperative", "name": "Attribution Model" },
+    { "id": "audiencesegmenteria__audiencesegmenteragentoperative", "name": "Audience Segmenter" },
+    { "id": "contentgeneratoria__contentgeneratoragentoperative", "name": "Content Generator" },
+    { "id": "campaignoptimizeria__campaignoptimizeragentoperative", "name": "Campaign Optimizer" },
+    { "id": "budgetforecastia__budgetforecastagentoperative", "name": "Budget Forecast" }
+  ],
+  "variants": [
+    { "name": "campaign_brief", "payload": { "query": "Campaign brief for Q2 product launch", "objective": "awareness" } },
+    { "name": "ad_copy", "payload": { "query": "Generate ad copy for retargeting", "format": "short" } },
+    { "name": "budget_split", "payload": { "query": "Budget split across channels", "total_budget": 10000 } }
+  ]
+}

@@ -23,25 +23,33 @@ export async function POST(
   }
   try {
     const body = await req.text();
+    const headers: Record<string, string> = {
+      "Content-Type": req.headers.get("Content-Type") || "application/json",
+      "X-Tenant-ID": tenantId,
+    };
+    const auth = req.headers.get("Authorization");
+    if (auth) headers["Authorization"] = auth;
+
     const res = await fetch(`${BACKEND_URL}/api/v1/agents/${agentId}/execute`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Tenant-ID": tenantId,
-      },
+      headers,
       body: body || JSON.stringify({ payload: {}, dry_run: true }),
     });
     const text = await res.text().catch(() => "");
-    if (!res.ok) {
-      return NextResponse.json(
-        {
-          error: `HTTP ${res.status} ${res.statusText} | execute | ${text.slice(0, 300)}`,
-        },
-        { status: res.status }
-      );
+    const contentType = res.headers.get("Content-Type") || "application/json";
+    if (contentType.includes("application/json")) {
+      let json: unknown = null;
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        json = { error: text };
+      }
+      return NextResponse.json(json ?? {}, { status: res.status });
     }
-    const json = text ? JSON.parse(text) : null;
-    return NextResponse.json(json);
+    return new NextResponse(text, {
+      status: res.status,
+      headers: { "Content-Type": contentType },
+    });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 502 });

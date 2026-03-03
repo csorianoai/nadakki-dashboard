@@ -34,6 +34,8 @@ async function proxyRequest(
     if (path[0] === "tenants" && path.length === 1) {
       headers["X-Role"] = "admin";
     }
+    const auth = req.headers.get("Authorization");
+    if (auth) headers["Authorization"] = auth;
     if (req.headers.get("Accept")?.includes("text/event-stream")) {
       headers["Accept"] = "text/event-stream";
     }
