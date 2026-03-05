@@ -39,6 +39,7 @@ const navigationStructure: NavCore[] = [
       { id: "tenants", icon: "🏢", label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
       { id: "settings", icon: "⚙️", label: "Configuración", href: "/settings" },
       { id: "agents-execute", icon: "▶️", label: "Ejecutar Agentes", href: "/agents/execute", badge: "42" },
+      { id: "sic", icon: "📄", label: "SIC Dashboard", href: "/sic" },
     ],
   },
 
