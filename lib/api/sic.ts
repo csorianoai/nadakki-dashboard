@@ -28,6 +28,7 @@ export interface Expediente {
   decision_final_humana?: string;
   override_usuario?: string;
   override_justificacion?: string;
+  version_activa?: string;
   creado_por?: string;
   asignado_a?: string;
   fecha_creacion?: string;
@@ -52,6 +53,7 @@ export interface EventoAuditoria {
   actor_rol?: string;
   detalle?: string;
   fecha_evento?: string;
+  evidencia_id?: string;
 }
 
 export interface VersionAnalisis {
@@ -69,6 +71,19 @@ export interface Exportacion {
   tipo_exportacion?: string;
   estado_exportacion?: string;
   fecha_generacion?: string;
+  generado_por?: string;
+  mensaje_error?: string;
+}
+
+export interface Evidencia {
+  evidencia_id?: string;
+  tipo_evidencia?: string;
+  referencia?: string;
+  origen?: string;
+  detalle?: string;
+  expediente_id?: string;
+  url?: string;
+  metadata?: Record<string, unknown>;
 }
 
 function headers(tenantId: string, overrides?: Record<string, string>): Record<string, string> {
@@ -220,9 +235,44 @@ export async function generarExportacionZIP(
   return res.json();
 }
 
+export async function fetchExportacionesGlobal(
+  tenantId: string,
+  limit?: number
+): Promise<Exportacion[]> {
+  const q = limit ? `?limit=${limit}` : "";
+  const res = await fetch(`${API_BASE}/api/v1/sic/exportaciones${q}`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) {
+    if (res.status === 404 || res.status === 500) return [];
+    throw new Error(`Exportaciones global: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.exportaciones ?? data.data ?? (Array.isArray(data) ? data : []);
+}
+
+export async function fetchEvidencia(
+  evidenciaId: string,
+  tenantId: string,
+  expedienteId?: string
+): Promise<Evidencia | null> {
+  const params = expedienteId ? `?expediente_id=${expedienteId}` : "";
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/evidencias/${evidenciaId}${params}`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Evidencia: ${res.status}`);
+  }
+  return res.json();
+}
+
+export type FactorConEvidencia = string | { texto: string; evidencia_id?: string };
+
 export interface Explicabilidad {
-  factores_a_favor?: string[];
-  factores_en_contra?: string[];
+  factores_a_favor?: FactorConEvidencia[];
+  factores_en_contra?: FactorConEvidencia[];
   narrativa_ejecutiva?: string;
   reglas_aplicadas?: string[];
   flags?: Record<string, unknown>;
@@ -250,6 +300,8 @@ export interface Permisos {
   puede_override?: boolean;
   puede_exportar?: boolean;
   puede_cambiar_estado?: boolean;
+  puede_ver_auditoria?: boolean;
+  puede_abrir_comparador?: boolean;
   transiciones_disponibles?: string[];
 }
 
