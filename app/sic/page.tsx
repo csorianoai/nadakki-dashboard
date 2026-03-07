@@ -4,6 +4,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 
 const MODULOS = [
+  { href: "/sic/metricas", label: "Métricas", desc: "Panel ejecutivo de rendimiento" },
   { href: "/sic/bandeja", label: "Bandeja", desc: "Expedientes recibidos para análisis" },
   { href: "/sic/expedientes", label: "Expedientes", desc: "Listado y vista integral" },
   { href: "/sic/comite/sesiones", label: "Comité", desc: "Sesiones y votación" },
