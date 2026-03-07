@@ -96,7 +96,7 @@ export function PanelDecisionOverride({
         <p className="text-slate-500 text-xs">Decisión ya registrada.</p>
       )}
       {!puedeOverride && (
-        <p className="text-slate-500 text-xs italic">Sin permiso para registrar decisión.</p>
+        <p className="text-slate-500 text-xs">Sin permiso para registrar decisión (ver Controles del expediente).</p>
       )}
       {exito && (
         <div className="rounded border border-emerald-500/50 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300">

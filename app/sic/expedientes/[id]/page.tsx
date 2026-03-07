@@ -14,6 +14,7 @@ import {
   fetchExportaciones,
   fetchExplicabilidad,
   fetchPermisos,
+  fetchEvidencia,
   compararVersiones,
   enviarOverride,
   cambiarEstado,
@@ -25,10 +26,15 @@ import {
   type Explicabilidad,
   type Permisos,
   type VersionAnalisis,
+  type EventoAuditoria,
+  type Exportacion,
+  type Evidencia,
 } from "@/lib/api/sic";
 import { PanelDecisionOverride } from "@/components/sic/PanelDecisionOverride";
 import { PanelExplicabilidad } from "@/components/sic/PanelExplicabilidad";
 import { ComparadorVersiones } from "@/components/sic/ComparadorVersiones";
+import { PanelEvidencia } from "@/components/sic/PanelEvidencia";
+import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
 
 const ESTADOS_BADGE: Record<string, string> = {
   RECIBIDO: "bg-slate-500/30 text-slate-300",
@@ -73,6 +79,7 @@ export default function SicExpedienteIdPage() {
   const [nuevoEstado, setNuevoEstado] = useState("");
   const [exportando, setExportando] = useState<string | null>(null);
   const [exitoExport, setExitoExport] = useState<string | null>(null);
+  const [evidenciaAuditoria, setEvidenciaAuditoria] = useState<Evidencia | null>(null);
 
   const cargar = useCallback(() => {
     if (!id) return;
@@ -172,31 +179,36 @@ export default function SicExpedienteIdPage() {
 
   const puedeOverride = permisos?.puede_override ?? false;
   const puedeCambiarEstado = permisos?.puede_cambiar_estado ?? false;
-  const puedeExportar = permisos?.puede_exportar ?? true;
+  const puedeExportar = permisos?.puede_exportar !== false;
+  const puedeVerAuditoria = permisos?.puede_ver_auditoria !== false;
+  const puedeAbrirComparador = permisos?.puede_abrir_comparador !== false;
   const transiciones = permisos?.transiciones_disponibles ?? [];
 
   if (loading && !expediente) {
     return (
-      <div className="min-h-screen bg-[#0a0f1c] p-6 flex items-center justify-center">
-        <div className="text-slate-400 text-sm">Cargando expediente…</div>
+      <div className="p-6">
+        <LoadingSic titulo="Cargando expediente" mensaje="Obteniendo datos del expediente..." />
       </div>
     );
   }
 
   if (!expediente && !loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1c] p-6">
-        <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-8 text-center">
-          <p className="text-slate-400 text-sm">Expediente no encontrado</p>
+      <div className="p-6">
+        <EmptySic titulo="Expediente no encontrado" mensaje="El expediente solicitado no existe o no tiene acceso.">
           <Link href="/sic/expedientes" className="mt-4 inline-block text-cyan-400 hover:underline text-sm">
             Volver a expedientes
           </Link>
-        </div>
+        </EmptySic>
       </div>
     );
   }
 
   const e = expediente!;
+  const hayOverride = Boolean(e.decision_final_humana && e.decision_final_humana !== e.decision_actual);
+  const hayEvidencia = Boolean(
+    (explicabilidad?.factores_a_favor?.length ?? 0) + (explicabilidad?.factores_en_contra?.length ?? 0) > 0
+  );
 
   return (
     <div className="min-h-screen bg-[#0a0f1c] p-4">
@@ -224,13 +236,58 @@ export default function SicExpedienteIdPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm text-red-300">
-          {error}
+        <div className="mb-4">
+          <ErrorSic titulo="Error" mensaje={error} />
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4" style={{ minHeight: "calc(100vh - 140px)" }}>
+      {/* Señales de confianza */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {e.version_activa && (
+          <span className="px-2 py-0.5 rounded bg-slate-700/50 text-slate-300 text-xs">
+            Versión activa: {e.version_activa}
+          </span>
+        )}
+        <span className="px-2 py-0.5 rounded bg-slate-700/50 text-slate-300 text-xs">
+          Decisión IA: {e.decision_actual ?? "—"}
+        </span>
+        {e.decision_final_humana && (
+          <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs">
+            Decisión final: {e.decision_final_humana}
+          </span>
+        )}
+        <span className={`px-2 py-0.5 rounded text-xs ${hayOverride ? "bg-amber-500/20 text-amber-300" : "bg-slate-700/50 text-slate-400"}`}>
+          Override: {hayOverride ? "Sí" : "No"}
+        </span>
+        <span className={`px-2 py-0.5 rounded text-xs ${timeline.length > 0 ? "bg-cyan-500/20 text-cyan-300" : "bg-slate-700/50 text-slate-400"}`}>
+          Trazabilidad: {timeline.length > 0 ? "Sí" : "Parcial"}
+        </span>
+        <span className={`px-2 py-0.5 rounded text-xs ${hayEvidencia ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-400"}`}>
+          Evidencia: {hayEvidencia ? "Disponible" : "No"}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4" style={{ minHeight: "calc(100vh - 200px)" }}>
         <div className="lg:col-span-3 space-y-4">
+          <Panel titulo="Controles del expediente">
+            <div className="space-y-2 text-xs">
+              <div className="flex flex-wrap gap-1">
+                <span className={`px-2 py-0.5 rounded ${puedeOverride ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-500"}`}>
+                  Decidir: {puedeOverride ? "Sí" : "No"}
+                </span>
+                <span className={`px-2 py-0.5 rounded ${puedeOverride ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-500"}`}>
+                  Override: {puedeOverride ? "Sí" : "No"}
+                </span>
+                <span className={`px-2 py-0.5 rounded ${puedeCambiarEstado ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-500"}`}>
+                  Transición: {puedeCambiarEstado ? "Sí" : "No"}
+                </span>
+                <span className={`px-2 py-0.5 rounded ${puedeExportar ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-500"}`}>
+                  Exportar: {puedeExportar ? "Sí" : "No"}
+                </span>
+              </div>
+              {permisos?.rol && <p className="text-slate-500">Rol actual: {permisos.rol}</p>}
+            </div>
+          </Panel>
           <Panel titulo="Estado y transición">
             <div className="space-y-2">
               {puedeCambiarEstado && transiciones.length > 0 && (
@@ -255,16 +312,9 @@ export default function SicExpedienteIdPage() {
                 </div>
               )}
               {!puedeCambiarEstado && (
-                <p className="text-slate-500 text-xs italic">Sin permiso para cambiar estado.</p>
+                <p className="text-slate-500 text-xs italic">No tiene permiso para cambiar estado.</p>
               )}
             </div>
-          </Panel>
-          <Panel titulo="Permisos">
-            <ul className="text-xs text-slate-300 space-y-1">
-              <li>Decisión: {puedeOverride ? "Sí" : "No"}</li>
-              <li>Exportar: {puedeExportar ? "Sí" : "No"}</li>
-              <li>Transición: {puedeCambiarEstado ? "Sí" : "No"}</li>
-            </ul>
           </Panel>
           <Panel titulo="Datos del expediente">
             <dl className="space-y-2 text-slate-300 text-xs">
@@ -299,10 +349,19 @@ export default function SicExpedienteIdPage() {
             />
           </Panel>
           <Panel titulo="Explicabilidad">
-            <PanelExplicabilidad data={explicabilidad} />
+            <PanelExplicabilidad
+              data={explicabilidad}
+              expedienteId={id}
+              tenantId={tenant}
+              onVerEvidencia={(evId) => fetchEvidencia(evId, tenant, id)}
+            />
           </Panel>
           <Panel titulo="Comparador de versiones">
-            <ComparadorVersiones versiones={versiones} onComparar={handleCompararVersiones} />
+            {puedeAbrirComparador ? (
+              <ComparadorVersiones versiones={versiones} onComparar={handleCompararVersiones} />
+            ) : (
+              <p className="text-slate-500 text-xs italic">No tiene permiso para abrir el comparador.</p>
+            )}
           </Panel>
           <Panel titulo="KPIs y alertas">
             <p className="text-slate-500 text-xs">Datos de análisis en reporte.</p>
@@ -337,48 +396,95 @@ export default function SicExpedienteIdPage() {
             </div>
           </Panel>
           <Panel titulo="Auditoría">
-            {auditoria.length === 0 ? (
+            {!puedeVerAuditoria ? (
+              <p className="text-slate-500 text-xs italic">No tiene permiso para ver auditoría.</p>
+            ) : auditoria.length === 0 ? (
               <p className="text-slate-500 text-xs">Sin eventos</p>
             ) : (
               <ul className="space-y-1 text-xs text-slate-300">
-                {(auditoria as { tipo_evento?: string; fecha_evento?: string; detalle?: string }[]).map((a, i) => (
-                  <li key={i}>{a.tipo_evento ?? a.fecha_evento} — {a.detalle ?? ""}</li>
-                ))}
+                {(auditoria as EventoAuditoria[]).map((a, i) => {
+                  const tieneEv = Boolean(a.evidencia_id);
+                  return (
+                    <li key={a.evento_id ?? i}>
+                      {tieneEv ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            fetchEvidencia(a.evidencia_id!, tenant, id)
+                              .then(setEvidenciaAuditoria)
+                              .catch(() =>
+                                setEvidenciaAuditoria({
+                                  evidencia_id: a.evidencia_id,
+                                  detalle: "Evidencia no disponible.",
+                                })
+                              );
+                          }}
+                          className="text-left hover:text-cyan-400 hover:underline"
+                        >
+                          {a.tipo_evento ?? a.fecha_evento} — {a.detalle ?? ""}
+                          <span className="ml-1 text-cyan-500/80 text-[10px]">[evidencia]</span>
+                        </button>
+                      ) : (
+                        <span>{a.tipo_evento ?? a.fecha_evento} — {a.detalle ?? ""}</span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
+            )}
+            {evidenciaAuditoria && (
+              <div className="mt-3">
+                <PanelEvidencia
+                  evidencia={evidenciaAuditoria}
+                  expedienteId={id}
+                  onCerrar={() => setEvidenciaAuditoria(null)}
+                />
+              </div>
             )}
           </Panel>
           <Panel titulo="Exportaciones">
             <div className="space-y-2">
               {exportaciones.length > 0 && (
-                <ul className="text-xs text-slate-300 space-y-1">
-                  {(exportaciones as { tipo_exportacion?: string; estado_exportacion?: string }[]).map((x, i) => (
-                    <li key={i}>{x.tipo_exportacion} — {x.estado_exportacion}</li>
-                  ))}
-                </ul>
+                <div>
+                  <span className="text-slate-500 text-xs block mb-1">Historial</span>
+                  <ul className="text-xs text-slate-300 space-y-1">
+                    {(exportaciones as Exportacion[]).map((x) => (
+                      <li key={x.exportacion_id} className="flex flex-wrap gap-x-2">
+                        <span className={x.tipo_exportacion === "pdf" ? "text-amber-400" : "text-cyan-400"}>
+                          {x.tipo_exportacion === "pdf" ? "PDF ejecutivo" : x.tipo_exportacion === "zip" ? "ZIP bancario" : x.tipo_exportacion ?? "—"}
+                        </span>
+                        <span>{x.estado_exportacion ?? "—"}</span>
+                        {x.generado_por && <span className="text-slate-500">por {x.generado_por}</span>}
+                        {x.fecha_generacion && <span className="text-slate-500">{x.fecha_generacion}</span>}
+                        {x.mensaje_error && <span className="text-red-400">Error: {x.mensaje_error}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
               {!puedeExportar ? (
-                <p className="text-slate-500 text-xs italic">Sin permiso para exportar.</p>
+                <p className="text-slate-500 text-xs italic">No tiene permiso para exportar.</p>
               ) : (
                 <>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={handleExportarPDF}
                       disabled={!!exportando}
                       className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 disabled:opacity-50"
                     >
-                      {exportando === "pdf" ? "Generando…" : "Generar PDF"}
+                      {exportando === "pdf" ? "Generando…" : "PDF ejecutivo"}
                     </button>
                     <button
                       onClick={handleExportarZIP}
                       disabled={!!exportando}
                       className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 disabled:opacity-50"
                     >
-                      {exportando === "zip" ? "Generando…" : "Generar ZIP"}
+                      {exportando === "zip" ? "Generando…" : "ZIP bancario"}
                     </button>
                   </div>
                   {exitoExport && (
-                    <div className="rounded border border-emerald-500/50 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300">
-                      {exitoExport}
+                    <div className="mt-2">
+                      <SuccessSic titulo="Exportación" mensaje={exitoExport} />
                     </div>
                   )}
                 </>
