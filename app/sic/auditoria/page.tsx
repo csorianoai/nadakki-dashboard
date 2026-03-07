@@ -1,24 +1,133 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
+import { fetchAuditoriaGlobal, type EventoAuditoria } from "@/lib/api/sic";
 import Link from "next/link";
 
 export default function SicAuditoriaPage() {
   const { tenantId } = useTenant();
   const tenant = tenantId || "credicefi";
+  const [eventos, setEventos] = useState<EventoAuditoria[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [limit] = useState(100);
+  const [filtroTipo, setFiltroTipo] = useState("");
+  const [filtroExpediente, setFiltroExpediente] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+    fetchAuditoriaGlobal(tenant, limit)
+      .then((list) => {
+        if (alive) setEventos(list);
+      })
+      .catch((e) => {
+        if (alive) setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+  }, [tenant, limit]);
+
+  const tipos = Array.from(new Set(eventos.map((e) => e.tipo_evento).filter(Boolean))) as string[];
+  const expedientes = Array.from(new Set(eventos.map((e) => e.expediente_id).filter(Boolean))) as string[];
+
+  const filtrados = eventos.filter((e) => {
+    if (filtroTipo && e.tipo_evento !== filtroTipo) return false;
+    if (filtroExpediente && e.expediente_id !== filtroExpediente) return false;
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0f1c] p-6 flex items-center justify-center">
+        <div className="text-slate-400 text-sm">Cargando auditoría…</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0f1c] p-6">
-      <h1 className="text-xl font-700 text-slate-100 m-0 mb-1">Panel de Auditoría</h1>
-      <p className="text-slate-500 text-sm mb-6">Eventos de auditoría por expediente</p>
+      <h1 className="text-xl font-700 text-slate-100 m-0 mb-1">Panel de Auditoría Expandida</h1>
+      <p className="text-slate-500 text-sm mb-6">Eventos de auditoría global del tenant</p>
 
-      <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-6">
-        <p className="text-slate-400 text-sm mb-4">
-          La auditoría se visualiza dentro de cada expediente.
-        </p>
-        <Link href="/sic/expedientes" className="text-cyan-400 hover:underline text-sm">
-          Abrir expedientes
-        </Link>
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm text-red-300">
+          {error}
+        </div>
+      )}
+
+      <div className="mb-4 flex flex-wrap gap-4 items-center">
+        <div>
+          <label className="text-slate-500 text-xs block mb-1">Tipo</label>
+          <select
+            value={filtroTipo}
+            onChange={(e) => setFiltroTipo(e.target.value)}
+            className="bg-slate-800/80 border border-slate-600 rounded px-2 py-1.5 text-slate-200 text-sm"
+          >
+            <option value="">Todos</option>
+            {tipos.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-slate-500 text-xs block mb-1">Expediente</label>
+          <select
+            value={filtroExpediente}
+            onChange={(e) => setFiltroExpediente(e.target.value)}
+            className="bg-slate-800/80 border border-slate-600 rounded px-2 py-1.5 text-slate-200 text-sm"
+          >
+            <option value="">Todos</option>
+            {expedientes.map((id) => (
+              <option key={id} value={id}>{id}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">
+        {filtrados.length === 0 ? (
+          <div className="p-8 text-center text-slate-500 text-sm">
+            No hay eventos de auditoría.
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-700 text-left text-slate-400 text-xs uppercase">
+                <th className="p-3 font-600">Fecha</th>
+                <th className="p-3 font-600">Tipo</th>
+                <th className="p-3 font-600">Expediente</th>
+                <th className="p-3 font-600">Actor / Rol</th>
+                <th className="p-3 font-600">Detalle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtrados.map((e) => (
+                <tr key={e.evento_id} className="border-b border-slate-700/50 hover:bg-slate-800/30">
+                  <td className="p-3 text-slate-400 text-xs whitespace-nowrap">{e.fecha_evento ?? "—"}</td>
+                  <td className="p-3 text-slate-300">{e.tipo_evento ?? "—"}</td>
+                  <td className="p-3">
+                    {e.expediente_id ? (
+                      <Link
+                        href={`/sic/expedientes/${e.expediente_id}`}
+                        className="text-cyan-400 hover:underline font-mono"
+                      >
+                        {e.expediente_id}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="p-3 text-slate-300">{e.actor_id ?? e.actor_rol ?? "—"}</td>
+                  <td className="p-3 text-slate-400 max-w-md truncate" title={e.detalle ?? ""}>
+                    {e.detalle ?? "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
