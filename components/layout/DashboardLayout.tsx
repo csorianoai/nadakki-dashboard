@@ -39,7 +39,22 @@ const navigationStructure: NavCore[] = [
       { id: "tenants", icon: "🏢", label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
       { id: "settings", icon: "⚙️", label: "Configuración", href: "/settings" },
       { id: "agents-execute", icon: "▶️", label: "Ejecutar Agentes", href: "/agents/execute", badge: "42" },
-      { id: "sic", icon: "📄", label: "SIC Dashboard", href: "/sic" },
+    ],
+  },
+
+  {
+    id: "sic",
+    title: "SIC — RIESGO CREDITICIO",
+    icon: "📋",
+    color: "#0ea5e9",
+    gradient: "linear-gradient(135deg, #0ea5e9, #0284c7)",
+    modules: [
+      { id: "sic-home", icon: "🏠", label: "Inicio SIC", href: "/sic" },
+      { id: "sic-bandeja", icon: "📥", label: "Bandeja", href: "/sic/bandeja" },
+      { id: "sic-expedientes", icon: "📁", label: "Expedientes", href: "/sic/expedientes" },
+      { id: "sic-exportaciones", icon: "📤", label: "Exportaciones", href: "/sic/exportaciones" },
+      { id: "sic-auditoria", icon: "📜", label: "Auditoría", href: "/sic/auditoria" },
+      { id: "sic-configuracion", icon: "⚙️", label: "Configuración", href: "/sic/configuracion" },
     ],
   },
 
