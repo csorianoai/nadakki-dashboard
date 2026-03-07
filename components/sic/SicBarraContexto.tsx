@@ -47,6 +47,12 @@ export function SicBarraContexto() {
         <span className="text-slate-600">·</span>
         <Link href="/sic/expedientes" className="text-slate-500 hover:text-slate-300">Expedientes</Link>
         <span className="text-slate-600">·</span>
+        <Link href="/sic/comite/sesiones" className="text-slate-500 hover:text-slate-300">Comité</Link>
+        <span className="text-slate-600">·</span>
+        <Link href="/sic/portafolio" className="text-slate-500 hover:text-slate-300">Portafolio</Link>
+        <span className="text-slate-600">·</span>
+        <Link href="/sic/reportes" className="text-slate-500 hover:text-slate-300">Reportes</Link>
+        <span className="text-slate-600">·</span>
         <Link href="/sic/exportaciones" className="text-slate-500 hover:text-slate-300">Exportaciones</Link>
         <span className="text-slate-600">·</span>
         <Link href="/sic/auditoria" className="text-slate-500 hover:text-slate-300">Auditoría</Link>

@@ -7,6 +7,7 @@ import {
   fetchExportacionesGlobal,
   generarExportacionPDF,
   generarExportacionZIP,
+  generarPaqueteRegulatorio,
   type Expediente,
   type Exportacion,
 } from "@/lib/api/sic";
@@ -91,6 +92,21 @@ export default function SicExportacionesPage() {
     }
   };
 
+  const handleRegulatorio = async (id: string) => {
+    setExportando(`${id}-reg`);
+    setExito(null);
+    setError(null);
+    try {
+      const r = await generarPaqueteRegulatorio(id, tenant);
+      setExito(`Paquete regulatorio generado para ${id}${r?.url ? ". " + r.url : ""}`);
+      cargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExportando(null);
+    }
+  };
+
   const handleZIP = async (id: string) => {
     setExportando(`${id}-zip`);
     setExito(null);
@@ -164,8 +180,8 @@ export default function SicExportacionesPage() {
                     </Link>
                   </td>
                   <td className="p-3">
-                    <span className={x.tipo_exportacion === "pdf" ? "text-amber-400" : "text-cyan-400"}>
-                      {x.tipo_exportacion === "pdf" ? "PDF ejecutivo" : x.tipo_exportacion === "zip" ? "ZIP bancario" : x.tipo_exportacion ?? "—"}
+                    <span className={x.tipo_exportacion === "pdf" ? "text-amber-400" : x.tipo_exportacion === "regulatorio" ? "text-violet-400" : "text-cyan-400"}>
+                      {x.tipo_exportacion === "pdf" ? "PDF ejecutivo" : x.tipo_exportacion === "zip" ? "ZIP bancario" : x.tipo_exportacion === "regulatorio" ? "Paquete regulatorio" : x.tipo_exportacion ?? "—"}
                     </span>
                   </td>
                   <td className="p-3">
@@ -231,20 +247,27 @@ export default function SicExportacionesPage() {
                   <td className="p-3 text-slate-300">{e.referencia_cliente ?? "—"}</td>
                   <td className="p-3 text-slate-300">{e.referencia_producto ?? "—"}</td>
                   <td className="p-3">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => handlePDF(e.expediente_id)}
                         disabled={!!exportando}
                         className="rounded px-2 py-1 bg-slate-700 text-slate-200 text-xs hover:bg-slate-600 disabled:opacity-50"
                       >
-                        {exportando === `${e.expediente_id}-pdf` ? "Generando…" : "PDF ejecutivo"}
+                        {exportando === `${e.expediente_id}-pdf` ? "…" : "PDF"}
                       </button>
                       <button
                         onClick={() => handleZIP(e.expediente_id)}
                         disabled={!!exportando}
                         className="rounded px-2 py-1 bg-slate-700 text-slate-200 text-xs hover:bg-slate-600 disabled:opacity-50"
                       >
-                        {exportando === `${e.expediente_id}-zip` ? "Generando…" : "ZIP bancario"}
+                        {exportando === `${e.expediente_id}-zip` ? "…" : "ZIP"}
+                      </button>
+                      <button
+                        onClick={() => handleRegulatorio(e.expediente_id)}
+                        disabled={!!exportando}
+                        className="rounded px-2 py-1 bg-violet-700/50 text-violet-300 text-xs hover:bg-violet-600/50 disabled:opacity-50"
+                      >
+                        {exportando === `${e.expediente_id}-reg` ? "…" : "Regulatorio"}
                       </button>
                     </div>
                   </td>

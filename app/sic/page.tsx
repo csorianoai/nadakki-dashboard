@@ -4,11 +4,14 @@ import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 
 const MODULOS = [
-  { href: "/sic/bandeja", icon: "📥", label: "Bandeja", desc: "Expedientes recibidos para análisis" },
-  { href: "/sic/expedientes", icon: "📁", label: "Expedientes", desc: "Listado y vista integral" },
-  { href: "/sic/exportaciones", icon: "📤", label: "Exportaciones", desc: "PDF, ZIP y reportes" },
-  { href: "/sic/auditoria", icon: "📜", label: "Auditoría", desc: "Eventos y trazabilidad" },
-  { href: "/sic/configuracion", icon: "⚙️", label: "Configuración", desc: "Parámetros SIC" },
+  { href: "/sic/bandeja", label: "Bandeja", desc: "Expedientes recibidos para análisis" },
+  { href: "/sic/expedientes", label: "Expedientes", desc: "Listado y vista integral" },
+  { href: "/sic/comite/sesiones", label: "Comité", desc: "Sesiones y votación" },
+  { href: "/sic/portafolio", label: "Portafolio", desc: "Analítica de riesgo" },
+  { href: "/sic/reportes", label: "Reportes", desc: "Dashboard ejecutivo" },
+  { href: "/sic/exportaciones", label: "Exportaciones", desc: "PDF, ZIP y paquete regulatorio" },
+  { href: "/sic/auditoria", label: "Auditoría", desc: "Eventos y trazabilidad" },
+  { href: "/sic/configuracion", label: "Configuración", desc: "Parámetros SIC" },
 ];
 
 export default function SicPage() {
@@ -29,7 +32,6 @@ export default function SicPage() {
             href={m.href}
             className="block rounded-xl border border-slate-700/50 bg-slate-900/50 p-5 hover:border-cyan-500/50 hover:bg-slate-800/50 transition-colors"
           >
-            <span className="text-2xl mb-2 block">{m.icon}</span>
             <h2 className="text-slate-100 font-600 text-base m-0 mb-1">{m.label}</h2>
             <p className="text-slate-500 text-xs m-0">{m.desc}</p>
           </Link>
@@ -39,11 +41,15 @@ export default function SicPage() {
       <div className="mt-8 rounded-xl border border-slate-700/50 bg-slate-900/50 p-6">
         <h3 className="text-sm font-600 text-slate-300 mb-2">Acceso rápido</h3>
         <p className="text-slate-500 text-sm mb-4">
-          Panel de decisión, simulador, heatmap, escenarios y comité están disponibles en la vista integral del expediente.
+          Vista integral, Decision Replay y Memo Ejecutivo disponibles en cada expediente.
         </p>
-        <Link href="/sic/expedientes" className="text-cyan-400 hover:underline text-sm">
-          Ir a Expedientes
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/sic/expedientes" className="text-cyan-400 hover:underline text-sm">Expedientes</Link>
+          <span className="text-slate-600">·</span>
+          <Link href="/sic/portafolio" className="text-cyan-400 hover:underline text-sm">Portafolio</Link>
+          <span className="text-slate-600">·</span>
+          <Link href="/sic/reportes" className="text-cyan-400 hover:underline text-sm">Reportes</Link>
+        </div>
       </div>
     </div>
   );

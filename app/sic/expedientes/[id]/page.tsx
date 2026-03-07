@@ -20,6 +20,7 @@ import {
   cambiarEstado,
   generarExportacionPDF,
   generarExportacionZIP,
+  generarPaqueteRegulatorio,
   type Expediente,
   type Nota,
   type EstadoExpediente,
@@ -34,6 +35,7 @@ import { PanelDecisionOverride } from "@/components/sic/PanelDecisionOverride";
 import { PanelExplicabilidad } from "@/components/sic/PanelExplicabilidad";
 import { ComparadorVersiones } from "@/components/sic/ComparadorVersiones";
 import { PanelEvidencia } from "@/components/sic/PanelEvidencia";
+import { MemoEjecutivo } from "@/components/sic/MemoEjecutivo";
 import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
 
 const ESTADOS_BADGE: Record<string, string> = {
@@ -172,6 +174,20 @@ export default function SicExpedienteIdPage() {
     }
   }, [id, tenant, cargar]);
 
+  const handleExportarRegulatorio = useCallback(async () => {
+    setExportando("reg");
+    setExitoExport(null);
+    try {
+      await generarPaqueteRegulatorio(id, tenant);
+      setExitoExport("Paquete regulatorio generado correctamente.");
+      cargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExportando(null);
+    }
+  }, [id, tenant, cargar]);
+
   const handleCompararVersiones = useCallback(
     (va: string, vb: string) => compararVersiones(id, tenant, va, vb),
     [id, tenant]
@@ -222,6 +238,12 @@ export default function SicExpedienteIdPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/sic/expedientes/${id}/replay`}
+            className="text-cyan-400 hover:underline text-xs"
+          >
+            Replay
+          </Link>
           <span
             className={`px-2 py-1 rounded text-xs font-semibold ${
               ESTADOS_BADGE[(e.estado_expediente as EstadoExpediente) ?? ""] ?? "bg-slate-600/30 text-slate-400"
@@ -363,6 +385,9 @@ export default function SicExpedienteIdPage() {
               <p className="text-slate-500 text-xs italic">No tiene permiso para abrir el comparador.</p>
             )}
           </Panel>
+          <Panel titulo="Memo ejecutivo">
+            <MemoEjecutivo expediente={e} explicabilidad={explicabilidad} />
+          </Panel>
           <Panel titulo="KPIs y alertas">
             <p className="text-slate-500 text-xs">Datos de análisis en reporte.</p>
           </Panel>
@@ -480,6 +505,13 @@ export default function SicExpedienteIdPage() {
                       className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 disabled:opacity-50"
                     >
                       {exportando === "zip" ? "Generando…" : "ZIP bancario"}
+                    </button>
+                    <button
+                      onClick={handleExportarRegulatorio}
+                      disabled={!!exportando}
+                      className="rounded px-3 py-1.5 bg-violet-700/50 text-violet-300 text-xs font-medium hover:bg-violet-600/50 disabled:opacity-50"
+                    >
+                      {exportando === "reg" ? "Generando…" : "Paquete regulatorio"}
                     </button>
                   </div>
                   {exitoExport && (
