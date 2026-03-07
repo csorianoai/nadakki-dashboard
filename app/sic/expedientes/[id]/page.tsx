@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useTenant } from "@/contexts/TenantContext";
 import {
@@ -12,12 +12,23 @@ import {
   fetchVersiones,
   fetchAuditoria,
   fetchExportaciones,
+  fetchExplicabilidad,
+  fetchPermisos,
+  compararVersiones,
+  enviarOverride,
+  cambiarEstado,
   generarExportacionPDF,
   generarExportacionZIP,
   type Expediente,
   type Nota,
   type EstadoExpediente,
+  type Explicabilidad,
+  type Permisos,
+  type VersionAnalisis,
 } from "@/lib/api/sic";
+import { PanelDecisionOverride } from "@/components/sic/PanelDecisionOverride";
+import { PanelExplicabilidad } from "@/components/sic/PanelExplicabilidad";
+import { ComparadorVersiones } from "@/components/sic/ComparadorVersiones";
 
 const ESTADOS_BADGE: Record<string, string> = {
   RECIBIDO: "bg-slate-500/30 text-slate-300",
@@ -43,7 +54,6 @@ function Panel({ titulo, children }: { titulo: string; children: React.ReactNode
 
 export default function SicExpedienteIdPage() {
   const params = useParams();
-  const router = useRouter();
   const { tenantId } = useTenant();
   const id = String(params?.id ?? "");
   const tenant = tenantId || "credicefi";
@@ -51,13 +61,18 @@ export default function SicExpedienteIdPage() {
   const [expediente, setExpediente] = useState<Expediente | null>(null);
   const [timeline, setTimeline] = useState<unknown[]>([]);
   const [notas, setNotas] = useState<Nota[]>([]);
-  const [versiones, setVersiones] = useState<unknown[]>([]);
+  const [versiones, setVersiones] = useState<VersionAnalisis[]>([]);
   const [auditoria, setAuditoria] = useState<unknown[]>([]);
   const [exportaciones, setExportaciones] = useState<unknown[]>([]);
+  const [explicabilidad, setExplicabilidad] = useState<Explicabilidad | null>(null);
+  const [permisos, setPermisos] = useState<Permisos | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nuevaNota, setNuevaNota] = useState("");
   const [creandoNota, setCreandoNota] = useState(false);
+  const [nuevoEstado, setNuevoEstado] = useState("");
+  const [exportando, setExportando] = useState<string | null>(null);
+  const [exitoExport, setExitoExport] = useState<string | null>(null);
 
   const cargar = useCallback(() => {
     if (!id) return;
@@ -70,22 +85,24 @@ export default function SicExpedienteIdPage() {
       fetchVersiones(id, tenant),
       fetchAuditoria(id, tenant),
       fetchExportaciones(id, tenant),
+      fetchExplicabilidad(id, tenant).catch(() => null),
+      fetchPermisos(id, tenant).catch(() => null),
     ])
-      .then(([exp, tl, nt, vr, au, ex]) => {
+      .then(([exp, tl, nt, vr, au, ex, expb, perm]) => {
         setExpediente(exp ?? null);
         setTimeline(Array.isArray(tl) ? tl : []);
         setNotas(Array.isArray(nt) ? nt : []);
         setVersiones(Array.isArray(vr) ? vr : []);
         setAuditoria(Array.isArray(au) ? au : []);
         setExportaciones(Array.isArray(ex) ? ex : []);
+        setExplicabilidad(expb ?? null);
+        setPermisos(perm ?? null);
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
   }, [id, tenant]);
 
-  useEffect(() => {
-    cargar();
-  }, [cargar]);
+  useEffect(() => cargar(), [cargar]);
 
   const handleCrearNota = useCallback(async () => {
     if (!nuevaNota.trim() || !id) return;
@@ -101,25 +118,62 @@ export default function SicExpedienteIdPage() {
     }
   }, [id, tenant, nuevaNota, cargar]);
 
-  const handleExportarPDF = useCallback(async () => {
-    if (!id) return;
+  const handleOverride = useCallback(
+    async (decision: string, justificacion: string) => {
+      await enviarOverride(id, tenant, { decision_final: decision, justificacion });
+      cargar();
+    },
+    [id, tenant, cargar]
+  );
+
+  const handleCambiarEstado = useCallback(async () => {
+    if (!nuevoEstado.trim()) return;
     try {
-      await generarExportacionPDF(id, tenant);
+      await cambiarEstado(id, tenant, nuevoEstado.trim());
+      setNuevoEstado("");
       cargar();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    }
+  }, [id, tenant, nuevoEstado, cargar]);
+
+  const handleExportarPDF = useCallback(async () => {
+    setExportando("pdf");
+    setExitoExport(null);
+    try {
+      await generarExportacionPDF(id, tenant);
+      setExitoExport("PDF generado correctamente.");
+      cargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExportando(null);
     }
   }, [id, tenant, cargar]);
 
   const handleExportarZIP = useCallback(async () => {
-    if (!id) return;
+    setExportando("zip");
+    setExitoExport(null);
     try {
       await generarExportacionZIP(id, tenant);
+      setExitoExport("ZIP generado correctamente.");
       cargar();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExportando(null);
     }
   }, [id, tenant, cargar]);
+
+  const handleCompararVersiones = useCallback(
+    (va: string, vb: string) => compararVersiones(id, tenant, va, vb),
+    [id, tenant]
+  );
+
+  const puedeOverride = permisos?.puede_override ?? false;
+  const puedeCambiarEstado = permisos?.puede_cambiar_estado ?? false;
+  const puedeExportar = permisos?.puede_exportar ?? true;
+  const transiciones = permisos?.transiciones_disponibles ?? [];
 
   if (loading && !expediente) {
     return (
@@ -155,13 +209,18 @@ export default function SicExpedienteIdPage() {
             Expediente <span className="font-mono text-cyan-300">{e.expediente_id}</span>
           </h1>
         </div>
-        <span
-          className={`px-2 py-1 rounded text-xs font-medium ${
-            ESTADOS_BADGE[(e.estado_expediente as EstadoExpediente) ?? ""] ?? "bg-slate-600/30 text-slate-400"
-          }`}
-        >
-          {e.estado_expediente ?? "—"}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`px-2 py-1 rounded text-xs font-semibold ${
+              ESTADOS_BADGE[(e.estado_expediente as EstadoExpediente) ?? ""] ?? "bg-slate-600/30 text-slate-400"
+            }`}
+          >
+            {e.estado_expediente ?? "—"}
+          </span>
+          {permisos?.rol && (
+            <span className="text-slate-500 text-xs">Rol: {permisos.rol}</span>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -172,12 +231,47 @@ export default function SicExpedienteIdPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4" style={{ minHeight: "calc(100vh - 140px)" }}>
         <div className="lg:col-span-3 space-y-4">
+          <Panel titulo="Estado y transición">
+            <div className="space-y-2">
+              {puedeCambiarEstado && transiciones.length > 0 && (
+                <div>
+                  <select
+                    value={nuevoEstado}
+                    onChange={(e) => setNuevoEstado(e.target.value)}
+                    className="w-full bg-slate-800/80 border border-slate-600 rounded px-2 py-1.5 text-slate-200 text-xs"
+                  >
+                    <option value="">Cambiar a…</option>
+                    {transiciones.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleCambiarEstado}
+                    disabled={!nuevoEstado}
+                    className="mt-1 w-full rounded px-2 py-1 bg-slate-700 text-slate-200 text-xs hover:bg-slate-600 disabled:opacity-50"
+                  >
+                    Transicionar
+                  </button>
+                </div>
+              )}
+              {!puedeCambiarEstado && (
+                <p className="text-slate-500 text-xs italic">Sin permiso para cambiar estado.</p>
+              )}
+            </div>
+          </Panel>
+          <Panel titulo="Permisos">
+            <ul className="text-xs text-slate-300 space-y-1">
+              <li>Decisión: {puedeOverride ? "Sí" : "No"}</li>
+              <li>Exportar: {puedeExportar ? "Sí" : "No"}</li>
+              <li>Transición: {puedeCambiarEstado ? "Sí" : "No"}</li>
+            </ul>
+          </Panel>
           <Panel titulo="Datos del expediente">
-            <dl className="space-y-2 text-slate-300">
-              <div><dt className="text-slate-500 text-xs">Cliente</dt><dd>{e.referencia_cliente ?? "—"}</dd></div>
-              <div><dt className="text-slate-500 text-xs">Producto</dt><dd>{e.referencia_producto ?? "—"}</dd></div>
-              <div><dt className="text-slate-500 text-xs">Asignado</dt><dd>{e.asignado_a ?? "—"}</dd></div>
-              <div><dt className="text-slate-500 text-xs">Creado</dt><dd className="text-xs">{e.fecha_creacion ?? "—"}</dd></div>
+            <dl className="space-y-2 text-slate-300 text-xs">
+              <div><dt className="text-slate-500">Cliente</dt><dd>{e.referencia_cliente ?? "—"}</dd></div>
+              <div><dt className="text-slate-500">Producto</dt><dd>{e.referencia_producto ?? "—"}</dd></div>
+              <div><dt className="text-slate-500">Asignado</dt><dd>{e.asignado_a ?? "—"}</dd></div>
+              <div><dt className="text-slate-500">Creado</dt><dd>{e.fecha_creacion ?? "—"}</dd></div>
             </dl>
           </Panel>
           <Panel titulo="Línea de tiempo">
@@ -185,9 +279,10 @@ export default function SicExpedienteIdPage() {
               <p className="text-slate-500 text-xs">Sin eventos</p>
             ) : (
               <ul className="space-y-2">
-                {(timeline as { fecha?: string; evento?: string; tipo?: string }[]).map((ev, i) => (
-                  <li key={i} className="text-xs text-slate-300 border-l-2 border-slate-600 pl-2">
-                    {ev.fecha ?? ev.tipo ?? "Evento"} — {ev.evento ?? ev.detalle ?? ""}
+                {(timeline as { fecha?: string; evento?: string; tipo?: string; detalle?: string }[]).map((ev, i) => (
+                  <li key={i} className="text-xs text-slate-300 border-l-2 border-cyan-500/50 pl-2">
+                    <span className="text-slate-500">{ev.fecha ?? ev.tipo ?? "—"}</span>
+                    <span className="ml-1">{ev.evento ?? ev.detalle ?? ""}</span>
                   </li>
                 ))}
               </ul>
@@ -196,25 +291,21 @@ export default function SicExpedienteIdPage() {
         </div>
 
         <div className="lg:col-span-5 space-y-4">
-          <Panel titulo="Panel de decisión">
-            <div className="space-y-2">
-              <p className="text-slate-300"><span className="text-slate-500">Decisión:</span> {e.decision_actual ?? "—"}</p>
-              <p className="text-slate-300"><span className="text-slate-500">Confianza:</span> {e.confianza_decision ?? "—"}</p>
-            </div>
+          <Panel titulo="Panel de decisión y override">
+            <PanelDecisionOverride
+              expediente={e}
+              puedeOverride={puedeOverride}
+              onOverride={handleOverride}
+            />
+          </Panel>
+          <Panel titulo="Explicabilidad">
+            <PanelExplicabilidad data={explicabilidad} />
+          </Panel>
+          <Panel titulo="Comparador de versiones">
+            <ComparadorVersiones versiones={versiones} onComparar={handleCompararVersiones} />
           </Panel>
           <Panel titulo="KPIs y alertas">
-            <p className="text-slate-500 text-xs">Datos de análisis disponibles en reporte.</p>
-          </Panel>
-          <Panel titulo="Versiones del análisis">
-            {versiones.length === 0 ? (
-              <p className="text-slate-500 text-xs">Sin versiones</p>
-            ) : (
-              <ul className="space-y-1 text-xs text-slate-300">
-                {versiones.map((v: { numero_version?: number; fecha_version?: string }, i) => (
-                  <li key={i}>v{v.numero_version ?? i + 1} — {v.fecha_version ?? ""}</li>
-                ))}
-              </ul>
-            )}
+            <p className="text-slate-500 text-xs">Datos de análisis en reporte.</p>
           </Panel>
         </div>
 
@@ -247,7 +338,7 @@ export default function SicExpedienteIdPage() {
           </Panel>
           <Panel titulo="Auditoría">
             {auditoria.length === 0 ? (
-              <p className="text-slate-500 text-xs">Sin eventos de auditoría</p>
+              <p className="text-slate-500 text-xs">Sin eventos</p>
             ) : (
               <ul className="space-y-1 text-xs text-slate-300">
                 {(auditoria as { tipo_evento?: string; fecha_evento?: string; detalle?: string }[]).map((a, i) => (
@@ -265,24 +356,34 @@ export default function SicExpedienteIdPage() {
                   ))}
                 </ul>
               )}
-              <div className="flex gap-2">
-                <button
-                  onClick={handleExportarPDF}
-                  className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600"
-                >
-                  Generar PDF
-                </button>
-                <button
-                  onClick={handleExportarZIP}
-                  className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600"
-                >
-                  Generar ZIP
-                </button>
-              </div>
+              {!puedeExportar ? (
+                <p className="text-slate-500 text-xs italic">Sin permiso para exportar.</p>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleExportarPDF}
+                      disabled={!!exportando}
+                      className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 disabled:opacity-50"
+                    >
+                      {exportando === "pdf" ? "Generando…" : "Generar PDF"}
+                    </button>
+                    <button
+                      onClick={handleExportarZIP}
+                      disabled={!!exportando}
+                      className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 disabled:opacity-50"
+                    >
+                      {exportando === "zip" ? "Generando…" : "Generar ZIP"}
+                    </button>
+                  </div>
+                  {exitoExport && (
+                    <div className="rounded border border-emerald-500/50 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300">
+                      {exitoExport}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-          </Panel>
-          <Panel titulo="Chat con expediente">
-            <p className="text-slate-500 text-xs">Próximamente</p>
           </Panel>
         </div>
       </div>

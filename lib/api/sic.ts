@@ -25,6 +25,9 @@ export interface Expediente {
   estado_expediente?: EstadoExpediente | string;
   decision_actual?: string;
   confianza_decision?: number;
+  decision_final_humana?: string;
+  override_usuario?: string;
+  override_justificacion?: string;
   creado_por?: string;
   asignado_a?: string;
   fecha_creacion?: string;
@@ -162,6 +165,22 @@ export async function fetchAuditoria(expedienteId: string, tenantId: string): Pr
   return data.eventos ?? data.auditoria ?? (Array.isArray(data) ? data : []);
 }
 
+export async function fetchAuditoriaGlobal(
+  tenantId: string,
+  limit?: number
+): Promise<EventoAuditoria[]> {
+  const q = limit ? `?limit=${limit}` : "";
+  const res = await fetch(`${API_BASE}/api/v1/sic/auditoria${q}`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) {
+    if (res.status === 404) return [];
+    throw new Error(`Auditoría global: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.eventos ?? data.auditoria ?? (Array.isArray(data) ? data : []);
+}
+
 export async function fetchExportaciones(
   expedienteId: string,
   tenantId: string
@@ -198,5 +217,122 @@ export async function generarExportacionZIP(
     { method: "POST", headers: headers(tenantId) }
   );
   if (!res.ok) throw new Error(`Generar ZIP: ${res.status}`);
+  return res.json();
+}
+
+export interface Explicabilidad {
+  factores_a_favor?: string[];
+  factores_en_contra?: string[];
+  narrativa_ejecutiva?: string;
+  reglas_aplicadas?: string[];
+  flags?: Record<string, unknown>;
+}
+
+export async function fetchExplicabilidad(
+  expedienteId: string,
+  tenantId: string
+): Promise<Explicabilidad | null> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/explicabilidad`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Explicabilidad: ${res.status}`);
+  }
+  return res.json();
+}
+
+export interface Permisos {
+  rol?: string;
+  usuario_id?: string;
+  puede_decidir?: boolean;
+  puede_override?: boolean;
+  puede_exportar?: boolean;
+  puede_cambiar_estado?: boolean;
+  transiciones_disponibles?: string[];
+}
+
+export async function fetchPermisos(
+  expedienteId: string,
+  tenantId: string
+): Promise<Permisos | null> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/permisos`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Permisos: ${res.status}`);
+  }
+  return res.json();
+}
+
+export interface ComparacionVersiones {
+  version_a?: VersionAnalisis & { decision_version?: string; confianza?: number; resumen_json?: unknown };
+  version_b?: VersionAnalisis & { decision_version?: string; confianza?: number; resumen_json?: unknown };
+  diferencias?: {
+    decision?: { antes: string; despues: string };
+    confianza?: { antes: number; despues: number };
+    reglas?: string[];
+    flags?: Record<string, { antes?: unknown; despues?: unknown }>;
+  };
+}
+
+export async function compararVersiones(
+  expedienteId: string,
+  tenantId: string,
+  versionA: string,
+  versionB: string
+): Promise<ComparacionVersiones | null> {
+  const params = new URLSearchParams({ version_a: versionA, version_b: versionB });
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/versiones/comparar?${params}`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Comparar versiones: ${res.status}`);
+  }
+  return res.json();
+}
+
+export interface OverrideRequest {
+  decision_final: string;
+  justificacion: string;
+}
+
+export async function cambiarEstado(
+  expedienteId: string,
+  tenantId: string,
+  nuevoEstado: string,
+  motivo?: string
+): Promise<{ success?: boolean }> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/transiciones`,
+    {
+      method: "POST",
+      headers: headers(tenantId),
+      body: JSON.stringify({ nuevo_estado: nuevoEstado, motivo }),
+    }
+  );
+  if (!res.ok) throw new Error(`Transición: ${res.status}`);
+  return res.json();
+}
+
+export async function enviarOverride(
+  expedienteId: string,
+  tenantId: string,
+  body: OverrideRequest
+): Promise<{ success?: boolean }> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/decision`,
+    {
+      method: "POST",
+      headers: headers(tenantId),
+      body: JSON.stringify(body),
+    }
+  );
+  if (!res.ok) throw new Error(`Override: ${res.status}`);
   return res.json();
 }
