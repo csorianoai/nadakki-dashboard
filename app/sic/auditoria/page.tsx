@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { fetchAuditoriaGlobal, type EventoAuditoria } from "@/lib/api/sic";
 import Link from "next/link";
+import { LoadingSic, EmptySic, ErrorSic } from "@/components/sic/EstadosSic";
 
 export default function SicAuditoriaPage() {
   const { tenantId } = useTenant();
@@ -40,20 +41,20 @@ export default function SicAuditoriaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1c] p-6 flex items-center justify-center">
-        <div className="text-slate-400 text-sm">Cargando auditoría…</div>
+      <div className="p-6">
+        <LoadingSic titulo="Cargando auditoría" mensaje="Obteniendo eventos de auditoría..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c] p-6">
+    <div className="p-6">
       <h1 className="text-xl font-700 text-slate-100 m-0 mb-1">Panel de Auditoría Expandida</h1>
-      <p className="text-slate-500 text-sm mb-6">Eventos de auditoría global del tenant</p>
+      <p className="text-slate-500 text-sm mb-6">Eventos de auditoría global del tenant. Trazabilidad y cumplimiento.</p>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm text-red-300">
-          {error}
+        <div className="mb-4">
+          <ErrorSic titulo="Error" mensaje={error} />
         </div>
       )}
 
@@ -88,9 +89,10 @@ export default function SicAuditoriaPage() {
 
       <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">
         {filtrados.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 text-sm">
-            No hay eventos de auditoría.
-          </div>
+          <EmptySic
+            titulo="Sin eventos de auditoría"
+            mensaje="Los eventos de auditoría aparecerán aquí cuando exista actividad."
+          />
         ) : (
           <table className="w-full text-sm">
             <thead>

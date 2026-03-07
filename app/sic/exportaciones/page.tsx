@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
-import { fetchExpedientes, generarExportacionPDF, generarExportacionZIP } from "@/lib/api/sic";
+import {
+  fetchExpedientes,
+  fetchExportacionesGlobal,
+  generarExportacionPDF,
+  generarExportacionZIP,
+  type Expediente,
+  type Exportacion,
+} from "@/lib/api/sic";
 import Link from "next/link";
+import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
 
 const ESTADOS_BADGE: Record<string, string> = {
   RECIBIDO: "bg-slate-500/30 text-slate-300",
@@ -18,20 +26,44 @@ const ESTADOS_BADGE: Record<string, string> = {
   REABIERTO: "bg-cyan-500/30 text-cyan-300",
 };
 
+const ESTADO_EXPORT: Record<string, string> = {
+  completado: "text-emerald-400",
+  pendiente: "text-amber-400",
+  error: "text-red-400",
+  generando: "text-cyan-400",
+};
+
 export default function SicExportacionesPage() {
   const { tenantId } = useTenant();
   const tenant = tenantId || "credicefi";
-  const [expedientes, setExpedientes] = useState<Awaited<ReturnType<typeof fetchExpedientes>>>([]);
+  const [expedientes, setExpedientes] = useState<Expediente[]>([]);
+  const [exportaciones, setExportaciones] = useState<Exportacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exportando, setExportando] = useState<string | null>(null);
   const [exito, setExito] = useState<string | null>(null);
 
+  const cargar = () => {
+    fetchExpedientes(tenant)
+      .then(setExpedientes)
+      .catch(() => {});
+    fetchExportacionesGlobal(tenant, 100)
+      .then(setExportaciones)
+      .catch(() => setExportaciones([]));
+  };
+
   useEffect(() => {
     let alive = true;
-    fetchExpedientes(tenant)
-      .then((list) => {
-        if (alive) setExpedientes(list);
+    setLoading(true);
+    Promise.all([
+      fetchExpedientes(tenant),
+      fetchExportacionesGlobal(tenant, 100).catch(() => []),
+    ])
+      .then(([expList, expList2]) => {
+        if (alive) {
+          setExpedientes(expList);
+          setExportaciones(expList2);
+        }
       })
       .catch((e) => {
         if (alive) setError(e instanceof Error ? e.message : String(e));
@@ -47,9 +79,11 @@ export default function SicExportacionesPage() {
   const handlePDF = async (id: string) => {
     setExportando(`${id}-pdf`);
     setExito(null);
+    setError(null);
     try {
       const r = await generarExportacionPDF(id, tenant);
-      setExito(`PDF generado para ${id}${r?.url ? ". Descargar: " + r.url : ""}`);
+      setExito(`PDF ejecutivo generado para ${id}${r?.url ? ". " + r.url : ""}`);
+      cargar();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -60,9 +94,11 @@ export default function SicExportacionesPage() {
   const handleZIP = async (id: string) => {
     setExportando(`${id}-zip`);
     setExito(null);
+    setError(null);
     try {
       const r = await generarExportacionZIP(id, tenant);
-      setExito(`ZIP generado para ${id}${r?.url ? ". Descargar: " + r.url : ""}`);
+      setExito(`ZIP bancario generado para ${id}${r?.url ? ". " + r.url : ""}`);
+      cargar();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -72,33 +108,98 @@ export default function SicExportacionesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1c] p-6 flex items-center justify-center">
-        <div className="text-slate-400 text-sm">Cargando expedientes…</div>
+      <div className="p-6">
+        <LoadingSic titulo="Cargando centro de exportaciones" mensaje="Obteniendo expedientes y exportaciones..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c] p-6">
+    <div className="p-6">
       <h1 className="text-xl font-700 text-slate-100 m-0 mb-1">Centro de Exportaciones Bancarias</h1>
-      <p className="text-slate-500 text-sm mb-6">Generar PDF, ZIP y reportes por expediente</p>
+      <p className="text-slate-500 text-sm mb-6">Generar PDF ejecutivo, ZIP bancario y reportes por expediente</p>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm text-red-300">
-          {error}
+        <div className="mb-4">
+          <ErrorSic titulo="Error" mensaje={error} />
         </div>
       )}
       {exito && (
-        <div className="mb-4 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
-          {exito}
+        <div className="mb-4">
+          <SuccessSic titulo="Operación completada" mensaje={exito} />
         </div>
       )}
 
+      {/* Historial de exportaciones */}
+      <div className="mb-8 rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">
+        <h2 className="text-sm font-600 text-slate-400 uppercase tracking-wide px-4 py-3 border-b border-slate-700/50">
+          Historial de exportaciones
+        </h2>
+        {exportaciones.length === 0 ? (
+          <EmptySic
+            titulo="Sin exportaciones"
+            mensaje="Las exportaciones generadas aparecerán aquí."
+          />
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-700 text-left text-slate-400 text-xs uppercase">
+                <th className="p-3 font-600">Expediente</th>
+                <th className="p-3 font-600">Tipo</th>
+                <th className="p-3 font-600">Estado</th>
+                <th className="p-3 font-600">Generado por</th>
+                <th className="p-3 font-600">Fecha</th>
+                <th className="p-3 font-600">Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              {exportaciones.map((x) => (
+                <tr key={x.exportacion_id} className="border-b border-slate-700/50 hover:bg-slate-800/30">
+                  <td className="p-3">
+                    <Link
+                      href={`/sic/expedientes/${x.expediente_id}`}
+                      className="text-cyan-400 hover:underline font-mono"
+                    >
+                      {x.expediente_id}
+                    </Link>
+                  </td>
+                  <td className="p-3">
+                    <span className={x.tipo_exportacion === "pdf" ? "text-amber-400" : "text-cyan-400"}>
+                      {x.tipo_exportacion === "pdf" ? "PDF ejecutivo" : x.tipo_exportacion === "zip" ? "ZIP bancario" : x.tipo_exportacion ?? "—"}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className={ESTADO_EXPORT[(x.estado_exportacion ?? "").toLowerCase()] ?? "text-slate-400"}>
+                      {x.estado_exportacion ?? "—"}
+                    </span>
+                  </td>
+                  <td className="p-3 text-slate-300">{x.generado_por ?? "—"}</td>
+                  <td className="p-3 text-slate-400 text-xs">{x.fecha_generacion ?? "—"}</td>
+                  <td className="p-3">
+                    {x.mensaje_error ? (
+                      <span className="text-red-400 text-xs">{x.mensaje_error}</span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Generar por expediente */}
       <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">
+        <h2 className="text-sm font-600 text-slate-400 uppercase tracking-wide px-4 py-3 border-b border-slate-700/50">
+          Generar exportación por expediente
+        </h2>
         {expedientes.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 text-sm">
-            No hay expedientes. <Link href="/sic/expedientes" className="text-cyan-400 hover:underline">Ir a Expedientes</Link>
-          </div>
+          <EmptySic titulo="Sin expedientes" mensaje="No hay expedientes disponibles para exportar.">
+            <Link href="/sic/expedientes" className="text-cyan-400 hover:underline text-sm">
+              Ir a Expedientes
+            </Link>
+          </EmptySic>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -136,14 +237,14 @@ export default function SicExportacionesPage() {
                         disabled={!!exportando}
                         className="rounded px-2 py-1 bg-slate-700 text-slate-200 text-xs hover:bg-slate-600 disabled:opacity-50"
                       >
-                        {exportando === `${e.expediente_id}-pdf` ? "…" : "PDF"}
+                        {exportando === `${e.expediente_id}-pdf` ? "Generando…" : "PDF ejecutivo"}
                       </button>
                       <button
                         onClick={() => handleZIP(e.expediente_id)}
                         disabled={!!exportando}
                         className="rounded px-2 py-1 bg-slate-700 text-slate-200 text-xs hover:bg-slate-600 disabled:opacity-50"
                       >
-                        {exportando === `${e.expediente_id}-zip` ? "…" : "ZIP"}
+                        {exportando === `${e.expediente_id}-zip` ? "Generando…" : "ZIP bancario"}
                       </button>
                     </div>
                   </td>
