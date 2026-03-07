@@ -565,3 +565,92 @@ export async function generarPaqueteRegulatorio(
   if (!res.ok) throw new Error(`Paquete regulatorio: ${res.status}`);
   return res.json();
 }
+
+// ——— Métricas ejecutivas ———
+
+export interface MetricasEjecutivas {
+  expedientes_por_estado?: Record<string, number>;
+  tiempo_promedio_decision_horas?: number;
+  total_overrides?: number;
+  tasa_overrides?: number;
+  aprobados?: number;
+  rechazados?: number;
+  productividad_analista?: { analista: string; expedientes: number; resueltos: number }[];
+  uso_por_rol?: { rol: string; sesiones: number; accesos: number }[];
+  rendimiento_operativo?: { uptime_pct?: number; latencia_p50_ms?: number };
+}
+
+export async function fetchMetricasEjecutivas(tenantId: string): Promise<MetricasEjecutivas | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/metricas`, { headers: headers(tenantId) });
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Métricas: ${res.status}`);
+  }
+  return res.json();
+}
+
+// ——— Estado del sistema ———
+
+export interface EstadoSistema {
+  salud?: "ok" | "degradado" | "error";
+  conectividad?: boolean;
+  eventos_criticos?: number;
+  alertas_seguridad?: number;
+  ultima_revision?: string;
+}
+
+export async function fetchEstadoSistema(tenantId: string): Promise<EstadoSistema | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/health`, { headers: headers(tenantId) });
+  if (!res.ok) {
+    if (res.status === 404) return { salud: "error", conectividad: false };
+    return null;
+  }
+  return res.json();
+}
+
+// ——— Configuración por banco ———
+
+export interface ConfigBanco {
+  branding?: { logo_url?: string; nombre_institucion?: string; color_primario?: string };
+  politicas?: Record<string, unknown>;
+  matrices_riesgo?: unknown[];
+  reglas_decision?: unknown[];
+  roles_internos?: { rol: string; permisos: string[] }[];
+  integraciones_sso?: { proveedor: string; activo: boolean }[];
+}
+
+export async function fetchConfigBanco(tenantId: string): Promise<ConfigBanco | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/configuracion`, { headers: headers(tenantId) });
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Config: ${res.status}`);
+  }
+  return res.json();
+}
+
+// ——— Auditoría de acceso ———
+
+export interface EventoAcceso {
+  evento_id: string;
+  usuario_id?: string;
+  rol?: string;
+  accion?: string;
+  recurso?: string;
+  datos_sensibles?: boolean;
+  fecha?: string;
+  ip?: string;
+}
+
+export async function fetchAuditoriaAcceso(
+  tenantId: string,
+  limit?: number
+): Promise<EventoAcceso[]> {
+  const q = limit ? `?limit=${limit}` : "";
+  const res = await fetch(`${API_BASE}/api/v1/sic/auditoria-acceso${q}`, { headers: headers(tenantId) });
+  if (!res.ok) {
+    if (res.status === 404) return [];
+    throw new Error(`Auditoría acceso: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.eventos ?? data.data ?? (Array.isArray(data) ? data : []);
+}
