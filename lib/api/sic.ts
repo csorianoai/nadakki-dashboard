@@ -388,3 +388,180 @@ export async function enviarOverride(
   if (!res.ok) throw new Error(`Override: ${res.status}`);
   return res.json();
 }
+
+// ——— Comité ———
+
+export interface SesionComite {
+  sesion_id: string;
+  tenant_id?: string;
+  fecha_sesion?: string;
+  estado_sesion?: "programada" | "abierta" | "cerrada" | "pospuesta";
+  participantes?: string[];
+  expedientes_count?: number;
+  creado_por?: string;
+}
+
+export interface ExpedienteEnSesion {
+  expediente_id: string;
+  sesion_id: string;
+  orden?: number;
+  decision_ia?: string;
+  confianza?: number;
+  votos_a_favor?: number;
+  votos_en_contra?: number;
+  decision_final_sesion?: string;
+  votos?: { participante: string; voto: "apruebo" | "rechazo" | "abstenido"; fecha?: string }[];
+}
+
+export async function fetchSesionesComite(
+  tenantId: string,
+  limit?: number
+): Promise<SesionComite[]> {
+  const q = limit ? `?limit=${limit}` : "";
+  const res = await fetch(`${API_BASE}/api/v1/sic/comite/sesiones${q}`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) {
+    if (res.status === 404 || res.status === 500) return [];
+    throw new Error(`Sesiones comité: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.sesiones ?? data.data ?? (Array.isArray(data) ? data : []);
+}
+
+export async function fetchSesionComite(
+  sesionId: string,
+  tenantId: string
+): Promise<SesionComite | null> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/comite/sesiones/${sesionId}`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Sesión: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function fetchExpedientesSesion(
+  sesionId: string,
+  tenantId: string
+): Promise<ExpedienteEnSesion[]> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/comite/sesiones/${sesionId}/expedientes`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return [];
+    throw new Error(`Expedientes sesión: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.expedientes ?? data.data ?? (Array.isArray(data) ? data : []);
+}
+
+export async function votarExpediente(
+  sesionId: string,
+  expedienteId: string,
+  tenantId: string,
+  voto: "apruebo" | "rechazo" | "abstenido"
+): Promise<{ success?: boolean }> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/comite/sesiones/${sesionId}/votar`,
+    {
+      method: "POST",
+      headers: headers(tenantId),
+      body: JSON.stringify({ expediente_id: expedienteId, voto }),
+    }
+  );
+  if (!res.ok) throw new Error(`Voto: ${res.status}`);
+  return res.json();
+}
+
+export async function cerrarSesionComite(
+  sesionId: string,
+  tenantId: string,
+  memo?: string
+): Promise<{ success?: boolean }> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/comite/sesiones/${sesionId}/cerrar`,
+    {
+      method: "POST",
+      headers: headers(tenantId),
+      body: JSON.stringify({ memo }),
+    }
+  );
+  if (!res.ok) throw new Error(`Cerrar sesión: ${res.status}`);
+  return res.json();
+}
+
+// ——— Replay ———
+
+export interface ReplayData {
+  expediente_id: string;
+  version_analizada?: VersionAnalisis;
+  decision_ia?: string;
+  confianza?: number;
+  decision_final?: string;
+  override_activo?: boolean;
+  override_usuario?: string;
+  override_fecha?: string;
+  reglas_aplicadas?: string[];
+  evidencias_usadas?: Evidencia[];
+  timeline?: { fecha?: string; evento?: string; actor?: string }[];
+}
+
+export async function fetchReplay(
+  expedienteId: string,
+  tenantId: string
+): Promise<ReplayData | null> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/replay`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Replay: ${res.status}`);
+  }
+  return res.json();
+}
+
+// ——— Portafolio / Analítica ———
+
+export interface PortafolioAnalytics {
+  expedientes_por_estado?: Record<string, number>;
+  tiempo_promedio_dias?: number;
+  tasa_overrides?: number;
+  aprobados?: number;
+  rechazados?: number;
+  riesgos_frecuentes?: { riesgo: string; count: number }[];
+  productividad_analista?: { analista: string; expedientes: number }[];
+  actividad_comite?: { sesiones: number; expedientes_resueltos: number };
+}
+
+export async function fetchPortafolioAnalytics(
+  tenantId: string
+): Promise<PortafolioAnalytics | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/portafolio/analytics`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    throw new Error(`Analytics: ${res.status}`);
+  }
+  return res.json();
+}
+
+// ——— Paquete Regulatorio ———
+
+export async function generarPaqueteRegulatorio(
+  expedienteId: string,
+  tenantId: string
+): Promise<{ exportacion_id?: string; url?: string } | null> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/exportaciones/regulatorio`,
+    { method: "POST", headers: headers(tenantId) }
+  );
+  if (!res.ok) throw new Error(`Paquete regulatorio: ${res.status}`);
+  return res.json();
+}
