@@ -13,6 +13,7 @@ const MODULOS = [
   { href: "/sic/exportaciones", label: "Exportaciones", desc: "PDF, ZIP y paquete regulatorio" },
   { href: "/sic/auditoria", label: "Auditoría", desc: "Eventos y trazabilidad" },
   { href: "/sic/configuracion", label: "Configuración", desc: "Parámetros SIC" },
+  { href: "/sic/demo", label: "Modo Demo", desc: "Presentaciones con datos simulados" },
 ];
 
 export default function SicPage() {

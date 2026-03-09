@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
+import { useDemo } from "@/contexts/DemoContext";
 import { fetchAuditoriaGlobal, type EventoAuditoria } from "@/lib/api/sic";
+import { getDemoEventosAuditoria } from "@/lib/demo-sic";
 import Link from "next/link";
 import { LoadingSic, EmptySic, ErrorSic } from "@/components/sic/EstadosSic";
 
 export default function SicAuditoriaPage() {
   const { tenantId } = useTenant();
+  const { demoMode, escenario } = useDemo();
   const tenant = tenantId || "credicefi";
   const [eventos, setEventos] = useState<EventoAuditoria[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,17 +21,18 @@ export default function SicAuditoriaPage() {
 
   useEffect(() => {
     let alive = true;
+    if (demoMode) {
+      setEventos(getDemoEventosAuditoria(escenario));
+      setLoading(false);
+      setError(null);
+      return;
+    }
     fetchAuditoriaGlobal(tenant, limit)
-      .then((list) => {
-        if (alive) setEventos(list);
-      })
-      .catch((e) => {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-  }, [tenant, limit]);
+      .then((list) => { if (alive) setEventos(list); })
+      .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [tenant, limit, demoMode, escenario]);
 
   const tipos = Array.from(new Set(eventos.map((e) => e.tipo_evento).filter(Boolean))) as string[];
   const expedientes = Array.from(new Set(eventos.map((e) => e.expediente_id).filter(Boolean))) as string[];

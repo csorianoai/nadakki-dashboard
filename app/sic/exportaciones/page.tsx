@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
+import { useDemo } from "@/contexts/DemoContext";
 import {
   fetchExpedientes,
   fetchExportacionesGlobal,
@@ -11,6 +12,7 @@ import {
   type Expediente,
   type Exportacion,
 } from "@/lib/api/sic";
+import { getDemoExpedientes, getDemoExportaciones } from "@/lib/demo-sic";
 import Link from "next/link";
 import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
 
@@ -36,6 +38,7 @@ const ESTADO_EXPORT: Record<string, string> = {
 
 export default function SicExportacionesPage() {
   const { tenantId } = useTenant();
+  const { demoMode, escenario } = useDemo();
   const tenant = tenantId || "credicefi";
   const [expedientes, setExpedientes] = useState<Expediente[]>([]);
   const [exportaciones, setExportaciones] = useState<Exportacion[]>([]);
@@ -45,17 +48,25 @@ export default function SicExportacionesPage() {
   const [exito, setExito] = useState<string | null>(null);
 
   const cargar = () => {
-    fetchExpedientes(tenant)
-      .then(setExpedientes)
-      .catch(() => {});
-    fetchExportacionesGlobal(tenant, 100)
-      .then(setExportaciones)
-      .catch(() => setExportaciones([]));
+    if (demoMode) {
+      setExpedientes(getDemoExpedientes(escenario));
+      setExportaciones(getDemoExportaciones(escenario));
+      return;
+    }
+    fetchExpedientes(tenant).then(setExpedientes).catch(() => {});
+    fetchExportacionesGlobal(tenant, 100).then(setExportaciones).catch(() => setExportaciones([]));
   };
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    if (demoMode) {
+      setExpedientes(getDemoExpedientes(escenario));
+      setExportaciones(getDemoExportaciones(escenario));
+      setLoading(false);
+      setError(null);
+      return;
+    }
     Promise.all([
       fetchExpedientes(tenant),
       fetchExportacionesGlobal(tenant, 100).catch(() => []),
@@ -72,15 +83,19 @@ export default function SicExportacionesPage() {
       .finally(() => {
         if (alive) setLoading(false);
       });
-    return () => {
-      alive = false;
-    };
-  }, [tenant]);
+    return () => { alive = false; };
+  }, [tenant, demoMode, escenario]);
 
   const handlePDF = async (id: string) => {
     setExportando(`${id}-pdf`);
     setExito(null);
     setError(null);
+    if (demoMode) {
+      setExito(`[Demo] PDF ejecutivo generado para ${id}`);
+      cargar();
+      setExportando(null);
+      return;
+    }
     try {
       const r = await generarExportacionPDF(id, tenant);
       setExito(`PDF ejecutivo generado para ${id}${r?.url ? ". " + r.url : ""}`);
@@ -96,6 +111,12 @@ export default function SicExportacionesPage() {
     setExportando(`${id}-reg`);
     setExito(null);
     setError(null);
+    if (demoMode) {
+      setExito(`[Demo] Paquete regulatorio generado para ${id}`);
+      cargar();
+      setExportando(null);
+      return;
+    }
     try {
       const r = await generarPaqueteRegulatorio(id, tenant);
       setExito(`Paquete regulatorio generado para ${id}${r?.url ? ". " + r.url : ""}`);
@@ -111,6 +132,12 @@ export default function SicExportacionesPage() {
     setExportando(`${id}-zip`);
     setExito(null);
     setError(null);
+    if (demoMode) {
+      setExito(`[Demo] ZIP bancario generado para ${id}`);
+      cargar();
+      setExportando(null);
+      return;
+    }
     try {
       const r = await generarExportacionZIP(id, tenant);
       setExito(`ZIP bancario generado para ${id}${r?.url ? ". " + r.url : ""}`);

@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { IndicadorEstadoSistema } from "./IndicadorEstadoSistema";
+import { SicDemoToggle, SicDemoBadge } from "./SicDemoToggle";
+import { useDemo } from "@/contexts/DemoContext";
 
 const MODO = typeof process !== "undefined" && process.env?.NEXT_PUBLIC_SIC_MODE
   ? process.env.NEXT_PUBLIC_SIC_MODE
@@ -22,6 +24,19 @@ const MODO_BADGE: Record<string, string> = {
   sandbox: "bg-amber-500/20 text-amber-400 border-amber-500/40",
   demo: "bg-violet-500/20 text-violet-400 border-violet-500/40",
 };
+
+function TourNavButton() {
+  const { iniciarTour } = useDemo();
+  return (
+    <button
+      type="button"
+      onClick={iniciarTour}
+      className="text-violet-400 hover:text-violet-300 text-xs"
+    >
+      Recorrido
+    </button>
+  );
+}
 
 export function SicBarraInstitucional() {
   const { isAuthenticated, role, tenantName } = useAuth();
@@ -50,8 +65,15 @@ export function SicBarraInstitucional() {
         <span className="text-slate-600">|</span>
         <span className="text-slate-500">Sistema:</span>
         <IndicadorEstadoSistema />
+        <span className="text-slate-600">|</span>
+        <SicDemoToggle />
+        <SicDemoBadge />
       </div>
       <nav className="flex items-center gap-2">
+        <TourNavButton />
+        <span className="text-slate-600">·</span>
+        <Link href="/sic/demo" className="text-slate-500 hover:text-slate-300">Demo</Link>
+        <span className="text-slate-600">·</span>
         <Link href="/sic" className="text-slate-500 hover:text-slate-300">Inicio</Link>
         <span className="text-slate-600">·</span>
         <Link href="/sic/metricas" className="text-slate-500 hover:text-slate-300">Métricas</Link>

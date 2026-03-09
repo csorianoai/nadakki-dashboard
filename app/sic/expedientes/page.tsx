@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
+import { useDemo } from "@/contexts/DemoContext";
 import Link from "next/link";
 import { fetchExpedientes, type Expediente, type EstadoExpediente } from "@/lib/api/sic";
+import { getDemoExpedientes } from "@/lib/demo-sic";
 
 const ESTADOS_BADGE: Record<string, string> = {
   RECIBIDO: "bg-slate-500/30 text-slate-300",
@@ -20,6 +22,7 @@ const ESTADOS_BADGE: Record<string, string> = {
 
 export default function SicExpedientesPage() {
   const { tenantId } = useTenant();
+  const { demoMode, escenario } = useDemo();
   const [expedientes, setExpedientes] = useState<Expediente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,12 +30,18 @@ export default function SicExpedientesPage() {
 
   useEffect(() => {
     let alive = true;
+    if (demoMode) {
+      setExpedientes(getDemoExpedientes(escenario));
+      setLoading(false);
+      setError(null);
+      return;
+    }
     fetchExpedientes(tenant)
       .then((list) => { if (alive) setExpedientes(list); })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [tenant]);
+  }, [tenant, demoMode, escenario]);
 
   if (loading) {
     return (

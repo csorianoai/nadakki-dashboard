@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
+import { useDemo } from "@/contexts/DemoContext";
 import { fetchSesionesComite, type SesionComite } from "@/lib/api/sic";
+import { getDemoSesiones } from "@/lib/demo-sic";
 import Link from "next/link";
 import { LoadingSic, EmptySic, ErrorSic } from "@/components/sic/EstadosSic";
 
@@ -15,6 +17,7 @@ const ESTADO_BADGE: Record<string, string> = {
 
 export default function SicComiteSesionesPage() {
   const { tenantId } = useTenant();
+  const { demoMode, escenario } = useDemo();
   const tenant = tenantId || "credicefi";
   const [sesiones, setSesiones] = useState<SesionComite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,12 +25,18 @@ export default function SicComiteSesionesPage() {
 
   useEffect(() => {
     let alive = true;
+    if (demoMode) {
+      setSesiones(getDemoSesiones(escenario));
+      setLoading(false);
+      setError(null);
+      return;
+    }
     fetchSesionesComite(tenant, 50)
       .then((list) => { if (alive) setSesiones(list); })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [tenant]);
+  }, [tenant, demoMode, escenario]);
 
   if (loading) {
     return (

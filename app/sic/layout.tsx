@@ -2,6 +2,8 @@
 
 import { SicBarraInstitucional } from "@/components/sic/SicBarraInstitucional";
 import { useTenant } from "@/contexts/TenantContext";
+import { DemoProvider } from "@/contexts/DemoContext";
+import { TourGuiadoInstitucional } from "@/components/sic/TourGuiadoInstitucional";
 
 export default function SicLayout({
   children,
@@ -12,12 +14,15 @@ export default function SicLayout({
   const primaryColor = settings?.primaryColor ?? "#0ea5e9";
 
   return (
-    <div
-      className="min-h-screen bg-[#0a0f1c]"
-      style={{ "--sic-primary": primaryColor } as React.CSSProperties}
-    >
-      <SicBarraInstitucional />
-      <main>{children}</main>
-    </div>
+    <DemoProvider>
+      <div
+        className="min-h-screen bg-[#0a0f1c]"
+        style={{ "--sic-primary": primaryColor } as React.CSSProperties}
+      >
+        <SicBarraInstitucional />
+        <main>{children}</main>
+        <TourGuiadoInstitucional />
+      </div>
+    </DemoProvider>
   );
 }

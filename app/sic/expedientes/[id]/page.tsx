@@ -37,6 +37,8 @@ import { ComparadorVersiones } from "@/components/sic/ComparadorVersiones";
 import { PanelEvidencia } from "@/components/sic/PanelEvidencia";
 import { MemoEjecutivo } from "@/components/sic/MemoEjecutivo";
 import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
+import { useDemo } from "@/contexts/DemoContext";
+import { getDemoExpedientes, getDemoEventosAuditoria, getDemoExportaciones } from "@/lib/demo-sic";
 
 const ESTADOS_BADGE: Record<string, string> = {
   RECIBIDO: "bg-slate-500/30 text-slate-300",
@@ -63,6 +65,7 @@ function Panel({ titulo, children }: { titulo: string; children: React.ReactNode
 export default function SicExpedienteIdPage() {
   const params = useParams();
   const { tenantId } = useTenant();
+  const { demoMode, escenario } = useDemo();
   const id = String(params?.id ?? "");
   const tenant = tenantId || "credicefi";
 
@@ -87,6 +90,20 @@ export default function SicExpedienteIdPage() {
     if (!id) return;
     setLoading(true);
     setError(null);
+    if (demoMode && id.startsWith("EXP-DEMO-")) {
+      const demos = getDemoExpedientes(escenario);
+      const exp = demos.find((e) => e.expediente_id === id) ?? null;
+      setExpediente(exp);
+      setTimeline(exp ? [{ fecha: exp.fecha_creacion, evento: "Creación", tipo: "INICIO" }] : []);
+      setNotas(exp ? [{ nota_id: "n1", expediente_id: id, contenido: "[Demo] Nota de análisis", rol_usuario: "analista" }] : []);
+      setVersiones(exp ? [{ version_id: "v1", expediente_id: id, numero_version: 1, decision_version: exp.decision_actual }] : []);
+      setAuditoria(getDemoEventosAuditoria(escenario).filter((e) => e.expediente_id === id));
+      setExportaciones(getDemoExportaciones(escenario).filter((x) => x.expediente_id === id));
+      setExplicabilidad(exp ? { narrativa_ejecutiva: "[Demo] Análisis de crédito simulado.", factores_a_favor: ["Score favorable"], factores_en_contra: ["Ratio DTI elevado"], reglas_aplicadas: ["Regla 1", "Regla 2"] } : null);
+      setPermisos({ rol: "analista", puede_override: true, puede_exportar: true, puede_cambiar_estado: true });
+      setLoading(false);
+      return;
+    }
     Promise.all([
       fetchExpediente(id, tenant),
       fetchTimeline(id, tenant),
@@ -109,12 +126,16 @@ export default function SicExpedienteIdPage() {
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
-  }, [id, tenant]);
+  }, [id, tenant, demoMode, escenario]);
 
   useEffect(() => cargar(), [cargar]);
 
   const handleCrearNota = useCallback(async () => {
     if (!nuevaNota.trim() || !id) return;
+    if (demoMode && id.startsWith("EXP-DEMO-")) {
+      setNuevaNota("");
+      return;
+    }
     setCreandoNota(true);
     try {
       await crearNota(id, tenant, nuevaNota.trim());
@@ -129,6 +150,10 @@ export default function SicExpedienteIdPage() {
 
   const handleOverride = useCallback(
     async (decision: string, justificacion: string) => {
+      if (demoMode && id.startsWith("EXP-DEMO-")) {
+        cargar();
+        return;
+      }
       await enviarOverride(id, tenant, { decision_final: decision, justificacion });
       cargar();
     },
@@ -137,6 +162,11 @@ export default function SicExpedienteIdPage() {
 
   const handleCambiarEstado = useCallback(async () => {
     if (!nuevoEstado.trim()) return;
+    if (demoMode && id.startsWith("EXP-DEMO-")) {
+      setNuevoEstado("");
+      cargar();
+      return;
+    }
     try {
       await cambiarEstado(id, tenant, nuevoEstado.trim());
       setNuevoEstado("");
@@ -147,6 +177,10 @@ export default function SicExpedienteIdPage() {
   }, [id, tenant, nuevoEstado, cargar]);
 
   const handleExportarPDF = useCallback(async () => {
+    if (demoMode && id.startsWith("EXP-DEMO-")) {
+      setExitoExport("[Demo] PDF generado.");
+      return;
+    }
     setExportando("pdf");
     setExitoExport(null);
     try {
@@ -161,6 +195,10 @@ export default function SicExpedienteIdPage() {
   }, [id, tenant, cargar]);
 
   const handleExportarZIP = useCallback(async () => {
+    if (demoMode && id.startsWith("EXP-DEMO-")) {
+      setExitoExport("[Demo] ZIP generado.");
+      return;
+    }
     setExportando("zip");
     setExitoExport(null);
     try {
@@ -175,6 +213,10 @@ export default function SicExpedienteIdPage() {
   }, [id, tenant, cargar]);
 
   const handleExportarRegulatorio = useCallback(async () => {
+    if (demoMode && id.startsWith("EXP-DEMO-")) {
+      setExitoExport("[Demo] Paquete regulatorio generado.");
+      return;
+    }
     setExportando("reg");
     setExitoExport(null);
     try {

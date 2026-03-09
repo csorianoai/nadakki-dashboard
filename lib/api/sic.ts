@@ -654,3 +654,44 @@ export async function fetchAuditoriaAcceso(
   const data = await res.json();
   return data.eventos ?? data.data ?? (Array.isArray(data) ? data : []);
 }
+
+// ——— Modo Demo (backend simulador) ———
+
+export type EscenarioDemoBackend =
+  | "banco_conservador"
+  | "banco_agresivo"
+  | "crisis_economica"
+  | "alta_morosidad"
+  | "expansion_crediticia";
+
+export async function fetchDemoExpedientes(
+  tenantId: string,
+  escenario: EscenarioDemoBackend
+): Promise<Expediente[]> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/demo/expedientes?escenario=${escenario}`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return [];
+    throw new Error(`Demo expedientes: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.expedientes ?? data.data ?? (Array.isArray(data) ? data : []);
+}
+
+export async function fetchDemoSesiones(
+  tenantId: string,
+  escenario: EscenarioDemoBackend
+): Promise<{ sesion_id: string; fecha_sesion?: string; estado_sesion?: string; expedientes_count?: number; creado_por?: string }[]> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/demo/sesiones?escenario=${escenario}`,
+    { headers: headers(tenantId) }
+  );
+  if (!res.ok) {
+    if (res.status === 404) return [];
+    throw new Error(`Demo sesiones: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.sesiones ?? data.data ?? (Array.isArray(data) ? data : []);
+}
