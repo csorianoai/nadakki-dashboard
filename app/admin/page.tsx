@@ -15,16 +15,16 @@ import StatusBadge from "@/components/ui/StatusBadge";
 const ADMIN_MODULES_BASE = [
   { id: "agents", name: "Agentes IA", icon: Bot, desc: "Activar, desactivar y configurar agentes", href: "/admin/agents", color: "#8b5cf6", badgeKey: "agents" },
   { id: "logs", name: "Logs del Sistema", icon: FileText, desc: "Historial de ejecuciones y errores", href: "/admin/logs", color: "#22c55e" },
-  { id: "gates", name: "Gates", icon: Shield, desc: "Gates de configuración (Security, Data, Quality, Pilot)", href: "/admin/gates", color: "#f59e0b" },
-  { id: "config", name: "Config", icon: Settings, desc: "Configuración de tenant y canales en vivo", href: "/admin/config", color: "#8b5cf6" },
-  { id: "db", name: "Database Status", icon: Database, desc: "Estado de conexión y esquema DB", href: "/admin/db", color: "#06b6d4" },
-  { id: "billing", name: "Billing", icon: CreditCard, desc: "Planes y facturación", href: "/admin/billing", color: "#10b981" },
-  { id: "usage", name: "Usage", icon: BarChart3, desc: "Ejecuciones y límites por tenant", href: "/admin/usage", color: "#f59e0b" },
-  { id: "api-keys", name: "API Keys", icon: Key, desc: "Gestión de claves API", href: "/admin/api-keys", color: "#8b5cf6" },
+  { id: "gates", name: "Gates", icon: Shield, desc: "Gates de configuracion (Security, Data, Quality, Pilot)", href: "/admin/gates", color: "#f59e0b" },
+  { id: "config", name: "Config", icon: Settings, desc: "Configuracion de tenant y canales en vivo", href: "/admin/config", color: "#8b5cf6" },
+  { id: "db", name: "Database Status", icon: Database, desc: "Estado de conexion y esquema DB", href: "/admin/db", color: "#06b6d4" },
+  { id: "billing", name: "Billing", icon: CreditCard, desc: "Planes y facturacion", href: "/admin/billing", color: "#10b981" },
+  { id: "usage", name: "Usage", icon: BarChart3, desc: "Ejecuciones y limites por tenant", href: "/admin/usage", color: "#f59e0b" },
+  { id: "api-keys", name: "API Keys", icon: Key, desc: "Gestion de claves API", href: "/admin/api-keys", color: "#8b5cf6" },
   { id: "system", name: "System Info", icon: Monitor, desc: "Estado del sistema", href: "/admin/system", color: "#06b6d4" },
-  { id: "qa", name: "QA Piloto", icon: Activity, desc: "Verificación operativa del tenant", href: "/admin/qa", color: "#22c55e" },
-  { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "Gestión de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
-  { id: "settings", name: "Configuración", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
+  { id: "qa", name: "QA Piloto", icon: Activity, desc: "Verificacion operativa del tenant", href: "/admin/qa", color: "#22c55e" },
+  { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "Gestion de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
+  { id: "settings", name: "Configuracion", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
 ];
 
 const RECENT_EVENTS = [
@@ -35,7 +35,7 @@ const RECENT_EVENTS = [
 ];
 
 export default function AdminPage() {
-  const [agentTotal, setAgentTotal] = useState<string>("—");
+  const [agentTotal, setAgentTotal] = useState<string>("--");
 
   useEffect(() => {
     fetch("/api/ai-studio/agents")
@@ -56,7 +56,7 @@ export default function AdminPage() {
     { value: agentTotal, label: "Agentes Totales", icon: <Bot className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
     { value: "4", label: "Tenants Activos", icon: <Users className="w-6 h-6 text-blue-400" />, color: "#3b82f6" },
     { value: "99.7%", label: "Uptime", icon: <Activity className="w-6 h-6 text-green-400" />, color: "#22c55e" },
-    { value: "v3.2", label: "Versión", icon: <Server className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
+    { value: "v3.2", label: "Version", icon: <Server className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
   ];
 
   return (
@@ -77,9 +77,9 @@ export default function AdminPage() {
           </div>
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-200 via-slate-300 to-slate-400 bg-clip-text text-transparent">
-              Panel de AdministraciÃ³n
+              Panel de Administracin
             </h1>
-            <p className="text-gray-400 mt-1">Gestiona agentes, tenants, logs y configuraciÃ³n del sistema</p>
+            <p className="text-gray-400 mt-1">Gestiona agentes, tenants, logs y configuracin del sistema</p>
           </div>
         </div>
       </motion.div>
@@ -95,7 +95,7 @@ export default function AdminPage() {
       <div className="grid grid-cols-3 gap-6">
         {/* Admin Modules */}
         <div className="col-span-2">
-          <h2 className="text-xl font-bold text-white mb-4">MÃ³dulos de AdministraciÃ³n</h2>
+          <h2 className="text-xl font-bold text-white mb-4">Mdulos de Administracin</h2>
           <div className="grid grid-cols-2 gap-4">
             {adminModules?.map((module, index) => (
               <motion.div

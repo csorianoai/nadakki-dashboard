@@ -172,7 +172,7 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
               if (process.env.NODE_ENV === "development") {
                 console.debug("[Observability] SSE", res.status, url, txt.slice(0, 200));
               }
-              setError(`SSE: ${res.status}${txt ? ` â€” ${txt.slice(0, 150)}` : ""}`);
+              setError(`SSE: ${res.status}${txt ? ` " ${txt.slice(0, 150)}` : ""}`);
               onTerminal?.();
               resolve();
               return;

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -185,7 +185,7 @@ export default function PredictivePage() {
             <StatCard value={(modelAccuracy * 100).toFixed(0) + "%"} label="Precision del Modelo" icon={<Sparkles className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
           </div>
 
-          {/* GrÃ¡fico con Recharts */}
+          {/* Grafico con Recharts */}
           <GlassCard className="p-6 mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>

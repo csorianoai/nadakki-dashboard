@@ -592,7 +592,7 @@ export async function fetchMetricasEjecutivas(tenantId: string): Promise<Metrica
 // ——— Estado del sistema ———
 
 export interface EstadoSistema {
-  salud?: "ok" | "degradado" | "error";
+  salud?: "ok" | "degradado" | "no_disponible" | "error";
   conectividad?: boolean;
   eventos_criticos?: number;
   alertas_seguridad?: number;
@@ -653,6 +653,221 @@ export async function fetchAuditoriaAcceso(
   }
   const data = await res.json();
   return data.eventos ?? data.data ?? (Array.isArray(data) ? data : []);
+}
+
+// ——— Reportes Hub ———
+
+export interface KpisEjecutivo {
+  tenant_id: string;
+  total_expedientes: number;
+  aprobados: number;
+  rechazados: number;
+  revision_manual: number;
+  pendientes: number;
+  score_promedio: number;
+  alertas_activas: number;
+  tiempo_promedio_analisis_horas: number;
+  tasa_aprobacion_pct: number;
+  tasa_rechazo_pct: number;
+}
+
+export interface AlertaEjecutiva {
+  expediente_id: string;
+  referencia_cliente?: string;
+  risk_level: string;
+  confidence_score: number | null;
+  alert_count: number;
+  estado?: string;
+  decision?: string;
+}
+
+export interface ResumenPortafolio {
+  tenant_id: string;
+  distribucion_riesgo: Record<string, number>;
+  distribucion_estado: Record<string, number>;
+  tendencias_volumen: { mes: string; total: number }[];
+  concentracion_segmento: unknown[];
+  avg_processing_time_hours: number;
+  override_rate_pct: number;
+  escalation_rate_pct: number;
+  total_expedientes: number;
+  total_decisiones: number;
+}
+
+export interface ReporteIndividual {
+  tenant_id: string;
+  expediente_id: string;
+  referencia_cliente?: string;
+  referencia_producto?: string;
+  estado?: string;
+  fecha_creacion?: string;
+  fecha_actualizacion?: string;
+  asignado_a?: string;
+  creado_por?: string;
+  metadata?: Record<string, unknown>;
+  score_summary: {
+    confidence_score: number | null;
+    risk_level: string | null;
+    rules_fired: string[];
+    confidence_overall_pipeline: number | null;
+  };
+  income_report?: unknown;
+  recurrence_summary?: unknown;
+  outlier_flags?: unknown;
+  decision?: Record<string, unknown> | null;
+  analyst_notes: { usuario_id?: string; rol_usuario?: string; contenido?: string; fecha_creacion?: string }[];
+  evidencias: Record<string, unknown>[];
+  memo_final?: Record<string, unknown> | null;
+  trazabilidad: { tipo_evento?: string; actor_id?: string; actor_rol?: string; detalle?: string; fecha_evento?: string }[];
+  pipeline_status?: string | null;
+  pipeline_version?: string | null;
+}
+
+export interface ComparativoExpVsPortafolio {
+  tenant_id: string;
+  expediente_id: string;
+  expediente: {
+    confidence_score: number;
+    event_count: number;
+    processing_time_hours: number;
+    estado?: string;
+    decision?: string;
+  };
+  portafolio: {
+    avg_confidence_score: number;
+    avg_event_count: number;
+    avg_processing_time_hours: number;
+    total_expedientes: number;
+  };
+  diferencias: {
+    confidence_vs_avg: number;
+    events_vs_avg: number;
+    time_vs_avg_hours: number;
+  };
+  benchmark: {
+    confidence: string;
+    processing_speed: string;
+    complexity: string;
+  };
+}
+
+export interface ComparativoPeriodos {
+  tenant_id: string;
+  periodo_a: PeriodoMetrics;
+  periodo_b: PeriodoMetrics;
+  diferencias: Record<string, number>;
+}
+
+interface PeriodoMetrics {
+  start: string;
+  end: string;
+  total_expedientes: number;
+  aprobados: number;
+  rechazados: number;
+  tasa_aprobacion_pct: number;
+  avg_confidence: number;
+  overrides: number;
+}
+
+export interface ExportStatus {
+  tenant_id: string;
+  pdf_enabled: boolean;
+  csv_enabled: boolean;
+  zip_enabled: boolean;
+  snapshot_enabled: boolean;
+  regulatorio_enabled: boolean;
+}
+
+export async function fetchKpisEjecutivo(tenantId: string): Promise<KpisEjecutivo | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/ejecutivo/kpis`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchAlertasEjecutivo(tenantId: string, limit = 20): Promise<{ total_alertas: number; alertas: AlertaEjecutiva[] } | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/ejecutivo/alertas?limit=${limit}`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchResumenPortafolio(tenantId: string): Promise<ResumenPortafolio | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/portafolio/resumen`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchReporteIndividual(expedienteId: string, tenantId: string): Promise<ReporteIndividual | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/individual/${expedienteId}`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchComparativoExpVsPortafolio(
+  expedienteId: string,
+  tenantId: string,
+): Promise<ComparativoExpVsPortafolio | null> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/reportes/comparativos/expediente-vs-portafolio/${expedienteId}`,
+    { headers: headers(tenantId) },
+  );
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchComparativoPeriodos(
+  tenantId: string,
+  startA: string,
+  endA: string,
+  startB: string,
+  endB: string,
+): Promise<ComparativoPeriodos | null> {
+  const params = new URLSearchParams({ start_a: startA, end_a: endA, start_b: startB, end_b: endB });
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/reportes/comparativos/periodos?${params}`,
+    { headers: headers(tenantId) },
+  );
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchExportStatus(tenantId: string): Promise<ExportStatus | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/exportaciones/status`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function fetchExportHistorial(tenantId: string, limit = 50): Promise<{ total: number; exportaciones: Exportacion[] } | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/exportaciones/historial?limit=${limit}`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function downloadCsvBatch(tenantId: string): Promise<Blob | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/exportaciones/csv`, {
+    headers: { "X-Tenant-ID": tenantId, Accept: "text/csv" },
+  });
+  if (!res.ok) return null;
+  return res.blob();
+}
+
+export async function downloadSnapshot(tenantId: string): Promise<Record<string, unknown> | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/exportaciones/snapshot`, {
+    headers: headers(tenantId),
+  });
+  if (!res.ok) return null;
+  return res.json();
 }
 
 // ——— Modo Demo (backend simulador) ———

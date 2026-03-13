@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -14,9 +14,9 @@ import StatusBadge from "@/components/ui/StatusBadge";
 
 const API_URL = "${process.env.NEXT_PUBLIC_API_BASE_URL}";
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ***************************************
 // TYPES
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ***************************************
 interface Variant {
   id: string;
   name: string;
@@ -54,15 +54,15 @@ interface Notification {
   message: string;
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ***************************************
 // CONSTANTS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ***************************************
 const EXPERIMENT_TYPES = [
-  { id: "subject", label: "Asunto de Email", icon: "ðŸ“§", desc: "Prueba diferentes asuntos" },
-  { id: "content", label: "Contenido", icon: "ðŸ“", desc: "Prueba variaciones de texto" },
-  { id: "cta", label: "Call to Action", icon: "ðŸŽ¯", desc: "Prueba botones y CTAs" },
-  { id: "timing", label: "Horario de Envio", icon: "â°", desc: "Prueba diferentes horarios" },
-  { id: "design", label: "Diseno Visual", icon: "ðŸŽ¨", desc: "Prueba layouts y colores" },
+  { id: "subject", label: "Asunto de Email", icon: "-", desc: "Prueba diferentes asuntos" },
+  { id: "content", label: "Contenido", icon: "-", desc: "Prueba variaciones de texto" },
+  { id: "cta", label: "Call to Action", icon: "", desc: "Prueba botones y CTAs" },
+  { id: "timing", label: "Horario de Envio", icon: "", desc: "Prueba diferentes horarios" },
+  { id: "design", label: "Diseno Visual", icon: "", desc: "Prueba layouts y colores" },
 ];
 
 const GOALS = [
@@ -100,7 +100,7 @@ const SAMPLE_EXPERIMENTS: Experiment[] = [
     type: "subject",
     status: "running",
     variants: [
-      { id: "v1", name: "Control (Urgencia)", content: "âš¡ Ultima oportunidad: 50% OFF termina hoy", traffic: 50,
+      { id: "v1", name: "Control (Urgencia)", content: "! Ultima oportunidad: 50% OFF termina hoy", traffic: 50,
         metrics: { impressions: 5240, clicks: 892, conversions: 156, ctr: 17.0, conversionRate: 17.5 } },
       { id: "v2", name: "Variante (Beneficio)", content: "Ahorra $500 en tu proxima compra", traffic: 50,
         metrics: { impressions: 5180, clicks: 1036, conversions: 203, ctr: 20.0, conversionRate: 19.6 } }
@@ -179,9 +179,9 @@ const SAMPLE_EXPERIMENTS: Experiment[] = [
   }
 ];
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ***************************************
 // MAIN COMPONENT
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ***************************************
 export default function ABTestingPage() {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -420,7 +420,7 @@ export default function ABTestingPage() {
             <GlassCard className="p-6 border-yellow-500/30">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-white">Nuevo Experimento A/B</h3>
-                <button onClick={resetBuilder} className="text-gray-400 hover:text-white">âœ•</button>
+                <button onClick={resetBuilder} className="text-gray-400 hover:text-white">*</button>
               </div>
 
               <div className="grid grid-cols-2 gap-6 mb-6">
@@ -542,7 +542,7 @@ export default function ABTestingPage() {
                        selectedExperiment.status === "completed" ? "Completado" :
                        selectedExperiment.status === "paused" ? "Pausado" : "Borrador"}
                     </span>
-                    <button onClick={() => setSelectedExperiment(null)} className="p-2 hover:bg-white/10 rounded-lg text-gray-400">âœ•</button>
+                    <button onClick={() => setSelectedExperiment(null)} className="p-2 hover:bg-white/10 rounded-lg text-gray-400">*</button>
                   </div>
                 </div>
               </div>

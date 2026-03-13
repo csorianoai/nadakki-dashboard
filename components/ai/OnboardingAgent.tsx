@@ -24,38 +24,72 @@ export default function OnboardingAgent() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     if (!isOpen || messages.length > 0) return;
+
     fetch("/api/ai-studio/agents")
       .then((r) => r.json())
       .then((d) => {
         const total = d.data?.total ?? d.data?.agents?.length ?? 0;
         const countText = total > 0 ? `Los ${total} agentes de IA` : "Agentes de IA";
-        const welcomeContent = `¡Hola! 👋 Soy NADA, tu copiloto de IA.\n\nPuedo ayudarte con:\n• Workflows de marketing\n• ${countText}\n• Tutoriales y guías\n\n¿En qué te ayudo?`;
-        setMessages([{
-        id: "welcome",
-        role: "assistant",
-        content: welcomeContent,
-        source: "greeting",
-        suggestions: ["¿Qué es un workflow?", "¿Qué workflows hay?", "¿Cómo ejecuto un workflow?"]
-      }]);
+
+        const welcomeContent =
+          `¡Hola! Soy NADA, tu copiloto de IA.\n\n` +
+          `Puedo ayudarte con:\n` +
+          `• Workflows de marketing\n` +
+          `• ${countText}\n` +
+          `• Tutoriales y guías\n\n` +
+          `¿En qué te ayudo?`;
+
+        setMessages([
+          {
+            id: "welcome",
+            role: "assistant",
+            content: welcomeContent,
+            source: "greeting",
+            suggestions: [
+              "¿Qué es un workflow?",
+              "¿Qué workflows hay?",
+              "¿Cómo ejecuto un workflow?"
+            ]
+          }
+        ]);
       })
       .catch(() => {
-        setMessages([{
-          id: "welcome",
-          role: "assistant",
-          content: "¡Hola! 👋 Soy NADA, tu copiloto de IA.\n\nPuedo ayudarte con:\n• Workflows de marketing\n• Agentes de IA\n• Tutoriales y guías\n\n¿En qué te ayudo?",
-          source: "greeting",
-          suggestions: ["¿Qué es un workflow?", "¿Qué workflows hay?", "¿Cómo ejecuto un workflow?"]
-        }]);
+        setMessages([
+          {
+            id: "welcome",
+            role: "assistant",
+            content:
+              `¡Hola! Soy NADA, tu copiloto de IA.\n\n` +
+              `Puedo ayudarte con:\n` +
+              `• Workflows de marketing\n` +
+              `• Agentes de IA\n` +
+              `• Tutoriales y guías\n\n` +
+              `¿En qué te ayudo?`,
+            source: "greeting",
+            suggestions: [
+              "¿Qué es un workflow?",
+              "¿Qué workflows hay?",
+              "¿Cómo ejecuto un workflow?"
+            ]
+          }
+        ]);
       });
   }, [isOpen, messages.length]);
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
-    setMessages(prev => [...prev, { id: `u${Date.now()}`, role: "user", content: content.trim() }]);
+
+    setMessages((prev) => [
+      ...prev,
+      { id: `u${Date.now()}`, role: "user", content: content.trim() }
+    ]);
+
     setInput("");
     setIsLoading(true);
 
@@ -63,15 +97,19 @@ export default function OnboardingAgent() {
       const res = await fetch("/api/ai/copilot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content, sessionId, context: { tenant_id: tenantId } })
+        body: JSON.stringify({
+          message: content,
+          sessionId,
+          context: { tenant_id: tenantId }
+        })
       });
+
       const data = await res.json();
-      
-      // Debug log
-      console.log("ðŸ“¥ API Response:", JSON.stringify(data, null, 2));
-      
+
+      console.log("[API Response]", JSON.stringify(data, null, 2));
+
       if (data.sessionId) setSessionId(data.sessionId);
-      
+
       const newMessage: Message = {
         id: `a${Date.now()}`,
         logId: data.logId || undefined,
@@ -81,50 +119,66 @@ export default function OnboardingAgent() {
         suggestions: data.suggestions || [],
         feedback: null
       };
-      
-      console.log("ðŸ“ New message logId:", newMessage.logId);
-      
-      setMessages(prev => [...prev, newMessage]);
+
+      console.log("[New message logId]", newMessage.logId);
+
+      setMessages((prev) => [...prev, newMessage]);
     } catch (err) {
-      console.error("âŒ API Error:", err);
-      setMessages(prev => [...prev, { id: `e${Date.now()}`, role: "assistant", content: "Error de conexiÃ³n." }]);
+      console.error("API Error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `e${Date.now()}`,
+          role: "assistant",
+          content: "Error de conexión."
+        }
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const sendFeedback = async (msgId: string, logId: string | undefined, fb: "positive" | "negative") => {
-    console.log("ðŸ”” Sending feedback:", { msgId, logId, fb });
-    
+  const sendFeedback = async (
+    msgId: string,
+    logId: string | undefined,
+    fb: "positive" | "negative"
+  ) => {
+    console.log("[Sending feedback]", { msgId, logId, fb });
+
     if (!logId) {
-      console.warn("âš ï¸ No logId available, feedback not sent to server");
-      // AÃºn asÃ­ actualizar UI
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, feedback: fb } : m));
+      console.warn("No logId available, feedback not sent to server");
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, feedback: fb } : m))
+      );
       return;
     }
-    
+
     try {
       const res = await fetch("/api/ai/analytics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "feedback", logId, feedback: fb })
       });
+
       const result = await res.json();
-      console.log("âœ… Feedback response:", result);
-      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, feedback: fb } : m));
+      console.log("Feedback response:", result);
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, feedback: fb } : m))
+      );
     } catch (err) {
-      console.error("âŒ Feedback error:", err);
+      console.error("Feedback error:", err);
     }
   };
 
   const FeedbackButtons = ({ msg }: { msg: Message }) => {
-    // No mostrar en welcome/greeting
     if (msg.id === "welcome" || msg.source === "greeting") return null;
     if (msg.role !== "assistant") return null;
 
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
-        <span style={{ fontSize: "12px", color: "#888" }}>Â¿Ãštil?</span>
+        <span style={{ fontSize: "12px", color: "#888" }}>¿Útil?</span>
+
         <button
           onClick={() => sendFeedback(msg.id, msg.logId, "positive")}
           style={{
@@ -138,8 +192,9 @@ export default function OnboardingAgent() {
             cursor: "pointer"
           }}
         >
-          ðŸ‘ SÃ­
+          Sí
         </button>
+
         <button
           onClick={() => sendFeedback(msg.id, msg.logId, "negative")}
           style={{
@@ -153,7 +208,7 @@ export default function OnboardingAgent() {
             cursor: "pointer"
           }}
         >
-          ðŸ‘Ž No
+          No
         </button>
       </div>
     );
@@ -161,58 +216,234 @@ export default function OnboardingAgent() {
 
   if (!isOpen) {
     return (
-      <button onClick={() => setIsOpen(true)} style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 99999, width: "56px", height: "56px", borderRadius: "50%", background: "linear-gradient(to right, #9333ea, #06b6d4)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
+      <button
+        onClick={() => setIsOpen(true)}
+        style={{
+          position: "fixed",
+          bottom: "24px",
+          right: "24px",
+          zIndex: 99999,
+          width: "56px",
+          height: "56px",
+          borderRadius: "50%",
+          background: "linear-gradient(to right, #9333ea, #06b6d4)",
+          border: "none",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+        }}
+      >
         <Bot style={{ width: "28px", height: "28px", color: "#fff" }} />
-        <span style={{ position: "absolute", top: "-2px", right: "-2px", width: "14px", height: "14px", background: "#22c55e", borderRadius: "50%", border: "2px solid #111" }} />
+        <span
+          style={{
+            position: "absolute",
+            top: "-2px",
+            right: "-2px",
+            width: "14px",
+            height: "14px",
+            background: "#22c55e",
+            borderRadius: "50%",
+            border: "2px solid #111"
+          }}
+        />
       </button>
     );
   }
 
   return (
-    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 99999, width: isMinimized ? "320px" : "380px", height: isMinimized ? "56px" : "520px", background: "#111827", borderRadius: "16px", border: "1px solid #374151", boxShadow: "0 10px 40px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      
-      {/* Header */}
-      <div style={{ padding: "12px 16px", background: "linear-gradient(to right, rgba(88,28,135,0.5), rgba(8,145,178,0.5))", borderBottom: "1px solid #374151", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div
+      style={{
+        position: "fixed",
+        bottom: "24px",
+        right: "24px",
+        zIndex: 99999,
+        width: isMinimized ? "320px" : "380px",
+        height: isMinimized ? "56px" : "520px",
+        background: "#111827",
+        borderRadius: "16px",
+        border: "1px solid #374151",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden"
+      }}
+    >
+      <div
+        style={{
+          padding: "12px 16px",
+          background: "linear-gradient(to right, rgba(88,28,135,0.5), rgba(8,145,178,0.5))",
+          borderBottom: "1px solid #374151",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "linear-gradient(to right, #9333ea, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "8px",
+              background: "linear-gradient(to right, #9333ea, #06b6d4)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
             <Bot style={{ width: "20px", height: "20px", color: "#fff" }} />
           </div>
+
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "700", color: "#fff" }}>NADA <span style={{ fontSize: "11px", fontWeight: "400", color: "#9ca3af" }}>AI Copilot</span></div>
-            {!isMinimized && <div style={{ fontSize: "11px", color: "#9ca3af" }}>{settings.name}</div>}
+            <div style={{ fontSize: "14px", fontWeight: "700", color: "#fff" }}>
+              NADA{" "}
+              <span style={{ fontSize: "11px", fontWeight: "400", color: "#9ca3af" }}>
+                AI Copilot
+              </span>
+            </div>
+            {!isMinimized && (
+              <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+                {settings?.name ?? "Tenant"}
+              </div>
+            )}
           </div>
         </div>
+
         <div style={{ display: "flex", gap: "4px" }}>
-          <button onClick={() => { setMessages([]); setSessionId(null); }} style={{ padding: "8px", background: "transparent", border: "none", cursor: "pointer", borderRadius: "8px" }}><RefreshCw style={{ width: "16px", height: "16px", color: "#9ca3af" }} /></button>
-          <button onClick={() => setIsMinimized(!isMinimized)} style={{ padding: "8px", background: "transparent", border: "none", cursor: "pointer", borderRadius: "8px" }}><Minimize2 style={{ width: "16px", height: "16px", color: "#9ca3af" }} /></button>
-          <button onClick={() => setIsOpen(false)} style={{ padding: "8px", background: "transparent", border: "none", cursor: "pointer", borderRadius: "8px" }}><X style={{ width: "16px", height: "16px", color: "#9ca3af" }} /></button>
+          <button
+            onClick={() => {
+              setMessages([]);
+              setSessionId(null);
+            }}
+            style={{
+              padding: "8px",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              borderRadius: "8px"
+            }}
+          >
+            <RefreshCw style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
+          </button>
+
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            style={{
+              padding: "8px",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              borderRadius: "8px"
+            }}
+          >
+            <Minimize2 style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
+          </button>
+
+          <button
+            onClick={() => setIsOpen(false)}
+            style={{
+              padding: "8px",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              borderRadius: "8px"
+            }}
+          >
+            <X style={{ width: "16px", height: "16px", color: "#9ca3af" }} />
+          </button>
         </div>
       </div>
 
       {!isMinimized && (
         <>
-          {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px"
+            }}
+          >
             {messages.map((msg) => (
-              <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                
+              <div
+                key={msg.id}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: msg.role === "user" ? "flex-end" : "flex-start"
+                }}
+              >
                 {msg.role === "assistant" && msg.source && msg.source !== "greeting" && (
-                  <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", marginBottom: "4px", background: msg.source === "system" ? "#7c3aed" : "#0891b2", color: "#fff" }}>
-                    {msg.source === "system" ? "ðŸ“š NADAKKI" : "ðŸ¤– IA General"}
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      padding: "2px 8px",
+                      borderRadius: "4px",
+                      marginBottom: "4px",
+                      background: msg.source === "system" ? "#7c3aed" : "#0891b2",
+                      color: "#fff"
+                    }}
+                  >
+                    {msg.source === "system" ? "NADAKKI" : "IA General"}
                   </span>
                 )}
 
-                <div style={{ maxWidth: "85%", padding: "12px 16px", borderRadius: "16px", background: msg.role === "user" ? "#7c3aed" : "#1f2937", color: "#fff", fontSize: "14px", lineHeight: "1.5", whiteSpace: "pre-line" }}>
+                <div
+                  style={{
+                    maxWidth: "85%",
+                    padding: "12px 16px",
+                    borderRadius: "16px",
+                    background: msg.role === "user" ? "#7c3aed" : "#1f2937",
+                    color: "#fff",
+                    fontSize: "14px",
+                    lineHeight: "1.5",
+                    whiteSpace: "pre-line"
+                  }}
+                >
                   {msg.content}
                 </div>
 
                 <FeedbackButtons msg={msg} />
 
                 {msg.suggestions && msg.suggestions.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "12px", width: "100%" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      marginTop: "12px",
+                      width: "100%"
+                    }}
+                  >
                     {msg.suggestions.map((s, i) => (
-                      <button key={i} onClick={() => sendMessage(s)} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", borderRadius: "12px", background: "rgba(147,51,234,0.2)", border: "1px solid rgba(147,51,234,0.3)", color: "#c4b5fd", fontSize: "12px", cursor: "pointer", textAlign: "left" }}>
-                        <Lightbulb style={{ width: "14px", height: "14px", color: "#facc15", flexShrink: 0 }} />
+                      <button
+                        key={i}
+                        onClick={() => sendMessage(s)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "10px 12px",
+                          borderRadius: "12px",
+                          background: "rgba(147,51,234,0.2)",
+                          border: "1px solid rgba(147,51,234,0.3)",
+                          color: "#c4b5fd",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          textAlign: "left"
+                        }}
+                      >
+                        <Lightbulb
+                          style={{
+                            width: "14px",
+                            height: "14px",
+                            color: "#facc15",
+                            flexShrink: 0
+                          }}
+                        />
                         {s}
                       </button>
                     ))}
@@ -220,21 +451,61 @@ export default function OnboardingAgent() {
                 )}
               </div>
             ))}
-            {isLoading && <div style={{ display: "flex" }}><div style={{ padding: "12px 16px", borderRadius: "16px", background: "#1f2937" }}><Loader2 style={{ width: "20px", height: "20px", color: "#a78bfa", animation: "spin 1s linear infinite" }} /></div></div>}
+
+            {isLoading && (
+              <div style={{ display: "flex" }}>
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: "16px",
+                    background: "#1f2937"
+                  }}
+                >
+                  <Loader2
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      color: "#a78bfa",
+                      animation: "spin 1s linear infinite"
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div ref={endRef} />
           </div>
 
-          {/* Input */}
           <div style={{ padding: "16px", borderTop: "1px solid #374151" }}>
             <div style={{ display: "flex", gap: "8px" }}>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && sendMessage(input)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
                 placeholder="Escribe tu pregunta..."
-                style={{ flex: 1, padding: "12px 16px", borderRadius: "12px", border: "1px solid #374151", background: "#1f2937", color: "#fff", fontSize: "14px", outline: "none" }}
+                style={{
+                  flex: 1,
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  border: "1px solid #374151",
+                  background: "#1f2937",
+                  color: "#fff",
+                  fontSize: "14px",
+                  outline: "none"
+                }}
               />
-              <button onClick={() => sendMessage(input)} disabled={!input.trim() || isLoading} style={{ padding: "12px 16px", borderRadius: "12px", background: input.trim() && !isLoading ? "#7c3aed" : "#374151", border: "none", cursor: input.trim() && !isLoading ? "pointer" : "not-allowed" }}>
+
+              <button
+                onClick={() => sendMessage(input)}
+                disabled={!input.trim() || isLoading}
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  background: input.trim() && !isLoading ? "#7c3aed" : "#374151",
+                  border: "none",
+                  cursor: input.trim() && !isLoading ? "pointer" : "not-allowed"
+                }}
+              >
                 <Send style={{ width: "18px", height: "18px", color: "#fff" }} />
               </button>
             </div>

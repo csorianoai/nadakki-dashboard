@@ -113,9 +113,9 @@ export default function SocialPage() {
 
       <div className="grid grid-cols-4 gap-6 mb-8">
         <StatCard value={stats.connected.toString()} label="Redes Conectadas" icon={<Share2 className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-        <StatCard value={hasConnections ? "â€”" : "0"} label="Seguidores Total" icon={<MessageSquare className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value={hasConnections ? "â€”" : "0"} label="Posts Este Mes" icon={<Calendar className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
-        <StatCard value={hasConnections ? "â€”" : "0%"} label="Engagement Rate" icon={<BarChart3 className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
+        <StatCard value={hasConnections ? "-" : "0"} label="Seguidores Total" icon={<MessageSquare className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value={hasConnections ? "-" : "0"} label="Posts Este Mes" icon={<Calendar className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
+        <StatCard value={hasConnections ? "-" : "0%"} label="Engagement Rate" icon={<BarChart3 className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
 
       <Link href="/social/connections">
@@ -173,7 +173,7 @@ export default function SocialPage() {
               <p className="text-sm text-gray-400">Gestiona tus redes sociales</p>
             </div>
             <Link href="/social/connections" className="text-sm text-cyan-400 hover:text-cyan-300">
-              Gestionar â†’
+              Gestionar '
             </Link>
           </div>
           <div className="flex items-center gap-4 flex-wrap">
@@ -193,14 +193,14 @@ export default function SocialPage() {
 
 function getPlatformIcon(platform: string): string {
   const icons: Record<string, string> = {
-    facebook: "ðŸ“˜",
-    instagram: "ðŸ“¸",
-    twitter: "ðŸ¦",
-    linkedin: "ðŸ’¼",
-    tiktok: "ðŸŽµ",
-    youtube: "â–¶ï¸"
+    facebook: "-",
+    instagram: "-",
+    twitter: "",
+    linkedin: "'",
+    tiktok: "",
+    youtube: "-"
   };
-  return icons[platform] || "ðŸŒ";
+  return icons[platform] || "";
 }
 
 

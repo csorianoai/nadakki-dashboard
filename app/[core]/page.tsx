@@ -78,7 +78,7 @@ export default function CorePage() {
         />
         <div className="p-8">
           <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors">
-            <span>â†</span> Volver al Dashboard
+            <span></span> Volver al Dashboard
           </Link>
 
           <div className="grid grid-cols-4 gap-6 mb-8">
@@ -124,7 +124,7 @@ export default function CorePage() {
                   name={agent.name}
                   displayName={agent.name}
                   category={agent.category}
-                  icon={agent.icon || "⚙️"} status="active"
+                  icon={agent.icon || ""} status="active"
                   coreColor={coreConfig.color}
                 />
               ))}

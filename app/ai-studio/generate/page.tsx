@@ -42,9 +42,9 @@ export default function AIGeneratePage() {
       });
       // Simulated results
       setResults([
-        "ðŸš€ Â¡Transforma tu negocio hoy! Nuestra soluciÃ³n de IA automatiza tu marketing en minutos. ðŸ’¡ Resultados garantizados en 7 dÃ­as. Â¿Listo para el cambio? ðŸ‘‡ #Marketing #AI #InnovaciÃ³n",
-        "Â¿SabÃ­as que el 73% de las empresas exitosas ya usan IA para marketing? ðŸ“Š No te quedes atrÃ¡s â†’ Descubre cÃ³mo en el link de nuestra bio âœ¨ #TransformaciÃ³nDigital",
-        "ANTES: 8 horas creando contenido ðŸ˜©\nDESPUÃ‰S: 30 minutos con nuestra IA ðŸŽ¯\n\nÂ¿La diferencia? AutomatizaciÃ³n inteligente.\n\nðŸ‘‰ Agenda tu demo gratuita #ProductividadMaxima"
+        "Transforma tu negocio hoy! Nuestra solucion de IA automatiza tu marketing en minutos. Resultados garantizados en 7 dias. Listo para el cambio? #Marketing #AI #Innovacion",
+        "Sabias que el 73% de las empresas exitosas ya usan IA para marketing? No te quedes atras. Descubre como en el link de nuestra bio #TransformacionDigital",
+        "ANTES: 8 horas creando contenido\nDESPUES: 30 minutos con nuestra IA\n\nLa diferencia? Automatizacion inteligente.\n\nAgenda tu demo gratuita #ProductividadMaxima"
       ]);
     } finally {
       setGenerating(false);
@@ -80,7 +80,7 @@ export default function AIGeneratePage() {
         {/* Config Panel */}
         <div className="col-span-2">
           <GlassCard className="p-6">
-            <h3 className="text-lg font-bold text-white mb-6">ConfiguraciÃ³n</h3>
+            <h3 className="text-lg font-bold text-white mb-6">Configuracin</h3>
             
             {/* Platform */}
             <div className="mb-6">
@@ -117,7 +117,7 @@ export default function AIGeneratePage() {
 
             {/* Prompt */}
             <div className="mb-6">
-              <label className="text-sm text-gray-400 mb-3 block">DescripciÃ³n del contenido</label>
+              <label className="text-sm text-gray-400 mb-3 block">Descripcin del contenido</label>
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -199,7 +199,7 @@ export default function AIGeneratePage() {
                     <Sparkles className="w-8 h-8 text-purple-400" />
                   </div>
                   <p className="text-gray-400">Configura y genera contenido con IA</p>
-                  <p className="text-sm text-gray-500 mt-2">Los resultados aparecerÃ¡n aquÃ­</p>
+                  <p className="text-sm text-gray-500 mt-2">Los resultados aparecer!n aqu</p>
                 </motion.div>
               )}
             </AnimatePresence>

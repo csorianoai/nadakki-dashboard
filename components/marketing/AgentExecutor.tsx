@@ -39,7 +39,7 @@ export default function AgentExecutor({ agentId, agentName, color, defaultInput 
       setResult(data);
     } catch (err: any) {
       if (err.message?.includes("Failed to fetch")) {
-        setError("Backend dormido. Haz clic en âš¡ para despertar y espera 30 seg.");
+        setError("Backend dormido. Haz clic en ! para despertar y espera 30 seg.");
       } else {
         setError(err.message);
       }
@@ -53,7 +53,7 @@ export default function AgentExecutor({ agentId, agentName, color, defaultInput 
     setLoading(true);
     try {
       await fetch(`${API_BASE}/health`);
-      setResult({ message: "âœ… Backend despertado. Ahora ejecuta el agente." });
+      setResult({ message: "... Backend despertado. Ahora ejecuta el agente." });
     } catch {
       setError("Iniciando backend... espera 30 segundos.");
     } finally {
@@ -70,12 +70,12 @@ export default function AgentExecutor({ agentId, agentName, color, defaultInput 
           border: "none", borderRadius: 8, color: "white", fontWeight: 600,
           cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
         }}>
-          {loading ? "â³ Ejecutando..." : "ðŸš€ Ejecutar"}
+          {loading ? " Ejecutando..." : " Ejecutar"}
         </button>
         <button onClick={wakeBackend} disabled={loading} title="Despertar backend" style={{
           padding: "12px 14px", backgroundColor: "rgba(245,158,11,0.2)", border: "1px solid rgba(245,158,11,0.3)",
           borderRadius: 8, color: "#f59e0b", cursor: "pointer", fontSize: 16,
-        }}>âš¡</button>
+        }}>!</button>
       </div>
 
       {showModal && (
@@ -89,11 +89,11 @@ export default function AgentExecutor({ agentId, agentName, color, defaultInput 
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
               <h3 style={{ color: "#f8fafc", margin: 0 }}>
-                {error ? "âŒ Error" : "âœ… Resultado"} - {agentName}
+                {error ? " Error" : "... Resultado"} - {agentName}
               </h3>
               <button onClick={() => setShowModal(false)} style={{
                 backgroundColor: "transparent", border: "none", color: "#94a3b8", fontSize: 24, cursor: "pointer"
-              }}>Ã—</button>
+              }}>--</button>
             </div>
             
             {error ? (
@@ -115,7 +115,7 @@ export default function AgentExecutor({ agentId, agentName, color, defaultInput 
               {result && !error && (
                 <button onClick={() => navigator.clipboard.writeText(JSON.stringify(result, null, 2))} style={{
                   padding: "8px 16px", backgroundColor: color, border: "none", borderRadius: 6, color: "white", cursor: "pointer"
-                }}>ðŸ“‹ Copiar</button>
+                }}>" Copiar</button>
               )}
             </div>
           </div>

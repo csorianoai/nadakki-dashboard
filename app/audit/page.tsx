@@ -57,7 +57,7 @@ export default function AuditPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Audit Logs</h1>
 
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <span className="text-sm text-gray-600">Tenant: {tenantId ?? "—"}</span>
+        <span className="text-sm text-gray-600">Tenant: {tenantId ?? "--"}</span>
         <button
           onClick={fetchLogs}
           disabled={loading}
@@ -97,12 +97,12 @@ export default function AuditPage() {
                 ) : (
                   logs.map((log, i) => (
                     <tr key={i} className="border-t border-gray-100 hover:bg-gray-50">
-                      <td className="px-4 py-2 text-gray-600">{log.timestamp ?? "â€”"}</td>
-                      <td className="px-4 py-2 font-mono text-xs">{log.agent_id ?? "â€”"}</td>
-                      <td className="px-4 py-2">{log.mode ?? "â€”"}</td>
-                      <td className="px-4 py-2">{log.status ?? "â€”"}</td>
-                      <td className="px-4 py-2">{log.latency_ms ?? "â€”"}</td>
-                      <td className="px-4 py-2 font-mono text-xs">{log.trace_id ?? "â€”"}</td>
+                      <td className="px-4 py-2 text-gray-600">{log.timestamp ?? "-"}</td>
+                      <td className="px-4 py-2 font-mono text-xs">{log.agent_id ?? "-"}</td>
+                      <td className="px-4 py-2">{log.mode ?? "-"}</td>
+                      <td className="px-4 py-2">{log.status ?? "-"}</td>
+                      <td className="px-4 py-2">{log.latency_ms ?? "-"}</td>
+                      <td className="px-4 py-2 font-mono text-xs">{log.trace_id ?? "-"}</td>
                     </tr>
                   ))
                 )}

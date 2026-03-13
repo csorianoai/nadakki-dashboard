@@ -7,6 +7,7 @@ import { fetchEstadoSistema, type EstadoSistema } from "@/lib/api/sic";
 const SALUD_STYLE: Record<string, string> = {
   ok: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
   degradado: "bg-amber-500/20 text-amber-400 border-amber-500/40",
+  no_disponible: "bg-slate-500/20 text-slate-400 border-slate-500/40",
   error: "bg-red-500/20 text-red-400 border-red-500/40",
 };
 
@@ -18,11 +19,15 @@ export function IndicadorEstadoSistema() {
     if (!tenantId) return;
     fetchEstadoSistema(tenantId)
       .then(setEstado)
-      .catch(() => setEstado({ salud: "error", conectividad: false }));
+      .catch(() => setEstado({ salud: "no_disponible", conectividad: false }));
   }, [tenantId]);
 
-  const salud = estado?.salud ?? (estado?.conectividad === false ? "error" : "ok");
-  const label = salud === "ok" ? "Operativo" : salud === "degradado" ? "Degradado" : "Error";
+  const salud = estado?.salud ?? (estado?.conectividad === false ? "no_disponible" : "ok");
+  const label =
+    salud === "ok" ? "Operativo"
+    : salud === "degradado" ? "Degradado"
+    : salud === "no_disponible" ? "No disponible"
+    : "Error";
 
   return (
     <span

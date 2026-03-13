@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
 import {
@@ -129,12 +129,12 @@ export default function SocialConnectionsClient() {
                             </span>
                             {platformData?.page_name && (
                               <span className="text-sm text-gray-500">
-                                â€¢ {platformData.page_name}
+                                 {platformData.page_name}
                               </span>
                             )}
                             {platformData?.user_email && (
                               <span className="text-sm text-gray-500">
-                                â€¢ {platformData.user_email}
+                                 {platformData.user_email}
                               </span>
                             )}
                             {needsRefresh && (
@@ -147,7 +147,7 @@ export default function SocialConnectionsClient() {
                           <p className="text-sm text-gray-500 mt-1">
                             {config.enabled
                               ? "No conectado"
-                              : "PrÃ³ximamente"}
+                              : "Prximamente"}
                           </p>
                         )}
                       </div>
@@ -174,7 +174,7 @@ export default function SocialConnectionsClient() {
                           disabled
                           className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 text-sm cursor-not-allowed"
                         >
-                          PrÃ³ximamente
+                          Prximamente
                         </button>
                       )}
                     </div>

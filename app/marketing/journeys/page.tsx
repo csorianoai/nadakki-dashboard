@@ -379,7 +379,7 @@ export default function JourneysListPage() {
               </div>
             </div>
             <p className="text-gray-300 mb-6">
-              Â¿Estas seguro de que quieres eliminar este journey? Todos los datos asociados se perderan.
+              Â?Estas seguro de que quieres eliminar este journey? Todos los datos asociados se perderan.
             </p>
             <div className="flex justify-end gap-3">
               <button

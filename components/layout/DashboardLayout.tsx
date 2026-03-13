@@ -3,7 +3,49 @@
 import React, { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
+import {
+  Home,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
+  Rocket,
+  Building2,
+  Settings,
+  PlayCircle,
+  ClipboardList,
+  Inbox,
+  FolderOpen,
+  Upload,
+  ScrollText,
+  Megaphone,
+  Search,
+  BookOpen,
+  Music,
+  Briefcase,
+  RefreshCw,
+  Target,
+  Recycle,
+  PenLine,
+  Smartphone,
+  Mail,
+  BarChart3,
+  FlaskConical,
+  Star,
+  Bot,
+  TrendingUp,
+  Paintbrush,
+  Link2,
+  Wrench,
+  Shield,
+  CheckCircle,
+  Brain,
+  Activity,
+  Eye,
+  Users,
+  FileBarChart,
+  Lock,
+} from "lucide-react";
 import AgentCountDisplay from "./AgentCountDisplay";
 import TenantSelector from "@/components/ui/TenantSelector";
 import { useTenant } from "@/contexts/TenantContext";
@@ -11,7 +53,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface NavModule {
   id: string;
-  icon: string;
+  icon: ReactNode;
   label: string;
   href: string;
   badge?: number | string;
@@ -19,7 +61,7 @@ interface NavModule {
 interface NavCore {
   id: string;
   title: string;
-  icon: string;
+  icon: ReactNode;
   color: string;
   gradient: string;
   modules: NavModule[];
@@ -29,106 +71,111 @@ const navigationStructure: NavCore[] = [
   {
     id: "system",
     title: "SISTEMA",
-    icon: "🚀",
+    icon: <Rocket size={14} />,
     color: "#00d4ff",
     gradient: "linear-gradient(135deg, #00d4ff, #0099cc)",
     modules: [
-      { id: "dashboard", icon: "🏠", label: "Dashboard Principal", href: "/", badge: "∞" },
-      /* Live Panel: was missing from nav - no gating. Visible to all users with sidebar access (same as Ejecutar Agentes). */
-      { id: "live-panel", icon: "▶️", label: "Live Panel", href: "/agents/live" },
-      { id: "tenants", icon: "🏢", label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
-      { id: "settings", icon: "⚙️", label: "Configuración", href: "/settings" },
-      { id: "agents-execute", icon: "▶️", label: "Ejecutar Agentes", href: "/agents/execute", badge: "42" },
+      { id: "dashboard", icon: <Home size={14} />, label: "Dashboard Principal", href: "/" },
+      { id: "live-panel", icon: <Activity size={14} />, label: "Live Panel", href: "/agents/live" },
+      { id: "tenants", icon: <Building2 size={14} />, label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
+      { id: "settings", icon: <Settings size={14} />, label: "Configuracion", href: "/settings" },
+      { id: "agents-execute", icon: <PlayCircle size={14} />, label: "Ejecutar Agentes", href: "/agents/execute" },
     ],
   },
 
   {
     id: "sic",
     title: "SIC — RIESGO CREDITICIO",
-    icon: "📋",
+    icon: <ClipboardList size={14} />,
     color: "#0ea5e9",
     gradient: "linear-gradient(135deg, #0ea5e9, #0284c7)",
     modules: [
-      { id: "sic-home", icon: "🏠", label: "Inicio SIC", href: "/sic" },
-      { id: "sic-bandeja", icon: "📥", label: "Bandeja", href: "/sic/bandeja" },
-      { id: "sic-expedientes", icon: "📁", label: "Expedientes", href: "/sic/expedientes" },
-      { id: "sic-exportaciones", icon: "📤", label: "Exportaciones", href: "/sic/exportaciones" },
-      { id: "sic-auditoria", icon: "📜", label: "Auditoría", href: "/sic/auditoria" },
-      { id: "sic-configuracion", icon: "⚙️", label: "Configuración", href: "/sic/configuracion" },
+      { id: "sic-home", icon: <Home size={14} />, label: "Inicio SIC", href: "/sic" },
+      { id: "sic-metricas", icon: <BarChart3 size={14} />, label: "Metricas", href: "/sic/metricas" },
+      { id: "sic-bandeja", icon: <Inbox size={14} />, label: "Bandeja", href: "/sic/bandeja" },
+      { id: "sic-expedientes", icon: <FolderOpen size={14} />, label: "Expedientes", href: "/sic/expedientes" },
+      { id: "sic-comite", icon: <Users size={14} />, label: "Comite", href: "/sic/comite" },
+      { id: "sic-portafolio", icon: <Briefcase size={14} />, label: "Portafolio", href: "/sic/portafolio" },
+      { id: "sic-reportes", icon: <FileBarChart size={14} />, label: "Reportes", href: "/sic/reportes" },
+      { id: "sic-exportaciones", icon: <Upload size={14} />, label: "Exportaciones", href: "/sic/exportaciones" },
+      { id: "sic-auditoria", icon: <ScrollText size={14} />, label: "Auditoria", href: "/sic/auditoria" },
+      { id: "sic-auditoria-acceso", icon: <Lock size={14} />, label: "Auditoria Acceso", href: "/sic/auditoria-acceso" },
+      { id: "sic-configuracion", icon: <Settings size={14} />, label: "Configuracion", href: "/sic/configuracion" },
+      { id: "sic-demo", icon: <PlayCircle size={14} />, label: "Demo", href: "/sic/demo" },
     ],
   },
 
   {
     id: "advertising",
     title: "PUBLICIDAD",
-    icon: "📢",
+    icon: <Megaphone size={14} />,
     color: "#10b981",
     gradient: "linear-gradient(135deg, #10b981, #059669)",
     modules: [
-      { id: "advertising-hub", icon: "📣", label: "Publicidad (Hub)", href: "/advertising" },
-      { id: "google-ads", icon: "🔎", label: "Google Ads", href: "/advertising/google-ads", badge: "MVP" },
-      { id: "meta-ads", icon: "📘", label: "Meta Ads", href: "/advertising/meta-ads" },
-      { id: "tiktok-ads", icon: "🎵", label: "TikTok Ads", href: "/advertising/tiktok-ads" },
-      { id: "linkedin-ads", icon: "💼", label: "LinkedIn Ads", href: "/advertising/linkedin-ads" },
+      { id: "advertising-hub", icon: <Megaphone size={14} />, label: "Publicidad (Hub)", href: "/advertising" },
+      { id: "google-ads", icon: <Search size={14} />, label: "Google Ads", href: "/advertising/google-ads", badge: "MVP" },
+      { id: "meta-ads", icon: <BookOpen size={14} />, label: "Meta Ads", href: "/advertising/meta-ads" },
+      { id: "tiktok-ads", icon: <Music size={14} />, label: "TikTok Ads", href: "/advertising/tiktok-ads" },
+      { id: "linkedin-ads", icon: <Briefcase size={14} />, label: "LinkedIn Ads", href: "/advertising/linkedin-ads" },
     ],
   },
 
   {
     id: "workflows",
     title: "WORKFLOWS",
-    icon: "🔄",
+    icon: <RefreshCw size={14} />,
     color: "#8B5CF6",
     gradient: "linear-gradient(135deg, #8B5CF6, #6366F1)",
     modules: [
-      { id: "wf-all", icon: "📋", label: "Todos los Workflows", href: "/workflows", badge: "10" },
-      { id: "wf-campaign", icon: "📢", label: "Campaign Optimization", href: "/workflows/campaign-optimization" },
-      { id: "wf-acquisition", icon: "🎯", label: "Customer Acquisition", href: "/workflows/customer-acquisition-intelligence" },
-      { id: "wf-lifecycle", icon: "♻️", label: "Customer Lifecycle", href: "/workflows/customer-lifecycle-revenue" },
-      { id: "wf-content", icon: "📝", label: "Content Performance", href: "/workflows/content-performance-engine" },
-      { id: "wf-social", icon: "📱", label: "Social Intelligence", href: "/workflows/social-media-intelligence" },
-      { id: "wf-email", icon: "✉️", label: "Email Automation", href: "/workflows/email-automation-master" },
-      { id: "wf-attribution", icon: "📊", label: "Multi-Channel Attribution", href: "/workflows/multi-channel-attribution" },
-      { id: "wf-competitive", icon: "🔍", label: "Competitive Intel", href: "/workflows/competitive-intelligence-hub" },
-      { id: "wf-abtesting", icon: "🧪", label: "A/B Testing", href: "/workflows/ab-testing-experimentation" },
-      { id: "wf-influencer", icon: "⭐", label: "Influencer Engine", href: "/workflows/influencer-partnership-engine" },
+      { id: "wf-all", icon: <ClipboardList size={14} />, label: "Todos los Workflows", href: "/workflows", badge: "10" },
+      { id: "wf-campaign", icon: <Megaphone size={14} />, label: "Campaign Optimization", href: "/workflows/campaign-optimization" },
+      { id: "wf-acquisition", icon: <Target size={14} />, label: "Customer Acquisition", href: "/workflows/customer-acquisition-intelligence" },
+      { id: "wf-lifecycle", icon: <Recycle size={14} />, label: "Customer Lifecycle", href: "/workflows/customer-lifecycle-revenue" },
+      { id: "wf-content", icon: <PenLine size={14} />, label: "Content Performance", href: "/workflows/content-performance-engine" },
+      { id: "wf-social", icon: <Smartphone size={14} />, label: "Social Intelligence", href: "/workflows/social-media-intelligence" },
+      { id: "wf-email", icon: <Mail size={14} />, label: "Email Automation", href: "/workflows/email-automation-master" },
+      { id: "wf-attribution", icon: <BarChart3 size={14} />, label: "Multi-Channel Attribution", href: "/workflows/multi-channel-attribution" },
+      { id: "wf-competitive", icon: <Eye size={14} />, label: "Competitive Intel", href: "/workflows/competitive-intelligence-hub" },
+      { id: "wf-abtesting", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/workflows/ab-testing-experimentation" },
+      { id: "wf-influencer", icon: <Star size={14} />, label: "Influencer Engine", href: "/workflows/influencer-partnership-engine" },
     ],
   },
 
   {
     id: "marketing",
     title: "MARKETING",
-    icon: "🎯",
+    icon: <Target size={14} />,
     color: "#F97316",
     gradient: "linear-gradient(135deg, #F97316, #EA580C)",
     modules: [
-      { id: "mkt-all", icon: "🎯", label: "Marketing Hub", href: "/marketing", badge: "42" },
-      { id: "mkt-agents", icon: "🤖", label: "Agentes", href: "/marketing/agents" },
-      { id: "mkt-campaigns", icon: "📢", label: "Campañas", href: "/marketing/campaigns" },
-      { id: "mkt-leads", icon: "📈", label: "Lead Management", href: "/marketing/leads" },
-      { id: "mkt-content", icon: "✍️", label: "Content Generation", href: "/marketing/content" },
-      { id: "mkt-social", icon: "📱", label: "Social Media", href: "/marketing/social" },
-      { id: "mkt-google-ads", icon: "📊", label: "Google Ads", href: "/marketing/google-ads" },
-      { id: "mkt-social-connections", icon: "🔗", label: "Social Connections", href: "/marketing/social-connections" },
-      { id: "mkt-attribution", icon: "🔗", label: "Attribution", href: "/marketing/attribution" },
-      { id: "mkt-ab-testing", icon: "🧪", label: "A/B Testing", href: "/marketing/ab-testing" },
-      { id: "mkt-predictive", icon: "🔮", label: "Predictive", href: "/marketing/predictive" },
-      { id: "mkt-analytics", icon: "📊", label: "Analytics", href: "/marketing/analytics" },
+      { id: "mkt-all", icon: <Target size={14} />, label: "Marketing Hub", href: "/marketing" },
+      { id: "mkt-agents", icon: <Bot size={14} />, label: "Agentes", href: "/marketing/agents" },
+      { id: "mkt-campaigns", icon: <Megaphone size={14} />, label: "Campanas", href: "/marketing/campaigns" },
+      { id: "mkt-leads", icon: <TrendingUp size={14} />, label: "Lead Management", href: "/marketing/leads" },
+      { id: "mkt-content", icon: <Paintbrush size={14} />, label: "Content Generation", href: "/marketing/content" },
+      { id: "mkt-social", icon: <Smartphone size={14} />, label: "Social Media", href: "/marketing/social" },
+      { id: "mkt-google-ads", icon: <BarChart3 size={14} />, label: "Google Ads", href: "/marketing/google-ads" },
+      { id: "mkt-social-connections", icon: <Link2 size={14} />, label: "Social Connections", href: "/marketing/social-connections" },
+      { id: "mkt-attribution", icon: <Link2 size={14} />, label: "Attribution", href: "/marketing/attribution" },
+      { id: "mkt-ab-testing", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/marketing/ab-testing" },
+      { id: "mkt-predictive", icon: <Brain size={14} />, label: "Predictive", href: "/marketing/predictive" },
+      { id: "mkt-analytics", icon: <BarChart3 size={14} />, label: "Analytics", href: "/marketing/analytics" },
     ],
   },
 
   {
     id: "admin",
     title: "ADMIN",
-    icon: "🛠️",
+    icon: <Wrench size={14} />,
     color: "#6366F1",
     gradient: "linear-gradient(135deg, #6366F1, #4F46E5)",
     modules: [
-      { id: "admin-main", icon: "🛠️", label: "Panel Admin", href: "/admin" },
-      { id: "admin-agents", icon: "🤖", label: "Gestión Agentes", href: "/admin/agents" },
-      { id: "admin-logs", icon: "📜", label: "Logs", href: "/admin/logs" },
-      { id: "admin-compliance", icon: "🛡️", label: "Compliance", href: "/compliance" },
-      { id: "admin-testing", icon: "🧪", label: "Testing Lab", href: "/testing" },
-      { id: "admin-qa", icon: "✔️", label: "QA Piloto", href: "/admin/qa" },
+      { id: "admin-main", icon: <Wrench size={14} />, label: "Panel Admin", href: "/admin" },
+      { id: "admin-agents", icon: <Bot size={14} />, label: "Gestion Agentes", href: "/admin/agents" },
+      { id: "admin-logs", icon: <ScrollText size={14} />, label: "Logs", href: "/admin/logs" },
+      { id: "admin-compliance", icon: <Shield size={14} />, label: "Compliance", href: "/compliance" },
+      { id: "admin-testing", icon: <FlaskConical size={14} />, label: "Testing Lab", href: "/testing" },
+      { id: "admin-qa", icon: <CheckCircle size={14} />, label: "QA Piloto", href: "/admin/qa" },
     ],
   },
 ];
@@ -430,7 +477,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { tenantId } = useTenant();
   const { logout } = useAuth();
-  const [expandedCores, setExpandedCores] = useState<string[]>(["system", "advertising", "workflows"]);
+  const [expandedCores, setExpandedCores] = useState<string[]>(["system", "sic", "advertising", "workflows"]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const needsTenant = !NO_TENANT_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
@@ -483,7 +530,7 @@ backgroundColor: colors.bg.sidebar,
               fontSize: "18px",
             }}
           >
-            🚀
+            <Rocket size={18} color="#fff" />
           </div>
           <div>
             <div
@@ -562,7 +609,7 @@ backgroundColor: colors.bg.sidebar,
                 fontSize: "14px",
               }}
             >
-              🧠
+              <Brain size={14} color="#fff" />
             </div>
             <div style={{ flex: 1 }}>
               <TenantSelector />
@@ -571,7 +618,7 @@ backgroundColor: colors.bg.sidebar,
                 onClick={logout}
                 style={{ marginTop: "4px", fontSize: "10px", color: "#94a3b8", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
               >
-                Cerrar sesión
+                Cerrar sesion
               </button>
             </div>
             <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#26de81" }} />
@@ -606,7 +653,7 @@ backgroundColor: colors.bg.sidebar,
                 Selecciona un tenant para continuar
               </p>
               <p style={{ fontSize: "12px" }}>
-                Usa el selector de tenant en la barra superior o en el menú lateral.
+                Usa el selector de tenant en la barra superior o en el menu lateral.
               </p>
               <Link
                 href="/tenants"
@@ -645,7 +692,7 @@ backgroundColor: colors.bg.sidebar,
           boxShadow: "0 4px 20px rgba(139, 92, 246, 0.4)",
           zIndex: 50,
         }}
-        title="Abrir/cerrar menú"
+        title="Abrir/cerrar menu"
       >
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
