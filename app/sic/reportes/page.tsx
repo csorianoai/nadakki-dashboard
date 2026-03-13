@@ -17,6 +17,7 @@ import {
   fetchExportStatus,
   fetchExportHistorial,
   downloadCsvBatch,
+  downloadPdfBatch,
   downloadSnapshot,
   type Expediente,
   type Exportacion,
@@ -1120,6 +1121,25 @@ function TabExportaciones({
     }
   };
 
+  const handlePdfDownload = async () => {
+    setDownloading("pdf");
+    try {
+      const blob = await downloadPdfBatch(tenant);
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `sic_reportes_${tenant}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setDownloading(null);
+    }
+  };
+
   const handleSnapshotDownload = async () => {
     setDownloading("snapshot");
     try {
@@ -1208,6 +1228,7 @@ function TabExportaciones({
           title="PDF"
           desc={pdfReady ? "Exportar reporte batch en PDF" : "Exportar reporte en PDF"}
           ready={pdfReady}
+          onClick={handlePdfDownload}
           loadingKey="pdf"
         />
         <ActionCard

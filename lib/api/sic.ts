@@ -97,13 +97,37 @@ export interface Evidencia {
   metadata?: Record<string, unknown>;
 }
 
+const SIC_TOKEN_KEY = "nadakki_sic_token";
+
+export function getSicToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(SIC_TOKEN_KEY);
+}
+
 function headers(tenantId: string, overrides?: Record<string, string>): Record<string, string> {
-  return {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
+  const h: Record<string, string> = {
+    Accept: "application/json",
     "X-Tenant-ID": tenantId,
     ...overrides,
   };
+  if (!overrides?.["Content-Type"]) h["Content-Type"] = "application/json";
+  const token = getSicToken();
+  if (token) h["Authorization"] = `Bearer ${token}`;
+  return h;
+}
+
+function headersForUpload(tenantId: string): Record<string, string> {
+  const h: Record<string, string> = { "X-Tenant-ID": tenantId };
+  const token = getSicToken();
+  if (token) h["Authorization"] = `Bearer ${token}`;
+  return h;
+}
+
+function headersForDownload(tenantId: string, accept: string): Record<string, string> {
+  const h: Record<string, string> = { "X-Tenant-ID": tenantId, Accept: accept };
+  const token = getSicToken();
+  if (token) h["Authorization"] = `Bearer ${token}`;
+  return h;
 }
 
 export async function fetchExpedientes(tenantId: string): Promise<Expediente[]> {
@@ -867,7 +891,15 @@ export async function fetchExportHistorial(tenantId: string, limit = 50): Promis
 
 export async function downloadCsvBatch(tenantId: string): Promise<Blob | null> {
   const res = await fetch(`${API_BASE}/api/v1/sic/reportes/exportaciones/csv`, {
-    headers: { "X-Tenant-ID": tenantId, Accept: "text/csv" },
+    headers: headersForDownload(tenantId, "text/csv"),
+  });
+  if (!res.ok) return null;
+  return res.blob();
+}
+
+export async function downloadPdfBatch(tenantId: string): Promise<Blob | null> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/reportes/exportaciones/pdf`, {
+    headers: headersForDownload(tenantId, "application/pdf"),
   });
   if (!res.ok) return null;
   return res.blob();
@@ -952,7 +984,7 @@ export async function subirDocumento(
     `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/documentos`,
     {
       method: "POST",
-      headers: { "X-Tenant-ID": tenantId },
+      headers: headersForUpload(tenantId),
       body: formData,
     }
   );

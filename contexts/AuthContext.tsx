@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   tenantName: "nadakki_tenant_name",
   role: "nadakki_role",
   plan: "nadakki_plan",
+  sicToken: "nadakki_sic_token",
 } as const;
 
 const DEMO_USERS: Record<string, { password: string; tenantId: string; tenantName: string; role: string; plan: string }> = {
@@ -98,6 +99,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
+    // Obtain SIC JWT from backend for protected SIC API calls
+    try {
+      const res = await fetch("/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: key, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const token = data?.access_token;
+        if (token && typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEYS.sicToken, token);
+        }
+      }
+    } catch {
+      // Backend unreachable — SIC will fall back to demo/401; keep local auth
+    }
+
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEYS.auth, "true");
       localStorage.setItem(STORAGE_KEYS.tenantId, demo.tenantId);
@@ -125,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(STORAGE_KEYS.tenantName);
       localStorage.removeItem(STORAGE_KEYS.role);
       localStorage.removeItem(STORAGE_KEYS.plan);
+      localStorage.removeItem(STORAGE_KEYS.sicToken);
     }
     setState({
       isAuthenticated: false,
