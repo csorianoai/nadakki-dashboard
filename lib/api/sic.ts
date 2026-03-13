@@ -75,6 +75,17 @@ export interface Exportacion {
   mensaje_error?: string;
 }
 
+export interface Documento {
+  documento_id: string;
+  expediente_id: string;
+  nombre_archivo: string;
+  tipo_documento: string;
+  tamano_bytes: number;
+  estado_documento: string;
+  ruta_archivo?: string;
+  fecha_subida?: string;
+}
+
 export interface Evidencia {
   evidencia_id?: string;
   tipo_evidencia?: string;
@@ -909,4 +920,45 @@ export async function fetchDemoSesiones(
   }
   const data = await res.json();
   return data.sesiones ?? data.data ?? (Array.isArray(data) ? data : []);
+}
+
+// ── Documentos por expediente ────────────────────────────────────────────────
+
+export async function fetchDocumentos(
+  expedienteId: string,
+  tenantId: string
+): Promise<Documento[]> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/documentos`,
+      { headers: headers(tenantId) }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.documentos ?? (Array.isArray(data) ? data : []);
+  } catch {
+    return [];
+  }
+}
+
+export async function subirDocumento(
+  expedienteId: string,
+  tenantId: string,
+  file: File
+): Promise<Documento | null> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/documentos`,
+    {
+      method: "POST",
+      headers: { "X-Tenant-ID": tenantId },
+      body: formData,
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.detail ?? `Error ${res.status}`);
+  }
+  return res.json();
 }

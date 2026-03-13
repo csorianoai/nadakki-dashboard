@@ -15,6 +15,7 @@ import {
   fetchExplicabilidad,
   fetchPermisos,
   fetchEvidencia,
+  fetchDocumentos,
   compararVersiones,
   enviarOverride,
   cambiarEstado,
@@ -23,6 +24,7 @@ import {
   generarPaqueteRegulatorio,
   type Expediente,
   type Nota,
+  type Documento,
   type EstadoExpediente,
   type Explicabilidad,
   type Permisos,
@@ -36,6 +38,7 @@ import { PanelExplicabilidad } from "@/components/sic/PanelExplicabilidad";
 import { ComparadorVersiones } from "@/components/sic/ComparadorVersiones";
 import { PanelEvidencia } from "@/components/sic/PanelEvidencia";
 import { MemoEjecutivo } from "@/components/sic/MemoEjecutivo";
+import { PanelDocumentos } from "@/components/sic/PanelDocumentos";
 import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
 import { useDemo } from "@/contexts/DemoContext";
 import { getDemoExpedientes, getDemoEventosAuditoria, getDemoExportaciones } from "@/lib/demo-sic";
@@ -75,6 +78,7 @@ export default function SicExpedienteIdPage() {
   const [versiones, setVersiones] = useState<VersionAnalisis[]>([]);
   const [auditoria, setAuditoria] = useState<unknown[]>([]);
   const [exportaciones, setExportaciones] = useState<unknown[]>([]);
+  const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [explicabilidad, setExplicabilidad] = useState<Explicabilidad | null>(null);
   const [permisos, setPermisos] = useState<Permisos | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,6 +103,10 @@ export default function SicExpedienteIdPage() {
       setVersiones(exp ? [{ version_id: "v1", expediente_id: id, numero_version: 1, decision_version: exp.decision_actual }] : []);
       setAuditoria(getDemoEventosAuditoria(escenario).filter((e) => e.expediente_id === id));
       setExportaciones(getDemoExportaciones(escenario).filter((x) => x.expediente_id === id));
+      setDocumentos(exp ? [
+        { documento_id: "doc-demo-1", expediente_id: id, nombre_archivo: "cedula_identidad.pdf", tipo_documento: "application/pdf", tamano_bytes: 245_000, estado_documento: "SUBIDO", fecha_subida: "2026-03-10" },
+        { documento_id: "doc-demo-2", expediente_id: id, nombre_archivo: "comprobante_ingresos.jpg", tipo_documento: "image/jpeg", tamano_bytes: 1_200_000, estado_documento: "SUBIDO", fecha_subida: "2026-03-10" },
+      ] : []);
       setExplicabilidad(exp ? { narrativa_ejecutiva: "[Demo] Análisis de crédito simulado.", factores_a_favor: ["Score favorable"], factores_en_contra: ["Ratio DTI elevado"], reglas_aplicadas: ["Regla 1", "Regla 2"] } : null);
       setPermisos({ rol: "analista", puede_override: true, puede_exportar: true, puede_cambiar_estado: true });
       setLoading(false);
@@ -113,8 +121,9 @@ export default function SicExpedienteIdPage() {
       fetchExportaciones(id, tenant),
       fetchExplicabilidad(id, tenant).catch(() => null),
       fetchPermisos(id, tenant).catch(() => null),
+      fetchDocumentos(id, tenant),
     ])
-      .then(([exp, tl, nt, vr, au, ex, expb, perm]) => {
+      .then(([exp, tl, nt, vr, au, ex, expb, perm, docs]) => {
         setExpediente(exp ?? null);
         setTimeline(Array.isArray(tl) ? tl : []);
         setNotas(Array.isArray(nt) ? nt : []);
@@ -123,6 +132,7 @@ export default function SicExpedienteIdPage() {
         setExportaciones(Array.isArray(ex) ? ex : []);
         setExplicabilidad(expb ?? null);
         setPermisos(perm ?? null);
+        setDocumentos(Array.isArray(docs) ? docs : []);
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
@@ -461,6 +471,15 @@ export default function SicExpedienteIdPage() {
                 </button>
               </div>
             </div>
+          </Panel>
+          <Panel titulo="Documentos">
+            <PanelDocumentos
+              expedienteId={id}
+              tenantId={tenant}
+              documentos={documentos}
+              demoMode={demoMode && id.startsWith("EXP-DEMO-")}
+              onUploadComplete={cargar}
+            />
           </Panel>
           <Panel titulo="Auditoría">
             {!puedeVerAuditoria ? (
