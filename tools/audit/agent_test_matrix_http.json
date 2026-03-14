@@ -1,0 +1,726 @@
+{
+  "version": "1.0",
+  "source": "agent_test_matrix.json",
+  "agents": [
+    {
+      "agent_id": "abtestingia",
+      "core": "marketing",
+      "group": "experimentation",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/abtestingia/execute"
+    },
+    {
+      "agent_id": "abtestingimpactia",
+      "core": "marketing",
+      "group": "experimentation",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/abtestingimpactia/execute"
+    },
+    {
+      "agent_id": "attributionmodelia",
+      "core": "marketing",
+      "group": "attribution",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/attributionmodelia/execute"
+    },
+    {
+      "agent_id": "audiencesegmenteria",
+      "core": "marketing",
+      "group": "audience_segmentation",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/audiencesegmenteria/execute"
+    },
+    {
+      "agent_id": "brandsentimentia",
+      "core": "marketing",
+      "group": "brand_sentiment",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/brandsentimentia/execute"
+    },
+    {
+      "agent_id": "budgetforecastia",
+      "core": "marketing",
+      "group": "budget",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_budget.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/budgetforecastia/execute"
+    },
+    {
+      "agent_id": "campaignoptimizeria",
+      "core": "marketing",
+      "group": "campaign",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/campaignoptimizeria/execute"
+    },
+    {
+      "agent_id": "campaignstrategyorchestratoria",
+      "core": "marketing",
+      "group": "campaign",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/campaignstrategyorchestratoria/execute"
+    },
+    {
+      "agent_id": "cashofferfilteria",
+      "core": "marketing",
+      "group": "offer_filtering",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/cashofferfilteria/execute"
+    },
+    {
+      "agent_id": "channelattributia",
+      "core": "marketing",
+      "group": "attribution",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/channelattributia/execute"
+    },
+    {
+      "agent_id": "competitoranalyzeria",
+      "core": "marketing",
+      "group": "competitor_intelligence",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/competitoranalyzeria/execute"
+    },
+    {
+      "agent_id": "competitorintelligenceia",
+      "core": "marketing",
+      "group": "competitor_intelligence",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/competitorintelligenceia/execute"
+    },
+    {
+      "agent_id": "contactqualityia",
+      "core": "marketing",
+      "group": "contact_quality",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/contactqualityia/execute"
+    },
+    {
+      "agent_id": "contentgeneratoria",
+      "core": "marketing",
+      "group": "content",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_content.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/contentgeneratoria/execute"
+    },
+    {
+      "agent_id": "contentperformanceia",
+      "core": "marketing",
+      "group": "content",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_content.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/contentperformanceia/execute"
+    },
+    {
+      "agent_id": "contentviralityia",
+      "core": "marketing",
+      "group": "content",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_content.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/contentviralityia/execute"
+    },
+    {
+      "agent_id": "conversioncohortia",
+      "core": "marketing",
+      "group": "conversion",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/conversioncohortia/execute"
+    },
+    {
+      "agent_id": "creativeanalyzeria",
+      "core": "marketing",
+      "group": "content",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_content.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/creativeanalyzeria/execute"
+    },
+    {
+      "agent_id": "customersegmentatonia",
+      "core": "marketing",
+      "group": "audience_segmentation",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/customersegmentatonia/execute"
+    },
+    {
+      "agent_id": "emailautomationia",
+      "core": "marketing",
+      "group": "email",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/emailautomationia/execute"
+    },
+    {
+      "agent_id": "fidelizedprofileia",
+      "core": "marketing",
+      "group": "fidelity",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/fidelizedprofileia/execute"
+    },
+    {
+      "agent_id": "geosegmentationia",
+      "core": "marketing",
+      "group": "audience_segmentation",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/geosegmentationia/execute"
+    },
+    {
+      "agent_id": "googleadsbudgetpacingia",
+      "core": "marketing",
+      "group": "budget",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_budget.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/googleadsbudgetpacingia/execute"
+    },
+    {
+      "agent_id": "googleadsstrategistia",
+      "core": "marketing",
+      "group": "campaign",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/googleadsstrategistia/execute"
+    },
+    {
+      "agent_id": "influencermatcheria",
+      "core": "marketing",
+      "group": "influencer",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/influencermatcheria/execute"
+    },
+    {
+      "agent_id": "influencermatchia",
+      "core": "marketing",
+      "group": "influencer",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/influencermatchia/execute"
+    },
+    {
+      "agent_id": "influencermatchingia",
+      "core": "marketing",
+      "group": "influencer",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/influencermatchingia/execute"
+    },
+    {
+      "agent_id": "journeyoptimizeria",
+      "core": "marketing",
+      "group": "journey",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/journeyoptimizeria/execute"
+    },
+    {
+      "agent_id": "leadscoria",
+      "core": "marketing",
+      "group": "lead_scoring",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_lead.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/leadscoria/execute"
+    },
+    {
+      "agent_id": "leadscoringia",
+      "core": "marketing",
+      "group": "lead_scoring",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_lead.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/leadscoringia/execute"
+    },
+    {
+      "agent_id": "marketingmixmodelia",
+      "core": "marketing",
+      "group": "mix_model",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/marketingmixmodelia/execute"
+    },
+    {
+      "agent_id": "marketingorchestratorea",
+      "core": "marketing",
+      "group": "orchestration",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/marketingorchestratorea/execute"
+    },
+    {
+      "agent_id": "meta_publisher_operational",
+      "core": "marketing",
+      "group": "content",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_content.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/meta_publisher_operational/execute"
+    },
+    {
+      "agent_id": "minimalformia",
+      "core": "marketing",
+      "group": "conversion",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/minimalformia/execute"
+    },
+    {
+      "agent_id": "personalizationengineia",
+      "core": "marketing",
+      "group": "personalization",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/personalizationengineia/execute"
+    },
+    {
+      "agent_id": "predictiveleadia",
+      "core": "marketing",
+      "group": "lead_scoring",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_lead.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/predictiveleadia/execute"
+    },
+    {
+      "agent_id": "pricingoptimizeria",
+      "core": "marketing",
+      "group": "pricing",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "pricing_optimization.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/pricingoptimizeria/execute"
+    },
+    {
+      "agent_id": "productaffinityia",
+      "core": "marketing",
+      "group": "personalization",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/productaffinityia/execute"
+    },
+    {
+      "agent_id": "retentionpredictorea",
+      "core": "marketing",
+      "group": "retention",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "retention_analysis.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/retentionpredictorea/execute"
+    },
+    {
+      "agent_id": "retentionpredictoria",
+      "core": "marketing",
+      "group": "retention",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "retention_analysis.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/retentionpredictoria/execute"
+    },
+    {
+      "agent_id": "rsaadcopygeneratoria",
+      "core": "marketing",
+      "group": "rsa_copy",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/rsaadcopygeneratoria/execute"
+    },
+    {
+      "agent_id": "searchtermscleaneria",
+      "core": "marketing",
+      "group": "search_terms",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/searchtermscleaneria/execute"
+    },
+    {
+      "agent_id": "sentimentanalyzeria",
+      "core": "marketing",
+      "group": "brand_sentiment",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/sentimentanalyzeria/execute"
+    },
+    {
+      "agent_id": "sociallisteningia",
+      "core": "marketing",
+      "group": "brand_sentiment",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "orchestration_strategy.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/sociallisteningia/execute"
+    },
+    {
+      "agent_id": "socialpostgeneratoria",
+      "core": "marketing",
+      "group": "content",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_content.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/socialpostgeneratoria/execute"
+    },
+    {
+      "agent_id": "videoreelautogenia",
+      "core": "marketing",
+      "group": "content",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "marketing_content.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/videoreelautogenia/execute"
+    },
+    {
+      "agent_id": "creditscoreia",
+      "core": "credit_risk",
+      "group": "scoring",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/creditscoreia/execute"
+    },
+    {
+      "agent_id": "defaultpredictoria",
+      "core": "credit_risk",
+      "group": "prediction",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/defaultpredictoria/execute"
+    },
+    {
+      "agent_id": "incomeanalyzerai",
+      "core": "credit_risk",
+      "group": "income",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/incomeanalyzerai/execute"
+    },
+    {
+      "agent_id": "debtratioanalyzerai",
+      "core": "credit_risk",
+      "group": "debt",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/debtratioanalyzerai/execute"
+    },
+    {
+      "agent_id": "portfolioriskia",
+      "core": "credit_risk",
+      "group": "portfolio",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/portfolioriskia/execute"
+    },
+    {
+      "agent_id": "underwritingengineia",
+      "core": "credit_risk",
+      "group": "underwriting",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/underwritingengineia/execute"
+    },
+    {
+      "agent_id": "frauddetectionia",
+      "core": "credit_risk",
+      "group": "fraud",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/frauddetectionia/execute"
+    },
+    {
+      "agent_id": "collateralvaluatoria",
+      "core": "credit_risk",
+      "group": "collateral",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/collateralvaluatoria/execute"
+    },
+    {
+      "agent_id": "stresstesteria",
+      "core": "credit_risk",
+      "group": "stress",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/stresstesteria/execute"
+    },
+    {
+      "agent_id": "creditorchestratorea",
+      "core": "credit_risk",
+      "group": "orchestration",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "credit_risk.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/creditorchestratorea/execute"
+    },
+    {
+      "agent_id": "contractanalyzeria",
+      "core": "legal",
+      "group": "contracts",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "legal.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/contractanalyzeria/execute"
+    },
+    {
+      "agent_id": "regulatoryradaria",
+      "core": "legal",
+      "group": "regulatory",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "legal.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/regulatoryradaria/execute"
+    },
+    {
+      "agent_id": "compliancewatchdogia",
+      "core": "legal",
+      "group": "compliance",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "legal.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/compliancewatchdogia/execute"
+    },
+    {
+      "agent_id": "documentguardiania",
+      "core": "legal",
+      "group": "documents",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "legal.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/documentguardiania/execute"
+    },
+    {
+      "agent_id": "amldetectoria",
+      "core": "legal",
+      "group": "aml",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "legal.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/amldetectoria/execute"
+    },
+    {
+      "agent_id": "kycvalidatoria",
+      "core": "legal",
+      "group": "kyc",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "legal.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/kycvalidatoria/execute"
+    },
+    {
+      "agent_id": "sanctionscheckeria",
+      "core": "legal",
+      "group": "sanctions",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "legal.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/sanctionscheckeria/execute"
+    },
+    {
+      "agent_id": "legalorchestratorea",
+      "core": "legal",
+      "group": "orchestration",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "legal.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/legalorchestratorea/execute"
+    },
+    {
+      "agent_id": "auditmasteria",
+      "core": "compliance",
+      "group": "audit",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "compliance.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/auditmasteria/execute"
+    },
+    {
+      "agent_id": "regulatoryreporteria",
+      "core": "compliance",
+      "group": "reporting",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "compliance.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/regulatoryreporteria/execute"
+    },
+    {
+      "agent_id": "dataprivacyguardia",
+      "core": "compliance",
+      "group": "privacy",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "compliance.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/dataprivacyguardia/execute"
+    },
+    {
+      "agent_id": "riskcontrolmatrixia",
+      "core": "compliance",
+      "group": "risk",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "compliance.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/riskcontrolmatrixia/execute"
+    },
+    {
+      "agent_id": "incidenttrackeria",
+      "core": "compliance",
+      "group": "incidents",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "compliance.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/incidenttrackeria/execute"
+    },
+    {
+      "agent_id": "policygeneratoria",
+      "core": "compliance",
+      "group": "policy",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "compliance.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/policygeneratoria/execute"
+    },
+    {
+      "agent_id": "thirdpartyriskia",
+      "core": "compliance",
+      "group": "third_party",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "compliance.json",
+      "smoke": false,
+      "enabled": true,
+      "api_path": "/api/v1/agents/thirdpartyriskia/execute"
+    },
+    {
+      "agent_id": "complianceorchestratoria",
+      "core": "compliance",
+      "group": "orchestration",
+      "tenant_id": "tenant_credicefi",
+      "payload_template": "compliance.json",
+      "smoke": true,
+      "enabled": true,
+      "api_path": "/api/v1/agents/complianceorchestratoria/execute"
+    }
+  ]
+}

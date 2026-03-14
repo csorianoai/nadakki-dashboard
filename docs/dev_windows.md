@@ -25,11 +25,11 @@ On Windows, Next.js dev server may fail with **error 1224** (ERROR_USER_MAPPED_F
    Then run `npm run dev` — Next.js will use Webpack when this is set.
 
 3. **Port**  
-   `dev:stable` uses port **3001** to avoid conflicts with a default `next dev` on 3000.
+   Standard local dev port: **3001** (`dev:stable`). The audit runner and docs assume `http://localhost:3001`.
 
 ## Summary
 
-| Script        | Port | Turbopack | Use case      |
-|---------------|------|-----------|---------------|
-| `npm run dev` | 3000 | Yes       | Fast refresh  |
-| `npm run dev:stable` | 3001 | No (Webpack) | Windows stability |
+| Script              | Port | Turbopack | Use case            |
+|---------------------|------|-----------|---------------------|
+| `npm run dev`       | 3000 | Yes       | Fast refresh        |
+| `npm run dev:stable`| 3001 | No (Webpack) | Windows stability (recommended) |

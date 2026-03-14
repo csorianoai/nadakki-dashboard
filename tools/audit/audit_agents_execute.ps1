@@ -8,22 +8,41 @@
   Captures: url, status, latency, headers, body.
   Retries 429/503/504 up to 2 times with backoff.
 .PARAMETER BaseUrl
-  Dashboard base URL (default: http://localhost:3000)
+  Dashboard base URL (default: http://localhost:3001)
 .PARAMETER Tenant
   X-Tenant-ID value (default: sf-rentals-nadaki-excursions)
 .PARAMETER N
   Optional: limit to first N agents (for quick smoke)
+.PARAMETER Smoke
+  Run only 2 critical agents x 2 variants (fast local validation)
 #>
 
 param(
-  [string]$BaseUrl = "http://localhost:3000",
+  [string]$BaseUrl = "http://localhost:3001",
   [string]$Tenant = "sf-rentals-nadaki-excursions",
-  [int]$N = 0
+  [int]$N = 0,
+  [switch]$Smoke
 )
 
 $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $agentsFile = Join-Path $scriptDir "agents_marketing_core.json"
+
+Write-Host ""
+Write-Host "=== Agent Execute Audit ===" -ForegroundColor Cyan
+Write-Host "Base URL: $BaseUrl" -ForegroundColor Yellow
+Write-Host ""
+
+# Fail-fast: ensure dashboard is reachable
+try {
+  $null = Invoke-WebRequest -Uri "$BaseUrl/api/health" -Method Get -UseBasicParsing -TimeoutSec 5
+} catch {
+  if (-not $_.Exception.Response) {
+    Write-Host "ERROR: Cannot reach $BaseUrl" -ForegroundColor Red
+    Write-Host "Start dashboard with: npm run dev:stable" -ForegroundColor Yellow
+    exit 1
+  }
+}
 $logsDir = Join-Path (Split-Path -Parent (Split-Path -Parent $scriptDir)) "logs\audit"
 $ts = Get-Date -Format "yyyyMMdd_HHmmss"
 $jsonOut = Join-Path $logsDir "agents_execute_audit_$ts.json"
@@ -37,10 +56,16 @@ if (-not (Test-Path $agentsFile)) {
 $raw = Get-Content $agentsFile -Raw
 $config = $raw | ConvertFrom-Json
 $agents = $config.agents
-if ($N -gt 0) {
+$variants = $config.variants
+
+if ($Smoke) {
+  # 2 critical agents x 2 variants
+  $smokeAgentIds = @("contentgeneratoria__contentgeneratoragentoperative", "campaignoptimizeria__campaignoptimizeragentoperative")
+  $agents = $agents | Where-Object { $smokeAgentIds -contains $_.id }
+  $variants = $variants | Select-Object -First 2
+} elseif ($N -gt 0) {
   $agents = $agents | Select-Object -First $N
 }
-$variants = $config.variants
 
 $results = @()
 $urlsCalled = @()
@@ -107,6 +132,7 @@ $summary = @{
   timestamp = $ts
   baseUrl = $BaseUrl
   tenant = $Tenant
+  smoke = $Smoke.IsPresent
   totalCalls = $results.Count
   okCount = ($results | Where-Object { $_.ok }).Count
   urlsCalled = $urlsCalled
@@ -116,10 +142,11 @@ $summary = @{
 
 $summary | ConvertTo-Json -Depth 6 | Set-Content $jsonOut -Encoding UTF8
 
+$modeLine = if ($Smoke.IsPresent) { "**MODE:** SMOKE`n" } else { "" }
 $md = @"
 # Agent Execute Audit — $ts
 
-**Base URL:** $BaseUrl
+$modeLine**Base URL:** $BaseUrl
 **Tenant:** $Tenant
 **Total calls:** $($results.Count)
 **OK:** $(($results | Where-Object { $_.ok }).Count)
@@ -142,8 +169,7 @@ foreach ($r in $results) {
 $md += "`n`n---`n*No /run calls in execute flow.*"
 $md | Set-Content $mdOut -Encoding UTF8
 
-Write-Host ""
-Write-Host "=== Agent Execute Audit ===" -ForegroundColor Cyan
+if ($Smoke.IsPresent) { Write-Host "MODE: SMOKE" -ForegroundColor Magenta }
 Write-Host "Base: $BaseUrl | Tenant: $Tenant"
 Write-Host "Calls: $($results.Count) | OK: $(($results | Where-Object { $_.ok }).Count)"
 Write-Host "URLs contain /run: $runInUrls"
