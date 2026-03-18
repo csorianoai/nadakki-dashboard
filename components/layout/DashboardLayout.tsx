@@ -1,12 +1,10 @@
 "use client";
 
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Home,
-  ChevronLeft,
-  ChevronRight,
   Menu,
   X,
   Rocket,
@@ -79,6 +77,9 @@ const navigationStructure: NavCore[] = [
       { id: "live-panel", icon: <Activity size={14} />, label: "Live Panel", href: "/agents/live" },
       { id: "tenants", icon: <Building2 size={14} />, label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
       { id: "settings", icon: <Settings size={14} />, label: "Configuracion", href: "/settings" },
+      { id: "ai-studio", icon: <Brain size={14} />, label: "AI Studio", href: "/ai-studio" },
+      { id: "analytics", icon: <FileBarChart size={14} />, label: "Analytics Hub", href: "/analytics" },
+      { id: "reports", icon: <ScrollText size={14} />, label: "Reports Hub", href: "/reports" },
       { id: "agents-execute", icon: <PlayCircle size={14} />, label: "Ejecutar Agentes", href: "/agents/execute" },
     ],
   },
@@ -151,6 +152,9 @@ const navigationStructure: NavCore[] = [
       { id: "mkt-all", icon: <Target size={14} />, label: "Marketing Hub", href: "/marketing" },
       { id: "mkt-agents", icon: <Bot size={14} />, label: "Agentes", href: "/marketing/agents" },
       { id: "mkt-campaigns", icon: <Megaphone size={14} />, label: "Campanas", href: "/marketing/campaigns" },
+      { id: "mkt-journeys", icon: <Recycle size={14} />, label: "Journeys", href: "/marketing/journeys" },
+      { id: "mkt-templates", icon: <Star size={14} />, label: "Templates IA", href: "/marketing/templates" },
+      { id: "mkt-segments", icon: <Target size={14} />, label: "Segmentacion", href: "/marketing/segments" },
       { id: "mkt-leads", icon: <TrendingUp size={14} />, label: "Lead Management", href: "/marketing/leads" },
       { id: "mkt-content", icon: <Paintbrush size={14} />, label: "Content Generation", href: "/marketing/content" },
       { id: "mkt-social", icon: <Smartphone size={14} />, label: "Social Media", href: "/marketing/social" },
@@ -163,6 +167,8 @@ const navigationStructure: NavCore[] = [
       { id: "mkt-ab-testing", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/marketing/ab-testing" },
       { id: "mkt-predictive", icon: <Brain size={14} />, label: "Predictive", href: "/marketing/predictive" },
       { id: "mkt-analytics", icon: <BarChart3 size={14} />, label: "Analytics", href: "/marketing/analytics" },
+      { id: "mkt-competitive", icon: <Eye size={14} />, label: "Competitive Intel", href: "/marketing/competitive" },
+      { id: "mkt-command-center", icon: <Activity size={14} />, label: "Command Center", href: "/marketing/command-center" },
     ],
   },
 
@@ -176,9 +182,26 @@ const navigationStructure: NavCore[] = [
       { id: "admin-main", icon: <Wrench size={14} />, label: "Panel Admin", href: "/admin" },
       { id: "admin-agents", icon: <Bot size={14} />, label: "Gestion Agentes", href: "/admin/agents" },
       { id: "admin-logs", icon: <ScrollText size={14} />, label: "Logs", href: "/admin/logs" },
+      { id: "admin-config", icon: <Settings size={14} />, label: "Config", href: "/admin/config" },
+      { id: "admin-db", icon: <Building2 size={14} />, label: "Database Status", href: "/admin/db" },
+      { id: "admin-billing", icon: <Briefcase size={14} />, label: "Billing", href: "/admin/billing" },
+      { id: "admin-usage", icon: <BarChart3 size={14} />, label: "Usage", href: "/admin/usage" },
+      { id: "admin-api-keys", icon: <Lock size={14} />, label: "API Keys", href: "/admin/api-keys" },
+      { id: "admin-system", icon: <Activity size={14} />, label: "System Info", href: "/admin/system" },
       { id: "admin-compliance", icon: <Shield size={14} />, label: "Compliance", href: "/compliance" },
       { id: "admin-testing", icon: <FlaskConical size={14} />, label: "Testing Lab", href: "/testing" },
       { id: "admin-qa", icon: <CheckCircle size={14} />, label: "QA Piloto", href: "/admin/qa" },
+    ],
+  },
+  {
+    id: "regtech",
+    title: "LEGAL / REGTECH",
+    icon: <Shield size={14} />,
+    color: "#C77DFF",
+    gradient: "linear-gradient(135deg, #C77DFF, #8B5CF6)",
+    modules: [
+      { id: "legal", icon: <BookOpen size={14} />, label: "Legal", href: "/legal" },
+      { id: "regtech-hub", icon: <Shield size={14} />, label: "RegTech", href: "/regtech" },
     ],
   },
 ];
@@ -197,6 +220,8 @@ const colors = {
     muted: "#64748b",
   },
 };
+
+const DESKTOP_BREAKPOINT_PX = 1024;
 
 function NavItem({
   module,
@@ -361,8 +386,7 @@ function CoreSection({
   );
 }
 
-function TopNavigation() {
-  const router = useRouter();
+function TopNavigation({ isDesktop }: { isDesktop: boolean }) {
   const pathname = usePathname();
 
   const pathSegments = pathname.split("/").filter(Boolean);
@@ -382,81 +406,62 @@ function TopNavigation() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "12px 24px",
+        padding: isDesktop ? "12px 24px" : "12px 16px",
         backgroundColor: "rgba(26, 31, 46, 0.8)",
         borderBottom: "1px solid rgba(51, 65, 85, 0.5)",
         backdropFilter: "blur(10px)",
         position: "sticky",
         top: 0,
         zIndex: 30,
+        flexWrap: isDesktop ? "nowrap" : "wrap",
+        rowGap: isDesktop ? "0" : "10px",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <button
-          onClick={() => router.back()}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "36px",
-            height: "36px",
-            borderRadius: "8px",
-            backgroundColor: "rgba(51, 65, 85, 0.5)",
-            border: "1px solid rgba(51, 65, 85, 0.8)",
-            color: "#94a3b8",
-            cursor: "pointer",
-          }}
-          title="Retroceder"
-        >
-          <ChevronLeft size={20} />
-        </button>
-
-        <button
-          onClick={() => router.forward()}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "36px",
-            height: "36px",
-            borderRadius: "8px",
-            backgroundColor: "rgba(51, 65, 85, 0.5)",
-            border: "1px solid rgba(51, 65, 85, 0.8)",
-            color: "#94a3b8",
-            cursor: "pointer",
-          }}
-          title="Avanzar"
-        >
-          <ChevronRight size={20} />
-        </button>
-
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
         <Link
           href="/"
           style={{
-            display: "flex",
+            display: "inline-flex",
             alignItems: "center",
-            justifyContent: "center",
-            width: "36px",
-            height: "36px",
+            gap: "8px",
+            padding: "8px 12px",
             borderRadius: "8px",
             backgroundColor: "rgba(51, 65, 85, 0.5)",
             border: "1px solid rgba(51, 65, 85, 0.8)",
-            color: "#94a3b8",
-            cursor: "pointer",
+            color: "#f8fafc",
             textDecoration: "none",
+            fontSize: "12px",
+            fontWeight: 600,
           }}
-          title="Ir al Home"
+          title="Ir al Dashboard Principal"
         >
-          <Home size={20} />
+          <Home size={16} />
+          <span>Dashboard Principal</span>
         </Link>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#94a3b8", fontSize: "12px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          color: "#94a3b8",
+          fontSize: "12px",
+          flex: 1,
+          minWidth: 0,
+          justifyContent: isDesktop ? "center" : "flex-start",
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          padding: isDesktop ? "0 16px" : "0",
+          order: isDesktop ? 0 : 3,
+          width: isDesktop ? "auto" : "100%",
+        }}
+      >
         {breadcrumbs.length === 0 ? (
           <span>Home</span>
         ) : (
           breadcrumbs.map((b, idx) => (
-            <span key={b.href}>
+            <span key={b.href} style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
               {idx > 0 ? " / " : ""}
               <Link href={b.href} style={{ color: "#94a3b8", textDecoration: "none" }}>
                 {b.label}
@@ -466,7 +471,7 @@ function TopNavigation() {
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
         <TenantSelector />
       </div>
     </div>
@@ -480,8 +485,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { tenantId } = useTenant();
   const { logout } = useAuth();
+  const layoutModeRef = useRef<boolean | null>(null);
   const [expandedCores, setExpandedCores] = useState<string[]>(["system", "sic", "advertising", "workflows"]);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const needsTenant = !NO_TENANT_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
   const blocked = needsTenant && !tenantId;
@@ -491,14 +498,39 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       prev.includes(coreId) ? prev.filter((id) => id !== coreId) : [...prev, coreId]
     );
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const media = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT_PX}px)`);
+
+    const syncLayoutMode = () => {
+      const nextIsDesktop = media.matches;
+      setIsDesktop(nextIsDesktop);
+
+      if (layoutModeRef.current !== nextIsDesktop) {
+        setSidebarOpen(nextIsDesktop);
+        layoutModeRef.current = nextIsDesktop;
+      }
+    };
+
+    syncLayoutMode();
+
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", syncLayoutMode);
+      return () => media.removeEventListener("change", syncLayoutMode);
+    }
+
+    media.addListener(syncLayoutMode);
+    return () => media.removeListener(syncLayoutMode);
+  }, []);
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: colors.bg.primary }}>
       <aside
         style={{
           width: sidebarOpen ? 280 : 0,
-          
           pointerEvents: sidebarOpen ? "auto" : "none",
-backgroundColor: colors.bg.sidebar,
+          backgroundColor: colors.bg.sidebar,
           borderRight: `1px solid ${colors.border.subtle}`,
           position: "fixed",
           left: 0,
@@ -629,15 +661,29 @@ backgroundColor: colors.bg.sidebar,
         </div>
       </aside>
 
+      {!isDesktop && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(2, 6, 23, 0.65)",
+            zIndex: 35,
+          }}
+        />
+      )}
+
       <main
         style={{
           flex: 1,
-          paddingLeft: sidebarOpen ? 280 : 0,
+          width: "100%",
+          overflowX: "hidden",
+          paddingLeft: isDesktop && sidebarOpen ? 280 : 0,
           minHeight: "100vh",
           transition: "padding-left 0.3s ease",
         }}
       >
-        <TopNavigation />
+        <TopNavigation isDesktop={isDesktop} />
         <div style={{ minHeight: "calc(100vh - 61px)" }}>
           {blocked ? (
             <div
