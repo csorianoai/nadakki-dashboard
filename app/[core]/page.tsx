@@ -32,20 +32,22 @@ export default function CorePage() {
 
   const [coreData, setCoreData] = useState<CoreData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchCoreData() {
       setLoading(true);
+      setError(null);
       try {
         const res = await fetch(API_URL + '/api/catalog/' + coreId + '/agents', {
           cache: 'no-store'
         });
-        if (res.ok) {
-          const data = await res.json();
-          setCoreData(data);
-        }
-      } catch (e) {
-        console.error('Error fetching core data:', e);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const raw = await res.json();
+        const payload = raw.data || raw;
+        setCoreData({ agents: payload.agents || [], total: payload.pagination?.total || payload.total || 0 });
+      } catch (e: any) {
+        setError(e.message || 'Error al cargar datos del core');
       } finally {
         setLoading(false);
       }
@@ -114,6 +116,11 @@ export default function CorePage() {
                   <div className="h-3 bg-white/10 rounded w-1/2"></div>
                 </div>
               ))}
+            </div>
+          ) : error ? (
+            <div className="glass rounded-xl p-8 text-center">
+              <p className="text-red-400 mb-4">{error}</p>
+              <button onClick={() => window.location.reload()} className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30">Reintentar</button>
             </div>
           ) : agents.length > 0 ? (
             <div className="grid grid-cols-2 gap-4">

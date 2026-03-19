@@ -8,6 +8,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AgentDetails {
   id: string;
@@ -24,6 +25,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onr
 
 export default function AgentDetailPage() {
   const params = useParams();
+  const { tenantId } = useTenant();
   const agentId = params.agentId as string;
   const [agent, setAgent] = useState<AgentDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,18 +69,23 @@ export default function AgentDetailPage() {
   }, [agentId]);
 
   const executeAgent = async () => {
+    if (!tenantId) return;
     setExecuting(true);
     setResult(null);
     try {
       const res = await fetch(`${API_URL}/api/v1/agents/${agentId}/execute`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: "test execution" })
+        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
+        body: JSON.stringify({ payload: { test: true }, dry_run: false }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
       const data = await res.json();
-      setResult(data.result || data.message || "Ejecucion completada exitosamente");
-    } catch (err) {
-      setResult("Ejecucion simulada completada. Procesados 125 registros.");
+      setResult(data.result || data.message || JSON.stringify(data));
+    } catch (err: any) {
+      setResult(`Error: ${err.message}`);
     } finally {
       setExecuting(false);
     }
@@ -148,8 +155,14 @@ export default function AgentDetailPage() {
             {executing ? <><Loader2 className="w-5 h-5 animate-spin" /> Ejecutando...</> : <><Play className="w-5 h-5" /> Ejecutar Ahora</>}
           </motion.button>
           {result && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-              <div className="flex items-center gap-2 mb-2"><CheckCircle className="w-5 h-5 text-green-400" /><span className="font-medium text-green-400">Resultado</span></div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className={`mt-4 p-4 rounded-xl ${result.startsWith("Error:") ? "bg-red-500/10 border border-red-500/30" : "bg-green-500/10 border border-green-500/30"}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className={`w-5 h-5 ${result.startsWith("Error:") ? "text-red-400" : "text-green-400"}`} />
+                <span className={`font-medium ${result.startsWith("Error:") ? "text-red-400" : "text-green-400"}`}>
+                  {result.startsWith("Error:") ? "Error" : "Resultado"}
+                </span>
+              </div>
               <p className="text-sm text-gray-300">{result}</p>
             </motion.div>
           )}

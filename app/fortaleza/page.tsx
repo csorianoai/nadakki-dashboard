@@ -17,15 +17,16 @@ export default function FortalezaPage() {
   const [showModal, setShowModal] = useState(false);
 
   const executeAgent = async (agentId: string) => {
-    if (!tenantId) return;
+    if (!tenantId) { alert("Selecciona un tenant antes de ejecutar."); return; }
     setLoading(true);
     setShowModal(true);
     try {
-      const response = await fetch(`${API_URL}/agents/fortaleza/${agentId}/execute`, {
+      const response = await fetch(`${API_URL}/api/v1/agents/${agentId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
-        body: JSON.stringify({ input_data: { test: true }, tenant_id: tenantId }),
+        body: JSON.stringify({ payload: { test: true }, dry_run: false }),
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setResult(data);
     } catch (err: any) {
@@ -36,7 +37,7 @@ export default function FortalezaPage() {
   };
 
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
+    <div style={{ padding: "32px 24px" }}>
       <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 24 }}>Fortaleza Financiera</h1>
       <p style={{ color: "#94a3b8", marginBottom: 32 }}>Analisis de fortaleza y pruebas de estres</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>

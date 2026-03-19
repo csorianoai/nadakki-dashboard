@@ -17,9 +17,10 @@ export default function MarketingcompetitivePage() {
   useEffect(() => {
     fetch(`${API_URL}/api/catalog/marketing/agents`)
       .then((res) => res.json())
-      .then((data) => {
-        const filtered = (data.agents || []).filter((a: Agent) => 
-          a.name?.toLowerCase().includes("compet") || 
+      .then((raw) => {
+        const data = raw.data || raw;
+        const filtered = (data.agents || []).filter((a: Agent) =>
+          a.name?.toLowerCase().includes("compet") ||
           a.category?.toLowerCase().includes("compet")
         );
         setAgents(filtered.length > 0 ? filtered : data.agents?.slice(0, 8) || []);
@@ -34,11 +35,15 @@ export default function MarketingcompetitivePage() {
     setResult(null);
     setShowModal(true);
     try {
-      const response = await fetch(`${API_URL}/agents/marketing/${agentId}/execute`, {
+      const response = await fetch(`${API_URL}/api/v1/agents/${agentId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
-        body: JSON.stringify({ input_data: { test: true }, tenant_id: tenantId }),
+        body: JSON.stringify({ payload: { test: true }, dry_run: false }),
       });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${response.status}`);
+      }
       const data = await response.json();
       setResult({ status: "success", data });
     } catch (err: any) {

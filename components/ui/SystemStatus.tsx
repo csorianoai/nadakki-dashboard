@@ -22,7 +22,7 @@ export default function SystemStatus() {
   const checkStatus = async () => {
     try {
       const start = Date.now();
-      const res = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/health");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com"}/health`);
       const latency = Date.now() - start;
       
       if (res.ok) {

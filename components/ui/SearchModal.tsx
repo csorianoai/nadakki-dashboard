@@ -12,7 +12,7 @@ interface SearchResult {
   coreName?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_BASE_URL}';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -34,9 +34,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         try {
           const res = await fetch(`${API_URL}/api/catalog/${coreId}/agents`);
           if (res.ok) {
-            const data = await res.json();
+            const raw = await res.json();
+            const payload = raw.data || raw;
             const coreConfig = CORES_CONFIG[coreId];
-            data.agents?.forEach((agent: any) => {
+            (payload.agents || []).forEach((agent: any) => {
               agents.push({
                 type: 'agent',
                 id: agent.id,

@@ -9,6 +9,8 @@ interface Agent {
   available?: boolean;
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
+
 export default function AgentsPanel() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,13 +22,14 @@ export default function AgentsPanel() {
     const fetchAgents = async () => {
       try {
         const response = await fetch(
-          '${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/agents'
+          `${API_URL}/api/v1/agents`
         );
-        
+
         if (!response.ok) throw new Error('Failed to fetch agents');
-        
-        const data = await response.json();
-        setAgents(data.agents || []);
+
+        const raw = await response.json();
+        const payload = raw.data || raw;
+        setAgents(payload.agents || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load agents');
       } finally {
@@ -43,7 +46,7 @@ export default function AgentsPanel() {
     
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/agents/${agentId}/execute`,
+        `${API_URL}/api/v1/agents/${agentId}/execute`,
         {
           method: 'POST',
           headers: {
@@ -51,12 +54,16 @@ export default function AgentsPanel() {
             'X-Tenant-ID': 'demo'
           },
           body: JSON.stringify({
-            tenant_id: 'demo',
-            params: {}
+            payload: {},
+            dry_run: false
           })
         }
       );
       
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${response.status}`);
+      }
       const data = await response.json();
       setResult({
         agent: agentId,

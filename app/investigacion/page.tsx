@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 
-interface Agent { id: string; name: string; category: string; }
+interface Agent { id: string; name: string; category: string; execute_endpoint?: string | null; status?: string; }
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 export default function investigacionPage() {
@@ -13,25 +13,27 @@ export default function investigacionPage() {
   const [executing, setExecuting] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/catalog/investigacion/agents`)
-      .then((res) => res.json())
-      .then((data) => { setAgents(data.agents || []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+      .then((raw) => { const payload = raw.data || raw; setAgents(payload.agents || []); setLoading(false); })
+      .catch((err) => { setError(err.message || "Error al cargar"); setLoading(false); });
   }, []);
 
   const executeAgent = async (agentId: string) => {
-    if (!tenantId) return;
+    if (!tenantId) { alert("Selecciona un tenant antes de ejecutar."); return; }
     setExecuting(agentId);
     setResult(null);
     setShowModal(true);
     try {
-      const response = await fetch(`${API_URL}/agents/investigacion/${agentId}/execute`, {
+      const response = await fetch(`${API_URL}/api/v1/agents/${agentId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
-        body: JSON.stringify({ input_data: { test: true }, tenant_id: tenantId }),
+        body: JSON.stringify({ payload: { test: true }, dry_run: false }),
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setResult({ status: "success", data });
     } catch (err: any) {
@@ -41,27 +43,35 @@ export default function investigacionPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}><div style={{ color: "#94a3b8" }}>Cargando agentes...</div></div>;
+  if (loading) return <div style={{ padding: "32px 24px", display: "flex", justifyContent: "center", alignItems: "center", minHeight: 300 }}><div style={{ color: "#94a3b8" }}>Cargando agentes...</div></div>;
+
+  if (error) return <div style={{ padding: "32px 24px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: 300 }}><p style={{ color: "#f87171", marginBottom: 16 }}>{error}</p><button onClick={() => window.location.reload()} style={{ padding: "8px 16px", backgroundColor: "rgba(248,113,113,0.2)", color: "#f87171", border: "none", borderRadius: 8, cursor: "pointer" }}>Reintentar</button></div>;
 
   return (
-    <div style={{ padding: 40, backgroundColor: "#0a0f1c", minHeight: "100vh" }}>
+    <div style={{ padding: "32px 24px" }}>
       <h1 style={{ fontSize: 32, fontWeight: 800, color: "#f8fafc", marginBottom: 8 }}>Investigacion Core</h1>
       <p style={{ color: "#94a3b8", marginBottom: 32 }}>{agents.length} agentes disponibles</p>
-      
+
+      {agents.length === 0 && <div style={{ textAlign: "center", padding: 40, color: "#64748b" }}>No se encontraron agentes.</div>}
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
         {agents?.map((agent) => (
           <div key={agent.id} style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(51,65,85,0.5)", borderRadius: 12, padding: 20 }}>
             <h3 style={{ color: "#f8fafc", fontSize: 16, fontWeight: 600, marginBottom: 8 }}>{agent.name}</h3>
             <p style={{ color: "#64748b", fontSize: 12, marginBottom: 4 }}>ID: {agent.id}</p>
             <p style={{ color: "#94a3b8", fontSize: 13 }}>{agent.category}</p>
-            <button onClick={() => executeAgent(agent.id)} disabled={executing === agent.id} style={{
-              marginTop: 16, width: "100%", padding: 10,
-              backgroundColor: executing === agent.id ? "#6b7280" : "#3B82F6",
-              border: "none", borderRadius: 8, color: "white", fontWeight: 600,
-              cursor: executing === agent.id ? "not-allowed" : "pointer"
-            }}>
-              {executing === agent.id ? "Ejecutando..." : "Ejecutar"}
-            </button>
+            {agent.execute_endpoint === null && agent.status === "template" ? (
+              <div style={{ marginTop: 16, width: "100%", padding: 10, backgroundColor: "rgba(100,116,139,0.2)", borderRadius: 8, color: "#94a3b8", fontWeight: 600, textAlign: "center", fontSize: 14 }}>No ejecutable (template)</div>
+            ) : (
+              <button onClick={() => executeAgent(agent.id)} disabled={executing === agent.id} style={{
+                marginTop: 16, width: "100%", padding: 10,
+                backgroundColor: executing === agent.id ? "#6b7280" : "#3B82F6",
+                border: "none", borderRadius: 8, color: "white", fontWeight: 600,
+                cursor: executing === agent.id ? "not-allowed" : "pointer"
+              }}>
+                {executing === agent.id ? "Ejecutando..." : "Ejecutar"}
+              </button>
+            )}
           </div>
         ))}
       </div>

@@ -35,17 +35,21 @@ export default function AIGeneratePage() {
     if (!prompt.trim() || !tenantId) return;
     setGenerating(true);
     try {
-      await fetch(`${API_URL}/agents/marketing/contentgeneratoria/execute`, {
+      const response = await fetch(`${API_URL}/api/v1/agents/contentgeneratoria/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
-        body: JSON.stringify({ input_data: { prompt, platform, tone }, tenant_id: tenantId }),
+        body: JSON.stringify({ payload: { prompt, platform, tone }, dry_run: false }),
       });
-      // Simulated results
-      setResults([
-        "Transforma tu negocio hoy! Nuestra solucion de IA automatiza tu marketing en minutos. Resultados garantizados en 7 dias. Listo para el cambio? #Marketing #AI #Innovacion",
-        "Sabias que el 73% de las empresas exitosas ya usan IA para marketing? No te quedes atras. Descubre como en el link de nuestra bio #TransformacionDigital",
-        "ANTES: 8 horas creando contenido\nDESPUES: 30 minutos con nuestra IA\n\nLa diferencia? Automatizacion inteligente.\n\nAgenda tu demo gratuita #ProductividadMaxima"
-      ]);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      const generated = data.result?.variants || data.result?.content;
+      if (Array.isArray(generated) && generated.length > 0) {
+        setResults(generated);
+      } else {
+        setResults([JSON.stringify(data.result || data, null, 2)]);
+      }
+    } catch (err: any) {
+      setResults([`Error: ${err.message}`]);
     } finally {
       setGenerating(false);
     }

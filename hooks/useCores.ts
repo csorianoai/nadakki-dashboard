@@ -15,7 +15,7 @@ interface CoreData {
   status: 'active' | 'inactive' | 'maintenance';
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_BASE_URL}';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
 
 export function useCores() {
   const [cores, setCores] = useState<CoreData[]>([]);
@@ -37,8 +37,9 @@ export function useCores() {
             cache: 'no-store'
           });
           if (res.ok) {
-            const data = await res.json();
-            agentCount = data.total || data.agents?.length || config.agentCount;
+            const raw = await res.json();
+            const data = raw.data || raw;
+            agentCount = data.pagination?.total || data.total || data.agents?.length || config.agentCount;
           }
         } catch (e) {
           // Use fallback from config

@@ -26,7 +26,7 @@ import { useToast } from "@/components/ui/Toast";
 import { parseSSEStream } from "@/lib/observability/sse-fetch";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_NADAKKI_API_BASE || "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_NADAKKI_API_BASE || process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 const TENANT_HEADER = "X-Tenant-ID";
 const STORAGE_KEY = "lastInstitution";
 const RECONNECT_BACKOFFS = [1000, 2000, 4000];
@@ -240,14 +240,12 @@ export default function ObservabilityPage() {
     cleanupStream();
 
     try {
-      const res = await fetch(`${API_BASE}/agents/execute`, {
+      const res = await fetch(`${API_BASE}/api/v1/agents/${agentId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...headers() },
         body: JSON.stringify({
-          agent_id: agentId,
-          tenant_id: tenant,
-          mode: "dry_run",
           payload: {},
+          dry_run: true,
         }),
       });
       if (!res.ok) {

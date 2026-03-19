@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -12,6 +12,7 @@ interface Agent { id: string; name: string; category: string; core?: string; }
 interface HealthData { status: string; version: string; agents_loaded: number; cores_active: number; }
 
 const CORES = ["marketing", "legal", "originacion", "contabilidad", "compliance", "rrhh", "logistica", "decision"];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://nadakki-ai-suite.onrender.com";
 
 export default function AdminAgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -19,27 +20,45 @@ export default function AdminAgentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCore, setSelectedCore] = useState("todos");
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAllAgents = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const healthRes = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/health");
-      const healthData = await healthRes.json();
-      setHealth(healthData);
+      const healthRes = await fetch(`${API_URL}/health`);
+      if (healthRes.ok) {
+        const healthData = await healthRes.json();
+        setHealth(healthData);
+      } else {
+        setHealth(null);
+      }
 
       const allAgents: Agent[] = [];
       for (const core of CORES) {
         try {
-          const res = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/api/catalog/" + core + "/agents");
-          const data = await res.json();
-          if (data.agents) {
+          const res = await fetch(`${API_URL}/api/catalog/${core}/agents`);
+          if (!res.ok) {
+            continue;
+          }
+          const raw = await res.json();
+          const data = raw.data || raw;
+          if (Array.isArray(data?.agents)) {
             data.agents.forEach((a: Agent) => allAgents.push({ ...a, core }));
           }
         } catch {}
       }
+
+      if (allAgents.length === 0) {
+        setError("No se pudieron cargar agentes administrativos desde el backend.");
+      }
+
       setAgents(allAgents);
     } catch (err) {
       console.error(err);
+      setAgents([]);
+      setHealth(null);
+      setError("No se pudo cargar el inventario de agentes en este momento.");
     } finally {
       setLoading(false);
     }
@@ -93,11 +112,32 @@ export default function AdminAgentsPage() {
         </div>
       </GlassCard>
 
+      {error && (
+        <GlassCard className="p-4 mb-6 border border-amber-500/30 bg-amber-500/10">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-amber-200">{error}</p>
+            <button
+              onClick={fetchAllAgents}
+              className="px-3 py-2 rounded-lg bg-white/10 text-white text-sm hover:bg-white/15"
+            >
+              Reintentar
+            </button>
+          </div>
+        </GlassCard>
+      )}
+
       {loading ? (
         <div className="flex flex-col items-center py-20">
           <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4" />
           <p className="text-gray-400">Cargando agentes desde API...</p>
         </div>
+      ) : filteredAgents.length === 0 ? (
+        <GlassCard className="p-8 text-center">
+          <p className="text-lg font-semibold text-white">No hay agentes para mostrar.</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Ajusta el filtro actual o vuelve a cargar el inventario administrativo.
+          </p>
+        </GlassCard>
       ) : (
         <div className="grid grid-cols-4 gap-3">
           {filteredAgents?.map((agent, i) => (

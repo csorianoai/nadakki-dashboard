@@ -10,18 +10,24 @@ import StatusBadge from "@/components/ui/StatusBadge";
 
 interface Agent { id: string; name: string; category: string; }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+
 export default function OriginacionPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   const fetchAgents = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch("${process.env.NEXT_PUBLIC_API_BASE_URL}/api/catalog/originacion/agents");
-      const data = await res.json();
-      if (data.agents) setAgents(data.agents);
-    } catch (err) { console.error(err); }
+      const res = await fetch(`${API_URL}/api/catalog/originacion/agents`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      const payload = raw.data || raw;
+      setAgents(payload.agents || []);
+    } catch (err: any) { setError(err.message || "Error al cargar agentes"); }
     finally { setLoading(false); }
   };
 
@@ -63,6 +69,16 @@ export default function OriginacionPage() {
         <div className="flex flex-col items-center py-20">
           <div className="w-12 h-12 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin mb-4" />
           <p className="text-gray-400">Cargando agentes...</p>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center py-20">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button onClick={fetchAgents} className="px-4 py-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30">Reintentar</button>
+        </div>
+      ) : filteredAgents.length === 0 ? (
+        <div className="flex flex-col items-center py-20">
+          <p className="text-gray-400 mb-2">No se encontraron agentes.</p>
+          <button onClick={fetchAgents} className="px-4 py-2 bg-white/10 text-gray-300 rounded-lg hover:bg-white/20">Refrescar</button>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-4">

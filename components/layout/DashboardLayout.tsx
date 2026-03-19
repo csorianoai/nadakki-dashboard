@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
+  Bell,
   Menu,
   X,
   Rocket,
@@ -43,6 +44,14 @@ import {
   Users,
   FileBarChart,
   Lock,
+  Globe,
+  Scale,
+  Banknote,
+  Calculator,
+  Truck,
+  GraduationCap,
+  Zap,
+  Cog,
 } from "lucide-react";
 import AgentCountDisplay from "./AgentCountDisplay";
 import TenantSelector from "@/components/ui/TenantSelector";
@@ -81,6 +90,7 @@ const navigationStructure: NavCore[] = [
       { id: "analytics", icon: <FileBarChart size={14} />, label: "Analytics Hub", href: "/analytics" },
       { id: "reports", icon: <ScrollText size={14} />, label: "Reports Hub", href: "/reports" },
       { id: "agents-execute", icon: <PlayCircle size={14} />, label: "Ejecutar Agentes", href: "/agents/execute" },
+      { id: "agents-hub", icon: <Bot size={14} />, label: "Agentes (Hub)", href: "/agents" },
     ],
   },
 
@@ -194,6 +204,27 @@ const navigationStructure: NavCore[] = [
     ],
   },
   {
+    id: "hubs",
+    title: "HUBS LEGACY",
+    icon: <FolderOpen size={14} />,
+    color: "#14b8a6",
+    gradient: "linear-gradient(135deg, #14b8a6, #0f766e)",
+    modules: [
+      { id: "core-dashboard", icon: <Rocket size={14} />, label: "Dashboard de Cores", href: "/dashboard" },
+      { id: "campaigns-hub", icon: <Megaphone size={14} />, label: "Campaigns Hub", href: "/campaigns" },
+      { id: "content-hub", icon: <Paintbrush size={14} />, label: "Content Hub", href: "/content" },
+      { id: "email-hub", icon: <Mail size={14} />, label: "Email Hub", href: "/email" },
+      { id: "automations-hub", icon: <RefreshCw size={14} />, label: "Automations", href: "/automations" },
+      { id: "scheduler-hub", icon: <Activity size={14} />, label: "Scheduler", href: "/scheduler" },
+      { id: "audiences-hub", icon: <Users size={14} />, label: "Audiences", href: "/audiences" },
+      { id: "library-hub", icon: <FolderOpen size={14} />, label: "Library", href: "/library" },
+      { id: "notifications-hub", icon: <Bell size={14} />, label: "Notifications", href: "/notifications" },
+      { id: "intelligence-hub", icon: <Brain size={14} />, label: "Intelligence", href: "/intelligence" },
+      { id: "audit-hub", icon: <Shield size={14} />, label: "Audit Logs", href: "/audit" },
+      { id: "export-center", icon: <Upload size={14} />, label: "Export Center", href: "/export" },
+    ],
+  },
+  {
     id: "regtech",
     title: "LEGAL / REGTECH",
     icon: <Shield size={14} />,
@@ -201,7 +232,38 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #C77DFF, #8B5CF6)",
     modules: [
       { id: "legal", icon: <BookOpen size={14} />, label: "Legal", href: "/legal" },
+      { id: "legal-agents", icon: <Scale size={14} />, label: "Agentes Legales", href: "/legal-agents" },
       { id: "regtech-hub", icon: <Shield size={14} />, label: "RegTech", href: "/regtech" },
+    ],
+  },
+  {
+    id: "cores",
+    title: "CORES NEGOCIO",
+    icon: <Briefcase size={14} />,
+    color: "#22c55e",
+    gradient: "linear-gradient(135deg, #22c55e, #16a34a)",
+    modules: [
+      { id: "originacion", icon: <Banknote size={14} />, label: "Originacion", href: "/originacion" },
+      { id: "decision", icon: <Brain size={14} />, label: "Decision Engine", href: "/decision" },
+      { id: "contabilidad", icon: <Calculator size={14} />, label: "Contabilidad", href: "/contabilidad" },
+      { id: "compliance", icon: <Shield size={14} />, label: "Compliance", href: "/compliance" },
+      { id: "rrhh", icon: <Users size={14} />, label: "Recursos Humanos", href: "/rrhh" },
+      { id: "logistica", icon: <Truck size={14} />, label: "Logistica", href: "/logistica" },
+      { id: "educacion", icon: <GraduationCap size={14} />, label: "Educacion", href: "/educacion" },
+      { id: "inteligencia", icon: <Zap size={14} />, label: "Inteligencia", href: "/inteligencia" },
+      { id: "operacional", icon: <Cog size={14} />, label: "Operacional", href: "/operacional" },
+    ],
+  },
+  {
+    id: "operaciones",
+    title: "OPERACIONES",
+    icon: <Building2 size={14} />,
+    color: "#0ea5e9",
+    gradient: "linear-gradient(135deg, #0ea5e9, #0284c7)",
+    modules: [
+      { id: "institutions", icon: <Building2 size={14} />, label: "Instituciones", href: "/institutions" },
+      { id: "credit-agents", icon: <TrendingUp size={14} />, label: "Agentes de Credito", href: "/credit-agents" },
+      { id: "ecosystems", icon: <Globe size={14} />, label: "Ecosistemas", href: "/ecosystems" },
     ],
   },
 ];
@@ -222,6 +284,10 @@ const colors = {
 };
 
 const DESKTOP_BREAKPOINT_PX = 1024;
+const TEMP_BUILD_FINGERPRINT = {
+  branch: "feat/sic-v6-frontend-bankready",
+  commit: "95bed99",
+};
 
 function NavItem({
   module,
@@ -472,6 +538,26 @@ function TopNavigation({ isDesktop }: { isDesktop: boolean }) {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "6px 10px",
+            borderRadius: "999px",
+            backgroundColor: "rgba(139, 92, 246, 0.16)",
+            border: "1px solid rgba(139, 92, 246, 0.35)",
+            color: "#d8b4fe",
+            fontSize: "11px",
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+          title={`Temporary build fingerprint: ${TEMP_BUILD_FINGERPRINT.branch} @ ${TEMP_BUILD_FINGERPRINT.commit}`}
+        >
+          <span>branch: {TEMP_BUILD_FINGERPRINT.branch}</span>
+          <span style={{ color: "rgba(216, 180, 254, 0.72)" }}>|</span>
+          <span>commit: {TEMP_BUILD_FINGERPRINT.commit}</span>
+        </div>
         <TenantSelector />
       </div>
     </div>
@@ -486,7 +572,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { tenantId } = useTenant();
   const { logout } = useAuth();
   const layoutModeRef = useRef<boolean | null>(null);
-  const [expandedCores, setExpandedCores] = useState<string[]>(["system", "sic", "advertising", "workflows"]);
+  const [expandedCores, setExpandedCores] = useState<string[]>(["system", "sic", "advertising", "workflows", "hubs"]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

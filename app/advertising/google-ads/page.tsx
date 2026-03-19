@@ -39,6 +39,10 @@ export default function GoogleAdsPage() {
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
         body: JSON.stringify({ payload: {}, dry_run: true }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setResults((prev) => ({ ...prev, [agent.id]: { success: true, data } }));
     } catch (err: any) {

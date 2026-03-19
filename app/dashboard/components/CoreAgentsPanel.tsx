@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import CoreTabs from './CoreTabs';
@@ -327,8 +327,11 @@ export default function CoreAgentsPanel() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredAgents.map(agent => (
-                <CoreAgentCard key={agent.id} agent={agent} />
+              {filteredAgents.map((agent, index) => (
+                <CoreAgentCard
+                  key={`${agent.id}-${agent.backendModule}-${agent.path}-${agent.status}-${index}`}
+                  agent={agent}
+                />
               ))}
             </div>
           )}
