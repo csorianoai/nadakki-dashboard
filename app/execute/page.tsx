@@ -5,18 +5,40 @@ import { Play, Loader2, CheckCircle, Bot } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { useTenant } from "@/contexts/TenantContext";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 export default function ExecutePage() {
+  const { tenantId } = useTenant();
   const [agent, setAgent] = useState("");
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [isError, setIsError] = useState(false);
 
   const handleExecute = async () => {
+    if (!agent || !tenantId) return;
     setExecuting(true);
     setResult(null);
-    await new Promise(r => setTimeout(r, 2000));
-    setResult("Ejecucion completada exitosamente. El agente proceso 125 registros.");
-    setExecuting(false);
+    setIsError(false);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/agents/${agent}/execute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
+        body: JSON.stringify({ payload: { test: true }, dry_run: false }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setResult(JSON.stringify(data, null, 2));
+    } catch (err: any) {
+      setIsError(true);
+      setResult(err.message);
+    } finally {
+      setExecuting(false);
+    }
   };
 
   return (
@@ -49,9 +71,12 @@ export default function ExecutePage() {
         <GlassCard className="p-6">
           <h3 className="font-bold text-white mb-4">Resultado</h3>
           {result ? (
-            <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-              <div className="flex items-center gap-2 mb-2"><CheckCircle className="w-5 h-5 text-green-400" /><span className="font-medium text-green-400">Exito</span></div>
-              <p className="text-gray-300">{result}</p>
+            <div className={`p-4 rounded-xl ${isError ? "bg-red-500/10 border border-red-500/30" : "bg-green-500/10 border border-green-500/30"}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className={`w-5 h-5 ${isError ? "text-red-400" : "text-green-400"}`} />
+                <span className={`font-medium ${isError ? "text-red-400" : "text-green-400"}`}>{isError ? "Error" : "Exito"}</span>
+              </div>
+              <pre className="text-gray-300 text-sm whitespace-pre-wrap">{result}</pre>
             </div>
           ) : (
             <div className="h-32 flex items-center justify-center text-gray-500">

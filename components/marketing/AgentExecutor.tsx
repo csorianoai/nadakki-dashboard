@@ -26,16 +26,20 @@ export default function AgentExecutor({ agentId, agentName, color, defaultInput 
     setResult(null);
 
     try {
-      const response = await fetch(`${API_BASE}/agents/marketing/${agentId}/execute`, {
+      const response = await fetch(`${API_BASE}/api/v1/agents/${agentId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
         body: JSON.stringify({
-          input_data: { ...defaultInput, tenant_id: tenantId, timestamp: new Date().toISOString() },
+          payload: { ...defaultInput, timestamp: new Date().toISOString() },
+          dry_run: false,
         }),
       });
 
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || `Error ${response.status}`);
+      }
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || `Error ${response.status}`);
       setResult(data);
     } catch (err: any) {
       if (err.message?.includes("Failed to fetch")) {

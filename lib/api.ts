@@ -322,11 +322,18 @@ export const agentsAPI = {
   getById: (id: string, signal?: AbortSignal) =>
     fetchWithFallback(`/api/agents/${id}`, { id, name: "Agent", status: "active" }, { signal }),
   
-  execute: (id: string, data: any) =>
-    fetchWithFallback(`/api/agents/${id}/execute`, { success: true, result: {} }, {
+  execute: async (id: string, data: any) => {
+    const response = await fetch(`${API_URL}/api/v1/agents/${id}/execute`, {
       method: "POST",
-      body: JSON.stringify(data),
-    }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payload: data || {}, dry_run: false }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${response.status}`);
+    }
+    return response.json();
+  },
 };
 
 // ***************************************************************
@@ -352,15 +359,18 @@ export const api = {
     fetchWithFallback(endpoint, {} as T, { method: "DELETE" }),
   
   // Agent execution (for [core]/[agentId] pages)
-  executeAgent: (coreId: string, agentId: string, input: any): Promise<any> =>
-    fetchWithFallback(`/api/cores/${coreId}/agents/${agentId}/execute`, {
-      success: true,
-      result: { message: "Agent executed successfully (mock)", input },
-      timestamp: new Date().toISOString(),
-    }, {
+  executeAgent: async (_coreId: string, agentId: string, input: any): Promise<any> => {
+    const response = await fetch(`${API_URL}/api/v1/agents/${agentId}/execute`, {
       method: "POST",
-      body: JSON.stringify(input),
-    }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payload: input || {}, dry_run: false }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${response.status}`);
+    }
+    return response.json();
+  },
   
   // Get agent details
   getAgent: (coreId: string, agentId: string, signal?: AbortSignal): Promise<any> =>
