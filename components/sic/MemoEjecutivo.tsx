@@ -13,7 +13,7 @@ export function MemoEjecutivo({ expediente, explicabilidad, onExportar }: MemoEj
   const fav = explicabilidad?.factores_a_favor ?? [];
   const contra = explicabilidad?.factores_en_contra ?? [];
   const reglas = explicabilidad?.reglas_aplicadas ?? [];
-  const narrativa = explicabilidad?.narrativa_ejecutiva ?? "";
+  const narrativa = explicabilidad?.narrativa_ejecutiva ?? (explicabilidad as { resumen_ejecutivo?: string } | undefined)?.resumen_ejecutivo ?? "";
 
   const texto = (x: string | { texto?: string }) => (typeof x === "string" ? x : x.texto ?? "");
 

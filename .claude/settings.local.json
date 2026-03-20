@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for target in dashboard institutions agents credit-agents legal-agents ecosystems reports analytics settings)",
+      "Bash(do)",
+      "Bash(if [ -f \"/c/Users/ramon/Projects/nadakki-dashboard/app/$target/page.tsx\" ])",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(for target in institutions credit-agents legal-agents ecosystems agents)",
+      "Bash(if [ -f \"app/$target/page.tsx\" ])",
+      "Bash(npx next build:*)",
+      "Bash(NEXT_TURBOPACK=0 npx next build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(xargs -I {} bash -c 'echo \"\"=== {} ===\"\" && head -5 {}')",
+      "Bash(python:*)",
+      "Bash(python -c:*)",
+      "Bash(xargs:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git checkout:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

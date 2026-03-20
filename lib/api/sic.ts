@@ -123,7 +123,7 @@ function headersForUpload(tenantId: string): Record<string, string> {
   return h;
 }
 
-function headersForDownload(tenantId: string, accept: string): Record<string, string> {
+function headersForDownload(tenantId: string, accept: string = "application/octet-stream"): Record<string, string> {
   const h: Record<string, string> = { "X-Tenant-ID": tenantId, Accept: accept };
   const token = getSicToken();
   if (token) h["Authorization"] = `Bearer ${token}`;
@@ -252,10 +252,17 @@ export async function generarExportacionPDF(
 ): Promise<{ exportacion_id?: string; url?: string } | null> {
   const res = await fetch(
     `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/exportaciones/pdf`,
-    { method: "POST", headers: headers(tenantId) }
+    { method: "POST", headers: headersForDownload(tenantId) }
   );
   if (!res.ok) throw new Error(`Generar PDF: ${res.status}`);
-  return res.json();
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `expediente-${expedienteId}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+  return { url };
 }
 
 export async function generarExportacionZIP(
@@ -264,10 +271,17 @@ export async function generarExportacionZIP(
 ): Promise<{ exportacion_id?: string; url?: string } | null> {
   const res = await fetch(
     `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/exportaciones/zip`,
-    { method: "POST", headers: headers(tenantId) }
+    { method: "POST", headers: headersForDownload(tenantId) }
   );
   if (!res.ok) throw new Error(`Generar ZIP: ${res.status}`);
-  return res.json();
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `expediente-${expedienteId}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+  return { url };
 }
 
 export async function fetchExportacionesGlobal(
@@ -291,9 +305,9 @@ export async function fetchEvidencia(
   tenantId: string,
   expedienteId?: string
 ): Promise<Evidencia | null> {
-  const params = expedienteId ? `?expediente_id=${expedienteId}` : "";
+  if (!expedienteId) return null;
   const res = await fetch(
-    `${API_BASE}/api/v1/sic/evidencias/${evidenciaId}${params}`,
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/evidencias/${evidenciaId}`,
     { headers: headers(tenantId) }
   );
   if (!res.ok) {
@@ -325,7 +339,13 @@ export async function fetchExplicabilidad(
     if (res.status === 404) return null;
     throw new Error(`Explicabilidad: ${res.status}`);
   }
-  return res.json();
+  const data = await res.json();
+  // Normalize backend field names to frontend contract
+  return {
+    ...data,
+    narrativa_ejecutiva: data.narrativa_ejecutiva ?? data.resumen_ejecutivo,
+    reglas_aplicadas: data.reglas_aplicadas ?? data.reglas_disparadas,
+  };
 }
 
 export interface Permisos {
@@ -342,17 +362,31 @@ export interface Permisos {
 
 export async function fetchPermisos(
   expedienteId: string,
-  tenantId: string
+  tenantId: string,
+  rol?: string
 ): Promise<Permisos | null> {
+  const userRol = rol || "analista";
   const res = await fetch(
-    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/permisos`,
+    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/permisos?rol=${encodeURIComponent(userRol)}`,
     { headers: headers(tenantId) }
   );
   if (!res.ok) {
-    if (res.status === 404) return null;
+    if (res.status === 404 || res.status === 422) return null;
     throw new Error(`Permisos: ${res.status}`);
   }
-  return res.json();
+  const data = await res.json();
+  const acciones: string[] = data.acciones_permitidas ?? [];
+  return {
+    rol: data.rol ?? userRol,
+    usuario_id: data.usuario_id,
+    puede_decidir: acciones.includes("decidir"),
+    puede_override: acciones.includes("override"),
+    puede_exportar: acciones.includes("exportar"),
+    puede_cambiar_estado: acciones.includes("cambiar_estado"),
+    puede_ver_auditoria: acciones.includes("ver_auditoria"),
+    puede_abrir_comparador: acciones.includes("comparar_versiones"),
+    transiciones_disponibles: data.transiciones_disponibles ?? [],
+  };
 }
 
 export interface ComparacionVersiones {
@@ -448,6 +482,16 @@ export interface ExpedienteEnSesion {
   votos?: { participante: string; voto: "apruebo" | "rechazo" | "abstenido"; fecha?: string }[];
 }
 
+function normalizeSesion(s: Record<string, unknown>): SesionComite {
+  return {
+    ...s,
+    sesion_id: (s.sesion_id ?? s.id ?? "") as string,
+    fecha_sesion: (s.fecha_sesion ?? s.fecha_creacion ?? "") as string,
+    estado_sesion: ((s.estado_sesion ?? s.estado ?? "") as string).toLowerCase() as SesionComite["estado_sesion"],
+    creado_por: (s.creado_por ?? s.creada_por ?? "") as string,
+  } as SesionComite;
+}
+
 export async function fetchSesionesComite(
   tenantId: string,
   limit?: number
@@ -461,7 +505,8 @@ export async function fetchSesionesComite(
     throw new Error(`Sesiones comité: ${res.status}`);
   }
   const data = await res.json();
-  return data.sesiones ?? data.data ?? (Array.isArray(data) ? data : []);
+  const list = data.sesiones ?? data.data ?? (Array.isArray(data) ? data : []);
+  return list.map(normalizeSesion);
 }
 
 export async function fetchSesionComite(
@@ -476,7 +521,8 @@ export async function fetchSesionComite(
     if (res.status === 404) return null;
     throw new Error(`Sesión: ${res.status}`);
   }
-  return res.json();
+  const data = await res.json();
+  return normalizeSesion(data);
 }
 
 export async function fetchExpedientesSesion(
@@ -501,12 +547,17 @@ export async function votarExpediente(
   tenantId: string,
   voto: "apruebo" | "rechazo" | "abstenido"
 ): Promise<{ success?: boolean }> {
+  const VOTO_MAP: Record<string, string> = {
+    apruebo: "APROBADO",
+    rechazo: "RECHAZADO",
+    abstenido: "ABSTINENCIA",
+  };
   const res = await fetch(
-    `${API_BASE}/api/v1/sic/comite/sesiones/${sesionId}/votar`,
+    `${API_BASE}/api/v1/sic/comite/sesiones/${sesionId}/votos`,
     {
       method: "POST",
       headers: headers(tenantId),
-      body: JSON.stringify({ expediente_id: expedienteId, voto }),
+      body: JSON.stringify({ expediente_id: expedienteId, voto_emitido: VOTO_MAP[voto] ?? voto }),
     }
   );
   if (!res.ok) throw new Error(`Voto: ${res.status}`);
@@ -577,7 +628,7 @@ export interface PortafolioAnalytics {
 export async function fetchPortafolioAnalytics(
   tenantId: string
 ): Promise<PortafolioAnalytics | null> {
-  const res = await fetch(`${API_BASE}/api/v1/sic/portafolio/analytics`, {
+  const res = await fetch(`${API_BASE}/api/v1/sic/portafolio/resumen`, {
     headers: headers(tenantId),
   });
   if (!res.ok) {
@@ -595,10 +646,17 @@ export async function generarPaqueteRegulatorio(
 ): Promise<{ exportacion_id?: string; url?: string } | null> {
   const res = await fetch(
     `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/exportaciones/regulatorio`,
-    { method: "POST", headers: headers(tenantId) }
+    { method: "POST", headers: headersForDownload(tenantId) }
   );
   if (!res.ok) throw new Error(`Paquete regulatorio: ${res.status}`);
-  return res.json();
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `paquete-regulatorio-${expedienteId}.zip`;
+  a.click();
+  URL.revokeObjectURL(url);
+  return { url };
 }
 
 // ——— Métricas ejecutivas ———
@@ -616,7 +674,7 @@ export interface MetricasEjecutivas {
 }
 
 export async function fetchMetricasEjecutivas(tenantId: string): Promise<MetricasEjecutivas | null> {
-  const res = await fetch(`${API_BASE}/api/v1/sic/metricas`, { headers: headers(tenantId) });
+  const res = await fetch(`${API_BASE}/api/v1/sic/metricas/resumen`, { headers: headers(tenantId) });
   if (!res.ok) {
     if (res.status === 404) return null;
     throw new Error(`Métricas: ${res.status}`);

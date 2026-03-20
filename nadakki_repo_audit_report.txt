@@ -1,0 +1,28 @@
+
+====================================================================================================
+NADAKKI REPO AUDIT REPORT
+====================================================================================================
+Generated: 3/19/2026 3:28:36 PM
+
+====================================================================================================
+FRONTEND ENV FILES
+====================================================================================================
+EnvFile: C:\Users\ramon\Projects\nadakki-ai-suite\.env
+EnvFile: C:\Users\ramon\Projects\nadakki-ai-suite\.env.development
+   DATACREDITO_API_URL=https://sandbox.datacredito.com.do/v2
+EnvFile: C:\Users\ramon\Projects\nadakki-ai-suite\.env.local
+EnvFile: C:\Users\ramon\Projects\nadakki-ai-suite\.env.production
+   DATACREDITO_API_URL=https://api.datacredito.com.do/v2
+EnvFile: C:\Users\ramon\Projects\nadakki-dashboard\.env.local
+EnvFile: C:\Users\ramon\Projects\_ARCHIVE_NADAKKI\nadakki-suite-enterprise_20260211_160017\nadakki-suite-enterprise\.env.local
+   NEXT_PUBLIC_API_URL=https://nadakki-ai-suite.onrender.com
+
+====================================================================================================
+SUMMARY HINTS
+====================================================================================================
+Look for:
+1. Which repo remote matches the real Vercel frontend project.
+2. Which backend repo contains sic_router, deploy_marker, and debug/boom changes.
+3. Whether the frontend env points to the same Render backend you are testing.
+4. Whether another older repo still contains the old runtime behavior.
+5. Whether hardcoded onrender.com references remain in the wrong repo.

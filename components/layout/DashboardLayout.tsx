@@ -1,11 +1,12 @@
 "use client";
 
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
-  Bell,
+  ChevronLeft,
+  ChevronRight,
   Menu,
   X,
   Rocket,
@@ -44,19 +45,21 @@ import {
   Users,
   FileBarChart,
   Lock,
-  Globe,
-  Scale,
-  Banknote,
-  Calculator,
-  Truck,
-  GraduationCap,
+  ScanEye,
+  Microscope,
+  Wallet,
+  Handshake,
+  Network,
+  Smile,
+  RotateCcw,
   Zap,
-  Cog,
+  Clock,
 } from "lucide-react";
 import AgentCountDisplay from "./AgentCountDisplay";
 import TenantSelector from "@/components/ui/TenantSelector";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { CORES_CONFIG } from "@/config/cores";
 
 interface NavModule {
   id: string;
@@ -74,7 +77,24 @@ interface NavCore {
   modules: NavModule[];
 }
 
+/** Live workflow sub-routes (excludes hub). Badge on "Todos los Workflows" uses this length. */
+const WORKFLOW_DETAIL_MODULES: NavModule[] = [
+  { id: "wf-campaign", icon: <Megaphone size={14} />, label: "Campaign Optimization", href: "/workflows/campaign-optimization" },
+  { id: "wf-acquisition", icon: <Target size={14} />, label: "Customer Acquisition", href: "/workflows/customer-acquisition-intelligence" },
+  { id: "wf-lifecycle", icon: <Recycle size={14} />, label: "Customer Lifecycle", href: "/workflows/customer-lifecycle-revenue" },
+  { id: "wf-content", icon: <PenLine size={14} />, label: "Content Performance", href: "/workflows/content-performance-engine" },
+  { id: "wf-social", icon: <Smartphone size={14} />, label: "Social Intelligence", href: "/workflows/social-media-intelligence" },
+  { id: "wf-email", icon: <Mail size={14} />, label: "Email Automation", href: "/workflows/email-automation-master" },
+  { id: "wf-attribution", icon: <BarChart3 size={14} />, label: "Multi-Channel Attribution", href: "/workflows/multi-channel-attribution" },
+  { id: "wf-competitive", icon: <Eye size={14} />, label: "Competitive Intel", href: "/workflows/competitive-intelligence-hub" },
+  { id: "wf-abtesting", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/workflows/ab-testing-experimentation" },
+  { id: "wf-influencer", icon: <Star size={14} />, label: "Influencer Engine", href: "/workflows/influencer-partnership-engine" },
+];
+
+const CORE_COUNT = Object.keys(CORES_CONFIG).length;
+
 const navigationStructure: NavCore[] = [
+  /** Enterprise order: Plataforma → Riesgo → Mercado → Dominios → Control. All hrefs unchanged. */
   {
     id: "system",
     title: "SISTEMA",
@@ -86,17 +106,13 @@ const navigationStructure: NavCore[] = [
       { id: "live-panel", icon: <Activity size={14} />, label: "Live Panel", href: "/agents/live" },
       { id: "tenants", icon: <Building2 size={14} />, label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
       { id: "settings", icon: <Settings size={14} />, label: "Configuracion", href: "/settings" },
-      { id: "ai-studio", icon: <Brain size={14} />, label: "AI Studio", href: "/ai-studio" },
-      { id: "analytics", icon: <FileBarChart size={14} />, label: "Analytics Hub", href: "/analytics" },
-      { id: "reports", icon: <ScrollText size={14} />, label: "Reports Hub", href: "/reports" },
       { id: "agents-execute", icon: <PlayCircle size={14} />, label: "Ejecutar Agentes", href: "/agents/execute" },
-      { id: "agents-hub", icon: <Bot size={14} />, label: "Agentes (Hub)", href: "/agents" },
     ],
   },
 
   {
     id: "sic",
-    title: "SIC — RIESGO CREDITICIO",
+    title: "SIC / RIESGO CREDITICIO",
     icon: <ClipboardList size={14} />,
     color: "#0ea5e9",
     gradient: "linear-gradient(135deg, #0ea5e9, #0284c7)",
@@ -118,7 +134,7 @@ const navigationStructure: NavCore[] = [
 
   {
     id: "advertising",
-    title: "PUBLICIDAD",
+    title: "CRECIMIENTO · Publicidad",
     icon: <Megaphone size={14} />,
     color: "#10b981",
     gradient: "linear-gradient(135deg, #10b981, #059669)",
@@ -133,58 +149,77 @@ const navigationStructure: NavCore[] = [
 
   {
     id: "workflows",
-    title: "WORKFLOWS",
+    title: "CRECIMIENTO · Workflows",
     icon: <RefreshCw size={14} />,
-    color: "#8B5CF6",
-    gradient: "linear-gradient(135deg, #8B5CF6, #6366F1)",
+    color: "#10b981",
+    gradient: "linear-gradient(135deg, #10b981, #059669)",
     modules: [
-      { id: "wf-all", icon: <ClipboardList size={14} />, label: "Todos los Workflows", href: "/workflows", badge: "10" },
-      { id: "wf-campaign", icon: <Megaphone size={14} />, label: "Campaign Optimization", href: "/workflows/campaign-optimization" },
-      { id: "wf-acquisition", icon: <Target size={14} />, label: "Customer Acquisition", href: "/workflows/customer-acquisition-intelligence" },
-      { id: "wf-lifecycle", icon: <Recycle size={14} />, label: "Customer Lifecycle", href: "/workflows/customer-lifecycle-revenue" },
-      { id: "wf-content", icon: <PenLine size={14} />, label: "Content Performance", href: "/workflows/content-performance-engine" },
-      { id: "wf-social", icon: <Smartphone size={14} />, label: "Social Intelligence", href: "/workflows/social-media-intelligence" },
-      { id: "wf-email", icon: <Mail size={14} />, label: "Email Automation", href: "/workflows/email-automation-master" },
-      { id: "wf-attribution", icon: <BarChart3 size={14} />, label: "Multi-Channel Attribution", href: "/workflows/multi-channel-attribution" },
-      { id: "wf-competitive", icon: <Eye size={14} />, label: "Competitive Intel", href: "/workflows/competitive-intelligence-hub" },
-      { id: "wf-abtesting", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/workflows/ab-testing-experimentation" },
-      { id: "wf-influencer", icon: <Star size={14} />, label: "Influencer Engine", href: "/workflows/influencer-partnership-engine" },
+      {
+        id: "wf-all",
+        icon: <ClipboardList size={14} />,
+        label: "Todos los Workflows",
+        href: "/workflows",
+        badge: String(WORKFLOW_DETAIL_MODULES.length),
+      },
+      ...WORKFLOW_DETAIL_MODULES,
     ],
   },
 
   {
     id: "marketing",
-    title: "MARKETING",
+    title: "CRECIMIENTO · Marketing",
     icon: <Target size={14} />,
-    color: "#F97316",
-    gradient: "linear-gradient(135deg, #F97316, #EA580C)",
+    color: "#10b981",
+    gradient: "linear-gradient(135deg, #10b981, #059669)",
     modules: [
       { id: "mkt-all", icon: <Target size={14} />, label: "Marketing Hub", href: "/marketing" },
       { id: "mkt-agents", icon: <Bot size={14} />, label: "Agentes", href: "/marketing/agents" },
       { id: "mkt-campaigns", icon: <Megaphone size={14} />, label: "Campanas", href: "/marketing/campaigns" },
-      { id: "mkt-journeys", icon: <Recycle size={14} />, label: "Journeys", href: "/marketing/journeys" },
-      { id: "mkt-templates", icon: <Star size={14} />, label: "Templates IA", href: "/marketing/templates" },
-      { id: "mkt-segments", icon: <Target size={14} />, label: "Segmentacion", href: "/marketing/segments" },
       { id: "mkt-leads", icon: <TrendingUp size={14} />, label: "Lead Management", href: "/marketing/leads" },
       { id: "mkt-content", icon: <Paintbrush size={14} />, label: "Content Generation", href: "/marketing/content" },
       { id: "mkt-social", icon: <Smartphone size={14} />, label: "Social Media", href: "/marketing/social" },
-      { id: "mkt-social-hub", icon: <Smartphone size={14} />, label: "Social Hub", href: "/social" },
-      { id: "mkt-social-connections-hub", icon: <Link2 size={14} />, label: "Social Connections Hub", href: "/social/connections" },
       { id: "mkt-google-ads", icon: <BarChart3 size={14} />, label: "Google Ads", href: "/marketing/google-ads" },
       { id: "mkt-social-connections", icon: <Link2 size={14} />, label: "Social Connections", href: "/marketing/social-connections" },
-      { id: "mkt-integrations", icon: <Wrench size={14} />, label: "Integrations", href: "/marketing/integrations" },
       { id: "mkt-attribution", icon: <Link2 size={14} />, label: "Attribution", href: "/marketing/attribution" },
       { id: "mkt-ab-testing", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/marketing/ab-testing" },
       { id: "mkt-predictive", icon: <Brain size={14} />, label: "Predictive", href: "/marketing/predictive" },
       { id: "mkt-analytics", icon: <BarChart3 size={14} />, label: "Analytics", href: "/marketing/analytics" },
-      { id: "mkt-competitive", icon: <Eye size={14} />, label: "Competitive Intel", href: "/marketing/competitive" },
-      { id: "mkt-command-center", icon: <Activity size={14} />, label: "Command Center", href: "/marketing/command-center" },
+    ],
+  },
+
+  {
+    id: "autonoma",
+    title: "AUTOPILOT IA",
+    icon: <Zap size={14} />,
+    color: "#8b5cf6",
+    gradient: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+    modules: [
+      { id: "ame-autopilot", icon: <Zap size={14} />, label: "Centro de Control", href: "/autopilot" },
+      { id: "ame-scheduler", icon: <Clock size={14} />, label: "Motor de Ejecucion", href: "/scheduler" },
+    ],
+  },
+
+  {
+    id: "dominios",
+    title: "DOMINIOS DE NEGOCIO",
+    icon: <Brain size={14} />,
+    color: "#14b8a6",
+    gradient: "linear-gradient(135deg, #14b8a6, #0d9488)",
+    modules: [
+      { id: "dom-fortaleza", icon: <Shield size={14} />, label: "Fortaleza (ciber)", href: "/fortaleza" },
+      { id: "dom-experiencia", icon: <Smile size={14} />, label: "Experiencia cliente", href: "/experiencia" },
+      { id: "dom-vigilancia", icon: <ScanEye size={14} />, label: "Vigilancia", href: "/vigilancia" },
+      { id: "dom-recuperacion", icon: <RotateCcw size={14} />, label: "Recuperación", href: "/recuperacion" },
+      { id: "dom-investigacion", icon: <Microscope size={14} />, label: "Investigación", href: "/investigacion" },
+      { id: "dom-presupuesto", icon: <Wallet size={14} />, label: "Presupuesto", href: "/presupuesto" },
+      { id: "dom-ventascrm", icon: <Handshake size={14} />, label: "Ventas y CRM", href: "/ventascrm" },
+      { id: "dom-orchestration", icon: <Network size={14} />, label: "Orquestación", href: "/orchestration" },
     ],
   },
 
   {
     id: "admin",
-    title: "ADMIN",
+    title: "ADMIN / CONTROL",
     icon: <Wrench size={14} />,
     color: "#6366F1",
     gradient: "linear-gradient(135deg, #6366F1, #4F46E5)",
@@ -192,78 +227,9 @@ const navigationStructure: NavCore[] = [
       { id: "admin-main", icon: <Wrench size={14} />, label: "Panel Admin", href: "/admin" },
       { id: "admin-agents", icon: <Bot size={14} />, label: "Gestion Agentes", href: "/admin/agents" },
       { id: "admin-logs", icon: <ScrollText size={14} />, label: "Logs", href: "/admin/logs" },
-      { id: "admin-config", icon: <Settings size={14} />, label: "Config", href: "/admin/config" },
-      { id: "admin-db", icon: <Building2 size={14} />, label: "Database Status", href: "/admin/db" },
-      { id: "admin-billing", icon: <Briefcase size={14} />, label: "Billing", href: "/admin/billing" },
-      { id: "admin-usage", icon: <BarChart3 size={14} />, label: "Usage", href: "/admin/usage" },
-      { id: "admin-api-keys", icon: <Lock size={14} />, label: "API Keys", href: "/admin/api-keys" },
-      { id: "admin-system", icon: <Activity size={14} />, label: "System Info", href: "/admin/system" },
       { id: "admin-compliance", icon: <Shield size={14} />, label: "Compliance", href: "/compliance" },
       { id: "admin-testing", icon: <FlaskConical size={14} />, label: "Testing Lab", href: "/testing" },
       { id: "admin-qa", icon: <CheckCircle size={14} />, label: "QA Piloto", href: "/admin/qa" },
-    ],
-  },
-  {
-    id: "hubs",
-    title: "HUBS LEGACY",
-    icon: <FolderOpen size={14} />,
-    color: "#14b8a6",
-    gradient: "linear-gradient(135deg, #14b8a6, #0f766e)",
-    modules: [
-      { id: "core-dashboard", icon: <Rocket size={14} />, label: "Dashboard de Cores", href: "/dashboard" },
-      { id: "campaigns-hub", icon: <Megaphone size={14} />, label: "Campaigns Hub", href: "/campaigns" },
-      { id: "content-hub", icon: <Paintbrush size={14} />, label: "Content Hub", href: "/content" },
-      { id: "email-hub", icon: <Mail size={14} />, label: "Email Hub", href: "/email" },
-      { id: "automations-hub", icon: <RefreshCw size={14} />, label: "Automations", href: "/automations" },
-      { id: "scheduler-hub", icon: <Activity size={14} />, label: "Scheduler", href: "/scheduler" },
-      { id: "audiences-hub", icon: <Users size={14} />, label: "Audiences", href: "/audiences" },
-      { id: "library-hub", icon: <FolderOpen size={14} />, label: "Library", href: "/library" },
-      { id: "notifications-hub", icon: <Bell size={14} />, label: "Notifications", href: "/notifications" },
-      { id: "intelligence-hub", icon: <Brain size={14} />, label: "Intelligence", href: "/intelligence" },
-      { id: "audit-hub", icon: <Shield size={14} />, label: "Audit Logs", href: "/audit" },
-      { id: "export-center", icon: <Upload size={14} />, label: "Export Center", href: "/export" },
-    ],
-  },
-  {
-    id: "regtech",
-    title: "LEGAL / REGTECH",
-    icon: <Shield size={14} />,
-    color: "#C77DFF",
-    gradient: "linear-gradient(135deg, #C77DFF, #8B5CF6)",
-    modules: [
-      { id: "legal", icon: <BookOpen size={14} />, label: "Legal", href: "/legal" },
-      { id: "legal-agents", icon: <Scale size={14} />, label: "Agentes Legales", href: "/legal-agents" },
-      { id: "regtech-hub", icon: <Shield size={14} />, label: "RegTech", href: "/regtech" },
-    ],
-  },
-  {
-    id: "cores",
-    title: "CORES NEGOCIO",
-    icon: <Briefcase size={14} />,
-    color: "#22c55e",
-    gradient: "linear-gradient(135deg, #22c55e, #16a34a)",
-    modules: [
-      { id: "originacion", icon: <Banknote size={14} />, label: "Originacion", href: "/originacion" },
-      { id: "decision", icon: <Brain size={14} />, label: "Decision Engine", href: "/decision" },
-      { id: "contabilidad", icon: <Calculator size={14} />, label: "Contabilidad", href: "/contabilidad" },
-      { id: "compliance", icon: <Shield size={14} />, label: "Compliance", href: "/compliance" },
-      { id: "rrhh", icon: <Users size={14} />, label: "Recursos Humanos", href: "/rrhh" },
-      { id: "logistica", icon: <Truck size={14} />, label: "Logistica", href: "/logistica" },
-      { id: "educacion", icon: <GraduationCap size={14} />, label: "Educacion", href: "/educacion" },
-      { id: "inteligencia", icon: <Zap size={14} />, label: "Inteligencia", href: "/inteligencia" },
-      { id: "operacional", icon: <Cog size={14} />, label: "Operacional", href: "/operacional" },
-    ],
-  },
-  {
-    id: "operaciones",
-    title: "OPERACIONES",
-    icon: <Building2 size={14} />,
-    color: "#0ea5e9",
-    gradient: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-    modules: [
-      { id: "institutions", icon: <Building2 size={14} />, label: "Instituciones", href: "/institutions" },
-      { id: "credit-agents", icon: <TrendingUp size={14} />, label: "Agentes de Credito", href: "/credit-agents" },
-      { id: "ecosystems", icon: <Globe size={14} />, label: "Ecosistemas", href: "/ecosystems" },
     ],
   },
 ];
@@ -281,12 +247,6 @@ const colors = {
     secondary: "#94a3b8",
     muted: "#64748b",
   },
-};
-
-const DESKTOP_BREAKPOINT_PX = 1024;
-const TEMP_BUILD_FINGERPRINT = {
-  branch: "feat/sic-v6-frontend-bankready",
-  commit: "95bed99",
 };
 
 function NavItem({
@@ -452,7 +412,8 @@ function CoreSection({
   );
 }
 
-function TopNavigation({ isDesktop }: { isDesktop: boolean }) {
+function TopNavigation() {
+  const router = useRouter();
   const pathname = usePathname();
 
   const pathSegments = pathname.split("/").filter(Boolean);
@@ -472,62 +433,81 @@ function TopNavigation({ isDesktop }: { isDesktop: boolean }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: isDesktop ? "12px 24px" : "12px 16px",
+        padding: "12px 24px",
         backgroundColor: "rgba(26, 31, 46, 0.8)",
         borderBottom: "1px solid rgba(51, 65, 85, 0.5)",
         backdropFilter: "blur(10px)",
         position: "sticky",
         top: 0,
         zIndex: 30,
-        flexWrap: isDesktop ? "nowrap" : "wrap",
-        rowGap: isDesktop ? "0" : "10px",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-        <Link
-          href="/"
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <button
+          onClick={() => router.back()}
           style={{
-            display: "inline-flex",
+            display: "flex",
             alignItems: "center",
-            gap: "8px",
-            padding: "8px 12px",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
             borderRadius: "8px",
             backgroundColor: "rgba(51, 65, 85, 0.5)",
             border: "1px solid rgba(51, 65, 85, 0.8)",
-            color: "#f8fafc",
-            textDecoration: "none",
-            fontSize: "12px",
-            fontWeight: 600,
+            color: "#94a3b8",
+            cursor: "pointer",
           }}
-          title="Ir al Dashboard Principal"
+          title="Retroceder"
         >
-          <Home size={16} />
-          <span>Dashboard Principal</span>
+          <ChevronLeft size={20} />
+        </button>
+
+        <button
+          onClick={() => router.forward()}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
+            borderRadius: "8px",
+            backgroundColor: "rgba(51, 65, 85, 0.5)",
+            border: "1px solid rgba(51, 65, 85, 0.8)",
+            color: "#94a3b8",
+            cursor: "pointer",
+          }}
+          title="Avanzar"
+        >
+          <ChevronRight size={20} />
+        </button>
+
+        <Link
+          href="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "36px",
+            height: "36px",
+            borderRadius: "8px",
+            backgroundColor: "rgba(51, 65, 85, 0.5)",
+            border: "1px solid rgba(51, 65, 85, 0.8)",
+            color: "#94a3b8",
+            cursor: "pointer",
+            textDecoration: "none",
+          }}
+          title="Ir al Home"
+        >
+          <Home size={20} />
         </Link>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          color: "#94a3b8",
-          fontSize: "12px",
-          flex: 1,
-          minWidth: 0,
-          justifyContent: isDesktop ? "center" : "flex-start",
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          padding: isDesktop ? "0 16px" : "0",
-          order: isDesktop ? 0 : 3,
-          width: isDesktop ? "auto" : "100%",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#94a3b8", fontSize: "12px" }}>
         {breadcrumbs.length === 0 ? (
           <span>Home</span>
         ) : (
           breadcrumbs.map((b, idx) => (
-            <span key={b.href} style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+            <span key={b.href}>
               {idx > 0 ? " / " : ""}
               <Link href={b.href} style={{ color: "#94a3b8", textDecoration: "none" }}>
                 {b.label}
@@ -537,27 +517,7 @@ function TopNavigation({ isDesktop }: { isDesktop: boolean }) {
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "6px 10px",
-            borderRadius: "999px",
-            backgroundColor: "rgba(139, 92, 246, 0.16)",
-            border: "1px solid rgba(139, 92, 246, 0.35)",
-            color: "#d8b4fe",
-            fontSize: "11px",
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-          }}
-          title={`Temporary build fingerprint: ${TEMP_BUILD_FINGERPRINT.branch} @ ${TEMP_BUILD_FINGERPRINT.commit}`}
-        >
-          <span>branch: {TEMP_BUILD_FINGERPRINT.branch}</span>
-          <span style={{ color: "rgba(216, 180, 254, 0.72)" }}>|</span>
-          <span>commit: {TEMP_BUILD_FINGERPRINT.commit}</span>
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <TenantSelector />
       </div>
     </div>
@@ -571,10 +531,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { tenantId } = useTenant();
   const { logout } = useAuth();
-  const layoutModeRef = useRef<boolean | null>(null);
-  const [expandedCores, setExpandedCores] = useState<string[]>(["system", "sic", "advertising", "workflows", "hubs"]);
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedCores, setExpandedCores] = useState<string[]>([
+    "system",
+    "sic",
+    "advertising",
+    "workflows",
+    "marketing",
+    "autonoma",
+    "dominios",
+  ]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const needsTenant = !NO_TENANT_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
   const blocked = needsTenant && !tenantId;
@@ -584,39 +550,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       prev.includes(coreId) ? prev.filter((id) => id !== coreId) : [...prev, coreId]
     );
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const media = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT_PX}px)`);
-
-    const syncLayoutMode = () => {
-      const nextIsDesktop = media.matches;
-      setIsDesktop(nextIsDesktop);
-
-      if (layoutModeRef.current !== nextIsDesktop) {
-        setSidebarOpen(nextIsDesktop);
-        layoutModeRef.current = nextIsDesktop;
-      }
-    };
-
-    syncLayoutMode();
-
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", syncLayoutMode);
-      return () => media.removeEventListener("change", syncLayoutMode);
-    }
-
-    media.addListener(syncLayoutMode);
-    return () => media.removeListener(syncLayoutMode);
-  }, []);
-
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: colors.bg.primary }}>
       <aside
         style={{
           width: sidebarOpen ? 280 : 0,
+          
           pointerEvents: sidebarOpen ? "auto" : "none",
-          backgroundColor: colors.bg.sidebar,
+backgroundColor: colors.bg.sidebar,
           borderRight: `1px solid ${colors.border.subtle}`,
           position: "fixed",
           left: 0,
@@ -665,7 +606,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             >
               NADAKKI AI
             </div>
-            <div style={{ fontSize: "8px", color: colors.text.muted }}>Enterprise Suite</div>
+            <div style={{ fontSize: "8px", color: colors.text.muted }}>Plataforma enterprise</div>
           </div>
         </div>
 
@@ -686,11 +627,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <div style={{ fontSize: "7px", color: colors.text.muted }}>AGENTES</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#34d399" }}>20</div>
-            <div style={{ fontSize: "7px", color: colors.text.muted }}>CORES</div>
+            <div style={{ fontSize: "14px", fontWeight: 800, color: "#34d399" }}>{CORE_COUNT}</div>
+            <div style={{ fontSize: "7px", color: colors.text.muted }}>DOMINIOS</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#60a5fa" }}>10</div>
+            <div style={{ fontSize: "14px", fontWeight: 800, color: "#60a5fa" }}>
+              {WORKFLOW_DETAIL_MODULES.length}
+            </div>
             <div style={{ fontSize: "7px", color: colors.text.muted }}>WORKFLOWS</div>
           </div>
         </div>
@@ -747,29 +690,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {!isDesktop && sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(2, 6, 23, 0.65)",
-            zIndex: 35,
-          }}
-        />
-      )}
-
       <main
         style={{
           flex: 1,
-          width: "100%",
-          overflowX: "hidden",
-          paddingLeft: isDesktop && sidebarOpen ? 280 : 0,
+          paddingLeft: sidebarOpen ? 280 : 0,
           minHeight: "100vh",
           transition: "padding-left 0.3s ease",
         }}
       >
-        <TopNavigation isDesktop={isDesktop} />
+        <TopNavigation />
         <div style={{ minHeight: "calc(100vh - 61px)" }}>
           {blocked ? (
             <div

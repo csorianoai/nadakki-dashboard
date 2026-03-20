@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import CoreTabs from './CoreTabs';
 import CoreAgentCard from './CoreAgentCard';
+
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com').replace(/\/$/, '');
 
 interface Agent {
   id: string;
@@ -27,6 +29,55 @@ interface CoreData {
   description: string;
 }
 
+function mapCatalogAgent(a: Record<string, unknown>, idx: number): Agent {
+  const mod = String(a.module ?? 'unclassified');
+  const st = String(a.status ?? '').toLowerCase();
+  const lab = String(a.label ?? '').toLowerCase();
+  const inactive = st === 'template' || lab === 'not_agent';
+  const agentType = String(a.type ?? 'Agent').toUpperCase() === 'IA' ? 'IA' : 'Agent';
+  return {
+    id: String(a.id ?? `agent-${idx}`),
+    name: String(a.name ?? a.id ?? 'Agent'),
+    fileName: String(a.filename ?? a.file_path ?? '—'),
+    type: agentType,
+    status: inactive ? 'inactive' : 'active',
+    inactiveReason: st === 'template' ? 'test_file' : undefined,
+    path: String(a.file_path ?? ''),
+    module: mod,
+    backendModule: mod,
+  };
+}
+
+async function fetchAgentsLive(): Promise<Agent[] | null> {
+  const bases = API_URL ? [`${API_URL}/api/v1/agents`, '/api/v1/agents'] : ['/api/v1/agents'];
+  for (const url of bases) {
+    try {
+      const res = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' } });
+      if (!res.ok) continue;
+      const raw = await res.json();
+      const list =
+        raw?.data?.agents ??
+        raw?.data?.data?.agents ??
+        (Array.isArray(raw?.agents) ? raw.agents : null);
+      if (!Array.isArray(list) || list.length === 0) continue;
+      return list.map((row: Record<string, unknown>, i: number) => mapCatalogAgent(row, i));
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+async function fetchAgentsStaticFallback(): Promise<Agent[]> {
+  const response = await fetch('/data/all-agents-structure.json', { cache: 'no-store' });
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  const data = await response.json();
+  if (!data.agentsActive || !data.agentsInactive) {
+    throw new Error('Estructura JSON inválida');
+  }
+  return [...data.agentsActive, ...data.agentsInactive];
+}
+
 export default function CoreAgentsPanel() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [cores, setCores] = useState<CoreData[]>([]);
@@ -36,32 +87,25 @@ export default function CoreAgentsPanel() {
   const [filterActive, setFilterActive] = useState<string>('all');
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadData = async () => {
+  const loadData = useCallback(async () => {
       try {
         setLoading(true);
         setError(null);
-        
-        const response = await fetch('/data/all-agents-structure.json', {
-          cache: 'no-store'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+
+        let allAgents: Agent[] | null = await fetchAgentsLive();
+        let source: 'api' | 'static' = 'api';
+        if (!allAgents || allAgents.length === 0) {
+          allAgents = await fetchAgentsStaticFallback();
+          source = 'static';
         }
-        
-        const data = await response.json();
-        
-        if (!data.agentsActive || !data.agentsInactive) {
-          throw new Error('Estructura JSON inválida');
+        if (!allAgents.length) {
+          throw new Error('No se obtuvieron agentes (API ni JSON local).');
         }
-        
-        const allAgents: Agent[] = [...data.agentsActive, ...data.agentsInactive];
         setAgents(allAgents);
-        
+
         const coreMap = new Map<string, CoreData>();
-        
-        allAgents.forEach(agent => {
+
+        allAgents.forEach((agent) => {
           const coreId = agent.backendModule || 'unclassified';
           if (!coreMap.has(coreId)) {
             coreMap.set(coreId, {
@@ -90,6 +134,9 @@ export default function CoreAgentsPanel() {
           .sort((a, b) => b.totalCount - a.totalCount);
         
         setCores(coresArray);
+        if (source === 'static' && typeof window !== 'undefined') {
+          console.warn('[CoreAgentsPanel] Using static all-agents-structure.json fallback; API catalog unavailable.');
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cargar datos';
         setError(errorMessage);
@@ -97,10 +144,11 @@ export default function CoreAgentsPanel() {
       } finally {
         setLoading(false);
       }
-    };
-    
-    loadData();
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const formatCoreName = (coreId: string): string => {
     return coreId

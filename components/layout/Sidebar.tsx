@@ -1,3 +1,8 @@
+/**
+ * @deprecated Not used by the active app shell. Navigation truth lives in
+ * `components/layout/DashboardLayout.tsx` (via AppGate). Do not import this
+ * into `AppGate` or root layout — kept only for reference / legacy.
+ */
 "use client";
 
 import Link from "next/link";

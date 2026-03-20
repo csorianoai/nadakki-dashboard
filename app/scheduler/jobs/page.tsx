@@ -1,48 +1,142 @@
 "use client";
+
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, Play, Pause, Trash2 } from "lucide-react";
+import { Clock, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
-
-const JOBS = [
-  { name: "Daily Report Generator", schedule: "0 9 * * *", lastRun: "Hoy 09:00", status: "active" },
-  { name: "Weekly Newsletter", schedule: "0 10 * * 1", lastRun: "Lun 10:00", status: "active" },
-  { name: "Data Sync", schedule: "*/15 * * * *", lastRun: "Hace 5 min", status: "active" },
-  { name: "Cleanup Old Data", schedule: "0 2 * * 0", lastRun: "Dom 02:00", status: "paused" },
-];
+import {
+  fetchSchedulerStatus,
+  formatBool,
+  type SchedulerStatusPayload,
+} from "@/lib/scheduler-status";
 
 export default function SchedulerJobsPage() {
+  const [data, setData] = useState<SchedulerStatusPayload | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const res = await fetchSchedulerStatus();
+    if (res.ok) {
+      setData(res.data);
+    } else {
+      setData(null);
+      setError((res as { ok: false; error: string }).error);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const ame = data?.ame_autopilot;
+
   return (
     <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/scheduler"><StatusBadge status="active" label="Jobs" size="lg" /></NavigationBar>
+      <NavigationBar backHref="/scheduler">
+        <StatusBadge status="active" label="Jobs (solo lectura)" size="lg" />
+      </NavigationBar>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-orange-500/20 border border-orange-500/30"><Clock className="w-8 h-8 text-orange-400" /></div>
-          <div><h1 className="text-3xl font-bold text-white">Jobs Programados</h1><p className="text-gray-400">{JOBS.length} tareas configuradas</p></div>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-orange-500/20 border border-orange-500/30">
+              <Clock className="w-8 h-8 text-orange-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Programacion</h1>
+              <p className="text-gray-400">
+                Datos en vivo desde{" "}
+                <span className="font-mono text-xs">GET /api/v1/scheduler/status</span>
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => load()}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-sm text-white hover:bg-white/15 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            Actualizar
+          </button>
         </div>
       </motion.div>
-      <div className="space-y-4">
-        {JOBS?.map((j, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <GlassCard className="p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-orange-500/20"><Clock className="w-5 h-5 text-orange-400" /></div>
-                  <div><h3 className="font-bold text-white">{j.name}</h3><p className="text-sm text-gray-400 font-mono">{j.schedule}</p></div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-xs text-gray-500">{j.lastRun}</span>
-                  <StatusBadge status={j.status === "active" ? "active" : "warning"} label={j.status === "active" ? "Activo" : "Pausado"} size="sm" />
-                  <button className="p-2 hover:bg-white/10 rounded-lg">{j.status === "active" ? <Pause className="w-4 h-4 text-yellow-400" /> : <Play className="w-4 h-4 text-green-400" />}</button>
-                  <button className="p-2 hover:bg-red-500/20 rounded-lg"><Trash2 className="w-4 h-4 text-gray-400" /></button>
-                </div>
-              </div>
+
+      {error && (
+        <GlassCard className="p-4 mb-6 border-amber-500/30 bg-amber-500/10">
+          <div className="flex items-start gap-3 text-amber-200 text-sm">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        </GlassCard>
+      )}
+
+      {loading && !data ? (
+        <div className="flex items-center justify-center py-16 text-gray-400 gap-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          Cargando
+        </div>
+      ) : data ? (
+        <div className="space-y-6">
+          <GlassCard className="p-6">
+            <h2 className="text-white font-semibold mb-4">Resumen del scheduler</h2>
+            <ul className="text-sm text-gray-300 space-y-2">
+              <li>
+                <span className="text-gray-500">enabled:</span> {formatBool(data.enabled)}
+              </li>
+              <li>
+                <span className="text-gray-500">running:</span> {formatBool(data.running)}
+              </li>
+              <li>
+                <span className="text-gray-500">jobs_count:</span>{" "}
+                <span className="text-white font-mono">{data.jobs_count ?? 0}</span>
+              </li>
+              <li>
+                <span className="text-gray-500">mode:</span>{" "}
+                <span className="text-white font-mono">{data.mode ?? "—"}</span>
+              </li>
+              {data.timestamp && (
+                <li>
+                  <span className="text-gray-500">timestamp:</span>{" "}
+                  <span className="text-gray-400 font-mono text-xs">{data.timestamp}</span>
+                </li>
+              )}
+            </ul>
+            <p className="text-xs text-gray-500 mt-4">
+              La API no devuelve el listado de nombres de jobs ni acciones de pausa o eliminacion.
+            </p>
+          </GlassCard>
+
+          {ame && (
+            <GlassCard className="p-6">
+              <h2 className="text-white font-semibold mb-4">AME Autopilot</h2>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li>
+                  <span className="text-gray-500">job_running:</span> {formatBool(ame.job_running)}
+                </li>
+                <li>
+                  <span className="text-gray-500">dry_run_mode:</span> {formatBool(ame.dry_run_mode)}
+                </li>
+                <li>
+                  <span className="text-gray-500">last_run_at:</span>{" "}
+                  <span className="font-mono text-xs text-gray-400">{ame.last_run_at ?? "—"}</span>
+                </li>
+                <li>
+                  <span className="text-gray-500">next_timeslices:</span>{" "}
+                  <span className="font-mono text-xs">
+                    {ame.next_timeslices?.length ? ame.next_timeslices.join(", ") : "—"}
+                  </span>
+                </li>
+              </ul>
             </GlassCard>
-          </motion.div>
-        ))}
-      </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
-

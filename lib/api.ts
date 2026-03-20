@@ -94,19 +94,38 @@ export interface Campaign {
   id: string;
   name: string;
   status: CampaignStatus;
-  type: "email" | "sms" | "push" | "ads" | "newsletter";
+  type: "email" | "sms" | "push" | "ads" | "newsletter" | "in-app" | "whatsapp" | "multi-channel";
   created_at: string;
   updated_at: string;
   description?: string;
   subject?: string;
   content?: string;
   audience_size?: number;
+  version?: number;
+  created_by?: string;
+  tenant_id?: string;
   stats?: {
     sent: number;
     opened: number;
     clicked: number;
     conversions: number;
   };
+}
+
+/** Normalize backend campaign response (metrics → stats, converted → conversions). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizeCampaign(raw: any): Campaign {
+  const metrics = raw.metrics as Record<string, number> | undefined;
+  const stats = raw.stats as Campaign["stats"] | undefined;
+  return {
+    ...raw,
+    stats: stats ?? (metrics ? {
+      sent: metrics.sent ?? 0,
+      opened: metrics.opened ?? 0,
+      clicked: metrics.clicked ?? 0,
+      conversions: metrics.converted ?? metrics.conversions ?? 0,
+    } : undefined),
+  } as Campaign;
 }
 
 export interface AnalyticsOverview {
@@ -258,28 +277,49 @@ export const analyticsAPI = {
       MOCK_ANALYTICS.time_series || [], { signal }),
 };
 
-// Campaigns API
+// Campaigns API — backend v2 at /campaigns (no /api prefix)
 export const campaignsAPI = {
-  getAll: (signal?: AbortSignal): Promise<Campaign[]> => 
-    fetchWithFallback("/api/campaigns", MOCK_CAMPAIGNS, { signal }),
-  
-  getById: (id: string, signal?: AbortSignal): Promise<Campaign> => 
-    fetchWithFallback(`/api/campaigns/${id}`, MOCK_CAMPAIGNS.find(c => c.id === id) || MOCK_CAMPAIGNS[0], { signal }),
-  
-  create: (data: Partial<Campaign>): Promise<Campaign> => 
-    fetchWithFallback("/api/campaigns", { id: Date.now().toString(), ...data, status: "draft" } as Campaign, {
+  getAll: async (signal?: AbortSignal, tenantId?: string): Promise<Campaign[]> => {
+    const q = tenantId ? `?tenant_id=${encodeURIComponent(tenantId)}` : "";
+    const raw = await fetchWithFallback<Campaign[]>(`/campaigns${q}`, MOCK_CAMPAIGNS, { signal });
+    return (Array.isArray(raw) ? raw : []).map(normalizeCampaign);
+  },
+
+  getByStatus: async (status: CampaignStatus, signal?: AbortSignal, tenantId?: string): Promise<Campaign[]> => {
+    const params = new URLSearchParams({ status });
+    if (tenantId) params.set("tenant_id", tenantId);
+    const raw = await fetchWithFallback<Campaign[]>(`/campaigns?${params}`, [], { signal });
+    return (Array.isArray(raw) ? raw : []).map(normalizeCampaign);
+  },
+
+  getById: async (id: string, signal?: AbortSignal): Promise<Campaign> => {
+    const raw = await fetchWithFallback(`/campaigns/${id}`, MOCK_CAMPAIGNS.find(c => c.id === id) || MOCK_CAMPAIGNS[0], { signal });
+    return normalizeCampaign(raw);
+  },
+
+  create: (data: Partial<Campaign>): Promise<Campaign> =>
+    fetchWithFallback("/campaigns", { id: Date.now().toString(), ...data, status: "draft" } as Campaign, {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  
-  update: (id: string, data: Partial<Campaign>): Promise<Campaign> => 
-    fetchWithFallback(`/api/campaigns/${id}`, { id, ...data } as Campaign, {
+
+  update: (id: string, data: Partial<Campaign>): Promise<Campaign> =>
+    fetchWithFallback(`/campaigns/${id}`, { id, ...data } as Campaign, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-  
-  delete: (id: string): Promise<{ success: boolean }> => 
-    fetchWithFallback(`/api/campaigns/${id}`, { success: true }, { method: "DELETE" }),
+
+  delete: (id: string): Promise<{ success: boolean }> =>
+    fetchWithFallback(`/campaigns/${id}`, { success: true }, { method: "DELETE" }),
+
+  activate: (id: string): Promise<{ success: boolean }> =>
+    fetchWithFallback(`/campaigns/${id}/activate`, { success: true }, { method: "POST" }),
+
+  pause: (id: string): Promise<{ success: boolean }> =>
+    fetchWithFallback(`/campaigns/${id}/pause`, { success: true }, { method: "POST" }),
+
+  duplicate: (id: string): Promise<Campaign> =>
+    fetchWithFallback(`/campaigns/${id}/duplicate`, {} as Campaign, { method: "POST" }),
 };
 
 // AI API
