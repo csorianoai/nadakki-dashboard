@@ -46,6 +46,7 @@ import {
   FileBarChart,
   Lock,
   Gauge,
+  FileUp,
 } from "lucide-react";
 import AgentCountDisplay from "./AgentCountDisplay";
 import TenantSelector from "@/components/ui/TenantSelector";
@@ -95,6 +96,7 @@ const navigationStructure: NavCore[] = [
       { id: "sic-metricas", icon: <BarChart3 size={14} />, label: "Metricas", href: "/sic/metricas" },
       { id: "sic-bandeja", icon: <Inbox size={14} />, label: "Bandeja", href: "/sic/bandeja" },
       { id: "sic-expedientes", icon: <FolderOpen size={14} />, label: "Expedientes", href: "/sic/expedientes" },
+      { id: "sic-nuevo-analisis", icon: <FileUp size={14} />, label: "Nuevo analisis", href: "/sic/nuevo-analisis" },
       { id: "sic-comite", icon: <Users size={14} />, label: "Comite", href: "/sic/comite" },
       { id: "sic-portafolio", icon: <Briefcase size={14} />, label: "Portafolio", href: "/sic/portafolio" },
       { id: "sic-reportes", icon: <FileBarChart size={14} />, label: "Reportes", href: "/sic/reportes" },

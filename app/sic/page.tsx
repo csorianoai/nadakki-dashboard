@@ -23,9 +23,24 @@ export default function SicPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1c] p-6">
       <h1 className="text-2xl font-800 text-slate-100 m-0 mb-1">SIC — Sistema de Información Crediticia</h1>
-      <p className="text-slate-500 text-sm mb-6">
+      <p className="text-slate-500 text-sm mb-4">
         Plataforma operativa de riesgo crediticio. Tenant: {tenant}
       </p>
+
+      <div className="flex flex-wrap gap-3 mb-6">
+        <Link
+          href="/sic/nuevo-analisis"
+          className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-5 py-3 text-sm font-700 text-white hover:bg-cyan-500 shadow-lg shadow-cyan-900/25"
+        >
+          Nuevo Análisis
+        </Link>
+        <Link
+          href="/sic/nuevo-analisis"
+          className="inline-flex items-center justify-center rounded-xl border border-cyan-500/50 bg-slate-900/70 px-5 py-3 text-sm font-600 text-cyan-200 hover:bg-slate-800/80"
+        >
+          Subir Estado de Cuenta
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {MODULOS.map((m) => (

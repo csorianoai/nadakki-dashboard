@@ -53,8 +53,18 @@ export default function SicBandejaPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1c] p-6">
-      <h1 className="text-xl font-700 text-slate-100 m-0 mb-1">Bandeja de Expedientes</h1>
-      <p className="text-slate-500 text-sm mb-6">Expedientes recibidos para análisis crediticio</p>
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-xl font-700 text-slate-100 m-0 mb-1">Bandeja de Expedientes</h1>
+          <p className="text-slate-500 text-sm m-0">Expedientes recibidos para análisis crediticio</p>
+        </div>
+        <Link
+          href="/sic/nuevo-analisis"
+          className="shrink-0 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-600 text-white hover:bg-cyan-500"
+        >
+          + Nuevo
+        </Link>
+      </div>
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2 text-sm text-red-300">
