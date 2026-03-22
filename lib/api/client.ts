@@ -1,5 +1,5 @@
 /**
- * Safe fetch helper for dashboard panels: never throws; non-200 uses fallback.
+ * Safe JSON fetch for dashboard panels: never throws; non-OK or network errors return fallback.
  */
 
 export type FetchSource = "live" | "fallback";
@@ -11,21 +11,22 @@ export type FetchWithFallbackResult<T> = {
   status: number | null;
 };
 
-export type FetchWithFallbackOptions = {
-  tenantId?: string;
-  fallbackData: unknown;
+export type FetchWithFallbackOptions<T> = {
+  tenantId?: string | null;
+  fallbackData: T;
   signal?: AbortSignal;
-  init?: Omit<RequestInit, "headers"> & { headers?: Record<string, string> };
+  headers?: Record<string, string>;
+  init?: Omit<RequestInit, "headers" | "signal"> & { headers?: Record<string, string> };
 };
 
 export async function fetchWithFallback<T>(
-  endpoint: string,
-  options: FetchWithFallbackOptions
+  url: string,
+  options: FetchWithFallbackOptions<T>
 ): Promise<FetchWithFallbackResult<T>> {
-  const { tenantId, fallbackData, signal, init } = options;
-  const fb = fallbackData as T;
+  const { tenantId, fallbackData, signal, headers: extraHeaders, init } = options;
+  const fb = fallbackData;
 
-  if (!endpoint || !endpoint.startsWith("http")) {
+  if (!url || !url.startsWith("http")) {
     return {
       data: fb,
       source: "fallback",
@@ -37,11 +38,16 @@ export async function fetchWithFallback<T>(
   try {
     const headers: Record<string, string> = {
       Accept: "application/json",
+      "Content-Type": "application/json",
       ...((init?.headers as Record<string, string> | undefined) ?? {}),
+      ...extraHeaders,
     };
-    if (tenantId) headers["X-Tenant-ID"] = tenantId;
+    if (tenantId) {
+      headers["X-Tenant-ID"] = tenantId;
+    }
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(url, {
+      method: "GET",
       ...init,
       signal,
       headers,
@@ -56,7 +62,6 @@ export async function fetchWithFallback<T>(
         status,
       };
     }
-
     const data = (await response.json()) as T;
     return { data, source: "live", error: null, status };
   } catch (e) {
@@ -65,14 +70,14 @@ export async function fetchWithFallback<T>(
       return {
         data: fb,
         source: "fallback",
-        error: "Aborted",
+        error: "AbortError",
         status: null,
       };
     }
     return {
       data: fb,
       source: "fallback",
-      error: (e as Error)?.message ?? "Network error",
+      error: (e as Error)?.message ?? String(e),
       status: null,
     };
   }

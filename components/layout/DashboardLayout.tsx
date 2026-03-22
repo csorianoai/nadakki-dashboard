@@ -150,7 +150,6 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #F97316, #EA580C)",
     modules: [
       { id: "mkt-all", icon: <Target size={14} />, label: "Marketing Hub", href: "/marketing" },
-      { id: "mkt-ame", icon: <Gauge size={14} />, label: "Autopilot (AME)", href: "/ame" },
       { id: "mkt-agents", icon: <Bot size={14} />, label: "Agentes", href: "/marketing/agents" },
       { id: "mkt-campaigns", icon: <Megaphone size={14} />, label: "Campanas", href: "/marketing/campaigns" },
       { id: "mkt-leads", icon: <TrendingUp size={14} />, label: "Lead Management", href: "/marketing/leads" },
@@ -162,6 +161,7 @@ const navigationStructure: NavCore[] = [
       { id: "mkt-ab-testing", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/marketing/ab-testing" },
       { id: "mkt-predictive", icon: <Brain size={14} />, label: "Predictive", href: "/marketing/predictive" },
       { id: "mkt-analytics", icon: <BarChart3 size={14} />, label: "Analytics", href: "/marketing/analytics" },
+      { id: "mkt-ame", icon: <Gauge size={14} />, label: "Autopilot (AME)", href: "/ame" },
     ],
   },
 
@@ -473,7 +473,7 @@ function TopNavigation() {
 }
 
 /* Paths that work without global tenant (e.g. Live Panel has own tenant selector). live-panel same visibility as agents-execute. */
-const NO_TENANT_PATHS = ["/tenants", "/agents/live"];
+const NO_TENANT_PATHS = ["/tenants", "/agents/live", "/ame"];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();

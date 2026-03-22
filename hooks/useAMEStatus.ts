@@ -1,41 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
 import { AME_ENDPOINTS } from "@/lib/api/endpoints";
-import { FALLBACK_AME_STATUS } from "@/lib/fallbacks/ame";
+import { FALLBACK_AME_STATUS, type AMEStatusData } from "@/lib/fallbacks/ame";
 
-export type AMEStatusShape = typeof FALLBACK_AME_STATUS;
-
-export function useAMEStatus(tenantIdForHeader?: string | null) {
-  const [data, setData] = useState<AMEStatusShape>(FALLBACK_AME_STATUS);
+export function useAMEStatus(tenantId: string | null | undefined, refreshKey = 0) {
+  const [data, setData] = useState<AMEStatusData>(FALLBACK_AME_STATUS);
   const [source, setSource] = useState<FetchSource>("fallback");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(
-    async (signal?: AbortSignal) => {
+  useEffect(() => {
+    const ac = new AbortController();
+    let cancelled = false;
+    (async () => {
       setLoading(true);
       setError(null);
-      const tid = tenantIdForHeader?.trim() || undefined;
-      const res = await fetchWithFallback<AMEStatusShape>(AME_ENDPOINTS.STATUS, {
-        tenantId: tid,
+      const res = await fetchWithFallback<AMEStatusData>(AME_ENDPOINTS.STATUS, {
+        tenantId: tenantId?.trim() || undefined,
         fallbackData: FALLBACK_AME_STATUS,
-        signal,
+        signal: ac.signal,
       });
+      if (cancelled) return;
+      if (res.error === "AbortError") return;
       setData(res.data);
       setSource(res.source);
       setError(res.error);
       setLoading(false);
-    },
-    [tenantIdForHeader]
-  );
+    })();
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [tenantId, refreshKey]);
 
-  useEffect(() => {
-    const ac = new AbortController();
-    void load(ac.signal);
-    return () => ac.abort();
-  }, [load]);
-
-  return { data, source, loading, error, refetch: load };
+  return { data, source, loading, error };
 }

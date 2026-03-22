@@ -1,85 +1,108 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { RefreshCw, Gauge } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAMEStatus } from "@/hooks/useAMEStatus";
 import { useAMERuns } from "@/hooks/useAMERuns";
 
+const colors = {
+  bg: "#0f172a",
+  card: "rgba(30, 41, 59, 0.85)",
+  border: "rgba(51, 65, 85, 0.6)",
+  text: "#f8fafc",
+  muted: "#94a3b8",
+};
+
 function DataSourceBadge({ live }: { live: boolean }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-600 ${
-        live ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/15 text-amber-200"
-      }`}
+      style={{
+        fontSize: "11px",
+        fontWeight: 700,
+        padding: "4px 10px",
+        borderRadius: "999px",
+        backgroundColor: live ? "rgba(34, 197, 94, 0.2)" : "rgba(148, 163, 184, 0.2)",
+        color: live ? "#4ade80" : colors.muted,
+        border: `1px solid ${live ? "rgba(34,197,94,0.45)" : "rgba(148,163,184,0.35)"}`,
+      }}
     >
       {live ? "Live" : "Reference"}
     </span>
   );
 }
 
-function chipClass(kind: "blue" | "gray" | "green" | "red" | "yellow") {
+function Chip({ label, tone }: { label: string; tone: "gray" | "green" | "red" | "yellow" | "blue" }) {
   const map = {
-    blue: "bg-sky-500/20 text-sky-200",
-    gray: "bg-slate-600/40 text-slate-200",
-    green: "bg-emerald-500/20 text-emerald-300",
-    red: "bg-rose-500/20 text-rose-200",
-    yellow: "bg-amber-500/20 text-amber-200",
+    gray: { bg: "rgba(148,163,184,0.15)", fg: "#cbd5e1", bd: "rgba(148,163,184,0.35)" },
+    green: { bg: "rgba(34,197,94,0.15)", fg: "#4ade80", bd: "rgba(34,197,94,0.4)" },
+    red: { bg: "rgba(239,68,68,0.15)", fg: "#f87171", bd: "rgba(239,68,68,0.4)" },
+    yellow: { bg: "rgba(234,179,8,0.15)", fg: "#facc15", bd: "rgba(234,179,8,0.4)" },
+    blue: { bg: "rgba(59,130,246,0.15)", fg: "#60a5fa", bd: "rgba(59,130,246,0.4)" },
   };
-  return `inline-flex rounded-full px-2 py-0.5 text-xs font-600 ${map[kind]}`;
+  const t = map[tone];
+  return (
+    <span
+      style={{
+        fontSize: "11px",
+        fontWeight: 600,
+        padding: "3px 8px",
+        borderRadius: "6px",
+        backgroundColor: t.bg,
+        color: t.fg,
+        border: `1px solid ${t.bd}`,
+      }}
+    >
+      {label}
+    </span>
+  );
 }
 
-function modeBadge(mode: string) {
-  const m = (mode || "").toLowerCase();
-  if (m === "dry_run") return <span className={chipClass("gray")}>Dry Run</span>;
-  if (m === "live") return <span className={chipClass("green")}>Live</span>;
-  return <span className={chipClass("yellow")}>Unknown</span>;
+function modeChip(mode: string | undefined) {
+  const m = (mode ?? "unknown").toLowerCase();
+  if (m === "dry_run" || m === "dry-run") return <Chip label="Dry Run" tone="gray" />;
+  if (m === "live") return <Chip label="Live" tone="green" />;
+  return <Chip label="Unknown" tone="yellow" />;
 }
 
-function overallBadge(overall: string) {
-  const o = (overall || "").toLowerCase();
-  if (o === "running") return <span className={chipClass("blue")}>Running</span>;
-  if (o === "idle") return <span className={chipClass("gray")}>Idle</span>;
-  if (o === "degraded") return <span className={chipClass("red")}>Degraded</span>;
-  return <span className={chipClass("yellow")}>Unknown</span>;
+function overallChip(overall: string | undefined) {
+  const o = (overall ?? "unknown").toLowerCase();
+  if (o === "running") return <Chip label="Running" tone="blue" />;
+  if (o === "idle") return <Chip label="Idle" tone="gray" />;
+  if (o === "degraded") return <Chip label="Degraded" tone="red" />;
+  return <Chip label="Unknown" tone="yellow" />;
 }
 
-function resultChip(result: string) {
-  const r = (result || "").toLowerCase();
-  if (["success", "completed", "ok"].some((x) => r.includes(x)))
-    return <span className={chipClass("green")}>{result || "OK"}</span>;
-  if (["fail", "error"].some((x) => r.includes(x)))
-    return <span className={chipClass("red")}>{result || "Failed"}</span>;
-  if (["block", "partial", "skip"].some((x) => r.includes(x)))
-    return <span className={chipClass("yellow")}>{result || "Partial"}</span>;
-  return <span className={chipClass("gray")}>{result || "—"}</span>;
+function resultChip(result: string | undefined) {
+  const r = (result ?? "unknown").toLowerCase();
+  if (["success", "completed", "ok", "succeeded"].includes(r)) return <Chip label={result ?? "ok"} tone="green" />;
+  if (["failed", "error", "failure"].includes(r)) return <Chip label={result ?? "failed"} tone="red" />;
+  if (["blocked", "partial"].includes(r)) return <Chip label={result ?? r} tone="yellow" />;
+  return <Chip label={result ?? "—"} tone="yellow" />;
 }
 
-function actionStatusChip(status: string) {
-  const s = (status || "").toLowerCase();
-  if (s === "completed") return <span className={chipClass("green")}>completed</span>;
-  if (s === "blocked") return <span className={chipClass("red")}>blocked</span>;
-  if (s === "skipped") return <span className={chipClass("yellow")}>skipped</span>;
-  if (s === "failed") return <span className={chipClass("red")}>failed</span>;
-  return <span className={chipClass("gray")}>{status || "—"}</span>;
+function actionStatusChip(status: string | undefined) {
+  const s = (status ?? "").toLowerCase();
+  if (s === "completed") return <Chip label="completed" tone="green" />;
+  if (s === "blocked" || s === "failed") return <Chip label={status ?? "—"} tone="red" />;
+  if (s === "skipped") return <Chip label="skipped" tone="yellow" />;
+  if (s) return <Chip label={status} tone="yellow" />;
+  return <Chip label="—" tone="gray" />;
 }
 
-function fmtTime(iso: unknown): string {
-  if (typeof iso !== "string" || !iso) return "—";
+function formatTime(iso: string | undefined | null): string {
+  if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
   return d.toLocaleString();
 }
 
-function fmtDuration(start: unknown, end: unknown): string {
-  if (typeof start !== "string" || !start) return "—";
+function formatDuration(start?: string, end?: string | null): string {
+  if (!start) return "—";
   const a = new Date(start).getTime();
   if (Number.isNaN(a)) return "—";
-  const b =
-    typeof end === "string" && end
-      ? new Date(end).getTime()
-      : NaN;
-  if (Number.isNaN(b)) return "In progress";
+  const b = end ? new Date(end).getTime() : Date.now();
+  if (Number.isNaN(b)) return "—";
   const sec = Math.max(0, Math.round((b - a) / 1000));
   if (sec < 60) return `${sec}s`;
   const m = Math.floor(sec / 60);
@@ -87,75 +110,146 @@ function fmtDuration(start: unknown, end: unknown): string {
   return `${m}m ${s}s`;
 }
 
-function str(v: unknown): string {
-  if (v === null || v === undefined) return "";
-  return String(v);
+function asRecord(v: unknown): Record<string, unknown> {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 }
 
-function getRunField(run: Record<string, unknown>, keys: string[]): unknown {
-  for (const k of keys) {
-    if (k in run && run[k] != null) return run[k];
+function pickActionRow(raw: unknown, i: number) {
+  const o = asRecord(raw);
+  const time = formatTime(
+    (o.time ?? o.timestamp ?? o.created_at ?? o.at ?? o.executed_at) as string | undefined
+  );
+  const entity = String(
+    o.campaign ?? o.entity ?? o.campaign_name ?? o.campaign_id ?? o.target ?? "—"
+  );
+  const action = String(o.action ?? o.action_type ?? o.type ?? o.name ?? "—");
+  const platform = String(o.platform ?? o.channel ?? "—");
+  const status = String(o.status ?? "—");
+  const reason = String(o.reason ?? o.message ?? o.detail ?? "—");
+  return { key: String(o.id ?? i), time, entity, action, platform, status, reason };
+}
+
+function runStartedAt(o: Record<string, unknown>): string | undefined {
+  return (o.started_at ?? o.start_time ?? o.created_at ?? o.begin) as string | undefined;
+}
+
+function pickRunRow(raw: unknown, i: number) {
+  const o = asRecord(raw);
+  const id = String(o.id ?? o.run_id ?? o.run_uuid ?? o.uuid ?? i);
+  const time = formatTime(runStartedAt(o));
+  const mode = String(o.mode ?? o.run_mode ?? "—");
+  const result = String(o.result ?? o.status ?? o.outcome ?? "—");
+  const phases = o.phase_count ?? o.phases ?? (Array.isArray(o.phase_list) ? o.phase_list.length : undefined);
+  const actions = o.action_count ?? o.actions ?? (Array.isArray(o.actions_list) ? o.actions_list.length : undefined);
+  return {
+    key: id,
+    id,
+    time,
+    mode,
+    result,
+    phases: phases === undefined || phases === null ? "—" : String(phases),
+    actions: actions === undefined || actions === null ? "—" : String(actions),
+  };
+}
+
+function gateLabel(key: string): string {
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
+  if (value === null || value === undefined) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+        <span style={{ color: colors.muted, minWidth: "160px", fontSize: "12px" }}>{gateLabel(gateKey)}</span>
+        <Chip label="unknown" tone="yellow" />
+      </div>
+    );
   }
-  return undefined;
+  if (typeof value === "boolean") {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+        <span style={{ color: colors.muted, minWidth: "160px", fontSize: "12px" }}>{gateLabel(gateKey)}</span>
+        <Chip label={value ? "enabled" : "disabled"} tone={value ? "green" : "red"} />
+      </div>
+    );
+  }
+  if (typeof value === "number" || typeof value === "string") {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px", flexWrap: "wrap" }}>
+        <span style={{ color: colors.muted, minWidth: "160px", fontSize: "12px" }}>{gateLabel(gateKey)}</span>
+        <Chip label={String(value)} tone="gray" />
+      </div>
+    );
+  }
+  if (Array.isArray(value)) {
+    return (
+      <div style={{ marginBottom: "10px" }}>
+        <div style={{ color: colors.muted, fontSize: "12px", marginBottom: "4px" }}>{gateLabel(gateKey)}</div>
+        <div style={{ fontSize: "11px", color: colors.text, opacity: 0.9 }}>{value.join(", ")}</div>
+      </div>
+    );
+  }
+  return (
+    <div style={{ marginBottom: "8px", fontSize: "11px", color: colors.muted }}>
+      <strong style={{ color: colors.text }}>{gateLabel(gateKey)}:</strong> {JSON.stringify(value)}
+    </div>
+  );
 }
 
-function runResult(run: Record<string, unknown>): string {
-  const raw =
-    getRunField(run, ["result", "status", "outcome", "state"]) ?? "";
-  return str(raw);
-}
+type TenantOpt = { slug: string; name?: string; display_name?: string };
 
 export default function AMEPage() {
-  const { tenantId } = useTenant();
-  const envTenant =
-    typeof process !== "undefined"
-      ? process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID
-      : undefined;
-  const [tenantOverride, setTenantOverride] = useState<string | null>(null);
-  const [tenantOptions, setTenantOptions] = useState<
-    { slug: string; label: string }[]
-  >([]);
+  const { tenantId: ctxTenant } = useTenant();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [pickedTenant, setPickedTenant] = useState("");
+  const [tenants, setTenants] = useState<TenantOpt[]>([]);
 
-  const effectiveTenant =
-    tenantOverride?.trim() ||
-    tenantId?.trim() ||
-    envTenant?.trim() ||
-    undefined;
+  const effectiveTenantId = useMemo(() => {
+    const p = pickedTenant.trim();
+    if (p) return p;
+    if (ctxTenant && ctxTenant.trim()) return ctxTenant.trim();
+    return undefined;
+  }, [pickedTenant, ctxTenant]);
 
-  const {
-    data: status,
-    source: statusSource,
-    loading: statusLoading,
-    refetch: refetchStatus,
-  } = useAMEStatus(effectiveTenant);
-  const {
-    data: runs,
-    source: runsSource,
-    loading: runsLoading,
-    refetch: refetchRuns,
-  } = useAMERuns(effectiveTenant);
+  const { data: status, source: statusSource, loading: statusLoading, error: statusErr } = useAMEStatus(
+    effectiveTenantId,
+    refreshKey
+  );
+  const { data: runs, source: runsSource, loading: runsLoading, error: runsErr } = useAMERuns(
+    effectiveTenantId,
+    refreshKey
+  );
 
   const loading = statusLoading || runsLoading;
   const dataLive = statusSource === "live" && runsSource === "live";
+
+  const refresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const res = await fetch("/api/tenants", { cache: "no-store" });
-        if (!res.ok) return;
-        const json = await res.json();
-        const list =
-          json?.data?.tenants ?? json?.tenants ?? json?.data ?? json ?? [];
-        const normalized = (Array.isArray(list) ? list : [])
-          .map((t: Record<string, unknown>) => ({
-            slug: String(t.slug ?? t.tenant_id ?? t.id ?? t.name ?? ""),
-            label: String(t.display_name ?? t.name ?? t.slug ?? ""),
+        const text = await res.text().catch(() => "");
+        if (!res.ok || !text) return;
+        const json = JSON.parse(text) as Record<string, unknown>;
+        const list = (json?.data as Record<string, unknown>)?.tenants ?? json?.tenants ?? json?.data ?? json;
+        const arr = (Array.isArray(list) ? list : []) as Record<string, unknown>[];
+        const normalized: TenantOpt[] = arr
+          .map((t) => ({
+            slug: String(t.slug ?? t.tenant_id ?? t.id ?? t.name ?? "").trim(),
+            name: t.name as string | undefined,
+            display_name: t.display_name as string | undefined,
           }))
-          .filter((t: { slug: string }) => t.slug);
-        if (alive) setTenantOptions(normalized);
+          .filter((t) => t.slug);
+        if (!alive) return;
+        setTenants(normalized);
       } catch {
-        /* keep empty */
+        if (alive) setTenants([]);
       }
     })();
     return () => {
@@ -163,512 +257,379 @@ export default function AMEPage() {
     };
   }, []);
 
-  const onRefresh = useCallback(async () => {
-    const ac = new AbortController();
-    await Promise.all([refetchStatus(ac.signal), refetchRuns(ac.signal)]);
-  }, [refetchStatus, refetchRuns]);
+  const ame = status.ame ?? {};
+  const kpis = status.kpis ?? {};
+  const lastRun = status.last_run && typeof status.last_run === "object" ? asRecord(status.last_run) : null;
+  const gatesObj = status.gates?.gates ?? {};
+  const gateKeys = Object.keys(gatesObj);
+  const scheduler = status.scheduler ?? {};
 
-  const ame = status.ame as Record<string, unknown> | undefined;
-  const overallStatus = str(ame?.overall_status);
-  const mode = str(ame?.mode);
-  const tenantLabel = str(ame?.tenant);
-  const environment = str(ame?.environment);
+  const runsList = Array.isArray(runs.runs) ? [...runs.runs] : [];
+  runsList.sort((a, b) => {
+    const ta = new Date(runStartedAt(asRecord(a)) ?? 0).getTime();
+    const tb = new Date(runStartedAt(asRecord(b)) ?? 0).getTime();
+    return tb - ta;
+  });
+  const runsDisplay = runsList.slice(0, 10).map((r, i) => pickRunRow(r, i));
 
-  const lastRun = status.last_run as Record<string, unknown> | null | undefined;
-  const kpis = status.kpis as Record<string, unknown> | undefined;
+  const actionsFeed = Array.isArray(runs.actions_feed) ? runs.actions_feed : [];
+  const actionsDisplay = actionsFeed.slice(0, 15).map((a, i) => pickActionRow(a, i));
 
-  const kpiLastRun = lastRun?.started_at
-    ? fmtTime(lastRun.started_at)
-    : "No runs yet";
-  const kpiRunsTotal =
-    typeof runs.total === "number" ? String(runs.total) : "—";
-  const kpiActions =
-    typeof kpis?.actions_executed === "number"
-      ? String(kpis.actions_executed)
-      : "—";
-  const kpiBlocked =
-    typeof kpis?.actions_blocked === "number"
-      ? String(kpis.actions_blocked)
-      : "—";
-  const kpiPhasesOk =
-    typeof kpis?.phases_ok === "number" ? String(kpis.phases_ok) : "—";
-  const kpiPhasesFail =
-    typeof kpis?.phases_fail === "number" ? String(kpis.phases_fail) : "—";
+  const kpiVal = (n: number | undefined | null) =>
+    n === undefined || n === null || Number.isNaN(Number(n)) ? "—" : String(n);
 
-  const actionsFeed = Array.isArray(runs.actions_feed)
-    ? (runs.actions_feed as Record<string, unknown>[])
-    : [];
-  const displayActions = actionsFeed.slice(0, 15);
-
-  const sortedRuns = useMemo(() => {
-    const runsList = Array.isArray(runs.runs)
-      ? ([...runs.runs] as Record<string, unknown>[])
-      : [];
-    return runsList.sort((a, b) => {
-      const ta = new Date(
-        str(getRunField(a, ["started_at", "start", "time"]))
-      ).getTime();
-      const tb = new Date(
-        str(getRunField(b, ["started_at", "start", "time"]))
-      ).getTime();
-      return (Number.isNaN(tb) ? 0 : tb) - (Number.isNaN(ta) ? 0 : ta);
-    });
-  }, [runs.runs]);
-  const displayRuns = sortedRuns.slice(0, 10);
-
-  const gatesObj =
-    (status.gates as { gates?: Record<string, unknown> } | undefined)?.gates ??
-    {};
-  const gateEntries = Object.keys(gatesObj).length
-    ? Object.entries(gatesObj)
-    : [];
-
-  const scheduler = (status.scheduler ?? {}) as Record<string, unknown>;
-
-  const showTenantFilter = tenantOptions.length > 1;
+  const section = (title: string, children: ReactNode) => (
+    <section
+      style={{
+        marginBottom: "24px",
+        padding: "20px",
+        borderRadius: "12px",
+        backgroundColor: colors.card,
+        border: `1px solid ${colors.border}`,
+      }}
+    >
+      <h2 style={{ fontSize: "14px", fontWeight: 700, color: colors.text, margin: "0 0 16px", letterSpacing: "0.02em" }}>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c] p-6 text-slate-100">
-      {/* Section 1 */}
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <Gauge className="h-7 w-7 text-orange-400" aria-hidden />
-            <h1 className="m-0 text-2xl font-800 text-slate-100">
-              Autopilot (AME)
-            </h1>
-            <DataSourceBadge live={dataLive} />
-          </div>
-          <p className="m-0 text-sm text-slate-500">
-            Tenant: {tenantLabel || "—"} · Environment: {environment || "—"}
+    <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto", color: colors.text }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+        <div
+          style={{
+            width: "44px",
+            height: "44px",
+            borderRadius: "12px",
+            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Gauge size={22} color="#fff" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ fontSize: "22px", fontWeight: 800, margin: 0 }}>Autopilot (AME)</h1>
+          <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.muted }}>
+            Read-only operational view
+            {(statusErr || runsErr) && (
+              <span style={{ color: "#f87171", marginLeft: "8px" }}>
+                {[statusErr, runsErr].filter(Boolean).join(" · ")}
+              </span>
+            )}
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs uppercase tracking-wide text-slate-500">
-              Mode
-            </span>
-            {modeBadge(mode)}
-            <span className="text-xs uppercase tracking-wide text-slate-500">
-              Overall
-            </span>
-            {overallBadge(overallStatus)}
+        </div>
+        <DataSourceBadge live={dataLive} />
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "12px",
+          alignItems: "center",
+          marginBottom: "24px",
+        }}
+      >
+        <button
+          type="button"
+          onClick={refresh}
+          disabled={loading}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px 16px",
+            borderRadius: "8px",
+            border: `1px solid ${colors.border}`,
+            background: "rgba(99,102,241,0.2)",
+            color: "#c4b5fd",
+            fontWeight: 600,
+            fontSize: "13px",
+            cursor: loading ? "wait" : "pointer",
+            opacity: loading ? 0.7 : 1,
+          }}
+        >
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+
+        {tenants.length > 1 ? (
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: colors.muted }}>
+            <span>Tenant (X-Tenant-ID)</span>
+            <select
+              value={pickedTenant}
+              onChange={(e) => setPickedTenant(e.target.value)}
+              style={{
+                background: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: "8px",
+                padding: "8px 12px",
+                minWidth: "200px",
+              }}
+            >
+              <option value="">Dashboard tenant / unscoped</option>
+              {tenants.map((t) => (
+                <option key={t.slug} value={t.slug}>
+                  {t.display_name || t.name || t.slug}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: colors.muted }}>
+            <span>Optional tenant override</span>
+            <input
+              value={pickedTenant}
+              onChange={(e) => setPickedTenant(e.target.value)}
+              placeholder={ctxTenant ? `Default: ${ctxTenant}` : "X-Tenant-ID"}
+              style={{
+                background: colors.bg,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: "8px",
+                padding: "8px 12px",
+                minWidth: "220px",
+              }}
+            />
+          </label>
+        )}
+      </div>
+
+      {section(
+        "Header / Operational identity",
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
+          <div style={{ fontSize: "13px", color: colors.muted }}>
+            Tenant: <span style={{ color: colors.text }}>{String(ame.tenant ?? "—")}</span>
+          </div>
+          <div style={{ fontSize: "13px", color: colors.muted }}>
+            Environment: <span style={{ color: colors.text }}>{String(ame.environment ?? "—")}</span>
+          </div>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <span style={{ fontSize: "12px", color: colors.muted }}>Mode</span>
+            {modeChip(String(ame.mode ?? ""))}
+          </div>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <span style={{ fontSize: "12px", color: colors.muted }}>Overall</span>
+            {overallChip(String(ame.overall_status ?? ""))}
           </div>
         </div>
-        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-          {showTenantFilter && (
-            <label className="flex flex-col gap-1 text-xs text-slate-400">
-              Tenant (header)
-              <select
-                className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-                value={tenantOverride ?? tenantId ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setTenantOverride(v || null);
+      )}
+
+      {section(
+        "KPI strip",
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+            gap: "12px",
+          }}
+        >
+          {[
+            { label: "Last Run", value: lastRun ? formatTime(runStartedAt(lastRun)) : "No runs yet" },
+            { label: "Runs Total", value: kpiVal(runs.total) },
+            { label: "Actions", value: kpiVal(kpis.actions_executed as number | undefined) },
+            { label: "Blocked", value: kpiVal(kpis.actions_blocked as number | undefined) },
+            { label: "Phases OK", value: kpiVal(kpis.phases_ok as number | undefined) },
+            {
+              label: "Phases Fail",
+              value: kpiVal(kpis.phases_fail as number | undefined),
+              danger: Number(kpis.phases_fail) > 0,
+            },
+          ].map((c) => (
+            <div
+              key={c.label}
+              style={{
+                padding: "12px",
+                borderRadius: "8px",
+                background: "rgba(15,23,42,0.6)",
+                border: `1px solid ${colors.border}`,
+              }}
+            >
+              <div style={{ fontSize: "10px", color: colors.muted, textTransform: "uppercase", marginBottom: "6px" }}>
+                {c.label}
+              </div>
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  color: (c as { danger?: boolean }).danger ? "#f87171" : colors.text,
                 }}
               >
-                <option value="">—</option>
-                {tenantOptions.map((t) => (
-                  <option key={t.slug} value={t.slug}>
-                    {t.label || t.slug}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <button
-            type="button"
-            onClick={() => void onRefresh()}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm font-600 text-slate-100 hover:bg-slate-700 disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-              aria-hidden
-            />
-            Refresh
-          </button>
+                {c.value}
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Section 2 */}
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        {[
-          { label: "Last Run", value: kpiLastRun },
-          { label: "Runs Total", value: kpiRunsTotal },
-          { label: "Actions", value: kpiActions },
-          { label: "Blocked", value: kpiBlocked },
-          { label: "Phases OK", value: kpiPhasesOk },
-          {
-            label: "Phases Fail",
-            value: kpiPhasesFail,
-            danger:
-              typeof kpis?.phases_fail === "number" && kpis.phases_fail > 0,
-          },
-        ].map((c) => (
-          <div
-            key={c.label}
-            className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-4"
-          >
-            <div className="text-xs font-600 uppercase tracking-wide text-slate-500">
-              {c.label}
-            </div>
-            <div
-              className={`mt-1 text-lg font-700 ${
-                "danger" in c && c.danger ? "text-rose-400" : "text-slate-100"
-              }`}
-            >
-              {c.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Section 3 */}
-      <section className="mb-6 rounded-xl border border-slate-700/50 bg-slate-900/50 p-5">
-        <h2 className="mt-0 text-base font-700 text-slate-200">Last run</h2>
-        {!lastRun ? (
-          <p className="m-0 text-sm text-slate-500">
+      {section(
+        "Last run summary",
+        !lastRun ? (
+          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>
             No runs recorded yet. Run the pilot to see data here.
           </p>
         ) : (
-          <div className="grid gap-2 text-sm md:grid-cols-2">
-            <div>
-              <span className="text-slate-500">Run ID</span>{" "}
-              <span className="text-slate-200">
-                {str(getRunField(lastRun, ["id", "run_id", "runId"])) || "—"}
-              </span>
+          <div style={{ fontSize: "13px", display: "grid", gap: "10px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
+              <span style={{ color: colors.muted }}>Run ID</span>
+              <span>{String(lastRun.id ?? lastRun.run_id ?? "—")}</span>
+              {resultChip(String(lastRun.result ?? lastRun.status ?? lastRun.outcome))}
             </div>
             <div>
-              <span className="text-slate-500">Started</span>{" "}
-              <span className="text-slate-200">
-                {fmtTime(getRunField(lastRun, ["started_at", "start"]))}
-              </span>
+              <span style={{ color: colors.muted }}>Started:</span> {formatTime(runStartedAt(lastRun))} ·{" "}
+              <span style={{ color: colors.muted }}>Ended:</span>{" "}
+              {lastRun.ended_at ? formatTime(String(lastRun.ended_at)) : "In progress"}
             </div>
             <div>
-              <span className="text-slate-500">Ended</span>{" "}
-              <span className="text-slate-200">
-                {getRunField(lastRun, ["ended_at", "end"])
-                  ? fmtTime(getRunField(lastRun, ["ended_at", "end"]))
-                  : "In progress"}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-500">Duration</span>{" "}
-              <span className="text-slate-200">
-                {fmtDuration(
-                  getRunField(lastRun, ["started_at", "start"]),
-                  getRunField(lastRun, ["ended_at", "end"])
-                )}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-500">Mode</span>{" "}
-              {modeBadge(
-                str(getRunField(lastRun, ["mode", "run_mode"])) || mode
+              <span style={{ color: colors.muted }}>Duration:</span>{" "}
+              {formatDuration(
+                runStartedAt(lastRun),
+                lastRun.ended_at ? String(lastRun.ended_at) : null
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-slate-500">Result</span>
-              {resultChip(runResult(lastRun))}
+            <div>
+              <span style={{ color: colors.muted }}>Mode:</span> {String(lastRun.mode ?? "—")} ·{" "}
+              <span style={{ color: colors.muted }}>Tenant:</span> {String(lastRun.tenant ?? ame.tenant ?? "—")}
             </div>
             <div>
-              <span className="text-slate-500">Tenant</span>{" "}
-              <span className="text-slate-200">
-                {str(getRunField(lastRun, ["tenant", "tenant_id"])) || tenantLabel || "—"}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-500">Phases</span>{" "}
-              <span className="text-slate-200">
-                {typeof getRunField(lastRun, ["phase_count", "phases"]) ===
-                "number"
-                  ? String(getRunField(lastRun, ["phase_count"]))
-                  : Array.isArray(getRunField(lastRun, ["phases"]))
-                    ? String(
-                        (getRunField(lastRun, ["phases"]) as unknown[]).length
-                      )
-                    : "—"}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-500">Actions</span>{" "}
-              <span className="text-slate-200">
-                {typeof getRunField(lastRun, ["action_count", "actions"]) ===
-                "number"
-                  ? String(getRunField(lastRun, ["action_count"]))
-                  : Array.isArray(getRunField(lastRun, ["actions"]))
-                    ? String(
-                        (getRunField(lastRun, ["actions"]) as unknown[]).length
-                      )
-                    : "—"}
-              </span>
+              <span style={{ color: colors.muted }}>Phase count:</span>{" "}
+              {lastRun.phase_count != null
+                ? String(lastRun.phase_count)
+                : Array.isArray(lastRun.phases)
+                  ? String(lastRun.phases.length)
+                  : "—"}{" "}
+              · <span style={{ color: colors.muted }}>Action count:</span>{" "}
+              {lastRun.action_count != null
+                ? String(lastRun.action_count)
+                : Array.isArray(lastRun.actions)
+                  ? String(lastRun.actions.length)
+                  : "—"}
             </div>
           </div>
-        )}
-      </section>
+        )
+      )}
 
-      {/* Section 4 */}
-      <section className="mb-6 rounded-xl border border-slate-700/50 bg-slate-900/50 p-5">
-        <h2 className="mt-0 text-base font-700 text-slate-200">
-          Actions feed
-        </h2>
-        {displayActions.length === 0 ? (
-          <p className="m-0 text-sm text-slate-500">
-            No actions recorded yet.
-          </p>
+      {section(
+        "Actions feed",
+        actionsDisplay.length === 0 ? (
+          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>No actions recorded yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-sm">
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
               <thead>
-                <tr className="border-b border-slate-700 text-xs uppercase text-slate-500">
-                  <th className="py-2 pr-3">Time</th>
-                  <th className="py-2 pr-3">Campaign / Entity</th>
-                  <th className="py-2 pr-3">Action</th>
-                  <th className="py-2 pr-3">Platform</th>
-                  <th className="py-2 pr-3">Status</th>
-                  <th className="py-2">Reason</th>
+                <tr style={{ color: colors.muted, textAlign: "left" }}>
+                  {["Time", "Campaign / Entity", "Action", "Platform", "Status", "Reason"].map((h) => (
+                    <th key={h} style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {displayActions.map((row, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-slate-800/80 text-slate-300"
-                  >
-                    <td className="py-2 pr-3 whitespace-nowrap">
-                      {fmtTime(
-                        getRunField(row, ["time", "at", "timestamp", "ts"])
-                      )}
+                {actionsDisplay.map((row) => (
+                  <tr key={row.key}>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.time}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.entity}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.action}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.platform}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>
+                      {actionStatusChip(row.status)}
                     </td>
-                    <td className="py-2 pr-3">
-                      {str(
-                        getRunField(row, [
-                          "campaign",
-                          "entity",
-                          "campaign_id",
-                          "entity_id",
-                        ])
-                      ) || "—"}
-                    </td>
-                    <td className="py-2 pr-3">
-                      {str(getRunField(row, ["action", "action_type"])) || "—"}
-                    </td>
-                    <td className="py-2 pr-3">
-                      {str(getRunField(row, ["platform", "channel"])) || "—"}
-                    </td>
-                    <td className="py-2 pr-3">
-                      {actionStatusChip(
-                        str(getRunField(row, ["status", "state"])) || "—"
-                      )}
-                    </td>
-                    <td className="py-2 text-slate-400">
-                      {str(
-                        getRunField(row, ["reason", "message", "detail"])
-                      ) || "—"}
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}`, color: colors.muted }}>
+                      {row.reason}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-      </section>
+        )
+      )}
 
-      {/* Section 5 */}
-      <section className="mb-6 rounded-xl border border-slate-700/50 bg-slate-900/50 p-5">
-        <h2 className="mt-0 text-base font-700 text-slate-200">
-          Gates status
-        </h2>
-        {gateEntries.length === 0 ? (
-          <p className="m-0 text-sm text-slate-500">
+      {section(
+        "Gates status",
+        gateKeys.length === 0 ? (
+          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>
             Gates state unavailable — showing reference.
           </p>
         ) : (
-          <ul className="m-0 list-none space-y-3 p-0">
-            {typeof gatesObj.meta_live_enabled === "boolean" && (
-              <li className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-slate-400">meta_live_enabled</span>
-                <span
-                  className={chipClass(
-                    gatesObj.meta_live_enabled ? "green" : "red"
-                  )}
-                >
-                  {gatesObj.meta_live_enabled ? "enabled" : "disabled"}
-                </span>
-              </li>
-            )}
-            {"circuit_breaker_threshold" in gatesObj && (
-              <li className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-slate-400">circuit_breaker</span>
-                <span className="text-slate-200">
-                  threshold:{" "}
-                  {str(gatesObj.circuit_breaker_threshold) || "—"}
-                </span>
-              </li>
-            )}
-            {("rate_limit_max" in gatesObj ||
-              "rate_limit_window_s" in gatesObj) && (
-              <li className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-slate-400">rate_limit</span>
-                <span className="text-slate-200">
-                  max {str(gatesObj.rate_limit_max) ?? "—"} / window{" "}
-                  {str(gatesObj.rate_limit_window_s) ?? "—"}s
-                </span>
-              </li>
-            )}
-            {typeof gatesObj.global_autonomy === "boolean" && (
-              <li className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-slate-400">global_autonomy</span>
-                <span
-                  className={chipClass(
-                    gatesObj.global_autonomy ? "green" : "red"
-                  )}
-                >
-                  {gatesObj.global_autonomy ? "enabled" : "disabled"}
-                </span>
-              </li>
-            )}
-            {gateEntries
-              .filter(
-                ([k]) =>
-                  ![
-                    "meta_live_enabled",
-                    "circuit_breaker_threshold",
-                    "rate_limit_max",
-                    "rate_limit_window_s",
-                    "global_autonomy",
-                  ].includes(k)
-              )
-              .map(([k, v]) => (
-                <li
-                  key={k}
-                  className="flex flex-wrap items-center gap-2 text-sm"
-                >
-                  <span className="text-slate-400">{k}</span>
-                  <span className="rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
-                    {typeof v === "object" ? JSON.stringify(v) : str(v)}
-                  </span>
-                </li>
-              ))}
-          </ul>
-        )}
-      </section>
+          <div>
+            {gateKeys.map((k) => (
+              <GateRow key={k} gateKey={k} value={gatesObj[k]} />
+            ))}
+          </div>
+        )
+      )}
 
-      {/* Section 6 */}
-      <section className="mb-6 rounded-xl border border-slate-700/50 bg-slate-900/50 p-5">
-        <h2 className="mt-0 text-base font-700 text-slate-200">Scheduler</h2>
-        {!scheduler || Object.keys(scheduler).length === 0 ? (
-          <p className="m-0 text-sm text-slate-500">
+      {section(
+        "Scheduler status",
+        !scheduler || Object.keys(scheduler).length === 0 ? (
+          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>
             Scheduler state not available.
           </p>
         ) : (
-          <div className="space-y-2 text-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-slate-400">Enabled</span>
-              <span
-                className={chipClass(
-                  scheduler.enabled === true
-                    ? "green"
-                    : scheduler.enabled === false
-                      ? "gray"
-                      : "yellow"
-                )}
-              >
-                {scheduler.enabled === true
-                  ? "YES"
-                  : scheduler.enabled === false
-                    ? "NO"
-                    : "UNKNOWN"}
-              </span>
+          <div style={{ fontSize: "13px", display: "grid", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ color: colors.muted }}>Enabled</span>
+              <Chip
+                label={scheduler.enabled ? "YES" : "NO"}
+                tone={scheduler.enabled ? "green" : "gray"}
+              />
             </div>
-            {"source" in scheduler && (
-              <div>
-                <span className="text-slate-400">Source</span>{" "}
-                <span className="text-slate-200">{str(scheduler.source)}</span>
-              </div>
-            )}
+            <div>
+              <span style={{ color: colors.muted }}>Source:</span> {String(scheduler.source ?? "—")}
+            </div>
             {Object.entries(scheduler)
               .filter(([k]) => k !== "enabled" && k !== "source")
               .map(([k, v]) => (
                 <div key={k}>
-                  <span className="text-slate-400">{k}</span>{" "}
-                  <span className="text-slate-200">
-                    {typeof v === "object" ? JSON.stringify(v) : str(v)}
-                  </span>
+                  <span style={{ color: colors.muted }}>{gateLabel(k)}:</span>{" "}
+                  <span style={{ color: colors.text }}>{typeof v === "object" ? JSON.stringify(v) : String(v)}</span>
                 </div>
               ))}
           </div>
-        )}
-      </section>
+        )
+      )}
 
-      {/* Section 7 */}
-      <section className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-5">
-        <h2 className="mt-0 text-base font-700 text-slate-200">
-          Recent runs
-        </h2>
-        {displayRuns.length === 0 ? (
-          <p className="m-0 text-sm text-slate-500">
-            No run history available.
-          </p>
+      {section(
+        "Recent runs table",
+        runsDisplay.length === 0 ? (
+          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>No run history available.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-sm">
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
               <thead>
-                <tr className="border-b border-slate-700 text-xs uppercase text-slate-500">
-                  <th className="py-2 pr-3">Run ID</th>
-                  <th className="py-2 pr-3">Time</th>
-                  <th className="py-2 pr-3">Mode</th>
-                  <th className="py-2 pr-3">Result</th>
-                  <th className="py-2 pr-3">Phases</th>
-                  <th className="py-2">Actions</th>
+                <tr style={{ color: colors.muted, textAlign: "left" }}>
+                  {["Run ID", "Time", "Mode", "Result", "Phases", "Actions"].map((h) => (
+                    <th key={h} style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {displayRuns.map((run, i) => (
-                  <tr
-                    key={str(getRunField(run, ["id", "run_id"])) || i}
-                    className="border-b border-slate-800/80 text-slate-300"
-                  >
-                    <td className="py-2 pr-3 font-mono text-xs">
-                      {str(getRunField(run, ["id", "run_id", "runId"])) || "—"}
+                {runsDisplay.map((row) => (
+                  <tr key={row.key}>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.id}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.time}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.mode}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>
+                      {resultChip(row.result)}
                     </td>
-                    <td className="py-2 pr-3 whitespace-nowrap">
-                      {fmtTime(
-                        getRunField(run, ["started_at", "start", "time"])
-                      )}
-                    </td>
-                    <td className="py-2 pr-3">
-                      {modeBadge(str(getRunField(run, ["mode", "run_mode"])))}
-                    </td>
-                    <td className="py-2 pr-3">{resultChip(runResult(run))}</td>
-                    <td className="py-2 pr-3">
-                      {typeof getRunField(run, ["phase_count", "phases"]) ===
-                      "number"
-                        ? String(getRunField(run, ["phase_count"]))
-                        : Array.isArray(getRunField(run, ["phases"]))
-                          ? String(
-                              (getRunField(run, ["phases"]) as unknown[])
-                                .length
-                            )
-                          : "—"}
-                    </td>
-                    <td className="py-2">
-                      {typeof getRunField(run, ["action_count", "actions"]) ===
-                      "number"
-                        ? String(getRunField(run, ["action_count"]))
-                        : Array.isArray(getRunField(run, ["actions"]))
-                          ? String(
-                              (getRunField(run, ["actions"]) as unknown[])
-                                .length
-                            )
-                          : "—"}
-                    </td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.phases}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.actions}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-      </section>
+        )
+      )}
     </div>
   );
 }

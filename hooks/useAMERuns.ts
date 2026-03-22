@@ -1,44 +1,40 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
 import { AME_ENDPOINTS } from "@/lib/api/endpoints";
-import { FALLBACK_AME_RUNS } from "@/lib/fallbacks/ame";
+import { FALLBACK_AME_RUNS, type AMERunsData } from "@/lib/fallbacks/ame";
 
-export type AMERunsShape = typeof FALLBACK_AME_RUNS;
-
-export function useAMERuns(tenantIdForHeader?: string | null) {
-  const [data, setData] = useState<AMERunsShape>(FALLBACK_AME_RUNS);
+export function useAMERuns(tenantId: string | null | undefined, refreshKey = 0) {
+  const [data, setData] = useState<AMERunsData>(FALLBACK_AME_RUNS);
   const [source, setSource] = useState<FetchSource>("fallback");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(
-    async (signal?: AbortSignal) => {
+  useEffect(() => {
+    const ac = new AbortController();
+    let cancelled = false;
+    const url = AME_ENDPOINTS.RUNS ? `${AME_ENDPOINTS.RUNS}?limit=10` : "";
+    (async () => {
       setLoading(true);
       setError(null);
-      const tid = tenantIdForHeader?.trim() || undefined;
-      const url = AME_ENDPOINTS.RUNS
-        ? `${AME_ENDPOINTS.RUNS}?limit=10`
-        : "";
-      const res = await fetchWithFallback<AMERunsShape>(url, {
-        tenantId: tid,
+      const res = await fetchWithFallback<AMERunsData>(url, {
+        tenantId: tenantId?.trim() || undefined,
         fallbackData: FALLBACK_AME_RUNS,
-        signal,
+        signal: ac.signal,
       });
+      if (cancelled) return;
+      if (res.error === "AbortError") return;
       setData(res.data);
       setSource(res.source);
       setError(res.error);
       setLoading(false);
-    },
-    [tenantIdForHeader]
-  );
+    })();
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [tenantId, refreshKey]);
 
-  useEffect(() => {
-    const ac = new AbortController();
-    void load(ac.signal);
-    return () => ac.abort();
-  }, [load]);
-
-  return { data, source, loading, error, refetch: load };
+  return { data, source, loading, error };
 }
