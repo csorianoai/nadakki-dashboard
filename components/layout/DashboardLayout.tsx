@@ -45,6 +45,7 @@ import {
   Users,
   FileBarChart,
   Lock,
+  Gauge,
 } from "lucide-react";
 import AgentCountDisplay from "./AgentCountDisplay";
 import TenantSelector from "@/components/ui/TenantSelector";
@@ -149,6 +150,7 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #F97316, #EA580C)",
     modules: [
       { id: "mkt-all", icon: <Target size={14} />, label: "Marketing Hub", href: "/marketing" },
+      { id: "mkt-ame", icon: <Gauge size={14} />, label: "Autopilot (AME)", href: "/ame" },
       { id: "mkt-agents", icon: <Bot size={14} />, label: "Agentes", href: "/marketing/agents" },
       { id: "mkt-campaigns", icon: <Megaphone size={14} />, label: "Campanas", href: "/marketing/campaigns" },
       { id: "mkt-leads", icon: <TrendingUp size={14} />, label: "Lead Management", href: "/marketing/leads" },
