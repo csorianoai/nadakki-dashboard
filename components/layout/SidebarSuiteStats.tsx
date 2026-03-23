@@ -1,6 +1,5 @@
 "use client";
 
-import { useTenant } from "@/contexts/TenantContext";
 import { useFetchWithFallback } from "@/hooks/useFetchWithFallback";
 import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 
@@ -26,34 +25,42 @@ function coresCount(json: unknown): number | null {
 }
 
 function pickAgentTotal(h: Record<string, unknown>): number | null {
-  if (typeof h.agents_total === "number") return h.agents_total;
   if (typeof h.agents === "number") return h.agents;
+  if (typeof h.total_agents === "number") return h.total_agents;
+  if (typeof h.agent_count === "number") return h.agent_count;
+  if (typeof h.agents_total === "number") return h.agents_total;
   if (typeof h.confirmed_agents === "number") return h.confirmed_agents;
   return null;
 }
 
-export default function SidebarSuiteStats() {
-  const { tenantId } = useTenant();
+function pickWorkflowCount(h: Record<string, unknown>): number | string | null {
+  if (typeof h.workflows === "number") return h.workflows;
+  if (typeof h.workflow_count === "number") return h.workflow_count;
+  return null;
+}
 
+export default function SidebarSuiteStats() {
   const { data: healthRaw, source: healthSource } = useFetchWithFallback<Record<string, unknown>>(
     MARKETING_ENDPOINTS.HEALTH,
-    { tenantId, fallbackData: {} }
+    { fallbackData: {} }
   );
 
   const { data: coresRaw, source: coresSource } = useFetchWithFallback<unknown>(
     MARKETING_ENDPOINTS.CORES,
-    { tenantId, fallbackData: {} }
+    { fallbackData: [] }
   );
 
   const healthData = unwrapData(healthRaw) as Record<string, unknown>;
-  const agentNum =
-    healthSource === "live" ? pickAgentTotal(healthData) : null;
-  const agentsDisplay = agentNum ?? "—";
+  const agentNum = healthSource === "live" ? pickAgentTotal(healthData) : null;
+  const agentsDisplay = agentNum ?? 0;
 
   const cc = coresSource === "live" ? coresCount(coresRaw) : null;
-  const coresDisplay = cc ?? "—";
+  const coresDisplay = cc ?? (Array.isArray(coresRaw) ? coresRaw.length : 0);
 
-  const wfTitle = "Disponible cuando tracking esté activo";
+  const wfNum = healthSource === "live" ? pickWorkflowCount(healthData) : null;
+  const workflowsDisplay = wfNum ?? "—";
+
+  const wfTitle = "Workflows disponibles cuando tracking esté activo";
 
   return (
     <div
@@ -98,7 +105,7 @@ export default function SidebarSuiteStats() {
             color: "#60a5fa",
           }}
         >
-          —
+          {workflowsDisplay}
         </div>
         <div style={{ fontSize: "7px", color: "#64748b" }}>WORKFLOWS</div>
       </div>

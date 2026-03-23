@@ -205,6 +205,18 @@ export default function AMEPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [pickedTenant, setPickedTenant] = useState("");
   const [tenants, setTenants] = useState<TenantOpt[]>([]);
+  const [hasInitializedTenant, setHasInitializedTenant] = useState(false);
+
+  useEffect(() => {
+    if (hasInitializedTenant || tenants.length === 0) return;
+    const active = tenantId?.trim();
+    if (!active) return;
+    const match = tenants.find((t) => t.slug === active || t.slug === tenantId);
+    if (match && !pickedTenant) {
+      setPickedTenant(match.slug);
+      setHasInitializedTenant(true);
+    }
+  }, [tenantId, tenants, pickedTenant, hasInitializedTenant]);
 
   /** Manual tenant override, else TenantContext — passed to AME hooks as X-Tenant-ID. */
   const effectiveTenantId = useMemo(() => {
