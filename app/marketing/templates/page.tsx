@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import MarketingTemplatesLiveBanner from "@/components/marketing/MarketingTemplatesLiveBanner";
 
 // ═══════════════════════════════════════════════════════════════
 // TIPOS Y DATOS
@@ -272,6 +273,7 @@ export default function TemplatesPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: bgPrimary }}>
+      <MarketingTemplatesLiveBanner />
       {/* Header */}
       <header className="sticky top-0 z-40 backdrop-blur-xl" style={{ backgroundColor: `${bgSecondary}ee`, borderBottom: `1px solid ${borderColor}` }}>
         <div className="max-w-[1800px] mx-auto px-6 py-4">

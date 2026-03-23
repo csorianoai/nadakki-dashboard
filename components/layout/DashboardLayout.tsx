@@ -48,7 +48,7 @@ import {
   Gauge,
   FileUp,
 } from "lucide-react";
-import AgentCountDisplay from "./AgentCountDisplay";
+import SidebarSuiteStats from "./SidebarSuiteStats";
 import TenantSelector from "@/components/ui/TenantSelector";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -552,31 +552,7 @@ backgroundColor: colors.bg.sidebar,
           </div>
         </div>
 
-        <div
-          style={{
-            padding: "8px 10px",
-            margin: "10px",
-            borderRadius: "8px",
-            background: "rgba(139, 92, 246, 0.1)",
-            display: "flex",
-            justifyContent: "space-around",
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#a78bfa" }}>
-              <AgentCountDisplay />
-            </div>
-            <div style={{ fontSize: "7px", color: colors.text.muted }}>AGENTES</div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#34d399" }}>20</div>
-            <div style={{ fontSize: "7px", color: colors.text.muted }}>CORES</div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#60a5fa" }}>10</div>
-            <div style={{ fontSize: "7px", color: colors.text.muted }}>WORKFLOWS</div>
-          </div>
-        </div>
+        <SidebarSuiteStats />
 
         <nav style={{ flex: 1, padding: "2px 0", overflowY: "auto" }}>
           {navigationStructure.map((core) => (
