@@ -1,16 +1,20 @@
-import Link from 'next/link';
+"use client";
+
+import Link from "next/link";
+import { AdvertisingDashboardLive } from "./components/AdvertisingDashboardLive";
 
 export default function AdvertisingPage() {
   const platforms = [
-    { name: 'Google Ads', href: '/advertising/google-ads', icon: '💰' },
-    { name: 'Meta Ads', href: '/advertising/meta-ads', icon: '📘' },
-    { name: 'LinkedIn Ads', href: '/advertising/linkedin-ads', icon: '💼' },
-    { name: 'TikTok Ads', href: '/advertising/tiktok-ads', icon: '🎵' },
-    { name: 'Vista Unificada', href: '/advertising/unified', icon: '📊' },
+    { name: "Google Ads", href: "/advertising/google-ads", icon: "💰" },
+    { name: "Meta Ads", href: "/advertising/meta-ads", icon: "📘" },
+    { name: "LinkedIn Ads", href: "/advertising/linkedin-ads", icon: "💼" },
+    { name: "TikTok Ads", href: "/advertising/tiktok-ads", icon: "🎵" },
+    { name: "Vista Unificada", href: "/advertising/unified", icon: "📊" },
   ];
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      <AdvertisingDashboardLive title="Hub de Publicidad — Dashboard API" />
       <h1 className="text-4xl font-bold mb-12">📢 Hub de Publicidad</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {platforms.map((p) => (

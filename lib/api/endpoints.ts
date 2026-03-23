@@ -19,3 +19,10 @@ export const MARKETING_ENDPOINTS = {
   CORES: apiBase ? `${apiBase}/cores` : "",
   HEALTH: apiBase ? `${apiBase}/health` : "",
 };
+
+export const ADVERTISING_ENDPOINTS = {
+  HEALTH: apiBase ? `${apiBase}/api/v1/advertising/health` : "",
+  PLATFORMS: apiBase ? `${apiBase}/api/v1/advertising/platforms` : "",
+  DASHBOARD: apiBase ? `${apiBase}/api/v1/advertising/dashboard` : "",
+  TENANTS: apiBase ? `${apiBase}/api/v1/advertising/tenants` : "",
+};

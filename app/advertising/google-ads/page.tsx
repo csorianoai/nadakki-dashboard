@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AgentCard } from "@/components/ui/AgentCard";
 import { useTenant } from "@/contexts/TenantContext";
+import { AdvertisingDashboardLive } from "../components/AdvertisingDashboardLive";
 
 interface Agent {
   id: string;
@@ -54,6 +55,7 @@ export default function GoogleAdsPage() {
 
   return (
     <div className="space-y-8 p-6 max-w-7xl mx-auto">
+      <AdvertisingDashboardLive title="Google Ads — Dashboard API" />
       <div>
         <h1 className="text-4xl font-bold mb-2">💰 Google Ads Hub</h1>
         <p className="text-gray-600">Agentes especializados de automatizacion - Conectados al Backend</p>
