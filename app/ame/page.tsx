@@ -201,17 +201,18 @@ function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
 type TenantOpt = { slug: string; name?: string; display_name?: string };
 
 export default function AMEPage() {
-  const { tenantId: ctxTenant } = useTenant();
+  const { tenantId } = useTenant();
   const [refreshKey, setRefreshKey] = useState(0);
   const [pickedTenant, setPickedTenant] = useState("");
   const [tenants, setTenants] = useState<TenantOpt[]>([]);
 
+  /** Manual tenant override, else TenantContext — passed to AME hooks as X-Tenant-ID. */
   const effectiveTenantId = useMemo(() => {
     const p = pickedTenant.trim();
     if (p) return p;
-    if (ctxTenant && ctxTenant.trim()) return ctxTenant.trim();
+    if (tenantId && tenantId.trim()) return tenantId.trim();
     return undefined;
-  }, [pickedTenant, ctxTenant]);
+  }, [pickedTenant, tenantId]);
 
   const { data: status, source: statusSource, loading: statusLoading, error: statusErr } = useAMEStatus(
     effectiveTenantId,
@@ -386,7 +387,7 @@ export default function AMEPage() {
             <input
               value={pickedTenant}
               onChange={(e) => setPickedTenant(e.target.value)}
-              placeholder={ctxTenant ? `Default: ${ctxTenant}` : "X-Tenant-ID"}
+              placeholder={tenantId ? `Default: ${tenantId}` : "X-Tenant-ID"}
               style={{
                 background: colors.bg,
                 color: colors.text,

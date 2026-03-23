@@ -14,13 +14,21 @@ export function useAMEStatus(tenantId: string | null | undefined, refreshKey = 0
   useEffect(() => {
     const ac = new AbortController();
     let cancelled = false;
+    const resolvedTenant =
+      tenantId === null || tenantId === undefined
+        ? undefined
+        : String(tenantId).trim() || undefined;
     (async () => {
       setLoading(true);
       setError(null);
       const res = await fetchWithFallback<AMEStatusData>(AME_ENDPOINTS.STATUS, {
-        tenantId: tenantId?.trim() || undefined,
+        tenantId: resolvedTenant,
         fallbackData: FALLBACK_AME_STATUS,
         signal: ac.signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...(resolvedTenant ? { "X-Tenant-ID": resolvedTenant } : {}),
+        },
       });
       if (cancelled) return;
       if (res.error === "AbortError") return;

@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
-import { fetchWithFallback } from "@/lib/api/client";
+import { useFetchWithFallback } from "@/hooks/useFetchWithFallback";
 import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 
+function unwrapData(json: unknown): unknown {
+  if (!json || typeof json !== "object") return json;
+  const o = json as Record<string, unknown>;
+  if (o.data !== undefined && o.data !== null && typeof o.data === "object" && !Array.isArray(o.data)) {
+    return { ...o, ...(o.data as Record<string, unknown>) };
+  }
+  return json;
+}
+
 function coresCount(json: unknown): number | null {
-  if (Array.isArray(json)) return json.length;
-  if (json && typeof json === "object") {
-    const o = json as Record<string, unknown>;
+  const j = unwrapData(json);
+  if (Array.isArray(j)) return j.length;
+  if (j && typeof j === "object") {
+    const o = j as Record<string, unknown>;
     if (Array.isArray(o.cores)) return o.cores.length;
     if (typeof o.total === "number") return o.total;
+    if (typeof o.count === "number") return o.count;
   }
   return null;
 }
@@ -24,34 +34,24 @@ function pickAgentTotal(h: Record<string, unknown>): number | null {
 
 export default function SidebarSuiteStats() {
   const { tenantId } = useTenant();
-  const [agentsDisplay, setAgentsDisplay] = useState<string | number>("—");
-  const [coresDisplay, setCoresDisplay] = useState<string | number>("—");
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const [hRes, cRes] = await Promise.all([
-        fetchWithFallback<Record<string, unknown>>(MARKETING_ENDPOINTS.HEALTH, {
-          tenantId: tenantId ?? undefined,
-          fallbackData: {},
-        }),
-        fetchWithFallback<unknown>(MARKETING_ENDPOINTS.CORES, {
-          tenantId: tenantId ?? undefined,
-          fallbackData: {},
-        }),
-      ]);
-      if (!alive) return;
-      const agentNum =
-        hRes.source === "live" ? pickAgentTotal(hRes.data) : null;
-      setAgentsDisplay(agentNum ?? "—");
-      const cc =
-        cRes.source === "live" ? coresCount(cRes.data) : null;
-      setCoresDisplay(cc ?? "—");
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [tenantId]);
+  const { data: healthRaw, source: healthSource } = useFetchWithFallback<Record<string, unknown>>(
+    MARKETING_ENDPOINTS.HEALTH,
+    { tenantId, fallbackData: {} }
+  );
+
+  const { data: coresRaw, source: coresSource } = useFetchWithFallback<unknown>(
+    MARKETING_ENDPOINTS.CORES,
+    { tenantId, fallbackData: {} }
+  );
+
+  const healthData = unwrapData(healthRaw) as Record<string, unknown>;
+  const agentNum =
+    healthSource === "live" ? pickAgentTotal(healthData) : null;
+  const agentsDisplay = agentNum ?? "—";
+
+  const cc = coresSource === "live" ? coresCount(coresRaw) : null;
+  const coresDisplay = cc ?? "—";
 
   const wfTitle = "Disponible cuando tracking esté activo";
 

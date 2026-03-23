@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Campañas: datos vía useMarketingCampaigns → MARKETING_ENDPOINTS.CAMPAIGNS
+ * (= NEXT_PUBLIC_API_URL + /marketing/campaigns). Sin legacy /api/campaigns.
+ */
 import Link from "next/link";
 import { Megaphone, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";

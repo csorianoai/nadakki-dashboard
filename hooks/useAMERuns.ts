@@ -15,13 +15,21 @@ export function useAMERuns(tenantId: string | null | undefined, refreshKey = 0) 
     const ac = new AbortController();
     let cancelled = false;
     const url = AME_ENDPOINTS.RUNS ? `${AME_ENDPOINTS.RUNS}?limit=10` : "";
+    const resolvedTenant =
+      tenantId === null || tenantId === undefined
+        ? undefined
+        : String(tenantId).trim() || undefined;
     (async () => {
       setLoading(true);
       setError(null);
       const res = await fetchWithFallback<AMERunsData>(url, {
-        tenantId: tenantId?.trim() || undefined,
+        tenantId: resolvedTenant,
         fallbackData: FALLBACK_AME_RUNS,
         signal: ac.signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...(resolvedTenant ? { "X-Tenant-ID": resolvedTenant } : {}),
+        },
       });
       if (cancelled) return;
       if (res.error === "AbortError") return;
