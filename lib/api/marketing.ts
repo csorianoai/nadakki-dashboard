@@ -28,6 +28,32 @@ export function normalizeMarketingAgents(json: unknown): {
   return { agents, total };
 }
 
+/** Best-effort agent count from GET /health (or wrapped payload). */
+export function agentCountFromHealthJson(json: unknown): number | null {
+  if (!json || typeof json !== "object") return null;
+  const o = unwrapPayload(json);
+  const tryNum = (v: unknown): number | null => {
+    if (typeof v === "number" && !Number.isNaN(v)) return v;
+    if (typeof v === "string" && /^\d+$/.test(v)) return parseInt(v, 10);
+    return null;
+  };
+  const direct = [o.agent_count, o.agents_count, o.total_agents, o.marketing_agents];
+  for (const v of direct) {
+    const n = tryNum(v);
+    if (n !== null) return n;
+  }
+  if (Array.isArray(o.agents)) return o.agents.length;
+  const m = o.marketing;
+  if (m && typeof m === "object") {
+    const mo = m as Record<string, unknown>;
+    for (const key of ["agents_count", "agent_count", "total"]) {
+      const n = tryNum(mo[key]);
+      if (n !== null) return n;
+    }
+  }
+  return null;
+}
+
 export function normalizeMarketingCampaigns(json: unknown): {
   campaigns: Record<string, unknown>[];
   total: number;

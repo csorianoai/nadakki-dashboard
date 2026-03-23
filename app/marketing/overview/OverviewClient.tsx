@@ -20,9 +20,13 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
+import { useFetchWithFallback } from "@/hooks/useFetchWithFallback";
 import { useMarketingAgents, type MarketingAgent } from "@/hooks/useMarketingAgents";
 import { useMarketingCampaigns } from "@/hooks/useMarketingCampaigns";
 import { useSocialConnections } from "@/hooks/useSocialConnections";
+import { useTenant } from "@/contexts/TenantContext";
+import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
+import { agentCountFromHealthJson } from "@/lib/api/marketing";
 
 const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   meta: Facebook,
@@ -105,6 +109,7 @@ function isActiveCampaignStatus(status: unknown): boolean {
 }
 
 export default function OverviewClient() {
+  const { tenantId } = useTenant();
   const {
     agents,
     total: agentTotal,
@@ -121,13 +126,24 @@ export default function OverviewClient() {
     source: campaignSource,
     refresh: refreshCampaigns,
   } = useMarketingCampaigns();
+  const {
+    data: healthJson,
+    loading: healthLoading,
+    error: healthError,
+    source: healthSource,
+    refresh: refreshHealth,
+  } = useFetchWithFallback<Record<string, unknown>>(MARKETING_ENDPOINTS.HEALTH, {
+    tenantId,
+    fallbackData: {},
+  });
   const { platforms } = useSocialConnections();
 
   const connectedPlatforms = platforms.filter((p) => p.connected);
   const activeCampaigns = campaigns.filter((c) =>
     isActiveCampaignStatus(c.status)
   ).length;
-  const trackingTitle = "Disponible cuando tracking esté activo";
+  const agentsFromHealth = agentCountFromHealthJson(healthJson);
+  const trackingTooltip = "Disponible cuando el tracking esté activado";
 
   return (
     <div className="ndk-page ndk-fade-in">
@@ -135,6 +151,7 @@ export default function OverviewClient() {
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status="active" label="Marketing Overview" size="lg" />
           <DataSourceBadge source={campaignSource} error={campaignsError} />
+          <DataSourceBadge source={healthSource} error={healthError} />
           <DataSourceBadge source={agentSource} error={error} />
         </div>
       </NavigationBar>
@@ -152,7 +169,9 @@ export default function OverviewClient() {
           <div>
             <h1 className="text-3xl font-bold text-white">Marketing Overview</h1>
             <p className="text-gray-400">
-              KPIs desde /marketing/campaigns y /marketing/agents. Autopilot (AME) mantiene su propia vista en /ame.
+              Campañas desde <code className="text-gray-500">/marketing/campaigns</code>, recuento de
+              agentes desde <code className="text-gray-500">/health</code>, listado de agentes desde{" "}
+              <code className="text-gray-500">/marketing/agents</code>. AME en <code className="text-gray-500">/ame</code>.
             </p>
           </div>
         </div>
@@ -174,24 +193,34 @@ export default function OverviewClient() {
           icon={<BarChart3 className="w-6 h-6 text-cyan-400" />}
           color="#22d3ee"
         />
-        <StatCard
-          value={loading ? "…" : String(agentTotal)}
-          label="Agentes (marketing)"
-          icon={<Bot className="w-6 h-6 text-violet-400" />}
-          color="#a78bfa"
-        />
-        <div title={trackingTitle}>
+        <div
+          title={
+            agentsFromHealth == null && !healthLoading
+              ? "Sin recuento de agentes en la respuesta de /health"
+              : undefined
+          }
+        >
+          <StatCard
+            value={
+              healthLoading ? "…" : agentsFromHealth != null ? String(agentsFromHealth) : "—"
+            }
+            label="Agentes (/health)"
+            icon={<Bot className="w-6 h-6 text-violet-400" />}
+            color="#a78bfa"
+          />
+        </div>
+        <div title={trackingTooltip}>
           <StatCard
             value="—"
-            label="Ejecuciones hoy"
+            label="MAU"
             icon={<BarChart3 className="w-6 h-6 text-slate-400" />}
             color="#64748b"
           />
         </div>
-        <div title={trackingTitle}>
+        <div title={trackingTooltip}>
           <StatCard
             value="—"
-            label="Tasa éxito"
+            label="DAU"
             icon={<BarChart3 className="w-6 h-6 text-slate-500" />}
             color="#475569"
           />
@@ -199,13 +228,14 @@ export default function OverviewClient() {
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
         <p className="text-[11px] text-gray-600 m-0">
-          Campos con &quot;—&quot;: {trackingTitle}
+          MAU / DAU y agentes sin dato en /health: &quot;—&quot;. {trackingTooltip}
         </p>
         <button
           type="button"
           onClick={() => {
             void refresh();
             void refreshCampaigns();
+            void refreshHealth();
           }}
           className="inline-flex items-center gap-2 text-xs text-purple-300 hover:text-purple-200"
         >

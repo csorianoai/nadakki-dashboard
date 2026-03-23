@@ -5,8 +5,8 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { useTenant } from "@/contexts/TenantContext";
-import { campaignsAPI } from "@/lib/api";
 import type { Campaign } from "@/lib/api";
+import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 import { fetchMarketingCampaignById } from "@/lib/api/marketing";
 import { mapApiRecordToCampaign } from "@/lib/api/mapMarketingCampaign";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
@@ -58,7 +58,21 @@ export default function CampaignDetailPage() {
     if (!campaign) return;
     setSaving(true);
     try {
-      await campaignsAPI.update(campaignId, campaign);
+      // TODO: migrar a PATCH /marketing/campaigns/{id} cuando el backend confirme el contrato
+      const url = MARKETING_ENDPOINTS.CAMPAIGN_BY_ID(campaignId);
+      if (!url) throw new Error("Missing NEXT_PUBLIC_API_URL");
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(tenantId ? { "X-Tenant-ID": tenantId } : {}),
+        },
+        body: JSON.stringify(campaign),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { detail?: string }).detail || `HTTP ${res.status}`);
+      }
     } catch (err) {
       console.error(err);
     } finally {
