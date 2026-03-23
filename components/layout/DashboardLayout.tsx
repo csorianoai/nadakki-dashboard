@@ -45,21 +45,13 @@ import {
   Users,
   FileBarChart,
   Lock,
-  ScanEye,
-  Microscope,
-  Wallet,
-  Handshake,
-  Network,
-  Smile,
-  RotateCcw,
-  Zap,
-  Clock,
+  Gauge,
+  FileUp,
 } from "lucide-react";
-import AgentCountDisplay from "./AgentCountDisplay";
+import SidebarSuiteStats from "./SidebarSuiteStats";
 import TenantSelector from "@/components/ui/TenantSelector";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { CORES_CONFIG } from "@/config/cores";
 
 interface NavModule {
   id: string;
@@ -77,24 +69,7 @@ interface NavCore {
   modules: NavModule[];
 }
 
-/** Live workflow sub-routes (excludes hub). Badge on "Todos los Workflows" uses this length. */
-const WORKFLOW_DETAIL_MODULES: NavModule[] = [
-  { id: "wf-campaign", icon: <Megaphone size={14} />, label: "Campaign Optimization", href: "/workflows/campaign-optimization" },
-  { id: "wf-acquisition", icon: <Target size={14} />, label: "Customer Acquisition", href: "/workflows/customer-acquisition-intelligence" },
-  { id: "wf-lifecycle", icon: <Recycle size={14} />, label: "Customer Lifecycle", href: "/workflows/customer-lifecycle-revenue" },
-  { id: "wf-content", icon: <PenLine size={14} />, label: "Content Performance", href: "/workflows/content-performance-engine" },
-  { id: "wf-social", icon: <Smartphone size={14} />, label: "Social Intelligence", href: "/workflows/social-media-intelligence" },
-  { id: "wf-email", icon: <Mail size={14} />, label: "Email Automation", href: "/workflows/email-automation-master" },
-  { id: "wf-attribution", icon: <BarChart3 size={14} />, label: "Multi-Channel Attribution", href: "/workflows/multi-channel-attribution" },
-  { id: "wf-competitive", icon: <Eye size={14} />, label: "Competitive Intel", href: "/workflows/competitive-intelligence-hub" },
-  { id: "wf-abtesting", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/workflows/ab-testing-experimentation" },
-  { id: "wf-influencer", icon: <Star size={14} />, label: "Influencer Engine", href: "/workflows/influencer-partnership-engine" },
-];
-
-const CORE_COUNT = Object.keys(CORES_CONFIG).length;
-
 const navigationStructure: NavCore[] = [
-  /** Enterprise order: Plataforma → Riesgo → Mercado → Dominios → Control. All hrefs unchanged. */
   {
     id: "system",
     title: "SISTEMA",
@@ -112,7 +87,7 @@ const navigationStructure: NavCore[] = [
 
   {
     id: "sic",
-    title: "SIC / RIESGO CREDITICIO",
+    title: "SIC — RIESGO CREDITICIO",
     icon: <ClipboardList size={14} />,
     color: "#0ea5e9",
     gradient: "linear-gradient(135deg, #0ea5e9, #0284c7)",
@@ -121,6 +96,7 @@ const navigationStructure: NavCore[] = [
       { id: "sic-metricas", icon: <BarChart3 size={14} />, label: "Metricas", href: "/sic/metricas" },
       { id: "sic-bandeja", icon: <Inbox size={14} />, label: "Bandeja", href: "/sic/bandeja" },
       { id: "sic-expedientes", icon: <FolderOpen size={14} />, label: "Expedientes", href: "/sic/expedientes" },
+      { id: "sic-nuevo-analisis", icon: <FileUp size={14} />, label: "Nuevo analisis", href: "/sic/nuevo-analisis" },
       { id: "sic-comite", icon: <Users size={14} />, label: "Comite", href: "/sic/comite" },
       { id: "sic-portafolio", icon: <Briefcase size={14} />, label: "Portafolio", href: "/sic/portafolio" },
       { id: "sic-reportes", icon: <FileBarChart size={14} />, label: "Reportes", href: "/sic/reportes" },
@@ -134,7 +110,7 @@ const navigationStructure: NavCore[] = [
 
   {
     id: "advertising",
-    title: "CRECIMIENTO · Publicidad",
+    title: "PUBLICIDAD",
     icon: <Megaphone size={14} />,
     color: "#10b981",
     gradient: "linear-gradient(135deg, #10b981, #059669)",
@@ -149,28 +125,31 @@ const navigationStructure: NavCore[] = [
 
   {
     id: "workflows",
-    title: "CRECIMIENTO · Workflows",
+    title: "WORKFLOWS",
     icon: <RefreshCw size={14} />,
-    color: "#10b981",
-    gradient: "linear-gradient(135deg, #10b981, #059669)",
+    color: "#8B5CF6",
+    gradient: "linear-gradient(135deg, #8B5CF6, #6366F1)",
     modules: [
-      {
-        id: "wf-all",
-        icon: <ClipboardList size={14} />,
-        label: "Todos los Workflows",
-        href: "/workflows",
-        badge: String(WORKFLOW_DETAIL_MODULES.length),
-      },
-      ...WORKFLOW_DETAIL_MODULES,
+      { id: "wf-all", icon: <ClipboardList size={14} />, label: "Todos los Workflows", href: "/workflows", badge: "10" },
+      { id: "wf-campaign", icon: <Megaphone size={14} />, label: "Campaign Optimization", href: "/workflows/campaign-optimization" },
+      { id: "wf-acquisition", icon: <Target size={14} />, label: "Customer Acquisition", href: "/workflows/customer-acquisition-intelligence" },
+      { id: "wf-lifecycle", icon: <Recycle size={14} />, label: "Customer Lifecycle", href: "/workflows/customer-lifecycle-revenue" },
+      { id: "wf-content", icon: <PenLine size={14} />, label: "Content Performance", href: "/workflows/content-performance-engine" },
+      { id: "wf-social", icon: <Smartphone size={14} />, label: "Social Intelligence", href: "/workflows/social-media-intelligence" },
+      { id: "wf-email", icon: <Mail size={14} />, label: "Email Automation", href: "/workflows/email-automation-master" },
+      { id: "wf-attribution", icon: <BarChart3 size={14} />, label: "Multi-Channel Attribution", href: "/workflows/multi-channel-attribution" },
+      { id: "wf-competitive", icon: <Eye size={14} />, label: "Competitive Intel", href: "/workflows/competitive-intelligence-hub" },
+      { id: "wf-abtesting", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/workflows/ab-testing-experimentation" },
+      { id: "wf-influencer", icon: <Star size={14} />, label: "Influencer Engine", href: "/workflows/influencer-partnership-engine" },
     ],
   },
 
   {
     id: "marketing",
-    title: "CRECIMIENTO · Marketing",
+    title: "MARKETING",
     icon: <Target size={14} />,
-    color: "#10b981",
-    gradient: "linear-gradient(135deg, #10b981, #059669)",
+    color: "#F97316",
+    gradient: "linear-gradient(135deg, #F97316, #EA580C)",
     modules: [
       { id: "mkt-all", icon: <Target size={14} />, label: "Marketing Hub", href: "/marketing" },
       { id: "mkt-agents", icon: <Bot size={14} />, label: "Agentes", href: "/marketing/agents" },
@@ -184,42 +163,13 @@ const navigationStructure: NavCore[] = [
       { id: "mkt-ab-testing", icon: <FlaskConical size={14} />, label: "A/B Testing", href: "/marketing/ab-testing" },
       { id: "mkt-predictive", icon: <Brain size={14} />, label: "Predictive", href: "/marketing/predictive" },
       { id: "mkt-analytics", icon: <BarChart3 size={14} />, label: "Analytics", href: "/marketing/analytics" },
-    ],
-  },
-
-  {
-    id: "autonoma",
-    title: "AUTOPILOT IA",
-    icon: <Zap size={14} />,
-    color: "#8b5cf6",
-    gradient: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-    modules: [
-      { id: "ame-autopilot", icon: <Zap size={14} />, label: "Centro de Control", href: "/autopilot" },
-      { id: "ame-scheduler", icon: <Clock size={14} />, label: "Motor de Ejecucion", href: "/scheduler" },
-    ],
-  },
-
-  {
-    id: "dominios",
-    title: "DOMINIOS DE NEGOCIO",
-    icon: <Brain size={14} />,
-    color: "#14b8a6",
-    gradient: "linear-gradient(135deg, #14b8a6, #0d9488)",
-    modules: [
-      { id: "dom-fortaleza", icon: <Shield size={14} />, label: "Fortaleza (ciber)", href: "/fortaleza" },
-      { id: "dom-experiencia", icon: <Smile size={14} />, label: "Experiencia cliente", href: "/experiencia" },
-      { id: "dom-vigilancia", icon: <ScanEye size={14} />, label: "Vigilancia", href: "/vigilancia" },
-      { id: "dom-recuperacion", icon: <RotateCcw size={14} />, label: "Recuperación", href: "/recuperacion" },
-      { id: "dom-investigacion", icon: <Microscope size={14} />, label: "Investigación", href: "/investigacion" },
-      { id: "dom-presupuesto", icon: <Wallet size={14} />, label: "Presupuesto", href: "/presupuesto" },
-      { id: "dom-ventascrm", icon: <Handshake size={14} />, label: "Ventas y CRM", href: "/ventascrm" },
-      { id: "dom-orchestration", icon: <Network size={14} />, label: "Orquestación", href: "/orchestration" },
+      { id: "mkt-ame", icon: <Gauge size={14} />, label: "Autopilot (AME)", href: "/ame" },
     ],
   },
 
   {
     id: "admin",
-    title: "ADMIN / CONTROL",
+    title: "ADMIN",
     icon: <Wrench size={14} />,
     color: "#6366F1",
     gradient: "linear-gradient(135deg, #6366F1, #4F46E5)",
@@ -525,21 +475,13 @@ function TopNavigation() {
 }
 
 /* Paths that work without global tenant (e.g. Live Panel has own tenant selector). live-panel same visibility as agents-execute. */
-const NO_TENANT_PATHS = ["/tenants", "/agents/live"];
+const NO_TENANT_PATHS = ["/tenants", "/agents/live", "/ame"];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { tenantId } = useTenant();
   const { logout } = useAuth();
-  const [expandedCores, setExpandedCores] = useState<string[]>([
-    "system",
-    "sic",
-    "advertising",
-    "workflows",
-    "marketing",
-    "autonoma",
-    "dominios",
-  ]);
+  const [expandedCores, setExpandedCores] = useState<string[]>(["system", "sic", "advertising", "workflows"]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const needsTenant = !NO_TENANT_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
@@ -606,37 +548,11 @@ backgroundColor: colors.bg.sidebar,
             >
               NADAKKI AI
             </div>
-            <div style={{ fontSize: "8px", color: colors.text.muted }}>Plataforma enterprise</div>
+            <div style={{ fontSize: "8px", color: colors.text.muted }}>Enterprise Suite</div>
           </div>
         </div>
 
-        <div
-          style={{
-            padding: "8px 10px",
-            margin: "10px",
-            borderRadius: "8px",
-            background: "rgba(139, 92, 246, 0.1)",
-            display: "flex",
-            justifyContent: "space-around",
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#a78bfa" }}>
-              <AgentCountDisplay />
-            </div>
-            <div style={{ fontSize: "7px", color: colors.text.muted }}>AGENTES</div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#34d399" }}>{CORE_COUNT}</div>
-            <div style={{ fontSize: "7px", color: colors.text.muted }}>DOMINIOS</div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "14px", fontWeight: 800, color: "#60a5fa" }}>
-              {WORKFLOW_DETAIL_MODULES.length}
-            </div>
-            <div style={{ fontSize: "7px", color: colors.text.muted }}>WORKFLOWS</div>
-          </div>
-        </div>
+        <SidebarSuiteStats />
 
         <nav style={{ flex: 1, padding: "2px 0", overflowY: "auto" }}>
           {navigationStructure.map((core) => (

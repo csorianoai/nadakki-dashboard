@@ -13,6 +13,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import MarketingSegmentsLiveBanner from "@/components/marketing/MarketingSegmentsLiveBanner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 const STORAGE_KEY = "nadakki_segments_v2";
@@ -618,6 +619,8 @@ export default function SegmentsPage() {
       <NavigationBar backHref="/marketing">
         <StatusBadge status="active" label={segments.length + " Segmentos"} size="lg" />
       </NavigationBar>
+
+      <MarketingSegmentsLiveBanner />
 
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center justify-between">

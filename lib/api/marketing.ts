@@ -1,37 +1,157 @@
+import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
+import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
-// Fallback chain: LOCAL y PROD tienen endpoints diferentes
-async function fetchWithFallback(
-  endpoints: string[],
-  timeoutMs = 12000
-): Promise<{ data: unknown; error: null; endpoint: string } | { data: null; error: string; endpoint: null }> {
-  for (const ep of endpoints) {
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-      const resp = await fetch(API_URL + ep, { signal: ctrl.signal });
-      clearTimeout(timer);
-      if (resp.ok) return { data: await resp.json(), error: null, endpoint: ep };
-    } catch {
-      continue;
-    }
+function unwrapPayload(json: unknown): Record<string, unknown> {
+  if (!json || typeof json !== "object") return {};
+  const o = json as Record<string, unknown>;
+  if (o.data && typeof o.data === "object" && !Array.isArray(o.data)) {
+    return { ...o, ...(o.data as Record<string, unknown>) };
   }
-  return { data: null, error: "No endpoint responded", endpoint: null };
+  if (o.campaign && typeof o.campaign === "object" && !Array.isArray(o.campaign)) {
+    return { ...o, ...(o.campaign as Record<string, unknown>) };
+  }
+  return o;
 }
 
-export async function fetchMarketingAgents(limit = 1000) {
-  const r = await fetchWithFallback([
-    `/api/catalog?module=marketing&limit=${limit}`,
-    `/api/catalog/marketing/agents?limit=${limit}`,
-    `/api/agents?module=marketing&limit=${limit}`,
-  ]);
-  if (!r.data) return { agents: [], total: 0, error: r.error };
-  const json = r.data as Record<string, unknown>;
-  const data = json?.data as Record<string, unknown> | undefined;
-  const pagination = data?.pagination as { total?: number } | undefined;
-  const agents = (data?.agents ?? json?.agents ?? []) as Record<string, unknown>[];
-  const total = pagination?.total ?? agents.length;
-  return { agents, total, error: null };
+export function normalizeMarketingAgents(json: unknown): {
+  agents: Record<string, unknown>[];
+  total: number;
+} {
+  const o = unwrapPayload(json);
+  const raw = o.agents ?? o.items ?? (Array.isArray(json) ? json : []);
+  const agents = Array.isArray(raw)
+    ? raw.filter((x) => x && typeof x === "object").map((x) => x as Record<string, unknown>)
+    : [];
+  const total = typeof o.total === "number" ? o.total : agents.length;
+  return { agents, total };
+}
+
+export function normalizeMarketingCampaigns(json: unknown): {
+  campaigns: Record<string, unknown>[];
+  total: number;
+} {
+  const o = unwrapPayload(json);
+  const raw = o.campaigns ?? o.items ?? (Array.isArray(json) ? json : []);
+  const campaigns = Array.isArray(raw)
+    ? raw.filter((x) => x && typeof x === "object").map((x) => x as Record<string, unknown>)
+    : [];
+  const total = typeof o.total === "number" ? o.total : campaigns.length;
+  return { campaigns, total };
+}
+
+export function normalizeMarketingTemplates(json: unknown): {
+  templates: Record<string, unknown>[];
+  total: number;
+} {
+  const o = unwrapPayload(json);
+  const raw = o.templates ?? o.items ?? (Array.isArray(json) ? json : []);
+  const templates = Array.isArray(raw)
+    ? raw.filter((x) => x && typeof x === "object").map((x) => x as Record<string, unknown>)
+    : [];
+  const total = typeof o.total === "number" ? o.total : templates.length;
+  return { templates, total };
+}
+
+export function normalizeMarketingSegmentsList(json: unknown): {
+  segments: Record<string, unknown>[];
+  total: number;
+} {
+  const o = unwrapPayload(json);
+  const raw = o.segments ?? o.items ?? (Array.isArray(json) ? json : []);
+  const segments = Array.isArray(raw)
+    ? raw.filter((x) => x && typeof x === "object").map((x) => x as Record<string, unknown>)
+    : [];
+  const total = typeof o.total === "number" ? o.total : segments.length;
+  return { segments, total };
+}
+
+export async function fetchMarketingAgents(
+  tenantId?: string | null,
+  limit = 1000
+): Promise<{
+  agents: Record<string, unknown>[];
+  total: number;
+  error: string | null;
+  source: FetchSource;
+}> {
+  const base = MARKETING_ENDPOINTS.AGENTS;
+  if (!base) {
+    return {
+      agents: [],
+      total: 0,
+      error: "Missing NEXT_PUBLIC_API_URL",
+      source: "fallback",
+    };
+  }
+  const url = `${base}${base.includes("?") ? "&" : "?"}limit=${limit}`;
+  const r = await fetchWithFallback<unknown>(url, {
+    tenantId: tenantId ?? undefined,
+    fallbackData: {},
+  });
+  const norm = normalizeMarketingAgents(r.source === "live" ? r.data : {});
+  return {
+    agents: norm.agents,
+    total: norm.total,
+    error: r.source === "fallback" ? r.error : null,
+    source: r.source,
+  };
+}
+
+export async function fetchMarketingCampaigns(tenantId?: string | null): Promise<{
+  campaigns: Record<string, unknown>[];
+  total: number;
+  error: string | null;
+  source: FetchSource;
+}> {
+  const url = MARKETING_ENDPOINTS.CAMPAIGNS;
+  if (!url) {
+    return {
+      campaigns: [],
+      total: 0,
+      error: "Missing NEXT_PUBLIC_API_URL",
+      source: "fallback",
+    };
+  }
+  const r = await fetchWithFallback<unknown>(url, {
+    tenantId: tenantId ?? undefined,
+    fallbackData: {},
+  });
+  const norm = normalizeMarketingCampaigns(r.source === "live" ? r.data : {});
+  return {
+    campaigns: norm.campaigns,
+    total: norm.total,
+    error: r.source === "fallback" ? r.error : null,
+    source: r.source,
+  };
+}
+
+export async function fetchMarketingCampaignById(
+  id: string,
+  tenantId?: string | null
+): Promise<{
+  data: Record<string, unknown> | null;
+  error: string | null;
+  source: FetchSource;
+}> {
+  const url = MARKETING_ENDPOINTS.CAMPAIGN_BY_ID(id);
+  if (!url) {
+    return { data: null, error: "Missing NEXT_PUBLIC_API_URL", source: "fallback" };
+  }
+  const r = await fetchWithFallback<unknown>(url, {
+    tenantId: tenantId ?? undefined,
+    fallbackData: {},
+  });
+  if (r.source !== "live" || !r.data || typeof r.data !== "object") {
+    return {
+      data: null,
+      error: r.error,
+      source: r.source,
+    };
+  }
+  const o = unwrapPayload(r.data);
+  return { data: o, error: null, source: "live" };
 }
 
 export async function fetchSocialStatus(tenantId: string) {
@@ -47,14 +167,11 @@ export async function fetchSocialStatus(tenantId: string) {
       return { data: null, error: `HTTP ${r.status}` };
     }
 
-    // Backend puede envolver la respuesta en { success, data: { ... } }
     const json = await r.json();
-    console.log("[marketing.fetchSocialStatus] raw json", json);
     const payload =
       json && typeof json === "object" && "data" in (json as Record<string, unknown>)
         ? (json as { data: unknown }).data
         : json;
-    console.log("[marketing.fetchSocialStatus] payload", payload);
 
     return { data: payload, error: null };
   } catch {

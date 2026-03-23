@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTenant } from "@/contexts/TenantContext";
 import { fetchMarketingAgents } from "@/lib/api/marketing";
+import type { FetchSource } from "@/lib/api/client";
 
 export type MarketingAgent = {
   id?: string;
@@ -17,51 +19,32 @@ export type UseMarketingAgentsResult = {
   total: number;
   loading: boolean;
   error: string | null;
+  source: FetchSource;
   refresh: () => Promise<void>;
 };
 
 export function useMarketingAgents(limit = 1000): UseMarketingAgentsResult {
+  const { tenantId } = useTenant();
   const [agents, setAgents] = useState<MarketingAgent[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [source, setSource] = useState<FetchSource>("fallback");
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const result = await fetchMarketingAgents(limit);
-    if (result.error) {
-      setError(result.error);
-      setAgents([]);
-      setTotal(0);
-    } else {
-      setAgents(result.agents);
-      setTotal(result.total);
-      setError(null);
-    }
+    const result = await fetchMarketingAgents(tenantId, limit);
+    setAgents(result.agents as MarketingAgent[]);
+    setTotal(result.total);
+    setSource(result.source);
+    setError(result.error);
     setLoading(false);
-  }, [limit]);
-
-  // Retry 1x after 3s on error
-  useEffect(() => {
-    if (error && retryCount < 1) {
-      const timer = setTimeout(() => {
-        setRetryCount(1);
-        load();
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, retryCount, load]);
+  }, [limit, tenantId]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
-  // Reset retry when load succeeds
-  useEffect(() => {
-    if (!error) setRetryCount(0);
-  }, [error]);
-
-  return { agents, total, loading, error, refresh: load };
+  return { agents, total, loading, error, source, refresh: load };
 }

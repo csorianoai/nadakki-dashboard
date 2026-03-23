@@ -2,6 +2,8 @@
 // Mantiene compatibilidad con api.ts existente + nuevos módulos
 
 export * from './base';
+export * from './client';
+export * from './endpoints';
 export * from './decisions';
 export * from './tenants';
 export * from './workflows';

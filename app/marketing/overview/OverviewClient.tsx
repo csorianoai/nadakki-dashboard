@@ -13,11 +13,15 @@ import {
   Twitter,
   Instagram,
   Bot,
+  BarChart3,
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
 import { useMarketingAgents, type MarketingAgent } from "@/hooks/useMarketingAgents";
+import { useMarketingCampaigns } from "@/hooks/useMarketingCampaigns";
 import { useSocialConnections } from "@/hooks/useSocialConnections";
 
 const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -95,16 +99,44 @@ function SkeletonCard() {
   );
 }
 
+function isActiveCampaignStatus(status: unknown): boolean {
+  const s = String(status ?? "").toLowerCase();
+  return s === "active" || s === "running" || s === "live" || s === "enabled";
+}
+
 export default function OverviewClient() {
-  const { agents, total, loading, error, refresh } = useMarketingAgents();
+  const {
+    agents,
+    total: agentTotal,
+    loading,
+    error,
+    refresh,
+    source: agentSource,
+  } = useMarketingAgents();
+  const {
+    campaigns,
+    total: campaignTotal,
+    loading: campaignsLoading,
+    error: campaignsError,
+    source: campaignSource,
+    refresh: refreshCampaigns,
+  } = useMarketingCampaigns();
   const { platforms } = useSocialConnections();
 
   const connectedPlatforms = platforms.filter((p) => p.connected);
+  const activeCampaigns = campaigns.filter((c) =>
+    isActiveCampaignStatus(c.status)
+  ).length;
+  const trackingTitle = "Disponible cuando tracking esté activo";
 
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/marketing">
-        <StatusBadge status="active" label="Marketing Overview" size="lg" />
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge status="active" label="Marketing Overview" size="lg" />
+          <DataSourceBadge source={campaignSource} error={campaignsError} />
+          <DataSourceBadge source={agentSource} error={error} />
+        </div>
       </NavigationBar>
 
       {/* Header */}
@@ -119,10 +151,68 @@ export default function OverviewClient() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-white">Marketing Overview</h1>
-            <p className="text-gray-400">Agentes y plataformas conectadas</p>
+            <p className="text-gray-400">
+              KPIs desde /marketing/campaigns y /marketing/agents. Autopilot (AME) mantiene su propia vista en /ame.
+            </p>
           </div>
         </div>
       </motion.div>
+
+      {/* KPIs (marketing API; no duplicar métricas AME) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-3">
+        <StatCard
+          value={
+            campaignsLoading ? "…" : String(campaignTotal)
+          }
+          label="Total campañas"
+          icon={<Megaphone className="w-6 h-6 text-orange-400" />}
+          color="#f97316"
+        />
+        <StatCard
+          value={campaignsLoading ? "…" : String(activeCampaigns)}
+          label="Campañas activas"
+          icon={<BarChart3 className="w-6 h-6 text-cyan-400" />}
+          color="#22d3ee"
+        />
+        <StatCard
+          value={loading ? "…" : String(agentTotal)}
+          label="Agentes (marketing)"
+          icon={<Bot className="w-6 h-6 text-violet-400" />}
+          color="#a78bfa"
+        />
+        <div title={trackingTitle}>
+          <StatCard
+            value="—"
+            label="Ejecuciones hoy"
+            icon={<BarChart3 className="w-6 h-6 text-slate-400" />}
+            color="#64748b"
+          />
+        </div>
+        <div title={trackingTitle}>
+          <StatCard
+            value="—"
+            label="Tasa éxito"
+            icon={<BarChart3 className="w-6 h-6 text-slate-500" />}
+            color="#475569"
+          />
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+        <p className="text-[11px] text-gray-600 m-0">
+          Campos con &quot;—&quot;: {trackingTitle}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            void refresh();
+            void refreshCampaigns();
+          }}
+          className="inline-flex items-center gap-2 text-xs text-purple-300 hover:text-purple-200"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          Actualizar KPIs
+        </button>
+      </div>
 
       {/* Connected platforms section */}
       <motion.div
@@ -166,7 +256,7 @@ export default function OverviewClient() {
 
       {/* Agents section */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-white">Agentes de marketing ({total})</h2>
+        <h2 className="text-lg font-bold text-white">Agentes de marketing ({agentTotal})</h2>
       </div>
 
       {loading ? (

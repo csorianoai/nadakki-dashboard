@@ -1,15 +1,20 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2, Mail, Eye, Send } from "lucide-react";
+import { useParams } from "next/navigation";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { useTenant } from "@/contexts/TenantContext";
 import { campaignsAPI } from "@/lib/api";
 import type { Campaign } from "@/lib/api";
+import { fetchMarketingCampaignById } from "@/lib/api/marketing";
+import { mapApiRecordToCampaign } from "@/lib/api/mapMarketingCampaign";
+import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
+import type { FetchSource } from "@/lib/api/client";
 
 export default function CampaignDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const { tenantId } = useTenant();
   const { theme } = useTheme();
   const isLight = theme?.isLight;
   const campaignId = params.id as string;
@@ -18,6 +23,7 @@ export default function CampaignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<FetchSource>("fallback");
 
   const bgPrimary = isLight ? "#f8fafc" : theme?.colors?.bgPrimary || "#0F172A";
   const bgCard = isLight ? "#ffffff" : theme?.colors?.bgCard || "rgba(30,41,59,0.5)";
@@ -27,19 +33,26 @@ export default function CampaignDetailPage() {
   const accentPrimary = theme?.colors?.accentPrimary || "#8b5cf6";
 
   useEffect(() => {
-    const fetchCampaign = async () => {
-      try {
-        const data = await campaignsAPI.getById(campaignId);
-        setCampaign(data);
-      } catch (err) {
-        setError("Error al cargar campana");
-        console.error(err);
-      } finally {
-        setLoading(false);
+    if (!campaignId) return;
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      const r = await fetchMarketingCampaignById(campaignId, tenantId);
+      if (!alive) return;
+      setDataSource(r.source);
+      if (r.data) {
+        setCampaign(mapApiRecordToCampaign(campaignId, r.data));
+        setError(null);
+      } else {
+        setCampaign(null);
+        setError(r.error ?? "Campaña no disponible desde el API");
       }
+      setLoading(false);
+    })();
+    return () => {
+      alive = false;
     };
-    if (campaignId) fetchCampaign();
-  }, [campaignId]);
+  }, [campaignId, tenantId]);
 
   const handleSave = async () => {
     if (!campaign) return;
@@ -81,8 +94,11 @@ export default function CampaignDetailPage() {
               <ArrowLeft className="w-5 h-5" style={{ color: textMuted }} />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold" style={{ color: textPrimary }}>{campaign.name}</h1>
-              <p className="text-sm" style={{ color: textMuted }}>ID: {campaign.id}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-bold m-0" style={{ color: textPrimary }}>{campaign.name}</h1>
+                <DataSourceBadge source={dataSource} error={error} />
+              </div>
+              <p className="text-sm m-0 mt-1" style={{ color: textMuted }}>ID: {campaign.id}</p>
             </div>
           </div>
           <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-lg text-white flex items-center gap-2" style={{ backgroundColor: accentPrimary }}>
