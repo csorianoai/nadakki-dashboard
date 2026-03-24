@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -16,6 +16,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import MarketingSegmentsLiveBanner from "@/components/marketing/MarketingSegmentsLiveBanner";
 import type { FetchSource } from "@/lib/api/client";
 import { normalizeMarketingSegmentsList } from "@/lib/api/marketing";
+import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 
 const STORAGE_KEY = "nadakki_segments_v2";
 const CACHE_TTL = 5 * 60 * 1000;
@@ -410,7 +411,7 @@ export default function SegmentsPage() {
       setLoading(true);
       setApiError(null);
       try {
-        const res = await fetch("/marketing/segments", {
+        const res = await fetch(MARKETING_ENDPOINTS.SEGMENTS, {
           method: "GET",
           signal,
           headers: {
@@ -575,7 +576,7 @@ export default function SegmentsPage() {
 
     if (!tenantId) return;
     try {
-      await fetch("/marketing/segments", {
+      await fetch(MARKETING_ENDPOINTS.SEGMENTS, {
         method: editingSegment ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
         body: JSON.stringify({ ...newSegment, tenant_id: tenantId }),
@@ -634,7 +635,7 @@ export default function SegmentsPage() {
     if (!confirm("Eliminar este segmento? Esta accion no se puede deshacer.")) return;
     
     try {
-      await fetch(`/marketing/segments/${id}?tenant_id=${encodeURIComponent(tenantId)}`, {
+      await fetch(`${MARKETING_ENDPOINTS.SEGMENTS}/${id}?tenant_id=${encodeURIComponent(tenantId)}`, {
         method: "DELETE",
         headers: { "X-Tenant-ID": tenantId },
       });

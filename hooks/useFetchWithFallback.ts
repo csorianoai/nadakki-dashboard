@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchWithFallback,
   type FetchSource,
@@ -16,13 +16,17 @@ export type UseFetchWithFallbackResult<T> = {
 
 /**
  * Client hook wrapping lib/api/client fetchWithFallback.
- * Pass stable `fallbackData` (e.g. imported constants) to avoid effect loops.
+ * Fetches exactly once per (url, tenantId) pair. Manual refresh via `refresh()`.
  */
 export function useFetchWithFallback<T>(
   url: string,
   options: { tenantId?: string | null; fallbackData: T }
 ): UseFetchWithFallbackResult<T> {
   const { tenantId, fallbackData } = options;
+  // Store fallbackData in a ref so it never triggers re-fetches.
+  const fallbackRef = useRef(fallbackData);
+  fallbackRef.current = fallbackData;
+
   const [data, setData] = useState<T>(fallbackData);
   const [source, setSource] = useState<FetchSource>("fallback");
   const [loading, setLoading] = useState(true);
@@ -32,13 +36,14 @@ export function useFetchWithFallback<T>(
     setLoading(true);
     const r = await fetchWithFallback<T>(url, {
       tenantId: tenantId ?? undefined,
-      fallbackData,
+      fallbackData: fallbackRef.current,
     });
     setData(r.data);
     setSource(r.source);
     setError(r.error);
     setLoading(false);
-  }, [url, tenantId, fallbackData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, tenantId]);
 
   useEffect(() => {
     void load();

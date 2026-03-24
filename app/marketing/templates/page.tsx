@@ -13,9 +13,8 @@ import {
 import { useTenant } from "@/contexts/TenantContext";
 import type { FetchSource } from "@/lib/api/client";
 import { normalizeMarketingTemplates } from "@/lib/api/marketing";
+import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
-
-const TEMPLATES_PATH = "/marketing/templates";
 
 export default function TemplatesPage() {
   const { tenantId } = useTenant();
@@ -37,7 +36,7 @@ export default function TemplatesPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(TEMPLATES_PATH, {
+        const res = await fetch(MARKETING_ENDPOINTS.TEMPLATES, {
           method: "GET",
           signal,
           headers: {

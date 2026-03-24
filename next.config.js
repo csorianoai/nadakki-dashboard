@@ -4,7 +4,6 @@ const nextConfig = {
   async rewrites() {
     const backendUrl = "https://nadakki-ai-suite.onrender.com";
     return [
-      { source: "/marketing/:path*", destination: `${backendUrl}/marketing/:path*` },
       { source: "/api/marketing/:path*", destination: `${backendUrl}/api/marketing/:path*` },
       { source: "/health", destination: `${backendUrl}/health` },
       { source: "/cores", destination: `${backendUrl}/cores` },
