@@ -519,7 +519,7 @@ export default function SegmentsPage() {
 
     if (!tenantId) return;
     try {
-      await fetch(`${API_URL}/api/segments`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/marketing/segments`, {
         method: editingSegment ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
         body: JSON.stringify({ ...newSegment, tenant_id: tenantId }),
@@ -578,7 +578,7 @@ export default function SegmentsPage() {
     if (!confirm("Eliminar este segmento? Esta accion no se puede deshacer.")) return;
     
     try {
-      await fetch(`${API_URL}/api/segments/${id}?tenant_id=${encodeURIComponent(tenantId)}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/marketing/segments/${id}?tenant_id=${encodeURIComponent(tenantId)}`, {
         method: "DELETE",
         headers: { "X-Tenant-ID": tenantId },
       });
