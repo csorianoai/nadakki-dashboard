@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { crearCasoSic } from "@/lib/api/sic";
 
 export default function SicNuevoAnalisisPage() {
   const router = useRouter();
@@ -21,13 +20,33 @@ export default function SicNuevoAnalisisPage() {
     setLoading(true);
     setError(null);
     try {
-      const caseId = await crearCasoSic(resolvedTenant, {
-        applicant_id: `applicant-${Date.now()}`,
-        title: "Nuevo Análisis",
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/sic/cases`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tenant-ID": resolvedTenant,
+        },
+        body: JSON.stringify({
+          applicant_id: `applicant-${Date.now()}`,
+          title: "Nuevo Análisis",
+        }),
       });
-      router.push(`/sic/expedientes/${encodeURIComponent(caseId)}`);
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+      const caseId = data?.id;
+      if (typeof caseId === "string" && caseId.trim()) {
+        router.push(`/sic/expedientes/${encodeURIComponent(caseId)}`);
+        return;
+      }
+
+      const detail =
+        (typeof data?.detail === "string" && data.detail) ||
+        (typeof data?.message === "string" && data.message) ||
+        (typeof data?.error === "string" && data.error) ||
+        "Error al crear el expediente";
+      setError(detail);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear el expediente");
+      const message = err instanceof Error ? err.message : String(err);
+      setError(String(message || "No se pudo crear el expediente"));
     } finally {
       setLoading(false);
     }
