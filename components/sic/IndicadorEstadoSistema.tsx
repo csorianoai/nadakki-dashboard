@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { fetchEstadoSistema, type EstadoSistema } from "@/lib/api/sic";
 
@@ -13,14 +14,16 @@ const SALUD_STYLE: Record<string, string> = {
 
 export function IndicadorEstadoSistema() {
   const { tenantId } = useTenant();
+  const { tenantId: authTenantId } = useAuth();
+  const resolvedTenant =
+    (tenantId && tenantId.trim()) || (authTenantId && authTenantId.trim()) || "credicefi";
   const [estado, setEstado] = useState<EstadoSistema | null>(null);
 
   useEffect(() => {
-    if (!tenantId) return;
-    fetchEstadoSistema(tenantId)
+    fetchEstadoSistema(resolvedTenant)
       .then(setEstado)
       .catch(() => setEstado({ salud: "no_disponible", conectividad: false }));
-  }, [tenantId]);
+  }, [resolvedTenant]);
 
   const salud = estado?.salud ?? (estado?.conectividad === false ? "no_disponible" : "ok");
   const label =

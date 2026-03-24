@@ -73,8 +73,14 @@ export default function SicExpedientesPage() {
       )}
 
       {expedientes.length === 0 && !error ? (
-        <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-12 text-center">
-          <p className="text-slate-400 text-sm">No hay expedientes</p>
+        <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-12 text-center space-y-4">
+          <p className="text-slate-400 text-sm m-0">No hay expedientes todavía.</p>
+          <Link
+            href="/sic/nuevo-analisis"
+            className="inline-block rounded-lg bg-cyan-600 px-4 py-2 text-sm font-600 text-white hover:bg-cyan-500"
+          >
+            Crear primer análisis
+          </Link>
         </div>
       ) : (
         <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">

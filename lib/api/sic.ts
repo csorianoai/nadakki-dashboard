@@ -5,6 +5,36 @@
 
 const API_BASE = "";
 
+function normalizeCaseToExpediente(d: Record<string, unknown>): Expediente {
+  const expediente_id = String(d.expediente_id ?? d.id ?? d.case_id ?? "");
+  return {
+    expediente_id,
+    tenant_id: d.tenant_id as string | undefined,
+    referencia_cliente: (d.referencia_cliente ?? d.applicant_id ?? d.title ?? d.cliente) as string | undefined,
+    referencia_producto: d.referencia_producto as string | undefined,
+    estado_expediente: (d.estado_expediente ?? d.status ?? d.state) as string | undefined,
+    decision_actual: (d.decision_actual ?? d.decision) as string | undefined,
+    confianza_decision:
+      typeof d.confianza_decision === "number"
+        ? d.confianza_decision
+        : typeof (d as { confidence?: number }).confidence === "number"
+          ? (d as { confidence: number }).confidence
+          : undefined,
+    decision_final_humana: d.decision_final_humana as string | undefined,
+    override_usuario: d.override_usuario as string | undefined,
+    override_justificacion: d.override_justificacion as string | undefined,
+    version_activa: d.version_activa as string | undefined,
+    creado_por: d.creado_por as string | undefined,
+    asignado_a: d.asignado_a as string | undefined,
+    fecha_creacion: (d.fecha_creacion ?? d.created_at) as string | undefined,
+    fecha_actualizacion: (d.fecha_actualizacion ?? d.updated_at) as string | undefined,
+    metadata_json:
+      typeof d.metadata_json === "object" && d.metadata_json !== null && !Array.isArray(d.metadata_json)
+        ? (d.metadata_json as Record<string, unknown>)
+        : undefined,
+  };
+}
+
 export type EstadoExpediente =
   | "RECIBIDO"
   | "EN_VALIDACION"
@@ -131,7 +161,7 @@ function headersForDownload(tenantId: string, accept: string = "application/octe
 }
 
 export async function fetchExpedientes(tenantId: string): Promise<Expediente[]> {
-  const res = await fetch(`${API_BASE}/api/v1/sic/expedientes`, {
+  const res = await fetch(`${API_BASE}/api/v1/sic/cases`, {
     headers: headers(tenantId),
   });
   if (!res.ok) {
@@ -139,18 +169,58 @@ export async function fetchExpedientes(tenantId: string): Promise<Expediente[]> 
     throw new Error(`Expedientes: ${res.status}`);
   }
   const data = await res.json();
-  return data.expedientes ?? data.data ?? (Array.isArray(data) ? data : []);
+  const list = (
+    Array.isArray(data)
+      ? data
+      : Array.isArray(data?.cases)
+        ? data.cases
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.expedientes)
+            ? data.expedientes
+            : []
+  ) as Record<string, unknown>[];
+  return list.map((row) => normalizeCaseToExpediente(row));
 }
 
 export async function fetchExpediente(expedienteId: string, tenantId: string): Promise<Expediente | null> {
-  const res = await fetch(`${API_BASE}/api/v1/sic/expedientes/${expedienteId}`, {
+  const res = await fetch(`${API_BASE}/api/v1/sic/cases/${encodeURIComponent(expedienteId)}`, {
     headers: headers(tenantId),
   });
   if (!res.ok) {
     if (res.status === 404) return null;
     throw new Error(`Expediente: ${res.status}`);
   }
-  return res.json();
+  const data = await res.json();
+  const row = (data?.data && typeof data.data === "object" && !Array.isArray(data.data) ? data.data : data) as Record<
+    string,
+    unknown
+  >;
+  return normalizeCaseToExpediente(row);
+}
+
+/** Crea un caso SIC vía POST /api/v1/sic/cases y devuelve el id del caso creado. */
+export async function crearCasoSic(
+  tenantId: string,
+  opts?: { applicant_id?: string; title?: string }
+): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/v1/sic/cases`, {
+    method: "POST",
+    headers: headers(tenantId),
+    body: JSON.stringify({
+      applicant_id: opts?.applicant_id ?? `applicant-${Date.now()}`,
+      title: opts?.title ?? "Nuevo Análisis",
+    }),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as { detail?: string; error?: string } | null;
+    throw new Error(err?.detail ?? err?.error ?? `Crear caso: ${res.status}`);
+  }
+  const data = (await res.json()) as Record<string, unknown>;
+  const inner = data?.data && typeof data.data === "object" && !Array.isArray(data.data) ? (data.data as Record<string, unknown>) : data;
+  const id = inner?.id ?? inner?.case_id ?? data?.id ?? data?.case_id;
+  if (id == null || String(id).trim() === "") throw new Error("Respuesta sin id de caso");
+  return String(id);
 }
 
 export async function fetchTimeline(expedienteId: string, tenantId: string): Promise<unknown[]> {
@@ -694,11 +764,16 @@ export interface EstadoSistema {
 
 export async function fetchEstadoSistema(tenantId: string): Promise<EstadoSistema | null> {
   const res = await fetch(`${API_BASE}/api/v1/sic/health`, { headers: headers(tenantId) });
-  if (!res.ok) {
-    if (res.status === 404) return { salud: "error", conectividad: false };
-    return null;
+  if (res.ok) return res.json();
+
+  const fallback = await fetch(`${API_BASE}/health`, { headers: headers(tenantId) }).catch(() => null);
+  if (fallback?.ok) {
+    return { salud: "ok", conectividad: true };
   }
-  return res.json();
+  if (res.status === 404) {
+    return { salud: "degradado", conectividad: true };
+  }
+  return { salud: "no_disponible", conectividad: false };
 }
 
 // ——— Configuración por banco ———
@@ -1020,12 +1095,12 @@ export async function fetchDocumentos(
 ): Promise<Documento[]> {
   try {
     const res = await fetch(
-      `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/documentos`,
+      `${API_BASE}/api/v1/sic/cases/${encodeURIComponent(expedienteId)}/documents`,
       { headers: headers(tenantId) }
     );
     if (!res.ok) return [];
     const data = await res.json();
-    return data.documentos ?? (Array.isArray(data) ? data : []);
+    return (data.documentos ?? data.documents ?? (Array.isArray(data) ? data : [])) as Documento[];
   } catch {
     return [];
   }
@@ -1039,7 +1114,7 @@ export async function subirDocumento(
   const formData = new FormData();
   formData.append("file", file);
   const res = await fetch(
-    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/documentos`,
+    `${API_BASE}/api/v1/sic/cases/${encodeURIComponent(expedienteId)}/documents`,
     {
       method: "POST",
       headers: headersForUpload(tenantId),
