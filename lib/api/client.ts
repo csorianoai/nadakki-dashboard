@@ -19,6 +19,20 @@ export type FetchWithFallbackOptions<T> = {
   init?: Omit<RequestInit, "headers" | "signal"> & { headers?: Record<string, string> };
 };
 
+/** Same-origin paths (e.g. /marketing/...) are proxied by next.config rewrites. */
+function resolveFetchUrl(url: string): string | null {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}${url}`;
+    }
+    const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+    return base ? `${base}${url}` : null;
+  }
+  return null;
+}
+
 export async function fetchWithFallback<T>(
   url: string,
   options: FetchWithFallbackOptions<T>
@@ -26,7 +40,8 @@ export async function fetchWithFallback<T>(
   const { tenantId, fallbackData, signal, headers: extraHeaders, init } = options;
   const fb = fallbackData;
 
-  if (!url || !url.startsWith("http")) {
+  const resolved = resolveFetchUrl(url);
+  if (!resolved) {
     return {
       data: fb,
       source: "fallback",
@@ -46,7 +61,7 @@ export async function fetchWithFallback<T>(
       headers["X-Tenant-ID"] = tenantId;
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(resolved, {
       method: "GET",
       ...init,
       signal,

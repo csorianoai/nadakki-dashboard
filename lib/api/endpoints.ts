@@ -1,5 +1,8 @@
 const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
+/** Same-origin paths; proxied to backend via next.config.js rewrites (browser-safe). */
+const marketingPath = "/marketing";
+
 export const AME_ENDPOINTS = {
   HEALTH: apiBase ? `${apiBase}/api/v1/ame/health` : "",
   STATUS: apiBase ? `${apiBase}/api/v1/ame/status` : "",
@@ -7,15 +10,15 @@ export const AME_ENDPOINTS = {
 };
 
 export const MARKETING_ENDPOINTS = {
-  AGENTS: apiBase ? `${apiBase}/marketing/agents` : "",
-  AGENT_BY_ID: (id: string) => (apiBase ? `${apiBase}/marketing/agents/${encodeURIComponent(id)}` : ""),
-  AGENT_EXEC: (id: string) => (apiBase ? `${apiBase}/marketing/agents/${encodeURIComponent(id)}/execute` : ""),
-  CAMPAIGNS: apiBase ? `${apiBase}/marketing/campaigns` : "",
-  CAMPAIGN_BY_ID: (id: string) => (apiBase ? `${apiBase}/marketing/campaigns/${encodeURIComponent(id)}` : ""),
-  SEGMENTS: apiBase ? `${apiBase}/marketing/segments` : "",
-  JOURNEYS: apiBase ? `${apiBase}/marketing/journeys` : "",
-  TEMPLATES: apiBase ? `${apiBase}/marketing/templates` : "",
-  INTEGRATIONS: apiBase ? `${apiBase}/marketing/integrations` : "",
+  AGENTS: `${marketingPath}/agents`,
+  AGENT_BY_ID: (id: string) => `${marketingPath}/agents/${encodeURIComponent(id)}`,
+  AGENT_EXEC: (id: string) => `${marketingPath}/agents/${encodeURIComponent(id)}/execute`,
+  CAMPAIGNS: `${marketingPath}/campaigns`,
+  CAMPAIGN_BY_ID: (id: string) => `${marketingPath}/campaigns/${encodeURIComponent(id)}`,
+  SEGMENTS: `${marketingPath}/segments`,
+  JOURNEYS: `${marketingPath}/journeys`,
+  TEMPLATES: `${marketingPath}/templates`,
+  INTEGRATIONS: `${marketingPath}/integrations`,
   CORES: apiBase ? `${apiBase}/cores` : "",
   HEALTH: apiBase ? `${apiBase}/health` : "",
 };

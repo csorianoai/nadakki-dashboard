@@ -8,6 +8,10 @@ const nextConfig = {
     );
     return [
       {
+        source: "/marketing/:path*",
+        destination: `${backendUrl}/marketing/:path*`,
+      },
+      {
         source: "/api/v1/sic/:path*",
         destination: `${backendUrl}/api/v1/sic/:path*`,
       },

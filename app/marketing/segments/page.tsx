@@ -14,8 +14,8 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import MarketingSegmentsLiveBanner from "@/components/marketing/MarketingSegmentsLiveBanner";
+import { fetchMarketingSegments } from "@/lib/api/marketing";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 const STORAGE_KEY = "nadakki_segments_v2";
 const CACHE_TTL = 5 * 60 * 1000;
 
@@ -289,6 +289,75 @@ const generateSQLPreview = (groups: ConditionGroup[]): string => {
   return `SELECT * FROM users WHERE ${groupsSQL}`;
 };
 
+function parseConditionGroups(raw: unknown): ConditionGroup[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((g) => g && typeof g === "object")
+    .map((g, gi) => {
+      const o = g as Record<string, unknown>;
+      const conditionsRaw = o.conditions;
+      const conditions: Condition[] = Array.isArray(conditionsRaw)
+        ? conditionsRaw
+            .filter((c) => c && typeof c === "object")
+            .map((c, ci) => {
+              const co = c as Record<string, unknown>;
+              return {
+                id: String(co.id ?? `c-${gi}-${ci}`),
+                field: String(co.field ?? "activity_days"),
+                operator: String(co.operator ?? "eq"),
+                value: String(co.value ?? ""),
+              };
+            })
+        : [];
+      return {
+        id: String(o.id ?? `g-${gi}`),
+        type: o.type === "OR" ? "OR" : "AND",
+        conditions,
+      };
+    });
+}
+
+function mapSegmentFromApi(r: Record<string, unknown>, index: number): Segment {
+  const stats = r.stats && typeof r.stats === "object" ? (r.stats as Record<string, unknown>) : {};
+  const statusRaw = r.status;
+  const status: Segment["status"] =
+    statusRaw === "draft" || statusRaw === "archived" ? statusRaw : "active";
+  return {
+    id: String(r.id ?? r.segment_id ?? `seg-${index}`),
+    name: String(r.name ?? "Sin nombre"),
+    description: String(r.description ?? ""),
+    conditionGroups: parseConditionGroups(r.condition_groups ?? r.conditionGroups),
+    size:
+      typeof r.size === "number" && !Number.isNaN(r.size)
+        ? r.size
+        : Number(r.audience_size ?? r.member_count ?? 0) || 0,
+    predictedConversion:
+      typeof r.predicted_conversion === "number"
+        ? r.predicted_conversion
+        : typeof r.predictedConversion === "number"
+          ? r.predictedConversion
+          : 0.1,
+    created_at:
+      typeof r.created_at === "string"
+        ? r.created_at
+        : typeof r.createdAt === "string"
+          ? r.createdAt
+          : new Date().toISOString(),
+    updated_at:
+      typeof r.updated_at === "string"
+        ? r.updated_at
+        : typeof r.updatedAt === "string"
+          ? r.updatedAt
+          : new Date().toISOString(),
+    status,
+    stats: {
+      campaigns_used: Number(stats.campaigns_used ?? r.campaigns_used ?? 0) || 0,
+      avg_open_rate: Number(stats.avg_open_rate ?? r.avg_open_rate ?? 0) || 0,
+      avg_click_rate: Number(stats.avg_click_rate ?? r.avg_click_rate ?? 0) || 0,
+    },
+  };
+}
+
 // ***************************************
 // MAIN COMPONENT
 // ***************************************
@@ -320,24 +389,40 @@ export default function SegmentsPage() {
     }, 4000);
   }, []);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setSegments(parsed);
-          setLoading(false);
-          return;
+  const fetchSegments = useCallback(async () => {
+    if (!tenantId) return;
+    setLoading(true);
+    try {
+      const { segments: rows, source, error } = await fetchMarketingSegments(tenantId);
+      if (source === "live" && rows.length > 0) {
+        setSegments(rows.map((row, i) => mapSegmentFromApi(row, i)));
+      } else {
+        setSegments([]);
+        if (source === "fallback" && error) {
+          addNotification(
+            "error",
+            error.includes("fetch") || error === "Failed to fetch"
+              ? "No se pudo cargar segmentos"
+              : error
+          );
         }
-      } catch (e) {
-        console.warn("Error parsing saved segments:", e);
       }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setSegments([]);
+      addNotification("error", "No se pudo cargar segmentos");
+    } finally {
+      setLoading(false);
     }
-    if (tenantId) fetchSegments();
-    else setLoading(false);
-  }, [tenantId]);
+  }, [tenantId, addNotification]);
+
+  useEffect(() => {
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
+    fetchSegments();
+  }, [tenantId, fetchSegments]);
 
   // Save to localStorage when segments change
   useEffect(() => {
@@ -370,44 +455,6 @@ export default function SegmentsPage() {
       return () => clearTimeout(timer);
     }
   }, [segmentName, conditionGroups, showBuilder]);
-
-  const fetchSegments = async () => {
-    if (!tenantId) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/segments?tenant_id=${encodeURIComponent(tenantId)}`, {
-        headers: { "X-Tenant-ID": tenantId },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.segments && data.segments.length > 0) {
-          setSegments(data.segments);
-        } else {
-          setSegments(getDefaultSegments());
-        }
-      } else {
-        throw new Error("API error");
-      }
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setSegments(getDefaultSegments());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getDefaultSegments = (): Segment[] => PRESET_SEGMENTS?.map((s, i) => ({
-    id: "seg-" + (i + 1),
-    name: s.name,
-    description: s.desc,
-    conditionGroups: s.groups,
-    size: s.size,
-    predictedConversion: s.conversion,
-    created_at: new Date(Date.now() - i * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-    status: "active",
-    stats: { campaigns_used: Math.floor(Math.random() * 10) + 1, avg_open_rate: 0.25 + Math.random() * 0.2, avg_click_rate: 0.08 + Math.random() * 0.1 }
-  }));
 
   // Condition management
   const addConditionGroup = () => {

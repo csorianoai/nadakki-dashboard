@@ -103,14 +103,6 @@ export async function fetchMarketingAgents(
   source: FetchSource;
 }> {
   const base = MARKETING_ENDPOINTS.AGENTS;
-  if (!base) {
-    return {
-      agents: [],
-      total: 0,
-      error: "Missing NEXT_PUBLIC_API_URL",
-      source: "fallback",
-    };
-  }
   const url = `${base}${base.includes("?") ? "&" : "?"}limit=${limit}`;
   const r = await fetchWithFallback<unknown>(url, {
     tenantId: tenantId ?? undefined,
@@ -132,14 +124,6 @@ export async function fetchMarketingCampaigns(tenantId?: string | null): Promise
   source: FetchSource;
 }> {
   const url = MARKETING_ENDPOINTS.CAMPAIGNS;
-  if (!url) {
-    return {
-      campaigns: [],
-      total: 0,
-      error: "Missing NEXT_PUBLIC_API_URL",
-      source: "fallback",
-    };
-  }
   const r = await fetchWithFallback<unknown>(url, {
     tenantId: tenantId ?? undefined,
     fallbackData: {},
@@ -147,6 +131,26 @@ export async function fetchMarketingCampaigns(tenantId?: string | null): Promise
   const norm = normalizeMarketingCampaigns(r.source === "live" ? r.data : {});
   return {
     campaigns: norm.campaigns,
+    total: norm.total,
+    error: r.source === "fallback" ? r.error : null,
+    source: r.source,
+  };
+}
+
+export async function fetchMarketingSegments(tenantId?: string | null): Promise<{
+  segments: Record<string, unknown>[];
+  total: number;
+  error: string | null;
+  source: FetchSource;
+}> {
+  const url = MARKETING_ENDPOINTS.SEGMENTS;
+  const r = await fetchWithFallback<unknown>(url, {
+    tenantId: tenantId ?? undefined,
+    fallbackData: {},
+  });
+  const norm = normalizeMarketingSegmentsList(r.source === "live" ? r.data : {});
+  return {
+    segments: norm.segments,
     total: norm.total,
     error: r.source === "fallback" ? r.error : null,
     source: r.source,
@@ -162,9 +166,6 @@ export async function fetchMarketingCampaignById(
   source: FetchSource;
 }> {
   const url = MARKETING_ENDPOINTS.CAMPAIGN_BY_ID(id);
-  if (!url) {
-    return { data: null, error: "Missing NEXT_PUBLIC_API_URL", source: "fallback" };
-  }
   const r = await fetchWithFallback<unknown>(url, {
     tenantId: tenantId ?? undefined,
     fallbackData: {},
