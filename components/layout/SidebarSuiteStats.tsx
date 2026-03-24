@@ -1,7 +1,19 @@
 "use client";
 
-import { useFetchWithFallback } from "@/hooks/useFetchWithFallback";
+import { useEffect, useState } from "react";
+import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
 import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
+
+const CACHE_KEY = "sidebar_stats";
+const CACHE_TTL = 5 * 60 * 1000;
+
+type SidebarStatsCache = {
+  ts: number;
+  healthRaw: Record<string, unknown>;
+  healthSource: FetchSource;
+  coresRaw: unknown;
+  coresSource: FetchSource;
+};
 
 function unwrapData(json: unknown): unknown {
   if (!json || typeof json !== "object") return json;
@@ -39,16 +51,79 @@ function pickWorkflowCount(h: Record<string, unknown>): number | string | null {
   return null;
 }
 
-export default function SidebarSuiteStats() {
-  const { data: healthRaw, source: healthSource } = useFetchWithFallback<Record<string, unknown>>(
-    MARKETING_ENDPOINTS.HEALTH,
-    { fallbackData: {} }
-  );
+function readCache(): SidebarStatsCache | null {
+  if (typeof sessionStorage === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SidebarStatsCache;
+    if (typeof parsed?.ts !== "number") return null;
+    if (Date.now() - parsed.ts >= CACHE_TTL) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
-  const { data: coresRaw, source: coresSource } = useFetchWithFallback<unknown>(
-    MARKETING_ENDPOINTS.CORES,
-    { fallbackData: [] }
-  );
+function writeCache(entry: Omit<SidebarStatsCache, "ts">): void {
+  if (typeof sessionStorage === "undefined") return;
+  try {
+    const payload: SidebarStatsCache = { ts: Date.now(), ...entry };
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+export default function SidebarSuiteStats() {
+  const [healthRaw, setHealthRaw] = useState<Record<string, unknown>>({});
+  const [healthSource, setHealthSource] = useState<FetchSource>("fallback");
+  const [coresRaw, setCoresRaw] = useState<unknown>([]);
+  const [coresSource, setCoresSource] = useState<FetchSource>("fallback");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const cached = readCache();
+    if (cached) {
+      setHealthRaw(cached.healthRaw);
+      setHealthSource(cached.healthSource);
+      setCoresRaw(cached.coresRaw);
+      setCoresSource(cached.coresSource);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    (async () => {
+      const [healthRes, coresRes] = await Promise.all([
+        fetchWithFallback<Record<string, unknown>>(MARKETING_ENDPOINTS.HEALTH, {
+          fallbackData: {},
+        }),
+        fetchWithFallback<unknown>(MARKETING_ENDPOINTS.CORES, {
+          fallbackData: [],
+        }),
+      ]);
+
+      if (cancelled) return;
+
+      setHealthRaw(healthRes.data);
+      setHealthSource(healthRes.source);
+      setCoresRaw(coresRes.data);
+      setCoresSource(coresRes.source);
+
+      writeCache({
+        healthRaw: healthRes.data,
+        healthSource: healthRes.source,
+        coresRaw: coresRes.data,
+        coresSource: coresRes.source,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const healthData = unwrapData(healthRaw) as Record<string, unknown>;
   const agentNum = healthSource === "live" ? pickAgentTotal(healthData) : null;
