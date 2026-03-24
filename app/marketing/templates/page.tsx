@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Brain,
@@ -10,17 +11,82 @@ import {
   Wand2,
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
-import { useFetchWithFallback } from "@/hooks/useFetchWithFallback";
-import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
+import type { FetchSource } from "@/lib/api/client";
 import { normalizeMarketingTemplates } from "@/lib/api/marketing";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
 
+const TEMPLATES_PATH = "/marketing/templates";
+
 export default function TemplatesPage() {
   const { tenantId } = useTenant();
-  const { data, source, loading, error, refresh } = useFetchWithFallback<unknown>(
-    MARKETING_ENDPOINTS.TEMPLATES,
-    { tenantId, fallbackData: {} }
+  const [data, setData] = useState<unknown>({});
+  const [source, setSource] = useState<FetchSource>("fallback");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const load = useCallback(
+    async (signal: AbortSignal) => {
+      if (!tenantId?.trim()) {
+        setLoading(false);
+        setSource("fallback");
+        setError(null);
+        setData({});
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(TEMPLATES_PATH, {
+          method: "GET",
+          signal,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tenantId.trim(),
+          },
+        });
+        if (res.status === 429) {
+          setSource("fallback");
+          setError("HTTP 429");
+          setData({});
+          return;
+        }
+        if (!res.ok) {
+          setSource("fallback");
+          setError(`HTTP ${res.status}`);
+          setData({});
+          return;
+        }
+        const json = (await res.json().catch(() => null)) as unknown;
+        setData(json ?? {});
+        setSource("live");
+      } catch (e) {
+        if ((e as Error)?.name === "AbortError") return;
+        setSource("fallback");
+        setError((e as Error)?.message ?? String(e));
+        setData({});
+      } finally {
+        setLoading(false);
+      }
+    },
+    [tenantId]
   );
+
+  useEffect(() => {
+    if (!tenantId?.trim()) {
+      setLoading(false);
+      return;
+    }
+    const ac = new AbortController();
+    void load(ac.signal);
+    return () => ac.abort();
+  }, [tenantId, refreshKey, load]);
+
+  const refresh = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
+
   const { templates, total } = normalizeMarketingTemplates(
     source === "live" ? data : {}
   );
@@ -69,7 +135,7 @@ export default function TemplatesPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => void refresh()}
+                onClick={() => refresh()}
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 text-sm text-gray-200 hover:bg-white/15"
               >
                 <RefreshCw className="w-4 h-4" />

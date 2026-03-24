@@ -1,28 +1,33 @@
 "use client";
 
-import { useTenant } from "@/contexts/TenantContext";
-import { useFetchWithFallback } from "@/hooks/useFetchWithFallback";
-import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
-import { FALLBACK_SEGMENTS_LIST } from "@/lib/fallbacks/marketing";
-import { normalizeMarketingSegmentsList } from "@/lib/api/marketing";
+import type { FetchSource } from "@/lib/api/client";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
 import { RefreshCw } from "lucide-react";
 
-export default function MarketingSegmentsLiveBanner() {
-  const { tenantId } = useTenant();
-  const { data, source, loading, error, refresh } = useFetchWithFallback(
-    MARKETING_ENDPOINTS.SEGMENTS,
-    { tenantId, fallbackData: FALLBACK_SEGMENTS_LIST }
-  );
-  const { segments, total } = normalizeMarketingSegmentsList(data);
+type Row = Record<string, unknown>;
 
+export type MarketingSegmentsLiveBannerProps = {
+  loading: boolean;
+  error: string | null;
+  source: FetchSource;
+  segments: Row[];
+  total: number;
+  onRefresh: () => void;
+};
+
+export default function MarketingSegmentsLiveBanner({
+  loading,
+  error,
+  source,
+  segments,
+  total,
+  onRefresh,
+}: MarketingSegmentsLiveBannerProps) {
   return (
     <div className="mb-6 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-white">
-            Segmentos (API)
-          </span>
+          <span className="text-sm font-semibold text-white">Segmentos (API)</span>
           <DataSourceBadge source={source} error={error} />
           {loading ? (
             <span className="text-xs text-gray-500">Cargando…</span>
@@ -32,7 +37,7 @@ export default function MarketingSegmentsLiveBanner() {
         </div>
         <button
           type="button"
-          onClick={() => void refresh()}
+          onClick={() => onRefresh()}
           className="inline-flex items-center gap-1.5 text-xs text-emerald-300 hover:text-emerald-200"
         >
           <RefreshCw className="w-3.5 h-3.5" />

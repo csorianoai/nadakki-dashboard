@@ -14,7 +14,8 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import MarketingSegmentsLiveBanner from "@/components/marketing/MarketingSegmentsLiveBanner";
-import { fetchMarketingSegments } from "@/lib/api/marketing";
+import type { FetchSource } from "@/lib/api/client";
+import { normalizeMarketingSegmentsList } from "@/lib/api/marketing";
 
 const STORAGE_KEY = "nadakki_segments_v2";
 const CACHE_TTL = 5 * 60 * 1000;
@@ -380,6 +381,12 @@ export default function SegmentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSQL, setShowSQL] = useState(false);
 
+  const [apiLiveData, setApiLiveData] = useState<unknown>({});
+  const [apiSource, setApiSource] = useState<FetchSource>("fallback");
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [apiLoading, setApiLoading] = useState(true);
+  const [apiRefreshKey, setApiRefreshKey] = useState(0);
+
   // Notifications
   const addNotification = useCallback((type: Notification["type"], message: string) => {
     const id = generateId();
@@ -389,40 +396,89 @@ export default function SegmentsPage() {
     }, 4000);
   }, []);
 
-  const fetchSegments = useCallback(async () => {
-    if (!tenantId) return;
-    setLoading(true);
-    try {
-      const { segments: rows, source, error } = await fetchMarketingSegments(tenantId);
-      if (source === "live" && rows.length > 0) {
-        setSegments(rows.map((row, i) => mapSegmentFromApi(row, i)));
-      } else {
-        setSegments([]);
-        if (source === "fallback" && error) {
-          addNotification(
-            "error",
-            error.includes("fetch") || error === "Failed to fetch"
-              ? "No se pudo cargar segmentos"
-              : error
-          );
-        }
+  const loadSegmentsFromApi = useCallback(
+    async (signal: AbortSignal) => {
+      if (!tenantId?.trim()) {
+        setApiLoading(false);
+        setLoading(false);
+        setApiSource("fallback");
+        setApiError(null);
+        setApiLiveData({});
+        return;
       }
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setSegments([]);
-      addNotification("error", "No se pudo cargar segmentos");
-    } finally {
-      setLoading(false);
-    }
-  }, [tenantId, addNotification]);
+      setApiLoading(true);
+      setLoading(true);
+      setApiError(null);
+      try {
+        const res = await fetch("/marketing/segments", {
+          method: "GET",
+          signal,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tenantId.trim(),
+          },
+        });
+        if (res.status === 429) {
+          setApiSource("fallback");
+          setApiError("HTTP 429");
+          setApiLiveData({});
+          setSegments([]);
+          addNotification("error", "Demasiadas solicitudes (429). Espera un momento e inténtalo de nuevo.");
+          return;
+        }
+        if (!res.ok) {
+          setApiSource("fallback");
+          setApiError(`HTTP ${res.status}`);
+          setApiLiveData({});
+          setSegments([]);
+          addNotification("error", `No se pudo cargar segmentos (${res.status})`);
+          return;
+        }
+        const json = (await res.json().catch(() => null)) as unknown;
+        setApiLiveData(json ?? {});
+        setApiSource("live");
+        const norm = normalizeMarketingSegmentsList(json);
+        if (norm.segments.length > 0) {
+          setSegments(norm.segments.map((row, i) => mapSegmentFromApi(row, i)));
+        } else {
+          setSegments([]);
+        }
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
+        console.error("Fetch error:", err);
+        setApiSource("fallback");
+        setApiError((err as Error)?.message ?? String(err));
+        setApiLiveData({});
+        setSegments([]);
+        addNotification("error", "No se pudo cargar segmentos");
+      } finally {
+        setApiLoading(false);
+        setLoading(false);
+      }
+    },
+    [tenantId, addNotification]
+  );
 
   useEffect(() => {
-    if (!tenantId) {
+    if (!tenantId?.trim()) {
+      setApiLoading(false);
       setLoading(false);
       return;
     }
-    fetchSegments();
-  }, [tenantId, fetchSegments]);
+    const ac = new AbortController();
+    void loadSegmentsFromApi(ac.signal);
+    return () => ac.abort();
+  }, [tenantId, apiRefreshKey, loadSegmentsFromApi]);
+
+  const fetchSegments = useCallback(() => {
+    setApiRefreshKey((k) => k + 1);
+  }, []);
+
+  const bannerPreview = useMemo(
+    () => normalizeMarketingSegmentsList(apiSource === "live" ? apiLiveData : {}),
+    [apiSource, apiLiveData]
+  );
 
   // Save to localStorage when segments change
   useEffect(() => {
@@ -667,7 +723,14 @@ export default function SegmentsPage() {
         <StatusBadge status="active" label={segments.length + " Segmentos"} size="lg" />
       </NavigationBar>
 
-      <MarketingSegmentsLiveBanner />
+      <MarketingSegmentsLiveBanner
+        loading={apiLoading}
+        error={apiError}
+        source={apiSource}
+        segments={bannerPreview.segments}
+        total={bannerPreview.total}
+        onRefresh={fetchSegments}
+      />
 
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center justify-between">

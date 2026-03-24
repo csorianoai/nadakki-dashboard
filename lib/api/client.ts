@@ -63,6 +63,7 @@ export async function fetchWithFallback<T>(
     });
 
     const status = response.status;
+    // Single GET per call; no automatic retries (avoids 429 storms from client loops).
     if (status !== 200) {
       return {
         data: fb,

@@ -138,6 +138,10 @@ export async function fetchMarketingCampaigns(tenantId?: string | null): Promise
   };
 }
 
+/**
+ * Uses fetchWithFallback. If wiring through useFetchWithFallback, pass a stable
+ * `fallbackData` reference (e.g. FALLBACK_SEGMENTS_LIST), never an inline `{}`.
+ */
 export async function fetchMarketingSegments(tenantId?: string | null): Promise<{
   segments: Record<string, unknown>[];
   total: number;
