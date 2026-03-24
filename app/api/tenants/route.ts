@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_RENDER_API_URL ||
   "https://nadakki-ai-suite.onrender.com";
 
 export async function GET(req: NextRequest) {

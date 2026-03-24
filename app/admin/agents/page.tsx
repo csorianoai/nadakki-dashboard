@@ -12,7 +12,7 @@ interface Agent { id: string; name: string; category: string; core?: string; }
 interface HealthData { status: string; version: string; agents_loaded: number; cores_active: number; }
 
 const CORES = ["marketing", "legal", "originacion", "contabilidad", "compliance", "rrhh", "logistica", "decision"];
-const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://nadakki-ai-suite.onrender.com";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 export default function AdminAgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);

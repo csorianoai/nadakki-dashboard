@@ -9,7 +9,7 @@ import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 interface Agent { id: string; name: string; category: string; }
-const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://nadakki-ai-suite.onrender.com";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 
 export default function LegalPage() {
   const [agents, setAgents] = useState<Agent[]>([]);

@@ -2,16 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
-import { useDemo } from "@/contexts/DemoContext";
 import { fetchAuditoriaGlobal, type EventoAuditoria } from "@/lib/api/sic";
-import { getDemoEventosAuditoria } from "@/lib/demo-sic";
 import Link from "next/link";
 import { LoadingSic, EmptySic, ErrorSic } from "@/components/sic/EstadosSic";
 
 export default function SicAuditoriaPage() {
   const { tenantId } = useTenant();
-  const { demoMode, escenario } = useDemo();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId?.trim() ?? "";
   const [eventos, setEventos] = useState<EventoAuditoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,18 +18,19 @@ export default function SicAuditoriaPage() {
 
   useEffect(() => {
     let alive = true;
-    if (demoMode) {
-      setEventos(getDemoEventosAuditoria(escenario));
+    if (!tenant) {
+      setEventos([]);
       setLoading(false);
-      setError(null);
-      return;
+      setError("No hay tenant activo");
+      return () => { alive = false; };
     }
+    setError(null);
     fetchAuditoriaGlobal(tenant, limit)
       .then((list) => { if (alive) setEventos(list); })
-      .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
+      .catch(() => { if (alive) { setEventos([]); setError("No hay datos disponibles."); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [tenant, limit, demoMode, escenario]);
+  }, [tenant, limit]);
 
   const tipos = Array.from(new Set(eventos.map((e) => e.tipo_evento).filter(Boolean))) as string[];
   const expedientes = Array.from(new Set(eventos.map((e) => e.expediente_id).filter(Boolean))) as string[];
@@ -93,10 +91,7 @@ export default function SicAuditoriaPage() {
 
       <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">
         {filtrados.length === 0 ? (
-          <EmptySic
-            titulo="Sin eventos de auditoría"
-            mensaje="Los eventos de auditoría aparecerán aquí cuando exista actividad."
-          />
+          <EmptySic titulo="Sin eventos" mensaje="No hay datos disponibles." />
         ) : (
           <table className="w-full text-sm">
             <thead>

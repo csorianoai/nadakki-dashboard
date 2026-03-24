@@ -47,6 +47,9 @@ import {
   Lock,
   Gauge,
   FileUp,
+  Clock,
+  Zap,
+  CreditCard,
 } from "lucide-react";
 import SidebarSuiteStats from "./SidebarSuiteStats";
 import TenantSelector from "@/components/ui/TenantSelector";
@@ -82,6 +85,8 @@ const navigationStructure: NavCore[] = [
       { id: "tenants", icon: <Building2 size={14} />, label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
       { id: "settings", icon: <Settings size={14} />, label: "Configuracion", href: "/settings" },
       { id: "agents-execute", icon: <PlayCircle size={14} />, label: "Ejecutar Agentes", href: "/agents/execute" },
+      { id: "scheduler", icon: <Clock size={14} />, label: "Scheduler", href: "/scheduler" },
+      { id: "autopilot", icon: <Zap size={14} />, label: "Autopilot IA", href: "/autopilot" },
     ],
   },
 
@@ -152,6 +157,8 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #F97316, #EA580C)",
     modules: [
       { id: "mkt-all", icon: <Target size={14} />, label: "Marketing Hub", href: "/marketing" },
+      { id: "analytics-hub", icon: <BarChart3 size={14} />, label: "Analytics Hub", href: "/analytics" },
+      { id: "analytics-agents", icon: <Bot size={14} />, label: "Analytics Agentes", href: "/analytics/agents" },
       { id: "mkt-agents", icon: <Bot size={14} />, label: "Agentes", href: "/marketing/agents" },
       { id: "mkt-campaigns", icon: <Megaphone size={14} />, label: "Campanas", href: "/marketing/campaigns" },
       { id: "mkt-leads", icon: <TrendingUp size={14} />, label: "Lead Management", href: "/marketing/leads" },
@@ -175,6 +182,9 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #6366F1, #4F46E5)",
     modules: [
       { id: "admin-main", icon: <Wrench size={14} />, label: "Panel Admin", href: "/admin" },
+      { id: "admin-billing", icon: <CreditCard size={14} />, label: "Billing", href: "/admin/billing" },
+      { id: "admin-gates", icon: <Lock size={14} />, label: "Gates", href: "/admin/gates" },
+      { id: "admin-usage", icon: <Gauge size={14} />, label: "Uso tenant", href: "/admin/usage" },
       { id: "admin-agents", icon: <Bot size={14} />, label: "Gestion Agentes", href: "/admin/agents" },
       { id: "admin-logs", icon: <ScrollText size={14} />, label: "Logs", href: "/admin/logs" },
       { id: "admin-compliance", icon: <Shield size={14} />, label: "Compliance", href: "/compliance" },

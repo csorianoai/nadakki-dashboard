@@ -4,8 +4,8 @@
  * Onboarding → Agent Observability (tipo Manus)
  * Ver ejecuciones (runs), logs live (SSE), ejecutar dry_run, cancelar.
  *
- * Config: set NEXT_PUBLIC_NADAKKI_API_BASE in .env.local
- * Ej: NEXT_PUBLIC_NADAKKI_API_BASE=http://127.0.0.1:8000
+ * Config: set NEXT_PUBLIC_API_URL in .env.local
+ * Ej: NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
  * O para Render: https://nadakki-ai-suite.onrender.com
  */
 
@@ -26,7 +26,7 @@ import { useToast } from "@/components/ui/Toast";
 import { parseSSEStream } from "@/lib/observability/sse-fetch";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_NADAKKI_API_BASE || process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+  process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
 const TENANT_HEADER = "X-Tenant-ID";
 const STORAGE_KEY = "lastInstitution";
 const RECONNECT_BACKOFFS = [1000, 2000, 4000];

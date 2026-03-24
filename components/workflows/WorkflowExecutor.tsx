@@ -82,7 +82,8 @@ export default function WorkflowExecutor({ config }: Props) {
         setCurrentStep(prev => Math.min(prev + 1, config.agents));
       }, 800);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/workflows/${config.id}`, {
+      const base = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+      const response = await fetch(`${base.replace(/\/$/, "")}/workflows/${config.id}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

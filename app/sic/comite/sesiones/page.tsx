@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
-import { useDemo } from "@/contexts/DemoContext";
 import { fetchSesionesComite, type SesionComite } from "@/lib/api/sic";
-import { getDemoSesiones } from "@/lib/demo-sic";
 import Link from "next/link";
 import { LoadingSic, EmptySic, ErrorSic } from "@/components/sic/EstadosSic";
 
@@ -17,26 +15,26 @@ const ESTADO_BADGE: Record<string, string> = {
 
 export default function SicComiteSesionesPage() {
   const { tenantId } = useTenant();
-  const { demoMode, escenario } = useDemo();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId?.trim() ?? "";
   const [sesiones, setSesiones] = useState<SesionComite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    if (demoMode) {
-      setSesiones(getDemoSesiones(escenario));
+    if (!tenant) {
+      setSesiones([]);
       setLoading(false);
-      setError(null);
-      return;
+      setError("No hay tenant activo");
+      return () => { alive = false; };
     }
+    setError(null);
     fetchSesionesComite(tenant, 50)
       .then((list) => { if (alive) setSesiones(list); })
-      .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
+      .catch(() => { if (alive) { setSesiones([]); setError("No hay datos disponibles."); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [tenant, demoMode, escenario]);
+  }, [tenant]);
 
   if (loading) {
     return (
@@ -63,7 +61,7 @@ export default function SicComiteSesionesPage() {
 
       <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">
         {sesiones.length === 0 ? (
-          <EmptySic titulo="Sin sesiones" mensaje="No hay sesiones de comité registradas.">
+          <EmptySic titulo="Sin sesiones" mensaje="No hay datos disponibles.">
             <Link href="/sic/comite" className="text-cyan-400 hover:underline text-sm">Ir a Comité</Link>
           </EmptySic>
         ) : (

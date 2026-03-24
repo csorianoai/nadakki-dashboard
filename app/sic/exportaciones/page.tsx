@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
-import { useDemo } from "@/contexts/DemoContext";
 import {
   fetchExpedientes,
   fetchExportacionesGlobal,
@@ -12,7 +11,6 @@ import {
   type Expediente,
   type Exportacion,
 } from "@/lib/api/sic";
-import { getDemoExpedientes, getDemoExportaciones } from "@/lib/demo-sic";
 import Link from "next/link";
 import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
 
@@ -38,8 +36,7 @@ const ESTADO_EXPORT: Record<string, string> = {
 
 export default function SicExportacionesPage() {
   const { tenantId } = useTenant();
-  const { demoMode, escenario } = useDemo();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId?.trim() ?? "";
   const [expedientes, setExpedientes] = useState<Expediente[]>([]);
   const [exportaciones, setExportaciones] = useState<Exportacion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,27 +45,24 @@ export default function SicExportacionesPage() {
   const [exito, setExito] = useState<string | null>(null);
 
   const cargar = () => {
-    if (demoMode) {
-      setExpedientes(getDemoExpedientes(escenario));
-      setExportaciones(getDemoExportaciones(escenario));
-      return;
-    }
-    fetchExpedientes(tenant).then(setExpedientes).catch(() => {});
+    if (!tenant) return;
+    fetchExpedientes(tenant).then(setExpedientes).catch(() => setExpedientes([]));
     fetchExportacionesGlobal(tenant, 100).then(setExportaciones).catch(() => setExportaciones([]));
   };
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    if (demoMode) {
-      setExpedientes(getDemoExpedientes(escenario));
-      setExportaciones(getDemoExportaciones(escenario));
+    if (!tenant) {
+      setExpedientes([]);
+      setExportaciones([]);
       setLoading(false);
-      setError(null);
-      return;
+      setError("No hay tenant activo");
+      return () => { alive = false; };
     }
+    setError(null);
     Promise.all([
-      fetchExpedientes(tenant),
+      fetchExpedientes(tenant).catch(() => []),
       fetchExportacionesGlobal(tenant, 100).catch(() => []),
     ])
       .then(([expList, expList2]) => {
@@ -77,25 +71,24 @@ export default function SicExportacionesPage() {
           setExportaciones(expList2);
         }
       })
-      .catch((e) => {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
+      .catch(() => {
+        if (alive) {
+          setExpedientes([]);
+          setExportaciones([]);
+          setError("No hay datos disponibles.");
+        }
       })
       .finally(() => {
         if (alive) setLoading(false);
       });
     return () => { alive = false; };
-  }, [tenant, demoMode, escenario]);
+  }, [tenant]);
 
   const handlePDF = async (id: string) => {
+    if (!tenant) return;
     setExportando(`${id}-pdf`);
     setExito(null);
     setError(null);
-    if (demoMode) {
-      setExito(`[Demo] PDF ejecutivo generado para ${id}`);
-      cargar();
-      setExportando(null);
-      return;
-    }
     try {
       const r = await generarExportacionPDF(id, tenant);
       setExito(`PDF ejecutivo generado para ${id}${r?.url ? ". " + r.url : ""}`);
@@ -108,15 +101,10 @@ export default function SicExportacionesPage() {
   };
 
   const handleRegulatorio = async (id: string) => {
+    if (!tenant) return;
     setExportando(`${id}-reg`);
     setExito(null);
     setError(null);
-    if (demoMode) {
-      setExito(`[Demo] Paquete regulatorio generado para ${id}`);
-      cargar();
-      setExportando(null);
-      return;
-    }
     try {
       const r = await generarPaqueteRegulatorio(id, tenant);
       setExito(`Paquete regulatorio generado para ${id}${r?.url ? ". " + r.url : ""}`);
@@ -129,15 +117,10 @@ export default function SicExportacionesPage() {
   };
 
   const handleZIP = async (id: string) => {
+    if (!tenant) return;
     setExportando(`${id}-zip`);
     setExito(null);
     setError(null);
-    if (demoMode) {
-      setExito(`[Demo] ZIP bancario generado para ${id}`);
-      cargar();
-      setExportando(null);
-      return;
-    }
     try {
       const r = await generarExportacionZIP(id, tenant);
       setExito(`ZIP bancario generado para ${id}${r?.url ? ". " + r.url : ""}`);
@@ -179,10 +162,7 @@ export default function SicExportacionesPage() {
           Historial de exportaciones
         </h2>
         {exportaciones.length === 0 ? (
-          <EmptySic
-            titulo="Sin exportaciones"
-            mensaje="Las exportaciones generadas aparecerán aquí."
-          />
+          <EmptySic titulo="Sin exportaciones" mensaje="No hay datos disponibles." />
         ) : (
           <table className="w-full text-sm">
             <thead>
