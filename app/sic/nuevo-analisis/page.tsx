@@ -23,9 +23,8 @@ export default function SicNuevoAnalisisPage() {
     }
     setLoading(true);
     setError(null);
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "";
     try {
-      const res = await fetch(`${base}/api/v1/sic/cases`, {
+      const res = await fetch("/api/v1/sic/cases", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

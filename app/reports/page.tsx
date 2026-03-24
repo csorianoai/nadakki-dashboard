@@ -6,7 +6,8 @@ import { FileText, Loader2, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);

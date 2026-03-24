@@ -7,7 +7,8 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useTenant } from "@/contexts/TenantContext";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 export default function ExecutePage() {
   const { tenantId } = useTenant();

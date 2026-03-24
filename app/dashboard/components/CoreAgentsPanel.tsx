@@ -4,8 +4,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import CoreTabs from './CoreTabs';
 import CoreAgentCard from './CoreAgentCard';
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com').replace(/\/$/, '');
-
 interface Agent {
   id: string;
   name: string;
@@ -49,7 +47,7 @@ function mapCatalogAgent(a: Record<string, unknown>, idx: number): Agent {
 }
 
 async function fetchAgentsLive(): Promise<Agent[] | null> {
-  const bases = API_URL ? [`${API_URL}/api/v1/agents`, '/api/v1/agents'] : ['/api/v1/agents'];
+  const bases = ["/api/v1/agents"];
   for (const url of bases) {
     try {
       const res = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json' } });

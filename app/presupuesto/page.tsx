@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 
 interface Agent { id: string; name: string; category: string; execute_endpoint?: string | null; status?: string; }
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 export default function presupuestoPage() {
   const { tenantId } = useTenant();

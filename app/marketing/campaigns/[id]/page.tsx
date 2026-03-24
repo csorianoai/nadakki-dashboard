@@ -60,7 +60,7 @@ export default function CampaignDetailPage() {
     try {
       // TODO: migrar a PATCH /marketing/campaigns/{id} cuando el backend confirme el contrato
       const url = MARKETING_ENDPOINTS.CAMPAIGN_BY_ID(campaignId);
-      if (!url) throw new Error("Missing NEXT_PUBLIC_API_URL");
+      if (!url) throw new Error("Missing campaign endpoint URL");
       const res = await fetch(url, {
         method: "PUT",
         headers: {

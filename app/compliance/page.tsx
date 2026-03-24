@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -10,7 +10,8 @@ import StatusBadge from "@/components/ui/StatusBadge";
 
 interface Agent { id: string; name: string; category: string; }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 export default function CompliancePage() {
   const [agents, setAgents] = useState<Agent[]>([]);

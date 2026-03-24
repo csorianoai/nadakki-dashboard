@@ -10,7 +10,8 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 const SOCIAL_MODULES = [
   { id: "connections", name: "Conexiones", icon: Settings, desc: "Conecta tus redes sociales", href: "/social/connections", color: "#06b6d4", priority: true },

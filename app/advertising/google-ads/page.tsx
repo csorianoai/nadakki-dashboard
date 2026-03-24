@@ -34,7 +34,7 @@ export default function GoogleAdsPage() {
     if (!tenantId) return;
     setLoading((prev) => ({ ...prev, [agent.id]: true }));
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+      const apiUrl = "";
       const res = await fetch(`${apiUrl}/api/v1/agents/${agent.backendId}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 const AGENTS = [
   { id: "fortaleza-analyzer", name: "Analizador de Fortaleza", desc: "Analiza la fortaleza financiera" },

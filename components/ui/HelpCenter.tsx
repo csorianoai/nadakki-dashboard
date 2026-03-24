@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 const QUICK_LINKS = [
   { name: "Campaign Builder", href: "/marketing/campaign-builder" },

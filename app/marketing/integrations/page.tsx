@@ -13,7 +13,8 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 interface Integration {
   id: string;
@@ -233,6 +234,10 @@ export default function IntegrationsPage() {
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
+  const [publicOrigin, setPublicOrigin] = useState("");
+  useEffect(() => {
+    setPublicOrigin(typeof window !== "undefined" ? window.location.origin : "");
+  }, []);
 
   // Cargar estado de integraciones desde API
   useEffect(() => {
@@ -636,12 +641,16 @@ export default function IntegrationsPage() {
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        value={`${API_URL}/webhooks/${tenantId ?? ""}/${selectedIntegration.id}`}
+                        value={`${publicOrigin}/webhooks/${tenantId ?? ""}/${selectedIntegration.id}`}
                         readOnly
                         className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono text-sm"
                       />
                       <button
-                        onClick={() => navigator.clipboard.writeText(`${API_URL}/webhooks/${tenantId ?? ""}/${selectedIntegration.id}`)}
+                        onClick={() =>
+                          navigator.clipboard.writeText(
+                            `${publicOrigin}/webhooks/${tenantId ?? ""}/${selectedIntegration.id}`
+                          )
+                        }
                         className="px-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white"
                       >
                         Copiar

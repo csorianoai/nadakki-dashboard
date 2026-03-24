@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { CORES_CONFIG } from '@/config/cores';
@@ -15,7 +15,8 @@ interface CoreData {
   status: 'active' | 'inactive' | 'maintenance';
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = '';
 
 export function useCores() {
   const [cores, setCores] = useState<CoreData[]>([]);

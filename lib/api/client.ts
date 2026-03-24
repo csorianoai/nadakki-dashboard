@@ -19,17 +19,11 @@ export type FetchWithFallbackOptions<T> = {
   init?: Omit<RequestInit, "headers" | "signal"> & { headers?: Record<string, string> };
 };
 
-/** Same-origin paths (e.g. /marketing/...) are proxied by next.config rewrites. */
+/** Same-origin paths (e.g. /marketing/...) are proxied by next.config rewrites and app/api routes. */
 function resolveFetchUrl(url: string): string | null {
   if (!url) return null;
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  if (url.startsWith("/")) {
-    if (typeof window !== "undefined") {
-      return `${window.location.origin}${url}`;
-    }
-    const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-    return base ? `${base}${url}` : null;
-  }
+  if (url.startsWith("/")) return url;
   return null;
 }
 
@@ -45,7 +39,7 @@ export async function fetchWithFallback<T>(
     return {
       data: fb,
       source: "fallback",
-      error: "Missing NEXT_PUBLIC_API_URL",
+      error: "Invalid fetch URL",
       status: null,
     };
   }

@@ -6,7 +6,8 @@ import { Shield, Database, Award, Rocket, Check, X, RefreshCw, Loader2 } from "l
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 type GateStatus = "PENDING" | "APPROVED" | "REJECTED";
 

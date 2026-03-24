@@ -1,7 +1,8 @@
 import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
 import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 function unwrapPayload(json: unknown): Record<string, unknown> {
   if (!json || typeof json !== "object") return {};

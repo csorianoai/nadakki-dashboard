@@ -20,7 +20,8 @@ const PLATFORMS = [
 
 const TONES = ["Profesional", "Casual", "Divertido", "Urgente", "Inspiracional"];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 export default function AIGeneratePage() {
   const { tenantId } = useTenant();

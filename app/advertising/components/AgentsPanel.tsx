@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -9,7 +9,8 @@ interface Agent {
   available?: boolean;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nadakki-ai-suite.onrender.com';
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = '';
 
 export default function AgentsPanel() {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -115,7 +116,7 @@ export default function AgentsPanel() {
 
       {result && (
         <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-          <h3 className="font-bold mb-2">{result.status === 'error' ? '❌ Error' : '✅ Result'}</h3>
+          <h3 className="font-bold mb-2">{result.status === 'error' ? '? Error' : '? Result'}</h3>
           <pre className="text-sm bg-white p-3 rounded border overflow-auto max-h-64">
             {JSON.stringify(result, null, 2)}
           </pre>

@@ -1,12 +1,10 @@
-const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-
-/** Same-origin paths; proxied to backend via next.config.js rewrites (browser-safe). */
+/** Same-origin paths; proxied via next.config.js rewrites and app/api/v1/[[...path]]. */
 const marketingPath = "/marketing";
 
 export const AME_ENDPOINTS = {
-  HEALTH: apiBase ? `${apiBase}/api/v1/ame/health` : "",
-  STATUS: apiBase ? `${apiBase}/api/v1/ame/status` : "",
-  RUNS: apiBase ? `${apiBase}/api/v1/ame/runs` : "",
+  HEALTH: "/api/v1/ame/health",
+  STATUS: "/api/v1/ame/status",
+  RUNS: "/api/v1/ame/runs",
 };
 
 export const MARKETING_ENDPOINTS = {
@@ -19,13 +17,13 @@ export const MARKETING_ENDPOINTS = {
   JOURNEYS: `${marketingPath}/journeys`,
   TEMPLATES: `${marketingPath}/templates`,
   INTEGRATIONS: `${marketingPath}/integrations`,
-  CORES: apiBase ? `${apiBase}/cores` : "",
-  HEALTH: apiBase ? `${apiBase}/health` : "",
+  CORES: "/cores",
+  HEALTH: "/health",
 };
 
 export const ADVERTISING_ENDPOINTS = {
-  HEALTH: apiBase ? `${apiBase}/api/v1/advertising/health` : "",
-  PLATFORMS: apiBase ? `${apiBase}/api/v1/advertising/platforms` : "",
-  DASHBOARD: apiBase ? `${apiBase}/api/v1/advertising/dashboard` : "",
-  TENANTS: apiBase ? `${apiBase}/api/v1/advertising/tenants` : "",
+  HEALTH: "/api/v1/advertising/health",
+  PLATFORMS: "/api/v1/advertising/platforms",
+  DASHBOARD: "/api/v1/advertising/dashboard",
+  TENANTS: "/api/v1/advertising/tenants",
 };

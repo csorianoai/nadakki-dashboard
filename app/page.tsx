@@ -18,7 +18,8 @@ import {
 import { useAgents } from "@/app/hooks/useAgents";
 import { CORES_CONFIG } from "@/config/cores";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_URL = "";
 
 /** Acceso rápido: producto principal + gobierno (alineado con rutas reales). */
 const QUICK_LINKS = [

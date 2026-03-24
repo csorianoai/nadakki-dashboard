@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 
@@ -186,23 +186,14 @@ export function useAgents(): UseAgentsResult {
   const [lastError, setLastError] = useState<string | undefined>();
   const [source, setSource] = useState<UseAgentsResult["source"]>("empty");
 
-  const apiBase = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-
   const apiCandidates = useMemo(() => {
-    const relativeEndpoints = [
-  "/api/v1/agents",  // ← agregar esta ruta
-  "/api/agents",
-  "/api/catalog",
-  "/api/ai-studio/agents",
-];
-    if (!apiBase) {
-      return relativeEndpoints;
-    }
     return [
-      ...relativeEndpoints.map((ep) => `${apiBase}${ep}`),
-      ...relativeEndpoints,
+      "/api/v1/agents",
+      "/api/agents",
+      "/api/catalog",
+      "/api/ai-studio/agents",
     ];
-  }, [apiBase]);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);

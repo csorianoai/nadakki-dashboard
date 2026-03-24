@@ -39,7 +39,7 @@ export function useMarketingStats(tenantId: string | null): UseMarketingStatsRes
     try {
       setLoading(true);
       setError(null);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+      const apiUrl = "";
       const response = await fetch(`${apiUrl}/api/marketing/dashboard?tenant_id=${tenantId}`, {
         headers: { "Accept": "application/json", "X-Tenant-ID": tenantId },
         signal: AbortSignal.timeout(10000),

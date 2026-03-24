@@ -10,7 +10,8 @@ interface AgentExecutorProps {
   defaultInput?: Record<string, any>;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com";
+/** Same-origin; proxied via next.config rewrites */
+const API_BASE = "";
 
 export default function AgentExecutor({ agentId, agentName, color, defaultInput = {} }: AgentExecutorProps) {
   const { tenantId } = useTenant();
