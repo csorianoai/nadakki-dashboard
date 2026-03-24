@@ -11,8 +11,6 @@ import {
   crearNota,
   fetchVersiones,
   fetchAuditoria,
-  fetchExportaciones,
-  fetchExplicabilidad,
   fetchPermisos,
   fetchEvidencia,
   fetchDocumentos,
@@ -21,28 +19,21 @@ import {
   cambiarEstado,
   generarExportacionPDF,
   generarExportacionZIP,
-  generarPaqueteRegulatorio,
   type Expediente,
   type Nota,
   type Documento,
   type EstadoExpediente,
-  type Explicabilidad,
   type Permisos,
   type VersionAnalisis,
   type EventoAuditoria,
-  type Exportacion,
   type Evidencia,
 } from "@/lib/api/sic";
 import { PanelDecisionOverride } from "@/components/sic/PanelDecisionOverride";
-import { PanelExplicabilidad } from "@/components/sic/PanelExplicabilidad";
 import { ComparadorVersiones } from "@/components/sic/ComparadorVersiones";
 import { PanelEvidencia } from "@/components/sic/PanelEvidencia";
 import { MemoEjecutivo } from "@/components/sic/MemoEjecutivo";
 import { PanelDocumentos } from "@/components/sic/PanelDocumentos";
 import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
-import { useDemo } from "@/contexts/DemoContext";
-import { getDemoExpedientes, getDemoEventosAuditoria, getDemoExportaciones } from "@/lib/demo-sic";
-
 const ESTADOS_BADGE: Record<string, string> = {
   RECIBIDO: "bg-slate-500/30 text-slate-300",
   EN_VALIDACION: "bg-amber-500/30 text-amber-300",
@@ -68,18 +59,15 @@ function Panel({ titulo, children }: { titulo: string; children: React.ReactNode
 export default function SicExpedienteIdPage() {
   const params = useParams();
   const { tenantId } = useTenant();
-  const { demoMode, escenario } = useDemo();
   const id = String(params?.id ?? "");
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId?.trim() || "";
 
   const [expediente, setExpediente] = useState<Expediente | null>(null);
   const [timeline, setTimeline] = useState<unknown[]>([]);
   const [notas, setNotas] = useState<Nota[]>([]);
   const [versiones, setVersiones] = useState<VersionAnalisis[]>([]);
   const [auditoria, setAuditoria] = useState<unknown[]>([]);
-  const [exportaciones, setExportaciones] = useState<unknown[]>([]);
   const [documentos, setDocumentos] = useState<Documento[]>([]);
-  const [explicabilidad, setExplicabilidad] = useState<Explicabilidad | null>(null);
   const [permisos, setPermisos] = useState<Permisos | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,60 +80,40 @@ export default function SicExpedienteIdPage() {
 
   const cargar = useCallback(() => {
     if (!id) return;
-    setLoading(true);
-    setError(null);
-    if (demoMode && id.startsWith("EXP-DEMO-")) {
-      const demos = getDemoExpedientes(escenario);
-      const exp = demos.find((e) => e.expediente_id === id) ?? null;
-      setExpediente(exp);
-      setTimeline(exp ? [{ fecha: exp.fecha_creacion, evento: "Creación", tipo: "INICIO" }] : []);
-      setNotas(exp ? [{ nota_id: "n1", expediente_id: id, contenido: "[Demo] Nota de análisis", rol_usuario: "analista" }] : []);
-      setVersiones(exp ? [{ version_id: "v1", expediente_id: id, numero_version: 1, decision_version: exp.decision_actual }] : []);
-      setAuditoria(getDemoEventosAuditoria(escenario).filter((e) => e.expediente_id === id));
-      setExportaciones(getDemoExportaciones(escenario).filter((x) => x.expediente_id === id));
-      setDocumentos(exp ? [
-        { documento_id: "doc-demo-1", expediente_id: id, nombre_archivo: "cedula_identidad.pdf", tipo_documento: "application/pdf", tamano_bytes: 245_000, estado_documento: "SUBIDO", fecha_subida: "2026-03-10" },
-        { documento_id: "doc-demo-2", expediente_id: id, nombre_archivo: "comprobante_ingresos.jpg", tipo_documento: "image/jpeg", tamano_bytes: 1_200_000, estado_documento: "SUBIDO", fecha_subida: "2026-03-10" },
-      ] : []);
-      setExplicabilidad(exp ? { narrativa_ejecutiva: "[Demo] Análisis de crédito simulado.", factores_a_favor: ["Score favorable"], factores_en_contra: ["Ratio DTI elevado"], reglas_aplicadas: ["Regla 1", "Regla 2"] } : null);
-      setPermisos({ rol: "analista", puede_override: true, puede_exportar: true, puede_cambiar_estado: true });
+    if (!tenant) {
+      setError("No hay tenant activo");
+      setExpediente(null);
       setLoading(false);
       return;
     }
+    setLoading(true);
+    setError(null);
     Promise.all([
       fetchExpediente(id, tenant),
-      fetchTimeline(id, tenant),
-      fetchNotas(id, tenant),
-      fetchVersiones(id, tenant),
-      fetchAuditoria(id, tenant),
-      fetchExportaciones(id, tenant),
-      fetchExplicabilidad(id, tenant).catch(() => null),
+      fetchTimeline(id, tenant).catch(() => []),
+      fetchNotas(id, tenant).catch(() => []),
+      fetchVersiones(id, tenant).catch(() => []),
+      fetchAuditoria(id, tenant).catch(() => []),
       fetchPermisos(id, tenant).catch(() => null),
-      fetchDocumentos(id, tenant),
+      fetchDocumentos(id, tenant).catch(() => []),
     ])
-      .then(([exp, tl, nt, vr, au, ex, expb, perm, docs]) => {
+      .then(([exp, tl, nt, vr, au, perm, docs]) => {
         setExpediente(exp ?? null);
         setTimeline(Array.isArray(tl) ? tl : []);
         setNotas(Array.isArray(nt) ? nt : []);
         setVersiones(Array.isArray(vr) ? vr : []);
         setAuditoria(Array.isArray(au) ? au : []);
-        setExportaciones(Array.isArray(ex) ? ex : []);
-        setExplicabilidad(expb ?? null);
         setPermisos(perm ?? null);
         setDocumentos(Array.isArray(docs) ? docs : []);
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
-  }, [id, tenant, demoMode, escenario]);
+  }, [id, tenant]);
 
   useEffect(() => cargar(), [cargar]);
 
   const handleCrearNota = useCallback(async () => {
-    if (!nuevaNota.trim() || !id) return;
-    if (demoMode && id.startsWith("EXP-DEMO-")) {
-      setNuevaNota("");
-      return;
-    }
+    if (!nuevaNota.trim() || !id || !tenant) return;
     setCreandoNota(true);
     try {
       await crearNota(id, tenant, nuevaNota.trim());
@@ -160,10 +128,7 @@ export default function SicExpedienteIdPage() {
 
   const handleOverride = useCallback(
     async (decision: string, justificacion: string) => {
-      if (demoMode && id.startsWith("EXP-DEMO-")) {
-        cargar();
-        return;
-      }
+      if (!tenant) return;
       await enviarOverride(id, tenant, { decision_final: decision, justificacion });
       cargar();
     },
@@ -171,12 +136,7 @@ export default function SicExpedienteIdPage() {
   );
 
   const handleCambiarEstado = useCallback(async () => {
-    if (!nuevoEstado.trim()) return;
-    if (demoMode && id.startsWith("EXP-DEMO-")) {
-      setNuevoEstado("");
-      cargar();
-      return;
-    }
+    if (!nuevoEstado.trim() || !tenant) return;
     try {
       await cambiarEstado(id, tenant, nuevoEstado.trim());
       setNuevoEstado("");
@@ -187,10 +147,7 @@ export default function SicExpedienteIdPage() {
   }, [id, tenant, nuevoEstado, cargar]);
 
   const handleExportarPDF = useCallback(async () => {
-    if (demoMode && id.startsWith("EXP-DEMO-")) {
-      setExitoExport("[Demo] PDF generado.");
-      return;
-    }
+    if (!tenant) return;
     setExportando("pdf");
     setExitoExport(null);
     try {
@@ -205,33 +162,12 @@ export default function SicExpedienteIdPage() {
   }, [id, tenant, cargar]);
 
   const handleExportarZIP = useCallback(async () => {
-    if (demoMode && id.startsWith("EXP-DEMO-")) {
-      setExitoExport("[Demo] ZIP generado.");
-      return;
-    }
+    if (!tenant) return;
     setExportando("zip");
     setExitoExport(null);
     try {
       await generarExportacionZIP(id, tenant);
       setExitoExport("ZIP generado correctamente.");
-      cargar();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setExportando(null);
-    }
-  }, [id, tenant, cargar]);
-
-  const handleExportarRegulatorio = useCallback(async () => {
-    if (demoMode && id.startsWith("EXP-DEMO-")) {
-      setExitoExport("[Demo] Paquete regulatorio generado.");
-      return;
-    }
-    setExportando("reg");
-    setExitoExport(null);
-    try {
-      await generarPaqueteRegulatorio(id, tenant);
-      setExitoExport("Paquete regulatorio generado correctamente.");
       cargar();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -274,9 +210,7 @@ export default function SicExpedienteIdPage() {
 
   const e = expediente!;
   const hayOverride = Boolean(e.decision_final_humana && e.decision_final_humana !== e.decision_actual);
-  const hayEvidencia = Boolean(
-    (explicabilidad?.factores_a_favor?.length ?? 0) + (explicabilidad?.factores_en_contra?.length ?? 0) > 0
-  );
+  const hayEvidencia = timeline.length > 0;
 
   return (
     <div className="min-h-screen bg-[#0a0f1c] p-4">
@@ -423,12 +357,9 @@ export default function SicExpedienteIdPage() {
             />
           </Panel>
           <Panel titulo="Explicabilidad">
-            <PanelExplicabilidad
-              data={explicabilidad}
-              expedienteId={id}
-              tenantId={tenant}
-              onVerEvidencia={(evId) => fetchEvidencia(evId, tenant, id)}
-            />
+            <div className="text-muted-foreground text-sm p-4">
+              Módulo en desarrollo — próximamente disponible
+            </div>
           </Panel>
           <Panel titulo="Comparador de versiones">
             {puedeAbrirComparador ? (
@@ -438,7 +369,7 @@ export default function SicExpedienteIdPage() {
             )}
           </Panel>
           <Panel titulo="Memo ejecutivo">
-            <MemoEjecutivo expediente={e} explicabilidad={explicabilidad} />
+            <MemoEjecutivo expediente={e} explicabilidad={null} />
           </Panel>
           <Panel titulo="KPIs y alertas">
             <p className="text-slate-500 text-xs">Datos de análisis en reporte.</p>
@@ -477,7 +408,7 @@ export default function SicExpedienteIdPage() {
               expedienteId={id}
               tenantId={tenant}
               documentos={documentos}
-              demoMode={demoMode && id.startsWith("EXP-DEMO-")}
+              demoMode={false}
               onUploadComplete={cargar}
             />
           </Panel>
@@ -530,24 +461,9 @@ export default function SicExpedienteIdPage() {
           </Panel>
           <Panel titulo="Exportaciones">
             <div className="space-y-2">
-              {exportaciones.length > 0 && (
-                <div>
-                  <span className="text-slate-500 text-xs block mb-1">Historial</span>
-                  <ul className="text-xs text-slate-300 space-y-1">
-                    {(exportaciones as Exportacion[]).map((x) => (
-                      <li key={x.exportacion_id} className="flex flex-wrap gap-x-2">
-                        <span className={x.tipo_exportacion === "pdf" ? "text-amber-400" : "text-cyan-400"}>
-                          {x.tipo_exportacion === "pdf" ? "PDF ejecutivo" : x.tipo_exportacion === "zip" ? "ZIP bancario" : x.tipo_exportacion ?? "—"}
-                        </span>
-                        <span>{x.estado_exportacion ?? "—"}</span>
-                        {x.generado_por && <span className="text-slate-500">por {x.generado_por}</span>}
-                        {x.fecha_generacion && <span className="text-slate-500">{x.fecha_generacion}</span>}
-                        {x.mensaje_error && <span className="text-red-400">Error: {x.mensaje_error}</span>}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <div className="text-muted-foreground text-sm p-2">
+                Módulo en desarrollo — historial de exportaciones por expediente no disponible.
+              </div>
               {!puedeExportar ? (
                 <p className="text-slate-500 text-xs italic">No tiene permiso para exportar.</p>
               ) : (
@@ -568,11 +484,12 @@ export default function SicExpedienteIdPage() {
                       {exportando === "zip" ? "Generando…" : "ZIP bancario"}
                     </button>
                     <button
-                      onClick={handleExportarRegulatorio}
-                      disabled={!!exportando}
-                      className="rounded px-3 py-1.5 bg-violet-700/50 text-violet-300 text-xs font-medium hover:bg-violet-600/50 disabled:opacity-50"
+                      type="button"
+                      disabled
+                      title="No disponible en esta versión"
+                      className="rounded px-3 py-1.5 bg-slate-800 text-slate-500 text-xs font-medium cursor-not-allowed opacity-60"
                     >
-                      {exportando === "reg" ? "Generando…" : "Paquete regulatorio"}
+                      Paquete regulatorio
                     </button>
                   </div>
                   {exitoExport && (

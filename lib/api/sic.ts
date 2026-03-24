@@ -35,6 +35,34 @@ function normalizeCaseToExpediente(d: Record<string, unknown>): Expediente {
   };
 }
 
+function normalizeTimelineRow(ev: Record<string, unknown>): {
+  fecha?: string;
+  evento?: string;
+  tipo?: string;
+  detalle?: string;
+  actor?: string;
+} {
+  const ts = ev.timestamp ?? ev.fecha ?? ev.fecha_evento;
+  const summary = ev.summary ?? ev.evento ?? ev.detalle ?? "";
+  let detalle: string | undefined;
+  if (ev.details != null && typeof ev.details === "object") {
+    try {
+      detalle = JSON.stringify(ev.details);
+    } catch {
+      detalle = String(ev.details);
+    }
+  } else if (ev.detalle != null) {
+    detalle = String(ev.detalle);
+  }
+  return {
+    fecha: ts != null ? String(ts) : undefined,
+    evento: String(summary),
+    tipo: String(ev.event_type ?? ev.tipo ?? ""),
+    detalle,
+    actor: ev.actor != null ? String(ev.actor) : undefined,
+  };
+}
+
 export type EstadoExpediente =
   | "RECIBIDO"
   | "EN_VALIDACION"
@@ -116,6 +144,30 @@ export interface Documento {
   fecha_subida?: string;
 }
 
+function normalizeNotaRow(n: Record<string, unknown>, caseId: string): Nota {
+  return {
+    nota_id: String(n.id ?? n.nota_id ?? ""),
+    expediente_id: String(n.case_id ?? n.expediente_id ?? caseId),
+    usuario_id: n.author != null ? String(n.author) : undefined,
+    rol_usuario: n.rol_usuario != null ? String(n.rol_usuario) : undefined,
+    contenido: String(n.content ?? n.contenido ?? ""),
+    fecha_creacion: (n.created_at as string | undefined) ?? undefined,
+  };
+}
+
+function normalizeDocumentoRow(d: Record<string, unknown>, caseId: string): Documento {
+  return {
+    documento_id: String(d.documento_id ?? d.id ?? ""),
+    expediente_id: String(d.expediente_id ?? d.case_id ?? caseId),
+    nombre_archivo: String(d.nombre_archivo ?? d.filename ?? ""),
+    tipo_documento: String(d.tipo_documento ?? d.file_type ?? "application/octet-stream"),
+    tamano_bytes: Number(d.tamano_bytes ?? d.file_size ?? 0),
+    estado_documento: String(d.estado_documento ?? d.status ?? "UNKNOWN"),
+    ruta_archivo: d.ruta_archivo != null ? String(d.ruta_archivo) : d.storage_path != null ? String(d.storage_path) : undefined,
+    fecha_subida: (d.fecha_subida ?? d.created_at) as string | undefined,
+  };
+}
+
 export interface Evidencia {
   evidencia_id?: string;
   tipo_evidencia?: string;
@@ -184,6 +236,19 @@ export async function fetchExpedientes(tenantId: string): Promise<Expediente[]> 
 }
 
 export async function fetchExpediente(expedienteId: string, tenantId: string): Promise<Expediente | null> {
+  const expUrl = `${API_BASE}/api/v1/sic/expedientes/${encodeURIComponent(expedienteId)}`;
+  const expRes = await fetch(expUrl, { headers: headers(tenantId) });
+  if (expRes.ok) {
+    const data = await expRes.json();
+    const row = (data?.data && typeof data.data === "object" && !Array.isArray(data.data) ? data.data : data) as Record<
+      string,
+      unknown
+    >;
+    return normalizeCaseToExpediente(row);
+  }
+  if (expRes.status !== 404) {
+    throw new Error(`Expediente: ${expRes.status}`);
+  }
   const res = await fetch(`${API_BASE}/api/v1/sic/cases/${encodeURIComponent(expedienteId)}`, {
     headers: headers(tenantId),
   });
@@ -232,7 +297,9 @@ export async function fetchTimeline(expedienteId: string, tenantId: string): Pro
     throw new Error(`Timeline: ${res.status}`);
   }
   const data = await res.json();
-  return data.timeline ?? data.eventos ?? (Array.isArray(data) ? data : []);
+  const raw = data.events ?? data.timeline ?? data.eventos ?? (Array.isArray(data) ? data : []);
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.map((ev) => normalizeTimelineRow(ev as Record<string, unknown>));
 }
 
 export async function fetchNotas(expedienteId: string, tenantId: string): Promise<Nota[]> {
@@ -244,7 +311,9 @@ export async function fetchNotas(expedienteId: string, tenantId: string): Promis
     throw new Error(`Notas: ${res.status}`);
   }
   const data = await res.json();
-  return data.notas ?? (Array.isArray(data) ? data : []);
+  const raw = data.notas ?? data.notes ?? (Array.isArray(data) ? data : []);
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.map((n) => normalizeNotaRow(n as Record<string, unknown>, expedienteId));
 }
 
 export async function crearNota(
@@ -255,10 +324,15 @@ export async function crearNota(
   const res = await fetch(`${API_BASE}/api/v1/sic/expedientes/${expedienteId}/notas`, {
     method: "POST",
     headers: headers(tenantId),
-    body: JSON.stringify({ contenido }),
+    body: JSON.stringify({
+      content: contenido,
+      author: "system",
+      note_type: "COMMENT",
+    }),
   });
   if (!res.ok) throw new Error(`Crear nota: ${res.status}`);
-  return res.json();
+  const j = (await res.json()) as Record<string, unknown>;
+  return normalizeNotaRow(j, expedienteId);
 }
 
 export async function fetchVersiones(expedienteId: string, tenantId: string): Promise<VersionAnalisis[]> {
@@ -301,19 +375,12 @@ export async function fetchAuditoriaGlobal(
   return data.eventos ?? data.auditoria ?? (Array.isArray(data) ? data : []);
 }
 
+/** Listado por expediente no expuesto en el backend de casos activo; evita llamadas 404. */
 export async function fetchExportaciones(
-  expedienteId: string,
-  tenantId: string
+  _expedienteId: string,
+  _tenantId: string
 ): Promise<Exportacion[]> {
-  const res = await fetch(`${API_BASE}/api/v1/sic/expedientes/${expedienteId}/exportaciones`, {
-    headers: headers(tenantId),
-  });
-  if (!res.ok) {
-    if (res.status === 404) return [];
-    throw new Error(`Exportaciones: ${res.status}`);
-  }
-  const data = await res.json();
-  return data.exportaciones ?? (Array.isArray(data) ? data : []);
+  return [];
 }
 
 export async function generarExportacionPDF(
@@ -321,8 +388,8 @@ export async function generarExportacionPDF(
   tenantId: string
 ): Promise<{ exportacion_id?: string; url?: string } | null> {
   const res = await fetch(
-    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/exportaciones/pdf`,
-    { method: "POST", headers: headersForDownload(tenantId) }
+    `${API_BASE}/api/v1/sic/cases/${encodeURIComponent(expedienteId)}/report`,
+    { method: "GET", headers: headersForDownload(tenantId, "application/pdf") }
   );
   if (!res.ok) throw new Error(`Generar PDF: ${res.status}`);
   const blob = await res.blob();
@@ -340,8 +407,8 @@ export async function generarExportacionZIP(
   tenantId: string
 ): Promise<{ exportacion_id?: string; url?: string } | null> {
   const res = await fetch(
-    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/exportaciones/zip`,
-    { method: "POST", headers: headersForDownload(tenantId) }
+    `${API_BASE}/api/v1/sic/cases/${encodeURIComponent(expedienteId)}/package`,
+    { method: "GET", headers: headersForDownload(tenantId, "application/zip") }
   );
   if (!res.ok) throw new Error(`Generar ZIP: ${res.status}`);
   const blob = await res.blob();
@@ -397,25 +464,12 @@ export interface Explicabilidad {
   flags?: Record<string, unknown>;
 }
 
+/** No hay endpoint de explicabilidad en el despliegue de casos; evita rutas legacy 404. */
 export async function fetchExplicabilidad(
-  expedienteId: string,
-  tenantId: string
+  _expedienteId: string,
+  _tenantId: string
 ): Promise<Explicabilidad | null> {
-  const res = await fetch(
-    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/explicabilidad`,
-    { headers: headers(tenantId) }
-  );
-  if (!res.ok) {
-    if (res.status === 404) return null;
-    throw new Error(`Explicabilidad: ${res.status}`);
-  }
-  const data = await res.json();
-  // Normalize backend field names to frontend contract
-  return {
-    ...data,
-    narrativa_ejecutiva: data.narrativa_ejecutiva ?? data.resumen_ejecutivo,
-    reglas_aplicadas: data.reglas_aplicadas ?? data.reglas_disparadas,
-  };
+  return null;
 }
 
 export interface Permisos {
@@ -430,32 +484,22 @@ export interface Permisos {
   transiciones_disponibles?: string[];
 }
 
+/** Permisos por UUID de caso no coinciden con expediente legacy; valores seguros por defecto. */
 export async function fetchPermisos(
-  expedienteId: string,
-  tenantId: string,
+  _expedienteId: string,
+  _tenantId: string,
   rol?: string
 ): Promise<Permisos | null> {
   const userRol = rol || "analista";
-  const res = await fetch(
-    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/permisos?rol=${encodeURIComponent(userRol)}`,
-    { headers: headers(tenantId) }
-  );
-  if (!res.ok) {
-    if (res.status === 404 || res.status === 422) return null;
-    throw new Error(`Permisos: ${res.status}`);
-  }
-  const data = await res.json();
-  const acciones: string[] = data.acciones_permitidas ?? [];
   return {
-    rol: data.rol ?? userRol,
-    usuario_id: data.usuario_id,
-    puede_decidir: acciones.includes("decidir"),
-    puede_override: acciones.includes("override"),
-    puede_exportar: acciones.includes("exportar"),
-    puede_cambiar_estado: acciones.includes("cambiar_estado"),
-    puede_ver_auditoria: acciones.includes("ver_auditoria"),
-    puede_abrir_comparador: acciones.includes("comparar_versiones"),
-    transiciones_disponibles: data.transiciones_disponibles ?? [],
+    rol: userRol,
+    puede_decidir: false,
+    puede_override: false,
+    puede_exportar: true,
+    puede_cambiar_estado: false,
+    puede_ver_auditoria: true,
+    puede_abrir_comparador: false,
+    transiciones_disponibles: [],
   };
 }
 
@@ -711,22 +755,10 @@ export async function fetchPortafolioAnalytics(
 // ——— Paquete Regulatorio ———
 
 export async function generarPaqueteRegulatorio(
-  expedienteId: string,
-  tenantId: string
+  _expedienteId: string,
+  _tenantId: string
 ): Promise<{ exportacion_id?: string; url?: string } | null> {
-  const res = await fetch(
-    `${API_BASE}/api/v1/sic/expedientes/${expedienteId}/exportaciones/regulatorio`,
-    { method: "POST", headers: headersForDownload(tenantId) }
-  );
-  if (!res.ok) throw new Error(`Paquete regulatorio: ${res.status}`);
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `paquete-regulatorio-${expedienteId}.zip`;
-  a.click();
-  URL.revokeObjectURL(url);
-  return { url };
+  throw new Error("Paquete regulatorio no disponible en esta versión.");
 }
 
 // ——— Métricas ejecutivas ———
@@ -1100,7 +1132,9 @@ export async function fetchDocumentos(
     );
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.documentos ?? data.documents ?? (Array.isArray(data) ? data : [])) as Documento[];
+    const raw = data.documentos ?? data.documents ?? (Array.isArray(data) ? data : []);
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((d) => normalizeDocumentoRow(d as Record<string, unknown>, expedienteId));
   } catch {
     return [];
   }

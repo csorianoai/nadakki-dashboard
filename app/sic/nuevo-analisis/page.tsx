@@ -11,16 +11,21 @@ export default function SicNuevoAnalisisPage() {
   const { tenantId } = useTenant();
   const { tenantId: authTenantId } = useAuth();
   const resolvedTenant =
-    (tenantId && tenantId.trim()) || (authTenantId && authTenantId.trim()) || "credicefi";
+    (tenantId && tenantId.trim()) || (authTenantId && authTenantId.trim()) || "";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleNuevoAnalisis = async () => {
+    if (!resolvedTenant) {
+      setError("No hay tenant activo");
+      return;
+    }
     setLoading(true);
     setError(null);
+    const base = process.env.NEXT_PUBLIC_API_URL ?? "";
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/sic/cases`, {
+      const res = await fetch(`${base}/api/v1/sic/cases`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -32,21 +37,28 @@ export default function SicNuevoAnalisisPage() {
         }),
       });
       const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      const caseId = data?.id;
+      if (!res.ok) {
+        const errDetail =
+          (typeof data?.detail === "string" && data.detail) ||
+          (typeof data?.message === "string" && data.message) ||
+          (typeof data?.error === "string" && data.error) ||
+          `Error ${res.status}`;
+        setError(errDetail);
+        return;
+      }
+      const inner =
+        data?.data && typeof data.data === "object" && !Array.isArray(data.data)
+          ? (data.data as Record<string, unknown>)
+          : data;
+      const caseId = inner?.id ?? data?.id;
       if (typeof caseId === "string" && caseId.trim()) {
         router.push(`/sic/expedientes/${encodeURIComponent(caseId)}`);
         return;
       }
-
-      const detail =
-        (typeof data?.detail === "string" && data.detail) ||
-        (typeof data?.message === "string" && data.message) ||
-        (typeof data?.error === "string" && data.error) ||
-        "Error al crear el expediente";
-      setError(detail);
+      setError("El servidor no retornó un ID de expediente");
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(String(message || "No se pudo crear el expediente"));
+      console.error("Create case failed:", err);
+      setError("No se pudo conectar al servidor");
     } finally {
       setLoading(false);
     }

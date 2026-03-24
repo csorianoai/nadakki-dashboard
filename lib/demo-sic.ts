@@ -64,7 +64,7 @@ function applyEscenario<T extends { decision_actual?: string; estado_expediente?
 export function getDemoExpedientes(escenario: EscenarioDemo): Expediente[] {
   const base = baseExpedientes().map((e, i) => ({
     ...e,
-    expediente_id: `EXP-DEMO-${String(i + 1).padStart(4, "0")}`,
+    expediente_id: `SIC-SAMPLE-${String(i + 1).padStart(4, "0")}`,
   })) as Expediente[];
   return applyEscenario(base, escenario) as Expediente[];
 }

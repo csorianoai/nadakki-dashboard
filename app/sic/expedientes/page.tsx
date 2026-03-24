@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
-import { useDemo } from "@/contexts/DemoContext";
 import Link from "next/link";
 import { fetchExpedientes, type Expediente, type EstadoExpediente } from "@/lib/api/sic";
-import { getDemoExpedientes } from "@/lib/demo-sic";
 
 const ESTADOS_BADGE: Record<string, string> = {
   RECIBIDO: "bg-slate-500/30 text-slate-300",
@@ -22,26 +20,26 @@ const ESTADOS_BADGE: Record<string, string> = {
 
 export default function SicExpedientesPage() {
   const { tenantId } = useTenant();
-  const { demoMode, escenario } = useDemo();
   const [expedientes, setExpedientes] = useState<Expediente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId?.trim() ?? "";
 
   useEffect(() => {
     let alive = true;
-    if (demoMode) {
-      setExpedientes(getDemoExpedientes(escenario));
+    if (!tenant) {
+      setExpedientes([]);
       setLoading(false);
-      setError(null);
-      return;
+      setError("No hay tenant activo");
+      return () => { alive = false; };
     }
+    setError(null);
     fetchExpedientes(tenant)
       .then((list) => { if (alive) setExpedientes(list); })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [tenant, demoMode, escenario]);
+  }, [tenant]);
 
   if (loading) {
     return (
@@ -72,7 +70,7 @@ export default function SicExpedientesPage() {
         </div>
       )}
 
-      {expedientes.length === 0 && !error ? (
+      {!error && expedientes.length === 0 ? (
         <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-12 text-center space-y-4">
           <p className="text-slate-400 text-sm m-0">No hay expedientes todavía.</p>
           <Link
@@ -82,7 +80,7 @@ export default function SicExpedientesPage() {
             Crear primer análisis
           </Link>
         </div>
-      ) : (
+      ) : expedientes.length > 0 ? (
         <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">
           <table className="w-full text-left text-sm">
             <thead>
@@ -119,7 +117,7 @@ export default function SicExpedientesPage() {
             </tbody>
           </table>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

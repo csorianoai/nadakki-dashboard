@@ -7,12 +7,10 @@ import { useTenant } from "@/contexts/TenantContext";
 import {
   fetchReplay,
   fetchExpediente,
-  fetchExplicabilidad,
   fetchTimeline,
   fetchAuditoria,
   type ReplayData,
   type Expediente,
-  type Explicabilidad,
 } from "@/lib/api/sic";
 import { LoadingSic, EmptySic, ErrorSic } from "@/components/sic/EstadosSic";
 
@@ -24,7 +22,6 @@ export default function SicExpedienteReplayPage() {
 
   const [replay, setReplay] = useState<ReplayData | null>(null);
   const [expediente, setExpediente] = useState<Expediente | null>(null);
-  const [explicabilidad, setExplicabilidad] = useState<Explicabilidad | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,18 +32,16 @@ export default function SicExpedienteReplayPage() {
     Promise.all([
       fetchReplay(id, tenant),
       fetchExpediente(id, tenant),
-      fetchExplicabilidad(id, tenant).catch(() => null),
       fetchTimeline(id, tenant).catch(() => []),
       fetchAuditoria(id, tenant).catch(() => []),
     ])
-      .then(([r, e, expb, tl, au]) => {
+      .then(([r, e, tl, au]) => {
         if (r) {
           setReplay(r);
         } else {
           setReplay(null);
         }
         setExpediente(e ?? null);
-        setExplicabilidad(expb ?? null);
         if (!r && e) {
           setReplay({
             expediente_id: id,
@@ -55,7 +50,7 @@ export default function SicExpedienteReplayPage() {
             decision_final: e.decision_final_humana,
             override_activo: Boolean(e.decision_final_humana && e.decision_final_humana !== e.decision_actual),
             override_usuario: e.override_usuario,
-            reglas_aplicadas: expb?.reglas_aplicadas ?? [],
+            reglas_aplicadas: [],
             timeline: (Array.isArray(tl) ? tl : []).map((ev: { fecha?: string; evento?: string; tipo?: string; actor?: string }) => ({
               fecha: ev.fecha ?? ev.tipo,
               evento: ev.evento,
@@ -95,7 +90,7 @@ export default function SicExpedienteReplayPage() {
     decision_final: expediente!.decision_final_humana,
     override_activo: Boolean(expediente!.decision_final_humana && expediente!.decision_final_humana !== expediente!.decision_actual),
     override_usuario: expediente!.override_usuario,
-    reglas_aplicadas: explicabilidad?.reglas_aplicadas ?? [],
+    reglas_aplicadas: [],
     timeline: [],
   };
 
