@@ -578,7 +578,11 @@ export default function SegmentsPage() {
     try {
       await fetch(MARKETING_ENDPOINTS.SEGMENTS, {
         method: editingSegment ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Tenant-ID": tenantId,
+        },
         body: JSON.stringify({ ...newSegment, tenant_id: tenantId }),
       });
     } catch {}
@@ -637,7 +641,11 @@ export default function SegmentsPage() {
     try {
       await fetch(`${MARKETING_ENDPOINTS.SEGMENTS}/${id}?tenant_id=${encodeURIComponent(tenantId)}`, {
         method: "DELETE",
-        headers: { "X-Tenant-ID": tenantId },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Tenant-ID": tenantId,
+        },
       });
     } catch {}
     

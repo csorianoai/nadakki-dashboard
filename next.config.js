@@ -2,7 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
-    const backendUrl = "https://nadakki-ai-suite.onrender.com";
+    const backendUrl = (
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_RENDER_API_URL ||
+      "https://nadakki-ai-suite.onrender.com"
+    ).replace(/\/$/, "");
     return [
       { source: "/api/marketing/:path*", destination: `${backendUrl}/api/marketing/:path*` },
       { source: "/health", destination: `${backendUrl}/health` },

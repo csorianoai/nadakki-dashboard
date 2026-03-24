@@ -4,6 +4,9 @@ import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
 
+/** Stable reference for fetchWithFallback (avoids a fresh `{}` per call). */
+const FALLBACK_EMPTY_JSON: Record<string, unknown> = {};
+
 function unwrapPayload(json: unknown): Record<string, unknown> {
   if (!json || typeof json !== "object") return {};
   const o = json as Record<string, unknown>;
@@ -107,7 +110,7 @@ export async function fetchMarketingAgents(
   const url = `${base}${base.includes("?") ? "&" : "?"}limit=${limit}`;
   const r = await fetchWithFallback<unknown>(url, {
     tenantId: tenantId ?? undefined,
-    fallbackData: {},
+    fallbackData: FALLBACK_EMPTY_JSON,
   });
   const norm = normalizeMarketingAgents(r.source === "live" ? r.data : {});
   return {
@@ -127,7 +130,7 @@ export async function fetchMarketingCampaigns(tenantId?: string | null): Promise
   const url = MARKETING_ENDPOINTS.CAMPAIGNS;
   const r = await fetchWithFallback<unknown>(url, {
     tenantId: tenantId ?? undefined,
-    fallbackData: {},
+    fallbackData: FALLBACK_EMPTY_JSON,
   });
   const norm = normalizeMarketingCampaigns(r.source === "live" ? r.data : {});
   return {
@@ -138,10 +141,7 @@ export async function fetchMarketingCampaigns(tenantId?: string | null): Promise
   };
 }
 
-/**
- * Uses fetchWithFallback. If wiring through useFetchWithFallback, pass a stable
- * `fallbackData` reference (e.g. FALLBACK_SEGMENTS_LIST), never an inline `{}`.
- */
+/** Uses fetchWithFallback with module-stable empty fallback. */
 export async function fetchMarketingSegments(tenantId?: string | null): Promise<{
   segments: Record<string, unknown>[];
   total: number;
@@ -151,7 +151,7 @@ export async function fetchMarketingSegments(tenantId?: string | null): Promise<
   const url = MARKETING_ENDPOINTS.SEGMENTS;
   const r = await fetchWithFallback<unknown>(url, {
     tenantId: tenantId ?? undefined,
-    fallbackData: {},
+    fallbackData: FALLBACK_EMPTY_JSON,
   });
   const norm = normalizeMarketingSegmentsList(r.source === "live" ? r.data : {});
   return {
@@ -173,7 +173,7 @@ export async function fetchMarketingCampaignById(
   const url = MARKETING_ENDPOINTS.CAMPAIGN_BY_ID(id);
   const r = await fetchWithFallback<unknown>(url, {
     tenantId: tenantId ?? undefined,
-    fallbackData: {},
+    fallbackData: FALLBACK_EMPTY_JSON,
   });
   if (r.source !== "live" || !r.data || typeof r.data !== "object") {
     return {

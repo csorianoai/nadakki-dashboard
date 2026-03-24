@@ -125,7 +125,8 @@ export default function TemplatesPage() {
                     <span>Cargando…</span>
                   ) : (
                     <span>
-                      {total} desde <code className="text-xs text-gray-500">/marketing/templates</code>
+                      {total} desde{" "}
+                      <code className="text-xs text-gray-500">{MARKETING_ENDPOINTS.TEMPLATES}</code>
                     </span>
                   )}
                 </p>
@@ -166,7 +167,7 @@ export default function TemplatesPage() {
             <p className="text-gray-300 text-lg m-0">No hay plantillas todavía</p>
             <p className="text-gray-500 text-sm mt-2 m-0">
               Cuando el backend devuelva registros en{" "}
-              <code className="text-gray-400">/marketing/templates</code>, aparecerán aquí.
+              <code className="text-gray-400">{MARKETING_ENDPOINTS.TEMPLATES}</code>, aparecerán aquí.
             </p>
             <Link
               href="/marketing/templates/create"

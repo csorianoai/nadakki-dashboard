@@ -23,9 +23,16 @@ export function useFetchWithFallback<T>(
   options: { tenantId?: string | null; fallbackData: T }
 ): UseFetchWithFallbackResult<T> {
   const { tenantId, fallbackData } = options;
-  // Store fallbackData in a ref so it never triggers re-fetches.
+  const fetchKey = `${url}\0${tenantId ?? ""}`;
+  const keyRef = useRef<string | null>(null);
   const fallbackRef = useRef(fallbackData);
-  fallbackRef.current = fallbackData;
+  if (keyRef.current === null) {
+    keyRef.current = fetchKey;
+    fallbackRef.current = fallbackData;
+  } else if (keyRef.current !== fetchKey) {
+    keyRef.current = fetchKey;
+    fallbackRef.current = fallbackData;
+  }
 
   const [data, setData] = useState<T>(fallbackData);
   const [source, setSource] = useState<FetchSource>("fallback");
