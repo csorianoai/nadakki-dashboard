@@ -1,5 +1,5 @@
 /** Same-origin paths; proxied via next.config.js rewrites and app/api/v1/[[...path]]. */
-const marketingPath = "/marketing";
+const marketingPath = "/api/marketing";
 
 export const AME_ENDPOINTS = {
   HEALTH: "/api/v1/ame/health",
