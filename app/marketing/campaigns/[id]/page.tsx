@@ -1,14 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Rocket } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { useTenant } from "@/contexts/TenantContext";
 import type { Campaign } from "@/lib/api";
-import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
-import { fetchMarketingCampaignById } from "@/lib/api/marketing";
+import { fetchMarketingCampaignById, postMarketingLaunchPilot, updateMarketingCampaign } from "@/lib/api/marketing";
 import { mapApiRecordToCampaign } from "@/lib/api/mapMarketingCampaign";
+import { buildMarketingCampaignUpdatePayload } from "@/lib/api/campaignUpdatePayload";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
 import type { FetchSource } from "@/lib/api/client";
 
@@ -23,6 +23,10 @@ export default function CampaignDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveOk, setSaveOk] = useState<string | null>(null);
+  const [pilotLoading, setPilotLoading] = useState(false);
+  const [pilotMessage, setPilotMessage] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<FetchSource>("fallback");
 
   const bgPrimary = isLight ? "#f8fafc" : theme?.colors?.bgPrimary || "#0F172A";
@@ -55,29 +59,52 @@ export default function CampaignDetailPage() {
   }, [campaignId, tenantId]);
 
   const handleSave = async () => {
-    if (!campaign) return;
+    if (!campaign || !tenantId) return;
     setSaving(true);
+    setSaveError(null);
+    setSaveOk(null);
     try {
-      // TODO: migrar a PATCH /marketing/campaigns/{id} cuando el backend confirme el contrato
-      const url = MARKETING_ENDPOINTS.CAMPAIGN_BY_ID(campaignId);
-      if (!url) throw new Error("Missing campaign endpoint URL");
-      const res = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(tenantId ? { "X-Tenant-ID": tenantId } : {}),
-        },
-        body: JSON.stringify(campaign),
-      });
+      const payload = buildMarketingCampaignUpdatePayload(campaign);
+      const res = await updateMarketingCampaign(tenantId, campaignId, payload);
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { detail?: string }).detail || `HTTP ${res.status}`);
+        setSaveError(res.error || `HTTP ${res.status}`);
+        return;
+      }
+      setSaveOk("Guardado.");
+      if (res.data && typeof res.data === "object") {
+        setCampaign(mapApiRecordToCampaign(campaignId, res.data));
       }
     } catch (err) {
       console.error(err);
+      setSaveError((err as Error)?.message ?? "Error al guardar");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePilotDryRun = async () => {
+    if (!tenantId || !campaign) return;
+    setPilotMessage(null);
+    setPilotLoading(true);
+    const r = await postMarketingLaunchPilot(tenantId, {
+      product_name: campaign.name || "Campaign",
+      target_audience: String(campaign.settings?.segment_snapshot && typeof campaign.settings.segment_snapshot === "object" && campaign.settings.segment_snapshot !== null && "name" in (campaign.settings.segment_snapshot as object)
+        ? String((campaign.settings.segment_snapshot as { name?: string }).name)
+        : campaign.name),
+      dry_run: true,
+      campaign_id: campaignId,
+    });
+    setPilotLoading(false);
+    if (!r.ok) {
+      setPilotMessage(r.error || "Pilot failed");
+      return;
+    }
+    const linked = r.data?.marketing_campaign_id;
+    setPilotMessage(
+      r.data?.success === true
+        ? `Pilot dry run OK.${linked ? ` Linked: ${String(linked)}.` : ""}`
+        : `Pilot success=${String(r.data?.success)}`
+    );
   };
 
   if (loading) {
@@ -115,11 +142,31 @@ export default function CampaignDetailPage() {
               <p className="text-sm m-0 mt-1" style={{ color: textMuted }}>ID: {campaign.id}</p>
             </div>
           </div>
-          <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-lg text-white flex items-center gap-2" style={{ backgroundColor: accentPrimary }}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {saving ? "Guardando..." : "Guardar"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handlePilotDryRun()}
+              disabled={pilotLoading}
+              className="px-4 py-2 rounded-lg text-white flex items-center gap-2 border border-white/20"
+              style={{ backgroundColor: bgCard }}
+            >
+              {pilotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
+              Pilot (dry run)
+            </button>
+            <button onClick={() => void handleSave()} disabled={saving} className="px-4 py-2 rounded-lg text-white flex items-center gap-2" style={{ backgroundColor: accentPrimary }}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
         </div>
+
+        {(saveError || saveOk || pilotMessage) && (
+          <div className="mb-4 text-sm space-y-1">
+            {saveError ? <p className="text-red-400 m-0">{saveError}</p> : null}
+            {saveOk ? <p className="text-emerald-400 m-0">{saveOk}</p> : null}
+            {pilotMessage ? <p className="text-gray-400 m-0">{pilotMessage}</p> : null}
+          </div>
+        )}
 
         <div className="grid grid-cols-3 gap-6">
           <div className="col-span-2 space-y-6">
@@ -163,9 +210,11 @@ export default function CampaignDetailPage() {
               <h2 className="font-semibold mb-4" style={{ color: textPrimary }}>Estado</h2>
               <select value={campaign.status} onChange={(e) => setCampaign({ ...campaign, status: e.target.value as Campaign["status"] })} className="w-full px-4 py-2 rounded-lg" style={{ backgroundColor: bgPrimary, border: "1px solid " + borderColor, color: textPrimary }}>
                 <option value="draft">Borrador</option>
+                <option value="scheduled">Programada</option>
                 <option value="active">Activa</option>
                 <option value="paused">Pausada</option>
                 <option value="completed">Completada</option>
+                <option value="archived">Archivada</option>
               </select>
             </div>
 

@@ -121,13 +121,73 @@ export async function fetchMarketingAgents(
   };
 }
 
+export type UpdateMarketingCampaignResult = {
+  ok: boolean;
+  data: Record<string, unknown> | null;
+  error: string | null;
+  status: number;
+};
+
+/** PUT /api/marketing/campaigns/{id} — body must match campaigns_v2 CampaignUpdate */
+export async function updateMarketingCampaign(
+  tenantId: string,
+  campaignId: string,
+  payload: Record<string, unknown>
+): Promise<UpdateMarketingCampaignResult> {
+  const url = MARKETING_ENDPOINTS.CAMPAIGN_BY_ID(campaignId);
+  try {
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Tenant-ID": tenantId,
+      },
+      body: JSON.stringify(payload),
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      let detailStr = `HTTP ${status}`;
+      if (json && typeof json === "object" && json !== null && "detail" in json) {
+        const d = (json as { detail: unknown }).detail;
+        if (typeof d === "string") detailStr = d;
+        else if (Array.isArray(d))
+          detailStr = d
+            .map((x) =>
+              typeof x === "object" && x && "msg" in x ? String((x as { msg: unknown }).msg) : String(x)
+            )
+            .join("; ");
+        else detailStr = JSON.stringify(d);
+      }
+      return { ok: false, data: null, error: detailStr, status };
+    }
+    if (!json || typeof json !== "object") {
+      return { ok: true, data: {}, error: null, status };
+    }
+    return { ok: true, data: json as Record<string, unknown>, error: null, status };
+  } catch (e) {
+    return {
+      ok: false,
+      data: null,
+      error: (e as Error)?.message ?? "Network error",
+      status: 0,
+    };
+  }
+}
+
 export async function fetchMarketingCampaigns(tenantId?: string | null): Promise<{
   campaigns: Record<string, unknown>[];
   total: number;
   error: string | null;
   source: FetchSource;
 }> {
-  const url = MARKETING_ENDPOINTS.CAMPAIGNS;
+  /** Header X-Tenant-ID is primary; ?tenant_id= is backward-compatible if proxies strip the header. */
+  const qs =
+    tenantId != null && tenantId !== ""
+      ? `?tenant_id=${encodeURIComponent(tenantId)}`
+      : "";
+  const url = `${MARKETING_ENDPOINTS.CAMPAIGNS}${qs}`;
   const r = await fetchWithFallback<unknown>(url, {
     tenantId: tenantId ?? undefined,
     fallbackData: FALLBACK_EMPTY_JSON,
@@ -156,6 +216,30 @@ export async function fetchMarketingSegments(tenantId?: string | null): Promise<
   const norm = normalizeMarketingSegmentsList(r.source === "live" ? r.data : {});
   return {
     segments: norm.segments,
+    total: norm.total,
+    error: r.source === "fallback" ? r.error : null,
+    source: r.source,
+  };
+}
+
+export async function fetchMarketingTemplates(tenantId?: string | null): Promise<{
+  templates: Record<string, unknown>[];
+  total: number;
+  error: string | null;
+  source: FetchSource;
+}> {
+  const qs =
+    tenantId != null && tenantId !== ""
+      ? `?tenant_id=${encodeURIComponent(tenantId)}`
+      : "";
+  const url = `${MARKETING_ENDPOINTS.TEMPLATES}${qs}`;
+  const r = await fetchWithFallback<unknown>(url, {
+    tenantId: tenantId ?? undefined,
+    fallbackData: FALLBACK_EMPTY_JSON,
+  });
+  const norm = normalizeMarketingTemplates(r.source === "live" ? r.data : {});
+  return {
+    templates: norm.templates,
     total: norm.total,
     error: r.source === "fallback" ? r.error : null,
     source: r.source,

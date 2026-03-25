@@ -102,6 +102,8 @@ export interface Campaign {
   subject?: string;
   content?: string;
   audience_size?: number;
+  /** Backend audience / segment id (cmp row). */
+  audience_id?: string;
   /** Raw settings from campaigns_v2 (segment_id, template_id, snapshots, marketing_objective). */
   settings?: Record<string, unknown>;
   version?: number;

@@ -101,6 +101,12 @@ export function mapApiRecordToCampaign(
         : typeof raw.audienceSize === "number"
           ? raw.audienceSize
           : undefined,
+    audience_id:
+      raw.audience_id != null
+        ? String(raw.audience_id)
+        : raw.audienceId != null
+          ? String(raw.audienceId)
+          : undefined,
     settings,
     stats,
   };

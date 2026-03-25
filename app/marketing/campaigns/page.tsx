@@ -2,7 +2,7 @@
 
 /**
  * Campañas: datos vía useMarketingCampaigns → MARKETING_ENDPOINTS.CAMPAIGNS
- * (= /marketing/campaigns same-origin). Sin legacy /api/campaigns.
+ * (= GET /api/marketing/campaigns same-origin; tenant from X-Tenant-ID).
  */
 import Link from "next/link";
 import { Megaphone, RefreshCw } from "lucide-react";
@@ -73,8 +73,8 @@ export default function CampaignsPage() {
         <GlassCard className="p-12 text-center border-white/10">
           <p className="text-gray-400 m-0">No hay campañas para mostrar.</p>
           <p className="text-gray-500 text-xs mt-2 m-0">
-            Datos desde <code className="text-gray-400">/marketing/campaigns</code> (sin legacy{" "}
-            <code className="text-gray-400">/api/campaigns</code>).
+            Datos desde <code className="text-gray-400">/api/marketing/campaigns</code> (header{" "}
+            <code className="text-gray-400">X-Tenant-ID</code>).
           </p>
         </GlassCard>
       ) : (

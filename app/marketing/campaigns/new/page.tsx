@@ -186,7 +186,7 @@ function CampaignWizardContent() {
     }
   };
 
-  const buildSchedule(): Record<string, unknown> | undefined {
+  const buildSchedule = (): Record<string, unknown> | undefined => {
     if (campaign.scheduleType !== "scheduled" || !campaign.scheduledDate) return undefined;
     return {
       type: "scheduled",
@@ -194,7 +194,7 @@ function CampaignWizardContent() {
       time: campaign.scheduledTime || "09:00",
       timezone: campaign.timezone,
     };
-  }
+  };
 
   function validateForSave(): string | null {
     if (!tenantId) return "Select a tenant before saving.";
@@ -304,26 +304,51 @@ function CampaignWizardContent() {
 
   const runPilotDryRun = async () => {
     if (!tenantId) return;
+    const v = validateForSave();
+    if (v) {
+      setFormError(v);
+      return;
+    }
+    setFormError(null);
     setPilotMessage(null);
     setPilotLoading(true);
+    let id = createdCampaignId;
+    if (!id) {
+      const res = await createMarketingCampaign(tenantId, buildCreatePayload());
+      if (!res.ok) {
+        setPilotMessage(res.error ? formatApiError(res.error) : "Could not create campaign for pilot.");
+        setPilotLoading(false);
+        return;
+      }
+      id = res.data?.id != null ? String(res.data.id) : null;
+      if (id) setCreatedCampaignId(id);
+    }
+    if (!id) {
+      setPilotMessage("Could not resolve campaign id for pilot.");
+      setPilotLoading(false);
+      return;
+    }
     const audience =
       selectedSegmentRow && typeof selectedSegmentRow.name === "string"
         ? selectedSegmentRow.name
         : String(selectedSegmentRow?.name ?? campaign.name);
-    const r = await postMarketingLaunchPilot(tenantId, {
+    const pilotBody: Record<string, unknown> = {
       product_name: campaign.name || "Campaign",
       target_audience: audience,
       dry_run: true,
-    });
+      campaign_id: id,
+    };
+    const r = await postMarketingLaunchPilot(tenantId, pilotBody);
     setPilotLoading(false);
     if (!r.ok) {
       setPilotMessage(r.error || "Pilot request failed.");
       return;
     }
     const ok = r.data?.success === true;
+    const linked = r.data?.marketing_campaign_id;
     setPilotMessage(
       ok
-        ? "Pilot dry run completed. Check steps_summary in logs or command center."
+        ? `Pilot dry run completed.${linked ? ` Linked campaign: ${String(linked)}.` : ""}`
         : `Pilot finished with success=${String(r.data?.success)}`
     );
   };
