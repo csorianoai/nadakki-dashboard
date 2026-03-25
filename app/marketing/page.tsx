@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
   GitBranch, Sparkles, Database, Target, FlaskConical, TrendingUp,
-  Bot, Megaphone, FileText, Share2, BarChart3, Users, Zap, Globe,
-  Map, Trophy, UserPlus, ArrowRight, Play, Pause, RefreshCw
+  Bot, Megaphone, Share2, BarChart3, Users, Zap,
+  Map, Trophy, ArrowRight, Play, Pause, RefreshCw
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useMarketingStats } from "@/app/hooks/useMarketingStats";
@@ -65,11 +65,12 @@ const CORE_MODULES = [
 const TESTING_MODULES = [
   { 
     id: "ab-testing", 
-    name: "A/B Testing", 
-    desc: "Experimenta y optimiza tus campaas",
+    name: "A/B Testing (local, parcial)", 
+    desc: "UI de prueba: datos solo en este navegador, sin API",
     href: "/marketing/ab-testing", 
     icon: FlaskConical, 
     color: "#06b6d4",
+    badge: "LOCAL",
     features: ["Variants", "Statistics", "Auto-winner"]
   },
   { 
@@ -116,31 +117,13 @@ const CHANNEL_MODULES = [
     features: ["Chatbots", "Email Agent", "Support"]
   },
   { 
-    id: "content", 
-    name: "Content Studio", 
-    desc: "Genera contenido con IA",
-    href: "/marketing/content", 
-    icon: FileText, 
-    color: "#6366f1",
-    features: ["AI Writer", "Images", "Templates"]
-  },
-  { 
-    id: "social", 
-    name: "Social Media", 
-    desc: "Gestiona tus redes sociales",
-    href: "/marketing/social", 
-    icon: Share2, 
-    color: "#0ea5e9",
-    features: ["Scheduler", "Analytics", "Inbox"]
-  },
-  { 
     id: "integrations", 
     name: "Integraciones", 
-    desc: "Conecta con tu stack de herramientas",
+    desc: "Estado real: Meta, Google, SendGrid (solo lectura)",
     href: "/marketing/integrations", 
     icon: Database, 
     color: "#14b8a6",
-    features: ["CRM", "CDP", "Analytics"]
+    features: ["OAuth", "Email", "Hub honesto"]
   },
 ];
 
@@ -149,15 +132,6 @@ const CHANNEL_MODULES = [
 // ***************************************************************
 const ADVANCED_MODULES = [
   { 
-    id: "leads", 
-    name: "Lead Scoring", 
-    desc: "Califica y prioriza tus leads autom!ticamente",
-    href: "/marketing/leads", 
-    icon: UserPlus, 
-    color: "#84cc16",
-    features: ["Scoring Rules", "MQL/SQL", "Alerts"]
-  },
-  { 
     id: "competitive", 
     name: "Competitive Intel", 
     desc: "Monitorea a tu competencia",
@@ -165,15 +139,6 @@ const ADVANCED_MODULES = [
     icon: Trophy, 
     color: "#eab308",
     features: ["Tracking", "Alerts", "Reports"]
-  },
-  { 
-    id: "command-center", 
-    name: "Command Center", 
-    desc: "Centro de control en tiempo real",
-    href: "/marketing/command-center", 
-    icon: Globe, 
-    color: "#ef4444",
-    features: ["Live Dashboard", "Alerts", "Actions"]
   },
 ];
 

@@ -1,697 +1,317 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTenant } from "@/contexts/TenantContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Database, Link2, Unlink, RefreshCw, Check, X, ExternalLink,
-  Settings, Trash2, Plus, Search, Filter, AlertCircle, Clock,
-  Users, FileText, TrendingUp, Loader2, ChevronRight, Shield
+/**
+ * Integraciones — hub honesto (solo lectura).
+ * Estado: GET /api/social/status/{tenant} + GET /api/v1/tenants/{tenant}/config
+ * Gestión real: /marketing/social-connections y /admin/config
+ */
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import {
+  Plug,
+  Loader2,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  ArrowRight,
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
-import StatusBadge from "@/components/ui/StatusBadge";
+import { useTenant } from "@/contexts/TenantContext";
+import { fetchSocialStatus } from "@/lib/api/marketing";
 
-/** Same-origin; proxied via next.config rewrites */
-const API_URL = "";
+type ConnState = "connected" | "disconnected" | "error" | "unknown";
+type SendgridState = "configured" | "not_configured" | "unknown";
 
-interface Integration {
-  id: string;
-  name: string;
-  description: string;
-  category: "crm" | "cdp" | "analytics" | "communication" | "payment" | "other";
-  logo: string;
-  status: "disconnected" | "connected" | "error" | "pending";
-  authType: "oauth" | "api_key" | "webhook";
-  authUrl?: string;
-  docsUrl: string;
-  lastSync?: string;
-  stats?: {
-    contacts?: number;
-    events?: number;
-    syncs?: number;
-  };
-  config?: Record<string, string>;
-}
-
-// Integraciones reales con URLs de OAuth/conexin correctas
-const AVAILABLE_INTEGRATIONS: Integration[] = [
-  // CRM
-  {
-    id: "hubspot",
-    name: "HubSpot",
-    description: "CRM, marketing, sales y servicio al cliente",
-    category: "crm",
-    logo: "https://www.hubspot.com/hubfs/HubSpot_Logos/HubSpot-Inversed-Favicon.png",
-    status: "disconnected",
-    authType: "oauth",
-    authUrl: "https://app.hubspot.com/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT&scope=contacts%20content",
-    docsUrl: "https://developers.hubspot.com/docs/api/overview",
-  },
-  {
-    id: "salesforce",
-    name: "Salesforce",
-    description: "CRM lder para ventas y servicio",
-    category: "crm",
-    logo: "https://c1.sfdcstatic.com/content/dam/sfdc-docs/www/logos/logo-salesforce.svg",
-    status: "disconnected",
-    authType: "oauth",
-    authUrl: "https://login.salesforce.com/services/oauth2/authorize",
-    docsUrl: "https://developer.salesforce.com/docs",
-  },
-  {
-    id: "pipedrive",
-    name: "Pipedrive",
-    description: "CRM de ventas diseado para equipos pequeos",
-    category: "crm",
-    logo: "https://www.pipedrive.com/favicon.ico",
-    status: "disconnected",
-    authType: "oauth",
-    authUrl: "https://oauth.pipedrive.com/oauth/authorize",
-    docsUrl: "https://developers.pipedrive.com/docs/api/v1",
-  },
-  {
-    id: "zoho",
-    name: "Zoho CRM",
-    description: "Suite completa de CRM y productividad",
-    category: "crm",
-    logo: "https://www.zoho.com/favicon.ico",
-    status: "disconnected",
-    authType: "oauth",
-    authUrl: "https://accounts.zoho.com/oauth/v2/auth",
-    docsUrl: "https://www.zoho.com/crm/developer/docs/api/v2/",
-  },
-  // CDP
-  {
-    id: "segment",
-    name: "Segment",
-    description: "Customer Data Platform lder",
-    category: "cdp",
-    logo: "https://segment.com/favicon.ico",
-    status: "disconnected",
-    authType: "api_key",
-    docsUrl: "https://segment.com/docs/connections/sources/",
-  },
-  {
-    id: "rudderstack",
-    name: "RudderStack",
-    description: "CDP open-source para datos de clientes",
-    category: "cdp",
-    logo: "https://www.rudderstack.com/favicon.ico",
-    status: "disconnected",
-    authType: "api_key",
-    docsUrl: "https://www.rudderstack.com/docs/",
-  },
-  {
-    id: "mparticle",
-    name: "mParticle",
-    description: "Plataforma de datos de clientes enterprise",
-    category: "cdp",
-    logo: "https://www.mparticle.com/favicon.ico",
-    status: "disconnected",
-    authType: "api_key",
-    docsUrl: "https://docs.mparticle.com/",
-  },
-  // Analytics
-  {
-    id: "google-analytics",
-    name: "Google Analytics 4",
-    description: "Analtica web y app de Google",
-    category: "analytics",
-    logo: "https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg",
-    status: "disconnected",
-    authType: "oauth",
-    authUrl: "https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/analytics.readonly",
-    docsUrl: "https://developers.google.com/analytics/devguides/reporting/data/v1",
-  },
-  {
-    id: "mixpanel",
-    name: "Mixpanel",
-    description: "Product analytics para engagement",
-    category: "analytics",
-    logo: "https://mixpanel.com/favicon.ico",
-    status: "disconnected",
-    authType: "api_key",
-    docsUrl: "https://developer.mixpanel.com/docs",
-  },
-  {
-    id: "amplitude",
-    name: "Amplitude",
-    description: "Digital analytics platform",
-    category: "analytics",
-    logo: "https://amplitude.com/favicon.ico",
-    status: "disconnected",
-    authType: "api_key",
-    docsUrl: "https://www.docs.developers.amplitude.com/",
-  },
-  // Communication
-  {
-    id: "twilio",
-    name: "Twilio",
-    description: "SMS, WhatsApp, Voice y Email",
-    category: "communication",
-    logo: "https://www.twilio.com/favicon.ico",
-    status: "disconnected",
-    authType: "api_key",
-    docsUrl: "https://www.twilio.com/docs",
-  },
-  {
-    id: "sendgrid",
-    name: "SendGrid",
-    description: "Email delivery y marketing",
-    category: "communication",
-    logo: "https://sendgrid.com/favicon.ico",
-    status: "disconnected",
-    authType: "api_key",
-    docsUrl: "https://docs.sendgrid.com/",
-  },
-  {
-    id: "intercom",
-    name: "Intercom",
-    description: "Mensajera y soporte al cliente",
-    category: "communication",
-    logo: "https://www.intercom.com/favicon.ico",
-    status: "disconnected",
-    authType: "oauth",
-    authUrl: "https://app.intercom.com/oauth",
-    docsUrl: "https://developers.intercom.com/docs",
-  },
-  // Payment
-  {
-    id: "stripe",
-    name: "Stripe",
-    description: "Procesamiento de pagos y suscripciones",
-    category: "payment",
-    logo: "https://stripe.com/favicon.ico",
-    status: "disconnected",
-    authType: "oauth",
-    authUrl: "https://connect.stripe.com/oauth/authorize",
-    docsUrl: "https://stripe.com/docs/api",
-  },
-  // Other
-  {
-    id: "zapier",
-    name: "Zapier",
-    description: "Conecta +5000 apps sin cdigo",
-    category: "other",
-    logo: "https://zapier.com/favicon.ico",
-    status: "disconnected",
-    authType: "webhook",
-    docsUrl: "https://zapier.com/developer/documentation/v2/",
-  },
-  {
-    id: "slack",
-    name: "Slack",
-    description: "Notificaciones y alertas del equipo",
-    category: "communication",
-    logo: "https://slack.com/favicon.ico",
-    status: "disconnected",
-    authType: "oauth",
-    authUrl: "https://slack.com/oauth/v2/authorize?scope=chat:write,channels:read",
-    docsUrl: "https://api.slack.com/docs",
-  },
-];
-
-const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
-  crm: { label: "CRM", color: "#3b82f6" },
-  cdp: { label: "CDP", color: "#8b5cf6" },
-  analytics: { label: "Analytics", color: "#22c55e" },
-  communication: { label: "Communication", color: "#f59e0b" },
-  payment: { label: "Payment", color: "#ec4899" },
-  other: { label: "Other", color: "#6b7280" },
+type SocialRow = {
+  platform: string;
+  connected?: boolean;
+  needs_refresh?: boolean;
+  [k: string]: unknown;
 };
 
-export default function IntegrationsPage() {
-  const { tenantId } = useTenant();
-  const [integrations, setIntegrations] = useState<Integration[]>(AVAILABLE_INTEGRATIONS);
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
-  const [showConnectModal, setShowConnectModal] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState("");
-  const [connecting, setConnecting] = useState(false);
-  const [syncing, setSyncing] = useState<string | null>(null);
-  const [publicOrigin, setPublicOrigin] = useState("");
-  useEffect(() => {
-    setPublicOrigin(typeof window !== "undefined" ? window.location.origin : "");
-  }, []);
+function getPlatformKey(platform: string): string {
+  const lower = platform.toLowerCase();
+  if (lower === "facebook" || lower === "instagram") return "meta";
+  return lower;
+}
 
-  // Cargar estado de integraciones desde API
-  useEffect(() => {
-    fetchIntegrations();
-  }, []);
+function normalizePlatformsFromPayload(data: Record<string, unknown> | null): SocialRow[] {
+  if (!data || typeof data !== "object") return [];
+  const anyData = data as Record<string, unknown>;
+  const platformsValue = anyData.platforms;
 
-  const fetchIntegrations = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/integrations?tenant_id=${tenantId ?? ""}`);
-      if (res.ok) {
-        const data = await res.json();
-        // Merge API data with available integrations
-        if (data.integrations) {
-          setIntegrations(prevIntegrations => 
-            prevIntegrations?.map(int => {
-              const apiInt = data.integrations.find((a: any) => a.id === int.id);
-              if (apiInt) {
-                return { ...int, status: apiInt.status, lastSync: apiInt.last_sync, stats: apiInt.stats };
-              }
-              return int;
-            })
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching integrations:", error);
-    }
-    setLoading(false);
-  };
+  if (Array.isArray(platformsValue)) {
+    return platformsValue as SocialRow[];
+  }
+  if (platformsValue && typeof platformsValue === "object") {
+    return Object.entries(platformsValue as Record<string, unknown>).map(([platform, info]) => ({
+      platform,
+      ...(typeof info === "object" && info ? (info as Record<string, unknown>) : {}),
+      connected: (info as Record<string, unknown>)?.connected === true,
+    }));
+  }
+  if (Array.isArray(anyData.connections)) {
+    return anyData.connections as SocialRow[];
+  }
+  return Object.entries(anyData)
+    .filter(([key]) => key !== "tenant_id")
+    .map(([platform, info]) => ({
+      platform,
+      ...(typeof info === "object" && info ? (info as Record<string, unknown>) : {}),
+      connected: (info as Record<string, unknown>)?.connected === true,
+    }));
+}
 
-  const filteredIntegrations = integrations.filter(int => {
-    const matchesSearch = int.name.toLowerCase().includes(search.toLowerCase()) ||
-                          int.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = categoryFilter === "all" || int.category === categoryFilter;
-    const matchesStatus = statusFilter === "all" || int.status === statusFilter;
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+function deriveConnState(rows: SocialRow[], key: "meta" | "google", statusError: boolean): ConnState {
+  if (statusError) return "unknown";
+  const map = new Map(rows.map((p) => [getPlatformKey(p.platform), p]));
+  const p = map.get(key);
+  if (!p) return "unknown";
+  if (p.connected && p.needs_refresh) return "error";
+  if (p.connected) return "connected";
+  return "disconnected";
+}
 
-  const connectedCount = integrations.filter(i => i.status === "connected").length;
-  const totalContacts = integrations.reduce((acc, i) => acc + (i.stats?.contacts || 0), 0);
-  const totalSyncs = integrations.reduce((acc, i) => acc + (i.stats?.syncs || 0), 0);
+async function fetchSendgridState(tenantId: string): Promise<SendgridState> {
+  try {
+    const r = await fetch(`/api/v1/tenants/${encodeURIComponent(tenantId)}/config`, {
+      method: "GET",
+      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    });
+    if (r.status === 404) return "not_configured";
+    if (!r.ok) return "unknown";
+    const j = (await r.json()) as { data?: { sendgrid_live_enabled?: boolean } };
+    const d = j?.data;
+    if (d?.sendgrid_live_enabled === true) return "configured";
+    if (d?.sendgrid_live_enabled === false) return "not_configured";
+    return "unknown";
+  } catch {
+    return "unknown";
+  }
+}
 
-  const handleConnect = (integration: Integration) => {
-    setSelectedIntegration(integration);
-    setApiKeyInput("");
-    
-    if (integration.authType === "oauth" && integration.authUrl) {
-      // Para OAuth, abrir ventana de autorizacin
-      // En produccin, esto debera redirigir al backend para manejar OAuth
-      window.open(integration.authUrl, "_blank", "width=600,height=700");
-      // Simulamos conexin exitosa despus de unos segundos
-      setConnecting(true);
-      setTimeout(() => {
-        setIntegrations(prev => prev?.map(i => 
-          i.id === integration.id 
-            ? { ...i, status: "connected", lastSync: new Date().toISOString() }
-            : i
-        ));
-        setConnecting(false);
-        setShowConnectModal(false);
-      }, 3000);
-    } else {
-      // Para API Key o Webhook, mostrar modal
-      setShowConnectModal(true);
-    }
-  };
-
-  const submitApiKey = async () => {
-    if (!selectedIntegration || !apiKeyInput) return;
-    
-    setConnecting(true);
-    try {
-      const res = await fetch(`${API_URL}/api/integrations/${selectedIntegration.id}/connect`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          tenant_id: tenantId ?? "", 
-          api_key: apiKeyInput,
-          config: { api_key: apiKeyInput }
-        }),
-      });
-      
-      if (res.ok) {
-        setIntegrations(prev => prev?.map(i => 
-          i.id === selectedIntegration.id 
-            ? { ...i, status: "connected", lastSync: new Date().toISOString(), config: { api_key: "" } }
-            : i
-        ));
-        setShowConnectModal(false);
-      }
-    } catch (error) {
-      console.error("Error connecting:", error);
-    }
-    setConnecting(false);
-  };
-
-  const handleDisconnect = async (integration: Integration) => {
-    if (!confirm(`?Est!s seguro de desconectar ${integration.name}?`)) return;
-    
-    try {
-      await fetch(`${API_URL}/api/integrations/${integration.id}/disconnect`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenant_id: tenantId ?? "" }),
-      });
-      
-      setIntegrations(prev => prev?.map(i => 
-        i.id === integration.id 
-          ? { ...i, status: "disconnected", lastSync: undefined, stats: undefined, config: undefined }
-          : i
-      ));
-    } catch (error) {
-      console.error("Error disconnecting:", error);
-    }
-  };
-
-  const handleSync = async (integration: Integration) => {
-    setSyncing(integration.id);
-    try {
-      await fetch(`${API_URL}/api/integrations/${integration.id}/sync`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenant_id: tenantId ?? "" }),
-      });
-      
-      setIntegrations(prev => prev?.map(i => 
-        i.id === integration.id 
-          ? { ...i, lastSync: new Date().toISOString() }
-          : i
-      ));
-    } catch (error) {
-      console.error("Error syncing:", error);
-    }
-    setSyncing(null);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "connected":
-        return <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs"><Check className="w-3 h-3" /> Conectado</span>;
-      case "error":
-        return <span className="flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs"><AlertCircle className="w-3 h-3" /> Error</span>;
-      case "pending":
-        return <span className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs"><Clock className="w-3 h-3" /> Pendiente</span>;
-      default:
-        return <span className="flex items-center gap-1 px-2 py-1 bg-gray-500/20 text-gray-400 rounded-full text-xs"><Unlink className="w-3 h-3" /> No conectado</span>;
-    }
-  };
-
+function StateBadge({ label, variant }: { label: string; variant: "ok" | "off" | "warn" | "muted" }) {
+  const cls =
+    variant === "ok"
+      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+      : variant === "off"
+        ? "bg-white/10 text-gray-400 border-white/15"
+        : variant === "warn"
+          ? "bg-amber-500/15 text-amber-200 border-amber-500/35"
+          : "bg-white/5 text-gray-500 border-white/10";
   return (
-    <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/marketing">
-        <StatusBadge status="active" label="Integraciones" size="lg" />
-      </NavigationBar>
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-500/30">
-            <Database className="w-8 h-8 text-teal-400" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Integraciones CDP/CRM</h1>
-            <p className="text-gray-400">Conecta tus herramientas y sincroniza datos en tiempo real</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard 
-          value={connectedCount.toString()} 
-          label="Conectadas" 
-          icon={<Link2 className="w-6 h-6 text-green-400" />} 
-          color="#22c55e" 
-        />
-        <StatCard 
-          value={integrations.length.toString()} 
-          label="Disponibles" 
-          icon={<Database className="w-6 h-6 text-blue-400" />} 
-          color="#3b82f6" 
-        />
-        <StatCard 
-          value={totalContacts > 0 ? (totalContacts / 1000).toFixed(1) + "K" : "0"} 
-          label="Contactos Sincronizados" 
-          icon={<Users className="w-6 h-6 text-purple-400" />} 
-          color="#8b5cf6" 
-        />
-        <StatCard 
-          value={totalSyncs.toString()} 
-          label="Sincronizaciones" 
-          icon={<RefreshCw className="w-6 h-6 text-cyan-400" />} 
-          color="#06b6d4" 
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Buscar integraciones..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
-          />
-        </div>
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
-        >
-          <option value="all">Todas las categoras</option>
-          {Object.entries(CATEGORY_LABELS).map(([key, val]) => (
-            <option key={key} value={key}>{val.label}</option>
-          ))}
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
-        >
-          <option value="all">Todos los estados</option>
-          <option value="connected">Conectadas</option>
-          <option value="disconnected">No conectadas</option>
-          <option value="error">Con errores</option>
-        </select>
-      </div>
-
-      {/* Integrations Grid */}
-      <div className="grid grid-cols-2 gap-6">
-        {loading ? (
-          <div className="col-span-2 flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-          </div>
-        ) : filteredIntegrations.length === 0 ? (
-          <div className="col-span-2 text-center py-20 text-gray-500">
-            No se encontraron integraciones
-          </div>
-        ) : (
-          filteredIntegrations?.map((integration, i) => {
-            const categoryInfo = CATEGORY_LABELS[integration.category];
-            return (
-              <motion.div
-                key={integration.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <GlassCard className="p-5 hover:border-teal-500/30 transition-all">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden">
-                        <img 
-                          src={integration.logo} 
-                          alt={integration.name} 
-                          className="w-8 h-8 object-contain"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                        />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-white">{integration.name}</h3>
-                        <span 
-                          className="text-xs px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: categoryInfo.color + "20", color: categoryInfo.color }}
-                        >
-                          {categoryInfo.label}
-                        </span>
-                      </div>
-                    </div>
-                    {getStatusBadge(integration.status)}
-                  </div>
-
-                  <p className="text-sm text-gray-400 mb-4">{integration.description}</p>
-
-                  {integration.status === "connected" && integration.stats && (
-                    <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-white/5 rounded-lg">
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-white">{integration.stats.contacts?.toLocaleString() || 0}</div>
-                        <div className="text-xs text-gray-500">Contactos</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-white">{integration.stats.events?.toLocaleString() || 0}</div>
-                        <div className="text-xs text-gray-500">Eventos</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-white">{integration.stats.syncs || 0}</div>
-                        <div className="text-xs text-gray-500">Syncs</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {integration.lastSync && (
-                    <div className="text-xs text-gray-500 mb-4 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      ltima sincronizacin: {new Date(integration.lastSync).toLocaleString()}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                    <a 
-                      href={integration.docsUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-gray-400 hover:text-white flex items-center gap-1"
-                    >
-                      <FileText className="w-4 h-4" /> Documentacin
-                    </a>
-
-                    <div className="flex gap-2">
-                      {integration.status === "connected" ? (
-                        <>
-                          <button
-                            onClick={() => handleSync(integration)}
-                            disabled={syncing === integration.id}
-                            className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white text-sm flex items-center gap-1"
-                          >
-                            <RefreshCw className={`w-4 h-4 ${syncing === integration.id ? "animate-spin" : ""}`} />
-                            Sync
-                          </button>
-                          <button
-                            onClick={() => handleDisconnect(integration)}
-                            className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-1"
-                          >
-                            <Unlink className="w-4 h-4" /> Desconectar
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => handleConnect(integration)}
-                          className="px-4 py-1.5 bg-teal-500 hover:bg-teal-600 rounded-lg text-white text-sm flex items-center gap-1"
-                        >
-                          <Link2 className="w-4 h-4" /> Conectar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Connect Modal for API Key */}
-      <AnimatePresence>
-        {showConnectModal && selectedIntegration && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowConnectModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="bg-[#0a0f1c] border border-white/10 rounded-2xl w-full max-w-md"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
-                    <img src={selectedIntegration.logo} alt="" className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Conectar {selectedIntegration.name}</h3>
-                    <p className="text-sm text-gray-400">
-                      {selectedIntegration.authType === "api_key" ? "Ingresa tu API Key" : "Configura el webhook"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6">
-                {selectedIntegration.authType === "api_key" && (
-                  <div className="mb-4">
-                    <label className="text-sm text-gray-400 block mb-2">API Key</label>
-                    <input
-                      type="password"
-                      value={apiKeyInput}
-                      onChange={(e) => setApiKeyInput(e.target.value)}
-                      placeholder="sk_live_xxxxxxxxxxxxxxxx"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
-                    />
-                    <p className="text-xs text-gray-500 mt-2">
-                      Encuentra tu API Key en{" "}
-                      <a href={selectedIntegration.docsUrl} target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">
-                        la documentacin de {selectedIntegration.name}
-                      </a>
-                    </p>
-                  </div>
-                )}
-
-                {selectedIntegration.authType === "webhook" && (
-                  <div className="mb-4">
-                    <label className="text-sm text-gray-400 block mb-2">Webhook URL</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={`${publicOrigin}/webhooks/${tenantId ?? ""}/${selectedIntegration.id}`}
-                        readOnly
-                        className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono text-sm"
-                      />
-                      <button
-                        onClick={() =>
-                          navigator.clipboard.writeText(
-                            `${publicOrigin}/webhooks/${tenantId ?? ""}/${selectedIntegration.id}`
-                          )
-                        }
-                        className="px-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white"
-                      >
-                        Copiar
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Copia esta URL y configrala en {selectedIntegration.name}
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl mb-4">
-                  <Shield className="w-5 h-5 text-yellow-400" />
-                  <p className="text-sm text-yellow-400">
-                    Tus credenciales se almacenan de forma segura y encriptada
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-6 border-t border-white/10 flex justify-end gap-3">
-                <button
-                  onClick={() => setShowConnectModal(false)}
-                  className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={submitApiKey}
-                  disabled={connecting || (selectedIntegration.authType === "api_key" && !apiKeyInput)}
-                  className="px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-lg text-white flex items-center gap-2 disabled:opacity-50"
-                >
-                  {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  {connecting ? "Conectando..." : "Conectar"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${cls}`}>
+      {variant === "ok" ? <CheckCircle2 className="w-3 h-3" /> : null}
+      {variant === "off" ? <XCircle className="w-3 h-3" /> : null}
+      {variant === "warn" ? <AlertCircle className="w-3 h-3" /> : null}
+      {variant === "muted" ? <HelpCircle className="w-3 h-3" /> : null}
+      {label}
+    </span>
   );
 }
 
+function connBadge(state: ConnState) {
+  switch (state) {
+    case "connected":
+      return <StateBadge variant="ok" label="Conectado" />;
+    case "disconnected":
+      return <StateBadge variant="off" label="Desconectado" />;
+    case "error":
+      return <StateBadge variant="warn" label="Error / revisar token" />;
+    default:
+      return <StateBadge variant="muted" label="Desconocido" />;
+  }
+}
 
+function sendgridBadge(state: SendgridState) {
+  switch (state) {
+    case "configured":
+      return <StateBadge variant="ok" label="Configurado" />;
+    case "not_configured":
+      return <StateBadge variant="off" label="No configurado" />;
+    default:
+      return <StateBadge variant="muted" label="Desconocido" />;
+  }
+}
+
+export default function IntegrationsPage() {
+  const { tenantId } = useTenant();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [socialErr, setSocialErr] = useState<string | null>(null);
+  const [metaState, setMetaState] = useState<ConnState>("unknown");
+  const [googleState, setGoogleState] = useState<ConnState>("unknown");
+  const [sendgridState, setSendgridState] = useState<SendgridState>("unknown");
+
+  const load = useCallback(async () => {
+    if (!tenantId) {
+      setSocialErr("Selecciona un tenant.");
+      setMetaState("unknown");
+      setGoogleState("unknown");
+      setSendgridState("unknown");
+      setLoading(false);
+      return;
+    }
+    setSocialErr(null);
+
+    const social = await fetchSocialStatus(tenantId);
+    const statusError = Boolean(social.error);
+    if (statusError) {
+      setSocialErr(social.error ?? "No se pudo leer el estado social.");
+    }
+    const payload =
+      social.data && typeof social.data === "object"
+        ? (social.data as Record<string, unknown>)
+        : null;
+    const rows = normalizePlatformsFromPayload(payload);
+    setMetaState(deriveConnState(rows, "meta", statusError));
+    setGoogleState(deriveConnState(rows, "google", statusError));
+
+    setSendgridState(await fetchSendgridState(tenantId));
+    setLoading(false);
+    setRefreshing(false);
+  }, [tenantId]);
+
+  useEffect(() => {
+    setLoading(true);
+    void load();
+  }, [load]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    void load();
+  };
+
+  return (
+    <div className="ndk-page ndk-fade-in min-h-screen text-white p-6">
+      <NavigationBar backHref="/marketing">
+        <span className="text-sm text-gray-400">Integraciones</span>
+      </NavigationBar>
+
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
+        <div className="flex items-start gap-4">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-500/30 shrink-0">
+            <Plug className="w-8 h-8 text-teal-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white m-0">Integraciones</h1>
+            <p className="text-gray-400 mt-1 m-0 max-w-xl">
+              Estado real de conexiones activas y configuración disponible. La conexión OAuth y envío en vivo se gestionan
+              en las páginas enlazadas — esta vista no modifica integraciones.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={refreshing || !tenantId}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-gray-200 disabled:opacity-50"
+        >
+          {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          Actualizar estado
+        </button>
+      </div>
+
+      {socialErr ? (
+        <GlassCard className="p-4 mb-6 border-amber-500/25 bg-amber-500/5">
+          <p className="text-amber-100/90 text-sm m-0 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {socialErr} Los indicadores OAuth pueden mostrar &quot;Desconocido&quot; hasta que el API responda.
+          </p>
+        </GlassCard>
+      ) : null}
+
+      {loading ? (
+        <div className="flex justify-center py-16 text-gray-400">
+          <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
+        </div>
+      ) : (
+        <>
+          <h2 className="text-lg font-semibold text-white mb-3">Integraciones activas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+            <GlassCard className="p-5 border-white/10">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div>
+                  <h3 className="text-white font-semibold m-0">Meta</h3>
+                  <p className="text-sm text-gray-500 m-0 mt-1">
+                    Facebook e Instagram (OAuth). Estado según el mismo endpoint que Conexiones sociales.
+                  </p>
+                </div>
+                {connBadge(metaState)}
+              </div>
+              <Link
+                href="/marketing/social-connections"
+                className="mt-4 inline-flex items-center gap-2 text-sm text-teal-300 hover:text-teal-200"
+              >
+                Administrar en Conexiones sociales
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </GlassCard>
+
+            <GlassCard className="p-5 border-white/10">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div>
+                  <h3 className="text-white font-semibold m-0">Google</h3>
+                  <p className="text-sm text-gray-500 m-0 mt-1">
+                    Google (Ads, Analytics, YouTube) vía OAuth. Estado según respuesta del backend.
+                  </p>
+                </div>
+                {connBadge(googleState)}
+              </div>
+              <Link
+                href="/marketing/social-connections"
+                className="mt-4 inline-flex items-center gap-2 text-sm text-teal-300 hover:text-teal-200"
+              >
+                Administrar en Conexiones sociales
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </GlassCard>
+          </div>
+
+          <h2 className="text-lg font-semibold text-white mb-3">Envío de email</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+            <GlassCard className="p-5 border-white/10">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div>
+                  <h3 className="text-white font-semibold m-0">SendGrid</h3>
+                  <p className="text-sm text-gray-500 m-0 mt-1">
+                    Flag <code className="text-gray-400">sendgrid_live_enabled</code> del tenant (entorno y políticas del
+                    backend). No se muestran secretos.
+                  </p>
+                </div>
+                {sendgridBadge(sendgridState)}
+              </div>
+              <Link
+                href="/admin/config"
+                className="mt-4 inline-flex items-center gap-2 text-sm text-violet-300 hover:text-violet-200"
+              >
+                Configurar en Administración
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </GlassCard>
+          </div>
+
+          <h2 className="text-lg font-semibold text-white mb-3">Próximamente</h2>
+          <p className="text-sm text-gray-500 mb-4 m-0">
+            Sin conexión simulada ni botones de OAuth. Integraciones planificadas:
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {(["TikTok", "LinkedIn", "X", "Pinterest"] as const).map((name) => (
+              <GlassCard key={name} className="p-4 border-white/10 opacity-80">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-white text-sm font-medium">{name}</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-gray-400 border border-white/10">
+                    Próximamente
+                  </span>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
