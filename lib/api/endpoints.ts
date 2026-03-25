@@ -16,6 +16,8 @@ export const MARKETING_ENDPOINTS = {
   SEGMENTS: `${marketingPath}/segments`,
   JOURNEYS: `${marketingPath}/journeys`,
   TEMPLATES: `${marketingPath}/templates`,
+  /** POST JSON body — same-origin, proxied to backend */
+  TEMPLATES_GENERATE: `${marketingPath}/templates/generate`,
   INTEGRATIONS: `${marketingPath}/integrations`,
   CORES: "/cores",
   HEALTH: "/health",
