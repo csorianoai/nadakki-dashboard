@@ -14,6 +14,7 @@ const nextConfig = {
       },
       { source: "/api/campaigns/:path*", destination: `${backendUrl}/campaigns/:path*` },
       { source: "/api/marketing/:path*", destination: `${backendUrl}/api/marketing/:path*` },
+      { source: "/analytics/:path*", destination: `${backendUrl}/analytics/:path*` },
       { source: "/health", destination: `${backendUrl}/health` },
       { source: "/cores", destination: `${backendUrl}/cores` },
       { source: "/api/v1/sic/:path*", destination: `${backendUrl}/api/v1/sic/:path*` },

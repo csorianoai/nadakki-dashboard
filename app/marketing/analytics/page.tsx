@@ -1,79 +1,196 @@
 "use client";
-import { useState, useEffect } from "react";
+
+/**
+ * Marketing analytics — same-origin /analytics/* (proxied). Datos desde SQLite (overview + series).
+ * Sin gráficos demostrativos inventados: lo no expuesto por API se oculta o se etiqueta claramente.
+ */
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { 
-  BarChart3, TrendingUp, TrendingDown, Users, Mail, MousePointer,
-  Eye, DollarSign, Calendar, Download, RefreshCw, Filter,
-  ArrowUpRight, ArrowDownRight, Loader2, Target, Zap, Clock
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Loader2,
+  RefreshCw,
+  BarChart3,
+  AlertCircle,
 } from "lucide-react";
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
-import StatusBadge from "@/components/ui/StatusBadge";
+import { useTenant } from "@/contexts/TenantContext";
 
-const COLORS = ["#8b5cf6", "#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#ec4899"];
+type MetricBlock = { current?: number; previous?: number; change?: number; trend?: string };
 
-const PERFORMANCE_DATA = [
-  { date: "Jan 1", sent: 12500, delivered: 12200, opened: 4880, clicked: 1464 },
-  { date: "Jan 8", sent: 15000, delivered: 14700, opened: 6174, clicked: 1852 },
-  { date: "Jan 15", sent: 18200, delivered: 17800, opened: 7832, clicked: 2350 },
-  { date: "Jan 22", sent: 14800, delivered: 14500, opened: 5945, clicked: 1783 },
-  { date: "Jan 29", sent: 21000, delivered: 20600, opened: 9064, clicked: 2719 },
-  { date: "Feb 5", sent: 19500, delivered: 19100, opened: 8213, clicked: 2464 },
-  { date: "Feb 12", sent: 23000, delivered: 22500, opened: 10125, clicked: 3038 },
-];
+type OverviewPayload = {
+  tenant_id?: string;
+  period?: string;
+  data_source?: string;
+  mau?: MetricBlock;
+  dau?: MetricBlock;
+  new_users?: MetricBlock;
+  stickiness?: MetricBlock;
+  daily_sessions?: MetricBlock;
+  sessions_per_mau?: MetricBlock;
+  active_campaigns?: number;
+  total_revenue?: MetricBlock;
+  top_campaigns?: Array<{
+    id?: string;
+    name?: string;
+    status?: string;
+    sent?: number;
+    delivered?: number;
+    opened?: number;
+    clicked?: number;
+    converted?: number;
+    revenue?: number;
+    ctr?: number;
+    conversion_rate?: number;
+  }>;
+};
 
-const CHANNEL_DATA = [
-  { name: "Email", value: 45, color: "#3b82f6" },
-  { name: "SMS", value: 25, color: "#22c55e" },
-  { name: "Push", value: 18, color: "#f59e0b" },
-  { name: "In-App", value: 12, color: "#8b5cf6" },
-];
+function formatNum(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
 
-const CAMPAIGN_PERFORMANCE = [
-  { name: "Welcome Series", sent: 45000, openRate: 42.5, clickRate: 12.8, conversion: 3.2, revenue: 12500 },
-  { name: "Black Friday", sent: 125000, openRate: 38.2, clickRate: 15.4, conversion: 4.8, revenue: 85000 },
-  { name: "Newsletter Weekly", sent: 89000, openRate: 28.6, clickRate: 8.2, conversion: 1.5, revenue: 4200 },
-  { name: "Cart Abandonment", sent: 23000, openRate: 52.1, clickRate: 22.3, conversion: 8.5, revenue: 32000 },
-  { name: "Re-engagement", sent: 67000, openRate: 18.4, clickRate: 5.1, conversion: 0.8, revenue: 1800 },
-];
-
-const HOURLY_DATA = Array.from({ length: 24 }, (_, i) => ({
-  hour: `${i}:00`,
-  opens: Math.floor(Math.random() * 500 + (i >= 9 && i <= 18 ? 800 : 200)),
-  clicks: Math.floor(Math.random() * 150 + (i >= 10 && i <= 17 ? 250 : 50)),
-}));
+function TrendMini({ m }: { m?: MetricBlock }) {
+  if (m?.change == null) return null;
+  const up = m.change > 0;
+  const down = m.change < 0;
+  return (
+    <span
+      className={`text-xs flex items-center gap-0.5 ${up ? "text-emerald-400" : down ? "text-red-400" : "text-gray-500"}`}
+    >
+      {up ? <TrendingUp className="w-3 h-3" /> : down ? <TrendingDown className="w-3 h-3" /> : null}
+      {m.change}%
+    </span>
+  );
+}
 
 export default function AnalyticsPage() {
+  const { tenantId } = useTenant();
+  const [dateRange, setDateRange] = useState("30d");
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState("7d");
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [overview, setOverview] = useState<OverviewPayload | null>(null);
+  const [perfSeries, setPerfSeries] = useState<{ date: string; value: number }[]>([]);
+
+  const load = useCallback(async () => {
+    if (!tenantId) {
+      setOverview(null);
+      setPerfSeries([]);
+      setError("Selecciona un tenant para ver analítica.");
+      setLoading(false);
+      return;
+    }
+    setError(null);
+    const qs = new URLSearchParams({
+      tenant_id: tenantId,
+      period: dateRange,
+    });
+    try {
+      const [ovRes, perfRes] = await Promise.all([
+        fetch(`/analytics/overview?${qs.toString()}`, {
+          headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+        }),
+        fetch(
+          `/analytics/performance?${new URLSearchParams({
+            tenant_id: tenantId,
+            period: dateRange,
+            metric: "sessions",
+          }).toString()}`,
+          { headers: { Accept: "application/json", "X-Tenant-ID": tenantId } }
+        ),
+      ]);
+      if (!ovRes.ok) {
+        setError(`Overview: HTTP ${ovRes.status}`);
+        setOverview(null);
+      } else {
+        const json = (await ovRes.json()) as OverviewPayload;
+        setOverview(json);
+      }
+      if (perfRes.ok) {
+        const pj = (await perfRes.json()) as { data?: { date: string; value: number }[] };
+        const rows = Array.isArray(pj.data) ? pj.data.map((d) => ({ date: d.date, value: d.value })) : [];
+        setPerfSeries(rows);
+      } else {
+        setPerfSeries([]);
+      }
+    } catch (e) {
+      setError((e as Error)?.message ?? "Error de red");
+      setOverview(null);
+      setPerfSeries([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [tenantId, dateRange]);
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
+    setLoading(true);
+    void load();
+  }, [load]);
 
-  const refresh = async () => {
+  const refresh = () => {
     setRefreshing(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setRefreshing(false);
+    void load();
   };
 
-  const stats = {
-    totalSent: 523847,
-    delivered: 512567,
-    opened: 179398,
-    clicked: 46107,
-    converted: 8298,
-    revenue: 245800,
-    openRate: 35.0,
-    clickRate: 9.0,
-    conversionRate: 1.6,
-    unsubscribed: 1247,
-  };
+  const top = overview?.top_campaigns ?? [];
+  const totals = top.reduce(
+    (acc, c) => {
+      acc.sent += Number(c.sent ?? 0);
+      acc.opened += Number(c.opened ?? 0);
+      acc.clicked += Number(c.clicked ?? 0);
+      acc.converted += Number(c.converted ?? 0);
+      return acc;
+    },
+    { sent: 0, opened: 0, clicked: 0, converted: 0 }
+  );
+  const funnelSteps =
+    totals.sent > 0
+      ? [
+          { label: "Enviados (top campañas)", value: totals.sent, pct: 100 },
+          {
+            label: "Abiertos",
+            value: totals.opened,
+            pct: Math.min(100, Math.round((totals.opened / totals.sent) * 1000) / 10),
+          },
+          {
+            label: "Clicks",
+            value: totals.clicked,
+            pct: Math.min(100, Math.round((totals.clicked / totals.sent) * 1000) / 10),
+          },
+          {
+            label: "Conversiones",
+            value: totals.converted,
+            pct: Math.min(100, Math.round((totals.converted / totals.sent) * 1000) / 10),
+          },
+        ]
+      : [];
 
-  if (loading) {
+  const dataSource = overview?.data_source ?? "unknown";
+  const sourceLabel =
+    dataSource === "database"
+      ? "Fuente: base de datos (métricas diarias y campañas del tenant)."
+      : dataSource === "fallback"
+        ? "Fuente: respaldo del servidor (sin lectura completa de BD para este período)."
+        : `Fuente: ${dataSource}`;
+
+  if (loading && !overview) {
     return (
       <div className="min-h-screen bg-[#0a0f1c] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
@@ -84,197 +201,195 @@ export default function AnalyticsPage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/marketing">
-        <StatusBadge status="active" label="Analytics Dashboard" size="lg" />
+        <span className="text-sm text-gray-400">Analytics</span>
       </NavigationBar>
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">Analytics Dashboard</h1>
-          <p className="text-gray-400 mt-1">Métricas en tiempo real de todas tus campañas</p>
+          <h1 className="text-3xl font-bold text-white m-0">Analytics</h1>
+          <p className="text-gray-400 mt-1 m-0">Métricas reales del backend (sin datos de demostración).</p>
         </div>
-        <div className="flex items-center gap-3">
-          <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}
-            className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white">
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+          >
             <option value="24h">Últimas 24h</option>
             <option value="7d">Últimos 7 días</option>
             <option value="30d">Últimos 30 días</option>
             <option value="90d">Últimos 90 días</option>
           </select>
-          <button onClick={refresh} disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white">
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={refreshing || !tenantId}
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white disabled:opacity-50"
+          >
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white">
-            <Download className="w-4 h-4" /> Export
+            Actualizar
           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-5 gap-4 mb-8">
-        <GlassCard className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Mail className="w-5 h-5 text-blue-400" />
-            <span className="text-xs text-green-400 flex items-center"><ArrowUpRight className="w-3 h-3" /> 12%</span>
-          </div>
-          <div className="text-2xl font-bold text-white">{(stats.totalSent / 1000).toFixed(0)}K</div>
-          <div className="text-sm text-gray-400">Total Enviados</div>
+      {error ? (
+        <GlassCard className="p-4 mb-6 border-amber-500/30 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-amber-100/90 text-sm m-0">{error}</p>
         </GlassCard>
-        <GlassCard className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Eye className="w-5 h-5 text-purple-400" />
-            <span className="text-xs text-green-400 flex items-center"><ArrowUpRight className="w-3 h-3" /> 8%</span>
-          </div>
-          <div className="text-2xl font-bold text-white">{stats.openRate}%</div>
-          <div className="text-sm text-gray-400">Open Rate</div>
-        </GlassCard>
-        <GlassCard className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <MousePointer className="w-5 h-5 text-cyan-400" />
-            <span className="text-xs text-red-400 flex items-center"><ArrowDownRight className="w-3 h-3" /> 2%</span>
-          </div>
-          <div className="text-2xl font-bold text-white">{stats.clickRate}%</div>
-          <div className="text-sm text-gray-400">Click Rate</div>
-        </GlassCard>
-        <GlassCard className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Target className="w-5 h-5 text-green-400" />
-            <span className="text-xs text-green-400 flex items-center"><ArrowUpRight className="w-3 h-3" /> 15%</span>
-          </div>
-          <div className="text-2xl font-bold text-white">{stats.conversionRate}%</div>
-          <div className="text-sm text-gray-400">Conversion Rate</div>
-        </GlassCard>
-        <GlassCard className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <DollarSign className="w-5 h-5 text-yellow-400" />
-            <span className="text-xs text-green-400 flex items-center"><ArrowUpRight className="w-3 h-3" /> 23%</span>
-          </div>
-          <div className="text-2xl font-bold text-white">${(stats.revenue / 1000).toFixed(0)}K</div>
-          <div className="text-sm text-gray-400">Revenue</div>
-        </GlassCard>
-      </div>
+      ) : null}
 
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-3 gap-6 mb-6">
-        <GlassCard className="col-span-2 p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Performance Over Time</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={PERFORMANCE_DATA}>
-              <defs>
-                <linearGradient id="colorOpened" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="colorClicked" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="date" stroke="#666" />
-              <YAxis stroke="#666" />
-              <Tooltip contentStyle={{ backgroundColor: "#1a1f2e", border: "1px solid #333" }} />
-              <Legend />
-              <Area type="monotone" dataKey="opened" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorOpened)" name="Opened" />
-              <Area type="monotone" dataKey="clicked" stroke="#22c55e" fillOpacity={1} fill="url(#colorClicked)" name="Clicked" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </GlassCard>
-
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Channel Distribution</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={CHANNEL_DATA} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
-                {CHANNEL_DATA?.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ backgroundColor: "#1a1f2e", border: "1px solid #333" }} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
-            {CHANNEL_DATA?.map(c => (
-              <div key={c.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }} />
-                <span className="text-sm text-gray-400">{c.name} ({c.value}%)</span>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Engagement by Hour</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={HOURLY_DATA}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="hour" stroke="#666" interval={3} />
-              <YAxis stroke="#666" />
-              <Tooltip contentStyle={{ backgroundColor: "#1a1f2e", border: "1px solid #333" }} />
-              <Bar dataKey="opens" fill="#8b5cf6" name="Opens" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="clicks" fill="#22c55e" name="Clicks" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </GlassCard>
-
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Funnel Analysis</h3>
-          <div className="space-y-4">
-            {[
-              { label: "Sent", value: stats.totalSent, percent: 100, color: "#3b82f6" },
-              { label: "Delivered", value: stats.delivered, percent: 97.8, color: "#8b5cf6" },
-              { label: "Opened", value: stats.opened, percent: 35.0, color: "#22c55e" },
-              { label: "Clicked", value: stats.clicked, percent: 9.0, color: "#f59e0b" },
-              { label: "Converted", value: stats.converted, percent: 1.6, color: "#ec4899" },
-            ].map((step, i) => (
-              <div key={step.label}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-400">{step.label}</span>
-                  <span className="text-white">{step.value.toLocaleString()} ({step.percent}%)</span>
-                </div>
-                <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${step.percent}%` }} transition={{ duration: 1, delay: i * 0.1 }}
-                    className="h-full rounded-full" style={{ backgroundColor: step.color }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-      </div>
-
-      {/* Campaign Table */}
-      <GlassCard className="p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Top Performing Campaigns</h3>
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left p-3 text-sm text-gray-400">Campaign</th>
-              <th className="text-right p-3 text-sm text-gray-400">Sent</th>
-              <th className="text-right p-3 text-sm text-gray-400">Open Rate</th>
-              <th className="text-right p-3 text-sm text-gray-400">Click Rate</th>
-              <th className="text-right p-3 text-sm text-gray-400">Conversion</th>
-              <th className="text-right p-3 text-sm text-gray-400">Revenue</th>
-            </tr>
-          </thead>
-          <tbody>
-            {CAMPAIGN_PERFORMANCE?.map((c, i) => (
-              <tr key={c.name} className="border-b border-white/5 hover:bg-white/5">
-                <td className="p-3 text-white font-medium">{c.name}</td>
-                <td className="p-3 text-right text-gray-300">{c.sent.toLocaleString()}</td>
-                <td className="p-3 text-right"><span className={`${c.openRate > 35 ? "text-green-400" : "text-gray-300"}`}>{c.openRate}%</span></td>
-                <td className="p-3 text-right"><span className={`${c.clickRate > 10 ? "text-green-400" : "text-gray-300"}`}>{c.clickRate}%</span></td>
-                <td className="p-3 text-right"><span className={`${c.conversion > 3 ? "text-green-400" : "text-gray-300"}`}>{c.conversion}%</span></td>
-                <td className="p-3 text-right text-white font-medium">${c.revenue.toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <GlassCard className="p-4 mb-6 border-white/10">
+        <div className="flex items-center gap-2 text-sm text-gray-300">
+          <BarChart3 className="w-4 h-4 text-purple-400 shrink-0" />
+          <span>{sourceLabel}</span>
+        </div>
       </GlassCard>
+
+      {overview ? (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Users className="w-5 h-5 text-violet-400" />
+                <TrendMini m={overview.mau} />
+              </div>
+              <div className="text-2xl font-bold text-white">{formatNum(overview.mau?.current ?? 0)}</div>
+              <div className="text-sm text-gray-400">MAU (estim.)</div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Users className="w-5 h-5 text-blue-400" />
+                <TrendMini m={overview.dau} />
+              </div>
+              <div className="text-2xl font-bold text-white">{formatNum(overview.dau?.current ?? 0)}</div>
+              <div className="text-sm text-gray-400">DAU (prom.)</div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <BarChart3 className="w-5 h-5 text-cyan-400" />
+                <TrendMini m={overview.daily_sessions} />
+              </div>
+              <div className="text-2xl font-bold text-white">{formatNum(overview.daily_sessions?.current ?? 0)}</div>
+              <div className="text-sm text-gray-400">Sesiones (prom.)</div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Users className="w-5 h-5 text-emerald-400" />
+                <TrendMini m={overview.new_users} />
+              </div>
+              <div className="text-2xl font-bold text-white">{formatNum(overview.new_users?.current ?? 0)}</div>
+              <div className="text-sm text-gray-400">Nuevos usuarios</div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="text-2xl font-bold text-white">{overview.active_campaigns ?? 0}</div>
+              <div className="text-sm text-gray-400">Campañas activas (muestra)</div>
+            </GlassCard>
+            <GlassCard className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-500">Ingresos</span>
+                <TrendMini m={overview.total_revenue} />
+              </div>
+              <div className="text-2xl font-bold text-white">
+                {formatNum(overview.total_revenue?.current ?? 0)}
+              </div>
+              <div className="text-sm text-gray-400">Suma período (daily_metrics)</div>
+            </GlassCard>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <GlassCard className="p-6">
+              <h3 className="text-lg font-bold text-white mb-4 m-0">Sesiones por día</h3>
+              {perfSeries.length === 0 ? (
+                <p className="text-gray-500 text-sm m-0">No hay puntos en daily_metrics para este período.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={perfSeries}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="date" stroke="#666" tick={{ fontSize: 11 }} />
+                    <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                    <Tooltip contentStyle={{ backgroundColor: "#1a1f2e", border: "1px solid #333" }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="value" name="Sesiones" stroke="#8b5cf6" dot={false} strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </GlassCard>
+
+            <GlassCard className="p-6">
+              <h3 className="text-lg font-bold text-white mb-4 m-0">Embudo agregado (muestra de campañas)</h3>
+              {funnelSteps.length === 0 ? (
+                <p className="text-gray-500 text-sm m-0">
+                  Sin campañas en la muestra o métricas en cero. Los envíos reales aparecen cuando hay campañas con
+                  métricas en BD.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {funnelSteps.map((step, i) => (
+                    <div key={step.label}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-400">{step.label}</span>
+                        <span className="text-white">
+                          {step.value.toLocaleString()} ({step.pct}%)
+                        </span>
+                      </div>
+                      <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, step.pct)}%` }}
+                          transition={{ duration: 0.6, delay: i * 0.08 }}
+                          className="h-full rounded-full bg-purple-500"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </GlassCard>
+          </div>
+
+          <GlassCard className="p-6 mb-6">
+            <h3 className="text-lg font-bold text-white mb-4 m-0">Campañas (muestra desde BD)</h3>
+            {top.length === 0 ? (
+              <p className="text-gray-500 text-sm m-0">No hay filas de campaña para este tenant.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px]">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left p-3 text-sm text-gray-400">Campaña</th>
+                      <th className="text-left p-3 text-sm text-gray-400">Estado</th>
+                      <th className="text-right p-3 text-sm text-gray-400">Enviados</th>
+                      <th className="text-right p-3 text-sm text-gray-400">Abierto %</th>
+                      <th className="text-right p-3 text-sm text-gray-400">CTR %</th>
+                      <th className="text-right p-3 text-sm text-gray-400">Conv. %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {top.map((c) => {
+                      const sent = Number(c.sent ?? 0);
+                      const opened = Number(c.opened ?? 0);
+                      const openPct = sent > 0 ? Math.round((opened / sent) * 1000) / 10 : 0;
+                      return (
+                        <tr key={String(c.id ?? c.name)} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="p-3 text-white font-medium">{String(c.name ?? "—")}</td>
+                          <td className="p-3 text-gray-400 text-sm">{String(c.status ?? "—")}</td>
+                          <td className="p-3 text-right text-gray-300">{sent.toLocaleString()}</td>
+                          <td className="p-3 text-right text-gray-300">{openPct}%</td>
+                          <td className="p-3 text-right text-gray-300">{Number(c.ctr ?? 0)}%</td>
+                          <td className="p-3 text-right text-gray-300">{Number(c.conversion_rate ?? 0)}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </GlassCard>
+        </>
+      ) : (
+        <GlassCard className="p-8 text-center text-gray-400">Sin datos de overview.</GlassCard>
+      )}
     </div>
   );
 }
-
