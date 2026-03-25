@@ -1,5 +1,5 @@
 import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
-import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
+import { CAMPAIGNS_API, MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
@@ -160,6 +160,153 @@ export async function fetchMarketingSegments(tenantId?: string | null): Promise<
     error: r.source === "fallback" ? r.error : null,
     source: r.source,
   };
+}
+
+export type CreateMarketingCampaignResult = {
+  ok: boolean;
+  data: Record<string, unknown> | null;
+  error: string | null;
+  status: number;
+};
+
+/** POST /api/marketing/campaigns — requires name, objective, channel, segment_id, template_id + optional snapshots */
+export async function createMarketingCampaign(
+  tenantId: string,
+  body: Record<string, unknown>
+): Promise<CreateMarketingCampaignResult> {
+  const url = MARKETING_ENDPOINTS.CAMPAIGNS;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Tenant-ID": tenantId,
+      },
+      body: JSON.stringify(body),
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      let detailStr = `HTTP ${status}`;
+      if (json && typeof json === "object" && json !== null && "detail" in json) {
+        const d = (json as { detail: unknown }).detail;
+        if (typeof d === "string") detailStr = d;
+        else if (Array.isArray(d))
+          detailStr = d
+            .map((x) =>
+              typeof x === "object" && x && "msg" in x ? String((x as { msg: unknown }).msg) : String(x)
+            )
+            .join("; ");
+        else detailStr = JSON.stringify(d);
+      }
+      return { ok: false, data: null, error: detailStr, status };
+    }
+    if (!json || typeof json !== "object") {
+      return { ok: true, data: {}, error: null, status };
+    }
+    return {
+      ok: true,
+      data: json as Record<string, unknown>,
+      error: null,
+      status,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      data: null,
+      error: (e as Error)?.message ?? "Network error",
+      status: 0,
+    };
+  }
+}
+
+export type ActivateCampaignResult = {
+  ok: boolean;
+  error: string | null;
+  status: number;
+};
+
+export async function activateMarketingCampaign(
+  tenantId: string,
+  campaignId: string
+): Promise<ActivateCampaignResult> {
+  const url = CAMPAIGNS_API.ACTIVATE(campaignId);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "X-Tenant-ID": tenantId,
+      },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const detail =
+        err && typeof err === "object" && "detail" in err
+          ? String((err as { detail: unknown }).detail)
+          : `HTTP ${res.status}`;
+      return { ok: false, error: detail, status: res.status };
+    }
+    return { ok: true, error: null, status: res.status };
+  } catch (e) {
+    return {
+      ok: false,
+      error: (e as Error)?.message ?? "Network error",
+      status: 0,
+    };
+  }
+}
+
+export type LaunchPilotResult = {
+  ok: boolean;
+  data: Record<string, unknown> | null;
+  error: string | null;
+  status: number;
+};
+
+/** POST same-origin → backend /marketing/campaigns/launch-pilot (Meta pilot sequence; default dry_run). */
+export async function postMarketingLaunchPilot(
+  tenantId: string,
+  body: Record<string, unknown>
+): Promise<LaunchPilotResult> {
+  const url = MARKETING_ENDPOINTS.CAMPAIGN_LAUNCH_PILOT;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Tenant-ID": tenantId,
+      },
+      body: JSON.stringify(body),
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      const detail =
+        json && typeof json === "object" && json !== null && "detail" in json
+          ? String((json as { detail: unknown }).detail)
+          : `HTTP ${status}`;
+      return { ok: false, data: null, error: detail, status };
+    }
+    if (!json || typeof json !== "object") {
+      return { ok: true, data: {}, error: null, status };
+    }
+    return {
+      ok: true,
+      data: json as Record<string, unknown>,
+      error: null,
+      status,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      data: null,
+      error: (e as Error)?.message ?? "Network error",
+      status: 0,
+    };
+  }
 }
 
 export async function fetchMarketingCampaignById(

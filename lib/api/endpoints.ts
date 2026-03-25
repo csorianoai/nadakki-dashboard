@@ -22,9 +22,17 @@ export const MARKETING_ENDPOINTS = {
   TEMPLATE_BY_ID: (id: string) => `${marketingPath}/templates/${encodeURIComponent(id)}`,
   /** POST JSON body — same-origin, proxied to backend */
   TEMPLATES_GENERATE: `${marketingPath}/templates/generate`,
+  /** Proxied to backend POST /marketing/campaigns/launch-pilot */
+  CAMPAIGN_LAUNCH_PILOT: `${marketingPath}/campaigns/launch-pilot`,
   INTEGRATIONS: `${marketingPath}/integrations`,
   CORES: "/cores",
   HEALTH: "/health",
+};
+
+/** Same-origin; proxied to backend router prefix /campaigns */
+export const CAMPAIGNS_API = {
+  ACTIVATE: (id: string) =>
+    `/api/campaigns/${encodeURIComponent(id)}/activate`,
 };
 
 export const ADVERTISING_ENDPOINTS = {

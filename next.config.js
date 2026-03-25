@@ -8,6 +8,11 @@ const nextConfig = {
       "https://nadakki-ai-suite.onrender.com"
     ).replace(/\/$/, "");
     return [
+      {
+        source: "/api/marketing/campaigns/launch-pilot",
+        destination: `${backendUrl}/marketing/campaigns/launch-pilot`,
+      },
+      { source: "/api/campaigns/:path*", destination: `${backendUrl}/campaigns/:path*` },
       { source: "/api/marketing/:path*", destination: `${backendUrl}/api/marketing/:path*` },
       { source: "/health", destination: `${backendUrl}/health` },
       { source: "/cores", destination: `${backendUrl}/cores` },

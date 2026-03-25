@@ -138,6 +138,22 @@ export default function CampaignDetailPage() {
                   <label className="block text-sm mb-1" style={{ color: textMuted }}>Descripcion</label>
                   <textarea value={campaign.description || ""} onChange={(e) => setCampaign({ ...campaign, description: e.target.value })} rows={3} className="w-full px-4 py-2 rounded-lg" style={{ backgroundColor: bgPrimary, border: "1px solid " + borderColor, color: textPrimary }} />
                 </div>
+                {campaign.settings && Object.keys(campaign.settings).length > 0 ? (
+                  <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: bgPrimary, border: "1px solid " + borderColor }}>
+                    <h3 className="text-sm font-semibold mb-2" style={{ color: textPrimary }}>Marketing assets</h3>
+                    <dl className="space-y-1 text-sm" style={{ color: textMuted }}>
+                      {typeof campaign.settings.marketing_objective === "string" ? (
+                        <div className="flex gap-2"><dt className="font-medium">Objective</dt><dd style={{ color: textPrimary }}>{campaign.settings.marketing_objective}</dd></div>
+                      ) : null}
+                      {typeof campaign.settings.segment_id === "string" ? (
+                        <div className="flex gap-2"><dt className="font-medium">Segment</dt><dd style={{ color: textPrimary }}>{campaign.settings.segment_id}</dd></div>
+                      ) : null}
+                      {typeof campaign.settings.template_id === "string" ? (
+                        <div className="flex gap-2"><dt className="font-medium">Template</dt><dd style={{ color: textPrimary }}>{campaign.settings.template_id}</dd></div>
+                      ) : null}
+                    </dl>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
