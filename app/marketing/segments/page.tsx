@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -17,9 +17,6 @@ import MarketingSegmentsLiveBanner from "@/components/marketing/MarketingSegment
 import type { FetchSource } from "@/lib/api/client";
 import { normalizeMarketingSegmentsList } from "@/lib/api/marketing";
 import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
-
-const STORAGE_KEY = "nadakki_segments_v2";
-const CACHE_TTL = 5 * 60 * 1000;
 
 // ***************************************
 // TYPES & INTERFACES
@@ -52,6 +49,11 @@ interface Segment {
     avg_open_rate: number;
     avg_click_rate: number;
   };
+  /** From GET /api/marketing/segments merged payload */
+  apiSource?: string;
+  apiEditable?: boolean;
+  apiDeletable?: boolean;
+  apiPersisted?: boolean;
 }
 
 interface ValidationResult {
@@ -324,11 +326,24 @@ function mapSegmentFromApi(r: Record<string, unknown>, index: number): Segment {
   const statusRaw = r.status;
   const status: Segment["status"] =
     statusRaw === "draft" || statusRaw === "archived" ? statusRaw : "active";
+  let conditionGroups = parseConditionGroups(r.condition_groups ?? r.conditionGroups);
+  if (
+    conditionGroups.length === 0 &&
+    typeof r.audience_rules_json === "string" &&
+    r.audience_rules_json.trim()
+  ) {
+    try {
+      const parsed = JSON.parse(r.audience_rules_json) as unknown;
+      conditionGroups = parseConditionGroups(parsed);
+    } catch {
+      /* ignore invalid JSON */
+    }
+  }
   return {
     id: String(r.id ?? r.segment_id ?? `seg-${index}`),
     name: String(r.name ?? "Sin nombre"),
     description: String(r.description ?? ""),
-    conditionGroups: parseConditionGroups(r.condition_groups ?? r.conditionGroups),
+    conditionGroups,
     size:
       typeof r.size === "number" && !Number.isNaN(r.size)
         ? r.size
@@ -357,6 +372,10 @@ function mapSegmentFromApi(r: Record<string, unknown>, index: number): Segment {
       avg_open_rate: Number(stats.avg_open_rate ?? r.avg_open_rate ?? 0) || 0,
       avg_click_rate: Number(stats.avg_click_rate ?? r.avg_click_rate ?? 0) || 0,
     },
+    apiSource: typeof r.source === "string" ? r.source : undefined,
+    apiEditable: r.editable === true,
+    apiDeletable: r.deletable === true,
+    apiPersisted: r.persisted === true,
   };
 }
 
@@ -481,13 +500,6 @@ export default function SegmentsPage() {
     [apiSource, apiLiveData]
   );
 
-  // Save to localStorage when segments change
-  useEffect(() => {
-    if (segments.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(segments));
-    }
-  }, [segments]);
-
   // Auto-calculate when conditions change
   useEffect(() => {
     if (conditionGroups.length > 0 && conditionGroups.some(g => g.conditions.length > 0)) {
@@ -550,7 +562,7 @@ export default function SegmentsPage() {
     ));
   };
 
-  // Save segment
+  // Save segment (POST / PUT persistent API)
   const saveSegment = async () => {
     const validation = validateSegment(segmentName, conditionGroups);
     if (!validation.valid) {
@@ -558,45 +570,83 @@ export default function SegmentsPage() {
       return;
     }
 
-    setSaving(true);
-    const now = new Date().toISOString();
-    
-    const newSegment: Segment = {
-      id: editingSegment?.id || "seg-" + generateId(),
-      name: segmentName.trim(),
-      description: segmentDesc.trim(),
-      conditionGroups,
-      size: estimatedSize || calculateSegmentSize(conditionGroups),
-      predictedConversion: predictedConversion || calculatePredictedConversion(conditionGroups),
-      created_at: editingSegment?.created_at || now,
-      updated_at: now,
-      status: "active",
-      stats: editingSegment?.stats || { campaigns_used: 0, avg_open_rate: 0, avg_click_rate: 0 }
-    };
-
-    if (!tenantId) return;
-    try {
-      await fetch(MARKETING_ENDPOINTS.SEGMENTS, {
-        method: editingSegment ? "PUT" : "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "X-Tenant-ID": tenantId,
-        },
-        body: JSON.stringify({ ...newSegment, tenant_id: tenantId }),
-      });
-    } catch {}
-
-    if (editingSegment) {
-      setSegments(segments?.map(s => s.id === editingSegment.id ? newSegment : s));
-      addNotification("success", "Segmento actualizado correctamente");
-    } else {
-      setSegments([newSegment, ...segments]);
-      addNotification("success", "Segmento creado correctamente");
+    if (!tenantId?.trim()) {
+      addNotification("error", "Selecciona un tenant.");
+      return;
     }
 
-    resetBuilder();
-    setSaving(false);
+    setSaving(true);
+    const tid = tenantId.trim();
+    const rulesJson = JSON.stringify(conditionGroups);
+    const criteriaText = generateSQLPreview(conditionGroups);
+    const sz = estimatedSize ?? calculateSegmentSize(conditionGroups);
+    const pred = predictedConversion ?? calculatePredictedConversion(conditionGroups);
+
+    try {
+      if (editingSegment) {
+        const res = await fetch(MARKETING_ENDPOINTS.SEGMENT_BY_ID(editingSegment.id), {
+          method: "PUT",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tid,
+          },
+          body: JSON.stringify({
+            name: segmentName.trim(),
+            description: segmentDesc.trim(),
+            type: "custom",
+            criteria: criteriaText,
+            size: sz,
+            audience_rules_json: rulesJson,
+            predicted_conversion: pred,
+          }),
+        });
+        const json = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+        if (!res.ok) {
+          addNotification(
+            "error",
+            typeof json?.detail === "string" ? json.detail : `Error HTTP ${res.status}`
+          );
+          return;
+        }
+        addNotification("success", "Segmento actualizado");
+      } else {
+        const res = await fetch(MARKETING_ENDPOINTS.SEGMENTS, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tid,
+          },
+          body: JSON.stringify({
+            name: segmentName.trim(),
+            description: segmentDesc.trim(),
+            type: "custom",
+            criteria: criteriaText,
+            size: sz,
+            source: "manual",
+            tenant_id: tid,
+            audience_rules_json: rulesJson,
+            predicted_conversion: pred,
+          }),
+        });
+        const json = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+        if (!res.ok) {
+          addNotification(
+            "error",
+            typeof json?.detail === "string" ? json.detail : `Error HTTP ${res.status}`
+          );
+          return;
+        }
+        addNotification("success", "Segmento creado y guardado");
+      }
+      resetBuilder();
+      fetchSegments();
+    } catch (e) {
+      addNotification("error", (e as Error)?.message ?? String(e));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const resetBuilder = () => {
@@ -612,45 +662,78 @@ export default function SegmentsPage() {
   };
 
   const editSegment = (segment: Segment) => {
+    if (segment.apiEditable !== true) {
+      addNotification("warning", "Segmento del sistema o de campaña: usa Duplicar para crear una copia editable.");
+      return;
+    }
     setEditingSegment(segment);
     setSegmentName(segment.name);
     setSegmentDesc(segment.description);
-    setConditionGroups(segment.conditionGroups);
+    setConditionGroups(
+      segment.conditionGroups.length > 0
+        ? segment.conditionGroups
+        : [{ id: generateId(), type: "AND", conditions: [] }]
+    );
     setEstimatedSize(segment.size);
     setPredictedConversion(segment.predictedConversion);
     setShowBuilder(true);
   };
 
-  const duplicateSegment = (segment: Segment) => {
-    const newSegment: Segment = {
-      ...segment,
-      id: "seg-" + generateId(),
-      name: segment.name + " (copia)",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      stats: { campaigns_used: 0, avg_open_rate: 0, avg_click_rate: 0 }
-    };
-    setSegments([newSegment, ...segments]);
-    addNotification("success", "Segmento duplicado");
+  const duplicateSegment = async (segment: Segment) => {
+    if (!tenantId?.trim()) {
+      addNotification("error", "Selecciona un tenant.");
+      return;
+    }
+    try {
+      const res = await fetch(MARKETING_ENDPOINTS.SEGMENT_DUPLICATE(segment.id), {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "X-Tenant-ID": tenantId.trim(),
+        },
+      });
+      const json = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+      if (!res.ok) {
+        addNotification(
+          "error",
+          typeof json?.detail === "string" ? json.detail : `Error HTTP ${res.status}`
+        );
+        return;
+      }
+      addNotification("success", "Copia guardada en tu tenant");
+      fetchSegments();
+    } catch (e) {
+      addNotification("error", (e as Error)?.message ?? String(e));
+    }
   };
 
   const deleteSegment = async (id: string) => {
-    if (!tenantId) return;
-    if (!confirm("Eliminar este segmento? Esta accion no se puede deshacer.")) return;
-    
+    if (!tenantId?.trim()) return;
+    if (!confirm("¿Eliminar este segmento del tenant? No se puede deshacer.")) return;
+
     try {
-      await fetch(`${MARKETING_ENDPOINTS.SEGMENTS}/${id}?tenant_id=${encodeURIComponent(tenantId)}`, {
+      const res = await fetch(MARKETING_ENDPOINTS.SEGMENT_BY_ID(id), {
         method: "DELETE",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          "X-Tenant-ID": tenantId,
+          "X-Tenant-ID": tenantId.trim(),
         },
       });
-    } catch {}
-    
-    setSegments(segments.filter(s => s.id !== id));
-    addNotification("success", "Segmento eliminado");
+      const json = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+      if (!res.ok) {
+        addNotification(
+          "error",
+          typeof json?.detail === "string" ? json.detail : `Error HTTP ${res.status}`
+        );
+        return;
+      }
+      addNotification("success", "Segmento eliminado");
+      fetchSegments();
+    } catch (e) {
+      addNotification("error", (e as Error)?.message ?? String(e));
+    }
   };
 
   const usePreset = (preset: typeof PRESET_SEGMENTS[0]) => {
@@ -681,8 +764,11 @@ export default function SegmentsPage() {
       try {
         const imported = JSON.parse(e.target?.result as string);
         if (Array.isArray(imported)) {
-          setSegments(imported);
-          addNotification("success", `${imported.length} segmentos importados`);
+          setSegments(imported as Segment[]);
+          addNotification(
+            "warning",
+            `${imported.length} segmentos en memoria local. No están en el API hasta que los guardes o uses exportar solo como respaldo.`
+          );
         }
       } catch {
         addNotification("error", "Error importando segmentos");
@@ -1011,9 +1097,14 @@ export default function SegmentsPage() {
               <GlassCard className="p-5 group hover:border-green-500/30 transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-bold text-white group-hover:text-green-400 transition-colors">{segment.name}</h3>
-                      {new Date(segment.created_at) > new Date(Date.now() - 86400000) && (
+                      {segment.apiSource ? (
+                        <span className="px-1.5 py-0.5 text-[10px] rounded bg-white/10 text-gray-300 uppercase">
+                          {segment.apiSource}
+                        </span>
+                      ) : null}
+                      {segment.apiPersisted && new Date(segment.created_at) > new Date(Date.now() - 86400000) && (
                         <span className="px-1.5 py-0.5 text-[10px] bg-yellow-500/20 text-yellow-400 rounded">NUEVO</span>
                       )}
                     </div>
@@ -1063,13 +1154,37 @@ export default function SegmentsPage() {
                     {new Date(segment.updated_at).toLocaleDateString()}
                   </span>
                   <div className="flex gap-1">
-                    <button onClick={() => editSegment(segment)} className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white" title="Editar">
+                    <button
+                      onClick={() => editSegment(segment)}
+                      disabled={segment.apiEditable !== true}
+                      className={
+                        "p-2 rounded-lg " +
+                        (segment.apiEditable === true
+                          ? "hover:bg-white/10 text-gray-400 hover:text-white"
+                          : "text-gray-600 cursor-not-allowed opacity-50")
+                      }
+                      title={segment.apiEditable === true ? "Editar" : "Solo lectura (sistema/campaña)"}
+                    >
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => duplicateSegment(segment)} className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white" title="Duplicar">
+                    <button
+                      onClick={() => void duplicateSegment(segment)}
+                      className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white"
+                      title="Duplicar y guardar en tenant"
+                    >
                       <Copy className="w-4 h-4" />
                     </button>
-                    <button onClick={() => deleteSegment(segment.id)} className="p-2 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400" title="Eliminar">
+                    <button
+                      onClick={() => void deleteSegment(segment.id)}
+                      disabled={segment.apiDeletable !== true}
+                      className={
+                        "p-2 rounded-lg " +
+                        (segment.apiDeletable === true
+                          ? "hover:bg-red-500/20 text-gray-400 hover:text-red-400"
+                          : "text-gray-600 cursor-not-allowed opacity-50")
+                      }
+                      title={segment.apiDeletable === true ? "Eliminar" : "No eliminable"}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>

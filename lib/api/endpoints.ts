@@ -14,6 +14,9 @@ export const MARKETING_ENDPOINTS = {
   CAMPAIGNS: `${marketingPath}/campaigns`,
   CAMPAIGN_BY_ID: (id: string) => `${marketingPath}/campaigns/${encodeURIComponent(id)}`,
   SEGMENTS: `${marketingPath}/segments`,
+  SEGMENT_BY_ID: (id: string) => `${marketingPath}/segments/${encodeURIComponent(id)}`,
+  SEGMENT_DUPLICATE: (id: string) =>
+    `${marketingPath}/segments/${encodeURIComponent(id)}/duplicate`,
   JOURNEYS: `${marketingPath}/journeys`,
   TEMPLATES: `${marketingPath}/templates`,
   TEMPLATE_BY_ID: (id: string) => `${marketingPath}/templates/${encodeURIComponent(id)}`,

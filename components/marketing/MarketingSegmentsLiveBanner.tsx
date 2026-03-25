@@ -46,7 +46,7 @@ export default function MarketingSegmentsLiveBanner({
       </div>
       {segments.length === 0 && !loading ? (
         <p className="text-xs text-gray-500 mt-2 m-0">
-          Sin segmentos desde el API. El constructor local sigue disponible abajo.
+          Sin datos del API. Usa &quot;Nuevo segmento&quot; para crear uno persistente en tu tenant.
         </p>
       ) : (
         <ul className="mt-2 space-y-1 max-h-28 overflow-y-auto text-sm text-gray-300">
