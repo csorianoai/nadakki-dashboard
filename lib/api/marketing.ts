@@ -417,6 +417,200 @@ export async function fetchMarketingCampaignById(
   return { data: o, error: null, source: "live" };
 }
 
+function formatHttpDetail(json: unknown, fallback: string): string {
+  if (json && typeof json === "object" && json !== null && "detail" in json) {
+    const d = (json as { detail: unknown }).detail;
+    if (typeof d === "string") return d;
+    if (Array.isArray(d))
+      return d
+        .map((x) =>
+          typeof x === "object" && x && "msg" in x ? String((x as { msg: unknown }).msg) : String(x)
+        )
+        .join("; ");
+    return JSON.stringify(d);
+  }
+  return fallback;
+}
+
+/** GET /api/marketing/journeys — same-origin; X-Tenant-ID + optional ?tenant_id= fallback. */
+export async function fetchMarketingJourneys(tenantId: string): Promise<{
+  journeys: Record<string, unknown>[];
+  error: string | null;
+}> {
+  const qs = tenantId ? `?tenant_id=${encodeURIComponent(tenantId)}` : "";
+  const url = `${MARKETING_ENDPOINTS.JOURNEYS}${qs}`;
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    });
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { journeys: [], error: formatHttpDetail(json, `HTTP ${res.status}`) };
+    }
+    const o = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    const raw = o.journeys;
+    const journeys = Array.isArray(raw)
+      ? raw.filter((x) => x && typeof x === "object").map((x) => x as Record<string, unknown>)
+      : [];
+    return { journeys, error: null };
+  } catch (e) {
+    return { journeys: [], error: (e as Error)?.message ?? "Network error" };
+  }
+}
+
+/** GET /api/marketing/journeys/{id} — returns journey row or error. */
+export async function fetchMarketingJourneyById(
+  tenantId: string,
+  journeyId: string
+): Promise<{ data: Record<string, unknown> | null; error: string | null }> {
+  const url = MARKETING_ENDPOINTS.JOURNEY_BY_ID(journeyId);
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    });
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { data: null, error: formatHttpDetail(json, `HTTP ${res.status}`) };
+    }
+    if (!json || typeof json !== "object") return { data: null, error: "Invalid response" };
+    return { data: json as Record<string, unknown>, error: null };
+  } catch (e) {
+    return { data: null, error: (e as Error)?.message ?? "Network error" };
+  }
+}
+
+export type JourneyMutationResult = {
+  ok: boolean;
+  data: Record<string, unknown> | null;
+  error: string | null;
+  status: number;
+};
+
+export async function createMarketingJourney(
+  tenantId: string,
+  body: Record<string, unknown>
+): Promise<JourneyMutationResult> {
+  const url = MARKETING_ENDPOINTS.JOURNEYS;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Tenant-ID": tenantId,
+      },
+      body: JSON.stringify(body),
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { ok: false, data: null, error: formatHttpDetail(json, `HTTP ${status}`), status };
+    }
+    const o = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    const inner = o.journey && typeof o.journey === "object" ? (o.journey as Record<string, unknown>) : o;
+    return { ok: true, data: inner, error: null, status };
+  } catch (e) {
+    return { ok: false, data: null, error: (e as Error)?.message ?? "Network error", status: 0 };
+  }
+}
+
+export async function updateMarketingJourney(
+  tenantId: string,
+  journeyId: string,
+  body: Record<string, unknown>
+): Promise<JourneyMutationResult> {
+  const url = MARKETING_ENDPOINTS.JOURNEY_BY_ID(journeyId);
+  try {
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Tenant-ID": tenantId,
+      },
+      body: JSON.stringify(body),
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { ok: false, data: null, error: formatHttpDetail(json, `HTTP ${status}`), status };
+    }
+    const o = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    const inner = o.journey && typeof o.journey === "object" ? (o.journey as Record<string, unknown>) : o;
+    return { ok: true, data: inner, error: null, status };
+  } catch (e) {
+    return { ok: false, data: null, error: (e as Error)?.message ?? "Network error", status: 0 };
+  }
+}
+
+export async function activateMarketingJourney(
+  tenantId: string,
+  journeyId: string
+): Promise<JourneyMutationResult> {
+  const url = MARKETING_ENDPOINTS.JOURNEY_ACTIVATE(journeyId);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { ok: false, data: null, error: formatHttpDetail(json, `HTTP ${status}`), status };
+    }
+    const o = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    const inner = o.journey && typeof o.journey === "object" ? (o.journey as Record<string, unknown>) : o;
+    return { ok: true, data: inner, error: null, status };
+  } catch (e) {
+    return { ok: false, data: null, error: (e as Error)?.message ?? "Network error", status: 0 };
+  }
+}
+
+export async function pauseMarketingJourney(
+  tenantId: string,
+  journeyId: string
+): Promise<JourneyMutationResult> {
+  const url = MARKETING_ENDPOINTS.JOURNEY_PAUSE(journeyId);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { ok: false, data: null, error: formatHttpDetail(json, `HTTP ${status}`), status };
+    }
+    const o = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    const inner = o.journey && typeof o.journey === "object" ? (o.journey as Record<string, unknown>) : o;
+    return { ok: true, data: inner, error: null, status };
+  } catch (e) {
+    return { ok: false, data: null, error: (e as Error)?.message ?? "Network error", status: 0 };
+  }
+}
+
+export async function deleteMarketingJourney(
+  tenantId: string,
+  journeyId: string
+): Promise<JourneyMutationResult> {
+  const url = MARKETING_ENDPOINTS.JOURNEY_BY_ID(journeyId);
+  try {
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { ok: false, data: null, error: formatHttpDetail(json, `HTTP ${status}`), status };
+    }
+    const o = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    return { ok: true, data: o, error: null, status };
+  } catch (e) {
+    return { ok: false, data: null, error: (e as Error)?.message ?? "Network error", status: 0 };
+  }
+}
+
 export async function fetchSocialStatus(tenantId: string) {
   try {
     const ctrl = new AbortController();

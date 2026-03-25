@@ -18,6 +18,11 @@ export const MARKETING_ENDPOINTS = {
   SEGMENT_DUPLICATE: (id: string) =>
     `${marketingPath}/segments/${encodeURIComponent(id)}/duplicate`,
   JOURNEYS: `${marketingPath}/journeys`,
+  JOURNEY_BY_ID: (id: string) => `${marketingPath}/journeys/${encodeURIComponent(id)}`,
+  JOURNEY_ACTIVATE: (id: string) =>
+    `${marketingPath}/journeys/${encodeURIComponent(id)}/activate`,
+  JOURNEY_PAUSE: (id: string) =>
+    `${marketingPath}/journeys/${encodeURIComponent(id)}/pause`,
   TEMPLATES: `${marketingPath}/templates`,
   TEMPLATE_BY_ID: (id: string) => `${marketingPath}/templates/${encodeURIComponent(id)}`,
   /** POST JSON body — same-origin, proxied to backend */
