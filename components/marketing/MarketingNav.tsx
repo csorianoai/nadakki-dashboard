@@ -4,13 +4,21 @@ import { usePathname, useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
   { name: "Hub", href: "/marketing", icon: "🚀", color: "#8b5cf6" },
-  { name: "Leads", href: "/marketing/leads", icon: "🎯", color: "#22c55e" },
-  { name: "Content", href: "/marketing/content", icon: "✍️", color: "#a855f7" },
-  { name: "Social", href: "/marketing/social", icon: "📱", color: "#3b82f6" },
+  { name: "Templates", href: "/marketing/templates", icon: "📝", color: "#f59e0b" },
+  { name: "Segmentos", href: "/marketing/segments", icon: "🎯", color: "#22c55e" },
+  { name: "Journeys", href: "/marketing/journeys", icon: "🗺️", color: "#8b5cf6" },
   { name: "Analytics", href: "/marketing/analytics", icon: "📊", color: "#06b6d4" },
+  { name: "Integraciones", href: "/marketing/integrations", icon: "🔌", color: "#14b8a6" },
   { name: "Campaigns", href: "/marketing/campaigns", icon: "📢", color: "#f59e0b" },
+  {
+    name: "A/B (beta)",
+    href: "/marketing/ab-testing",
+    icon: "🔬",
+    color: "#64748b",
+    title: "Beta local: solo este navegador, sin API de experimentos en backend",
+  },
   { name: "Agentes", href: "/marketing/agents", icon: "🤖", color: "#ec4899" },
-];
+] as const;
 
 export default function MarketingNav() {
   const pathname = usePathname();
@@ -45,9 +53,10 @@ export default function MarketingNav() {
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const title = "title" in item ? item.title : undefined;
           return (
-            <Link key={item.href} href={item.href} style={{ textDecoration: "none" }}>
+            <Link key={item.href} href={item.href} style={{ textDecoration: "none" }} title={title}>
               <button style={{
                 display: "flex", alignItems: "center", gap: 8, padding: "10px 18px",
                 backgroundColor: isActive ? item.color : `${item.color}15`,

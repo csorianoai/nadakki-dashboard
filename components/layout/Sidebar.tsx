@@ -23,6 +23,7 @@ import {
   Inbox,
   FolderOpen,
   Users2,
+  Users,
   BarChart3,
   Download,
   Shield,
@@ -34,6 +35,9 @@ import {
   Activity,
   KeyRound,
   Server,
+  GitBranch,
+  Plug,
+  FlaskConical,
 } from "lucide-react";
 
 interface NavModule {
@@ -74,10 +78,22 @@ const NAV: NavCore[] = [
     color: "#10b981",
     modules: [
       { id: "marketing-hub", icon: <Megaphone size={16} />, label: "Marketing", href: "/marketing" },
+      { id: "marketing-templates", icon: <FileText size={16} />, label: "Templates", href: "/marketing/templates" },
+      { id: "marketing-segments", icon: <Users size={16} />, label: "Segmentos", href: "/marketing/segments" },
+      { id: "marketing-journeys", icon: <GitBranch size={16} />, label: "Journeys", href: "/marketing/journeys" },
+      { id: "marketing-analytics", icon: <BarChart3 size={16} />, label: "Analytics (marketing)", href: "/marketing/analytics" },
+      { id: "marketing-integrations", icon: <Plug size={16} />, label: "Integraciones", href: "/marketing/integrations" },
+      { id: "marketing-social-connections", icon: <Link2 size={16} />, label: "Social Connections", href: "/marketing/social-connections" },
+      {
+        id: "marketing-ab",
+        icon: <FlaskConical size={16} />,
+        label: "A/B (beta · local)",
+        href: "/marketing/ab-testing",
+        badge: "LOCAL",
+      },
       { id: "advertising", icon: <Megaphone size={16} />, label: "Publicidad", href: "/advertising" },
       { id: "content", icon: <PenSquare size={16} />, label: "Contenido", href: "/content" },
       { id: "social", icon: <Share2 size={16} />, label: "Redes Sociales", href: "/social" },
-      { id: "marketing-social-connections", icon: <Link2 size={16} />, label: "Social Connections", href: "/marketing/social-connections" },
     ],
   },
   {
