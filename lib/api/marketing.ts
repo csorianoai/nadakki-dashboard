@@ -686,7 +686,7 @@ export async function fetchSocialStatus(tenantId: string) {
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 10000);
-    const r = await fetch(`${API_URL}/api/social/status/${tenantId}`, {
+    const r = await fetch(`/api/social/status/${tenantId}`, {
       headers: { "X-Tenant-ID": tenantId },
       signal: ctrl.signal,
     });
