@@ -129,7 +129,14 @@ export function useSocialConnections(): UseSocialConnectionsResult {
       const t = tid ?? tenantId;
       if (!t) return;
       setConnecting(true);
-      window.open(getOAuthConnectUrl(platform, t), "_blank", "noopener");
+      const url = getOAuthConnectUrl(platform, t);
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       setConnecting(false);
     },
     [tenantId]
