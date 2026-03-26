@@ -309,7 +309,14 @@ export default function JourneysListPage() {
                       {j.campaign_id ? (
                         <div>
                           <dt className="text-gray-600">Campaña</dt>
-                          <dd className="text-gray-300 m-0 font-mono truncate">{String(j.campaign_id)}</dd>
+                          <dd className="m-0 font-mono truncate">
+                            <Link
+                              href={`/marketing/campaigns/${encodeURIComponent(String(j.campaign_id))}`}
+                              className="text-violet-300 hover:text-violet-200 underline"
+                            >
+                              {String(j.campaign_id)}
+                            </Link>
+                          </dd>
                         </div>
                       ) : null}
                       <div className="col-span-2 sm:col-span-3">

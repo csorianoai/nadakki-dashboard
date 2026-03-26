@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import { motion } from "framer-motion";
 import {
   Share2,
@@ -9,18 +10,22 @@ import {
   Twitter,
   Loader2,
   CheckCircle2,
-  XCircle,
+  AlertCircle,
+  RefreshCw,
+  ArrowRight,
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useSocialConnections } from "@/hooks/useSocialConnections";
+import { useTenant } from "@/contexts/TenantContext";
+import Link from "next/link";
 
 const PLATFORM_CONFIG: Record<
   string,
   {
     name: string;
-    Icon: React.ComponentType<{ className?: string }>;
+    Icon: ComponentType<{ className?: string }>;
     color: string;
     enabled: boolean;
   }
@@ -52,11 +57,16 @@ function getPlatformFromData(platform: string): string {
 }
 
 export default function SocialConnectionsClient() {
-  const { platforms, loading, error, connect, disconnect } = useSocialConnections();
+  const { tenantId } = useTenant();
+  const { platforms, loading, refreshing, error, connect, fetchStatus } = useSocialConnections();
 
   const platformMap = new Map(
     platforms.map((p) => [getPlatformFromData(p.platform), p])
   );
+
+  const onQuietRefresh = () => {
+    void fetchStatus(undefined, { quiet: true });
+  };
 
   return (
     <div className="ndk-page ndk-fade-in">
@@ -64,19 +74,49 @@ export default function SocialConnectionsClient() {
         <StatusBadge status="active" label="Conexiones Sociales" size="lg" />
       </NavigationBar>
 
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
-            <Share2 className="w-10 h-10 text-blue-400" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
+              <Share2 className="w-10 h-10 text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Conexiones Sociales</h1>
+              <p className="text-gray-400 m-0">
+                OAuth manual cuando conectas o revisas una sesión. Sin pasos automáticos de inicio de sesión.
+              </p>
+              {tenantId ? (
+                <p className="text-sm text-gray-500 mt-2 m-0">
+                  Tenant: <span className="text-gray-300 font-mono">{tenantId}</span>
+                </p>
+              ) : (
+                <p className="text-sm text-amber-200/90 mt-2 m-0">
+                  Selecciona un tenant para ver el estado real de las integraciones.
+                </p>
+              )}
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Conexiones Sociales</h1>
-            <p className="text-gray-400">Conecta tus plataformas para sincronizar datos</p>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Link
+              href="/marketing/integrations"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-gray-200"
+            >
+              Resumen integraciones
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <button
+              type="button"
+              onClick={onQuietRefresh}
+              disabled={!tenantId || loading || refreshing}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-gray-200 disabled:opacity-50"
+            >
+              {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Actualizar estado
+            </button>
           </div>
         </div>
       </motion.div>
@@ -87,7 +127,14 @@ export default function SocialConnectionsClient() {
         </div>
       ) : error ? (
         <GlassCard className="p-8 text-center">
-          <p className="text-gray-400">{error}</p>
+          <p className="text-gray-400 m-0">{error}</p>
+          <button
+            type="button"
+            onClick={() => void fetchStatus()}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-gray-200"
+          >
+            Reintentar
+          </button>
         </GlassCard>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -102,79 +149,110 @@ export default function SocialConnectionsClient() {
             const platformData = platformMap.get(key);
             const connected = platformData?.connected ?? false;
             const needsRefresh = platformData?.needs_refresh ?? false;
+            const healthyConnected = connected && !needsRefresh;
+            const degraded = connected && needsRefresh;
+
+            const cardRing =
+              healthyConnected
+                ? "ring-1 ring-emerald-500/30 border-emerald-500/25"
+                : degraded
+                  ? "ring-1 ring-amber-500/30 border-amber-500/25"
+                  : "border-white/10";
 
             return (
               <motion.div
                 key={key}
+                id={`social-${key}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
+                className="scroll-mt-24"
               >
-                <GlassCard className="p-6 hover:border-white/20 transition-all">
+                <GlassCard className={`p-6 hover:border-white/20 transition-all ${cardRing}`}>
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="p-3 rounded-xl"
+                        className="p-3 rounded-xl shrink-0"
                         style={{ backgroundColor: config.color + "20" }}
                       >
-                        <span style={{ color: config.color }}><Icon className="w-6 h-6" /></span>
+                        <span style={{ color: config.color }}>
+                          <Icon className="w-6 h-6" />
+                        </span>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-white">{config.name}</h3>
-                        {connected ? (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="flex items-center gap-1 text-sm text-green-400">
-                              <CheckCircle2 className="w-4 h-4" />
-                              Conectado
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-white m-0">{config.name}</h3>
+                        {healthyConnected ? (
+                          <div className="mt-2 space-y-1">
+                            <span className="inline-flex items-center gap-1.5 text-sm text-emerald-400">
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                              Listo · conectado
                             </span>
-                            {platformData?.page_name && (
-                              <span className="text-sm text-gray-500">
-                                 {platformData.page_name}
-                              </span>
-                            )}
-                            {platformData?.user_email && (
-                              <span className="text-sm text-gray-500">
-                                 {platformData.user_email}
-                              </span>
-                            )}
-                            {needsRefresh && (
-                              <span className="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-400 rounded-full">
-                                Actualizar
-                              </span>
+                            <p className="text-sm text-gray-500 m-0">
+                              No necesitas volver a autorizar mientras el estado se mantenga así.
+                            </p>
+                            {(platformData?.page_name || platformData?.user_email) && (
+                              <p className="text-sm text-gray-500 m-0 truncate">
+                                {[platformData?.page_name, platformData?.user_email]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </p>
                             )}
                           </div>
+                        ) : degraded ? (
+                          <div className="mt-2 space-y-1">
+                            <span className="inline-flex items-center gap-1.5 text-sm text-amber-300">
+                              <AlertCircle className="w-4 h-4 shrink-0" />
+                              Requiere atención
+                            </span>
+                            <p className="text-sm text-gray-500 m-0">
+                              El token o permisos pueden estar vencidos. Usa el flujo OAuth real para revisar (tú inicias la
+                              sesión en el proveedor).
+                            </p>
+                          </div>
                         ) : (
-                          <p className="text-sm text-gray-500 mt-1">
-                            {config.enabled
-                              ? "No conectado"
-                              : "Prximamente"}
+                          <p className="text-sm text-gray-500 mt-2 m-0">
+                            {config.enabled ? "No conectado" : "Próximamente"}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="shrink-0">
-                      {connected ? (
+                    <div className="shrink-0 flex flex-col items-end gap-2">
+                      {healthyConnected ? (
                         <button
-                          onClick={() => disconnect(key)}
-                          className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-400 text-sm font-medium transition-colors"
+                          type="button"
+                          onClick={onQuietRefresh}
+                          disabled={!tenantId || refreshing}
+                          className="flex items-center gap-2 px-4 py-2 bg-emerald-500/90 hover:bg-emerald-500 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
                         >
-                          <XCircle className="w-4 h-4" />
-                          Desconectar
+                          {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                          Administrar
                         </button>
-                      ) : config.enabled ? (
+                      ) : degraded && config.enabled ? (
                         <button
+                          type="button"
                           onClick={() => connect(key)}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-medium transition-colors"
+                          disabled={!tenantId}
+                          className="flex items-center gap-2 px-4 py-2 bg-amber-500/25 hover:bg-amber-500/35 border border-amber-500/40 rounded-lg text-amber-100 text-sm font-medium transition-colors disabled:opacity-50"
+                        >
+                          Revisar conexión
+                        </button>
+                      ) : !connected && config.enabled ? (
+                        <button
+                          type="button"
+                          onClick={() => connect(key)}
+                          disabled={!tenantId}
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
                         >
                           Conectar {config.name.split(" ")[0]}
                         </button>
                       ) : (
                         <button
+                          type="button"
                           disabled
                           className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 text-sm cursor-not-allowed"
                         >
-                          Prximamente
+                          Próximamente
                         </button>
                       )}
                     </div>
@@ -188,4 +266,3 @@ export default function SocialConnectionsClient() {
     </div>
   );
 }
-

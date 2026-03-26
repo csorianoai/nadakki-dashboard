@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CreditCard, Check, Loader2, RefreshCw, Zap } from "lucide-react";
+import { CreditCard, Check, Loader2, Zap } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
@@ -18,60 +18,105 @@ interface Plan {
   features: string[];
 }
 
-const DEFAULT_PLANS: Plan[] = [
-  { id: "starter", name: "Starter", price: 999, executions_limit: 10000, features: ["10K ejecuciones/mes", "Soporte email", "5 agentes"] },
-  { id: "pro", name: "Pro", price: 2999, executions_limit: 50000, features: ["50K ejecuciones/mes", "Soporte prioritario", "Agentes ilimitados", "Analytics avanzado"] },
-  { id: "enterprise", name: "Enterprise", price: 9999, executions_limit: 200000, features: ["200K ejecuciones/mes", "SLA 99.9%", "Soporte dedicado", "Custom integrations"] },
-];
-
 export default function AdminBillingPage() {
   const { tenantId } = useTenant();
-  const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
-  const [currentPlan, setCurrentPlan] = useState<string>("starter");
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tenantId) {
       setLoading(false);
+      setPlans([]);
+      setCurrentPlan(null);
+      setError(null);
       return;
     }
+
     setLoading(true);
+    setError(null);
+
+    let plansLoaded: Plan[] = [];
+    let plansFailed = false;
+
     Promise.all([
       fetch(`${API_URL}/api/v1/billing/plans`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => {
+        .then(async (r) => {
+          if (!r.ok) {
+            plansFailed = true;
+            return;
+          }
+          const d = await r.json().catch(() => null);
           const list = d?.plans || d?.data?.plans || d;
-          if (Array.isArray(list) && list.length > 0) {
-            setPlans(list.map((p: any) => ({
-              id: p.id || p.name?.toLowerCase(),
-              name: p.name || p.id,
-              price: p.price ?? p.price_monthly ?? 0,
-              executions_limit: p.executions_limit ?? p.executionsLimit ?? 0,
-              features: p.features || [],
-            })));
+          if (!Array.isArray(list)) {
+            plansFailed = true;
+            return;
+          }
+          plansLoaded = list.map((p: Record<string, unknown>) => ({
+            id: String(p.id ?? (p.name as string)?.toLowerCase() ?? ""),
+            name: String(p.name ?? p.id ?? ""),
+            price: Number(p.price ?? p.price_monthly ?? 0),
+            executions_limit: Number(p.executions_limit ?? p.executionsLimit ?? 0),
+            features: Array.isArray(p.features) ? (p.features as string[]) : [],
+          })).filter((p) => p.id.length > 0);
+        })
+        .catch(() => {
+          plansFailed = true;
+        }),
+      fetch(`${API_URL}/api/v1/tenants/${tenantId}/billing`)
+        .then(async (r) => {
+          if (!r.ok) {
+            setCurrentPlan(null);
+            return;
+          }
+          const d = await r.json().catch(() => null);
+          const plan = d?.plan ?? d?.data?.plan;
+          if (plan != null && String(plan).length > 0) {
+            setCurrentPlan(String(plan).toLowerCase());
+          } else {
+            setCurrentPlan(null);
           }
         })
-        .catch(() => {}),
-      fetch(`${API_URL}/api/v1/tenants/${tenantId}/billing`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => {
-          const plan = d?.plan || d?.data?.plan;
-          if (plan) setCurrentPlan(String(plan).toLowerCase());
-        })
-        .catch(() => {}),
-    ]).finally(() => setLoading(false));
+        .catch(() => {
+          setCurrentPlan(null);
+        }),
+    ])
+      .then(() => {
+        if (plansFailed) {
+          setPlans([]);
+          setError("No se pudieron cargar los planes. Compruebe la API de billing.");
+          return;
+        }
+        setPlans(plansLoaded);
+        if (plansLoaded.length === 0) {
+          setError(null);
+        }
+      })
+      .finally(() => setLoading(false));
   }, [tenantId]);
 
   const handleUpgrade = (planId: string) => {
+    if (!tenantId) return;
+    setActionError(null);
     setUpgrading(planId);
     fetch(`${API_URL}/api/v1/tenants/${tenantId}/billing`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plan: planId }),
     })
-      .then((r) => r.ok && setCurrentPlan(planId))
-      .catch(() => {})
+      .then((r) => {
+        if (r.ok) {
+          setCurrentPlan(planId.toLowerCase());
+          return;
+        }
+        setActionError(`No se pudo actualizar el plan (${r.status}).`);
+      })
+      .catch(() => {
+        setActionError("No se pudo actualizar el plan (error de red).");
+      })
       .finally(() => setUpgrading(null));
   };
 
@@ -86,18 +131,59 @@ export default function AdminBillingPage() {
     );
   }
 
+  if (!tenantId) {
+    return (
+      <div className="ndk-page ndk-fade-in">
+        <NavigationBar backHref="/admin" />
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Billing</h1>
+          <p className="text-gray-400 mt-1">Seleccione un tenant para ver planes y facturación.</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="ndk-page ndk-fade-in">
+        <NavigationBar backHref="/admin">
+          <span className="text-sm text-gray-400">Tenant: {tenantId}</span>
+        </NavigationBar>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Billing</h1>
+          <p className="text-red-400 mt-2">{error}</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (plans.length === 0) {
+    return (
+      <div className="ndk-page ndk-fade-in">
+        <NavigationBar backHref="/admin">
+          <span className="text-sm text-gray-400">Tenant: {tenantId}</span>
+        </NavigationBar>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Billing</h1>
+          <p className="text-gray-400 mt-1">No hay planes publicados por la API.</p>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/admin">
-        <span className="text-sm text-gray-400">Tenant: {tenantId ?? "—"}</span>
+        <span className="text-sm text-gray-400">Tenant: {tenantId}</span>
       </NavigationBar>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-3xl font-bold text-white">Billing</h1>
         <p className="text-gray-400 mt-1">Planes y facturación</p>
       </motion.div>
+      {actionError && <p className="text-red-400 mb-4">{actionError}</p>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map((plan, i) => {
-          const isActive = currentPlan === plan.id;
+          const isActive = currentPlan != null && currentPlan === plan.id;
           const isUpgrading = upgrading === plan.id;
           return (
             <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>

@@ -589,6 +589,77 @@ export async function pauseMarketingJourney(
   }
 }
 
+export type JourneyRunResult = {
+  ok: boolean;
+  data: Record<string, unknown> | null;
+  error: string | null;
+  status: number;
+};
+
+export type JourneyHistoryRun = {
+  id: string;
+  journey_id: string;
+  tenant_id: string;
+  timestamp: string;
+  status: string;
+  message: string;
+};
+
+/** POST /api/marketing/journeys/{id}/run — manual execution MVP (no scheduler/engine). */
+export async function runMarketingJourney(
+  tenantId: string,
+  journeyId: string
+): Promise<JourneyRunResult> {
+  const url = MARKETING_ENDPOINTS.JOURNEY_RUN(journeyId);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { ok: false, data: null, error: formatHttpDetail(json, `HTTP ${status}`), status };
+    }
+    const o = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    return { ok: true, data: o, error: null, status };
+  } catch (e) {
+    return { ok: false, data: null, error: (e as Error)?.message ?? "Network error", status: 0 };
+  }
+}
+
+/** GET /api/marketing/journeys/{id}/runs — returns up to 5 recent runs. */
+export async function fetchMarketingJourneyRuns(
+  tenantId: string,
+  journeyId: string
+): Promise<{ runs: JourneyHistoryRun[]; error: string | null }> {
+  const url = MARKETING_ENDPOINTS.JOURNEY_RUNS(journeyId);
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    });
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      return { runs: [], error: formatHttpDetail(json, `HTTP ${res.status}`) };
+    }
+    const o = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    const rawRuns = Array.isArray(o.runs) ? o.runs : [];
+    const runs: JourneyHistoryRun[] = rawRuns
+      .filter((x): x is Record<string, unknown> => !!x && typeof x === "object")
+      .map((x) => ({
+        id: String(x.id ?? ""),
+        journey_id: String(x.journey_id ?? ""),
+        tenant_id: String(x.tenant_id ?? ""),
+        timestamp: String(x.timestamp ?? ""),
+        status: String(x.status ?? ""),
+        message: String(x.message ?? ""),
+      }));
+    return { runs, error: null };
+  } catch (e) {
+    return { runs: [], error: (e as Error)?.message ?? "Network error" };
+  }
+}
+
 export async function deleteMarketingJourney(
   tenantId: string,
   journeyId: string

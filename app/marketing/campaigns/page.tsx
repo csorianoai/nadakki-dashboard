@@ -49,14 +49,22 @@ export default function CampaignsPage() {
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => void refresh()}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-gray-200"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Actualizar
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/marketing/campaigns/new"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500/90 hover:bg-orange-500 text-sm font-medium text-white"
+          >
+            Nueva campaña
+          </Link>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-gray-200"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualizar
+          </button>
+        </div>
       </div>
 
       {error && source === "fallback" && (
@@ -76,6 +84,12 @@ export default function CampaignsPage() {
             Datos desde <code className="text-gray-400">/api/marketing/campaigns</code> (header{" "}
             <code className="text-gray-400">X-Tenant-ID</code>).
           </p>
+          <Link
+            href="/marketing/campaigns/new"
+            className="inline-block mt-6 px-4 py-2 rounded-lg bg-orange-500/90 hover:bg-orange-500 text-sm font-medium text-white"
+          >
+            Crear campaña con segmento y plantilla
+          </Link>
         </GlassCard>
       ) : (
         <div className="space-y-3">

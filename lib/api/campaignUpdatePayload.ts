@@ -1,5 +1,17 @@
 import type { Campaign, CampaignStatus } from "@/lib/api";
 
+/** Blocks save when core marketing wiring is missing (segment + template). */
+export function validateMarketingCampaignForSave(c: Campaign): string | null {
+  if (!c.name.trim()) return "El nombre es obligatorio.";
+  const segId =
+    String(c.audience_id ?? "").trim() ||
+    (typeof c.settings?.segment_id === "string" ? c.settings.segment_id.trim() : "");
+  const tplId = typeof c.settings?.template_id === "string" ? c.settings.template_id.trim() : "";
+  if (!segId) return "Seleccione un segmento.";
+  if (!tplId) return "Seleccione una plantilla.";
+  return null;
+}
+
 const STATUSES: CampaignStatus[] = [
   "draft",
   "scheduled",

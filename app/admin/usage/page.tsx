@@ -16,55 +16,62 @@ interface UsageData {
   executions?: { date: string; agent: string; result: string }[];
 }
 
-const EXAMPLE_USAGE: UsageData = {
-  executions_this_month: 3420,
-  limit: 10000,
-  executions: [
-    { date: "2025-02-18 10:32", agent: "leadscoringia__leadscoringagentoperative", result: "success" },
-    { date: "2025-02-18 10:15", agent: "contentgeneratoria__contentgeneratoragentoperative", result: "success" },
-    { date: "2025-02-18 09:58", agent: "sentimentanalyzeria__sentimentanalyzeragentoperative", result: "success" },
-    { date: "2025-02-18 09:42", agent: "audiencesegmenteria__audiencesegmenteragentoperative", result: "success" },
-    { date: "2025-02-18 09:21", agent: "budgetforecastia__budgetforecastagentoperative", result: "success" },
-    { date: "2025-02-17 18:05", agent: "campaignoptimizeria__campaignoptimizeragentoperative", result: "success" },
-    { date: "2025-02-17 17:30", agent: "retentionpredictoria__retentionpredictoragentoperative", result: "success" },
-    { date: "2025-02-17 16:55", agent: "competitoranalyzeria__competitoranalyzeragentoperative", result: "success" },
-    { date: "2025-02-17 16:20", agent: "emailautomationia__emailautomationagentoperative", result: "success" },
-    { date: "2025-02-17 15:45", agent: "socialpostgeneratoria__socialpostgeneratoragentoperative", result: "success" },
-  ],
-};
+function hasUsagePayload(u: UsageData): boolean {
+  if (u.executions_this_month != null && Number.isFinite(Number(u.executions_this_month))) return true;
+  if (u.limit != null && Number.isFinite(Number(u.limit))) return true;
+  if (Array.isArray(u.executions) && u.executions.length > 0) return true;
+  return false;
+}
 
 export default function AdminUsagePage() {
   const { tenantId } = useTenant();
   const [data, setData] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchUsage = () => {
     if (!tenantId) return;
     setLoading(true);
+    setError(null);
     fetch(`${API_URL}/api/v1/tenants/${tenantId}/usage`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        const usage = d?.data || d;
-        if (usage?.executions_this_month != null || usage?.executions?.length) {
-          setData(usage);
-        } else {
-          setData(EXAMPLE_USAGE);
+      .then(async (r) => {
+        if (!r.ok) {
+          setData(null);
+          setError(`La API devolvió ${r.status}. No se mostrarán datos inventados.`);
+          return;
         }
+        const d = await r.json().catch(() => null);
+        const usage = (d?.data ?? d) as UsageData | null;
+        if (!usage || !hasUsagePayload(usage)) {
+          setData(null);
+          setError(null);
+          return;
+        }
+        setData(usage);
       })
-      .catch(() => setData(EXAMPLE_USAGE))
+      .catch(() => {
+        setData(null);
+        setError("No se pudo cargar el uso (red o error de cliente).");
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     if (tenantId) fetchUsage();
-    else setLoading(false);
+    else {
+      setLoading(false);
+      setData(null);
+      setError(null);
+    }
   }, [tenantId]);
 
-  const usage = data || EXAMPLE_USAGE;
-  const used = usage.executions_this_month ?? 0;
-  const limit = usage.limit ?? 10000;
-  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
-  const executions = usage.executions || [];
+  const used = data?.executions_this_month;
+  const limit = data?.limit;
+  const executions = data?.executions ?? [];
+  const hasLimit = limit != null && Number.isFinite(Number(limit)) && Number(limit) > 0;
+  const usedNum = used != null && Number.isFinite(Number(used)) ? Number(used) : null;
+  const pct =
+    hasLimit && usedNum != null ? Math.min(100, (usedNum / Number(limit)) * 100) : null;
 
   return (
     <div className="ndk-page ndk-fade-in">
@@ -72,7 +79,7 @@ export default function AdminUsagePage() {
         <span className="text-sm text-gray-400">Tenant: {tenantId || "—"}</span>
         <button
           onClick={fetchUsage}
-          disabled={loading}
+          disabled={loading || !tenantId}
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
@@ -84,59 +91,100 @@ export default function AdminUsagePage() {
         <p className="text-gray-400 mt-1">Ejecuciones y límites del tenant</p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GlassCard className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="w-6 h-6 text-cyan-400" />
-            <h2 className="text-xl font-bold text-white">Ejecuciones este mes</h2>
-          </div>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">{used.toLocaleString()} / {limit.toLocaleString()}</span>
-              <span className="text-gray-300">{pct.toFixed(1)}%</span>
-            </div>
-            <div className="h-6 rounded-full bg-white/10 overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${pct}%` }}
-                transition={{ duration: 0.8 }}
-                className={`h-full rounded-full ${pct > 90 ? "bg-amber-500" : pct > 70 ? "bg-yellow-500" : "bg-cyan-500"}`}
-              />
-            </div>
-          </div>
-        </GlassCard>
+      {loading && (
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
+        </div>
+      )}
 
-        <GlassCard className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <List className="w-6 h-6 text-purple-400" />
-            <h2 className="text-xl font-bold text-white">Últimas 10 ejecuciones</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-500 border-b border-white/10">
-                  <th className="py-2 pr-4">Fecha</th>
-                  <th className="py-2 pr-4">Agente</th>
-                  <th className="py-2">Resultado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {executions.slice(0, 10).map((e, i) => (
-                  <tr key={i} className="border-b border-white/5">
-                    <td className="py-2 pr-4 text-gray-400">{e.date}</td>
-                    <td className="py-2 pr-4 text-gray-300 font-mono text-xs truncate max-w-[200px]">{e.agent}</td>
-                    <td className="py-2">
-                      <span className={`px-2 py-0.5 rounded ${e.result === "success" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
-                        {e.result}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </GlassCard>
-      </div>
+      {!loading && !tenantId && (
+        <p className="text-gray-400">Seleccione un tenant para ver el uso.</p>
+      )}
+
+      {!loading && tenantId && error && (
+        <p className="text-red-400">{error}</p>
+      )}
+
+      {!loading && tenantId && !error && !data && (
+        <p className="text-gray-400">No hay datos de uso para este tenant (respuesta vacía o sin métricas).</p>
+      )}
+
+      {!loading && tenantId && data && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <GlassCard className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="w-6 h-6 text-cyan-400" />
+              <h2 className="text-xl font-bold text-white">Ejecuciones este mes</h2>
+            </div>
+            <div className="space-y-3">
+              {pct != null ? (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">
+                      {usedNum?.toLocaleString() ?? "—"} / {Number(limit).toLocaleString()}
+                    </span>
+                    <span className="text-gray-300">{pct.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-6 rounded-full bg-white/10 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ duration: 0.8 }}
+                      className={`h-full rounded-full ${pct > 90 ? "bg-amber-500" : pct > 70 ? "bg-yellow-500" : "bg-cyan-500"}`}
+                    />
+                  </div>
+                </>
+              ) : (
+                <p className="text-gray-400 text-sm">
+                  {usedNum != null ? (
+                    <>Ejecuciones este mes: {usedNum.toLocaleString()}</>
+                  ) : (
+                    <>El backend no envió un límite o volumen comparable para dibujar la barra.</>
+                  )}
+                  {limit != null && !hasLimit && (
+                    <span className="block mt-1">Límite informado: {String(limit)}</span>
+                  )}
+                </p>
+              )}
+            </div>
+          </GlassCard>
+
+          <GlassCard className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <List className="w-6 h-6 text-purple-400" />
+              <h2 className="text-xl font-bold text-white">Últimas ejecuciones</h2>
+            </div>
+            {executions.length === 0 ? (
+              <p className="text-gray-400 text-sm">No hay filas de ejecución en la respuesta.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-500 border-b border-white/10">
+                      <th className="py-2 pr-4">Fecha</th>
+                      <th className="py-2 pr-4">Agente</th>
+                      <th className="py-2">Resultado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {executions.slice(0, 10).map((e, i) => (
+                      <tr key={i} className="border-b border-white/5">
+                        <td className="py-2 pr-4 text-gray-400">{e.date}</td>
+                        <td className="py-2 pr-4 text-gray-300 font-mono text-xs truncate max-w-[200px]">{e.agent}</td>
+                        <td className="py-2">
+                          <span className={`px-2 py-0.5 rounded ${e.result === "success" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                            {e.result}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </GlassCard>
+        </div>
+      )}
     </div>
   );
 }

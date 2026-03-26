@@ -72,6 +72,25 @@ export function mapApiRecordToCampaign(
   if (set && typeof set === "object" && !Array.isArray(set)) {
     settings = set as Record<string, unknown>;
   }
+  const rawTemplateId =
+    raw.template_id != null
+      ? String(raw.template_id)
+      : raw.templateId != null
+        ? String(raw.templateId)
+        : "";
+  const rawSegmentId =
+    raw.segment_id != null
+      ? String(raw.segment_id)
+      : raw.segmentId != null
+        ? String(raw.segmentId)
+        : "";
+  if (rawTemplateId || rawSegmentId) {
+    settings = {
+      ...(settings ?? {}),
+      ...(rawTemplateId ? { template_id: rawTemplateId } : {}),
+      ...(rawSegmentId ? { segment_id: rawSegmentId } : {}),
+    };
+  }
 
   const contentRaw = raw.content;
   let contentStr: string | undefined;

@@ -23,6 +23,10 @@ export const MARKETING_ENDPOINTS = {
     `${marketingPath}/journeys/${encodeURIComponent(id)}/activate`,
   JOURNEY_PAUSE: (id: string) =>
     `${marketingPath}/journeys/${encodeURIComponent(id)}/pause`,
+  JOURNEY_RUN: (id: string) =>
+    `${marketingPath}/journeys/${encodeURIComponent(id)}/run`,
+  JOURNEY_RUNS: (id: string) =>
+    `${marketingPath}/journeys/${encodeURIComponent(id)}/runs`,
   TEMPLATES: `${marketingPath}/templates`,
   TEMPLATE_BY_ID: (id: string) => `${marketingPath}/templates/${encodeURIComponent(id)}`,
   /** POST JSON body — same-origin, proxied to backend */

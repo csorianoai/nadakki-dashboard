@@ -116,11 +116,11 @@ function StateBadge({ label, variant }: { label: string; variant: "ok" | "off" |
 function connBadge(state: ConnState) {
   switch (state) {
     case "connected":
-      return <StateBadge variant="ok" label="Conectado" />;
+      return <StateBadge variant="ok" label="Listo · conectado" />;
     case "disconnected":
       return <StateBadge variant="off" label="Desconectado" />;
     case "error":
-      return <StateBadge variant="warn" label="Error / revisar token" />;
+      return <StateBadge variant="warn" label="Requiere atención" />;
     default:
       return <StateBadge variant="muted" label="Desconocido" />;
   }
@@ -129,12 +129,108 @@ function connBadge(state: ConnState) {
 function sendgridBadge(state: SendgridState) {
   switch (state) {
     case "configured":
-      return <StateBadge variant="ok" label="Configurado" />;
+      return <StateBadge variant="ok" label="Listo · configurado" />;
     case "not_configured":
       return <StateBadge variant="off" label="No configurado" />;
     default:
       return <StateBadge variant="muted" label="Desconocido" />;
   }
+}
+
+function SocialIntegrationCard({
+  title,
+  description,
+  anchor,
+  state,
+}: {
+  title: string;
+  description: string;
+  anchor: string;
+  state: ConnState;
+}) {
+  const manageBase = "/marketing/social-connections";
+  const manageHref = `${manageBase}#${anchor}`;
+
+  const ready = state === "connected";
+  const degraded = state === "error";
+  const disconnected = state === "disconnected";
+  const unknown = state === "unknown";
+
+  return (
+    <GlassCard
+      className={`p-5 border-white/10 ${ready ? "ring-1 ring-emerald-500/25 border-emerald-500/20" : ""}`}
+    >
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div>
+          <h3 className="text-white font-semibold m-0">{title}</h3>
+          <p className="text-sm text-gray-500 m-0 mt-1">{description}</p>
+        </div>
+        {connBadge(state)}
+      </div>
+
+      {ready ? (
+        <p className="text-sm text-emerald-400/90 m-0 mt-3">
+          No necesitas volver a autorizar mientras el estado siga en verde. Usa conexiones sociales si quieres comprobar
+          detalles.
+        </p>
+      ) : null}
+      {degraded ? (
+        <p className="text-sm text-amber-200/85 m-0 mt-3">
+          El token o la sesión pueden necesitar revisión. Abre conexiones sociales y usa &quot;Revisar conexión&quot; para el
+          flujo OAuth real (sin pasos automáticos).
+        </p>
+      ) : null}
+      {(unknown || degraded) && !ready ? (
+        <p className="text-sm text-gray-500 m-0 mt-2">
+          Tenant actual: revisa la selección arriba si el estado no cuadra.
+        </p>
+      ) : null}
+
+      <div className="mt-4 flex flex-wrap gap-2 items-center">
+        {ready ? (
+          <Link
+            href={manageHref}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/90 hover:bg-emerald-500 text-white text-sm font-medium"
+          >
+            Administrar
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        ) : degraded ? (
+          <Link
+            href={manageHref}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/25 hover:bg-amber-500/35 border border-amber-500/40 text-amber-100 text-sm font-medium"
+          >
+            Revisar conexión
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        ) : disconnected ? (
+          <>
+            <Link
+              href={manageHref}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium"
+            >
+              Conectar
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href={manageHref}
+              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-300"
+            >
+              Ver página de conexiones
+            </Link>
+          </>
+        ) : (
+          <Link
+            href={manageHref}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm text-gray-200"
+          >
+            Ver conexiones sociales
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        )}
+      </div>
+    </GlassCard>
+  );
 }
 
 export default function IntegrationsPage() {
@@ -232,48 +328,25 @@ export default function IntegrationsPage() {
         <>
           <h2 className="text-lg font-semibold text-white mb-3">Integraciones activas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-            <GlassCard className="p-5 border-white/10">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div>
-                  <h3 className="text-white font-semibold m-0">Meta</h3>
-                  <p className="text-sm text-gray-500 m-0 mt-1">
-                    Facebook e Instagram (OAuth). Estado según el mismo endpoint que Conexiones sociales.
-                  </p>
-                </div>
-                {connBadge(metaState)}
-              </div>
-              <Link
-                href="/marketing/social-connections"
-                className="mt-4 inline-flex items-center gap-2 text-sm text-teal-300 hover:text-teal-200"
-              >
-                Administrar en Conexiones sociales
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </GlassCard>
-
-            <GlassCard className="p-5 border-white/10">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div>
-                  <h3 className="text-white font-semibold m-0">Google</h3>
-                  <p className="text-sm text-gray-500 m-0 mt-1">
-                    Google (Ads, Analytics, YouTube) vía OAuth. Estado según respuesta del backend.
-                  </p>
-                </div>
-                {connBadge(googleState)}
-              </div>
-              <Link
-                href="/marketing/social-connections"
-                className="mt-4 inline-flex items-center gap-2 text-sm text-teal-300 hover:text-teal-200"
-              >
-                Administrar en Conexiones sociales
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </GlassCard>
+            <SocialIntegrationCard
+              title="Meta"
+              description="Facebook e Instagram (OAuth). Estado en tiempo real desde el mismo endpoint que Conexiones sociales."
+              anchor="social-meta"
+              state={metaState}
+            />
+            <SocialIntegrationCard
+              title="Google"
+              description="Google (Ads, Analytics, YouTube) vía OAuth. Estado según respuesta del backend."
+              anchor="social-google"
+              state={googleState}
+            />
           </div>
 
           <h2 className="text-lg font-semibold text-white mb-3">Envío de email</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-            <GlassCard className="p-5 border-white/10">
+            <GlassCard
+              className={`p-5 border-white/10 ${sendgridState === "configured" ? "ring-1 ring-emerald-500/25 border-emerald-500/20" : ""}`}
+            >
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div>
                   <h3 className="text-white font-semibold m-0">SendGrid</h3>
@@ -284,13 +357,28 @@ export default function IntegrationsPage() {
                 </div>
                 {sendgridBadge(sendgridState)}
               </div>
-              <Link
-                href="/admin/config"
-                className="mt-4 inline-flex items-center gap-2 text-sm text-violet-300 hover:text-violet-200"
-              >
-                Configurar en Administración
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              {sendgridState === "configured" ? (
+                <p className="text-sm text-emerald-400/90 m-0 mt-3">
+                  Envío en vivo habilitado a nivel tenant. Ajustes finos en Administración si hace falta.
+                </p>
+              ) : null}
+              {sendgridState === "configured" ? (
+                <Link
+                  href="/admin/config"
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/90 hover:bg-emerald-500 text-white text-sm font-medium"
+                >
+                  Administrar
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <Link
+                  href="/admin/config"
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-500/80 hover:bg-violet-500 text-white text-sm font-medium"
+                >
+                  {sendgridState === "not_configured" ? "Configurar" : "Revisar en Administración"}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
             </GlassCard>
           </div>
 

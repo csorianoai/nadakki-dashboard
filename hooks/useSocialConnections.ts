@@ -22,9 +22,10 @@ export type SocialPlatform = {
 export type UseSocialConnectionsResult = {
   platforms: SocialPlatform[];
   loading: boolean;
+  refreshing: boolean;
   error: string | null;
   connecting: boolean;
-  fetchStatus: (tenantId?: string) => Promise<void>;
+  fetchStatus: (tenantId?: string, options?: { quiet?: boolean }) => Promise<void>;
   connect: (platform: string, tenantId?: string) => void;
   disconnect: (platform: string, tenantId?: string) => Promise<void>;
 };
@@ -33,22 +34,27 @@ export function useSocialConnections(): UseSocialConnectionsResult {
   const { tenantId } = useTenant();
   const [platforms, setPlatforms] = useState<SocialPlatform[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
   const searchParams = useSearchParams();
   const toast = useToast();
 
-  const fetchStatus = useCallback(async (tid?: string) => {
+  const fetchStatus = useCallback(async (tid?: string, options?: { quiet?: boolean }) => {
+    const quiet = options?.quiet === true;
     const t = tid ?? tenantId;
     if (!t) {
-      setLoading(false);
+      if (!quiet) setLoading(false);
+      setRefreshing(false);
       setPlatforms([]);
       return;
     }
-    setLoading(true);
+    if (quiet) setRefreshing(true);
+    else setLoading(true);
     setError(null);
     const result = await fetchSocialStatus(t);
-    setLoading(false);
+    if (quiet) setRefreshing(false);
+    else setLoading(false);
     if (result.error) {
       setError(result.error);
       setPlatforms([]);
@@ -146,6 +152,7 @@ export function useSocialConnections(): UseSocialConnectionsResult {
   return {
     platforms,
     loading,
+    refreshing,
     error,
     connecting,
     fetchStatus,

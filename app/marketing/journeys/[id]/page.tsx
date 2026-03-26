@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Pause, Play, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Pause, Play, Save, Trash2, ListOrdered, TerminalSquare } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   fetchMarketingJourneyById,
+  fetchMarketingJourneyRuns,
+  type JourneyHistoryRun,
   updateMarketingJourney,
   activateMarketingJourney,
   pauseMarketingJourney,
@@ -16,6 +18,7 @@ import {
   fetchMarketingSegments,
   fetchMarketingTemplates,
   fetchMarketingCampaigns,
+  runMarketingJourney,
 } from "@/lib/api/marketing";
 
 export default function JourneyDetailPage() {
@@ -43,6 +46,27 @@ export default function JourneyDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [journeyMissing, setJourneyMissing] = useState(false);
+  const [runLoading, setRunLoading] = useState(false);
+  const [lastRunAt, setLastRunAt] = useState<string | null>(null);
+  const [lastRunStatus, setLastRunStatus] = useState<string | null>(null);
+  const [lastRunMessage, setLastRunMessage] = useState<string | null>(null);
+  const [lastRunLog, setLastRunLog] = useState<Record<string, unknown> | null>(null);
+  const [executionHistory, setExecutionHistory] = useState<JourneyHistoryRun[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  const linkedCampaignRow =
+    campaignId.trim().length > 0
+      ? campaigns.find((c) => String(c.id ?? "").trim() === campaignId.trim())
+      : undefined;
+  const parsedSteps = useMemo(() => {
+    try {
+      const parsed = JSON.parse(stepsJson) as unknown;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [stepsJson]);
 
   const loadRefs = useCallback(async () => {
     if (!tenantId) {
@@ -88,7 +112,30 @@ export default function JourneyDetailPage() {
     setCampaignId(j.campaign_id != null ? String(j.campaign_id) : "");
     const steps = j.steps;
     setStepsJson(JSON.stringify(Array.isArray(steps) ? steps : [], null, 2));
+    setLastRunAt(typeof j.last_run_at === "string" ? j.last_run_at : null);
+    setLastRunStatus(typeof j.last_run_status === "string" ? j.last_run_status : null);
+    setLastRunMessage(typeof j.last_run_message === "string" ? j.last_run_message : null);
+    setLastRunLog(j.last_run_log && typeof j.last_run_log === "object" ? (j.last_run_log as Record<string, unknown>) : null);
     setLoading(false);
+  }, [tenantId, journeyId]);
+
+  const loadExecutionHistory = useCallback(async () => {
+    if (!tenantId || !journeyId) {
+      setExecutionHistory([]);
+      setHistoryLoading(false);
+      return;
+    }
+    setHistoryLoading(true);
+    setHistoryError(null);
+    const r = await fetchMarketingJourneyRuns(tenantId, journeyId);
+    if (r.error) {
+      setExecutionHistory([]);
+      setHistoryError(r.error);
+      setHistoryLoading(false);
+      return;
+    }
+    setExecutionHistory(r.runs.slice(0, 5));
+    setHistoryLoading(false);
   }, [tenantId, journeyId]);
 
   useEffect(() => {
@@ -98,6 +145,10 @@ export default function JourneyDetailPage() {
   useEffect(() => {
     void loadJourney();
   }, [loadJourney]);
+
+  useEffect(() => {
+    void loadExecutionHistory();
+  }, [loadExecutionHistory]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,6 +220,33 @@ export default function JourneyDetailPage() {
     router.push("/marketing/journeys");
   };
 
+  const onRun = async () => {
+    if (!tenantId) return;
+    setError(null);
+    setMessage(null);
+    setRunLoading(true);
+    const r = await runMarketingJourney(tenantId, journeyId);
+    setRunLoading(false);
+    if (!r.ok) {
+      setLastRunStatus("failed");
+      setLastRunAt(new Date().toISOString());
+      setLastRunMessage(r.error ?? "Run failed");
+      setLastRunLog(null);
+      return;
+    }
+    const statusVal = typeof r.data?.status === "string" ? r.data.status : "success";
+    const atVal = typeof r.data?.last_run_at === "string" ? r.data.last_run_at : new Date().toISOString();
+    const msgVal =
+      r.data?.log && typeof r.data.log === "object" && "message" in r.data.log
+        ? String((r.data.log as { message: unknown }).message)
+        : "Run completed.";
+    setLastRunStatus(statusVal);
+    setLastRunAt(atVal);
+    setLastRunMessage(msgVal);
+    setLastRunLog(r.data?.log && typeof r.data.log === "object" ? (r.data.log as Record<string, unknown>) : null);
+    void loadExecutionHistory();
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-white">
@@ -206,6 +284,17 @@ export default function JourneyDetailPage() {
           <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-gray-300 shrink-0">{status}</span>
         </div>
         <div className="flex flex-wrap gap-2">
+          {triggerType === "manual" && status !== "archived" ? (
+            <button
+              type="button"
+              onClick={() => void onRun()}
+              disabled={runLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-200 disabled:opacity-60"
+            >
+              {runLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Ejecutar ahora
+            </button>
+          ) : null}
           {status === "active" ? (
             <button
               type="button"
@@ -242,6 +331,62 @@ export default function JourneyDetailPage() {
           {message ? <p className="text-emerald-400 text-sm m-0">{message}</p> : null}
         </div>
       )}
+
+      {(lastRunAt || lastRunStatus || lastRunMessage) ? (
+        <GlassCard className="p-4 mb-4 border-white/10 max-w-3xl">
+          <h3 className="text-sm font-semibold text-white m-0 mb-2 flex items-center gap-2">
+            <TerminalSquare className="w-4 h-4 text-blue-300" />
+            Última ejecución
+          </h3>
+          <div className="text-xs text-gray-300 space-y-1">
+            <p className="m-0">Fecha: {lastRunAt ? new Date(lastRunAt).toLocaleString() : "—"}</p>
+            <p className="m-0">
+              Estado:{" "}
+              <span className={lastRunStatus === "success" ? "text-emerald-300" : "text-red-300"}>
+                {lastRunStatus ?? "—"}
+              </span>
+            </p>
+            {lastRunMessage ? <p className="m-0">Mensaje: {lastRunMessage}</p> : null}
+            {lastRunLog ? (
+              <pre className="m-0 mt-2 p-2 rounded bg-black/30 text-[11px] text-gray-300 overflow-x-auto">
+                {JSON.stringify(lastRunLog, null, 2)}
+              </pre>
+            ) : null}
+          </div>
+        </GlassCard>
+      ) : null}
+
+      <GlassCard className="p-4 mb-4 border-white/10 max-w-3xl">
+        <h3 className="text-sm font-semibold text-white m-0 mb-2 flex items-center gap-2">
+          <TerminalSquare className="w-4 h-4 text-violet-300" />
+          Execution History
+        </h3>
+        {historyLoading ? (
+          <p className="text-xs text-gray-400 m-0">Cargando historial…</p>
+        ) : historyError ? (
+          <p className="text-xs text-red-400 m-0">{historyError}</p>
+        ) : executionHistory.length === 0 ? (
+          <p className="text-xs text-gray-500 m-0">Sin ejecuciones registradas.</p>
+        ) : (
+          <ul className="space-y-2 m-0 p-0 list-none">
+            {executionHistory.map((run, idx) => {
+              const ts = typeof run.timestamp === "string" ? run.timestamp : "";
+              const st = typeof run.status === "string" ? run.status : "unknown";
+              const msg = typeof run.message === "string" ? run.message : "";
+              return (
+                <li key={String(run.id ?? `${ts}-${idx}`)} className="text-xs rounded-lg border border-white/10 p-2">
+                  <p className="m-0 text-gray-300">Fecha: {ts ? new Date(ts).toLocaleString() : "—"}</p>
+                  <p className="m-0">
+                    Estado:{" "}
+                    <span className={st === "success" ? "text-emerald-300" : "text-red-300"}>{st}</span>
+                  </p>
+                  <p className="m-0 text-gray-300">Mensaje: {msg || "—"}</p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </GlassCard>
 
       <form onSubmit={(e) => void handleSave(e)}>
         <GlassCard className="p-6 space-y-4 border-white/10 max-w-3xl">
@@ -317,6 +462,9 @@ export default function JourneyDetailPage() {
               <option value="segment-entry">segment-entry</option>
               <option value="campaign-linked">campaign-linked</option>
             </select>
+            <p className="text-xs text-gray-500 m-0 mt-1">
+              Solo <code>manual</code> habilita el botón de ejecución MVP.
+            </p>
           </div>
 
           {refsLoading ? (
@@ -367,6 +515,22 @@ export default function JourneyDetailPage() {
                     </option>
                   ))}
                 </select>
+                {campaignId.trim() ? (
+                  <p className="text-xs mt-1 m-0 text-gray-400">
+                    Vinculado a{" "}
+                    <Link
+                      href={`/marketing/campaigns/${encodeURIComponent(campaignId.trim())}`}
+                      className="text-violet-300 hover:text-violet-200 underline"
+                    >
+                      {typeof linkedCampaignRow?.name === "string" && linkedCampaignRow.name.trim()
+                        ? linkedCampaignRow.name
+                        : campaignId}
+                    </Link>
+                    .
+                  </p>
+                ) : (
+                  <p className="text-xs mt-1 m-0 text-gray-500">Sin campaña vinculada.</p>
+                )}
               </div>
             </div>
           )}
@@ -379,6 +543,30 @@ export default function JourneyDetailPage() {
               rows={12}
               className="w-full px-4 py-2 rounded-lg bg-black/40 border border-white/10 text-gray-200 font-mono text-sm"
             />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white m-0 mb-2 flex items-center gap-2">
+              <ListOrdered className="w-4 h-4 text-violet-300" />
+              Pasos ordenados (lectura)
+            </h3>
+            {parsedSteps.length === 0 ? (
+              <p className="text-xs text-gray-500 m-0">Sin pasos definidos.</p>
+            ) : (
+              <ol className="space-y-2 list-decimal list-inside">
+                {parsedSteps.map((step, idx) => (
+                  <li key={idx} className="text-sm text-gray-300">
+                    {typeof step === "object" && step !== null
+                      ? String(
+                          (step as { name?: unknown; id?: unknown; type?: unknown }).name ??
+                            (step as { id?: unknown; type?: unknown }).id ??
+                            (step as { type?: unknown }).type ??
+                            `Step ${idx + 1}`
+                        )
+                      : `Step ${idx + 1}`}
+                  </li>
+                ))}
+              </ol>
+            )}
           </div>
 
           <button

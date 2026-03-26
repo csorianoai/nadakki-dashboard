@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
@@ -34,6 +34,14 @@ import {
   activateMarketingCampaign,
   postMarketingLaunchPilot,
 } from "@/lib/api/marketing";
+import {
+  rowTemplateId,
+  rowSegmentId,
+  templateOriginLabel,
+  segmentOriginLabel,
+  buildSegmentSnapshot,
+  buildTemplateSnapshot,
+} from "@/lib/marketing/campaignAssets";
 
 const STEPS = [
   { id: 1, name: "Compose", label: "Compose Messages", icon: FileText },
@@ -83,11 +91,10 @@ function formatApiError(detail: unknown): string {
 
 function CampaignWizardContent() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { tenantId } = useTenant();
   const campaignType = searchParams.get("type") || "email";
-  const typeConfig = CAMPAIGN_TYPES[campaignType] || CAMPAIGN_TYPES.email;
-  const TypeIcon = typeConfig.icon;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -117,6 +124,9 @@ function CampaignWizardContent() {
     conversionWindow: 7,
   });
 
+  const typeConfig = CAMPAIGN_TYPES[campaign.type] || CAMPAIGN_TYPES.email;
+  const TypeIcon = typeConfig.icon;
+
   const [newTag, setNewTag] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
 
@@ -145,18 +155,29 @@ function CampaignWizardContent() {
     };
   }, [tenantId]);
 
+  useEffect(() => {
+    setCampaign((prev) => (prev.type === campaignType ? prev : { ...prev, type: campaignType }));
+  }, [campaignType]);
+
   const selectedTemplateRow = useMemo(
-    () => templates.find((x) => String(x.id) === campaign.selectedTemplate),
+    () => templates.find((x) => rowTemplateId(x) === campaign.selectedTemplate),
     [templates, campaign.selectedTemplate]
   );
 
   const selectedSegmentRow = useMemo(
-    () => segments.find((x) => String(x.id) === campaign.selectedSegmentId),
+    () => segments.find((x) => rowSegmentId(x) === campaign.selectedSegmentId),
     [segments, campaign.selectedSegmentId]
   );
 
   const updateCampaign = (field: string, value: unknown) => {
     setCampaign((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const setChannelType = (type: string) => {
+    setCampaign((prev) => ({ ...prev, type }));
+    const q = new URLSearchParams(searchParams.toString());
+    q.set("type", type);
+    router.replace(`${pathname}?${q.toString()}`, { scroll: false });
   };
 
   const addTag = () => {
@@ -198,6 +219,7 @@ function CampaignWizardContent() {
 
   function validateForSave(): string | null {
     if (!tenantId) return "Select a tenant before saving.";
+    if (assetsError) return "Fix template/segment API errors before saving.";
     if (!campaign.name.trim()) return "Campaign name is required.";
     if (!marketingObjective.trim()) return "Objective is required.";
     if (!campaign.type) return "Channel is required.";
@@ -207,35 +229,18 @@ function CampaignWizardContent() {
   }
 
   function buildCreatePayload(): Record<string, unknown> {
-    const seg = segments.find((s) => String(s.id) === campaign.selectedSegmentId);
-    const tpl = templates.find((t) => String(t.id) === campaign.selectedTemplate);
-    const segment_snapshot = seg
-      ? {
-          id: seg.id,
-          name: seg.name,
-          type: seg.type,
-          source: seg.source,
-          size: seg.size,
-          criteria: seg.criteria,
-        }
-      : undefined;
-    const template_snapshot = tpl
-      ? {
-          id: tpl.id,
-          name: tpl.name,
-          type: tpl.type,
-          objective: tpl.objective,
-          source: tpl.source,
-          subject: tpl.subject,
-          content: tpl.content,
-        }
-      : undefined;
+    const seg = segments.find((s) => rowSegmentId(s) === campaign.selectedSegmentId);
+    const tpl = templates.find((t) => rowTemplateId(t) === campaign.selectedTemplate);
+    const segmentId = seg ? rowSegmentId(seg) : "";
+    const templateId = tpl ? rowTemplateId(tpl) : "";
+    const segment_snapshot = buildSegmentSnapshot(seg);
+    const template_snapshot = buildTemplateSnapshot(tpl);
     return {
       name: campaign.name.trim(),
       objective: marketingObjective,
       channel: campaign.type,
-      segment_id: String(seg?.id ?? ""),
-      template_id: String(tpl?.id ?? ""),
+      segment_id: segmentId,
+      template_id: templateId,
       segment_snapshot,
       template_snapshot,
       description: campaign.description || "",
@@ -448,7 +453,7 @@ function CampaignWizardContent() {
           <button
             type="button"
             onClick={saveDraft}
-            disabled={saving || assetsLoading}
+            disabled={saving || assetsLoading || !!assetsError}
             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save as Draft
@@ -522,6 +527,23 @@ function CampaignWizardContent() {
                     </select>
                   </div>
                   <div>
+                    <label className="text-sm text-gray-400 block mb-2">Channel</label>
+                    <select
+                      value={campaign.type}
+                      onChange={(e) => setChannelType(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
+                    >
+                      {Object.entries(CAMPAIGN_TYPES).map(([key, cfg]) => (
+                        <option key={key} value={key} className="bg-[#0d1117]">
+                          {cfg.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1 m-0">
+                      Sent to API as <code className="text-gray-400">channel</code> (maps to campaign type on the server).
+                    </p>
+                  </div>
+                  <div>
                     <label className="text-sm text-gray-400 block mb-2">Description (optional)</label>
                     <textarea
                       value={campaign.description}
@@ -535,7 +557,10 @@ function CampaignWizardContent() {
               </GlassCard>
               <GlassCard className="p-6">
                 <h2 className="text-xl font-bold text-white mb-4">Template</h2>
-                <p className="text-sm text-gray-400 mb-4">Load persisted and system templates for this tenant (same-origin API).</p>
+                <p className="text-sm text-gray-400 mb-4">
+                  Templates from <code className="text-gray-500">/api/marketing/templates</code>: sistema (base) + persistidos del
+                  tenant. Origen se muestra en cada fila.
+                </p>
                 {assetsLoading ? (
                   <div className="flex items-center gap-2 text-gray-400">
                     <Loader2 className="w-5 h-5 animate-spin" /> Loading templates…
@@ -547,7 +572,8 @@ function CampaignWizardContent() {
                         <p className="text-gray-500 text-sm">No templates returned.</p>
                       ) : (
                         templates.map((t) => {
-                          const tid = String(t.id ?? "");
+                          const tid = rowTemplateId(t);
+                          if (!tid) return null;
                           return (
                             <button
                               type="button"
@@ -555,9 +581,14 @@ function CampaignWizardContent() {
                               onClick={() => updateCampaign("selectedTemplate", tid)}
                               className={`w-full p-3 text-left rounded-lg border ${campaign.selectedTemplate === tid ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"}`}
                             >
-                              <div className="text-sm text-white font-medium">{String(t.name ?? tid)}</div>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-sm text-white font-medium">{String(t.name ?? tid)}</span>
+                                <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/10 text-gray-400 shrink-0">
+                                  {templateOriginLabel(t)}
+                                </span>
+                              </div>
                               <div className="text-xs text-gray-500 mt-1">
-                                {String(t.type ?? "")} · {String(t.objective ?? "")} · {String(t.source ?? "")}
+                                {String(t.type ?? "")} · {String(t.objective ?? "")}
                               </div>
                             </button>
                           );
@@ -644,7 +675,10 @@ function CampaignWizardContent() {
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6">
                 <h2 className="text-xl font-bold text-white mb-2">Target Audiences</h2>
-                <p className="text-gray-400 mb-6">Select one persisted or system segment</p>
+                <p className="text-gray-400 mb-2">
+                  Segmentos desde <code className="text-gray-500">/api/marketing/segments</code> (sistema + campaña + tenant).
+                </p>
+                <p className="text-gray-500 text-sm mb-6 m-0">Selecciona un segmento persistido o de sistema.</p>
                 {assetsLoading ? (
                   <div className="flex items-center gap-2 text-gray-400">
                     <Loader2 className="w-5 h-5 animate-spin" /> Loading segments…
@@ -655,7 +689,8 @@ function CampaignWizardContent() {
                       <p className="text-gray-500 text-sm col-span-2">No segments returned.</p>
                     ) : (
                       segments.map((s) => {
-                        const sid = String(s.id ?? "");
+                        const sid = rowSegmentId(s);
+                        if (!sid) return null;
                         const selected = campaign.selectedSegmentId === sid;
                         const size = typeof s.size === "number" ? s.size : 0;
                         return (
@@ -665,16 +700,19 @@ function CampaignWizardContent() {
                             onClick={() => updateCampaign("selectedSegmentId", sid)}
                             className={`p-4 text-left rounded-xl border ${selected ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"}`}
                           >
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-2 gap-2">
                               <span className="text-white font-medium">{String(s.name ?? sid)}</span>
                               <div
-                                className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selected ? "border-purple-500 bg-purple-500" : "border-white/20"}`}
+                                className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${selected ? "border-purple-500 bg-purple-500" : "border-white/20"}`}
                               >
                                 {selected && <Check className="w-3 h-3 text-white" />}
                               </div>
                             </div>
-                            <div className="text-xs text-gray-500 mb-2">
-                              {String(s.type ?? "")} · {String(s.source ?? "")}
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-2">
+                              <span className="uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/10 text-gray-400">
+                                {segmentOriginLabel(s)}
+                              </span>
+                              <span>{String(s.type ?? "")}</span>
                             </div>
                             <div className="text-2xl font-bold text-white">{size.toLocaleString()}</div>
                             <div className="text-xs text-gray-500">audience size</div>
@@ -821,7 +859,7 @@ function CampaignWizardContent() {
                 <button
                   type="button"
                   onClick={launchCampaign}
-                  disabled={saving || assetsLoading}
+                  disabled={saving || assetsLoading || !!assetsError}
                   className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 rounded-xl text-white font-bold text-lg disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}{" "}
@@ -830,7 +868,7 @@ function CampaignWizardContent() {
                 <button
                   type="button"
                   onClick={runPilotDryRun}
-                  disabled={pilotLoading || !tenantId}
+                  disabled={pilotLoading || !tenantId || !!assetsError}
                   className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white text-sm disabled:opacity-50"
                 >
                   {pilotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
@@ -882,7 +920,7 @@ function CampaignWizardContent() {
             <button
               type="button"
               onClick={saveDraft}
-              disabled={saving || assetsLoading}
+              disabled={saving || assetsLoading || !!assetsError}
               className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium disabled:opacity-50"
             >
               Save Draft
