@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentType } from "react";
+import { useCallback, useEffect, useState, type ComponentType } from "react";
 import { motion } from "framer-motion";
 import {
   Share2,
@@ -58,7 +58,21 @@ function getPlatformFromData(platform: string): string {
 
 export default function SocialConnectionsClient() {
   const { tenantId } = useTenant();
-  const { platforms, loading, refreshing, error, connect, fetchStatus } = useSocialConnections();
+  const { platforms, loading, refreshing, error, connect, disconnect, fetchStatus } =
+    useSocialConnections();
+
+  const [openMenuKey, setOpenMenuKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!openMenuKey) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el?.closest?.("[data-social-menu]")) return;
+      setOpenMenuKey(null);
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [openMenuKey]);
 
   const platformMap = new Map(
     platforms.map((p) => [getPlatformFromData(p.platform), p])
@@ -67,6 +81,22 @@ export default function SocialConnectionsClient() {
   const onQuietRefresh = () => {
     void fetchStatus(undefined, { quiet: true });
   };
+
+  const onDisconnectPlatform = useCallback(
+    async (platformKey: string, platformLabel: string) => {
+      if (
+        !window.confirm(
+          `¿Desconectar ${platformLabel}? Necesitarás volver a autorizar para publicar.`
+        )
+      ) {
+        return;
+      }
+      setOpenMenuKey(null);
+      await disconnect(platformKey);
+      void fetchStatus();
+    },
+    [disconnect, fetchStatus]
+  );
 
   return (
     <div className="ndk-page ndk-fade-in">
@@ -219,15 +249,45 @@ export default function SocialConnectionsClient() {
 
                     <div className="shrink-0 flex flex-col items-end gap-2">
                       {healthyConnected ? (
-                        <button
-                          type="button"
-                          onClick={onQuietRefresh}
-                          disabled={!tenantId || refreshing}
-                          className="flex items-center gap-2 px-4 py-2 bg-emerald-500/90 hover:bg-emerald-500 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
-                        >
-                          {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                          Administrar
-                        </button>
+                        <div className="relative" data-social-menu>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenMenuKey((k) => (k === key ? null : key))
+                            }
+                            disabled={!tenantId}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-500/90 hover:bg-emerald-500 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
+                          >
+                            Administrar
+                          </button>
+                          {openMenuKey === key ? (
+                            <div
+                              className="absolute right-0 top-full z-20 mt-1 min-w-[13rem] rounded-lg border border-white/10 bg-zinc-950/95 py-1 shadow-lg backdrop-blur"
+                              role="menu"
+                            >
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="block w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-white/10"
+                                onClick={() => {
+                                  setOpenMenuKey(null);
+                                  connect(key);
+                                }}
+                              >
+                                Actualizar conexión
+                              </button>
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-white/10"
+                                disabled={!tenantId}
+                                onClick={() => void onDisconnectPlatform(key, config.name)}
+                              >
+                                Desconectar
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
                       ) : degraded && config.enabled ? (
                         <button
                           type="button"
