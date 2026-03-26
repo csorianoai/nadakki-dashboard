@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, List, Loader2, RefreshCw } from "lucide-react";
+import { BarChart3, List, Loader2, RefreshCw, AlertCircle } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
@@ -27,17 +27,19 @@ export default function AdminUsagePage() {
   const { tenantId } = useTenant();
   const [data, setData] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsage = () => {
+  const fetchUsage = useCallback((quiet = false) => {
     if (!tenantId) return;
-    setLoading(true);
+    if (quiet) setRefreshing(true);
+    else setLoading(true);
     setError(null);
     fetch(`${API_URL}/api/v1/tenants/${tenantId}/usage`)
       .then(async (r) => {
         if (!r.ok) {
           setData(null);
-          setError(`La API devolvió ${r.status}. No se mostrarán datos inventados.`);
+          setError(`La API devolvió HTTP ${r.status}. No hay datos estimados ni de demostración.`);
           return;
         }
         const d = await r.json().catch(() => null);
@@ -53,17 +55,21 @@ export default function AdminUsagePage() {
         setData(null);
         setError("No se pudo cargar el uso (red o error de cliente).");
       })
-      .finally(() => setLoading(false));
-  };
+      .finally(() => {
+        if (quiet) setRefreshing(false);
+        else setLoading(false);
+      });
+  }, [tenantId]);
 
   useEffect(() => {
-    if (tenantId) fetchUsage();
+    if (tenantId) fetchUsage(false);
     else {
       setLoading(false);
+      setRefreshing(false);
       setData(null);
       setError(null);
     }
-  }, [tenantId]);
+  }, [tenantId, fetchUsage]);
 
   const used = data?.executions_this_month;
   const limit = data?.limit;
@@ -78,11 +84,12 @@ export default function AdminUsagePage() {
       <NavigationBar backHref="/admin">
         <span className="text-sm text-gray-400">Tenant: {tenantId || "—"}</span>
         <button
-          onClick={fetchUsage}
-          disabled={loading || !tenantId}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300"
+          type="button"
+          onClick={() => fetchUsage(true)}
+          disabled={loading || refreshing || !tenantId}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 disabled:opacity-50"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Actualizar
         </button>
       </NavigationBar>
@@ -98,15 +105,27 @@ export default function AdminUsagePage() {
       )}
 
       {!loading && !tenantId && (
-        <p className="text-gray-400">Seleccione un tenant para ver el uso.</p>
+        <GlassCard className="p-8 border-white/10">
+          <p className="text-gray-400 m-0">Selecciona un tenant para cargar uso real desde el API.</p>
+        </GlassCard>
       )}
 
       {!loading && tenantId && error && (
-        <p className="text-red-400">{error}</p>
+        <GlassCard className="p-6 border-red-500/30 bg-red-500/5">
+          <p className="text-red-200 text-sm m-0 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            {error}
+          </p>
+        </GlassCard>
       )}
 
       {!loading && tenantId && !error && !data && (
-        <p className="text-gray-400">No hay datos de uso para este tenant (respuesta vacía o sin métricas).</p>
+        <GlassCard className="p-8 border-white/10">
+          <p className="text-gray-400 m-0">
+            Sin datos de uso para este tenant: respuesta vacía, sin métricas reconocibles o cuerpo no parseable. No se
+            rellenan filas de ejemplo.
+          </p>
+        </GlassCard>
       )}
 
       {!loading && tenantId && data && (

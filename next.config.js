@@ -21,6 +21,8 @@ const nextConfig = {
       { source: "/api/v1/auth/:path*", destination: `${backendUrl}/api/v1/auth/:path*` },
       { source: "/api/v1/ame/:path*", destination: `${backendUrl}/api/v1/ame/:path*` },
       { source: "/api/v1/advertising/:path*", destination: `${backendUrl}/api/v1/advertising/:path*` },
+      // Social status + future same-origin calls to suite (dashboard uses API_URL for most fetches)
+      { source: "/api/social/:path*", destination: `${backendUrl}/api/social/:path*` },
     ];
   },
 };
