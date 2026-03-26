@@ -3,6 +3,7 @@ import { CAMPAIGNS_API, MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
+const BACKEND_URL = "https://nadakki-ai-suite.onrender.com";
 
 /** Stable reference for fetchWithFallback (avoids a fresh `{}` per call). */
 const FALLBACK_EMPTY_JSON: Record<string, unknown> = {};
@@ -708,11 +709,14 @@ export async function fetchSocialStatus(tenantId: string) {
 }
 
 export function getOAuthConnectUrl(platform: string, tenantId: string) {
-  return `${API_URL}/auth/${platform}/connect/${tenantId}`;
+  return `${BACKEND_URL}/auth/${platform}/connect/${tenantId}`;
 }
 
 export async function disconnectPlatform(platform: string, tenantId: string) {
-  return fetch(`${API_URL}/auth/${platform}/disconnect/${tenantId}`, {
+  return fetch(`${BACKEND_URL}/auth/${platform}/disconnect/${tenantId}`, {
     method: "DELETE",
   });
 }
+
+
+
