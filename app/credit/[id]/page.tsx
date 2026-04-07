@@ -313,7 +313,7 @@ function ApplicationDetailInner({ tenantId }: { tenantId: string }) {
       </div>
 
       {showDecisionHint && (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+        <div className="hidden rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
           Decisions are returned by <code className="text-xs">POST /process</code>{" "}
           and kept in this browser session. Submit from{" "}
           <Link href="/credit/new" className="underline font-medium">
