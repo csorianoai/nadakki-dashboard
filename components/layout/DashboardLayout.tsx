@@ -51,6 +51,7 @@ import {
   FileText,
   GitBranch,
   Plug,
+  Calendar,
 } from "lucide-react";
 import SidebarSuiteStats from "./SidebarSuiteStats";
 import TenantSelector from "@/components/ui/TenantSelector";
@@ -99,6 +100,13 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #0ea5e9, #0284c7)",
     modules: [
       { id: "sic-home", icon: <Home size={14} />, label: "Inicio SIC", href: "/sic" },
+      {
+        id: "credit-core",
+        icon: <CreditCard size={14} />,
+        label: "Credit Core",
+        href: "/credit",
+        badge: "DEMO",
+      },
       { id: "sic-metricas", icon: <BarChart3 size={14} />, label: "Metricas", href: "/sic/metricas" },
       { id: "sic-bandeja", icon: <Inbox size={14} />, label: "Bandeja", href: "/sic/bandeja" },
       { id: "sic-expedientes", icon: <FolderOpen size={14} />, label: "Expedientes", href: "/sic/expedientes" },
@@ -164,6 +172,7 @@ const navigationStructure: NavCore[] = [
       { id: "mkt-analytics", icon: <BarChart3 size={14} />, label: "Analytics (marketing)", href: "/marketing/analytics" },
       { id: "mkt-integrations", icon: <Plug size={14} />, label: "Integraciones", href: "/marketing/integrations" },
       { id: "mkt-campaigns", icon: <Megaphone size={14} />, label: "Campanas", href: "/marketing/campaigns" },
+      { id: "mkt-calendar", icon: <Calendar size={14} />, label: "Calendario", href: "/marketing/calendar" },
       { id: "mkt-social-connections", icon: <Link2 size={14} />, label: "Social Connections", href: "/marketing/social-connections" },
       { id: "mkt-google-ads", icon: <BarChart3 size={14} />, label: "Google Ads", href: "/marketing/google-ads" },
       { id: "mkt-agents", icon: <Bot size={14} />, label: "Agentes", href: "/marketing/agents" },
