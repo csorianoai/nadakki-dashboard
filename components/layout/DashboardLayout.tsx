@@ -500,7 +500,8 @@ function TopNavigation() {
 }
 
 /* Paths that work without global tenant (e.g. Live Panel has own tenant selector). live-panel same visibility as agents-execute. */
-const NO_TENANT_PATHS = ["/tenants", "/agents/live", "/ame"];
+/** Credit Core shows its own tenant prompt; other routes stay gated. */
+const NO_TENANT_PATHS = ["/tenants", "/agents/live", "/ame", "/credit"];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();

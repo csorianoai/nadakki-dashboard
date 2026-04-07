@@ -7,10 +7,6 @@ const BACKEND_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 ).replace(/\/$/, "");
 
-/** Credicefi pilot tenant — replace via TenantContext when auth wiring is complete. */
-export const CREDICEFI_PILOT_TENANT_ID =
-  "366b3c6c-a899-4320-805e-5c1d7c896f74";
-
 export function processResultStorageKey(applicationId: string): string {
   return `nadakki_credit_process_${applicationId}`;
 }
@@ -138,12 +134,44 @@ export interface CreditProcessResult {
   } | null;
 }
 
-function creditHeaders(tenantId: string): HeadersInit {
-  return {
-    "Content-Type": "application/json",
+function creditHeaders(
+  tenantId: string,
+  opts?: { jsonBody?: boolean }
+): HeadersInit {
+  const h: Record<string, string> = {
     Accept: "application/json",
     "X-Tenant-ID": tenantId,
   };
+  if (opts?.jsonBody !== false) {
+    h["Content-Type"] = "application/json";
+  }
+  return h;
+}
+
+/** GET /api/v2/credit/health — never throws; use for UI badge when backend omits route. */
+export async function getCreditHealth(tenantId: string): Promise<{
+  ok: boolean;
+  status: number;
+  body?: unknown;
+}> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v2/credit/health`, {
+      method: "GET",
+      headers: creditHeaders(tenantId, { jsonBody: false }),
+    });
+    if (!res.ok) {
+      return { ok: false, status: res.status };
+    }
+    let body: unknown;
+    try {
+      body = await res.json();
+    } catch {
+      body = undefined;
+    }
+    return { ok: true, status: res.status, body };
+  } catch {
+    return { ok: false, status: 0 };
+  }
 }
 
 export async function createApplication(
@@ -196,16 +224,19 @@ export async function processApplication(
 export async function getApplication(
   tenantId: string,
   applicationId: string
-): Promise<CreditApplicationResponse> {
-  const res = await fetch(
-    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}`,
-    { headers: creditHeaders(tenantId) }
-  );
-  if (!res.ok) {
-    const errText = await res.text().catch(() => res.statusText);
-    throw new Error(`Get failed: ${res.status} ${errText}`);
+): Promise<CreditApplicationResponse | null> {
+  try {
+    const res = await fetch(
+      `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}`,
+      { headers: creditHeaders(tenantId, { jsonBody: false }) }
+    );
+    if (!res.ok) {
+      return null;
+    }
+    return (await res.json()) as CreditApplicationResponse;
+  } catch {
+    return null;
   }
-  return res.json() as Promise<CreditApplicationResponse>;
 }
 
 export async function getApplicationEvents(
@@ -214,7 +245,7 @@ export async function getApplicationEvents(
 ): Promise<{ events: CreditEventRow[]; count: number }> {
   const res = await fetch(
     `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/events`,
-    { headers: creditHeaders(tenantId) }
+    { headers: creditHeaders(tenantId, { jsonBody: false }) }
   );
   if (!res.ok) {
     return { events: [], count: 0 };
@@ -222,4 +253,35 @@ export async function getApplicationEvents(
   const data = (await res.json()) as { events?: CreditEventRow[] };
   const events = Array.isArray(data.events) ? data.events : [];
   return { events, count: events.length };
+}
+
+/** GET /api/v2/credit/applications — returns null if missing or non-OK (no throw). */
+export async function listCreditApplications(
+  tenantId: string
+): Promise<{ applications?: unknown[]; items?: unknown[] } | null> {
+  try {
+    const res = await fetch(
+      `${BACKEND_URL}/api/v2/credit/applications`,
+      { headers: creditHeaders(tenantId, { jsonBody: false }) }
+    );
+    if (!res.ok) return null;
+    return (await res.json()) as { applications?: unknown[]; items?: unknown[] };
+  } catch {
+    return null;
+  }
+}
+
+/** GET /api/v2/credit/stats — returns null if missing or non-OK (no throw). */
+export async function getCreditStats(
+  tenantId: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v2/credit/stats`, {
+      headers: creditHeaders(tenantId, { jsonBody: false }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
 }

@@ -1,11 +1,13 @@
 "use client";
 
+import {
+  getCreditHealth,
+  getCreditStats,
+  listCreditApplications,
+} from "@/app/hooks/useCredit";
+import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-const BACKEND_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-).replace(/\/$/, "");
 
 const MODES = {
   AI_ONLY: {
@@ -37,14 +39,54 @@ const MODES = {
   },
 } as const;
 
-export default function CreditOverviewPage() {
-  const [health, setHealth] = useState<"checking" | "ok" | "error">("checking");
+function normalizeApplicationList(
+  data: { applications?: unknown[]; items?: unknown[] } | null
+): unknown[] {
+  if (!data) return [];
+  if (Array.isArray(data.applications)) return data.applications;
+  if (Array.isArray(data.items)) return data.items;
+  return [];
+}
+
+function CreditOverviewBody({ tenantId }: { tenantId: string }) {
+  const [health, setHealth] = useState<"checking" | "ok" | "error">(
+    "checking"
+  );
+  const [listCount, setListCount] = useState<number | null>(null);
+  const [statsPreview, setStatsPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/v2/credit/health`)
-      .then((r) => setHealth(r.ok ? "ok" : "error"))
-      .catch(() => setHealth("error"));
-  }, []);
+    let cancelled = false;
+    setHealth("checking");
+    (async () => {
+      const r = await getCreditHealth(tenantId);
+      if (!cancelled) setHealth(r.ok ? "ok" : "error");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [listData, statsData] = await Promise.all([
+        listCreditApplications(tenantId),
+        getCreditStats(tenantId),
+      ]);
+      if (cancelled) return;
+      const rows = normalizeApplicationList(listData);
+      setListCount(listData === null ? null : rows.length);
+      if (statsData && Object.keys(statsData).length > 0) {
+        setStatsPreview(JSON.stringify(statsData, null, 0).slice(0, 280));
+      } else {
+        setStatsPreview(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tenantId]);
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -70,8 +112,12 @@ export default function CreditOverviewPage() {
           </span>
         </div>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
-          Multi-tenant credit evaluation: AI underwriting, bank adapter, and hybrid
-          flows (live data from your API).
+          Tenant:{" "}
+          <span className="font-mono text-xs" title="X-Tenant-ID">
+            {tenantId}
+          </span>
+          {" — "}
+          Multi-tenant credit evaluation (live API).
         </p>
       </div>
 
@@ -103,11 +149,39 @@ export default function CreditOverviewPage() {
         ))}
       </div>
 
+      {listCount !== null && (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 px-4 py-3 mb-6 text-sm text-gray-600 dark:text-gray-300">
+          Applications in workspace:{" "}
+          <span className="font-semibold text-gray-900 dark:text-gray-100">
+            {listCount}
+          </span>
+          {listCount === 0 && (
+            <span className="text-gray-400 dark:text-gray-500 ml-2">
+              (none yet — create one below)
+            </span>
+          )}
+        </div>
+      )}
+
+      {statsPreview && (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4 mb-6">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+            Credit stats (API)
+          </p>
+          <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-all max-h-32 overflow-y-auto">
+            {statsPreview}
+            {statsPreview.length >= 280 ? "…" : ""}
+          </pre>
+        </div>
+      )}
+
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-6 text-center">
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-          No list API yet — start a new application to see real decisions and
-          events.
-        </p>
+        {listCount === null && !statsPreview ? (
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+            List or stats API not available on this deployment — start a new
+            application to see decisions and events.
+          </p>
+        ) : null}
         <Link
           href="/credit/new"
           className="inline-block bg-gray-900 dark:bg-gray-100 dark:text-gray-900 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-200 transition-colors"
@@ -116,5 +190,13 @@ export default function CreditOverviewPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function CreditOverviewPage() {
+  return (
+    <CreditTenantGate>
+      {(tenantId) => <CreditOverviewBody tenantId={tenantId} />}
+    </CreditTenantGate>
   );
 }

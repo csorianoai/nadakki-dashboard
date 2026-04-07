@@ -1,13 +1,12 @@
 "use client";
 
-import { useTenant } from "@/contexts/TenantContext";
 import {
   createApplication,
-  CREDICEFI_PILOT_TENANT_ID,
   processApplication,
   saveProcessResultToSession,
   type ApplicationMode,
 } from "@/app/hooks/useCredit";
+import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
@@ -27,12 +26,9 @@ function isApplicationMode(v: string | null): v is ApplicationMode {
   return v === "AI_ONLY" || v === "BANK_ONLY" || v === "HYBRID";
 }
 
-export default function NewApplicationClient() {
+function NewApplicationForm({ tenantId }: { tenantId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { tenantId: contextTenant } = useTenant();
-  const tenantResolved =
-    (contextTenant && contextTenant.trim()) || CREDICEFI_PILOT_TENANT_ID;
 
   const qp = searchParams.get("mode");
   const [mode, setMode] = useState<ApplicationMode>(() =>
@@ -62,13 +58,13 @@ export default function NewApplicationClient() {
 
     try {
       const created = await createApplication(
-        tenantResolved,
+        tenantId,
         mode,
         {
-          name: form.applicant_name,
+          applicant_name: form.applicant_name,
           monthly_income: parseFloat(form.monthly_income) || 0,
           loan_amount: parseFloat(form.loan_amount) || 0,
-          loan_purpose: form.loan_purpose,
+          loan_purpose: form.loan_purpose || undefined,
         },
         true
       );
@@ -77,7 +73,7 @@ export default function NewApplicationClient() {
       setStatusMessage("Processing application…");
 
       const processed = await processApplication(
-        tenantResolved,
+        tenantId,
         created.application_id,
         mode,
         true
@@ -134,7 +130,7 @@ export default function NewApplicationClient() {
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
           Tenant:{" "}
-          <span className="font-mono text-xs">{tenantResolved}</span> — All
+          <span className="font-mono text-xs">{tenantId}</span> — All
           fields marked * are required
         </p>
       </div>
@@ -257,5 +253,13 @@ export default function NewApplicationClient() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function NewApplicationClient() {
+  return (
+    <CreditTenantGate>
+      {(tenantId) => <NewApplicationForm tenantId={tenantId} />}
+    </CreditTenantGate>
   );
 }

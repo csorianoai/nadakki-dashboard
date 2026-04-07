@@ -13,9 +13,8 @@ import {
   type CreditApplicationResponse,
   type CreditEventRow,
   type CreditProcessResult,
-  CREDICEFI_PILOT_TENANT_ID,
 } from "@/app/hooks/useCredit";
-import { useTenant } from "@/contexts/TenantContext";
+import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -140,12 +139,9 @@ function pickDecisionLabel(
   return state;
 }
 
-export default function ApplicationDetailPage() {
+function ApplicationDetailInner({ tenantId }: { tenantId: string }) {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
-  const { tenantId: contextTenant } = useTenant();
-  const tenantResolved =
-    (contextTenant && contextTenant.trim()) || CREDICEFI_PILOT_TENANT_ID;
 
   const [app, setApp] = useState<CreditApplicationResponse | null>(null);
   const [cachedResult, setCachedResult] = useState<CreditProcessResult | null>(
@@ -157,14 +153,24 @@ export default function ApplicationDetailPage() {
   const [reprocessing, setReprocessing] = useState(false);
 
   const load = useCallback(async () => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const [appData, eventsData] = await Promise.all([
-        getApplication(tenantResolved, id),
-        getApplicationEvents(tenantResolved, id),
+        getApplication(tenantId, id),
+        getApplicationEvents(tenantId, id),
       ]);
+      if (!appData) {
+        setError("Application not available (missing endpoint or id).");
+        setApp(null);
+        setEvents(eventsData.events);
+        setCachedResult(loadProcessResultFromSession(id));
+        return;
+      }
       setApp(appData);
       setEvents(eventsData.events);
       const cached = loadProcessResultFromSession(id);
@@ -175,7 +181,7 @@ export default function ApplicationDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, tenantResolved]);
+  }, [id, tenantId]);
 
   useEffect(() => {
     void load();
@@ -187,10 +193,10 @@ export default function ApplicationDetailPage() {
     setError(null);
     try {
       const mode = resolveModeFromPayload(app);
-      const res = await processApplication(tenantResolved, id, mode, true);
+      const res = await processApplication(tenantId, id, mode, true);
       setCachedResult(res);
       saveProcessResultToSession(id, res);
-      const ev = await getApplicationEvents(tenantResolved, id);
+      const ev = await getApplicationEvents(tenantId, id);
       setEvents(ev.events);
       await load();
     } catch (e) {
@@ -423,5 +429,13 @@ export default function ApplicationDetailPage() {
         <EventTimeline events={events} />
       </div>
     </div>
+  );
+}
+
+export default function ApplicationDetailPage() {
+  return (
+    <CreditTenantGate>
+      {(tenantId) => <ApplicationDetailInner tenantId={tenantId} />}
+    </CreditTenantGate>
   );
 }
