@@ -129,6 +129,54 @@ export type UpdateMarketingCampaignResult = {
   status: number;
 };
 
+/** PATCH /api/marketing/campaigns/{id} — partial update (e.g. status). */
+export async function patchMarketingCampaignStatus(
+  tenantId: string,
+  campaignId: string,
+  status: "approved" | "rejected"
+): Promise<UpdateMarketingCampaignResult> {
+  const url = MARKETING_ENDPOINTS.CAMPAIGN_BY_ID(campaignId);
+  try {
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Tenant-ID": tenantId,
+      },
+      body: JSON.stringify({ status }),
+    });
+    const httpStatus = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (!res.ok) {
+      let detailStr = `HTTP ${httpStatus}`;
+      if (json && typeof json === "object" && json !== null && "detail" in json) {
+        const d = (json as { detail: unknown }).detail;
+        if (typeof d === "string") detailStr = d;
+        else if (Array.isArray(d))
+          detailStr = d
+            .map((x) =>
+              typeof x === "object" && x && "msg" in x ? String((x as { msg: unknown }).msg) : String(x)
+            )
+            .join("; ");
+        else detailStr = JSON.stringify(d);
+      }
+      return { ok: false, data: null, error: detailStr, status: httpStatus };
+    }
+    if (!json || typeof json !== "object") {
+      return { ok: true, data: {}, error: null, status: httpStatus };
+    }
+    return { ok: true, data: json as Record<string, unknown>, error: null, status: httpStatus };
+  } catch (e) {
+    return {
+      ok: false,
+      data: null,
+      error: (e as Error)?.message ?? "Network error",
+      status: 0,
+    };
+  }
+}
+
 /** PUT /api/marketing/campaigns/{id} — body must match campaigns_v2 CampaignUpdate */
 export async function updateMarketingCampaign(
   tenantId: string,

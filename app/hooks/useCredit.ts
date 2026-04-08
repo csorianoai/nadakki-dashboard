@@ -7,18 +7,37 @@ const BACKEND_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 ).replace(/\/$/, "");
 
-export function processResultStorageKey(applicationId: string): string {
-  return `nadakki_credit_process_${applicationId}`;
+/** Safe segment for sessionStorage keys; avoids empty or pathological tenant strings. */
+function tenantStorageSegment(tenantId?: string | null): string {
+  const t = (tenantId ?? "").trim();
+  if (!t) return "_";
+  const safe = t.replace(/[^a-zA-Z0-9._-]/g, "_");
+  return safe.length > 0 ? safe.slice(0, 128) : "_";
 }
+
+/**
+ * Session key for cached POST /process payload.
+ * Pattern: nadakki_credit_${tenantId}_${applicationId}
+ * Callers may pass tenantId on save/load to isolate tenants; omitted → "_".
+ */
+export function processResultStorageKey(
+  applicationId: string,
+  tenantId?: string | null
+): string {
+  return `nadakki_credit_${tenantStorageSegment(tenantId)}_${applicationId}`;
+}
+
+const LEGACY_PROCESS_STORAGE_PREFIX = "nadakki_credit_process_";
 
 export function saveProcessResultToSession(
   applicationId: string,
-  result: CreditProcessResult
+  result: CreditProcessResult,
+  tenantId?: string | null
 ): void {
   if (typeof window === "undefined") return;
   try {
     window.sessionStorage.setItem(
-      processResultStorageKey(applicationId),
+      processResultStorageKey(applicationId, tenantId),
       JSON.stringify(result)
     );
   } catch {
@@ -27,13 +46,18 @@ export function saveProcessResultToSession(
 }
 
 export function loadProcessResultFromSession(
-  applicationId: string
+  applicationId: string,
+  tenantId?: string | null
 ): CreditProcessResult | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.sessionStorage.getItem(
-      processResultStorageKey(applicationId)
-    );
+    const key = processResultStorageKey(applicationId, tenantId);
+    let raw = window.sessionStorage.getItem(key);
+    if (!raw) {
+      raw = window.sessionStorage.getItem(
+        `${LEGACY_PROCESS_STORAGE_PREFIX}${applicationId}`
+      );
+    }
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     if (parsed && typeof parsed === "object" && "success" in parsed) {
@@ -89,7 +113,18 @@ export interface AiDecisionShape {
   dry_run?: boolean;
   score?: number;
   confidence?: number;
-  income_verified?: boolean;
+  /** SIC / underwriting context — all optional for backward compatibility. */
+  income_verified?: boolean | null;
+  monthly_income_estimate?: number | null;
+  recurring_income_monthly_median?: number | null;
+  income_stability_score?: number | null;
+  income_group_count?: number | null;
+  total_outliers?: number | null;
+  total_transfer_pairs?: number | null;
+  sic_used?: boolean | null;
+  sic_fallback?: boolean | null;
+  confidence_overall?: number | null;
+  review_required?: boolean | null;
 }
 
 export interface BankDecisionShape {

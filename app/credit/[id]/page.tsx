@@ -139,6 +139,143 @@ function pickDecisionLabel(
   return state;
 }
 
+const SIC_FIELD_KEYS = [
+  "recurring_income_monthly_median",
+  "income_stability_score",
+  "total_outliers",
+  "income_group_count",
+  "total_transfer_pairs",
+  "confidence_overall",
+  "review_required",
+] as const;
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+function sicHasAnyKnownField(o: Record<string, unknown>): boolean {
+  return SIC_FIELD_KEYS.some(
+    (k) => o[k] !== undefined && o[k] !== null && o[k] !== ""
+  );
+}
+
+/** Resolve SIC metrics from nested objects or top-level AI decision fields (runtime API shape). */
+function pickSicSource(
+  ai: AiDecisionShape | undefined
+): Record<string, unknown> | null {
+  if (!ai) return null;
+  const raw = ai as unknown as Record<string, unknown>;
+  const nestedKeys = [
+    "sic",
+    "sic_analysis",
+    "statement_analysis",
+    "sic_metrics",
+  ] as const;
+  for (const nk of nestedKeys) {
+    const v = raw[nk];
+    if (isPlainObject(v) && sicHasAnyKnownField(v)) return v;
+  }
+  if (!sicHasAnyKnownField(raw)) return null;
+  const pick: Record<string, unknown> = {};
+  for (const k of SIC_FIELD_KEYS) {
+    const val = raw[k];
+    if (val !== undefined && val !== null && val !== "") pick[k] = val;
+  }
+  return Object.keys(pick).length > 0 ? pick : null;
+}
+
+function coalesceNumber(v: unknown): number | null {
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  if (typeof v === "string" && v.trim() !== "" && !Number.isNaN(Number(v))) {
+    return Number(v);
+  }
+  return null;
+}
+
+function coalesceBool(v: unknown): boolean | null {
+  if (typeof v === "boolean") return v;
+  return null;
+}
+
+function formatDopMonthly(n: number): string {
+  const formatted = new Intl.NumberFormat("es-DO", {
+    maximumFractionDigits: 0,
+  }).format(n);
+  return `${formatted} DOP/mo`;
+}
+
+/** Stability / SIC confidence: ratio 0–1 or already a percent 0–100. */
+function formatScoreOrPercent(n: number): string {
+  if (n >= 0 && n <= 1) {
+    return `${Math.round(n * 1000) / 10}%`;
+  }
+  if (n > 1 && n <= 100) {
+    return `${Math.round(n * 10) / 10}%`;
+  }
+  return String(Math.round(n * 10) / 10);
+}
+
+function buildSicExecutiveRows(
+  sic: Record<string, unknown>
+): { label: string; value: string }[] {
+  const rows: { label: string; value: string }[] = [];
+
+  const recurring = coalesceNumber(sic.recurring_income_monthly_median);
+  if (recurring !== null) {
+    rows.push({ label: "Recurring Income", value: formatDopMonthly(recurring) });
+  }
+
+  const stability = coalesceNumber(sic.income_stability_score);
+  if (stability !== null) {
+    rows.push({
+      label: "Income Stability",
+      value: formatScoreOrPercent(stability),
+    });
+  }
+
+  const outliers = coalesceNumber(sic.total_outliers);
+  if (outliers !== null) {
+    rows.push({
+      label: "Outlier Transactions",
+      value: String(Math.round(outliers)),
+    });
+  }
+
+  const groups = coalesceNumber(sic.income_group_count);
+  if (groups !== null) {
+    rows.push({
+      label: "Income Sources",
+      value: String(Math.round(groups)),
+    });
+  }
+
+  const transfers = coalesceNumber(sic.total_transfer_pairs);
+  if (transfers !== null) {
+    rows.push({
+      label: "Transfer Pairs",
+      value: String(Math.round(transfers)),
+    });
+  }
+
+  const conf = coalesceNumber(sic.confidence_overall);
+  if (conf !== null) {
+    rows.push({
+      label: "SIC Confidence",
+      value: formatScoreOrPercent(conf),
+    });
+  }
+
+  const review = coalesceBool(sic.review_required);
+  if (review !== null) {
+    rows.push({
+      label: "Review Flag",
+      value: review ? "Yes" : "No",
+    });
+  }
+
+  return rows;
+}
+
 function ApplicationDetailInner({ tenantId }: { tenantId: string }) {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
@@ -260,6 +397,9 @@ function ApplicationDetailInner({ tenantId }: { tenantId: string }) {
   const showDecisionHint =
     app.state !== "DRAFT" && !result && !aiDecision && !bankDecision;
 
+  const sicSource = pickSicSource(aiDecision);
+  const sicExecutiveRows = sicSource ? buildSicExecutiveRows(sicSource) : [];
+
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -354,14 +494,29 @@ function ApplicationDetailInner({ tenantId }: { tenantId: string }) {
               </p>
               <p className="text-xs text-gray-400">Confidence</p>
             </div>
-            <div className="text-center flex flex-col items-center justify-center gap-1">
-              <DecisionBadge
-                label={
-                  aiDecision.recommendation ||
-                  aiDecision.decision ||
-                  "REVIEW"
-                }
-              />
+            <div className="text-center flex flex-col items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <DecisionBadge
+                  label={
+                    aiDecision.recommendation ||
+                    aiDecision.decision ||
+                    "REVIEW"
+                  }
+                />
+                {typeof aiDecision.income_verified === "boolean" && (
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                      aiDecision.income_verified
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+                        : "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"
+                    }`}
+                  >
+                    {aiDecision.income_verified
+                      ? "Income verified \u2713"
+                      : "Income estimated"}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-gray-400">Recommendation</p>
             </div>
           </div>
@@ -380,6 +535,28 @@ function ApplicationDetailInner({ tenantId }: { tenantId: string }) {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          {sicExecutiveRows.length > 0 && (
+            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                Statement Analysis (SIC)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                {sicExecutiveRows.map(({ label, value }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-0.5 border-b border-gray-100 dark:border-gray-800 pb-2 sm:border-0 sm:pb-0"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+                      {label}
+                    </span>
+                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100 sm:text-right tabular-nums">
+                      {value}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

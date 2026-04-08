@@ -181,7 +181,7 @@ function NewApplicationForm({ tenantId }: { tenantId: string }) {
               setForm({ ...form, applicant_name: e.target.value })
             }
             placeholder="Full legal name"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:border-gray-600 dark:focus:ring-gray-300"
           />
         </div>
 
@@ -199,7 +199,7 @@ function NewApplicationForm({ tenantId }: { tenantId: string }) {
                 setForm({ ...form, monthly_income: e.target.value })
               }
               placeholder="e.g. 45000"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:border-gray-600 dark:focus:ring-gray-300"
             />
           </div>
           <div>
@@ -214,7 +214,7 @@ function NewApplicationForm({ tenantId }: { tenantId: string }) {
                 setForm({ ...form, loan_amount: e.target.value })
               }
               placeholder="e.g. 200000"
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:border-gray-600 dark:focus:ring-gray-300"
             />
           </div>
         </div>
@@ -228,7 +228,7 @@ function NewApplicationForm({ tenantId }: { tenantId: string }) {
             onChange={(e) =>
               setForm({ ...form, loan_purpose: e.target.value })
             }
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-300"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:border-gray-600 dark:focus:ring-gray-300"
           >
             <option value="">Select purpose…</option>
             <option value="personal">Personal</option>

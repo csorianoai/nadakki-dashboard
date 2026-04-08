@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { name: "Analytics", href: "/marketing/analytics", icon: "📊", color: "#06b6d4" },
   { name: "Integraciones", href: "/marketing/integrations", icon: "🔌", color: "#14b8a6" },
   { name: "Campaigns", href: "/marketing/campaigns", icon: "📢", color: "#f59e0b" },
+  { name: "Calendario", href: "/marketing/calendar", icon: "📅", color: "#22c55e" },
   {
     name: "A/B (beta)",
     href: "/marketing/ab-testing",
