@@ -385,3 +385,65 @@ export async function getSimilarCases(
   );
   return handleJson(res);
 }
+
+/**
+ * Browser-only PDF download: fetch + blob + object URL so `X-Tenant-ID` is sent.
+ * Do not use `window.open()` — tenant header would not be included.
+ */
+export async function downloadPdf(
+  tenantId: string,
+  url: string,
+  filename: string
+): Promise<void> {
+  const tid = requireTenant(tenantId);
+  if (typeof document === "undefined") {
+    throw new Error("PDF download must run in the browser");
+  }
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/pdf",
+      "X-Tenant-ID": tid,
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`PDF error: ${res.status}`);
+  }
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(objectUrl);
+}
+
+/** GET .../pdf/application-summary */
+export async function downloadApplicationSummaryPdf(
+  tenantId: string,
+  applicationId: string,
+  filename = `credit-application-summary-${applicationId}.pdf`
+): Promise<void> {
+  const url = `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/pdf/application-summary`;
+  return downloadPdf(tenantId, url, filename);
+}
+
+/** GET .../pdf/executive-memo */
+export async function downloadExecutiveMemoPdf(
+  tenantId: string,
+  applicationId: string,
+  filename = `credit-executive-memo-${applicationId}.pdf`
+): Promise<void> {
+  const url = `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/pdf/executive-memo`;
+  return downloadPdf(tenantId, url, filename);
+}
+
+/** GET .../offers/{offer_id}/pdf */
+export async function downloadOfferPdf(
+  tenantId: string,
+  applicationId: string,
+  offerId: string,
+  filename = `credit-offer-${offerId}.pdf`
+): Promise<void> {
+  const url = `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/offers/${encodeURIComponent(offerId)}/pdf`;
+  return downloadPdf(tenantId, url, filename);
+}
