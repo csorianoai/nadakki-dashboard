@@ -101,11 +101,22 @@ const navigationStructure: NavCore[] = [
     modules: [
       { id: "sic-home", icon: <Home size={14} />, label: "Inicio SIC", href: "/sic" },
       {
-        id: "credit-core",
+        id: "credit-dealer",
         icon: <CreditCard size={14} />,
-        label: "Credit Core",
+        label: "Credit Dealer",
+        href: "/credit/dealer",
+      },
+      {
+        id: "credit-bank",
+        icon: <Building2 size={14} />,
+        label: "Credit Banco",
+        href: "/credit/bank",
+      },
+      {
+        id: "credit-legacy",
+        icon: <FileText size={14} />,
+        label: "Credit Core (legacy)",
         href: "/credit",
-        badge: "DEMO",
       },
       { id: "sic-metricas", icon: <BarChart3 size={14} />, label: "Metricas", href: "/sic/metricas" },
       { id: "sic-bandeja", icon: <Inbox size={14} />, label: "Bandeja", href: "/sic/bandeja" },

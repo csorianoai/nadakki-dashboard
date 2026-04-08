@@ -19,14 +19,14 @@ export function CreditTenantGate({
     return (
       <div className="p-8 max-w-lg mx-auto text-center space-y-4">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Credit Core
+          Crédito NADAKKI
         </h1>
         <p className="text-gray-600 dark:text-gray-400 text-sm">
-          Select a tenant to use Credit Core
+          Seleccione una institución
         </p>
         <p className="text-gray-500 dark:text-gray-500 text-xs">
-          Use the tenant selector in the top-right of the bar or in the sidebar,
-          then return here.
+          Use el selector de tenant en la barra superior o en el menú lateral y
+          vuelva a esta pantalla.
         </p>
         <Link
           href="/tenants"
