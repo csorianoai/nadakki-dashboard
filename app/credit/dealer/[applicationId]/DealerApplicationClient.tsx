@@ -12,6 +12,9 @@ import {
 } from "@/components/credit";
 import {
   CreditApiError,
+  downloadApplicationSummaryPdf,
+  downloadExecutiveMemoPdf,
+  downloadOfferPdf,
   getApplicationFull,
   getExplanation,
   getOffersRank,
@@ -48,6 +51,11 @@ export function DealerApplicationClient({
   const [similar, setSimilar] = useState<Record<string, unknown>[] | null>(
     null
   );
+  const [pdfErr, setPdfErr] = useState<string | null>(null);
+  const [pdfDocBusy, setPdfDocBusy] = useState<"summary" | "memo" | null>(
+    null
+  );
+  const [pdfOfferBusyId, setPdfOfferBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -127,6 +135,42 @@ export function DealerApplicationClient({
       ? rank.ranked_eligible
       : dossier?.offers;
 
+  async function handlePdfSummary() {
+    setPdfErr(null);
+    setPdfDocBusy("summary");
+    try {
+      await downloadApplicationSummaryPdf(tenantId, applicationId);
+    } catch (e) {
+      setPdfErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPdfDocBusy(null);
+    }
+  }
+
+  async function handlePdfMemo() {
+    setPdfErr(null);
+    setPdfDocBusy("memo");
+    try {
+      await downloadExecutiveMemoPdf(tenantId, applicationId);
+    } catch (e) {
+      setPdfErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPdfDocBusy(null);
+    }
+  }
+
+  async function handlePdfOffer(offerId: string) {
+    setPdfErr(null);
+    setPdfOfferBusyId(offerId);
+    try {
+      await downloadOfferPdf(tenantId, applicationId, offerId);
+    } catch (e) {
+      setPdfErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPdfOfferBusyId(null);
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -160,6 +204,9 @@ export function DealerApplicationClient({
       </div>
 
       <ValidationBanner error={error} />
+      {pdfErr && (
+        <ValidationBanner error={pdfErr} />
+      )}
 
       {loading && !dossier ? (
         <div className="animate-pulse h-96 rounded-xl bg-white/5" />
@@ -170,6 +217,30 @@ export function DealerApplicationClient({
             vehicle={dossier.vehicle}
             ltv={ltv}
           />
+
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+            <span className="text-xs font-medium text-slate-500 mr-1">
+              PDF (motor backend):
+            </span>
+            <button
+              type="button"
+              disabled={pdfDocBusy !== null}
+              onClick={handlePdfSummary}
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10 disabled:opacity-40"
+            >
+              {pdfDocBusy === "summary"
+                ? "Generando…"
+                : "Resumen solicitud"}
+            </button>
+            <button
+              type="button"
+              disabled={pdfDocBusy !== null}
+              onClick={handlePdfMemo}
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10 disabled:opacity-40"
+            >
+              {pdfDocBusy === "memo" ? "Generando…" : "Memo ejecutivo"}
+            </button>
+          </div>
 
           <div className="grid lg:grid-cols-3 gap-4">
             <ScoreGauge score={score} />
@@ -194,6 +265,8 @@ export function DealerApplicationClient({
               offers={tableOffers}
               bestOfferId={bestId}
               emptyMessage="Sin ofertas aún"
+              onDownloadOfferPdf={handlePdfOffer}
+              pdfLoadingOfferId={pdfOfferBusyId}
             />
           </div>
 

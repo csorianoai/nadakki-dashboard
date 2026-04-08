@@ -3,6 +3,7 @@
 import {
   DossierCard,
   ExplanationCard,
+  OfferComparisonTable,
   OfferForm,
   SimilarCasesPanel,
   ValidationBanner,
@@ -10,9 +11,13 @@ import {
 import {
   CreditApiError,
   createOffer,
+  downloadApplicationSummaryPdf,
+  downloadExecutiveMemoPdf,
+  downloadOfferPdf,
   getApplicationFull,
   getExplanation,
   getSimilarCases,
+  listOffers,
   type OfferCreatePayload,
 } from "@/lib/credit-api";
 import { formatPercentDecimal } from "@/lib/credit-format";
@@ -40,6 +45,11 @@ export function BankApplicationClient({
   );
   const [offerBusy, setOfferBusy] = useState(false);
   const [offerMsg, setOfferMsg] = useState<string | null>(null);
+  const [pdfErr, setPdfErr] = useState<string | null>(null);
+  const [pdfDocBusy, setPdfDocBusy] = useState<"summary" | "memo" | null>(
+    null
+  );
+  const [pdfOfferBusyId, setPdfOfferBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,7 +57,12 @@ export function BankApplicationClient({
     setExplErr(null);
     try {
       const full = await getApplicationFull(tenantId, applicationId);
-      setDossier(full);
+      const offRes = await listOffers(tenantId, applicationId);
+      const mergedOffers =
+        full.offers && full.offers.length > 0
+          ? full.offers
+          : offRes.offers ?? [];
+      setDossier({ ...full, offers: mergedOffers });
       const sim = await getSimilarCases(tenantId, applicationId);
       setSimilar(sim.similar_cases ?? []);
       if (full.ai_decision) {
@@ -108,6 +123,42 @@ export function BankApplicationClient({
   const ltv =
     loan != null && val != null && val > 0 ? loan / val : null;
 
+  async function handlePdfSummary() {
+    setPdfErr(null);
+    setPdfDocBusy("summary");
+    try {
+      await downloadApplicationSummaryPdf(tenantId, applicationId);
+    } catch (e) {
+      setPdfErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPdfDocBusy(null);
+    }
+  }
+
+  async function handlePdfMemo() {
+    setPdfErr(null);
+    setPdfDocBusy("memo");
+    try {
+      await downloadExecutiveMemoPdf(tenantId, applicationId);
+    } catch (e) {
+      setPdfErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPdfDocBusy(null);
+    }
+  }
+
+  async function handlePdfOffer(offerId: string) {
+    setPdfErr(null);
+    setPdfOfferBusyId(offerId);
+    try {
+      await downloadOfferPdf(tenantId, applicationId, offerId);
+    } catch (e) {
+      setPdfErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPdfOfferBusyId(null);
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-start gap-4">
@@ -126,6 +177,7 @@ export function BankApplicationClient({
       </div>
 
       <ValidationBanner error={error} />
+      {pdfErr && <ValidationBanner error={pdfErr} />}
 
       {loading && !dossier ? (
         <div className="animate-pulse h-64 rounded-xl bg-white/5" />
@@ -166,6 +218,42 @@ export function BankApplicationClient({
           <ExplanationCard data={explanation} error={explErr} />
 
           <SimilarCasesPanel cases={similar} />
+
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+            <span className="text-xs font-medium text-slate-500 mr-1">
+              PDF:
+            </span>
+            <button
+              type="button"
+              disabled={pdfDocBusy !== null}
+              onClick={handlePdfSummary}
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10 disabled:opacity-40"
+            >
+              {pdfDocBusy === "summary"
+                ? "Generando…"
+                : "Resumen solicitud"}
+            </button>
+            <button
+              type="button"
+              disabled={pdfDocBusy !== null}
+              onClick={handlePdfMemo}
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10 disabled:opacity-40"
+            >
+              {pdfDocBusy === "memo" ? "Generando…" : "Memo ejecutivo"}
+            </button>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-medium text-slate-300 mb-2">
+              Ofertas registradas
+            </h2>
+            <OfferComparisonTable
+              offers={dossier.offers}
+              onDownloadOfferPdf={handlePdfOffer}
+              pdfLoadingOfferId={pdfOfferBusyId}
+              emptyMessage="Sin ofertas aún"
+            />
+          </div>
 
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-6">
             <h2 className="text-sm font-medium text-emerald-200 mb-4">

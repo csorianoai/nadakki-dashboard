@@ -9,6 +9,9 @@ export interface OfferComparisonTableProps {
   bestOfferId?: string | null;
   emptyMessage?: string;
   className?: string;
+  /** Si se define, muestra botón por fila para descargar PDF de la oferta (fetch + blob + X-Tenant-ID en el cliente). */
+  onDownloadOfferPdf?: (offerId: string) => void | Promise<void>;
+  pdfLoadingOfferId?: string | null;
 }
 
 export function OfferComparisonTable({
@@ -16,6 +19,8 @@ export function OfferComparisonTable({
   bestOfferId,
   emptyMessage = "Sin ofertas aún",
   className,
+  onDownloadOfferPdf,
+  pdfLoadingOfferId,
 }: OfferComparisonTableProps) {
   const list = Array.isArray(offers) ? offers : [];
 
@@ -49,6 +54,9 @@ export function OfferComparisonTable({
               <th className="px-3 py-2">Plazo</th>
               <th className="px-3 py-2">Cuota</th>
               <th className="px-3 py-2">Estado</th>
+              {onDownloadOfferPdf && (
+                <th className="px-3 py-2 whitespace-nowrap">PDF</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -94,6 +102,28 @@ export function OfferComparisonTable({
                       {String(o.status ?? "—")}
                     </span>
                   </td>
+                  {onDownloadOfferPdf && (
+                    <td className="px-3 py-2">
+                      {o.offer_id != null && String(o.offer_id) !== "" ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onDownloadOfferPdf(String(o.offer_id))
+                          }
+                          disabled={
+                            pdfLoadingOfferId === String(o.offer_id)
+                          }
+                          className="text-xs text-violet-300 hover:underline disabled:opacity-40"
+                        >
+                          {pdfLoadingOfferId === String(o.offer_id)
+                            ? "…"
+                            : "Descargar"}
+                        </button>
+                      ) : (
+                        <span className="text-slate-600 text-xs">—</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
