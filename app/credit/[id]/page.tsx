@@ -15,6 +15,7 @@ import {
   type CreditProcessResult,
 } from "@/app/hooks/useCredit";
 import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
+import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -276,7 +277,9 @@ function buildSicExecutiveRows(
   return rows;
 }
 
-function ApplicationDetailInner({ tenantId }: { tenantId: string }) {
+function ApplicationDetailInner() {
+  const { tenantId: ctxTenantId } = useTenant();
+  const tenantId = (ctxTenantId ?? "").trim();
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
 
@@ -612,7 +615,7 @@ function ApplicationDetailInner({ tenantId }: { tenantId: string }) {
 export default function ApplicationDetailPage() {
   return (
     <CreditTenantGate>
-      {(tenantId) => <ApplicationDetailInner tenantId={tenantId} />}
+      <ApplicationDetailInner />
     </CreditTenantGate>
   );
 }

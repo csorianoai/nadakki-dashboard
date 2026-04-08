@@ -4,7 +4,7 @@ import { DealerNewWizard } from "./DealerNewWizard";
 export default function CreditDealerNewPage() {
   return (
     <CreditTenantGate>
-      {(tenantId) => <DealerNewWizard tenantId={tenantId} />}
+      <DealerNewWizard />
     </CreditTenantGate>
   );
 }

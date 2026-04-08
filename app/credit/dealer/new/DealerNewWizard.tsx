@@ -10,6 +10,7 @@ import {
   type ApplicantPayload,
   type VehiclePayload,
 } from "@/lib/credit-api";
+import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,7 +22,9 @@ const STEPS = [
   "Procesar",
 ] as const;
 
-export function DealerNewWizard({ tenantId }: { tenantId: string }) {
+export function DealerNewWizard() {
+  const { tenantId: ctxTenantId } = useTenant();
+  const tenantId = (ctxTenantId ?? "").trim();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [applicationId, setApplicationId] = useState<string | null>(null);

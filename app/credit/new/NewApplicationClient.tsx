@@ -7,6 +7,7 @@ import {
   type ApplicationMode,
 } from "@/app/hooks/useCredit";
 import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
+import { useTenant } from "@/contexts/TenantContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
@@ -26,7 +27,9 @@ function isApplicationMode(v: string | null): v is ApplicationMode {
   return v === "AI_ONLY" || v === "BANK_ONLY" || v === "HYBRID";
 }
 
-function NewApplicationForm({ tenantId }: { tenantId: string }) {
+function NewApplicationForm() {
+  const { tenantId: ctxTenantId } = useTenant();
+  const tenantId = (ctxTenantId ?? "").trim();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -259,7 +262,7 @@ function NewApplicationForm({ tenantId }: { tenantId: string }) {
 export default function NewApplicationClient() {
   return (
     <CreditTenantGate>
-      {(tenantId) => <NewApplicationForm tenantId={tenantId} />}
+      <NewApplicationForm />
     </CreditTenantGate>
   );
 }

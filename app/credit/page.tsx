@@ -6,6 +6,7 @@ import {
   listCreditApplications,
 } from "@/app/hooks/useCredit";
 import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
+import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -139,7 +140,9 @@ function parseCreatedMs(s: string | null): number {
   return Number.isNaN(t) ? 0 : t;
 }
 
-function CreditOverviewBody({ tenantId }: { tenantId: string }) {
+function CreditOverviewBody() {
+  const { tenantId: ctxTenantId } = useTenant();
+  const tenantId = (ctxTenantId ?? "").trim();
   const [health, setHealth] = useState<"checking" | "ok" | "error">(
     "checking"
   );
@@ -419,7 +422,7 @@ function CreditOverviewBody({ tenantId }: { tenantId: string }) {
 export default function CreditOverviewPage() {
   return (
     <CreditTenantGate>
-      {(tenantId) => <CreditOverviewBody tenantId={tenantId} />}
+      <CreditOverviewBody />
     </CreditTenantGate>
   );
 }

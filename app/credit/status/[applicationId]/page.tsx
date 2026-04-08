@@ -9,12 +9,9 @@ export default async function CreditClientStatusPage({
   const { applicationId } = await params;
   return (
     <CreditTenantGate>
-      {(tenantId) => (
-        <ClientStatusClient
-          tenantId={tenantId}
-          applicationId={decodeURIComponent(applicationId)}
-        />
-      )}
+      <ClientStatusClient
+        applicationId={decodeURIComponent(applicationId)}
+      />
     </CreditTenantGate>
   );
 }

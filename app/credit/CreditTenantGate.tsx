@@ -8,11 +8,7 @@ import type { ReactNode } from "react";
  * Credit routes use X-Tenant-ID from the same tenant selector as the rest of the dashboard
  * ({@link TenantContext} / top bar). No silent default tenant.
  */
-export function CreditTenantGate({
-  children,
-}: {
-  children: (tenantId: string) => ReactNode;
-}) {
+export function CreditTenantGate({ children }: { children: ReactNode }) {
   const { tenantId } = useTenant();
   const tid = tenantId?.trim() ?? "";
   if (!tid) {
@@ -37,5 +33,5 @@ export function CreditTenantGate({
       </div>
     );
   }
-  return <>{children(tid)}</>;
+  return <>{children}</>;
 }

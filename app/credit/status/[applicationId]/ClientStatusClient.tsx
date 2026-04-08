@@ -14,17 +14,18 @@ import {
   getOffersRank,
 } from "@/lib/credit-api";
 import { formatDOP, simulateMonthlyPayment } from "@/lib/credit-format";
+import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 /** Informative-only term slider; does not change bank offers. */
 export function ClientStatusClient({
-  tenantId,
   applicationId,
 }: {
-  tenantId: string;
   applicationId: string;
 }) {
+  const { tenantId: ctxTenantId } = useTenant();
+  const tenantId = (ctxTenantId ?? "").trim();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [dossier, setDossier] = useState<Awaited<

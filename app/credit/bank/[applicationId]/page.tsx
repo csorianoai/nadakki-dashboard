@@ -9,12 +9,9 @@ export default async function CreditBankApplicationPage({
   const { applicationId } = await params;
   return (
     <CreditTenantGate>
-      {(tenantId) => (
-        <BankApplicationClient
-          tenantId={tenantId}
-          applicationId={decodeURIComponent(applicationId)}
-        />
-      )}
+      <BankApplicationClient
+        applicationId={decodeURIComponent(applicationId)}
+      />
     </CreditTenantGate>
   );
 }

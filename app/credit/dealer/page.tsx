@@ -4,7 +4,7 @@ import { DealerListClient } from "./DealerListClient";
 export default function CreditDealerPage() {
   return (
     <CreditTenantGate>
-      {(tenantId) => <DealerListClient tenantId={tenantId} />}
+      <DealerListClient />
     </CreditTenantGate>
   );
 }

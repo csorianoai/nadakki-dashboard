@@ -21,16 +21,17 @@ import {
   type OfferCreatePayload,
 } from "@/lib/credit-api";
 import { formatPercentDecimal } from "@/lib/credit-format";
+import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 export function BankApplicationClient({
-  tenantId,
   applicationId,
 }: {
-  tenantId: string;
   applicationId: string;
 }) {
+  const { tenantId: ctxTenantId } = useTenant();
+  const tenantId = (ctxTenantId ?? "").trim();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [dossier, setDossier] = useState<Awaited<

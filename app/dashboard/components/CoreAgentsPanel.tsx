@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import UsageDashboard from '@/components/usage/UsageDashboard';
 import CoreTabs from './CoreTabs';
 import CoreAgentCard from './CoreAgentCard';
 
@@ -238,6 +239,8 @@ export default function CoreAgentsPanel() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
+        <UsageDashboard variant="default" />
+
         {/* Header */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-2xl p-6 md:p-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

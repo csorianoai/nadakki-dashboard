@@ -6,6 +6,7 @@ import {
   getApplicationFull,
   listApplications,
 } from "@/lib/credit-api";
+import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatDOP } from "@/lib/credit-format";
@@ -15,7 +16,9 @@ interface Row extends CreditApplicationRow {
   loanHint?: number | null;
 }
 
-export function BankQueueClient({ tenantId }: { tenantId: string }) {
+export function BankQueueClient() {
+  const { tenantId: ctxTenantId } = useTenant();
+  const tenantId = (ctxTenantId ?? "").trim();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

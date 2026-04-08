@@ -86,6 +86,7 @@ const navigationStructure: NavCore[] = [
       { id: "live-panel", icon: <Activity size={14} />, label: "Live Panel", href: "/agents/live" },
       { id: "tenants", icon: <Building2 size={14} />, label: "Multi-Tenant", href: "/tenants", badge: "NEW" },
       { id: "settings", icon: <Settings size={14} />, label: "Configuracion", href: "/settings" },
+      { id: "billing", icon: <CreditCard size={14} />, label: "Suscripcion", href: "/billing" },
       { id: "agents-execute", icon: <PlayCircle size={14} />, label: "Ejecutar Agentes", href: "/agents/execute" },
       { id: "scheduler", icon: <Clock size={14} />, label: "Scheduler", href: "/scheduler" },
       { id: "autopilot", icon: <Zap size={14} />, label: "Autopilot IA", href: "/autopilot" },

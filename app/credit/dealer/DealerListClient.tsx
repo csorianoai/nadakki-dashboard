@@ -5,12 +5,16 @@ import { formatDOP } from "@/lib/credit-format";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ValidationBanner } from "@/components/credit/ValidationBanner";
+import UsageDashboard from "@/components/usage/UsageDashboard";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface EnrichedRow extends CreditApplicationRow {
   loanHint?: number | null;
 }
 
-export function DealerListClient({ tenantId }: { tenantId: string }) {
+export function DealerListClient() {
+  const { tenantId: ctxTenantId } = useTenant();
+  const tenantId = (ctxTenantId ?? "").trim();
   const [rows, setRows] = useState<EnrichedRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -112,6 +116,8 @@ export function DealerListClient({ tenantId }: { tenantId: string }) {
           Nueva solicitud
         </Link>
       </div>
+
+      <UsageDashboard variant="dark" />
 
       <ValidationBanner error={error} />
 
