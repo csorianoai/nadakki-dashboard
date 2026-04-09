@@ -25,13 +25,44 @@ export interface CreateApplicationBody {
   initial_state?: "DRAFT";
 }
 
+export interface ApplicantReferenciaPayload {
+  nombre?: string;
+  telefono?: string;
+  relacion?: string;
+}
+
+/** Payload for RD extended applicant (ApplicantDataRD); legacy fields kept for API compatibility. */
 export interface ApplicantPayload {
-  name: string;
-  monthly_income: number;
+  name?: string;
+  monthly_income?: number;
   co_borrower_name?: string | null;
   co_borrower_monthly_income?: number | null;
   employment_status?: string | null;
   national_id?: string | null;
+  cedula?: string;
+  nombre_completo?: string;
+  fecha_nacimiento?: string;
+  estado_civil?: string;
+  nacionalidad?: string;
+  telefono_celular?: string;
+  email?: string;
+  direccion?: string;
+  sector?: string;
+  municipio?: string;
+  provincia?: string;
+  tipo_empleo?: string;
+  nombre_empleador?: string;
+  cargo?: string;
+  antiguedad_empleo_meses?: number;
+  ingreso_mensual_declarado?: number;
+  otros_ingresos?: number;
+  monto_solicitado?: number;
+  plazo_meses?: number;
+  inicial_disponible?: number;
+  referencias?: ApplicantReferenciaPayload[];
+  autoriza_buro?: boolean;
+  acepta_politica_datos?: boolean;
+  firma_digital?: string;
 }
 
 export interface VehiclePayload {
@@ -41,6 +72,22 @@ export interface VehiclePayload {
   model?: string | null;
   vehicle_value?: number | null;
   loan_amount_requested?: number | null;
+  marca?: string;
+  modelo?: string;
+  version?: string;
+  anio?: number;
+  condicion?: string;
+  transmision?: string;
+  combustible?: string;
+  color?: string;
+  km_odometro?: number;
+  vin_chasis?: string;
+  placa?: string;
+  precio_venta?: number;
+  valor_tasacion?: number;
+  propietario_vehiculo?: string;
+  tiene_gravamen_previo?: boolean;
+  entidad_gravamen?: string;
 }
 
 export interface OfferCreatePayload {

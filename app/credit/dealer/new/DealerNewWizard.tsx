@@ -94,7 +94,9 @@ export function DealerNewWizard() {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [mode] = useState<"AI_ONLY" | "BANK_ONLY" | "HYBRID">("AI_ONLY");
+  const [mode, setMode] = useState<"AI_ONLY" | "BANK_ONLY" | "HYBRID">(
+    "AI_ONLY"
+  );
 
   async function stepCreate() {
     setBusy(true);
@@ -151,7 +153,7 @@ export function DealerNewWizard() {
     try {
       await processApplication(tenantId, applicationId, {
         mode,
-        dry_run: true,
+        dry_run: false,
       });
       router.push(`/credit/dealer/${encodeURIComponent(applicationId)}`);
     } catch (e) {
@@ -236,18 +238,88 @@ export function DealerNewWizard() {
       )}
 
       {step === 4 && applicationId && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-4">
-          <p className="text-sm text-slate-400">
-            Ejecutar análisis (dry run). Tras finalizar, verá el expediente
-            completo.
-          </p>
+        <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-6">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-200 mb-1">
+              Modalidad de evaluación
+            </h3>
+            <p className="text-xs text-slate-500 mb-3">
+              Selecciona cómo deseas procesar esta solicitud.
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              {(
+                [
+                  {
+                    value: "AI_ONLY" as const,
+                    label: "Solo IA",
+                    desc: "El sistema de inteligencia artificial evalúa automáticamente el perfil crediticio basado en ingresos, historial y datos del vehículo.",
+                    color: "border-violet-500/50 bg-violet-500/5",
+                  },
+                  {
+                    value: "BANK_ONLY" as const,
+                    label: "Solo banco",
+                    desc: "La solicitud se envía directamente a las instituciones bancarias conectadas para su evaluación manual.",
+                    color: "border-blue-500/50 bg-blue-500/5",
+                  },
+                  {
+                    value: "HYBRID" as const,
+                    label: "Híbrido (IA + Banco)",
+                    desc: "La IA realiza una evaluación preliminar y la envía a los bancos con su análisis, acelerando la decisión final.",
+                    color: "border-teal-500/50 bg-teal-500/5",
+                  },
+                ] as const
+              ).map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-colors ${
+                    mode === opt.value
+                      ? opt.color
+                      : "border-white/10 bg-white/3 hover:bg-white/5"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="mode"
+                    value={opt.value}
+                    checked={mode === opt.value}
+                    onChange={() => setMode(opt.value)}
+                    className="mt-0.5 accent-violet-500"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-slate-200">
+                      {opt.label}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">{opt.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+            <p className="text-xs text-amber-400 font-medium mb-1">
+              Resumen de la solicitud
+            </p>
+            <p className="text-xs text-slate-400">
+              Al procesar se ejecutará el análisis{" "}
+              {mode === "AI_ONLY"
+                ? "de inteligencia artificial"
+                : mode === "BANK_ONLY"
+                  ? "bancario"
+                  : "combinado (IA + banco)"}
+              . El resultado estará disponible inmediatamente en el expediente.
+            </p>
+          </div>
+
           <button
             type="button"
             disabled={busy}
             onClick={onProcess}
-            className="rounded-lg bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-500 disabled:opacity-50"
+            className="w-full rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
           >
-            {busy ? "Procesando…" : "Procesar solicitud"}
+            {busy
+              ? "Procesando solicitud..."
+              : `Procesar con ${mode === "AI_ONLY" ? "IA" : mode === "BANK_ONLY" ? "banco" : "modo híbrido"}`}
           </button>
         </div>
       )}
