@@ -19,6 +19,13 @@ export interface DocumentIntelligenceCardProps {
   refreshSignal?: number;
 }
 
+function formatConfidence(v: number | null | undefined): string {
+  if (v == null || !Number.isFinite(v)) return "—";
+  if (v >= 0 && v <= 1) return `${Math.round(v * 1000) / 10}%`;
+  if (v > 1 && v <= 100) return `${Math.round(v * 10) / 10}%`;
+  return `${v}`;
+}
+
 function statusTone(status: ExtractionStatus): string {
   switch (status) {
     case "completed":
@@ -136,10 +143,7 @@ export default function DocumentIntelligenceCard({
             <div>
               <span className="opacity-60">Confianza</span>
               <p className="font-medium m-0 mt-0.5 tabular-nums">
-                {data?.extraction_confidence != null &&
-                Number.isFinite(data.extraction_confidence)
-                  ? `${Math.round(data.extraction_confidence * 100) / 100}%`
-                  : "—"}
+                {formatConfidence(data?.extraction_confidence)}
               </p>
             </div>
           </div>
