@@ -31,14 +31,18 @@ export interface ApplicantReferenciaPayload {
   relacion?: string;
 }
 
-/** Payload for RD extended applicant (ApplicantDataRD); legacy fields kept for API compatibility. */
-export interface ApplicantPayload {
+/** POST /applications/{id}/applicant — only these keys are accepted by the current backend schema. */
+export interface ApplicantSavePayload {
   name?: string;
   monthly_income?: number;
   co_borrower_name?: string | null;
   co_borrower_monthly_income?: number | null;
   employment_status?: string | null;
   national_id?: string | null;
+}
+
+/** UI / dossier hydration only; never serialized by {@link serializeApplicantForApi}. */
+export interface ApplicantUiExtra {
   cedula?: string;
   nombre_completo?: string;
   fecha_nacimiento?: string;
@@ -65,13 +69,55 @@ export interface ApplicantPayload {
   firma_digital?: string;
 }
 
-export interface VehiclePayload {
+export type ApplicantPayload = ApplicantSavePayload & ApplicantUiExtra;
+
+export function serializeApplicantForApi(
+  p: ApplicantPayload
+): ApplicantSavePayload {
+  const out: ApplicantSavePayload = {};
+  if (p.name != null && String(p.name).trim() !== "")
+    out.name = String(p.name).trim();
+  if (
+    p.monthly_income != null &&
+    typeof p.monthly_income === "number" &&
+    !Number.isNaN(p.monthly_income)
+  ) {
+    out.monthly_income = p.monthly_income;
+  }
+  if (p.employment_status != null && String(p.employment_status).trim() !== "")
+    out.employment_status = String(p.employment_status).trim();
+  if (p.national_id != null && String(p.national_id).trim() !== "") {
+    const nid = String(p.national_id).replace(/\D/g, "");
+    if (nid) out.national_id = nid;
+  }
+  if (p.co_borrower_name != null && String(p.co_borrower_name).trim() !== "") {
+    out.co_borrower_name = String(p.co_borrower_name).trim();
+  } else if (p.co_borrower_name === null) {
+    out.co_borrower_name = null;
+  }
+  if (
+    p.co_borrower_monthly_income != null &&
+    typeof p.co_borrower_monthly_income === "number" &&
+    !Number.isNaN(p.co_borrower_monthly_income)
+  ) {
+    out.co_borrower_monthly_income = p.co_borrower_monthly_income;
+  } else if (p.co_borrower_monthly_income === null) {
+    out.co_borrower_monthly_income = null;
+  }
+  return out;
+}
+
+/** POST /applications/{id}/vehicle — only these keys are accepted by the current backend schema. */
+export interface VehicleSavePayload {
   vin?: string | null;
   year?: number | null;
   make?: string | null;
   model?: string | null;
   vehicle_value?: number | null;
   loan_amount_requested?: number | null;
+}
+
+export interface VehicleUiExtra {
   marca?: string;
   modelo?: string;
   version?: string;
@@ -88,6 +134,35 @@ export interface VehiclePayload {
   propietario_vehiculo?: string;
   tiene_gravamen_previo?: boolean;
   entidad_gravamen?: string;
+}
+
+export type VehiclePayload = VehicleSavePayload & VehicleUiExtra;
+
+export function serializeVehicleForApi(p: VehiclePayload): VehicleSavePayload {
+  const out: VehicleSavePayload = {};
+  if (p.vin != null && String(p.vin).trim() !== "")
+    out.vin = String(p.vin).trim();
+  if (p.year != null && typeof p.year === "number" && !Number.isNaN(p.year))
+    out.year = p.year;
+  if (p.make != null && String(p.make).trim() !== "")
+    out.make = String(p.make).trim();
+  if (p.model != null && String(p.model).trim() !== "")
+    out.model = String(p.model).trim();
+  if (
+    p.vehicle_value != null &&
+    typeof p.vehicle_value === "number" &&
+    !Number.isNaN(p.vehicle_value)
+  ) {
+    out.vehicle_value = p.vehicle_value;
+  }
+  if (
+    p.loan_amount_requested != null &&
+    typeof p.loan_amount_requested === "number" &&
+    !Number.isNaN(p.loan_amount_requested)
+  ) {
+    out.loan_amount_requested = p.loan_amount_requested;
+  }
+  return out;
 }
 
 export interface OfferCreatePayload {
@@ -316,7 +391,7 @@ export async function saveApplicant(
     {
       method: "POST",
       headers: baseHeaders(tid, true),
-      body: JSON.stringify(payload),
+      body: JSON.stringify(serializeApplicantForApi(payload)),
     }
   );
   return handleJson(res);
@@ -334,7 +409,7 @@ export async function saveVehicle(
     {
       method: "POST",
       headers: baseHeaders(tid, true),
-      body: JSON.stringify(payload),
+      body: JSON.stringify(serializeVehicleForApi(payload)),
     }
   );
   return handleJson(res);

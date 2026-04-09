@@ -122,6 +122,12 @@ export function ApplicantForm({
   const [aceptaPolitica, setAceptaPolitica] = useState(
     initial?.acepta_politica_datos ?? false
   );
+  const [coNombre, setCoNombre] = useState(initial?.co_borrower_name ?? "");
+  const [coIngreso, setCoIngreso] = useState(
+    initial?.co_borrower_monthly_income != null
+      ? String(initial.co_borrower_monthly_income)
+      : ""
+  );
   const [cedulaError, setCedulaError] = useState("");
 
   function onCedulaChange(val: string) {
@@ -139,39 +145,20 @@ export function ApplicantForm({
     e.preventDefault();
     if (!autorizaBuro || !aceptaPolitica) return;
     if (cedulaError) return;
-    onSubmit({
-      cedula: cedula.replace(/\D/g, "") || undefined,
-      nombre_completo: nombre.trim() || undefined,
-      fecha_nacimiento: fechaNac || undefined,
-      estado_civil: estadoCivil || undefined,
-      nacionalidad,
-      telefono_celular: telefono.trim() || undefined,
-      email: email.trim() || undefined,
-      direccion: direccion.trim() || undefined,
-      sector: sector.trim() || undefined,
-      municipio: municipio.trim() || undefined,
-      provincia: provincia || undefined,
-      tipo_empleo: tipoEmpleo || undefined,
-      nombre_empleador: empleador.trim() || undefined,
-      cargo: cargo.trim() || undefined,
-      antiguedad_empleo_meses: antiguedad ? parseInt(antiguedad, 10) : undefined,
-      ingreso_mensual_declarado: ingreso ? parseFloat(ingreso) : undefined,
-      otros_ingresos: otrosIngresos ? parseFloat(otrosIngresos) : 0,
-      monto_solicitado: montoSolicitado ? parseFloat(montoSolicitado) : undefined,
-      plazo_meses: plazo ? parseInt(plazo, 10) : 48,
-      inicial_disponible: inicial ? parseFloat(inicial) : undefined,
-      referencias: [
-        { nombre: ref1Nombre, telefono: ref1Tel, relacion: ref1Rel },
-        { nombre: ref2Nombre, telefono: ref2Tel, relacion: ref2Rel },
-      ].filter((r) => r.nombre.trim()),
-      autoriza_buro: autorizaBuro,
-      acepta_politica_datos: aceptaPolitica,
-      firma_digital: new Date().toISOString(),
+    // Wire payload: backend only accepts ApplicantSavePayload (see lib/credit-api).
+    const payload: ApplicantPayload = {
       name: nombre.trim() || undefined,
       monthly_income: ingreso ? parseFloat(ingreso) : undefined,
       national_id: cedula.replace(/\D/g, "") || undefined,
       employment_status: tipoEmpleo || undefined,
-    });
+    };
+    if (coNombre.trim()) {
+      payload.co_borrower_name = coNombre.trim();
+      if (coIngreso.trim()) {
+        payload.co_borrower_monthly_income = parseFloat(coIngreso);
+      }
+    }
+    onSubmit(payload);
   }
 
   const fieldClass =
@@ -418,6 +405,38 @@ export function ApplicantForm({
               onChange={(e) => setOtrosIngresos(e.target.value)}
               disabled={disabled}
               placeholder="0"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className={sectionClass}>
+        <p className={sectionTitle}>Codeudor (opcional)</p>
+        <p className="text-[11px] text-slate-500 m-0 mb-2">
+          Solo se envía al servidor si indicas nombre de codeudor (contrato API).
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>Nombre completo codeudor</label>
+            <input
+              className={fieldClass}
+              value={coNombre}
+              onChange={(e) => setCoNombre(e.target.value)}
+              disabled={disabled}
+              placeholder="Opcional"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Ingreso mensual codeudor (RD$)</label>
+            <input
+              type="number"
+              min={0}
+              step={100}
+              className={fieldClass}
+              value={coIngreso}
+              onChange={(e) => setCoIngreso(e.target.value)}
+              disabled={disabled}
+              placeholder="Opcional"
             />
           </div>
         </div>

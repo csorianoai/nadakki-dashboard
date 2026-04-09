@@ -41,6 +41,9 @@ export function VehicleForm({
   const [valorTasacion, setValorTasacion] = useState(
     String(initial?.valor_tasacion ?? "")
   );
+  const [montoPrestamo, setMontoPrestamo] = useState(
+    String(initial?.loan_amount_requested ?? "")
+  );
   const [tieneGravamen, setTieneGravamen] = useState(
     initial?.tiene_gravamen_previo ?? false
   );
@@ -56,28 +59,16 @@ export function VehicleForm({
     const yr = parseInt(anio, 10);
     if (yr < 2000 || yr > currentYear + 1) return;
     if (condicion === "NUEVO" && parseInt(km, 10) > 0) return;
+    // Wire payload: backend only accepts VehicleSavePayload (see lib/credit-api).
     onSubmit({
-      marca: marca.trim() || undefined,
-      modelo: modelo.trim() || undefined,
-      version: version.trim() || undefined,
-      anio: yr,
-      condicion,
-      transmision,
-      combustible,
-      color: color.trim() || undefined,
-      km_odometro: parseInt(km, 10) || 0,
-      vin_chasis: vin.trim() || undefined,
-      placa: placa.trim() || undefined,
-      precio_venta: precioVenta ? parseFloat(precioVenta) : undefined,
-      valor_tasacion: valorTasacion ? parseFloat(valorTasacion) : undefined,
-      propietario_vehiculo: propietario,
-      tiene_gravamen_previo: tieneGravamen,
-      entidad_gravamen: tieneGravamen ? entidadGravamen.trim() || undefined : undefined,
       make: marca.trim() || undefined,
       model: modelo.trim() || undefined,
       year: yr,
       vin: vin.trim() || undefined,
       vehicle_value: precioVenta ? parseFloat(precioVenta) : undefined,
+      loan_amount_requested: montoPrestamo
+        ? parseFloat(montoPrestamo)
+        : undefined,
     });
   }
 
@@ -259,6 +250,9 @@ export function VehicleForm({
               required
               placeholder="Ej: 900000"
             />
+            <p className="text-xs text-slate-500 mt-1">
+              Se envía al API como valor del vehículo
+            </p>
           </div>
           <div>
             <label className={labelClass}>Valor de tasación (RD$) *</label>
@@ -274,9 +268,23 @@ export function VehicleForm({
               placeholder="Ej: 870000"
             />
             <p className="text-xs text-slate-500 mt-1">
-              Valor estimado por perito o tasador oficial
+              Referencia local; no se envía al API actual
             </p>
           </div>
+        </div>
+        <div className="mt-3">
+          <label className={labelClass}>Monto del préstamo solicitado (RD$) *</label>
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            className={fieldClass}
+            value={montoPrestamo}
+            onChange={(e) => setMontoPrestamo(e.target.value)}
+            disabled={disabled}
+            required
+            placeholder="Ej: 600000"
+          />
         </div>
       </div>
 
