@@ -21,6 +21,7 @@ import {
   type OfferCreatePayload,
 } from "@/lib/credit-api";
 import { formatPercentDecimal } from "@/lib/credit-format";
+import DocumentIntelligenceWorkspace from "@/components/document-intelligence/DocumentIntelligenceWorkspace";
 import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -188,6 +189,12 @@ export function BankApplicationClient({
             applicant={dossier.applicant}
             vehicle={dossier.vehicle}
             ltv={ltv}
+          />
+
+          <DocumentIntelligenceWorkspace
+            variant="bank"
+            tenantId={tenantId}
+            applicationId={applicationId}
           />
 
           {ai && (

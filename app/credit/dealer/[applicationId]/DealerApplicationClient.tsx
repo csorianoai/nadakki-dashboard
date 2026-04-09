@@ -22,6 +22,7 @@ import {
   getSimilarCases,
   listOffers,
 } from "@/lib/credit-api";
+import DocumentIntelligenceWorkspace from "@/components/document-intelligence/DocumentIntelligenceWorkspace";
 import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -217,6 +218,12 @@ export function DealerApplicationClient({
             applicant={dossier.applicant}
             vehicle={dossier.vehicle}
             ltv={ltv}
+          />
+
+          <DocumentIntelligenceWorkspace
+            variant="dealer"
+            tenantId={tenantId}
+            applicationId={applicationId}
           />
 
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-3">
