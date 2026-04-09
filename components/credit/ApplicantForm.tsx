@@ -145,11 +145,40 @@ export function ApplicantForm({
     e.preventDefault();
     if (!autorizaBuro || !aceptaPolitica) return;
     if (cedulaError) return;
-    // Wire payload: backend only accepts ApplicantSavePayload (see lib/credit-api).
+    const digits = cedula.replace(/\D/g, "");
     const payload: ApplicantPayload = {
+      nombre_completo: nombre.trim() || undefined,
+      cedula: digits || undefined,
+      fecha_nacimiento: fechaNac || undefined,
+      estado_civil: estadoCivil || undefined,
+      nacionalidad,
+      telefono_celular: telefono.trim() || undefined,
+      email: email.trim() || undefined,
+      direccion: direccion.trim() || undefined,
+      sector: sector.trim() || undefined,
+      municipio: municipio.trim() || undefined,
+      provincia: provincia || undefined,
+      tipo_empleo: tipoEmpleo || undefined,
+      nombre_empleador: empleador.trim() || undefined,
+      cargo: cargo.trim() || undefined,
+      antiguedad_empleo_meses: antiguedad
+        ? parseInt(antiguedad, 10)
+        : undefined,
+      ingreso_mensual_declarado: ingreso ? parseFloat(ingreso) : undefined,
+      otros_ingresos: otrosIngresos ? parseFloat(otrosIngresos) : 0,
+      monto_solicitado: montoSolicitado ? parseFloat(montoSolicitado) : undefined,
+      plazo_meses: plazo ? parseInt(plazo, 10) : 48,
+      inicial_disponible: inicial ? parseFloat(inicial) : undefined,
+      referencias: [
+        { nombre: ref1Nombre, telefono: ref1Tel, relacion: ref1Rel },
+        { nombre: ref2Nombre, telefono: ref2Tel, relacion: ref2Rel },
+      ].filter((r) => r.nombre.trim()),
+      autoriza_buro: autorizaBuro,
+      acepta_politica_datos: aceptaPolitica,
+      firma_digital: new Date().toISOString(),
       name: nombre.trim() || undefined,
       monthly_income: ingreso ? parseFloat(ingreso) : undefined,
-      national_id: cedula.replace(/\D/g, "") || undefined,
+      national_id: digits || undefined,
       employment_status: tipoEmpleo || undefined,
     };
     if (coNombre.trim()) {

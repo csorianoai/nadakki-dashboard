@@ -59,8 +59,25 @@ export function VehicleForm({
     const yr = parseInt(anio, 10);
     if (yr < 2000 || yr > currentYear + 1) return;
     if (condicion === "NUEVO" && parseInt(km, 10) > 0) return;
-    // Wire payload: backend only accepts VehicleSavePayload (see lib/credit-api).
     onSubmit({
+      marca: marca.trim() || undefined,
+      modelo: modelo.trim() || undefined,
+      version: version.trim() || undefined,
+      anio: yr,
+      condicion,
+      transmision,
+      combustible,
+      color: color.trim() || undefined,
+      km_odometro: parseInt(km, 10) || 0,
+      vin_chasis: vin.trim() || undefined,
+      placa: placa.trim() || undefined,
+      precio_venta: precioVenta ? parseFloat(precioVenta) : undefined,
+      valor_tasacion: valorTasacion ? parseFloat(valorTasacion) : undefined,
+      propietario_vehiculo: propietario,
+      tiene_gravamen_previo: tieneGravamen,
+      entidad_gravamen: tieneGravamen
+        ? entidadGravamen.trim() || undefined
+        : undefined,
       make: marca.trim() || undefined,
       model: modelo.trim() || undefined,
       year: yr,

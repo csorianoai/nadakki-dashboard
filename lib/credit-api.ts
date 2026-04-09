@@ -31,7 +31,7 @@ export interface ApplicantReferenciaPayload {
   relacion?: string;
 }
 
-/** POST /applications/{id}/applicant — only these keys are accepted by the current backend schema. */
+/** Legacy + codeudor fields; full RD body is built by {@link serializeApplicantForApi}. */
 export interface ApplicantSavePayload {
   name?: string;
   monthly_income?: number;
@@ -41,7 +41,6 @@ export interface ApplicantSavePayload {
   national_id?: string | null;
 }
 
-/** UI / dossier hydration only; never serialized by {@link serializeApplicantForApi}. */
 export interface ApplicantUiExtra {
   cedula?: string;
   nombre_completo?: string;
@@ -71,43 +70,48 @@ export interface ApplicantUiExtra {
 
 export type ApplicantPayload = ApplicantSavePayload & ApplicantUiExtra;
 
+/** ApplicantDataRDV2 (+ compat); backend uses model extra="ignore" for unknown keys. */
 export function serializeApplicantForApi(
-  p: ApplicantPayload
-): ApplicantSavePayload {
-  const out: ApplicantSavePayload = {};
-  if (p.name != null && String(p.name).trim() !== "")
-    out.name = String(p.name).trim();
-  if (
-    p.monthly_income != null &&
-    typeof p.monthly_income === "number" &&
-    !Number.isNaN(p.monthly_income)
-  ) {
-    out.monthly_income = p.monthly_income;
-  }
-  if (p.employment_status != null && String(p.employment_status).trim() !== "")
-    out.employment_status = String(p.employment_status).trim();
-  if (p.national_id != null && String(p.national_id).trim() !== "") {
-    const nid = String(p.national_id).replace(/\D/g, "");
-    if (nid) out.national_id = nid;
-  }
-  if (p.co_borrower_name != null && String(p.co_borrower_name).trim() !== "") {
-    out.co_borrower_name = String(p.co_borrower_name).trim();
-  } else if (p.co_borrower_name === null) {
-    out.co_borrower_name = null;
-  }
-  if (
-    p.co_borrower_monthly_income != null &&
-    typeof p.co_borrower_monthly_income === "number" &&
-    !Number.isNaN(p.co_borrower_monthly_income)
-  ) {
-    out.co_borrower_monthly_income = p.co_borrower_monthly_income;
-  } else if (p.co_borrower_monthly_income === null) {
-    out.co_borrower_monthly_income = null;
-  }
-  return out;
+  data: ApplicantPayload
+): Record<string, unknown> {
+  const referenciasFiltered =
+    data.referencias?.filter((r) => Boolean(r.nombre?.trim())) ?? [];
+  return {
+    name: data.nombre_completo || data.name || "",
+    monthly_income: data.ingreso_mensual_declarado ?? data.monthly_income ?? 0,
+    national_id:
+      (data.cedula || data.national_id || "").replace(/\D/g, "") || undefined,
+    employment_status: data.tipo_empleo || data.employment_status || undefined,
+    nombre_completo: data.nombre_completo || undefined,
+    cedula: (data.cedula || "").replace(/\D/g, "") || undefined,
+    fecha_nacimiento: data.fecha_nacimiento || undefined,
+    estado_civil: data.estado_civil || undefined,
+    nacionalidad: data.nacionalidad || "Dominicana",
+    telefono_celular: data.telefono_celular || undefined,
+    email: data.email || undefined,
+    direccion: data.direccion || undefined,
+    sector: data.sector || undefined,
+    municipio: data.municipio || undefined,
+    provincia: data.provincia || undefined,
+    tipo_empleo: data.tipo_empleo || undefined,
+    nombre_empleador: data.nombre_empleador || undefined,
+    cargo: data.cargo || undefined,
+    antiguedad_empleo_meses: data.antiguedad_empleo_meses ?? undefined,
+    ingreso_mensual_declarado: data.ingreso_mensual_declarado ?? undefined,
+    otros_ingresos: data.otros_ingresos ?? 0,
+    monto_solicitado: data.monto_solicitado ?? undefined,
+    plazo_meses: data.plazo_meses ?? 48,
+    inicial_disponible: data.inicial_disponible ?? undefined,
+    referencias:
+      referenciasFiltered.length > 0 ? referenciasFiltered : undefined,
+    autoriza_buro: data.autoriza_buro ?? undefined,
+    acepta_politica_datos: data.acepta_politica_datos ?? undefined,
+    firma_digital: data.firma_digital || new Date().toISOString(),
+    co_borrower_name: data.co_borrower_name ?? undefined,
+    co_borrower_monthly_income: data.co_borrower_monthly_income ?? undefined,
+  };
 }
 
-/** POST /applications/{id}/vehicle — only these keys are accepted by the current backend schema. */
 export interface VehicleSavePayload {
   vin?: string | null;
   year?: number | null;
@@ -138,31 +142,33 @@ export interface VehicleUiExtra {
 
 export type VehiclePayload = VehicleSavePayload & VehicleUiExtra;
 
-export function serializeVehicleForApi(p: VehiclePayload): VehicleSavePayload {
-  const out: VehicleSavePayload = {};
-  if (p.vin != null && String(p.vin).trim() !== "")
-    out.vin = String(p.vin).trim();
-  if (p.year != null && typeof p.year === "number" && !Number.isNaN(p.year))
-    out.year = p.year;
-  if (p.make != null && String(p.make).trim() !== "")
-    out.make = String(p.make).trim();
-  if (p.model != null && String(p.model).trim() !== "")
-    out.model = String(p.model).trim();
-  if (
-    p.vehicle_value != null &&
-    typeof p.vehicle_value === "number" &&
-    !Number.isNaN(p.vehicle_value)
-  ) {
-    out.vehicle_value = p.vehicle_value;
-  }
-  if (
-    p.loan_amount_requested != null &&
-    typeof p.loan_amount_requested === "number" &&
-    !Number.isNaN(p.loan_amount_requested)
-  ) {
-    out.loan_amount_requested = p.loan_amount_requested;
-  }
-  return out;
+export function serializeVehicleForApi(
+  data: VehiclePayload
+): Record<string, unknown> {
+  return {
+    make: data.marca || data.make || undefined,
+    model: data.modelo || data.model || undefined,
+    year: data.anio ?? data.year ?? undefined,
+    vin: data.vin_chasis || data.vin || undefined,
+    vehicle_value: data.precio_venta ?? data.vehicle_value ?? undefined,
+    loan_amount_requested: data.loan_amount_requested ?? undefined,
+    marca: data.marca || undefined,
+    modelo: data.modelo || undefined,
+    version: data.version || undefined,
+    anio: data.anio ?? undefined,
+    condicion: data.condicion || undefined,
+    transmision: data.transmision || undefined,
+    combustible: data.combustible || undefined,
+    color: data.color || undefined,
+    km_odometro: data.km_odometro ?? 0,
+    vin_chasis: data.vin_chasis || undefined,
+    placa: data.placa || undefined,
+    precio_venta: data.precio_venta ?? undefined,
+    valor_tasacion: data.valor_tasacion ?? undefined,
+    propietario_vehiculo: data.propietario_vehiculo || undefined,
+    tiene_gravamen_previo: data.tiene_gravamen_previo ?? false,
+    entidad_gravamen: data.entidad_gravamen || undefined,
+  };
 }
 
 export interface OfferCreatePayload {
