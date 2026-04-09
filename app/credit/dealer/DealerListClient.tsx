@@ -4,6 +4,7 @@ import { type CreditApplicationRow, getApplication, listApplications } from "@/l
 import { formatDOP } from "@/lib/credit-format";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DemoModeLauncher } from "@/components/credit/commercial/DemoModeLauncher";
 import { ValidationBanner } from "@/components/credit/ValidationBanner";
 import UsageDashboard from "@/components/usage/UsageDashboard";
 import { useTenant } from "@/contexts/TenantContext";
@@ -188,6 +189,8 @@ export function DealerListClient() {
           Actualizar
         </button>
       </div>
+
+      <DemoModeLauncher />
 
       {loading ? (
         <div className="animate-pulse h-64 rounded-xl bg-white/5" />
