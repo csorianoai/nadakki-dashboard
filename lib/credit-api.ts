@@ -125,6 +125,62 @@ export interface OffersRankResponse {
   trace_id?: string;
 }
 
+export interface NarrativeResult {
+  dealer_narrative: string;
+  bank_narrative: string;
+  client_narrative: string;
+  generated_at: string;
+  application_id: string;
+  confidence_label: "ALTA" | "MEDIA" | "BAJA";
+  confidence_score: number;
+}
+
+export interface WizardStatus {
+  application_id: string;
+  steps_completed: string[];
+  steps_pending: string[];
+  completion_pct: number;
+  can_submit: boolean;
+  blocking_reasons: string[];
+}
+
+export interface ConsistencyResult {
+  consistency_score: number;
+  risk_level: "BAJO" | "MEDIO" | "ALTO";
+  flags: string[];
+  breakdown: Record<string, string>;
+}
+
+export interface CreditDocument {
+  id: string;
+  application_id: string;
+  document_type: string;
+  document_category: string;
+  file_url: string;
+  file_name?: string;
+  upload_status: string;
+  verification_status: string;
+  uploaded_at: string;
+}
+
+export interface DocumentCompleteness {
+  application_id: string;
+  is_complete: boolean;
+  missing_categories: string[];
+  counts_by_category: Record<string, number>;
+  total_documents: number;
+  completeness_pct: number;
+  detail: string;
+}
+
+export interface DemoLoadResult {
+  application_id: string;
+  case_type: string;
+  score?: number;
+  recommendation?: string;
+  message: string;
+}
+
 function requireTenant(tenantId: string): string {
   const t = tenantId?.trim() ?? "";
   if (!t) {
@@ -446,4 +502,184 @@ export async function downloadOfferPdf(
 ): Promise<void> {
   const url = `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/offers/${encodeURIComponent(offerId)}/pdf`;
   return downloadPdf(tenantId, url, filename);
+}
+
+function normalizeCreditDocuments(raw: unknown): CreditDocument[] {
+  const list = Array.isArray(raw)
+    ? raw
+    : raw &&
+        typeof raw === "object" &&
+        Array.isArray((raw as Record<string, unknown>).documents)
+      ? ((raw as Record<string, unknown>).documents as unknown[])
+      : [];
+  return list
+    .map((row): CreditDocument | null => {
+      if (!row || typeof row !== "object") return null;
+      const r = row as Record<string, unknown>;
+      const id = r.id ?? r.document_id;
+      if (id == null) return null;
+      return {
+        id: String(id),
+        application_id: String(r.application_id ?? ""),
+        document_type: String(r.document_type ?? r.type ?? ""),
+        document_category: String(r.document_category ?? r.category ?? ""),
+        file_url: String(r.file_url ?? r.url ?? ""),
+        file_name:
+          r.file_name != null ? String(r.file_name) : undefined,
+        upload_status: String(r.upload_status ?? "uploaded"),
+        verification_status: String(r.verification_status ?? "pending"),
+        uploaded_at: String(r.uploaded_at ?? r.created_at ?? ""),
+      };
+    })
+    .filter((x): x is CreditDocument => x != null);
+}
+
+/** GET .../narrative */
+export async function getNarrative(
+  tenantId: string,
+  applicationId: string
+): Promise<NarrativeResult> {
+  const tid = requireTenant(tenantId);
+  const res = await fetch(
+    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/narrative`,
+    { headers: baseHeaders(tid, false) }
+  );
+  return handleJson<NarrativeResult>(res);
+}
+
+/** POST /api/v2/credit/demo/load */
+export async function loadDemoCase(
+  tenantId: string,
+  caseType: "prime" | "review" | "high_risk"
+): Promise<DemoLoadResult> {
+  const tid = requireTenant(tenantId);
+  const res = await fetch(`${BACKEND_URL}/api/v2/credit/demo/load`, {
+    method: "POST",
+    headers: baseHeaders(tid, true),
+    body: JSON.stringify({ case_type: caseType }),
+  });
+  const detail = await parseDetail(res);
+  if (res.status === 403) {
+    throw new CreditApiError("demo_disabled", 403, detail);
+  }
+  if (!res.ok) {
+    const msg = humanMessage(res.status, detail);
+    throw new CreditApiError(msg, res.status, detail);
+  }
+  return detail as DemoLoadResult;
+}
+
+/** POST .../documents/upload (multipart) */
+export async function uploadDocument(
+  tenantId: string,
+  applicationId: string,
+  file: File,
+  documentType: string
+): Promise<CreditDocument> {
+  const tid = requireTenant(tenantId);
+  const form = new FormData();
+  form.append("file", file);
+  form.append("document_type", documentType);
+  const res = await fetch(
+    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/upload`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "X-Tenant-ID": tid,
+      },
+      body: form,
+    }
+  );
+  const detail = await parseDetail(res);
+  if (!res.ok) {
+    const msg = humanMessage(res.status, detail);
+    throw new CreditApiError(msg, res.status, detail);
+  }
+  const arr = normalizeCreditDocuments(detail);
+  if (arr.length > 0) return arr[0]!;
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    const single = normalizeCreditDocuments([detail]);
+    if (single.length > 0) return single[0]!;
+  }
+  throw new CreditApiError("Respuesta de subida inválida", res.status, detail);
+}
+
+/** GET .../documents */
+export async function listDocuments(
+  tenantId: string,
+  applicationId: string
+): Promise<CreditDocument[]> {
+  const tid = requireTenant(tenantId);
+  const res = await fetch(
+    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents`,
+    { headers: baseHeaders(tid, false) }
+  );
+  const detail = await parseDetail(res);
+  if (!res.ok) {
+    const msg = humanMessage(res.status, detail);
+    throw new CreditApiError(msg, res.status, detail);
+  }
+  return normalizeCreditDocuments(detail);
+}
+
+/** GET .../documents/completeness */
+export async function getDocumentCompleteness(
+  tenantId: string,
+  applicationId: string
+): Promise<DocumentCompleteness> {
+  const tid = requireTenant(tenantId);
+  const res = await fetch(
+    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/completeness`,
+    { headers: baseHeaders(tid, false) }
+  );
+  return handleJson<DocumentCompleteness>(res);
+}
+
+/** GET .../wizard/status */
+export async function getWizardStatus(
+  tenantId: string,
+  applicationId: string
+): Promise<WizardStatus> {
+  const tid = requireTenant(tenantId);
+  const res = await fetch(
+    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/wizard/status`,
+    { headers: baseHeaders(tid, false) }
+  );
+  return handleJson<WizardStatus>(res);
+}
+
+/** GET .../consistency */
+export async function getConsistencyScore(
+  tenantId: string,
+  applicationId: string
+): Promise<ConsistencyResult> {
+  const tid = requireTenant(tenantId);
+  const res = await fetch(
+    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/consistency`,
+    { headers: baseHeaders(tid, false) }
+  );
+  return handleJson<ConsistencyResult>(res);
+}
+
+/** POST .../consents */
+export async function saveConsents(
+  tenantId: string,
+  applicationId: string,
+  consents: Record<string, boolean>
+): Promise<void> {
+  const tid = requireTenant(tenantId);
+  const res = await fetch(
+    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/consents`,
+    {
+      method: "POST",
+      headers: baseHeaders(tid, true),
+      body: JSON.stringify(consents),
+    }
+  );
+  const detail = await parseDetail(res);
+  if (!res.ok) {
+    const msg = humanMessage(res.status, detail);
+    throw new CreditApiError(msg, res.status, detail);
+  }
 }
