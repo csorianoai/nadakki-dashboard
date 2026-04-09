@@ -10,19 +10,29 @@ import {
   ValidationBanner,
   DossierCard,
 } from "@/components/credit";
+import { BestOfferHero } from "@/components/credit/commercial/BestOfferHero";
+import { ExecutiveSummaryCard } from "@/components/credit/commercial/ExecutiveSummaryCard";
+import { NarrativeCard } from "@/components/credit/commercial/NarrativeCard";
+import { PdfActionsPanel } from "@/components/credit/commercial/PdfActionsPanel";
+import { DocumentCompletenessCard } from "@/components/credit/documents/DocumentCompletenessCard";
+import { DocumentList } from "@/components/credit/documents/DocumentList";
+import { DocumentUploader } from "@/components/credit/documents/DocumentUploader";
+import DocumentIntelligenceWorkspace from "@/components/document-intelligence/DocumentIntelligenceWorkspace";
 import {
   CreditApiError,
-  downloadApplicationSummaryPdf,
-  downloadExecutiveMemoPdf,
   downloadOfferPdf,
   getApplicationFull,
+  getDocumentCompleteness,
   getExplanation,
+  getNarrative,
   getOffersRank,
   getOptimization,
   getSimilarCases,
+  listDocuments,
   listOffers,
+  type CreditDocument,
+  type NarrativeResult,
 } from "@/lib/credit-api";
-import DocumentIntelligenceWorkspace from "@/components/document-intelligence/DocumentIntelligenceWorkspace";
 import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -54,10 +64,14 @@ export function DealerApplicationClient({
     null
   );
   const [pdfErr, setPdfErr] = useState<string | null>(null);
-  const [pdfDocBusy, setPdfDocBusy] = useState<"summary" | "memo" | null>(
-    null
-  );
   const [pdfOfferBusyId, setPdfOfferBusyId] = useState<string | null>(null);
+
+  const [narrative, setNarrative] = useState<NarrativeResult | null>(null);
+  const [loadingNarrative, setLoadingNarrative] = useState(false);
+  const [docs, setDocs] = useState<CreditDocument[]>([]);
+  const [completeness, setCompleteness] = useState<Awaited<
+    ReturnType<typeof getDocumentCompleteness>
+  > | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -107,6 +121,20 @@ export function DealerApplicationClient({
     } finally {
       setLoading(false);
     }
+
+    setLoadingNarrative(true);
+    void getNarrative(tenantId, applicationId)
+      .then(setNarrative)
+      .catch(() => setNarrative(null))
+      .finally(() => setLoadingNarrative(false));
+
+    void listDocuments(tenantId, applicationId)
+      .then(setDocs)
+      .catch(() => setDocs([]));
+
+    void getDocumentCompleteness(tenantId, applicationId)
+      .then(setCompleteness)
+      .catch(() => setCompleteness(null));
   }, [tenantId, applicationId]);
 
   useEffect(() => {
@@ -137,29 +165,13 @@ export function DealerApplicationClient({
       ? rank.ranked_eligible
       : dossier?.offers;
 
-  async function handlePdfSummary() {
-    setPdfErr(null);
-    setPdfDocBusy("summary");
-    try {
-      await downloadApplicationSummaryPdf(tenantId, applicationId);
-    } catch (e) {
-      setPdfErr(e instanceof Error ? e.message : String(e));
-    } finally {
-      setPdfDocBusy(null);
-    }
-  }
-
-  async function handlePdfMemo() {
-    setPdfErr(null);
-    setPdfDocBusy("memo");
-    try {
-      await downloadExecutiveMemoPdf(tenantId, applicationId);
-    } catch (e) {
-      setPdfErr(e instanceof Error ? e.message : String(e));
-    } finally {
-      setPdfDocBusy(null);
-    }
-  }
+  const pdfOfferId = useMemo(() => {
+    if (bestId) return bestId;
+    const o = dossier?.offers?.[0] as Record<string, unknown> | undefined;
+    if (!o) return undefined;
+    const id = o.offer_id ?? o.id;
+    return id != null ? String(id) : undefined;
+  }, [bestId, dossier?.offers]);
 
   async function handlePdfOffer(offerId: string) {
     setPdfErr(null);
@@ -172,6 +184,15 @@ export function DealerApplicationClient({
       setPdfOfferBusyId(null);
     }
   }
+
+  const refreshDocs = useCallback(() => {
+    void listDocuments(tenantId, applicationId)
+      .then(setDocs)
+      .catch(() => setDocs([]));
+    void getDocumentCompleteness(tenantId, applicationId)
+      .then(setCompleteness)
+      .catch(() => setCompleteness(null));
+  }, [tenantId, applicationId]);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -206,9 +227,7 @@ export function DealerApplicationClient({
       </div>
 
       <ValidationBanner error={error} />
-      {pdfErr && (
-        <ValidationBanner error={pdfErr} />
-      )}
+      {pdfErr && <ValidationBanner error={pdfErr} />}
 
       {loading && !dossier ? (
         <div className="animate-pulse h-96 rounded-xl bg-white/5" />
@@ -220,35 +239,31 @@ export function DealerApplicationClient({
             ltv={ltv}
           />
 
-          <DocumentIntelligenceWorkspace
-            variant="dealer"
-            tenantId={tenantId}
-            applicationId={applicationId}
+          <ExecutiveSummaryCard
+            explanation={dossier.ai_decision}
+            optimize={optimization}
+            ranking={rank}
           />
 
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-            <span className="text-xs font-medium text-slate-500 mr-1">
-              PDF (motor backend):
-            </span>
-            <button
-              type="button"
-              disabled={pdfDocBusy !== null}
-              onClick={handlePdfSummary}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10 disabled:opacity-40"
-            >
-              {pdfDocBusy === "summary"
-                ? "Generando…"
-                : "Resumen solicitud"}
-            </button>
-            <button
-              type="button"
-              disabled={pdfDocBusy !== null}
-              onClick={handlePdfMemo}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-200 hover:bg-white/10 disabled:opacity-40"
-            >
-              {pdfDocBusy === "memo" ? "Generando…" : "Memo ejecutivo"}
-            </button>
-          </div>
+          <NarrativeCard
+            narrative={narrative}
+            role="dealer"
+            loading={loadingNarrative}
+          />
+
+          <PdfActionsPanel
+            applicationId={applicationId}
+            offerId={pdfOfferId}
+          />
+
+          <DocumentCompletenessCard completeness={completeness} />
+          <DocumentUploader
+            applicationId={applicationId}
+            onUploadSuccess={() => refreshDocs()}
+          />
+          <DocumentList documents={docs} loading={false} />
+
+          <BestOfferHero ranking={rank} />
 
           <div className="grid lg:grid-cols-3 gap-4">
             <ScoreGauge score={score} />
@@ -258,10 +273,7 @@ export function DealerApplicationClient({
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
-            <ExplanationCard
-              data={explanation}
-              error={explErr}
-            />
+            <ExplanationCard data={explanation} error={explErr} />
             <OptimizationPanel data={optimization} error={optErr} />
           </div>
 
@@ -279,6 +291,12 @@ export function DealerApplicationClient({
           </div>
 
           <SimilarCasesPanel cases={similar} />
+
+          <DocumentIntelligenceWorkspace
+            variant="dealer"
+            tenantId={tenantId}
+            applicationId={applicationId}
+          />
         </>
       ) : null}
     </div>
