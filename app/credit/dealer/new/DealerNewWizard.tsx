@@ -1,26 +1,90 @@
 "use client";
 
 import { ApplicantForm, ValidationBanner, VehicleForm } from "@/components/credit";
+import { DocumentCompletenessCard } from "@/components/credit/documents/DocumentCompletenessCard";
+import { DocumentList } from "@/components/credit/documents/DocumentList";
+import { DocumentUploader } from "@/components/credit/documents/DocumentUploader";
 import {
   createApplication,
   CreditApiError,
+  getDocumentCompleteness,
+  listDocuments,
   processApplication,
   saveApplicant,
   saveVehicle,
   type ApplicantPayload,
+  type CreditDocument,
   type VehiclePayload,
 } from "@/lib/credit-api";
 import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const STEPS = [
   "Crear solicitud",
   "Solicitante",
   "Vehículo",
+  "Documentos",
   "Procesar",
 ] as const;
+
+function DocumentsStepInline({
+  applicationId,
+  tenantId,
+  onComplete,
+}: {
+  applicationId: string;
+  tenantId: string;
+  onComplete: () => void;
+}) {
+  const [docs, setDocs] = useState<CreditDocument[]>([]);
+  const [completeness, setCompleteness] =
+    useState<Awaited<ReturnType<typeof getDocumentCompleteness>> | null>(null);
+  const [loadingDocs, setLoadingDocs] = useState(true);
+
+  const loadDocs = useCallback(async () => {
+    if (!tenantId.trim()) return;
+    setLoadingDocs(true);
+    try {
+      const [docsData, comp] = await Promise.all([
+        listDocuments(tenantId, applicationId),
+        getDocumentCompleteness(tenantId, applicationId),
+      ]);
+      setDocs(docsData);
+      setCompleteness(comp);
+    } catch {
+      setDocs([]);
+      setCompleteness(null);
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [tenantId, applicationId]);
+
+  useEffect(() => {
+    void loadDocs();
+  }, [loadDocs]);
+
+  return (
+    <div className="space-y-4">
+      <DocumentCompletenessCard completeness={completeness} />
+      <DocumentUploader
+        applicationId={applicationId}
+        onUploadSuccess={() => {
+          void loadDocs();
+        }}
+      />
+      <DocumentList documents={docs} loading={loadingDocs} />
+      <button
+        type="button"
+        onClick={onComplete}
+        className="w-full py-2 px-4 rounded bg-purple-600 text-white text-sm font-medium hover:bg-purple-500"
+      >
+        Continuar a evaluación →
+      </button>
+    </div>
+  );
+}
 
 export function DealerNewWizard() {
   const { tenantId: ctxTenantId } = useTenant();
@@ -162,6 +226,16 @@ export function DealerNewWizard() {
       )}
 
       {step === 3 && applicationId && (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+          <DocumentsStepInline
+            applicationId={applicationId}
+            tenantId={tenantId}
+            onComplete={() => setStep(4)}
+          />
+        </div>
+      )}
+
+      {step === 4 && applicationId && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-4">
           <p className="text-sm text-slate-400">
             Ejecutar análisis (dry run). Tras finalizar, verá el expediente
