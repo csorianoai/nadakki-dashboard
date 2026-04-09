@@ -29,6 +29,8 @@ export interface ApplicantReferenciaPayload {
   nombre?: string;
   telefono?: string;
   relacion?: string;
+  /** personal | comercial (or backend-specific) */
+  tipo?: string;
 }
 
 /** Legacy + codeudor fields; full RD body is built by {@link serializeApplicantForApi}. */
@@ -63,6 +65,11 @@ export interface ApplicantUiExtra {
   plazo_meses?: number;
   inicial_disponible?: number;
   referencias?: ApplicantReferenciaPayload[];
+  co_borrower_cedula?: string;
+  co_borrower_email?: string;
+  co_borrower_direccion?: string;
+  co_borrower_telefono?: string;
+  co_borrower_referencias?: ApplicantReferenciaPayload[];
   autoriza_buro?: boolean;
   acepta_politica_datos?: boolean;
   firma_digital?: string;
@@ -109,6 +116,15 @@ export function serializeApplicantForApi(
     firma_digital: data.firma_digital || new Date().toISOString(),
     co_borrower_name: data.co_borrower_name ?? undefined,
     co_borrower_monthly_income: data.co_borrower_monthly_income ?? undefined,
+    co_borrower_cedula: data.co_borrower_cedula ?? undefined,
+    co_borrower_email: data.co_borrower_email ?? undefined,
+    co_borrower_direccion: data.co_borrower_direccion ?? undefined,
+    co_borrower_telefono: data.co_borrower_telefono ?? undefined,
+    co_borrower_referencias:
+      data.co_borrower_referencias &&
+      data.co_borrower_referencias.length > 0
+        ? data.co_borrower_referencias
+        : undefined,
   };
 }
 
