@@ -5,7 +5,8 @@ import Link from "next/link";
 import { 
   Settings, Bot, FileText, Shield, Database, 
   Users, Activity, Server, ArrowRight, Cog,
-  CreditCard, BarChart3, Key, Monitor
+  CreditCard, BarChart3, Key, Monitor,
+  Rocket, Gauge, MessageCircle, Sparkles, ClipboardList
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
@@ -13,6 +14,11 @@ import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const ADMIN_MODULES_BASE = [
+  { id: "onboarding", name: "Onboarding tenant", icon: ClipboardList, desc: "Asistente de perfil y POST /tenants/onboard", href: "/admin/onboarding", color: "#a855f7" },
+  { id: "activation", name: "Activación", icon: Rocket, desc: "Readiness y activación dry-run", href: "/admin/activation", color: "#f59e0b" },
+  { id: "sales-scripts", name: "Ofertas & scripts", icon: Sparkles, desc: "OfferStrategyIA (segmentos)", href: "/admin/sales-scripts", color: "#ec4899" },
+  { id: "whatsapp", name: "WhatsApp", icon: MessageCircle, desc: "Config tenant Meta / verify token", href: "/admin/whatsapp", color: "#22c55e" },
+  { id: "readiness", name: "Readiness ops", icon: Gauge, desc: "Fleet y tenant /ops/onboarding", href: "/admin/readiness", color: "#06b6d4" },
   { id: "agents", name: "Agentes IA", icon: Bot, desc: "Activar, desactivar y configurar agentes", href: "/admin/agents", color: "#8b5cf6", badgeKey: "agents" },
   { id: "logs", name: "Logs del Sistema", icon: FileText, desc: "Historial de ejecuciones y errores", href: "/admin/logs", color: "#22c55e" },
   { id: "gates", name: "Gates", icon: Shield, desc: "Gates de configuracion (Security, Data, Quality, Pilot)", href: "/admin/gates", color: "#f59e0b" },

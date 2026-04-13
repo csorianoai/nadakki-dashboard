@@ -198,6 +198,9 @@ const navigationStructure: NavCore[] = [
       { id: "analytics-hub", icon: <BarChart3 size={14} />, label: "Analytics global", href: "/analytics" },
       { id: "analytics-agents", icon: <Bot size={14} />, label: "Analytics agentes", href: "/analytics/agents" },
       { id: "mkt-ame", icon: <Gauge size={14} />, label: "Autopilot (AME)", href: "/ame" },
+      { id: "mkt-onboarding-wizard", icon: <ClipboardList size={14} />, label: "Onboarding Wizard", href: "/marketing/onboarding", badge: "NEW" },
+      { id: "mkt-whatsapp", icon: <Smartphone size={14} />, label: "WhatsApp", href: "/marketing/whatsapp" },
+      { id: "mkt-booking-agent", icon: <Bot size={14} />, label: "Booking Agent", href: "/marketing/booking", badge: "BETA" },
     ],
   },
 
@@ -217,6 +220,8 @@ const navigationStructure: NavCore[] = [
       { id: "admin-compliance", icon: <Shield size={14} />, label: "Compliance", href: "/compliance" },
       { id: "admin-testing", icon: <FlaskConical size={14} />, label: "Testing Lab", href: "/testing" },
       { id: "admin-qa", icon: <CheckCircle size={14} />, label: "QA Piloto", href: "/admin/qa" },
+      { id: "admin-audit", icon: <Shield size={14} />, label: "System Audit", href: "/admin/audit" },
+      { id: "admin-readiness", icon: <Gauge size={14} />, label: "Readiness", href: "/admin/readiness" },
     ],
   },
 ];
