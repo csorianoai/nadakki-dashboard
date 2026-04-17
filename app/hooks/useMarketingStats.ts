@@ -2,71 +2,107 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+/** Per-metric nullable: only non-null values come from the API (no demo numbers). */
 export interface MarketingStats {
-  campaigns: number;
-  activeJourneys: number;
-  contacts: number;
-  conversionRate: number;
+  campaigns: number | null;
+  activeJourneys: number | null;
+  contacts: number | null;
+  conversionRate: number | null;
 }
 
 export interface UseMarketingStatsResult {
-  stats: MarketingStats;
+  stats: MarketingStats | null;
   loading: boolean;
   error: string | null;
   lastUpdated: Date | null;
   refresh: () => Promise<void>;
 }
 
-const DEFAULT_STATS: MarketingStats = {
-  campaigns: 12,
-  activeJourneys: 5,
-  contacts: 125000,
-  conversionRate: 3.2
-};
+function numFrom(v: unknown): number | null {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function parseDashboardPayload(data: unknown): MarketingStats | null {
+  if (!data || typeof data !== "object") return null;
+  const root = data as { success?: unknown; data?: unknown };
+  if (!root.success || !root.data || typeof root.data !== "object") return null;
+  const d = root.data as {
+    campaigns?: { total?: unknown };
+    journeys?: { total?: unknown };
+    contacts?: { total?: unknown };
+    conversions?: { rate?: unknown };
+  };
+  const stats: MarketingStats = {
+    campaigns: numFrom(d.campaigns?.total),
+    activeJourneys: numFrom(d.journeys?.total),
+    contacts: numFrom(d.contacts?.total),
+    conversionRate: numFrom(d.conversions?.rate),
+  };
+  if (stats.campaigns == null && stats.activeJourneys == null && stats.contacts == null && stats.conversionRate == null) {
+    return null;
+  }
+  return stats;
+}
 
 export function useMarketingStats(tenantId: string | null): UseMarketingStatsResult {
-  const [stats, setStats] = useState<MarketingStats>(DEFAULT_STATS);
+  const [stats, setStats] = useState<MarketingStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchStats = useCallback(async () => {
-    if (!tenantId) {
+    if (!tenantId?.trim()) {
       setLoading(false);
-      setStats(DEFAULT_STATS);
+      setStats(null);
+      setError(null);
+      setLastUpdated(null);
       return;
     }
+    const tid = tenantId.trim();
     try {
       setLoading(true);
       setError(null);
-      const apiUrl = "";
-      const response = await fetch(`${apiUrl}/api/marketing/dashboard?tenant_id=${tenantId}`, {
-        headers: { "Accept": "application/json", "X-Tenant-ID": tenantId },
+      const response = await fetch(`/api/marketing/dashboard?tenant_id=${encodeURIComponent(tid)}`, {
+        headers: { Accept: "application/json", "X-Tenant-ID": tid },
         signal: AbortSignal.timeout(10000),
       });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          const { campaigns, journeys, contacts, conversions } = data.data;
-          setStats({ campaigns: campaigns?.total || DEFAULT_STATS.campaigns, activeJourneys: journeys?.total || DEFAULT_STATS.activeJourneys, contacts: contacts?.total || DEFAULT_STATS.contacts, conversionRate: conversions?.rate || DEFAULT_STATS.conversionRate });
-          setLastUpdated(new Date());
-          return;
-        }
+
+      if (!response.ok) {
+        setStats(null);
+        setError(`No se pudieron cargar los datos (HTTP ${response.status}).`);
+        return;
       }
-      setError("No se pudieron cargar los datos");
-      setStats(DEFAULT_STATS);
+
+      const data = await response.json();
+      const parsed = parseDashboardPayload(data);
+      if (!parsed) {
+        setStats(null);
+        setError("Respuesta inválida o incompleta del servidor.");
+        return;
+      }
+      setStats(parsed);
+      setLastUpdated(new Date());
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Error desconocido";
       setError(errorMsg);
-      setStats(DEFAULT_STATS);
+      setStats(null);
     } finally {
       setLoading(false);
     }
   }, [tenantId]);
 
-  useEffect(() => { fetchStats(); }, [fetchStats]);
-  useEffect(() => { const interval = setInterval(fetchStats, 30000); return () => clearInterval(interval); }, [fetchStats]);
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      void fetchStats();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [fetchStats]);
 
   return { stats, loading, error, lastUpdated, refresh: fetchStats };
 }

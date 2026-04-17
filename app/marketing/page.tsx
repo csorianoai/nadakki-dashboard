@@ -1,11 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
   GitBranch, Sparkles, Database, Target, FlaskConical, TrendingUp,
   Bot, Megaphone, Share2, BarChart3, Users, Zap,
-  Map, Trophy, ArrowRight, Play, Pause, RefreshCw
+  Map, Trophy, ArrowRight, Loader2
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useMarketingStats } from "@/app/hooks/useMarketingStats";
@@ -142,10 +141,36 @@ const ADVANCED_MODULES = [
   },
 ];
 
+function formatContactsValue(contacts: number): string {
+  if (contacts >= 1_000_000) return `${(contacts / 1_000_000).toFixed(1)}M`;
+  if (contacts >= 1_000) return `${(contacts / 1_000).toFixed(0)}K`;
+  return String(contacts);
+}
+
+function statCell(
+  loading: boolean,
+  tenantOk: boolean,
+  blockError: boolean,
+  value: number | null,
+  format: (n: number) => string
+): string {
+  if (loading) return "…";
+  if (!tenantOk || blockError) return "—";
+  if (value == null) return "—";
+  return format(value);
+}
+
 export default function MarketingHubPage() {
   const { tenantId } = useTenant();
-  const { stats, loading, error, lastUpdated, refresh } = useMarketingStats(tenantId);
-  
+  const { stats, loading, error } = useMarketingStats(tenantId);
+
+  const tenantOk = Boolean(tenantId?.trim());
+  const blockError = Boolean(error) || (!loading && tenantOk && !stats);
+
+  const statCampaigns = statCell(loading, tenantOk, blockError, stats?.campaigns ?? null, (n) => String(n));
+  const statJourneys = statCell(loading, tenantOk, blockError, stats?.activeJourneys ?? null, (n) => String(n));
+  const statContacts = statCell(loading, tenantOk, blockError, stats?.contacts ?? null, formatContactsValue);
+  const statConversion = statCell(loading, tenantOk, blockError, stats?.conversionRate ?? null, (n) => `${n}%`);
 
   const renderModuleCard = (m: any, i: number, delay: number = 0) => (
     <motion.div 
@@ -210,12 +235,20 @@ export default function MarketingHubPage() {
         </div>
       </motion.div>
 
-      {/* Stats */}
+      {/* Stats — valores solo desde API; sin datos demo */}
+      {error && (
+        <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          {error}
+        </div>
+      )}
+      {!tenantId?.trim() && (
+        <p className="mb-4 text-sm text-gray-500 m-0">Selecciona un tenant para ver métricas del hub.</p>
+      )}
       <div className="grid grid-cols-4 gap-6 mb-10">
-        <StatCard value={stats.campaigns.toString()} label="Campaas Activas" icon={<Megaphone className="w-6 h-6 text-pink-400" />} color="#ec4899" />
-        <StatCard value={stats.activeJourneys.toString()} label="Journeys Activos" icon={<GitBranch className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
-        <StatCard value={(stats.contacts / 1000).toFixed(0) + "K"} label="Contactos" icon={<Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-        <StatCard value={stats.conversionRate + "%"} label="Conversin" icon={<TrendingUp className="w-6 h-6 text-green-400" />} color="#22c55e" />
+        <StatCard value={statCampaigns} label="Campaas Activas" icon={loading ? <Loader2 className="w-6 h-6 text-pink-400 animate-spin" /> : <Megaphone className="w-6 h-6 text-pink-400" />} color="#ec4899" />
+        <StatCard value={statJourneys} label="Journeys Activos" icon={loading ? <Loader2 className="w-6 h-6 text-purple-400 animate-spin" /> : <GitBranch className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
+        <StatCard value={statContacts} label="Contactos" icon={loading ? <Loader2 className="w-6 h-6 text-blue-400 animate-spin" /> : <Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
+        <StatCard value={statConversion} label="Conversin" icon={loading ? <Loader2 className="w-6 h-6 text-green-400 animate-spin" /> : <TrendingUp className="w-6 h-6 text-green-400" />} color="#22c55e" />
       </div>
 
       {/* Core Marketing */}

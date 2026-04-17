@@ -16,10 +16,12 @@ function detailFromUnknown(json: unknown, fallback: string): string {
 export default function MarketingBookingPage() {
   const { tenantId } = useTenant();
   const [message, setMessage] = useState("");
+  const [fromNumber, setFromNumber] = useState("");
+  const [contactName, setContactName] = useState("");
   const [channel, setChannel] = useState("whatsapp");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
   const sendToAgent = async () => {
     if (!tenantId?.trim()) {
@@ -30,11 +32,19 @@ export default function MarketingBookingPage() {
       setError("Escribe un mensaje del cliente.");
       return;
     }
+    if (!fromNumber.trim()) {
+      setError("Indica el número de origen (from_number).");
+      return;
+    }
+    if (!contactName.trim()) {
+      setError("Indica el nombre de contacto.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
     try {
-      const res = await fetch("/api/v1/booking/process", {
+      const res = await fetch("/api/v1/booking/intent", {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -42,14 +52,14 @@ export default function MarketingBookingPage() {
           "X-Tenant-ID": tenantId.trim(),
         },
         body: JSON.stringify({
-          message: message.trim(),
-          channel,
-          session_id: "demo-session",
+          text: message.trim(),
+          from_number: fromNumber.trim(),
+          contact_name: contactName.trim(),
         }),
       });
-      const json = (await res.json().catch(() => null)) as any;
+      const json = (await res.json().catch(() => null)) as unknown;
       if (!res.ok) throw new Error(detailFromUnknown(json, `HTTP ${res.status}`));
-      setResult(json ?? {});
+      setResult(json && typeof json === "object" ? (json as Record<string, unknown>) : {});
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -57,7 +67,35 @@ export default function MarketingBookingPage() {
     }
   };
 
-  const entities = result?.entities && typeof result.entities === "object" ? result.entities : {};
+  const customerReply =
+    result != null
+      ? String(
+          (result as { customer_reply?: unknown }).customer_reply ??
+            (result as { reply?: unknown }).reply ??
+            (result as { assistant_message?: unknown }).assistant_message ??
+            "—"
+        )
+      : "";
+  const intentDetected =
+    result != null
+      ? String(
+          (result as { intent_detected?: unknown }).intent_detected ??
+            (result as { intent?: unknown }).intent ??
+            (result as { intent_label?: unknown }).intent_label ??
+            "—"
+        )
+      : "";
+
+  const rawEntities =
+    result != null
+      ? (result as { entities?: unknown }).entities ??
+        (result as { slots?: unknown }).slots ??
+        (result as { extracted_entities?: unknown }).extracted_entities
+      : null;
+  const entities =
+    rawEntities && typeof rawEntities === "object" && rawEntities !== null && !Array.isArray(rawEntities)
+      ? (rawEntities as Record<string, unknown>)
+      : {};
 
   return (
     <div className="ndk-page ndk-fade-in">
@@ -77,7 +115,29 @@ export default function MarketingBookingPage() {
               <textarea className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white" rows={5} value={message} onChange={(e) => setMessage(e.target.value)} />
             </label>
             <label className="block">
-              <span className="text-xs text-gray-500">Intención / canal</span>
+              <span className="text-xs text-gray-500">Número de origen (from_number)</span>
+              <input
+                type="text"
+                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white"
+                value={fromNumber}
+                onChange={(e) => setFromNumber(e.target.value)}
+                placeholder="+5215512345678"
+                autoComplete="tel"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-gray-500">Nombre de contacto</span>
+              <input
+                type="text"
+                className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                placeholder="Nombre del cliente"
+                autoComplete="name"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-gray-500">Intención / canal (referencia)</span>
               <select className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white" value={channel} onChange={(e) => setChannel(e.target.value)}>
                 {["walk_in", "online", "whatsapp"].map((opt) => (
                   <option key={opt} value={opt} className="bg-[#0d1117]">
@@ -108,20 +168,32 @@ export default function MarketingBookingPage() {
             <div className="space-y-4">
               <div className="rounded-lg border border-white/10 bg-white/5 p-3">
                 <p className="text-xs text-gray-500 m-0">customer_reply</p>
-                <p className="text-sm text-white mt-1 m-0 whitespace-pre-wrap">{String(result?.customer_reply ?? "—")}</p>
+                <p className="text-sm text-white mt-1 m-0 whitespace-pre-wrap">{customerReply}</p>
               </div>
               <div className="rounded-lg border border-white/10 bg-white/5 p-3">
                 <p className="text-xs text-gray-500 m-0">intent_detected</p>
-                <p className="text-sm text-white mt-1 m-0">{String(result?.intent_detected ?? "—")}</p>
+                <p className="text-sm text-white mt-1 m-0">{intentDetected}</p>
               </div>
               <div className="rounded-lg border border-white/10 bg-white/5 p-3">
                 <p className="text-xs text-gray-500 m-0 mb-2">entities</p>
-                <ul className="text-sm text-gray-200 space-y-1 m-0">
-                  <li>barco: {String(entities?.barco ?? "—")}</li>
-                  <li>fecha: {String(entities?.fecha ?? "—")}</li>
-                  <li>personas: {String(entities?.personas ?? "—")}</li>
-                </ul>
+                {Object.keys(entities).length === 0 ? (
+                  <p className="text-sm text-gray-400 m-0">—</p>
+                ) : (
+                  <ul className="text-sm text-gray-200 space-y-1 m-0">
+                    {Object.entries(entities).map(([k, v]) => (
+                      <li key={k}>
+                        {k}: {v == null ? "—" : String(v)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
+              <details className="rounded-lg border border-white/10 bg-black/20 p-3">
+                <summary className="cursor-pointer text-xs text-gray-500">JSON completo (backend)</summary>
+                <pre className="mt-2 text-xs text-gray-300 overflow-auto max-h-56 whitespace-pre-wrap break-words m-0">
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </details>
             </div>
           )}
         </GlassCard>

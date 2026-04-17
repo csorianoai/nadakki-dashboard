@@ -1,17 +1,60 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
   Settings, Bot, FileText, Shield, Database, 
   Users, Activity, Server, ArrowRight, Cog,
   CreditCard, BarChart3, Key, Monitor,
-  Rocket, Gauge, MessageCircle, Sparkles, ClipboardList
+  Rocket, Gauge, MessageCircle, Sparkles, ClipboardList, Loader2
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { useTenant } from "@/contexts/TenantContext";
+
+type AuditEventDisplay = {
+  type: "success" | "warning" | "error" | "info";
+  message: string;
+  time: string;
+};
+
+function formatRelativeEs(iso: string | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const t = d.getTime();
+  if (Number.isNaN(t)) return iso;
+  const diffMs = Date.now() - t;
+  const sec = Math.floor(diffMs / 1000);
+  const min = Math.floor(sec / 60);
+  const hr = Math.floor(min / 60);
+  const day = Math.floor(hr / 24);
+  if (sec < 60) return "Hace un momento";
+  if (min < 60) return `Hace ${min} min`;
+  if (hr < 24) return `Hace ${hr} h`;
+  if (day < 7) return `Hace ${day} d`;
+  return d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+}
+
+function auditEventType(status: string | undefined): AuditEventDisplay["type"] {
+  const s = (status ?? "").toLowerCase();
+  if (/\b(fail|error|failed|timeout)\b/.test(s) || /^5\d\d$/.test(s)) return "error";
+  if (/\bwarn|degrad/.test(s)) return "warning";
+  if (/\b(ok|success|completed|200|201)\b/.test(s)) return "success";
+  return "info";
+}
+
+function formatAuditMessage(log: Record<string, unknown>): string {
+  const raw = log.message ?? log.detail ?? log.description;
+  if (typeof raw === "string" && raw.trim()) return raw.trim();
+  const agent = String(log.agent_id ?? "").trim();
+  const mode = String(log.mode ?? "").trim();
+  const status = String(log.status ?? "").trim();
+  const trace = String(log.trace_id ?? "").trim();
+  const parts = [agent && `agent: ${agent}`, mode && `mode: ${mode}`, status && `status: ${status}`, trace && `trace: ${trace.slice(0, 12)}…`].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "Evento de auditoría";
+}
 
 const ADMIN_MODULES_BASE = [
   { id: "onboarding", name: "Onboarding tenant", icon: ClipboardList, desc: "Asistente de perfil y POST /tenants/onboard", href: "/admin/onboarding", color: "#a855f7" },
@@ -33,15 +76,12 @@ const ADMIN_MODULES_BASE = [
   { id: "settings", name: "Configuracion", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
 ];
 
-const RECENT_EVENTS = [
-  { type: "success", message: "Tenant 'sfrentals' creado exitosamente", time: "Hace 5 min" },
-  { type: "info", message: "35 agentes de marketing sincronizados", time: "Hace 12 min" },
-  { type: "warning", message: "Backend Render reiniciado (cold start)", time: "Hace 25 min" },
-  { type: "success", message: "Deploy frontend completado", time: "Hace 1 hora" },
-];
-
 export default function AdminPage() {
+  const { tenantId } = useTenant();
   const [agentTotal, setAgentTotal] = useState<string>("--");
+  const [recentEvents, setRecentEvents] = useState<AuditEventDisplay[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/ai-studio/agents")
@@ -52,6 +92,55 @@ export default function AdminPage() {
       })
       .catch(() => {});
   }, []);
+
+  const fetchRecentAudit = useCallback(async () => {
+    if (!tenantId?.trim()) {
+      setRecentEvents([]);
+      setEventsError(null);
+      setEventsLoading(false);
+      return;
+    }
+    const tid = tenantId.trim();
+    setEventsLoading(true);
+    setEventsError(null);
+    try {
+      const url = `/api/v1/audit/logs?tenant_id=${encodeURIComponent(tid)}&limit=8`;
+      const res = await fetch(url, { headers: { Accept: "application/json", "X-Tenant-ID": tid }, cache: "no-store" });
+      if (!res.ok) {
+        setRecentEvents([]);
+        setEventsError(`No se pudieron cargar eventos (HTTP ${res.status}).`);
+        return;
+      }
+      const data = await res.json();
+      const items: unknown[] = Array.isArray(data) ? data : data?.logs ?? data?.data ?? [];
+      const mapped: AuditEventDisplay[] = items
+        .filter((row): row is Record<string, unknown> => row != null && typeof row === "object")
+        .slice(0, 8)
+        .map((log) => {
+          const status = typeof log.status === "string" ? log.status : undefined;
+          const ts =
+            (typeof log.timestamp === "string" && log.timestamp) ||
+            (typeof log.created_at === "string" && log.created_at) ||
+            (typeof log.time === "string" && log.time) ||
+            undefined;
+          return {
+            type: auditEventType(status),
+            message: formatAuditMessage(log),
+            time: formatRelativeEs(ts),
+          };
+        });
+      setRecentEvents(mapped);
+    } catch (e) {
+      setRecentEvents([]);
+      setEventsError(e instanceof Error ? e.message : "Error al cargar auditoría.");
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [tenantId]);
+
+  useEffect(() => {
+    void fetchRecentAudit();
+  }, [fetchRecentAudit]);
 
   const adminModules = ADMIN_MODULES_BASE.map((m) => ({
     ...m,
@@ -145,22 +234,36 @@ export default function AdminPage() {
         <div>
           <h2 className="text-xl font-bold text-white mb-4">Eventos Recientes</h2>
           <GlassCard className="p-4">
+            {!tenantId?.trim() && (
+              <p className="text-sm text-gray-500 m-0 mb-4">Selecciona un tenant para ver la auditoría en vivo.</p>
+            )}
+            {eventsError && tenantId?.trim() && (
+              <p className="text-sm text-amber-300/90 m-0 mb-4">{eventsError}</p>
+            )}
+            {eventsLoading && tenantId?.trim() && (
+              <p className="text-sm text-gray-400 m-0 mb-4 inline-flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" /> Cargando auditoría…
+              </p>
+            )}
             <div className="space-y-4">
-              {RECENT_EVENTS?.map((event, i) => (
+              {!eventsLoading && tenantId?.trim() && !eventsError && recentEvents.length === 0 && (
+                <p className="text-sm text-gray-500 m-0">No hay eventos de auditoría recientes para este tenant.</p>
+              )}
+              {recentEvents.map((event, i) => (
                 <motion.div
-                  key={i}
+                  key={`${event.time}-${i}-${event.message.slice(0, 24)}`}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + i * 0.1 }}
                   className="flex items-start gap-3 pb-4 border-b border-white/5 last:border-0 last:pb-0"
                 >
-                  <div className={`w-2 h-2 rounded-full mt-2 ${
+                  <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
                     event.type === "success" ? "bg-green-500" :
                     event.type === "warning" ? "bg-yellow-500" :
                     event.type === "error" ? "bg-red-500" : "bg-blue-500"
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white">{event.message}</p>
+                    <p className="text-sm text-white break-words">{event.message}</p>
                     <p className="text-xs text-gray-500 mt-1">{event.time}</p>
                   </div>
                 </motion.div>
