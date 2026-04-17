@@ -201,6 +201,7 @@ const navigationStructure: NavCore[] = [
       { id: "mkt-onboarding-wizard", icon: <ClipboardList size={14} />, label: "Onboarding Wizard", href: "/marketing/onboarding", badge: "NEW" },
       { id: "mkt-whatsapp", icon: <Smartphone size={14} />, label: "WhatsApp", href: "/marketing/whatsapp" },
       { id: "mkt-booking-agent", icon: <Bot size={14} />, label: "Booking Agent", href: "/marketing/booking", badge: "BETA" },
+      { id: "mkt-run", icon: <PlayCircle size={14} />, label: "Marketing Run", href: "/marketing/run", badge: "OPS" },
     ],
   },
 
