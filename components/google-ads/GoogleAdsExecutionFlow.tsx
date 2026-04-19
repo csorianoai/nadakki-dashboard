@@ -358,7 +358,7 @@ export default function GoogleAdsExecutionFlow() {
 
   useEffect(() => {
     let alive = true;
-    getModules().then((data) => {
+    getModules(safeTenantId).then((data) => {
       if (!alive) return;
       setModules(data);
       setLoading(false);
@@ -557,4 +557,5 @@ export default function GoogleAdsExecutionFlow() {
     </div>
   );
 }
+
 
