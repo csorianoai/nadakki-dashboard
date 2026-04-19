@@ -52,6 +52,8 @@ import {
   GitBranch,
   Plug,
   Calendar,
+  Globe,
+  HeartPulse,
 } from "lucide-react";
 import SidebarSuiteStats from "./SidebarSuiteStats";
 import TenantSelector from "@/components/ui/TenantSelector";
@@ -90,6 +92,13 @@ const navigationStructure: NavCore[] = [
       { id: "agents-execute", icon: <PlayCircle size={14} />, label: "Ejecutar Agentes", href: "/agents/execute" },
       { id: "scheduler", icon: <Clock size={14} />, label: "Scheduler", href: "/scheduler" },
       { id: "autopilot", icon: <Zap size={14} />, label: "Autopilot IA", href: "/autopilot" },
+      {
+        id: "system-health",
+        icon: <HeartPulse size={14} />,
+        label: "System Health",
+        href: "/admin/system",
+        badge: "LIVE",
+      },
     ],
   },
 
@@ -130,6 +139,13 @@ const navigationStructure: NavCore[] = [
       { id: "sic-auditoria", icon: <ScrollText size={14} />, label: "Auditoria", href: "/sic/auditoria" },
       { id: "sic-auditoria-acceso", icon: <Lock size={14} />, label: "Auditoria Acceso", href: "/sic/auditoria-acceso" },
       { id: "sic-configuracion", icon: <Settings size={14} />, label: "Configuracion", href: "/sic/configuracion" },
+      {
+        id: "sic-multitenant",
+        icon: <Building2 size={14} />,
+        label: "Multi-Tenant Config",
+        href: "/sic/multitenant-config",
+        badge: "v2",
+      },
       { id: "sic-demo", icon: <PlayCircle size={14} />, label: "Demo", href: "/sic/demo" },
     ],
   },
@@ -148,6 +164,13 @@ const navigationStructure: NavCore[] = [
         icon: <Zap size={14} />,
         label: "Execution Flow",
         href: "/advertising/google-ads/flow",
+        badge: "NEW",
+      },
+      {
+        id: "landing-readiness",
+        icon: <Globe size={14} />,
+        label: "Landing Readiness",
+        href: "/advertising/landing-readiness",
         badge: "NEW",
       },
       { id: "meta-ads", icon: <BookOpen size={14} />, label: "Meta Ads", href: "/advertising/meta-ads" },

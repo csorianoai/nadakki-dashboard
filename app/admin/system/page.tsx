@@ -6,6 +6,7 @@ import { Server, Database, RefreshCw, Loader2, CheckCircle, XCircle } from "luci
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import AutonomousHealthPanel from "@/components/system/AutonomousHealthPanel";
+import SystemAutonomousRunnerSection from "@/components/system/SystemAutonomousRunnerSection";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
@@ -77,6 +78,8 @@ export default function AdminSystemPage() {
       <div className="mb-6">
         <AutonomousHealthPanel />
       </div>
+
+      <SystemAutonomousRunnerSection />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GlassCard className="p-6">

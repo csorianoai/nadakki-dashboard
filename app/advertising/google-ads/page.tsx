@@ -11,6 +11,7 @@ import {
   preflightFromExecuteErrorBody,
   type GoogleAdsPreflightResult,
 } from "@/lib/api/googleAdsPreflight";
+import GoogleAdsIntelligencePanel from "@/components/advertising/GoogleAdsIntelligencePanel";
 
 interface Agent {
   id: string;
@@ -416,6 +417,8 @@ export default function GoogleAdsPage() {
           </div>
         </div>
       )}
+
+      <GoogleAdsIntelligencePanel />
 
       <PreflightResultModal
         result={preflightResult}

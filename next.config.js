@@ -23,7 +23,9 @@ const nextConfig = {
       { source: "/api/v1/advertising/:path*", destination: `${backendUrl}/api/v1/advertising/:path*` },
       { source: "/api/v1/tenants/:path*", destination: `${backendUrl}/api/v1/tenants/:path*` },
       { source: "/api/v1/ops/:path*", destination: `${backendUrl}/api/v1/ops/:path*` },
+      { source: "/api/v1/landing-readiness/:path*", destination: `${backendUrl}/api/v1/landing-readiness/:path*` },
       { source: "/api/v1/system/:path*", destination: `${backendUrl}/api/v1/system/:path*` },
+      { source: "/api/v2/sic-mt/:path*", destination: `${backendUrl}/api/v2/sic-mt/:path*` },
       { source: "/api/v1/google-ads/:path*", destination: `${backendUrl}/api/v1/google-ads/:path*` },
       { source: "/api/v1/knowledge-pipeline/:path*", destination: `${backendUrl}/api/v1/knowledge-pipeline/:path*` },
       // Same-origin shorter alias → `/api/v1/ops/*` (client code prefers `/api/v1/ops/...` via rewrites + catch-all)
