@@ -335,7 +335,7 @@ function ModuleCard({ module, isRunning, onRun }: CardProps) {
           )}
           {module.status === "in_progress" && (
             <span className="text-xs text-indigo-400 flex items-center gap-1">
-              <Loader2 size={12} className="animate-spin" /> Ejecutandoâ€¦
+              <Loader2 size={12} className="animate-spin" /> Ejecutando...
             </span>
           )}
         </div>
@@ -557,6 +557,7 @@ export default function GoogleAdsExecutionFlow() {
     </div>
   );
 }
+
 
 
 
