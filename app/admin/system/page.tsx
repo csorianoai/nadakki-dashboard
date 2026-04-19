@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Server, Database, RefreshCw, Loader2, CheckCircle, XCircle } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import AutonomousHealthPanel from "@/components/system/AutonomousHealthPanel";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
@@ -72,6 +73,10 @@ export default function AdminSystemPage() {
         <h1 className="text-3xl font-bold text-white">System Info</h1>
         <p className="text-gray-400 mt-1">Estado del sistema y base de datos</p>
       </motion.div>
+
+      <div className="mb-6">
+        <AutonomousHealthPanel />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GlassCard className="p-6">

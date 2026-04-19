@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { 
   Users, Building2, Plus, Search, MoreVertical,
@@ -162,6 +163,12 @@ export default function TenantsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 pt-4 border-t border-white/10">
+                  <Link
+                    href={`/tenants/${encodeURIComponent(tenant.id)}`}
+                    className="flex-1 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-lg text-sm text-emerald-200 transition-colors flex items-center justify-center gap-1"
+                  >
+                    Google Ads readiness
+                  </Link>
                   <button className="flex-1 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-1">
                     <Key className="w-4 h-4" /> API Key
                   </button>
