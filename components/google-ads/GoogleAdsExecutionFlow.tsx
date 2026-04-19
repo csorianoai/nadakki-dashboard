@@ -167,7 +167,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
 ];
 
-async function getModules(): Promise<GoogleAdsModuleStep[]> {
+async function getModules(tenantId: string): Promise<GoogleAdsModuleStep[]> {
   // TODO: swap for real endpoint when ready:
   // GET /api/v1/google-ads/modules/status
   // const res = await fetch("/api/v1/google-ads/modules/status", {
@@ -557,5 +557,6 @@ export default function GoogleAdsExecutionFlow() {
     </div>
   );
 }
+
 
 
