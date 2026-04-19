@@ -23,6 +23,11 @@ const nextConfig = {
       { source: "/api/v1/advertising/:path*", destination: `${backendUrl}/api/v1/advertising/:path*` },
       { source: "/api/v1/tenants/:path*", destination: `${backendUrl}/api/v1/tenants/:path*` },
       { source: "/api/v1/ops/:path*", destination: `${backendUrl}/api/v1/ops/:path*` },
+      { source: "/api/v1/system/:path*", destination: `${backendUrl}/api/v1/system/:path*` },
+      { source: "/api/v1/google-ads/:path*", destination: `${backendUrl}/api/v1/google-ads/:path*` },
+      { source: "/api/v1/knowledge-pipeline/:path*", destination: `${backendUrl}/api/v1/knowledge-pipeline/:path*` },
+      // Same-origin shorter alias → `/api/v1/ops/*` (client code prefers `/api/v1/ops/...` via rewrites + catch-all)
+      { source: "/api/ops/:path*", destination: "/api/v1/ops/:path*" },
       { source: "/api/v1/whatsapp/:path*", destination: `${backendUrl}/api/v1/whatsapp/:path*` },
       { source: "/api/v1/offers/:path*", destination: `${backendUrl}/api/v1/offers/:path*` },
       // Social status + future same-origin calls to suite (dashboard uses API_URL for most fetches)

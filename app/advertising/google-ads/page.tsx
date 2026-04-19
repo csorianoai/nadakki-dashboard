@@ -5,6 +5,7 @@ import GoogleAdsClient from "./GoogleAdsClient";
 import { AgentCard } from "@/components/ui/AgentCard";
 import { useTenant } from "@/contexts/TenantContext";
 import { AdvertisingDashboardLive } from "../components/AdvertisingDashboardLive";
+import PreflightResultModal from "@/components/preflight/PreflightResultModal";
 import {
   postGoogleAdsPreflight,
   preflightFromExecuteErrorBody,
@@ -154,6 +155,8 @@ export default function GoogleAdsPage() {
   const [results, setResults] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [modal, setModal] = useState<ModalState>({ open: false });
+  const [preflightResult, setPreflightResult] = useState<GoogleAdsPreflightResult | null>(null);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const selected = AGENTS.find((a) => a.id === selectedId);
 
   const openModal = (m: Omit<Extract<ModalState, { open: true }>, "open">) => {
@@ -245,44 +248,24 @@ export default function GoogleAdsPage() {
         return;
       }
       const pf = pfRes.data;
-      if (pf.status === "blocked") {
-        openModal({
-          variant: "blocked",
-          title: "Blocked: this tenant is not eligible for this campaign type.",
-          result: pf,
-          bodyLines: [...pf.reasons, ...(pf.required_fixes?.length ? ["", "Required fixes:", ...pf.required_fixes] : [])],
+      setPreflightResult(pf);
+      if (pf.status === "blocked" || pf.status === "not_ready") {
+        setPendingAction(null);
+        return;
+      }
+      if (pf.status === "proposal_only" || pf.status === "allowed") {
+        setPendingAction(() => () => {
+          void runExecute(def.agentId, def.payload, def.id);
         });
         return;
       }
-      if (pf.status === "not_ready") {
-        openModal({
-          variant: "not_ready",
-          title: notReadyTitle(def.actionKey),
-          result: pf,
-          bodyLines: [
-            ...pf.reasons,
-            ...(pf.required_fixes?.length ? ["", "Required fixes:", ...pf.required_fixes] : []),
-            ...(pf.next_step ? ["", `Next step: ${pf.next_step}`] : []),
-          ],
-        });
-        return;
-      }
-      if (pf.status === "proposal_only") {
-        openModal({
-          variant: "proposal_only",
-          title: "Proposal only: this action requires approval before execution.",
-          result: pf,
-          bodyLines: [
-            ...pf.reasons,
-            ...(pf.next_step ? [pf.next_step] : []),
-            "",
-            "Al continuar, el backend puede forzar dry_run hasta aprobación.",
-          ],
-          executePayload: { agentId: def.agentId, payload: def.payload },
-        });
-        return;
-      }
-      await runExecute(def.agentId, def.payload, def.id);
+      setPreflightResult(null);
+      setPendingAction(null);
+      openModal({
+        variant: "error",
+        title: "Pre-flight",
+        bodyLines: [`Unexpected status: ${String(pf.status)}`],
+      });
     } finally {
       setLoading((p) => ({ ...p, [def.id]: false }));
     }
@@ -433,6 +416,20 @@ export default function GoogleAdsPage() {
           </div>
         </div>
       )}
+
+      <PreflightResultModal
+        result={preflightResult}
+        onClose={() => {
+          setPreflightResult(null);
+          setPendingAction(null);
+        }}
+        onContinue={() => {
+          const fn = pendingAction;
+          setPreflightResult(null);
+          setPendingAction(null);
+          fn?.();
+        }}
+      />
 
       {modal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true">
