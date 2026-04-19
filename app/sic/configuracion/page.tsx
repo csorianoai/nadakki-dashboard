@@ -4,6 +4,36 @@ import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { fetchConfigBanco, type ConfigBanco } from "@/lib/api/sic";
 import { LoadingSic, ErrorSic } from "@/components/sic/EstadosSic";
+import SICRegulatoryBadge from "@/components/sic/SICRegulatoryBadge";
+
+type SICMultiTenantConfig = {
+  tenant_id: string;
+  institution_name: string;
+  institution_type: string;
+  regulatory_profile: string;
+  country_code: string;
+  currency: string;
+  max_loan_amount: number;
+  min_loan_amount: number;
+  required_documents: string[];
+  max_dti_ratio: number;
+  max_ltv_ratio: number;
+};
+
+async function fetchSICMultiTenantConfig(
+  tenantId: string
+): Promise<SICMultiTenantConfig | null> {
+  try {
+    const res = await fetch("/api/v2/sic-mt/config", {
+      headers: { "X-Tenant-ID": tenantId },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as SICMultiTenantConfig;
+  } catch {
+    return null;
+  }
+}
 
 export default function SicConfiguracionPage() {
   const { tenantId } = useTenant();
@@ -12,6 +42,8 @@ export default function SicConfiguracionPage() {
   const [config, setConfig] = useState<ConfigBanco | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mtConfig, setMtConfig] = useState<SICMultiTenantConfig | null>(null);
+  const [mtLoading, setMtLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
@@ -19,6 +51,15 @@ export default function SicConfiguracionPage() {
       .then((c) => { if (alive) setConfig(c ?? null); })
       .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
       .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [tenant]);
+
+  useEffect(() => {
+    let alive = true;
+    setMtLoading(true);
+    fetchSICMultiTenantConfig(tenant)
+      .then((c) => { if (alive) setMtConfig(c); })
+      .finally(() => { if (alive) setMtLoading(false); });
     return () => { alive = false; };
   }, [tenant]);
 
@@ -42,6 +83,68 @@ export default function SicConfiguracionPage() {
       )}
 
       <div className="space-y-6">
+        <Seccion
+          titulo="Configuración Multi-Tenant (v2)"
+          desc="Perfil institucional y regulatorio gestionado por /api/v2/sic-mt"
+        >
+          {mtLoading ? (
+            <p className="text-slate-500 text-sm">Cargando configuración multi-tenant…</p>
+          ) : !mtConfig ? (
+            <p className="text-slate-500 text-sm">
+              Configuracion multi-tenant no disponible para este tenant
+            </p>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-slate-200 font-600">{mtConfig.institution_name}</span>
+                <SICRegulatoryBadge profile={mtConfig.regulatory_profile} size="sm" />
+                <span className="text-slate-500 text-xs">
+                  {mtConfig.country_code} · {mtConfig.currency}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-slate-500 text-xs">Monto máximo</div>
+                  <div className="text-slate-200">
+                    {mtConfig.max_loan_amount.toLocaleString()} {mtConfig.currency}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">Monto mínimo</div>
+                  <div className="text-slate-200">
+                    {mtConfig.min_loan_amount.toLocaleString()} {mtConfig.currency}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">Máx. DTI</div>
+                  <div className="text-slate-200">
+                    {(mtConfig.max_dti_ratio * 100).toFixed(1)}%
+                  </div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">Máx. LTV</div>
+                  <div className="text-slate-200">
+                    {(mtConfig.max_ltv_ratio * 100).toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-500 text-xs mb-1">Documentos requeridos</div>
+                <div className="flex flex-wrap gap-2">
+                  {mtConfig.required_documents.map((d) => (
+                    <span
+                      key={d}
+                      className="inline-flex items-center rounded-full border border-slate-600 bg-slate-800/60 px-2 py-0.5 text-xs text-slate-300"
+                    >
+                      {d}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </Seccion>
+
         <Seccion titulo="Branding" desc="Logo e identidad corporativa">
           <div className="space-y-3 text-sm">
             <div>
