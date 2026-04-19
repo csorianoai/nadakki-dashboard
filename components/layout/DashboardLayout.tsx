@@ -143,6 +143,13 @@ const navigationStructure: NavCore[] = [
     modules: [
       { id: "advertising-hub", icon: <Megaphone size={14} />, label: "Publicidad (Hub)", href: "/advertising" },
       { id: "google-ads", icon: <Search size={14} />, label: "Google Ads", href: "/advertising/google-ads", badge: "MVP" },
+      {
+        id: "google-ads-flow",
+        icon: <Zap size={14} />,
+        label: "Execution Flow",
+        href: "/advertising/google-ads/flow",
+        badge: "NEW",
+      },
       { id: "meta-ads", icon: <BookOpen size={14} />, label: "Meta Ads", href: "/advertising/meta-ads" },
       { id: "tiktok-ads", icon: <Music size={14} />, label: "TikTok Ads", href: "/advertising/tiktok-ads" },
       { id: "linkedin-ads", icon: <Briefcase size={14} />, label: "LinkedIn Ads", href: "/advertising/linkedin-ads" },
