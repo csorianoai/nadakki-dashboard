@@ -35,7 +35,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m01",
     title: "Platform Fundamentals",
-    description: "Entender la plataforma y mÃ©tricas clave",
+    description: "Entender la plataforma y metricas clave",
     status: "completed",
     dependencies: [],
     lastRunAt: "2026-04-10T10:00:00Z",
@@ -45,7 +45,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m02",
     title: "Account Structure",
-    description: "JerarquÃ­a de cuenta y campaÃ±a",
+    description: "Jerarquia de cuenta y campana",
     status: "completed",
     dependencies: ["m01"],
     lastRunAt: "2026-04-11T10:00:00Z",
@@ -55,7 +55,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m03",
     title: "Keyword Research",
-    description: "InvestigaciÃ³n de palabras clave y match types",
+    description: "Investigacion de palabras clave y match types",
     status: "ready",
     dependencies: ["m02"],
     actionKey: "google_ads_m03_keyword_research",
@@ -72,7 +72,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m05",
     title: "Quality Score & Ad Rank",
-    description: "DiagnÃ³stico de calidad y ad rank",
+    description: "Diagnostico de calidad y ad rank",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -81,7 +81,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m06",
     title: "Smart Bidding",
-    description: "Estrategias de puja automÃ¡tica",
+    description: "Estrategias de puja automatica",
     status: "blocked",
     dependencies: ["m05"],
     blockedReason: "Requiere completar M05 primero",
@@ -106,7 +106,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m09",
     title: "Audiences",
-    description: "SegmentaciÃ³n y seÃ±ales de audiencia",
+    description: "Segmentacion y senales de audiencia",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -115,7 +115,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m10",
     title: "Performance Max",
-    description: "CampaÃ±as PMax y asset groups",
+    description: "Campanas PMax y asset groups",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar Conversion Tracking (M13)",
@@ -124,7 +124,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m11",
     title: "Shopping Campaigns",
-    description: "Shopping estÃ¡ndar y Merchant Center",
+    description: "Shopping estandar y Merchant Center",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar Conversion Tracking (M13)",
@@ -133,7 +133,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m12",
     title: "Demand Gen",
-    description: "CampaÃ±as de generaciÃ³n de demanda",
+    description: "Campanas de generacion de demanda",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar Conversion Tracking (M13)",
@@ -151,7 +151,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m14",
     title: "Attribution & GA4",
-    description: "Modelo de atribuciÃ³n y consent mode v2",
+    description: "Modelo de atribucion y consent mode v2",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar Conversion Tracking (M13)",
@@ -160,7 +160,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m15",
     title: "API Primer",
-    description: "Google Ads API y operaciones programÃ¡ticas",
+    description: "Google Ads API y operaciones programaticas",
     status: "ready",
     dependencies: [],
     actionKey: "google_ads_m15_api",
@@ -257,7 +257,7 @@ function ModuleCard({ module, isRunning, onRun }: CardProps) {
     <div
       className={`rounded-xl border p-4 transition-all duration-200 ${borderColor} ${
         module.status === "ready" ? "hover:border-blue-400/40 hover:bg-blue-500/5" : ""
-      } ${module.status === "blocked" ? "opacity-60" : ""}`}
+      } ${module.status === "blocked" ? "opacity-80" : ""}`}
       style={{ backgroundColor: "rgba(15, 20, 40, 0.6)" }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -278,18 +278,18 @@ function ModuleCard({ module, isRunning, onRun }: CardProps) {
             <p className="text-sm font-medium text-slate-100 mb-0.5">{module.title}</p>
             <p className="text-xs text-slate-500 mb-2">{module.description}</p>
             {module.blockedReason && (
-              <p className="text-xs text-amber-400/80 flex items-center gap-1">
+              <p className="text-xs text-amber-300 flex items-center gap-1">
                 <Lock size={10} />
                 {module.blockedReason}
               </p>
             )}
             {module.dependencies.length > 0 && module.status !== "completed" && (
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 Requiere: {module.dependencies.map((d) => d.toUpperCase()).join(", ")}
               </p>
             )}
             {module.lastRunAt && (
-              <p className="text-xs text-slate-600 mt-1 flex items-center gap-1">
+              <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
                 <Clock size={10} />
                 {relativeTime(module.lastRunAt)}
               </p>
