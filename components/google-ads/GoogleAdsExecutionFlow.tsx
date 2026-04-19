@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
@@ -16,7 +16,7 @@ import { postGoogleAdsPreflight, type GoogleAdsPreflightResult } from "@/lib/api
 import PreflightResultModal from "@/components/preflight/PreflightResultModal";
 import { useTenant } from "@/contexts/TenantContext";
 
-// ── Types ────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type ModuleStatus = "completed" | "ready" | "blocked" | "in_progress" | "not_ready";
 
 type GoogleAdsModuleStep = {
@@ -35,7 +35,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m01",
     title: "Platform Fundamentals",
-    description: "Entender la plataforma y métricas clave",
+    description: "Entender la plataforma y mÃ©tricas clave",
     status: "completed",
     dependencies: [],
     lastRunAt: "2026-04-10T10:00:00Z",
@@ -45,7 +45,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m02",
     title: "Account Structure",
-    description: "Jerarquía de cuenta y campaña",
+    description: "JerarquÃ­a de cuenta y campaÃ±a",
     status: "completed",
     dependencies: ["m01"],
     lastRunAt: "2026-04-11T10:00:00Z",
@@ -55,7 +55,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m03",
     title: "Keyword Research",
-    description: "Investigación de palabras clave y match types",
+    description: "InvestigaciÃ³n de palabras clave y match types",
     status: "ready",
     dependencies: ["m02"],
     actionKey: "google_ads_m03_keyword_research",
@@ -72,7 +72,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m05",
     title: "Quality Score & Ad Rank",
-    description: "Diagnóstico de calidad y ad rank",
+    description: "DiagnÃ³stico de calidad y ad rank",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -81,7 +81,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m06",
     title: "Smart Bidding",
-    description: "Estrategias de puja automática",
+    description: "Estrategias de puja automÃ¡tica",
     status: "blocked",
     dependencies: ["m05"],
     blockedReason: "Requiere completar M05 primero",
@@ -106,7 +106,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m09",
     title: "Audiences",
-    description: "Segmentación y señales de audiencia",
+    description: "SegmentaciÃ³n y seÃ±ales de audiencia",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -115,7 +115,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m10",
     title: "Performance Max",
-    description: "Campañas PMax y asset groups",
+    description: "CampaÃ±as PMax y asset groups",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar Conversion Tracking (M13)",
@@ -124,7 +124,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m11",
     title: "Shopping Campaigns",
-    description: "Shopping estándar y Merchant Center",
+    description: "Shopping estÃ¡ndar y Merchant Center",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar Conversion Tracking (M13)",
@@ -133,7 +133,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m12",
     title: "Demand Gen",
-    description: "Campañas de generación de demanda",
+    description: "CampaÃ±as de generaciÃ³n de demanda",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar Conversion Tracking (M13)",
@@ -151,7 +151,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m14",
     title: "Attribution & GA4",
-    description: "Modelo de atribución y consent mode v2",
+    description: "Modelo de atribuciÃ³n y consent mode v2",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar Conversion Tracking (M13)",
@@ -160,7 +160,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m15",
     title: "API Primer",
-    description: "Google Ads API y operaciones programáticas",
+    description: "Google Ads API y operaciones programÃ¡ticas",
     status: "ready",
     dependencies: [],
     actionKey: "google_ads_m15_api",
@@ -193,7 +193,7 @@ function notReadyFallback(
   };
 }
 
-// ── Helpers ──────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function progressCount(modules: GoogleAdsModuleStep[]) {
   return modules.filter((m) => m.status === "completed").length;
 }
@@ -212,7 +212,7 @@ function relativeTime(iso: string) {
   return `hace ${Math.floor(diff / 86400)} d`;
 }
 
-// ── Status badge ─────────────────────────────────────────
+// â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ModuleStatusBadge({ status }: { status: ModuleStatus }) {
   const MAP = {
     completed: { label: "Completado", cls: "bg-emerald-500/20 text-emerald-400 ring-emerald-500/30" },
@@ -236,7 +236,7 @@ function StepIcon({ status }: { status: ModuleStatus }) {
   return <Clock size={18} className="text-slate-500" />;
 }
 
-// ── Module card ──────────────────────────────────────────
+// â”€â”€ Module card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface CardProps {
   module: GoogleAdsModuleStep;
   isRunning: boolean;
@@ -335,7 +335,7 @@ function ModuleCard({ module, isRunning, onRun }: CardProps) {
           )}
           {module.status === "in_progress" && (
             <span className="text-xs text-indigo-400 flex items-center gap-1">
-              <Loader2 size={12} className="animate-spin" /> Ejecutando…
+              <Loader2 size={12} className="animate-spin" /> Ejecutandoâ€¦
             </span>
           )}
         </div>
@@ -344,7 +344,7 @@ function ModuleCard({ module, isRunning, onRun }: CardProps) {
   );
 }
 
-// ── Main component ───────────────────────────────────────
+// â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function GoogleAdsExecutionFlow() {
   const { tenantId } = useTenant();
   const safeTenantId = tenantId?.trim() || "sf-rentals-nadaki-excursions";
@@ -381,7 +381,7 @@ export default function GoogleAdsExecutionFlow() {
             notReadyFallback(
               module.actionKey,
               safeTenantId,
-              pfRes.error || "Revisa que el backend esté activo en Render"
+              pfRes.error || "Revisa que el backend estÃ© activo en Render"
             )
           );
           setPendingModule(module);
@@ -391,7 +391,7 @@ export default function GoogleAdsExecutionFlow() {
         setPendingModule(module);
       } catch {
         setPreflightResult(
-          notReadyFallback(module.actionKey, safeTenantId, "Revisa que el backend esté activo en Render")
+          notReadyFallback(module.actionKey, safeTenantId, "Revisa que el backend estÃ© activo en Render")
         );
         setPendingModule(module);
       } finally {
@@ -443,7 +443,7 @@ export default function GoogleAdsExecutionFlow() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 size={24} className="animate-spin text-slate-500" />
-        <span className="ml-3 text-sm text-slate-500">Cargando módulos...</span>
+        <span className="ml-3 text-sm text-slate-500">Cargando mÃ³dulos...</span>
       </div>
     );
   }
@@ -458,10 +458,10 @@ export default function GoogleAdsExecutionFlow() {
           <div>
             <h2 className="text-base font-semibold text-slate-100 flex items-center gap-2">
               <Zap size={16} className="text-indigo-400" />
-              Flujo de Ejecución Google Ads
+              Flujo de EjecuciÃ³n Google Ads
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Progreso guiado M01–M15 · Pre-flight automático antes de ejecutar
+              Progreso guiado M01â€“M15 Â· Pre-flight automÃ¡tico antes de ejecutar
             </p>
           </div>
           <div className="flex items-center gap-6">
@@ -480,7 +480,7 @@ export default function GoogleAdsExecutionFlow() {
               >
                 {readiness}%
               </p>
-              <p className="text-xs text-slate-500">preparación</p>
+              <p className="text-xs text-slate-500">preparaciÃ³n</p>
             </div>
           </div>
         </div>
@@ -494,7 +494,7 @@ export default function GoogleAdsExecutionFlow() {
           {[
             { cls: "bg-emerald-500/20 text-emerald-400", label: "Completado" },
             { cls: "bg-blue-500/20 text-blue-400", label: "Listo para ejecutar" },
-            { cls: "bg-amber-500/20 text-amber-400", label: "Configuración pendiente" },
+            { cls: "bg-amber-500/20 text-amber-400", label: "ConfiguraciÃ³n pendiente" },
             { cls: "bg-slate-500/20 text-slate-400", label: "Bloqueado" },
           ].map(({ cls, label }) => (
             <span key={label} className={`text-xs px-2 py-0.5 rounded-full ${cls}`}>
@@ -557,3 +557,4 @@ export default function GoogleAdsExecutionFlow() {
     </div>
   );
 }
+
