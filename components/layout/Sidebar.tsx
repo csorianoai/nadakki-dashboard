@@ -38,6 +38,8 @@ import {
   GitBranch,
   Plug,
   FlaskConical,
+  Search,
+  Gauge,
 } from "lucide-react";
 
 interface NavModule {
@@ -92,6 +94,7 @@ const NAV: NavCore[] = [
         badge: "LOCAL",
       },
       { id: "advertising", icon: <Megaphone size={16} />, label: "Publicidad", href: "/advertising" },
+      { id: "advertising-google-ads", icon: <Search size={16} />, label: "Google Ads", href: "/advertising/google-ads" },
       { id: "content", icon: <PenSquare size={16} />, label: "Contenido", href: "/content" },
       { id: "social", icon: <Share2 size={16} />, label: "Redes Sociales", href: "/social" },
     ],
@@ -136,6 +139,8 @@ const NAV: NavCore[] = [
       { id: "admin-usage", icon: <Activity size={16} />, label: "Usage", href: "/admin/usage" },
       { id: "admin-api-keys", icon: <KeyRound size={16} />, label: "API Keys", href: "/admin/api-keys" },
       { id: "admin-system", icon: <Server size={16} />, label: "System", href: "/admin/system" },
+      { id: "admin-readiness", icon: <Gauge size={16} />, label: "Readiness", href: "/admin/readiness" },
+      { id: "admin-google-ads-agent", icon: <Search size={16} />, label: "Ads Agent", href: "/admin/google-ads-agent" },
     ],
   },
 ];

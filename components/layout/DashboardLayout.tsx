@@ -223,6 +223,12 @@ const navigationStructure: NavCore[] = [
       { id: "admin-qa", icon: <CheckCircle size={14} />, label: "QA Piloto", href: "/admin/qa" },
       { id: "admin-audit", icon: <Shield size={14} />, label: "System Audit", href: "/admin/audit" },
       { id: "admin-readiness", icon: <Gauge size={14} />, label: "Readiness", href: "/admin/readiness" },
+      {
+        id: "admin-google-ads-agent",
+        icon: <Search size={14} />,
+        label: "Ads Agent",
+        href: "/admin/google-ads-agent",
+      },
     ],
   },
 ];
@@ -519,7 +525,7 @@ function TopNavigation() {
 
 /* Paths that work without global tenant (e.g. Live Panel has own tenant selector). live-panel same visibility as agents-execute. */
 /** Credit Core shows its own tenant prompt; other routes stay gated. */
-const NO_TENANT_PATHS = ["/tenants", "/agents/live", "/ame", "/credit"];
+const NO_TENANT_PATHS = ["/tenants", "/agents/live", "/ame", "/credit", "/admin/google-ads-agent"];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();

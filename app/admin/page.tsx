@@ -12,6 +12,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import AutonomousHealthPanel from "@/components/system/AutonomousHealthPanel";
 import { useTenant } from "@/contexts/TenantContext";
 
 type AuditEventDisplay = {
@@ -192,6 +193,10 @@ export default function AdminPage() {
         {systemStats?.map((stat, i) => (
           <StatCard key={i} {...stat} delay={i * 0.1} />
         ))}
+      </div>
+
+      <div className="mb-8">
+        <AutonomousHealthPanel />
       </div>
 
       {/* Main Grid */}

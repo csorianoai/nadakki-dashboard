@@ -137,11 +137,11 @@ export default function AutonomousHealthPanel({
         <button
           type="button"
           onClick={onRunNow}
-          disabled={isTriggering}
+          disabled={isTriggering || isLoading}
           className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isTriggering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-          {isTriggering ? "Ejecutando…" : "Run Now"}
+          {isTriggering || isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+          {isTriggering ? "Ejecutando…" : isLoading ? "Cargando…" : "Run Now"}
         </button>
       </div>
 

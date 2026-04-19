@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Gauge, Building2, AlertTriangle } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
@@ -8,6 +8,7 @@ import GlassCard from "@/components/ui/GlassCard";
 import StatusChip from "@/components/admin/StatusChip";
 import GapList from "@/components/admin/GapList";
 import NextActionsPanel from "@/components/admin/NextActionsPanel";
+import GoogleAdsTenantReadinessCard from "@/components/tenants/GoogleAdsTenantReadinessCard";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   getTenantReadiness,
@@ -15,7 +16,15 @@ import {
   getOpsOnboardingHealth,
   suiteFailure,
 } from "@/lib/api/suiteOps";
+import {
+  getGoogleAdsTenantReadiness,
+  refreshGoogleAdsTenantReadiness,
+  type GoogleAdsTenantReadinessPayload,
+} from "@/lib/api/googleAdsTenantReadiness";
 import { getActivationGaps, getNextActions } from "@/lib/adminContracts";
+
+/** Default pilot tenant when context/manual input is empty — TODO: remove when tenant is always required */
+const PILOT_TENANT = "sf-rentals-nadaki-excursions";
 
 type Tab = "tenant" | "fleet";
 
@@ -37,6 +46,43 @@ export default function AdminReadinessPage() {
   const [fleet, setFleet] = useState<Record<string, unknown> | null>(null);
 
   const effectiveId = (tenantId || manualId).trim();
+  const gaTenantId = effectiveId || PILOT_TENANT;
+
+  const [gaData, setGaData] = useState<GoogleAdsTenantReadinessPayload | null>(null);
+  const [gaLoading, setGaLoading] = useState(true);
+  const [gaErr, setGaErr] = useState<string | null>(null);
+  const [gaRefreshing, setGaRefreshing] = useState(false);
+
+  const loadGoogleAdsReadiness = useCallback(async () => {
+    setGaErr(null);
+    setGaLoading(true);
+    const r = await getGoogleAdsTenantReadiness(gaTenantId);
+    setGaLoading(false);
+    const f = suiteFailure(r);
+    if (f) {
+      setGaErr(f.error);
+      setGaData(null);
+      return;
+    }
+    if (r.ok) setGaData(r.data);
+  }, [gaTenantId]);
+
+  const onRefreshGoogleAds = useCallback(async () => {
+    setGaRefreshing(true);
+    setGaErr(null);
+    const r = await refreshGoogleAdsTenantReadiness(gaTenantId);
+    setGaRefreshing(false);
+    const f = suiteFailure(r);
+    if (f) {
+      setGaErr(f.error);
+      return;
+    }
+    if (r.ok) setGaData(r.data);
+  }, [gaTenantId]);
+
+  useEffect(() => {
+    void loadGoogleAdsReadiness();
+  }, [loadGoogleAdsReadiness]);
 
   useEffect(() => {
     let alive = true;
@@ -114,7 +160,20 @@ export default function AdminReadinessPage() {
           <code className="text-gray-500">GET /api/v1/ops/onboarding/readiness/…</code> — server-side scoring from saved
           profiles (no mock data).
         </p>
+        <p className="text-gray-500 text-sm mt-2 m-0">
+          Google Ads tenant readiness uses the tenant selector or manual ID above; if none is set, the pilot tenant{" "}
+          <code className="text-gray-600">{PILOT_TENANT}</code> is used for the Ads card only.
+        </p>
       </motion.div>
+
+      <GoogleAdsTenantReadinessCard
+        tenantId={gaTenantId}
+        data={gaData}
+        loading={gaLoading}
+        error={gaErr}
+        onRefresh={() => void onRefreshGoogleAds()}
+        refreshing={gaRefreshing}
+      />
 
       <GlassCard className="p-4 mb-6">
         {opsLoading ? (

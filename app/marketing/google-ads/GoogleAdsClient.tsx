@@ -69,7 +69,17 @@ function AgentCard({ agent, index }: { agent: MarketingAgent; index: number }) {
   );
 }
 
-export default function GoogleAdsClient() {
+export type GoogleAdsClientProps = {
+  /** When true, omit NavigationBar and full-page shell so this can be embedded under another route. */
+  embed?: boolean;
+  /** Back link for NavigationBar when `embed` is false */
+  navigationBackHref?: string;
+};
+
+export default function GoogleAdsClient({
+  embed = false,
+  navigationBackHref = "/marketing",
+}: GoogleAdsClientProps) {
   const { agents, loading, error, refresh } = useMarketingAgents();
   const { platforms } = useSocialConnections();
 
@@ -97,10 +107,12 @@ export default function GoogleAdsClient() {
   ];
 
   return (
-    <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/marketing">
-        <StatusBadge status="active" label="Google Ads" size="lg" />
-      </NavigationBar>
+    <div className={embed ? "space-y-6" : "ndk-page ndk-fade-in"}>
+      {!embed && (
+        <NavigationBar backHref={navigationBackHref}>
+          <StatusBadge status="active" label="Google Ads" size="lg" />
+        </NavigationBar>
+      )}
 
       {/* Header */}
       <motion.div
