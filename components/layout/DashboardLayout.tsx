@@ -173,6 +173,17 @@ const navigationStructure: NavCore[] = [
         href: "/advertising/landing-readiness",
         badge: "NEW",
       },
+      ...(process.env.NEXT_PUBLIC_COMPETITIVE_RESEARCH_ENABLED === "true"
+        ? [
+            {
+              id: "competitor-research",
+              icon: <Search size={14} />,
+              label: "Competitor Research",
+              href: "/competitor-research",
+              badge: "NEW",
+            },
+          ]
+        : []),
       { id: "meta-ads", icon: <BookOpen size={14} />, label: "Meta Ads", href: "/advertising/meta-ads" },
       { id: "tiktok-ads", icon: <Music size={14} />, label: "TikTok Ads", href: "/advertising/tiktok-ads" },
       { id: "linkedin-ads", icon: <Briefcase size={14} />, label: "LinkedIn Ads", href: "/advertising/linkedin-ads" },
