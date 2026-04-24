@@ -50,3 +50,9 @@ export const ADVERTISING_ENDPOINTS = {
   DASHBOARD: "/api/v1/advertising/dashboard",
   TENANTS: "/api/v1/advertising/tenants",
 };
+
+/** Agent Registry (system) — same-origin via rewrites */
+export const SYSTEM_AGENT_REGISTRY = {
+  SUMMARY: "/api/v1/system/agents/summary",
+  REGISTRY: "/api/v1/system/agents/registry",
+} as const;

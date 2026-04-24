@@ -15,7 +15,8 @@ import {
   Scale,
   ClipboardList,
 } from "lucide-react";
-import { useAgents } from "@/app/hooks/useAgents";
+import { useAgentRegistrySummary } from "@/app/hooks/useAgentRegistrySummary";
+import { AgentRegistryStatHome } from "@/components/agent-registry/AgentRegistryStatHome";
 import { CORES_CONFIG } from "@/config/cores";
 
 /** Same-origin; proxied via next.config rewrites */
@@ -37,11 +38,9 @@ const QUICK_LINKS = [
 const HIGHLIGHT_CORE_IDS = ["marketing", "contabilidad", "legal", "ventascrm", "logistica"] as const;
 
 export default function HomePage() {
-  const { agents, loading: agentsLoading, source } = useAgents();
+  const agentReg = useAgentRegistrySummary();
   const [stats, setStats] = useState({ totalTenants: 0, backendOnline: false });
   const [loading, setLoading] = useState(true);
-
-  const totalAgents = agents.length;
 
   useEffect(() => {
     let cancelled = false;
@@ -96,11 +95,13 @@ export default function HomePage() {
               />
               {stats.backendOnline ? "Backend online" : "Backend offline"}
             </span>
-            {source === "api" && totalAgents > 0 && (
-              <span className="text-xs text-gray-500">Catálogo: API v1</span>
+            {agentReg.available && (
+              <span className="text-xs text-gray-500">Agent Registry</span>
             )}
-            {source === "local" && (
-              <span className="text-xs text-amber-400/90">Catálogo: fallback local</span>
+            {!agentReg.loading && !agentReg.available && (
+              <span className="text-xs text-amber-400/90" title={agentReg.tooltip}>
+                Agent Registry unavailable
+              </span>
             )}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
@@ -127,11 +128,12 @@ export default function HomePage() {
               <Bot className="w-5 h-5 text-purple-400" />
               <span className="text-gray-400 text-sm">Agentes</span>
             </div>
-            {agentsLoading ? (
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            ) : (
-              <span className="text-2xl font-bold text-white">{totalAgents > 0 ? totalAgents : "—"}</span>
-            )}
+            <AgentRegistryStatHome
+              loading={agentReg.loading}
+              available={agentReg.available}
+              summary={agentReg.summary}
+              tooltip={agentReg.tooltip}
+            />
           </div>
           <div className="rounded-xl bg-white/5 border border-white/10 p-4">
             <div className="flex items-center gap-2 mb-1">

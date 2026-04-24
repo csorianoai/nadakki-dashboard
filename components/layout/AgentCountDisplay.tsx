@@ -1,14 +1,14 @@
 ﻿"use client";
 
 import React from "react";
-import { useAgents } from "@/app/hooks/useAgents";
+import { useAgentRegistrySummary } from "@/app/hooks/useAgentRegistrySummary";
 
 type Props = {
-  /** Si se pasa, se usa este conteo (no hace fetch adicional) */
+  /** Si se pasa, se usa este conteo estático (sin llamar al registry) */
   count?: number;
   /** Mostrar etiqueta 'AGENTES' */
   showLabel?: boolean;
-  /** Mostrar source (api/local/empty) */
+  /** Reservado; el conteo oficial viene del Agent Registry */
   showSource?: boolean;
   /** Clase extra opcional */
   className?: string;
@@ -17,51 +17,55 @@ type Props = {
 export default function AgentCountDisplay({
   count,
   showLabel = true,
-  showSource = false,
+  showSource: _showSource = false,
   className = "",
 }: Props) {
-  // Hook correcto: { agents, loading, error, source, lastError }
-  const { agents, loading, error, source } = useAgents();
+  const registry = useAgentRegistrySummary();
 
-  // Determina conteo sin mentir:
-  // - Si hay count explícito, úsalo.
-  // - Si no, usa agents.length si está disponible.
-  const resolvedCount =
-    typeof count === "number"
-      ? count
-      : Array.isArray(agents)
-      ? agents.length
-      : null;
-
-  // Si hay error y no hay data, mostrar estado
-  if (loading && resolvedCount === null) {
+  if (typeof count === "number") {
     return (
-      <div className={`flex items-center gap-2 ${className}`}>
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
-        <span className="text-sm text-gray-400">Cargando agentes...</span>
+      <div className={`flex items-baseline justify-between gap-2 ${className}`}>
+        <div className="text-lg font-bold">{count}</div>
+        {showLabel && <div className="text-xs text-gray-500">AGENTES</div>}
       </div>
     );
   }
 
-  // Mostrar conteo con badge de source si es fallback
-  const isFallback = source === "local" || source === "empty";
-  const sourceBadge = {
-    api: "bg-green-100 text-green-700",
-    local: "bg-yellow-100 text-yellow-700",
-    empty: "bg-red-100 text-red-700",
-  }[source] || "bg-gray-100 text-gray-700";
+  if (registry.loading) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+        <span className="text-sm text-gray-400">Agent Registry…</span>
+      </div>
+    );
+  }
+
+  if (!registry.available || !registry.summary) {
+    return (
+      <div className={`flex flex-col gap-0.5 ${className}`} title={registry.tooltip}>
+        <div className="text-xs font-medium text-amber-700 dark:text-amber-400/90 leading-tight">
+          Agent Registry unavailable
+        </div>
+        {showLabel && <div className="text-[10px] text-gray-500">REGISTRY</div>}
+      </div>
+    );
+  }
+
+  const s = registry.summary;
+  const sub = s.countKind === "executable" ? "executable" : "official";
 
   return (
-    <div className={`flex items-baseline justify-between gap-2 ${className}`}>
-      <div className="text-lg font-bold">
-        {resolvedCount ?? "—"}
+    <div className={`flex flex-col gap-0.5 ${className}`} title={registry.tooltip}>
+      <div className="text-lg font-bold leading-none">{s.displayCount}</div>
+      <div className="text-[10px] text-gray-500 leading-tight">
+        {showLabel ? (
+          <>
+            {sub} · <span className="uppercase">agents</span>
+          </>
+        ) : (
+          sub
+        )}
       </div>
-      {showLabel && <div className="text-xs text-gray-500">AGENTES</div>}
-      {showSource && (
-        <span className={`text-xs px-2 py-0.5 rounded-full ${sourceBadge}`}>
-          {source === "api" ? "🔗 API" : source === "local" ? "💾 Local" : "⚠️ Empty"}
-        </span>
-      )}
     </div>
   );
 }

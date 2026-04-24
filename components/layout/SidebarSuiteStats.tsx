@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAgentRegistrySummary } from "@/app/hooks/useAgentRegistrySummary";
 import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
 import { MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 
@@ -36,15 +37,6 @@ function coresCount(json: unknown): number | null {
   return null;
 }
 
-function pickAgentTotal(h: Record<string, unknown>): number | null {
-  if (typeof h.agents === "number") return h.agents;
-  if (typeof h.total_agents === "number") return h.total_agents;
-  if (typeof h.agent_count === "number") return h.agent_count;
-  if (typeof h.agents_total === "number") return h.agents_total;
-  if (typeof h.confirmed_agents === "number") return h.confirmed_agents;
-  return null;
-}
-
 function pickWorkflowCount(h: Record<string, unknown>): number | string | null {
   if (typeof h.workflows === "number") return h.workflows;
   if (typeof h.workflow_count === "number") return h.workflow_count;
@@ -76,6 +68,7 @@ function writeCache(entry: Omit<SidebarStatsCache, "ts">): void {
 }
 
 export default function SidebarSuiteStats() {
+  const agentReg = useAgentRegistrySummary();
   const [healthRaw, setHealthRaw] = useState<Record<string, unknown>>({});
   const [healthSource, setHealthSource] = useState<FetchSource>("fallback");
   const [coresRaw, setCoresRaw] = useState<unknown>([]);
@@ -126,8 +119,13 @@ export default function SidebarSuiteStats() {
   }, []);
 
   const healthData = unwrapData(healthRaw) as Record<string, unknown>;
-  const agentNum = healthSource === "live" ? pickAgentTotal(healthData) : null;
-  const agentsDisplay = agentNum ?? 0;
+
+  const agentsDisplay = agentReg.loading
+    ? "…"
+    : agentReg.available && agentReg.summary
+      ? String(agentReg.summary.displayCount)
+      : "—";
+  const agentsTitle = agentReg.tooltip;
 
   const cc = coresSource === "live" ? coresCount(coresRaw) : null;
   const coresDisplay = cc ?? (Array.isArray(coresRaw) ? coresRaw.length : 0);
@@ -148,7 +146,7 @@ export default function SidebarSuiteStats() {
         justifyContent: "space-around",
       }}
     >
-      <div style={{ textAlign: "center" }} title="GET /health">
+      <div style={{ textAlign: "center" }} title={agentsTitle}>
         <div
           style={{
             fontSize: "14px",
