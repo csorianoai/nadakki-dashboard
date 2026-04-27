@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import CreditHubHome from "@/app/credit-hub/page";
+import CreditHubHome from "@/app/(forge)/credit-hub/page";
 
 describe("CreditHubHome", () => {
   test("renders all 4 portals", () => {

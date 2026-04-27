@@ -8,6 +8,8 @@ import { ForgeButton } from "../../primitives/ForgeButton";
 import { ForgeCard } from "../../primitives/ForgeCard";
 import { useCreateApplication } from "@/lib/credit-hub/hooks/useCreateApplication";
 import type { CHCreateApplicationRequest } from "@/lib/credit-hub/types/_generated";
+import { celebrateSuccessRespectReduced } from "@/lib/credit-hub/utils/celebrate";
+import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { Step1Applicant } from "./Step1Applicant";
 import { Step2Vehicle } from "./Step2Vehicle";
 import { Step3Review } from "./Step3Review";
@@ -99,9 +101,11 @@ export function WizardContainer() {
     try {
       const result = await createMutation.mutateAsync(buildCreateApplicationPayload(formData, status));
       setSubmitStatus("success");
+      celebrateSuccessRespectReduced();
+      forgeToast.success("¡Solicitud creada exitosamente!");
       setTimeout(() => {
         router.push(`/credit-hub/dealer/applications/${result.application_id}`);
-      }, 1200);
+      }, 1500);
     } catch (error) {
       console.error("Submit error:", error);
       setSubmitStatus("error");
@@ -112,6 +116,9 @@ export function WizardContainer() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
+      <div role="status" aria-live="polite" className="sr-only">
+        Paso {currentStep + 1} de {steps.length}: {steps[currentStep].title}
+      </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-forge-text-muted">
@@ -138,6 +145,7 @@ export function WizardContainer() {
             return (
               <div key={step.id} className="flex flex-col items-center gap-1">
                 <motion.div
+                  initial={false}
                   animate={{
                     scale: isActive ? 1.1 : 1,
                     backgroundColor: isComplete ? "var(--forge-success)" : isActive ? "var(--forge-primary)" : "var(--forge-surface-elevated)",

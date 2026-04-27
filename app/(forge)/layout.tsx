@@ -1,11 +1,12 @@
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { CHQueryProvider } from "@/components/credit-hub/system/CHQueryProvider";
-import "./forge-globals.css";
+import "./credit-hub/forge-globals.css";
 
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--forge-font-sans",
   display: "swap",
+  preload: true,
 });
 
 const fontMono = JetBrains_Mono({
@@ -20,9 +21,14 @@ const fontDisplay = Space_Grotesk({
   display: "swap",
 });
 
-export default function CreditHubLayout({ children }: { children: React.ReactNode }) {
+export const metadata = {
+  title: "Nadakki Forge",
+  description: "Where credit decisions are forged",
+};
+
+export default function ForgeRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable}`}>
+    <div className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} forge-app antialiased`}>
       <CHQueryProvider>{children}</CHQueryProvider>
     </div>
   );

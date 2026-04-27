@@ -68,6 +68,7 @@ export default function DealerApplicationDetailPage({ params }: { params: Promis
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              aria-selected={isActive}
               className={cn(
                 "flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors",
                 isActive ? "border-forge-primary text-forge-primary" : "border-transparent text-forge-text-muted hover:text-forge-text"

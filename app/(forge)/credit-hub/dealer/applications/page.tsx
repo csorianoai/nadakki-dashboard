@@ -2,11 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Plus, Search } from "lucide-react";
 import { ApplicationCard } from "@/components/credit-hub/dealer/ApplicationCard";
 import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import { ForgeInput } from "@/components/credit-hub/primitives/ForgeInput";
+import { CHEmptyState } from "@/components/credit-hub/system/CHEmptyState";
+import { PullToRefresh } from "@/components/credit-hub/system/PullToRefresh";
 import { useApplications } from "@/lib/credit-hub/hooks/useApplications";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +20,7 @@ const filters = [
 ];
 
 export default function DealerApplicationsPage() {
-  const { data: applications = [], isLoading, error } = useApplications();
+  const { data: applications = [], isLoading, error, refetch } = useApplications();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -42,7 +45,8 @@ export default function DealerApplicationsPage() {
   }, [activeFilter, applications, searchQuery]);
 
   return (
-    <div className="space-y-6 p-4 md:p-8">
+    <PullToRefresh onRefresh={async () => { await refetch(); }}>
+      <div className="space-y-6 p-4 md:p-8">
       <div className="flex items-center justify-between gap-4">
         <h1 className="font-display text-3xl font-bold text-forge-text">Solicitudes</h1>
         <Link href="/credit-hub/dealer/applications/new" className="hidden md:block">
@@ -67,6 +71,7 @@ export default function DealerApplicationsPage() {
             <button
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
+              aria-pressed={activeFilter === filter.id}
               className={cn(
                 "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all",
                 activeFilter === filter.id
@@ -92,15 +97,20 @@ export default function DealerApplicationsPage() {
           <p className="mt-1 text-sm text-forge-text-muted">Inténtalo de nuevo en un momento</p>
         </ForgeCard>
       ) : filtered.length === 0 ? (
-        <ForgeCard className="py-16 text-center">
-          <p className="mb-4 text-forge-text-muted">
-            {searchQuery || activeFilter !== "all" ? "No se encontraron solicitudes con esos criterios" : "No hay solicitudes aún"}
-          </p>
-          <Link href="/credit-hub/dealer/applications/new">
-            <ForgeButton variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
-              Crear primera solicitud
-            </ForgeButton>
-          </Link>
+        <ForgeCard className="py-8">
+          <CHEmptyState
+            title={searchQuery || activeFilter !== "all" ? "No encontramos coincidencias" : "Tu pipeline está esperando"}
+            description={
+              searchQuery || activeFilter !== "all"
+                ? "Ajusta la búsqueda o cambia el filtro para ver más solicitudes."
+                : "Cada solicitud es un cliente más cerca de su nuevo carro. Empieza ahora."
+            }
+            primaryAction={{
+              label: "Crear Primera Solicitud",
+              href: "/credit-hub/dealer/applications/new",
+              icon: <Plus className="h-4 w-4" />,
+            }}
+          />
         </ForgeCard>
       ) : (
         <div className="space-y-3">
@@ -118,13 +128,27 @@ export default function DealerApplicationsPage() {
         </div>
       )}
 
-      <Link
-        href="/credit-hub/dealer/applications/new"
-        className="fixed bottom-24 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-forge-primary to-forge-primary-hover shadow-xl shadow-forge-primary/30 transition-transform hover:scale-105 active:scale-95 md:hidden"
-        aria-label="Nueva solicitud"
-      >
-        <Plus className="h-6 w-6 text-white" />
-      </Link>
-    </div>
+      <motion.div className="fixed bottom-24 right-6 z-30 md:hidden" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3, type: "spring", stiffness: 300 }}>
+        <motion.div
+          animate={{
+            boxShadow: [
+              "0 10px 25px rgba(255,107,53,0.3)",
+              "0 10px 35px rgba(255,107,53,0.5)",
+              "0 10px 25px rgba(255,107,53,0.3)",
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <Link
+            href="/credit-hub/dealer/applications/new"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-forge-primary to-forge-primary-hover transition-transform hover:scale-105 active:scale-95"
+            aria-label="Nueva solicitud"
+          >
+            <Plus className="h-6 w-6 text-white" />
+          </Link>
+        </motion.div>
+      </motion.div>
+      </div>
+    </PullToRefresh>
   );
 }

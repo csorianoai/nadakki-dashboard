@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import NewApplicationPage from "@/app/credit-hub/dealer/applications/new/page";
+import NewApplicationPage from "@/app/(forge)/credit-hub/dealer/applications/new/page";
 import { useCreateApplication } from "@/lib/credit-hub/hooks/useCreateApplication";
 
 jest.mock("next/navigation", () => ({
@@ -11,10 +11,10 @@ jest.mock("@/lib/credit-hub/hooks/useCreateApplication", () => ({
 }));
 
 describe("NewApplicationPage", () => {
-  test("renders wizard entry step", () => {
+  test("renders wizard page with lazy loading shell", () => {
     (useCreateApplication as jest.Mock).mockReturnValue({ mutateAsync: jest.fn() });
-    render(<NewApplicationPage />);
+    const { container } = render(<NewApplicationPage />);
     expect(screen.getByText("Nueva Solicitud")).toBeInTheDocument();
-    expect(screen.getByText("Información del Cliente")).toBeInTheDocument();
+    expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 });

@@ -1,6 +1,14 @@
 "use client";
 
-import { WizardContainer } from "@/components/credit-hub/dealer/wizard/WizardContainer";
+import dynamic from "next/dynamic";
+
+const WizardContainer = dynamic(
+  () => import("@/components/credit-hub/dealer/wizard/WizardContainer").then((mod) => mod.WizardContainer),
+  {
+    ssr: false,
+    loading: () => <div className="h-96 animate-pulse rounded-2xl bg-forge-surface" />,
+  }
+);
 
 export default function NewDealerApplicationPage() {
   return (

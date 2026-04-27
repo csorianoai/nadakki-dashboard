@@ -25,9 +25,9 @@ export function DealerBottomNav() {
 
           if (item.primary) {
             return (
-              <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center">
+              <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center" aria-label="Nueva solicitud">
                 <div className="-mt-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-forge-primary to-forge-primary-hover shadow-lg shadow-forge-primary/30">
-                  <Icon className="h-6 w-6 text-white" />
+                  <Icon className="h-6 w-6 text-white" aria-hidden="true" />
                 </div>
                 <span className="mt-0.5 text-[10px] text-forge-text-muted">{item.label}</span>
               </Link>
@@ -44,7 +44,7 @@ export function DealerBottomNav() {
                 isActive ? "text-forge-primary" : "text-forge-text-muted hover:text-forge-text"
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-5 w-5" aria-hidden="true" />
               <span className="text-xs">{item.label}</span>
             </Link>
           );

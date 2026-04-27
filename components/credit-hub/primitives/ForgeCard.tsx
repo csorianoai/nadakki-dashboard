@@ -12,7 +12,7 @@ export const ForgeCard = forwardRef<HTMLDivElement, ForgeCardProps>(
       default: "bg-forge-surface border border-forge-border",
       elevated: "bg-forge-surface-elevated border border-forge-border shadow-md",
       interactive:
-        "bg-forge-surface border border-forge-border hover:border-forge-border-hover hover:bg-forge-surface-hover transition-colors cursor-pointer",
+        "bg-forge-surface border border-forge-border cursor-pointer transition-all duration-300 hover:border-forge-primary/30 hover:bg-forge-surface-hover hover:shadow-xl hover:shadow-forge-primary/10 hover:-translate-y-0.5",
     };
 
     const paddings = {

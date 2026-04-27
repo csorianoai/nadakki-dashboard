@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import DealerDashboardPage from "@/app/credit-hub/dealer/page";
+import DealerDashboardPage from "@/app/(forge)/credit-hub/dealer/page";
 import { useApplications } from "@/lib/credit-hub/hooks/useApplications";
 import { makeApplication } from "../testData";
 
