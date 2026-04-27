@@ -63,17 +63,27 @@ describe("creditCoreClient", () => {
     expect(stats.total_applications).toBe(3);
   });
 
-  test("creates application with payload", async () => {
+  test("creates application with Credit Core schema wrapper preserving payload fields", async () => {
     const fetchMock = mockFetch({ id: "app-created", applicant_name: "Ana" });
+    const payload = {
+      applicant_name: "Ana",
+      applicant_email: "ana@example.com",
+      requested_amount: "500000",
+      vehicle_make: "Toyota",
+      source: "forge_dealer_portal" as const,
+    };
     await createApplication({
       tenantId,
-      payload: { applicant_name: "Ana", source: "forge_dealer_portal" },
+      payload,
     });
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v2/credit/applications",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ applicant_name: "Ana", source: "forge_dealer_portal" }),
+        body: JSON.stringify({
+          application_payload: payload,
+          initial_state: "DRAFT",
+        }),
       })
     );
   });

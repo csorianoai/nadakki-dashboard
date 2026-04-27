@@ -59,7 +59,7 @@ export function Step3Review({ data, onChange, onSubmit, submitStatus }: Step3Pro
         <div className="space-y-2 text-sm">
           <div className="flex justify-between gap-4">
             <span className="text-forge-text-muted">Cliente:</span>
-            <span className="font-medium text-forge-text">{data.applicant_name || "—"}</span>
+            <span className="font-medium text-forge-text">{data.applicant_full_name || "—"}</span>
           </div>
 
           {data.applicant_email && (

@@ -44,10 +44,10 @@ export function Step2Vehicle({ data, onChange }: Step2Props) {
         label="VIN"
         placeholder="17 caracteres"
         maxLength={17}
-        value={data.vehicle_vin}
-        onChange={(event) => onChange("vehicle_vin", event.target.value.toUpperCase())}
+        value={data.dealer_supplier}
+        onChange={(event) => onChange("dealer_supplier", event.target.value)}
         leftIcon={<Hash className="h-4 w-4" />}
-        helperText="Vehicle Identification Number"
+        helperText="Dealer o suplidor"
       />
     </div>
   );

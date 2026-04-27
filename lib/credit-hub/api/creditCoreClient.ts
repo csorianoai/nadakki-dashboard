@@ -117,7 +117,10 @@ export async function createApplication(params: {
   const raw = await creditCoreFetch<unknown>("/applications", {
     method: "POST",
     tenantId: params.tenantId,
-    body: JSON.stringify(params.payload),
+    body: JSON.stringify({
+      application_payload: params.payload,
+      initial_state: "DRAFT",
+    }),
   });
   return normalizeApplication(raw);
 }

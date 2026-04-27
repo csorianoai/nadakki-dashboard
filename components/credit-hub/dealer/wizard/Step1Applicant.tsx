@@ -20,12 +20,20 @@ export function Step1Applicant({ data, onChange }: Step1Props) {
       <ForgeInput
         label="Nombre completo *"
         placeholder="Ej: Juan Pérez"
-        value={data.applicant_name}
-        onChange={(event) => onChange("applicant_name", event.target.value)}
+        value={data.applicant_full_name}
+        onChange={(event) => onChange("applicant_full_name", event.target.value)}
         leftIcon={<User className="h-4 w-4" />}
         required
         autoFocus
         helperText="Mínimo 2 caracteres"
+      />
+
+      <ForgeInput
+        label="Cédula / Identificación *"
+        placeholder="000-0000000-0"
+        value={data.applicant_identification}
+        onChange={(event) => onChange("applicant_identification", event.target.value)}
+        required
       />
 
       <ForgeInput
