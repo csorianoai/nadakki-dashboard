@@ -89,7 +89,7 @@ describe("WizardContainer", () => {
     );
 
     act(() => {
-      jest.advanceTimersByTime(1200);
+      jest.advanceTimersByTime(1500);
     });
     expect(push).toHaveBeenCalledWith("/credit-hub/dealer/applications/app-created");
     jest.useRealTimers();

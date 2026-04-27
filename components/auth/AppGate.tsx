@@ -13,6 +13,10 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  if (pathname.startsWith("/credit-hub")) {
+    return <>{children}</>;
+  }
+
   return (
     <RequireAuth>
       <DashboardLayout>

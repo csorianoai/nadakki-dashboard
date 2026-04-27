@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import DealerApplicationDetailPage from "@/app/credit-hub/dealer/applications/[applicationId]/page";
+import DealerApplicationDetailPage from "@/app/(forge)/credit-hub/dealer/applications/[applicationId]/page";
 import { useApplication } from "@/lib/credit-hub/hooks/useApplication";
 import { makeApplication } from "../testData";
 

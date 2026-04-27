@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, type InputHTMLAttributes, type ReactNode, useId, useState } from "react";
+import { forwardRef, type InputHTMLAttributes, type ReactNode, useEffect, useId, useState } from "react";
+import { motion, useAnimationControls } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ForgeInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -14,8 +15,18 @@ interface ForgeInputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const ForgeInput = forwardRef<HTMLInputElement, ForgeInputProps>(
   ({ label, error, helperText, leftIcon, rightIcon, className, id, ...props }, ref) => {
     const [focused, setFocused] = useState(false);
+    const controls = useAnimationControls();
     const generatedId = useId();
     const inputId = id || `forge-input-${generatedId}`;
+
+    useEffect(() => {
+      if (error) {
+        void controls.start({
+          x: [0, -3, 3, -3, 3, 0],
+          transition: { duration: 0.4, ease: "easeInOut" },
+        });
+      }
+    }, [controls, error]);
 
     return (
       <div className="space-y-1.5">
@@ -25,7 +36,9 @@ export const ForgeInput = forwardRef<HTMLInputElement, ForgeInputProps>(
           </label>
         )}
 
-        <div
+        <motion.div
+          animate={controls}
+          data-testid="forge-input-control"
           className={cn(
             "relative flex items-center rounded-xl border-2 bg-forge-surface-elevated transition-all duration-200",
             focused && !error && "border-forge-primary shadow-[0_0_0_3px_rgba(255,107,53,0.1)]",
@@ -58,7 +71,7 @@ export const ForgeInput = forwardRef<HTMLInputElement, ForgeInputProps>(
           />
 
           {rightIcon && <span className="pr-4 text-forge-text-muted">{rightIcon}</span>}
-        </div>
+        </motion.div>
 
         {error && (
           <p id={`${inputId}-error`} role="alert" className="text-sm text-forge-danger">

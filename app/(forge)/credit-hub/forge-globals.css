@@ -1,4 +1,4 @@
-@import "../../styles/forge-tokens.css";
+@import "../../../styles/forge-tokens.css";
 
 .forge-route {
   background: var(--forge-bg);

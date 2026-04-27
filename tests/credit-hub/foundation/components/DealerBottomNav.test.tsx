@@ -13,7 +13,7 @@ describe("DealerBottomNav", () => {
 
   test("primary action Plus is visually distinct", () => {
     render(<DealerBottomNav />);
-    const primaryAction = screen.getByRole("link", { name: /Nueva/ });
+    const primaryAction = screen.getByRole("link", { name: /Nueva solicitud/ });
     expect(primaryAction.querySelector(".from-forge-primary")).toBeInTheDocument();
   });
 });

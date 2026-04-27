@@ -13,16 +13,15 @@ jest.mock("@/lib/credit-hub/hooks/useFeatureFlag", () => ({
   useFeatureFlag: () => ({ enabled: true, loading: false }),
 }));
 
-describe("DealerLayout", () => {
-  test("renders dealer shell with navigation and children", () => {
+describe("skip to content", () => {
+  test("renders skip link and main content target", () => {
     render(
       <DealerLayout>
-        <div>Dealer child</div>
+        <div>Dashboard</div>
       </DealerLayout>
     );
 
-    expect(screen.getByText("Dealer child")).toBeInTheDocument();
-    expect(screen.getAllByText("Solicitudes")[0]).toBeInTheDocument();
-    expect(screen.getByText("Nueva")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Saltar al contenido principal" })).toHaveAttribute("href", "#main-content");
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
   });
 });
