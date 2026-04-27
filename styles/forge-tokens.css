@@ -1,0 +1,165 @@
+/* === BASE TOKENS === */
+:root {
+  /* Spacing scale (4px base) */
+  --forge-space-1: 4px;
+  --forge-space-2: 8px;
+  --forge-space-3: 12px;
+  --forge-space-4: 16px;
+  --forge-space-6: 24px;
+  --forge-space-8: 32px;
+  --forge-space-12: 48px;
+  --forge-space-16: 64px;
+
+  /* Radii */
+  --forge-radius-sm: 6px;
+  --forge-radius-md: 8px;
+  --forge-radius-lg: 12px;
+  --forge-radius-xl: 16px;
+  --forge-radius-2xl: 24px;
+  --forge-radius-full: 9999px;
+
+  /* Shadows */
+  --forge-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --forge-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --forge-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --forge-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --forge-shadow-glow-orange: 0 0 24px rgba(255, 107, 53, 0.3);
+  --forge-shadow-glow-success: 0 0 24px rgba(0, 200, 150, 0.3);
+
+  /* Z-index */
+  --forge-z-dropdown: 1000;
+  --forge-z-sticky: 1020;
+  --forge-z-fixed: 1030;
+  --forge-z-modal-backdrop: 1040;
+  --forge-z-modal: 1050;
+  --forge-z-popover: 1060;
+  --forge-z-tooltip: 1070;
+  --forge-z-toast: 1080;
+}
+
+/* === DEALER PORTAL: Velocidad + Energia === */
+:root[data-portal="dealer"],
+[data-portal="dealer"] {
+  --forge-primary: #FF6B35;
+  --forge-primary-hover: #E55A2B;
+  --forge-primary-active: #CC4F26;
+  --forge-accent: #FFB627;
+  --forge-accent-hover: #E5A422;
+
+  --forge-bg: #0A0E1A;
+  --forge-surface: #131829;
+  --forge-surface-elevated: #1A2138;
+  --forge-surface-hover: #232B45;
+
+  --forge-text: #F5F7FA;
+  --forge-text-muted: #8B95A8;
+  --forge-text-subtle: #5C6680;
+
+  --forge-border: rgba(255, 255, 255, 0.08);
+  --forge-border-hover: rgba(255, 255, 255, 0.16);
+  --forge-border-focus: var(--forge-primary);
+
+  --forge-success: #00C896;
+  --forge-warning: #FFB627;
+  --forge-danger: #FF4757;
+  --forge-info: #3B82F6;
+
+  --forge-gradient-hero: linear-gradient(135deg, #FF6B35 0%, #FF8C42 50%, #FFB627 100%);
+  --forge-gradient-button: linear-gradient(135deg, #FF6B35 0%, #E55A2B 100%);
+  --forge-gradient-ai: linear-gradient(90deg, #FF6B35 0%, #FFB627 100%);
+}
+
+/* === BANK PORTAL: Confianza + Profundidad === */
+:root[data-portal="bank"],
+[data-portal="bank"] {
+  --forge-primary: #1E3A8A;
+  --forge-primary-hover: #1E40AF;
+  --forge-primary-active: #1D4ED8;
+  --forge-accent: #06B6D4;
+  --forge-accent-hover: #0891B2;
+
+  --forge-bg: #0B1120;
+  --forge-surface: #131C2E;
+  --forge-surface-elevated: #1A2540;
+  --forge-surface-hover: #223052;
+
+  --forge-text: #F0F4F8;
+  --forge-text-muted: #94A3B8;
+  --forge-text-subtle: #64748B;
+
+  --forge-border: rgba(255, 255, 255, 0.08);
+  --forge-border-hover: rgba(255, 255, 255, 0.16);
+  --forge-border-focus: var(--forge-primary);
+
+  --forge-success: #10B981;
+  --forge-warning: #F59E0B;
+  --forge-danger: #EF4444;
+  --forge-info: #06B6D4;
+}
+
+/* === CUSTOMER PORTAL: Calma === */
+:root[data-portal="customer"],
+[data-portal="customer"] {
+  --forge-primary: #059669;
+  --forge-primary-hover: #047857;
+  --forge-primary-active: #065F46;
+  --forge-accent: #14B8A6;
+  --forge-accent-hover: #0D9488;
+
+  --forge-bg: #FAFBFC;
+  --forge-surface: #FFFFFF;
+  --forge-surface-elevated: #F1F5F9;
+  --forge-surface-hover: #E2E8F0;
+
+  --forge-text: #0F172A;
+  --forge-text-muted: #64748B;
+  --forge-text-subtle: #94A3B8;
+
+  --forge-border: rgba(15, 23, 42, 0.1);
+  --forge-border-hover: rgba(15, 23, 42, 0.18);
+  --forge-border-focus: var(--forge-primary);
+
+  --forge-success: #059669;
+  --forge-warning: #D97706;
+  --forge-danger: #DC2626;
+  --forge-info: #0284C7;
+}
+
+/* === ADMIN PORTAL: Power === */
+:root[data-portal="admin"],
+[data-portal="admin"] {
+  --forge-primary: #8B5CF6;
+  --forge-primary-hover: #7C3AED;
+  --forge-primary-active: #6D28D9;
+  --forge-accent: #F59E0B;
+  --forge-accent-hover: #D97706;
+
+  --forge-bg: #09090B;
+  --forge-surface: #18181B;
+  --forge-surface-elevated: #27272A;
+  --forge-surface-hover: #3F3F46;
+
+  --forge-text: #FAFAFA;
+  --forge-text-muted: #A1A1AA;
+  --forge-text-subtle: #71717A;
+
+  --forge-border: rgba(255, 255, 255, 0.08);
+  --forge-border-hover: rgba(255, 255, 255, 0.16);
+  --forge-border-focus: var(--forge-primary);
+
+  --forge-success: #10B981;
+  --forge-warning: #F59E0B;
+  --forge-danger: #EF4444;
+  --forge-info: #3B82F6;
+}
+
+/* === REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

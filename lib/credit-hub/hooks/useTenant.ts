@@ -2,7 +2,7 @@
 
 import { useTenant as useDashboardTenant } from "@/contexts/TenantContext";
 
-export function useTenant(): { tenantId: string | null; loading: boolean } {
+export function useTenant(): { tenantId: string | null; tenantSlug: string | null; loading: boolean } {
   const { tenantId } = useDashboardTenant();
-  return { tenantId, loading: false };
+  return { tenantId, tenantSlug: tenantId, loading: false };
 }

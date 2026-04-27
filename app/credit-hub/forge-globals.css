@@ -1,0 +1,6 @@
+@import "../../styles/forge-tokens.css";
+
+.forge-route {
+  background: var(--forge-bg);
+  color: var(--forge-text);
+}
