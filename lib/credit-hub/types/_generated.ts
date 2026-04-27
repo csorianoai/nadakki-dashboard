@@ -68,6 +68,7 @@ export interface CHCreateApplicationRequest {
   vehicle_model?: string;
   requested_amount?: string | number;
   down_payment?: string | number;
+  status?: "draft" | "submitted";
 }
 
 /**
