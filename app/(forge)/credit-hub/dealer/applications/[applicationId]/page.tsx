@@ -2,11 +2,14 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Car, Clock, DollarSign, Mail, Phone, User } from "lucide-react";
+import { ArrowLeft, Brain, Car, Clock, DollarSign, Mail, Phone, ShieldCheck, User } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
-import { useApplication } from "@/lib/credit-hub/hooks/useApplication";
+import { CreditCoreApiError } from "@/lib/credit-hub/api/creditCoreClient";
+import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
+import { useProcessCreditApplication } from "@/lib/credit-hub/hooks/useProcessCreditApplication";
+import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -18,8 +21,19 @@ const tabs = [
 export default function DealerApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
   const router = useRouter();
-  const { data, isLoading, error } = useApplication(applicationId);
+  const { application: data, events, isLoading, error, refetch } = useCreditApplicationDetail(applicationId);
+  const processMutation = useProcessCreditApplication(applicationId);
   const [activeTab, setActiveTab] = useState("summary");
+
+  const handleProcess = async () => {
+    try {
+      await processMutation.mutateAsync("ai");
+      forgeToast.success("Procesamiento iniciado correctamente");
+      await refetch();
+    } catch (processError) {
+      forgeToast.error(processError instanceof Error ? processError.message : "No se pudo procesar la solicitud");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -33,13 +47,24 @@ export default function DealerApplicationDetailPage({ params }: { params: Promis
   }
 
   if (error || !data) {
+    const notFound = error instanceof CreditCoreApiError && error.status === 404;
     return (
       <div className="p-4 md:p-8">
         <ForgeCard className="py-12 text-center">
-          <p className="mb-4 text-forge-danger">Error al cargar solicitud</p>
-          <ForgeButton variant="secondary" onClick={() => router.back()}>
-            Volver
-          </ForgeButton>
+          <p className="mb-2 text-forge-danger">{notFound ? "Solicitud no encontrada" : "Error al cargar solicitud real"}</p>
+          <p className="mb-4 text-sm text-forge-text-muted">
+            {notFound ? "El backend no encontró esta solicitud." : error instanceof Error ? error.message : "Inténtalo de nuevo en un momento."}
+          </p>
+          <div className="flex justify-center gap-3">
+            <ForgeButton variant="secondary" onClick={() => router.back()}>
+              Volver
+            </ForgeButton>
+            {!notFound && (
+              <ForgeButton variant="primary" onClick={() => void refetch()}>
+                Reintentar
+              </ForgeButton>
+            )}
+          </div>
         </ForgeCard>
       </div>
     );
@@ -57,6 +82,14 @@ export default function DealerApplicationDetailPage({ params }: { params: Promis
             <ApplicationStatusBadge status={data.status} />
           </div>
         </div>
+        <ForgeButton
+          variant="primary"
+          onClick={handleProcess}
+          loading={processMutation.isPending}
+          leftIcon={<Brain className="h-4 w-4" />}
+        >
+          Procesar con IA
+        </ForgeButton>
       </div>
 
       <div className="flex items-center gap-1 border-b border-forge-border">
@@ -118,6 +151,20 @@ export default function DealerApplicationDetailPage({ params }: { params: Promis
                   <dd className="font-mono font-semibold text-forge-text">RD$ {Number(data.requested_amount || 0).toLocaleString("es-DO")}</dd>
                 </div>
               </div>
+              {(data.score !== null || data.risk_score !== null || data.decision || data.recommendation) && (
+                <div className="flex items-start gap-3 border-t border-forge-border pt-3">
+                  <ShieldCheck className="mt-1 h-4 w-4 text-forge-text-muted" />
+                  <div>
+                    <dt className="text-xs text-forge-text-muted">Decisión / Riesgo</dt>
+                    <dd className="space-y-1 text-forge-text">
+                      {data.score !== null && <div>Score: {data.score}</div>}
+                      {data.risk_score !== null && <div>Risk score: {data.risk_score}</div>}
+                      {data.decision && <div>Decisión: {data.decision}</div>}
+                      {data.recommendation && <div>Recomendación: {data.recommendation}</div>}
+                    </dd>
+                  </div>
+                </div>
+              )}
             </dl>
           </ForgeCard>
         )}
@@ -162,6 +209,16 @@ export default function DealerApplicationDetailPage({ params }: { params: Promis
           <ForgeCard padding="lg">
             <h2 className="mb-4 font-semibold text-forge-text">Línea de Tiempo</h2>
             <div className="space-y-4">
+              {events.map((event) => (
+                <div key={event.id} className="flex items-start gap-3">
+                  <div className="mt-1.5 h-2 w-2 rounded-full bg-forge-info" />
+                  <div>
+                    <p className="font-medium text-forge-text">{event.title}</p>
+                    {event.description && <p className="text-sm text-forge-text-muted">{event.description}</p>}
+                    <p className="text-xs text-forge-text-muted">{new Date(event.created_at).toLocaleString("es-DO")}</p>
+                  </div>
+                </div>
+              ))}
               <div className="flex items-start gap-3">
                 <div className="mt-1.5 h-2 w-2 rounded-full bg-forge-success" />
                 <div>

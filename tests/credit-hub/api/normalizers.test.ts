@@ -1,0 +1,60 @@
+import {
+  normalizeApplication,
+  normalizeApplications,
+  normalizeEvent,
+  normalizeStats,
+} from "@/lib/credit-hub/api/normalizers";
+
+describe("Credit Core normalizers", () => {
+  test("normalizes application id and camelCase fields", () => {
+    const app = normalizeApplication({
+      id: "credit-1",
+      applicantName: "Ana Pérez",
+      requestedAmount: "750000",
+      risk_score: 42,
+      createdAt: "2026-04-27T12:00:00Z",
+    });
+
+    expect(app.application_id).toBe("credit-1");
+    expect(app.applicant_name).toBe("Ana Pérez");
+    expect(app.requested_amount).toBe("750000");
+    expect(app.risk_score).toBe(42);
+    expect(app.created_at).toBe("2026-04-27T12:00:00Z");
+  });
+
+  test("normalizes applications from envelope", () => {
+    const apps = normalizeApplications({ applications: [{ application_id: "a1", applicant_name: "Luis" }] });
+    expect(apps).toHaveLength(1);
+    expect(apps[0].application_id).toBe("a1");
+  });
+
+  test("normalizes stats from backend totals", () => {
+    const stats = normalizeStats({
+      totalApplications: 10,
+      draftApplications: 2,
+      submittedApplications: 3,
+      applicationsThisWeek: 4,
+      averageScore: 710,
+    });
+
+    expect(stats.total_applications).toBe(10);
+    expect(stats.draft_applications).toBe(2);
+    expect(stats.submitted_applications).toBe(3);
+    expect(stats.applications_this_week).toBe(4);
+    expect(stats.average_score).toBe(710);
+  });
+
+  test("normalizes event variations", () => {
+    const event = normalizeEvent({
+      eventId: "evt-1",
+      eventType: "processed",
+      message: "Processed by AI",
+      timestamp: "2026-04-27T13:00:00Z",
+    });
+
+    expect(event.id).toBe("evt-1");
+    expect(event.type).toBe("processed");
+    expect(event.description).toBe("Processed by AI");
+    expect(event.created_at).toBe("2026-04-27T13:00:00Z");
+  });
+});

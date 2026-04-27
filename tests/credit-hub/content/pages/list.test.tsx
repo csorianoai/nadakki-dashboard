@@ -1,17 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import ApplicationsListPage from "@/app/(forge)/credit-hub/dealer/applications/page";
-import { useApplications } from "@/lib/credit-hub/hooks/useApplications";
+import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { makeApplication } from "../testData";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
-jest.mock("@/lib/credit-hub/hooks/useApplications", () => ({
-  useApplications: jest.fn(),
+jest.mock("@/lib/credit-hub/hooks/useCreditApplications", () => ({
+  useCreditApplications: jest.fn(),
 }));
 
-const mockUseApplications = useApplications as jest.Mock;
+const mockUseApplications = useCreditApplications as jest.Mock;
 
 describe("ApplicationsListPage", () => {
   beforeEach(() => {
@@ -23,6 +23,7 @@ describe("ApplicationsListPage", () => {
       ],
       isLoading: false,
       error: null,
+      refetch: jest.fn(),
     });
   });
 
@@ -38,5 +39,12 @@ describe("ApplicationsListPage", () => {
     fireEvent.change(screen.getByPlaceholderText("Buscar por nombre, marca, modelo..."), { target: { value: "ana" } });
     expect(screen.getAllByText("Ana Pérez")[0]).toBeInTheDocument();
     expect(screen.queryByText("Luis Gómez")).not.toBeInTheDocument();
+  });
+
+  test("search filters by application id", () => {
+    render(<ApplicationsListPage />);
+    fireEvent.change(screen.getByPlaceholderText("Buscar por nombre, marca, modelo..."), { target: { value: "app-2" } });
+    expect(screen.getAllByText("Luis Gómez")[0]).toBeInTheDocument();
+    expect(screen.queryByText("Ana Pérez")).not.toBeInTheDocument();
   });
 });

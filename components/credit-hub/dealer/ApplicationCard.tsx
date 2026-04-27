@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Car, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { CHApplication } from "@/lib/credit-hub/types/_generated";
+import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
 
 function getAvatarColors(name: string): { bg: string; text: string } {
@@ -57,7 +57,7 @@ function statusBarClass(status: string): string {
 }
 
 interface ApplicationCardProps {
-  application: CHApplication;
+  application: CreditApplication;
   variant?: "card" | "compact";
   className?: string;
 }
