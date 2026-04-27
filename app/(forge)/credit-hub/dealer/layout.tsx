@@ -7,6 +7,7 @@ import { DealerBottomNav } from "@/components/credit-hub/navigation/DealerBottom
 import { DealerTopBar } from "@/components/credit-hub/navigation/DealerTopBar";
 import { PortalShell } from "@/components/credit-hub/system/PortalShell";
 import { ForgeToaster } from "@/components/credit-hub/system/ForgeToaster";
+import { ForgeCreditGuide } from "@/components/credit-hub/system/ForgeCreditGuide";
 
 export default function DealerLayout({ children }: { children: ReactNode }) {
   return (
@@ -25,6 +26,7 @@ export default function DealerLayout({ children }: { children: ReactNode }) {
         </main>
       </CHTenantGuard>
       <DealerBottomNav />
+      <ForgeCreditGuide />
       <ForgeToaster />
     </PortalShell>
   );
