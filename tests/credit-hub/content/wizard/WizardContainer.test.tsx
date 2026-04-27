@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { WizardContainer, buildCreateApplicationPayload } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import { useCreateApplication } from "@/lib/credit-hub/hooks/useCreateApplication";
+import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 
 const push = jest.fn();
 const back = jest.fn();
@@ -10,11 +10,11 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push, back }),
 }));
 
-jest.mock("@/lib/credit-hub/hooks/useCreateApplication", () => ({
-  useCreateApplication: jest.fn(),
+jest.mock("@/lib/credit-hub/hooks/useCreateCreditApplication", () => ({
+  useCreateCreditApplication: jest.fn(),
 }));
 
-const mockUseCreateApplication = useCreateApplication as jest.Mock;
+const mockUseCreateApplication = useCreateCreditApplication as jest.Mock;
 
 describe("WizardContainer", () => {
   beforeEach(() => {
@@ -49,22 +49,19 @@ describe("WizardContainer", () => {
   });
 
   test("payload does not include extra fields", () => {
-    const payload = buildCreateApplicationPayload(
-      {
-        applicant_name: " Ana Pérez ",
-        applicant_email: "ana@example.com",
-        applicant_phone: "",
-        vehicle_year: "2024",
-        vehicle_make: "Toyota",
-        vehicle_model: "",
-        vehicle_vin: "ABC123",
-        requested_amount: "500000",
-        down_payment: "",
-      },
-      "submitted"
-    );
+    const payload = buildCreateApplicationPayload({
+      applicant_name: " Ana Pérez ",
+      applicant_email: "ana@example.com",
+      applicant_phone: "",
+      vehicle_year: "2024",
+      vehicle_make: "Toyota",
+      vehicle_model: "",
+      vehicle_vin: "ABC123",
+      requested_amount: "500000",
+      down_payment: "",
+    });
 
-    expect(Object.keys(payload).sort()).toEqual(["applicant_email", "applicant_name", "requested_amount", "status", "vehicle_make", "vehicle_vin", "vehicle_year"].sort());
+    expect(Object.keys(payload).sort()).toEqual(["applicant_email", "applicant_name", "requested_amount", "source", "vehicle_make", "vehicle_year"].sort());
   });
 
   test("submit calls API with only allowed fields and redirects to detail", async () => {
@@ -84,7 +81,7 @@ describe("WizardContainer", () => {
       expect(mutateAsync).toHaveBeenCalledWith({
         applicant_name: "Ana Pérez",
         requested_amount: "500000",
-        status: "submitted",
+        source: "forge_dealer_portal",
       })
     );
 

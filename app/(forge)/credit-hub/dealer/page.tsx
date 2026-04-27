@@ -7,19 +7,35 @@ import { DashboardHero } from "@/components/credit-hub/dealer/DashboardHero";
 import { ForgeMetricCard } from "@/components/credit-hub/dealer/ForgeMetricCard";
 import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
-import { useApplications } from "@/lib/credit-hub/hooks/useApplications";
+import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
+import { useCreditStats } from "@/lib/credit-hub/hooks/useCreditStats";
 
 export default function DealerDashboardPage() {
-  const { data: applications = [], isLoading, error } = useApplications();
-  const total = applications.length;
-  const drafts = applications.filter((application) => application.status === "draft").length;
-  const submitted = applications.filter((application) => application.status === "submitted").length;
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const thisWeek = applications.filter((application) => new Date(application.created_at) >= oneWeekAgo).length;
+  const applicationsQuery = useCreditApplications();
+  const statsQuery = useCreditStats();
+  const applications = applicationsQuery.data ?? [];
+  const total = statsQuery.data?.total_applications ?? applications.length;
+  const drafts = statsQuery.data?.draft_applications ?? applications.filter((application) => application.status === "draft").length;
+  const submitted =
+    statsQuery.data?.submitted_applications ??
+    applications.filter((application) => ["submitted", "processed", "processing"].includes(application.status)).length;
+  const thisWeek =
+    statsQuery.data?.applications_this_week ??
+    applications.filter((application) => {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      return new Date(application.created_at) >= oneWeekAgo;
+    }).length;
   const recent = [...applications]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
+  const isLoading = applicationsQuery.isLoading || statsQuery.isLoading;
+  const error = applicationsQuery.error ?? statsQuery.error;
+  const hasStats = !!statsQuery.data;
+  const retry = () => {
+    void applicationsQuery.refetch();
+    void statsQuery.refetch();
+  };
 
   return (
     <div className="space-y-8 p-4 md:p-8">
@@ -27,17 +43,17 @@ export default function DealerDashboardPage() {
 
       <section>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <ForgeMetricCard label="Total Solicitudes" value={total === 0 ? null : total} loading={isLoading} />
-          <ForgeMetricCard label="En Borrador" value={total === 0 ? null : drafts} loading={isLoading} />
+          <ForgeMetricCard label="Total Solicitudes" value={hasStats ? total : total === 0 ? null : total} loading={isLoading} />
+          <ForgeMetricCard label="En Borrador" value={hasStats ? drafts : total === 0 ? null : drafts} loading={isLoading} />
           <ForgeMetricCard
             label="Enviadas"
-            value={total === 0 ? null : submitted}
+            value={hasStats ? submitted : total === 0 ? null : submitted}
             loading={isLoading}
             progress={submitted > 0 && total > 0 ? { value: (submitted / total) * 100, label: `${Math.round((submitted / total) * 100)}% del total` } : undefined}
           />
           <ForgeMetricCard
             label="Esta Semana"
-            value={total === 0 ? null : thisWeek}
+            value={hasStats ? thisWeek : total === 0 ? null : thisWeek}
             loading={isLoading}
             trend={thisWeek > 0 ? { direction: "up", delta: thisWeek, label: "últimos 7 días" } : undefined}
           />
@@ -62,7 +78,10 @@ export default function DealerDashboardPage() {
           </div>
         ) : error ? (
           <ForgeCard className="py-12 text-center">
-            <p className="text-forge-danger">Error al cargar solicitudes</p>
+            <p className="mb-4 text-forge-danger">Error al cargar solicitudes reales</p>
+            <ForgeButton variant="secondary" onClick={retry}>
+              Reintentar
+            </ForgeButton>
           </ForgeCard>
         ) : recent.length === 0 ? (
           <ForgeCard className="py-12 text-center">

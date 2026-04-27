@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { Car, ChevronLeft, ChevronRight, FileCheck, User } from "lucide-react";
 import { ForgeButton } from "../../primitives/ForgeButton";
 import { ForgeCard } from "../../primitives/ForgeCard";
-import { useCreateApplication } from "@/lib/credit-hub/hooks/useCreateApplication";
-import type { CHCreateApplicationRequest } from "@/lib/credit-hub/types/_generated";
+import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
+import type { CreateCreditApplicationPayload } from "@/lib/credit-hub/types/creditCore";
 import { celebrateSuccessRespectReduced } from "@/lib/credit-hub/utils/celebrate";
 import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { Step1Applicant } from "./Step1Applicant";
@@ -49,17 +49,16 @@ function clean(value: string): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-export function buildCreateApplicationPayload(formData: ApplicationFormData, status: "draft" | "submitted"): CHCreateApplicationRequest {
-  const payload: CHCreateApplicationRequest = {
+export function buildCreateApplicationPayload(formData: ApplicationFormData): CreateCreditApplicationPayload {
+  const payload: CreateCreditApplicationPayload = {
     applicant_name: formData.applicant_name.trim(),
-    status,
+    source: "forge_dealer_portal",
   };
 
   const applicantEmail = clean(formData.applicant_email);
   const applicantPhone = clean(formData.applicant_phone);
   const vehicleMake = clean(formData.vehicle_make);
   const vehicleModel = clean(formData.vehicle_model);
-  const vehicleVin = clean(formData.vehicle_vin);
   const requestedAmount = clean(formData.requested_amount);
   const downPayment = clean(formData.down_payment);
 
@@ -68,7 +67,6 @@ export function buildCreateApplicationPayload(formData: ApplicationFormData, sta
   if (formData.vehicle_year) payload.vehicle_year = parseInt(formData.vehicle_year, 10);
   if (vehicleMake) payload.vehicle_make = vehicleMake;
   if (vehicleModel) payload.vehicle_model = vehicleModel;
-  if (vehicleVin) payload.vehicle_vin = vehicleVin;
   if (requestedAmount) payload.requested_amount = requestedAmount;
   if (downPayment) payload.down_payment = downPayment;
 
@@ -80,7 +78,7 @@ export function WizardContainer() {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<ApplicationFormData>(initialData);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
-  const createMutation = useCreateApplication();
+  const createMutation = useCreateCreditApplication();
 
   const updateField = <K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -99,7 +97,7 @@ export function WizardContainer() {
   const handleSubmit = async (status: "draft" | "submitted") => {
     setSubmitStatus("submitting");
     try {
-      const result = await createMutation.mutateAsync(buildCreateApplicationPayload(formData, status));
+      const result = await createMutation.mutateAsync(buildCreateApplicationPayload(formData));
       setSubmitStatus("success");
       celebrateSuccessRespectReduced();
       forgeToast.success("¡Solicitud creada exitosamente!");

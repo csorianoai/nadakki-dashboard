@@ -10,17 +10,20 @@ import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import { ForgeInput } from "@/components/credit-hub/primitives/ForgeInput";
 import { CHEmptyState } from "@/components/credit-hub/system/CHEmptyState";
 import { PullToRefresh } from "@/components/credit-hub/system/PullToRefresh";
-import { useApplications } from "@/lib/credit-hub/hooks/useApplications";
+import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { cn } from "@/lib/utils";
 
 const filters = [
   { id: "all", label: "Todas" },
   { id: "draft", label: "Borrador" },
   { id: "submitted", label: "Enviadas" },
+  { id: "processing", label: "Processing" },
+  { id: "approved", label: "Approved" },
+  { id: "rejected", label: "Rejected" },
 ];
 
 export default function DealerApplicationsPage() {
-  const { data: applications = [], isLoading, error, refetch } = useApplications();
+  const { data: applications = [], isLoading, error, refetch } = useCreditApplications();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -36,6 +39,8 @@ export default function DealerApplicationsPage() {
       result = result.filter(
         (application) =>
           application.applicant_name.toLowerCase().includes(query) ||
+          application.application_id.toLowerCase().includes(query) ||
+          application.id.toLowerCase().includes(query) ||
           application.vehicle_make?.toLowerCase().includes(query) ||
           application.vehicle_model?.toLowerCase().includes(query)
       );
@@ -93,8 +98,11 @@ export default function DealerApplicationsPage() {
         </div>
       ) : error ? (
         <ForgeCard className="py-12 text-center">
-          <p className="text-forge-danger">Error al cargar solicitudes</p>
+          <p className="text-forge-danger">Error al cargar solicitudes reales</p>
           <p className="mt-1 text-sm text-forge-text-muted">Inténtalo de nuevo en un momento</p>
+          <ForgeButton className="mt-4" variant="secondary" onClick={() => void refetch()}>
+            Reintentar
+          </ForgeButton>
         </ForgeCard>
       ) : filtered.length === 0 ? (
         <ForgeCard className="py-8">
