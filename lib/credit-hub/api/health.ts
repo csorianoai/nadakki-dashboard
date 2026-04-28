@@ -1,4 +1,4 @@
-import { chFetch } from "./client";
+﻿import { chFetch } from "./client";
 import type { CHActorRole } from "./client";
 import type { CHHealthResponse } from "../types/_generated";
 
@@ -7,7 +7,6 @@ export async function getHealth(params: {
   actorRole: CHActorRole;
 }): Promise<CHHealthResponse> {
   try {
-    // Try real credit core health endpoint
     const data = await chFetch<Record<string, unknown>>(
       "/api/v2/credit/health",
       {
@@ -16,7 +15,6 @@ export async function getHealth(params: {
       }
     );
 
-    // Map to expected feature flag shape
     return {
       ...data,
       routeone_parity_enabled: true,
@@ -25,7 +23,6 @@ export async function getHealth(params: {
       webhook_status: "operational",
     } as CHHealthResponse;
   } catch (error) {
-    // Fallback: assume Forge enabled if endpoint unavailable
     return {
       status: "ok",
       service: "credit_core",
