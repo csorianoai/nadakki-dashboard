@@ -3,8 +3,9 @@
 import { useMemo } from "react";
 import { useTenant } from "./useTenant";
 import type { TenantBankingConfig } from "../types/tenantConfig";
+import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
 
-function buildDefaultConfig(tenantId: string): TenantBankingConfig {
+export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingConfig {
   return {
     tenant_id: tenantId,
     institution_name: "Institución financiera",
@@ -32,16 +33,7 @@ function buildDefaultConfig(tenantId: string): TenantBankingConfig {
     pii_masking_enabled: true,
     default_rate: 18,
     allowed_terms: [12, 24, 36, 48, 60, 72, 84],
-    required_documents: [
-      { id: "id", label: "Cédula de identidad (frente y reverso)", required: true, tooltip: "Documento principal del solicitante." },
-      { id: "employment_letter", label: "Carta de trabajo o constancia laboral", required: true, tooltip: "Evidencia del empleo actual." },
-      { id: "bank_statements", label: "Últimos 3 estados de cuenta bancarios", required: true, tooltip: "Soporte de movimiento y capacidad." },
-      { id: "additional_income", label: "Evidencia de ingresos adicionales (si aplica)", required: false, tooltip: "Soporte de rentas, remesas u otros ingresos." },
-      { id: "address_proof", label: "Comprobante de domicilio", required: true, tooltip: "Factura de servicio o documento equivalente." },
-      { id: "references", label: "Referencias personales (mínimo 2)", required: false, tooltip: "Contactos de referencia." },
-      { id: "vehicle_documents", label: "Documentos del vehículo (matrícula si usado)", required: false, tooltip: "Aplica para vehículos usados." },
-      { id: "other", label: "Otros documentos relevantes", required: false, tooltip: "Cualquier soporte adicional." },
-    ],
+    required_documents: [...DEFAULT_DO_REQUIRED_DOCUMENTS],
     features_enabled: {
       remote_consent: true,
       preapproval_simulator: true,
@@ -53,6 +45,8 @@ function buildDefaultConfig(tenantId: string): TenantBankingConfig {
 
 export function useTenantConfig(): { tenantConfig: TenantBankingConfig; loading: boolean } {
   const { tenantId, loading } = useTenant();
-  const config = useMemo(() => buildDefaultConfig(tenantId || "tenant-no-disponible"), [tenantId]);
+  const config = useMemo(() => getDefaultTenantBankingConfig(tenantId || "tenant-no-disponible"), [tenantId]);
   return { tenantConfig: config, loading };
 }
+
+export { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";

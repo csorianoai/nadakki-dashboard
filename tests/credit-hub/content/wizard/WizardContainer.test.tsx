@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import { WizardContainer, buildCreateApplicationPayload, type ApplicationFormData } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
+import { getDefaultTenantBankingConfig, useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 
 const push = jest.fn();
 const back = jest.fn();
@@ -14,6 +15,14 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/lib/credit-hub/hooks/useCreateCreditApplication", () => ({
   useCreateCreditApplication: jest.fn(),
 }));
+
+jest.mock("@/lib/credit-hub/hooks/useTenantConfig", () => {
+  const actual = jest.requireActual<typeof import("@/lib/credit-hub/hooks/useTenantConfig")>("@/lib/credit-hub/hooks/useTenantConfig");
+  return {
+    ...actual,
+    useTenantConfig: jest.fn(() => ({ tenantConfig: actual.getDefaultTenantBankingConfig("wizard-test-tenant"), loading: false })),
+  };
+});
 
 jest.mock("@/lib/credit-hub/hooks/useCatalogs", () => {
   const { DO_VEHICLE_BRANDS } = require("@/lib/credit/catalogs/do/vehicle-brands");
@@ -48,6 +57,7 @@ jest.mock("@/lib/credit-hub/utils/celebrate", () => ({
 }));
 
 const mockUseCreateApplication = useCreateCreditApplication as jest.Mock;
+const mockUseTenantConfig = useTenantConfig as unknown as jest.Mock;
 
 const fullData: ApplicationFormData = {
   applicant_full_name: "Ana Pérez",
@@ -112,13 +122,16 @@ const fullData: ApplicationFormData = {
   co_debtor_monthly_income: "",
   co_debtor_relationship: "",
   co_debtor_employment: "",
-  document_id_uploaded: true,
-  document_income_proof_uploaded: true,
-  document_bank_statement_uploaded: true,
-  document_bureau_authorization_uploaded: false,
-  document_invoice_uploaded: false,
+  documents_received: {
+    id_front: true,
+    id_back: true,
+    employment_letter: true,
+    bank_statements: true,
+    address_proof: true,
+    personal_references: true,
+  },
   document_notes: {},
-  additional_documents: [],
+  additional_document_items: [],
   consent_presence: "present",
   consent_bureau_authorization: true,
   consent_terms_accepted: true,
@@ -176,9 +189,12 @@ async function advanceToConsents() {
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Documentos recibidos")).toBeInTheDocument();
 
-  fireEvent.click(screen.getByLabelText(/Cédula de identidad \(frente y reverso\)/i));
+  fireEvent.click(screen.getByLabelText(/Cédula \(frente\)/i));
+  fireEvent.click(screen.getByLabelText(/Cédula \(reverso\)/i));
   fireEvent.click(screen.getByLabelText(/Carta de trabajo o constancia laboral/i));
   fireEvent.click(screen.getByLabelText(/Últimos 3 estados de cuenta bancarios/i));
+  fireEvent.click(screen.getByLabelText(/Comprobante de domicilio/i));
+  fireEvent.click(screen.getByLabelText(/Referencias personales/i));
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByRole("heading", { name: "Consentimientos" })).toBeInTheDocument();
 }
@@ -192,6 +208,41 @@ async function advanceToReview() {
   expect(await screen.findByText("Revisión final")).toBeInTheDocument();
 }
 
+async function navigateToGaranteStep() {
+  await fillApplicantAndContinue();
+  change("Tipo de empleo *", fullData.employment_type);
+  change("Empresa donde trabaja *", fullData.employer_name);
+  change("Cargo *", fullData.employment_position);
+  change("Fecha de ingreso al empleo *", fullData.employment_start_date);
+  change("Ingreso mensual neto *", fullData.monthly_income);
+  change("Teléfono empresa *", fullData.work_phone);
+  change("Dirección de la empresa *", fullData.employer_address);
+  change("Provincia empresa *", fullData.employer_province);
+  change("Municipio empresa *", fullData.employer_city);
+  change("Tipo de contrato *", fullData.contract_type);
+  fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+  expect(await screen.findByText("Información financiera y producto")).toBeInTheDocument();
+  change("Plazo deseado *", fullData.desired_term);
+  change("Cuota inicial disponible *", fullData.down_payment);
+  change("Deudas mensuales actuales *", fullData.monthly_debts);
+  change(/Gasto mensual estimado/i, fullData.estimated_monthly_expenses);
+  change("Tipo de producto *", fullData.product_type);
+  change("Marca *", fullData.vehicle_make);
+  change("Modelo *", fullData.vehicle_model);
+  change("Año *", fullData.vehicle_year);
+  change("Precio de venta *", fullData.vehicle_price);
+  change("Dealer / Suplidor *", fullData.dealer_supplier);
+  change("Condición *", fullData.vehicle_condition);
+  fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+  expect(await screen.findByText("Garante o cofirmante")).toBeInTheDocument();
+}
+
+async function navigateToDocumentsStep() {
+  await navigateToGaranteStep();
+  fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+  expect(await screen.findByText("Documentos recibidos")).toBeInTheDocument();
+}
+
 describe("WizardContainer", () => {
   let user: ReturnType<typeof userEvent.setup>;
 
@@ -202,6 +253,7 @@ describe("WizardContainer", () => {
     back.mockReset();
     mutateAsync.mockReset();
     mockUseCreateApplication.mockReturnValue({ mutateAsync });
+    mockUseTenantConfig.mockReturnValue({ tenantConfig: getDefaultTenantBankingConfig("wizard-test-tenant"), loading: false });
   });
 
   test("wizard renders new full credit application sections", async () => {
@@ -343,5 +395,97 @@ describe("WizardContainer", () => {
     await user.clear(docInput);
     await user.type(docInput, "001-1234567-8");
     expect(await screen.findByText(/Cédula inválida/i)).toBeInTheDocument();
+  });
+
+  it("does not show garante form when co_debtor_required is no", async () => {
+    render(<WizardContainer />);
+    await navigateToGaranteStep();
+    expect(screen.queryByTestId("garante-section")).not.toBeInTheDocument();
+  });
+
+  it("shows garante form when co_debtor_required is yes", async () => {
+    render(<WizardContainer />);
+    await navigateToGaranteStep();
+    await user.selectOptions(screen.getByLabelText(/¿La solicitud incluye garante o cofirmante/i), "yes");
+    expect(await screen.findByTestId("garante-section")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Nombre completo garante/i)).toBeInTheDocument();
+  });
+
+  it("validates guarantor cedula different from applicant", async () => {
+    render(<WizardContainer />);
+    await navigateToGaranteStep();
+    await user.selectOptions(screen.getByLabelText(/¿La solicitud incluye garante o cofirmante/i), "yes");
+    await screen.findByTestId("garante-section");
+    const guarantorDoc = screen.getByLabelText(/Número de documento garante/i);
+    fireEvent.change(guarantorDoc, { target: { value: "053-0003053-2" } });
+    expect(await screen.findByText(/El garante no puede ser el mismo solicitante/i)).toBeInTheDocument();
+  });
+
+  it("calculates guarantor age from birth date", async () => {
+    render(<WizardContainer />);
+    await navigateToGaranteStep();
+    await user.selectOptions(screen.getByLabelText(/¿La solicitud incluye garante o cofirmante/i), "yes");
+    await screen.findByTestId("garante-section");
+    const birth = screen.getByLabelText(/Fecha de nacimiento garante/i);
+    fireEvent.change(birth, { target: { value: "1985-06-20" } });
+    expect(await screen.findByTestId("co-debtor-calculated-age")).toHaveTextContent(/años/i);
+  });
+
+  it("auto-enables guarantor when tenant garante_required is true", async () => {
+    const base = getDefaultTenantBankingConfig("t");
+    mockUseTenantConfig.mockReturnValue({
+      tenantConfig: { ...base, features_enabled: { ...base.features_enabled, garante_required: true } },
+      loading: false,
+    });
+    render(<WizardContainer />);
+    await navigateToGaranteStep();
+    expect(screen.queryByLabelText(/¿La solicitud incluye garante o cofirmante/i)).not.toBeInTheDocument();
+    expect(screen.getByTestId("garante-section")).toBeInTheDocument();
+    expect(screen.getByText(/Esta institución requiere garante/i)).toBeInTheDocument();
+  });
+
+  it("renders documents checklist from tenant required_documents", async () => {
+    render(<WizardContainer />);
+    await navigateToDocumentsStep();
+    expect(screen.getByTestId("documents-checklist")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Cédula \(frente\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Carta de trabajo o constancia laboral/i)).toBeInTheDocument();
+  });
+
+  it("does not render Factura checkbox on documents step", async () => {
+    render(<WizardContainer />);
+    await navigateToDocumentsStep();
+    expect(screen.queryByLabelText(/^Factura/i)).not.toBeInTheDocument();
+  });
+
+  it("blocks continuation when required documents are missing", async () => {
+    render(<WizardContainer />);
+    await navigateToDocumentsStep();
+    expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
+  });
+
+  it("enables continuation when all required documents are checked", async () => {
+    render(<WizardContainer />);
+    await navigateToDocumentsStep();
+    fireEvent.click(screen.getByLabelText(/Cédula \(frente\)/i));
+    fireEvent.click(screen.getByLabelText(/Cédula \(reverso\)/i));
+    fireEvent.click(screen.getByLabelText(/Carta de trabajo o constancia laboral/i));
+    fireEvent.click(screen.getByLabelText(/Últimos 3 estados de cuenta bancarios/i));
+    fireEvent.click(screen.getByLabelText(/Comprobante de domicilio/i));
+    fireEvent.click(screen.getByLabelText(/Referencias personales/i));
+    expect(screen.getByRole("button", { name: "Siguiente" })).not.toBeDisabled();
+  });
+
+  it("allows adding additional documents row", async () => {
+    render(<WizardContainer />);
+    await navigateToDocumentsStep();
+    fireEvent.click(screen.getByRole("button", { name: /Agregar documento adicional/i }));
+    expect(screen.getByLabelText(/Nombre del documento/i)).toBeInTheDocument();
+  });
+
+  it("shows received counter on documents step", async () => {
+    render(<WizardContainer />);
+    await navigateToDocumentsStep();
+    expect(screen.getByText(/\d+ de \d+ documentos recibidos/)).toBeInTheDocument();
   });
 });

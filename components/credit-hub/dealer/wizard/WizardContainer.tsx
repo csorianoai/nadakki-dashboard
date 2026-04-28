@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Briefcase, Car, ChevronLeft, ChevronRight, ClipboardCheck, DollarSign, FileCheck, FileText, ShieldCheck, User, Users } from "lucide-react";
@@ -28,7 +28,8 @@ import {
 import { calculateTotalMonthlyIncome, type Frequency, type OtherIncomeSource } from "@/lib/credit/utils/income-normalizer";
 import { useAdministrativeDivisions } from "@/lib/credit/catalogs/useAdministrativeDivisions";
 import { DO_RELATIONSHIP_TYPES } from "@/lib/credit/catalogs/do/employment-types";
-import type { TenantBankingConfig } from "@/lib/credit-hub/types/tenantConfig";
+import type { TenantBankingConfig, TenantRequiredDocument } from "@/lib/credit-hub/types/tenantConfig";
+import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
 import { simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
 import { PreApprovalBadge } from "./PreApprovalBadge";
 
@@ -53,6 +54,20 @@ function documentTypeSelectOptions(config: TenantBankingConfig): Array<[string, 
 function newOtherIncomeRowId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return `oi-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function newAdditionalDocumentRowId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `ad-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function tenantDocumentKey(doc: TenantRequiredDocument): string {
+  return doc.key ?? doc.id ?? "doc";
+}
+
+export function effectiveRequiredDocuments(tenant: TenantBankingConfig): TenantRequiredDocument[] {
+  if (tenant.required_documents?.length) return tenant.required_documents;
+  return DEFAULT_DO_REQUIRED_DOCUMENTS;
 }
 
 function contractLabelToFormValue(label: string): string {
@@ -144,13 +159,10 @@ export interface ApplicationFormData {
   co_debtor_monthly_income: string;
   co_debtor_relationship: string;
   co_debtor_employment: string;
-  document_id_uploaded: boolean;
-  document_income_proof_uploaded: boolean;
-  document_bank_statement_uploaded: boolean;
-  document_bureau_authorization_uploaded: boolean;
-  document_invoice_uploaded: boolean;
+  /** Checklist keyed by `tenantDocumentKey` from tenant required documents. */
+  documents_received: Record<string, boolean>;
   document_notes: Record<string, string>;
-  additional_documents: string[];
+  additional_document_items: Array<{ id: string; label: string; received: boolean }>;
   consent_presence: "present" | "remote";
   consent_bureau_authorization: boolean;
   consent_terms_accepted: boolean;
@@ -220,13 +232,9 @@ const initialData: ApplicationFormData = {
   co_debtor_monthly_income: "",
   co_debtor_relationship: "",
   co_debtor_employment: "",
-  document_id_uploaded: false,
-  document_income_proof_uploaded: false,
-  document_bank_statement_uploaded: false,
-  document_bureau_authorization_uploaded: false,
-  document_invoice_uploaded: false,
+  documents_received: {},
   document_notes: {},
-  additional_documents: [],
+  additional_document_items: [],
   consent_presence: "present",
   consent_bureau_authorization: false,
   consent_terms_accepted: false,
@@ -345,15 +353,7 @@ export function buildCreateApplicationPayload(
       employer_name: (formData.co_debtor_employer_name || "").trim(),
       employment_start_date: formData.co_debtor_employment_start_date || "",
     },
-    documents: {
-      id_uploaded: formData.document_id_uploaded,
-      income_proof_uploaded: formData.document_income_proof_uploaded,
-      bank_statement_uploaded: formData.document_bank_statement_uploaded,
-      bureau_authorization_uploaded: formData.document_bureau_authorization_uploaded,
-      invoice_uploaded: false,
-      notes: formData.document_notes || {},
-      additional_documents: formData.additional_documents || [],
-    },
+    documents: documentsPayloadFromForm(formData),
     consents: {
       presence: formData.consent_presence || "present",
       bureau_authorization: formData.consent_bureau_authorization,
@@ -369,6 +369,23 @@ function isFilled(value: string): boolean {
   return value.trim().length > 0;
 }
 
+function documentsPayloadFromForm(formData: ApplicationFormData): CreateCreditApplicationPayload["documents"] {
+  const dr = formData.documents_received ?? {};
+  const additionals =
+    formData.additional_document_items
+      ?.filter((row) => row.received && isFilled(row.label))
+      .map((row) => row.label.trim()) ?? [];
+  return {
+    id_uploaded: Boolean(dr.id_front && dr.id_back) || Boolean(dr.id),
+    income_proof_uploaded: Boolean(dr.employment_letter) || Boolean(dr.income_evidence) || Boolean(dr.additional_income),
+    bank_statement_uploaded: Boolean(dr.bank_statements),
+    bureau_authorization_uploaded: Boolean(dr.address_proof),
+    invoice_uploaded: false,
+    notes: formData.document_notes || {},
+    additional_documents: additionals,
+  };
+}
+
 function documentIsValid(type: string, value: string): boolean {
   if (type === "CEDULA") return validateDominicanCedula(value);
   if (type === "PASAPORTE") return validatePassport(value);
@@ -380,14 +397,54 @@ function ageFromInput(value: string): number | null {
   return date ? calculateAge(date) : null;
 }
 
+type WizardStepValidationConfig = {
+  min_age: number;
+  max_age: number;
+  garante_required: boolean;
+  default_document_type: string;
+  required_documents: TenantRequiredDocument[];
+};
+
+function getGaranteInlineErrors(
+  data: ApplicationFormData,
+  config: Pick<WizardStepValidationConfig, "min_age" | "garante_required" | "default_document_type">
+): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (data.co_debtor_required !== "yes" && !config.garante_required) return errors;
+  const applicantDoc = data.applicant_document_type || config.default_document_type;
+  const coDoc = data.co_debtor_document_type || config.default_document_type;
+  const sameCedula =
+    applicantDoc === "CEDULA" &&
+    coDoc === "CEDULA" &&
+    cleanDominicanCedula(data.applicant_identification) &&
+    cleanDominicanCedula(data.applicant_identification) === cleanDominicanCedula(data.co_debtor_identification);
+  if (sameCedula) {
+    errors.co_debtor_identification = "El garante no puede ser el mismo solicitante";
+  } else if (data.co_debtor_identification && !documentIsValid(coDoc, data.co_debtor_identification)) {
+    errors.co_debtor_identification = coDoc === "CEDULA" ? "Cédula inválida. Verifica el dígito verificador." : "Pasaporte inválido";
+  }
+  const coAge = ageFromInput(data.co_debtor_date_of_birth);
+  if (data.co_debtor_date_of_birth && coAge !== null && coAge < config.min_age) {
+    errors.co_debtor_date_of_birth = `Edad mínima requerida: ${config.min_age} años`;
+  }
+  if (data.co_debtor_relationship === "Otro" && !isFilled(data.co_debtor_relationship_other ?? "")) {
+    errors.co_debtor_relationship_other = "Especifica la relación";
+  }
+  if ((data.co_debtor_required === "yes" || config.garante_required) && (!isFilled(data.co_debtor_monthly_income) || Number(data.co_debtor_monthly_income) <= 0)) {
+    errors.co_debtor_monthly_income = "Ingreso mensual debe ser mayor a 0";
+  }
+  return errors;
+}
+
 function stepIsValid(
   step: number,
   data: ApplicationFormData,
-  config: { min_age: number; max_age: number; garante_required: boolean; default_document_type: string } = {
+  config: WizardStepValidationConfig = {
     min_age: 18,
     max_age: 75,
     garante_required: false,
     default_document_type: "CEDULA",
+    required_documents: DEFAULT_DO_REQUIRED_DOCUMENTS,
   }
 ): boolean {
   const applicantDoc = data.applicant_document_type || config.default_document_type;
@@ -424,13 +481,19 @@ function stepIsValid(
     if (data.co_debtor_required === "no" && !config.garante_required) return true;
     const coAge = ageFromInput(data.co_debtor_date_of_birth);
     const coDoc = data.co_debtor_document_type || config.default_document_type;
-    return [data.co_debtor_full_name, data.co_debtor_identification, data.co_debtor_date_of_birth, data.co_debtor_phone, data.co_debtor_email, data.co_debtor_address, data.co_debtor_province, data.co_debtor_city, data.co_debtor_monthly_income, data.co_debtor_relationship, data.co_debtor_employer_name, data.co_debtor_employment_start_date].every(isFilled)
-      && documentIsValid(coDoc, data.co_debtor_identification)
-      && cleanDominicanCedula(data.co_debtor_identification) !== cleanDominicanCedula(data.applicant_identification)
-      && coAge !== null && coAge >= config.min_age && Number(data.co_debtor_monthly_income) > 0;
+    const garanteErrors = getGaranteInlineErrors(data, config);
+    return (
+      [data.co_debtor_full_name, data.co_debtor_identification, data.co_debtor_date_of_birth, data.co_debtor_phone, data.co_debtor_email, data.co_debtor_address, data.co_debtor_province, data.co_debtor_city, data.co_debtor_monthly_income, data.co_debtor_relationship, data.co_debtor_employer_name, data.co_debtor_employment_start_date].every(isFilled) &&
+      documentIsValid(coDoc, data.co_debtor_identification) &&
+      cleanDominicanCedula(data.co_debtor_identification) !== cleanDominicanCedula(data.applicant_identification) &&
+      coAge !== null &&
+      coAge >= config.min_age &&
+      Number(data.co_debtor_monthly_income) > 0 &&
+      Object.keys(garanteErrors).length === 0
+    );
   }
   if (step === 4) {
-    return data.document_id_uploaded && data.document_income_proof_uploaded && data.document_bank_statement_uploaded;
+    return config.required_documents.filter((d) => d.required).every((d) => Boolean(data.documents_received[tenantDocumentKey(d)]));
   }
   if (step === 5) {
     return data.consent_bureau_authorization && data.consent_terms_accepted && data.consent_data_processing_authorization;
@@ -438,8 +501,12 @@ function stepIsValid(
   return true;
 }
 
-function requiredHint(step: number): string {
+function requiredHint(step: number, data: ApplicationFormData, requiredDocs: TenantRequiredDocument[]): string {
   if (step === 3) return "Completa los datos del garante o marca que no es requerido.";
+  if (step === 4) {
+    const missing = requiredDocs.filter((d) => d.required).filter((d) => !data.documents_received[tenantDocumentKey(d)]).length;
+    if (missing > 0) return `Faltan ${missing} documentos obligatorios`;
+  }
   if (step === 5) return "Los tres consentimientos son obligatorios para enviar.";
   return "Completa los campos obligatorios para continuar.";
 }
@@ -516,8 +583,54 @@ export function WizardContainer() {
     });
   }, [formData, tenantConfig]);
 
+  const requiredDocumentsList = useMemo(() => effectiveRequiredDocuments(tenantConfig), [tenantConfig]);
+
+  const validationConfig = useMemo(
+    (): WizardStepValidationConfig => ({
+      min_age: tenantConfig.min_age,
+      max_age: tenantConfig.max_age,
+      garante_required: tenantConfig.features_enabled.garante_required,
+      default_document_type: defaultDocType,
+      required_documents: requiredDocumentsList,
+    }),
+    [tenantConfig.min_age, tenantConfig.max_age, tenantConfig.features_enabled.garante_required, defaultDocType, requiredDocumentsList]
+  );
+
+  useEffect(() => {
+    if (!tenantConfig.features_enabled.garante_required) return;
+    setFormData((prev) => (prev.co_debtor_required === "yes" ? prev : { ...prev, co_debtor_required: "yes" }));
+  }, [tenantConfig.features_enabled.garante_required]);
+
   const updateField = <K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateDocumentReceived = (key: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      documents_received: { ...prev.documents_received, [key]: checked },
+    }));
+  };
+
+  const addAdditionalDocumentRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      additional_document_items: [...prev.additional_document_items, { id: newAdditionalDocumentRowId(), label: "", received: false }],
+    }));
+  };
+
+  const updateAdditionalDocumentRow = (id: string, updates: Partial<{ label: string; received: boolean }>) => {
+    setFormData((prev) => ({
+      ...prev,
+      additional_document_items: prev.additional_document_items.map((row) => (row.id === id ? { ...row, ...updates } : row)),
+    }));
+  };
+
+  const removeAdditionalDocumentRow = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      additional_document_items: prev.additional_document_items.filter((row) => row.id !== id),
+    }));
   };
 
   const updateOtherIncomeRow = (id: string, updates: Partial<OtherIncomeFormRow>) => {
@@ -574,12 +687,7 @@ export function WizardContainer() {
   const selectedApplicantProvince = administrativeDivisions.find((item) => item.name === formData.applicant_province);
   const selectedEmployerProvince = administrativeDivisions.find((item) => item.name === formData.employer_province);
   const selectedCoDebtorProvince = administrativeDivisions.find((item) => item.name === formData.co_debtor_province);
-  const canProceed = stepIsValid(currentStep, formData, {
-    min_age: tenantConfig.min_age,
-    max_age: tenantConfig.max_age,
-    garante_required: tenantConfig.features_enabled.garante_required,
-    default_document_type: defaultDocType,
-  });
+  const canProceed = stepIsValid(currentStep, formData, validationConfig);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1 && canProceed) setCurrentStep(currentStep + 1);
@@ -590,12 +698,7 @@ export function WizardContainer() {
   };
 
   const handleSubmit = async (_status: "draft" | "submitted") => {
-    if (!stepIsValid(5, formData, {
-      min_age: tenantConfig.min_age,
-      max_age: tenantConfig.max_age,
-      garante_required: tenantConfig.features_enabled.garante_required,
-      default_document_type: defaultDocType,
-    })) {
+    if (!stepIsValid(5, formData, validationConfig)) {
       setSubmitStatus("error");
       setSubmitError("Debes aceptar todos los consentimientos antes de enviar.");
       return;
@@ -949,14 +1052,45 @@ export function WizardContainer() {
       const coDoc = formData.co_debtor_document_type || defaultDocType;
       const coBirthDate = parseDateInput(formData.co_debtor_date_of_birth);
       const coAge = coBirthDate ? calculateAge(coBirthDate) : null;
+      const garanteErrors = getGaranteInlineErrors(formData, validationConfig);
+      const coEmploymentTenure = formData.co_debtor_employment_start_date ? calculateEmploymentTenure(formData.co_debtor_employment_start_date) : null;
+      let garanteIncomeWarning: string | null = null;
+      if (
+        tenantConfig.garante_minimum_income_ratio != null &&
+        tenantConfig.garante_minimum_income_ratio > 0 &&
+        (formData.co_debtor_required === "yes" || tenantConfig.features_enabled.garante_required)
+      ) {
+        const loanAmount = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
+        const termParsed = /(\d+)/.exec(String(formData.desired_term ?? ""));
+        const termMonths = termParsed ? Math.max(1, parseInt(termParsed[1], 10)) : 60;
+        if (loanAmount > 0) {
+          const est = calculatePMT(loanAmount, tenantConfig.default_rate ?? 16, termMonths);
+          const minReq = est * tenantConfig.garante_minimum_income_ratio;
+          if (numeric(formData.co_debtor_monthly_income) > 0 && numeric(formData.co_debtor_monthly_income) < minReq) {
+            garanteIncomeWarning = `Ingreso del garante por debajo del mínimo recomendado (${formatDop(minReq)})`;
+          }
+        }
+      }
       return (
         <div className="space-y-5">
           {sectionHeader("Garante o cofirmante", "Completa los datos si la solicitud incluye respaldo adicional.")}
           <div className="space-y-4">
+            {tenantConfig.features_enabled.garante_required && (
+              <div className="rounded-xl border border-forge-primary/40 bg-forge-primary/10 p-3 text-sm text-forge-text">
+                Esta institución requiere garante para todas las solicitudes.
+              </div>
+            )}
             {!tenantConfig.features_enabled.garante_required && boolSelect("co_debtor_required", "¿La solicitud incluye garante o cofirmante? *")}
             {(tenantConfig.features_enabled.garante_required || formData.co_debtor_required === "yes") && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="grid gap-4 rounded-2xl border border-forge-border bg-forge-surface-elevated p-4 md:grid-cols-2">
-                <h3 className="md:col-span-2 font-semibold text-forge-text">Datos del garante</h3>
+              <motion.div
+                data-testid="garante-section"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid gap-4 border-l-2 border-forge-primary/40 pl-4 md:grid-cols-2 md:pl-6"
+              >
+                <div className="md:col-span-2 rounded-2xl border border-forge-border bg-forge-surface-elevated p-4">
+                  <h3 className="font-semibold text-forge-text">Datos del garante</h3>
+                </div>
                 <ForgeSelect
                   label="Tipo de documento garante *"
                   value={coDoc}
@@ -969,17 +1103,25 @@ export function WizardContainer() {
                   ))}
                 </ForgeSelect>
                 {coDoc === "OTRO" && input("co_debtor_document_other_type", "Especifique tipo *")}
-                <ForgeInput
-                  label="Número de documento garante *"
-                  aria-label="Número de documento garante"
-                  value={coDoc === "CEDULA" ? formatDominicanCedula(formData.co_debtor_identification) : formData.co_debtor_identification}
-                  onChange={(event) => updateField("co_debtor_identification", coDoc === "CEDULA" ? cleanDominicanCedula(event.target.value) : event.target.value.toUpperCase())}
-                />
+                <div className="space-y-1 md:col-span-2">
+                  <ForgeInput
+                    label="Número de documento garante *"
+                    aria-label="Número de documento garante"
+                    value={coDoc === "CEDULA" ? formatDominicanCedula(formData.co_debtor_identification) : formData.co_debtor_identification}
+                    onChange={(event) => updateField("co_debtor_identification", coDoc === "CEDULA" ? cleanDominicanCedula(event.target.value) : event.target.value.toUpperCase())}
+                  />
+                  {garanteErrors.co_debtor_identification && <p className="text-xs text-forge-danger">{garanteErrors.co_debtor_identification}</p>}
+                </div>
                 {input("co_debtor_full_name", "Nombre completo garante *")}
-                {input("co_debtor_date_of_birth", "Fecha de nacimiento garante *", { type: "date" })}
+                <div className="space-y-1">
+                  {input("co_debtor_date_of_birth", "Fecha de nacimiento garante *", { type: "date" })}
+                  {garanteErrors.co_debtor_date_of_birth && <p className="text-xs text-forge-danger">{garanteErrors.co_debtor_date_of_birth}</p>}
+                </div>
                 <div className="rounded-xl border border-forge-border bg-forge-surface p-3">
                   <p className="text-xs text-forge-text-muted">Edad garante</p>
-                  <p className="font-semibold text-forge-text">{coAge === null ? "No disponible" : `${coAge} años`}</p>
+                  <span data-testid="co-debtor-calculated-age" className="font-semibold text-forge-text">
+                    {coAge === null ? "No disponible" : `${coAge} años`}
+                  </span>
                 </div>
                 {input("co_debtor_phone", "Teléfono garante *", { type: "tel" })}
                 {input("co_debtor_email", "Correo electrónico garante *", { type: "email" })}
@@ -992,17 +1134,28 @@ export function WizardContainer() {
                   <option value="">Selecciona...</option>
                   {(selectedCoDebtorProvince?.municipalities ?? []).map((municipality) => <option key={municipality} value={municipality}>{municipality}</option>)}
                 </ForgeSelect>
-                {input("co_debtor_monthly_income", "Ingreso mensual garante *", { inputMode: "decimal" })}
+                <div className="space-y-1">
+                  {input("co_debtor_monthly_income", "Ingreso mensual garante *", { inputMode: "decimal" })}
+                  {garanteErrors.co_debtor_monthly_income && <p className="text-xs text-forge-danger">{garanteErrors.co_debtor_monthly_income}</p>}
+                  {garanteIncomeWarning && <p className="text-xs text-forge-warning">{garanteIncomeWarning}</p>}
+                </div>
                 {input("co_debtor_employer_name", "Empresa donde labora garante *")}
-                {input("co_debtor_employment_start_date", "Fecha de ingreso al empleo garante *", { type: "date" })}
+                <div className="space-y-1 md:col-span-2">
+                  {input("co_debtor_employment_start_date", "Fecha de ingreso al empleo garante *", { type: "date" })}
+                  {coEmploymentTenure?.isValid && (
+                    <p className="text-sm text-forge-text-muted">Antigüedad: {coEmploymentTenure.display}</p>
+                  )}
+                </div>
                 {select(
                   "co_debtor_relationship",
                   "Relación con solicitante *",
                   (catalogs?.relationshipTypes ?? [...DO_RELATIONSHIP_TYPES]).map((r) => [r, r] as [string, string])
                 )}
-                {formData.co_debtor_relationship === "Otro" && input("co_debtor_relationship_other", "Especifique relación *")}
-                {cleanDominicanCedula(formData.co_debtor_identification) && cleanDominicanCedula(formData.co_debtor_identification) === cleanDominicanCedula(formData.applicant_identification) && (
-                  <p className="md:col-span-2 text-sm text-forge-danger">El garante no puede ser el mismo solicitante.</p>
+                {formData.co_debtor_relationship === "Otro" && (
+                  <div className="space-y-1 md:col-span-2">
+                    {input("co_debtor_relationship_other", "Especifique relación *")}
+                    {garanteErrors.co_debtor_relationship_other && <p className="text-xs text-forge-danger">{garanteErrors.co_debtor_relationship_other}</p>}
+                  </div>
                 )}
               </motion.div>
             )}
@@ -1011,37 +1164,75 @@ export function WizardContainer() {
       );
     }
     if (currentStep === 4) {
-      const receivedCount = [
-        formData.document_id_uploaded,
-        formData.document_income_proof_uploaded,
-        formData.document_bank_statement_uploaded,
-        formData.document_bureau_authorization_uploaded,
-      ].filter(Boolean).length;
+      const docList = requiredDocumentsList;
+      const checklistReceived = docList.filter((d) => Boolean(formData.documents_received[tenantDocumentKey(d)])).length;
+      const extraReceived = formData.additional_document_items.filter((r) => r.received && isFilled(r.label)).length;
+      const receivedCount = checklistReceived + extraReceived;
+      const totalCount = docList.length + formData.additional_document_items.filter((r) => isFilled(r.label)).length;
+      const requiredMissing = docList.filter((d) => d.required).filter((d) => !formData.documents_received[tenantDocumentKey(d)]).length;
       return (
         <div className="space-y-5">
           {sectionHeader("Documentos recibidos", "Marca los documentos que has recibido del solicitante. La carga de archivos se completará después.")}
-          <p className="rounded-xl bg-forge-surface-elevated p-3 text-sm text-forge-text-muted">{receivedCount} de {tenantConfig.required_documents.length} documentos recibidos</p>
-          <div className="grid gap-3">
-            {tenantConfig.required_documents.map((document) => {
-              const field =
-                document.id === "id" ? "document_id_uploaded" :
-                document.id === "employment_letter" ? "document_income_proof_uploaded" :
-                document.id === "bank_statements" ? "document_bank_statement_uploaded" :
-                document.id === "address_proof" ? "document_bureau_authorization_uploaded" :
-                "document_invoice_uploaded";
+          <div className="text-sm text-forge-text-muted">
+            {receivedCount} de {Math.max(totalCount, docList.length)} documentos recibidos
+            {requiredMissing > 0 && (
+              <span className="ml-2 text-forge-danger">({requiredMissing} obligatorios pendientes)</span>
+            )}
+          </div>
+          <div className="space-y-3" data-testid="documents-checklist">
+            {docList.map((document) => {
+              const k = tenantDocumentKey(document);
+              const checked = Boolean(formData.documents_received[k]);
               return (
-                <div key={document.id} className="rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
-                  {checkbox(field as keyof ApplicationFormData, `${document.label}${document.required ? " *" : ""}`)}
-                  <p className="mt-2 text-xs text-forge-text-muted">{document.tooltip}</p>
-                  <textarea
-                    className="mt-2 min-h-16 w-full rounded-lg border border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
-                    placeholder="Notas opcionales"
-                    value={formData.document_notes[document.id] ?? ""}
-                    onChange={(event) => updateField("document_notes", { ...formData.document_notes, [document.id]: event.target.value })}
+                <div key={k} className="flex items-start gap-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
+                  <input
+                    type="checkbox"
+                    id={`doc-${k}`}
+                    className="mt-1"
+                    checked={checked}
+                    onChange={(event) => updateDocumentReceived(k, event.target.checked)}
                   />
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor={`doc-${k}`} className="text-sm font-medium text-forge-text">
+                      {document.label}
+                      {document.required ? <span className="ml-1 text-forge-danger">*</span> : <span className="ml-2 text-xs text-forge-text-muted">(opcional)</span>}
+                    </label>
+                    {document.tooltip && <p className="mt-1 text-xs text-forge-text-muted">{document.tooltip}</p>}
+                    <textarea
+                      className="mt-2 min-h-12 w-full rounded-lg border border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
+                      placeholder="Notas opcionales"
+                      value={formData.document_notes[k] ?? ""}
+                      onChange={(event) => updateField("document_notes", { ...formData.document_notes, [k]: event.target.value })}
+                    />
+                  </div>
+                  <span className={`text-xs tabular-nums ${checked ? "text-forge-success" : "text-forge-text-muted"}`}>{checked ? "Recibido" : "Pendiente"}</span>
                 </div>
               );
             })}
+          </div>
+          <div className="mt-6 space-y-3">
+            <h4 className="text-sm font-medium text-forge-text">Documentos adicionales</h4>
+            <ForgeButton type="button" variant="secondary" size="sm" onClick={addAdditionalDocumentRow}>
+              + Agregar documento adicional
+            </ForgeButton>
+            {formData.additional_document_items.map((row) => (
+              <div key={row.id} className="flex flex-wrap items-end gap-2 rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
+                <div className="min-w-[12rem] flex-1">
+                  <ForgeInput
+                    label="Nombre del documento"
+                    value={row.label}
+                    onChange={(event) => updateAdditionalDocumentRow(row.id, { label: event.target.value })}
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm text-forge-text">
+                  <input type="checkbox" checked={row.received} onChange={(event) => updateAdditionalDocumentRow(row.id, { received: event.target.checked })} />
+                  Recibido
+                </label>
+                <ForgeButton type="button" variant="ghost" size="sm" onClick={() => removeAdditionalDocumentRow(row.id)} aria-label="Eliminar documento adicional">
+                  ×
+                </ForgeButton>
+              </div>
+            ))}
           </div>
         </div>
       );
@@ -1220,7 +1411,7 @@ export function WizardContainer() {
       )}
 
       {!canProceed && currentStep < steps.length - 1 && (
-        <p className="text-center text-sm text-forge-warning">{requiredHint(currentStep)}</p>
+        <p className="text-center text-sm text-forge-warning">{requiredHint(currentStep, formData, requiredDocumentsList)}</p>
       )}
     </div>
   );

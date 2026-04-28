@@ -1,3 +1,13 @@
+export interface TenantRequiredDocument {
+  /** Stable checklist key (preferred). */
+  key?: string;
+  /** Legacy checklist id (maps to `key` when `key` omitted). */
+  id?: string;
+  label: string;
+  required: boolean;
+  tooltip?: string;
+}
+
 export interface TenantBankingConfig {
   tenant_id: string;
   institution_name: string;
@@ -26,11 +36,19 @@ export interface TenantBankingConfig {
   pii_masking_enabled: boolean;
   default_rate: number;
   allowed_terms: number[];
-  required_documents: Array<{ id: string; label: string; required: boolean; tooltip: string }>;
+  required_documents: TenantRequiredDocument[];
   features_enabled: {
     remote_consent: boolean;
     preapproval_simulator: boolean;
     garante_required: boolean;
+    bank_reports?: boolean;
+    bulk_decide?: boolean;
+    contra_offer?: boolean;
+    export_pdf?: boolean;
+    export_excel?: boolean;
+    committee_view?: boolean;
   };
+  /** When set, warn if guarantor monthly income is below estimated payment × ratio. */
+  garante_minimum_income_ratio?: number;
   consent_methods_enabled: Array<"OTP_SMS" | "OTP_EMAIL" | "WHATSAPP_LINK" | "SELFIE" | "SIGNED_PDF">;
 }
