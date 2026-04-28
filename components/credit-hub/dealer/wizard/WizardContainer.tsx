@@ -10,12 +10,22 @@ import { ForgeInput } from "../../primitives/ForgeInput";
 import { ForgeSelect } from "../../primitives/ForgeSelect";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { useCatalogs } from "@/lib/credit-hub/hooks/useCatalogs";
 import type { CreateCreditApplicationPayload } from "@/lib/credit-hub/types/creditCore";
 import { celebrateSuccessRespectReduced } from "@/lib/credit-hub/utils/celebrate";
 import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { formatDominicanCedula, cleanDominicanCedula } from "@/lib/credit/formatters/dominican-id";
 import { validateDominicanCedula, validatePassport } from "@/lib/credit/validators/dominican-id";
-import { calculateAge, formatTenure, parseDateInput } from "@/lib/credit/utils/age";
+import { calculateAge, parseDateInput } from "@/lib/credit/utils/age";
+import { calculateEmploymentTenure } from "@/lib/credit/utils/employment-tenure";
+import {
+  calculateAmountToFinance,
+  calculateIncomeCapacityPreview,
+  calculateLTV,
+  calculatePMT,
+  calculateWizardEstimatedCapacity,
+} from "@/lib/credit/utils/financial-calculator";
+import { calculateTotalMonthlyIncome, type Frequency } from "@/lib/credit/utils/income-normalizer";
 import { useAdministrativeDivisions } from "@/lib/credit/catalogs/useAdministrativeDivisions";
 import type { TenantBankingConfig } from "@/lib/credit-hub/types/tenantConfig";
 
@@ -37,6 +47,37 @@ function documentTypeSelectOptions(config: TenantBankingConfig): Array<[string, 
     .map((code) => [code, DOCUMENT_TYPE_LABELS[code] ?? code]);
 }
 
+function newOtherIncomeRowId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `oi-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function contractLabelToFormValue(label: string): string {
+  const map: Record<string, string> = {
+    Indefinido: "indefinido",
+    Temporal: "temporal",
+    "Por proyecto": "proyecto",
+    Independiente: "independiente",
+    Otro: "otro",
+  };
+  return map[label] ?? label.toLowerCase().replace(/\s+/g, "_");
+}
+
+function formValueToContractLabel(value: string, catalogLabels: readonly string[]): string {
+  const entry = catalogLabels.find((label) => contractLabelToFormValue(label) === value);
+  return entry ?? "Indefinido";
+}
+
+export interface OtherIncomeFormRow {
+  id: string;
+  concept: string;
+  concept_other?: string;
+  amount: string;
+  frequency: Frequency;
+  variable_avg_6_months?: string;
+  is_documented: boolean;
+}
+
 export interface ApplicationFormData {
   applicant_full_name: string;
   applicant_document_type: "CEDULA" | "PASAPORTE" | "OTRO" | string;
@@ -54,7 +95,6 @@ export interface ApplicationFormData {
   employment_type: string;
   employer_name: string;
   employment_position: string;
-  time_in_job: string;
   employment_start_date: string;
   employer_address: string;
   employer_province: string;
@@ -62,15 +102,14 @@ export interface ApplicationFormData {
   contract_type: string;
   monthly_income: string;
   has_other_income: "yes" | "no";
-  other_income: string;
-  payment_frequency: string;
+  other_incomes: OtherIncomeFormRow[];
   work_phone: string;
   requested_amount: string;
   desired_term: string;
   down_payment: string;
   monthly_debts: string;
   estimated_monthly_expenses: string;
-  primary_bank: string;
+  bank_institution: string;
   has_bank_account: "yes" | "no";
   has_late_payment_history: "yes" | "no";
   max_late_payment_days: string;
@@ -132,7 +171,6 @@ const initialData: ApplicationFormData = {
   employment_type: "",
   employer_name: "",
   employment_position: "",
-  time_in_job: "",
   employment_start_date: "",
   employer_address: "",
   employer_province: "",
@@ -140,15 +178,14 @@ const initialData: ApplicationFormData = {
   contract_type: "",
   monthly_income: "",
   has_other_income: "no",
-  other_income: "0",
-  payment_frequency: "",
+  other_incomes: [],
   work_phone: "",
   requested_amount: "",
   desired_term: "",
   down_payment: "",
   monthly_debts: "",
   estimated_monthly_expenses: "",
-  primary_bank: "",
+  bank_institution: "",
   has_bank_account: "yes",
   has_late_payment_history: "no",
   max_late_payment_days: "",
@@ -226,6 +263,13 @@ export function buildCreateApplicationPayload(
     coDebtorDocumentType === "CEDULA"
       ? cleanDominicanCedula(formData.co_debtor_identification)
       : formData.co_debtor_identification;
+  const otherIncomeNormalized = (formData.other_incomes ?? []).map((row) => ({
+    amount: numeric(row.amount),
+    frequency: row.frequency,
+    variableAvg: row.variable_avg_6_months ? numeric(row.variable_avg_6_months) : undefined,
+  }));
+  const otherMonthlySum =
+    formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomeNormalized) : 0;
   return {
     applicant: {
       full_name: formData.applicant_full_name.trim(),
@@ -248,15 +292,14 @@ export function buildCreateApplicationPayload(
       employer_name: formData.employer_name.trim(),
       position: formData.employment_position.trim(),
       employment_start_date: formData.employment_start_date || "",
-      time_in_job: formData.employment_start_date ? formatTenure(parseDateInput(formData.employment_start_date) || new Date()) : formData.time_in_job.trim(),
       employer_address: (formData.employer_address || "").trim(),
       employer_province: (formData.employer_province || "").trim(),
       employer_municipality: (formData.employer_city || "").trim(),
       contract_type: formData.contract_type || "",
       monthly_income: formData.monthly_income,
       has_other_income: formData.has_other_income === "yes",
-      other_income: formData.has_other_income === "yes" ? formData.other_income || "0" : "0",
-      payment_frequency: "monthly",
+      // TODO: extender backend para aceptar other_incomes[] detallado; hoy se envía suma mensual normalizada.
+      other_income: String(otherMonthlySum),
       work_phone: formData.work_phone.trim(),
     },
     financial: {
@@ -265,7 +308,6 @@ export function buildCreateApplicationPayload(
       down_payment: formData.down_payment || "0",
       monthly_debts: formData.monthly_debts || "0",
       estimated_monthly_expenses: formData.estimated_monthly_expenses || "0",
-      primary_bank: formData.primary_bank.trim() || null,
       has_bank_account: formData.has_bank_account === "yes",
       has_late_payment_history: false,
       max_late_payment_days: null,
@@ -362,7 +404,15 @@ function stepIsValid(
     ].every(isFilled) && documentIsValid(applicantDoc, data.applicant_identification) && age !== null && age >= config.min_age && age <= config.max_age;
   }
   if (step === 1) {
-    return [data.employment_type, data.employer_name, data.employment_position, data.employment_start_date, data.monthly_income, data.work_phone, data.employer_address, data.employer_province, data.employer_city, data.contract_type].every(isFilled);
+    const baseOk = [data.employment_type, data.employer_name, data.employment_position, data.employment_start_date, data.monthly_income, data.work_phone, data.employer_address, data.employer_province, data.employer_city, data.contract_type].every(isFilled);
+    if (!baseOk) return false;
+    if (data.has_other_income !== "yes") return true;
+    if (data.other_incomes.length < 1) return false;
+    return data.other_incomes.every((row) => {
+      const amt = numeric(row.amount);
+      const variableOk = row.frequency !== "VARIABLE" || isFilled(row.variable_avg_6_months ?? "");
+      return isFilled(row.amount) && amt > 0 && isFilled(row.concept) && Boolean(row.frequency) && variableOk;
+    });
   }
   if (step === 2) {
     return [data.product_type, data.vehicle_make, data.vehicle_model, data.vehicle_year, data.vehicle_price, data.dealer_supplier, data.vehicle_condition].every(isFilled);
@@ -396,25 +446,27 @@ function numeric(value: string | number | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function preliminaryPayment(principal: number, annualRate = 18, months = 36): number {
-  const safePrincipal = Math.max(0, principal);
-  const safeMonths = Math.max(1, months);
-  const monthlyRate = annualRate / 100 / 12;
-  if (safePrincipal === 0) return 0;
-  if (monthlyRate === 0) return safePrincipal / safeMonths;
-  return safePrincipal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -safeMonths));
+function otherIncomesToParts(data: ApplicationFormData): Array<{ amount: number; frequency: Frequency; variableAvg?: number }> {
+  return (data.other_incomes ?? []).map((row) => ({
+    amount: numeric(row.amount),
+    frequency: row.frequency,
+    variableAvg: row.variable_avg_6_months ? numeric(row.variable_avg_6_months) : undefined,
+  }));
 }
 
 function preliminaryViability(data: ApplicationFormData) {
-  const income = numeric(data.monthly_income) + numeric(data.other_income) + (data.co_debtor_required === "yes" ? numeric(data.co_debtor_monthly_income) : 0);
-  const capacity = income * 0.35;
+  const baseIncome = numeric(data.monthly_income);
+  const otherMonthly =
+    data.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(data)) : 0;
+  const income = baseIncome + otherMonthly + (data.co_debtor_required === "yes" ? numeric(data.co_debtor_monthly_income) : 0);
+  const capacity = calculateIncomeCapacityPreview(income, 0.35);
   const productPrice = numeric(data.vehicle_price);
   const requested = numeric(data.requested_amount);
   const downPayment = numeric(data.down_payment);
-  const principalFromPrice = Math.max(0, productPrice - downPayment);
+  const principalFromPrice = calculateAmountToFinance(productPrice, downPayment);
   const principal = requested > 0 && requested < principalFromPrice ? requested : principalFromPrice;
   const term = Math.max(1, Math.round(numeric(data.desired_term) || 36));
-  const payment = preliminaryPayment(principal, 18, term);
+  const payment = calculatePMT(principal, 18, term);
   const gap = capacity - payment;
   const status = payment <= capacity ? "verde" : payment <= capacity * 1.15 ? "amarillo" : "rojo";
   return { capacity, payment, gap, status };
@@ -431,6 +483,7 @@ function formatDop(value: number): string {
 export function WizardContainer() {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
+  const { catalogs, loading: catalogsLoading } = useCatalogs();
   const defaultDocType = tenantConfig.document_types.primary_id ?? "CEDULA";
   const administrativeDivisions = useAdministrativeDivisions(tenantConfig.country_code);
   const [currentStep, setCurrentStep] = useState(0);
@@ -441,6 +494,57 @@ export function WizardContainer() {
 
   const updateField = <K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateOtherIncomeRow = (id: string, updates: Partial<OtherIncomeFormRow>) => {
+    setFormData((prev) => ({
+      ...prev,
+      other_incomes: prev.other_incomes.map((row) => (row.id === id ? { ...row, ...updates } : row)),
+    }));
+  };
+
+  const addOtherIncomeRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      other_incomes: [
+        ...prev.other_incomes,
+        {
+          id: newOtherIncomeRowId(),
+          concept: "Otro",
+          amount: "",
+          frequency: "MENSUAL",
+          is_documented: false,
+        },
+      ],
+    }));
+  };
+
+  const removeOtherIncomeRow = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      other_incomes: prev.other_incomes.filter((row) => row.id !== id),
+    }));
+  };
+
+  const setHasOtherIncome = (value: "yes" | "no") => {
+    setFormData((prev) => {
+      if (value === "yes" && prev.other_incomes.length === 0) {
+        return {
+          ...prev,
+          has_other_income: value,
+          other_incomes: [
+            {
+              id: newOtherIncomeRowId(),
+              concept: "Otro",
+              amount: "",
+              frequency: "MENSUAL",
+              is_documented: false,
+            },
+          ],
+        };
+      }
+      return { ...prev, has_other_income: value, other_incomes: value === "no" ? [] : prev.other_incomes };
+    });
   };
 
   const selectedApplicantProvince = administrativeDivisions.find((item) => item.name === formData.applicant_province);
@@ -605,7 +709,14 @@ export function WizardContainer() {
     }
     if (currentStep === 1) {
       const employmentStart = parseDateInput(formData.employment_start_date);
-      const tenureLabel = employmentStart ? formatTenure(employmentStart) : "No disponible";
+      const tenure = formData.employment_start_date ? calculateEmploymentTenure(formData.employment_start_date) : null;
+      const tenureLabel = tenure?.isValid ? tenure.display : employmentStart ? "Fecha inválida" : "No disponible";
+      const otherMonthlyTotal =
+        formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
+      const totalIncomeDisplay = numeric(formData.monthly_income) + otherMonthlyTotal;
+      const contractOptions =
+        catalogs?.contractTypes?.map((label) => [contractLabelToFormValue(label), label] as [string, string]) ??
+        [["indefinido", "Indefinido"], ["temporal", "Temporal"], ["proyecto", "Por proyecto"], ["independiente", "Independiente"], ["otro", "Otro"]];
       return (
         <div className="space-y-5">
           {sectionHeader("Información laboral", "Capacidad de pago y estabilidad laboral.")}
@@ -629,20 +740,121 @@ export function WizardContainer() {
               <option value="">Selecciona...</option>
               {(selectedEmployerProvince?.municipalities ?? []).map((municipality) => <option key={municipality} value={municipality}>{municipality}</option>)}
             </ForgeSelect>
-            {select("contract_type", "Tipo de contrato *", [["indefinido", "Indefinido"], ["temporal", "Temporal"], ["proyecto", "Por proyecto"], ["independiente", "Independiente"]])}
-            {boolSelect("has_other_income", "¿Tiene otros ingresos además del salario? *")}
-            {formData.has_other_income === "yes" && input("other_income", "Monto mensual de otros ingresos", { inputMode: "decimal" })}
+            <ForgeSelect
+              label="Tipo de contrato *"
+              value={formData.contract_type}
+              onChange={(event) => updateField("contract_type", event.target.value)}
+              disabled={catalogsLoading || !catalogs}
+            >
+              <option value="">Selecciona...</option>
+              {contractOptions.map(([value, optionLabel]) => (
+                <option key={value} value={value}>
+                  {optionLabel}
+                </option>
+              ))}
+            </ForgeSelect>
+            <div className="md:col-span-2">
+              <ForgeSelect
+                label="¿Tiene otros ingresos además del salario? *"
+                value={formData.has_other_income}
+                onChange={(event) => setHasOtherIncome(event.target.value as "yes" | "no")}
+              >
+                <option value="no">No</option>
+                <option value="yes">Sí</option>
+              </ForgeSelect>
+            </div>
+            {formData.has_other_income === "yes" && (
+              <div className="md:col-span-2 space-y-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-forge-text">Otras fuentes de ingreso</p>
+                  <ForgeButton type="button" variant="secondary" size="sm" onClick={addOtherIncomeRow}>
+                    Agregar fuente de ingreso
+                  </ForgeButton>
+                </div>
+                {formData.other_incomes.map((row) => (
+                  <div key={row.id} className="grid gap-3 rounded-lg border border-forge-border/60 bg-forge-surface p-3 md:grid-cols-2">
+                    <ForgeSelect
+                      label="Concepto *"
+                      value={row.concept}
+                      onChange={(event) => updateOtherIncomeRow(row.id, { concept: event.target.value })}
+                      disabled={catalogsLoading || !catalogs}
+                    >
+                      {(catalogs?.incomeConcepts ?? ["Otro"]).map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </ForgeSelect>
+                    <ForgeInput
+                      label="Monto *"
+                      inputMode="decimal"
+                      value={row.amount}
+                      onChange={(event) => updateOtherIncomeRow(row.id, { amount: cleanDecimalInput(event.target.value) })}
+                    />
+                    <ForgeSelect
+                      label="Frecuencia *"
+                      value={row.frequency}
+                      onChange={(event) => updateOtherIncomeRow(row.id, { frequency: event.target.value as Frequency })}
+                      disabled={catalogsLoading || !catalogs}
+                    >
+                      {(catalogs?.paymentFrequencies ?? ["MENSUAL"]).map((f) => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
+                      ))}
+                    </ForgeSelect>
+                    {row.frequency === "VARIABLE" && (
+                      <ForgeInput
+                        label="Promedio últimos 6 meses *"
+                        inputMode="decimal"
+                        value={row.variable_avg_6_months ?? ""}
+                        onChange={(event) =>
+                          updateOtherIncomeRow(row.id, { variable_avg_6_months: cleanDecimalInput(event.target.value) })
+                        }
+                      />
+                    )}
+                    <label className="flex items-center gap-2 text-sm text-forge-text md:col-span-2">
+                      <input
+                        type="checkbox"
+                        checked={row.is_documented}
+                        onChange={(event) => updateOtherIncomeRow(row.id, { is_documented: event.target.checked })}
+                      />
+                      Ingreso documentado
+                    </label>
+                    <div className="md:col-span-2 flex justify-end">
+                      <ForgeButton
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={formData.has_other_income === "yes" && formData.other_incomes.length <= 1}
+                        onClick={() => removeOtherIncomeRow(row.id)}
+                      >
+                        Eliminar fuente
+                      </ForgeButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="rounded-xl bg-forge-primary/10 p-4 text-sm text-forge-text">
-            Ingreso total mensual estimado: <span className="font-semibold tabular-nums">{formatDop(numeric(formData.monthly_income) + (formData.has_other_income === "yes" ? numeric(formData.other_income) : 0))}</span>
+            Ingreso total mensual estimado:{" "}
+            <span className="font-semibold tabular-nums">{formatDop(totalIncomeDisplay)}</span>
           </div>
         </div>
       );
     }
     if (currentStep === 2) {
-      const amountToFinance = Math.max(0, numeric(formData.vehicle_price) - numeric(formData.down_payment));
-      const estimatedCapacity = Math.max(0, (numeric(formData.monthly_income) + (formData.has_other_income === "yes" ? numeric(formData.other_income) : 0) - numeric(formData.monthly_debts)) * 0.4);
-      const ltv = numeric(formData.vehicle_price) > 0 ? amountToFinance / numeric(formData.vehicle_price) : 0;
+      const otherMonthlyStep =
+        formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
+      const amountToFinance = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
+      const estimatedCapacity = calculateWizardEstimatedCapacity(
+        numeric(formData.monthly_income),
+        otherMonthlyStep,
+        numeric(formData.monthly_debts),
+        0.4
+      );
+      const ltvPercent = calculateLTV(amountToFinance, numeric(formData.vehicle_price));
       return (
         <div className="space-y-5">
           {sectionHeader("Información financiera y producto", "Condiciones solicitadas y vehículo o producto a financiar.")}
@@ -652,12 +864,38 @@ export function WizardContainer() {
             {input("monthly_debts", "Deudas mensuales actuales *", { inputMode: "decimal" })}
             {input("estimated_monthly_expenses", "Gasto mensual estimado (opcional)", { inputMode: "decimal" })}
             {boolSelect("has_bank_account", "¿Tiene cuenta bancaria activa? *")}
-            {formData.has_bank_account === "yes" && input("primary_bank", "Banco (opcional)")}
+            {formData.has_bank_account === "yes" && (
+              <ForgeSelect
+                label="Institución bancaria (opcional)"
+                value={formData.bank_institution}
+                onChange={(event) => updateField("bank_institution", event.target.value)}
+                disabled={catalogsLoading || !catalogs}
+              >
+                <option value="">Selecciona...</option>
+                {(catalogs?.banks ?? []).map((bank) => (
+                  <option key={bank} value={bank}>
+                    {bank}
+                  </option>
+                ))}
+              </ForgeSelect>
+            )}
             <div className="md:col-span-2 border-t border-forge-border pt-4">
               <h3 className="font-semibold text-forge-text">Vehículo o producto a financiar</h3>
             </div>
             {select("product_type", "Tipo de producto *", tenantConfig.product_types.map((item) => [item, item]))}
-            {select("vehicle_make", "Marca *", [["Toyota", "Toyota"], ["Honda", "Honda"], ["Hyundai", "Hyundai"], ["Kia", "Kia"], ["Nissan", "Nissan"], ["Mitsubishi", "Mitsubishi"], ["Ford", "Ford"], ["Chevrolet", "Chevrolet"], ["Mazda", "Mazda"], ["Suzuki", "Suzuki"], ["BMW", "BMW"], ["Mercedes-Benz", "Mercedes-Benz"], ["Audi", "Audi"], ["Lexus", "Lexus"], ["Otros", "Otros"]])}
+            <ForgeSelect
+              label="Marca *"
+              value={formData.vehicle_make}
+              onChange={(event) => updateField("vehicle_make", event.target.value)}
+              disabled={catalogsLoading || !catalogs}
+            >
+              <option value="">Selecciona...</option>
+              {(catalogs?.vehicleBrands ?? []).map((brand) => (
+                <option key={brand} value={brand}>
+                  {brand}
+                </option>
+              ))}
+            </ForgeSelect>
             {formData.vehicle_make === "Otros" && input("vehicle_brand_other", "Especifique marca *")}
             {input("vehicle_model", "Modelo *")}
             {input("vehicle_version", "Sub-modelo / versión (opcional)")}
@@ -673,7 +911,7 @@ export function WizardContainer() {
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">Monto a financiar</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(amountToFinance)}</p></div>
-            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">LTV</p><p className="font-semibold tabular-nums text-forge-text">{Math.round(ltv * 100)}%</p>{ltv > tenantConfig.ltv_max && <p className="text-xs text-forge-danger">LTV supera el máximo del tenant.</p>}</div>
+            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">LTV</p><p className="font-semibold tabular-nums text-forge-text">{Math.round(ltvPercent)}%</p>{ltvPercent / 100 > tenantConfig.ltv_max && <p className="text-xs text-forge-danger">LTV supera el máximo del tenant.</p>}</div>
             <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">Capacidad estimada</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(estimatedCapacity)}</p></div>
           </div>
         </div>

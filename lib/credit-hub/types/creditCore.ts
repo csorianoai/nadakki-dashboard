@@ -87,7 +87,8 @@ export interface CreateCreditApplicationPayload {
     employer_name: string;
     position: string;
     employment_start_date?: string;
-    time_in_job: string;
+    /** @deprecated Backend may still read; prefer employment_start_date (Sprint 7). */
+    time_in_job?: string;
     employer_address?: string;
     employer_province?: string;
     employer_municipality?: string;
@@ -95,7 +96,8 @@ export interface CreateCreditApplicationPayload {
     monthly_income: string | number;
     has_other_income?: boolean;
     other_income: string | number;
-    payment_frequency: string;
+    /** @deprecated Removed from Forge payload; retained optional for API tolerance. */
+    payment_frequency?: string;
     work_phone: string;
   };
   financial: {
@@ -104,7 +106,8 @@ export interface CreateCreditApplicationPayload {
     down_payment: string | number;
     monthly_debts: string | number;
     estimated_monthly_expenses: string | number;
-    primary_bank: string | null;
+    /** @deprecated Not sent from Forge wizard (Sprint 7). */
+    primary_bank?: string | null;
     has_bank_account: boolean;
     has_late_payment_history: boolean;
     max_late_payment_days: string | number | null;

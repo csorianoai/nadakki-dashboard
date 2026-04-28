@@ -12,6 +12,9 @@ export function parseDateInput(value: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/**
+ * @deprecated Prefer `calculateEmploymentTenure` from `@/lib/credit/utils/employment-tenure` (richer result + validation).
+ */
 export function formatTenure(startDate: Date): string {
   const today = new Date();
   let years = today.getFullYear() - startDate.getFullYear();

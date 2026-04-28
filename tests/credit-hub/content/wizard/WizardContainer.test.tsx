@@ -15,6 +15,28 @@ jest.mock("@/lib/credit-hub/hooks/useCreateCreditApplication", () => ({
   useCreateCreditApplication: jest.fn(),
 }));
 
+jest.mock("@/lib/credit-hub/hooks/useCatalogs", () => {
+  const { DO_VEHICLE_BRANDS } = require("@/lib/credit/catalogs/do/vehicle-brands");
+  const { DO_BANKS } = require("@/lib/credit/catalogs/do/banks");
+  const {
+    DO_CONTRACT_TYPES,
+    DO_INCOME_CONCEPTS,
+    DO_PAYMENT_FREQUENCIES,
+  } = require("@/lib/credit/catalogs/do/employment-types");
+  return {
+    useCatalogs: () => ({
+      catalogs: {
+        vehicleBrands: DO_VEHICLE_BRANDS,
+        banks: DO_BANKS,
+        contractTypes: DO_CONTRACT_TYPES,
+        incomeConcepts: DO_INCOME_CONCEPTS,
+        paymentFrequencies: DO_PAYMENT_FREQUENCIES,
+      },
+      loading: false,
+    }),
+  };
+});
+
 jest.mock("@/components/credit-hub/system/ForgeToaster", () => ({
   forgeToast: { success: jest.fn(), error: jest.fn() },
 }));
@@ -42,7 +64,6 @@ const fullData: ApplicationFormData = {
   employment_type: "employee",
   employer_name: "Credicefi",
   employment_position: "Analista",
-  time_in_job: "",
   employment_start_date: "2020-01-01",
   employer_address: "Av. Winston Churchill",
   employer_province: "Distrito Nacional",
@@ -50,15 +71,14 @@ const fullData: ApplicationFormData = {
   contract_type: "indefinido",
   monthly_income: "85000",
   has_other_income: "no",
-  other_income: "0",
-  payment_frequency: "",
+  other_incomes: [],
   work_phone: "8095551111",
   requested_amount: "",
   desired_term: "48 meses",
   down_payment: "100000",
   monthly_debts: "15000",
   estimated_monthly_expenses: "30000",
-  primary_bank: "",
+  bank_institution: "",
   has_bank_account: "yes",
   has_late_payment_history: "no",
   max_late_payment_days: "",
