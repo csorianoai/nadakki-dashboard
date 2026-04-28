@@ -253,6 +253,43 @@ function requiredHint(step: number): string {
   return "Completa los campos obligatorios para continuar.";
 }
 
+function numeric(value: string | number | null | undefined): number {
+  const parsed = Number(String(value ?? "0").replace(/,/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function preliminaryPayment(principal: number, annualRate = 18, months = 36): number {
+  const safePrincipal = Math.max(0, principal);
+  const safeMonths = Math.max(1, months);
+  const monthlyRate = annualRate / 100 / 12;
+  if (safePrincipal === 0) return 0;
+  if (monthlyRate === 0) return safePrincipal / safeMonths;
+  return safePrincipal * monthlyRate / (1 - Math.pow(1 + monthlyRate, -safeMonths));
+}
+
+function preliminaryViability(data: ApplicationFormData) {
+  const income = numeric(data.monthly_income) + numeric(data.other_income) + (data.co_debtor_required === "yes" ? numeric(data.co_debtor_monthly_income) : 0);
+  const capacity = income * 0.35;
+  const productPrice = numeric(data.vehicle_price);
+  const requested = numeric(data.requested_amount);
+  const downPayment = numeric(data.down_payment);
+  const principalFromPrice = Math.max(0, productPrice - downPayment);
+  const principal = requested > 0 && requested < principalFromPrice ? requested : principalFromPrice;
+  const term = Math.max(1, Math.round(numeric(data.desired_term) || 36));
+  const payment = preliminaryPayment(principal, 18, term);
+  const gap = capacity - payment;
+  const status = payment <= capacity ? "verde" : payment <= capacity * 1.15 ? "amarillo" : "rojo";
+  return { capacity, payment, gap, status };
+}
+
+function formatDop(value: number): string {
+  return new Intl.NumberFormat("es-DO", {
+    style: "currency",
+    currency: "DOP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 export function WizardContainer() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
@@ -465,6 +502,7 @@ export function WizardContainer() {
       );
     }
     const payload = buildCreateApplicationPayload(formData);
+    const preview = preliminaryViability(formData);
     const sections = [
       ["Solicitante", payload.applicant],
       ["Laboral", payload.employment],
@@ -477,6 +515,27 @@ export function WizardContainer() {
     return (
       <div className="space-y-5">
         {sectionHeader("Revisión final", "Verifica la solicitud completa antes de guardar o enviar.")}
+        <div className="rounded-2xl border border-forge-primary/20 bg-forge-primary/5 p-4">
+          <p className="text-sm uppercase tracking-[0.16em] text-forge-primary">Previsualización de viabilidad</p>
+          <p className="mt-1 text-sm text-forge-text-muted">Estimación preliminar antes de enviar.</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl bg-forge-surface-elevated p-3">
+              <p className="text-xs text-forge-text-muted">Cuota estimada preliminar</p>
+              <p className="font-semibold text-forge-text">{formatDop(preview.payment)}</p>
+            </div>
+            <div className="rounded-xl bg-forge-surface-elevated p-3">
+              <p className="text-xs text-forge-text-muted">Capacidad estimada preliminar</p>
+              <p className="font-semibold text-forge-text">{formatDop(preview.capacity)}</p>
+            </div>
+            <div className="rounded-xl bg-forge-surface-elevated p-3">
+              <p className="text-xs text-forge-text-muted">Status preliminar</p>
+              <p className={preview.status === "verde" ? "font-semibold text-forge-success" : preview.status === "amarillo" ? "font-semibold text-forge-warning" : "font-semibold text-forge-danger"}>
+                {preview.status === "verde" ? "Viable" : preview.status === "amarillo" ? "Requiere ajuste" : "Riesgo alto"}
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-forge-text-muted">El análisis completo con Forge AI estará disponible después de enviar la solicitud.</p>
+        </div>
         <div className="space-y-4">
           {sections.map(([title, values], index) => (
             <div key={title} className="rounded-xl bg-forge-surface-elevated p-4">

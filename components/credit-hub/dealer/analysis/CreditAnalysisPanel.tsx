@@ -1,0 +1,114 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Brain } from "lucide-react";
+import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
+import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
+import { useCreditAnalysis } from "@/lib/credit-hub/hooks/useCreditAnalysis";
+import { AnalysisDisclaimer } from "./AnalysisDisclaimer";
+import { CapacitySnapshot } from "./CapacitySnapshot";
+import { PaymentBreakdown } from "./PaymentBreakdown";
+import { RecommendationCard } from "./RecommendationCard";
+import { RiskFactorsList } from "./RiskFactorsList";
+import { ScoreVisual } from "./ScoreVisual";
+
+export function CreditAnalysisPanel({ applicationId }: { applicationId: string }) {
+  const { data, isLoading, isAnalyzing, error, mutate } = useCreditAnalysis(applicationId);
+
+  return (
+    <ForgeCard padding="lg" className="overflow-hidden">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-[0.18em] text-forge-primary">Forge Credit Analysis</p>
+          <h2 className="mt-1 font-display text-2xl font-bold text-forge-text">Análisis crediticio</h2>
+          <p className="mt-1 text-sm text-forge-text-muted">Motor rule-based auditable con cuota, DTI, capacidad y recomendaciones dinámicas.</p>
+        </div>
+        <ForgeButton
+          variant="primary"
+          size="lg"
+          onClick={() => mutate()}
+          loading={isAnalyzing}
+          disabled={isAnalyzing}
+          leftIcon={<Brain className="h-5 w-5" />}
+          className="bg-gradient-to-br from-forge-primary via-orange-500 to-forge-accent"
+        >
+          {isAnalyzing ? "Analizando con Forge AI..." : "Analizar con Forge AI"}
+        </ForgeButton>
+      </div>
+
+      {isAnalyzing && (
+        <div className="mt-6 rounded-2xl border border-forge-primary/20 bg-forge-primary/5 p-5">
+          <div className="flex items-center gap-3 text-forge-text">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-forge-primary border-t-transparent" />
+            Analizando con Forge AI...
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="h-24 animate-pulse rounded-xl bg-forge-surface-elevated" />
+            <div className="h-24 animate-pulse rounded-xl bg-forge-surface-elevated" />
+            <div className="h-24 animate-pulse rounded-xl bg-forge-surface-elevated" />
+          </div>
+        </div>
+      )}
+
+      {!isAnalyzing && isLoading && (
+        <div className="mt-6 h-48 animate-pulse rounded-2xl bg-forge-surface-elevated" />
+      )}
+
+      {!isAnalyzing && error && (
+        <div className="mt-6 rounded-2xl border border-forge-danger/30 bg-forge-danger/10 p-5">
+          <p className="font-semibold text-forge-danger">No se pudo completar el análisis. Verifica los datos de la solicitud.</p>
+          <p className="mt-1 text-sm text-forge-text-muted">{error instanceof Error ? error.message : "Intenta de nuevo."}</p>
+          <ForgeButton className="mt-4" variant="secondary" onClick={() => mutate()}>
+            Reintentar
+          </ForgeButton>
+        </div>
+      )}
+
+      {!isLoading && !isAnalyzing && !error && !data && (
+        <div className="mt-6 rounded-2xl border border-dashed border-forge-border bg-forge-surface-elevated/60 p-8 text-center">
+          <Brain className="mx-auto h-10 w-10 text-forge-primary" />
+          <p className="mt-3 font-semibold text-forge-text">Aún no se ha ejecutado análisis.</p>
+          <p className="mt-1 text-sm text-forge-text-muted">Haz click en Analizar con Forge AI.</p>
+        </div>
+      )}
+
+      {data && !isAnalyzing && (
+        <motion.div
+          className="mt-6 space-y-6"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+          <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+            <ScoreVisual analysis={data} />
+            <div className="space-y-4">
+              <CapacitySnapshot analysis={data} />
+              <PaymentBreakdown analysis={data} />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-forge-border bg-forge-surface-elevated p-4">
+            <h3 className="font-semibold text-forge-text">Explicación</h3>
+            <p className="mt-2 text-sm leading-relaxed text-forge-text-muted">{data.explanation}</p>
+          </div>
+
+          <div>
+            <h3 className="mb-3 font-semibold text-forge-text">Recomendaciones accionables</h3>
+            {data.recommendations.length === 0 ? (
+              <p className="rounded-xl bg-forge-success/10 p-4 text-sm text-forge-success">No se requieren ajustes numéricos para este escenario.</p>
+            ) : (
+              <div className="grid gap-3">
+                {data.recommendations.map((recommendation) => (
+                  <RecommendationCard key={`${recommendation.type}-${recommendation.recommended_value}`} recommendation={recommendation} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <RiskFactorsList analysis={data} />
+          <AnalysisDisclaimer />
+        </motion.div>
+      )}
+    </ForgeCard>
+  );
+}

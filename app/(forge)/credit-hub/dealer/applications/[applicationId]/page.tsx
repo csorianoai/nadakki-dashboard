@@ -4,6 +4,7 @@ import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Brain, Car, Clock, DollarSign, Mail, Phone, ShieldCheck, User } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
+import { CreditAnalysisPanel } from "@/components/credit-hub/dealer/analysis/CreditAnalysisPanel";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
 import { CreditCoreApiError } from "@/lib/credit-hub/api/creditCoreClient";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 const tabs = [
   { id: "summary", label: "Resumen", icon: User },
+  { id: "analysis", label: "Análisis", icon: Brain },
   { id: "vehicle", label: "Vehículo", icon: Car },
   { id: "timeline", label: "Timeline", icon: Clock },
 ];
@@ -168,6 +170,8 @@ export default function DealerApplicationDetailPage({ params }: { params: Promis
             </dl>
           </ForgeCard>
         )}
+
+        {activeTab === "analysis" && <CreditAnalysisPanel applicationId={applicationId} />}
 
         {activeTab === "vehicle" && (
           <ForgeCard padding="lg">
