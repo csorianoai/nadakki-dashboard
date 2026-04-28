@@ -221,7 +221,11 @@ export function buildCreateApplicationPayload(
   const cleanApplicantId =
     applicantDocumentType === "CEDULA"
       ? cleanDominicanCedula(formData.applicant_identification)
-      : formData.applicant_identification.trim().toUpperCase();
+      : formData.applicant_identification;
+  const cleanCoDebtorId =
+    coDebtorDocumentType === "CEDULA"
+      ? cleanDominicanCedula(formData.co_debtor_identification)
+      : formData.co_debtor_identification;
   return {
     applicant: {
       full_name: formData.applicant_full_name.trim(),
@@ -283,10 +287,7 @@ export function buildCreateApplicationPayload(
       full_name: formData.co_debtor_full_name.trim(),
       document_type: coDebtorDocumentType,
       document_other_type: (formData.co_debtor_document_other_type || "").trim() || null,
-      identification:
-        coDebtorDocumentType === "CEDULA"
-          ? cleanDominicanCedula(formData.co_debtor_identification)
-          : formData.co_debtor_identification.trim().toUpperCase(),
+      identification: cleanCoDebtorId,
       date_of_birth: formData.co_debtor_date_of_birth || "",
       email: (formData.co_debtor_email || "").trim(),
       address: (formData.co_debtor_address || "").trim(),
@@ -569,7 +570,7 @@ export function WizardContainer() {
             <div className="space-y-1">
               <ForgeInput
                 label="Número de documento *"
-                aria-label="Cédula / Identificación *"
+                aria-label="Número de documento"
                 value={applicantDoc === "CEDULA" ? formatDominicanCedula(formData.applicant_identification) : formData.applicant_identification}
                 placeholder={applicantDoc === "CEDULA" ? "053-0003053-2" : "Pasaporte"}
                 onChange={(event) => updateField("applicant_identification", applicantDoc === "CEDULA" ? cleanDominicanCedula(event.target.value) : event.target.value.toUpperCase())}
@@ -579,7 +580,9 @@ export function WizardContainer() {
             {input("applicant_date_of_birth", "Fecha de nacimiento *", { type: "date" })}
             <div className="rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
               <p className="text-xs text-forge-text-muted">Edad calculada</p>
-              <p className="font-semibold text-forge-text">{age === null ? "No disponible" : `${age} años`}</p>
+              <span data-testid="calculated-age" className="font-semibold text-forge-text">
+                {age === null ? "No disponible" : `${age} años`}
+              </span>
               {age !== null && age < tenantConfig.min_age && <p className="mt-1 text-xs text-forge-danger">Edad mínima requerida: {tenantConfig.min_age} años</p>}
               {age !== null && age > tenantConfig.max_age && <p className="mt-1 text-xs text-forge-danger">Edad excede el rango operativo del producto</p>}
             </div>
@@ -702,6 +705,7 @@ export function WizardContainer() {
                 {coDoc === "OTRO" && input("co_debtor_document_other_type", "Especifique tipo *")}
                 <ForgeInput
                   label="Número de documento garante *"
+                  aria-label="Número de documento garante"
                   value={coDoc === "CEDULA" ? formatDominicanCedula(formData.co_debtor_identification) : formData.co_debtor_identification}
                   onChange={(event) => updateField("co_debtor_identification", coDoc === "CEDULA" ? cleanDominicanCedula(event.target.value) : event.target.value.toUpperCase())}
                 />

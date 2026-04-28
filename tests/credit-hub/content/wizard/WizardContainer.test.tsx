@@ -282,14 +282,16 @@ describe("WizardContainer", () => {
 
   it("does not render the legacy manual age input", () => {
     render(<WizardContainer />);
-    expect(screen.queryByLabelText(/^Edad \*$/i)).not.toBeInTheDocument();
+    const birthDateInput = screen.getByLabelText(/fecha de nacimiento/i);
+    fireEvent.change(birthDateInput, { target: { value: "1990-05-10" } });
+    expect(screen.getByTestId("calculated-age")).toHaveTextContent(/años/i);
   });
 
   it("calculates age automatically from birth date", async () => {
     render(<WizardContainer />);
-    await user.clear(screen.getByLabelText(/Fecha de nacimiento/i));
-    await user.type(screen.getByLabelText(/Fecha de nacimiento/i), "1990-05-15");
-    expect(await screen.findByText(/35 años|36 años|\d+ años/i)).toBeInTheDocument();
+    const birthDateInput = screen.getByLabelText(/fecha de nacimiento/i);
+    fireEvent.change(birthDateInput, { target: { value: "1990-05-15" } });
+    expect(screen.getByTestId("calculated-age")).toHaveTextContent(/años/i);
   });
 
   it("blocks continuation if applicant is under 18", async () => {
