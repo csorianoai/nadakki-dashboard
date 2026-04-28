@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { PreApprovalBadge } from "@/components/credit-hub/dealer/wizard/PreApprovalBadge";
 import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
 import { calculateAmortization } from "@/lib/credit/simulation/amortization";
@@ -24,10 +24,6 @@ function formatDop(n: number): string {
 
 export function SimulatorResults({ result, inputs, copy, onSaveScenario, onConvertToApplication }: Props) {
   const [openDetail, setOpenDetail] = useState(false);
-  const [chartReady, setChartReady] = useState(false);
-  useEffect(() => {
-    setChartReady(true);
-  }, []);
   const amortRows = useMemo(() => {
     if (!result || result.amountToFinance <= 0) return [];
     return calculateAmortization(result.amountToFinance, inputs.annualRate, inputs.termMonths);
@@ -85,15 +81,13 @@ export function SimulatorResults({ result, inputs, copy, onSaveScenario, onConve
         </div>
       )}
 
-      {chartReady && (
-        <AmortizationChart
-          rows={amortRows}
-          title={copy.chart_title}
-          labelBalance={copy.chart_balance}
-          labelCumInterest={copy.chart_cum_interest}
-          labelCumPrincipal={copy.chart_cum_principal}
-        />
-      )}
+      <AmortizationChart
+        rows={amortRows}
+        title={copy.chart_title}
+        labelBalance={copy.chart_balance}
+        labelCumInterest={copy.chart_cum_interest}
+        labelCumPrincipal={copy.chart_cum_principal}
+      />
 
       <RecommendationsList items={result.recommendations} heading={copy.recommendations_heading} />
 

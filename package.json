@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint app/page.tsx components/layout/AgentCountDisplay.tsx components/layout/SidebarSuiteStats.tsx app/hooks/useAgentRegistrySummary.ts lib/api/agent-registry.ts lib/api/endpoints.ts lib/agent-registry/parse-summary.ts components/agent-registry/AgentRegistryStatHome.tsx types/agent-registry.ts --max-warnings 0",
     "typecheck": "tsc --noEmit",
@@ -21,7 +21,7 @@
     "clsx": "^2.1.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.400.0",
-    "next": "^16.1.6",
+    "next": "16.2.4",
     "next-pwa": "^5.6.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -43,7 +43,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.19",
-    "eslint": "^8",
+    "eslint": "^8.57.1",
     "eslint-config-next": "14.2.5",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
@@ -54,5 +54,15 @@
     "tailwindcss": "^3.4.4",
     "ts-jest": "^29.4.9",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@next/swc-darwin-arm64": "16.2.4",
+    "@next/swc-darwin-x64": "16.2.4",
+    "@next/swc-linux-arm64-gnu": "16.2.4",
+    "@next/swc-linux-arm64-musl": "16.2.4",
+    "@next/swc-linux-x64-gnu": "16.2.4",
+    "@next/swc-linux-x64-musl": "16.2.4",
+    "@next/swc-win32-arm64-msvc": "16.2.4",
+    "@next/swc-win32-x64-msvc": "16.2.4"
   }
 }
