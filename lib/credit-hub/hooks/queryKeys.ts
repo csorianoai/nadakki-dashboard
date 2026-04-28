@@ -14,4 +14,6 @@ export const chKeys = {
     ["credit-hub", "credit-core", "application", tenantId, applicationId] as const,
   creditCoreEvents: (tenantId: string, applicationId: string) =>
     ["credit-hub", "credit-core", "events", tenantId, applicationId] as const,
+  creditAnalysis: (tenantId: string, applicationId: string) =>
+    ["credit-hub", "credit-core", "analysis", tenantId, applicationId] as const,
 };
