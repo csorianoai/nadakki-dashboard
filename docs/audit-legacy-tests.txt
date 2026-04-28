@@ -1,0 +1,58 @@
+# Legacy field audit — tests/credit-hub + components/credit-hub
+# Generated: 2026-04-28 (audit PROMPT 1)
+# Source: ripgrep-equivalent patterns (PowerShell-friendly); repository: nadakki-dashboard
+
+=== Pattern 1: Edad * | getByLabelText.*[Ee]dad | placeholderText.*[Ee]dad | /[Ee]dad/ ===
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:80:  change("Edad *", fullData.applicant_age);
+
+=== Pattern 2: Tiempo en empleo | tiempo_empleo | employment_time ===
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:34:  time_in_job: "3 años",
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:97:  change("Tiempo en empleo *", fullData.time_in_job);
+
+=== Pattern 3: Frecuencia de pago | payment_frequency | frecuencia_pago ===
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:37:  payment_frequency: "monthly",
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:99:  change("Frecuencia de pago *", fullData.payment_frequency);
+
+=== Pattern 4: Banco principal | primary_bank | banco_principal ===
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:44:  primary_bank: "Banco Popular",
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:109:  change("Banco principal *", fullData.primary_bank);
+
+=== Pattern 5: Historial de mora | delinquency_history | historial_mora ===
+(no matches in tests/credit-hub for these exact strings)
+
+=== Pattern 6: Factura | invoice.*required | factura_required ===
+(no matches for Factura / invoice.*required / factura_required in tests/credit-hub)
+# Related legacy fixture field still present:
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:66:  document_invoice_uploaded: true,
+
+=== Pattern 7: Edad * (components/credit-hub) ===
+(no matches — manual Edad label removed from components)
+
+=== Pattern 8: "CEDULA" | "PASAPORTE" (components/credit-hub) ===
+components/credit-hub/dealer/wizard/WizardContainer.tsx:23:  applicant_document_type: "CEDULA" | "PASAPORTE" | "OTRO" | string;
+components/credit-hub/dealer/wizard/WizardContainer.tsx:70:  co_debtor_document_type: "CEDULA" | "PASAPORTE" | "OTRO" | string;
+components/credit-hub/dealer/wizard/WizardContainer.tsx:101:  applicant_document_type: "CEDULA",
+components/credit-hub/dealer/wizard/WizardContainer.tsx:148:  co_debtor_document_type: "CEDULA",
+components/credit-hub/dealer/wizard/WizardContainer.tsx:196:  const applicantDocumentType = formData.applicant_document_type || "CEDULA";
+components/credit-hub/dealer/wizard/WizardContainer.tsx:197:  const coDebtorDocumentType = formData.co_debtor_document_type || "CEDULA";
+components/credit-hub/dealer/wizard/WizardContainer.tsx:199:    applicantDocumentType === "CEDULA"
+components/credit-hub/dealer/wizard/WizardContainer.tsx:264:        coDebtorDocumentType === "CEDULA"
+components/credit-hub/dealer/wizard/WizardContainer.tsx:304:  if (type === "CEDULA") return validateDominicanCedula(value);
+components/credit-hub/dealer/wizard/WizardContainer.tsx:305:  if (type === "PASAPORTE") return validatePassport(value);
+components/credit-hub/dealer/wizard/WizardContainer.tsx:504:          ? formData.applicant_document_type === "CEDULA"
+components/credit-hub/dealer/wizard/WizardContainer.tsx:519:                <option key={label} value={label === "Cédula" ? "CEDULA" : label === "Pasaporte" ? "PASAPORTE" : "OTRO"}>
+components/credit-hub/dealer/wizard/WizardContainer.tsx:529:                value={formData.applicant_document_type === "CEDULA" ? formatDominicanCedula(formData.applicant_identification) : formData.applicant_identification}
+components/credit-hub/dealer/wizard/WizardContainer.tsx:530:                placeholder={formData.applicant_document_type === "CEDULA" ? "053-0003053-2" : "Pasaporte"}
+components/credit-hub/dealer/wizard/WizardContainer.tsx:531:                onChange={(event) => updateField("applicant_identification", formData.applicant_document_type === "CEDULA" ? cleanDominicanCedula(event.target.value) : event.target.value.toUpperCase())}
+components/credit-hub/dealer/wizard/WizardContainer.tsx:646:                {select("co_debtor_document_type", "Tipo de documento garante *", [["CEDULA", "Cédula"], ["PASAPORTE", "Pasaporte"], ["OTRO", "Otro"]])}
+components/credit-hub/dealer/wizard/WizardContainer.tsx:650:                  value={formData.co_debtor_document_type === "CEDULA" ? formatDominicanCedula(formData.co_debtor_identification) : formData.co_debtor_identification}
+components/credit-hub/dealer/wizard/WizardContainer.tsx:651:                  onChange={(event) => updateField("co_debtor_identification", formData.co_debtor_document_type === "CEDULA" ? cleanDominicanCedula(event.target.value) : event.target.value.toUpperCase())}
+
+=== Supplemental: mora / delinquency in tests (broader) ===
+(no matches for mora|delinquency|morosidad in tests/credit-hub)
+
+=== Supplemental: has_late_payment / document_invoice in tests ===
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:46:  has_late_payment_history: "no",
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:47:  max_late_payment_days: "",
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:66:  document_invoice_uploaded: true,
+tests/credit-hub/content/wizard/WizardContainer.test.tsx:167:      financial: { requested_amount: "500000", has_late_payment_history: false },

@@ -68,6 +68,8 @@ export interface CreditEvent {
 export interface CreateCreditApplicationPayload {
   applicant: {
     full_name: string;
+    document_type?: string;
+    document_other_type?: string | null;
     identification: string;
     date_of_birth: string;
     age: string | number;
@@ -76,6 +78,7 @@ export interface CreateCreditApplicationPayload {
     email: string;
     address: string;
     city: string;
+    municipality?: string;
     province: string;
     country: string;
   };
@@ -83,8 +86,14 @@ export interface CreateCreditApplicationPayload {
     employment_type: string;
     employer_name: string;
     position: string;
+    employment_start_date?: string;
     time_in_job: string;
+    employer_address?: string;
+    employer_province?: string;
+    employer_municipality?: string;
+    contract_type?: string;
     monthly_income: string | number;
+    has_other_income?: boolean;
     other_income: string | number;
     payment_frequency: string;
     work_phone: string;
@@ -95,7 +104,7 @@ export interface CreateCreditApplicationPayload {
     down_payment: string | number;
     monthly_debts: string | number;
     estimated_monthly_expenses: string | number;
-    primary_bank: string;
+    primary_bank: string | null;
     has_bank_account: boolean;
     has_late_payment_history: boolean;
     max_late_payment_days: string | number | null;
@@ -104,19 +113,31 @@ export interface CreateCreditApplicationPayload {
     product_type: string;
     make: string;
     model: string;
+    version?: string;
     year: string | number;
+    color?: string | null;
     price: string | number;
     dealer_supplier: string;
     condition: string;
+    mileage?: string | number | null;
   };
   co_debtor: {
     required: boolean;
+    document_type?: string;
+    document_other_type?: string | null;
     full_name: string;
     identification: string;
+    date_of_birth?: string;
+    email?: string;
+    address?: string;
+    province?: string;
+    municipality?: string;
     phone: string;
     monthly_income: string | number;
     relationship: string;
     employment: string;
+    employer_name?: string;
+    employment_start_date?: string;
   };
   documents: {
     id_uploaded: boolean;
@@ -124,8 +145,11 @@ export interface CreateCreditApplicationPayload {
     bank_statement_uploaded: boolean;
     bureau_authorization_uploaded: boolean;
     invoice_uploaded: boolean;
+    notes?: Record<string, string>;
+    additional_documents?: string[];
   };
   consents: {
+    presence?: "present" | "remote";
     bureau_authorization: boolean;
     terms_accepted: boolean;
     data_processing_authorization: boolean;

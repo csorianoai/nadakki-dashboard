@@ -9,12 +9,38 @@ import { ForgeCard } from "../../primitives/ForgeCard";
 import { ForgeInput } from "../../primitives/ForgeInput";
 import { ForgeSelect } from "../../primitives/ForgeSelect";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import type { CreateCreditApplicationPayload } from "@/lib/credit-hub/types/creditCore";
 import { celebrateSuccessRespectReduced } from "@/lib/credit-hub/utils/celebrate";
 import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
+import { formatDominicanCedula, cleanDominicanCedula } from "@/lib/credit/formatters/dominican-id";
+import { validateDominicanCedula, validatePassport } from "@/lib/credit/validators/dominican-id";
+import { calculateAge, formatTenure, parseDateInput } from "@/lib/credit/utils/age";
+import { useAdministrativeDivisions } from "@/lib/credit/catalogs/useAdministrativeDivisions";
+import type { TenantBankingConfig } from "@/lib/credit-hub/types/tenantConfig";
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  CEDULA: "Cédula",
+  PASAPORTE: "Pasaporte",
+  OTRO: "Otro",
+};
+
+function documentTypeSelectOptions(config: TenantBankingConfig): Array<[string, string]> {
+  const codes = [config.document_types.primary_id, ...config.document_types.alternative_ids];
+  const seen = new Set<string>();
+  return codes
+    .filter((code) => {
+      if (!code || seen.has(code)) return false;
+      seen.add(code);
+      return true;
+    })
+    .map((code) => [code, DOCUMENT_TYPE_LABELS[code] ?? code]);
+}
 
 export interface ApplicationFormData {
   applicant_full_name: string;
+  applicant_document_type: "CEDULA" | "PASAPORTE" | "OTRO" | string;
+  applicant_document_other_type: string;
   applicant_identification: string;
   applicant_date_of_birth: string;
   applicant_age: string;
@@ -29,7 +55,13 @@ export interface ApplicationFormData {
   employer_name: string;
   employment_position: string;
   time_in_job: string;
+  employment_start_date: string;
+  employer_address: string;
+  employer_province: string;
+  employer_city: string;
+  contract_type: string;
   monthly_income: string;
+  has_other_income: "yes" | "no";
   other_income: string;
   payment_frequency: string;
   work_phone: string;
@@ -43,6 +75,10 @@ export interface ApplicationFormData {
   has_late_payment_history: "yes" | "no";
   max_late_payment_days: string;
   product_type: string;
+  vehicle_brand_other: string;
+  vehicle_version: string;
+  vehicle_color: string;
+  vehicle_mileage: string;
   vehicle_make: string;
   vehicle_model: string;
   vehicle_year: string;
@@ -50,6 +86,16 @@ export interface ApplicationFormData {
   dealer_supplier: string;
   vehicle_condition: string;
   co_debtor_required: "yes" | "no";
+  co_debtor_document_type: "CEDULA" | "PASAPORTE" | "OTRO" | string;
+  co_debtor_document_other_type: string;
+  co_debtor_date_of_birth: string;
+  co_debtor_email: string;
+  co_debtor_address: string;
+  co_debtor_province: string;
+  co_debtor_city: string;
+  co_debtor_employer_name: string;
+  co_debtor_employment_start_date: string;
+  co_debtor_relationship_other: string;
   co_debtor_full_name: string;
   co_debtor_identification: string;
   co_debtor_phone: string;
@@ -61,6 +107,9 @@ export interface ApplicationFormData {
   document_bank_statement_uploaded: boolean;
   document_bureau_authorization_uploaded: boolean;
   document_invoice_uploaded: boolean;
+  document_notes: Record<string, string>;
+  additional_documents: string[];
+  consent_presence: "present" | "remote";
   consent_bureau_authorization: boolean;
   consent_terms_accepted: boolean;
   consent_data_processing_authorization: boolean;
@@ -68,6 +117,8 @@ export interface ApplicationFormData {
 
 const initialData: ApplicationFormData = {
   applicant_full_name: "",
+  applicant_document_type: "",
+  applicant_document_other_type: "",
   applicant_identification: "",
   applicant_date_of_birth: "",
   applicant_age: "",
@@ -82,7 +133,13 @@ const initialData: ApplicationFormData = {
   employer_name: "",
   employment_position: "",
   time_in_job: "",
+  employment_start_date: "",
+  employer_address: "",
+  employer_province: "",
+  employer_city: "",
+  contract_type: "",
   monthly_income: "",
+  has_other_income: "no",
   other_income: "0",
   payment_frequency: "",
   work_phone: "",
@@ -96,6 +153,10 @@ const initialData: ApplicationFormData = {
   has_late_payment_history: "no",
   max_late_payment_days: "",
   product_type: "vehicle",
+  vehicle_brand_other: "",
+  vehicle_version: "",
+  vehicle_color: "",
+  vehicle_mileage: "",
   vehicle_make: "",
   vehicle_model: "",
   vehicle_year: "",
@@ -103,6 +164,16 @@ const initialData: ApplicationFormData = {
   dealer_supplier: "",
   vehicle_condition: "",
   co_debtor_required: "no",
+  co_debtor_document_type: "",
+  co_debtor_document_other_type: "",
+  co_debtor_date_of_birth: "",
+  co_debtor_email: "",
+  co_debtor_address: "",
+  co_debtor_province: "",
+  co_debtor_city: "",
+  co_debtor_employer_name: "",
+  co_debtor_employment_start_date: "",
+  co_debtor_relationship_other: "",
   co_debtor_full_name: "",
   co_debtor_identification: "",
   co_debtor_phone: "",
@@ -114,19 +185,21 @@ const initialData: ApplicationFormData = {
   document_bank_statement_uploaded: false,
   document_bureau_authorization_uploaded: false,
   document_invoice_uploaded: false,
+  document_notes: {},
+  additional_documents: [],
+  consent_presence: "present",
   consent_bureau_authorization: false,
   consent_terms_accepted: false,
   consent_data_processing_authorization: false,
 };
 
 const steps = [
-  { id: "applicant", title: "Solicitante", icon: User },
+  { id: "applicant", title: "Identificación", icon: User },
   { id: "employment", title: "Laboral", icon: Briefcase },
-  { id: "financial", title: "Finanzas", icon: DollarSign },
-  { id: "vehicle", title: "Producto", icon: Car },
+  { id: "financial_product", title: "Finanzas y producto", icon: DollarSign },
   { id: "co_debtor", title: "Garante", icon: Users },
   { id: "documents", title: "Documentos", icon: FileText },
-  { id: "consents", title: "Consentimientos", icon: ShieldCheck },
+  { id: "consents", title: "Consentimiento", icon: ShieldCheck },
   { id: "review", title: "Revisión", icon: ClipboardCheck },
 ];
 
@@ -136,18 +209,33 @@ function cleanDecimalInput(value: string): string {
   return rest.length ? `${first}.${rest.join("")}` : first;
 }
 
-export function buildCreateApplicationPayload(formData: ApplicationFormData): CreateCreditApplicationPayload {
+export function buildCreateApplicationPayload(
+  formData: ApplicationFormData,
+  options?: { defaultDocumentType?: string }
+): CreateCreditApplicationPayload {
+  const defaultDoc = options?.defaultDocumentType ?? "CEDULA";
+  const applicantBirthDate = parseDateInput(formData.applicant_date_of_birth);
+  const applicantAge = applicantBirthDate ? calculateAge(applicantBirthDate) : "";
+  const applicantDocumentType = formData.applicant_document_type || defaultDoc;
+  const coDebtorDocumentType = formData.co_debtor_document_type || defaultDoc;
+  const cleanApplicantId =
+    applicantDocumentType === "CEDULA"
+      ? cleanDominicanCedula(formData.applicant_identification)
+      : formData.applicant_identification.trim().toUpperCase();
   return {
     applicant: {
       full_name: formData.applicant_full_name.trim(),
-      identification: formData.applicant_identification.trim(),
+      document_type: applicantDocumentType,
+      document_other_type: (formData.applicant_document_other_type || "").trim() || null,
+      identification: cleanApplicantId,
       date_of_birth: formData.applicant_date_of_birth,
-      age: formData.applicant_age,
+      age: applicantAge,
       marital_status: formData.applicant_marital_status,
       phone: formData.applicant_phone.trim(),
       email: formData.applicant_email.trim(),
       address: formData.applicant_address.trim(),
       city: formData.applicant_city.trim(),
+      municipality: formData.applicant_city.trim(),
       province: formData.applicant_province.trim(),
       country: formData.applicant_country.trim(),
     },
@@ -155,10 +243,16 @@ export function buildCreateApplicationPayload(formData: ApplicationFormData): Cr
       employment_type: formData.employment_type,
       employer_name: formData.employer_name.trim(),
       position: formData.employment_position.trim(),
-      time_in_job: formData.time_in_job.trim(),
+      employment_start_date: formData.employment_start_date || "",
+      time_in_job: formData.employment_start_date ? formatTenure(parseDateInput(formData.employment_start_date) || new Date()) : formData.time_in_job.trim(),
+      employer_address: (formData.employer_address || "").trim(),
+      employer_province: (formData.employer_province || "").trim(),
+      employer_municipality: (formData.employer_city || "").trim(),
+      contract_type: formData.contract_type || "",
       monthly_income: formData.monthly_income,
-      other_income: formData.other_income || "0",
-      payment_frequency: formData.payment_frequency,
+      has_other_income: formData.has_other_income === "yes",
+      other_income: formData.has_other_income === "yes" ? formData.other_income || "0" : "0",
+      payment_frequency: "monthly",
       work_phone: formData.work_phone.trim(),
     },
     financial: {
@@ -167,37 +261,55 @@ export function buildCreateApplicationPayload(formData: ApplicationFormData): Cr
       down_payment: formData.down_payment || "0",
       monthly_debts: formData.monthly_debts || "0",
       estimated_monthly_expenses: formData.estimated_monthly_expenses || "0",
-      primary_bank: formData.primary_bank.trim(),
+      primary_bank: formData.primary_bank.trim() || null,
       has_bank_account: formData.has_bank_account === "yes",
-      has_late_payment_history: formData.has_late_payment_history === "yes",
-      max_late_payment_days: formData.has_late_payment_history === "yes" ? formData.max_late_payment_days || "0" : null,
+      has_late_payment_history: false,
+      max_late_payment_days: null,
     },
     vehicle: {
       product_type: formData.product_type,
-      make: formData.vehicle_make.trim(),
+      make: formData.vehicle_make === "Otros" ? (formData.vehicle_brand_other || "").trim() : formData.vehicle_make.trim(),
       model: formData.vehicle_model.trim(),
+      version: formData.vehicle_version.trim(),
       year: formData.vehicle_year,
+      color: formData.vehicle_color.trim() || null,
       price: formData.vehicle_price,
       dealer_supplier: formData.dealer_supplier.trim(),
       condition: formData.vehicle_condition,
+      mileage: formData.vehicle_condition === "used" ? formData.vehicle_mileage : null,
     },
     co_debtor: {
       required: formData.co_debtor_required === "yes",
       full_name: formData.co_debtor_full_name.trim(),
-      identification: formData.co_debtor_identification.trim(),
+      document_type: coDebtorDocumentType,
+      document_other_type: (formData.co_debtor_document_other_type || "").trim() || null,
+      identification:
+        coDebtorDocumentType === "CEDULA"
+          ? cleanDominicanCedula(formData.co_debtor_identification)
+          : formData.co_debtor_identification.trim().toUpperCase(),
+      date_of_birth: formData.co_debtor_date_of_birth || "",
+      email: (formData.co_debtor_email || "").trim(),
+      address: (formData.co_debtor_address || "").trim(),
+      province: (formData.co_debtor_province || "").trim(),
+      municipality: (formData.co_debtor_city || "").trim(),
       phone: formData.co_debtor_phone.trim(),
       monthly_income: formData.co_debtor_monthly_income,
-      relationship: formData.co_debtor_relationship.trim(),
+      relationship: formData.co_debtor_relationship === "Otro" ? (formData.co_debtor_relationship_other || "").trim() : formData.co_debtor_relationship.trim(),
       employment: formData.co_debtor_employment.trim(),
+      employer_name: (formData.co_debtor_employer_name || "").trim(),
+      employment_start_date: formData.co_debtor_employment_start_date || "",
     },
     documents: {
       id_uploaded: formData.document_id_uploaded,
       income_proof_uploaded: formData.document_income_proof_uploaded,
       bank_statement_uploaded: formData.document_bank_statement_uploaded,
       bureau_authorization_uploaded: formData.document_bureau_authorization_uploaded,
-      invoice_uploaded: formData.document_invoice_uploaded,
+      invoice_uploaded: false,
+      notes: formData.document_notes || {},
+      additional_documents: formData.additional_documents || [],
     },
     consents: {
+      presence: formData.consent_presence || "present",
       bureau_authorization: formData.consent_bureau_authorization,
       terms_accepted: formData.consent_terms_accepted,
       data_processing_authorization: formData.consent_data_processing_authorization,
@@ -211,13 +323,34 @@ function isFilled(value: string): boolean {
   return value.trim().length > 0;
 }
 
-function stepIsValid(step: number, data: ApplicationFormData): boolean {
+function documentIsValid(type: string, value: string): boolean {
+  if (type === "CEDULA") return validateDominicanCedula(value);
+  if (type === "PASAPORTE") return validatePassport(value);
+  return isFilled(value);
+}
+
+function ageFromInput(value: string): number | null {
+  const date = parseDateInput(value);
+  return date ? calculateAge(date) : null;
+}
+
+function stepIsValid(
+  step: number,
+  data: ApplicationFormData,
+  config: { min_age: number; max_age: number; garante_required: boolean; default_document_type: string } = {
+    min_age: 18,
+    max_age: 75,
+    garante_required: false,
+    default_document_type: "CEDULA",
+  }
+): boolean {
+  const applicantDoc = data.applicant_document_type || config.default_document_type;
   if (step === 0) {
+    const age = ageFromInput(data.applicant_date_of_birth);
     return [
       data.applicant_full_name,
       data.applicant_identification,
       data.applicant_date_of_birth,
-      data.applicant_age,
       data.applicant_marital_status,
       data.applicant_phone,
       data.applicant_email,
@@ -225,31 +358,35 @@ function stepIsValid(step: number, data: ApplicationFormData): boolean {
       data.applicant_city,
       data.applicant_province,
       data.applicant_country,
-    ].every(isFilled);
+    ].every(isFilled) && documentIsValid(applicantDoc, data.applicant_identification) && age !== null && age >= config.min_age && age <= config.max_age;
   }
   if (step === 1) {
-    return [data.employment_type, data.employer_name, data.employment_position, data.time_in_job, data.monthly_income, data.payment_frequency, data.work_phone].every(isFilled);
+    return [data.employment_type, data.employer_name, data.employment_position, data.employment_start_date, data.monthly_income, data.work_phone, data.employer_address, data.employer_province, data.employer_city, data.contract_type].every(isFilled);
   }
   if (step === 2) {
-    const latePaymentValid = data.has_late_payment_history === "no" || isFilled(data.max_late_payment_days);
-    return [data.requested_amount, data.desired_term, data.down_payment, data.monthly_debts, data.estimated_monthly_expenses, data.primary_bank].every(isFilled) && latePaymentValid;
-  }
-  if (step === 3) {
     return [data.product_type, data.vehicle_make, data.vehicle_model, data.vehicle_year, data.vehicle_price, data.dealer_supplier, data.vehicle_condition].every(isFilled);
   }
-  if (step === 4) {
-    if (data.co_debtor_required === "no") return true;
-    return [data.co_debtor_full_name, data.co_debtor_identification, data.co_debtor_phone, data.co_debtor_monthly_income, data.co_debtor_relationship, data.co_debtor_employment].every(isFilled);
+  if (step === 3) {
+    if (data.co_debtor_required === "no" && !config.garante_required) return true;
+    const coAge = ageFromInput(data.co_debtor_date_of_birth);
+    const coDoc = data.co_debtor_document_type || config.default_document_type;
+    return [data.co_debtor_full_name, data.co_debtor_identification, data.co_debtor_date_of_birth, data.co_debtor_phone, data.co_debtor_email, data.co_debtor_address, data.co_debtor_province, data.co_debtor_city, data.co_debtor_monthly_income, data.co_debtor_relationship, data.co_debtor_employer_name, data.co_debtor_employment_start_date].every(isFilled)
+      && documentIsValid(coDoc, data.co_debtor_identification)
+      && cleanDominicanCedula(data.co_debtor_identification) !== cleanDominicanCedula(data.applicant_identification)
+      && coAge !== null && coAge >= config.min_age && Number(data.co_debtor_monthly_income) > 0;
   }
-  if (step === 6) {
+  if (step === 4) {
+    return data.document_id_uploaded && data.document_income_proof_uploaded && data.document_bank_statement_uploaded;
+  }
+  if (step === 5) {
     return data.consent_bureau_authorization && data.consent_terms_accepted && data.consent_data_processing_authorization;
   }
   return true;
 }
 
 function requiredHint(step: number): string {
-  if (step === 4) return "Completa los datos del co-deudor o marca que no es requerido.";
-  if (step === 6) return "Los tres consentimientos son obligatorios para enviar.";
+  if (step === 3) return "Completa los datos del garante o marca que no es requerido.";
+  if (step === 5) return "Los tres consentimientos son obligatorios para enviar.";
   return "Completa los campos obligatorios para continuar.";
 }
 
@@ -292,6 +429,9 @@ function formatDop(value: number): string {
 
 export function WizardContainer() {
   const router = useRouter();
+  const { tenantConfig } = useTenantConfig();
+  const defaultDocType = tenantConfig.document_types.primary_id ?? "CEDULA";
+  const administrativeDivisions = useAdministrativeDivisions(tenantConfig.country_code);
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<ApplicationFormData>(initialData);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
@@ -302,7 +442,15 @@ export function WizardContainer() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const canProceed = stepIsValid(currentStep, formData);
+  const selectedApplicantProvince = administrativeDivisions.find((item) => item.name === formData.applicant_province);
+  const selectedEmployerProvince = administrativeDivisions.find((item) => item.name === formData.employer_province);
+  const selectedCoDebtorProvince = administrativeDivisions.find((item) => item.name === formData.co_debtor_province);
+  const canProceed = stepIsValid(currentStep, formData, {
+    min_age: tenantConfig.min_age,
+    max_age: tenantConfig.max_age,
+    garante_required: tenantConfig.features_enabled.garante_required,
+    default_document_type: defaultDocType,
+  });
 
   const handleNext = () => {
     if (currentStep < steps.length - 1 && canProceed) setCurrentStep(currentStep + 1);
@@ -313,7 +461,12 @@ export function WizardContainer() {
   };
 
   const handleSubmit = async (_status: "draft" | "submitted") => {
-    if (!stepIsValid(6, formData)) {
+    if (!stepIsValid(5, formData, {
+      min_age: tenantConfig.min_age,
+      max_age: tenantConfig.max_age,
+      garante_required: tenantConfig.features_enabled.garante_required,
+      default_document_type: defaultDocType,
+    })) {
       setSubmitStatus("error");
       setSubmitError("Debes aceptar todos los consentimientos antes de enviar.");
       return;
@@ -321,7 +474,9 @@ export function WizardContainer() {
     setSubmitStatus("submitting");
     setSubmitError(null);
     try {
-      const result = await createMutation.mutateAsync(buildCreateApplicationPayload(formData));
+      const result = await createMutation.mutateAsync(
+        buildCreateApplicationPayload(formData, { defaultDocumentType: defaultDocType })
+      );
       setSubmitStatus("success");
       celebrateSuccessRespectReduced();
       forgeToast.success("¡Solicitud creada exitosamente!");
@@ -385,26 +540,69 @@ export function WizardContainer() {
 
   const renderStep = () => {
     if (currentStep === 0) {
+      const applicantDoc = formData.applicant_document_type || defaultDocType;
+      const birthDate = parseDateInput(formData.applicant_date_of_birth);
+      const age = birthDate ? calculateAge(birthDate) : null;
+      const docError =
+        formData.applicant_identification && !documentIsValid(applicantDoc, formData.applicant_identification)
+          ? applicantDoc === "CEDULA"
+            ? "Cédula inválida. Verifica el dígito verificador."
+            : "Pasaporte inválido"
+          : null;
       return (
         <div className="space-y-5">
           {sectionHeader("Datos del solicitante", "Identificación y datos de contacto del cliente.")}
           <div className="grid gap-4 md:grid-cols-2">
             {input("applicant_full_name", "Nombre completo *", { autoFocus: true })}
-            {input("applicant_identification", "Cédula / Identificación *")}
+            <ForgeSelect
+              label="Tipo de documento *"
+              value={applicantDoc}
+              onChange={(event) => updateField("applicant_document_type", event.target.value)}
+            >
+              {documentTypeSelectOptions(tenantConfig).map(([value, optionLabel]) => (
+                <option key={value} value={value}>
+                  {optionLabel}
+                </option>
+              ))}
+            </ForgeSelect>
+            {applicantDoc === "OTRO" && input("applicant_document_other_type", "Especifique tipo *")}
+            <div className="space-y-1">
+              <ForgeInput
+                label="Número de documento *"
+                aria-label="Cédula / Identificación *"
+                value={applicantDoc === "CEDULA" ? formatDominicanCedula(formData.applicant_identification) : formData.applicant_identification}
+                placeholder={applicantDoc === "CEDULA" ? "053-0003053-2" : "Pasaporte"}
+                onChange={(event) => updateField("applicant_identification", applicantDoc === "CEDULA" ? cleanDominicanCedula(event.target.value) : event.target.value.toUpperCase())}
+              />
+              {docError && <p className="text-xs text-forge-danger">{docError}</p>}
+            </div>
             {input("applicant_date_of_birth", "Fecha de nacimiento *", { type: "date" })}
-            {input("applicant_age", "Edad *", { type: "number" })}
+            <div className="rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
+              <p className="text-xs text-forge-text-muted">Edad calculada</p>
+              <p className="font-semibold text-forge-text">{age === null ? "No disponible" : `${age} años`}</p>
+              {age !== null && age < tenantConfig.min_age && <p className="mt-1 text-xs text-forge-danger">Edad mínima requerida: {tenantConfig.min_age} años</p>}
+              {age !== null && age > tenantConfig.max_age && <p className="mt-1 text-xs text-forge-danger">Edad excede el rango operativo del producto</p>}
+            </div>
             {select("applicant_marital_status", "Estado civil *", [["single", "Soltero/a"], ["married", "Casado/a"], ["union", "Unión libre"], ["divorced", "Divorciado/a"], ["widowed", "Viudo/a"]])}
             {input("applicant_phone", "Teléfono *", { type: "tel" })}
-            {input("applicant_email", "Email *", { type: "email" })}
+            {input("applicant_email", "Correo electrónico *", { type: "email" })}
             {input("applicant_country", "País *")}
             {input("applicant_address", "Dirección *", { className: "md:col-span-2" })}
-            {input("applicant_city", "Ciudad *")}
-            {input("applicant_province", "Provincia *")}
+            <ForgeSelect label="Provincia *" value={formData.applicant_province} onChange={(event) => updateField("applicant_province", event.target.value)}>
+              <option value="">Selecciona...</option>
+              {administrativeDivisions.map((item) => <option key={item.code} value={item.name}>{item.name}</option>)}
+            </ForgeSelect>
+            <ForgeSelect label="Municipio *" value={formData.applicant_city} onChange={(event) => updateField("applicant_city", event.target.value)} disabled={!selectedApplicantProvince}>
+              <option value="">Selecciona...</option>
+              {(selectedApplicantProvince?.municipalities ?? []).map((municipality) => <option key={municipality} value={municipality}>{municipality}</option>)}
+            </ForgeSelect>
           </div>
         </div>
       );
     }
     if (currentStep === 1) {
+      const employmentStart = parseDateInput(formData.employment_start_date);
+      const tenureLabel = employmentStart ? formatTenure(employmentStart) : "No disponible";
       return (
         <div className="space-y-5">
           {sectionHeader("Información laboral", "Capacidad de pago y estabilidad laboral.")}
@@ -412,65 +610,164 @@ export function WizardContainer() {
             {select("employment_type", "Tipo de empleo *", [["employee", "Empleado privado"], ["public_employee", "Empleado público"], ["self_employed", "Independiente"], ["business_owner", "Dueño de negocio"], ["retired", "Pensionado"]])}
             {input("employer_name", "Empresa donde trabaja *")}
             {input("employment_position", "Cargo *")}
-            {input("time_in_job", "Tiempo en empleo *", { placeholder: "Ej: 2 años" })}
-            {input("monthly_income", "Ingreso mensual *", { inputMode: "decimal" })}
-            {input("other_income", "Otros ingresos", { inputMode: "decimal" })}
-            {select("payment_frequency", "Frecuencia de pago *", [["weekly", "Semanal"], ["biweekly", "Quincenal"], ["monthly", "Mensual"]])}
-            {input("work_phone", "Teléfono laboral *", { type: "tel" })}
+            {input("employment_start_date", "Fecha de ingreso al empleo *", { type: "date" })}
+            <div className="rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
+              <p className="text-xs text-forge-text-muted">Antigüedad calculada</p>
+              <p className="font-semibold text-forge-text">{tenureLabel}</p>
+            </div>
+            {input("monthly_income", "Ingreso mensual neto *", { inputMode: "decimal" })}
+            {input("work_phone", "Teléfono empresa *", { type: "tel" })}
+            {input("employer_address", "Dirección de la empresa *", { className: "md:col-span-2" })}
+            <ForgeSelect label="Provincia empresa *" value={formData.employer_province} onChange={(event) => updateField("employer_province", event.target.value)}>
+              <option value="">Selecciona...</option>
+              {administrativeDivisions.map((item) => <option key={item.code} value={item.name}>{item.name}</option>)}
+            </ForgeSelect>
+            <ForgeSelect label="Municipio empresa *" value={formData.employer_city} onChange={(event) => updateField("employer_city", event.target.value)} disabled={!selectedEmployerProvince}>
+              <option value="">Selecciona...</option>
+              {(selectedEmployerProvince?.municipalities ?? []).map((municipality) => <option key={municipality} value={municipality}>{municipality}</option>)}
+            </ForgeSelect>
+            {select("contract_type", "Tipo de contrato *", [["indefinido", "Indefinido"], ["temporal", "Temporal"], ["proyecto", "Por proyecto"], ["independiente", "Independiente"]])}
+            {boolSelect("has_other_income", "¿Tiene otros ingresos además del salario? *")}
+            {formData.has_other_income === "yes" && input("other_income", "Monto mensual de otros ingresos", { inputMode: "decimal" })}
+          </div>
+          <div className="rounded-xl bg-forge-primary/10 p-4 text-sm text-forge-text">
+            Ingreso total mensual estimado: <span className="font-semibold tabular-nums">{formatDop(numeric(formData.monthly_income) + (formData.has_other_income === "yes" ? numeric(formData.other_income) : 0))}</span>
           </div>
         </div>
       );
     }
     if (currentStep === 2) {
+      const amountToFinance = Math.max(0, numeric(formData.vehicle_price) - numeric(formData.down_payment));
+      const estimatedCapacity = Math.max(0, (numeric(formData.monthly_income) + (formData.has_other_income === "yes" ? numeric(formData.other_income) : 0) - numeric(formData.monthly_debts)) * 0.4);
+      const ltv = numeric(formData.vehicle_price) > 0 ? amountToFinance / numeric(formData.vehicle_price) : 0;
       return (
         <div className="space-y-5">
-          {sectionHeader("Información financiera", "Condiciones solicitadas y obligaciones actuales.")}
+          {sectionHeader("Información financiera y producto", "Condiciones solicitadas y vehículo o producto a financiar.")}
           <div className="grid gap-4 md:grid-cols-2">
-            {input("requested_amount", "Monto solicitado *", { inputMode: "decimal" })}
             {input("desired_term", "Plazo deseado *", { placeholder: "Ej: 48 meses" })}
-            {input("down_payment", "Cuota inicial *", { inputMode: "decimal" })}
-            {input("monthly_debts", "Deudas mensuales *", { inputMode: "decimal" })}
-            {input("estimated_monthly_expenses", "Gasto mensual estimado *", { inputMode: "decimal" })}
-            {input("primary_bank", "Banco principal *")}
-            {boolSelect("has_bank_account", "Tiene cuenta bancaria *")}
-            {boolSelect("has_late_payment_history", "Historial de mora *")}
-            {formData.has_late_payment_history === "yes" && input("max_late_payment_days", "Días máximos de mora *", { type: "number" })}
+            {input("down_payment", "Cuota inicial disponible *", { inputMode: "decimal" })}
+            {input("monthly_debts", "Deudas mensuales actuales *", { inputMode: "decimal" })}
+            {input("estimated_monthly_expenses", "Gasto mensual estimado (opcional)", { inputMode: "decimal" })}
+            {boolSelect("has_bank_account", "¿Tiene cuenta bancaria activa? *")}
+            {formData.has_bank_account === "yes" && input("primary_bank", "Banco (opcional)")}
+            <div className="md:col-span-2 border-t border-forge-border pt-4">
+              <h3 className="font-semibold text-forge-text">Vehículo o producto a financiar</h3>
+            </div>
+            {select("product_type", "Tipo de producto *", tenantConfig.product_types.map((item) => [item, item]))}
+            {select("vehicle_make", "Marca *", [["Toyota", "Toyota"], ["Honda", "Honda"], ["Hyundai", "Hyundai"], ["Kia", "Kia"], ["Nissan", "Nissan"], ["Mitsubishi", "Mitsubishi"], ["Ford", "Ford"], ["Chevrolet", "Chevrolet"], ["Mazda", "Mazda"], ["Suzuki", "Suzuki"], ["BMW", "BMW"], ["Mercedes-Benz", "Mercedes-Benz"], ["Audi", "Audi"], ["Lexus", "Lexus"], ["Otros", "Otros"]])}
+            {formData.vehicle_make === "Otros" && input("vehicle_brand_other", "Especifique marca *")}
+            {input("vehicle_model", "Modelo *")}
+            {input("vehicle_version", "Sub-modelo / versión (opcional)")}
+            {select("vehicle_year", "Año *", Array.from({ length: 32 }, (_, index) => {
+              const year = new Date().getFullYear() + 1 - index;
+              return [String(year), String(year)] as [string, string];
+            }))}
+            {input("vehicle_color", "Color (opcional)")}
+            {input("vehicle_price", "Precio de venta *", { inputMode: "decimal" })}
+            {select("vehicle_condition", "Condición *", [["new", "Nuevo"], ["used", "Usado"]])}
+            {formData.vehicle_condition === "used" && input("vehicle_mileage", "Kilometraje actual", { inputMode: "numeric" })}
+            {input("dealer_supplier", "Dealer / Suplidor *", { readOnly: false })}
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">Monto a financiar</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(amountToFinance)}</p></div>
+            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">LTV</p><p className="font-semibold tabular-nums text-forge-text">{Math.round(ltv * 100)}%</p>{ltv > tenantConfig.ltv_max && <p className="text-xs text-forge-danger">LTV supera el máximo del tenant.</p>}</div>
+            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">Capacidad estimada</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(estimatedCapacity)}</p></div>
           </div>
         </div>
       );
     }
     if (currentStep === 3) {
+      const coDoc = formData.co_debtor_document_type || defaultDocType;
+      const coBirthDate = parseDateInput(formData.co_debtor_date_of_birth);
+      const coAge = coBirthDate ? calculateAge(coBirthDate) : null;
       return (
         <div className="space-y-5">
-          {sectionHeader("Vehículo / producto financiado", "Datos del activo o producto a financiar.")}
-          <div className="grid gap-4 md:grid-cols-2">
-            {select("product_type", "Tipo de producto *", [["vehicle", "Vehículo"], ["motorcycle", "Motocicleta"], ["equipment", "Equipo"], ["other", "Otro"]])}
-            {input("vehicle_make", "Marca *")}
-            {input("vehicle_model", "Modelo *")}
-            {input("vehicle_year", "Año *", { type: "number" })}
-            {input("vehicle_price", "Precio *", { inputMode: "decimal" })}
-            {input("dealer_supplier", "Dealer / Suplidor *")}
-            {select("vehicle_condition", "Condición *", [["new", "Nuevo"], ["used", "Usado"]])}
+          {sectionHeader("Garante o cofirmante", "Completa los datos si la solicitud incluye respaldo adicional.")}
+          <div className="space-y-4">
+            {!tenantConfig.features_enabled.garante_required && boolSelect("co_debtor_required", "¿La solicitud incluye garante o cofirmante? *")}
+            {(tenantConfig.features_enabled.garante_required || formData.co_debtor_required === "yes") && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="grid gap-4 rounded-2xl border border-forge-border bg-forge-surface-elevated p-4 md:grid-cols-2">
+                <h3 className="md:col-span-2 font-semibold text-forge-text">Datos del garante</h3>
+                <ForgeSelect
+                  label="Tipo de documento garante *"
+                  value={coDoc}
+                  onChange={(event) => updateField("co_debtor_document_type", event.target.value)}
+                >
+                  {documentTypeSelectOptions(tenantConfig).map(([value, optionLabel]) => (
+                    <option key={value} value={value}>
+                      {optionLabel}
+                    </option>
+                  ))}
+                </ForgeSelect>
+                {coDoc === "OTRO" && input("co_debtor_document_other_type", "Especifique tipo *")}
+                <ForgeInput
+                  label="Número de documento garante *"
+                  value={coDoc === "CEDULA" ? formatDominicanCedula(formData.co_debtor_identification) : formData.co_debtor_identification}
+                  onChange={(event) => updateField("co_debtor_identification", coDoc === "CEDULA" ? cleanDominicanCedula(event.target.value) : event.target.value.toUpperCase())}
+                />
+                {input("co_debtor_full_name", "Nombre completo garante *")}
+                {input("co_debtor_date_of_birth", "Fecha de nacimiento garante *", { type: "date" })}
+                <div className="rounded-xl border border-forge-border bg-forge-surface p-3">
+                  <p className="text-xs text-forge-text-muted">Edad garante</p>
+                  <p className="font-semibold text-forge-text">{coAge === null ? "No disponible" : `${coAge} años`}</p>
+                </div>
+                {input("co_debtor_phone", "Teléfono garante *", { type: "tel" })}
+                {input("co_debtor_email", "Correo electrónico garante *", { type: "email" })}
+                {input("co_debtor_address", "Dirección garante *", { className: "md:col-span-2" })}
+                <ForgeSelect label="Provincia garante *" value={formData.co_debtor_province} onChange={(event) => updateField("co_debtor_province", event.target.value)}>
+                  <option value="">Selecciona...</option>
+                  {administrativeDivisions.map((item) => <option key={item.code} value={item.name}>{item.name}</option>)}
+                </ForgeSelect>
+                <ForgeSelect label="Municipio garante *" value={formData.co_debtor_city} onChange={(event) => updateField("co_debtor_city", event.target.value)} disabled={!selectedCoDebtorProvince}>
+                  <option value="">Selecciona...</option>
+                  {(selectedCoDebtorProvince?.municipalities ?? []).map((municipality) => <option key={municipality} value={municipality}>{municipality}</option>)}
+                </ForgeSelect>
+                {input("co_debtor_monthly_income", "Ingreso mensual garante *", { inputMode: "decimal" })}
+                {input("co_debtor_employer_name", "Empresa donde labora garante *")}
+                {input("co_debtor_employment_start_date", "Fecha de ingreso al empleo garante *", { type: "date" })}
+                {select("co_debtor_relationship", "Relación con solicitante *", [["Cónyuge", "Cónyuge"], ["Padre/Madre", "Padre/Madre"], ["Hijo/a", "Hijo/a"], ["Hermano/a", "Hermano/a"], ["Familiar", "Familiar"], ["Amigo", "Amigo"], ["Socio comercial", "Socio comercial"], ["Otro", "Otro"]])}
+                {formData.co_debtor_relationship === "Otro" && input("co_debtor_relationship_other", "Especifique relación *")}
+                {cleanDominicanCedula(formData.co_debtor_identification) && cleanDominicanCedula(formData.co_debtor_identification) === cleanDominicanCedula(formData.applicant_identification) && (
+                  <p className="md:col-span-2 text-sm text-forge-danger">El garante no puede ser el mismo solicitante.</p>
+                )}
+              </motion.div>
+            )}
           </div>
         </div>
       );
     }
     if (currentStep === 4) {
+      const receivedCount = [
+        formData.document_id_uploaded,
+        formData.document_income_proof_uploaded,
+        formData.document_bank_statement_uploaded,
+        formData.document_bureau_authorization_uploaded,
+      ].filter(Boolean).length;
       return (
         <div className="space-y-5">
-          {sectionHeader("Co-deudor / garante", "Completa esta sección solo si la operación requiere garante.")}
-          <div className="grid gap-4 md:grid-cols-2">
-            {boolSelect("co_debtor_required", "Requiere co-deudor *")}
-            {formData.co_debtor_required === "yes" && (
-              <>
-                {input("co_debtor_full_name", "Nombre co-deudor *")}
-                {input("co_debtor_identification", "Cédula co-deudor *")}
-                {input("co_debtor_phone", "Teléfono co-deudor *", { type: "tel" })}
-                {input("co_debtor_monthly_income", "Ingreso mensual co-deudor *", { inputMode: "decimal" })}
-                {input("co_debtor_relationship", "Relación con solicitante *")}
-                {input("co_debtor_employment", "Empleo co-deudor *")}
-              </>
-            )}
+          {sectionHeader("Documentos recibidos", "Marca los documentos que has recibido del solicitante. La carga de archivos se completará después.")}
+          <p className="rounded-xl bg-forge-surface-elevated p-3 text-sm text-forge-text-muted">{receivedCount} de {tenantConfig.required_documents.length} documentos recibidos</p>
+          <div className="grid gap-3">
+            {tenantConfig.required_documents.map((document) => {
+              const field =
+                document.id === "id" ? "document_id_uploaded" :
+                document.id === "employment_letter" ? "document_income_proof_uploaded" :
+                document.id === "bank_statements" ? "document_bank_statement_uploaded" :
+                document.id === "address_proof" ? "document_bureau_authorization_uploaded" :
+                "document_invoice_uploaded";
+              return (
+                <div key={document.id} className="rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
+                  {checkbox(field as keyof ApplicationFormData, `${document.label}${document.required ? " *" : ""}`)}
+                  <p className="mt-2 text-xs text-forge-text-muted">{document.tooltip}</p>
+                  <textarea
+                    className="mt-2 min-h-16 w-full rounded-lg border border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
+                    placeholder="Notas opcionales"
+                    value={formData.document_notes[document.id] ?? ""}
+                    onChange={(event) => updateField("document_notes", { ...formData.document_notes, [document.id]: event.target.value })}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       );
@@ -478,21 +775,13 @@ export function WizardContainer() {
     if (currentStep === 5) {
       return (
         <div className="space-y-5">
-          {sectionHeader("Documentos requeridos", "Marca los documentos recibidos. La carga de archivos llegará después.")}
-          <div className="grid gap-3 md:grid-cols-2">
-            {checkbox("document_id_uploaded", "Cédula cargada")}
-            {checkbox("document_income_proof_uploaded", "Comprobante ingresos")}
-            {checkbox("document_bank_statement_uploaded", "Estado de cuenta")}
-            {checkbox("document_bureau_authorization_uploaded", "Autorización buró")}
-            {checkbox("document_invoice_uploaded", "Factura / proforma")}
-          </div>
-        </div>
-      );
-    }
-    if (currentStep === 6) {
-      return (
-        <div className="space-y-5">
           {sectionHeader("Consentimientos", "Todos son obligatorios antes de enviar la solicitud.")}
+          {select("consent_presence", "¿El solicitante está físicamente presente? *", [["present", "Sí, está aquí"], ["remote", "No, está remoto"]])}
+          {formData.consent_presence === "remote" && (
+            <div className="rounded-xl border border-forge-warning/30 bg-forge-warning/10 p-4 text-sm text-forge-text">
+              Consentimiento remoto estará disponible con enlace seguro por WhatsApp, correo, OTP o selfie. Para esta versión, completa el consentimiento cuando el cliente esté presente.
+            </div>
+          )}
           <div className="space-y-3">
             {checkbox("consent_bureau_authorization", "Autorizo la consulta de buró de crédito *")}
             {checkbox("consent_terms_accepted", "Acepto los términos y condiciones *")}
@@ -501,14 +790,13 @@ export function WizardContainer() {
         </div>
       );
     }
-    const payload = buildCreateApplicationPayload(formData);
+    const payload = buildCreateApplicationPayload(formData, { defaultDocumentType: defaultDocType });
     const preview = preliminaryViability(formData);
     const sections = [
       ["Solicitante", payload.applicant],
       ["Laboral", payload.employment],
-      ["Financiera", payload.financial],
-      ["Vehículo / Producto", payload.vehicle],
-      ["Co-deudor", payload.co_debtor],
+      ["Financiera y Producto", { ...payload.financial, ...payload.vehicle }],
+      ["Garante", payload.co_debtor],
       ["Documentos", payload.documents],
       ["Consentimientos", payload.consents],
     ] as const;
@@ -549,7 +837,9 @@ export function WizardContainer() {
                 {Object.entries(values).map(([key, value]) => (
                   <div key={key} className="flex justify-between gap-3 border-b border-forge-border/50 pb-1">
                     <dt className="text-forge-text-muted">{key}</dt>
-                    <dd className="text-right text-forge-text">{value === true ? "Sí" : value === false ? "No" : value ?? "—"}</dd>
+                    <dd className="text-right text-forge-text">
+                      {value === true ? "Sí" : value === false ? "No" : value === null || value === undefined ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value)}
+                    </dd>
                   </div>
                 ))}
               </dl>

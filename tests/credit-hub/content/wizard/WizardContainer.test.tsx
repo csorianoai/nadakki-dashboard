@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { WizardContainer, buildCreateApplicationPayload, type ApplicationFormData } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 
@@ -14,38 +15,58 @@ jest.mock("@/lib/credit-hub/hooks/useCreateCreditApplication", () => ({
   useCreateCreditApplication: jest.fn(),
 }));
 
+jest.mock("@/components/credit-hub/system/ForgeToaster", () => ({
+  forgeToast: { success: jest.fn(), error: jest.fn() },
+}));
+
+jest.mock("@/lib/credit-hub/utils/celebrate", () => ({
+  celebrateSuccessRespectReduced: jest.fn(),
+}));
+
 const mockUseCreateApplication = useCreateCreditApplication as jest.Mock;
 
 const fullData: ApplicationFormData = {
   applicant_full_name: "Ana Pérez",
-  applicant_identification: "001-0000000-1",
+  applicant_identification: "05300030532",
+  applicant_document_type: "CEDULA",
+  applicant_document_other_type: "",
   applicant_date_of_birth: "1990-01-01",
-  applicant_age: "35",
+  applicant_age: "",
   applicant_marital_status: "single",
   applicant_email: "ana@example.com",
   applicant_phone: "8095550000",
   applicant_address: "Calle 1",
-  applicant_city: "Santo Domingo",
+  applicant_city: "Santo Domingo de Guzmán",
   applicant_province: "Distrito Nacional",
   applicant_country: "República Dominicana",
   employment_type: "employee",
   employer_name: "Credicefi",
   employment_position: "Analista",
-  time_in_job: "3 años",
+  time_in_job: "",
+  employment_start_date: "2020-01-01",
+  employer_address: "Av. Winston Churchill",
+  employer_province: "Distrito Nacional",
+  employer_city: "Santo Domingo de Guzmán",
+  contract_type: "indefinido",
   monthly_income: "85000",
-  other_income: "5000",
-  payment_frequency: "monthly",
+  has_other_income: "no",
+  other_income: "0",
+  payment_frequency: "",
   work_phone: "8095551111",
-  requested_amount: "500000",
+  requested_amount: "",
   desired_term: "48 meses",
   down_payment: "100000",
   monthly_debts: "15000",
   estimated_monthly_expenses: "30000",
-  primary_bank: "Banco Popular",
+  primary_bank: "",
   has_bank_account: "yes",
   has_late_payment_history: "no",
   max_late_payment_days: "",
-  product_type: "vehicle",
+  product_type: "Vehículo nuevo",
+  vehicle_brand_other: "",
+  vehicle_version: "",
+  vehicle_color: "",
+  vehicle_mileage: "",
   vehicle_make: "Toyota",
   vehicle_model: "Hilux",
   vehicle_year: "2024",
@@ -53,6 +74,16 @@ const fullData: ApplicationFormData = {
   dealer_supplier: "Dealer Norte",
   vehicle_condition: "new",
   co_debtor_required: "no",
+  co_debtor_document_type: "CEDULA",
+  co_debtor_document_other_type: "",
+  co_debtor_date_of_birth: "",
+  co_debtor_email: "",
+  co_debtor_address: "",
+  co_debtor_province: "",
+  co_debtor_city: "",
+  co_debtor_employer_name: "",
+  co_debtor_employment_start_date: "",
+  co_debtor_relationship_other: "",
   co_debtor_full_name: "",
   co_debtor_identification: "",
   co_debtor_phone: "",
@@ -62,29 +93,31 @@ const fullData: ApplicationFormData = {
   document_id_uploaded: true,
   document_income_proof_uploaded: true,
   document_bank_statement_uploaded: true,
-  document_bureau_authorization_uploaded: true,
-  document_invoice_uploaded: true,
+  document_bureau_authorization_uploaded: false,
+  document_invoice_uploaded: false,
+  document_notes: {},
+  additional_documents: [],
+  consent_presence: "present",
   consent_bureau_authorization: true,
   consent_terms_accepted: true,
   consent_data_processing_authorization: true,
 };
 
-function change(label: string, value: string) {
+function change(label: string | RegExp, value: string) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 }
 
 async function fillApplicantAndContinue() {
   change("Nombre completo *", fullData.applicant_full_name);
-  change("Cédula / Identificación *", fullData.applicant_identification);
+  change(/Número de documento/i, fullData.applicant_identification);
   change("Fecha de nacimiento *", fullData.applicant_date_of_birth);
-  change("Edad *", fullData.applicant_age);
   change("Estado civil *", fullData.applicant_marital_status);
   change("Teléfono *", fullData.applicant_phone);
-  change("Email *", fullData.applicant_email);
+  change(/Correo electrónico/i, fullData.applicant_email);
   change("País *", fullData.applicant_country);
   change("Dirección *", fullData.applicant_address);
-  change("Ciudad *", fullData.applicant_city);
   change("Provincia *", fullData.applicant_province);
+  change("Municipio *", fullData.applicant_city);
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Información laboral")).toBeInTheDocument();
 }
@@ -94,34 +127,36 @@ async function advanceToConsents() {
   change("Tipo de empleo *", fullData.employment_type);
   change("Empresa donde trabaja *", fullData.employer_name);
   change("Cargo *", fullData.employment_position);
-  change("Tiempo en empleo *", fullData.time_in_job);
-  change("Ingreso mensual *", fullData.monthly_income);
-  change("Frecuencia de pago *", fullData.payment_frequency);
-  change("Teléfono laboral *", fullData.work_phone);
+  change("Fecha de ingreso al empleo *", fullData.employment_start_date);
+  change("Ingreso mensual neto *", fullData.monthly_income);
+  change("Teléfono empresa *", fullData.work_phone);
+  change("Dirección de la empresa *", fullData.employer_address);
+  change("Provincia empresa *", fullData.employer_province);
+  change("Municipio empresa *", fullData.employer_city);
+  change("Tipo de contrato *", fullData.contract_type);
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-  expect(await screen.findByText("Información financiera")).toBeInTheDocument();
+  expect(await screen.findByText("Información financiera y producto")).toBeInTheDocument();
 
-  change("Monto solicitado *", fullData.requested_amount);
   change("Plazo deseado *", fullData.desired_term);
-  change("Cuota inicial *", fullData.down_payment);
-  change("Deudas mensuales *", fullData.monthly_debts);
-  change("Gasto mensual estimado *", fullData.estimated_monthly_expenses);
-  change("Banco principal *", fullData.primary_bank);
-  fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-  expect(await screen.findByText("Vehículo / producto financiado")).toBeInTheDocument();
-
+  change("Cuota inicial disponible *", fullData.down_payment);
+  change("Deudas mensuales actuales *", fullData.monthly_debts);
+  change(/Gasto mensual estimado/i, fullData.estimated_monthly_expenses);
   change("Tipo de producto *", fullData.product_type);
   change("Marca *", fullData.vehicle_make);
   change("Modelo *", fullData.vehicle_model);
   change("Año *", fullData.vehicle_year);
-  change("Precio *", fullData.vehicle_price);
+  change("Precio de venta *", fullData.vehicle_price);
   change("Dealer / Suplidor *", fullData.dealer_supplier);
   change("Condición *", fullData.vehicle_condition);
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-  expect(await screen.findByText("Co-deudor / garante")).toBeInTheDocument();
+  expect(await screen.findByText("Garante o cofirmante")).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-  expect(await screen.findByText("Documentos requeridos")).toBeInTheDocument();
+  expect(await screen.findByText("Documentos recibidos")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByLabelText(/Cédula de identidad \(frente y reverso\)/i));
+  fireEvent.click(screen.getByLabelText(/Carta de trabajo o constancia laboral/i));
+  fireEvent.click(screen.getByLabelText(/Últimos 3 estados de cuenta bancarios/i));
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByRole("heading", { name: "Consentimientos" })).toBeInTheDocument();
 }
@@ -136,8 +171,11 @@ async function advanceToReview() {
 }
 
 describe("WizardContainer", () => {
+  let user: ReturnType<typeof userEvent.setup>;
+
   beforeEach(() => {
     jest.useRealTimers();
+    user = userEvent.setup();
     push.mockReset();
     back.mockReset();
     mutateAsync.mockReset();
@@ -159,15 +197,15 @@ describe("WizardContainer", () => {
   });
 
   test("payload contains full backend sections", () => {
-    const payload = buildCreateApplicationPayload(fullData);
+    const payload = buildCreateApplicationPayload(fullData, { defaultDocumentType: "CEDULA" });
 
     expect(payload).toMatchObject({
-      applicant: { full_name: "Ana Pérez", identification: "001-0000000-1" },
+      applicant: { full_name: "Ana Pérez", identification: "05300030532", document_type: "CEDULA" },
       employment: { employer_name: "Credicefi", monthly_income: "85000" },
-      financial: { requested_amount: "500000", has_late_payment_history: false },
+      financial: { down_payment: "100000", has_late_payment_history: false },
       vehicle: { make: "Toyota", model: "Hilux" },
       co_debtor: { required: false },
-      documents: { id_uploaded: true },
+      documents: { id_uploaded: true, invoice_uploaded: false },
       consents: { bureau_authorization: true, terms_accepted: true, data_processing_authorization: true },
       source: "forge_dealer_portal",
       version: "full_credit_application_v1",
@@ -175,19 +213,30 @@ describe("WizardContainer", () => {
   });
 
   test("co-debtor fields are conditional", () => {
-    const withoutCoDebtor = buildCreateApplicationPayload({ ...fullData, co_debtor_required: "no" });
+    const withoutCoDebtor = buildCreateApplicationPayload({ ...fullData, co_debtor_required: "no" }, { defaultDocumentType: "CEDULA" });
     expect(withoutCoDebtor.co_debtor.required).toBe(false);
 
-    const withCoDebtor = buildCreateApplicationPayload({
-      ...fullData,
-      co_debtor_required: "yes",
-      co_debtor_full_name: "Luis Pérez",
-      co_debtor_identification: "001-1111111-1",
-      co_debtor_phone: "8095552222",
-      co_debtor_monthly_income: "65000",
-      co_debtor_relationship: "Hermano",
-      co_debtor_employment: "Ingeniero",
-    });
+    const withCoDebtor = buildCreateApplicationPayload(
+      {
+        ...fullData,
+        co_debtor_required: "yes",
+        co_debtor_full_name: "Luis Pérez",
+        co_debtor_identification: "40212398768",
+        co_debtor_phone: "8095552222",
+        co_debtor_monthly_income: "65000",
+        co_debtor_relationship: "Hermano",
+        co_debtor_employment: "Ingeniero",
+        co_debtor_document_type: "CEDULA",
+        co_debtor_date_of_birth: "1985-06-01",
+        co_debtor_email: "luis@example.com",
+        co_debtor_address: "Calle 9",
+        co_debtor_province: "Distrito Nacional",
+        co_debtor_city: "Santo Domingo de Guzmán",
+        co_debtor_employer_name: "ACME",
+        co_debtor_employment_start_date: "2018-01-01",
+      },
+      { defaultDocumentType: "CEDULA" }
+    );
     expect(withCoDebtor.co_debtor).toMatchObject({ required: true, full_name: "Luis Pérez", monthly_income: "65000" });
   });
 
@@ -201,7 +250,6 @@ describe("WizardContainer", () => {
   });
 
   test("submit success redirects to detail", async () => {
-    jest.useFakeTimers();
     mutateAsync.mockResolvedValue({ application_id: "app-created" });
     render(<WizardContainer />);
 
@@ -216,11 +264,12 @@ describe("WizardContainer", () => {
       }))
     );
 
-    act(() => {
-      jest.advanceTimersByTime(1500);
-    });
-    expect(push).toHaveBeenCalledWith("/credit-hub/dealer/applications/app-created");
-    jest.useRealTimers();
+    await waitFor(
+      () => {
+        expect(push).toHaveBeenCalledWith("/credit-hub/dealer/applications/app-created");
+      },
+      { timeout: 4000 }
+    );
   });
 
   test("submit error shows backend message", async () => {
@@ -229,5 +278,46 @@ describe("WizardContainer", () => {
     await advanceToReview();
     fireEvent.click(screen.getByRole("button", { name: "Enviar solicitud" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Backend validation failed");
+  });
+
+  it("does not render the legacy manual age input", () => {
+    render(<WizardContainer />);
+    expect(screen.queryByLabelText(/^Edad \*$/i)).not.toBeInTheDocument();
+  });
+
+  it("calculates age automatically from birth date", async () => {
+    render(<WizardContainer />);
+    await user.clear(screen.getByLabelText(/Fecha de nacimiento/i));
+    await user.type(screen.getByLabelText(/Fecha de nacimiento/i), "1990-05-15");
+    expect(await screen.findByText(/35 años|36 años|\d+ años/i)).toBeInTheDocument();
+  });
+
+  it("blocks continuation if applicant is under 18", async () => {
+    render(<WizardContainer />);
+    const recentDate = new Date();
+    recentDate.setFullYear(recentDate.getFullYear() - 17);
+    const iso = `${recentDate.getFullYear()}-${String(recentDate.getMonth() + 1).padStart(2, "0")}-${String(recentDate.getDate()).padStart(2, "0")}`;
+    await user.clear(screen.getByLabelText(/Fecha de nacimiento/i));
+    await user.type(screen.getByLabelText(/Fecha de nacimiento/i), iso);
+    expect(screen.getByText(/Edad mínima requerida/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Siguiente/i })).toBeDisabled();
+  });
+
+  it("auto-formats Dominican cedula with mask", async () => {
+    render(<WizardContainer />);
+    const docTypeSelect = screen.getByLabelText(/Tipo de documento/i);
+    await user.selectOptions(docTypeSelect, "CEDULA");
+    const docInput = screen.getByLabelText(/Número de documento/i);
+    await user.clear(docInput);
+    await user.type(docInput, "05300030532");
+    expect(docInput).toHaveValue("053-0003053-2");
+  });
+
+  it("rejects invalid Dominican cedula by Luhn check", async () => {
+    render(<WizardContainer />);
+    const docInput = screen.getByLabelText(/Número de documento/i);
+    await user.clear(docInput);
+    await user.type(docInput, "001-1234567-8");
+    expect(await screen.findByText(/Cédula inválida/i)).toBeInTheDocument();
   });
 });
