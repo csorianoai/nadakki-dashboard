@@ -23,7 +23,7 @@ export class CHMutationForbiddenError extends Error {
   }
 }
 
-export type CHActorRole = "dealer" | "bank" | "customer" | "admin";
+export type CHActorRole = "dealer" | "bank" | "bank_analyst" | "bank_admin" | "compliance_officer" | "customer" | "admin";
 
 export interface CHRequestInit extends Omit<RequestInit, "headers"> {
   tenantId: string;

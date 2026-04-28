@@ -16,4 +16,14 @@ export const chKeys = {
     ["credit-hub", "credit-core", "events", tenantId, applicationId] as const,
   creditAnalysis: (tenantId: string, applicationId: string) =>
     ["credit-hub", "credit-core", "analysis", tenantId, applicationId] as const,
+  bankQueue: (tenantId: string) =>
+    ["credit-hub", "bank", "queue", tenantId] as const,
+  bankApplication: (tenantId: string, applicationId: string) =>
+    ["credit-hub", "bank", "application", tenantId, applicationId] as const,
+  bankAnalytics: (tenantId: string, period = "30d") =>
+    ["credit-hub", "bank", "analytics", tenantId, period] as const,
+  bankAuditTrail: (tenantId: string, applicationId: string) =>
+    ["credit-hub", "bank", "audit-trail", tenantId, applicationId] as const,
+  bankCompliance: (tenantId: string, applicationId: string) =>
+    ["credit-hub", "bank", "compliance", tenantId, applicationId] as const,
 };

@@ -33,6 +33,23 @@ const MATRIX: Record<CHActorRole, CHAction[] | ["*"]> = {
     "create_offer",
     "confirm_funding",
   ],
+  bank_analyst: [
+    "view_application",
+    "view_internal_notes",
+    "create_decision",
+    "edit_decision",
+    "create_offer",
+  ],
+  bank_admin: [
+    "view_application",
+    "view_internal_notes",
+    "create_decision",
+    "edit_decision",
+    "create_offer",
+    "confirm_funding",
+    "view_audit_log",
+  ],
+  compliance_officer: ["view_application", "view_internal_notes", "view_audit_log"],
   customer: ["view_application", "accept_offer", "reject_offer"],
   admin: ["*"],
 };
