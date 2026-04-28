@@ -25,8 +25,9 @@ import {
   calculatePMT,
   calculateWizardEstimatedCapacity,
 } from "@/lib/credit/utils/financial-calculator";
-import { calculateTotalMonthlyIncome, type Frequency } from "@/lib/credit/utils/income-normalizer";
+import { calculateTotalMonthlyIncome, type Frequency, type OtherIncomeSource } from "@/lib/credit/utils/income-normalizer";
 import { useAdministrativeDivisions } from "@/lib/credit/catalogs/useAdministrativeDivisions";
+import { DO_RELATIONSHIP_TYPES } from "@/lib/credit/catalogs/do/employment-types";
 import type { TenantBankingConfig } from "@/lib/credit-hub/types/tenantConfig";
 import { simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
 import { PreApprovalBadge } from "./PreApprovalBadge";
@@ -265,10 +266,10 @@ export function buildCreateApplicationPayload(
     coDebtorDocumentType === "CEDULA"
       ? cleanDominicanCedula(formData.co_debtor_identification)
       : formData.co_debtor_identification;
-  const otherIncomeNormalized = (formData.other_incomes ?? []).map((row) => ({
+  const otherIncomeNormalized: OtherIncomeSource[] = (formData.other_incomes ?? []).map((row) => ({
     amount: numeric(row.amount),
     frequency: row.frequency,
-    variableAvg: row.variable_avg_6_months ? numeric(row.variable_avg_6_months) : undefined,
+    variable_avg_6_months: row.variable_avg_6_months ? numeric(row.variable_avg_6_months) : undefined,
   }));
   const otherMonthlySum =
     formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomeNormalized) : 0;
@@ -448,11 +449,11 @@ function numeric(value: string | number | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function otherIncomesToParts(data: ApplicationFormData): Array<{ amount: number; frequency: Frequency; variableAvg?: number }> {
+function otherIncomesToParts(data: ApplicationFormData): OtherIncomeSource[] {
   return (data.other_incomes ?? []).map((row) => ({
     amount: numeric(row.amount),
     frequency: row.frequency,
-    variableAvg: row.variable_avg_6_months ? numeric(row.variable_avg_6_months) : undefined,
+    variable_avg_6_months: row.variable_avg_6_months ? numeric(row.variable_avg_6_months) : undefined,
   }));
 }
 
@@ -918,6 +919,9 @@ export function WizardContainer() {
                   {brand}
                 </option>
               ))}
+              {!catalogsLoading && !catalogs && (
+                <option disabled>Catálogo no disponible</option>
+              )}
             </ForgeSelect>
             {formData.vehicle_make === "Otros" && input("vehicle_brand_other", "Especifique marca *")}
             {input("vehicle_model", "Modelo *")}
@@ -991,7 +995,11 @@ export function WizardContainer() {
                 {input("co_debtor_monthly_income", "Ingreso mensual garante *", { inputMode: "decimal" })}
                 {input("co_debtor_employer_name", "Empresa donde labora garante *")}
                 {input("co_debtor_employment_start_date", "Fecha de ingreso al empleo garante *", { type: "date" })}
-                {select("co_debtor_relationship", "Relación con solicitante *", [["Cónyuge", "Cónyuge"], ["Padre/Madre", "Padre/Madre"], ["Hijo/a", "Hijo/a"], ["Hermano/a", "Hermano/a"], ["Familiar", "Familiar"], ["Amigo", "Amigo"], ["Socio comercial", "Socio comercial"], ["Otro", "Otro"]])}
+                {select(
+                  "co_debtor_relationship",
+                  "Relación con solicitante *",
+                  (catalogs?.relationshipTypes ?? [...DO_RELATIONSHIP_TYPES]).map((r) => [r, r] as [string, string])
+                )}
                 {formData.co_debtor_relationship === "Otro" && input("co_debtor_relationship_other", "Especifique relación *")}
                 {cleanDominicanCedula(formData.co_debtor_identification) && cleanDominicanCedula(formData.co_debtor_identification) === cleanDominicanCedula(formData.applicant_identification) && (
                   <p className="md:col-span-2 text-sm text-forge-danger">El garante no puede ser el mismo solicitante.</p>

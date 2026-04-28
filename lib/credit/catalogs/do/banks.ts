@@ -14,3 +14,5 @@ export const DO_BANKS = [
   "Cooperativa Credicefi",
   "Otros",
 ] as const;
+
+export type DOBank = (typeof DO_BANKS)[number];

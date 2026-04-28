@@ -1,8 +1,21 @@
-export type Frequency = "MENSUAL" | "QUINCENAL" | "SEMANAL" | "TRIMESTRAL" | "ANUAL" | "VARIABLE";
+export type IncomeFrequency = "MENSUAL" | "QUINCENAL" | "SEMANAL" | "TRIMESTRAL" | "ANUAL" | "VARIABLE";
 
-export function normalizeToMonthly(amount: number, frequency: Frequency, variableAvg6Months?: number): number {
+/** @deprecated Use `IncomeFrequency` */
+export type Frequency = IncomeFrequency;
+
+export interface OtherIncomeSource {
+  amount: number;
+  frequency: IncomeFrequency;
+  variable_avg_6_months?: number;
+}
+
+export function normalizeToMonthly(
+  amount: number,
+  frequency: IncomeFrequency,
+  variableAvg6Months?: number
+): number {
   if (frequency === "VARIABLE") return variableAvg6Months ?? 0;
-  const multipliers: Record<Frequency, number> = {
+  const multipliers: Record<IncomeFrequency, number> = {
     MENSUAL: 1,
     QUINCENAL: 2,
     SEMANAL: 4.33,
@@ -15,11 +28,11 @@ export function normalizeToMonthly(amount: number, frequency: Frequency, variabl
 
 export function calculateTotalMonthlyIncome(
   baseSalary: number,
-  otherIncomes: Array<{ amount: number; frequency: Frequency; variableAvg?: number }>
+  otherIncomes: OtherIncomeSource[] | null | undefined
 ): number {
   if (!otherIncomes || otherIncomes.length === 0) return baseSalary;
   const otherTotal = otherIncomes.reduce(
-    (sum, inc) => sum + normalizeToMonthly(inc.amount, inc.frequency, inc.variableAvg),
+    (sum, inc) => sum + normalizeToMonthly(inc.amount, inc.frequency, inc.variable_avg_6_months),
     0
   );
   return baseSalary + otherTotal;

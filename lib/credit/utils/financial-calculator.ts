@@ -2,6 +2,7 @@
 
 export function calculatePMT(principal: number, annualRate: number, months: number): number {
   if (months <= 0) return 0;
+  if (principal <= 0) return 0;
   const monthlyRate = annualRate / 12 / 100;
   if (monthlyRate === 0) return principal / months;
   const factor = Math.pow(1 + monthlyRate, months);

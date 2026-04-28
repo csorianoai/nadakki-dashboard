@@ -22,6 +22,7 @@ jest.mock("@/lib/credit-hub/hooks/useCatalogs", () => {
     DO_CONTRACT_TYPES,
     DO_INCOME_CONCEPTS,
     DO_PAYMENT_FREQUENCIES,
+    DO_RELATIONSHIP_TYPES,
   } = require("@/lib/credit/catalogs/do/employment-types");
   return {
     useCatalogs: () => ({
@@ -31,6 +32,7 @@ jest.mock("@/lib/credit-hub/hooks/useCatalogs", () => {
         contractTypes: DO_CONTRACT_TYPES,
         incomeConcepts: DO_INCOME_CONCEPTS,
         paymentFrequencies: DO_PAYMENT_FREQUENCIES,
+        relationshipTypes: DO_RELATIONSHIP_TYPES,
       },
       loading: false,
     }),

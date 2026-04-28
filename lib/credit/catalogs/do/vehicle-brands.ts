@@ -23,3 +23,5 @@ export const DO_VEHICLE_BRANDS = [
   "Porsche",
   "Otros",
 ] as const;
+
+export type DOVehicleBrand = (typeof DO_VEHICLE_BRANDS)[number];

@@ -3,15 +3,19 @@
 import { useEffect, useState } from "react";
 import { useTenantConfig } from "./useTenantConfig";
 
-export type LoadedCatalogs = {
+export interface Catalogs {
   vehicleBrands: readonly string[];
   banks: readonly string[];
   contractTypes: readonly string[];
   incomeConcepts: readonly string[];
   paymentFrequencies: readonly string[];
-};
+  relationshipTypes: readonly string[];
+}
 
-const CATALOGS_BY_COUNTRY: Record<string, () => Promise<LoadedCatalogs>> = {
+/** @deprecated Use `Catalogs` */
+export type LoadedCatalogs = Catalogs;
+
+const CATALOG_LOADERS: Record<string, () => Promise<Catalogs>> = {
   DO: async () => {
     const [brands, banks, employment] = await Promise.all([
       import("@/lib/credit/catalogs/do/vehicle-brands"),
@@ -24,30 +28,35 @@ const CATALOGS_BY_COUNTRY: Record<string, () => Promise<LoadedCatalogs>> = {
       contractTypes: employment.DO_CONTRACT_TYPES,
       incomeConcepts: employment.DO_INCOME_CONCEPTS,
       paymentFrequencies: employment.DO_PAYMENT_FREQUENCIES,
+      relationshipTypes: employment.DO_RELATIONSHIP_TYPES,
     };
   },
 };
 
-export function useCatalogs(): { catalogs: LoadedCatalogs | null; loading: boolean } {
+export function useCatalogs(): { catalogs: Catalogs | null; loading: boolean } {
   const { tenantConfig, loading: configLoading } = useTenantConfig();
   const country = tenantConfig?.country_code ?? "DO";
 
-  const [catalogs, setCatalogs] = useState<LoadedCatalogs | null>(null);
+  const [catalogs, setCatalogs] = useState<Catalogs | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
+    let mounted = true;
+    const loader = CATALOG_LOADERS[country] ?? CATALOG_LOADERS.DO;
     setLoading(true);
-    const loader = CATALOGS_BY_COUNTRY[country] ?? CATALOGS_BY_COUNTRY.DO;
     loader()
       .then((data) => {
-        if (!cancelled) setCatalogs(data);
+        if (mounted) setCatalogs(data);
+      })
+      .catch((err) => {
+        console.error("[useCatalogs] Failed to load:", err);
+        if (mounted) setCatalogs(null);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (mounted) setLoading(false);
       });
     return () => {
-      cancelled = true;
+      mounted = false;
     };
   }, [country]);
 

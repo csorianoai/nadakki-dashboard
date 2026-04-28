@@ -13,3 +13,14 @@ export const DO_INCOME_CONCEPTS = [
 ] as const;
 
 export const DO_PAYMENT_FREQUENCIES = ["MENSUAL", "QUINCENAL", "SEMANAL", "TRIMESTRAL", "ANUAL", "VARIABLE"] as const;
+
+export const DO_RELATIONSHIP_TYPES = [
+  "Cónyuge",
+  "Padre/Madre",
+  "Hijo/a",
+  "Hermano/a",
+  "Familiar",
+  "Amigo",
+  "Socio comercial",
+  "Otro",
+] as const;

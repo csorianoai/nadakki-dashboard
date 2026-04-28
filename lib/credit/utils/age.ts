@@ -13,7 +13,7 @@ export function parseDateInput(value: string): Date | null {
 }
 
 /**
- * @deprecated Prefer `calculateEmploymentTenure` from `@/lib/credit/utils/employment-tenure` (richer result + validation).
+ * @deprecated Use `calculateEmploymentTenure` from `@/lib/credit/utils/employment-tenure`.
  */
 export function formatTenure(startDate: Date): string {
   const today = new Date();
