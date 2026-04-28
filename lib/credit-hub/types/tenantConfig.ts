@@ -77,5 +77,6 @@ export interface TenantBankingConfig {
   };
   /** When set, warn if guarantor monthly income is below estimated payment × ratio. */
   garante_minimum_income_ratio?: number;
-  consent_methods_enabled: Array<"OTP_SMS" | "OTP_EMAIL" | "WHATSAPP_LINK" | "SELFIE" | "SIGNED_PDF">;
+  /** Códigos remotos: WHATSAPP, EMAIL, SMS_OTP, SELFIE; legacy: WHATSAPP_LINK, OTP_EMAIL, OTP_SMS. */
+  consent_methods_enabled: string[];
 }

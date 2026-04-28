@@ -156,6 +156,10 @@ export interface CreateCreditApplicationPayload {
     bureau_authorization: boolean;
     terms_accepted: boolean;
     data_processing_authorization: boolean;
+    consent_method?: string | null;
+    consent_audit_hash?: string | null;
+    consent_accepted_at?: string | null;
+    signature_full_name?: string | null;
   };
   source: "forge_dealer_portal";
   version: "full_credit_application_v1";

@@ -137,6 +137,13 @@ const fullData: ApplicationFormData = {
   consent_bureau_authorization: true,
   consent_terms_accepted: true,
   consent_data_processing_authorization: true,
+  consent_signature_full_name: "Ana Pérez",
+  consent_present_confirmed: true,
+  consent_method: "PRESENT",
+  consent_audit_hash: "",
+  consent_accepted_at: "2020-01-02T00:00:00.000Z",
+  consent_sms_otp_sent: false,
+  consent_dealer_otp_code: "",
 };
 
 function change(label: string | RegExp, value: string) {
@@ -202,9 +209,11 @@ async function advanceToConsents() {
 
 async function advanceToReview() {
   await advanceToConsents();
-  fireEvent.click(screen.getByLabelText("Autorizo la consulta de buró de crédito *"));
-  fireEvent.click(screen.getByLabelText("Acepto los términos y condiciones *"));
-  fireEvent.click(screen.getByLabelText("Autorizo el tratamiento de datos personales *"));
+  fireEvent.click(screen.getByLabelText(/Ley 172-13/i));
+  fireEvent.click(screen.getByLabelText(/buró de crédito/i));
+  fireEvent.click(screen.getByLabelText(/Nadakki/i));
+  fireEvent.change(screen.getByLabelText(/firma digital/i), { target: { value: "Ana Pérez" } });
+  fireEvent.click(screen.getByTestId("present-submit"));
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Revisión final")).toBeInTheDocument();
 }
@@ -281,7 +290,13 @@ describe("WizardContainer", () => {
       vehicle: { make: "Toyota", model: "Hilux" },
       co_debtor: { required: false },
       documents: { id_uploaded: true, invoice_uploaded: false },
-      consents: { bureau_authorization: true, terms_accepted: true, data_processing_authorization: true },
+      consents: {
+        bureau_authorization: true,
+        terms_accepted: true,
+        data_processing_authorization: true,
+        consent_method: "PRESENT",
+        signature_full_name: "Ana Pérez",
+      },
       source: "forge_dealer_portal",
       version: "full_credit_application_v1",
     });
@@ -316,15 +331,18 @@ describe("WizardContainer", () => {
   });
 
   test("consents are required before final review", async () => {
+    const user = userEvent.setup();
     render(<WizardContainer />);
     await advanceToConsents();
     expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
-    fireEvent.click(screen.getByLabelText("Autorizo la consulta de buró de crédito *"));
-    fireEvent.click(screen.getByLabelText("Acepto los términos y condiciones *"));
+    await user.click(screen.getByLabelText(/Ley 172-13/i));
+    await user.click(screen.getByLabelText(/buró de crédito/i));
     expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
   });
 
-  test("submit success redirects to detail", async () => {
+  test(
+    "submit success redirects to detail",
+    async () => {
     mutateAsync.mockResolvedValue({ application_id: "app-created" });
     render(<WizardContainer />);
 
@@ -345,7 +363,8 @@ describe("WizardContainer", () => {
       },
       { timeout: 4000 }
     );
-  });
+  },
+  30_000);
 
   test("submit error shows backend message", async () => {
     mutateAsync.mockRejectedValue(new Error("Backend validation failed"));

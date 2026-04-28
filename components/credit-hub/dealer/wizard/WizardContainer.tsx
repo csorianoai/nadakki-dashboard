@@ -34,6 +34,7 @@ import type { TenantBankingConfig, TenantRequiredDocument } from "@/lib/credit-h
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
 import { preapprovalParamsFromTenantFractions, simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
 import { PreApprovalBadge } from "./PreApprovalBadge";
+import { ConsentSection, type ConsentWizardPatch } from "./consent/ConsentSection";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   CEDULA: "Cédula",
@@ -180,6 +181,13 @@ export interface ApplicationFormData {
   consent_bureau_authorization: boolean;
   consent_terms_accepted: boolean;
   consent_data_processing_authorization: boolean;
+  consent_signature_full_name: string;
+  consent_present_confirmed: boolean;
+  consent_method: string;
+  consent_audit_hash: string;
+  consent_accepted_at: string;
+  consent_sms_otp_sent: boolean;
+  consent_dealer_otp_code: string;
 }
 
 const initialData: ApplicationFormData = {
@@ -252,6 +260,13 @@ const initialData: ApplicationFormData = {
   consent_bureau_authorization: false,
   consent_terms_accepted: false,
   consent_data_processing_authorization: false,
+  consent_signature_full_name: "",
+  consent_present_confirmed: false,
+  consent_method: "",
+  consent_audit_hash: "",
+  consent_accepted_at: "",
+  consent_sms_otp_sent: false,
+  consent_dealer_otp_code: "",
 };
 
 function cleanDecimalInput(value: string): string {
@@ -362,6 +377,11 @@ export function buildCreateApplicationPayload(
       bureau_authorization: formData.consent_bureau_authorization,
       terms_accepted: formData.consent_terms_accepted,
       data_processing_authorization: formData.consent_data_processing_authorization,
+      consent_method: formData.consent_method.trim() || null,
+      consent_audit_hash: formData.consent_audit_hash.trim() || null,
+      consent_accepted_at: formData.consent_accepted_at.trim() || null,
+      signature_full_name:
+        formData.consent_presence === "present" ? (formData.consent_signature_full_name.trim() || null) : null,
     },
     source: "forge_dealer_portal",
     version: "full_credit_application_v1",
@@ -406,6 +426,7 @@ type WizardStepValidationConfig = {
   garante_required: boolean;
   default_document_type: string;
   required_documents: TenantRequiredDocument[];
+  consent_application_id_ready: boolean;
 };
 
 function getGaranteInlineErrors(
@@ -449,6 +470,7 @@ function stepIsValid(
     garante_required: false,
     default_document_type: "CEDULA",
     required_documents: DEFAULT_DO_REQUIRED_DOCUMENTS,
+    consent_application_id_ready: false,
   },
   t: CreditHubTranslations
 ): boolean {
@@ -501,7 +523,25 @@ function stepIsValid(
     return config.required_documents.filter((d) => d.required).every((d) => Boolean(data.documents_received[tenantDocumentKey(d)]));
   }
   if (step === 5) {
-    return data.consent_bureau_authorization && data.consent_terms_accepted && data.consent_data_processing_authorization;
+    const base =
+      data.consent_bureau_authorization && data.consent_terms_accepted && data.consent_data_processing_authorization;
+    if (!base) return false;
+    if (data.consent_presence === "present") {
+      return data.consent_signature_full_name.trim().length >= 3 && data.consent_present_confirmed;
+    }
+    if (!config.consent_application_id_ready) return false;
+    const method = data.consent_method;
+    if (method === "SMS_OTP") {
+      return (
+        data.consent_sms_otp_sent &&
+        data.consent_dealer_otp_code.trim().length === 6 &&
+        Boolean(data.consent_accepted_at.trim())
+      );
+    }
+    if (method === "WHATSAPP" || method === "EMAIL" || method === "SELFIE") {
+      return Boolean(data.consent_accepted_at.trim());
+    }
+    return false;
   }
   return true;
 }
@@ -558,6 +598,8 @@ function formatDop(value: number): string {
 export function WizardContainer() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const consentApplicationId = searchParams.get("application_id")?.trim() ?? "";
+  const consentApplicationIdReady = Boolean(consentApplicationId);
   const presetAppliedRef = useRef(false);
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
@@ -611,8 +653,16 @@ export function WizardContainer() {
       garante_required: tenantConfig.features_enabled.garante_required,
       default_document_type: defaultDocType,
       required_documents: requiredDocumentsList,
+      consent_application_id_ready: consentApplicationIdReady,
     }),
-    [tenantConfig.min_age, tenantConfig.max_age, tenantConfig.features_enabled.garante_required, defaultDocType, requiredDocumentsList]
+    [
+      tenantConfig.min_age,
+      tenantConfig.max_age,
+      tenantConfig.features_enabled.garante_required,
+      defaultDocType,
+      requiredDocumentsList,
+      consentApplicationIdReady,
+    ]
   );
 
   useEffect(() => {
@@ -763,7 +813,7 @@ export function WizardContainer() {
         router.push(`/credit-hub/dealer/applications/${result.application_id}`);
       }, 1500);
     } catch (error) {
-      console.error("Submit error:", error);
+      console.error("Submit error");
       setSubmitStatus("error");
       setSubmitError(error instanceof Error ? error.message : t.toasts.application_failed);
       forgeToast.error(error instanceof Error ? error.message : t.toasts.application_failed);
@@ -1288,17 +1338,22 @@ export function WizardContainer() {
       return (
         <div className="space-y-5">
           {sectionHeader(t.wizard.sections.consents_title, t.wizard.sections.consents_sub)}
-          {select("consent_presence", "¿El solicitante está físicamente presente? *", [["present", "Sí, está aquí"], ["remote", "No, está remoto"]])}
-          {formData.consent_presence === "remote" && (
-            <div className="rounded-xl border border-forge-warning/30 bg-forge-warning/10 p-4 text-sm text-forge-text">
-              {t.wizard.remote_consent_notice}
-            </div>
-          )}
-          <div className="space-y-3">
-            {checkbox("consent_bureau_authorization", "Autorizo la consulta de buró de crédito *")}
-            {checkbox("consent_terms_accepted", "Acepto los términos y condiciones *")}
-            {checkbox("consent_data_processing_authorization", "Autorizo el tratamiento de datos personales *")}
-          </div>
+          <ConsentSection
+            applicationId={consentApplicationId}
+            applicationIdReady={consentApplicationIdReady}
+            consent_presence={formData.consent_presence}
+            consent_bureau_authorization={formData.consent_bureau_authorization}
+            consent_terms_accepted={formData.consent_terms_accepted}
+            consent_data_processing_authorization={formData.consent_data_processing_authorization}
+            consent_signature_full_name={formData.consent_signature_full_name}
+            consent_present_confirmed={formData.consent_present_confirmed}
+            consent_method={formData.consent_method}
+            consent_audit_hash={formData.consent_audit_hash}
+            consent_accepted_at={formData.consent_accepted_at}
+            consent_sms_otp_sent={formData.consent_sms_otp_sent}
+            consent_dealer_otp_code={formData.consent_dealer_otp_code}
+            onPatch={(patch: ConsentWizardPatch) => setFormData((prev) => ({ ...prev, ...patch }))}
+          />
         </div>
       );
     }

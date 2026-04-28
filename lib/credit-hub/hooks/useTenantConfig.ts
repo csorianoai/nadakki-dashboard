@@ -70,7 +70,7 @@ export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingCo
       preapproval_simulator: true,
       garante_required: false,
     },
-    consent_methods_enabled: ["WHATSAPP_LINK", "OTP_EMAIL", "OTP_SMS", "SELFIE"],
+    consent_methods_enabled: ["WHATSAPP", "EMAIL", "SMS_OTP", "SELFIE"],
     ...DEFAULT_DO_SIMULATOR_CONFIG,
   };
 }
