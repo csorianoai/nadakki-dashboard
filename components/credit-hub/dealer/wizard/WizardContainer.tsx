@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Briefcase, Car, ChevronLeft, ChevronRight, ClipboardCheck, DollarSign, FileCheck, FileText, ShieldCheck, User, Users } from "lucide-react";
@@ -28,6 +28,8 @@ import {
 import { calculateTotalMonthlyIncome, type Frequency } from "@/lib/credit/utils/income-normalizer";
 import { useAdministrativeDivisions } from "@/lib/credit/catalogs/useAdministrativeDivisions";
 import type { TenantBankingConfig } from "@/lib/credit-hub/types/tenantConfig";
+import { simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
+import { PreApprovalBadge } from "./PreApprovalBadge";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   CEDULA: "Cédula",
@@ -492,6 +494,27 @@ export function WizardContainer() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const createMutation = useCreateCreditApplication();
 
+  const preApproval = useMemo(() => {
+    const baseIncome = numeric(formData.monthly_income);
+    const otherMonthly =
+      formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
+    const monthlyIncomeTotal = baseIncome + otherMonthly;
+    const loanAmount = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
+    if (loanAmount <= 0) return null;
+
+    const termParsed = /(\d+)/.exec(String(formData.desired_term ?? ""));
+    const termMonths = termParsed ? Math.max(1, parseInt(termParsed[1], 10)) : 60;
+
+    return simulatePreApproval({
+      monthlyIncome: monthlyIncomeTotal,
+      monthlyDebts: numeric(formData.monthly_debts),
+      loanAmount,
+      annualRate: tenantConfig.default_rate ?? 16,
+      termMonths,
+      dtiMax: (tenantConfig.dti_max ?? 0.4) * 100,
+    });
+  }, [formData, tenantConfig]);
+
   const updateField = <K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -914,6 +937,7 @@ export function WizardContainer() {
             <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">LTV</p><p className="font-semibold tabular-nums text-forge-text">{Math.round(ltvPercent)}%</p>{ltvPercent / 100 > tenantConfig.ltv_max && <p className="text-xs text-forge-danger">LTV supera el máximo del tenant.</p>}</div>
             <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">Capacidad estimada</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(estimatedCapacity)}</p></div>
           </div>
+          {preApproval && <PreApprovalBadge result={preApproval} />}
         </div>
       );
     }
