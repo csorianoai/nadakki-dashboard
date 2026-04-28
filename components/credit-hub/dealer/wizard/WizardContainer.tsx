@@ -10,6 +10,8 @@ import { ForgeInput } from "../../primitives/ForgeInput";
 import { ForgeSelect } from "../../primitives/ForgeSelect";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import type { CreditHubTranslations } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
 import { useCatalogs } from "@/lib/credit-hub/hooks/useCatalogs";
 import type { CreateCreditApplicationPayload } from "@/lib/credit-hub/types/creditCore";
 import { celebrateSuccessRespectReduced } from "@/lib/credit-hub/utils/celebrate";
@@ -241,16 +243,6 @@ const initialData: ApplicationFormData = {
   consent_data_processing_authorization: false,
 };
 
-const steps = [
-  { id: "applicant", title: "Identificación", icon: User },
-  { id: "employment", title: "Laboral", icon: Briefcase },
-  { id: "financial_product", title: "Finanzas y producto", icon: DollarSign },
-  { id: "co_debtor", title: "Garante", icon: Users },
-  { id: "documents", title: "Documentos", icon: FileText },
-  { id: "consents", title: "Consentimiento", icon: ShieldCheck },
-  { id: "review", title: "Revisión", icon: ClipboardCheck },
-];
-
 function cleanDecimalInput(value: string): string {
   const cleaned = value.replace(/[^0-9.]/g, "");
   const [first, ...rest] = cleaned.split(".");
@@ -407,7 +399,8 @@ type WizardStepValidationConfig = {
 
 function getGaranteInlineErrors(
   data: ApplicationFormData,
-  config: Pick<WizardStepValidationConfig, "min_age" | "garante_required" | "default_document_type">
+  config: Pick<WizardStepValidationConfig, "min_age" | "garante_required" | "default_document_type">,
+  v: CreditHubTranslations["validation"]
 ): Record<string, string> {
   const errors: Record<string, string> = {};
   if (data.co_debtor_required !== "yes" && !config.garante_required) return errors;
@@ -419,19 +412,19 @@ function getGaranteInlineErrors(
     cleanDominicanCedula(data.applicant_identification) &&
     cleanDominicanCedula(data.applicant_identification) === cleanDominicanCedula(data.co_debtor_identification);
   if (sameCedula) {
-    errors.co_debtor_identification = "El garante no puede ser el mismo solicitante";
+    errors.co_debtor_identification = v.cedula_match_applicant;
   } else if (data.co_debtor_identification && !documentIsValid(coDoc, data.co_debtor_identification)) {
-    errors.co_debtor_identification = coDoc === "CEDULA" ? "Cédula inválida. Verifica el dígito verificador." : "Pasaporte inválido";
+    errors.co_debtor_identification = coDoc === "CEDULA" ? v.invalid_cedula : v.invalid_passport;
   }
   const coAge = ageFromInput(data.co_debtor_date_of_birth);
   if (data.co_debtor_date_of_birth && coAge !== null && coAge < config.min_age) {
-    errors.co_debtor_date_of_birth = `Edad mínima requerida: ${config.min_age} años`;
+    errors.co_debtor_date_of_birth = v.age_min(config.min_age);
   }
   if (data.co_debtor_relationship === "Otro" && !isFilled(data.co_debtor_relationship_other ?? "")) {
-    errors.co_debtor_relationship_other = "Especifica la relación";
+    errors.co_debtor_relationship_other = v.relationship_other_required;
   }
   if ((data.co_debtor_required === "yes" || config.garante_required) && (!isFilled(data.co_debtor_monthly_income) || Number(data.co_debtor_monthly_income) <= 0)) {
-    errors.co_debtor_monthly_income = "Ingreso mensual debe ser mayor a 0";
+    errors.co_debtor_monthly_income = v.guarantor_income_positive;
   }
   return errors;
 }
@@ -445,7 +438,8 @@ function stepIsValid(
     garante_required: false,
     default_document_type: "CEDULA",
     required_documents: DEFAULT_DO_REQUIRED_DOCUMENTS,
-  }
+  },
+  t: CreditHubTranslations
 ): boolean {
   const applicantDoc = data.applicant_document_type || config.default_document_type;
   if (step === 0) {
@@ -481,7 +475,7 @@ function stepIsValid(
     if (data.co_debtor_required === "no" && !config.garante_required) return true;
     const coAge = ageFromInput(data.co_debtor_date_of_birth);
     const coDoc = data.co_debtor_document_type || config.default_document_type;
-    const garanteErrors = getGaranteInlineErrors(data, config);
+    const garanteErrors = getGaranteInlineErrors(data, config, t.validation);
     return (
       [data.co_debtor_full_name, data.co_debtor_identification, data.co_debtor_date_of_birth, data.co_debtor_phone, data.co_debtor_email, data.co_debtor_address, data.co_debtor_province, data.co_debtor_city, data.co_debtor_monthly_income, data.co_debtor_relationship, data.co_debtor_employer_name, data.co_debtor_employment_start_date].every(isFilled) &&
       documentIsValid(coDoc, data.co_debtor_identification) &&
@@ -501,14 +495,14 @@ function stepIsValid(
   return true;
 }
 
-function requiredHint(step: number, data: ApplicationFormData, requiredDocs: TenantRequiredDocument[]): string {
-  if (step === 3) return "Completa los datos del garante o marca que no es requerido.";
+function requiredHint(step: number, data: ApplicationFormData, requiredDocs: TenantRequiredDocument[], t: CreditHubTranslations): string {
+  if (step === 3) return t.wizard.hints.garante;
   if (step === 4) {
     const missing = requiredDocs.filter((d) => d.required).filter((d) => !data.documents_received[tenantDocumentKey(d)]).length;
-    if (missing > 0) return `Faltan ${missing} documentos obligatorios`;
+    if (missing > 0) return t.validation.docs_missing(missing);
   }
-  if (step === 5) return "Los tres consentimientos son obligatorios para enviar.";
-  return "Completa los campos obligatorios para continuar.";
+  if (step === 5) return t.wizard.hints.consents;
+  return t.wizard.hints.generic;
 }
 
 function numeric(value: string | number | null | undefined): number {
@@ -553,6 +547,19 @@ function formatDop(value: number): string {
 export function WizardContainer() {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
+  const t = useTranslations();
+  const steps = useMemo(
+    () => [
+      { id: "applicant", title: t.wizard.nav.identification, icon: User },
+      { id: "employment", title: t.wizard.nav.employment, icon: Briefcase },
+      { id: "financial_product", title: t.wizard.nav.financial_product, icon: DollarSign },
+      { id: "co_debtor", title: t.wizard.nav.co_debtor, icon: Users },
+      { id: "documents", title: t.wizard.nav.documents, icon: FileText },
+      { id: "consents", title: t.wizard.nav.consents, icon: ShieldCheck },
+      { id: "review", title: t.wizard.nav.review, icon: ClipboardCheck },
+    ],
+    [t]
+  );
   const { catalogs, loading: catalogsLoading } = useCatalogs();
   const defaultDocType = tenantConfig.document_types.primary_id ?? "CEDULA";
   const administrativeDivisions = useAdministrativeDivisions(tenantConfig.country_code);
@@ -687,7 +694,7 @@ export function WizardContainer() {
   const selectedApplicantProvince = administrativeDivisions.find((item) => item.name === formData.applicant_province);
   const selectedEmployerProvince = administrativeDivisions.find((item) => item.name === formData.employer_province);
   const selectedCoDebtorProvince = administrativeDivisions.find((item) => item.name === formData.co_debtor_province);
-  const canProceed = stepIsValid(currentStep, formData, validationConfig);
+  const canProceed = stepIsValid(currentStep, formData, validationConfig, t);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1 && canProceed) setCurrentStep(currentStep + 1);
@@ -698,9 +705,9 @@ export function WizardContainer() {
   };
 
   const handleSubmit = async (_status: "draft" | "submitted") => {
-    if (!stepIsValid(5, formData, validationConfig)) {
+    if (!stepIsValid(5, formData, validationConfig, t)) {
       setSubmitStatus("error");
-      setSubmitError("Debes aceptar todos los consentimientos antes de enviar.");
+      setSubmitError(t.validation.consents_required);
       return;
     }
     setSubmitStatus("submitting");
@@ -711,15 +718,15 @@ export function WizardContainer() {
       );
       setSubmitStatus("success");
       celebrateSuccessRespectReduced();
-      forgeToast.success("¡Solicitud creada exitosamente!");
+      forgeToast.success(t.toasts.application_submitted);
       setTimeout(() => {
         router.push(`/credit-hub/dealer/applications/${result.application_id}`);
       }, 1500);
     } catch (error) {
       console.error("Submit error:", error);
       setSubmitStatus("error");
-      setSubmitError(error instanceof Error ? error.message : "No se pudo crear la solicitud.");
-      forgeToast.error(error instanceof Error ? error.message : "No se pudo crear la solicitud.");
+      setSubmitError(error instanceof Error ? error.message : t.toasts.application_failed);
+      forgeToast.error(error instanceof Error ? error.message : t.toasts.application_failed);
     }
   };
 
@@ -736,7 +743,7 @@ export function WizardContainer() {
 
   const select = (field: keyof ApplicationFormData, label: string, options: Array<[string, string]>) => (
     <ForgeSelect label={label} value={String(formData[field])} onChange={(event) => updateField(field, event.target.value as ApplicationFormData[typeof field])}>
-      <option value="">Selecciona...</option>
+      <option value="">{t.common.select_placeholder}</option>
       {options.map(([value, optionLabel]) => (
         <option key={value} value={value}>
           {optionLabel}
@@ -778,12 +785,12 @@ export function WizardContainer() {
       const docError =
         formData.applicant_identification && !documentIsValid(applicantDoc, formData.applicant_identification)
           ? applicantDoc === "CEDULA"
-            ? "Cédula inválida. Verifica el dígito verificador."
-            : "Pasaporte inválido"
+            ? t.validation.invalid_cedula
+            : t.validation.invalid_passport
           : null;
       return (
         <div className="space-y-5">
-          {sectionHeader("Datos del solicitante", "Identificación y datos de contacto del cliente.")}
+          {sectionHeader(t.wizard.sections.applicant_title, t.wizard.sections.applicant_sub)}
           <div className="grid gap-4 md:grid-cols-2">
             {input("applicant_full_name", "Nombre completo *", { autoFocus: true })}
             <ForgeSelect
@@ -810,12 +817,12 @@ export function WizardContainer() {
             </div>
             {input("applicant_date_of_birth", "Fecha de nacimiento *", { type: "date" })}
             <div className="rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
-              <p className="text-xs text-forge-text-muted">Edad calculada</p>
+              <p className="text-xs text-forge-text-muted">{t.wizard.calculated_age}</p>
               <span data-testid="calculated-age" className="font-semibold text-forge-text">
-                {age === null ? "No disponible" : `${age} años`}
+                {age === null ? t.common.no_data : t.wizard.years_suffix(age)}
               </span>
-              {age !== null && age < tenantConfig.min_age && <p className="mt-1 text-xs text-forge-danger">Edad mínima requerida: {tenantConfig.min_age} años</p>}
-              {age !== null && age > tenantConfig.max_age && <p className="mt-1 text-xs text-forge-danger">Edad excede el rango operativo del producto</p>}
+              {age !== null && age < tenantConfig.min_age && <p className="mt-1 text-xs text-forge-danger">{t.validation.age_min(tenantConfig.min_age)}</p>}
+              {age !== null && age > tenantConfig.max_age && <p className="mt-1 text-xs text-forge-danger">{t.validation.age_over_max}</p>}
             </div>
             {select("applicant_marital_status", "Estado civil *", [["single", "Soltero/a"], ["married", "Casado/a"], ["union", "Unión libre"], ["divorced", "Divorciado/a"], ["widowed", "Viudo/a"]])}
             {input("applicant_phone", "Teléfono *", { type: "tel" })}
@@ -823,11 +830,11 @@ export function WizardContainer() {
             {input("applicant_country", "País *")}
             {input("applicant_address", "Dirección *", { className: "md:col-span-2" })}
             <ForgeSelect label="Provincia *" value={formData.applicant_province} onChange={(event) => updateField("applicant_province", event.target.value)}>
-              <option value="">Selecciona...</option>
+              <option value="">{t.common.select_placeholder}</option>
               {administrativeDivisions.map((item) => <option key={item.code} value={item.name}>{item.name}</option>)}
             </ForgeSelect>
             <ForgeSelect label="Municipio *" value={formData.applicant_city} onChange={(event) => updateField("applicant_city", event.target.value)} disabled={!selectedApplicantProvince}>
-              <option value="">Selecciona...</option>
+              <option value="">{t.common.select_placeholder}</option>
               {(selectedApplicantProvince?.municipalities ?? []).map((municipality) => <option key={municipality} value={municipality}>{municipality}</option>)}
             </ForgeSelect>
           </div>
@@ -837,7 +844,7 @@ export function WizardContainer() {
     if (currentStep === 1) {
       const employmentStart = parseDateInput(formData.employment_start_date);
       const tenure = formData.employment_start_date ? calculateEmploymentTenure(formData.employment_start_date) : null;
-      const tenureLabel = tenure?.isValid ? tenure.display : employmentStart ? "Fecha inválida" : "No disponible";
+      const tenureLabel = tenure?.isValid ? tenure.display : employmentStart ? t.validation.age_invalid : t.common.no_data;
       const otherMonthlyTotal =
         formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
       const totalIncomeDisplay = numeric(formData.monthly_income) + otherMonthlyTotal;
@@ -846,25 +853,25 @@ export function WizardContainer() {
         [["indefinido", "Indefinido"], ["temporal", "Temporal"], ["proyecto", "Por proyecto"], ["independiente", "Independiente"], ["otro", "Otro"]];
       return (
         <div className="space-y-5">
-          {sectionHeader("Información laboral", "Capacidad de pago y estabilidad laboral.")}
+          {sectionHeader(t.wizard.sections.employment_title, t.wizard.sections.employment_sub)}
           <div className="grid gap-4 md:grid-cols-2">
             {select("employment_type", "Tipo de empleo *", [["employee", "Empleado privado"], ["public_employee", "Empleado público"], ["self_employed", "Independiente"], ["business_owner", "Dueño de negocio"], ["retired", "Pensionado"]])}
             {input("employer_name", "Empresa donde trabaja *")}
             {input("employment_position", "Cargo *")}
             {input("employment_start_date", "Fecha de ingreso al empleo *", { type: "date" })}
             <div className="rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
-              <p className="text-xs text-forge-text-muted">Antigüedad calculada</p>
+              <p className="text-xs text-forge-text-muted">{t.wizard.calculated_tenure}</p>
               <p className="font-semibold text-forge-text">{tenureLabel}</p>
             </div>
             {input("monthly_income", "Ingreso mensual neto *", { inputMode: "decimal" })}
             {input("work_phone", "Teléfono empresa *", { type: "tel" })}
             {input("employer_address", "Dirección de la empresa *", { className: "md:col-span-2" })}
             <ForgeSelect label="Provincia empresa *" value={formData.employer_province} onChange={(event) => updateField("employer_province", event.target.value)}>
-              <option value="">Selecciona...</option>
+              <option value="">{t.common.select_placeholder}</option>
               {administrativeDivisions.map((item) => <option key={item.code} value={item.name}>{item.name}</option>)}
             </ForgeSelect>
             <ForgeSelect label="Municipio empresa *" value={formData.employer_city} onChange={(event) => updateField("employer_city", event.target.value)} disabled={!selectedEmployerProvince}>
-              <option value="">Selecciona...</option>
+              <option value="">{t.common.select_placeholder}</option>
               {(selectedEmployerProvince?.municipalities ?? []).map((municipality) => <option key={municipality} value={municipality}>{municipality}</option>)}
             </ForgeSelect>
             <ForgeSelect
@@ -873,7 +880,7 @@ export function WizardContainer() {
               onChange={(event) => updateField("contract_type", event.target.value)}
               disabled={catalogsLoading || !catalogs}
             >
-              <option value="">Selecciona...</option>
+              <option value="">{t.common.select_placeholder}</option>
               {contractOptions.map(([value, optionLabel]) => (
                 <option key={value} value={value}>
                   {optionLabel}
@@ -984,7 +991,7 @@ export function WizardContainer() {
       const ltvPercent = calculateLTV(amountToFinance, numeric(formData.vehicle_price));
       return (
         <div className="space-y-5">
-          {sectionHeader("Información financiera y producto", "Condiciones solicitadas y vehículo o producto a financiar.")}
+          {sectionHeader(t.wizard.sections.financial_title, t.wizard.sections.financial_sub)}
           <div className="grid gap-4 md:grid-cols-2">
             {input("desired_term", "Plazo deseado *", { placeholder: "Ej: 48 meses" })}
             {input("down_payment", "Cuota inicial disponible *", { inputMode: "decimal" })}
@@ -998,7 +1005,7 @@ export function WizardContainer() {
                 onChange={(event) => updateField("bank_institution", event.target.value)}
                 disabled={catalogsLoading || !catalogs}
               >
-                <option value="">Selecciona...</option>
+                <option value="">{t.common.select_placeholder}</option>
                 {(catalogs?.banks ?? []).map((bank) => (
                   <option key={bank} value={bank}>
                     {bank}
@@ -1007,7 +1014,7 @@ export function WizardContainer() {
               </ForgeSelect>
             )}
             <div className="md:col-span-2 border-t border-forge-border pt-4">
-              <h3 className="font-semibold text-forge-text">Vehículo o producto a financiar</h3>
+              <h3 className="font-semibold text-forge-text">{t.wizard.vehicle_section}</h3>
             </div>
             {select("product_type", "Tipo de producto *", tenantConfig.product_types.map((item) => [item, item]))}
             <ForgeSelect
@@ -1016,14 +1023,14 @@ export function WizardContainer() {
               onChange={(event) => updateField("vehicle_make", event.target.value)}
               disabled={catalogsLoading || !catalogs}
             >
-              <option value="">Selecciona...</option>
+              <option value="">{t.common.select_placeholder}</option>
               {(catalogs?.vehicleBrands ?? []).map((brand) => (
                 <option key={brand} value={brand}>
                   {brand}
                 </option>
               ))}
               {!catalogsLoading && !catalogs && (
-                <option disabled>Catálogo no disponible</option>
+                <option disabled>{t.wizard.catalog_unavailable}</option>
               )}
             </ForgeSelect>
             {formData.vehicle_make === "Otros" && input("vehicle_brand_other", "Especifique marca *")}
@@ -1040,9 +1047,9 @@ export function WizardContainer() {
             {input("dealer_supplier", "Dealer / Suplidor *", { readOnly: false })}
           </div>
           <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">Monto a financiar</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(amountToFinance)}</p></div>
-            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">LTV</p><p className="font-semibold tabular-nums text-forge-text">{Math.round(ltvPercent)}%</p>{ltvPercent / 100 > tenantConfig.ltv_max && <p className="text-xs text-forge-danger">LTV supera el máximo del tenant.</p>}</div>
-            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">Capacidad estimada</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(estimatedCapacity)}</p></div>
+            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">{t.wizard.amount_finance}</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(amountToFinance)}</p></div>
+            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">{t.wizard.ltv_label}</p><p className="font-semibold tabular-nums text-forge-text">{Math.round(ltvPercent)}%</p>{ltvPercent / 100 > tenantConfig.ltv_max && <p className="text-xs text-forge-danger">{t.wizard.ltv_exceeds}</p>}</div>
+            <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">{t.wizard.estimated_capacity}</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(estimatedCapacity)}</p></div>
           </div>
           {preApproval && <PreApprovalBadge result={preApproval} />}
         </div>
@@ -1052,7 +1059,7 @@ export function WizardContainer() {
       const coDoc = formData.co_debtor_document_type || defaultDocType;
       const coBirthDate = parseDateInput(formData.co_debtor_date_of_birth);
       const coAge = coBirthDate ? calculateAge(coBirthDate) : null;
-      const garanteErrors = getGaranteInlineErrors(formData, validationConfig);
+      const garanteErrors = getGaranteInlineErrors(formData, validationConfig, t.validation);
       const coEmploymentTenure = formData.co_debtor_employment_start_date ? calculateEmploymentTenure(formData.co_debtor_employment_start_date) : null;
       let garanteIncomeWarning: string | null = null;
       if (
@@ -1073,11 +1080,11 @@ export function WizardContainer() {
       }
       return (
         <div className="space-y-5">
-          {sectionHeader("Garante o cofirmante", "Completa los datos si la solicitud incluye respaldo adicional.")}
+          {sectionHeader(t.wizard.sections.garante_title, t.wizard.sections.garante_sub)}
           <div className="space-y-4">
             {tenantConfig.features_enabled.garante_required && (
               <div className="rounded-xl border border-forge-primary/40 bg-forge-primary/10 p-3 text-sm text-forge-text">
-                Esta institución requiere garante para todas las solicitudes.
+                {t.wizard.garante_auto_required}
               </div>
             )}
             {!tenantConfig.features_enabled.garante_required && boolSelect("co_debtor_required", "¿La solicitud incluye garante o cofirmante? *")}
@@ -1089,7 +1096,7 @@ export function WizardContainer() {
                 className="grid gap-4 border-l-2 border-forge-primary/40 pl-4 md:grid-cols-2 md:pl-6"
               >
                 <div className="md:col-span-2 rounded-2xl border border-forge-border bg-forge-surface-elevated p-4">
-                  <h3 className="font-semibold text-forge-text">Datos del garante</h3>
+                  <h3 className="font-semibold text-forge-text">{t.wizard.garante_data_title}</h3>
                 </div>
                 <ForgeSelect
                   label="Tipo de documento garante *"
@@ -1118,20 +1125,20 @@ export function WizardContainer() {
                   {garanteErrors.co_debtor_date_of_birth && <p className="text-xs text-forge-danger">{garanteErrors.co_debtor_date_of_birth}</p>}
                 </div>
                 <div className="rounded-xl border border-forge-border bg-forge-surface p-3">
-                  <p className="text-xs text-forge-text-muted">Edad garante</p>
+                  <p className="text-xs text-forge-text-muted">{t.wizard.age_guarantor}</p>
                   <span data-testid="co-debtor-calculated-age" className="font-semibold text-forge-text">
-                    {coAge === null ? "No disponible" : `${coAge} años`}
+                    {coAge === null ? t.common.no_data : t.wizard.years_suffix(coAge)}
                   </span>
                 </div>
                 {input("co_debtor_phone", "Teléfono garante *", { type: "tel" })}
                 {input("co_debtor_email", "Correo electrónico garante *", { type: "email" })}
                 {input("co_debtor_address", "Dirección garante *", { className: "md:col-span-2" })}
                 <ForgeSelect label="Provincia garante *" value={formData.co_debtor_province} onChange={(event) => updateField("co_debtor_province", event.target.value)}>
-                  <option value="">Selecciona...</option>
+                  <option value="">{t.common.select_placeholder}</option>
                   {administrativeDivisions.map((item) => <option key={item.code} value={item.name}>{item.name}</option>)}
                 </ForgeSelect>
                 <ForgeSelect label="Municipio garante *" value={formData.co_debtor_city} onChange={(event) => updateField("co_debtor_city", event.target.value)} disabled={!selectedCoDebtorProvince}>
-                  <option value="">Selecciona...</option>
+                  <option value="">{t.common.select_placeholder}</option>
                   {(selectedCoDebtorProvince?.municipalities ?? []).map((municipality) => <option key={municipality} value={municipality}>{municipality}</option>)}
                 </ForgeSelect>
                 <div className="space-y-1">
@@ -1172,11 +1179,11 @@ export function WizardContainer() {
       const requiredMissing = docList.filter((d) => d.required).filter((d) => !formData.documents_received[tenantDocumentKey(d)]).length;
       return (
         <div className="space-y-5">
-          {sectionHeader("Documentos recibidos", "Marca los documentos que has recibido del solicitante. La carga de archivos se completará después.")}
+          {sectionHeader(t.wizard.sections.documents_title, t.wizard.sections.documents_sub)}
           <div className="text-sm text-forge-text-muted">
-            {receivedCount} de {Math.max(totalCount, docList.length)} documentos recibidos
+            {t.documents.counter(receivedCount, Math.max(totalCount, docList.length))}
             {requiredMissing > 0 && (
-              <span className="ml-2 text-forge-danger">({requiredMissing} obligatorios pendientes)</span>
+              <span className="ml-2 text-forge-danger">({t.documents.missing_required(requiredMissing)})</span>
             )}
           </div>
           <div className="space-y-3" data-testid="documents-checklist">
@@ -1195,40 +1202,40 @@ export function WizardContainer() {
                   <div className="min-w-0 flex-1">
                     <label htmlFor={`doc-${k}`} className="text-sm font-medium text-forge-text">
                       {document.label}
-                      {document.required ? <span className="ml-1 text-forge-danger">*</span> : <span className="ml-2 text-xs text-forge-text-muted">(opcional)</span>}
+                      {document.required ? <span className="ml-1 text-forge-danger">*</span> : <span className="ml-2 text-xs text-forge-text-muted">{t.common.optional_short}</span>}
                     </label>
                     {document.tooltip && <p className="mt-1 text-xs text-forge-text-muted">{document.tooltip}</p>}
                     <textarea
                       className="mt-2 min-h-12 w-full rounded-lg border border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
-                      placeholder="Notas opcionales"
+                      placeholder={t.wizard.doc_notes_placeholder}
                       value={formData.document_notes[k] ?? ""}
                       onChange={(event) => updateField("document_notes", { ...formData.document_notes, [k]: event.target.value })}
                     />
                   </div>
-                  <span className={`text-xs tabular-nums ${checked ? "text-forge-success" : "text-forge-text-muted"}`}>{checked ? "Recibido" : "Pendiente"}</span>
+                  <span className={`text-xs tabular-nums ${checked ? "text-forge-success" : "text-forge-text-muted"}`}>{checked ? t.documents.received : t.documents.pending}</span>
                 </div>
               );
             })}
           </div>
           <div className="mt-6 space-y-3">
-            <h4 className="text-sm font-medium text-forge-text">Documentos adicionales</h4>
+            <h4 className="text-sm font-medium text-forge-text">{t.wizard.additional_docs_title}</h4>
             <ForgeButton type="button" variant="secondary" size="sm" onClick={addAdditionalDocumentRow}>
-              + Agregar documento adicional
+              {t.wizard.add_additional_doc}
             </ForgeButton>
             {formData.additional_document_items.map((row) => (
               <div key={row.id} className="flex flex-wrap items-end gap-2 rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
                 <div className="min-w-[12rem] flex-1">
                   <ForgeInput
-                    label="Nombre del documento"
+                    label={t.wizard.additional_doc_label}
                     value={row.label}
                     onChange={(event) => updateAdditionalDocumentRow(row.id, { label: event.target.value })}
                   />
                 </div>
                 <label className="flex items-center gap-2 text-sm text-forge-text">
                   <input type="checkbox" checked={row.received} onChange={(event) => updateAdditionalDocumentRow(row.id, { received: event.target.checked })} />
-                  Recibido
+                  {t.wizard.doc_received_label}
                 </label>
-                <ForgeButton type="button" variant="ghost" size="sm" onClick={() => removeAdditionalDocumentRow(row.id)} aria-label="Eliminar documento adicional">
+                <ForgeButton type="button" variant="ghost" size="sm" onClick={() => removeAdditionalDocumentRow(row.id)} aria-label={t.common.delete_additional_doc_aria}>
                   ×
                 </ForgeButton>
               </div>
@@ -1240,11 +1247,11 @@ export function WizardContainer() {
     if (currentStep === 5) {
       return (
         <div className="space-y-5">
-          {sectionHeader("Consentimientos", "Todos son obligatorios antes de enviar la solicitud.")}
+          {sectionHeader(t.wizard.sections.consents_title, t.wizard.sections.consents_sub)}
           {select("consent_presence", "¿El solicitante está físicamente presente? *", [["present", "Sí, está aquí"], ["remote", "No, está remoto"]])}
           {formData.consent_presence === "remote" && (
             <div className="rounded-xl border border-forge-warning/30 bg-forge-warning/10 p-4 text-sm text-forge-text">
-              Consentimiento remoto estará disponible con enlace seguro por WhatsApp, correo, OTP o selfie. Para esta versión, completa el consentimiento cuando el cliente esté presente.
+              {t.wizard.remote_consent_notice}
             </div>
           )}
           <div className="space-y-3">
@@ -1258,36 +1265,36 @@ export function WizardContainer() {
     const payload = buildCreateApplicationPayload(formData, { defaultDocumentType: defaultDocType });
     const preview = preliminaryViability(formData);
     const sections = [
-      ["Solicitante", payload.applicant],
-      ["Laboral", payload.employment],
-      ["Financiera y Producto", { ...payload.financial, ...payload.vehicle }],
-      ["Garante", payload.co_debtor],
-      ["Documentos", payload.documents],
-      ["Consentimientos", payload.consents],
+      [t.wizard.review_sections.applicant, payload.applicant],
+      [t.wizard.review_sections.employment, payload.employment],
+      [t.wizard.review_sections.financial, { ...payload.financial, ...payload.vehicle }],
+      [t.wizard.review_sections.co_debtor, payload.co_debtor],
+      [t.wizard.review_sections.documents, payload.documents],
+      [t.wizard.review_sections.consents, payload.consents],
     ] as const;
     return (
       <div className="space-y-5">
-        {sectionHeader("Revisión final", "Verifica la solicitud completa antes de guardar o enviar.")}
+        {sectionHeader(t.wizard.sections.review_title, t.wizard.sections.review_sub)}
         <div className="rounded-2xl border border-forge-primary/20 bg-forge-primary/5 p-4">
-          <p className="text-sm uppercase tracking-[0.16em] text-forge-primary">Previsualización de viabilidad</p>
-          <p className="mt-1 text-sm text-forge-text-muted">Estimación preliminar antes de enviar.</p>
+          <p className="text-sm uppercase tracking-[0.16em] text-forge-primary">{t.wizard.preview_viability}</p>
+          <p className="mt-1 text-sm text-forge-text-muted">{t.wizard.preview_sub}</p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div className="rounded-xl bg-forge-surface-elevated p-3">
-              <p className="text-xs text-forge-text-muted">Cuota estimada preliminar</p>
+              <p className="text-xs text-forge-text-muted">{t.wizard.preliminary_payment}</p>
               <p className="font-semibold text-forge-text">{formatDop(preview.payment)}</p>
             </div>
             <div className="rounded-xl bg-forge-surface-elevated p-3">
-              <p className="text-xs text-forge-text-muted">Capacidad estimada preliminar</p>
+              <p className="text-xs text-forge-text-muted">{t.wizard.preliminary_capacity}</p>
               <p className="font-semibold text-forge-text">{formatDop(preview.capacity)}</p>
             </div>
             <div className="rounded-xl bg-forge-surface-elevated p-3">
-              <p className="text-xs text-forge-text-muted">Status preliminar</p>
+              <p className="text-xs text-forge-text-muted">{t.wizard.preliminary_status}</p>
               <p className={preview.status === "verde" ? "font-semibold text-forge-success" : preview.status === "amarillo" ? "font-semibold text-forge-warning" : "font-semibold text-forge-danger"}>
-                {preview.status === "verde" ? "Viable" : preview.status === "amarillo" ? "Requiere ajuste" : "Riesgo alto"}
+                {preview.status === "verde" ? t.wizard.status_viable : preview.status === "amarillo" ? t.wizard.status_adjust : t.wizard.status_high_risk}
               </p>
             </div>
           </div>
-          <p className="mt-3 text-sm text-forge-text-muted">El análisis completo con Forge AI estará disponible después de enviar la solicitud.</p>
+          <p className="mt-3 text-sm text-forge-text-muted">{t.wizard.preview_footer}</p>
         </div>
         <div className="space-y-4">
           {sections.map(([title, values], index) => (
@@ -1295,7 +1302,7 @@ export function WizardContainer() {
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-semibold text-forge-text">{title}</h3>
                 <ForgeButton variant="ghost" size="sm" onClick={() => setCurrentStep(index)}>
-                  Editar
+                  {t.common.edit}
                 </ForgeButton>
               </div>
               <dl className="grid gap-2 text-sm md:grid-cols-2">
@@ -1314,10 +1321,10 @@ export function WizardContainer() {
         {submitError && <p role="alert" className="rounded-xl border border-forge-danger/30 bg-forge-danger/10 p-3 text-sm text-forge-danger">{submitError}</p>}
         <div className="grid gap-3 sm:grid-cols-2">
           <ForgeButton variant="secondary" size="lg" fullWidth onClick={() => handleSubmit("draft")} disabled={submitStatus === "submitting" || submitStatus === "success"} loading={submitStatus === "submitting"}>
-            Guardar borrador
+            {t.common.save_draft}
           </ForgeButton>
           <ForgeButton variant="primary" size="lg" fullWidth onClick={() => handleSubmit("submitted")} disabled={submitStatus === "submitting" || submitStatus === "success"} loading={submitStatus === "submitting"} leftIcon={submitStatus === "success" ? <FileCheck className="h-5 w-5" /> : undefined}>
-            {submitStatus === "success" ? "¡Creada exitosamente!" : "Enviar solicitud"}
+            {submitStatus === "success" ? t.common.created_success : t.common.submit}
           </ForgeButton>
         </div>
       </div>
@@ -1327,12 +1334,12 @@ export function WizardContainer() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div role="status" aria-live="polite" className="sr-only">
-        Paso {currentStep + 1} de {steps.length}: {steps[currentStep].title}
+        {t.common.step_progress(currentStep + 1, steps.length)}: {steps[currentStep].title}
       </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-forge-text-muted">
-            Paso {currentStep + 1} de {steps.length}
+            {t.common.step_progress(currentStep + 1, steps.length)}
           </span>
           <span className="font-medium text-forge-text">{steps[currentStep].title}</span>
         </div>
@@ -1388,13 +1395,13 @@ export function WizardContainer() {
       {currentStep < steps.length - 1 && (
         <div className="flex items-center justify-between gap-3">
           <ForgeButton variant="ghost" onClick={() => router.back()} leftIcon={<ChevronLeft className="h-4 w-4" />} disabled={submitStatus === "submitting"}>
-            Cancelar
+            {t.common.cancel}
           </ForgeButton>
 
           <div className="flex gap-2">
             {currentStep > 0 && (
               <ForgeButton variant="secondary" onClick={handleBack} leftIcon={<ChevronLeft className="h-4 w-4" />}>
-                Atrás
+                {t.common.back}
               </ForgeButton>
             )}
 
@@ -1404,14 +1411,14 @@ export function WizardContainer() {
               disabled={!canProceed}
               rightIcon={<ChevronRight className="h-4 w-4" />}
             >
-              Siguiente
+              {t.common.next}
             </ForgeButton>
           </div>
         </div>
       )}
 
       {!canProceed && currentStep < steps.length - 1 && (
-        <p className="text-center text-sm text-forge-warning">{requiredHint(currentStep, formData, requiredDocumentsList)}</p>
+        <p className="text-center text-sm text-forge-warning">{requiredHint(currentStep, formData, requiredDocumentsList, t)}</p>
       )}
     </div>
   );

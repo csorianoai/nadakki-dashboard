@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { ForgeLogo } from "../brand/ForgeLogo";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 export function DealerTopBar() {
   const { tenantSlug } = useTenant();
+  const t = useTranslations();
 
   return (
     <header className="sticky top-0 z-30 border-b border-forge-border bg-forge-surface/80 backdrop-blur-md">
@@ -25,7 +27,7 @@ export function DealerTopBar() {
 
         <nav className="hidden items-center gap-6 text-sm lg:flex">
           <Link href="/credit-hub/dealer" className="text-forge-text transition-colors hover:text-forge-primary">
-            Dashboard
+            {t.dealer.top_nav_dashboard}
           </Link>
           <Link
             href="/credit-hub/dealer/applications"

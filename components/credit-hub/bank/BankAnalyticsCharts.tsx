@@ -3,14 +3,16 @@
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import type { BankDashboardAnalytics } from "@/lib/credit-hub/types/bankDecision";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 export function BankAnalyticsCharts({ analytics }: { analytics?: BankDashboardAnalytics }) {
+  const t = useTranslations();
   const statusData = Object.entries(analytics?.applications_by_status ?? {}).map(([name, value]) => ({ name, value }));
   const cohortData = analytics?.cohort_analysis ?? [];
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <ForgeCard>
-        <h3 className="mb-4 font-semibold text-forge-text">Solicitudes por status</h3>
+        <h3 className="mb-4 font-semibold text-forge-text">{t.bank.charts_by_status}</h3>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -23,7 +25,7 @@ export function BankAnalyticsCharts({ analytics }: { analytics?: BankDashboardAn
         </div>
       </ForgeCard>
       <ForgeCard>
-        <h3 className="mb-4 font-semibold text-forge-text">Cohorts por mes</h3>
+        <h3 className="mb-4 font-semibold text-forge-text">{t.bank.charts_cohorts}</h3>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={cohortData}>

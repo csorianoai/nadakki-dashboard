@@ -1,5 +1,8 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
 import type { CreditAnalysisRecommendation } from "@/lib/credit-hub/types/creditAnalysis";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { formatDop, formatPercent } from "./format";
 
 function formatRecommendationValue(type: string, value: number): string {
@@ -9,6 +12,7 @@ function formatRecommendationValue(type: string, value: number): string {
 }
 
 export function RecommendationCard({ recommendation }: { recommendation: CreditAnalysisRecommendation }) {
+  const t = useTranslations();
   return (
     <article className="rounded-2xl border border-forge-border bg-forge-surface-elevated p-4">
       <div className="flex items-start justify-between gap-3">
@@ -17,7 +21,7 @@ export function RecommendationCard({ recommendation }: { recommendation: CreditA
           <p className="mt-1 text-sm text-forge-text-muted">{recommendation.explanation}</p>
         </div>
         <span className="rounded-full bg-forge-primary/10 px-3 py-1 text-xs font-semibold text-forge-primary">
-          Score {recommendation.estimated_new_score}
+          {t.metrics.score_short} {recommendation.estimated_new_score}
         </span>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
@@ -34,7 +38,7 @@ export function RecommendationCard({ recommendation }: { recommendation: CreditA
           Nueva cuota: <span className="font-semibold text-forge-text">{formatDop(recommendation.estimated_new_payment)}</span>
         </p>
         <p className="text-forge-text-muted">
-          Nuevo DTI: <span className="font-semibold text-forge-text">{formatPercent(recommendation.estimated_new_dti)}</span>
+          {t.metrics.new_dti}: <span className="font-semibold text-forge-text">{formatPercent(recommendation.estimated_new_dti)}</span>
         </p>
       </div>
       <p className="mt-3 text-sm text-forge-success">{recommendation.impact}</p>

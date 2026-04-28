@@ -14,7 +14,7 @@ describe("Bank analytics page", () => {
     (useBankDealersRanking as jest.Mock).mockReturnValue({ data: { dealers: [] } });
     (useBankPortfolioHealth as jest.Mock).mockReturnValue({ data: { score_distribution: {} } });
     render(<BankAnalyticsPage />);
-    expect(screen.getByText(/Analytics ejecutivo/)).toBeInTheDocument();
+    expect(screen.getByText(/Analítica ejecutiva/)).toBeInTheDocument();
     expect(screen.getByText(/Riesgo, ROI y dealers/)).toBeInTheDocument();
   });
 });

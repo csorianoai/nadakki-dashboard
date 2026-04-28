@@ -9,6 +9,6 @@ describe("Bank compliance page", () => {
     (useBankQueue as jest.Mock).mockReturnValue({ isLoading: false, data: { applications: [] } });
     render(<BankCompliancePage />);
     expect(screen.getByText("Ley 172-13 RD")).toBeInTheDocument();
-    expect(screen.getByText(/Right to be forgotten/)).toBeInTheDocument();
+    expect(screen.getByText(/Derecho al olvido/)).toBeInTheDocument();
   });
 });

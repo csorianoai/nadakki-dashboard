@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import type { CreditAnalysisResult } from "@/lib/credit-hub/types/creditAnalysis";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 const bandLabel: Record<CreditAnalysisResult["approval_band"], string> = {
   PREAPROBABLE: "Preaprobable",
@@ -20,6 +21,7 @@ const riskLabel: Record<CreditAnalysisResult["risk_level"], string> = {
 };
 
 export function ScoreVisual({ analysis }: { analysis: CreditAnalysisResult }) {
+  const t = useTranslations();
   const progress = Math.max(0, Math.min(100, analysis.score / 10));
   const ringColor = analysis.score >= 720 ? "text-forge-success" : analysis.score >= 650 ? "text-forge-warning" : analysis.score >= 580 ? "text-orange-500" : "text-forge-danger";
   const bandClass = {
@@ -50,9 +52,9 @@ export function ScoreVisual({ analysis }: { analysis: CreditAnalysisResult }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xs uppercase tracking-[0.2em] text-forge-text-muted">Score Forge AI</span>
+          <span className="text-xs uppercase tracking-[0.2em] text-forge-text-muted">{t.metrics.score_ring_caption}</span>
           <span className="font-display text-5xl font-bold text-forge-text">{analysis.score}</span>
-          <span className="text-sm text-forge-text-muted">de 1000</span>
+          <span className="text-sm text-forge-text-muted">{t.metrics.out_of_thousand}</span>
         </div>
       </div>
       <div className="flex flex-wrap justify-center gap-2">
@@ -60,7 +62,7 @@ export function ScoreVisual({ analysis }: { analysis: CreditAnalysisResult }) {
           {bandLabel[analysis.approval_band]}
         </span>
         <span className="rounded-full border border-forge-border bg-forge-surface-elevated px-3 py-1 text-sm text-forge-text">
-          Riesgo: {riskLabel[analysis.risk_level]}
+          {t.metrics.risk}: {riskLabel[analysis.risk_level]}
         </span>
       </div>
     </div>

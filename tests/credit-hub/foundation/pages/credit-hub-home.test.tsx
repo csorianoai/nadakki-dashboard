@@ -5,10 +5,10 @@ describe("CreditHubHome", () => {
   test("renders all 4 portals", () => {
     render(<CreditHubHome />);
 
-    expect(screen.getByText("Dealer Portal")).toBeInTheDocument();
-    expect(screen.getByText("Bank Portal")).toBeInTheDocument();
-    expect(screen.getByText("Customer Portal")).toBeInTheDocument();
-    expect(screen.getByText("Admin")).toBeInTheDocument();
+    expect(screen.getByText("Portal concesionario")).toBeInTheDocument();
+    expect(screen.getByText("Portal bancario")).toBeInTheDocument();
+    expect(screen.getByText("Portal cliente")).toBeInTheDocument();
+    expect(screen.getByText("Administración")).toBeInTheDocument();
   });
 
   test('only Dealer is interactive and others show "Próximamente"', () => {

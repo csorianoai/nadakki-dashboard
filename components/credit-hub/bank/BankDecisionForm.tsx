@@ -5,6 +5,7 @@ import type { BankDecisionRequest, BankDecisionTerms, BankDecisionType, CounterO
 import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
 import { ForgeInput } from "@/components/credit-hub/primitives/ForgeInput";
 import { ForgeSelect } from "@/components/credit-hub/primitives/ForgeSelect";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 const decisionOptions: Array<[BankDecisionType, string]> = [
   ["APROBADO", "Aprobar como recomendado"],
@@ -24,6 +25,7 @@ export function BankDecisionForm({
   onSubmit: (body: BankDecisionRequest) => void;
   loading?: boolean;
 }) {
+  const t = useTranslations();
   const [decision, setDecision] = useState<BankDecisionType>("APROBADO");
   const [terms, setTerms] = useState<BankDecisionTerms>(defaultTerms);
   const [justification, setJustification] = useState("");
@@ -59,7 +61,7 @@ export function BankDecisionForm({
               className="min-h-20 w-full rounded-xl border border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
               value={terms.conditions.join("\n")}
               onChange={(event) => updateTerm("conditions", event.target.value)}
-              placeholder="Una condición por línea"
+              placeholder={t.bank.decision_conditions_placeholder}
             />
           </label>
         </div>
@@ -71,7 +73,7 @@ export function BankDecisionForm({
           className="min-h-28 w-full rounded-xl border border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
           value={justification}
           onChange={(event) => setJustification(event.target.value)}
-          placeholder="Explica la razón de la decisión para auditoría y comité de riesgo."
+          placeholder={t.bank.decision_justification_placeholder}
         />
       </label>
       <ForgeButton

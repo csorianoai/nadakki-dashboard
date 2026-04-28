@@ -1,11 +1,15 @@
+"use client";
+
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 interface ForgeAIBadgeProps {
   className?: string;
 }
 
 export function ForgeAIBadge({ className }: ForgeAIBadgeProps) {
+  const t = useTranslations();
   return (
     <span
       className={cn(
@@ -14,7 +18,7 @@ export function ForgeAIBadge({ className }: ForgeAIBadgeProps) {
       )}
     >
       <Sparkles className="h-3.5 w-3.5 text-forge-accent" aria-hidden="true" />
-      Powered by Forge AI
+      {t.forge.ai_badge}
     </span>
   );
 }

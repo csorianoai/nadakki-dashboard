@@ -1,8 +1,12 @@
+"use client";
+
 import type { CreditAnalysisResult } from "@/lib/credit-hub/types/creditAnalysis";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { formatDop, formatPercent } from "./format";
 
 export function CapacitySnapshot({ analysis }: { analysis: CreditAnalysisResult }) {
+  const t = useTranslations();
   const gap = analysis.payment_capacity - analysis.estimated_payment;
   const dtiWidth = Math.min(100, Math.round(analysis.dti * 100));
 
@@ -25,7 +29,7 @@ export function CapacitySnapshot({ analysis }: { analysis: CreditAnalysisResult 
       </div>
       <div className="rounded-xl bg-forge-surface-elevated p-4">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-forge-text-muted">DTI</span>
+          <span className="text-forge-text-muted">{t.metrics.dti_short}</span>
           <span className="font-semibold text-forge-text">{formatPercent(analysis.dti)}</span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-forge-surface">

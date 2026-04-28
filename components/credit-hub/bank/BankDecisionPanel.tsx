@@ -6,6 +6,7 @@ import { useBankCounterOffer, useBankDecision } from "@/lib/credit-hub/hooks/use
 import type { BankDecisionTerms, BankReviewApplication } from "@/lib/credit-hub/types/bankDecision";
 import { BankCounterOfferModal } from "./BankCounterOfferModal";
 import { BankDecisionForm } from "./BankDecisionForm";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 function defaultTerms(application?: BankReviewApplication): BankDecisionTerms {
   const analysis = application?.application_payload.analysis;
@@ -20,6 +21,7 @@ function defaultTerms(application?: BankReviewApplication): BankDecisionTerms {
 }
 
 export function BankDecisionPanel({ application }: { application: BankReviewApplication }) {
+  const t = useTranslations();
   const decisionMutation = useBankDecision(application.application_id);
   const counterOfferQuery = useBankCounterOffer(application.application_id);
   const existing = application.application_payload.bank_decision;
@@ -38,7 +40,7 @@ export function BankDecisionPanel({ application }: { application: BankReviewAppl
         loading={decisionMutation.isPending}
         onSubmit={async (body) => {
           await decisionMutation.mutateAsync(body);
-          forgeToast.success("Decisión bancaria registrada correctamente");
+          forgeToast.success(t.toasts.decision_confirmed);
         }}
       />
     </ForgeCard>

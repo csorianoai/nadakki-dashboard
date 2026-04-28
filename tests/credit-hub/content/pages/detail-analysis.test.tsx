@@ -73,7 +73,7 @@ describe("DealerApplicationDetailPage analysis tab", () => {
   test("opens analysis tab and shows backend analysis panel", () => {
     render(<DealerApplicationDetailPage params={{ applicationId: "app-1" } as never} />);
     fireEvent.click(screen.getByRole("button", { name: /Análisis/ }));
-    expect(screen.getByText("Score Forge AI")).toBeInTheDocument();
+    expect(screen.getByText("Puntaje del motor analítico")).toBeInTheDocument();
     expect(screen.getByText("812")).toBeInTheDocument();
     expect(screen.getByText(/Este análisis es orientativo y auditable/)).toBeInTheDocument();
   });

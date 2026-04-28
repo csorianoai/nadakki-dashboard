@@ -23,7 +23,7 @@ describe("Bank analytics components", () => {
 
   test("renders charts section", () => {
     render(<BankAnalyticsCharts analytics={analytics} />);
-    expect(screen.getByText("Solicitudes por status")).toBeInTheDocument();
-    expect(screen.getByText("Cohorts por mes")).toBeInTheDocument();
+    expect(screen.getByText("Solicitudes por estado")).toBeInTheDocument();
+    expect(screen.getByText("Cohortes por mes")).toBeInTheDocument();
   });
 });

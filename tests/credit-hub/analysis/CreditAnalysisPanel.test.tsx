@@ -59,14 +59,14 @@ describe("CreditAnalysisPanel", () => {
   test("button triggers analyze mutation", () => {
     mockUseCreditAnalysis.mockReturnValue({ data: null, isLoading: false, isAnalyzing: false, error: null, mutate });
     render(<CreditAnalysisPanel applicationId="app-1" />);
-    fireEvent.click(screen.getByRole("button", { name: /Analizar con Forge AI/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Ejecutar análisis crediticio/ }));
     expect(mutate).toHaveBeenCalled();
   });
 
   test("shows loading state in Spanish", () => {
     mockUseCreditAnalysis.mockReturnValue({ data: null, isLoading: false, isAnalyzing: true, error: null, mutate });
     render(<CreditAnalysisPanel applicationId="app-1" />);
-    expect(screen.getAllByText(/Analizando con Forge AI/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Ejecutando análisis crediticio/).length).toBeGreaterThan(0);
   });
 
   test("shows clear error state", () => {

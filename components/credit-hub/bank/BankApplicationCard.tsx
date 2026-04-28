@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ForgeBadge } from "@/components/credit-hub/primitives/ForgeBadge";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import { BankPriorityBadge } from "./BankPriorityBadge";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 function formatDop(value: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(value || 0);
@@ -18,6 +21,7 @@ export function BankApplicationCard({
   selected?: boolean;
   onSelect?: (checked: boolean) => void;
 }) {
+  const t = useTranslations();
   return (
     <ForgeCard className="transition-colors hover:border-forge-primary/40">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -37,13 +41,15 @@ export function BankApplicationCard({
               <BankPriorityBadge priority={application.priority} />
               {application.bank_decision && <ForgeBadge tone="success">{application.bank_decision.decision}</ForgeBadge>}
             </div>
-            <p className="mt-1 text-sm text-forge-text-muted">{application.vehicle_label || "Producto no especificado"} · {application.dealer_name || "Dealer no especificado"}</p>
+            <p className="mt-1 text-sm text-forge-text-muted">
+              {application.vehicle_label || "Producto no especificado"} · {application.dealer_name || "Dealer no especificado"}
+            </p>
             <p className="mt-1 font-mono text-xs text-forge-text-muted">{application.application_id}</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4 text-sm md:min-w-[360px]">
           <div>
-            <p className="text-forge-text-muted">Score</p>
+            <p className="text-forge-text-muted">{t.bank.application_score_label}</p>
             <p className="font-display text-2xl font-bold text-forge-text">{application.score}</p>
           </div>
           <div>

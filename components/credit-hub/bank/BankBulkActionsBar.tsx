@@ -4,8 +4,10 @@ import { useState } from "react";
 import type { BankBulkRule } from "@/lib/credit-hub/types/bankDecision";
 import { useBulkActions } from "@/lib/credit-hub/hooks/useBulkActions";
 import { BankBulkActionConfirm } from "./BankBulkActionConfirm";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 export function BankBulkActionsBar({ selectedIds, onDone }: { selectedIds: string[]; onDone?: () => void }) {
+  const t = useTranslations();
   const [rule, setRule] = useState<BankBulkRule>("APROBAR_SCORE_GTE_800");
   const [justification, setJustification] = useState("");
   const mutation = useBulkActions();
@@ -35,7 +37,7 @@ export function BankBulkActionsBar({ selectedIds, onDone }: { selectedIds: strin
       />
       {mutation.data && (
         <p className="mt-2 rounded-xl bg-forge-surface-elevated p-3 text-sm text-forge-text">
-          Resultado: {mutation.data.processed} procesadas, {mutation.data.skipped} omitidas, {mutation.data.errors} errores.
+          {t.bank.bulk_result(mutation.data.processed, mutation.data.skipped, mutation.data.errors)}
         </p>
       )}
     </div>

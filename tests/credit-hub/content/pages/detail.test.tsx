@@ -53,7 +53,7 @@ describe("DealerApplicationDetailPage", () => {
     renderDetail();
     expect(screen.getByRole("button", { name: /Resumen/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Vehículo/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Timeline/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cronología/ })).toBeInTheDocument();
   });
 
   test("handles null vehicle data gracefully", () => {
@@ -71,14 +71,14 @@ describe("DealerApplicationDetailPage", () => {
   test("process button calls backend mutation", () => {
     processMutateAsync.mockResolvedValue(makeApplication());
     renderDetail();
-    fireEvent.click(screen.getByRole("button", { name: /Procesar con IA/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Procesar con inteligencia artificial/ }));
     expect(processMutateAsync).toHaveBeenCalledWith("ai");
   });
 
   test("renders backend events in timeline", () => {
-    renderDetail({}, [{ id: "evt-1", title: "Procesada por IA", description: "Score calculado", created_at: new Date().toISOString() }]);
-    fireEvent.click(screen.getByRole("button", { name: /Timeline/ }));
-    expect(screen.getByText("Procesada por IA")).toBeInTheDocument();
-    expect(screen.getByText("Score calculado")).toBeInTheDocument();
+    renderDetail({}, [{ id: "evt-1", title: "Procesada con IA", description: "Puntaje calculado", created_at: new Date().toISOString() }]);
+    fireEvent.click(screen.getByRole("button", { name: /Cronología/ }));
+    expect(screen.getByText("Procesada con IA")).toBeInTheDocument();
+    expect(screen.getByText("Puntaje calculado")).toBeInTheDocument();
   });
 });
