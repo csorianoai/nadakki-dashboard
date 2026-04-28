@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "next build",
+    "build:webpack": "next build --webpack",
+    "build:turbopack": "next build --turbopack",
     "start": "next start",
     "lint": "eslint app/page.tsx components/layout/AgentCountDisplay.tsx components/layout/SidebarSuiteStats.tsx app/hooks/useAgentRegistrySummary.ts lib/api/agent-registry.ts lib/api/endpoints.ts lib/agent-registry/parse-summary.ts components/agent-registry/AgentRegistryStatHome.tsx types/agent-registry.ts --max-warnings 0",
     "typecheck": "tsc --noEmit",

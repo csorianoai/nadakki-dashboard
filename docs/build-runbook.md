@@ -5,41 +5,52 @@
 - Next.js 16.2.4
 - React 19.x (aligned with Next 16)
 - Node.js >= 18.17
-- **Build**: `next build --webpack` (script `npm run build`) para compatibilidad cuando el binario nativo SWC no está disponible (p. ej. políticas de Windows que bloquean `.node`, o entornos donde Turbopack exige bindings nativos).
 
-## Comandos
+## Scripts de build (dualidad)
 
-- `npm install` — instala dependencias (incluye bindings SWC para Windows, Linux y macOS declarados en `optionalDependencies`).
-- `npm run build` — build de producción con **Webpack** (`--webpack`).
-- `npm run typecheck` — verificación TypeScript.
-- `npm run lint` — ESLint (subset de rutas en `package.json`). Hoy: **ESLint 8** + `eslint-config-next@14` con `.eslintrc.json` (evita migración inmediata a flat config exigida por ESLint 9).
-- `npm run test:run -- credit-hub` — tests del módulo Credit Hub.
-- `npm run test:run -- lib` — tests de utilidades bajo `tests/lib`.
+| Script | Comando | Cuándo usarlo |
+|--------|---------|----------------|
+| **`npm run build`** | `next build` | **Vercel (Linux)** y **CI en runners Linux/macOS** con SWC nativo: Turbopack por defecto, máximo rendimiento. |
+| **`npm run build:turbopack`** | `next build --turbopack` | Mismo motor que `build`, explícito en documentación o pipelines que quieren el flag visible. |
+| **`npm run build:webpack`** | `next build --webpack` | **Windows corporativo** con **Application Control / AppLocker** que bloquea `@next/swc-win32-x64-msvc.node`: evita depender de Turbopack cuando no hay bindings nativos (WASM-only es más lento; Webpack suele ser más estable aquí). |
+
+### Por qué esta dualidad
+
+- **Application Control** en Windows puede bloquear el `.node` de SWC; Next intenta WASM y Turbopack puede fallar o degradarse.
+- **Linux (Vercel)** no aplica esa política: SWC nativo + **Turbopack** es lo más rápido.
+- **`vercel.json`** fija `buildCommand` a **`next build`** para que el deploy no herede accidentalmente un `package.json` orientado solo a Webpack.
+
+## Vercel
+
+- El proyecto define **`vercel.json`** con `"buildCommand": "next build"` (Turbopack en plataformas soportadas por Next).
+- El script **`build`** en `package.json` coincide con ese comando para desarrolladores que ejecutan `npm run build` en entornos compatibles.
+
+## Comandos habituales
+
+- `npm install` — instala dependencias (incluye `optionalDependencies` SWC alineados a la versión de `next`).
+- `npm run typecheck` — TypeScript.
+- `npm run lint` — ESLint (subset en `package.json`). **ESLint 8** + `eslint-config-next@14` + `.eslintrc.json`.
+- `npm run test:run -- credit-hub` / `npm run test:run -- lib` — tests Jest.
 
 ## Plataformas soportadas (bindings SWC)
 
-- Windows x64 local: `@next/swc-win32-x64-msvc`
-- Windows arm64: `@next/swc-win32-arm64-msvc`
-- Vercel / Linux x64 (glibc): `@next/swc-linux-x64-gnu`
-- Linux x64 (musl): `@next/swc-linux-x64-musl`
-- Linux arm64: `@next/swc-linux-arm64-gnu`, `@next/swc-linux-arm64-musl`
-- macOS Intel: `@next/swc-darwin-x64`
-- macOS Apple Silicon: `@next/swc-darwin-arm64`
+Pinneados en `package.json` → `optionalDependencies` (misma versión que `next`):
 
-Todos quedan **pinneados** en `package.json` → `optionalDependencies` en la misma versión que `next`, para reducir el aviso de Next *"Found lockfile missing swc dependencies, patching..."* cuando `npm` no materializa todas las plataformas en el lockfile.
+- Windows x64: `@next/swc-win32-x64-msvc`
+- Windows arm64: `@next/swc-win32-arm64-msvc`
+- Linux (Vercel glibc): `@next/swc-linux-x64-gnu`
+- Linux musl / arm64 / darwin: ver lista en `package.json`.
+
+Objetivo: evitar el aviso *"Found lockfile missing swc dependencies, patching..."* cuando el lockfile incluye los opcionales.
 
 ## Build esperado
 
-- **Sin** el aviso de Next *"Found lockfile missing swc dependencies, patching..."* cuando el `package-lock.json` se genera con los `optionalDependencies` SWC alineados a la versión de `next`.
-- En equipos Windows con **Application Control / AppLocker** que bloquean `next-swc.win32-x64-msvc.node`, Next puede mostrar *"Attempted to load @next/swc-win32-x64-msvc..."* y usar **WASM**; el build sigue pudiendo completarse con `--webpack`.
-- **Recharts**: el gráfico de amortización del simulador (`AmortizationChart`) monta `ResponsiveContainer` solo en cliente con altura fija. Otras páginas con Recharts pueden seguir emitiendo avisos en SSG hasta que se les aplique el mismo patrón.
+- Sin aviso de **lockfile SWC incompleto** (tras `npm install` con lockfile generado con opcionales).
+- En Windows con políticas que bloquean el binario nativo: usar **`npm run build:webpack`** (no confiar en `npm run build` local si AppControl rompe Turbopack).
+- **Recharts**: el simulador (`AmortizationChart`) monta el chart tras hidratar con altura fija; otras páginas con Recharts pueden aún loguear avisos en SSG.
 
-## Windows x64
+## Si reaparece el aviso de SWC en el lockfile
 
-- Binding nativo esperado: `@next/swc-win32-x64-msvc` (pinneado en `optionalDependencies`).
-
-## Si reaparece el aviso de SWC
-
-1. Confirmar que la versión de `next` en `dependencies` coincide con la de cada `@next/swc-*` en `optionalDependencies`.
-2. Regenerar instalación: eliminar `node_modules` y `package-lock.json`, ejecutar `npm install`, volver a commitear el lockfile si cambió.
-3. Revisar issues abiertos en [vercel/next.js](https://github.com/vercel/next.js/issues) con palabras clave `swc` y `lockfile`.
+1. Alinear versión de `next` con cada `@next/swc-*` en `optionalDependencies`.
+2. Regenerar: borrar `node_modules` y `package-lock.json`, `npm install`, commitear lockfile si cambia.
+3. Consultar [issues de Next.js](https://github.com/vercel/next.js/issues) (palabras clave: `swc`, `lockfile`).
