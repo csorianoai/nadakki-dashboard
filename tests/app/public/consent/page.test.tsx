@@ -1,0 +1,106 @@
+/** @jest-environment jsdom */
+
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+jest.mock("next/navigation", () => ({
+  useParams: () => ({ token: "valid-token" }),
+}));
+
+jest.mock("@/lib/credit-hub/api/public-consent-client", () => {
+  const validData = {
+    application_id: "app-1",
+    method: "WHATSAPP",
+    institution_name: "Cooperativa Test",
+    branding: { logo_url: null, primary_color: "#0066CC" },
+    regulatory_texts: {
+      LEY_172_13: "Texto Ley 172-13...",
+      BURO: "Texto buró...",
+      DATA_POLICY: "Texto data policy...",
+    },
+    consents_required: ["LEY_172_13", "BURO", "DATA_POLICY"],
+    expires_at: "2026-12-31T00:00:00Z",
+  };
+
+  return {
+    PublicConsentClient: jest.fn().mockImplementation(() => ({
+      getView: jest.fn().mockResolvedValue(validData),
+      accept: jest.fn().mockResolvedValue({
+        accepted_at: "2026-04-28T15:00:00Z",
+        audit_hash: "abc123def456",
+      }),
+    })),
+    ConsentTokenInvalidError: class extends Error {
+      name = "ConsentTokenInvalidError";
+    },
+    ConsentOtpInvalidError: class extends Error {
+      name = "ConsentOtpInvalidError";
+    },
+  };
+});
+
+import PublicConsentPage from "@/app/(public)/consent/[token]/page";
+
+describe("PublicConsentPage", () => {
+  it("shows loading initially then form", async () => {
+    render(<PublicConsentPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("consent-checkboxes")).toBeInTheDocument();
+    });
+  });
+
+  it("renders institution branding header", async () => {
+    render(<PublicConsentPage />);
+    await waitFor(() => {
+      expect(screen.getByText("Cooperativa Test")).toBeInTheDocument();
+    });
+  });
+
+  it("renders all consent checkboxes", async () => {
+    render(<PublicConsentPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("consent-checkbox-ley_172_13")).toBeInTheDocument();
+      expect(screen.getByTestId("consent-checkbox-buro")).toBeInTheDocument();
+      expect(screen.getByTestId("consent-checkbox-data_policy")).toBeInTheDocument();
+    });
+  });
+
+  it("disables submit until all checkboxes + signature", async () => {
+    const user = userEvent.setup();
+    render(<PublicConsentPage />);
+    await waitFor(() => screen.getByTestId("consent-submit"));
+    expect(screen.getByTestId("consent-submit")).toBeDisabled();
+
+    await user.click(screen.getByTestId("consent-checkbox-ley_172_13"));
+    expect(screen.getByTestId("consent-submit")).toBeDisabled();
+  });
+
+  it("enables submit when all required + signature filled", async () => {
+    const user = userEvent.setup();
+    render(<PublicConsentPage />);
+    await waitFor(() => screen.getByTestId("consent-submit"));
+
+    await user.click(screen.getByTestId("consent-checkbox-ley_172_13"));
+    await user.click(screen.getByTestId("consent-checkbox-buro"));
+    await user.click(screen.getByTestId("consent-checkbox-data_policy"));
+    await user.type(screen.getByTestId("signature-input"), "Juan Antonio Pérez");
+
+    expect(screen.getByTestId("consent-submit")).not.toBeDisabled();
+  });
+
+  it("shows success view after accept", async () => {
+    const user = userEvent.setup();
+    render(<PublicConsentPage />);
+    await waitFor(() => screen.getByTestId("consent-submit"));
+
+    await user.click(screen.getByTestId("consent-checkbox-ley_172_13"));
+    await user.click(screen.getByTestId("consent-checkbox-buro"));
+    await user.click(screen.getByTestId("consent-checkbox-data_policy"));
+    await user.type(screen.getByTestId("signature-input"), "Juan Pérez");
+    await user.click(screen.getByTestId("consent-submit"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("consent-success")).toBeInTheDocument();
+    });
+  });
+});

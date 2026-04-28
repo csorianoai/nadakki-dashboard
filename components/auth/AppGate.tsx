@@ -17,6 +17,10 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  if (pathname.startsWith("/consent")) {
+    return <>{children}</>;
+  }
+
   return (
     <RequireAuth>
       <DashboardLayout>
