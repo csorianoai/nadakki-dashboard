@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
 const WizardContainer = dynamic(
   () => import("@/components/credit-hub/dealer/wizard/WizardContainer").then((mod) => mod.WizardContainer),
@@ -18,7 +19,9 @@ export default function NewDealerApplicationPage() {
         <p className="mt-1 text-forge-text-muted">Completa los datos del cliente y vehículo.</p>
       </div>
 
-      <WizardContainer />
+      <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-forge-surface" />}>
+        <WizardContainer />
+      </Suspense>
     </div>
   );
 }

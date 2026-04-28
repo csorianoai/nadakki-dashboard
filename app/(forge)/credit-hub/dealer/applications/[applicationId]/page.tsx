@@ -2,9 +2,10 @@
 
 import { use, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Brain, Car, Clock, DollarSign, Mail, Phone, ShieldCheck, User } from "lucide-react";
+import { ArrowLeft, Brain, Calculator, Car, Clock, DollarSign, Mail, Phone, ShieldCheck, User } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { CreditAnalysisPanel } from "@/components/credit-hub/dealer/analysis/CreditAnalysisPanel";
+import { PreApprovalSimulator } from "@/components/credit-hub/dealer/preapproval/PreApprovalSimulator";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
 import { CreditCoreApiError } from "@/lib/credit-hub/api/creditCoreClient";
@@ -12,24 +13,71 @@ import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditAppl
 import { useProcessCreditApplication } from "@/lib/credit-hub/hooks/useProcessCreditApplication";
 import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { cn } from "@/lib/utils";
+
+function pickMonthlyDebtsFromApplication(raw: unknown): number {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return 0;
+  const r = raw as Record<string, unknown>;
+  const direct = r.monthly_debts ?? r.monthlyDebts;
+  if (typeof direct === "number" && Number.isFinite(direct)) return direct;
+  if (typeof direct === "string" && direct.trim() && Number.isFinite(Number(direct))) return Number(direct);
+  const fin = r.financial;
+  if (fin && typeof fin === "object" && !Array.isArray(fin)) {
+    const f = fin as Record<string, unknown>;
+    const v = f.monthly_debts ?? f.monthlyDebts;
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+    if (typeof v === "string" && v.trim() && Number.isFinite(Number(v))) return Number(v);
+  }
+  return 0;
+}
 
 export default function DealerApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
   const router = useRouter();
   const t = useTranslations();
-  const tabs = useMemo(
-    () => [
-      { id: "summary", label: t.dealer.detail_tabs.summary, icon: User },
-      { id: "analysis", label: t.dealer.detail_tabs.analysis, icon: Brain },
-      { id: "vehicle", label: t.dealer.detail_tabs.vehicle, icon: Car },
-      { id: "timeline", label: t.dealer.detail_tabs.timeline, icon: Clock },
-    ],
-    [t]
-  );
+  const { tenantConfig } = useTenantConfig();
+  const tabs = useMemo(() => {
+    const showSim = tenantConfig.features_enabled.preapproval_simulator;
+    return [
+      { id: "summary" as const, label: t.dealer.detail_tabs.summary, icon: User },
+      { id: "analysis" as const, label: t.dealer.detail_tabs.analysis, icon: Brain },
+      { id: "vehicle" as const, label: t.dealer.detail_tabs.vehicle, icon: Car },
+      ...(showSim ? [{ id: "simulator" as const, label: t.dealer.detail_tabs.simulator, icon: Calculator }] : []),
+      { id: "timeline" as const, label: t.dealer.detail_tabs.timeline, icon: Clock },
+    ];
+  }, [t, tenantConfig.features_enabled.preapproval_simulator]);
   const { application: data, events, isLoading, error, refetch } = useCreditApplicationDetail(applicationId);
   const processMutation = useProcessCreditApplication(applicationId);
   const [activeTab, setActiveTab] = useState("summary");
+
+  const simInitial = useMemo(() => {
+    if (!data) {
+      return {
+        monthlyIncome: 0,
+        monthlyDebts: 0,
+        age: 30,
+        employmentYears: 2,
+        vehiclePrice: 1_000_000,
+        downPayment: 0,
+        termMonths: tenantConfig.default_term ?? 60,
+        annualRate: tenantConfig.default_rate ?? 16,
+      };
+    }
+    const requested = Number(data.requested_amount) || 0;
+    const down = Number(data.down_payment) || 0;
+    const vehiclePrice = Number(data.vehicle_price) || (requested + down > 0 ? requested + down : 1_000_000);
+    return {
+      monthlyIncome: Number(data.monthly_income) || 0,
+      monthlyDebts: pickMonthlyDebtsFromApplication(data.raw),
+      age: 30,
+      employmentYears: 2,
+      vehiclePrice,
+      downPayment: down,
+      termMonths: tenantConfig.default_term ?? 60,
+      annualRate: tenantConfig.default_rate ?? 16,
+    };
+  }, [data, tenantConfig.default_term, tenantConfig.default_rate]);
 
   const handleProcess = async () => {
     try {
@@ -171,6 +219,10 @@ export default function DealerApplicationDetailPage({ params }: { params: Promis
         )}
 
         {activeTab === "analysis" && <CreditAnalysisPanel applicationId={applicationId} />}
+
+        {activeTab === "simulator" && tenantConfig.features_enabled.preapproval_simulator && (
+          <PreApprovalSimulator key={applicationId} initialInputs={simInitial} />
+        )}
 
         {activeTab === "vehicle" && (
           <ForgeCard padding="lg">

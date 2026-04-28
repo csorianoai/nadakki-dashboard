@@ -4,6 +4,7 @@ import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCred
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), back: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useCreateCreditApplication", () => ({

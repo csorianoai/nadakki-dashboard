@@ -53,6 +53,7 @@ describe("DealerApplicationDetailPage", () => {
     renderDetail();
     expect(screen.getByRole("button", { name: /Resumen/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Vehículo/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Simulador/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Cronología/ })).toBeInTheDocument();
   });
 

@@ -21,9 +21,13 @@ jest.mock("recharts", () => {
       React.createElement("div", { "data-testid": "recharts-container" }, children),
     BarChart: ({ children }: { children?: React.ReactNode }) =>
       React.createElement("div", null, children),
+    LineChart: ({ children }: { children?: React.ReactNode }) =>
+      React.createElement("div", { "data-testid": "recharts-line-chart" }, children),
     PieChart: ({ children }: { children?: React.ReactNode }) =>
       React.createElement("div", null, children),
     Bar: () => null,
+    Line: () => null,
+    Legend: () => null,
     Pie: ({ children }: { children?: React.ReactNode }) =>
       React.createElement("div", null, children),
     Cell: () => null,

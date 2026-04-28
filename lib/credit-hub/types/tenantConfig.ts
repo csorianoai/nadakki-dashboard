@@ -8,6 +8,19 @@ export interface TenantRequiredDocument {
   tooltip?: string;
 }
 
+export interface TenantProductLimits {
+  min_loan: number;
+  max_loan: number;
+  min_down_payment_ratio: number;
+  max_ltv: number;
+}
+
+export interface TenantRiskMultipliers {
+  BAJO: number;
+  MEDIO: number;
+  ALTO: number;
+}
+
 export interface TenantBankingConfig {
   tenant_id: string;
   institution_name: string;
@@ -35,7 +48,21 @@ export interface TenantBankingConfig {
   min_employment_years: number;
   pii_masking_enabled: boolean;
   default_rate: number;
+  /** % anual mínimo institucional (simulador y controles). */
+  min_rate?: number;
+  /** % anual máximo institucional. */
+  max_rate?: number;
   allowed_terms: number[];
+  /** Plazo por defecto del simulador (meses). */
+  default_term?: number;
+  product_limits?: TenantProductLimits;
+  /** Fracción 0–1: umbral “ajustar” respecto a DTI máximo (p. ej. 0.85). */
+  dti_warning_ratio?: number;
+  /** % mínimo de ROI bruto institucional para alertas en el simulador. */
+  min_roi_threshold?: number;
+  risk_multipliers?: TenantRiskMultipliers;
+  /** Ratio de capacidad de pago (ingreso × ratio − deudas), alineado con `calculatePaymentCapacity`. */
+  payment_capacity_ratio?: number;
   required_documents: TenantRequiredDocument[];
   features_enabled: {
     remote_consent: boolean;

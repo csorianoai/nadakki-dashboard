@@ -36,4 +36,11 @@ describe("simulatePreApproval", () => {
     const result = simulatePreApproval({ ...baseInput, monthlyDebts: 30000 });
     expect(result.reasons.length).toBeGreaterThan(0);
   });
+
+  it("respects dtiWarningRatio for AJUSTAR threshold", () => {
+    const tighter = simulatePreApproval({ ...baseInput, monthlyDebts: 10_600, dtiWarningRatio: 0.9 });
+    const looser = simulatePreApproval({ ...baseInput, monthlyDebts: 10_600, dtiWarningRatio: 0.99 });
+    expect(tighter.status).toBe("AJUSTAR");
+    expect(looser.status).toBe("APROBABLE");
+  });
 });

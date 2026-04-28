@@ -10,6 +10,7 @@ const mutateAsync = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push, back }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useCreateCreditApplication", () => ({

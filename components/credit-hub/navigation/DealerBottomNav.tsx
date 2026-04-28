@@ -2,23 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, FileText, Home, Plus, User } from "lucide-react";
+import { Bell, Calculator, FileText, Home, Plus, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/credit-hub/dealer", icon: Home, label: "Inicio" },
-  { href: "/credit-hub/dealer/applications", icon: FileText, label: "Solicitudes" },
-  { href: "/credit-hub/dealer/applications/new", icon: Plus, label: "Nueva", primary: true },
-  { href: "/credit-hub/dealer/notifications", icon: Bell, label: "Alertas" },
-  { href: "/credit-hub/dealer/profile", icon: User, label: "Perfil" },
-];
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 export function DealerBottomNav() {
   const pathname = usePathname();
+  const t = useTranslations();
+  const navItems = [
+    { href: "/credit-hub/dealer", icon: Home, label: t.dealer.top_nav_dashboard },
+    { href: "/credit-hub/dealer/applications", icon: FileText, label: "Solicitudes" },
+    { href: "/credit-hub/dealer/preapproval", icon: Calculator, label: t.simulator.nav_short },
+    { href: "/credit-hub/dealer/applications/new", icon: Plus, label: "Nueva", primary: true },
+    { href: "/credit-hub/dealer/notifications", icon: Bell, label: "Alertas" },
+    { href: "/credit-hub/dealer/profile", icon: User, label: "Perfil" },
+  ];
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-forge-border bg-forge-surface lg:hidden">
-      <div className="grid h-16 grid-cols-5">
+      <div className="grid h-16 grid-cols-6">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;

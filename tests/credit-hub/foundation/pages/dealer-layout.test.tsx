@@ -1,8 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import DealerLayout from "@/app/(forge)/credit-hub/dealer/layout";
+import { CREDIT_HUB_ES_DO } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/credit-hub/dealer",
+}));
+
+jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
+  useTranslations: () => CREDIT_HUB_ES_DO,
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({

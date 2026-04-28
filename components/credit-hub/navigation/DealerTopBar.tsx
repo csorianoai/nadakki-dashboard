@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Calculator } from "lucide-react";
 import { ForgeLogo } from "../brand/ForgeLogo";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
@@ -34,6 +35,13 @@ export function DealerTopBar() {
             className="text-forge-text transition-colors hover:text-forge-primary"
           >
             Solicitudes
+          </Link>
+          <Link
+            href="/credit-hub/dealer/preapproval"
+            className="inline-flex items-center gap-1.5 text-forge-text transition-colors hover:text-forge-primary"
+          >
+            <Calculator className="h-4 w-4" aria-hidden />
+            {t.dealer.top_nav_simulator}
           </Link>
         </nav>
       </div>

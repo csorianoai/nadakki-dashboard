@@ -5,6 +5,41 @@ import { useTenant } from "./useTenant";
 import type { TenantBankingConfig } from "../types/tenantConfig";
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
 
+/** Valores por defecto República Dominicana — simulador y políticas de exhibición en tenant. */
+const DEFAULT_DO_SIMULATOR_CONFIG: Pick<
+  TenantBankingConfig,
+  | "default_rate"
+  | "min_rate"
+  | "max_rate"
+  | "allowed_terms"
+  | "default_term"
+  | "product_limits"
+  | "dti_warning_ratio"
+  | "dti_max"
+  | "ltv_max"
+  | "min_roi_threshold"
+  | "risk_multipliers"
+  | "payment_capacity_ratio"
+> = {
+  default_rate: 16,
+  min_rate: 10,
+  max_rate: 25,
+  allowed_terms: [12, 24, 36, 48, 60, 72, 84],
+  default_term: 60,
+  product_limits: {
+    min_loan: 100_000,
+    max_loan: 5_000_000,
+    min_down_payment_ratio: 0.1,
+    max_ltv: 0.95,
+  },
+  dti_warning_ratio: 0.85,
+  dti_max: 0.4,
+  ltv_max: 0.95,
+  min_roi_threshold: 30,
+  risk_multipliers: { BAJO: 1.0, MEDIO: 0.75, ALTO: 0.5 },
+  payment_capacity_ratio: 0.4,
+};
+
 export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingConfig {
   return {
     tenant_id: tenantId,
@@ -25,14 +60,10 @@ export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingCo
     vehicle_types: ["Nuevo", "Usado", "Demo"],
     product_types: ["Vehículo nuevo", "Vehículo usado", "Motor", "Camión", "Maquinaria", "Otro"],
     document_types: { primary_id: "CEDULA", alternative_ids: ["PASAPORTE", "OTRO"] },
-    dti_max: 0.45,
-    ltv_max: 0.9,
     min_age: 18,
     max_age: 75,
     min_employment_years: 0.5,
     pii_masking_enabled: true,
-    default_rate: 18,
-    allowed_terms: [12, 24, 36, 48, 60, 72, 84],
     required_documents: [...DEFAULT_DO_REQUIRED_DOCUMENTS],
     features_enabled: {
       remote_consent: true,
@@ -40,6 +71,7 @@ export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingCo
       garante_required: false,
     },
     consent_methods_enabled: ["WHATSAPP_LINK", "OTP_EMAIL", "OTP_SMS", "SELFIE"],
+    ...DEFAULT_DO_SIMULATOR_CONFIG,
   };
 }
 

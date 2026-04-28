@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Briefcase, Car, ChevronLeft, ChevronRight, ClipboardCheck, DollarSign, FileCheck, FileText, ShieldCheck, User, Users } from "lucide-react";
 import { ForgeButton } from "../../primitives/ForgeButton";
 import { ForgeCard } from "../../primitives/ForgeCard";
@@ -32,7 +32,7 @@ import { useAdministrativeDivisions } from "@/lib/credit/catalogs/useAdministrat
 import { DO_RELATIONSHIP_TYPES } from "@/lib/credit/catalogs/do/employment-types";
 import type { TenantBankingConfig, TenantRequiredDocument } from "@/lib/credit-hub/types/tenantConfig";
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
-import { simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
+import { preapprovalParamsFromTenantFractions, simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
 import { PreApprovalBadge } from "./PreApprovalBadge";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -61,6 +61,17 @@ function newOtherIncomeRowId(): string {
 function newAdditionalDocumentRowId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return `ad-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function decodeWizardPreset(encoded: string): Record<string, unknown> | null {
+  try {
+    const decoded = typeof atob !== "undefined" ? atob(decodeURIComponent(encoded)) : encoded;
+    const parsed: unknown = JSON.parse(decoded);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
 }
 
 export function tenantDocumentKey(doc: TenantRequiredDocument): string {
@@ -546,6 +557,8 @@ function formatDop(value: number): string {
 
 export function WizardContainer() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const presetAppliedRef = useRef(false);
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
   const steps = useMemo(
@@ -584,9 +597,8 @@ export function WizardContainer() {
       monthlyIncome: monthlyIncomeTotal,
       monthlyDebts: numeric(formData.monthly_debts),
       loanAmount,
-      annualRate: tenantConfig.default_rate ?? 16,
       termMonths,
-      dtiMax: (tenantConfig.dti_max ?? 0.4) * 100,
+      ...preapprovalParamsFromTenantFractions(tenantConfig),
     });
   }, [formData, tenantConfig]);
 
@@ -607,6 +619,34 @@ export function WizardContainer() {
     if (!tenantConfig.features_enabled.garante_required) return;
     setFormData((prev) => (prev.co_debtor_required === "yes" ? prev : { ...prev, co_debtor_required: "yes" }));
   }, [tenantConfig.features_enabled.garante_required]);
+
+  useEffect(() => {
+    if (presetAppliedRef.current) return;
+    const encoded = searchParams.get("preset");
+    if (!encoded) return;
+    const raw = decodeWizardPreset(encoded);
+    if (!raw) return;
+    presetAppliedRef.current = true;
+    const toStr = (v: unknown) => (v == null ? "" : String(v));
+    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : Number(v));
+    const loanFromFields =
+      raw.vehiclePrice != null && raw.downPayment != null ? Math.max(0, num(raw.vehiclePrice) - num(raw.downPayment)) : null;
+    setFormData((prev) => ({
+      ...prev,
+      monthly_income: raw.monthlyIncome != null ? toStr(raw.monthlyIncome) : prev.monthly_income,
+      monthly_debts: raw.monthlyDebts != null ? toStr(raw.monthlyDebts) : prev.monthly_debts,
+      vehicle_price: raw.vehiclePrice != null ? toStr(raw.vehiclePrice) : prev.vehicle_price,
+      down_payment: raw.downPayment != null ? toStr(raw.downPayment) : prev.down_payment,
+      desired_term: raw.termMonths != null ? `${Math.max(1, Math.round(num(raw.termMonths)))} meses` : prev.desired_term,
+      requested_amount:
+        raw.loanAmount != null
+          ? toStr(raw.loanAmount)
+          : loanFromFields != null
+            ? toStr(loanFromFields)
+            : prev.requested_amount,
+      applicant_age: raw.age != null ? toStr(raw.age) : prev.applicant_age,
+    }));
+  }, [searchParams]);
 
   const updateField = <K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
