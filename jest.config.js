@@ -4,7 +4,7 @@ const path = require("path");
 module.exports = {
   testEnvironment: "jsdom",
   roots: ["<rootDir>"],
-  testMatch: ["**/tests/**/*.test.[jt]s?(x)"],
+  testMatch: ["**/tests/**/*.test.[jt]s?(x)", "**/__tests__/legal/**/*.test.[jt]s?(x)"],
   modulePathIgnorePatterns: ["<rootDir>/legacy/"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
