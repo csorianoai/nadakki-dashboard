@@ -13,16 +13,17 @@ describe("DemoAcceptanceModal", () => {
     push.mockClear();
   });
 
-  it("shows modal when legal_demo_accepted is not set", async () => {
+  it("shows modal when post-sello acceptance is not set", async () => {
     render(<DemoAcceptanceModal />);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/Aviso importante antes de continuar/)).toBeInTheDocument();
+    expect(screen.getByText(/Piloto controlado — Legal Core RD \(Fase 2\)/)).toBeInTheDocument();
   });
 
-  it("accept stores flag and hides modal", async () => {
+  it("accept stores post-sello and legacy flags and hides modal", async () => {
     render(<DemoAcceptanceModal />);
     const accept = await screen.findByRole("button", { name: /Acepto, continuar/i });
     fireEvent.click(accept);
+    expect(localStorage.getItem("legal_post_sello_accepted")).toBe("true");
     expect(localStorage.getItem("legal_demo_accepted")).toBe("true");
   });
 });

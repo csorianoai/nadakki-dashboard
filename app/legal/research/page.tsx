@@ -7,7 +7,6 @@ import { DecisionBadge } from "@/components/legal/DecisionBadge";
 import { CitationBadge } from "@/components/legal/CitationBadge";
 import { AuditTrailCard } from "@/components/legal/AuditTrailCard";
 import { LegalDisclaimer } from "@/components/legal/LegalDisclaimer";
-import { LlmModeNotice } from "@/components/legal/LlmModeNotice";
 import type { LegalQuickCheckResponse } from "@/lib/legal-api";
 
 interface Message {
@@ -16,8 +15,74 @@ interface Message {
   resultado?: LegalQuickCheckResponse;
 }
 
+/** Post sello Fase 2 — exportes y copias (Worker F). */
 const WATERMARK =
-  "Generado por Nadakki Legal AI (DEMO). No constituye consejo legal. Validar con abogado autorizado.";
+  "Generado por Nadakki Legal AI (PILOTO CONTROLADO). Knowledge pack RD verificado; no constituye consejo legal. Validar con abogado autorizado.";
+
+/**
+ * Aviso LLM solo en esta página (Worker F); no modifica `LlmModeNotice.tsx` (fuera de allowed_paths).
+ */
+function PilotLlmNotice({ resultado }: { resultado?: LegalQuickCheckResponse | null }) {
+  if (resultado == null) {
+    return (
+      <div
+        className="rounded-md border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-xs text-emerald-950"
+        role="status"
+        aria-live="polite"
+      >
+        <strong className="font-semibold">Fase 2 — LLM operativo:</strong>{" "}
+        <span>
+          El Legal Core utiliza <strong>LLM real</strong> (post Worker E). Toda salida requiere revisión profesional;
+          las citas marcadas con ⚠️ siguen en Capa 2 (sin verificación automática contra fuente oficial).
+        </span>
+      </div>
+    );
+  }
+
+  const modeRaw = resultado.metricas?.llm_mode;
+  const modeStr = typeof modeRaw === "string" ? modeRaw.toLowerCase() : null;
+  const isMockLike =
+    modeStr === "mock" ||
+    modeStr === "deterministic" ||
+    modeStr === "off" ||
+    modeStr === "disabled";
+
+  if (isMockLike) {
+    return (
+      <div
+        className="rounded-md border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-950"
+        role="status"
+        aria-live="polite"
+      >
+        <strong className="font-semibold">Atención — modo restringido:</strong>{" "}
+        <span>
+          esta ejecución reporta <code className="rounded bg-amber-100 px-1">{String(modeRaw)}</code>. En piloto RD
+          verificado el modo esperado es LLM real; si persiste, revise configuración del tenant.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="rounded-md border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-xs text-emerald-950"
+      role="status"
+      aria-live="polite"
+    >
+      <strong className="font-semibold">LLM (esta respuesta):</strong>{" "}
+      <span>
+        {modeStr ? (
+          <>
+            el core reporta <code className="rounded bg-emerald-100 px-1">{String(modeRaw)}</code>.
+          </>
+        ) : (
+          <>métricas sin modo explícito; asuma salida asistida por modelo y valide con abogado.</>
+        )}{" "}
+        No sustituye dictamen profesional.
+      </span>
+    </div>
+  );
+}
 
 export default function ResearchPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -61,7 +126,7 @@ export default function ResearchPage() {
 
       <div className="space-y-4">
         <h2 className="text-2xl font-medium">Consulta legal</h2>
-        <LlmModeNotice resultado={null} />
+        <PilotLlmNotice resultado={null} />
         <p className="text-sm text-slate-600">
           Conversación con asistente legal automatizado. Las respuestas requieren revisión profesional.
         </p>
@@ -70,6 +135,11 @@ export default function ResearchPage() {
             Selecciona un tenant en el selector global para enviar consultas al Legal Core.
           </p>
         )}
+
+        <p className="text-xs text-slate-500">
+          Las copias desde una respuesta del asistente incluyen el watermark{" "}
+          <strong className="text-slate-700">PILOTO CONTROLADO</strong> (Fase 2).
+        </p>
 
         <div className="bg-white rounded-lg shadow border min-h-[500px] flex flex-col">
           <div className="flex-1 p-6 space-y-4 overflow-y-auto max-h-[600px]">
@@ -99,7 +169,7 @@ export default function ResearchPage() {
 
                   {m.resultado && (
                     <div className="space-y-2 pt-2 border-t border-slate-300">
-                      <LlmModeNotice resultado={m.resultado} />
+                      <PilotLlmNotice resultado={m.resultado} />
                       <DecisionBadge decision={m.resultado.decision} />
 
                       {(m.resultado.citas?.length ?? 0) > 0 && (
@@ -139,7 +209,7 @@ export default function ResearchPage() {
                         onClick={() => handleCopy(m)}
                         className="text-xs text-blue-600 hover:underline"
                       >
-                        Copiar respuesta (con watermark DEMO)
+                        Copiar respuesta (con watermark PILOTO CONTROLADO)
                       </button>
                     </div>
                   )}

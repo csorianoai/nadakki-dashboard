@@ -3,21 +3,24 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const STORAGE_KEY = "legal_demo_accepted";
+/** Fase 2 post-sello: clave nueva para términos actualizados (solo flags de aceptación). */
+const STORAGE_KEY_V2 = "legal_post_sello_accepted";
+/** Compat tests / sesiones previas Worker C. */
+const STORAGE_KEY_LEGACY = "legal_demo_accepted";
 
 export function DemoAcceptanceModal() {
   const router = useRouter();
   const [accepted, setAccepted] = useState(true);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    setAccepted(stored === "true");
+    setAccepted(window.localStorage.getItem(STORAGE_KEY_V2) === "true");
   }, []);
 
   if (accepted) return null;
 
   const handleAccept = () => {
-    window.localStorage.setItem(STORAGE_KEY, "true");
+    window.localStorage.setItem(STORAGE_KEY_V2, "true");
+    window.localStorage.setItem(STORAGE_KEY_LEGACY, "true");
     setAccepted(true);
   };
 
@@ -32,20 +35,23 @@ export function DemoAcceptanceModal() {
       aria-modal="true"
       aria-labelledby="legal-demo-modal-title"
     >
-      <div className="bg-white rounded-xl max-w-lg p-6 space-y-4 shadow-xl">
-        <h2 id="legal-demo-modal-title" className="text-xl font-medium">
-          Aviso importante antes de continuar
+      <div className="bg-white rounded-xl max-w-lg p-6 space-y-4 shadow-xl border border-emerald-200">
+        <h2 id="legal-demo-modal-title" className="text-xl font-medium text-emerald-950">
+          Piloto controlado — Legal Core RD (Fase 2)
         </h2>
         <p className="text-slate-700 leading-relaxed">
-          Esta plataforma está en fase de desarrollo. Las respuestas son generadas automáticamente por sistemas de
-          inteligencia artificial y heurísticas legales, y <strong>NO sustituyen consulta legal profesional</strong>.
+          El knowledge pack para República Dominicana está <strong>verificado</strong> (sello profesional). El
+          asistente utiliza <strong>LLM real</strong> bajo políticas del Legal Core; las salidas son asistencia
+          institucional y <strong>no sustituyen</strong> consulta ni representación legal.
         </p>
         <p className="text-slate-700 leading-relaxed">
-          Al continuar, usted acepta que NO usará estas respuestas como base de decisiones legales reales. Cada respuesta
-          lleva watermark &quot;DEMO&quot; hasta que un abogado autorizado RD valide formalmente el sistema.
+          Al continuar, acepta que las exportaciones y copias incluyen el watermark{" "}
+          <strong className="whitespace-nowrap">PILOTO CONTROLADO</strong> y que no basará actos jurídicos definitivos
+          solo en esta herramienta.
         </p>
-        <p className="text-amber-700 text-sm">
-          Las citas legales que aparezcan marcadas con ⚠️ no han sido verificadas contra fuente oficial.
+        <p className="text-amber-800 text-sm border border-amber-200 bg-amber-50 rounded-lg p-3">
+          <strong>Capa 2 — citas:</strong> las referencias marcadas con ⚠️ siguen{" "}
+          <strong>sin verificación contra fuente oficial</strong>; valídelas con su abogado o fuente primaria.
         </p>
         <div className="flex justify-end gap-2 pt-2">
           <button
@@ -58,7 +64,7 @@ export function DemoAcceptanceModal() {
           <button
             type="button"
             onClick={handleAccept}
-            className="px-5 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+            className="px-5 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800"
           >
             Acepto, continuar
           </button>
