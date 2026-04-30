@@ -105,3 +105,12 @@ export function useKnowledgePackInfo(jurisdiccion: string = "do") {
 
   return { info, loading };
 }
+
+export {
+  useLegalEffectiveTenantId,
+  useLegalHealth,
+  useLegalAgents,
+  useLegalAuditTrail,
+  useKnowledgePackStatus,
+  useLegalAgentRun,
+} from "./useLegalCore";

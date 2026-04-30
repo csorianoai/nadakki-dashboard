@@ -7,11 +7,23 @@ const push = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("@/hooks/useLegal", () => ({
   useKnowledgePackInfo: jest.fn(),
   useLegalQuickCheck: jest.fn(),
+  useLegalEffectiveTenantId: jest.fn(() => ({
+    effectiveTenantId: "credicefi",
+    tenantHydrated: true,
+    tenantError: null as string | null,
+  })),
+  useLegalAgentRun: jest.fn(() => ({
+    run: jest.fn().mockRejectedValue(new Error("network disabled in test")),
+    loading: false,
+    error: null as string | null,
+    clearError: jest.fn(),
+  })),
 }));
 
 import { useKnowledgePackInfo, useLegalQuickCheck } from "@/hooks/useLegal";

@@ -54,6 +54,7 @@ import {
   Calendar,
   Globe,
   HeartPulse,
+  Scale,
 } from "lucide-react";
 import SidebarSuiteStats from "./SidebarSuiteStats";
 import TenantSelector from "@/components/ui/TenantSelector";
@@ -147,6 +148,21 @@ const navigationStructure: NavCore[] = [
         badge: "v2",
       },
       { id: "sic-demo", icon: <PlayCircle size={14} />, label: "Demo", href: "/sic/demo" },
+    ],
+  },
+
+  {
+    id: "legal-core",
+    title: "LEGAL CORE",
+    icon: <Scale size={14} />,
+    color: "#64748b",
+    gradient: "linear-gradient(135deg, #64748b, #475569)",
+    modules: [
+      { id: "legal-home", icon: <Home size={14} />, label: "Legal Intelligence", href: "/legal", badge: "NEW" },
+      { id: "legal-research", icon: <Brain size={14} />, label: "Research", href: "/legal/research" },
+      { id: "legal-audit", icon: <ScrollText size={14} />, label: "Audit Trail", href: "/legal/audit" },
+      { id: "legal-contracts", icon: <FileText size={14} />, label: "Contratos (quick-check)", href: "/legal/contracts" },
+      { id: "legal-config", icon: <Settings size={14} />, label: "Config knowledge pack", href: "/legal/config" },
     ],
   },
 

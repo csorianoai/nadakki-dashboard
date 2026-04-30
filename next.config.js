@@ -42,6 +42,8 @@ const nextConfig = {
       { source: "/api/v1/offers/:path*", destination: `${backendUrl}/api/v1/offers/:path*` },
       // Social status + future same-origin calls to suite (dashboard uses API_URL for most fetches)
       { source: "/api/social/:path*", destination: `${backendUrl}/api/social/:path*` },
+      // Legal Core (same-origin /api/legal → backend /api/v1/legal) — Worker L
+      { source: "/api/legal/:path*", destination: `${backendUrl}/api/v1/legal/:path*` },
     ];
   },
 };
