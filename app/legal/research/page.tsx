@@ -19,21 +19,20 @@ interface Message {
 const WATERMARK =
   "Generado por Nadakki Legal AI (PILOTO CONTROLADO). Knowledge pack RD verificado; no constituye consejo legal. Validar con abogado autorizado.";
 
-/**
- * Aviso LLM solo en esta página (Worker F); no modifica `LlmModeNotice.tsx` (fuera de allowed_paths).
- */
+/** Aviso LLM en research; tono piloto controlado (Worker F). */
 function PilotLlmNotice({ resultado }: { resultado?: LegalQuickCheckResponse | null }) {
   if (resultado == null) {
     return (
       <div
-        className="rounded-md border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-xs text-emerald-950"
+        className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-950"
         role="status"
         aria-live="polite"
       >
-        <strong className="font-semibold">Fase 2 — LLM operativo:</strong>{" "}
+        <strong className="font-semibold text-green-900">Piloto controlado:</strong>{" "}
         <span>
-          El Legal Core utiliza <strong>LLM real</strong> (post Worker E). Toda salida requiere revisión profesional;
-          las citas marcadas con ⚠️ siguen en Capa 2 (sin verificación automática contra fuente oficial).
+          El Legal Core opera con modelo de lenguaje bajo políticas del tenant. Las salidas{" "}
+          <strong>asisten</strong> y requieren revisión profesional; las citas con ⚠️ (Capa 2) no sustituyen
+          comprobación en fuente oficial.
         </span>
       </div>
     );
@@ -50,14 +49,14 @@ function PilotLlmNotice({ resultado }: { resultado?: LegalQuickCheckResponse | n
   if (isMockLike) {
     return (
       <div
-        className="rounded-md border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-950"
+        className="rounded-md border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs text-amber-950"
         role="status"
         aria-live="polite"
       >
         <strong className="font-semibold">Atención — modo restringido:</strong>{" "}
         <span>
-          esta ejecución reporta <code className="rounded bg-amber-100 px-1">{String(modeRaw)}</code>. En piloto RD
-          verificado el modo esperado es LLM real; si persiste, revise configuración del tenant.
+          esta ejecución reporta <code className="rounded bg-amber-100 px-1">{String(modeRaw)}</code>. En piloto
+          verificado el modo esperado es operación con LLM según políticas del core.
         </span>
       </div>
     );
@@ -65,18 +64,18 @@ function PilotLlmNotice({ resultado }: { resultado?: LegalQuickCheckResponse | n
 
   return (
     <div
-      className="rounded-md border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-xs text-emerald-950"
+      className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-950"
       role="status"
       aria-live="polite"
     >
-      <strong className="font-semibold">LLM (esta respuesta):</strong>{" "}
+      <strong className="font-semibold text-green-900">Asistencia (esta respuesta):</strong>{" "}
       <span>
         {modeStr ? (
           <>
-            el core reporta <code className="rounded bg-emerald-100 px-1">{String(modeRaw)}</code>.
+            el core reporta <code className="rounded bg-green-100 px-1">{String(modeRaw)}</code>.
           </>
         ) : (
-          <>métricas sin modo explícito; asuma salida asistida por modelo y valide con abogado.</>
+          <>sin detalle de modo en métricas; valide con su equipo legal.</>
         )}{" "}
         No sustituye dictamen profesional.
       </span>
@@ -138,7 +137,7 @@ export default function ResearchPage() {
 
         <p className="text-xs text-slate-500">
           Las copias desde una respuesta del asistente incluyen el watermark{" "}
-          <strong className="text-slate-700">PILOTO CONTROLADO</strong> (Fase 2).
+          <strong className="text-slate-700">PILOTO CONTROLADO</strong>.
         </p>
 
         <div className="bg-white rounded-lg shadow border min-h-[500px] flex flex-col">

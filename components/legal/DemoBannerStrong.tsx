@@ -1,48 +1,46 @@
 "use client";
 
+import { AlertTriangle, ShieldCheck } from "lucide-react";
 import { useKnowledgePackInfo } from "@/hooks/useLegal";
 
-/** Abogado que selló el pack RD (Fase 2); el API puede sobreescribir con `verified_by`. */
-const RD_PACK_VERIFIED_BY_FALLBACK = "Ramon Almonte Soriano";
-
 export function DemoBannerStrong() {
-  const { info } = useKnowledgePackInfo("do");
+  const { info, loading } = useKnowledgePackInfo("do");
   const verified = info?.verification_status === "verified";
-  const verifiedBy = info?.verified_by?.trim() || RD_PACK_VERIFIED_BY_FALLBACK;
+
+  if (loading) {
+    return (
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-500 max-w-6xl mx-auto">
+        Cargando estado del knowledge pack…
+      </div>
+    );
+  }
 
   if (verified) {
     return (
-      <div className="bg-emerald-100 border-y border-emerald-500 px-4 py-3 text-emerald-950 text-sm">
-        <div className="max-w-6xl mx-auto flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-          <span className="shrink-0 text-lg" aria-hidden="true">
-            ✓
-          </span>
-          <div>
-            <strong className="block sm:inline">Piloto controlado — Fase 2 (post sello).</strong>{" "}
-            <span>
-              Knowledge pack <abbr title="República Dominicana">RD</abbr> verificado por {verifiedBy}
-              {info?.verified_at ? ` (${new Date(info.verified_at).toLocaleDateString("es-DO")})` : ""}. El Legal Core
-              opera con <strong>LLM real</strong> bajo políticas del tenant; cada entrega sigue requiriendo revisión
-              por abogado autorizado antes de actos jurídicos.
-            </span>
-          </div>
+      <div className="border-b border-green-200/80 bg-green-50 px-4 py-2 text-sm text-green-900 max-w-6xl mx-auto">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 shrink-0 text-green-700" aria-hidden="true" />
+          <p className="leading-snug">
+            <span className="font-medium">Sistema en piloto controlado</span>
+            {" — "}
+            Conocimiento legal validado por abogado RD autorizado. Las respuestas asisten pero no sustituyen asesoría
+            legal profesional.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-amber-100 border-y border-amber-400 px-4 py-3 text-amber-900">
+    <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-950">
       <div className="flex items-start gap-3 max-w-6xl mx-auto">
-        <span className="text-2xl" aria-hidden="true">
-          ⚠️
-        </span>
+        <AlertTriangle className="h-6 w-6 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
         <div className="text-sm">
-          <strong className="block mb-1">Demo técnica — sistema en validación</strong>
+          <strong className="block mb-1">Validación pendiente — entorno restrictivo</strong>
           <p>
-            Las respuestas no constituyen consejo legal. El knowledge pack RD puede estar pendiente de sello
-            notarial / registro interno.
-            <strong> NO usar para tomar decisiones reales.</strong>
+            El knowledge pack legal no está verificado como &quot;firmado&quot; en este tenant. Las respuestas no
+            constituyen consejo legal.
+            <strong> No usar para decisiones jurídicas definitivas.</strong>
           </p>
         </div>
       </div>
