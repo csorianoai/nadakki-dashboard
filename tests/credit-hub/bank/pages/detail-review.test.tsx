@@ -7,8 +7,8 @@ jest.mock("react", () => {
   return { ...actual, use: (value: unknown) => value };
 });
 
-jest.mock("@/components/credit-hub/bank/BankDetailView", () => ({
-  BankDetailView: () => <div>Detalle bancario renderizado</div>,
+jest.mock("@/components/forge/credit-hub/BankApplicationDetailView", () => ({
+  BankApplicationDetailView: () => <div>Detalle bancario renderizado</div>,
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useBankDecision", () => ({

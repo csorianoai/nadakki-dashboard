@@ -1,10 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { use } from "react";
-import { BankDetailView } from "@/components/credit-hub/bank/BankDetailView";
-import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
-import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
+import { Button, Card, Skeleton } from "@/components/forge";
 import { useBankApplication, useBankAuditTrail, useBankCompliance } from "@/lib/credit-hub/hooks/useBankDecision";
+
+const BankApplicationDetailView = dynamic(
+  () => import("@/components/forge/credit-hub/BankApplicationDetailView").then((m) => m.BankApplicationDetailView),
+  { ssr: false, loading: () => <Skeleton className="min-h-[24rem] w-full rounded-forge-lg" /> }
+);
 
 export default function BankApplicationReviewPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
@@ -13,15 +17,17 @@ export default function BankApplicationReviewPage({ params }: { params: Promise<
   const auditQuery = useBankAuditTrail(applicationId);
 
   if (appQuery.isLoading) {
-    return <div className="h-96 animate-pulse rounded-2xl bg-forge-surface" />;
+    return <Skeleton className="min-h-[24rem] w-full rounded-forge-lg" />;
   }
   if (appQuery.error || !appQuery.data) {
     return (
-      <ForgeCard className="py-12 text-center">
-        <p className="text-forge-danger">No se pudo cargar la solicitud para revisión.</p>
-        <ForgeButton className="mt-4" variant="secondary" onClick={() => void appQuery.refetch()}>Reintentar</ForgeButton>
-      </ForgeCard>
+      <Card className="p-8 text-center">
+        <p className="text-forge-sm font-medium text-forgeDanger-700">No se pudo cargar la solicitud para revisión.</p>
+        <Button type="button" variant="secondary" className="mt-4 min-h-12" onClick={() => void appQuery.refetch()}>
+          Reintentar
+        </Button>
+      </Card>
     );
   }
-  return <BankDetailView application={appQuery.data} compliance={complianceQuery.data} audit={auditQuery.data} />;
+  return <BankApplicationDetailView application={appQuery.data} compliance={complianceQuery.data} audit={auditQuery.data} />;
 }

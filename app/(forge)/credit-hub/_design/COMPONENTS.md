@@ -64,3 +64,5 @@ npx lighthouse "http://localhost:3010/credit-hub/bank" --only-categories=accessi
 **Forge-specific fixes in tree:** root viewport allows zoom (`maximumScale: 5`); Credit Hub shell uses a **`<main id="main-content">`** landmark; sidebar and inline table actions meet **target-size**; `EmptyState` supports **`titleLevel`** so empty bands under an `h1` can use an **`h2`** title (heading order).
 
 **Artifacts:** decoded final screenshots and full JSON live under `app/(forge)/credit-hub/_design/_inventory/` (see `INVESTIGATION_phase4_chunk1_gates.md`).
+
+**Bank application detail (`/credit-hub/bank/applications/[applicationId]`):** the route loads a client-only bundle via `next/dynamic(..., { ssr: false })` for the heavy review surface (includes `ScoreVisual` / Framer Motion). Without this, the document request could **500** during SSR/Lighthouse even though the client shell is fine. Auditing: use any valid `applicationId` segment after `next start` (e.g. `test-id`); Lighthouse scores refer to the **shell + loading** state when data is still fetching.

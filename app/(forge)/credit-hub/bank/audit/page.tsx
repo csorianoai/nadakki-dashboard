@@ -1,41 +1,62 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
-import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
+import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
+import { AuditTimeline, Card, EmptyState, Skeleton } from "@/components/forge";
+import type { AuditTimelineEntry } from "@/components/forge/ui/AuditTimeline";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
+function targetHash(id: string) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(16).slice(0, 12);
+}
+
 export default function BankAuditPage() {
+  const persona = usePersona();
   const t = useTranslations();
   const queue = useBankQueue();
+
+  const entries: AuditTimelineEntry[] = useMemo(() => {
+    const apps = queue.data?.applications ?? [];
+    return [...apps]
+      .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")))
+      .map((application) => ({
+        id: application.application_id,
+        timestampLabel: application.created_at ? new Date(application.created_at).toLocaleString("es-DO") : "—",
+        actorLabel: application.applicant_name ? `${application.applicant_name.slice(0, 1)}•••` : "Sistema",
+        actionLabel: `Solicitud ${application.application_id.slice(0, 8)}…`,
+        detail: `${t.bank.audit_score_line(
+          application.score,
+          application.bank_decision ? `Decisión ${application.bank_decision.decision}` : t.bank.no_bank_decision
+        )} · Target hash ${targetHash(application.application_id)} · IP —`,
+        href: `/credit-hub/bank/applications/${application.application_id}`,
+      }));
+  }, [queue.data?.applications, t]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-persona={persona}>
       <div>
-        <p className="text-sm uppercase tracking-[0.18em] text-forge-primary">{t.bank.audit_kicker}</p>
-        <h1 className="mt-1 font-display text-3xl font-bold text-forge-text">Visor de auditoría</h1>
+        <p className="text-forge-xs font-semibold uppercase tracking-[0.18em] text-forgeBrand-600">{t.bank.audit_kicker}</p>
+        <h1 className="mt-1 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">Visor de auditoría</h1>
+        <p className="mt-2 text-forge-sm text-forgeInk-600">
+          Línea de tiempo desde la bandeja activa.{" "}
+          <Link href="/credit-hub/bank/applications" className="text-forgeBrand-600 hover:text-forgeBrand-700">
+            Abrir bandeja
+          </Link>
+        </p>
       </div>
-      <ForgeCard>
-        <div className="space-y-3">
-          {(queue.data?.applications ?? []).map((application) => (
-            <Link
-              key={application.application_id}
-              href={`/credit-hub/bank/applications/${application.application_id}`}
-              className="block rounded-xl bg-forge-surface-elevated p-4 transition-colors hover:bg-forge-surface-hover"
-            >
-              <p className="font-medium text-forge-text">{application.applicant_name || application.application_id}</p>
-              <p className="text-sm text-forge-text-muted">
-                {t.bank.audit_score_line(
-                  application.score,
-                  application.bank_decision ? `Decisión ${application.bank_decision.decision}` : t.bank.no_bank_decision
-                )}
-              </p>
-            </Link>
-          ))}
-          {!queue.isLoading && (queue.data?.applications ?? []).length === 0 && (
-            <p className="text-sm text-forge-text-muted">{t.bank.no_audit_apps}</p>
-          )}
-        </div>
-      </ForgeCard>
+      <Card className="p-4 sm:p-6">
+        {queue.isLoading ? (
+          <Skeleton className="min-h-48 w-full rounded-forge-md" />
+        ) : entries.length === 0 ? (
+          <EmptyState titleLevel={2} title={t.bank.no_audit_apps} description="Cuando existan solicitudes en cola, aparecerán aquí en orden cronológico inverso." />
+        ) : (
+          <AuditTimeline entries={entries} />
+        )}
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export interface AuditTimelineEntry {
@@ -8,6 +9,8 @@ export interface AuditTimelineEntry {
   actorLabel: string;
   actionLabel: string;
   detail?: string;
+  /** When set, the action line links here (e.g. application detail). */
+  href?: string;
 }
 
 export interface AuditTimelineProps {
@@ -26,7 +29,18 @@ export function AuditTimeline({ entries, className }: AuditTimelineProps) {
           />
           <p className="text-forge-xs text-forgeInk-500">{e.timestampLabel}</p>
           <p className="mt-1 text-forge-sm font-medium text-forgeInk-800">
-            <span className="text-forgeInk-600">{e.actorLabel}</span> — {e.actionLabel}
+            <span className="text-forgeInk-600">{e.actorLabel}</span>
+            {" — "}
+            {e.href ? (
+              <Link
+                href={e.href}
+                className="text-forgeBrand-600 underline decoration-forgeBrand-500/40 underline-offset-2 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+              >
+                {e.actionLabel}
+              </Link>
+            ) : (
+              e.actionLabel
+            )}
           </p>
           {e.detail ? <p className="mt-1 text-forge-sm text-forgeInk-600">{e.detail}</p> : null}
         </li>
