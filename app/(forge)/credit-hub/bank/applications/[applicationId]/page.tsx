@@ -1,14 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { use } from "react";
+import { BankApplicationDetailView } from "@/components/forge/credit-hub/BankApplicationDetailView";
 import { Button, Card, Skeleton } from "@/components/forge";
 import { useBankApplication, useBankAuditTrail, useBankCompliance } from "@/lib/credit-hub/hooks/useBankDecision";
-
-const BankApplicationDetailView = dynamic(
-  () => import("@/components/forge/credit-hub/BankApplicationDetailView").then((m) => m.BankApplicationDetailView),
-  { ssr: false, loading: () => <Skeleton className="min-h-[24rem] w-full rounded-forge-lg" /> }
-);
 
 export default function BankApplicationReviewPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
