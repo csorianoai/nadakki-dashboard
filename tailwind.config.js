@@ -26,6 +26,76 @@ module.exports = {
         'forge-warning': 'var(--forge-warning)',
         'forge-danger': 'var(--forge-danger)',
         'forge-info': 'var(--forge-info)',
+        /* v3.2 institutional tokens (inherit from .forge-app — see _design/tokens.css) */
+        forgeBrand: {
+          50: 'var(--forge-brand-50)',
+          100: 'var(--forge-brand-100)',
+          200: 'var(--forge-brand-200)',
+          300: 'var(--forge-brand-300)',
+          400: 'var(--forge-brand-400)',
+          500: 'var(--forge-brand-500)',
+          600: 'var(--forge-brand-600)',
+          700: 'var(--forge-brand-700)',
+          800: 'var(--forge-brand-800)',
+          900: 'var(--forge-brand-900)',
+          950: 'var(--forge-brand-950)',
+        },
+        forgeInk: {
+          50: 'var(--forge-ink-50)',
+          100: 'var(--forge-ink-100)',
+          200: 'var(--forge-ink-200)',
+          300: 'var(--forge-ink-300)',
+          400: 'var(--forge-ink-400)',
+          500: 'var(--forge-ink-500)',
+          600: 'var(--forge-ink-600)',
+          700: 'var(--forge-ink-700)',
+          800: 'var(--forge-ink-800)',
+          900: 'var(--forge-ink-900)',
+        },
+        forgeSurface: {
+          page: 'var(--forge-surface-page)',
+          card: 'var(--forge-surface-card)',
+          raised: 'var(--forge-surface-raised)',
+          sunken: 'var(--forge-surface-sunken)',
+          overlay: 'var(--forge-surface-overlay)',
+        },
+        forgeSuccess: {
+          50: 'var(--forge-success-50)',
+          500: 'var(--forge-success-500)',
+          700: 'var(--forge-success-700)',
+        },
+        forgeWarning: {
+          50: 'var(--forge-warning-50)',
+          500: 'var(--forge-warning-500)',
+          700: 'var(--forge-warning-700)',
+        },
+        forgeDanger: {
+          50: 'var(--forge-danger-50)',
+          500: 'var(--forge-danger-500)',
+          700: 'var(--forge-danger-700)',
+        },
+        forgeInfo: {
+          50: 'var(--forge-info-50)',
+          500: 'var(--forge-info-500)',
+          700: 'var(--forge-info-700)',
+        },
+        forgeNeutral: {
+          50: 'var(--forge-neutral-50)',
+          500: 'var(--forge-neutral-500)',
+          700: 'var(--forge-neutral-700)',
+        },
+        forgeAccent: {
+          gold: 'var(--forge-accent-gold)',
+          teal: 'var(--forge-accent-teal)',
+        },
+        forgeViz: {
+          1: 'var(--forge-viz-1)',
+          2: 'var(--forge-viz-2)',
+          3: 'var(--forge-viz-3)',
+          4: 'var(--forge-viz-4)',
+          5: 'var(--forge-viz-5)',
+          6: 'var(--forge-viz-6)',
+        },
         // Quantum Core Colors
         'quantum': {
           void: '#000008',
@@ -47,9 +117,18 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['var(--forge-font-sans)', 'Inter', 'sans-serif'],
-        display: ['var(--forge-font-display)', 'Inter', 'sans-serif'],
-        forgeMono: ['var(--forge-font-mono)', 'JetBrains Mono', 'monospace'],
+        /* Nested var() so routes without .forge-app (e.g. app/credit/*) still get sensible fallbacks */
+        sans: ['var(--forge-font-body, var(--forge-font-sans, Inter))', 'Inter', 'sans-serif'],
+        display: [
+          'var(--forge-font-display, var(--forge-font-display-opt, Georgia))',
+          'Georgia',
+          'serif',
+        ],
+        forgeMono: [
+          'var(--forge-font-mono, var(--forge-font-mono-opt, ui-monospace))',
+          'ui-monospace',
+          'monospace',
+        ],
         quantum: ['Orbitron', 'monospace'],
         neural: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],

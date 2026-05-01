@@ -1,3 +1,10 @@
+/**
+ * @deprecated Phase 8 will eliminate this fallback.
+ * Reason: hardcoded tenant ID violates multi-tenancy
+ * (anti-pattern #2 in master prompt).
+ * Tracked in: `app/(forge)/credit-hub/_design/TENANT_CONTEXT_EXTENSION.md`
+ * Do NOT add new consumers of this constant.
+ */
 export const DEFAULT_CREDIT_TENANT_ID = "0a91ee98-2dbe-46d0-a43c-3fc2dbd42242";
 
 export type CreditApplicationStatus =

@@ -1,0 +1,216 @@
+/**
+ * Forge Credit Hub — v3.2 design tokens (institutional).
+ * Scoped to .forge-app so legacy :root tokens in styles/forge-tokens.css stay intact.
+ * Bank (default): light surfaces + ink scale. Dealer: dark operational overrides on [data-portal="dealer"].
+ * Tenant: .forge-app[data-tenant="slug"] (Phase 8 sets attribute on Forge root).
+ */
+
+.forge-app {
+  /* ─── BRAND (overridable per tenant via [data-tenant]) ─────────────── */
+  --forge-brand-50: #f0f4fa;
+  --forge-brand-100: #dce6f2;
+  --forge-brand-200: #b6c8e0;
+  --forge-brand-300: #8aa5c9;
+  --forge-brand-400: #5c82b0;
+  --forge-brand-500: #2e5f97;
+  --forge-brand-600: #1e477a;
+  --forge-brand-700: #163660;
+  --forge-brand-800: #0f2849;
+  --forge-brand-900: #0a1d36;
+  --forge-brand-950: #050f1f;
+
+  /* ─── INK (text + icons + borders) ───────────────────────────────── */
+  --forge-ink-50: #f7f8fa;
+  --forge-ink-100: #eef1f4;
+  --forge-ink-200: #dde3ea;
+  --forge-ink-300: #c2cbd6;
+  --forge-ink-400: #8c97a6;
+  --forge-ink-500: #5a6478;
+  --forge-ink-600: #3d4759;
+  --forge-ink-700: #2a3447;
+  --forge-ink-800: #1a2540;
+  --forge-ink-900: #0f1729;
+
+  /* ─── SURFACE (light — bank institutional default) ────────────────── */
+  --forge-surface-page: #f7f8fa;
+  --forge-surface-card: #ffffff;
+  --forge-surface-raised: #ffffff;
+  --forge-surface-sunken: #f0f2f5;
+  --forge-surface-overlay: rgba(15, 23, 41, 0.48);
+
+  /* ─── SEMANTIC (status — not brand) ─────────────────────────────────── */
+  --forge-success-50: #ecfdf5;
+  --forge-success-500: #0f7a3e;
+  --forge-success-700: #0a5a2e;
+
+  --forge-warning-50: #fffbeb;
+  --forge-warning-500: #b7791f;
+  --forge-warning-700: #8c5a14;
+
+  --forge-danger-50: #fef2f2;
+  --forge-danger-500: #b5201e;
+  --forge-danger-700: #8a1816;
+
+  --forge-info-50: #eff6ff;
+  --forge-info-500: #1f60b5;
+  --forge-info-700: #154a8c;
+
+  --forge-neutral-50: var(--forge-ink-100);
+  --forge-neutral-500: var(--forge-ink-500);
+  --forge-neutral-700: var(--forge-ink-700);
+
+  /* ─── ACCENT (sparingly — AI evidence, highlights) ─────────────────── */
+  --forge-accent-gold: #c8940a;
+  --forge-accent-teal: #0a7ea4;
+
+  /* ─── DATA VIZ (charts — colorblind-safe) ──────────────────────────── */
+  --forge-viz-1: #2e5f97;
+  --forge-viz-2: #0a7ea4;
+  --forge-viz-3: #0f7a3e;
+  --forge-viz-4: #c8940a;
+  --forge-viz-5: #8a4fbf;
+  --forge-viz-6: #b5201e;
+
+  /* next/font injects --forge-font-sans, --forge-font-display-opt, --forge-font-mono-opt on this node */
+  --forge-font-display: var(--forge-font-display-opt), "Source Serif Pro", Georgia, serif;
+  --forge-font-body: var(--forge-font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --forge-font-mono: var(--forge-font-mono-opt), "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Type scale (1.25 modular) */
+  --forge-text-xs: 11px;
+  --forge-text-sm: 13px;
+  --forge-text-base: 14px;
+  --forge-text-md: 16px;
+  --forge-text-lg: 18px;
+  --forge-text-xl: 22px;
+  --forge-text-2xl: 28px;
+  --forge-text-3xl: 36px;
+  --forge-text-4xl: 48px;
+
+  --forge-leading-tight: 1.15;
+  --forge-leading-snug: 1.35;
+  --forge-leading-normal: 1.5;
+  --forge-leading-relaxed: 1.65;
+
+  --forge-tracking-tight: -0.02em;
+  --forge-tracking-normal: 0;
+  --forge-tracking-wide: 0.04em;
+  --forge-tracking-wider: 0.08em;
+
+  --forge-weight-regular: 400;
+  --forge-weight-medium: 500;
+  --forge-weight-semibold: 600;
+  --forge-weight-bold: 700;
+
+  /* Spacing — 4pt grid */
+  --forge-space-0: 0;
+  --forge-space-1: 4px;
+  --forge-space-2: 8px;
+  --forge-space-3: 12px;
+  --forge-space-4: 16px;
+  --forge-space-5: 20px;
+  --forge-space-6: 24px;
+  --forge-space-8: 32px;
+  --forge-space-10: 40px;
+  --forge-space-12: 48px;
+  --forge-space-16: 64px;
+  --forge-space-20: 80px;
+  --forge-space-24: 96px;
+
+  /* Radii — max 8px except pill (v3.2) */
+  --forge-radius-none: 0;
+  --forge-radius-sm: 4px;
+  --forge-radius-md: 6px;
+  --forge-radius-lg: 8px;
+  --forge-radius-pill: 9999px;
+
+  /* Elevation — flat; borders carry weight */
+  --forge-shadow-none: none;
+  --forge-shadow-xs: 0 1px 2px 0 rgba(15, 23, 41, 0.04);
+  --forge-shadow-sm: 0 1px 3px 0 rgba(15, 23, 41, 0.06), 0 1px 2px 0 rgba(15, 23, 41, 0.04);
+  --forge-shadow-md: 0 4px 6px -1px rgba(15, 23, 41, 0.06), 0 2px 4px -1px rgba(15, 23, 41, 0.04);
+  --forge-shadow-lg: 0 10px 15px -3px rgba(15, 23, 41, 0.08), 0 4px 6px -2px rgba(15, 23, 41, 0.04);
+
+  --forge-border-subtle: 1px solid var(--forge-ink-200);
+  --forge-border-default: 1px solid var(--forge-ink-300);
+  --forge-border-strong: 1px solid var(--forge-ink-500);
+
+  /* Motion */
+  --forge-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --forge-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --forge-duration-fast: 120ms;
+  --forge-duration-base: 180ms;
+  --forge-duration-slow: 240ms;
+
+  /* Breakpoints (reference — use in custom CSS or JS) */
+  --forge-bp-mobile: 640px;
+  --forge-bp-tablet: 1024px;
+  --forge-bp-desktop: 1280px;
+  --forge-bp-wide: 1536px;
+
+  font-family: var(--forge-font-body);
+  font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--forge-ink-800);
+  background-color: var(--forge-surface-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dealer portal — dark operational (preserves legacy dealer palette intent) */
+.forge-app [data-portal="dealer"] {
+  --forge-surface-page: #0a0e1a;
+  --forge-surface-card: #131829;
+  --forge-surface-raised: #1a2138;
+  --forge-surface-sunken: #232b45;
+  --forge-surface-overlay: rgba(10, 14, 26, 0.72);
+
+  --forge-ink-50: #131829;
+  --forge-ink-100: #1a2138;
+  --forge-ink-200: rgba(255, 255, 255, 0.08);
+  --forge-ink-300: rgba(255, 255, 255, 0.12);
+  --forge-ink-400: #8b95a8;
+  --forge-ink-500: #8b95a8;
+  --forge-ink-600: #c2cbd6;
+  --forge-ink-700: #dde3ea;
+  --forge-ink-800: #f5f7fa;
+  --forge-ink-900: #f7f8fa;
+
+  --forge-neutral-50: var(--forge-ink-100);
+  --forge-neutral-500: var(--forge-ink-500);
+  --forge-neutral-700: var(--forge-ink-700);
+
+  --forge-border-subtle: 1px solid rgba(255, 255, 255, 0.08);
+  --forge-border-default: 1px solid rgba(255, 255, 255, 0.12);
+  --forge-border-strong: 1px solid rgba(255, 255, 255, 0.2);
+
+  --forge-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --forge-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.25), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --forge-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.28), 0 2px 4px -1px rgba(0, 0, 0, 0.22);
+  --forge-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -2px rgba(0, 0, 0, 0.24);
+
+  color: var(--forge-ink-800);
+  background-color: var(--forge-surface-page);
+}
+
+/* Tenant examples (Phase 8 — ForgeBrandingProvider sets data-tenant on .forge-app) */
+.forge-app[data-tenant="credicefi"] {
+  --forge-brand-500: #1b4a8c;
+  --forge-brand-600: #133766;
+  --forge-brand-900: #081e3d;
+}
+
+.forge-app[data-tenant="banco-piloto"] {
+  --forge-brand-500: #0b5345;
+  --forge-brand-600: #074035;
+  --forge-brand-900: #032620;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forge-app *,
+  .forge-app *::before,
+  .forge-app *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
