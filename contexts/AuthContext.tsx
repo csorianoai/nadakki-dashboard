@@ -80,12 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = readFromStorage();
+    const forgeDemoName = process.env.NEXT_PUBLIC_FORGE_TEST_TENANT === "mx" ? "TestBank Mexico" : null;
     setState((s) => ({
       ...s,
       isAuthenticated: stored !== null,
       tenantId: stored?.tenantId ?? null,
-      tenantName: stored?.tenantName ?? "—",
-      role: stored?.role ?? "viewer",
+      tenantName: forgeDemoName ?? stored?.tenantName ?? "—",
+      role: (stored?.role ?? "viewer") as UserRole,
       plan: stored?.plan ?? "starter",
       isLoading: false,
     }));

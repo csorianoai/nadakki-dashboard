@@ -22,10 +22,7 @@ import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
-
-function formatDop(value: number) {
-  return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(value || 0);
-}
+import { formatForgeCurrency } from "@/utils/forge-locale";
 
 function priorityBadge(priority: BankQueueItem["priority"]) {
   if (priority === "ALTA") return <Badge variant="danger">Alta</Badge>;
@@ -108,7 +105,11 @@ export default function BankDashboardPage() {
       {
         id: "amount",
         header: "Monto",
-        cell: (row: BankQueueItem) => <span className="text-forge-sm text-forgeInk-800">{formatDop(row.requested_amount)}</span>,
+        cell: (row: BankQueueItem) => (
+          <span className="font-forgeMono text-right text-forge-sm text-forgeInk-800 tabular-nums">
+            {formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code)}
+          </span>
+        ),
       },
       {
         id: "status",
@@ -129,7 +130,7 @@ export default function BankDashboardPage() {
         ),
       },
     ],
-    [t.bank.application_score_label]
+    [t.bank.application_score_label, tenantConfig.currency_code, tenantConfig.locale]
   );
 
   return (
@@ -139,7 +140,7 @@ export default function BankDashboardPage() {
           <div>
             <p className="text-forge-xs font-semibold uppercase tracking-wide text-forgeBrand-600">Portal bancario</p>
             <h1 className="mt-2 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">
-              Mesa de decisiones CrediCefi
+              Mesa de decisiones — {tenantConfig.institution_name}
             </h1>
             <p className="mt-2 max-w-2xl text-forge-sm text-forgeInk-600">{t.bank.hero_compliance_line}</p>
           </div>
@@ -176,7 +177,7 @@ export default function BankDashboardPage() {
             analyticsQuery.isLoading ? (
               <Skeleton className="h-8 w-24" />
             ) : analytics ? (
-              `RD$ ${Math.round(analytics.portfolio_value).toLocaleString("es-DO")}`
+              formatForgeCurrency(Math.round(analytics.portfolio_value), tenantConfig.locale, tenantConfig.currency_code)
             ) : (
               "—"
             )

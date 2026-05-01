@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { useCreditStats } from "@/lib/credit-hub/hooks/useCreditStats";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { forgeDealerDashboardHeadline } from "@/utils/forge-dealer-dashboard-greeting";
 import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { cn } from "@/lib/utils";
@@ -49,7 +50,7 @@ export default function DealerDashboardPage() {
   const isLoading = applicationsQuery.isLoading || statsQuery.isLoading;
   const error = applicationsQuery.error ?? statsQuery.error;
 
-  const greetingName = tenantName && tenantName !== "—" ? tenantName : "there";
+  const greetingName = tenantConfig.institution_name?.trim() || (tenantName && tenantName !== "—" ? tenantName : "");
 
   const activeRows = useMemo(() => {
     return [...applications].filter(isActivePipeline).sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
@@ -107,7 +108,7 @@ export default function DealerDashboardPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="font-display text-forge-2xl font-semibold leading-tight text-forgeInk-900 md:text-forge-3xl">
-            Hi {greetingName}. Let&apos;s get someone approved today.
+            {forgeDealerDashboardHeadline(tenantConfig.locale, greetingName)}
           </h1>
           {persona === "bank" ? (
             <p className="mt-1 text-forge-xs font-medium text-forgeInk-500">Vista seguimiento dealer (misma URL, datos filtrados).</p>

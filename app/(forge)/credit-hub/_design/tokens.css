@@ -204,6 +204,36 @@
 */
 
 /* Tenant examples (Phase 8 — ForgeBrandingProvider sets data-tenant on .forge-app) */
+.forge-app[data-tenant="test-mx-tenant-uuid"] {
+  --forge-brand-50: #fdf2f2;
+  --forge-brand-100: #f5d6d6;
+  --forge-brand-200: #e8b4b4;
+  --forge-brand-300: #d48a8a;
+  --forge-brand-400: #b55555;
+  --forge-brand-500: #7b1f1f;
+  --forge-brand-600: #661a1a;
+  --forge-brand-700: #551515;
+  --forge-brand-800: #451212;
+  --forge-brand-900: #3d0a0a;
+  --forge-brand-950: #260606;
+  --forge-viz-1: #7b1f1f;
+}
+
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] {
+  background-color: var(--forge-brand-900);
+  color: var(--forge-ink-50);
+  border-color: color-mix(in srgb, var(--forge-brand-700) 55%, transparent);
+}
+
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeInk-500,
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeBrand-700 {
+  color: color-mix(in srgb, var(--forge-ink-50) 82%, transparent);
+}
+
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeBrand-700 {
+  color: var(--forge-ink-50);
+}
+
 .forge-app[data-tenant="credicefi"] {
   --forge-brand-500: #1b4a8c;
   --forge-brand-600: #133766;

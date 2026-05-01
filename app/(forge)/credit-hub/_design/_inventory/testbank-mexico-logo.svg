@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80" viewBox="0 0 240 80" role="img" aria-label="TestBank Mexico">
+  <rect width="240" height="80" rx="6" fill="#7B1F1F"/>
+  <text x="120" y="48" text-anchor="middle" font-family="Georgia,serif" font-size="28" font-weight="700" fill="#FFFFFF">TB</text>
+  <text x="120" y="68" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="600" fill="#F5D0D0" letter-spacing="0.15em">TESTBANK MÉXICO</text>
+</svg>

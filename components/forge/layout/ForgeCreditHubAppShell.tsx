@@ -34,6 +34,11 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
         </a>
         <CHTenantGuard>
           <ForgeCommandPaletteProvider>
+            <span
+              className="pointer-events-none fixed left-0 top-0 -z-10 h-4 w-4 bg-forgeBrand-500 opacity-0"
+              data-token-debug="brand-500"
+              aria-hidden
+            />
             <div className="flex min-h-[calc(100vh-4rem)] flex-1">
               <ForgeCreditHubSidebar />
               <div className="flex min-w-0 flex-1 flex-col">

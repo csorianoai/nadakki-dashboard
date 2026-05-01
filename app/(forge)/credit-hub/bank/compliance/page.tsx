@@ -9,12 +9,14 @@ import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { CheckCircle2 } from "lucide-react";
 import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
+import { getForgeComplianceSurface } from "@/lib/credit-hub/compliance/regulatory-surface";
 
 export default function BankCompliancePage() {
   const persona = usePersona();
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
   const empty = forgeEmptyCopy(tenantConfig.locale);
+  const complianceSurface = getForgeComplianceSurface(tenantConfig);
   const queue = useBankQueue();
   const applications = queue.data?.applications ?? [];
 
@@ -29,8 +31,8 @@ export default function BankCompliancePage() {
     <div className="space-y-6" data-persona={persona}>
       <div>
         <p className="text-forge-xs font-semibold uppercase tracking-[0.18em] text-forgeBrand-600">{t.bank.compliance_kicker}</p>
-        <h1 className="mt-1 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">Ley 172-13 RD</h1>
-        <p className="mt-2 text-forge-sm text-forgeInk-600">Consentimientos, documentación mínima y trazabilidad de decisiones.</p>
+        <h1 className="mt-1 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">{complianceSurface.heroTitle}</h1>
+        <p className="mt-2 text-forge-sm text-forgeInk-600">{complianceSurface.heroDescription}</p>
       </div>
       {queue.isLoading ? (
         <Skeleton className="min-h-80 w-full rounded-forge-lg" />
@@ -47,11 +49,13 @@ export default function BankCompliancePage() {
             </Card>
             <Card className="p-4">
               <p className="text-forge-sm text-forgeInk-500">Última auditoría</p>
-              <p className="mt-2 font-display text-forge-md font-semibold text-forgeInk-800">{new Date().toLocaleString("es-DO")}</p>
+              <p className="mt-2 font-display text-forge-md font-semibold text-forgeInk-800">
+                {new Date().toLocaleString(tenantConfig.locale, { dateStyle: "medium", timeStyle: "short" })}
+              </p>
             </Card>
           </div>
           <Card className="p-4 sm:p-6">
-            <h2 className="font-display text-forge-md font-semibold text-forgeInk-800">{t.bank.issues_section_title}</h2>
+            <h2 className="font-display text-forge-md font-semibold text-forgeInk-800">{complianceSurface.issuesSectionTitle}</h2>
             {withIssues.length === 0 ? (
               <EmptyState
                 titleLevel={2}
@@ -82,7 +86,7 @@ export default function BankCompliancePage() {
           </Card>
           <Card className="p-4 sm:p-6">
             <h2 className="font-display text-forge-md font-semibold text-forgeInk-800">{t.bank.rtbf_title}</h2>
-            <p className="mt-2 text-forge-sm text-forgeInk-600">{t.bank.rtbf_description}</p>
+            <p className="mt-2 text-forge-sm text-forgeInk-600">{complianceSurface.rtbfDescription}</p>
           </Card>
         </>
       )}

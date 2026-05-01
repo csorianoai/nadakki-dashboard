@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { getForgeTestTenantBankingConfig } from "@/lib/credit-hub/forge-test-tenant-override";
 import { useTenant } from "./useTenant";
 import type { TenantBankingConfig } from "../types/tenantConfig";
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
@@ -77,7 +78,11 @@ export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingCo
 
 export function useTenantConfig(): { tenantConfig: TenantBankingConfig; loading: boolean } {
   const { tenantId, loading } = useTenant();
-  const config = useMemo(() => getDefaultTenantBankingConfig(tenantId || "tenant-no-disponible"), [tenantId]);
+  const config = useMemo(() => {
+    const test = getForgeTestTenantBankingConfig();
+    if (test) return test;
+    return getDefaultTenantBankingConfig(tenantId || "tenant-no-disponible");
+  }, [tenantId]);
   return { tenantConfig: config, loading };
 }
 

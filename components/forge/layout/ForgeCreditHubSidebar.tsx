@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { cn } from "@/lib/utils";
 import { personaLabel } from "@/lib/credit-hub/design/persona";
 
@@ -25,6 +26,7 @@ export function ForgeCreditHubSidebar() {
   const pathname = usePathname();
   const persona = usePersona();
   const t = useTranslations();
+  const { tenantConfig } = useTenantConfig();
 
   const items: NavItem[] = useMemo(() => {
     if (persona === "dealer") {
@@ -49,7 +51,23 @@ export function ForgeCreditHubSidebar() {
       className="hidden w-56 shrink-0 flex-col border-r border-forgeInk-200 bg-forgeSurface-card lg:flex"
       aria-label={`${personaLabel(persona)} navigation`}
     >
-      <div className="border-b border-forgeInk-100 px-4 py-3">
+      <div
+        className="border-b border-forgeInk-100 px-4 py-3"
+        data-forge-sidebar-header
+      >
+        {tenantConfig.branding.logo_url ? (
+          <div className="mb-2 flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element -- tenant-provided same-origin SVG */}
+            <img
+              src={tenantConfig.branding.logo_url}
+              alt=""
+              width={200}
+              height={48}
+              className="h-10 w-auto max-w-[200px] object-contain object-left"
+              aria-hidden
+            />
+          </div>
+        ) : null}
         <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Forge</p>
         <p className="text-forge-sm font-medium text-forgeBrand-700">{personaLabel(persona)}</p>
       </div>
