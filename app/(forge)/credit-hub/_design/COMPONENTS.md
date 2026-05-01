@@ -32,6 +32,12 @@ The master prompt originally suggested a separate **`<DataTableMobileCard>`** co
 - **Sort (optional):** If a column defines **`onSort`**, the header is a button with **`aria-sort`** reflecting **`sort`** (`ascending` | `descending` | `none`). Icons are decorative (`aria-hidden`).
 - **Rows:** Body rows use a **subtle hover** background only (no transform / layout shift).
 
+### Navigation — Tabs, Breadcrumb, CommandPalette (`layout/Sidebar`, `layout/Topbar`)
+
+- **`Tabs` (`line`):** Active indicator **`border-forgeBrand-500`**; inactive baseline uses **`border-forgeInk-200`** (not a fully invisible underline) so the tab bar reads as a structured control strip.
+- **`CommandPalette`:** **`closeOnBackdropClick`** (default `true`) mirrors Modal/Drawer backdrop policy for audits that need a non-dismissible surface.
+- **`Topbar`:** No interactive chrome beyond the **`actions`** slot — compose **`Button`** / **`IconButton`** only (Group 2 sweep applies).
+
 ## Preview playground
 
 **Canonical URL:** `/credit-hub/preview`

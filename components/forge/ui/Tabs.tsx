@@ -48,15 +48,16 @@ export function Tabs({ tabs, value, onValueChange, className, variant = "line" }
               disabled={tab.disabled}
               onClick={() => onValueChange(tab.id)}
               className={cn(
-                "rounded-forge-sm px-3 py-2 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
+                "rounded-forge-sm px-3 py-2 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)] ease-out",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-                tab.disabled && "cursor-not-allowed opacity-50",
                 variant === "line" &&
                   (selected
-                    ? "-mb-px border-b-2 border-forgeBrand-600 text-forgeBrand-700"
-                    : "border-b-2 border-transparent text-forgeInk-500 hover:text-forgeInk-700"),
+                    ? "-mb-px border-b-2 border-forgeBrand-500 text-forgeBrand-700"
+                    : "-mb-px border-b-2 border-forgeInk-200 text-forgeInk-500 hover:border-forgeInk-300 hover:text-forgeInk-700"),
                 variant === "pills" &&
-                  (selected ? "bg-forgeSurface-card text-forgeInk-800 shadow-forge-xs" : "text-forgeInk-600 hover:text-forgeInk-800")
+                  (selected ? "bg-forgeSurface-card text-forgeInk-800 shadow-forge-xs" : "text-forgeInk-600 hover:text-forgeInk-800"),
+                tab.disabled &&
+                  "cursor-not-allowed !border-transparent bg-transparent text-forgeInk-300 hover:!border-transparent hover:bg-transparent hover:text-forgeInk-300"
               )}
             >
               {tab.label}

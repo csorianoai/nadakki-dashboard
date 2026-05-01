@@ -34,7 +34,7 @@ export function Sidebar({ brand, items, footer, className }: SidebarProps) {
             key={item.id}
             href={item.href}
             className={cn(
-              "flex items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
+              "flex items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)] ease-out",
               "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
               item.active
                 ? "bg-forgeSurface-sunken text-forgeBrand-700"

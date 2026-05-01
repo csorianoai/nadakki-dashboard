@@ -25,7 +25,10 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                   {item.label}
                 </span>
               ) : (
-                <Link href={item.href} className="text-forgeBrand-600 hover:text-forgeBrand-700 hover:underline">
+                <Link
+                  href={item.href}
+                  className="rounded-forge-sm text-forgeBrand-600 outline-none transition-colors duration-[var(--forge-duration-fast)] ease-out hover:text-forgeBrand-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+                >
                   {item.label}
                 </Link>
               )}

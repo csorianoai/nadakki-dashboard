@@ -5,7 +5,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | Item | Description | Status | Notes |
 |------|-------------|--------|-------|
 | **1** | Dealer `/credit-hub/dealer/applications` list — Forge primitives, URL `q` / `status` / `density`, DataTable + density, PullToRefresh kept | **green** | Lighthouse a11y **1.0** — `lh-dealer-applications-list-a11y.json`; diagnosis `lh_error_shell_diagnosis.md` |
-| **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | in progress | Groups **1–3** **green** — see Group 3 below; Groups **4–5** pending next commits |
+| **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | in progress | Groups **1–4** **green** — see Group 4 below; Group **5** next |
 | **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | todo | Sonner primitive |
 | **4** | Empty states sweep (bank + dealer zero-data surfaces) | todo | Icons + CTAs per Appendix A |
 | **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | todo | cmdk |
@@ -119,7 +119,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 |-------|--------|--------|
 | 2 | Actions (Button, IconButton) | **green** — see Group 2 below |
 | 3 | Tables (DataTable, …) | **green** — see Group 3 below |
-| 4 | Navigation (Sidebar, Topbar, Tabs, Breadcrumb, CommandPalette) | todo |
+| 4 | Navigation (Sidebar, Topbar, Tabs, Breadcrumb, CommandPalette) | **green** — see Group 4 below |
 | 5 | Overlays (Modal, Drawer, Toast, …) | todo |
 
 ---
@@ -171,6 +171,34 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 
 - `npm run build` — passed (webpack).
 - **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95). Gate hygiene + no `html#__next_error__`.
+- **axe-core CLI** on `/credit-hub/preview` — **exit `0`**.
+
+---
+
+## Item 2 Group 4 — Navigation (**GREEN**)
+
+**Primitives / layout:** `Sidebar`, `Topbar`, `Tabs`, `Breadcrumb`, `CommandPalette`
+
+**Changes:**
+
+- **Tabs (`line`):** Active tab **underline `border-forgeBrand-500`** + `text-forgeBrand-700`; inactive **bottom border `border-forgeInk-200`** + hover ink shift (no transform). **Disabled** tabs: **ink-300** + `!border-transparent`, no opacity wash; hover locked to resting.
+- **Tabs (`pills`):** Unchanged interaction baseline (Group 2 buttons own dense surfaces).
+- **Sidebar:** Link transitions **`ease-out`** (120ms token path).
+- **Breadcrumb:** Trunc link **`focus-visible`** ring (`forgeBrand-500`, 2px + offset) + rounded hit target; chevrons remain **`aria-hidden`**.
+- **CommandPalette:** **`closeOnBackdropClick`** prop (default `true`); **`Command.Item`** row **`focus-visible`** ring + **120ms** color transition; backdrop respects prop.
+
+| Primitive / layout | Hover | Focus | Disabled | Loading | Status |
+|--------------------|-------|-------|----------|---------|--------|
+| Tabs               | ✓     | ✓     | ✓        | n/a     | **green** — line spec + disabled tokens |
+| Sidebar            | ✓     | ✓     | n/a      | n/a     | **green** — `aria-current` unchanged |
+| Topbar             | n/a   | n/a   | n/a      | n/a     | **green** — actions slot uses Group 2 primitives |
+| Breadcrumb         | ✓     | ✓     | n/a      | n/a     | **green** — link focus ring |
+| CommandPalette     | ✓ rows | ✓     | n/a      | n/a     | **green** — backdrop opt-out + item focus |
+
+**Verification (this group):**
+
+- `npm run build` — passed (webpack).
+- **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95).
 - **axe-core CLI** on `/credit-hub/preview` — **exit `0`**.
 
 ---

@@ -19,6 +19,8 @@ export interface CommandPaletteProps {
   actions: CommandPaletteAction[];
   placeholder?: string;
   className?: string;
+  /** When false, backdrop mousedown does not dismiss (default true). */
+  closeOnBackdropClick?: boolean;
 }
 
 export function CommandPalette({
@@ -27,6 +29,7 @@ export function CommandPalette({
   actions,
   placeholder = "Search commands…",
   className,
+  closeOnBackdropClick = true,
 }: CommandPaletteProps) {
   const [search, setSearch] = useState("");
 
@@ -57,7 +60,9 @@ export function CommandPalette({
       aria-modal="true"
       aria-label="Command palette"
       className="fixed inset-0 z-[60] flex items-start justify-center bg-forgeSurface-overlay px-4 pt-[12vh]"
-      onMouseDown={() => onOpenChange(false)}
+      onMouseDown={() => {
+        if (closeOnBackdropClick) onOpenChange(false);
+      }}
     >
       <Command
         className={cn(
@@ -89,7 +94,7 @@ export function CommandPalette({
                   a.onSelect();
                   onOpenChange(false);
                 }}
-                className="flex cursor-pointer items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm text-forgeInk-800 aria-selected:bg-forgeSurface-sunken aria-selected:text-forgeBrand-700"
+                className="flex cursor-pointer items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm text-forgeInk-800 transition-colors duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 aria-selected:bg-forgeSurface-sunken aria-selected:text-forgeBrand-700"
               >
                 {a.icon ? <span className="text-forgeInk-500">{a.icon}</span> : null}
                 {a.label}
