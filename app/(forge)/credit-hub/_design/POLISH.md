@@ -5,7 +5,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | Item | Description | Status | Notes |
 |------|-------------|--------|-------|
 | **1** | Dealer `/credit-hub/dealer/applications` list — Forge primitives, URL `q` / `status` / `density`, DataTable + density, PullToRefresh kept | **green** | Lighthouse a11y **1.0** — `lh-dealer-applications-list-a11y.json`; diagnosis `lh_error_shell_diagnosis.md` |
-| **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | in progress | Groups **1–4** **green** — see Group 4 below; Group **5** next |
+| **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | **green** | Groups **1–5** **green** — see Group 5 below (Item 3–5 on this table are separate Phase 5 items) |
 | **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | todo | Sonner primitive |
 | **4** | Empty states sweep (bank + dealer zero-data surfaces) | todo | Icons + CTAs per Appendix A |
 | **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | todo | cmdk |
@@ -113,14 +113,14 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 - **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95). Gate hygiene: stop servers, `rm -rf .next`, one `npm run build`, one `next start -p 3017`, then audit. If the score collapses, check the JSON for `html#__next_error__` — that means a **stale server** was still running against a rebuilt `.next` (same class of failure as Item 1). CLI may still exit `1` on Windows (`EPERM` temp cleanup) while JSON is valid.
 - **axe-core CLI:** `npx @axe-core/cli http://localhost:3017/credit-hub/preview --load-delay 2000 -q` — **exit `0`**.
 
-### Item 2 — remaining groups (todo)
+### Item 2 — group tracker
 
 | Group | Scope | Status |
 |-------|--------|--------|
 | 2 | Actions (Button, IconButton) | **green** — see Group 2 below |
 | 3 | Tables (DataTable, …) | **green** — see Group 3 below |
 | 4 | Navigation (Sidebar, Topbar, Tabs, Breadcrumb, CommandPalette) | **green** — see Group 4 below |
-| 5 | Overlays (Modal, Drawer, Toast, …) | todo |
+| 5 | Overlays (Modal, Drawer, Toast, …) | **green** — see Group 5 below |
 
 ---
 
@@ -194,6 +194,30 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | Topbar             | n/a   | n/a   | n/a      | n/a     | **green** — actions slot uses Group 2 primitives |
 | Breadcrumb         | ✓     | ✓     | n/a      | n/a     | **green** — link focus ring |
 | CommandPalette     | ✓ rows | ✓     | n/a      | n/a     | **green** — backdrop opt-out + item focus |
+
+**Verification (this group):**
+
+- `npm run build` — passed (webpack).
+- **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95).
+- **axe-core CLI** on `/credit-hub/preview` — **exit `0`**.
+
+---
+
+## Item 2 Group 5 — Overlays (**GREEN**)
+
+**Primitives:** `Modal`, `Drawer`, `ForgeToaster` / `toast` — **Tooltip:** not shipped in Forge (`components/forge/ui/*`).
+
+**Changes:**
+
+- **`Modal`:** **`closeOnBackdropClick`** (default `true`); backdrop **`click`** on the native `<dialog>` (target === dialog) calls **`onClose`** when allowed. **`Esc`** unchanged (`cancel` handler). Focus trap / return handled by **`<dialog showModal>`** in supporting browsers.
+- **`Drawer`:** **`closeOnBackdropClick`** (default `true`); overlay mouse-down respects the flag (existing outside-click close).
+- **`ForgeToaster`:** Toast chrome adds **`motion-reduce:transition-none`** and **`motion-reduce:animate-none`** for **`prefers-reduced-motion`**.
+
+| Primitive | Hover | Focus | Disabled | Loading | Status |
+|-----------|-------|-------|----------|---------|--------|
+| Modal     | n/a   | ✓ chrome | n/a   | n/a     | **green** — backdrop policy |
+| Drawer    | n/a   | ✓ chrome | n/a   | n/a     | **green** — backdrop policy |
+| ForgeToaster | ✓ buttons (Sonner) | ✓ | n/a   | n/a     | **green** — reduced-motion classNames |
 
 **Verification (this group):**
 

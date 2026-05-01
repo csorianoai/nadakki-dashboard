@@ -12,6 +12,7 @@ export function ForgeToaster({ className }: { className?: string }) {
         classNames: {
           toast: cn(
             "rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card text-forgeInk-800 shadow-forge-md",
+            "motion-reduce:transition-none motion-reduce:animate-none",
             className
           ),
           title: "font-medium text-forge-sm text-forgeInk-800",

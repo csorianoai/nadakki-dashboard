@@ -14,9 +14,11 @@ export interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
+  /** When false, clicking the dialog backdrop does not dismiss (default true). */
+  closeOnBackdropClick?: boolean;
 }
 
-export function Modal({ open, onClose, title, description, children, footer, className }: ModalProps) {
+export function Modal({ open, onClose, title, description, children, footer, className, closeOnBackdropClick = true }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -45,6 +47,9 @@ export function Modal({ open, onClose, title, description, children, footer, cla
   return createPortal(
     <dialog
       ref={dialogRef}
+      onClick={(e) => {
+        if (closeOnBackdropClick && e.target === e.currentTarget) onClose();
+      }}
       className={cn(
         "fixed inset-0 z-50 m-auto max-h-[min(90vh,720px)] w-[min(92vw,560px)] overflow-hidden rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-0 text-forgeInk-800 shadow-forge-lg backdrop:bg-forgeSurface-overlay",
         className

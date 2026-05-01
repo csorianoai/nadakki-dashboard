@@ -38,6 +38,11 @@ The master prompt originally suggested a separate **`<DataTableMobileCard>`** co
 - **`CommandPalette`:** **`closeOnBackdropClick`** (default `true`) mirrors Modal/Drawer backdrop policy for audits that need a non-dismissible surface.
 - **`Topbar`:** No interactive chrome beyond the **`actions`** slot — compose **`Button`** / **`IconButton`** only (Group 2 sweep applies).
 
+### Overlays — Modal, Drawer, Toast
+
+- **`Modal` / `Drawer`:** **`closeOnBackdropClick`** (default `true`) — set `false` for non-dismissible flows (still use **`Esc`** / explicit close affordances). **`Modal`** uses native **`<dialog>`** light-dismiss when clicking the dialog element itself (backdrop hit target).
+- **`ForgeToaster` (Sonner):** Toast surface includes **`motion-reduce:transition-none`** / **`motion-reduce:animate-none`** so auto-dismiss does not rely on motion for comprehension.
+
 ## Preview playground
 
 **Canonical URL:** `/credit-hub/preview`

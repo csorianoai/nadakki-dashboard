@@ -15,6 +15,8 @@ export interface DrawerProps {
   footer?: ReactNode;
   side?: "left" | "right";
   className?: string;
+  /** When false, clicking outside the panel does not dismiss (default true). */
+  closeOnBackdropClick?: boolean;
 }
 
 export function Drawer({
@@ -26,6 +28,7 @@ export function Drawer({
   footer,
   side = "right",
   className,
+  closeOnBackdropClick = true,
 }: DrawerProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -51,6 +54,7 @@ export function Drawer({
   }, [onClose]);
 
   const onOverlayMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    if (!closeOnBackdropClick) return;
     if (e.target === e.currentTarget) onClose();
   };
 
