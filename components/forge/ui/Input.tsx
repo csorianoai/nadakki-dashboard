@@ -1,6 +1,7 @@
 "use client";
 
 import type { InputHTMLAttributes, ReactNode } from "react";
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "prefix"> {
@@ -13,7 +14,8 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 }
 
 export function Input({ label, helper, error, prefix, suffix, className, id, ...props }: InputProps) {
-  const inputId = id ?? props.name;
+  const autoId = useId();
+  const inputId = id ?? props.name ?? autoId;
   const describedBy = error ? `${inputId}-err` : helper ? `${inputId}-help` : undefined;
   return (
     <div className="flex w-full flex-col gap-1.5">

@@ -61,6 +61,35 @@ npx lighthouse "http://localhost:3010/credit-hub/bank" --only-categories=accessi
 
 **Why not only `next dev`:** a long-lived dev server can serve **stale** inlined viewport metadata after a root layout change; if Lighthouse still flags `meta-viewport` or misses heading fixes, restart dev or use `next start` as above.
 
+### Windows: Lighthouse CLI and `chrome-launcher` (`EPERM` on temp cleanup)
+
+On some Windows installs, `npx lighthouse` fails after the run with **`EPERM`** while `chrome-launcher` deletes its temp profile (`rmSync` on `%TEMP%\lighthouse.*`). The audit may still complete; if it does not, try **one** of these (in order of convenience):
+
+1. **Pinned user data dir + project temp (recommended on Windows):** `chrome-launcher` also creates a throwaway profile under `%TEMP%` (or `.tmp\lighthouse.*` under the repo). If cleanup hits **`EPERM`**, point **`TMP` and `TEMP`** at a project folder you own, and pin Chromium’s profile:
+
+   ```powershell
+   New-Item -ItemType Directory -Force -Path ".\tmp\lh-chrome-profile",".\tmp\lh-tmp" | Out-Null
+   $env:TEMP = (Resolve-Path ".\tmp\lh-tmp").Path
+   $env:TMP = $env:TEMP
+   $ud = (Resolve-Path ".\tmp\lh-chrome-profile").Path
+   npx lighthouse "http://localhost:3012/credit-hub/dealer/applications/new/applicant" `
+     --only-categories=accessibility --output=json `
+     --output-path="app/(forge)/credit-hub/_design/_inventory/lh-dealer-applications-new-a11y.json" `
+     --chrome-flags="--user-data-dir=$ud"
+   ```
+
+   If a second run still fails on `rmSync` of `lighthouse.*` under that folder (file still locked), wait a few seconds or use a **new** `.\tmp\lh-tmp-2` for `TEMP`/`TMP` for the next command.
+
+   Use a **fresh** `next build --webpack` + `next start` first (same SOP as above).
+
+2. **`--quiet` / logging:** some environments report fewer launcher races with `--quiet` (optional).
+
+3. **Manual DevTools:** open the URL in Chrome → **Lighthouse** panel → Accessibility → **Analyze page load** → **Save as JSON** (or export) into the same `_design/_inventory/` filenames. This satisfies the Phase 4 gate when CLI is blocked locally.
+
+4. **CI as canonical gate:** Linux CI agents typically do not hit this `EPERM`; keep Lighthouse in CI for regression if local Windows remains flaky.
+
+**If none of the above work:** document the limitation in this section and rely on **CI + manual DevTools JSON** for evidence; do not block merges on a single machine’s launcher policy alone.
+
 **Forge-specific fixes in tree:** root viewport allows zoom (`maximumScale: 5`); Credit Hub shell uses a **`<main id="main-content">`** landmark; sidebar and inline table actions meet **target-size**; `EmptyState` supports **`titleLevel`** so empty bands under an `h1` can use an **`h2`** title (heading order).
 
 **Artifacts:** decoded final screenshots and full JSON live under `app/(forge)/credit-hub/_design/_inventory/` (see `INVESTIGATION_phase4_chunk1_gates.md`).

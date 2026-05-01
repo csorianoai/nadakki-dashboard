@@ -63,7 +63,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
                     "rounded-forge-sm px-2.5 py-1.5 text-forge-xs font-medium transition-colors",
                     active && "bg-forgeBrand-500 text-white shadow-forge-sm",
                     !active && done && "bg-forgeInk-100 text-forgeInk-800",
-                    !active && !done && muted && "bg-forgeSurface-sunken text-forgeInk-400",
+                    !active && !done && muted && "bg-forgeSurface-sunken text-forgeInk-700",
                     !active && !done && !muted && "bg-forgeInk-50 text-forgeInk-600"
                   )}
                 >

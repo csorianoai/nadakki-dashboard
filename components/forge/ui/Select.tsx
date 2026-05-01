@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode, SelectHTMLAttributes } from "react";
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 export interface SelectOption {
@@ -17,7 +18,8 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
 }
 
 export function Select({ label, helper, error, options, className, id, ...props }: SelectProps) {
-  const sid = id ?? props.name;
+  const autoId = useId();
+  const sid = id ?? props.name ?? autoId;
   return (
     <div className="flex w-full flex-col gap-1.5">
       {label ? (
