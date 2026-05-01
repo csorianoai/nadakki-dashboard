@@ -24,6 +24,8 @@ import {
   type CommandPaletteAction,
   ConsentCapture,
   DataTable,
+  type DataTableDensity,
+  type DataTableSortDirection,
   DateInput,
   Drawer,
   EmptyState,
@@ -70,6 +72,10 @@ export default function ForgePreviewPage() {
   const [date, setDate] = useState("2026-04-29");
   const [consent, setConsent] = useState(false);
   const [select, setSelect] = useState("usd");
+  const [tableDensity, setTableDensity] = useState<DataTableDensity>("comfortable");
+  const [tableSort, setTableSort] = useState<DataTableSortDirection>("none");
+  const [tableDemo, setTableDemo] = useState<"data" | "loading" | "empty">("data");
+  const [bulkDemoSelected, setBulkDemoSelected] = useState<string[]>(["1"]);
 
   const tableRows: DemoRow[] = useMemo(
     () => [
@@ -77,6 +83,27 @@ export default function ForgePreviewPage() {
       { id: "2", applicant: "Nguyen, T.", channel: "Online" },
     ],
     []
+  );
+
+  const tableColumns = useMemo(
+    () => [
+      {
+        id: "applicant",
+        header: "Applicant",
+        sort: tableSort,
+        onSort: () => {
+          setTableSort((s) => (s === "none" ? "ascending" : s === "ascending" ? "descending" : "none"));
+        },
+        cell: (r: DemoRow) => r.applicant,
+      },
+      { id: "channel", header: "Channel", cell: (r: DemoRow) => r.channel },
+      {
+        id: "status",
+        header: "Status",
+        cell: () => <StatusPill tone="info">In review</StatusPill>,
+      },
+    ],
+    [tableSort]
   );
 
   const paletteActions: CommandPaletteAction[] = useMemo(
@@ -489,19 +516,73 @@ export default function ForgePreviewPage() {
         </Section>
 
         <Section title="Data table">
+          <div className="mb-6 flex flex-wrap items-end gap-4">
+            <div className="min-w-[12rem] max-w-xs flex-1">
+              <Select
+                name="preview-table-demo"
+                label="Preview mode"
+                value={tableDemo}
+                onChange={(e) => setTableDemo(e.target.value as "data" | "loading" | "empty")}
+                options={[
+                  { value: "data", label: "With rows" },
+                  { value: "loading", label: "Loading skeleton" },
+                  { value: "empty", label: "Empty (EmptyState)" },
+                ]}
+              />
+            </div>
+            <div className="min-w-[12rem] max-w-xs flex-1">
+              <Select
+                name="preview-table-density"
+                label="Density"
+                value={tableDensity}
+                onChange={(e) => setTableDensity(e.target.value as DataTableDensity)}
+                options={[
+                  { value: "comfortable", label: "Comfortable" },
+                  { value: "compact", label: "Compact" },
+                  { value: "dense", label: "Dense" },
+                ]}
+              />
+            </div>
+          </div>
           <DataTable<DemoRow>
             getRowId={(r) => r.id}
-            rows={tableRows}
-            columns={[
-              { id: "applicant", header: "Applicant", cell: (r) => r.applicant },
-              { id: "channel", header: "Channel", cell: (r) => r.channel },
-              {
-                id: "status",
-                header: "Status",
-                cell: () => <StatusPill tone="info">In review</StatusPill>,
-              },
-            ]}
+            rows={tableDemo === "data" ? tableRows : []}
+            columns={tableColumns}
+            density={tableDensity}
+            loading={tableDemo === "loading"}
+            skeletonRowCount={4}
+            emptyLabel="No applications in this preview slice"
+            emptyDescription="Try switching preview mode to “With rows” or adjust filters in a real screen."
+            emptyAction={
+              <Button type="button" variant="secondary" size="sm" onClick={() => setTableDemo("data")}>
+                Reset preview to sample rows
+              </Button>
+            }
           />
+          <div className="mt-6 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4">
+            <p className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Bulk action bar (layout only)</p>
+            <div className="flex flex-wrap items-center gap-4">
+              <Checkbox
+                label="Select all demo rows"
+                checked={bulkDemoSelected.length === tableRows.length}
+                onChange={(e) => setBulkDemoSelected(e.target.checked ? tableRows.map((r) => r.id) : [])}
+              />
+              <span className="text-forge-sm text-forgeInk-600">
+                {bulkDemoSelected.length} selected — uses same tokens as bank queue bulk strip.
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-forgeInk-100 pt-4">
+            <p className="text-forge-xs text-forgeInk-500">Pagination (no forge Pagination primitive — button disabled spec)</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="secondary" disabled>
+                Previous
+              </Button>
+              <Button size="sm" variant="secondary">
+                Next
+              </Button>
+            </div>
+          </div>
         </Section>
 
         <Section title="Evidence & audit">

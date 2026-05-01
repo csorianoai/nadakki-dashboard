@@ -5,7 +5,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | Item | Description | Status | Notes |
 |------|-------------|--------|-------|
 | **1** | Dealer `/credit-hub/dealer/applications` list — Forge primitives, URL `q` / `status` / `density`, DataTable + density, PullToRefresh kept | **green** | Lighthouse a11y **1.0** — `lh-dealer-applications-list-a11y.json`; diagnosis `lh_error_shell_diagnosis.md` |
-| **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | in progress | Groups **1–2** **green** — see below |
+| **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | in progress | Groups **1–3** **green** — see Group 3 below; Groups **4–5** pending next commits |
 | **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | todo | Sonner primitive |
 | **4** | Empty states sweep (bank + dealer zero-data surfaces) | todo | Icons + CTAs per Appendix A |
 | **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | todo | cmdk |
@@ -118,7 +118,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | Group | Scope | Status |
 |-------|--------|--------|
 | 2 | Actions (Button, IconButton) | **green** — see Group 2 below |
-| 3 | Tables (DataTable, …) | todo |
+| 3 | Tables (DataTable, …) | **green** — see Group 3 below |
 | 4 | Navigation (Sidebar, Topbar, Tabs, Breadcrumb, CommandPalette) | todo |
 | 5 | Overlays (Modal, Drawer, Toast, …) | todo |
 
@@ -145,5 +145,32 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 - `npm run build` — passed (webpack).
 - **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95). Gate hygiene: stop servers on audit ports, `rm -rf .next`, one `npm run build`, one `next start -p 3017`, then audit (no `html#__next_error__` in JSON).
 - **axe-core CLI:** `npx @axe-core/cli http://localhost:3017/credit-hub/preview --load-delay 2000 -q` — **exit `0`**.
+
+---
+
+## Item 2 Group 3 — Tables (**GREEN**)
+
+**Primitives / surfaces:** `DataTable` (cells, headers, optional sort), `Skeleton` (decorative vs labelled)
+
+**Notes:** Forge does not ship a separate **Pagination** / **column visibility** / **bulk bar** primitive — those live in app pages (e.g. bank queue). Preview documents **pagination button disabled spec** and a **bulk bar layout** strip for audit.
+
+**Changes:**
+
+- **DataTable:** **`loading`** + column-aligned **skeleton** body, wrapper **`aria-busy`**; **empty** state uses **`<EmptyState>`** with optional **`emptyDescription`** / **`emptyAction`**; **row hover** `surface-sunken/50` only (no transform); optional **`onSort` + `sort`** on a column → **`<th aria-sort>`** + header **button** with focus ring and sort affix.
+- **Skeleton:** Optional **`label`** — omit for **decorative** blocks ( **`aria-hidden`** ); set **`label`** for standalone status skeletons.
+- **`COMPONENTS.md`:** DataTable subsection (empty / loading / sort / row hover).
+- **`/credit-hub/preview`:** Table **mode** select (rows / loading / empty), **density** select, **sortable Applicant** column, **bulk** strip, **pagination** buttons.
+
+| Surface / primitive | Hover | Focus | Disabled | Loading | Status |
+|---------------------|-------|-------|----------|---------|--------|
+| DataTable (body)    | ✓ rows | ✓ sort btn | n/a      | ✓ skeleton + `aria-busy` | **green** |
+| DataTable (empty)   | n/a   | n/a   | n/a      | n/a     | **green** — `<EmptyState>` |
+| Skeleton (decorative) | n/a | n/a   | n/a      | n/a     | **green** — `aria-hidden` when no `label` |
+
+**Verification (this group):**
+
+- `npm run build` — passed (webpack).
+- **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95). Gate hygiene + no `html#__next_error__`.
+- **axe-core CLI** on `/credit-hub/preview` — **exit `0`**.
 
 ---

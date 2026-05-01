@@ -4,15 +4,17 @@ import { cn } from "@/lib/utils";
 
 export interface SkeletonProps {
   className?: string;
-  /** Accessible label for screen readers */
+  /** Accessible label for screen readers. Omit for decorative skeletons (parent sets `aria-busy`). */
   label?: string;
 }
 
-export function Skeleton({ className, label = "Loading" }: SkeletonProps) {
+export function Skeleton({ className, label }: SkeletonProps) {
+  const decorative = label === undefined || label === "" || label.trim() === "";
   return (
     <span
-      role="status"
-      aria-label={label}
+      {...(decorative
+        ? { "aria-hidden": true as const }
+        : { role: "status" as const, "aria-label": label })}
       className={cn("block animate-pulse rounded-forge-sm bg-forgeInk-100", className)}
     />
   );
