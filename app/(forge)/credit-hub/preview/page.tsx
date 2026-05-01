@@ -1,0 +1,406 @@
+"use client";
+
+import { useMemo, useState, type ReactNode } from "react";
+import {
+  Bell,
+  FileText,
+  Home,
+  LayoutDashboard,
+  Settings,
+  Shield,
+  Sparkles,
+  User,
+} from "lucide-react";
+import {
+  AuditTimeline,
+  Avatar,
+  Badge,
+  Breadcrumb,
+  Button,
+  Card,
+  Checkbox,
+  CommandPalette,
+  type CommandPaletteAction,
+  ConsentCapture,
+  DataTable,
+  DateInput,
+  Drawer,
+  EmptyState,
+  EvidenceCard,
+  ForgeToaster,
+  IconButton,
+  Input,
+  KpiCard,
+  Modal,
+  MoneyInput,
+  RadioGroup,
+  Select,
+  Sidebar,
+  Skeleton,
+  StatusPill,
+  Switch,
+  Tabs,
+  Textarea,
+  toast,
+  Topbar,
+} from "@/components/forge";
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="scroll-mt-4 border-b border-forgeInk-100 py-10 last:border-0">
+      <h2 className="mb-6 font-display text-forge-md font-semibold text-forgeInk-800">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+type DemoRow = { id: string; applicant: string; channel: string };
+
+export default function ForgePreviewPage() {
+  const [tabLine, setTabLine] = useState("one");
+  const [tabPills, setTabPills] = useState("a");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [sw, setSw] = useState(false);
+  const [cb, setCb] = useState(true);
+  const [radio, setRadio] = useState("b");
+  const [money, setMoney] = useState(1250.5);
+  const [date, setDate] = useState("2026-04-29");
+  const [consent, setConsent] = useState(false);
+  const [select, setSelect] = useState("usd");
+
+  const tableRows: DemoRow[] = useMemo(
+    () => [
+      { id: "1", applicant: "Rivera, A.", channel: "Branch" },
+      { id: "2", applicant: "Nguyen, T.", channel: "Online" },
+    ],
+    []
+  );
+
+  const paletteActions: CommandPaletteAction[] = useMemo(
+    () => [
+      {
+        id: "open-apps",
+        label: "Open applications",
+        keywords: ["list", "apps"],
+        icon: <FileText className="h-4 w-4" aria-hidden />,
+        onSelect: () => toast.message("Palette action", { description: "Open applications" }),
+      },
+      {
+        id: "compliance",
+        label: "Go to compliance",
+        keywords: ["audit", "kyc"],
+        icon: <Shield className="h-4 w-4" aria-hidden />,
+        onSelect: () => toast.message("Palette action", { description: "Compliance" }),
+      },
+    ],
+    []
+  );
+
+  return (
+    <div className="min-h-screen bg-forgeSurface-page pb-24 text-forgeInk-800">
+      <ForgeToaster />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} actions={paletteActions} />
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Confirm action"
+        description="Modals use the native dialog element with token-backed surfaces."
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={() => setModalOpen(false)}>
+              Continue
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-forge-sm text-forgeInk-600">Body content uses the same typography scale as production screens.</p>
+      </Modal>
+      <Drawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title="Filters"
+        description="Drawer panel for secondary workflows."
+        footer={<Button fullWidth onClick={() => setDrawerOpen(false)}>Apply</Button>}
+      >
+        <p className="text-forge-sm text-forgeInk-600">Filter controls would live here.</p>
+      </Drawer>
+
+      <div className="mx-auto max-w-5xl px-4 pt-8">
+        <Breadcrumb
+          items={[
+            { label: "Credit Hub", href: "/credit-hub" },
+            { label: "Design", href: "/credit-hub/_design/preview" },
+            { label: "Forge preview" },
+          ]}
+        />
+        <h1 className="mt-4 font-display text-forge-md font-semibold text-forgeInk-800 sm:text-[length:var(--forge-text-xl)]">
+          Forge component preview
+        </h1>
+        <p className="mt-2 max-w-2xl text-forge-sm text-forgeInk-600">
+          Phase 2 playground — v3.2 tokens only. Open the command palette with{" "}
+          <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">
+            Ctrl K
+          </kbd>
+          .
+        </p>
+      </div>
+
+      <div className="mx-auto mt-8 max-w-6xl px-4">
+        <Card variant="inset" className="overflow-hidden p-0">
+          <div className="flex min-h-[420px] flex-col md:flex-row">
+            <Sidebar
+              brand={<span className="font-display text-forge-sm font-semibold text-forgeBrand-700">Forge</span>}
+              items={[
+                { id: "h", label: "Home", href: "#layout", icon: <Home aria-hidden />, active: true },
+                { id: "d", label: "Dashboard", href: "#layout", icon: <LayoutDashboard aria-hidden /> },
+                { id: "s", label: "Settings", href: "#layout", icon: <Settings aria-hidden /> },
+              ]}
+              footer={<span className="text-forge-xs text-forgeInk-500">Layout preview</span>}
+            />
+            <div className="flex min-w-0 flex-1 flex-col bg-forgeSurface-page">
+              <Topbar
+                leading={
+                  <Breadcrumb
+                    items={[
+                      { label: "Bank", href: "#" },
+                      { label: "Applications" },
+                    ]}
+                  />
+                }
+                title="Application queue"
+                actions={
+                  <>
+                    <IconButton aria-label="Notifications" variant="default">
+                      <Bell className="h-4 w-4" aria-hidden />
+                    </IconButton>
+                    <Button size="sm" variant="primary" onClick={() => toast.success("Saved")}>
+                      Save
+                    </Button>
+                  </>
+                }
+              />
+              <div className="flex-1 space-y-4 p-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <KpiCard label="Open" value="128" trend="+4.2% vs prior week" hint="Rolling 7-day window" />
+                  <KpiCard label="SLA risk" value="6" trend="2 escalated" />
+                  <KpiCard label="Auto-decision" value="42%" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4">
+        <Section title="Buttons & icon buttons">
+          <div className="flex flex-wrap gap-3">
+            <Button variant="primary">Primary</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="ghost">Ghost</Button>
+            <Button variant="danger">Danger</Button>
+            <Button variant="link">Link</Button>
+            <Button variant="primary" loading>
+              Loading
+            </Button>
+            <Button variant="primary" disabled>
+              Disabled
+            </Button>
+            <IconButton aria-label="User" variant="default">
+              <User className="h-4 w-4" aria-hidden />
+            </IconButton>
+            <IconButton aria-label="Sparkle" variant="subtle">
+              <Sparkles className="h-4 w-4" aria-hidden />
+            </IconButton>
+          </div>
+        </Section>
+
+        <Section title="Form controls">
+          <div className="grid max-w-xl gap-6">
+            <Input name="legal-name" label="Legal name" placeholder="Ada Lovelace" />
+            <Textarea name="preview-notes" label="Notes" placeholder="Internal notes…" rows={3} />
+            <Select
+              name="currency"
+              label="Currency"
+              value={select}
+              onChange={(e) => setSelect(e.target.value)}
+              options={[
+                { value: "usd", label: "USD" },
+                { value: "eur", label: "EUR" },
+              ]}
+            />
+            <MoneyInput label="Loan amount" value={money} onValueChange={setMoney} locale="en-US" currency="USD" hint="Major units" />
+            <DateInput label="Closing date" value={date} onValueChange={setDate} locale="en-US" hint="ISO field with localized preview" />
+            <Checkbox label="Agree to hard pull" checked={cb} onChange={(e) => setCb(e.target.checked)} />
+            <RadioGroup
+              name="rg-preview"
+              label="Channel"
+              layout="inline"
+              value={radio}
+              onChange={setRadio}
+              options={[
+                { value: "a", label: "Branch" },
+                { value: "b", label: "Online" },
+                { value: "c", label: "Partner", disabled: true },
+              ]}
+            />
+            <Switch checked={sw} onCheckedChange={setSw} label="Desktop notifications" />
+          </div>
+        </Section>
+
+        <Section title="Consent capture">
+          <ConsentCapture
+            checked={consent}
+            onCheckedChange={setConsent}
+            consentAriaLabel="Accept terms and privacy notice"
+          >
+            <p>
+              I authorize the institution to verify information provided and to obtain a consumer report. See linked terms
+              for retention and dispute rights.
+            </p>
+          </ConsentCapture>
+        </Section>
+
+        <Section title="Cards, empty state, badges">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card variant="default">
+              <p className="text-forge-sm font-medium text-forgeInk-800">Default card</p>
+              <p className="mt-2 text-forge-sm text-forgeInk-600">Shadow-xs, raised surface.</p>
+            </Card>
+            <Card variant="outlined">
+              <p className="text-forge-sm font-medium text-forgeInk-800">Outlined</p>
+              <p className="mt-2 text-forge-sm text-forgeInk-600">No elevation — dense stacks.</p>
+            </Card>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Badge variant="success">Success</Badge>
+            <Badge variant="warning">Warning</Badge>
+            <Badge variant="danger">Danger</Badge>
+            <Badge variant="info">Info</Badge>
+            <Badge variant="neutral">Neutral</Badge>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <StatusPill tone="success">Approved</StatusPill>
+            <StatusPill tone="warning">Review</StatusPill>
+            <StatusPill tone="danger">Declined</StatusPill>
+            <StatusPill tone="info">Pending</StatusPill>
+            <StatusPill tone="neutral">Draft</StatusPill>
+          </div>
+          <EmptyState
+            className="mt-6"
+            title="No applications yet"
+            description="When data exists, this region lists recent applications with sortable columns."
+            action={<Button variant="primary">Create application</Button>}
+          />
+        </Section>
+
+        <Section title="Skeleton & avatar">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-12 w-12 rounded-forge-pill" />
+            <Avatar alt="Jamie Chen" fallback="JC" size="md" />
+            <Avatar alt="Sam Patel" fallback="SP" size="lg" />
+          </div>
+        </Section>
+
+        <Section title="Tabs">
+          <Tabs
+            variant="line"
+            value={tabLine}
+            onValueChange={setTabLine}
+            tabs={[
+              { id: "one", label: "Summary", panel: <p>Summary panel content.</p> },
+              { id: "two", label: "Documents", panel: <p>Documents panel content.</p> },
+              { id: "three", label: "Disabled", disabled: true, panel: <p>Hidden</p> },
+            ]}
+          />
+          <div className="mt-8">
+            <Tabs
+              variant="pills"
+              value={tabPills}
+              onValueChange={setTabPills}
+              tabs={[
+                { id: "a", label: "All", panel: <p>All items.</p> },
+                { id: "b", label: "Mine", panel: <p>Assigned to me.</p> },
+              ]}
+            />
+          </div>
+        </Section>
+
+        <Section title="Data table">
+          <DataTable<DemoRow>
+            getRowId={(r) => r.id}
+            rows={tableRows}
+            columns={[
+              { id: "applicant", header: "Applicant", cell: (r) => r.applicant },
+              { id: "channel", header: "Channel", cell: (r) => r.channel },
+              {
+                id: "status",
+                header: "Status",
+                cell: () => <StatusPill tone="info">In review</StatusPill>,
+              },
+            ]}
+          />
+        </Section>
+
+        <Section title="Evidence & audit">
+          <div className="grid gap-6 md:grid-cols-2">
+            <EvidenceCard
+              title="Income stability"
+              sourceLabel="payroll_v2.normalized"
+              confidence="high"
+              body={
+                <p>
+                  Recurring deposits match stated employer with low variance across the trailing six statements.
+                </p>
+              }
+            />
+            <div>
+              <AuditTimeline
+                entries={[
+                  {
+                    id: "e1",
+                    timestampLabel: "Apr 29, 2026 · 09:12",
+                    actorLabel: "System",
+                    actionLabel: "Risk score computed",
+                    detail: "Model v4.2 — no manual override",
+                  },
+                  {
+                    id: "e2",
+                    timestampLabel: "Apr 29, 2026 · 09:20",
+                    actorLabel: "Analyst",
+                    actionLabel: "Assigned to queue",
+                  },
+                ]}
+              />
+            </div>
+          </div>
+        </Section>
+
+        <Section title="Overlays & toast">
+          <div className="flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={() => setModalOpen(true)}>
+              Open modal
+            </Button>
+            <Button variant="secondary" onClick={() => setDrawerOpen(true)}>
+              Open drawer
+            </Button>
+            <Button variant="secondary" onClick={() => setPaletteOpen(true)}>
+              Open command palette
+            </Button>
+            <Button variant="primary" onClick={() => toast.message("Heads up", { description: "Details in timeline." })}>
+              Toast message
+            </Button>
+            <Button variant="primary" onClick={() => toast.error("Validation failed", { description: "Check required fields." })}>
+              Toast error
+            </Button>
+          </div>
+        </Section>
+      </div>
+    </div>
+  );
+}

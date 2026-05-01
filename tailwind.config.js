@@ -172,8 +172,26 @@ module.exports = {
         },
       },
       backdropBlur: {
-        'quantum': '60px',
-        'neural': '30px',
+        quantum: '60px',
+        neural: '30px',
+      },
+      borderRadius: {
+        'forge-sm': 'var(--forge-radius-sm)',
+        'forge-md': 'var(--forge-radius-md)',
+        'forge-lg': 'var(--forge-radius-lg)',
+        'forge-pill': 'var(--forge-radius-pill)',
+      },
+      fontSize: {
+        'forge-xs': ['var(--forge-text-xs)', { lineHeight: 'var(--forge-leading-normal)' }],
+        'forge-sm': ['var(--forge-text-sm)', { lineHeight: 'var(--forge-leading-normal)' }],
+        'forge-base': ['var(--forge-text-base)', { lineHeight: 'var(--forge-leading-normal)' }],
+        'forge-md': ['var(--forge-text-md)', { lineHeight: 'var(--forge-leading-normal)' }],
+      },
+      boxShadow: {
+        'forge-xs': 'var(--forge-shadow-xs)',
+        'forge-sm': 'var(--forge-shadow-sm)',
+        'forge-md': 'var(--forge-shadow-md)',
+        'forge-lg': 'var(--forge-shadow-lg)',
       },
     },
   },
