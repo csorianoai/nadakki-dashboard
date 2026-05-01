@@ -3,8 +3,10 @@
 import { useMemo, useState, type ReactNode } from "react";
 import {
   Bell,
+  CheckCircle2,
   FileText,
   Home,
+  Inbox,
   LayoutDashboard,
   Plus,
   Settings,
@@ -460,6 +462,29 @@ export default function ForgePreviewPage() {
               <p className="mt-2 text-forge-sm text-forgeInk-600">No elevation — dense stacks.</p>
             </Card>
           </div>
+          <div className="mt-8 grid gap-6 lg:grid-cols-2">
+            <div>
+              <p className="mb-2 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">EmptyState — default + CTA</p>
+              <EmptyState
+                icon={<Inbox />}
+                title="No applications match these filters"
+                description="Clear filters or widen your search to see the full queue."
+                action={<Button variant="secondary">Clear all filters</Button>}
+              />
+            </div>
+            <div>
+              <p className="mb-2 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">EmptyState — passive (card context)</p>
+              <Card variant="default" className="p-4">
+                <EmptyState
+                  tone="success"
+                  className="border-solid"
+                  icon={<CheckCircle2 className="text-forgeSuccess-600" />}
+                  title="No open AML/KYC alerts"
+                  description="All visible applications meet the minimum controls reviewed."
+                />
+              </Card>
+            </div>
+          </div>
           <div className="mt-6 flex flex-wrap gap-2">
             <Badge variant="success">Success</Badge>
             <Badge variant="warning">Warning</Badge>
@@ -476,6 +501,7 @@ export default function ForgePreviewPage() {
           </div>
           <EmptyState
             className="mt-6"
+            icon={<Sparkles />}
             title="No applications yet"
             description="When data exists, this region lists recent applications with sortable columns."
             action={<Button variant="primary">Create application</Button>}
@@ -553,11 +579,23 @@ export default function ForgePreviewPage() {
             skeletonRowCount={4}
             emptyLabel="No applications in this preview slice"
             emptyDescription="Try switching preview mode to “With rows” or adjust filters in a real screen."
+            emptyIcon={<Inbox />}
             emptyAction={
               <Button type="button" variant="secondary" size="sm" onClick={() => setTableDemo("data")}>
                 Reset preview to sample rows
               </Button>
             }
+          />
+          <p className="mt-8 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">DataTable — empty row (success / passive)</p>
+          <DataTable<DemoRow>
+            getRowId={(r) => r.id}
+            rows={[]}
+            columns={tableColumns}
+            density={tableDensity}
+            emptyLabel="No open AML/KYC alerts"
+            emptyDescription="Positive framing when the grid has nothing to flag."
+            emptyTone="success"
+            emptyIcon={<CheckCircle2 className="text-forgeSuccess-600" />}
           />
           <div className="mt-6 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4">
             <p className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Bulk action bar (layout only)</p>

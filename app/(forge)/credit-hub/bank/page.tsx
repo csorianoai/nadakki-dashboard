@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ArrowRight, Building2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, Inbox, Search } from "lucide-react";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import {
   Badge,
@@ -16,10 +16,12 @@ import {
   Skeleton,
   StatusPill,
 } from "@/components/forge";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useBankAnalytics } from "@/lib/credit-hub/hooks/useBankAnalytics";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
+import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
 function formatDop(value: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(value || 0);
@@ -47,9 +49,12 @@ export default function BankDashboardPage() {
   const router = useRouter();
   const persona = usePersona();
   const t = useTranslations();
+  const { tenantConfig } = useTenantConfig();
+  const empty = forgeEmptyCopy(tenantConfig.locale);
   const queueQuery = useBankQueue();
   const analyticsQuery = useBankAnalytics();
-  const applications = useMemo(() => (queueQuery.data?.applications ?? []).slice(0, 5), [queueQuery.data?.applications]);
+  const queueApps = useMemo(() => queueQuery.data?.applications ?? [], [queueQuery.data?.applications]);
+  const applications = useMemo(() => queueApps.slice(0, 5), [queueApps]);
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -209,9 +214,41 @@ export default function BankDashboardPage() {
             <Skeleton className="h-12 w-full rounded-forge-md" />
           </div>
         ) : queueQuery.error ? (
-          <EmptyState titleLevel={2} title="No se pudo cargar la bandeja" description="Reintente en unos momentos o abra la bandeja completa." />
+          <EmptyState
+            titleLevel={2}
+            icon={<AlertCircle className="text-forgeDanger-500" />}
+            title={empty.bankQueueErrorTitle}
+            description={empty.bankQueueErrorBody}
+            action={
+              <Button type="button" variant="secondary" className="min-h-12" onClick={() => router.push("/credit-hub/bank/applications")}>
+                {empty.bankQueueErrorCta}
+              </Button>
+            }
+          />
+        ) : queueApps.length === 0 ? (
+          <EmptyState
+            titleLevel={2}
+            icon={<Inbox />}
+            title={empty.bankQueueZeroTitle}
+            description={empty.bankQueueZeroBody}
+            action={
+              <Button type="button" variant="primary" className="min-h-12" trailingIcon={<ArrowRight className="h-4 w-4" aria-hidden />} onClick={() => router.push("/credit-hub/bank/applications")}>
+                {empty.bankQueueZeroCta}
+              </Button>
+            }
+          />
         ) : filtered.length === 0 ? (
-          <EmptyState titleLevel={2} title="Sin solicitudes en esta vista" description="Ajuste el filtro o abra la bandeja completa." />
+          <EmptyState
+            titleLevel={2}
+            icon={<Search />}
+            title={empty.bankQueueFilteredTitle}
+            description={empty.bankQueueFilteredBody}
+            action={
+              <Button type="button" variant="secondary" className="min-h-12" onClick={() => setSearch("")}>
+                {empty.bankQueueFilteredCta}
+              </Button>
+            }
+          />
         ) : (
           <DataTable<BankQueueItem>
             getRowId={(r) => r.application_id}

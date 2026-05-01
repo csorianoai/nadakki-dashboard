@@ -2,11 +2,14 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { Inbox } from "lucide-react";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { AuditTimeline, Card, EmptyState, Skeleton } from "@/components/forge";
 import type { AuditTimelineEntry } from "@/components/forge/ui/AuditTimeline";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
 function targetHash(id: string) {
   let h = 0;
@@ -17,6 +20,8 @@ function targetHash(id: string) {
 export default function BankAuditPage() {
   const persona = usePersona();
   const t = useTranslations();
+  const { tenantConfig } = useTenantConfig();
+  const empty = forgeEmptyCopy(tenantConfig.locale);
   const queue = useBankQueue();
 
   const entries: AuditTimelineEntry[] = useMemo(() => {
@@ -52,7 +57,20 @@ export default function BankAuditPage() {
         {queue.isLoading ? (
           <Skeleton className="min-h-48 w-full rounded-forge-md" />
         ) : entries.length === 0 ? (
-          <EmptyState titleLevel={2} title={t.bank.no_audit_apps} description="Cuando existan solicitudes en cola, aparecerán aquí en orden cronológico inverso." />
+          <EmptyState
+            titleLevel={2}
+            icon={<Inbox />}
+            title={empty.bankAuditFilteredTitle}
+            description={empty.bankAuditFilteredBody}
+            action={
+              <Link
+                href="/credit-hub/bank/applications"
+                className="inline-flex min-h-12 items-center justify-center rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-card px-4 text-forge-sm font-medium text-forgeInk-800 shadow-forge-xs hover:bg-forgeSurface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+              >
+                {empty.bankAuditClearCta}
+              </Link>
+            }
+          />
         ) : (
           <AuditTimeline entries={entries} />
         )}

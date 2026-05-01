@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Plus } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { Button, Card, DataTable, EmptyState, KpiCard, Skeleton } from "@/components/forge";
@@ -13,6 +13,7 @@ import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { cn } from "@/lib/utils";
+import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 import { formatForgeCurrency } from "@/utils/forge-locale";
 
 const primaryCta =
@@ -40,6 +41,7 @@ export default function DealerDashboardPage() {
   const persona = usePersona();
   const { tenantName } = useAuth();
   const { tenantConfig } = useTenantConfig();
+  const empty = forgeEmptyCopy(tenantConfig.locale);
   const applicationsQuery = useCreditApplications();
   const statsQuery = useCreditStats();
   const applications = applicationsQuery.data ?? [];
@@ -161,11 +163,14 @@ export default function DealerDashboardPage() {
           </Card>
         ) : activeRows.length === 0 ? (
           <EmptyState
-            title="Sin solicitudes activas"
-            description="Cuando envíes o tengas solicitudes en proceso, aparecerán aquí."
+            titleLevel={2}
+            icon={<FolderOpen />}
+            title={empty.dealerPipelineEmptyTitle}
+            description={empty.dealerPipelineEmptyBody}
             action={
               <Link href="/credit-hub/dealer/applications/new/applicant" className={cn(primaryCta)}>
-                + Nueva solicitud
+                <Plus className="h-4 w-4 shrink-0" aria-hidden />
+                {empty.dealerPipelineCta}
               </Link>
             }
           />

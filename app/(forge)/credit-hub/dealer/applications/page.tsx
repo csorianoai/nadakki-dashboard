@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Inbox, AlertCircle } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { PullToRefresh } from "@/components/credit-hub/system/PullToRefresh";
 import {
   Button,
-  Card,
   DataTable,
   type DataTableDensity,
   EmptyState,
@@ -24,6 +23,7 @@ import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { cn } from "@/lib/utils";
 import { formatForgeCurrency } from "@/utils/forge-locale";
+import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
 const FILTER_IDS = ["all", "draft", "submitted", "processing", "approved", "rejected"] as const;
 type FilterId = (typeof FILTER_IDS)[number];
@@ -72,6 +72,7 @@ function DealerApplicationsListInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { tenantConfig } = useTenantConfig();
+  const empty = forgeEmptyCopy(tenantConfig.locale);
   const { data: applications = [], isLoading, error, refetch } = useCreditApplications();
 
   const filters = useMemo(
@@ -278,31 +279,32 @@ function DealerApplicationsListInner() {
             <Skeleton className="h-12 w-full rounded-forge-md" />
           </div>
         ) : error ? (
-          <Card className="p-6 text-center">
-            <p className="text-forge-sm text-forgeDanger-700">Error al cargar solicitudes reales</p>
-            <p className="mt-1 text-forge-sm text-forgeInk-500">Inténtalo de nuevo en un momento</p>
-            <Button type="button" variant="secondary" className="mt-4 min-h-11" onClick={() => void refetch()}>
-              Reintentar
-            </Button>
-          </Card>
+          <EmptyState
+            titleLevel={2}
+            icon={<AlertCircle className="text-forgeDanger-500" />}
+            title={empty.dealerListErrorTitle}
+            description={empty.dealerListErrorBody}
+            action={
+              <Button type="button" variant="secondary" className="min-h-11" onClick={() => void refetch()}>
+                {t.common.retry}
+              </Button>
+            }
+          />
         ) : filtered.length === 0 ? (
           <EmptyState
             titleLevel={2}
-            title={hasActiveFilters ? "No hay solicitudes que coincidan con estos filtros" : "Aún no hay solicitudes"}
-            description={
-              hasActiveFilters
-                ? "Prueba otras palabras en la búsqueda o restablece los filtros para ver todo el historial."
-                : "Cuando crees solicitudes, aparecerán aquí con su estado y monto."
-            }
+            icon={hasActiveFilters ? <Search /> : <Inbox />}
+            title={hasActiveFilters ? empty.dealerListFilteredTitle : empty.dealerListZeroTitle}
+            description={hasActiveFilters ? empty.dealerListFilteredBody : empty.dealerListZeroBody}
             action={
               hasActiveFilters ? (
                 <Button type="button" variant="secondary" className="min-h-11" onClick={clearFilters}>
-                  Limpiar filtros
+                  {empty.dealerListFilteredCta}
                 </Button>
               ) : (
                 <Link href="/credit-hub/dealer/applications/new/applicant" className={cn(primaryCta)}>
                   <Plus className="h-4 w-4 shrink-0" aria-hidden />
-                  Crear solicitud
+                  {empty.dealerListZeroCta}
                 </Link>
               )
             }

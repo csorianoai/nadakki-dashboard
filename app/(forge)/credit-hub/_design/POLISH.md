@@ -7,7 +7,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | **1** | Dealer `/credit-hub/dealer/applications` list — Forge primitives, URL `q` / `status` / `density`, DataTable + density, PullToRefresh kept | **green** | Lighthouse a11y **1.0** — `lh-dealer-applications-list-a11y.json`; diagnosis `lh_error_shell_diagnosis.md` |
 | **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | **green** | Groups **1–5** **green** — see Group 5 below (Item 3–5 on this table are separate Phase 5 items) |
 | **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | **green** | Sonner — see **Item 3** below; locale via `utils/forge-toast-copy.ts` + `forgeToastLangFromLocale` |
-| **4** | Empty states sweep (bank + dealer zero-data surfaces) | todo | Icons + CTAs per Appendix A |
+| **4** | Empty states sweep (bank + dealer zero-data surfaces) | **green** | `utils/forge-empty-copy.ts` + `EmptyState` `icon` / `tone` — see **Item 4** below |
 | **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | todo | cmdk |
 | **Tenant coupling** | Hardcoded tenant copy/colors/currency (Phase 6 prep) | todo | Log leaks here when found |
 
@@ -40,6 +40,29 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 - **Manual smoke (representative):** bank approve/reject + error paths via Forge bank application UI or panel; dealer wizard: wait first autosave tick / force storage failure in devtools; document upload error path on `/credit/dealer/...` with invalid file or offline (as available).
 - **`prefers-reduced-motion`:** Toaster classNames include **`motion-reduce:*`** (Item 2 Group 5) — spot-check in DevTools rendering.
 - **Mobile (375×667):** toasts **`top-right`**; verify they do not cover the dealer wizard fixed footer primary actions during a toast.
+
+---
+
+## Item 4 — Empty states sweep (**GREEN**)
+
+**Copy / locale:** Institutional strings live in **`utils/forge-empty-copy.ts`** (EN/ES via `forgeEmptyLangFromLocale` / `useTenantConfig().tenantConfig.locale`), matching Item 3’s scoped copy pattern.
+
+**Primitive:** **`EmptyState`** supports optional **`icon`** (decorative wrapper `aria-hidden`) and **`tone="success"`** for positive passive states (e.g. compliance “all clear”). **`DataTable`** accepts **`emptyIcon`** and **`emptyTone`** for empty rows.
+
+| # | Surface | Empty handling |
+|---|---------|----------------|
+| 1 | `/credit-hub/bank` | Queue zero vs filter-empty vs error — `EmptyState` + CTAs (`bank/page.tsx`) |
+| 2 | `/credit-hub/bank/applications` | URL `q` sync (`Suspense` + `useSearchParams`); filter vs empty queue (`bank/applications/page.tsx`) |
+| 3 | Bank application detail tabs | Documents / AI pending / statement metrics / audit / comments — `BankApplicationDetailView.tsx` |
+| 4 | `/credit-hub/bank/audit` | Global audit empty — `bank/audit/page.tsx` |
+| 5 | `/credit-hub/bank/compliance` | Alerts clear — `EmptyState` success tone, no CTA (`bank/compliance/page.tsx`) |
+| 6 | `/credit-hub/dealer` | Active pipeline — `dealer/page.tsx` |
+| 7 | `/credit-hub/dealer/applications` | Filter vs zero submissions — `dealer/applications/page.tsx` |
+| 8 | `/credit-hub/dealer/applications/[id]` | Valid id → data view; invalid → **404** (unchanged); no `EmptyState` ambiguity |
+
+**Preview:** `/credit-hub/preview` — “Cards, empty state, badges” demonstrates default + passive-in-card `EmptyState`; “Data table” includes empty row with icon + success-tone passive row.
+
+**Verification:** `npm run build` — passed; Lighthouse a11y `/credit-hub/preview` ≥ **0.95** (re-run per gate hygiene); axe CLI exit **0** (same SOP as Items 2–3).
 
 ---
 

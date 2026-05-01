@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
-import { FileText, Shield } from "lucide-react";
+import { FileText, MessageSquareText, ScrollText, Shield, Sparkles } from "lucide-react";
 import { CreditAnalysisPanel } from "@/components/credit-hub/dealer/analysis/CreditAnalysisPanel";
 import { ScoreVisual } from "@/components/credit-hub/dealer/analysis/ScoreVisual";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
@@ -27,6 +27,7 @@ import { useBankCounterOffer, useBankDecision } from "@/lib/credit-hub/hooks/use
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { forgeBankDecisionToasts, forgeToastLangFromLocale, formatToastApplicationId } from "@/utils/forge-toast-copy";
+import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 import type {
   BankAuditTrail,
   BankDecisionRequest,
@@ -76,7 +77,12 @@ function formatDop(value: number) {
 }
 
 function DecisionCommentsPanel({ existingJustification }: { existingJustification?: string }) {
+  const { tenantConfig } = useTenantConfig();
+  const empty = forgeEmptyCopy(tenantConfig.locale);
   const [internalNote, setInternalNote] = useState("");
+  const noteFieldId = "forge-bank-internal-note-draft";
+  const showEmpty = !existingJustification?.trim() && !internalNote.trim();
+
   return (
     <div className="space-y-4">
       {existingJustification ? (
@@ -85,8 +91,32 @@ function DecisionCommentsPanel({ existingJustification }: { existingJustificatio
           <p className="mt-2 text-forge-sm text-forgeInk-800">{existingJustification}</p>
         </Card>
       ) : null}
+      {showEmpty ? (
+        <EmptyState
+          titleLevel={2}
+          icon={<MessageSquareText />}
+          title={empty.bankDetailCommentsEmptyTitle}
+          description={empty.bankDetailCommentsEmptyBody}
+          action={
+            <Button
+              type="button"
+              variant="secondary"
+              className="min-h-12"
+              onClick={() => document.getElementById(noteFieldId)?.focus()}
+            >
+              {empty.bankDetailCommentsCta}
+            </Button>
+          }
+        />
+      ) : null}
       <div>
-        <Textarea label="Comentario interno (borrador local)" value={internalNote} onChange={(e) => setInternalNote(e.target.value)} rows={4} />
+        <Textarea
+          id={noteFieldId}
+          label="Comentario interno (borrador local)"
+          value={internalNote}
+          onChange={(e) => setInternalNote(e.target.value)}
+          rows={4}
+        />
         <p className="mt-2 text-forge-xs text-forgeInk-500">
           La persistencia de comentarios sigue el flujo de API del banco; este campo no envía datos hasta integrarse con el endpoint de notas.
         </p>
@@ -137,6 +167,7 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
   }, []);
 
   const { tenantConfig } = useTenantConfig();
+  const empty = forgeEmptyCopy(tenantConfig.locale);
 
   const submitDecision = useCallback(async () => {
     if (!decisionModal || !modalComment.trim()) return;
@@ -368,7 +399,7 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
 
   const documentsPanel =
     documents.length === 0 ? (
-      <EmptyState titleLevel={2} title="Sin documentos indexados" description="Los adjuntos aparecerán aquí cuando el origen exponga la lista en el payload de la solicitud." />
+      <EmptyState titleLevel={2} icon={<FileText />} title={empty.bankDetailDocumentsTitle} description={empty.bankDetailDocumentsBody} />
     ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {documents.map((doc, idx) => {
@@ -392,7 +423,7 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
   const evidencePanel = (
     <div className="space-y-4">
       {evidenceCards.length === 0 ? (
-        <EmptyState titleLevel={2} title="Sin análisis" description="No hay resultado de motor disponible para generar tarjetas de evidencia." />
+        <EmptyState titleLevel={2} icon={<Sparkles />} title={empty.bankDetailEvidencePendingTitle} description={empty.bankDetailEvidencePendingBody} />
       ) : (
         evidenceCards.map((c) => <EvidenceCard key={c.key} title={c.title} body={c.body} sourceLabel={c.sourceLabel} confidence={c.confidence} />)
       )}
@@ -420,12 +451,12 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
         </Card>
       </div>
     ) : (
-      <EmptyState titleLevel={2} title="Sin métricas de estado de cuenta" description="No hay bloque de métricas en el análisis para esta solicitud." />
+      <EmptyState titleLevel={2} icon={<ScrollText />} title={empty.bankDetailStatementTitle} description={empty.bankDetailStatementBody} />
     );
 
   const auditPanel =
     auditEntries.length === 0 ? (
-      <EmptyState titleLevel={2} title="Sin eventos de auditoría" description="Aún no hay entradas en la pista de auditoría para esta solicitud." />
+      <EmptyState titleLevel={2} icon={<ScrollText />} title={empty.bankDetailAuditEmptyTitle} description={empty.bankDetailAuditEmptyBody} />
     ) : (
       <AuditTimeline entries={auditEntries} />
     );

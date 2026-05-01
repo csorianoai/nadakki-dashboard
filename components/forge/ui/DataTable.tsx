@@ -29,6 +29,10 @@ export interface DataTableProps<Row> {
   emptyDescription?: string;
   /** Optional CTA in the empty state (e.g. clear filters). */
   emptyAction?: ReactNode;
+  /** Decorative icon for the empty row (Lucide recommended). */
+  emptyIcon?: ReactNode;
+  /** Visual tone when empty (e.g. compliance “all clear”). */
+  emptyTone?: "default" | "success";
   className?: string;
   /** Row / header padding and type scale (default: comfortable). */
   density?: DataTableDensity;
@@ -77,6 +81,8 @@ export function DataTable<Row>({
   emptyLabel = "No rows",
   emptyDescription,
   emptyAction,
+  emptyIcon,
+  emptyTone = "default",
   className,
   density = "comfortable",
   loading = false,
@@ -144,6 +150,8 @@ export function DataTable<Row>({
             <tr>
               <td colSpan={columns.length} className={cn(d.td, "p-0")}>
                 <EmptyState
+                  icon={emptyIcon}
+                  tone={emptyTone}
                   title={emptyLabel}
                   titleLevel={2}
                   description={emptyDescription}

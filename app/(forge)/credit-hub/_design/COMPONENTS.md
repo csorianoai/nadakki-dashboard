@@ -8,7 +8,7 @@ App code imports from `@/components/forge` (see `components/forge/index.ts`).
 
 Presentational building blocks under `components/forge/ui/*` (and generic `layout/Sidebar`, `layout/Topbar` for previews):
 
-Button, IconButton, Input, Textarea, Select, Checkbox, RadioGroup, Switch, Card, EmptyState, Badge, StatusPill, Skeleton, Avatar, Modal, Drawer, Toast (`ForgeToaster` + `toast`), Tabs, Breadcrumb, DataTable, KpiCard, EvidenceCard, AuditTimeline, CommandPalette, MoneyInput, DateInput, ConsentCapture.
+Button, IconButton, Input, Textarea, Select, Checkbox, RadioGroup, Switch, Card, EmptyState (optional **`icon`**, **`tone="success"`** for passive positive framing), Badge, StatusPill, Skeleton, Avatar, Modal, Drawer, Toast (`ForgeToaster` + `toast`), Tabs, Breadcrumb, DataTable, KpiCard, EvidenceCard, AuditTimeline, CommandPalette, MoneyInput, DateInput, ConsentCapture.
 
 These primitives are **persona-agnostic** (no `usePersona` / no layout segments).
 
@@ -27,7 +27,7 @@ The master prompt originally suggested a separate **`<DataTableMobileCard>`** co
 
 ### DataTable
 
-- **Empty:** Zero rows render **`<EmptyState>`** inside the table (not a bare “no data” text row). Pass **`emptyDescription`** / **`emptyAction`** when you need copy + CTA beyond **`emptyLabel`**.
+- **Empty:** Zero rows render **`<EmptyState>`** inside the table (not a bare “no data” text row). Pass **`emptyDescription`** / **`emptyAction`** when you need copy + CTA beyond **`emptyLabel`**. Optional **`emptyIcon`** (decorative) and **`emptyTone="success"`** for positive “all clear” grids (Item 4).
 - **Loading:** Set **`loading`** to show a skeleton **body** with the same column count as **`columns`** (use **`skeletonRowCount`** to tune height). The wrapper sets **`aria-busy`**.
 - **Sort (optional):** If a column defines **`onSort`**, the header is a button with **`aria-sort`** reflecting **`sort`** (`ascending` | `descending` | `none`). Icons are decorative (`aria-hidden`).
 - **Rows:** Body rows use a **subtle hover** background only (no transform / layout shift).

@@ -3,13 +3,18 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
-import { Badge, Card, Skeleton } from "@/components/forge";
+import { Badge, Card, EmptyState, Skeleton } from "@/components/forge";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { CheckCircle2 } from "lucide-react";
+import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
 export default function BankCompliancePage() {
   const persona = usePersona();
   const t = useTranslations();
+  const { tenantConfig } = useTenantConfig();
+  const empty = forgeEmptyCopy(tenantConfig.locale);
   const queue = useBankQueue();
   const applications = queue.data?.applications ?? [];
 
@@ -48,7 +53,14 @@ export default function BankCompliancePage() {
           <Card className="p-4 sm:p-6">
             <h2 className="font-display text-forge-md font-semibold text-forgeInk-800">{t.bank.issues_section_title}</h2>
             {withIssues.length === 0 ? (
-              <p className="mt-3 text-forge-sm text-forgeInk-500">{t.bank.no_issues_queue}</p>
+              <EmptyState
+                titleLevel={2}
+                tone="success"
+                icon={<CheckCircle2 className="text-forgeSuccess-600" />}
+                title={empty.complianceAlertsClearTitle}
+                description={empty.complianceAlertsClearBody}
+                className="mt-4 border-solid"
+              />
             ) : (
               <ul className="mt-4 space-y-3">
                 {withIssues.map((item) => (

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { AlertCircle, ArrowRight, Inbox, Search } from "lucide-react";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import {
   Button,
@@ -16,10 +17,12 @@ import {
   StatusPill,
   Textarea,
 } from "@/components/forge";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useBulkActions } from "@/lib/credit-hub/hooks/useBulkActions";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { BankBulkRule, BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
+import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
 function formatDop(value: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(value || 0);
@@ -44,15 +47,65 @@ function queueLabel(item: BankQueueItem): string {
 }
 
 export default function BankApplicationsQueuePage() {
+  return (
+    <Suspense fallback={<BankApplicationsSkeleton />}>
+      <BankApplicationsQueueInner />
+    </Suspense>
+  );
+}
+
+function BankApplicationsSkeleton() {
+  return (
+    <div className="space-y-6 p-6">
+      <Skeleton className="h-24 w-full max-w-2xl rounded-forge-md" />
+      <Skeleton className="h-12 w-full rounded-forge-md" />
+      <Skeleton className="h-48 w-full rounded-forge-md" />
+    </div>
+  );
+}
+
+function BankApplicationsQueueInner() {
   const persona = usePersona();
   const t = useTranslations();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { tenantConfig } = useTenantConfig();
+  const empty = forgeEmptyCopy(tenantConfig.locale);
   const queueQuery = useBankQueue();
   const applications = queueQuery.data?.applications ?? [];
-  const [search, setSearch] = useState("");
+  const urlQ = searchParams.get("q") ?? "";
+  const [search, setSearch] = useState(urlQ);
   const [selected, setSelected] = useState<string[]>([]);
   const [rule, setRule] = useState<BankBulkRule>("APROBAR_SCORE_GTE_800");
   const [justification, setJustification] = useState("");
   const bulkMutation = useBulkActions();
+
+  useEffect(() => {
+    setSearch(urlQ);
+  }, [urlQ]);
+
+  const replaceQuery = useCallback(
+    (q: string) => {
+      const p = new URLSearchParams(searchParams.toString());
+      if (q.trim()) p.set("q", q.trim());
+      else p.delete("q");
+      const qs = p.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  useEffect(() => {
+    if (search.trim() === urlQ.trim()) return;
+    const id = window.setTimeout(() => replaceQuery(search), 400);
+    return () => window.clearTimeout(id);
+  }, [search, urlQ, replaceQuery]);
+
+  const clearFilters = () => {
+    setSearch("");
+    replaceQuery("");
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -197,9 +250,26 @@ export default function BankApplicationsQueuePage() {
           <Skeleton className="h-12 w-full rounded-forge-md" />
         </div>
       ) : queueQuery.error ? (
-        <EmptyState titleLevel={2} title="No se pudo cargar la bandeja bancaria" description="Reintente en unos momentos." />
+        <EmptyState
+          titleLevel={2}
+          icon={<AlertCircle className="text-forgeDanger-500" />}
+          title={empty.bankAppsErrorTitle}
+          description={empty.bankAppsErrorBody}
+        />
+      ) : applications.length === 0 ? (
+        <EmptyState titleLevel={2} icon={<Inbox />} title={empty.bankAppsEmptyTitle} description={empty.bankAppsEmptyBody} />
       ) : filtered.length === 0 ? (
-        <EmptyState titleLevel={2} title="No hay solicitudes para este filtro" description="Ajuste la búsqueda o espere nuevas entradas." />
+        <EmptyState
+          titleLevel={2}
+          icon={<Search />}
+          title={empty.bankAppsFilteredTitle}
+          description={empty.bankAppsFilteredBody}
+          action={
+            <Button type="button" variant="secondary" className="min-h-12" onClick={clearFilters}>
+              {empty.bankAppsFilteredCta}
+            </Button>
+          }
+        />
       ) : (
         <DataTable<BankQueueItem> getRowId={(r) => r.application_id} rows={filtered} columns={columns} emptyLabel="Sin filas" />
       )}
