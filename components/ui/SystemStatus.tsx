@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import { CheckCircle, AlertTriangle, XCircle, ChevronDown, ExternalLink, RefreshCw } from "lucide-react";
 
 interface ServiceStatus {

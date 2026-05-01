@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React from "react";
 
 interface Metric {
@@ -25,7 +25,7 @@ export function AgentCard({
   id,
   name,
   description,
-  icon = "🤖",
+  icon = "??",
   status,
   metrics,
   isSelected = false,
@@ -55,7 +55,7 @@ export function AgentCard({
           <span className="text-3xl">{icon}</span>
           <div>
             <h3 className="font-bold text-lg">{displayName || name}</h3>
-            <p className="text-sm text-gray-600 mt-1">{description || "Sin descripción"}</p>
+            <p className="text-sm text-gray-600 mt-1">{description || "Sin descripci�n"}</p>
             {category && (
               <span className="text-xs font-semibold px-2 py-1 mt-2 inline-block bg-gray-100 text-gray-800 rounded-full">
                 {category}

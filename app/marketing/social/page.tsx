@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   Share2, Calendar, MessageSquare, Heart, Repeat2, Eye, Users,
   TrendingUp, Clock, Image, Video, Link2, Send, Plus, Filter,

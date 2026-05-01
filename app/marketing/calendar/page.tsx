@@ -5,7 +5,7 @@
  * UI basada en app/content/calendar/page.tsx — datos reales del backend, sin inventar filas.
  */
 import { useMemo, useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import {
   Calendar,
   ChevronLeft,

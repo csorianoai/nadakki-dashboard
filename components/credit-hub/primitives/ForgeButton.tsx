@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, type ButtonHTMLAttributes, type MouseEvent, type ReactNode, useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { cn } from "@/lib/utils";
 
 interface ForgeButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

@@ -1,5 +1,5 @@
 'use client';
-import { motion } from 'framer-motion';
+import { motion } from '@/lib/motion-stub';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';

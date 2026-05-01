@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import Link from "next/link";
 import { 
   ChevronLeft, Plus, Trash2, Users, Filter, Save, Eye, RefreshCw,

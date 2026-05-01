@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { cn } from "@/lib/utils";
 
 const statusConfig: Record<string, { label: string; bg: string; text: string; pulse?: boolean }> = {

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   Brain, TrendingUp, TrendingDown, Users, Target, Zap,
   AlertTriangle, CheckCircle, Clock, RefreshCw, Loader2,

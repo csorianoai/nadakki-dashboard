@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { Brain } from "lucide-react";
 import { ForgeButton } from "@/components/credit-hub/primitives/ForgeButton";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";

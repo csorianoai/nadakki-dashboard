@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ComponentType } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import {
   Share2,
   Facebook,

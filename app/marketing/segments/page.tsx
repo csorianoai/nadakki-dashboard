@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTenant } from "@/contexts/TenantContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import { 
   Users, Plus, Filter, Save, Trash2, Search, Download, Upload,
   ChevronRight, BarChart3, Target, Zap, Clock, HelpCircle,

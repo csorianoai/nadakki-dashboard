@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   Calendar, Plus, ChevronLeft, ChevronRight,
   Instagram, Twitter, Linkedin, Mail

@@ -1,7 +1,1 @@
-@import "../../../styles/forge-tokens.css";
 @import "./_design/tokens.css";
-
-.forge-route {
-  background: var(--forge-bg);
-  color: var(--forge-text);
-}

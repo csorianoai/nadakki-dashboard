@@ -1,5 +1,5 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import { AlertTriangle, X } from "lucide-react";
 
 interface ConfirmModalProps {

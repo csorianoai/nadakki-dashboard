@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import { 
   FileText, Image, Video, Mic, Sparkles, Wand2, Copy, Download,
   RefreshCw, Save, Trash2, Clock, Star, Folder, Search, Filter,

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   Target, Users, TrendingUp, Star, Filter,
   Search, ArrowUpRight, Phone, Mail, Building

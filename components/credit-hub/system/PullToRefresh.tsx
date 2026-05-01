@@ -1,15 +1,22 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { RefreshCw } from "lucide-react";
 
 export function PullToRefresh({ onRefresh, children }: { onRefresh: () => Promise<void>; children: ReactNode }) {
-  const y = useMotionValue(0);
+  const [pull, setPull] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const startY = useRef(0);
-  const opacity = useTransform(y, [0, 80], [0, 1]);
-  const rotate = useTransform(y, [0, 80], [0, 180]);
+
+  const indicatorStyle: CSSProperties = {
+    opacity: Math.min(1, pull / 80),
+    transform: `rotate(${Math.min(180, (pull / 80) * 180)}deg)`,
+  };
+
+  const contentStyle: CSSProperties = {
+    transform: `translateY(${isRefreshing ? 60 : pull}px)`,
+    transition: isRefreshing || pull === 0 ? "transform 180ms ease-out" : "none",
+  };
 
   return (
     <div
@@ -19,30 +26,30 @@ export function PullToRefresh({ onRefresh, children }: { onRefresh: () => Promis
       onTouchMove={(event) => {
         if (window.scrollY > 0 || isRefreshing) return;
         const diff = event.touches[0].clientY - startY.current;
-        if (diff > 0 && diff < 120) y.set(diff);
+        if (diff > 0 && diff < 120) setPull(diff);
       }}
       onTouchEnd={async () => {
-        if (y.get() > 80 && !isRefreshing) {
+        if (pull > 80 && !isRefreshing) {
           setIsRefreshing(true);
-          y.set(60);
+          setPull(60);
           try {
             await onRefresh();
           } finally {
             setIsRefreshing(false);
-            y.set(0);
+            setPull(0);
           }
         } else {
-          y.set(0);
+          setPull(0);
         }
       }}
       className="relative"
     >
-      <motion.div style={{ opacity }} className="absolute left-1/2 top-2 z-20 -translate-x-1/2">
-        <motion.div style={{ rotate }} className="flex h-10 w-10 items-center justify-center rounded-full bg-forge-primary shadow-lg" aria-hidden="true">
+      <div style={indicatorStyle} className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-forge-primary shadow-lg" aria-hidden="true">
           <RefreshCw className={`h-5 w-5 text-white ${isRefreshing ? "animate-spin" : ""}`} />
-        </motion.div>
-      </motion.div>
-      <motion.div style={{ y }}>{children}</motion.div>
+        </div>
+      </div>
+      <div style={contentStyle}>{children}</div>
     </div>
   );
 }

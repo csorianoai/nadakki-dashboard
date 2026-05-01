@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 
 export function SuccessCheckmark({ size = 48 }: { size?: number }) {
   return (

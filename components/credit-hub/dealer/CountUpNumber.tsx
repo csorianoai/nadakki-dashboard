@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useMotionValue, useMotionValueEvent, useSpring } from "framer-motion";
 
 interface CountUpNumberProps {
   value: number;
@@ -12,20 +11,26 @@ interface CountUpNumberProps {
 }
 
 export function CountUpNumber({ value, duration = 1.5, className, prefix = "", suffix = "" }: CountUpNumberProps) {
-  const motionValue = useMotionValue(0);
-  const spring = useSpring(motionValue, {
-    duration: duration * 1000,
-    bounce: 0,
-  });
   const [display, setDisplay] = useState(`${prefix}0${suffix}`);
 
-  useMotionValueEvent(spring, "change", (latest) => {
-    setDisplay(`${prefix}${Math.round(latest).toLocaleString("es-DO")}${suffix}`);
-  });
-
   useEffect(() => {
-    motionValue.set(value);
-  }, [motionValue, value]);
+    let raf = 0;
+    const start = performance.now();
+    const from = 0;
+    const to = value;
+    const ms = duration * 1000;
 
-  return <motion.span className={className}>{display}</motion.span>;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / ms);
+      const eased = 1 - (1 - p) * (1 - p);
+      const cur = from + (to - from) * eased;
+      setDisplay(`${prefix}${Math.round(cur).toLocaleString("es-DO")}${suffix}`);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration, prefix, suffix]);
+
+  return <span className={className}>{display}</span>;
 }

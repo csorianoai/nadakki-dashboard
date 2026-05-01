@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   FileText, Filter, Download, RefreshCw, Search,
   CheckCircle, AlertTriangle, XCircle, Info, Clock

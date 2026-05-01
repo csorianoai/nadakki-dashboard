@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   Wand2, Sparkles, Copy, Check, RefreshCw, 
   Loader2, Instagram, Twitter, Linkedin, Mail

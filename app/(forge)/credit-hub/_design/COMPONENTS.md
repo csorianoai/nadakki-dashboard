@@ -131,4 +131,16 @@ On some Windows installs, `npx lighthouse` fails after the run with **`EPERM`** 
 
 **Artifacts:** decoded final screenshots and full JSON live under `app/(forge)/credit-hub/_design/_inventory/` (see `INVESTIGATION_phase4_chunk1_gates.md`).
 
-**Bank application detail (`/credit-hub/bank/applications/[applicationId]`):** a prior **HTTP 500** during document load led to a temporary **full-route** `next/dynamic(..., { ssr: false })` workaround. **SSR investigation** (`_design/_inventory/ssr_root_cause_phase4_detail.md`) showed a **clean `next build` + fresh `next start`** returns **200** with a **direct** import of `BankApplicationDetailView` — no `ssr: false` required on current `framer-motion` usage (`ScoreVisual`, `CreditAnalysisPanel`). If a 500 reappears, capture **server stderr** and treat as **CAT E** (stale `.next` / old server process) until a stack trace proves a library (**CAT A/D**). First narrowing step if `framer-motion` is proven: dynamic-import **only** `ScoreVisual`, not the whole review tree.
+**Bank application detail (`/credit-hub/bank/applications/[applicationId]`):** a prior **HTTP 500** during document load led to a temporary **full-route** `next/dynamic(..., { ssr: false })` workaround. **SSR investigation** (`_design/_inventory/ssr_root_cause_phase4_detail.md`) showed a **clean `next build` + fresh `next start`** returns **200** with a **direct** import of `BankApplicationDetailView` — no `ssr: false` required on current builds. If a 500 reappears, capture **server stderr** and treat as **CAT E** (stale `.next` / old server process) until a stack trace proves a library (**CAT A/D**).
+
+## Motion policy (Phase 7)
+
+Forge **does not ship a JavaScript animation library**. Runtime uses **`lib/motion-stub.tsx`** only as a compatibility shim for legacy JSX that still references `motion.*` / `AnimatePresence`: motion-only props are stripped and the underlying DOM element is rendered. **New surfaces** must use **CSS transitions** or the **Web Animations API** where animation is truly required for comprehension (e.g. pull-to-refresh affordance). If a change “needs” a motion library, the animation is probably **decorative** — remove it instead.
+
+## DataTable — pagination
+
+`DataTable` **does not** embed page controls. Pagination lives at the **page level** when needed (URL-driven `page` / `pageSize` + buttons composing **`Button`**). Keep this pattern unless multiple unrelated tables need an identical pager API — then extract a **`Pagination`** primitive.
+
+## Tooltips
+
+Forge **does not use tooltips**. Prefer visible labels, helper text, `aria-describedby`, and inline descriptions. Tooltips fail on touch-first workflows and add cognitive load. If a surface seems to need a tooltip, the information probably belongs **visible** in the layout.

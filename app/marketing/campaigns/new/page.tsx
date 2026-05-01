@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import {

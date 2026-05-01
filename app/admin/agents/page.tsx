@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import Link from "next/link";
 import { Bot, Search, Zap, TrendingUp, CheckCircle, RefreshCw, Server } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";

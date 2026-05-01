@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "@/lib/motion-stub";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Briefcase, Car, ChevronLeft, ChevronRight, ClipboardCheck, DollarSign, FileCheck, FileText, ShieldCheck, User, Users } from "lucide-react";
 import { ForgeButton } from "../../primitives/ForgeButton";

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { Plus, Ban } from "lucide-react";
 import Link from "next/link";
 import NavigationBar from "@/components/ui/NavigationBar";

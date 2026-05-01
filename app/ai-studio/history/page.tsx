@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   History, Search, Copy, Trash2, Eye,
   Instagram, Twitter, Linkedin, Mail, Check

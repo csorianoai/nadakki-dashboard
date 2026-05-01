@@ -9,7 +9,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | **green** | Sonner — see **Item 3** below; locale via `utils/forge-toast-copy.ts` + `forgeToastLangFromLocale` |
 | **4** | Empty states sweep (bank + dealer zero-data surfaces) | **green** | `utils/forge-empty-copy.ts` + `EmptyState` `icon` / `tone` — see **Item 4** below |
 | **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | **green** | `ForgeCommandPaletteProvider` + `ForgeCreditHubCommandPalette` — see **Item 5** below |
-| **Tenant coupling** | Hardcoded tenant copy/colors/currency (Phase 6 prep) | todo | Log leaks here when found |
+| **Tenant coupling** | Hardcoded tenant copy/colors/currency | **green** | Phase 7: `tenant_coupling_grep_phase7.txt`; `BankDashboardHero` uses `useTenantConfig().institution_name`. Remaining `credicefi` strings are outside Forge Credit Hub (SIC, API defaults, settings demo). |
 
 ---
 
@@ -84,7 +84,27 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 
 ---
 
-## Phase 7 — eliminate `framer-motion` from runtime (DECIDED)
+## Phase 6 — Reusability test (**GREEN**)
+
+- **Fixture + flag:** `NEXT_PUBLIC_FORGE_TEST_TENANT=mx` → `_design/_inventory/test-tenant-fixtures.ts` + `lib/credit-hub/forge-test-tenant-override.ts` + `useTenant` / `useTenantConfig` + `.forge-app[data-tenant]` (`app/(forge)/layout.tsx`).
+- **Evidence:** `REUSABILITY_TEST.md`, screenshots under `_design/_inventory/reusability-test/`, Lighthouse `lh-forge-preview-a11y-phase6-mx.json` (**0.97** a11y), `tools/capture-forge-reusability.mjs` (Playwright; **`channel: "msedge"`** when headless Chromium spawn fails on Windows).
+
+## Phase 7 — Cleanup summary (**GREEN**)
+
+| Item | Notes |
+|------|--------|
+| **7.1** | `framer-motion` uninstalled; `lib/motion-stub.tsx`; CSS/state **`PullToRefresh`**; **`CountUpNumber`** RAF easing; **`ForgeInput`** shake removed; `framer_motion_grep_post.txt` (app+components); `bundle_size_post_framer_removal.md`. |
+| **7.2** | `forge-globals.css` drops `styles/forge-tokens.css` import for Forge subtree. **`tailwind.config.js` LEGACY ALIASES retained** — dual-var fallbacks still required for `components/credit-hub/**` + legacy routes; see `legacy_utility_grep_phase7.txt`. |
+| **7.3** | No new stale Phase TODO / debug `console.log` in Forge UI targets. |
+| **7.4** | Pagination pattern documented on **`DataTable`**; tooltips **formally absent** (`COMPONENTS.md`). |
+| **7.5** | `tenant_coupling_grep_phase7.txt` + **`BankDashboardHero`** institution headline fix. |
+
+---
+
+## Phase 7 — eliminate `framer-motion` from runtime (archived decision memo)
+
+<details>
+<summary>Original decision text</summary>
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -122,6 +142,8 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 │ to isolate tenant-leak variables from animation refactors.  │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+</details>
 
 ---
 

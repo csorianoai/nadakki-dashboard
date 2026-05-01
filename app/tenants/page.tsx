@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   Users, Building2, Plus, Search, MoreVertical,
   Key, Settings, Trash2, CheckCircle, Clock

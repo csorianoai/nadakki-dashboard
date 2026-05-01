@@ -8,4 +8,9 @@
 
 ## Dealer application detail URLs
 
-Use **`forgeDealerApplicationDetailHref()`** from `lib/credit-hub/dealerRoutes.ts` for all links to `/credit-hub/dealer/applications/[id]`. Relative hrefs such as `dealer/applications/<id>` from a page at `/credit-hub/dealer` resolve to **`/credit-hub/dealer/dealer/applications/<id>`** (double `dealer` → 404).
+## Phase 7 — cleanup log (2026-04-29)
+
+- **Motion:** `framer-motion` removed from dependencies; `lib/motion-stub.tsx` provides a zero-runtime compatibility layer for existing `motion.*` JSX. **`PullToRefresh`** rewritten with CSS `transform` / `opacity` + touch state.
+- **Forge globals:** `forge-globals.css` imports only **`_design/tokens.css`**. Legacy **`styles/forge-tokens.css`** remains in the repo for non–Forge-app shells and Tailwind dual-var fallbacks (`tailwind.config.js` **LEGACY ALIASES** block — not deleted in this pass because `components/credit-hub/**` still emits legacy utility classnames at volume).
+- **Tenant headline:** `BankDashboardHero` reads **`useTenantConfig().institution_name`** instead of a hardcoded brand string.
+
