@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
  * **Loading:** spinner is **leading** (left of label), matches Stripe/Linear. Label stays visible.
  * `aria-busy` is set while `loading` is true.
  *
- * **Disabled vs `loading`:** `disabled={true}` alone grays the control (no spinner). `loading={true}`
- * sets `disabled` on the element to block double-submit but keeps variant colors + leading spinner.
- * If both are true, loading UI wins (spinner + busy) and the control stays non-interactive — callers
- * should avoid redundant `disabled` while `loading` (e.g. only pass `loading`).
+ * **Disabled vs `loading`:** `disabled={true}` alone → muted ink/surface (no spinner). `loading={true}` →
+ * native `disabled` + variant colors + leading spinner + `aria-busy`. If **both** are true, **loading UI still
+ * shows** (spinner + frozen colors) so in-flight submits never look like a dead gray button — prefer passing
+ * **`loading` only** during submit when possible to avoid redundant props.
  */
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "link";
 export type ButtonSize = "sm" | "md" | "lg";
