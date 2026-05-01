@@ -31,3 +31,4 @@ export * from "./layout/creditHubPersonaFromSegments";
 export * from "./layout/ForgeCreditHubAppShell";
 export * from "./layout/ForgeCreditHubSidebar";
 export * from "./layout/ForgeCreditHubTopbar";
+export { ForgeCommandPaletteProvider, useForgeCommandPalette } from "./layout/ForgeCommandPaletteContext";

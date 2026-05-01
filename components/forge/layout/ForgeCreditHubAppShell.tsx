@@ -5,9 +5,10 @@ import { useSelectedLayoutSegments } from "next/navigation";
 import { PersonaProvider } from "@/components/credit-hub/system/PersonaProvider";
 import { CHFeatureFlagBanner } from "@/components/credit-hub/system/CHFeatureFlagBanner";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
-import { ForgeToaster } from "@/components/forge";
+import { ForgeToaster } from "@/components/forge/ui/Toast";
 import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { creditHubPersonaFromLayoutSegments } from "./creditHubPersonaFromSegments";
+import { ForgeCommandPaletteProvider } from "./ForgeCommandPaletteContext";
 import { ForgeCreditHubSidebar } from "./ForgeCreditHubSidebar";
 import { ForgeCreditHubTopbar } from "./ForgeCreditHubTopbar";
 
@@ -32,15 +33,17 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
           Saltar al contenido principal
         </a>
         <CHTenantGuard>
-          <div className="flex min-h-[calc(100vh-4rem)] flex-1">
-            <ForgeCreditHubSidebar />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <ForgeCreditHubTopbar />
-              <main id="main-content" className="min-h-0 flex-1">
-                {children}
-              </main>
+          <ForgeCommandPaletteProvider>
+            <div className="flex min-h-[calc(100vh-4rem)] flex-1">
+              <ForgeCreditHubSidebar />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <ForgeCreditHubTopbar />
+                <main id="main-content" className="min-h-0 flex-1">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
+          </ForgeCommandPaletteProvider>
         </CHTenantGuard>
         <ForgeToaster />
       </div>

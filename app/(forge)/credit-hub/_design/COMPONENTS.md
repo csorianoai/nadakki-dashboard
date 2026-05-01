@@ -35,8 +35,9 @@ The master prompt originally suggested a separate **`<DataTableMobileCard>`** co
 ### Navigation — Tabs, Breadcrumb, CommandPalette (`layout/Sidebar`, `layout/Topbar`)
 
 - **`Tabs` (`line`):** Active indicator **`border-forgeBrand-500`**; inactive baseline uses **`border-forgeInk-200`** (not a fully invisible underline) so the tab bar reads as a structured control strip.
-- **`CommandPalette`:** **`closeOnBackdropClick`** (default `true`) mirrors Modal/Drawer backdrop policy for audits that need a non-dismissible surface.
-- **`Topbar`:** No interactive chrome beyond the **`actions`** slot — compose **`Button`** / **`IconButton`** only (Group 2 sweep applies).
+- **`CommandPalette`:** **`closeOnBackdropClick`** (default `true`) mirrors Modal/Drawer backdrop policy for audits that need a non-dismissible surface. Supports **`groups`** (cmdk `Command.Group`), optional **controlled `search` / `onSearchChange`** for dynamic first-class rows (e.g. “search applications for …”), custom **`emptyMessage`** when filtering yields no commands, and **`keyboardShortcut={false}`** when **`ForgeCommandPaletteProvider`** owns **Ctrl+K / ⌘K** globally.
+- **`ForgeCommandPaletteProvider`** (`components/forge/layout/ForgeCommandPaletteContext.tsx`): mounted inside **`ForgeCreditHubAppShell`**; registers **Ctrl+K / ⌘K**, restores focus after close, and renders **`ForgeCreditHubCommandPalette`** (persona-aware navigation, table-density deep links to **`/credit-hub/{persona}/applications?density=`**, AML/compliance shortcut, **“Switch institution (coming soon)”** dormant row, keyboard-shortcuts **Modal**). **`ForgeCreditHubTopbar`** adds a search **`IconButton`** calling **`useForgeCommandPalette().toggle`**. Labels use **`utils/forge-palette-copy.ts`** (EN/ES). **Telemetry:** none in repo — skipped.
+- **`Topbar`:** **`actions`** slot carries global chrome (e.g. command palette) — compose **`Button`** / **`IconButton`** only (Group 2 sweep applies).
 
 ### Overlays — Modal, Drawer, Toast
 

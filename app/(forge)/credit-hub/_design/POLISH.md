@@ -8,7 +8,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | **green** | Groups **1–5** **green** — see Group 5 below (Item 3–5 on this table are separate Phase 5 items) |
 | **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | **green** | Sonner — see **Item 3** below; locale via `utils/forge-toast-copy.ts` + `forgeToastLangFromLocale` |
 | **4** | Empty states sweep (bank + dealer zero-data surfaces) | **green** | `utils/forge-empty-copy.ts` + `EmptyState` `icon` / `tone` — see **Item 4** below |
-| **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | todo | cmdk |
+| **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | **green** | `ForgeCommandPaletteProvider` + `ForgeCreditHubCommandPalette` — see **Item 5** below |
 | **Tenant coupling** | Hardcoded tenant copy/colors/currency (Phase 6 prep) | todo | Log leaks here when found |
 
 ---
@@ -63,6 +63,24 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 **Preview:** `/credit-hub/preview` — “Cards, empty state, badges” demonstrates default + passive-in-card `EmptyState`; “Data table” includes empty row with icon + success-tone passive row.
 
 **Verification:** `npm run build` — passed; Lighthouse a11y `/credit-hub/preview` ≥ **0.95** (re-run per gate hygiene); axe CLI exit **0** (same SOP as Items 2–3).
+
+---
+
+## Item 5 — Command palette wiring (**GREEN**)
+
+**Mount:** **`ForgeCommandPaletteProvider`** wraps the main Credit Hub column inside **`ForgeCreditHubAppShell`** (with **`PersonaProvider`** above so **`usePersona()`** resolves). **`ForgeCreditHubCommandPalette`** is rendered by the provider (sibling to page content). **No telemetry** dependency in the repo — not added.
+
+| Area | Detail |
+|------|--------|
+| Global shortcut | **Ctrl+K / ⌘K** (single window listener in provider) |
+| Focus | Prior element restored on palette close |
+| Topbar | **`IconButton`** opens palette (`useForgeCommandPalette`) |
+| Groups | Search (dynamic), Global, Bank (persona `bank`), Dealer (persona `dealer`) |
+| Search / APP- | Non-empty query adds “search applications”; `APP-*` pattern adds “go to application” row |
+| Density | Commands deep-link to **`?density=`** on the persona applications list |
+| Shortcuts | Modal documents Esc / Tab / Enter / palette shortcut (`forge-palette-copy` + inline `<kbd>`) |
+
+**Verification:** `npm run build` — passed; Lighthouse + axe on **`/credit-hub/preview`** per gate hygiene (≥ **0.95** / exit **0**).
 
 ---
 

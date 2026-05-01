@@ -4,13 +4,11 @@ import { useMemo, useState, type ReactNode } from "react";
 import {
   Bell,
   CheckCircle2,
-  FileText,
   Home,
   Inbox,
   LayoutDashboard,
   Plus,
   Settings,
-  Shield,
   Sparkles,
   User,
 } from "lucide-react";
@@ -22,8 +20,6 @@ import {
   Button,
   Card,
   Checkbox,
-  CommandPalette,
-  type CommandPaletteAction,
   ConsentCapture,
   DataTable,
   type DataTableDensity,
@@ -48,6 +44,7 @@ import {
   Textarea,
   toast,
   Topbar,
+  useForgeCommandPalette,
 } from "@/components/forge";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -62,11 +59,11 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 type DemoRow = { id: string; applicant: string; channel: string };
 
 export default function ForgePreviewPage() {
+  const { toggle: openCommandPalette } = useForgeCommandPalette();
   const [tabLine, setTabLine] = useState("one");
   const [tabPills, setTabPills] = useState("a");
   const [modalOpen, setModalOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
   const [sw, setSw] = useState(false);
   const [cb, setCb] = useState(true);
   const [radio, setRadio] = useState("b");
@@ -108,30 +105,9 @@ export default function ForgePreviewPage() {
     [tableSort]
   );
 
-  const paletteActions: CommandPaletteAction[] = useMemo(
-    () => [
-      {
-        id: "open-apps",
-        label: "Open applications",
-        keywords: ["list", "apps"],
-        icon: <FileText className="h-4 w-4" aria-hidden />,
-        onSelect: () => toast.message("Palette action", { description: "Open applications" }),
-      },
-      {
-        id: "compliance",
-        label: "Go to compliance",
-        keywords: ["audit", "kyc"],
-        icon: <Shield className="h-4 w-4" aria-hidden />,
-        onSelect: () => toast.message("Palette action", { description: "Compliance" }),
-      },
-    ],
-    []
-  );
-
   return (
     <div className="min-h-screen bg-forgeSurface-page pb-24 text-forgeInk-800">
       <ForgeToaster />
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} actions={paletteActions} />
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -665,7 +641,7 @@ export default function ForgePreviewPage() {
             <Button variant="secondary" onClick={() => setDrawerOpen(true)}>
               Open drawer
             </Button>
-            <Button variant="secondary" onClick={() => setPaletteOpen(true)}>
+            <Button variant="secondary" onClick={() => openCommandPalette()}>
               Open command palette
             </Button>
             <Button variant="primary" onClick={() => toast.message("Heads up", { description: "Details in timeline." })}>
