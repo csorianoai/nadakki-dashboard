@@ -42,7 +42,7 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   OTRO: "Otro",
 };
 
-function documentTypeSelectOptions(config: TenantBankingConfig): Array<[string, string]> {
+export function documentTypeSelectOptions(config: TenantBankingConfig): Array<[string, string]> {
   const codes = [config.document_types.primary_id, ...config.document_types.alternative_ids];
   const seen = new Set<string>();
   return codes
@@ -190,7 +190,7 @@ export interface ApplicationFormData {
   consent_dealer_otp_code: string;
 }
 
-const initialData: ApplicationFormData = {
+export const initialApplicationFormData: ApplicationFormData = {
   applicant_full_name: "",
   applicant_document_type: "",
   applicant_document_other_type: "",
@@ -420,7 +420,7 @@ function ageFromInput(value: string): number | null {
   return date ? calculateAge(date) : null;
 }
 
-type WizardStepValidationConfig = {
+export type WizardStepValidationConfig = {
   min_age: number;
   max_age: number;
   garante_required: boolean;
@@ -429,7 +429,7 @@ type WizardStepValidationConfig = {
   consent_application_id_ready: boolean;
 };
 
-function getGaranteInlineErrors(
+export function getGaranteInlineErrors(
   data: ApplicationFormData,
   config: Pick<WizardStepValidationConfig, "min_age" | "garante_required" | "default_document_type">,
   v: CreditHubTranslations["validation"]
@@ -461,7 +461,7 @@ function getGaranteInlineErrors(
   return errors;
 }
 
-function stepIsValid(
+export function stepIsValid(
   step: number,
   data: ApplicationFormData,
   config: WizardStepValidationConfig = {
@@ -619,7 +619,7 @@ export function WizardContainer() {
   const defaultDocType = tenantConfig.document_types.primary_id ?? "CEDULA";
   const administrativeDivisions = useAdministrativeDivisions(tenantConfig.country_code);
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<ApplicationFormData>(initialData);
+  const [formData, setFormData] = useState<ApplicationFormData>(initialApplicationFormData);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const createMutation = useCreateCreditApplication();

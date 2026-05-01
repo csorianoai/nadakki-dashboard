@@ -21,7 +21,7 @@ export interface DataTableProps<Row> {
 export function DataTable<Row>({ columns, rows, getRowId, emptyLabel = "No rows", className }: DataTableProps<Row>) {
   return (
     <div className={cn("overflow-x-auto rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card", className)}>
-      <table className="w-full min-w-[480px] border-collapse text-left text-forge-sm">
+      <table className="w-full min-w-0 border-collapse text-left text-forge-sm">
         <thead>
           <tr className="border-b border-forgeInk-200 bg-forgeSurface-sunken">
             {columns.map((col) => (
