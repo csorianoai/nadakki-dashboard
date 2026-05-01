@@ -35,6 +35,6 @@
 
 ### `DEFAULT_CREDIT_TENANT_ID` → Banco Piloto RD
 
-- **Status:** **Blocked** — see `BLOCKER_phase1.5.md`.
-- The UUID `550e8400-e29b-41d4-a716-446655440000` from the Phase 1.5 prompt has **no canonical occurrence** in `app/`, `components/`, `lib/`, `hooks/`, or `docs/` (it is the well-known RFC example nil UUID, not a repo-confirmed tenant). The repo’s documented pilot default remains `0a91ee98-2dbe-46d0-a43c-3fc2dbd42242` (`.env.example`, tests).
-- **Action:** Cesar to confirm the real Banco Piloto RD `tenant_id` before any constant swap.
+- **Status:** **Investigation complete** — see **`BLOCKER_phase1.5.md`** for cross-repo evidence.
+- **Findings:** `0a91ee98-2dbe-46d0-a43c-3fc2dbd42242` matches **Credicefi** in `nadakki-ai-suite/validation_output.txt` (`default_tenant` JSON). Banco Piloto RD for Credit is **`550e8400-e29b-41d4-a716-446655440099`** (`docs/credit/SECOND_TENANT_PILOT.md` + `config/credit/tenants/*.json`). The RFC nil UUID `…440000` is not used.
+- **Action:** Cesar chooses option **A / B / C** in the blocker doc before any constant change.

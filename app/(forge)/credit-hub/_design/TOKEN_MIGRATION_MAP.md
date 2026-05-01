@@ -178,7 +178,7 @@ Sorted by **legacy utility occurrence count** (from `legacy_utilities_raw.txt`).
 
 1. **Backwards-compat adapter** — `tailwind.config.js` legacy `forge-*` color entries now use `var(<v3.2>, var(<legacy portal>))` so **on `.forge-app`** legacy utilities match v3.2 semantic variables; **outside** `.forge-app`, legacy portal colors from `styles/forge-tokens.css` still apply. The `LEGACY ALIASES` comment marks this block for **Phase 7 removal** once classnames are migrated per Sections A–B.
 
-2. **`DEFAULT_CREDIT_TENANT_ID`** — **No UUID swap in this phase.** The proposed Banco Piloto value `550e8400-e29b-41d4-a716-446655440000` is **not** verified in-repo as a tenant id (see `BLOCKER_phase1.5.md`). The constant remains `0a91ee98-2dbe-46d0-a43c-3fc2dbd42242` with `@deprecated` JSDoc; `lib/credit-hub/hooks/useTenant.ts` unchanged.
+2. **`DEFAULT_CREDIT_TENANT_ID`** — Investigation complete; see **`BLOCKER_phase1.5.md`** (Pattern **D**, options **A/B/C**). **Canonical Credicefi** Credit UUID in repo + backend snapshot: **`0a91ee98-2dbe-46d0-a43c-3fc2dbd42242`**. **Canonical Banco Piloto RD** (Credit pilot): **`550e8400-e29b-41d4-a716-446655440099`** (not `…440000`). Constant **unchanged** until Cesar selects an option.
 
 3. **Dealer dark mode (v3.2)** — The `.forge-app [data-portal="dealer"]` override block in `_design/tokens.css` is **commented dormant** per Cesar 2026-05-01. Re-enable in one diff when Phase 4 approves dealer dark on v3.2 semantics. Documented under **Deferred decisions** in `TENANT_CONTEXT_EXTENSION.md`.
 
@@ -192,7 +192,7 @@ Sorted by **legacy utility occurrence count** (from `legacy_utilities_raw.txt`).
 | `TOKEN_MIGRATION_MAP.md` sections A–E | **Yes** |
 | `npm run build` | **Yes** — `exit_code: 0` (Next 16.2.4 webpack, 2026-05-01 agent run). |
 | Spot-check “identical computed color” | **Interpretation:** On routes wrapped by `.forge-app`, `bg-forge-primary` and `bg-forgeBrand-500` both resolve through `var(--forge-brand-500, …)` to the **same** computed sRGB when `--forge-brand-500` is defined. **Manual DevTools** comparison recommended on: (1) `/credit-hub/bank` — bank queue; (2) `/credit-hub/dealer` — dealer dashboard; (3) `/credit-hub/dealer/applications/new` — wizard shell. Automated before/after screenshots were not captured in this agent run. |
-| `DEFAULT_CREDIT_TENANT_ID` → Banco Piloto | **Blocked** — `BLOCKER_phase1.5.md` |
+| `DEFAULT_CREDIT_TENANT_ID` → Banco Piloto | **Awaiting decision** — see `BLOCKER_phase1.5.md` (evidence: `0a91ee98…` = Credicefi default; Piloto = `550e8400…0099`). |
 | Dealer dormant CSS | **Yes** — wrapped in comment block in `_design/tokens.css` |
 | Forbidden paths | **Untouched** — `app/legal/**`, `app/marketing/**`, `app/sic/**`, `vercel.json`, `next.config.js`, `contexts/TenantContext.tsx`, `lib/credit-hub/hooks/useTenant.ts` |
 
