@@ -13,6 +13,8 @@ import {
   type CreditDocument,
 } from "@/lib/credit-api";
 import { useTenant } from "@/contexts/TenantContext";
+import { toast } from "@/components/forge";
+import { forgeDocumentUploadToasts, forgeToastLangFromLocale } from "@/utils/forge-toast-copy";
 
 type DocGroup = {
   category: string;
@@ -119,6 +121,22 @@ const DOC_TYPE_DESCRIPTION: Record<string, string> = {
 const MAX_BYTES = 10 * 1024 * 1024;
 const EXT_RE = /\.(pdf|jpe?g|png|webp)$/i;
 
+function classifyDocumentUploadError(err: unknown, lang: "es" | "en"): string | undefined {
+  if (!(err instanceof CreditApiError)) return undefined;
+  const msg = err.message.toLowerCase();
+  const status = err.status;
+  if (status === 413 || msg.includes("too large") || msg.includes("demasiado")) {
+    return lang === "es" ? "Archivo demasiado grande." : "File too large.";
+  }
+  if (msg.includes("type") || msg.includes("formato") || msg.includes("mime") || status === 415) {
+    return lang === "es" ? "Tipo de archivo no permitido." : "File type not allowed.";
+  }
+  if (status === 0 || msg.includes("network") || msg.includes("fetch")) {
+    return lang === "es" ? "Error de red." : "Network error.";
+  }
+  return err.message || undefined;
+}
+
 export interface DocumentUploaderProps {
   applicationId: string;
   onUploadSuccess: (doc: CreditDocument) => void;
@@ -130,8 +148,10 @@ export function DocumentUploader({
   onUploadSuccess,
   categoryFilter,
 }: DocumentUploaderProps) {
-  const { tenantId: ctx } = useTenant();
+  const { tenantId: ctx, settings } = useTenant();
   const tenantId = (ctx ?? "").trim();
+  const toastLang = forgeToastLangFromLocale(settings.language);
+  const docToast = forgeDocumentUploadToasts(toastLang);
 
   const groups = useMemo(() => {
     if (!categoryFilter || categoryFilter === "OTRO") {
@@ -244,10 +264,13 @@ export function DocumentUploader({
       onFileChange(null);
       setDocType(flatOptions[0]?.value ?? "OTRO");
       onUploadSuccess(doc);
+      toast.success(docToast.uploaded, { duration: 3000 });
     } catch (e) {
       setError(
         e instanceof CreditApiError ? e.message : "Error al subir el archivo."
       );
+      const detail = classifyDocumentUploadError(e, toastLang);
+      toast.error(docToast.uploadFailed(detail), { duration: 6000 });
     } finally {
       clearInterval(step);
       setBusy(false);

@@ -6,10 +6,40 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 |------|-------------|--------|-------|
 | **1** | Dealer `/credit-hub/dealer/applications` list — Forge primitives, URL `q` / `status` / `density`, DataTable + density, PullToRefresh kept | **green** | Lighthouse a11y **1.0** — `lh-dealer-applications-list-a11y.json`; diagnosis `lh_error_shell_diagnosis.md` |
 | **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | **green** | Groups **1–5** **green** — see Group 5 below (Item 3–5 on this table are separate Phase 5 items) |
-| **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | todo | Sonner primitive |
+| **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | **green** | Sonner — see **Item 3** below; locale via `utils/forge-toast-copy.ts` + `forgeToastLangFromLocale` |
 | **4** | Empty states sweep (bank + dealer zero-data surfaces) | todo | Icons + CTAs per Appendix A |
 | **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | todo | cmdk |
 | **Tenant coupling** | Hardcoded tenant copy/colors/currency (Phase 6 prep) | todo | Log leaks here when found |
+
+---
+
+## Item 3 — Toast wiring (**GREEN**)
+
+**Locale:** Bank decision, dealer wizard (autosave + submit), and legacy document upload use **`utils/forge-toast-copy.ts`** with **`forgeToastLangFromLocale`**: `en-*` → English; `es-*` (and default) → Spanish. Forge screens use **`useTenantConfig().tenantConfig.locale`**; **`DocumentUploader`** uses **`useTenant().settings.language`**.
+
+**Toaster mounts:** **`ForgeCreditHubAppShell`** (`components/forge/layout/ForgeCreditHubAppShell.tsx`) — single host for `/credit-hub/*`. **`app/credit/layout.tsx`** — **`CreditForgeToaster`** for `/credit/*` (document upload) without per-page duplication.
+
+| Flow | Trigger | File (approx.) | Toast |
+|------|---------|------------------|--------|
+| 1 | `useBankDecision` success, decision `APROBADO` | `BankApplicationDetailView.tsx` — `submitDecision` | `success` 4s, approved copy + `formatToastApplicationId` |
+| 2 | success, `RECHAZADO` | same | `success` 4s, rejected copy |
+| 3 | `mutateAsync` catch | same + `BankDecisionPanel.tsx` — `onSubmit` | `error` 6s, save error + `err.message` when present |
+| 4 | 10s autosave success, first per session | `DealerWizardProvider.tsx` — interval | `info` 2s, subtle className; **`sessionStorage`** gate |
+| 5 | autosave `localStorage` throws | same | `warning` + **Reintentar** → `saveDraftToStorage()`; stable toast **`id`** |
+| 6 | create application success | `DealerWizardChrome.tsx` — `handlePrimary` | `success` 4s, then redirect |
+| 7 | `uploadDocument` success | `DocumentUploader.tsx` — `submit` | `success` 3s |
+| 8 | upload catch | same | `error` 6s + classified detail when possible |
+
+**Dealer autosave UX:** Pattern **(a)** — only the **first** successful autosave per session shows a toast; later saves are silent (`COMPONENTS.md`).
+
+**Verification:**
+
+- **`npm run build`** — passed (webpack) after Item 3.
+- **Lighthouse a11y** `/credit-hub/preview` — **`categories.accessibility.score`: `0.97`** (≥ 0.95); artifact: `app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y-item3.json`. (CLI may exit `1` on Windows after the run due to `chrome-launcher` `EPERM` on temp cleanup; JSON is still valid — see `COMPONENTS.md`.)
+- **axe-core CLI:** `npx @axe-core/cli http://localhost:<port>/credit-hub/preview --load-delay 2000 -q` — **exit `0`**.
+- **Manual smoke (representative):** bank approve/reject + error paths via Forge bank application UI or panel; dealer wizard: wait first autosave tick / force storage failure in devtools; document upload error path on `/credit/dealer/...` with invalid file or offline (as available).
+- **`prefers-reduced-motion`:** Toaster classNames include **`motion-reduce:*`** (Item 2 Group 5) — spot-check in DevTools rendering.
+- **Mobile (375×667):** toasts **`top-right`**; verify they do not cover the dealer wizard fixed footer primary actions during a toast.
 
 ---
 

@@ -5,7 +5,7 @@ import { useSelectedLayoutSegments } from "next/navigation";
 import { PersonaProvider } from "@/components/credit-hub/system/PersonaProvider";
 import { CHFeatureFlagBanner } from "@/components/credit-hub/system/CHFeatureFlagBanner";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
-import { ForgeToaster } from "@/components/credit-hub/system/ForgeToaster";
+import { ForgeToaster } from "@/components/forge";
 import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { creditHubPersonaFromLayoutSegments } from "./creditHubPersonaFromSegments";
 import { ForgeCreditHubSidebar } from "./ForgeCreditHubSidebar";

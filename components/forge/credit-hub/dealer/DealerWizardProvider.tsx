@@ -29,8 +29,12 @@ import {
   dealerWizardStepIndexFromPathname,
   dealerWizardStepSlugFromIndex,
 } from "./dealerWizardPaths";
+import { toast } from "@/components/forge";
+import { forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast-copy";
 
 const STORAGE_KEY = "forge-dealer-wizard-draft-v1";
+/** Session flag: show at most one subtle autosave success toast (institutional UX — silent thereafter). */
+const AUTOSAVE_FIRST_SUCCESS_TOAST_KEY = "forge-dealer-wizard-autosave-first-success-v1";
 
 function decodeWizardPreset(encoded: string): Record<string, unknown> | null {
   try {
@@ -132,7 +136,7 @@ export type DealerWizardContextValue = {
   canAdvance: boolean;
   goNext: () => void;
   goPrev: () => void;
-  saveDraftToStorage: () => void;
+  saveDraftToStorage: () => boolean;
   clearDraftStorage: () => void;
   submitApplication: () => Promise<{ application_id: string }>;
   isSubmitting: boolean;
@@ -180,6 +184,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   );
 
   const [formData, setFormData] = useState<ApplicationFormData>(initialApplicationFormData);
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
   const hydratedRef = useRef(false);
   const presetAppliedRef = useRef(false);
   const createMutation = useCreateCreditApplication();
@@ -210,17 +216,6 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     if (!tenantConfig.features_enabled.garante_required) return;
     setFormData((prev) => (prev.co_debtor_required === "yes" ? prev : { ...prev, co_debtor_required: "yes" }));
   }, [tenantConfig.features_enabled.garante_required]);
-
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-      } catch {
-        /* ignore */
-      }
-    }, 10_000);
-    return () => window.clearInterval(id);
-  }, [formData]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -370,21 +365,62 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(prev)));
   }, [router, stepIndex]);
 
-  const saveDraftToStorage = useCallback(() => {
+  const saveDraftToStorage = useCallback((): boolean => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formDataRef.current));
+      return true;
     } catch {
-      /* ignore */
+      return false;
     }
-  }, [formData]);
+  }, []);
 
   const clearDraftStorage = useCallback(() => {
     try {
       localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(AUTOSAVE_FIRST_SUCCESS_TOAST_KEY);
     } catch {
       /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      let ok = false;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(formDataRef.current));
+        ok = true;
+      } catch {
+        ok = false;
+      }
+      const lang = forgeToastLangFromLocale(tenantConfig.locale);
+      const copy = forgeWizardToasts(lang);
+      if (ok) {
+        if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(AUTOSAVE_FIRST_SUCCESS_TOAST_KEY)) {
+          sessionStorage.setItem(AUTOSAVE_FIRST_SUCCESS_TOAST_KEY, "1");
+          toast.info(copy.draftSaved, {
+            duration: 2000,
+            className:
+              "border-forgeInk-100/80 bg-forgeSurface-sunken/95 text-forgeInk-600 shadow-forge-sm opacity-95 saturate-75",
+          });
+        }
+      } else {
+        toast.warning(copy.draftSaveFailed, {
+          id: "forge-dealer-autosave-error",
+          duration: 60_000,
+          action: {
+            label: copy.retry,
+            onClick: () => {
+              const saved = saveDraftToStorage();
+              if (saved) {
+                toast.success(copy.draftSaved, { duration: 2000 });
+              }
+            },
+          },
+        });
+      }
+    }, 10_000);
+    return () => window.clearInterval(id);
+  }, [tenantConfig.locale, saveDraftToStorage]);
 
   const submitApplication = useCallback(async () => {
     if (!stepIsValid(5, formData, validationConfig, t)) {

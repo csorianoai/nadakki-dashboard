@@ -42,6 +42,9 @@ The master prompt originally suggested a separate **`<DataTableMobileCard>`** co
 
 - **`Modal` / `Drawer`:** **`closeOnBackdropClick`** (default `true`) — set `false` for non-dismissible flows (still use **`Esc`** / explicit close affordances). **`Modal`** uses native **`<dialog>`** light-dismiss when clicking the dialog element itself (backdrop hit target).
 - **`ForgeToaster` (Sonner):** Toast surface includes **`motion-reduce:transition-none`** / **`motion-reduce:animate-none`** so auto-dismiss does not rely on motion for comprehension.
+- **Mount policy (Item 3):** **`ForgeToaster`** is mounted **once** in **`ForgeCreditHubAppShell`** (all `/credit-hub/*` Forge routes). Legacy **`/credit/*`** routes that still use **`DocumentUploader`** mount a **separate** **`CreditForgeToaster`** in **`app/credit/layout.tsx`** so Sonner is available without duplicating per page. Do **not** add another `<ForgeToaster />` on individual pages under those shells.
+- **Sonner options:** **`position="top-right"`**, **`visibleToasts={3}`**, per-call **`duration`** from callers (`toast.success(msg, { duration: … })`).
+- **Dealer wizard autosave toasts:** Background **localStorage** autosave (10s) shows **at most one** subtle **info** success toast **per browser session** (`sessionStorage` gate); subsequent successful saves are **silent** (institutional preference for silent success over repeated affirmation). Autosave **failure** uses **`toast.warning`** with a **“Reintentar”** / **“Retry”** action that runs a manual save. Copy + EN/ES split lives in **`utils/forge-toast-copy.ts`** (`forgeWizardToasts`), keyed off **`useTenantConfig().tenantConfig.locale`** (Forge) or **`TenantSettings.language`** (legacy uploader) via **`forgeToastLangFromLocale`**. Bank decision + legacy document upload strings use the same helper module.
 
 ## Preview playground
 

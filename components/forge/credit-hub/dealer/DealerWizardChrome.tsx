@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Modal } from "@/components/forge";
+import { Button, Modal, toast } from "@/components/forge";
 import { cn } from "@/lib/utils";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { formatToastApplicationId, forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast-copy";
 import { DEALER_WIZARD_STEP_PATHS, dealerWizardStepHref } from "./dealerWizardPaths";
 import { useDealerWizard } from "./DealerWizardProvider";
 
@@ -12,6 +14,7 @@ const STEP_LABELS = ["1 Solicitante", "2 Co-firmante", "3 Vehículo", "4 Documen
 
 export function DealerWizardChrome({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { tenantConfig } = useTenantConfig();
   const { stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError } = useDealerWizard();
   const [exitOpen, setExitOpen] = useState(false);
 
@@ -28,6 +31,9 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
     }
     try {
       const r = await submitApplication();
+      const lang = forgeToastLangFromLocale(tenantConfig.locale);
+      const copy = forgeWizardToasts(lang);
+      toast.success(copy.requestSubmitted(formatToastApplicationId(r.application_id)), { duration: 4000 });
       router.push(`/credit-hub/dealer/applications/new/complete?application_id=${encodeURIComponent(r.application_id)}`);
     } catch {
       /* error surfaced via submitError */

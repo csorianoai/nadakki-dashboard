@@ -6,7 +6,6 @@ import { FileText, Shield } from "lucide-react";
 import { CreditAnalysisPanel } from "@/components/credit-hub/dealer/analysis/CreditAnalysisPanel";
 import { ScoreVisual } from "@/components/credit-hub/dealer/analysis/ScoreVisual";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
-import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import {
   AuditTimeline,
   type AuditTimelineEntry,
@@ -21,10 +20,13 @@ import {
   StatusPill,
   Tabs,
   Textarea,
+  toast,
   type StatusPillTone,
 } from "@/components/forge";
 import { useBankCounterOffer, useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { forgeBankDecisionToasts, forgeToastLangFromLocale, formatToastApplicationId } from "@/utils/forge-toast-copy";
 import type {
   BankAuditTrail,
   BankDecisionRequest,
@@ -134,6 +136,8 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
     }));
   }, []);
 
+  const { tenantConfig } = useTenantConfig();
+
   const submitDecision = useCallback(async () => {
     if (!decisionModal || !modalComment.trim()) return;
     const body: BankDecisionRequest = {
@@ -142,11 +146,33 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
       analyst_id: "bank-analyst-demo",
       terms,
     };
-    await decisionMutation.mutateAsync(body);
-    forgeToast.success(t.toasts.decision_confirmed);
-    setDecisionModal(null);
-    setModalComment("");
-  }, [decisionModal, modalComment, terms, decisionMutation, t.toasts.decision_confirmed]);
+    const lang = forgeToastLangFromLocale(tenantConfig.locale);
+    const copy = forgeBankDecisionToasts(lang);
+    const displayId = formatToastApplicationId(application.application_id);
+    try {
+      await decisionMutation.mutateAsync(body);
+      if (body.decision === "APROBADO") {
+        toast.success(copy.applicationApproved(displayId), { duration: 4000 });
+      } else if (body.decision === "RECHAZADO") {
+        toast.success(copy.applicationRejected(displayId), { duration: 4000 });
+      } else {
+        toast.success(t.toasts.decision_confirmed, { duration: 4000 });
+      }
+      setDecisionModal(null);
+      setModalComment("");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : undefined;
+      toast.error(copy.decisionSaveError(detail), { duration: 6000 });
+    }
+  }, [
+    application.application_id,
+    decisionModal,
+    modalComment,
+    terms,
+    decisionMutation,
+    tenantConfig.locale,
+    t.toasts.decision_confirmed,
+  ]);
 
   const documents = useMemo(() => {
     if (Array.isArray(rawDocs)) {

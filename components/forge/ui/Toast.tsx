@@ -7,6 +7,7 @@ export function ForgeToaster({ className }: { className?: string }) {
   return (
     <SonnerToaster
       position="top-right"
+      visibleToasts={3}
       closeButton
       toastOptions={{
         classNames: {
