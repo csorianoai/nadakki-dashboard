@@ -43,3 +43,24 @@ Next.js treats leading-underscore segments as **private folders**, so the playgr
 **Acceptance (Phase 8):** Phase 8 acceptance criteria will include **removing segment-based persona** in favor of tenant-driven (or role-driven) resolution, with regression checks on bank/dealer nav and `data-portal` styling.
 
 **Interim risk acceptance:** URL ↔ persona alignment matches current folder layout (`bank/*`, `dealer/*`); no security boundary relies on persona today (server enforces `tenant_id` + JWT role).
+
+## Lighthouse accessibility (Phase 4 gate)
+
+**Canonical verification:** run against a **fresh** production build so HTML matches `app/layout.tsx` (viewport, lang) and client chunks are current:
+
+```bash
+npx next build --webpack
+npx next start -p 3010
+```
+
+Then audit, for example:
+
+```bash
+npx lighthouse "http://localhost:3010/credit-hub/bank" --only-categories=accessibility --output=json --output-path="app/(forge)/credit-hub/_design/_inventory/lh-bank-dashboard-a11y.json"
+```
+
+**Why not only `next dev`:** a long-lived dev server can serve **stale** inlined viewport metadata after a root layout change; if Lighthouse still flags `meta-viewport` or misses heading fixes, restart dev or use `next start` as above.
+
+**Forge-specific fixes in tree:** root viewport allows zoom (`maximumScale: 5`); Credit Hub shell uses a **`<main id="main-content">`** landmark; sidebar and inline table actions meet **target-size**; `EmptyState` supports **`titleLevel`** so empty bands under an `h1` can use an **`h2`** title (heading order).
+
+**Artifacts:** decoded final screenshots and full JSON live under `app/(forge)/credit-hub/_design/_inventory/` (see `INVESTIGATION_phase4_chunk1_gates.md`).

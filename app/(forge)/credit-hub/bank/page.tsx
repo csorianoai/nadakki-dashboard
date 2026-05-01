@@ -117,7 +117,7 @@ export default function BankDashboardPage() {
         cell: (row: BankQueueItem) => (
           <Link
             href={`/credit-hub/bank/applications/${row.application_id}`}
-            className="text-forge-sm font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+            className="inline-flex min-h-12 min-w-[44px] items-center text-forge-sm font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
           >
             Revisar <ArrowRight className="ml-1 inline h-3 w-3" aria-hidden />
           </Link>
@@ -209,9 +209,9 @@ export default function BankDashboardPage() {
             <Skeleton className="h-12 w-full rounded-forge-md" />
           </div>
         ) : queueQuery.error ? (
-          <EmptyState title="No se pudo cargar la bandeja" description="Reintente en unos momentos o abra la bandeja completa." />
+          <EmptyState titleLevel={2} title="No se pudo cargar la bandeja" description="Reintente en unos momentos o abra la bandeja completa." />
         ) : filtered.length === 0 ? (
-          <EmptyState title="Sin solicitudes en esta vista" description="Ajuste el filtro o abra la bandeja completa." />
+          <EmptyState titleLevel={2} title="Sin solicitudes en esta vista" description="Ajuste el filtro o abra la bandeja completa." />
         ) : (
           <DataTable<BankQueueItem>
             getRowId={(r) => r.application_id}

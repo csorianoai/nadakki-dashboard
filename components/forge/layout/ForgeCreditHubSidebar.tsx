@@ -66,7 +66,7 @@ export function ForgeCreditHubSidebar() {
               key={item.id}
               href={item.href}
               className={cn(
-                "flex items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
+                "flex min-h-12 min-w-[44px] items-center gap-2 rounded-forge-sm px-3 py-3 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
                 active ? "bg-forgeSurface-sunken text-forgeBrand-700" : "text-forgeInk-700 hover:bg-forgeSurface-sunken hover:text-forgeInk-900"
               )}
@@ -78,10 +78,10 @@ export function ForgeCreditHubSidebar() {
           );
         })}
       </nav>
-      <div className="border-t border-forgeInk-100 p-3">
+      <div className="border-t border-forgeInk-100 px-3 pb-3 pt-5">
         <Link
           href="/credit-hub/preview"
-          className="text-forge-xs font-medium text-forgeInk-500 hover:text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+          className="flex min-h-12 w-full min-w-[44px] items-center rounded-forge-sm px-2 py-3 text-forge-xs font-medium text-forgeInk-500 hover:bg-forgeSurface-sunken hover:text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
         >
           UI preview
         </Link>

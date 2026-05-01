@@ -81,12 +81,14 @@ export default function BankApplicationsQueuePage() {
       {
         id: "select",
         header: (
-          <Checkbox
-            label=""
-            aria-label="Seleccionar todas las solicitudes visibles"
+          <span className="inline-flex min-h-12 items-center py-1">
+            <Checkbox
+              label=""
+              aria-label="Seleccionar todas las solicitudes visibles"
             checked={filtered.length > 0 && selected.length === filtered.length}
             onChange={(e) => setSelected(e.target.checked ? filtered.map((item) => item.application_id) : [])}
           />
+          </span>
         ),
         className: "w-12",
         cell: (row: BankQueueItem) => (
@@ -144,7 +146,7 @@ export default function BankApplicationsQueuePage() {
         cell: (row: BankQueueItem) => (
           <Link
             href={`/credit-hub/bank/applications/${row.application_id}`}
-            className="text-forge-sm font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+            className="inline-flex min-h-12 min-w-[44px] items-center text-forge-sm font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
           >
             Revisar <ArrowRight className="ml-1 inline h-3 w-3" aria-hidden />
           </Link>
@@ -195,9 +197,9 @@ export default function BankApplicationsQueuePage() {
           <Skeleton className="h-12 w-full rounded-forge-md" />
         </div>
       ) : queueQuery.error ? (
-        <EmptyState title="No se pudo cargar la bandeja bancaria" description="Reintente en unos momentos." />
+        <EmptyState titleLevel={2} title="No se pudo cargar la bandeja bancaria" description="Reintente en unos momentos." />
       ) : filtered.length === 0 ? (
-        <EmptyState title="No hay solicitudes para este filtro" description="Ajuste la búsqueda o espere nuevas entradas." />
+        <EmptyState titleLevel={2} title="No hay solicitudes para este filtro" description="Ajuste la búsqueda o espere nuevas entradas." />
       ) : (
         <DataTable<BankQueueItem> getRowId={(r) => r.application_id} rows={filtered} columns={columns} emptyLabel="Sin filas" />
       )}
@@ -224,6 +226,7 @@ export default function BankApplicationsQueuePage() {
               <Button
                 type="button"
                 variant="primary"
+                className="min-h-12"
                 loading={bulkMutation.isPending}
                 disabled={!justification.trim()}
                 onClick={() => void runBulk()}
