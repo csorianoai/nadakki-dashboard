@@ -4,12 +4,6 @@ import type { NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  if (path === "/credit-hub/_design/preview") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/credit-hub/preview";
-    return NextResponse.rewrite(url);
-  }
-
   const redirects: Record<string, string> = {
     "/google-ads": "/advertising/google-ads",
     "/meta-ads": "/advertising/meta-ads",
@@ -30,7 +24,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/credit-hub/_design/preview",
     "/google-ads/:path*",
     "/meta-ads/:path*",
     "/linkedin-ads/:path*",

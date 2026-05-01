@@ -134,7 +134,7 @@ export default function ForgePreviewPage() {
         <Breadcrumb
           items={[
             { label: "Credit Hub", href: "/credit-hub" },
-            { label: "Design", href: "/credit-hub/_design/preview" },
+            { label: "Design", href: "/credit-hub/preview" },
             { label: "Forge preview" },
           ]}
         />
