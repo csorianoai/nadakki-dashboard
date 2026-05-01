@@ -24,7 +24,13 @@ export function RadioGroup({ name, label, options, value, onChange, layout = "st
       {label ? <legend className="text-forge-sm font-medium text-forgeInk-700">{label}</legend> : null}
       <div className={cn("flex gap-4", layout === "inline" ? "flex-row flex-wrap" : "flex-col")}>
         {options.map((o) => (
-          <label key={o.value} className="inline-flex cursor-pointer items-center gap-2 text-forge-sm text-forgeInk-800">
+          <label
+            key={o.value}
+            className={cn(
+              "inline-flex items-center gap-2 text-forge-sm",
+              o.disabled ? "cursor-not-allowed text-forgeInk-400" : "cursor-pointer text-forgeInk-800 hover:text-forgeInk-900"
+            )}
+          >
             <input
               type="radio"
               name={name}
@@ -32,7 +38,7 @@ export function RadioGroup({ name, label, options, value, onChange, layout = "st
               checked={value === o.value}
               disabled={o.disabled}
               onChange={() => onChange?.(o.value)}
-              className="h-4 w-4 border-forgeInk-300 text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+              className="h-4 w-4 border-forgeInk-300 text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 disabled:cursor-not-allowed disabled:border-forgeInk-200 disabled:bg-forgeInk-100 disabled:text-forgeInk-400"
             />
             <span>{o.label}</span>
           </label>

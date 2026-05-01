@@ -1,6 +1,7 @@
 "use client";
 
 import type { TextareaHTMLAttributes } from "react";
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -10,13 +11,31 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   maxLength?: number;
 }
 
-export function Textarea({ label, helper, error, maxLength, className, id, value, defaultValue, ...props }: TextareaProps) {
-  const tid = id ?? props.name;
+export function Textarea({
+  label,
+  helper,
+  error,
+  maxLength,
+  className,
+  id,
+  value,
+  defaultValue,
+  disabled,
+  ...props
+}: TextareaProps) {
+  const autoId = useId();
+  const tid = id ?? props.name ?? autoId;
   const len = typeof value === "string" ? value.length : typeof defaultValue === "string" ? defaultValue.length : undefined;
   return (
     <div className="flex w-full flex-col gap-1.5">
       {label ? (
-        <label htmlFor={tid} className="text-forge-sm font-medium text-forgeInk-700">
+        <label
+          htmlFor={tid}
+          className={cn(
+            "text-forge-sm font-medium",
+            disabled ? "cursor-not-allowed text-forgeInk-400" : "text-forgeInk-700"
+          )}
+        >
           {label}
         </label>
       ) : null}
@@ -25,9 +44,13 @@ export function Textarea({ label, helper, error, maxLength, className, id, value
         maxLength={maxLength}
         value={value}
         defaultValue={defaultValue}
+        disabled={disabled}
         className={cn(
-          "min-h-[96px] w-full resize-y rounded-forge-sm border bg-forgeSurface-card px-3 py-2 text-forge-sm text-forgeInk-800 outline-none transition-colors duration-[var(--forge-duration-fast)] placeholder:text-forgeInk-400 focus-visible:border-forgeBrand-500 focus-visible:ring-2 focus-visible:ring-forgeBrand-500 focus-visible:ring-offset-2",
+          "min-h-[96px] w-full resize-y rounded-forge-sm border bg-forgeSurface-card px-3 py-2 text-forge-sm outline-none transition-[border-color,background-color] duration-[var(--forge-duration-fast)] ease-out placeholder:text-forgeInk-400 focus-visible:border-forgeBrand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
           error ? "border-forgeDanger-500" : "border-forgeInk-200",
+          !error && !disabled && "hover:border-forgeInk-300 hover:bg-forgeSurface-sunken/50",
+          disabled && "cursor-not-allowed border-forgeInk-100 bg-forgeInk-50 text-forgeInk-400",
+          !disabled && "text-forgeInk-800",
           className
         )}
         aria-invalid={Boolean(error)}

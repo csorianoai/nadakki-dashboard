@@ -21,7 +21,7 @@ function mergeRefs<T>(...refs: Array<React.Ref<T> | null | undefined>) {
 }
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
-  { label, className, indeterminate, ...props },
+  { label, className, indeterminate, disabled, ...props },
   ref
 ) {
   const innerRef = useRef<HTMLInputElement>(null);
@@ -30,11 +30,18 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
   }, [indeterminate]);
 
   return (
-    <label className={cn("inline-flex cursor-pointer items-center gap-2 text-forge-sm text-forgeInk-800", className)}>
+    <label
+      className={cn(
+        "inline-flex items-center gap-2 text-forge-sm",
+        disabled ? "cursor-not-allowed text-forgeInk-400" : "cursor-pointer text-forgeInk-800 hover:text-forgeInk-900",
+        className
+      )}
+    >
       <input
         ref={mergeRefs(ref, innerRef)}
         type="checkbox"
-        className="h-4 w-4 rounded-forge-sm border-forgeInk-300 text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+        disabled={disabled}
+        className="h-4 w-4 rounded-forge-sm border-forgeInk-300 text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 disabled:cursor-not-allowed disabled:border-forgeInk-200 disabled:bg-forgeInk-100 disabled:text-forgeInk-400"
         {...props}
       />
       {label ? <span>{label}</span> : null}

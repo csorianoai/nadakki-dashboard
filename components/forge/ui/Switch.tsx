@@ -15,8 +15,8 @@ export function Switch({ checked, onCheckedChange, label, className, id, disable
   return (
     <label
       className={cn(
-        "inline-flex cursor-pointer items-center gap-2",
-        disabled && "cursor-not-allowed opacity-50",
+        "inline-flex items-center gap-2",
+        disabled ? "cursor-not-allowed" : "cursor-pointer",
         className
       )}
     >
@@ -28,19 +28,22 @@ export function Switch({ checked, onCheckedChange, label, className, id, disable
         disabled={disabled}
         onClick={() => onCheckedChange(!checked)}
         className={cn(
-          "relative h-6 w-10 shrink-0 rounded-forge-pill border border-forgeInk-200 transition-colors duration-[var(--forge-duration-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-          checked ? "bg-forgeBrand-500" : "bg-forgeSurface-sunken"
+          "relative h-6 w-10 shrink-0 rounded-forge-pill border transition-[border-color,background-color] duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
+          checked ? "border-forgeBrand-600 bg-forgeBrand-500" : "border-forgeInk-200 bg-forgeSurface-sunken",
+          !disabled && "hover:border-forgeInk-300",
+          disabled && "cursor-not-allowed border-forgeInk-100 bg-forgeInk-100"
         )}
         {...props}
       >
         <span
           className={cn(
             "absolute top-0.5 h-4 w-4 rounded-forge-pill bg-forgeSurface-card shadow-forge-xs transition-transform duration-[var(--forge-duration-fast)] ease-out",
-            checked ? "translate-x-4" : "translate-x-0.5"
+            checked ? "translate-x-4" : "translate-x-0.5",
+            disabled && "bg-forgeInk-50 shadow-none"
           )}
         />
       </button>
-      <span className="text-forge-sm text-forgeInk-800">{label}</span>
+      <span className={cn("text-forge-sm", disabled ? "text-forgeInk-400" : "text-forgeInk-800")}>{label}</span>
     </label>
   );
 }

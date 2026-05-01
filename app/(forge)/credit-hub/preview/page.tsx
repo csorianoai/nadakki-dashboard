@@ -220,35 +220,80 @@ export default function ForgePreviewPage() {
         </Section>
 
         <Section title="Form controls">
-          <div className="grid max-w-xl gap-6">
-            <Input name="legal-name" label="Legal name" placeholder="Ada Lovelace" />
-            <Textarea name="preview-notes" label="Notes" placeholder="Internal notes…" rows={3} />
-            <Select
-              name="currency"
-              label="Currency"
-              value={select}
-              onChange={(e) => setSelect(e.target.value)}
-              options={[
-                { value: "usd", label: "USD" },
-                { value: "eur", label: "EUR" },
-              ]}
-            />
-            <MoneyInput label="Loan amount" value={money} onValueChange={setMoney} locale="en-US" currency="USD" hint="Major units" />
-            <DateInput label="Closing date" value={date} onValueChange={setDate} locale="en-US" hint="ISO field with localized preview" />
-            <Checkbox label="Agree to hard pull" checked={cb} onChange={(e) => setCb(e.target.checked)} />
-            <RadioGroup
-              name="rg-preview"
-              label="Channel"
-              layout="inline"
-              value={radio}
-              onChange={setRadio}
-              options={[
-                { value: "a", label: "Branch" },
-                { value: "b", label: "Online" },
-                { value: "c", label: "Partner", disabled: true },
-              ]}
-            />
-            <Switch checked={sw} onCheckedChange={setSw} label="Desktop notifications" />
+          <div className="grid gap-10 lg:grid-cols-2">
+            <div className="max-w-xl space-y-6">
+              <h3 className="text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Default</h3>
+              <Input name="legal-name" label="Legal name" placeholder="Ada Lovelace" />
+              <Textarea name="preview-notes" label="Notes" placeholder="Internal notes…" rows={3} />
+              <Select
+                name="currency"
+                label="Currency"
+                value={select}
+                onChange={(e) => setSelect(e.target.value)}
+                options={[
+                  { value: "usd", label: "USD" },
+                  { value: "eur", label: "EUR" },
+                ]}
+              />
+              <MoneyInput label="Loan amount" value={money} onValueChange={setMoney} locale="en-US" currency="USD" hint="Major units" />
+              <DateInput label="Closing date" value={date} onValueChange={setDate} locale="en-US" hint="ISO field with localized preview" />
+              <Checkbox label="Agree to hard pull" checked={cb} onChange={(e) => setCb(e.target.checked)} />
+              <RadioGroup
+                name="rg-preview"
+                label="Channel"
+                layout="inline"
+                value={radio}
+                onChange={setRadio}
+                options={[
+                  { value: "a", label: "Branch" },
+                  { value: "b", label: "Online" },
+                  { value: "c", label: "Partner", disabled: true },
+                ]}
+              />
+              <Switch checked={sw} onCheckedChange={setSw} label="Desktop notifications" />
+            </div>
+            <div className="max-w-xl space-y-6">
+              <h3 className="text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Disabled &amp; error</h3>
+              <Input
+                name="preview-legal-err"
+                label="Client name"
+                defaultValue="A"
+                error="Enter at least two characters."
+              />
+              <Input name="preview-legal-dis" label="Locked field" defaultValue="Read-only value" disabled />
+              <Textarea name="preview-notes-err" label="Reason" defaultValue="" error="A reason is required for this action." rows={2} />
+              <Textarea name="preview-notes-dis" label="Archived notes" defaultValue="Cannot edit in this state." disabled rows={2} />
+              <Select
+                name="currency-dis"
+                label="Currency (locked)"
+                value="usd"
+                disabled
+                onChange={() => {}}
+                options={[
+                  { value: "usd", label: "USD" },
+                  { value: "eur", label: "EUR" },
+                ]}
+              />
+              <MoneyInput
+                label="Amount over limit"
+                value={money}
+                onValueChange={setMoney}
+                locale="en-US"
+                currency="USD"
+                error="Requested amount exceeds policy maximum."
+              />
+              <MoneyInput label="Prior balance" value={0} onValueChange={() => {}} locale="en-US" currency="USD" disabled hint="Synced from core" />
+              <DateInput
+                label="Funding date"
+                value={date}
+                onValueChange={setDate}
+                locale="en-US"
+                error="Date must fall within the current disclosure window."
+              />
+              <DateInput label="Booked on" value="2026-01-15" onValueChange={() => {}} locale="en-US" disabled />
+              <Checkbox label="Immutable consent flag" checked disabled onChange={() => {}} />
+              <Switch checked={false} onCheckedChange={() => {}} label="Tenant-locked feature" disabled />
+            </div>
           </div>
         </Section>
 

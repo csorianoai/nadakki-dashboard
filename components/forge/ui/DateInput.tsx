@@ -27,7 +27,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={inputId} className="text-forge-sm font-medium text-forgeInk-700">
+      <label htmlFor={inputId} className={cn("text-forge-sm font-medium", disabled ? "text-forgeInk-400" : "text-forgeInk-700")}>
         {label}
       </label>
       <input
@@ -40,9 +40,11 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
         aria-describedby={describedBy}
         aria-invalid={Boolean(error)}
         className={cn(
-          "w-full rounded-forge-sm border bg-forgeSurface-card px-3 py-2 text-forge-sm text-forgeInk-800 shadow-forge-xs",
-          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-          error ? "border-forgeDanger-500" : "border-forgeInk-200"
+          "w-full rounded-forge-sm border bg-forgeSurface-card px-3 py-2 text-forge-sm shadow-forge-xs outline-none transition-[border-color,background-color] duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
+          error ? "border-forgeDanger-500" : "border-forgeInk-200",
+          !error && !disabled && "hover:border-forgeInk-300 hover:bg-forgeSurface-sunken/50",
+          disabled && "cursor-not-allowed border-forgeInk-100 bg-forgeInk-50 text-forgeInk-400",
+          !disabled && "text-forgeInk-800"
         )}
         {...props}
       />
