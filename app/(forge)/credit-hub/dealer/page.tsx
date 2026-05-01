@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { useCreditStats } from "@/lib/credit-hub/hooks/useCreditStats";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { cn } from "@/lib/utils";
 import { formatForgeCurrency } from "@/utils/forge-locale";
@@ -83,7 +84,7 @@ export default function DealerDashboardPage() {
         className: "w-[1%] whitespace-nowrap",
         cell: (row: CreditApplication) => (
           <Link
-            href={`/credit-hub/dealer/applications/${row.application_id}`}
+            href={forgeDealerApplicationDetailHref(row.application_id)}
             className="text-forge-xs font-medium text-forgeBrand-600 hover:underline"
           >
             Ver

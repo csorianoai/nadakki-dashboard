@@ -8,6 +8,7 @@ import { ForgeButton } from "../../primitives/ForgeButton";
 import { ForgeCard } from "../../primitives/ForgeCard";
 import { ForgeInput } from "../../primitives/ForgeInput";
 import { ForgeSelect } from "../../primitives/ForgeSelect";
+import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
@@ -810,7 +811,7 @@ export function WizardContainer() {
       celebrateSuccessRespectReduced();
       forgeToast.success(t.toasts.application_submitted);
       setTimeout(() => {
-        router.push(`/credit-hub/dealer/applications/${result.application_id}`);
+        router.push(forgeDealerApplicationDetailHref(result.application_id));
       }, 1500);
     } catch (error) {
       console.error("Submit error");

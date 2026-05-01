@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, Skeleton } from "@/components/forge";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
 import { cn } from "@/lib/utils";
 import { formatForgeDate } from "@/utils/forge-locale";
 
@@ -36,7 +37,7 @@ function DealerApplicationSubmittedInner() {
         </p>
         <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Link
-            href={applicationId ? `/credit-hub/dealer/applications/${applicationId}` : "/credit-hub/dealer/applications"}
+            href={applicationId ? forgeDealerApplicationDetailHref(applicationId) : "/credit-hub/dealer/applications"}
             className={cn(linkPrimary)}
           >
             Ver estado
