@@ -21,7 +21,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 │ ──────────────────────────────────────────────────────────  │
 │ Status: DECIDED, scheduled for Phase 7                      │
 │ Decided by: Cesar (Phase 5 Item 1 follow-up)                │
-│ Decided on: 2026-04-29                                      │
+│ Decided on: 2026-05-01                                      │
 │                                                             │
 │ Scope:                                                      │
 │   1. Rewrite PullToRefresh with CSS-only motion             │
@@ -100,7 +100,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 **Verification (this group):**
 
 - `npm run build` — passed (webpack).
-- **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95). Gate hygiene: single `next start -p 3017`, fresh `.next`. CLI may exit `1` on Windows (`EPERM` temp cleanup) while JSON is valid.
+- **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95). Gate hygiene: stop servers, `rm -rf .next`, one `npm run build`, one `next start -p 3017`, then audit. If the score collapses, check the JSON for `html#__next_error__` — that means a **stale server** was still running against a rebuilt `.next` (same class of failure as Item 1). CLI may still exit `1` on Windows (`EPERM` temp cleanup) while JSON is valid.
 - **axe-core CLI:** `npx @axe-core/cli http://localhost:3017/credit-hub/preview --load-delay 2000 -q` — **exit `0`**.
 
 ### Item 2 — remaining groups (todo)
