@@ -9,23 +9,31 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'forge-primary': 'var(--forge-primary)',
-        'forge-primary-hover': 'var(--forge-primary-hover)',
-        'forge-primary-active': 'var(--forge-primary-active)',
-        'forge-accent': 'var(--forge-accent)',
-        'forge-bg': 'var(--forge-bg)',
-        'forge-surface': 'var(--forge-surface)',
-        'forge-surface-elevated': 'var(--forge-surface-elevated)',
-        'forge-surface-hover': 'var(--forge-surface-hover)',
-        'forge-text': 'var(--forge-text)',
-        'forge-text-muted': 'var(--forge-text-muted)',
-        'forge-text-subtle': 'var(--forge-text-subtle)',
-        'forge-border': 'var(--forge-border)',
-        'forge-border-hover': 'var(--forge-border-hover)',
-        'forge-success': 'var(--forge-success)',
-        'forge-warning': 'var(--forge-warning)',
-        'forge-danger': 'var(--forge-danger)',
-        'forge-info': 'var(--forge-info)',
+        // ─────────────────────────────────────────────────────────
+        // LEGACY ALIASES — DO NOT ADD NEW ENTRIES HERE.
+        // Delete this block entirely in Phase 7 once all pages have
+        // migrated to v3.2 utilities per TOKEN_MIGRATION_MAP.md.
+        // Reference: TOKEN_MIGRATION_MAP.md sections A & B.
+        // Dual var(): prefer v3.2 custom properties on .forge-app; fall
+        // back to styles/forge-tokens.css portal variables.
+        // ─────────────────────────────────────────────────────────
+        'forge-primary': 'var(--forge-brand-500, var(--forge-primary))',
+        'forge-primary-hover': 'var(--forge-brand-600, var(--forge-primary-hover))',
+        'forge-primary-active': 'var(--forge-brand-700, var(--forge-primary-active))',
+        'forge-accent': 'var(--forge-accent-gold, var(--forge-accent))',
+        'forge-bg': 'var(--forge-surface-page, var(--forge-bg))',
+        'forge-surface': 'var(--forge-surface-card, var(--forge-surface))',
+        'forge-surface-elevated': 'var(--forge-surface-raised, var(--forge-surface-elevated))',
+        'forge-surface-hover': 'var(--forge-surface-sunken, var(--forge-surface-hover))',
+        'forge-text': 'var(--forge-ink-800, var(--forge-text))',
+        'forge-text-muted': 'var(--forge-ink-500, var(--forge-text-muted))',
+        'forge-text-subtle': 'var(--forge-ink-400, var(--forge-text-subtle))',
+        'forge-border': 'var(--forge-ink-200, var(--forge-border))',
+        'forge-border-hover': 'var(--forge-ink-300, var(--forge-border-hover))',
+        'forge-success': 'var(--forge-success-500, var(--forge-success))',
+        'forge-warning': 'var(--forge-warning-500, var(--forge-warning))',
+        'forge-danger': 'var(--forge-danger-500, var(--forge-danger))',
+        'forge-info': 'var(--forge-info-500, var(--forge-info))',
         /* v3.2 institutional tokens (inherit from .forge-app — see _design/tokens.css) */
         forgeBrand: {
           50: 'var(--forge-brand-50)',

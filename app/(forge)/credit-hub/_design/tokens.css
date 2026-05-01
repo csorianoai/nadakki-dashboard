@@ -1,7 +1,7 @@
 /**
  * Forge Credit Hub — v3.2 design tokens (institutional).
  * Scoped to .forge-app so legacy :root tokens in styles/forge-tokens.css stay intact.
- * Bank (default): light surfaces + ink scale. Dealer: dark operational overrides on [data-portal="dealer"].
+ * Bank (default): light surfaces + ink scale. Dealer dark overrides: **dormant** (commented) until Phase 4.
  * Tenant: .forge-app[data-tenant="slug"] (Phase 8 sets attribute on Forge root).
  */
 
@@ -157,7 +157,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Dealer portal — dark operational (preserves legacy dealer palette intent) */
+/*
+ * Dealer dark mode override (DORMANT)
+ * -----------------------------------
+ * Decision deferred to Phase 4 per Cesar 2026-05-01.
+ * Architecture preserved here so re-enabling is one diff.
+ * Do NOT consume these tokens from any component until
+ * Phase 4 explicitly approves dealer dark mode.
+ */
+
+/* DORMANT — re-enable in Phase 4 if dealer dark mode is approved.
 .forge-app [data-portal="dealer"] {
   --forge-surface-page: #0a0e1a;
   --forge-surface-card: #131829;
@@ -192,6 +201,7 @@
   color: var(--forge-ink-800);
   background-color: var(--forge-surface-page);
 }
+*/
 
 /* Tenant examples (Phase 8 — ForgeBrandingProvider sets data-tenant on .forge-app) */
 .forge-app[data-tenant="credicefi"] {

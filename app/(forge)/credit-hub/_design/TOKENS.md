@@ -20,7 +20,7 @@ Space Grotesk is **deprecated for Forge**; it is not imported in the Forge layou
 ## Dual theme (architectural decision)
 
 - **Bank persona (default under `.forge-app`):** **Light institutional** surfaces and ink scale per master prompt Part 4 (Goldman-style direction). New variables: `--forge-surface-page`, `--forge-ink-*`, `--forge-brand-*`, etc.
-- **Dealer persona:** **Dark operational** experience preserved for showroom/mobile. Scoped with `.forge-app [data-portal="dealer"]` in `tokens.css`, aligned with legacy dealer hexes (`#0A0E1A`, `#131829`, …) for the **new** semantic names only.
+- **Dealer persona (v3.2 semantic overrides):** **Dormant from Phase 1.5** — the `.forge-app [data-portal="dealer"]` block in `_design/tokens.css` is commented out until Phase 4 re-approves dealer dark on v3.2 tokens. **Legacy** dealer dark still comes from `styles/forge-tokens.css` (`--forge-bg`, etc.) via Tailwind fallbacks.
 - **Legacy `styles/forge-tokens.css`:** Still supplies `--forge-bg`, `--forge-text`, gradients, and portal-specific colors for **existing components** until refactors remove them.
 
 New light defaults do **not** automatically switch old `bg-forge-bg` / `text-forge-text` utilities to light mode; that is a later presentation migration.
