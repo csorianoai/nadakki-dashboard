@@ -20,14 +20,10 @@ import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { AiReadinessPanel, VehicleShowcaseCard, WizardProgressRail } from "@/components/credit/forge";
+import { Sparkles } from "lucide-react";
 
-const STEPS = [
-  "Crear solicitud",
-  "Solicitante",
-  "Vehículo",
-  "Documentos",
-  "Procesar",
-] as const;
+const STEPS = ["Crear solicitud", "Solicitante", "Vehículo", "Documentos", "Evaluar"] as const;
 
 function DocumentsStepInline({
   applicationId,
@@ -39,8 +35,7 @@ function DocumentsStepInline({
   onComplete: () => void;
 }) {
   const [docs, setDocs] = useState<CreditDocument[]>([]);
-  const [completeness, setCompleteness] =
-    useState<Awaited<ReturnType<typeof getDocumentCompleteness>> | null>(null);
+  const [completeness, setCompleteness] = useState<Awaited<ReturnType<typeof getDocumentCompleteness>> | null>(null);
   const [loadingDocs, setLoadingDocs] = useState(true);
 
   const loadDocs = useCallback(async () => {
@@ -78,7 +73,7 @@ function DocumentsStepInline({
       <button
         type="button"
         onClick={onComplete}
-        className="w-full py-2 px-4 rounded bg-purple-600 text-white text-sm font-medium hover:bg-purple-500"
+        className="w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-violet-500"
       >
         Continuar a evaluación →
       </button>
@@ -94,9 +89,7 @@ export function DealerNewWizard() {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [mode, setMode] = useState<"AI_ONLY" | "BANK_ONLY" | "HYBRID">(
-    "AI_ONLY"
-  );
+  const [mode, setMode] = useState<"AI_ONLY" | "BANK_ONLY" | "HYBRID">("AI_ONLY");
 
   async function stepCreate() {
     setBusy(true);
@@ -164,165 +157,149 @@ export function DealerNewWizard() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-50">Nueva solicitud</h1>
-        <Link
-          href="/credit/dealer"
-          className="text-sm text-slate-500 hover:text-slate-300"
-        >
-          ← Volver
-        </Link>
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-8 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-violet-950/50 via-slate-900 to-slate-950 p-6 shadow-2xl md:p-10">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
+            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-violet-300">
+              <Sparkles className="h-4 w-4" aria-hidden />
+              AI Financing Wizard
+            </p>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-white md:text-3xl">Nueva solicitud de crédito</h1>
+            <p className="max-w-xl text-sm leading-relaxed text-slate-400">
+              Flujo guiado con validaciones existentes. Cada paso persiste contra el Credit Core; sin datos de demostración
+              embebidos.
+            </p>
+          </div>
+          <Link
+            href="/credit/dealer"
+            className="shrink-0 text-sm font-medium text-slate-400 underline-offset-4 hover:text-white hover:underline"
+          >
+            ← Volver al command center
+          </Link>
+        </div>
       </div>
 
-      <ol className="flex gap-2 text-xs">
-        {STEPS.map((label, i) => (
-          <li
-            key={label}
-            className={`flex-1 rounded-lg px-2 py-2 text-center ${
-              i === step
-                ? "bg-violet-600 text-white"
-                : i < step
-                  ? "bg-white/10 text-slate-400"
-                  : "bg-white/5 text-slate-600"
-            }`}
-          >
-            {i + 1}. {label}
-          </li>
-        ))}
-      </ol>
+      <div className="grid gap-8 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-8">
+          <WizardProgressRail steps={STEPS} currentIndex={step} />
 
-      <ValidationBanner
-        error={
-          error instanceof CreditApiError
-            ? error
-            : error?.message
-              ? error
-              : null
-        }
-      />
-
-      {step === 0 && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-4">
-          <p className="text-sm text-slate-400">
-            Se creará un expediente en estado <strong>DRAFT</strong> con modo{" "}
-            <strong>{mode}</strong>.
-          </p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={stepCreate}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm text-white hover:bg-violet-500 disabled:opacity-50"
-          >
-            {busy ? "Creando…" : "Continuar"}
-          </button>
-        </div>
-      )}
-
-      {step === 1 && applicationId && (
-        <ApplicantForm onSubmit={onApplicant} disabled={busy} />
-      )}
-
-      {step === 2 && applicationId && (
-        <VehicleForm onSubmit={onVehicle} disabled={busy} />
-      )}
-
-      {step === 3 && applicationId && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-          <DocumentsStepInline
-            applicationId={applicationId}
-            tenantId={tenantId}
-            onComplete={() => setStep(4)}
+          <ValidationBanner
+            error={
+              error instanceof CreditApiError ? error : error?.message ? error : null
+            }
           />
-        </div>
-      )}
 
-      {step === 4 && applicationId && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-6">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-200 mb-1">
-              Modalidad de evaluación
-            </h3>
-            <p className="text-xs text-slate-500 mb-3">
-              Selecciona cómo deseas procesar esta solicitud.
-            </p>
-            <div className="grid grid-cols-1 gap-3">
-              {(
-                [
-                  {
-                    value: "AI_ONLY" as const,
-                    label: "Solo IA",
-                    desc: "El sistema de inteligencia artificial evalúa automáticamente el perfil crediticio basado en ingresos, historial y datos del vehículo.",
-                    color: "border-violet-500/50 bg-violet-500/5",
-                  },
-                  {
-                    value: "BANK_ONLY" as const,
-                    label: "Solo banco",
-                    desc: "La solicitud se envía directamente a las instituciones bancarias conectadas para su evaluación manual.",
-                    color: "border-blue-500/50 bg-blue-500/5",
-                  },
-                  {
-                    value: "HYBRID" as const,
-                    label: "Híbrido (IA + Banco)",
-                    desc: "La IA realiza una evaluación preliminar y la envía a los bancos con su análisis, acelerando la decisión final.",
-                    color: "border-teal-500/50 bg-teal-500/5",
-                  },
-                ] as const
-              ).map((opt) => (
-                <label
-                  key={opt.value}
-                  className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-colors ${
-                    mode === opt.value
-                      ? opt.color
-                      : "border-white/10 bg-white/3 hover:bg-white/5"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="mode"
-                    value={opt.value}
-                    checked={mode === opt.value}
-                    onChange={() => setMode(opt.value)}
-                    className="mt-0.5 accent-violet-500"
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-slate-200">
-                      {opt.label}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-0.5">{opt.desc}</p>
-                  </div>
-                </label>
-              ))}
+          {step === 0 && (
+            <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
+              <p className="text-sm leading-relaxed text-slate-400">
+                Se creará un expediente en estado <strong className="text-slate-200">DRAFT</strong> con modo{" "}
+                <strong className="text-slate-200">{mode}</strong>.
+              </p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={stepCreate}
+                className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-violet-500 disabled:opacity-50"
+              >
+                {busy ? "Creando…" : "Crear expediente y continuar"}
+              </button>
             </div>
-          </div>
+          )}
 
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-            <p className="text-xs text-amber-400 font-medium mb-1">
-              Resumen de la solicitud
-            </p>
-            <p className="text-xs text-slate-400">
-              Al procesar se ejecutará el análisis{" "}
-              {mode === "AI_ONLY"
-                ? "de inteligencia artificial"
-                : mode === "BANK_ONLY"
-                  ? "bancario"
-                  : "combinado (IA + banco)"}
-              . El resultado estará disponible inmediatamente en el expediente.
-            </p>
-          </div>
+          {step === 1 && applicationId && <ApplicantForm onSubmit={onApplicant} disabled={busy} />}
 
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onProcess}
-            className="w-full rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
-          >
-            {busy
-              ? "Procesando solicitud..."
-              : `Procesar con ${mode === "AI_ONLY" ? "IA" : mode === "BANK_ONLY" ? "banco" : "modo híbrido"}`}
-          </button>
+          {step === 2 && applicationId && <VehicleForm onSubmit={onVehicle} disabled={busy} />}
+
+          {step === 3 && applicationId && (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
+              <DocumentsStepInline
+                applicationId={applicationId}
+                tenantId={tenantId}
+                onComplete={() => setStep(4)}
+              />
+            </div>
+          )}
+
+          {step === 4 && applicationId && (
+            <div className="space-y-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
+              <div>
+                <h3 className="mb-1 text-sm font-semibold text-slate-200">Modalidad de evaluación</h3>
+                <p className="mb-4 text-xs text-slate-500">Selecciona cómo procesar esta solicitud (misma lógica que antes).</p>
+                <div className="grid grid-cols-1 gap-3">
+                  {(
+                    [
+                      {
+                        value: "AI_ONLY" as const,
+                        label: "Solo IA",
+                        desc: "Evaluación automática del perfil crediticio.",
+                        color: "border-violet-500/50 bg-violet-500/10",
+                      },
+                      {
+                        value: "BANK_ONLY" as const,
+                        label: "Solo banco",
+                        desc: "Enviar a instituciones para evaluación manual.",
+                        color: "border-blue-500/50 bg-blue-500/10",
+                      },
+                      {
+                        value: "HYBRID" as const,
+                        label: "Híbrido (IA + Banco)",
+                        desc: "Pre-evaluación IA y paquete para mesa bancaria.",
+                        color: "border-teal-500/50 bg-teal-500/10",
+                      },
+                    ] as const
+                  ).map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${
+                        mode === opt.value ? opt.color : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="mode"
+                        value={opt.value}
+                        checked={mode === opt.value}
+                        onChange={() => setMode(opt.value)}
+                        className="mt-1 accent-violet-500"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-slate-200">{opt.label}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">{opt.desc}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4">
+                <p className="text-xs font-medium text-amber-200">Resumen</p>
+                <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
+                  Al procesar se ejecutará el análisis{" "}
+                  {mode === "AI_ONLY" ? "de IA" : mode === "BANK_ONLY" ? "bancario" : "combinado"}. El resultado quedará en el
+                  expediente.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onProcess}
+                className="w-full rounded-xl bg-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-teal-500 disabled:opacity-50"
+              >
+                {busy
+                  ? "Procesando solicitud..."
+                  : `Procesar con ${mode === "AI_ONLY" ? "IA" : mode === "BANK_ONLY" ? "banco" : "modo híbrido"}`}
+              </button>
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="space-y-4 lg:col-span-4">
+          <AiReadinessPanel stepIndex={step} />
+          <VehicleShowcaseCard />
+        </div>
+      </div>
     </div>
   );
 }

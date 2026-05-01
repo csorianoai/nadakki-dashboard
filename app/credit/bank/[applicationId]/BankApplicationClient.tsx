@@ -32,10 +32,11 @@ import {
   type NarrativeResult,
   type OfferCreatePayload,
 } from "@/lib/credit-api";
-import { formatPercentDecimal } from "@/lib/credit-format";
 import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BankManualDecisionNotice, DecisionSnapshotCard } from "@/components/credit/forge";
+import { Gavel, Sparkles } from "lucide-react";
 
 export function BankApplicationClient({
   applicationId,
@@ -153,6 +154,12 @@ export function BankApplicationClient({
   }
 
   const ai = dossier?.ai_decision as Record<string, unknown> | undefined;
+  const score =
+    ai && ai.score != null && !Number.isNaN(Number(ai.score)) ? Number(ai.score) : null;
+  const confidenceLabel =
+    ai && ai.confidence != null && !Number.isNaN(Number(ai.confidence))
+      ? `${(Number(ai.confidence) * 100).toFixed(1)}%`
+      : null;
   const loan =
     dossier?.vehicle &&
     typeof dossier.vehicle === "object" &&
@@ -197,17 +204,19 @@ export function BankApplicationClient({
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-start gap-4">
+    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-slate-950 via-emerald-950/30 to-slate-900 p-6 shadow-2xl md:flex md:items-center md:justify-between md:p-8">
         <div>
-          <h1 className="text-xl font-semibold text-slate-50">
-            Expediente — Banco
-          </h1>
-          <p className="font-mono text-xs text-slate-500 mt-1">{applicationId}</p>
+          <p className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            Credit decision dossier
+          </p>
+          <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-white md:text-3xl">Expediente banco</h1>
+          <p className="mt-2 max-w-xl font-mono text-xs text-slate-500 break-all">{applicationId}</p>
         </div>
         <Link
           href="/credit/bank"
-          className="text-sm text-slate-500 hover:text-slate-300"
+          className="mt-4 inline-flex shrink-0 items-center rounded-xl border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-white/5 md:mt-0"
         >
           ← Cola
         </Link>
@@ -217,9 +226,43 @@ export function BankApplicationClient({
       {pdfErr && <ValidationBanner error={pdfErr} />}
 
       {loading && !dossier ? (
-        <div className="animate-pulse h-64 rounded-xl bg-white/5" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="h-48 animate-pulse rounded-2xl bg-white/5" />
+          <div className="h-48 animate-pulse rounded-2xl bg-white/5" />
+        </div>
       ) : dossier ? (
         <>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <DecisionSnapshotCard
+                title="Recomendación IA (soporte)"
+                decision={
+                  ai?.decision != null
+                    ? String(ai.decision)
+                    : ai?.recommendation != null
+                      ? String(ai.recommendation)
+                      : null
+                }
+                score={score}
+                confidenceLabel={confidenceLabel}
+                footnote="La decisión institucional formal se registra en el canal con panel de decisión (Forge Credit Hub), no sustituida por esta vista."
+              />
+            </div>
+            <div className="flex flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div>
+                <p className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                  <Gavel className="h-3.5 w-3.5" aria-hidden />
+                  Ofertas & compliance
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                  Revise documentos, narrativa y PDFs. Emita ofertas cuando corresponda; todo queda auditado en el core.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <BankManualDecisionNotice applicationId={applicationId} />
+
           <DossierCard
             applicant={dossier.applicant}
             vehicle={dossier.vehicle}
@@ -247,32 +290,6 @@ export function BankApplicationClient({
           <DocumentList documents={docs} loading={false} />
 
           <BestOfferHero ranking={rank} />
-
-          {ai && (
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm space-y-2">
-              <h2 className="text-slate-200 font-medium">Decisión IA</h2>
-              <p className="text-slate-400">
-                Resultado:{" "}
-                <span className="text-slate-100 font-medium">
-                  {String(ai.decision ?? ai.recommendation ?? "—")}
-                </span>
-              </p>
-              {ai.score != null && (
-                <p className="text-slate-400">
-                  Score:{" "}
-                  <span className="tabular-nums text-slate-100">
-                    {Number(ai.score).toFixed(1)}
-                  </span>
-                </p>
-              )}
-              {ai.confidence != null && (
-                <p className="text-slate-400">
-                  Confianza:{" "}
-                  {formatPercentDecimal(Number(ai.confidence))}
-                </p>
-              )}
-            </div>
-          )}
 
           <ExplanationCard data={explanation} error={explErr} />
 
@@ -306,6 +323,10 @@ export function BankApplicationClient({
             applicationId={applicationId}
           />
         </>
+      ) : !loading && error ? (
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-950/25 p-8 text-center text-sm text-rose-100">
+          No se pudo cargar el dossier. Verifique API, tenant y vuelva a intentar.
+        </div>
       ) : null}
     </div>
   );

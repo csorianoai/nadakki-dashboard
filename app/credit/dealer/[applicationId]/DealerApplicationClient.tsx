@@ -36,6 +36,8 @@ import {
 import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DecisionSnapshotCard } from "@/components/credit/forge";
+import { FileStack, Gauge, Sparkles } from "lucide-react";
 
 export function DealerApplicationClient({
   applicationId,
@@ -173,6 +175,34 @@ export function DealerApplicationClient({
     return id != null ? String(id) : undefined;
   }, [bestId, dossier?.offers]);
 
+  const nextAction = useMemo(() => {
+    if (!dossier) return null;
+    const st = (dossier.state ?? "").toUpperCase();
+    if (!st || st === "DRAFT") {
+      return {
+        title: "Siguiente mejor acción",
+        body: "Complete solicitante, vehículo y documentación; luego procese para obtener score IA y narrativa.",
+      };
+    }
+    if (st === "COMPLETED") {
+      return {
+        title: "Paquete bank-ready",
+        body: "Descargue PDFs y comparta el expediente con la mesa en /credit/bank para revisión institucional.",
+      };
+    }
+    return {
+      title: "Seguimiento",
+      body: "Mantenga documentos al día y use Vista cliente para transparencia con el solicitante.",
+    };
+  }, [dossier]);
+
+  const confidenceLabel = useMemo(() => {
+    if (!ai || ai.confidence == null) return null;
+    const c = Number(ai.confidence);
+    if (Number.isNaN(c)) return null;
+    return `${(c * 100).toFixed(1)}%`;
+  }, [ai]);
+
   async function handlePdfOffer(offerId: string) {
     setPdfErr(null);
     setPdfOfferBusyId(offerId);
@@ -195,31 +225,33 @@ export function DealerApplicationClient({
   }, [tenantId, applicationId]);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900 via-violet-950/40 to-slate-950 p-6 shadow-2xl md:flex md:items-center md:justify-between md:p-8">
         <div>
-          <h1 className="text-xl font-semibold text-slate-50">
-            Expediente dealer
-          </h1>
-          <p className="font-mono text-xs text-slate-500 mt-1">{applicationId}</p>
+          <p className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-violet-300">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden />
+            Dealer · expediente vivo
+          </p>
+          <h1 className="mt-2 font-display text-2xl font-bold tracking-tight text-white md:text-3xl">Command view</h1>
+          <p className="mt-2 max-w-xl font-mono text-xs text-slate-500 break-all">{applicationId}</p>
         </div>
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="mt-4 flex flex-wrap gap-2 md:mt-0 md:justify-end">
           <Link
             href="/credit/dealer"
-            className="text-sm text-slate-500 hover:text-slate-300"
+            className="rounded-xl border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-white/5"
           >
             ← Listado
           </Link>
           <Link
             href={`/credit/status/${encodeURIComponent(applicationId)}`}
-            className="text-sm text-sky-400 hover:underline"
+            className="rounded-xl border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-sm font-medium text-sky-200 hover:bg-sky-500/15"
           >
             Vista cliente
           </Link>
           <button
             type="button"
             onClick={load}
-            className="text-sm rounded-lg border border-white/15 px-3 py-1 text-slate-300"
+            className="rounded-xl border border-white/15 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-white/5"
           >
             Actualizar
           </button>
@@ -230,9 +262,48 @@ export function DealerApplicationClient({
       {pdfErr && <ValidationBanner error={pdfErr} />}
 
       {loading && !dossier ? (
-        <div className="animate-pulse h-96 rounded-xl bg-white/5" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="h-48 animate-pulse rounded-2xl bg-white/5" />
+          <div className="h-48 animate-pulse rounded-2xl bg-white/5" />
+        </div>
       ) : dossier ? (
         <>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <DecisionSnapshotCard
+                title="AI decision snapshot"
+                decision={
+                  ai?.decision != null
+                    ? String(ai.decision)
+                    : ai?.recommendation != null
+                      ? String(ai.recommendation)
+                      : null
+                }
+                score={score}
+                confidenceLabel={confidenceLabel}
+                footnote="La recomendación IA no sustituye dictamen legal ni decisión bancaria formal."
+              />
+            </div>
+            {nextAction ? (
+              <div className="flex flex-col justify-between rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-5 ring-1 ring-emerald-500/10">
+                <div>
+                  <p className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-300">
+                    <Gauge className="h-3.5 w-3.5" aria-hidden />
+                    {nextAction.title}
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-300">{nextAction.body}</p>
+                </div>
+                <Link
+                  href="/credit/bank"
+                  className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-emerald-300 hover:text-emerald-200"
+                >
+                  <FileStack className="h-4 w-4" aria-hidden />
+                  Ir a consola banco
+                </Link>
+              </div>
+            ) : null}
+          </div>
+
           <DossierCard
             applicant={dossier.applicant}
             vehicle={dossier.vehicle}
@@ -298,6 +369,10 @@ export function DealerApplicationClient({
             applicationId={applicationId}
           />
         </>
+      ) : !loading && error ? (
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-8 text-center text-sm text-rose-100">
+          No se pudo cargar el expediente. Revise conexión al API y permisos del tenant, luego pulse Actualizar.
+        </div>
       ) : null}
     </div>
   );
