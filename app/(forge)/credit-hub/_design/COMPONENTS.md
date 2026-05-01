@@ -12,6 +12,12 @@ Button, IconButton, Input, Textarea, Select, Checkbox, RadioGroup, Switch, Card,
 
 These primitives are **persona-agnostic** (no `usePersona` / no layout segments).
 
+### DataTable — mobile strategy
+
+**Mobile strategy:** use **`density="compact"`** (or `dense`) plus **`overflow-x-auto`** on the table wrapper and **`min-w-0`** on text-heavy cells so small viewports scroll horizontally **inside** the table instead of breaking the page layout. Chunk 3 mobile screenshots (iPhone SE) confirmed no horizontal page scroll on dealer surfaces.
+
+The master prompt originally suggested a separate **`<DataTableMobileCard>`** component for card-based mobile rows. That component **was not built**: the **density + scroll** approach was sufficient for dealer/bank table UX, and a density toggle preserves a real table on tablets where bankers and dealers often want columns. If a future tenant requires **cards-not-tables** on mobile, introduce `DataTableMobileCard` (or a `variant="cards"` on `DataTable`) then — the API surface is already considered.
+
 ## Preview playground
 
 **Canonical URL:** `/credit-hub/preview`
@@ -45,6 +51,8 @@ Next.js treats leading-underscore segments as **private folders**, so the playgr
 **Interim risk acceptance:** URL ↔ persona alignment matches current folder layout (`bank/*`, `dealer/*`); no security boundary relies on persona today (server enforces `tenant_id` + JWT role).
 
 ## Lighthouse accessibility (Phase 4 gate)
+
+**Gate hygiene (local / Windows — avoid false `__next_error__` shells):** Before a Lighthouse run that **gates** a merge or a phase sign-off, **stop every** local `next start` / `next dev` bound to the ports you use for audits (e.g. `3000`, `3010`, `3012`, `3013`, `3015`), **delete `.next`**, run **`npx next build --webpack`**, then start **exactly one** fresh **`npx next start -p <port>`** for the audit. Stale bundles or **two servers** on different ports can leave `curl` looking healthy while a headless run briefly hits a torn-down or half-updated process — symptoms match **`html#__next_error__`** in the saved JSON. If that selector appears, **discard the JSON**, clean as above, and re-run (see `_design/_inventory/lh_error_shell_diagnosis.md`).
 
 **Canonical verification:** run against a **fresh** production build so HTML matches `app/layout.tsx` (viewport, lang) and client chunks are current:
 

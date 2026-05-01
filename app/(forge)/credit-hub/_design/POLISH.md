@@ -1,10 +1,10 @@
 # Phase 5 — polish tracker (Forge Credit Hub)
 
-Status: `todo` | `done` | `deferred-phase-7`
+Status: `todo` | `done` | `deferred-phase-7` | **green**
 
 | Item | Description | Status | Notes |
 |------|-------------|--------|-------|
-| **1** | Dealer `/credit-hub/dealer/applications` list — Forge primitives, URL `q` / `status` / `density`, DataTable + density, PullToRefresh kept | **done** | `page.tsx`, `DataTable.tsx` (`density`), tests: stable `useSearchParams` mock |
+| **1** | Dealer `/credit-hub/dealer/applications` list — Forge primitives, URL `q` / `status` / `density`, DataTable + density, PullToRefresh kept | **green** | Lighthouse a11y **1.0** — `lh-dealer-applications-list-a11y.json`; diagnosis `lh_error_shell_diagnosis.md` |
 | **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` | todo | Checklist in this file after sweep |
 | **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | todo | Sonner primitive |
 | **4** | Empty states sweep (bank + dealer zero-data surfaces) | todo | Icons + CTAs per Appendix A |
@@ -13,12 +13,16 @@ Status: `todo` | `done` | `deferred-phase-7`
 
 ---
 
-## Item 1 — verification log
+## Item 1 — verification log (**GREEN**)
 
 - **Build:** `npm run build` — passed (webpack).
 - **Unit tests:** `tests/credit-hub/content/pages/list.test.tsx`, `tests/credit-hub/polish/a11y/aria-labels.test.tsx` — passed.
 - **Legacy grep (page):** no `ForgeButton` / `ForgeCard` / `ForgeInput` / `CHEmptyState` / `ApplicationCard` / `framer-motion` on dealer applications list.
-- **Lighthouse (dealer applications list):** CLI may exit `1` on Windows (`EPERM` cleanup) while still writing JSON; use `TEMP`/`TMP` + `--user-data-dir` per `COMPONENTS.md`. If the saved run shows `html#__next_error__`, the server returned the Next error shell — **discard that JSON**, fix the underlying 500, and re-run. *Artifact not committed for this session after error-page capture.*
+- **Lighthouse (dealer applications list):** `app/(forge)/credit-hub/_design/_inventory/lh-dealer-applications-list-a11y.json` — **`categories.accessibility.score`: `1.0`** (≥ 0.95). Clean rebuild + single `next start -p 3015`; prior `__next_error__` capture attributed to **stale `.next` / competing servers** — see `lh_error_shell_diagnosis.md` and **Gate hygiene** in `COMPONENTS.md`. CLI may still exit `1` on Windows (`EPERM` temp cleanup) while JSON is valid.
+
+## Phase 7 decisions pending
+
+- **PullToRefresh** (dealer applications list — still wraps the page): **Option A** — replace `framer-motion` with CSS-only pull affordance (`translateY` + `transition`), removing `framer-motion` from that module. **Option B** — keep `framer-motion` scoped to `PullToRefresh` only and document it as the sole allowed motion dependency for that gesture. **Phase 5:** no code change (Cesar accept).
 
 ## Item 2 — forge/ui checklist (placeholder)
 
@@ -29,7 +33,3 @@ Status: `todo` | `done` | `deferred-phase-7`
 | … | | | | | todo |
 
 *(Fill during Item 2 sweep.)*
-
-## PullToRefresh (dealer applications)
-
-**Kept** — `PullToRefresh` still wraps the list; it uses `framer-motion` internally for pull gesture. **Phase 7:** optional replacement with CSS scroll-driven or reduced-motion-only refresh if product wants zero `motion` in Credit Hub shell.
