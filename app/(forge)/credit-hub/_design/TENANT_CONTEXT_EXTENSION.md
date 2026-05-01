@@ -28,6 +28,14 @@
 
 ## Deferred decisions
 
+### Persona resolution (`bank` | `dealer`) — URL segments today (Phase 3 debt)
+
+- **Status:** **Accepted interim** (2026-05-01, Cesar). Documented in `_design/COMPONENTS.md` under **DEFERRED TO PHASE 8**.
+- **Current:** `ForgeCreditHubAppShell` seeds `PersonaProvider` using **`creditHubPersonaFromLayoutSegments(useSelectedLayoutSegments())`**. All other Forge layout/UI consumers use **`usePersona()`** only.
+- **Target:** Feed persona from **`TenantContext`** (and/or auth metadata) once Path B / `ForgeBrandingProvider` work lands — **no** `useSelectedLayoutSegments` in persona resolution.
+- **Why deferred:** Extending `TenantContext` for persona is **Phase 8**; Phases 2–4 must not modify `TenantContext.tsx` or `useTenant.ts` per guardrails.
+- **Phase 8 acceptance:** Remove segment-based persona; single-file seam today (`creditHubPersonaFromSegments.ts` + shell call site) is the refactor boundary.
+
 ### Dealer dark mode (v3.2 semantic overrides)
 
 - **Status:** **Dormant** as of Phase 1.5 (2026-05-01, Cesar).
