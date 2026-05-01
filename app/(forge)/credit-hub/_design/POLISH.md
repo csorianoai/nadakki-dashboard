@@ -5,7 +5,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | Item | Description | Status | Notes |
 |------|-------------|--------|-------|
 | **1** | Dealer `/credit-hub/dealer/applications` list — Forge primitives, URL `q` / `status` / `density`, DataTable + density, PullToRefresh kept | **green** | Lighthouse a11y **1.0** — `lh-dealer-applications-list-a11y.json`; diagnosis `lh_error_shell_diagnosis.md` |
-| **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | in progress | Group 1 (forms) **green** — see below |
+| **2** | Hover / focus / disabled / loading sweep — `components/forge/ui/*` + layout | in progress | Groups **1–2** **green** — see below |
 | **3** | Toast wiring (bank detail, wizard autosave, consent, uploads) | todo | Sonner primitive |
 | **4** | Empty states sweep (bank + dealer zero-data surfaces) | todo | Icons + CTAs per Appendix A |
 | **5** | CommandPalette wiring (Cmd+K, routes, density, sign out) | todo | cmdk |
@@ -69,6 +69,16 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 
 — None raised during Group 1 (forms).
 
+— **Group 2 (actions):** Focus ring (`forgeBrand-500`, 2px + offset) checked on `/credit-hub/preview` **Focus on surfaces** swatches (card, `bg-forgeBrand-900`, modal scrim `rgba(15,23,41,0.48)`); ring remains legible on Tab — **no** alternate `brand-300` / double-ring treatment required for this gate.
+
+---
+
+## Item 2 — code-level findings (call-site a11y)
+
+*(IconButton `aria-label` is enforced on the primitive; list here if grep finds unsafe patterns.)*
+
+— **Group 2:** Grep of `IconButton` under `app/` + `components/`: **all** usages include `aria-label` — **0** call-site fixes required.
+
 ---
 
 ## Item 2 Group 1 — Forms (**GREEN**)
@@ -107,7 +117,33 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 
 | Group | Scope | Status |
 |-------|--------|--------|
-| 2 | Actions (Button, IconButton) | todo |
+| 2 | Actions (Button, IconButton) | **green** — see Group 2 below |
 | 3 | Tables (DataTable, …) | todo |
 | 4 | Navigation (Sidebar, Topbar, Tabs, Breadcrumb, CommandPalette) | todo |
 | 5 | Overlays (Modal, Drawer, Toast, …) | todo |
+
+---
+
+## Item 2 Group 2 — Actions (**GREEN**)
+
+**Primitives:** `Button`, `IconButton`
+
+**Changes:**
+
+- **Button:** Removed `disabled:opacity-50` / `pointer-events-none` in favor of **per-variant muted** tokens when `disabled && !loading`. **Leading spinner** when `loading`; label + optional trailing icon stay visible; **`aria-busy`** while loading; **`disabled` on element** whenever `disabled || loading`. **`loading` + `disabled` together:** loading UI (spinner + frozen variant colors) still applies — callers should prefer `loading` alone during submit. **120ms** transitions on color. **No transform** on hover (color-only).
+- **IconButton:** **`disabled:`** cursor, ink, and surface tokens; **hover suppressed** when disabled (`disabled:hover:bg-*` matches resting disabled). Default / subtle variants unchanged for enabled hover.
+- **`COMPONENTS.md`:** Button / IconButton subsection — **leading spinner** convention, disabled vs loading precedence, focus-ring note for dark chrome.
+- **`/credit-hub/preview`:** Variants grid, **loading** row (all variants + leading-icon demo), **disabled** row, IconButton disabled pair, **Focus on surfaces** triptych (card / `forgeBrand-900` / scrim).
+
+| Primitive   | Hover | Focus | Disabled | Loading | Status |
+|------------|-------|-------|----------|---------|--------|
+| Button     | ✓     | ✓     | ✓        | ✓       | **green** — leading spinner + `aria-busy` + muted disabled |
+| IconButton | ✓     | ✓     | ✓        | n/a     | **green** — disabled hover locked; `aria-label` required in type |
+
+**Verification (this group):**
+
+- `npm run build` — passed (webpack).
+- **Lighthouse** (`app/(forge)/credit-hub/_design/_inventory/lh-forge-preview-a11y.json`): **`categories.accessibility.score`: `0.97`** (≥ 0.95). Gate hygiene: stop servers on audit ports, `rm -rf .next`, one `npm run build`, one `next start -p 3017`, then audit (no `html#__next_error__` in JSON).
+- **axe-core CLI:** `npx @axe-core/cli http://localhost:3017/credit-hub/preview --load-delay 2000 -q` — **exit `0`**.
+
+---

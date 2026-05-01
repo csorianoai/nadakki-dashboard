@@ -13,8 +13,9 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 
 const variantClasses: Record<IconButtonVariant, string> = {
   default:
-    "bg-forgeSurface-card text-forgeInk-800 border border-forgeInk-200 hover:bg-forgeSurface-sunken",
-  subtle: "bg-transparent text-forgeInk-600 hover:bg-forgeSurface-sunken border border-transparent",
+    "bg-forgeSurface-card text-forgeInk-800 border border-forgeInk-200 hover:bg-forgeSurface-sunken disabled:cursor-not-allowed disabled:border-forgeInk-200 disabled:bg-forgeInk-100 disabled:text-forgeInk-300 disabled:hover:bg-forgeInk-100",
+  subtle:
+    "border border-transparent bg-transparent text-forgeInk-600 hover:bg-forgeSurface-sunken disabled:cursor-not-allowed disabled:border-transparent disabled:bg-transparent disabled:text-forgeInk-300 disabled:hover:bg-transparent",
 };
 
 export function IconButton({ variant = "default", className, children, ...props }: IconButtonProps) {

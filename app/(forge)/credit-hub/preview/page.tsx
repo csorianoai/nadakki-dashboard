@@ -6,6 +6,7 @@ import {
   FileText,
   Home,
   LayoutDashboard,
+  Plus,
   Settings,
   Shield,
   Sparkles,
@@ -198,24 +199,135 @@ export default function ForgePreviewPage() {
 
       <div className="mx-auto max-w-5xl px-4">
         <Section title="Buttons & icon buttons">
-          <div className="flex flex-wrap gap-3">
-            <Button variant="primary">Primary</Button>
-            <Button variant="secondary">Secondary</Button>
-            <Button variant="ghost">Ghost</Button>
-            <Button variant="danger">Danger</Button>
-            <Button variant="link">Link</Button>
-            <Button variant="primary" loading>
-              Loading
-            </Button>
-            <Button variant="primary" disabled>
-              Disabled
-            </Button>
-            <IconButton aria-label="User" variant="default">
-              <User className="h-4 w-4" aria-hidden />
-            </IconButton>
-            <IconButton aria-label="Sparkle" variant="subtle">
-              <Sparkles className="h-4 w-4" aria-hidden />
-            </IconButton>
+          <div className="space-y-8">
+            <div>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Variants (default)</h3>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="primary">Primary</Button>
+                <Button variant="secondary">Secondary</Button>
+                <Button variant="ghost">Ghost</Button>
+                <Button variant="danger">Danger</Button>
+                <Button variant="link">Link</Button>
+                <Button variant="primary" leadingIcon={<Plus className="h-4 w-4" aria-hidden />}>
+                  With leading icon
+                </Button>
+                <Button variant="primary" trailingIcon={<Sparkles className="h-4 w-4" aria-hidden />}>
+                  With trailing icon
+                </Button>
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Loading (leading spinner, label visible)</h3>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="primary" loading>
+                  Primary
+                </Button>
+                <Button variant="secondary" loading>
+                  Secondary
+                </Button>
+                <Button variant="ghost" loading>
+                  Ghost
+                </Button>
+                <Button variant="danger" loading>
+                  Danger
+                </Button>
+                <Button variant="link" loading>
+                  Link
+                </Button>
+                <Button variant="primary" loading leadingIcon={<Plus className="h-4 w-4" aria-hidden />}>
+                  Icon hidden while loading
+                </Button>
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Disabled (no hover lift)</h3>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="primary" disabled>
+                  Primary
+                </Button>
+                <Button variant="secondary" disabled>
+                  Secondary
+                </Button>
+                <Button variant="ghost" disabled>
+                  Ghost
+                </Button>
+                <Button variant="danger" disabled>
+                  Danger
+                </Button>
+                <Button variant="link" disabled>
+                  Link
+                </Button>
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">IconButton</h3>
+              <div className="flex flex-wrap items-center gap-3">
+                <IconButton aria-label="User" variant="default">
+                  <User className="h-4 w-4" aria-hidden />
+                </IconButton>
+                <IconButton aria-label="Sparkle" variant="subtle">
+                  <Sparkles className="h-4 w-4" aria-hidden />
+                </IconButton>
+                <IconButton aria-label="Disabled default" variant="default" disabled>
+                  <Bell className="h-4 w-4" aria-hidden />
+                </IconButton>
+                <IconButton aria-label="Disabled subtle" variant="subtle" disabled>
+                  <Settings className="h-4 w-4" aria-hidden />
+                </IconButton>
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">
+                Focus on surfaces (Tab through — brand-500 ring)
+              </h3>
+              <p className="mb-3 max-w-2xl text-forge-xs text-forgeInk-500">
+                Light card, deep brand header, and modal scrim tint — primary/secondary/icon controls should keep a visible focus outline.
+              </p>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-card p-4">
+                  <p className="mb-3 text-forge-xs text-forgeInk-500">Card surface</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="primary">
+                      Primary
+                    </Button>
+                    <Button size="sm" variant="secondary">
+                      Secondary
+                    </Button>
+                    <IconButton aria-label="Bell on card" variant="default">
+                      <Bell className="h-4 w-4" aria-hidden />
+                    </IconButton>
+                  </div>
+                </div>
+                <div className="rounded-forge-sm bg-forgeBrand-900 p-4">
+                  <p className="mb-3 text-forge-xs text-forgeInk-200">Brand-900 header</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="primary">
+                      Primary
+                    </Button>
+                    <IconButton aria-label="Bell on navy" variant="default" className="border-forgeInk-600 bg-forgeBrand-800 text-forgeInk-50 hover:bg-forgeBrand-700">
+                      <Bell className="h-4 w-4" aria-hidden />
+                    </IconButton>
+                  </div>
+                </div>
+                <div
+                  className="rounded-forge-sm p-4"
+                  style={{ backgroundColor: "rgba(15, 23, 41, 0.48)" }}
+                >
+                  <p className="mb-3 text-forge-xs text-forgeInk-100">Modal scrim (rgba 15,23,41,0.48)</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="primary">
+                      Primary
+                    </Button>
+                    <Button size="sm" variant="secondary">
+                      Secondary
+                    </Button>
+                    <IconButton aria-label="Bell on scrim" variant="default">
+                      <Bell className="h-4 w-4" aria-hidden />
+                    </IconButton>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </Section>
 

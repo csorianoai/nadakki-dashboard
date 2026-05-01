@@ -6,8 +6,13 @@ import { cn } from "@/lib/utils";
 /**
  * Button — primary action control for Forge Credit Hub.
  *
- * USAGE: one `primary` per surface; use `danger` for destructive actions; `loading` keeps label visible.
- * ACCESSIBILITY: pass `aria-label` when children are icon-only; focus ring uses token-backed `ring-forgeBrand-500`.
+ * **Loading:** spinner is **leading** (left of label), matches Stripe/Linear. Label stays visible.
+ * `aria-busy` is set while `loading` is true.
+ *
+ * **Disabled vs `loading`:** `disabled={true}` alone grays the control (no spinner). `loading={true}`
+ * sets `disabled` on the element to block double-submit but keeps variant colors + leading spinner.
+ * If both are true, loading UI wins (spinner + busy) and the control stays non-interactive — callers
+ * should avoid redundant `disabled` while `loading` (e.g. only pass `loading`).
  */
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "link";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -27,14 +32,32 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: "min-h-11 px-5 text-forge-md py-2.5",
 };
 
-const variantClasses: Record<ButtonVariant, string> = {
+/** Hover/active only — not used when the control is `disabled && !loading` (muted) or frozen loading. */
+const variantInteractive: Record<ButtonVariant, string> = {
   primary:
-    "bg-forgeBrand-500 text-forgeInk-50 hover:bg-forgeBrand-600 active:bg-forgeBrand-700 shadow-forge-xs border border-forgeBrand-600",
+    "bg-forgeBrand-500 text-forgeInk-50 shadow-forge-xs border border-forgeBrand-600 hover:bg-forgeBrand-600 active:bg-forgeBrand-700",
   secondary:
     "bg-forgeSurface-card text-forgeInk-800 border border-forgeInk-200 hover:bg-forgeSurface-sunken active:bg-forgeInk-100",
-  ghost: "bg-transparent text-forgeInk-700 hover:bg-forgeSurface-sunken border border-transparent",
-  danger: "bg-forgeDanger-500 text-forgeInk-50 hover:bg-forgeDanger-700 border border-forgeDanger-700",
-  link: "bg-transparent text-forgeBrand-600 underline-offset-2 hover:underline border-0 shadow-none p-0 min-h-0",
+  ghost: "bg-transparent text-forgeInk-700 border border-transparent hover:bg-forgeSurface-sunken",
+  danger: "bg-forgeDanger-500 text-forgeInk-50 border border-forgeDanger-700 hover:bg-forgeDanger-700 active:bg-forgeDanger-800",
+  link: "bg-transparent text-forgeBrand-600 border-0 shadow-none p-0 min-h-0 underline-offset-2 hover:underline",
+};
+
+/** Frozen appearance while `loading` (native `disabled` would suppress `:hover` on interactive classes). */
+const variantLoadingFrozen: Record<ButtonVariant, string> = {
+  primary: "cursor-wait border border-forgeBrand-600 bg-forgeBrand-500 text-forgeInk-50 shadow-forge-xs",
+  secondary: "cursor-wait border border-forgeInk-200 bg-forgeSurface-card text-forgeInk-800",
+  ghost: "cursor-wait border border-transparent bg-transparent text-forgeInk-700",
+  danger: "cursor-wait border border-forgeDanger-700 bg-forgeDanger-500 text-forgeInk-50",
+  link: "cursor-wait border-0 bg-transparent p-0 min-h-0 text-forgeBrand-600 shadow-none",
+};
+
+const variantMuted: Record<ButtonVariant, string> = {
+  primary: "cursor-not-allowed border-forgeInk-200 bg-forgeInk-100 text-forgeInk-400 shadow-none",
+  secondary: "cursor-not-allowed border-forgeInk-200 bg-forgeInk-100 text-forgeInk-400",
+  ghost: "cursor-not-allowed border-transparent bg-transparent text-forgeInk-300",
+  danger: "cursor-not-allowed border-forgeInk-200 bg-forgeInk-100 text-forgeInk-400",
+  link: "cursor-not-allowed border-0 bg-transparent p-0 min-h-0 text-forgeInk-400 shadow-none hover:no-underline",
 };
 
 export function Button({
@@ -47,32 +70,44 @@ export function Button({
   className,
   disabled,
   children,
+  type = "button",
   ...props
 }: ButtonProps) {
-  const isDisabled = Boolean(disabled || loading);
+  const showLoading = Boolean(loading);
+  const nativeDisabled = Boolean(disabled || loading);
+  const visuallyMuted = Boolean(disabled && !loading);
+
+  const variantClass = visuallyMuted
+    ? variantMuted[variant]
+    : showLoading
+      ? variantLoadingFrozen[variant]
+      : variantInteractive[variant];
+
   return (
     <button
-      type="button"
+      type={type}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)] ease-out",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-        "disabled:opacity-50 disabled:pointer-events-none",
         sizeClasses[size],
-        variantClasses[variant],
+        variantClass,
         fullWidth && "w-full",
         className
       )}
-      disabled={isDisabled}
       {...props}
+      disabled={nativeDisabled}
+      aria-busy={showLoading || undefined}
     >
-      {loading ? (
-        <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden />
-      ) : (
-        leadingIcon
-      )}
+      {showLoading ? (
+        <span
+          className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+          aria-hidden
+        />
+      ) : null}
+      {!showLoading ? leadingIcon : null}
       {variant !== "link" && <span className="truncate">{children}</span>}
       {variant === "link" && <span>{children}</span>}
-      {!loading && trailingIcon}
+      {!showLoading ? trailingIcon : null}
     </button>
   );
 }

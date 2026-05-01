@@ -18,6 +18,13 @@ These primitives are **persona-agnostic** (no `usePersona` / no layout segments)
 
 The master prompt originally suggested a separate **`<DataTableMobileCard>`** component for card-based mobile rows. That component **was not built**: the **density + scroll** approach was sufficient for dealer/bank table UX, and a density toggle preserves a real table on tablets where bankers and dealers often want columns. If a future tenant requires **cards-not-tables** on mobile, introduce `DataTableMobileCard` (or a `variant="cards"` on `DataTable`) then — the API surface is already considered.
 
+### Button & IconButton (Phase 5 polish)
+
+- **`Button` loading:** Inline spinner is **leading** (left of the label), never replacing the label. Matches common fintech defaults (Stripe / Linear). `aria-busy="true"` while `loading` is set; the element is `disabled` during loading to prevent double-submit.
+- **`Button` disabled vs loading:** `disabled` alone → muted ink/surface (no spinner). `loading` → variant colors + leading spinner + `aria-busy`. If both props are true, **loading UI wins** (spinner + busy + frozen variant colors); callers should prefer **`loading` only** during submission instead of also forcing `disabled`.
+- **`IconButton`:** `aria-label` is **required in TypeScript** on the primitive. Missing labels at call sites are bugs to fix in app code, not by loosening the primitive.
+- **Focus ring:** `focus-visible:outline` **2px** `forgeBrand-500` + **2px** offset on both primitives. On very dark brand chrome, if the ring ever fails WCAG focus-indicator contrast against adjacent pixels, consider `forgeBrand-300` for that surface or a double-ring treatment — validate in `/credit-hub/preview` “Focus on surfaces” swatches before changing tokens.
+
 ## Preview playground
 
 **Canonical URL:** `/credit-hub/preview`
