@@ -18,7 +18,7 @@ Status: `todo` | `done` | `deferred-phase-7`
 - **Build:** `npm run build` — passed (webpack).
 - **Unit tests:** `tests/credit-hub/content/pages/list.test.tsx`, `tests/credit-hub/polish/a11y/aria-labels.test.tsx` — passed.
 - **Legacy grep (page):** no `ForgeButton` / `ForgeCard` / `ForgeInput` / `CHEmptyState` / `ApplicationCard` / `framer-motion` on dealer applications list.
-- **Lighthouse (dealer applications list):** run after `next start` against `/credit-hub/dealer/applications` and save `lh-dealer-applications-list-a11y.json` when CLI is available; Windows EPERM → see `COMPONENTS.md` (TEMP + `--user-data-dir`). *Deferred if server not running in this session.*
+- **Lighthouse (dealer applications list):** CLI may exit `1` on Windows (`EPERM` cleanup) while still writing JSON; use `TEMP`/`TMP` + `--user-data-dir` per `COMPONENTS.md`. If the saved run shows `html#__next_error__`, the server returned the Next error shell — **discard that JSON**, fix the underlying 500, and re-run. *Artifact not committed for this session after error-page capture.*
 
 ## Item 2 — forge/ui checklist (placeholder)
 
