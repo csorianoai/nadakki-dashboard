@@ -103,11 +103,32 @@ async function main() {
   }
   await browser.close();
 
-  const report = {
-    generatedAt: new Date().toISOString(),
+  let componentsBlock = null;
+  if (fs.existsSync(REPORT)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(REPORT, "utf8"));
+      if (prev.components) componentsBlock = prev.components;
+      else if (prev.findings != null || prev.captures != null) {
+        componentsBlock = {
+          findings: prev.findings ?? [],
+          countsByPrimitive: prev.countsByPrimitive ?? {},
+          captures: prev.captures ?? [],
+        };
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const pageReport = {
     reused: events.filter((e) => e.mode === "reused").length,
     captured: events.filter((e) => e.mode === "captured").length,
     events,
+  };
+  const report = {
+    generatedAt: new Date().toISOString(),
+    ...(componentsBlock ? { components: componentsBlock } : {}),
+    pages: pageReport,
   };
   fs.writeFileSync(REPORT, JSON.stringify(report, null, 2), "utf8");
   console.log("capture-pages: Done →", OUT);

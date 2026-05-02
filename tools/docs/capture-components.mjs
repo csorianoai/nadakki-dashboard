@@ -195,11 +195,22 @@ async function main() {
   for (const c of captures) {
     byPrim[c.primitive] = (byPrim[c.primitive] || 0) + 1;
   }
-  fs.writeFileSync(
-    path.join(__dirname, "_capture-report.json"),
-    JSON.stringify({ generatedAt: new Date().toISOString(), findings, countsByPrimitive: byPrim, captures }, null, 2),
-    "utf8"
-  );
+  const REPORT = path.join(__dirname, "_capture-report.json");
+  let pagesBlock = null;
+  if (fs.existsSync(REPORT)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(REPORT, "utf8"));
+      if (prev.pages) pagesBlock = prev.pages;
+    } catch {
+      /* ignore */
+    }
+  }
+  const out = {
+    generatedAt: new Date().toISOString(),
+    components: { findings, countsByPrimitive: byPrim, captures },
+  };
+  if (pagesBlock) out.pages = pagesBlock;
+  fs.writeFileSync(REPORT, JSON.stringify(out, null, 2), "utf8");
   console.log("capture-components: Done →", OUT);
 }
 
