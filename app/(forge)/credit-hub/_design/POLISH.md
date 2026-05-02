@@ -94,7 +94,7 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 | Item | Notes |
 |------|--------|
 | **7.1** | `framer-motion` uninstalled; `lib/motion-stub.tsx`; CSS/state **`PullToRefresh`**; **`CountUpNumber`** RAF easing; **`ForgeInput`** shake removed; `framer_motion_grep_post.txt` (app+components); `bundle_size_post_framer_removal.md`. |
-| **7.2** | `forge-globals.css` drops `styles/forge-tokens.css` import for Forge subtree. **`tailwind.config.js` LEGACY ALIASES retained** — dual-var fallbacks still required for `components/credit-hub/**` + legacy routes; see `legacy_utility_grep_phase7.txt`. |
+| **7.2** | **FINAL — Case B.** Consumer grep: **`_design/_inventory/credit_hub_consumers_grep.txt`** (repo root) + mirror `app/(forge)/credit-hub/_design/_inventory/credit_hub_consumers_grep.txt`. **Active production imports** from `app/(forge)/credit-hub/**`, `app/(forge)/layout.tsx` (`CHQueryProvider`), and **`components/forge/**`** into `components/credit-hub/**` (Persona, PullToRefresh, analysis panels, wizard types, bank analytics blocks, etc.). **`tailwind.config.js`:** LEGACY ALIASES reclassified as **PERMANENT** (comment block updated). **`styles/forge-tokens.css`:** **preserved**. |
 | **7.3** | No new stale Phase TODO / debug `console.log` in Forge UI targets. |
 | **7.4** | Pagination pattern documented on **`DataTable`**; tooltips **formally absent** (`COMPONENTS.md`). |
 | **7.5** | `tenant_coupling_grep_phase7.txt` + **`BankDashboardHero`** institution headline fix. |

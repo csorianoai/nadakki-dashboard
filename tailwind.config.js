@@ -10,12 +10,23 @@ module.exports = {
     extend: {
       colors: {
         // ─────────────────────────────────────────────────────────
-        // LEGACY ALIASES — DO NOT ADD NEW ENTRIES HERE.
-        // Delete this block entirely in Phase 7 once all pages have
-        // migrated to v3.2 utilities per TOKEN_MIGRATION_MAP.md.
-        // Reference: TOKEN_MIGRATION_MAP.md sections A & B.
-        // Dual var(): prefer v3.2 custom properties on .forge-app; fall
-        // back to styles/forge-tokens.css portal variables.
+        // PERMANENT LEGACY ALIASES — components/credit-hub tree consumes
+        // these tokens directly. The Forge redesign (Phases 1–7) replaced
+        // higher-level surfaces by composition; the underlying
+        // components/credit-hub primitives remained out of scope per project
+        // guardrails. As long as those components ship to production, these
+        // aliases must resolve.
+        //
+        // Dual var(): prefer v3.2 custom properties on .forge-app; fall back
+        // to styles/forge-tokens.css portal variables outside .forge-app.
+        //
+        // To remove: migrate or replace components/credit-hub with
+        // components/forge equivalents, then verify grep is empty:
+        //   Get-ChildItem -Path app,components -Recurse `
+        //     -Include *.tsx,*.ts `
+        //     | Select-String -Pattern '(bg|text|border|ring|from|to|via)-forge-(primary|bg|surface-elevated|surface-hover|border|border-hover|text|text-muted|text-subtle)' `
+        //     | Where-Object { $_.Path -notmatch 'components\\credit-hub' }
+        // and then delete this block + styles/forge-tokens.css.
         // ─────────────────────────────────────────────────────────
         'forge-primary': 'var(--forge-brand-500, var(--forge-primary))',
         'forge-primary-hover': 'var(--forge-brand-600, var(--forge-primary-hover))',

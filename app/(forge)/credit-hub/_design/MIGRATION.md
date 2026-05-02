@@ -8,9 +8,20 @@
 
 ## Dealer application detail URLs
 
+## Phase 7 Item 7.2 — legacy Tailwind adapter (**FINAL — Case B**)
+
+**Consumer analysis:** `Get-ChildItem` on `app/` + `components/` excluding `components/credit-hub/**`, matching `from ['"]@/components/credit-hub` → **`_design/_inventory/credit_hub_consumers_grep.txt`** (repo root; mirror under `app/(forge)/credit-hub/_design/_inventory/`).
+
+**Classification:** **Case B** — `components/credit-hub/**` is **actively imported** by Forge production routes (`app/(forge)/credit-hub/**`), **`app/(forge)/layout.tsx`** (`CHQueryProvider`), and **`components/forge/credit-hub/**` + `components/forge/layout/**`**. Jest suites under `tests/credit-hub/**` also import the same tree. The tree is **not** dead code.
+
+**Resolution:** **`tailwind.config.js`** — LEGACY ALIASES block is **permanent** until primitives migrate to `components/forge/**`; comment documents removal criteria (grep empty outside `components/credit-hub`). **`styles/forge-tokens.css`** — **kept** (dual-var fallbacks for routes without full v3.2 scope).
+
+**Verification (Phase 7 Item 7.2 close):** `npm run build` and `npx tsc --noEmit` green. Lighthouse accessibility-only on `/credit-hub/preview` → **`_design/_inventory/lh-credit-hub-preview-a11y-phase7-72.json`** (`categories.accessibility.score`: **0.97**). `npx @axe-core/cli …/credit-hub/preview --exit` exit **0**.
+
 ## Phase 7 — cleanup log (2026-04-29)
 
 - **Motion:** `framer-motion` removed from dependencies; `lib/motion-stub.tsx` provides a zero-runtime compatibility layer for existing `motion.*` JSX. **`PullToRefresh`** rewritten with CSS `transform` / `opacity` + touch state.
-- **Forge globals:** `forge-globals.css` imports only **`_design/tokens.css`**. Legacy **`styles/forge-tokens.css`** remains in the repo for non–Forge-app shells and Tailwind dual-var fallbacks (`tailwind.config.js` **LEGACY ALIASES** block — not deleted in this pass because `components/credit-hub/**` still emits legacy utility classnames at volume).
+- **Forge globals:** `forge-globals.css` imports only **`_design/tokens.css`**. Legacy **`styles/forge-tokens.css`** remains in the repo for non–Forge-app shells and Tailwind dual-var fallbacks (`tailwind.config.js` **PERMANENT LEGACY ALIASES** block — Item 7.2 Case B).
 - **Tenant headline:** `BankDashboardHero` reads **`useTenantConfig().institution_name`** instead of a hardcoded brand string.
+
 
