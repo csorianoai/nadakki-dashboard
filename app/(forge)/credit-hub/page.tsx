@@ -12,18 +12,18 @@ export default function CreditHubHome() {
   const portals = useMemo(
     () => [
       {
+        href: "/credit-hub/bank",
+        icon: Building2,
+        title: t.portals.bank_title,
+        description: t.portals.bank_desc,
+        available: true,
+      },
+      {
         href: "/credit-hub/dealer",
         icon: Briefcase,
         title: t.portals.dealer_title,
         description: t.portals.dealer_desc,
         available: true,
-      },
-      {
-        href: "#",
-        icon: Building2,
-        title: t.portals.bank_title,
-        description: t.portals.bank_desc,
-        available: false,
       },
       {
         href: "#",
