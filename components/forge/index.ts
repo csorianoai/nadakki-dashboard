@@ -19,6 +19,7 @@ export * from "./ui/Tabs";
 export * from "./ui/Breadcrumb";
 export * from "./ui/DataTable";
 export * from "./ui/KpiCard";
+export * from "./ui/MicroChart";
 export * from "./ui/EvidenceCard";
 export * from "./ui/AuditTimeline";
 export * from "./ui/CommandPalette";

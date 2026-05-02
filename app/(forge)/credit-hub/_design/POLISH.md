@@ -337,3 +337,8 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 - **axe-core CLI** on `/credit-hub/preview` — **exit `0`**.
 
 ---
+
+## Phase 9 v3 — Bank dashboard charts (**TODO / wire hook**)
+
+**`MicroChart`** on **`/credit-hub/bank`** uses **static mock series** for the Insights row (volume + approval trend). **Replace with a real analytics hook** (e.g. `useBankVolumeSeries` / dashboard analytics endpoint) when the API exposes daily aggregates; keep **`prefers-reduced-motion`** behavior in **`MicroChart`** when wiring.
+

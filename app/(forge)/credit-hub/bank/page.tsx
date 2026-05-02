@@ -13,6 +13,7 @@ import {
   EmptyState,
   Input,
   KpiCard,
+  MicroChart,
   Skeleton,
   StatusPill,
 } from "@/components/forge";
@@ -62,6 +63,27 @@ function isSameLocalDay(iso: string, ref: Date): boolean {
     return false;
   }
 }
+
+/** Mock series for bank dashboard Insights (Phase 9 v3); replace with `useBankVolumeSeries` when API exists. */
+const BANK_DASHBOARD_VOLUME_MOCK = [
+  { label: "1", submitted: 28, approved: 21, rejected: 5 },
+  { label: "5", submitted: 32, approved: 25, rejected: 4 },
+  { label: "10", submitted: 36, approved: 29, rejected: 5 },
+  { label: "15", submitted: 34, approved: 27, rejected: 6 },
+  { label: "20", submitted: 40, approved: 31, rejected: 5 },
+  { label: "25", submitted: 38, approved: 30, rejected: 4 },
+  { label: "30", submitted: 42, approved: 33, rejected: 5 },
+];
+
+const BANK_DASHBOARD_APPROVAL_MOCK = [
+  { label: "1", rate: 58 },
+  { label: "5", rate: 61 },
+  { label: "10", rate: 63 },
+  { label: "15", rate: 62 },
+  { label: "20", rate: 65 },
+  { label: "25", rate: 67 },
+  { label: "30", rate: 68 },
+];
 
 export default function BankDashboardPage() {
   const router = useRouter();
@@ -334,6 +356,29 @@ export default function BankDashboardPage() {
             emptyLabel="Sin filas"
           />
         )}
+      </section>
+
+      <section className="mt-12 border-t border-forgeInk-100 pt-8" aria-labelledby="bank-insights-heading">
+        <h2 id="bank-insights-heading" className="font-sans text-[16px] font-medium text-forgeInk-700">
+          Insights
+        </h2>
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <MicroChart
+            title="Volume — last 30 days"
+            data={BANK_DASHBOARD_VOLUME_MOCK}
+            lineKeys={["submitted", "approved", "rejected"]}
+            lineLabels={["Submitted", "Approved", "Rejected"]}
+            colors={["var(--forge-brand-500)", "var(--forge-success-500)", "var(--forge-danger-500)"]}
+          />
+          <MicroChart
+            title="Approval rate trend"
+            data={BANK_DASHBOARD_APPROVAL_MOCK}
+            lineKeys={["rate"]}
+            lineLabels={["Approval rate"]}
+            colors={["var(--forge-brand-500)"]}
+            yTickFormatter={(v) => `${v}%`}
+          />
+        </div>
       </section>
     </div>
   );
