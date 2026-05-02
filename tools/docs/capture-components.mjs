@@ -61,6 +61,19 @@ async function main() {
   await checkHealth();
   fs.mkdirSync(OUT, { recursive: true });
 
+  const expectedSections = [
+    "Buttons & icon buttons",
+    "Form controls",
+    "Consent capture",
+    "Cards, empty state, badges",
+    "Skeleton & avatar",
+    "Tabs",
+    "Data table",
+    "Evidence & audit",
+    "Overlays & toast",
+  ];
+  const findings = [];
+
   const browser = await launchBrowser();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
@@ -68,35 +81,49 @@ async function main() {
   await page.goto(previewUrl, { waitUntil: "domcontentloaded", timeout: 90_000 });
   await sleep(800);
 
+  for (const title of expectedSections) {
+    try {
+      await sectionByTitle(page, title).waitFor({ state: "visible", timeout: 5000 });
+    } catch {
+      findings.push({ type: "missing-preview-section", title });
+      console.warn("MISSING preview section:", title);
+    }
+  }
+
+  const captures = [];
+
   // Layout chrome (sidebar + topbar + KPI strip)
   const layoutChrome = page.locator("div.mx-auto.mt-8.max-w-6xl").first();
   await shotLocator(page, layoutChrome, "layout/sidebar-topbar-kpi.png");
+  captures.push({ primitive: "layout", file: "layout/sidebar-topbar-kpi.png" });
 
   const h3Slugs = [
-    ["Buttons & icon buttons", "Variants (default)", "button/variants-default.png"],
-    ["Buttons & icon buttons", "Loading (leading spinner, label visible)", "button/variants-loading.png"],
-    ["Buttons & icon buttons", "Disabled (no hover lift)", "button/variants-disabled.png"],
-    ["Buttons & icon buttons", "IconButton", "button/iconbutton.png"],
-    ["Buttons & icon buttons", "Focus on surfaces (Tab through — brand-500 ring)", "button/focus-surfaces.png"],
+    ["Buttons & icon buttons", "Variants (default)", "button/variants-default.png", "Button"],
+    ["Buttons & icon buttons", "Loading (leading spinner, label visible)", "button/variants-loading.png", "Button"],
+    ["Buttons & icon buttons", "Disabled (no hover lift)", "button/variants-disabled.png", "Button"],
+    ["Buttons & icon buttons", "IconButton", "button/iconbutton.png", "IconButton"],
+    ["Buttons & icon buttons", "Focus on surfaces (Tab through — brand-500 ring)", "button/focus-surfaces.png", "Button"],
   ];
-  for (const [section, h3, out] of h3Slugs) {
+  for (const [section, h3, out, prim] of h3Slugs) {
     const sec = sectionByTitle(page, section);
     const h = sec.getByRole("heading", { name: h3, exact: true, level: 3 });
     const box = h.locator("xpath=ancestor::div[1]");
     await shotLocator(page, box, out);
+    captures.push({ primitive: prim, file: out });
   }
 
   const sections = [
-    ["Form controls", "form-controls/section.png"],
-    ["Consent capture", "consent-capture/section.png"],
-    ["Cards, empty state, badges", "cards-badges-empty/section.png"],
-    ["Skeleton & avatar", "skeleton-avatar/section.png"],
-    ["Tabs", "tabs/section.png"],
-    ["Evidence & audit", "evidence-audit/section.png"],
-    ["Overlays & toast", "overlays/section.png"],
+    ["Form controls", "form-controls/section.png", "Input"],
+    ["Consent capture", "consent-capture/section.png", "ConsentCapture"],
+    ["Cards, empty state, badges", "cards-badges-empty/section.png", "Card"],
+    ["Skeleton & avatar", "skeleton-avatar/section.png", "Skeleton"],
+    ["Tabs", "tabs/section.png", "Tabs"],
+    ["Evidence & audit", "evidence-audit/section.png", "EvidenceCard"],
+    ["Overlays & toast", "overlays/section.png", "Modal"],
   ];
-  for (const [title, out] of sections) {
+  for (const [title, out, prim] of sections) {
     await shotLocator(page, sectionByTitle(page, title), out);
+    captures.push({ primitive: prim, file: out });
   }
 
   // DataTable: density × preview mode (native selects from Forge Select)
@@ -112,7 +139,9 @@ async function main() {
     for (const [val, label] of modes) {
       await page.locator('select[name="preview-table-demo"]').selectOption({ label });
       await sleep(450);
-      await shotLocator(page, tableSection, `datatable/density-${d}-mode-${val}.png`);
+      const fp = `datatable/density-${d}-mode-${val}.png`;
+      await shotLocator(page, tableSection, fp);
+      captures.push({ primitive: "DataTable", file: fp });
     }
   }
 
@@ -124,9 +153,11 @@ async function main() {
   await applicantBtn.click();
   await sleep(250);
   await shotLocator(page, tableSection, "datatable/sorted-asc.png");
+  captures.push({ primitive: "DataTable", file: "datatable/sorted-asc.png" });
   await applicantBtn.click();
   await sleep(250);
   await shotLocator(page, tableSection, "datatable/sorted-desc.png");
+  captures.push({ primitive: "DataTable", file: "datatable/sorted-desc.png" });
 
   // Passive empty row block (second DataTable in section)
   await shotLocator(
@@ -134,6 +165,7 @@ async function main() {
     tableSection.getByText(/DataTable — empty row/).locator("xpath=following-sibling::*[1]"),
     "datatable/empty-success-tone.png"
   );
+  captures.push({ primitive: "DataTable", file: "datatable/empty-success-tone.png" });
 
   // Bulk strip
   await shotLocator(
@@ -141,6 +173,7 @@ async function main() {
     tableSection.getByText(/Bulk action bar/).locator("xpath=ancestor::div[contains(@class,'rounded-forge-md')][1]"),
     "datatable/bulk-action-bar.png"
   );
+  captures.push({ primitive: "DataTable", file: "datatable/bulk-action-bar.png" });
 
   // Command palette (opens cmd surface) — target preview button, not shell topbar duplicate label
   await sectionByTitle(page, "Overlays & toast")
@@ -150,12 +183,23 @@ async function main() {
   const palette = page.getByRole("dialog", { name: "Command palette" });
   if ((await palette.count()) > 0) {
     await shotLocator(page, palette, "command-palette/open.png");
+    captures.push({ primitive: "CommandPalette", file: "command-palette/open.png" });
   }
   await page.keyboard.press("Escape");
   await sleep(200);
 
   await context.close();
   await browser.close();
+
+  const byPrim = {};
+  for (const c of captures) {
+    byPrim[c.primitive] = (byPrim[c.primitive] || 0) + 1;
+  }
+  fs.writeFileSync(
+    path.join(__dirname, "_capture-report.json"),
+    JSON.stringify({ generatedAt: new Date().toISOString(), findings, countsByPrimitive: byPrim, captures }, null, 2),
+    "utf8"
+  );
   console.log("capture-components: Done →", OUT);
 }
 

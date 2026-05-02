@@ -18,7 +18,7 @@
     "docs:tokens": "node ./tools/docs/build-tokens-md.mjs",
     "docs:components": "node ./tools/docs/capture-components.mjs",
     "docs:pages": "node ./tools/docs/capture-pages.mjs",
-    "docs:validate": "node ./tools/docs/validate-docs.mjs",
+    "docs:validate": "node ./tools/docs/validate-docs.mjs --strict",
     "docs:all": "npm run docs:tokens && npm run docs:components && npm run docs:pages && npm run docs:validate"
   },
   "dependencies": {

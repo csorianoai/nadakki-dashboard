@@ -1,7 +1,6 @@
 /**
- * Capture 9 hero Credit Hub pages (desktop 1280x800 + mobile 375x667).
- * Requires: npm run build && npm run start (BASE_URL default http://127.0.0.1:3000).
- * Uses Playwright channel "msedge" when available (Windows), else bundled Chromium.
+ * Capture 9 hero Credit Hub pages (desktop + mobile), reusing Phase 6 reusability-test PNGs when available.
+ * Writes tools/docs/_capture-report.json
  */
 import { chromium } from "playwright";
 import fs from "fs";
@@ -11,19 +10,22 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..", "..");
 const OUT = path.join(ROOT, "app", "(forge)", "credit-hub", "_design", "_assets", "pages");
+const REUSE = path.join(ROOT, "app", "(forge)", "credit-hub", "_design", "_inventory", "reusability-test");
 const BASE = process.env.BASE_URL || "http://127.0.0.1:3000";
+const REPORT = path.join(__dirname, "_capture-report.json");
 
-/** @type {{ id: string; url: string; bank: boolean }[]} */
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 const PAGES = [
-  { id: "dashboard", url: "/credit-hub/bank", bank: true },
-  { id: "applications-list", url: "/credit-hub/bank/applications", bank: true },
-  { id: "application-detail", url: "/credit-hub/bank/applications/APP-1847", bank: true },
-  { id: "audit", url: "/credit-hub/bank/audit", bank: true },
-  { id: "compliance", url: "/credit-hub/bank/compliance", bank: true },
-  { id: "dashboard", url: "/credit-hub/dealer", bank: false },
-  { id: "applications-list", url: "/credit-hub/dealer/applications", bank: false },
-  { id: "application-detail", url: "/credit-hub/dealer/applications/APP-1847", bank: false },
-  { id: "wizard-step1", url: "/credit-hub/dealer/applications/new/applicant", bank: false },
+  { id: "dashboard", url: "/credit-hub/bank", persona: "bank", reuseDesktop: "bank-dashboard.png", reuseMobile: "bank-dashboard.png" },
+  { id: "applications-list", url: "/credit-hub/bank/applications", persona: "bank", reuseDesktop: "bank-applications-list.png", reuseMobile: "bank-applications-list.png" },
+  { id: "application-detail", url: "/credit-hub/bank/applications/APP-1847", persona: "bank", reuseDesktop: "bank-application-detail.png", reuseMobile: "bank-application-detail.png" },
+  { id: "audit", url: "/credit-hub/bank/audit", persona: "bank", reuseDesktop: "bank-audit.png", reuseMobile: "bank-audit.png" },
+  { id: "compliance", url: "/credit-hub/bank/compliance", persona: "bank", reuseDesktop: "bank-compliance.png", reuseMobile: "bank-compliance.png" },
+  { id: "dashboard", url: "/credit-hub/dealer", persona: "dealer", reuseDesktop: "dealer-dashboard.png", reuseMobile: "dealer-dashboard.png" },
+  { id: "applications-list", url: "/credit-hub/dealer/applications", persona: "dealer", reuseDesktop: "dealer-applications-list.png", reuseMobile: "dealer-applications-list.png" },
+  { id: "application-detail", url: "/credit-hub/dealer/applications/APP-1847", persona: "dealer", reuseDesktop: "dealer-applications-detail.png", reuseMobile: "dealer-applications-detail.png" },
+  { id: "wizard-step1", url: "/credit-hub/dealer/applications/new/applicant", persona: "dealer", reuseDesktop: "dealer-applications-new-step1.png", reuseMobile: "dealer-applications-new-step1.png" },
 ];
 
 async function launchBrowser() {
@@ -45,44 +47,69 @@ async function checkHealth() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   } catch (e) {
     clearTimeout(t);
-    throw new Error(
-      `Cannot reach ${u.href} (${e.message}). Run: npm run build && npm run start — or set BASE_URL.`
-    );
+    throw new Error(`Cannot reach ${u.href} (${e.message}).`);
   }
 }
 
-async function captureViewport(browser, viewport, suffix) {
-  const context = await browser.newContext({ viewport });
-  const page = await context.newPage();
-  for (const shot of PAGES) {
-    const persona = shot.bank ? "bank" : "dealer";
-    const dir = path.join(OUT, persona);
-    fs.mkdirSync(dir, { recursive: true });
-    const target = `${BASE}${shot.url}`;
-    try {
-      await page.goto(target, { waitUntil: "domcontentloaded", timeout: 90_000 });
-      await new Promise((r) => setTimeout(r, 900));
-      const file = path.join(dir, `${shot.id}-${suffix}.png`);
-      await page.screenshot({ path: file, fullPage: false });
-      console.log("OK", suffix, persona, shot.id);
-    } catch (e) {
-      console.error("FAIL", suffix, persona, shot.id, target, e.message);
-      throw e;
-    }
-  }
-  await context.close();
+function copyReuse(subdir, file, dest) {
+  const src = path.join(REUSE, subdir, file);
+  if (!fs.existsSync(src)) return false;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+  return true;
 }
 
 async function main() {
   await checkHealth();
   fs.mkdirSync(OUT, { recursive: true });
-  const browser = await launchBrowser();
-  try {
-    await captureViewport(browser, { width: 1280, height: 800 }, "desktop");
-    await captureViewport(browser, { width: 375, height: 667 }, "mobile");
-  } finally {
-    await browser.close();
+  const events = [];
+
+  for (const shot of PAGES) {
+    const dir = path.join(OUT, shot.persona);
+    for (const [suffix, reuseSub, reuseFile] of [
+      ["desktop", "desktop", shot.reuseDesktop],
+      ["mobile", "mobile", shot.reuseMobile],
+    ]) {
+      const dest = path.join(dir, `${shot.id}-${suffix}.png`);
+      if (copyReuse(reuseSub, reuseFile, dest)) {
+        events.push({ persona: shot.persona, id: shot.id, suffix, mode: "reused", from: `reusability-test/${reuseSub}/${reuseFile}` });
+        console.log("REUSE", shot.persona, shot.id, suffix);
+      }
+    }
   }
+
+  const browser = await launchBrowser();
+  for (const shot of PAGES) {
+    const dir = path.join(OUT, shot.persona);
+    for (const [suffix, vw, vh] of [
+      ["desktop", 1280, 800],
+      ["mobile", 375, 667],
+    ]) {
+      const dest = path.join(dir, `${shot.id}-${suffix}.png`);
+      if (fs.existsSync(dest) && fs.statSync(dest).size > 500) continue;
+
+      const context = await browser.newContext({ viewport: { width: vw, height: vh } });
+      const page = await context.newPage();
+      try {
+        await page.goto(`${BASE}${shot.url}`, { waitUntil: "domcontentloaded", timeout: 90_000 });
+        await sleep(900);
+        await page.screenshot({ path: dest, fullPage: false });
+        events.push({ persona: shot.persona, id: shot.id, suffix, mode: "captured", url: `${BASE}${shot.url}` });
+        console.log("CAPTURE", shot.persona, shot.id, suffix);
+      } finally {
+        await context.close();
+      }
+    }
+  }
+  await browser.close();
+
+  const report = {
+    generatedAt: new Date().toISOString(),
+    reused: events.filter((e) => e.mode === "reused").length,
+    captured: events.filter((e) => e.mode === "captured").length,
+    events,
+  };
+  fs.writeFileSync(REPORT, JSON.stringify(report, null, 2), "utf8");
   console.log("capture-pages: Done →", OUT);
 }
 
