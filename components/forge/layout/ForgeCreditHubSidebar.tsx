@@ -52,7 +52,7 @@ export function ForgeCreditHubSidebar() {
       aria-label={`${personaLabel(persona)} navigation`}
     >
       <div
-        className="border-b border-forgeInk-100 px-4 py-3"
+        className="border-b border-forgeInk-700/30 bg-gradient-to-b from-forgeBrand-900 to-forgeBrand-950 px-4 py-3"
         data-forge-sidebar-header
       >
         {tenantConfig.branding.logo_url ? (
@@ -68,8 +68,8 @@ export function ForgeCreditHubSidebar() {
             />
           </div>
         ) : null}
-        <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Forge</p>
-        <p className="text-forge-sm font-medium text-forgeBrand-700">{personaLabel(persona)}</p>
+        <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-300">Forge</p>
+        <p className="text-forge-sm font-medium text-forgeInk-50">{personaLabel(persona)}</p>
       </div>
       <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Primary">
         {items.map((item) => {
