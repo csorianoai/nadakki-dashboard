@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { AlertCircle, ArrowRight, Building2, Inbox, Search } from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, CheckCircle2, ClipboardList, Inbox, Search, TrendingUp, XCircle } from "lucide-react";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import {
   Badge,
@@ -54,6 +54,15 @@ function queueLabel(item: BankQueueItem): string {
   return item.bank_decision?.decision ?? item.state ?? "—";
 }
 
+function isSameLocalDay(iso: string, ref: Date): boolean {
+  try {
+    const d = new Date(iso);
+    return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth() && d.getDate() === ref.getDate();
+  } catch {
+    return false;
+  }
+}
+
 export default function BankDashboardPage() {
   const router = useRouter();
   const persona = usePersona();
@@ -86,6 +95,44 @@ export default function BankDashboardPage() {
           0
         )
       : null;
+
+  const kpiFromQueue = useMemo(() => {
+    const now = new Date();
+    let approvedToday = 0;
+    let rejectedToday = 0;
+    let volumeMonth = 0;
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    for (const row of queueApps) {
+      const decided = row.bank_decision;
+      if (decided?.decided_at) {
+        if (decided.decision === "APROBADO" && isSameLocalDay(decided.decided_at, now)) approvedToday += 1;
+        if (decided.decision === "RECHAZADO" && isSameLocalDay(decided.decided_at, now)) rejectedToday += 1;
+      }
+      if (row.created_at) {
+        const c = new Date(row.created_at);
+        if (c.getFullYear() === y && c.getMonth() === m) volumeMonth += Number(row.requested_amount) || 0;
+      }
+    }
+    return { approvedToday, rejectedToday, volumeMonth };
+  }, [queueApps]);
+
+  const volumeTrend = useMemo(() => {
+    const cohort = analytics?.cohort_analysis;
+    if (!cohort || cohort.length < 2) return undefined;
+    const sorted = [...cohort].sort((a, b) => a.period.localeCompare(b.period));
+    const prev = sorted[sorted.length - 2]!.approved;
+    const cur = sorted[sorted.length - 1]!.approved;
+    if (prev === 0 && cur === 0) return undefined;
+    const diff = cur - prev;
+    const pct = prev === 0 ? 100 : Math.round((diff / prev) * 100);
+    const es = tenantConfig.locale.toLowerCase().startsWith("es");
+    return {
+      direction: diff > 0 ? ("up" as const) : diff < 0 ? ("down" as const) : ("neutral" as const),
+      value: `${diff >= 0 ? "+" : "−"}${Math.abs(pct)}%`,
+      label: es ? "aprobadas vs cohorte previa" : "approved vs prior cohort",
+    };
+  }, [analytics, tenantConfig.locale]);
 
   const columns = useMemo(
     () => [
@@ -186,36 +233,31 @@ export default function BankDashboardPage() {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard
-          label="Solicitudes"
-          value={analyticsQuery.isLoading ? <Skeleton className="h-8 w-16" /> : (analytics?.total_applications ?? "—")}
+          icon={ClipboardList}
+          label="Solicitudes pendientes"
+          value={analyticsQuery.isLoading ? <Skeleton className="h-10 w-16" /> : String(pending ?? "—")}
         />
         <KpiCard
-          label="Pendientes"
-          value={analyticsQuery.isLoading ? <Skeleton className="h-8 w-16" /> : pending ?? "—"}
+          icon={CheckCircle2}
+          label="Aprobadas hoy"
+          value={queueQuery.isLoading ? <Skeleton className="h-10 w-12" /> : String(kpiFromQueue.approvedToday)}
         />
         <KpiCard
-          label="Aprobación %"
+          icon={XCircle}
+          label="Rechazadas hoy"
+          value={queueQuery.isLoading ? <Skeleton className="h-10 w-12" /> : String(kpiFromQueue.rejectedToday)}
+        />
+        <KpiCard
+          icon={TrendingUp}
+          label="Volumen del mes"
           value={
-            analyticsQuery.isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : analytics ? (
-              `${Math.round(analytics.approval_rate * 100)}%`
+            queueQuery.isLoading ? (
+              <Skeleton className="h-10 w-28" />
             ) : (
-              "—"
+              formatForgeCurrency(kpiFromQueue.volumeMonth, tenantConfig.locale, tenantConfig.currency_code)
             )
           }
-        />
-        <KpiCard
-          label="Cartera activa"
-          value={
-            analyticsQuery.isLoading ? (
-              <Skeleton className="h-8 w-24" />
-            ) : analytics ? (
-              formatForgeCurrency(Math.round(analytics.portfolio_value), tenantConfig.locale, tenantConfig.currency_code)
-            ) : (
-              "—"
-            )
-          }
+          trend={volumeTrend}
         />
       </div>
 

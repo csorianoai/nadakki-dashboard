@@ -196,9 +196,15 @@ export default function ForgePreviewPage() {
               />
               <div className="flex-1 space-y-4 p-4">
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <KpiCard label="Open" value="128" trend="+4.2% vs prior week" hint="Rolling 7-day window" />
-                  <KpiCard label="SLA risk" value="6" trend="2 escalated" />
-                  <KpiCard label="Auto-decision" value="42%" />
+                  <KpiCard
+                    icon={Inbox}
+                    label="Open"
+                    value="128"
+                    trend={{ direction: "up", value: "+4.2%", label: "vs prior week" }}
+                    hint="Rolling 7-day window"
+                  />
+                  <KpiCard icon={Bell} label="SLA risk" value="6" hint="2 escalated" />
+                  <KpiCard icon={CheckCircle2} label="Auto-decision" value="42%" />
                 </div>
               </div>
             </div>

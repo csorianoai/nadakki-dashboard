@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Plus, FolderOpen, ArrowRight } from "lucide-react";
+import { Plus, FolderOpen, ArrowRight, FileEdit, Send, CheckCircle2, TrendingUp } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { Button, Card, DataTable, EmptyState, KpiCard, Skeleton } from "@/components/forge";
@@ -169,10 +169,11 @@ export default function DealerDashboardPage() {
             </>
           ) : (
             <>
-              <KpiCard label="Borradores" value={String(stats?.draft_applications ?? 0)} />
-              <KpiCard label="Enviadas" value={String(stats?.submitted_applications ?? 0)} />
-              <KpiCard label="Aprobadas" value={String(stats?.approved_applications ?? 0)} />
+              <KpiCard icon={FileEdit} label="Borradores" value={String(stats?.draft_applications ?? 0)} />
+              <KpiCard icon={Send} label="Enviadas" value={String(stats?.submitted_applications ?? 0)} />
+              <KpiCard icon={CheckCircle2} label="Aprobadas" value={String(stats?.approved_applications ?? 0)} />
               <KpiCard
+                icon={TrendingUp}
                 label="Volumen este mes"
                 value={volumeThisMonth(applications, tenantConfig.locale, tenantConfig.currency_code)}
                 hint="Suma de montos solicitados (solicitudes creadas este mes)"
