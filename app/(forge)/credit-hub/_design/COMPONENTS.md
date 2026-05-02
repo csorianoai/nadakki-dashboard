@@ -67,7 +67,7 @@ Next.js treats leading-underscore segments as **private folders**, so the playgr
 
 ### DEFERRED TO PHASE 8 — URL-derived persona (accepted debt)
 
-**Current implementation:** Persona (`bank` | `dealer`) fed to `PersonaProvider` is derived from **`useSelectedLayoutSegments()`** via **`creditHubPersonaFromLayoutSegments()`**, keyed off the first route segment under `/credit-hub` (`bank` / `dealer`). This **does not** meet the stricter “no URL-derived persona” guardrail from the Phase 3 brief.
+**Current implementation:** Persona (`bank` | `dealer`) fed to `PersonaProvider` is derived from **`useSelectedLayoutSegments()`** via **`creditHubPersonaFromLayoutSegments()`** (implemented in `creditHubPersonaFromSegments.ts`), keyed off the first route segment under `/credit-hub` (`bank` / `dealer`). This **does not** meet the stricter “no URL-derived persona” guardrail from the Phase 3 brief.
 
 **Target implementation:** Derive persona from **`TenantContext`** (and/or auth-derived role metadata) once Path A/B decisions allow extending tenant metadata **without** breaking other cores — see `TENANT_CONTEXT_EXTENSION.md` (ForgeBrandingProvider / Path B).
 
@@ -144,3 +144,1605 @@ Forge **does not ship a JavaScript animation library**. Runtime uses **`lib/moti
 ## Tooltips
 
 Forge **does not use tooltips**. Prefer visible labels, helper text, `aria-describedby`, and inline descriptions. Tooltips fail on touch-first workflows and add cognitive load. If a surface seems to need a tooltip, the information probably belongs **visible** in the layout.
+
+
+<!-- PHASE8_PRIMITIVE_CATALOG_START -->
+
+> **Primitive catalog (scaffold):** Regenerate with `node tools/docs/generate-component-catalog.mjs`. Keep each `## Name` heading aligned with the source file basename for `docs:validate --strict`.
+
+
+## AuditTimeline
+
+**File:** `components/forge/ui/AuditTimeline.tsx` · **Lines:** 51
+
+**Purpose:** Forge design-system primitive `AuditTimeline` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `AuditTimelineProps`
+
+```ts
+entries: AuditTimelineEntry[];
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![AuditTimeline](./_assets/components/evidence-audit/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { AuditTimeline } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Avatar
+
+**File:** `components/forge/ui/Avatar.tsx` · **Lines:** 50
+
+**Purpose:** Forge design-system primitive `Avatar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `AvatarProps`
+
+```ts
+src?: string | null;
+alt: string;
+fallback?: string;
+size?: AvatarSize;
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Avatar](./_assets/components/skeleton-avatar/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Avatar } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Badge
+
+**File:** `components/forge/ui/Badge.tsx` · **Lines:** 34
+
+**Purpose:** Forge design-system primitive `Badge` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Badge](./_assets/components/cards-badges-empty/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Badge } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Breadcrumb
+
+**File:** `components/forge/ui/Breadcrumb.tsx` · **Lines:** 42
+
+**Purpose:** Forge design-system primitive `Breadcrumb` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `BreadcrumbProps`
+
+```ts
+items: BreadcrumbItem[];
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Breadcrumb } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Button
+
+**File:** `components/forge/ui/Button.tsx` · **Lines:** 114
+
+**Purpose:** Forge design-system primitive `Button` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Button](./_assets/components/button/variants-default.png)
+
+![Button](./_assets/components/button/variants-loading.png)
+
+![Button](./_assets/components/button/variants-disabled.png)
+
+![Button](./_assets/components/button/iconbutton.png)
+
+![Button](./_assets/components/button/focus-surfaces.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Button } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Card
+
+**File:** `components/forge/ui/Card.tsx` · **Lines:** 21
+
+**Purpose:** Forge design-system primitive `Card` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Card](./_assets/components/cards-badges-empty/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Card } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Checkbox
+
+**File:** `components/forge/ui/Checkbox.tsx` · **Lines:** 51
+
+**Purpose:** Forge design-system primitive `Checkbox` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Checkbox](./_assets/components/form-controls/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Checkbox } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## CommandPalette
+
+**File:** `components/forge/ui/CommandPalette.tsx` · **Lines:** 165
+
+**Purpose:** Forge design-system primitive `CommandPalette` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `CommandPaletteProps`
+
+```ts
+open: boolean;
+onOpenChange: (open: boolean) => void;
+/** Flat list (single “Actions” group). Ignored if `groups` is set. */
+actions?: CommandPaletteAction[];
+/** Grouped commands (cmdk `Command.Group`). */
+groups?: CommandPaletteGroup[];
+/** Controlled filter box so parents can derive dynamic commands from `search`. */
+search?: string;
+onSearchChange?: (value: string) => void;
+placeholder?: string;
+className?: string;
+closeOnBackdropClick?: boolean;
+/** When false, does not register ⌘K / Ctrl+K (default true). */
+keyboardShortcut?: boolean;
+emptyMessage?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![CommandPalette](./_assets/components/command-palette/open.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { CommandPalette } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## ConsentCapture
+
+**File:** `components/forge/ui/ConsentCapture.tsx` · **Lines:** 41
+
+**Purpose:** Forge design-system primitive `ConsentCapture` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `ConsentCaptureProps`
+
+```ts
+checked: boolean;
+onCheckedChange: (checked: boolean) => void;
+/** Accessible name for the consent control (visible copy lives in `children`). */
+consentAriaLabel: string;
+/** Visible consent copy (plain text or rich layout from caller). */
+children: ReactNode;
+disabled?: boolean;
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![ConsentCapture](./_assets/components/consent-capture/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { ConsentCapture } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## DataTable
+
+**File:** `components/forge/ui/DataTable.tsx` · **Lines:** 182
+
+**Purpose:** Forge design-system primitive `DataTable` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![DataTable](./_assets/components/datatable/density-comfortable-mode-data.png)
+
+![DataTable](./_assets/components/datatable/density-compact-mode-data.png)
+
+![DataTable](./_assets/components/datatable/sorted-asc.png)
+
+![DataTable](./_assets/components/datatable/bulk-action-bar.png)
+
+![DataTable](./_assets/components/datatable/empty-success-tone.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { DataTable } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## DateInput
+
+**File:** `components/forge/ui/DateInput.tsx` · **Lines:** 69
+
+**Purpose:** Forge design-system primitive `DateInput` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { DateInput } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Drawer
+
+**File:** `components/forge/ui/Drawer.tsx` · **Lines:** 98
+
+**Purpose:** Forge design-system primitive `Drawer` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `DrawerProps`
+
+```ts
+open: boolean;
+onClose: () => void;
+title: string;
+description?: string;
+children: ReactNode;
+footer?: ReactNode;
+side?: "left" | "right";
+className?: string;
+/** When false, clicking outside the panel does not dismiss (default true). */
+closeOnBackdropClick?: boolean;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Drawer](./_assets/components/overlays/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Drawer } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## EmptyState
+
+**File:** `components/forge/ui/EmptyState.tsx` · **Lines:** 42
+
+**Purpose:** Forge design-system primitive `EmptyState` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `EmptyStateProps`
+
+```ts
+/** Decorative icon (e.g. Lucide); wrapped with `aria-hidden`. */
+icon?: ReactNode;
+title: string;
+/** Heading level for the title (default 3). Use 2 after a page-level `h1` so the outline stays sequential. */
+titleLevel?: 2 | 3;
+description?: string;
+action?: ReactNode;
+className?: string;
+/** Passive positive framing (e.g. compliance “all clear”). */
+tone?: "default" | "success";
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![EmptyState](./_assets/components/cards-badges-empty/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { EmptyState } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## EvidenceCard
+
+**File:** `components/forge/ui/EvidenceCard.tsx` · **Lines:** 42
+
+**Purpose:** Forge design-system primitive `EvidenceCard` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `EvidenceCardProps`
+
+```ts
+title: string;
+body: ReactNode;
+sourceLabel: string;
+confidence?: "high" | "medium" | "low";
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![EvidenceCard](./_assets/components/evidence-audit/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { EvidenceCard } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## IconButton
+
+**File:** `components/forge/ui/IconButton.tsx` · **Lines:** 37
+
+**Purpose:** Forge design-system primitive `IconButton` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { IconButton } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Input
+
+**File:** `components/forge/ui/Input.tsx` · **Lines:** 71
+
+**Purpose:** Forge design-system primitive `Input` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Input](./_assets/components/form-controls/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Input } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## KpiCard
+
+**File:** `components/forge/ui/KpiCard.tsx` · **Lines:** 26
+
+**Purpose:** Forge design-system primitive `KpiCard` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `KpiCardProps`
+
+```ts
+label: string;
+value: ReactNode;
+hint?: string;
+trend?: ReactNode;
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { KpiCard } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Modal
+
+**File:** `components/forge/ui/Modal.tsx` · **Lines:** 75
+
+**Purpose:** Forge design-system primitive `Modal` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `ModalProps`
+
+```ts
+open: boolean;
+onClose: () => void;
+title: string;
+description?: string;
+children: ReactNode;
+footer?: ReactNode;
+className?: string;
+/** When false, clicking the dialog backdrop does not dismiss (default true). */
+closeOnBackdropClick?: boolean;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Modal](./_assets/components/overlays/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Modal } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## MoneyInput
+
+**File:** `components/forge/ui/MoneyInput.tsx` · **Lines:** 79
+
+**Purpose:** Forge design-system primitive `MoneyInput` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { MoneyInput } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## RadioGroup
+
+**File:** `components/forge/ui/RadioGroup.tsx` · **Lines:** 50
+
+**Purpose:** Forge design-system primitive `RadioGroup` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `RadioGroupProps`
+
+```ts
+name: string;
+label?: string;
+options: RadioOption[];
+value?: string;
+onChange?: (value: string) => void;
+layout?: "inline" | "stacked";
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { RadioGroup } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Select
+
+**File:** `components/forge/ui/Select.tsx` · **Lines:** 70
+
+**Purpose:** Forge design-system primitive `Select` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Select](./_assets/components/form-controls/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Select } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Skeleton
+
+**File:** `components/forge/ui/Skeleton.tsx` · **Lines:** 22
+
+**Purpose:** Forge design-system primitive `Skeleton` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `SkeletonProps`
+
+```ts
+className?: string;
+/** Accessible label for screen readers. Omit for decorative skeletons (parent sets `aria-busy`). */
+label?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Skeleton](./_assets/components/skeleton-avatar/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Skeleton } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## StatusPill
+
+**File:** `components/forge/ui/StatusPill.tsx` · **Lines:** 35
+
+**Purpose:** Forge design-system primitive `StatusPill` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![StatusPill](./_assets/components/cards-badges-empty/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { StatusPill } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Switch
+
+**File:** `components/forge/ui/Switch.tsx` · **Lines:** 50
+
+**Purpose:** Forge design-system primitive `Switch` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Switch } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Tabs
+
+**File:** `components/forge/ui/Tabs.tsx` · **Lines:** 82
+
+**Purpose:** Forge design-system primitive `Tabs` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `TabsProps`
+
+```ts
+tabs: TabDef[];
+value: string;
+onValueChange: (id: string) => void;
+className?: string;
+/** Visual style — both meet Forge density; `pills` for filters, `line` for settings. */
+variant?: "line" | "pills";
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Tabs](./_assets/components/tabs/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Tabs } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Textarea
+
+**File:** `components/forge/ui/Textarea.tsx` · **Lines:** 82
+
+**Purpose:** Forge design-system primitive `Textarea` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Textarea } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Toast
+
+**File:** `components/forge/ui/Toast.tsx` · **Lines:** 32
+
+**Purpose:** Forge design-system primitive `Toast` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Toast](./_assets/components/overlays/section.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { ForgeToaster, toast } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## ForgeCommandPaletteContext
+
+**File:** `components/forge/layout/ForgeCommandPaletteContext.tsx` · **Lines:** 54
+
+**Purpose:** Forge design-system primitive `ForgeCommandPaletteContext` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { ForgeCommandPaletteContext } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## ForgeCreditHubAppShell
+
+**File:** `components/forge/layout/ForgeCreditHubAppShell.tsx` · **Lines:** 58
+
+**Purpose:** Forge design-system primitive `ForgeCreditHubAppShell` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { ForgeCreditHubAppShell } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## ForgeCreditHubCommandPalette
+
+**File:** `components/forge/layout/ForgeCreditHubCommandPalette.tsx` · **Lines:** 273
+
+**Purpose:** Forge design-system primitive `ForgeCreditHubCommandPalette` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { ForgeCreditHubCommandPalette } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## ForgeCreditHubSidebar
+
+**File:** `components/forge/layout/ForgeCreditHubSidebar.tsx` · **Lines:** 110
+
+**Purpose:** Forge design-system primitive `ForgeCreditHubSidebar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { ForgeCreditHubSidebar } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## ForgeCreditHubTopbar
+
+**File:** `components/forge/layout/ForgeCreditHubTopbar.tsx` · **Lines:** 31
+
+**Purpose:** Forge design-system primitive `ForgeCreditHubTopbar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { ForgeCreditHubTopbar } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Sidebar
+
+**File:** `components/forge/layout/Sidebar.tsx` · **Lines:** 54
+
+**Purpose:** Forge design-system primitive `Sidebar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `SidebarProps`
+
+```ts
+brand: ReactNode;
+items: SidebarNavItem[];
+footer?: ReactNode;
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Sidebar](./_assets/components/layout/sidebar-topbar-kpi.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Sidebar } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## Topbar
+
+**File:** `components/forge/layout/Topbar.tsx` · **Lines:** 30
+
+**Purpose:** Forge design-system primitive `Topbar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Primary props interface:** `TopbarProps`
+
+```ts
+title: string;
+/** Optional row above title (e.g. breadcrumbs). */
+leading?: ReactNode;
+actions?: ReactNode;
+className?: string;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+![Topbar](./_assets/components/layout/sidebar-topbar-kpi.png)
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { Topbar } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## creditHubPersonaFromSegments
+
+**File:** `components/forge/layout/creditHubPersonaFromSegments.ts` · **Lines:** 14
+
+**Purpose:** Forge design-system primitive `creditHubPersonaFromSegments` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+
+**Props:** See source for `export interface …Props` and runtime props.
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
+
+### Accessibility
+
+- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
+- See **Lighthouse accessibility** section above for gate hygiene.
+
+### Minimal example
+
+```tsx
+import { creditHubPersonaFromSegments } from "@/components/forge";
+```
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+
+### Compose vs extend
+
+- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
+- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+<!-- PHASE8_PRIMITIVE_CATALOG_END -->
+
+

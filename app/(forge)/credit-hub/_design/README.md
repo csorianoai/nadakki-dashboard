@@ -15,7 +15,7 @@ This `_design/` folder is the **living documentation root**: English technical r
 | **Tenant / brand ops** | `TENANT_THEMING.md` (ES, Phase 8) | `REUSABILITY_TEST.md`, `TOKEN_MIGRATION_MAP.md` |
 | **Platform / fork** | `REUSE_PLAYBOOK.md` (ES, Phase 8) | `MIGRATION.md`, `TENANT_CONTEXT_EXTENSION.md` |
 | **QA / a11y** | `COMPONENTS.md` (a11y sections), `POLISH.md` | `_inventory/lh-*.json`, `REUSABILITY_TEST.md` |
-| **Future agent (cold start)** | This `README.md` → [Change brand color](#brand-color) | `TOKENS.md`, `TENANT_THEMING.md` |
+| **Future agent (cold start)** | This `README.md` → [Change brand color](./README.md#brand-color) | `TOKENS.md`, `TENANT_THEMING.md` |
 
 ## Document index (one line each)
 
@@ -25,7 +25,7 @@ This `_design/` folder is the **living documentation root**: English technical r
 | **DESIGN_SYSTEM.md** | Philosophy, benchmarks, anti-patterns, architecture non-negotiables, extend/compose/refuse. |
 | **TOKENS.md** | Token reference + **`npm run docs:tokens`** auto-table from `tokens.css` (between `AUTOGEN` markers). |
 | **COMPONENTS.md** | Forge primitive catalog, usage rules, motion and a11y gates. |
-| **PAGES.md** | Hero route reference — **added Phase 8 Step 4** (not in repo until then). |
+| **PAGES.md** | Hero routes (9) — bank/dealer dashboards, lists, detail, wizard, compliance, audit. |
 | **MIGRATION.md** | Phase 4–7 migration notes, Phase 7.2 legacy Tailwind adapter resolution. |
 | **POLISH.md** | Phase 5–7 polish tracker and verification evidence. |
 | **AUDIT.md** | Phase 0 baseline audit (drift, anti-patterns vs v3.2). |
@@ -69,7 +69,7 @@ _design/
 ├── DESIGN_SYSTEM.md
 ├── COMPONENTS.md
 ├── TOKENS.md
-├── MIGRATION.md
+├── PAGES.md
 ├── POLISH.md
 ├── AUDIT.md
 ├── REUSABILITY_TEST.md

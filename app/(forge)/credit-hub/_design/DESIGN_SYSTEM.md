@@ -27,12 +27,12 @@ Forge targets **dense, trustworthy** operator UIs—not marketing microsites. Th
 
 | Image | Alt | What we borrow | Live reference (open in browser) | Captured |
 |-------|-----|----------------|----------------------------------|------------|
-| ![Marquee-direction reference](./_assets/benchmarks/goldman-marquee.png) | Dark institutional dashboard with dense columns and status color | Data density, monospace numerals, restrained green/red semantics | [Marquee](https://www.goldmansachs.com/what-we-do/marquee/) (product marketing; institutional terminal style) | 2026-04-29 |
+| ![Marquee-direction reference](./_assets/benchmarks/goldman-marquee.png) | Dark institutional dashboard with dense columns and status color | Data density, monospace numerals, restrained green/red semantics | [Marquee](https://www.goldmansachs.com/) (product marketing; institutional terminal style) | 2026-04-29 |
 | ![Stripe-direction reference](./_assets/benchmarks/stripe-dashboard.png) | Light minimal dashboard with hairline borders | Quiet cards, single accent, generous whitespace | [Stripe Dashboard](https://stripe.com/) | 2026-04-29 |
 | ![Linear-direction reference](./_assets/benchmarks/linear-app.png) | Dark list-first productivity UI | Keyboard-first lists, subtle row chrome, command affordances | [Linear](https://linear.app/) | 2026-04-29 |
-| ![Brex-direction reference](./_assets/benchmarks/brex-dashboard.png) | Navy header, gold accent spend view | Premium corporate card aesthetic without neon | [Brex](https://www.brex.com/product/spend) | 2026-04-29 |
+| ![Brex-direction reference](./_assets/benchmarks/brex-dashboard.png) | Navy header, gold accent spend view | Premium corporate card aesthetic without neon | [Brex](https://www.brex.com/) (corporate spend / expense product family) | 2026-04-29 |
 | ![Notion-direction reference](./_assets/benchmarks/notion-page.png) | Light sidebar + document canvas | Sidebar IA, long-form readability, soft dividers | [Notion](https://www.notion.so/) | 2026-04-29 |
-| ![Bloomberg-direction reference](./_assets/benchmarks/bloomberg-terminal.png) | Black terminal grid with amber/cyan accents | Terminal-grade density, monospace grid (Forge bank analytics lean here) | [Bloomberg Professional](https://www.bloomberg.com/professional/) | 2026-04-29 |
+| ![Bloomberg-direction reference](./_assets/benchmarks/bloomberg-terminal.png) | Black terminal grid with amber/cyan accents | Terminal-grade density, monospace grid (Forge bank analytics lean here) | [Bloomberg Terminal](https://en.wikipedia.org/wiki/Bloomberg_Terminal) (encyclopedic overview; vendor site may block automated checks) | 2026-04-29 |
 
 **Fair use / institutional reference:** The composites above are **original artwork** for internal design documentation to reduce copyright risk. They **do not** reproduce proprietary layouts. When presenting to executives, prefer **live URLs** or licensed press imagery from the vendors themselves.
 
