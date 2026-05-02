@@ -1,0 +1,23 @@
+name: Forge Credit Hub — docs validate
+
+on:
+  pull_request:
+    paths:
+      - "components/forge/**"
+      - "app/(forge)/credit-hub/_design/tokens.css"
+      - "app/(forge)/credit-hub/_design/COMPONENTS.md"
+      - "tools/docs/validate-docs.mjs"
+
+jobs:
+  docs-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate COMPONENTS.md vs forge sources
+        run: npm run docs:validate
