@@ -1,0 +1,22 @@
+# Forge runtime TODO / FIXME / XXX / HACK sweep
+
+Generated: 2026-05-02 (Task 2 — POLISH.md debt closure pass)
+
+## Scope
+
+- `components/forge/**/*.{ts,tsx}`
+- `app/(forge)/**/*.{ts,tsx}` excluding `**/_design/**` (documentation only)
+
+## Method
+
+Repository search for: `TODO`, `FIXME`, `XXX`, `HACK` (token boundaries as used by ripgrep).
+
+## Results
+
+**0 matches** in the scoped TypeScript / TSX trees above.
+
+No trivial code comments required removal; no non-trivial items to register in POLISH.md beyond the existing cross-core note (**`CROSS_CORE_FINDINGS.md`**).
+
+## Follow-up
+
+Re-run the same search before major Forge releases or when adding large surface areas under `components/forge/` or `app/(forge)/`.

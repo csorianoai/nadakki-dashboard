@@ -101,7 +101,25 @@ Status: `todo` | `done` | `deferred-phase-7` | **green**
 
 ---
 
+## Phase 7 — Historical deferrals (**registry; all CLOSED for Forge**)
+
+| Ref | Topic | Status |
+|-----|--------|--------|
+| **A** | **`PullToRefresh`** + **`framer-motion`** removal | **RESOLVED Phase 7.1** — CSS/state `PullToRefresh`, `lib/motion-stub.tsx`, dep removed; see **7.1** above. The archived memo below is **read-only** (was “scheduled for Phase 7”; execution complete). |
+| **B** | Pagination as a separate Forge primitive | **CLOSED** — page-level pattern around **`DataTable`** only (**Item 2 Group 3** + `COMPONENTS.md`). |
+| **C** | Tooltip primitive | **CLOSED** — formally absent (**Item 2 Group 5** + `COMPONENTS.md`). |
+| **D** | **`DataTableMobileCard`** | **CLOSED** — intentionally not shipped; density + horizontal scroll inside table (**Phase 5 Item 1** + `COMPONENTS.md`). |
+| **E** | Cross-core UUID **`366b3c6c-…`** | **Out of Forge scope** — backend / identity sprint; **`CROSS_CORE_FINDINGS.md`**; **not blocking** Forge v1.0. |
+
+### Known TODOs in `components/forge/**` + `app/(forge)/**` (code only)
+
+**Sweep:** `_design/_inventory/forge_todos.txt` (updated with this pass). As of the latest grep of `*.{ts,tsx}` under those trees (excluding `_design` prose), **no** `TODO` / `FIXME` / `XXX` / `HACK` markers remain in Forge runtime code paths.
+
+---
+
 ## Phase 7 — eliminate `framer-motion` from runtime (archived decision memo)
+
+**Execution status:** **CLOSED — Phase 7.1** (PullToRefresh CSS-only; `framer-motion` removed from runtime). The ASCII memo inside `<details>` is preserved for audit only.
 
 <details>
 <summary>Original decision text</summary>

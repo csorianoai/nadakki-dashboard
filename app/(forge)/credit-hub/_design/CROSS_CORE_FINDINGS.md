@@ -26,6 +26,10 @@ The same UUID is **labeled as Credicefi** in one legal report and **bound to sf-
 
 Forge / Credit Hub default tenant for API fallback remains **`0a91ee98-2dbe-46d0-a43c-3fc2dbd42242`** (Credicefi), per canonical evidence in `BLOCKER_phase1.5.md` resolution and `lib/credit-hub/types/creditCore.ts` JSDoc. **No Forge code should assume `366b3c6c-…` without team-wide reconciliation.**
 
+### Sprint disposition (identity / control-plane)
+
+**Deferred to a backend / cross-core identity reconciliation sprint.** This inconsistency **does not block** Forge Credit Hub **v1.0** production release. Dashboard code must not depend on UUID **`366b3c6c-a899-4320-805e-5c1d7c896f74`** until product + legal agree a single canonical binding.
+
 ---
 
 *Filed Phase 2 prep window, 2026-05-01.*
