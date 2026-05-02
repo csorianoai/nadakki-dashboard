@@ -81,9 +81,13 @@ export default function BankDashboardPage() {
         id: "applicant",
         header: "Solicitante",
         cell: (row: BankQueueItem) => (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-0.5">
             <span className="font-medium text-forgeInk-800">{row.applicant_name || "Cliente sin nombre"}</span>
-            <span className="text-forge-xs text-forgeInk-500">{row.application_id}</span>
+            <span className="font-mono text-[13px] font-semibold text-forgeInk-700">{row.application_id}</span>
+            <span className="text-forge-xs text-forgeInk-500">
+              {t.bank.application_score_label}:{" "}
+              <span className="font-forgeMono font-semibold tabular-nums">{row.score}</span>
+            </span>
             <div className="flex flex-wrap gap-1">{priorityBadge(row.priority)}</div>
           </div>
         ),
@@ -92,21 +96,17 @@ export default function BankDashboardPage() {
         id: "product",
         header: "Producto / dealer",
         cell: (row: BankQueueItem) => (
-          <span className="text-forgeInk-600">
+          <span className="text-forge-sm text-forgeInk-600">
             {row.vehicle_label || "—"} · {row.dealer_name || "—"}
           </span>
         ),
       },
       {
-        id: "score",
-        header: t.bank.application_score_label,
-        cell: (row: BankQueueItem) => <span className="font-forgeMono text-forge-sm font-semibold text-forgeInk-800">{row.score}</span>,
-      },
-      {
         id: "amount",
         header: "Monto",
+        className: "text-right tabular-nums [font-feature-settings:'tnum']",
         cell: (row: BankQueueItem) => (
-          <span className="font-forgeMono text-right text-forge-sm text-forgeInk-800 tabular-nums">
+          <span className="font-forgeMono text-forge-sm font-medium text-forgeInk-800">
             {formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code)}
           </span>
         ),
@@ -114,7 +114,23 @@ export default function BankDashboardPage() {
       {
         id: "status",
         header: "Estado",
+        className: "w-[1%] whitespace-nowrap",
         cell: (row: BankQueueItem) => <StatusPill tone={queueTone(row)}>{queueLabel(row)}</StatusPill>,
+      },
+      {
+        id: "submitted",
+        header: "Enviada",
+        className: "whitespace-nowrap text-forgeInk-600",
+        cell: (row: BankQueueItem) => (
+          <span className="text-forge-xs">
+            {row.created_at
+              ? new Intl.DateTimeFormat(tenantConfig.locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                }).format(new Date(row.created_at))
+              : "—"}
+          </span>
+        ),
       },
       {
         id: "action",
@@ -123,9 +139,10 @@ export default function BankDashboardPage() {
         cell: (row: BankQueueItem) => (
           <Link
             href={`/credit-hub/bank/applications/${row.application_id}`}
-            className="inline-flex min-h-12 min-w-[44px] items-center text-forge-sm font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+            className="inline-flex min-h-9 min-w-[44px] items-center justify-end gap-0.5 text-forge-sm font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
           >
-            Revisar <ArrowRight className="ml-1 inline h-3 w-3" aria-hidden />
+            Revisar
+            <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
           </Link>
         ),
       },

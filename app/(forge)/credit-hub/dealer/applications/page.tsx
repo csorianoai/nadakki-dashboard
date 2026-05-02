@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, Inbox, AlertCircle } from "lucide-react";
+import { Plus, Search, Inbox, AlertCircle, ArrowRight } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { PullToRefresh } from "@/components/credit-hub/system/PullToRefresh";
@@ -25,6 +25,29 @@ import { cn } from "@/lib/utils";
 import { formatForgeCurrency } from "@/utils/forge-locale";
 import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
+function formatShortDateTime(iso: string, locale: string): string {
+  try {
+    const l = locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US";
+    return new Intl.DateTimeFormat(l, { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
+  } catch {
+    return "—";
+  }
+}
+
+function formatSyncAge(dataUpdatedAt: number | undefined, locale: string): string {
+  if (dataUpdatedAt == null || Number.isNaN(dataUpdatedAt)) return "—";
+  const sec = Math.max(0, Math.floor((Date.now() - dataUpdatedAt) / 1000));
+  const loc = locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US";
+  const rtf = new Intl.RelativeTimeFormat(loc, { numeric: "auto" });
+  if (sec < 45) return rtf.format(-sec, "second");
+  const min = Math.floor(sec / 60);
+  if (min < 60) return rtf.format(-min, "minute");
+  const hr = Math.floor(min / 60);
+  if (hr < 72) return rtf.format(-hr, "hour");
+  const day = Math.floor(hr / 24);
+  return rtf.format(-day, "day");
+}
+
 const FILTER_IDS = ["all", "draft", "submitted", "processing", "approved", "rejected"] as const;
 type FilterId = (typeof FILTER_IDS)[number];
 
@@ -34,14 +57,14 @@ function isFilterId(s: string | null): s is FilterId {
 
 function parseDensity(raw: string | null): DataTableDensity {
   if (raw === "compact" || raw === "dense" || raw === "comfortable") return raw;
-  return "comfortable";
+  return "compact";
 }
 
 function buildQueryString(q: string, status: FilterId, density: DataTableDensity): string {
   const p = new URLSearchParams();
   if (q.trim()) p.set("q", q.trim());
   if (status !== "all") p.set("status", status);
-  if (density !== "comfortable") p.set("density", density);
+  if (density !== "compact") p.set("density", density);
   return p.toString();
 }
 
@@ -73,7 +96,8 @@ function DealerApplicationsListInner() {
   const searchParams = useSearchParams();
   const { tenantConfig } = useTenantConfig();
   const empty = forgeEmptyCopy(tenantConfig.locale);
-  const { data: applications = [], isLoading, error, refetch } = useCreditApplications();
+  const applicationsQuery = useCreditApplications();
+  const { data: applications = [], isLoading, error, refetch } = applicationsQuery;
 
   const filters = useMemo(
     () =>
@@ -146,7 +170,7 @@ function DealerApplicationsListInner() {
         id: "applicant",
         header: "Solicitante",
         cell: (row: CreditApplication) => (
-          <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <span className="truncate font-medium text-forgeInk-900">{row.applicant_name || "—"}</span>
             <span className="truncate font-mono text-forge-xs text-forgeInk-500">{row.application_id}</span>
           </div>
@@ -162,28 +186,40 @@ function DealerApplicationsListInner() {
         ),
       },
       {
+        id: "amount",
+        header: "Monto",
+        className: "text-right tabular-nums [font-feature-settings:'tnum']",
+        cell: (row: CreditApplication) => (
+          <span className="font-forgeMono text-forge-sm font-medium text-forgeInk-800">
+            {formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code)}
+          </span>
+        ),
+      },
+      {
         id: "status",
         header: "Estado",
         className: "w-[1%] whitespace-nowrap",
         cell: (row: CreditApplication) => <ApplicationStatusBadge status={row.status} />,
       },
       {
-        id: "amount",
-        header: "Monto",
-        className: "w-[1%] whitespace-nowrap text-right font-mono text-forge-xs",
-        cell: (row: CreditApplication) =>
-          formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code),
+        id: "submitted",
+        header: "Enviada",
+        className: "whitespace-nowrap text-forgeInk-600",
+        cell: (row: CreditApplication) => (
+          <span className="text-forge-xs">{formatShortDateTime(row.created_at, tenantConfig.locale)}</span>
+        ),
       },
       {
         id: "action",
         header: "",
-        className: "w-[1%] whitespace-nowrap",
+        className: "w-[1%] whitespace-nowrap text-right",
         cell: (row: CreditApplication) => (
           <Link
             href={forgeDealerApplicationDetailHref(row.application_id)}
-            className="inline-flex min-h-12 min-w-[44px] items-center text-forge-xs font-medium text-forgeBrand-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+            className="inline-flex min-h-9 min-w-[44px] items-center justify-end gap-0.5 text-forge-xs font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
           >
-            Ver
+            Revisar
+            <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
           </Link>
         ),
       },
@@ -213,6 +249,11 @@ function DealerApplicationsListInner() {
               <p className="mt-1 text-forge-xs font-medium text-forgeInk-500">Vista seguimiento dealer (misma URL, datos filtrados).</p>
             ) : null}
             <p className="mt-2 max-w-xl text-forge-sm text-forgeInk-600">Historial completo con búsqueda y filtros por estado.</p>
+            <p className="mt-1 font-sans text-[13px] text-forgeInk-600">
+              <span className="font-medium tabular-nums text-forgeInk-700">{filtered.length}</span>
+              <span className="text-forgeInk-500"> en vista · Última sync: </span>
+              <span className="text-forgeInk-600">{formatSyncAge(applicationsQuery.dataUpdatedAt, tenantConfig.locale)}</span>
+            </p>
           </div>
           <Link href="/credit-hub/dealer/applications/new/applicant" className={cn(primaryCta, "hidden md:inline-flex")}>
             <Plus className="h-4 w-4 shrink-0" aria-hidden />

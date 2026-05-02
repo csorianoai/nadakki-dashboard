@@ -24,6 +24,8 @@ export interface DataTableProps<Row> {
   columns: DataTableColumn<Row>[];
   rows: Row[];
   getRowId: (row: Row) => string;
+  /** Optional per-row class (e.g. selection rail via `before:` utilities). */
+  getRowClassName?: (row: Row) => string | undefined;
   emptyLabel?: string;
   /** Shown under `emptyLabel` inside `<EmptyState>` when there are no rows. */
   emptyDescription?: string;
@@ -34,7 +36,7 @@ export interface DataTableProps<Row> {
   /** Visual tone when empty (e.g. compliance “all clear”). */
   emptyTone?: "default" | "success";
   className?: string;
-  /** Row / header padding and type scale (default: comfortable). */
+  /** Row / header padding and type scale (default: **compact** — Phase 9 v3 scan efficiency). */
   density?: DataTableDensity;
   /** Skeleton body matching column count (does not replace header). */
   loading?: boolean;
@@ -50,8 +52,8 @@ const densityClasses: Record<DataTableDensity, { th: string; td: string; table: 
   },
   compact: {
     table: "text-forge-xs",
-    th: "px-3 py-2",
-    td: "px-3 py-2",
+    th: "px-3 py-2.5",
+    td: "px-3 py-2.5",
   },
   dense: {
     table: "text-forge-xs",
@@ -62,14 +64,14 @@ const densityClasses: Record<DataTableDensity, { th: string; td: string; table: 
 
 function SortAffix({ direction }: { direction: DataTableSortDirection }) {
   if (direction === "ascending") {
-    return <ChevronUp className="h-4 w-4 shrink-0 text-forgeBrand-600" aria-hidden />;
+    return <ChevronUp className="h-3 w-3 shrink-0 text-forgeBrand-600" aria-hidden />;
   }
   if (direction === "descending") {
-    return <ChevronDown className="h-4 w-4 shrink-0 text-forgeBrand-600" aria-hidden />;
+    return <ChevronDown className="h-3 w-3 shrink-0 text-forgeBrand-600" aria-hidden />;
   }
   return (
-    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-forgeInk-400" aria-hidden>
-      <span className="text-forge-xs leading-none">↕</span>
+    <span className="inline-flex h-3 w-3 shrink-0 items-center justify-center text-forgeInk-400" aria-hidden>
+      <span className="text-[10px] leading-none">↕</span>
     </span>
   );
 }
@@ -78,13 +80,14 @@ export function DataTable<Row>({
   columns,
   rows,
   getRowId,
+  getRowClassName,
   emptyLabel = "No rows",
   emptyDescription,
   emptyAction,
   emptyIcon,
   emptyTone = "default",
   className,
-  density = "comfortable",
+  density = "compact",
   loading = false,
   skeletonRowCount = 5,
 }: DataTableProps<Row>) {
@@ -97,11 +100,12 @@ export function DataTable<Row>({
       aria-busy={loading || undefined}
     >
       <table className={cn("w-full min-w-0 border-collapse text-left", d.table)}>
-        <thead>
-          <tr className="border-b border-forgeInk-200 bg-forgeSurface-sunken transition-colors duration-[var(--forge-duration-fast)]">
+        <thead className="sticky top-0 z-10 border-b border-forgeInk-100 bg-forgeSurface-card/95 shadow-sm backdrop-blur-sm">
+          <tr>
             {columns.map((col) => {
               const sortable = Boolean(col.onSort);
               const ariaSort = sortable ? col.sort ?? "none" : undefined;
+              const sortActive = sortable && col.sort && col.sort !== "none";
               return (
                 <th
                   key={col.id}
@@ -109,7 +113,7 @@ export function DataTable<Row>({
                   aria-sort={ariaSort}
                   className={cn(
                     d.th,
-                    "font-semibold text-forgeInk-700",
+                    "font-sans text-[12px] font-medium uppercase tracking-wide text-forgeInk-600",
                     sortable && "align-middle",
                     col.className
                   )}
@@ -119,9 +123,10 @@ export function DataTable<Row>({
                       type="button"
                       onClick={() => col.onSort?.()}
                       className={cn(
-                        "-mx-1 inline-flex w-full min-w-0 max-w-full items-center justify-start gap-1 rounded-forge-sm px-1 py-0.5 text-left font-semibold text-forgeInk-700 transition-colors duration-[var(--forge-duration-fast)] ease-out",
+                        "-mx-1 inline-flex w-full min-w-0 max-w-full items-center justify-start gap-1 rounded-forge-sm px-1 py-0.5 text-left font-medium uppercase tracking-wide text-forgeInk-600 transition-colors duration-100 ease-out",
                         "hover:bg-forgeInk-50/80 hover:text-forgeInk-900",
-                        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+                        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
+                        sortActive && "text-forgeBrand-700"
                       )}
                     >
                       <span className="min-w-0 flex-1 truncate">{col.header}</span>
@@ -161,18 +166,25 @@ export function DataTable<Row>({
               </td>
             </tr>
           ) : (
-            rows.map((row) => (
-              <tr
-                key={getRowId(row)}
-                className="border-b border-forgeInk-100 transition-colors duration-[var(--forge-duration-fast)] ease-out last:border-0 hover:bg-forgeSurface-sunken/50"
-              >
-                {columns.map((col) => (
-                  <td key={col.id} className={cn(d.td, "text-forgeInk-800", col.className)}>
-                    {col.cell(row)}
-                  </td>
-                ))}
-              </tr>
-            ))
+            rows.map((row) => {
+              const rid = getRowId(row);
+              const rowExtra = getRowClassName?.(row);
+              return (
+                <tr
+                  key={rid}
+                  className={cn(
+                    "relative border-b border-forgeInk-100 transition-colors duration-100 ease-out last:border-0 hover:bg-forgeSurface-sunken",
+                    rowExtra
+                  )}
+                >
+                  {columns.map((col) => (
+                    <td key={col.id} className={cn(d.td, "text-forgeInk-800", col.className)}>
+                      {col.cell(row)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

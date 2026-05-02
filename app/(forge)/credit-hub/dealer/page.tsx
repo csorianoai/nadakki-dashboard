@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Plus, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen, ArrowRight } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { Button, Card, DataTable, EmptyState, KpiCard, Skeleton } from "@/components/forge";
@@ -62,10 +62,20 @@ export default function DealerDashboardPage() {
         id: "applicant",
         header: "Solicitante",
         cell: (row: CreditApplication) => (
-          <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <span className="truncate font-medium text-forgeInk-900">{row.applicant_name || "—"}</span>
             <span className="truncate font-mono text-forge-xs text-forgeInk-500">{row.application_id}</span>
           </div>
+        ),
+      },
+      {
+        id: "amount",
+        header: "Monto",
+        className: "text-right tabular-nums [font-feature-settings:'tnum']",
+        cell: (row: CreditApplication) => (
+          <span className="font-forgeMono text-forge-sm font-medium text-forgeInk-800">
+            {formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code)}
+          </span>
         ),
       },
       {
@@ -75,22 +85,29 @@ export default function DealerDashboardPage() {
         cell: (row: CreditApplication) => <ApplicationStatusBadge status={row.status} />,
       },
       {
-        id: "amount",
-        header: "Monto",
-        className: "w-[1%] whitespace-nowrap text-right font-mono text-forge-xs",
-        cell: (row: CreditApplication) =>
-          formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code),
+        id: "submitted",
+        header: "Enviada",
+        className: "whitespace-nowrap text-forgeInk-600",
+        cell: (row: CreditApplication) => (
+          <span className="text-forge-xs">
+            {new Intl.DateTimeFormat(tenantConfig.locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US", {
+              dateStyle: "short",
+              timeStyle: "short",
+            }).format(new Date(row.created_at))}
+          </span>
+        ),
       },
       {
         id: "action",
         header: "",
-        className: "w-[1%] whitespace-nowrap",
+        className: "w-[1%] whitespace-nowrap text-right",
         cell: (row: CreditApplication) => (
           <Link
             href={forgeDealerApplicationDetailHref(row.application_id)}
-            className="text-forge-xs font-medium text-forgeBrand-600 hover:underline"
+            className="inline-flex min-h-9 min-w-[44px] items-center justify-end gap-0.5 text-forge-xs font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
           >
-            Ver
+            Revisar
+            <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
           </Link>
         ),
       },

@@ -71,7 +71,7 @@ export default function ForgePreviewPage() {
   const [date, setDate] = useState("2026-04-29");
   const [consent, setConsent] = useState(false);
   const [select, setSelect] = useState("usd");
-  const [tableDensity, setTableDensity] = useState<DataTableDensity>("comfortable");
+  const [tableDensity, setTableDensity] = useState<DataTableDensity>("compact");
   const [tableSort, setTableSort] = useState<DataTableSortDirection>("none");
   const [tableDemo, setTableDemo] = useState<"data" | "loading" | "empty">("data");
   const [bulkDemoSelected, setBulkDemoSelected] = useState<string[]>(["1"]);

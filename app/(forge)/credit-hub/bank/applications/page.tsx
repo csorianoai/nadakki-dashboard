@@ -24,6 +24,31 @@ import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { BankBulkRule, BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
+function formatShortDateTime(iso: string | null, locale: string): string {
+  if (!iso) return "—";
+  try {
+    const l = locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US";
+    return new Intl.DateTimeFormat(l, { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
+  } catch {
+    return "—";
+  }
+}
+
+function formatSyncAge(dataUpdatedAt: number | undefined, locale: string): string {
+  if (dataUpdatedAt == null || Number.isNaN(dataUpdatedAt)) return "—";
+  const sec = Math.max(0, Math.floor((Date.now() - dataUpdatedAt) / 1000));
+  const loc = locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US";
+  const rtf = new Intl.RelativeTimeFormat(loc, { numeric: "auto" });
+  if (sec < 45) return rtf.format(-sec, "second");
+  const min = Math.floor(sec / 60);
+  if (min < 60) return rtf.format(-min, "minute");
+  const hr = Math.floor(min / 60);
+  if (hr < 72) return rtf.format(-hr, "hour");
+  const day = Math.floor(hr / 24);
+  return rtf.format(-day, "day");
+}
+
+
 function formatDop(value: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(value || 0);
 }
@@ -134,13 +159,13 @@ function BankApplicationsQueueInner() {
       {
         id: "select",
         header: (
-          <span className="inline-flex min-h-12 items-center py-1">
+          <span className="inline-flex min-h-9 items-center py-0.5">
             <Checkbox
               label=""
               aria-label="Seleccionar todas las solicitudes visibles"
-            checked={filtered.length > 0 && selected.length === filtered.length}
-            onChange={(e) => setSelected(e.target.checked ? filtered.map((item) => item.application_id) : [])}
-          />
+              checked={filtered.length > 0 && selected.length === filtered.length}
+              onChange={(e) => setSelected(e.target.checked ? filtered.map((item) => item.application_id) : [])}
+            />
           </span>
         ),
         className: "w-12",
@@ -158,39 +183,52 @@ function BankApplicationsQueueInner() {
         ),
       },
       {
+        id: "application_id",
+        header: "ID",
+        cell: (row: BankQueueItem) => (
+          <span className="font-mono text-[13px] font-semibold text-forgeInk-900">{row.application_id}</span>
+        ),
+      },
+      {
         id: "applicant",
         header: "Solicitante",
         cell: (row: BankQueueItem) => (
-          <div className="flex flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <span className="font-medium text-forgeInk-800">{row.applicant_name || "Cliente sin nombre"}</span>
-            <span className="text-forge-xs text-forgeInk-500">{row.application_id}</span>
-            <StatusPill tone={priorityTone(row.priority)}>{row.priority}</StatusPill>
+            <span className="text-forge-xs text-forgeInk-500">
+              {row.vehicle_label || "—"} · {row.dealer_name || "—"}
+            </span>
+            <span className="text-forge-xs text-forgeInk-500">
+              {t.bank.application_score_label}:{" "}
+              <span className="font-forgeMono font-semibold tabular-nums text-forgeInk-700">{row.score}</span> ·{" "}
+              <StatusPill tone={priorityTone(row.priority)} className="align-middle">
+                {row.priority}
+              </StatusPill>
+            </span>
           </div>
         ),
       },
       {
-        id: "product",
-        header: "Producto / dealer",
-        cell: (row: BankQueueItem) => (
-          <span className="text-forgeInk-600">
-            {row.vehicle_label || "—"} · {row.dealer_name || "—"}
-          </span>
-        ),
-      },
-      {
-        id: "score",
-        header: t.bank.application_score_label,
-        cell: (row: BankQueueItem) => <span className="font-forgeMono font-semibold text-forgeInk-800">{row.score}</span>,
-      },
-      {
         id: "amount",
         header: "Monto",
-        cell: (row: BankQueueItem) => <span className="text-forge-sm text-forgeInk-800">{formatDop(row.requested_amount)}</span>,
+        className: "text-right tabular-nums [font-feature-settings:'tnum']",
+        cell: (row: BankQueueItem) => (
+          <span className="font-forgeMono text-forge-sm font-medium text-forgeInk-800">{formatDop(row.requested_amount)}</span>
+        ),
       },
       {
         id: "status",
         header: "Estado",
+        className: "w-[1%] whitespace-nowrap",
         cell: (row: BankQueueItem) => <StatusPill tone={queueTone(row)}>{queueLabel(row)}</StatusPill>,
+      },
+      {
+        id: "submitted",
+        header: "Enviada",
+        className: "whitespace-nowrap text-forgeInk-600",
+        cell: (row: BankQueueItem) => (
+          <span className="text-forge-xs">{formatShortDateTime(row.created_at, tenantConfig.locale)}</span>
+        ),
       },
       {
         id: "action",
@@ -199,14 +237,15 @@ function BankApplicationsQueueInner() {
         cell: (row: BankQueueItem) => (
           <Link
             href={`/credit-hub/bank/applications/${row.application_id}`}
-            className="inline-flex min-h-12 min-w-[44px] items-center text-forge-sm font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+            className="inline-flex min-h-9 min-w-[44px] items-center justify-end gap-0.5 text-forge-sm font-medium text-forgeBrand-600 hover:text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
           >
-            Revisar <ArrowRight className="ml-1 inline h-3 w-3" aria-hidden />
+            Revisar
+            <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
           </Link>
         ),
       },
     ],
-    [filtered, selected, t.bank.application_score_label]
+    [filtered, selected, t.bank.application_score_label, tenantConfig.locale]
   );
 
   const runBulk = async () => {
@@ -227,7 +266,14 @@ function BankApplicationsQueueInner() {
         <h1 className="mt-1 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">
           Solicitudes priorizadas
         </h1>
-        <p className="mt-1 text-forge-sm text-forgeInk-600">{t.bank.applications_subtitle}</p>
+        <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+          <p className="text-forge-sm text-forgeInk-600">{t.bank.applications_subtitle}</p>
+          <p className="text-left font-sans text-[13px] text-forgeInk-600 sm:text-right">
+            <span className="font-medium tabular-nums text-forgeInk-700">{filtered.length}</span>
+            <span className="text-forgeInk-500"> en vista · Última sync: </span>
+            <span className="text-forgeInk-600">{formatSyncAge(queueQuery.dataUpdatedAt, tenantConfig.locale)}</span>
+          </p>
+        </div>
       </Card>
 
       <div className="grid gap-3 md:grid-cols-[1fr_auto]">
@@ -271,7 +317,17 @@ function BankApplicationsQueueInner() {
           }
         />
       ) : (
-        <DataTable<BankQueueItem> getRowId={(r) => r.application_id} rows={filtered} columns={columns} emptyLabel="Sin filas" />
+        <DataTable<BankQueueItem>
+          getRowId={(r) => r.application_id}
+          getRowClassName={(row) =>
+            selected.includes(row.application_id)
+              ? "before:absolute before:inset-y-0 before:left-0 before:z-0 before:w-0.5 before:bg-forgeBrand-500"
+              : undefined
+          }
+          rows={filtered}
+          columns={columns}
+          emptyLabel="Sin filas"
+        />
       )}
 
       {selected.length > 0 ? (

@@ -22,7 +22,7 @@ export function StatusPill({ tone = "neutral", className, children, ...props }: 
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-forge-pill px-2.5 py-1 text-forge-xs font-semibold uppercase tracking-wider",
+        "inline-flex h-[22px] max-h-[22px] min-h-[22px] items-center rounded-forge-pill px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.025em]",
         toneMap[tone],
         className
       )}
