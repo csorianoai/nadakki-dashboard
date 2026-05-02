@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import Link from "next/link";
 import { Clock, Calendar, ArrowRight, RefreshCw, Loader2, AlertCircle } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";

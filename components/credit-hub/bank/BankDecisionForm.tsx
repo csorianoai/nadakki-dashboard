@@ -22,7 +22,7 @@ export function BankDecisionForm({
 }: {
   defaultTerms: BankDecisionTerms;
   counterOffer?: CounterOffer;
-  onSubmit: (body: BankDecisionRequest) => void;
+  onSubmit: (body: BankDecisionRequest) => void | Promise<void>;
   loading?: boolean;
 }) {
   const t = useTranslations();

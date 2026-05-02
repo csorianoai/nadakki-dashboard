@@ -1,3 +1,20 @@
+/**
+ * Default tenant_id for Credit Core (Credicefi).
+ *
+ * Canonical fallback used by `useTenant()` when neither a
+ * caller-provided `tenantId` nor `NEXT_PUBLIC_DEFAULT_TENANT_ID`
+ * is available.
+ *
+ * Verified canonical (Phase 1.5 investigation, 2026-05):
+ * - Backend: `nadakki-ai-suite/validation_output.txt`
+ *   (`default_tenant` → name "CrediCefi", slug "credicefi")
+ * - Backend tooling: `tools/credit-hub/validate-bank-portal.ps1`
+ * - Frontend env: `.env.example` `NEXT_PUBLIC_DEFAULT_TENANT_ID`
+ *
+ * Phase 8 may eliminate this constant entirely if TenantContext
+ * extension restructures default tenant resolution. Until then,
+ * this is the source of truth.
+ */
 export const DEFAULT_CREDIT_TENANT_ID = "0a91ee98-2dbe-46d0-a43c-3fc2dbd42242";
 
 export type CreditApplicationStatus =

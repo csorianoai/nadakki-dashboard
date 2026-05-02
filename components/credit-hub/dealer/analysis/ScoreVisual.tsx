@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import type { CreditAnalysisResult } from "@/lib/credit-hub/types/creditAnalysis";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";

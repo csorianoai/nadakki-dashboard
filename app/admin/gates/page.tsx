@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { Shield, Check, X, RefreshCw, Loader2, AlertCircle } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";

@@ -9,23 +9,112 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'forge-primary': 'var(--forge-primary)',
-        'forge-primary-hover': 'var(--forge-primary-hover)',
-        'forge-primary-active': 'var(--forge-primary-active)',
-        'forge-accent': 'var(--forge-accent)',
-        'forge-bg': 'var(--forge-bg)',
-        'forge-surface': 'var(--forge-surface)',
-        'forge-surface-elevated': 'var(--forge-surface-elevated)',
-        'forge-surface-hover': 'var(--forge-surface-hover)',
-        'forge-text': 'var(--forge-text)',
-        'forge-text-muted': 'var(--forge-text-muted)',
-        'forge-text-subtle': 'var(--forge-text-subtle)',
-        'forge-border': 'var(--forge-border)',
-        'forge-border-hover': 'var(--forge-border-hover)',
-        'forge-success': 'var(--forge-success)',
-        'forge-warning': 'var(--forge-warning)',
-        'forge-danger': 'var(--forge-danger)',
-        'forge-info': 'var(--forge-info)',
+        // ─────────────────────────────────────────────────────────
+        // PERMANENT LEGACY ALIASES — components/credit-hub tree consumes
+        // these tokens directly. The Forge redesign (Phases 1–7) replaced
+        // higher-level surfaces by composition; the underlying
+        // components/credit-hub primitives remained out of scope per project
+        // guardrails. As long as those components ship to production, these
+        // aliases must resolve.
+        //
+        // Dual var(): prefer v3.2 custom properties on .forge-app; fall back
+        // to styles/forge-tokens.css portal variables outside .forge-app.
+        //
+        // To remove: migrate or replace components/credit-hub with
+        // components/forge equivalents, then verify grep is empty:
+        //   Get-ChildItem -Path app,components -Recurse `
+        //     -Include *.tsx,*.ts `
+        //     | Select-String -Pattern '(bg|text|border|ring|from|to|via)-forge-(primary|bg|surface-elevated|surface-hover|border|border-hover|text|text-muted|text-subtle)' `
+        //     | Where-Object { $_.Path -notmatch 'components\\credit-hub' }
+        // and then delete this block + styles/forge-tokens.css.
+        // ─────────────────────────────────────────────────────────
+        'forge-primary': 'var(--forge-brand-500, var(--forge-primary))',
+        'forge-primary-hover': 'var(--forge-brand-600, var(--forge-primary-hover))',
+        'forge-primary-active': 'var(--forge-brand-700, var(--forge-primary-active))',
+        'forge-accent': 'var(--forge-accent-gold, var(--forge-accent))',
+        'forge-bg': 'var(--forge-surface-page, var(--forge-bg))',
+        'forge-surface': 'var(--forge-surface-card, var(--forge-surface))',
+        'forge-surface-elevated': 'var(--forge-surface-raised, var(--forge-surface-elevated))',
+        'forge-surface-hover': 'var(--forge-surface-sunken, var(--forge-surface-hover))',
+        'forge-text': 'var(--forge-ink-800, var(--forge-text))',
+        'forge-text-muted': 'var(--forge-ink-500, var(--forge-text-muted))',
+        'forge-text-subtle': 'var(--forge-ink-400, var(--forge-text-subtle))',
+        'forge-border': 'var(--forge-ink-200, var(--forge-border))',
+        'forge-border-hover': 'var(--forge-ink-300, var(--forge-border-hover))',
+        'forge-success': 'var(--forge-success-500, var(--forge-success))',
+        'forge-warning': 'var(--forge-warning-500, var(--forge-warning))',
+        'forge-danger': 'var(--forge-danger-500, var(--forge-danger))',
+        'forge-info': 'var(--forge-info-500, var(--forge-info))',
+        /* v3.2 institutional tokens (inherit from .forge-app — see _design/tokens.css) */
+        forgeBrand: {
+          50: 'var(--forge-brand-50)',
+          100: 'var(--forge-brand-100)',
+          200: 'var(--forge-brand-200)',
+          300: 'var(--forge-brand-300)',
+          400: 'var(--forge-brand-400)',
+          500: 'var(--forge-brand-500)',
+          600: 'var(--forge-brand-600)',
+          700: 'var(--forge-brand-700)',
+          800: 'var(--forge-brand-800)',
+          900: 'var(--forge-brand-900)',
+          950: 'var(--forge-brand-950)',
+        },
+        forgeInk: {
+          50: 'var(--forge-ink-50)',
+          100: 'var(--forge-ink-100)',
+          200: 'var(--forge-ink-200)',
+          300: 'var(--forge-ink-300)',
+          400: 'var(--forge-ink-400)',
+          500: 'var(--forge-ink-500)',
+          600: 'var(--forge-ink-600)',
+          700: 'var(--forge-ink-700)',
+          800: 'var(--forge-ink-800)',
+          900: 'var(--forge-ink-900)',
+        },
+        forgeSurface: {
+          page: 'var(--forge-surface-page)',
+          card: 'var(--forge-surface-card)',
+          raised: 'var(--forge-surface-raised)',
+          sunken: 'var(--forge-surface-sunken)',
+          overlay: 'var(--forge-surface-overlay)',
+        },
+        forgeSuccess: {
+          50: 'var(--forge-success-50)',
+          500: 'var(--forge-success-500)',
+          700: 'var(--forge-success-700)',
+        },
+        forgeWarning: {
+          50: 'var(--forge-warning-50)',
+          500: 'var(--forge-warning-500)',
+          700: 'var(--forge-warning-700)',
+        },
+        forgeDanger: {
+          50: 'var(--forge-danger-50)',
+          500: 'var(--forge-danger-500)',
+          700: 'var(--forge-danger-700)',
+        },
+        forgeInfo: {
+          50: 'var(--forge-info-50)',
+          500: 'var(--forge-info-500)',
+          700: 'var(--forge-info-700)',
+        },
+        forgeNeutral: {
+          50: 'var(--forge-neutral-50)',
+          500: 'var(--forge-neutral-500)',
+          700: 'var(--forge-neutral-700)',
+        },
+        forgeAccent: {
+          gold: 'var(--forge-accent-gold)',
+          teal: 'var(--forge-accent-teal)',
+        },
+        forgeViz: {
+          1: 'var(--forge-viz-1)',
+          2: 'var(--forge-viz-2)',
+          3: 'var(--forge-viz-3)',
+          4: 'var(--forge-viz-4)',
+          5: 'var(--forge-viz-5)',
+          6: 'var(--forge-viz-6)',
+        },
         // Quantum Core Colors
         'quantum': {
           void: '#000008',
@@ -47,9 +136,18 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['var(--forge-font-sans)', 'Inter', 'sans-serif'],
-        display: ['var(--forge-font-display)', 'Inter', 'sans-serif'],
-        forgeMono: ['var(--forge-font-mono)', 'JetBrains Mono', 'monospace'],
+        /* Nested var() so routes without .forge-app (e.g. app/credit/*) still get sensible fallbacks */
+        sans: ['var(--forge-font-body, var(--forge-font-sans, Inter))', 'Inter', 'sans-serif'],
+        display: [
+          'var(--forge-font-display, var(--forge-font-display-opt, Georgia))',
+          'Georgia',
+          'serif',
+        ],
+        forgeMono: [
+          'var(--forge-font-mono, var(--forge-font-mono-opt, ui-monospace))',
+          'ui-monospace',
+          'monospace',
+        ],
         quantum: ['Orbitron', 'monospace'],
         neural: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
@@ -85,8 +183,26 @@ module.exports = {
         },
       },
       backdropBlur: {
-        'quantum': '60px',
-        'neural': '30px',
+        quantum: '60px',
+        neural: '30px',
+      },
+      borderRadius: {
+        'forge-sm': 'var(--forge-radius-sm)',
+        'forge-md': 'var(--forge-radius-md)',
+        'forge-lg': 'var(--forge-radius-lg)',
+        'forge-pill': 'var(--forge-radius-pill)',
+      },
+      fontSize: {
+        'forge-xs': ['var(--forge-text-xs)', { lineHeight: 'var(--forge-leading-normal)' }],
+        'forge-sm': ['var(--forge-text-sm)', { lineHeight: 'var(--forge-leading-normal)' }],
+        'forge-base': ['var(--forge-text-base)', { lineHeight: 'var(--forge-leading-normal)' }],
+        'forge-md': ['var(--forge-text-md)', { lineHeight: 'var(--forge-leading-normal)' }],
+      },
+      boxShadow: {
+        'forge-xs': 'var(--forge-shadow-xs)',
+        'forge-sm': 'var(--forge-shadow-sm)',
+        'forge-md': 'var(--forge-shadow-md)',
+        'forge-lg': 'var(--forge-shadow-lg)',
       },
     },
   },

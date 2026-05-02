@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { Settings, Plus, CheckCircle, XCircle, RefreshCw, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import NavigationBar from "@/components/ui/NavigationBar";

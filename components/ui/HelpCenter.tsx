@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useTenant } from "@/contexts/TenantContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import { 
   HelpCircle, X, Send, Bot, User, Sparkles, 
   ChevronRight, Search, Loader2, MessageCircle

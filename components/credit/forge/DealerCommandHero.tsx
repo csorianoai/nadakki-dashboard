@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { ArrowRight, Car, Plus, Sparkles } from "lucide-react";
 
 function getTimeGreeting(date = new Date()): string {

@@ -1,0 +1,19 @@
+Phase 4 Chunk 3 — Legacy / Section A grep (migrated dealer surfaces only)
+Generated: 2026-04-29
+
+Scope: app/(forge)/credit-hub/dealer/page.tsx,
+       app/(forge)/credit-hub/dealer/applications/[applicationId]/page.tsx,
+       app/(forge)/credit-hub/dealer/applications/new/**/*.tsx (wizard shell + segments + complete + redirect)
+
+Patterns (Section A style): components/credit/, ForgeMetricCard, ForgeCard, ForgeButton, ForgeInput, next/dynamic, ssr:false
+
+--- dealer/page.tsx ---
+(no matches)
+
+--- dealer/applications/[applicationId]/page.tsx ---
+(no matches)
+
+--- dealer/applications/new (all tsx) ---
+(no matches)
+
+Note: app/(forge)/credit-hub/dealer/applications/page.tsx (list) still uses Forge* primitives — out of chunk 3 migration scope per master prompt ordering.

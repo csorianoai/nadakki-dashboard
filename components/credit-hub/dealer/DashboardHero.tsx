@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { ArrowRight, Plus } from "lucide-react";
 import { ForgeButton } from "../primitives/ForgeButton";
 import { CountUpNumber } from "./CountUpNumber";

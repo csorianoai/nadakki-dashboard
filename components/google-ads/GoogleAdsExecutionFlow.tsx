@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
@@ -16,7 +16,7 @@ import { postGoogleAdsPreflight, type GoogleAdsPreflightResult } from "@/lib/api
 import PreflightResultModal from "@/components/preflight/PreflightResultModal";
 import { useTenant } from "@/contexts/TenantContext";
 
-// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Types ────────────────────────────────────────────────
 type ModuleStatus = "completed" | "ready" | "blocked" | "in_progress" | "not_ready";
 
 type GoogleAdsModuleStep = {
@@ -193,7 +193,7 @@ function notReadyFallback(
   };
 }
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ──────────────────────────────────────────────
 function progressCount(modules: GoogleAdsModuleStep[]) {
   return modules.filter((m) => m.status === "completed").length;
 }
@@ -212,7 +212,7 @@ function relativeTime(iso: string) {
   return `hace ${Math.floor(diff / 86400)} d`;
 }
 
-// â”€â”€ Status badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Status badge ─────────────────────────────────────────
 function ModuleStatusBadge({ status }: { status: ModuleStatus }) {
   const MAP = {
     completed: { label: "Completado", cls: "bg-emerald-500/20 text-emerald-400 ring-emerald-500/30" },
@@ -236,7 +236,7 @@ function StepIcon({ status }: { status: ModuleStatus }) {
   return <Clock size={18} className="text-slate-500" />;
 }
 
-// â”€â”€ Module card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Module card ──────────────────────────────────────────
 interface CardProps {
   module: GoogleAdsModuleStep;
   isRunning: boolean;
@@ -344,7 +344,7 @@ function ModuleCard({ module, isRunning, onRun }: CardProps) {
   );
 }
 
-// â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main component ───────────────────────────────────────
 export default function GoogleAdsExecutionFlow() {
   const { tenantId } = useTenant();
   const safeTenantId = tenantId?.trim() || "sf-rentals-nadaki-excursions";
@@ -381,7 +381,7 @@ export default function GoogleAdsExecutionFlow() {
             notReadyFallback(
               module.actionKey,
               safeTenantId,
-              pfRes.error || "Revisa que el backend estÃ© activo en Render"
+              pfRes.error || "Revisa que el backend esté activo en Render"
             )
           );
           setPendingModule(module);
@@ -391,7 +391,7 @@ export default function GoogleAdsExecutionFlow() {
         setPendingModule(module);
       } catch {
         setPreflightResult(
-          notReadyFallback(module.actionKey, safeTenantId, "Revisa que el backend estÃ© activo en Render")
+          notReadyFallback(module.actionKey, safeTenantId, "Revisa que el backend esté activo en Render")
         );
         setPendingModule(module);
       } finally {
@@ -443,7 +443,7 @@ export default function GoogleAdsExecutionFlow() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 size={24} className="animate-spin text-slate-500" />
-        <span className="ml-3 text-sm text-slate-500">Cargando mÃ³dulos...</span>
+        <span className="ml-3 text-sm text-slate-500">Cargando módulos...</span>
       </div>
     );
   }
@@ -458,10 +458,10 @@ export default function GoogleAdsExecutionFlow() {
           <div>
             <h2 className="text-base font-semibold text-slate-100 flex items-center gap-2">
               <Zap size={16} className="text-indigo-400" />
-              Flujo de EjecuciÃ³n Google Ads
+              Flujo de Ejecución Google Ads
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Progreso guiado M01â€“M15 Â· Pre-flight automÃ¡tico antes de ejecutar
+              Progreso guiado M01–M15 · Pre-flight automático antes de ejecutar
             </p>
           </div>
           <div className="flex items-center gap-6">
@@ -480,7 +480,7 @@ export default function GoogleAdsExecutionFlow() {
               >
                 {readiness}%
               </p>
-              <p className="text-xs text-slate-500">preparaciÃ³n</p>
+              <p className="text-xs text-slate-500">preparación</p>
             </div>
           </div>
         </div>
@@ -494,7 +494,7 @@ export default function GoogleAdsExecutionFlow() {
           {[
             { cls: "bg-emerald-500/20 text-emerald-400", label: "Completado" },
             { cls: "bg-blue-500/20 text-blue-400", label: "Listo para ejecutar" },
-            { cls: "bg-amber-500/20 text-amber-400", label: "ConfiguraciÃ³n pendiente" },
+            { cls: "bg-amber-500/20 text-amber-400", label: "Configuración pendiente" },
             { cls: "bg-slate-500/20 text-slate-400", label: "Bloqueado" },
           ].map(({ cls, label }) => (
             <span key={label} className={`text-xs px-2 py-0.5 rounded-full ${cls}`}>

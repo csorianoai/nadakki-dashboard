@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { History, Eye, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import NavigationBar from "@/components/ui/NavigationBar";

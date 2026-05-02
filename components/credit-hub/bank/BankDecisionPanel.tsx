@@ -1,12 +1,14 @@
 "use client";
 
-import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
+import { toast } from "@/components/forge";
 import { useBankCounterOffer, useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
-import type { BankDecisionTerms, BankReviewApplication } from "@/lib/credit-hub/types/bankDecision";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import type { BankDecisionRequest, BankDecisionTerms, BankReviewApplication } from "@/lib/credit-hub/types/bankDecision";
 import { BankCounterOfferModal } from "./BankCounterOfferModal";
 import { BankDecisionForm } from "./BankDecisionForm";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { forgeBankDecisionToasts, forgeToastLangFromLocale, formatToastApplicationId } from "@/utils/forge-toast-copy";
 
 function defaultTerms(application?: BankReviewApplication): BankDecisionTerms {
   const analysis = application?.application_payload.analysis;
@@ -22,6 +24,7 @@ function defaultTerms(application?: BankReviewApplication): BankDecisionTerms {
 
 export function BankDecisionPanel({ application }: { application: BankReviewApplication }) {
   const t = useTranslations();
+  const { tenantConfig } = useTenantConfig();
   const decisionMutation = useBankDecision(application.application_id);
   const counterOfferQuery = useBankCounterOffer(application.application_id);
   const existing = application.application_payload.bank_decision;
@@ -38,9 +41,23 @@ export function BankDecisionPanel({ application }: { application: BankReviewAppl
         defaultTerms={defaultTerms(application)}
         counterOffer={counterOfferQuery.data}
         loading={decisionMutation.isPending}
-        onSubmit={async (body) => {
-          await decisionMutation.mutateAsync(body);
-          forgeToast.success(t.toasts.decision_confirmed);
+        onSubmit={async (body: BankDecisionRequest) => {
+          const lang = forgeToastLangFromLocale(tenantConfig.locale);
+          const copy = forgeBankDecisionToasts(lang);
+          const displayId = formatToastApplicationId(application.application_id);
+          try {
+            await decisionMutation.mutateAsync(body);
+            if (body.decision === "APROBADO") {
+              toast.success(copy.applicationApproved(displayId), { duration: 4000 });
+            } else if (body.decision === "RECHAZADO") {
+              toast.success(copy.applicationRejected(displayId), { duration: 4000 });
+            } else {
+              toast.success(t.toasts.decision_confirmed, { duration: 4000 });
+            }
+          } catch (err) {
+            const detail = err instanceof Error ? err.message : undefined;
+            toast.error(copy.decisionSaveError(detail), { duration: 6000 });
+          }
         }}
       />
     </ForgeCard>

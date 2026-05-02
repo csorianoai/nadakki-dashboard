@@ -1,5 +1,5 @@
 "use client";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import Link from "next/link";
 import { Users, ArrowRight } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";

@@ -1,0 +1,262 @@
+{
+  "generatedAt": "2026-05-02T14:34:27.291Z",
+  "components": {
+    "findings": [],
+    "countsByPrimitive": {
+      "layout": 1,
+      "Button": 4,
+      "IconButton": 1,
+      "Input": 1,
+      "ConsentCapture": 1,
+      "Card": 1,
+      "Skeleton": 1,
+      "Tabs": 1,
+      "EvidenceCard": 1,
+      "Modal": 1,
+      "DataTable": 13,
+      "CommandPalette": 1
+    },
+    "captures": [
+      {
+        "primitive": "layout",
+        "file": "layout/sidebar-topbar-kpi.png"
+      },
+      {
+        "primitive": "Button",
+        "file": "button/variants-default.png"
+      },
+      {
+        "primitive": "Button",
+        "file": "button/variants-loading.png"
+      },
+      {
+        "primitive": "Button",
+        "file": "button/variants-disabled.png"
+      },
+      {
+        "primitive": "IconButton",
+        "file": "button/iconbutton.png"
+      },
+      {
+        "primitive": "Button",
+        "file": "button/focus-surfaces.png"
+      },
+      {
+        "primitive": "Input",
+        "file": "form-controls/section.png"
+      },
+      {
+        "primitive": "ConsentCapture",
+        "file": "consent-capture/section.png"
+      },
+      {
+        "primitive": "Card",
+        "file": "cards-badges-empty/section.png"
+      },
+      {
+        "primitive": "Skeleton",
+        "file": "skeleton-avatar/section.png"
+      },
+      {
+        "primitive": "Tabs",
+        "file": "tabs/section.png"
+      },
+      {
+        "primitive": "EvidenceCard",
+        "file": "evidence-audit/section.png"
+      },
+      {
+        "primitive": "Modal",
+        "file": "overlays/section.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-comfortable-mode-data.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-comfortable-mode-loading.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-comfortable-mode-empty.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-compact-mode-data.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-compact-mode-loading.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-compact-mode-empty.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-dense-mode-data.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-dense-mode-loading.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/density-dense-mode-empty.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/sorted-asc.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/sorted-desc.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/empty-success-tone.png"
+      },
+      {
+        "primitive": "DataTable",
+        "file": "datatable/bulk-action-bar.png"
+      },
+      {
+        "primitive": "CommandPalette",
+        "file": "command-palette/open.png"
+      }
+    ]
+  },
+  "pages": {
+    "reused": 18,
+    "captured": 0,
+    "events": [
+      {
+        "persona": "bank",
+        "id": "dashboard",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/bank-dashboard.png"
+      },
+      {
+        "persona": "bank",
+        "id": "dashboard",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/bank-dashboard.png"
+      },
+      {
+        "persona": "bank",
+        "id": "applications-list",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/bank-applications-list.png"
+      },
+      {
+        "persona": "bank",
+        "id": "applications-list",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/bank-applications-list.png"
+      },
+      {
+        "persona": "bank",
+        "id": "application-detail",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/bank-application-detail.png"
+      },
+      {
+        "persona": "bank",
+        "id": "application-detail",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/bank-application-detail.png"
+      },
+      {
+        "persona": "bank",
+        "id": "audit",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/bank-audit.png"
+      },
+      {
+        "persona": "bank",
+        "id": "audit",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/bank-audit.png"
+      },
+      {
+        "persona": "bank",
+        "id": "compliance",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/bank-compliance.png"
+      },
+      {
+        "persona": "bank",
+        "id": "compliance",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/bank-compliance.png"
+      },
+      {
+        "persona": "dealer",
+        "id": "dashboard",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/dealer-dashboard.png"
+      },
+      {
+        "persona": "dealer",
+        "id": "dashboard",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/dealer-dashboard.png"
+      },
+      {
+        "persona": "dealer",
+        "id": "applications-list",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/dealer-applications-list.png"
+      },
+      {
+        "persona": "dealer",
+        "id": "applications-list",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/dealer-applications-list.png"
+      },
+      {
+        "persona": "dealer",
+        "id": "application-detail",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/dealer-applications-detail.png"
+      },
+      {
+        "persona": "dealer",
+        "id": "application-detail",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/dealer-applications-detail.png"
+      },
+      {
+        "persona": "dealer",
+        "id": "wizard-step1",
+        "suffix": "desktop",
+        "mode": "reused",
+        "from": "reusability-test/desktop/dealer-applications-new-step1.png"
+      },
+      {
+        "persona": "dealer",
+        "id": "wizard-step1",
+        "suffix": "mobile",
+        "mode": "reused",
+        "from": "reusability-test/mobile/dealer-applications-new-step1.png"
+      }
+    ]
+  }
+}

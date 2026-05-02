@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import Link from "next/link";
 import {
   Play, RotateCcw, CheckCircle2, XCircle, Clock, 

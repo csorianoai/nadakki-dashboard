@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { 
   FolderOpen, Search, Upload, Image, FileText, 
   Video, Music, Download, Trash2, Eye

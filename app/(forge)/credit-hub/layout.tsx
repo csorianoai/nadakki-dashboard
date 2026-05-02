@@ -1,12 +1,5 @@
-"use client";
-
-import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
+import { CreditHubLayoutClient } from "./CreditHubLayoutClient";
 
 export default function CreditHubLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <CreditHubI18nBootstrap />
-      {children}
-    </>
-  );
+  return <CreditHubLayoutClient>{children}</CreditHubLayoutClient>;
 }

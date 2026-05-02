@@ -1,0 +1,49 @@
+Phase 1.5 — DEFAULT_CREDIT_TENANT_ID blocker investigation
+Generated: 2026-05-01
+Repos: nadakki-dashboard (frontend), nadakki-ai-suite (backend, read-only)
+
+=== FRONTEND: 0a91ee98 (all paths) ===
+app\(forge)\credit-hub\_design\BLOCKER_phase1.5.md — references
+app\(forge)\credit-hub\_design\TOKEN_MIGRATION_MAP.md — references
+app\(forge)\credit-hub\_design\TENANT_CONTEXT_EXTENSION.md — references
+app\(forge)\credit-hub\_design\AUDIT.md — references
+.env.example — NEXT_PUBLIC_DEFAULT_TENANT_ID=0a91ee98-2dbe-46d0-a43c-3fc2dbd42242
+lib\credit-hub\types\creditCore.ts — DEFAULT_CREDIT_TENANT_ID
+tests\credit-hub\api\creditCoreClient.test.ts — const tenantId
+docs\credit-hub\SESSION_4_REAL_DATA_REPORT.md — final fallback line
+tools\credit-hub\validate-full-credit-wizard.ps1 — default param
+tools\credit-hub\validate-session4.ps1 — $tenantId
+
+=== FRONTEND: 366b3c6c | 550e8400 | credicefi | banco piloto (subset) ===
+366b3c6c — NOT FOUND in dashboard repo (Credicefi UUID from Cesar memory absent)
+550e8400 — NOT FOUND (RFC nil 440000 and pilot 440099 both absent in dashboard)
+credicefi — many slug usages (AuthContext, APIs, SIC, etc.); not UUID
+banco-piloto — only _design/tokens.css [data-tenant="banco-piloto"] selector
+
+=== BACKEND: key evidence lines ===
+nadakki-ai-suite\validation_output.txt (API / control plane snapshot):
+  "default_tenant":{"id":"0a91ee98-2dbe-46d0-a43c-3fc2dbd42242","name":"CrediCefi","slug":"credicefi","plan":"pro"}
+
+nadakki-ai-suite\docs\credit\SECOND_TENANT_PILOT.md:
+  Tenant ID (header): 550e8400-e29b-41d4-a716-446655440099
+  Display name: Banco Piloto RD
+
+nadakki-ai-suite\config\credit\tenants\550e8400-e29b-41d4-a716-446655440099.json:
+  "display_name": "Banco Piloto RD"
+
+nadakki-ai-suite\docs\legal_phase2_completion_report.md (line 5):
+  **Tenant piloto:** Credicefi (UUID 366b3c6c-a899-4320-805e-5c1d7c896f74)
+  NOTE: Contradicts validation_output default_tenant; see BLOCKER resolution.
+
+nadakki-ai-suite\release_verification_report.json (excerpt):
+  "tenant_id":"366b3c6c-a899-4320-805e-5c1d7c896f74","tenant_slug":"sf-rentals-nadaki-excursions"
+
+nadakki-ai-suite\services\tenant_marketing_key.py:
+  "366b3c6c-a899-4320-805e-5c1d7c896f74": "sf-rentals-nadaki-excursions"
+
+nadakki-ai-suite\tools\credit-hub\validate-bank-portal.ps1:
+  [string]$TenantId = "0a91ee98-2dbe-46d0-a43c-3fc2dbd42242",
+
+=== .env.local (dashboard) ===
+No .env.local file in workspace (likely gitignored or not created on this machine).
+.env.example documents NEXT_PUBLIC_DEFAULT_TENANT_ID=0a91ee98-2dbe-46d0-a43c-3fc2dbd42242

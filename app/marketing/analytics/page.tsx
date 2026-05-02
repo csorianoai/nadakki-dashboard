@@ -5,7 +5,7 @@
  * Sin gráficos demostrativos inventados: lo no expuesto por API se oculta o se etiqueta claramente.
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import {
   TrendingUp,
   TrendingDown,

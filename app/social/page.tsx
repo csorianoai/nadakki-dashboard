@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import Link from "next/link";
 import { Share2, Calendar, MessageSquare, BarChart3, Rss, Settings, ArrowRight, AlertTriangle, RefreshCw, Plus } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";

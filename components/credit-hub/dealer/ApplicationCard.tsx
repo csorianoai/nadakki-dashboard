@@ -1,9 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion-stub";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Car, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
 
@@ -72,7 +73,7 @@ export function ApplicationCard({ application, variant = "card", className }: Ap
   const requestedAmount = Number(application.requested_amount || 0);
 
   const handleClick = () => {
-    router.push(`/credit-hub/dealer/applications/${application.application_id}`);
+    router.push(forgeDealerApplicationDetailHref(application.application_id));
   };
 
   if (variant === "compact") {

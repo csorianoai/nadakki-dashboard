@@ -1,6 +1,6 @@
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import { CHQueryProvider } from "@/components/credit-hub/system/CHQueryProvider";
-import "./credit-hub/forge-globals.css";
+import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -11,13 +11,13 @@ const fontSans = Inter({
 
 const fontMono = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--forge-font-mono",
+  variable: "--forge-font-mono-opt",
   display: "swap",
 });
 
-const fontDisplay = Space_Grotesk({
+const fontDisplay = Source_Serif_4({
   subsets: ["latin"],
-  variable: "--forge-font-display",
+  variable: "--forge-font-display-opt",
   display: "swap",
 });
 
@@ -27,8 +27,12 @@ export const metadata = {
 };
 
 export default function ForgeRootLayout({ children }: { children: React.ReactNode }) {
+  const forgeTenantAttr = forgeAppDataTenantAttribute();
   return (
-    <div className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} forge-app antialiased`}>
+    <div
+      className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} forge-app antialiased`}
+      data-tenant={forgeTenantAttr}
+    >
       <CHQueryProvider>{children}</CHQueryProvider>
     </div>
   );

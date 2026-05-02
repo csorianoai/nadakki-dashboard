@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "@/lib/motion-stub";
 import { 
   Split, Plus, Play, Pause, Trophy, TrendingUp, TrendingDown,
   BarChart3, Users, Clock, Target, CheckCircle, XCircle,

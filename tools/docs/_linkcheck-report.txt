@@ -1,0 +1,163 @@
+﻿
+
+==== app/(forge)/credit-hub/_design/README.md ====
+
+FILE: app/(forge)/credit-hub/_design/README.md
+  [Γ£ô] ./README.md#brand-color
+  [Γ£ô] https://dashboard.nadakki.com
+  [Γ£ô] https://github.com/csorianoai/nadakki-dashboard/tree/feat/forge-redesign-v3
+  [Γ£ô] ./tokens.css
+  [Γ£ô] ../../../../.github/workflows/auto-deploy-frontend.yml
+
+  5 links checked.
+
+==== app/(forge)/credit-hub/_design/DESIGN_SYSTEM.md ====
+
+FILE: app/(forge)/credit-hub/_design/DESIGN_SYSTEM.md
+  [Γ£ô] https://www.goldmansachs.com/
+  [Γ£ô] https://stripe.com/
+  [Γ£ô] https://linear.app/
+  [Γ£ô] https://www.brex.com/
+  [Γ£ô] https://www.notion.so/
+  [Γ£ô] https://en.wikipedia.org/wiki/Bloomberg_Terminal
+  [Γ£ô] ./tokens.css
+  [Γ£ô] ./COMPONENTS.md
+  [Γ£ô] ./POLISH.md
+  [Γ£ô] ./REUSABILITY_TEST.md
+  [Γ£ô] ./AUDIT.md
+  [Γ£ô] ./MIGRATION.md
+  [Γ£ô] ./_assets/benchmarks/goldman-marquee.png
+  [Γ£ô] ./_assets/benchmarks/stripe-dashboard.png
+  [Γ£ô] ./_assets/benchmarks/linear-app.png
+  [Γ£ô] ./_assets/benchmarks/brex-dashboard.png
+  [Γ£ô] ./_assets/benchmarks/notion-page.png
+  [Γ£ô] ./_assets/benchmarks/bloomberg-terminal.png
+
+  18 links checked.
+
+==== app/(forge)/credit-hub/_design/TOKENS.md ====
+
+FILE: app/(forge)/credit-hub/_design/TOKENS.md
+  No hyperlinks found!
+
+  0 links checked.
+
+==== app/(forge)/credit-hub/_design/COMPONENTS.md ====
+
+FILE: app/(forge)/credit-hub/_design/COMPONENTS.md
+  [Γ£ô] ../preview
+  [Γ£ô] ./TOKENS.md
+  [Γ£ô] ./POLISH.md
+  [Γ£ô] ./MIGRATION.md
+  [Γ£ô] ./_assets/components/evidence-audit/section.png
+  [Γ£ô] ./_assets/components/skeleton-avatar/section.png
+  [Γ£ô] ./_assets/components/cards-badges-empty/section.png
+  [Γ£ô] ./_assets/components/button/variants-default.png
+  [Γ£ô] ./_assets/components/button/variants-loading.png
+  [Γ£ô] ./_assets/components/button/variants-disabled.png
+  [Γ£ô] ./_assets/components/button/iconbutton.png
+  [Γ£ô] ./_assets/components/button/focus-surfaces.png
+  [Γ£ô] ./_assets/components/form-controls/section.png
+  [Γ£ô] ./_assets/components/command-palette/open.png
+  [Γ£ô] ./_assets/components/consent-capture/section.png
+  [Γ£ô] ./_assets/components/datatable/density-comfortable-mode-data.png
+  [Γ£ô] ./_assets/components/datatable/density-compact-mode-data.png
+  [Γ£ô] ./_assets/components/datatable/sorted-asc.png
+  [Γ£ô] ./_assets/components/datatable/bulk-action-bar.png
+  [Γ£ô] ./_assets/components/datatable/empty-success-tone.png
+  [Γ£ô] ./_assets/components/overlays/section.png
+  [Γ£ô] ./_assets/components/tabs/section.png
+  [Γ£ô] ./_assets/components/layout/sidebar-topbar-kpi.png
+
+  23 links checked.
+
+==== app/(forge)/credit-hub/_design/PAGES.md ====
+
+FILE: app/(forge)/credit-hub/_design/PAGES.md
+  [Γ£ô] ./COMPONENTS.md
+  [Γ£ô] ./COMPONENTS.md#kpicard
+  [Γ£ô] ./COMPONENTS.md#datatable
+  [Γ£ô] ./COMPONENTS.md#emptystate
+  [Γ£ô] ./COMPONENTS.md#button
+  [Γ£ô] ./COMPONENTS.md#badge
+  [Γ£ô] ./COMPONENTS.md#statuspill
+  [Γ£ô] ./COMPONENTS.md#input
+  [Γ£ô] ./COMPONENTS.md#card
+  [Γ£ô] ./COMPONENTS.md#skeleton
+  [Γ£ô] ../../../../lib/credit-hub/hooks/useTenantConfig.ts
+  [Γ£ô] ../../../../lib/credit-hub/hooks/useBankQueue.ts
+  [Γ£ô] ../../../../lib/credit-hub/hooks/useBankAnalytics.ts
+  [Γ£ô] ../../../../lib/credit-hub/i18n/useTranslations.ts
+  [Γ£ô] ./POLISH.md
+  [Γ£ô] ./_assets/pages/bank/dashboard-desktop.png
+  [Γ£ô] ./_assets/pages/bank/dashboard-mobile.png
+  [Γ£ô] ./HOW_TO_MODIFY.md
+  [Γ£ô] ./COMPONENTS.md#select
+  [Γ£ô] ../../../../lib/credit-hub/hooks/useBulkActions.ts
+  [Γ£ô] ./_assets/pages/bank/applications-list-desktop.png
+  [Γ£ô] ./_assets/pages/bank/applications-list-mobile.png
+  [Γ£ô] ./COMPONENTS.md#tabs
+  [Γ£ô] ./COMPONENTS.md#evidencecard
+  [Γ£ô] ./COMPONENTS.md#modal
+  [Γ£ô] ./COMPONENTS.md#drawer
+  [Γ£ô] ../../../../lib/credit-hub/hooks/useApplication.ts
+  [Γ£ô] ../../../../lib/credit-hub/hooks/useBankDecision.ts
+  [Γ£ô] ./_assets/pages/bank/application-detail-desktop.png
+  [Γ£ô] ./_assets/pages/bank/application-detail-mobile.png
+  [Γ£ô] ./COMPONENTS.md#audittimeline
+  [Γ£ô] ./_assets/pages/bank/audit-desktop.png
+  [Γ£ô] ./_assets/pages/bank/audit-mobile.png
+  [Γ£ô] ./_assets/pages/bank/compliance-desktop.png
+  [Γ£ô] ./_assets/pages/bank/compliance-mobile.png
+  [Γ£ô] ./_assets/pages/dealer/dashboard-desktop.png
+  [Γ£ô] ./_assets/pages/dealer/dashboard-mobile.png
+  [Γ£ô] ../../../../lib/credit-hub/hooks/useCreditApplications.ts
+  [Γ£ô] ./_assets/pages/dealer/applications-list-desktop.png
+  [Γ£ô] ./_assets/pages/dealer/applications-list-mobile.png
+  [Γ£ô] ./_assets/pages/dealer/application-detail-desktop.png
+  [Γ£ô] ./_assets/pages/dealer/application-detail-mobile.png
+  [Γ£ô] ./COMPONENTS.md#consentcapture
+  [Γ£ô] ./MIGRATION.md
+  [Γ£ô] ./_assets/pages/dealer/wizard-step1-desktop.png
+  [Γ£ô] ./_assets/pages/dealer/wizard-step1-mobile.png
+  [Γ£ô] ./COMPONENTS.md#preview-playground
+  [Γ£ô] ./README.md
+  [Γ£ô] ./TOKENS.md
+
+  49 links checked.
+
+==== app/(forge)/credit-hub/_design/TENANT_THEMING.md ====
+
+FILE: app/(forge)/credit-hub/_design/TENANT_THEMING.md
+  [Γ£ô] ./TENANT_CONTEXT_EXTENSION.md
+  [Γ£ô] ./AUDIT.md
+  [Γ£ô] ./REUSABILITY_TEST.md
+  [Γ£ô] ./tokens.css
+  [Γ£ô] https://webaim.org/resources/contrastchecker/
+  [Γ£ô] ./COMPONENTS.md#button
+
+  6 links checked.
+
+==== app/(forge)/credit-hub/_design/HOW_TO_MODIFY.md ====
+
+FILE: app/(forge)/credit-hub/_design/HOW_TO_MODIFY.md
+  [Γ£ô] ./tokens.css
+  [Γ£ô] ./TOKENS.md
+  [Γ£ô] ../../../../components/forge/ui/Button.tsx
+  [Γ£ô] ../preview/page.tsx
+  [Γ£ô] ./COMPONENTS.md#button
+  [Γ£ô] ./PAGES.md
+  [Γ£ô] ../../../../components/forge/ui/EvidenceCard.tsx
+  [Γ£ô] ./DESIGN_SYSTEM.md
+  [Γ£ô] ./MIGRATION.md
+  [Γ£ô] ./COMPONENTS.md
+
+  10 links checked.
+
+==== app/(forge)/credit-hub/_design/REUSE_PLAYBOOK.md ====
+
+FILE: app/(forge)/credit-hub/_design/REUSE_PLAYBOOK.md
+  [Γ£ô] ./COMPONENTS.md
+  [Γ£ô] ./DESIGN_SYSTEM.md
+
+  2 links checked.

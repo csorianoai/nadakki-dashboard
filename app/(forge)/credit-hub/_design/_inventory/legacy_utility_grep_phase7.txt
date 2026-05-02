@@ -1,0 +1,737 @@
+﻿
+app\(forge)\credit-hub\bank\analytics\page.tsx:18:        <p className="text-sm uppercase tracking-[0.18em] 
+text-forge-primary">{t.bank.analytics_kicker}</p>
+app\(forge)\credit-hub\bank\analytics\page.tsx:19:        <h1 className="mt-1 font-display text-3xl font-bold 
+text-forge-text">Riesgo, ROI y dealers</h1>
+app\(forge)\credit-hub\components\page.tsx:16:    <div data-portal="dealer" className="min-h-screen bg-forge-bg p-4 
+text-forge-text md:p-8">
+app\(forge)\credit-hub\dealer\preapproval\page.tsx:23:        <h1 className="font-display text-3xl font-bold 
+text-forge-text">{copy.page_title}</h1>
+app\(forge)\credit-hub\dealer\preapproval\page.tsx:24:        <p className="max-w-3xl 
+text-forge-text-muted">{copy.page_subtitle}</p>
+app\(forge)\credit-hub\page.tsx:47:    <div data-portal="dealer" className="flex min-h-screen items-center 
+justify-center bg-forge-bg p-4">
+app\(forge)\credit-hub\page.tsx:51:          <h1 className="mb-3 font-display text-4xl font-bold text-forge-text 
+md:text-5xl">Nadakki Forge</h1>
+app\(forge)\credit-hub\page.tsx:52:          <p className="text-lg text-forge-text-muted">{t.portals.tagline}</p>
+app\(forge)\credit-hub\page.tsx:61:                  <div className="rounded-xl bg-gradient-to-br from-forge-primary 
+to-forge-accent p-3">
+app\(forge)\credit-hub\page.tsx:65:                    <h2 className="font-semibold 
+text-forge-text">{portal.title}</h2>
+app\(forge)\credit-hub\page.tsx:66:                    <p className="mt-1 text-sm 
+text-forge-text-muted">{portal.description}</p>
+components\credit-hub\bank\navigation\BankSideNav.tsx:25:    <aside className="hidden w-64 shrink-0 border-r 
+border-forge-border bg-forge-surface/40 p-4 lg:block">
+components\credit-hub\bank\navigation\BankSideNav.tsx:36:                active ? "bg-forge-primary text-white 
+shadow-lg shadow-forge-primary/20" : "text-forge-text-muted hover:bg-forge-surface-elevated hover:text-forge-text"
+components\credit-hub\bank\navigation\BankTopBar.tsx:12:    <header className="sticky top-0 z-30 border-b 
+border-forge-border bg-forge-surface/85 backdrop-blur-md">
+components\credit-hub\bank\navigation\BankTopBar.tsx:17:            <p className="font-display font-bold 
+text-forge-text">Forge Banco</p>
+components\credit-hub\bank\navigation\BankTopBar.tsx:18:            <p className="text-xs 
+text-forge-text-muted">Decisiones crediticias auditables</p>
+components\credit-hub\bank\navigation\BankTopBar.tsx:26:          {tenantSlug && <span className="rounded-md 
+bg-forge-surface-elevated px-2 py-1 text-xs text-forge-text-muted">{tenantSlug}</span>}
+components\credit-hub\bank\BankAnalyticsCharts.tsx:15:        <h3 className="mb-4 font-semibold 
+text-forge-text">{t.bank.charts_by_status}</h3>
+components\credit-hub\bank\BankAnalyticsCharts.tsx:28:        <h3 className="mb-4 font-semibold 
+text-forge-text">{t.bank.charts_cohorts}</h3>
+components\credit-hub\bank\BankApplicationCard.tsx:26:    <ForgeCard className="transition-colors 
+hover:border-forge-primary/40">
+components\credit-hub\bank\BankApplicationCard.tsx:40:              <h3 className="font-semibold 
+text-forge-text">{application.applicant_name || "Cliente sin nombre"}</h3>
+components\credit-hub\bank\BankApplicationCard.tsx:44:            <p className="mt-1 text-sm text-forge-text-muted">
+components\credit-hub\bank\BankApplicationCard.tsx:47:            <p className="mt-1 font-mono text-xs 
+text-forge-text-muted">{application.application_id}</p>
+components\credit-hub\bank\BankApplicationCard.tsx:52:            <p 
+className="text-forge-text-muted">{t.bank.application_score_label}</p>
+components\credit-hub\bank\BankApplicationCard.tsx:53:            <p className="font-display text-2xl font-bold 
+text-forge-text">{application.score}</p>
+components\credit-hub\bank\BankApplicationCard.tsx:56:            <p className="text-forge-text-muted">Monto</p>
+components\credit-hub\bank\BankApplicationCard.tsx:57:            <p className="font-semibold 
+text-forge-text">{formatDop(application.requested_amount)}</p>
+components\credit-hub\bank\BankApplicationCard.tsx:59:          <Link 
+href={`/credit-hub/bank/applications/${application.application_id}`} className="flex items-center justify-end gap-2 
+text-forge-primary">
+components\credit-hub\bank\BankAuditTimeline.tsx:13:      <h3 className="mb-4 flex items-center gap-2 font-semibold 
+text-forge-text">
+components\credit-hub\bank\BankAuditTimeline.tsx:17:        <p className="text-sm text-forge-text-muted">Aún no hay 
+eventos de auditoría bancaria.</p>
+components\credit-hub\bank\BankAuditTimeline.tsx:22:              <div className="mt-1.5 h-2 w-2 rounded-full 
+bg-forge-primary" />
+components\credit-hub\bank\BankAuditTimeline.tsx:24:                <p className="font-medium 
+text-forge-text">{event.event}</p>
+components\credit-hub\bank\BankAuditTimeline.tsx:25:                <p className="text-xs text-forge-text-muted">
+components\credit-hub\bank\BankBulkActionConfirm.tsx:39:    <ForgeCard className="border-forge-primary/30 
+bg-forge-primary/5">
+components\credit-hub\bank\BankBulkActionConfirm.tsx:49:          <span className="mb-1 block text-sm font-medium 
+text-forge-text">Justificación obligatoria</span>
+components\credit-hub\bank\BankBulkActionConfirm.tsx:53:            className="min-h-[44px] w-full rounded-xl border 
+border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
+components\credit-hub\bank\BankBulkActionsBar.tsx:39:        <p className="mt-2 rounded-xl bg-forge-surface-elevated 
+p-3 text-sm text-forge-text">
+components\credit-hub\bank\BankComplianceCard.tsx:17:          <h3 className="font-semibold 
+text-forge-text">{t.bank_ui.compliance_card_title}</h3>
+components\credit-hub\bank\BankComplianceCard.tsx:22:            <ul className="mt-3 space-y-1 text-sm 
+text-forge-text-muted">
+components\credit-hub\bank\BankComplianceCard.tsx:30:            <p className="mt-2 text-sm 
+text-forge-text-muted">Consentimientos y documentos mínimos completos.</p>
+components\credit-hub\bank\BankComplianceReport.tsx:17:          <p className="text-sm 
+text-forge-text-muted">{t.bank.compliance_percent_label}</p>
+components\credit-hub\bank\BankComplianceReport.tsx:18:          <p className="mt-2 font-display text-3xl font-bold 
+text-forge-text">
+components\credit-hub\bank\BankComplianceReport.tsx:23:          <p className="text-sm 
+text-forge-text-muted">{t.bank.issues_detected}</p>
+components\credit-hub\bank\BankComplianceReport.tsx:27:          <p className="text-sm text-forge-text-muted">Última 
+auditoría</p>
+components\credit-hub\bank\BankComplianceReport.tsx:28:          <p className="mt-2 font-semibold 
+text-forge-text">{new Date().toLocaleString("es-DO")}</p>
+components\credit-hub\bank\BankComplianceReport.tsx:32:        <h2 className="mb-4 font-semibold 
+text-forge-text">{t.bank.issues_section_title}</h2>
+components\credit-hub\bank\BankComplianceReport.tsx:34:          <p className="text-sm 
+text-forge-text-muted">{t.bank.no_issues_queue}</p>
+components\credit-hub\bank\BankComplianceReport.tsx:41:                className="flex items-center justify-between 
+rounded-xl bg-forge-surface-elevated p-3"
+components\credit-hub\bank\BankComplianceReport.tsx:44:                  <p className="font-medium 
+text-forge-text">{item.application_id}</p>
+components\credit-hub\bank\BankComplianceReport.tsx:45:                  <p className="text-sm 
+text-forge-text-muted">{item.applicant_name || "Cliente"}</p>
+components\credit-hub\bank\BankComplianceReport.tsx:54:        <h2 className="font-semibold 
+text-forge-text">{t.bank.rtbf_title}</h2>
+components\credit-hub\bank\BankComplianceReport.tsx:55:        <p className="mt-2 text-sm 
+text-forge-text-muted">{t.bank.rtbf_description}</p>
+components\credit-hub\bank\BankCounterOfferModal.tsx:15:      <h3 className="font-semibold 
+text-forge-text">Contra-oferta sugerida</h3>
+components\credit-hub\bank\BankCounterOfferModal.tsx:16:      <p className="mt-1 text-sm 
+text-forge-text-muted">{offer.explanation}</p>
+components\credit-hub\bank\BankCounterOfferModal.tsx:18:        <div><p className="text-xs 
+text-forge-text-muted">Monto</p><p className="font-semibold 
+text-forge-text">{dop(offer.counter_offer_terms.approved_amount)}</p></div>
+components\credit-hub\bank\BankCounterOfferModal.tsx:19:        <div><p className="text-xs 
+text-forge-text-muted">Tasa</p><p className="font-semibold 
+text-forge-text">{offer.counter_offer_terms.interest_rate}%</p></div>
+components\credit-hub\bank\BankCounterOfferModal.tsx:20:        <div><p className="text-xs 
+text-forge-text-muted">Plazo</p><p className="font-semibold text-forge-text">{offer.counter_offer_terms.term_months} 
+meses</p></div>
+components\credit-hub\bank\BankCounterOfferModal.tsx:21:        <div><p className="text-xs 
+text-forge-text-muted">Ajuste</p><p className="font-semibold text-forge-text">{offer.rate_adjustment_bps} bps</p></div>
+components\credit-hub\bank\BankDashboardHero.tsx:10:    <ForgeCard className="overflow-hidden border-forge-primary/20 
+bg-gradient-to-br from-forge-surface via-forge-surface to-forge-primary/10">
+components\credit-hub\bank\BankDashboardHero.tsx:13:          <p className="text-sm uppercase tracking-[0.18em] 
+text-forge-primary">Portal bancario</p>
+components\credit-hub\bank\BankDashboardHero.tsx:14:          <h1 className="mt-2 font-display text-3xl font-bold 
+text-forge-text md:text-4xl">Mesa de decisiones CrediCefi</h1>
+components\credit-hub\bank\BankDashboardHero.tsx:15:          <p className="mt-2 max-w-2xl 
+text-forge-text-muted">{t.bank.hero_compliance_line}</p>
+components\credit-hub\bank\BankDashboardHero.tsx:17:        <div className="flex h-16 w-16 items-center justify-center 
+rounded-2xl bg-forge-primary/15 text-forge-primary">
+components\credit-hub\bank\BankDealerRanking.tsx:7:      <h3 className="mb-4 font-semibold text-forge-text">Top 
+dealers</h3>
+components\credit-hub\bank\BankDealerRanking.tsx:9:        {dealers.length === 0 ? <p className="text-sm 
+text-forge-text-muted">Sin volumen suficiente.</p> : dealers.map((dealer) => (
+components\credit-hub\bank\BankDealerRanking.tsx:10:          <div key={dealer.dealer} className="flex items-center 
+justify-between rounded-xl bg-forge-surface-elevated p-3">
+components\credit-hub\bank\BankDealerRanking.tsx:12:              <p className="font-medium 
+text-forge-text">{dealer.dealer}</p>
+components\credit-hub\bank\BankDealerRanking.tsx:13:              <p className="text-xs 
+text-forge-text-muted">{dealer.volume} solicitudes</p>
+components\credit-hub\bank\BankDecisionForm.tsx:59:            <span className="mb-1 block text-sm font-medium 
+text-forge-text">Condiciones</span>
+components\credit-hub\bank\BankDecisionForm.tsx:61:              className="min-h-20 w-full rounded-xl border 
+border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
+components\credit-hub\bank\BankDecisionForm.tsx:71:        <span className="mb-1 block text-sm font-medium 
+text-forge-text">Justificación obligatoria</span>
+components\credit-hub\bank\BankDecisionForm.tsx:73:          className="min-h-28 w-full rounded-xl border 
+border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
+components\credit-hub\bank\BankDecisionPanel.tsx:35:        <p className="text-sm uppercase tracking-[0.18em] 
+text-forge-primary">Decisión del banco</p>
+components\credit-hub\bank\BankDecisionPanel.tsx:36:        <h2 className="mt-1 font-display text-2xl font-bold 
+text-forge-text">Registro final auditable</h2>
+components\credit-hub\bank\BankDetailView.tsx:30:          <h1 className="font-display text-3xl font-bold 
+text-forge-text">{String(applicant?.full_name || "Cliente sin nombre")}</h1>
+components\credit-hub\bank\BankDetailView.tsx:31:          <p className="mt-1 font-mono text-xs 
+text-forge-text-muted">{application.application_id}</p>
+components\credit-hub\bank\BankDetailView.tsx:33:            <div><p className="text-xs text-forge-text-muted">Monto 
+solicitado</p><p className="font-semibold text-forge-text">RD$ {Number(financial?.requested_amount || 
+0).toLocaleString("es-DO")}</p></div>
+components\credit-hub\bank\BankDetailView.tsx:34:            <div><p className="text-xs 
+text-forge-text-muted">Vehículo</p><p className="font-semibold text-forge-text">{String(vehicle?.make || "")} 
+{String(vehicle?.model || "")}</p></div>
+components\credit-hub\bank\BankDetailView.tsx:35:            <div><p className="text-xs 
+text-forge-text-muted">Estado</p><p className="font-semibold text-forge-text">{application.state}</p></div>
+components\credit-hub\bank\BankExecutiveMetrics.tsx:15:        <p className="text-sm font-medium 
+text-forge-text-muted">Cartera activa</p>
+components\credit-hub\bank\BankExecutiveMetrics.tsx:16:        <p className="mt-3 font-display text-3xl font-bold 
+text-forge-text">
+components\credit-hub\bank\BankPortfolioHealth.tsx:11:      <h3 className="mb-4 font-semibold text-forge-text">Salud 
+de cartera</h3>
+components\credit-hub\bank\BankPortfolioHealth.tsx:14:          <div key={band} className="rounded-xl 
+bg-forge-surface-elevated p-3">
+components\credit-hub\bank\BankPortfolioHealth.tsx:15:            <p className="text-xs 
+text-forge-text-muted">{t.bank.portfolio_score_band(band)}</p>
+components\credit-hub\bank\BankPortfolioHealth.tsx:16:            <p className="font-display text-2xl font-bold 
+text-forge-text">{count}</p>
+components\credit-hub\bank\BankQueueFilters.tsx:17:      <div className="rounded-xl bg-forge-surface-elevated px-4 
+py-3 text-sm text-forge-text-muted">{t.bank.queue_order_caption}</div>
+components\credit-hub\bank\BankQueueList.tsx:31:      <label className="flex items-center gap-2 text-sm 
+text-forge-text-muted">
+components\credit-hub\bank\BankQueueList.tsx:40:        <ForgeCard className="py-12 text-center 
+text-forge-text-muted">No hay solicitudes pendientes para este filtro.</ForgeCard>
+components\credit-hub\brand\ForgeAIBadge.tsx:16:        "inline-flex items-center gap-1.5 rounded-full border 
+border-forge-border bg-forge-surface-elevated px-3 py-1 text-xs font-medium text-forge-text",
+components\credit-hub\brand\ForgeLoadingMark.tsx:16:    <div className={cn("inline-flex flex-col items-center gap-3 
+text-forge-text-muted", className)}>
+components\credit-hub\brand\ForgeLogo.tsx:52:      <span className="font-display font-bold tracking-tight 
+text-forge-text">
+components\credit-hub\brand\ForgeWordmark.tsx:12:      <span className="font-display text-xl font-bold tracking-tight 
+text-forge-text">
+components\credit-hub\dealer\analysis\AnalysisDisclaimer.tsx:3:    <p className="rounded-xl border border-forge-border 
+bg-forge-surface-elevated p-3 text-xs leading-relaxed text-forge-text-muted">
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:15:      <div className="rounded-xl 
+bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:16:        <p className="text-sm 
+text-forge-text-muted">Capacidad estimada</p>
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:17:        <p className="mt-1 font-display text-2xl 
+font-bold text-forge-text">{formatDop(analysis.payment_capacity)}</p>
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:19:      <div className="rounded-xl 
+bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:20:        <p className="text-sm 
+text-forge-text-muted">Cuota estimada</p>
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:21:        <p className="mt-1 font-display text-2xl 
+font-bold text-forge-text">{formatDop(analysis.estimated_payment)}</p>
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:23:      <div className="rounded-xl 
+bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:24:        <p className="text-sm 
+text-forge-text-muted">Diferencia contra capacidad</p>
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:30:      <div className="rounded-xl 
+bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:32:          <span 
+className="text-forge-text-muted">{t.metrics.dti_short}</span>
+components\credit-hub\dealer\analysis\CapacitySnapshot.tsx:33:          <span className="font-semibold 
+text-forge-text">{formatPercent(analysis.dti)}</span>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:24:          <p className="text-sm uppercase 
+tracking-[0.18em] text-forge-primary">{t.analysis.panel_kicker}</p>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:25:          <h2 className="mt-1 font-display text-2xl 
+font-bold text-forge-text">{t.analysis.panel_title}</h2>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:26:          <p className="mt-1 text-sm 
+text-forge-text-muted">{t.analysis.panel_subtitle}</p>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:35:          className="bg-gradient-to-br 
+from-forge-primary via-orange-500 to-forge-accent"
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:42:        <div className="mt-6 rounded-2xl border 
+border-forge-primary/20 bg-forge-primary/5 p-5">
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:43:          <div className="flex items-center gap-3 
+text-forge-text">
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:44:            <span className="h-5 w-5 animate-spin 
+rounded-full border-2 border-forge-primary border-t-transparent" />
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:48:            <div className="h-24 animate-pulse 
+rounded-xl bg-forge-surface-elevated" />
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:49:            <div className="h-24 animate-pulse 
+rounded-xl bg-forge-surface-elevated" />
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:50:            <div className="h-24 animate-pulse 
+rounded-xl bg-forge-surface-elevated" />
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:55:      {!isAnalyzing && isLoading && <div 
+className="mt-6 h-48 animate-pulse rounded-2xl bg-forge-surface-elevated" />}
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:60:          <p className="mt-1 text-sm 
+text-forge-text-muted">{error instanceof Error ? error.message : t.analysis.try_again_detail}</p>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:68:        <div className="mt-6 rounded-2xl border 
+border-dashed border-forge-border bg-forge-surface-elevated/60 p-8 text-center">
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:69:          <Brain className="mx-auto h-10 w-10 
+text-forge-primary" />
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:70:          <p className="mt-3 font-semibold 
+text-forge-text">{t.analysis.empty_title}</p>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:71:          <p className="mt-1 text-sm 
+text-forge-text-muted">{t.analysis.empty_hint}</p>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:90:          <div className="rounded-2xl border 
+border-forge-border bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:91:            <h3 className="font-semibold 
+text-forge-text">{t.analysis.explanation_heading}</h3>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:92:            <p className="mt-2 text-sm 
+leading-relaxed text-forge-text-muted">{data.explanation}</p>
+components\credit-hub\dealer\analysis\CreditAnalysisPanel.tsx:96:            <h3 className="mb-3 font-semibold 
+text-forge-text">{t.analysis.recommendations_heading}</h3>
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:7:      <div className="rounded-xl border 
+border-forge-border bg-forge-surface/60 p-4">
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:8:        <p className="text-sm 
+text-forge-text-muted">Monto financiado</p>
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:9:        <p className="mt-1 font-semibold 
+text-forge-text">{formatDop(analysis.financed_amount)}</p>
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:11:      <div className="rounded-xl border 
+border-forge-border bg-forge-surface/60 p-4">
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:12:        <p className="text-sm 
+text-forge-text-muted">Capacidad de deuda</p>
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:13:        <p className="mt-1 font-semibold 
+text-forge-text">{formatDop(analysis.debt_capacity)}</p>
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:15:      <div className="rounded-xl border 
+border-forge-border bg-forge-surface/60 p-4">
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:16:        <p className="text-sm 
+text-forge-text-muted">Confianza del análisis</p>
+components\credit-hub\dealer\analysis\PaymentBreakdown.tsx:17:        <p className="mt-1 font-semibold 
+text-forge-text">{Math.round(analysis.confidence * 100)}%</p>
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:17:    <article className="rounded-2xl border 
+border-forge-border bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:20:          <h4 className="font-semibold 
+text-forge-text">{recommendation.title}</h4>
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:21:          <p className="mt-1 text-sm 
+text-forge-text-muted">{recommendation.explanation}</p>
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:23:        <span className="rounded-full 
+bg-forge-primary/10 px-3 py-1 text-xs font-semibold text-forge-primary">
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:28:        <span className="rounded-lg bg-forge-surface 
+px-3 py-2 text-forge-text">
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:31:        <ArrowRight className="h-4 w-4 
+text-forge-text-muted" />
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:32:        <span className="rounded-lg 
+bg-forge-primary/10 px-3 py-2 font-semibold text-forge-primary">
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:37:        <p className="text-forge-text-muted">
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:38:          Nueva cuota: <span className="font-semibold 
+text-forge-text">{formatDop(recommendation.estimated_new_payment)}</span>
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:40:        <p className="text-forge-text-muted">
+components\credit-hub\dealer\analysis\RecommendationCard.tsx:41:          {t.metrics.new_dti}: <span 
+className="font-semibold text-forge-text">{formatPercent(recommendation.estimated_new_dti)}</span>
+components\credit-hub\dealer\analysis\RiskFactorsList.tsx:11:            <li key={factor} className="flex items-start 
+gap-2 text-sm text-forge-text">
+components\credit-hub\dealer\analysis\RiskFactorsList.tsx:22:            <li className="text-sm 
+text-forge-text-muted">No se detectaron alertas relevantes en las reglas actuales.</li>
+components\credit-hub\dealer\analysis\RiskFactorsList.tsx:25:              <li key={factor} className="flex 
+items-start gap-2 text-sm text-forge-text">
+components\credit-hub\dealer\analysis\ScoreVisual.tsx:55:          <span className="text-xs uppercase tracking-[0.2em] 
+text-forge-text-muted">{t.metrics.score_ring_caption}</span>
+components\credit-hub\dealer\analysis\ScoreVisual.tsx:56:          <span className="font-display text-5xl font-bold 
+text-forge-text">{analysis.score}</span>
+components\credit-hub\dealer\analysis\ScoreVisual.tsx:57:          <span className="text-sm 
+text-forge-text-muted">{t.metrics.out_of_thousand}</span>
+components\credit-hub\dealer\analysis\ScoreVisual.tsx:64:        <span className="rounded-full border 
+border-forge-border bg-forge-surface-elevated px-3 py-1 text-sm text-forge-text">
+components\credit-hub\dealer\preapproval\AmortizationChart.tsx:41:    <div className="rounded-xl border 
+border-forge-border bg-forge-surface-elevated/30 p-4">
+components\credit-hub\dealer\preapproval\AmortizationChart.tsx:42:      <h3 className="mb-3 text-sm font-semibold 
+text-forge-text">{title}</h3>
+components\credit-hub\dealer\preapproval\AmortizationChart.tsx:44:        <div className="h-[300px] w-full min-w-0 
+rounded-lg bg-forge-surface-elevated/50 animate-pulse" aria-hidden />
+components\credit-hub\dealer\preapproval\PreApprovalSimulator.tsx:39:      <div className="rounded-2xl border 
+border-forge-border bg-forge-surface p-8 text-center text-forge-text-muted">
+components\credit-hub\dealer\preapproval\RecommendationsList.tsx:12:    <div className="rounded-xl border 
+border-forge-border bg-forge-surface-elevated/40 p-4">
+components\credit-hub\dealer\preapproval\RecommendationsList.tsx:13:      <h3 className="mb-2 text-sm font-semibold 
+text-forge-text">{heading}</h3>
+components\credit-hub\dealer\preapproval\RecommendationsList.tsx:14:      <ul className="space-y-2 text-sm 
+text-forge-text-muted">
+components\credit-hub\dealer\preapproval\RecommendationsList.tsx:17:            <span 
+className="text-forge-primary">•</span>
+components\credit-hub\dealer\preapproval\ScenarioComparison.tsx:30:    <div className="rounded-2xl border 
+border-forge-border bg-forge-surface p-4">
+components\credit-hub\dealer\preapproval\ScenarioComparison.tsx:32:        <h3 className="font-semibold 
+text-forge-text">{title}</h3>
+components\credit-hub\dealer\preapproval\ScenarioComparison.tsx:40:            <tr className="border-b 
+border-forge-border text-forge-text-muted">
+components\credit-hub\dealer\preapproval\ScenarioComparison.tsx:55:              <tr key={s.id} className="border-b 
+border-forge-border/60 text-forge-text">
+components\credit-hub\dealer\preapproval\SimulatorControls.tsx:56:    <div className="space-y-4 rounded-2xl border 
+border-forge-border bg-forge-surface p-4 md:p-6">
+components\credit-hub\dealer\preapproval\SimulatorControls.tsx:57:      <h2 className="font-display text-lg 
+font-semibold text-forge-text">{sectionTitle}</h2>
+components\credit-hub\dealer\preapproval\SimulatorControls.tsx:111:        <label className="block text-sm font-medium 
+text-forge-text" htmlFor="sim-down-pct">
+components\credit-hub\dealer\preapproval\SimulatorControls.tsx:142:          <label className="block text-sm 
+font-medium text-forge-text" htmlFor="sim-rate">
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:34:      <div className="rounded-2xl border 
+border-forge-border bg-forge-surface p-8 text-center text-forge-text-muted">{copy.empty_hint}</div>
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:43:      <h2 className="font-display text-lg 
+font-semibold text-forge-text">{copy.results_title}</h2>
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:46:      <div className="rounded-xl border 
+border-forge-border bg-forge-surface-elevated/40 p-4">
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:47:        <p className="mb-2 text-xs font-medium 
+uppercase tracking-wide text-forge-text-muted">{copy.metrics.approval_probability}</p>
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:48:        <div className="h-3 w-full overflow-hidden 
+rounded-full bg-forge-border">
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:50:            className="h-full rounded-full 
+bg-gradient-to-r from-forge-primary to-emerald-400 transition-all"
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:54:        <p className="mt-2 text-right text-sm 
+font-semibold tabular-nums text-forge-text">{result.approvalProbability}%</p>
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:68:        className="w-full rounded-xl border 
+border-forge-border bg-forge-surface-elevated/50 px-4 py-3 text-left text-sm font-medium text-forge-text 
+hover:bg-forge-surface-elevated"
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:71:        <span className="float-right 
+text-forge-text-muted">{openDetail ? "▲" : "▼"}</span>
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:74:        <div className="grid grid-cols-1 gap-3 
+rounded-xl border border-forge-border bg-forge-surface-elevated/30 p-4 sm:grid-cols-2">
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:110:    <div className="rounded-xl border 
+border-forge-border bg-forge-surface-elevated/40 p-3">
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:111:      <p className="text-xs 
+text-forge-text-muted">{label}</p>
+components\credit-hub\dealer\preapproval\SimulatorResults.tsx:112:      <p className="mt-1 font-semibold tabular-nums 
+text-forge-text">{value}</p>
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:77:        <h2 className="font-display text-xl 
+font-semibold text-forge-text">{t.consent.step_title}</h2>
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:81:        <legend className="text-sm font-medium 
+text-forge-text">{t.consent.presence_question}</legend>
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:83:          <label className="flex cursor-pointer 
+items-center gap-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-4 hover:border-forge-primary/50">
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:90:              className="text-forge-primary"
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:92:            <span className="text-sm 
+text-forge-text">{t.consent.presence_present}</span>
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:94:          <label className="flex cursor-pointer 
+items-center gap-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-4 hover:border-forge-primary/50">
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:101:              className="text-forge-primary"
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:103:            <span className="text-sm 
+text-forge-text">{t.consent.presence_remote}</span>
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:132:            <p className="text-sm 
+text-forge-text-muted">{t.consent.present_intro}</p>
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:133:            <label className="flex items-start 
+gap-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-3 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:142:            <label className="flex items-start 
+gap-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-3 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\consent\ConsentSection.tsx:151:            <label className="flex items-start 
+gap-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-3 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\consent\ConsentStatusPoller.tsx:37:    INITIATED: "text-forge-text-muted",
+components\credit-hub\dealer\wizard\consent\ConsentStatusPoller.tsx:38:    SENT: "text-forge-text",
+components\credit-hub\dealer\wizard\consent\ConsentStatusPoller.tsx:39:    VIEWED: "text-forge-primary",
+components\credit-hub\dealer\wizard\consent\ConsentStatusPoller.tsx:48:  const colorClass = statusColors[String(status 
+?? "SENT")] ?? "text-forge-text";
+components\credit-hub\dealer\wizard\consent\ConsentStatusPoller.tsx:51:    <div className="mt-3 rounded-xl border 
+border-forge-border bg-forge-surface-elevated p-4" data-testid="consent-status-poller">
+components\credit-hub\dealer\wizard\consent\ConsentStatusPoller.tsx:55:          <span className="text-xs 
+text-forge-text-muted tabular-nums">
+components\credit-hub\dealer\wizard\consent\ConsentStatusPoller.tsx:71:          className="mt-3 text-xs 
+text-forge-primary hover:underline"
+components\credit-hub\dealer\wizard\consent\EmailConsentMethod.tsx:51:            <label className="text-sm 
+font-medium text-forge-text" htmlFor="consent-email">
+components\credit-hub\dealer\wizard\consent\EmailConsentMethod.tsx:60:              className="mt-1 h-11 w-full 
+rounded-lg border border-forge-border bg-forge-surface px-3 text-sm text-forge-text"
+components\credit-hub\dealer\wizard\consent\EmailConsentMethod.tsx:80:            className="rounded-lg 
+bg-forge-success px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed 
+disabled:bg-forge-surface-elevated disabled:text-forge-text-muted"
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:38:    <div className="mt-4 space-y-4 border-l-2 
+border-forge-primary/50 pl-6" data-testid="present-consent-form">
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:39:      <p className="text-sm 
+text-forge-text-muted">{t.consent.present_intro}</p>
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:42:        <label className="flex items-start gap-3 
+rounded-xl border border-forge-border bg-forge-surface-elevated p-3 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:51:        <label className="flex items-start gap-3 
+rounded-xl border border-forge-border bg-forge-surface-elevated p-3 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:60:        <label className="flex items-start gap-3 
+rounded-xl border border-forge-border bg-forge-surface-elevated p-3 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:72:        <label className="text-sm font-medium 
+text-forge-text" htmlFor="consent-signature-name">
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:80:          className="h-11 w-full rounded-lg 
+border border-forge-border bg-forge-surface px-3 text-sm text-forge-text"
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:82:        <p className="text-xs 
+text-forge-text-muted">
+components\credit-hub\dealer\wizard\consent\PresentConsentForm.tsx:98:        className="rounded-lg bg-forge-primary 
+px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-forge-surface-elevated 
+disabled:text-forge-text-muted"
+components\credit-hub\dealer\wizard\consent\RemoteConsentSelector.tsx:52:      <p className="text-sm 
+text-forge-text-muted">{t.consent.remote_intro}</p>
+components\credit-hub\dealer\wizard\consent\RemoteConsentSelector.tsx:55:        <div className="rounded-xl border 
+border-forge-warning/30 bg-forge-warning/10 p-3 text-sm text-forge-text" role="status">
+components\credit-hub\dealer\wizard\consent\RemoteConsentSelector.tsx:65:              selected === m.key ? 
+"border-forge-primary bg-forge-primary/10" : "border-forge-border hover:border-forge-primary/40"
+components\credit-hub\dealer\wizard\consent\RemoteConsentSelector.tsx:79:                <m.Icon className="h-5 w-5 
+shrink-0 text-forge-primary" aria-hidden />
+components\credit-hub\dealer\wizard\consent\RemoteConsentSelector.tsx:80:                <span className="text-sm 
+font-medium text-forge-text">{m.title}</span>
+components\credit-hub\dealer\wizard\consent\RemoteConsentSelector.tsx:82:              <p className="mt-1 text-xs 
+text-forge-text-muted">{m.desc}</p>
+components\credit-hub\dealer\wizard\consent\SelfieConsentMethod.tsx:51:            <label className="text-sm 
+font-medium text-forge-text" htmlFor="selfie-phone">
+components\credit-hub\dealer\wizard\consent\SelfieConsentMethod.tsx:60:              className="mt-1 h-11 w-full 
+rounded-lg border border-forge-border bg-forge-surface px-3 text-sm text-forge-text"
+components\credit-hub\dealer\wizard\consent\SelfieConsentMethod.tsx:80:            className="rounded-lg 
+bg-forge-success px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed 
+disabled:bg-forge-surface-elevated disabled:text-forge-text-muted"
+components\credit-hub\dealer\wizard\consent\SMSOTPConsentMethod.tsx:55:        <label className="text-sm font-medium 
+text-forge-text" htmlFor="sms-otp-phone">
+components\credit-hub\dealer\wizard\consent\SMSOTPConsentMethod.tsx:64:          className="mt-1 h-11 w-full 
+rounded-lg border border-forge-border bg-forge-surface px-3 text-sm text-forge-text"
+components\credit-hub\dealer\wizard\consent\SMSOTPConsentMethod.tsx:84:        className="rounded-lg bg-forge-success 
+px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-forge-surface-elevated 
+disabled:text-forge-text-muted"
+components\credit-hub\dealer\wizard\consent\SMSOTPConsentMethod.tsx:91:        <div className="space-y-2 rounded-lg 
+border border-forge-border bg-forge-surface-elevated p-3">
+components\credit-hub\dealer\wizard\consent\SMSOTPConsentMethod.tsx:92:          <p className="text-xs 
+text-forge-text-muted">
+components\credit-hub\dealer\wizard\consent\SMSOTPConsentMethod.tsx:95:          <label className="text-sm font-medium 
+text-forge-text" htmlFor="dealer-otp">
+components\credit-hub\dealer\wizard\consent\SMSOTPConsentMethod.tsx:106:            className="h-11 w-full max-w-xs 
+rounded-lg border border-forge-border bg-forge-surface px-3 text-sm tabular-nums text-forge-text"
+components\credit-hub\dealer\wizard\consent\SMSOTPConsentMethod.tsx:113:            className="rounded-lg 
+bg-forge-primary px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed 
+disabled:bg-forge-surface-elevated disabled:text-forge-text-muted"
+components\credit-hub\dealer\wizard\consent\WhatsAppConsentMethod.tsx:51:            <label className="text-sm 
+font-medium text-forge-text" htmlFor="whatsapp-phone">
+components\credit-hub\dealer\wizard\consent\WhatsAppConsentMethod.tsx:60:              className="mt-1 h-11 w-full 
+rounded-lg border border-forge-border bg-forge-surface px-3 text-sm text-forge-text"
+components\credit-hub\dealer\wizard\consent\WhatsAppConsentMethod.tsx:80:            className="rounded-lg 
+bg-forge-success px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed 
+disabled:bg-forge-surface-elevated disabled:text-forge-text-muted"
+components\credit-hub\dealer\wizard\WizardContainer.tsx:853:    <label className="flex items-start gap-3 rounded-xl 
+border border-forge-border bg-forge-surface-elevated p-3 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:866:      <h2 className="font-display text-2xl font-bold 
+text-forge-text">{title}</h2>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:867:      <p className="mt-1 
+text-forge-text-muted">{description}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:910:            <div className="rounded-xl border 
+border-forge-border bg-forge-surface-elevated p-3">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:911:              <p className="text-xs 
+text-forge-text-muted">{t.wizard.calculated_age}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:912:              <span data-testid="calculated-age" 
+className="font-semibold text-forge-text">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:953:            <div className="rounded-xl border 
+border-forge-border bg-forge-surface-elevated p-3">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:954:              <p className="text-xs 
+text-forge-text-muted">{t.wizard.calculated_tenure}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:955:              <p className="font-semibold 
+text-forge-text">{tenureLabel}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:992:              <div className="md:col-span-2 space-y-3 
+rounded-xl border border-forge-border bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:994:                  <p className="text-sm font-medium 
+text-forge-text">Otras fuentes de ingreso</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1000:                  <div key={row.id} className="grid gap-3 
+rounded-lg border border-forge-border/60 bg-forge-surface p-3 md:grid-cols-2">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1041:                    <label className="flex items-center 
+gap-2 text-sm text-forge-text md:col-span-2">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1065:          <div className="rounded-xl bg-forge-primary/10 
+p-4 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1107:            <div className="md:col-span-2 border-t 
+border-forge-border pt-4">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1108:              <h3 className="font-semibold 
+text-forge-text">{t.wizard.vehicle_section}</h3>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1141:            <div className="rounded-xl 
+bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">{t.wizard.amount_finance}</p><p 
+className="font-semibold tabular-nums text-forge-text">{formatDop(amountToFinance)}</p></div>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1142:            <div className="rounded-xl 
+bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">{t.wizard.ltv_label}</p><p 
+className="font-semibold tabular-nums text-forge-text">{Math.round(ltvPercent)}%</p>{ltvPercent / 100 > 
+tenantConfig.ltv_max && <p className="text-xs text-forge-danger">{t.wizard.ltv_exceeds}</p>}</div>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1143:            <div className="rounded-xl 
+bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">{t.wizard.estimated_capacity}</p><p 
+className="font-semibold tabular-nums text-forge-text">{formatDop(estimatedCapacity)}</p></div>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1177:              <div className="rounded-xl border 
+border-forge-primary/40 bg-forge-primary/10 p-3 text-sm text-forge-text">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1187:                className="grid gap-4 border-l-2 
+border-forge-primary/40 pl-4 md:grid-cols-2 md:pl-6"
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1189:                <div className="md:col-span-2 rounded-2xl 
+border border-forge-border bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1190:                  <h3 className="font-semibold 
+text-forge-text">{t.wizard.garante_data_title}</h3>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1218:                <div className="rounded-xl border 
+border-forge-border bg-forge-surface p-3">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1219:                  <p className="text-xs 
+text-forge-text-muted">{t.wizard.age_guarantor}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1220:                  <span 
+data-testid="co-debtor-calculated-age" className="font-semibold text-forge-text">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1244:                    <p className="text-sm 
+text-forge-text-muted">Antigüedad: {coEmploymentTenure.display}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1274:          <div className="text-sm text-forge-text-muted">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1285:                <div key={k} className="flex items-start 
+gap-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1294:                    <label htmlFor={`doc-${k}`} 
+className="text-sm font-medium text-forge-text">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1296:                      {document.required ? <span 
+className="ml-1 text-forge-danger">*</span> : <span className="ml-2 text-xs 
+text-forge-text-muted">{t.common.optional_short}</span>}
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1298:                    {document.tooltip && <p 
+className="mt-1 text-xs text-forge-text-muted">{document.tooltip}</p>}
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1300:                      className="mt-2 min-h-12 w-full 
+rounded-lg border border-forge-border bg-forge-surface px-3 py-2 text-sm text-forge-text"
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1306:                  <span className={`text-xs tabular-nums 
+${checked ? "text-forge-success" : "text-forge-text-muted"}`}>{checked ? t.documents.received : 
+t.documents.pending}</span>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1312:            <h4 className="text-sm font-medium 
+text-forge-text">{t.wizard.additional_docs_title}</h4>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1317:              <div key={row.id} className="flex flex-wrap 
+items-end gap-2 rounded-xl border border-forge-border bg-forge-surface-elevated p-3">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1325:                <label className="flex items-center gap-2 
+text-sm text-forge-text">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1374:        <div className="rounded-2xl border 
+border-forge-primary/20 bg-forge-primary/5 p-4">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1375:          <p className="text-sm uppercase 
+tracking-[0.16em] text-forge-primary">{t.wizard.preview_viability}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1376:          <p className="mt-1 text-sm 
+text-forge-text-muted">{t.wizard.preview_sub}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1378:            <div className="rounded-xl 
+bg-forge-surface-elevated p-3">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1379:              <p className="text-xs 
+text-forge-text-muted">{t.wizard.preliminary_payment}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1380:              <p className="font-semibold 
+text-forge-text">{formatDop(preview.payment)}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1382:            <div className="rounded-xl 
+bg-forge-surface-elevated p-3">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1383:              <p className="text-xs 
+text-forge-text-muted">{t.wizard.preliminary_capacity}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1384:              <p className="font-semibold 
+text-forge-text">{formatDop(preview.capacity)}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1386:            <div className="rounded-xl 
+bg-forge-surface-elevated p-3">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1387:              <p className="text-xs 
+text-forge-text-muted">{t.wizard.preliminary_status}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1393:          <p className="mt-3 text-sm 
+text-forge-text-muted">{t.wizard.preview_footer}</p>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1397:            <div key={title} className="rounded-xl 
+bg-forge-surface-elevated p-4">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1399:                <h3 className="font-semibold 
+text-forge-text">{title}</h3>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1406:                  <div key={key} className="flex 
+justify-between gap-3 border-b border-forge-border/50 pb-1">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1407:                    <dt 
+className="text-forge-text-muted">{key}</dt>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1408:                    <dd className="text-right 
+text-forge-text">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1437:          <span className="text-forge-text-muted">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1440:          <span className="font-medium 
+text-forge-text">{steps[currentStep].title}</span>
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1443:        <div className="h-1.5 overflow-hidden 
+rounded-full bg-forge-surface-elevated">
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1445:            className="h-full rounded-full 
+bg-gradient-to-r from-forge-primary to-forge-accent"
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1468:                  <Icon className={`h-5 w-5 ${isComplete 
+|| isActive ? "text-white" : "text-forge-text-muted"}`} />
+components\credit-hub\dealer\wizard\WizardContainer.tsx:1470:                <span className={`text-xs ${isActive ? 
+"font-medium text-forge-text" : "text-forge-text-muted"}`}>{step.title}</span>
+components\credit-hub\dealer\ApplicationCard.tsx:92:          "border border-forge-border 
+hover:border-forge-border-hover",
+components\credit-hub\dealer\ApplicationCard.tsx:102:          <p className="truncate font-medium 
+text-forge-text">{application.applicant_name}</p>
+components\credit-hub\dealer\ApplicationCard.tsx:103:          <p className="truncate text-sm 
+text-forge-text-muted">{vehicleInfo}</p>
+components\credit-hub\dealer\ApplicationCard.tsx:106:          <p className="font-mono font-medium 
+text-forge-text">RD$ {requestedAmount.toLocaleString("es-DO")}</p>
+components\credit-hub\dealer\ApplicationCard.tsx:107:          <p className="text-xs 
+text-forge-text-muted">{formatTimeAgo(application.created_at)}</p>
+components\credit-hub\dealer\ApplicationCard.tsx:110:        <ArrowRight className="h-5 w-5 text-forge-text-muted 
+transition-colors group-hover:text-forge-primary" />
+components\credit-hub\dealer\ApplicationCard.tsx:127:        "border border-forge-border 
+hover:border-forge-border-hover hover:shadow-xl hover:shadow-forge-primary/5",
+components\credit-hub\dealer\ApplicationCard.tsx:141:              <h3 className="truncate font-semibold 
+text-forge-text">{application.applicant_name}</h3>
+components\credit-hub\dealer\ApplicationCard.tsx:144:            <p className="mt-0.5 flex items-center gap-1.5 
+truncate text-sm text-forge-text-muted">
+components\credit-hub\dealer\ApplicationCard.tsx:153:            <p className="mb-0.5 text-xs 
+text-forge-text-muted">Monto solicitado</p>
+components\credit-hub\dealer\ApplicationCard.tsx:154:            <p className="font-mono text-2xl font-bold 
+text-forge-text">RD$ {requestedAmount.toLocaleString("es-DO")}</p>
+components\credit-hub\dealer\ApplicationCard.tsx:157:            <p className="flex items-center justify-end gap-1 
+text-xs text-forge-text-muted">
+components\credit-hub\dealer\ForgeMetricCard.tsx:31:          <div className="h-4 w-2/3 rounded 
+bg-forge-surface-elevated" />
+components\credit-hub\dealer\ForgeMetricCard.tsx:32:          <div className="h-10 w-1/2 rounded 
+bg-forge-surface-elevated" />
+components\credit-hub\dealer\ForgeMetricCard.tsx:33:          <div className="h-3 w-1/3 rounded 
+bg-forge-surface-elevated" />
+components\credit-hub\dealer\ForgeMetricCard.tsx:41:    trend?.direction === "up" ? "text-forge-success" : 
+trend?.direction === "down" ? "text-forge-danger" : "text-forge-text-muted";
+components\credit-hub\dealer\ForgeMetricCard.tsx:46:        <div className="pointer-events-none absolute inset-0 
+rounded-2xl bg-gradient-to-br from-forge-primary/0 to-forge-primary/0 transition-all duration-300 
+group-hover:from-forge-primary/5 group-hover:to-forge-accent/5" />
+components\credit-hub\dealer\ForgeMetricCard.tsx:50:            <p className="text-sm font-medium 
+text-forge-text-muted">{label}</p>
+components\credit-hub\dealer\ForgeMetricCard.tsx:63:            <span className="font-display text-3xl font-bold 
+text-forge-text md:text-4xl">
+components\credit-hub\dealer\ForgeMetricCard.tsx:64:              {value === null ? <span 
+className="text-forge-text-muted">—</span> : <CountUpNumber value={value} duration={1.5} />}
+components\credit-hub\dealer\ForgeMetricCard.tsx:68:          {trend && <p className="text-xs 
+text-forge-text-muted">{trend.label}</p>}
+components\credit-hub\dealer\ForgeMetricCard.tsx:72:              <div className="h-1.5 overflow-hidden rounded-full 
+bg-forge-surface-elevated">
+components\credit-hub\dealer\ForgeMetricCard.tsx:74:                  className="h-full rounded-full bg-gradient-to-r 
+from-forge-primary to-forge-accent"
+components\credit-hub\dealer\ForgeMetricCard.tsx:80:              {progress.label && <p className="text-xs 
+text-forge-text-muted">{progress.label}</p>}
+components\credit-hub\navigation\DealerBottomNav.tsx:22:    <nav className="fixed inset-x-0 bottom-0 z-40 border-t 
+border-forge-border bg-forge-surface lg:hidden">
+components\credit-hub\navigation\DealerBottomNav.tsx:31:                <div className="-mt-6 flex h-12 w-12 
+items-center justify-center rounded-2xl bg-gradient-to-br from-forge-primary to-forge-primary-hover shadow-lg 
+shadow-forge-primary/30">
+components\credit-hub\navigation\DealerBottomNav.tsx:34:                <span className="mt-0.5 text-[10px] 
+text-forge-text-muted">{item.label}</span>
+components\credit-hub\navigation\DealerBottomNav.tsx:46:                isActive ? "text-forge-primary" : 
+"text-forge-text-muted hover:text-forge-text"
+components\credit-hub\navigation\DealerTopBar.tsx:14:    <header className="sticky top-0 z-30 border-b 
+border-forge-border bg-forge-surface/80 backdrop-blur-md">
+components\credit-hub\navigation\DealerTopBar.tsx:19:            <span className="hidden font-display font-bold 
+text-forge-text sm:inline">Forge</span>
+components\credit-hub\navigation\DealerTopBar.tsx:23:            <span className="hidden rounded-md 
+bg-forge-surface-elevated px-2 py-1 text-xs text-forge-text-muted md:inline-block">
+components\credit-hub\navigation\DealerTopBar.tsx:30:          <Link href="/credit-hub/dealer" 
+className="text-forge-text transition-colors hover:text-forge-primary">
+components\credit-hub\navigation\DealerTopBar.tsx:35:            className="text-forge-text transition-colors 
+hover:text-forge-primary"
+components\credit-hub\navigation\DealerTopBar.tsx:41:            className="inline-flex items-center gap-1.5 
+text-forge-text transition-colors hover:text-forge-primary"
+components\credit-hub\primitives\ForgeBadge.tsx:10:    neutral: "bg-forge-surface-elevated text-forge-text-muted 
+border-forge-border",
+components\credit-hub\primitives\ForgeButton.tsx:41:        "bg-gradient-to-br from-forge-primary 
+to-forge-primary-hover text-white shadow-md hover:shadow-lg hover:shadow-orange-500/25 active:scale-[0.98]",
+components\credit-hub\primitives\ForgeButton.tsx:43:        "bg-forge-surface-elevated text-forge-text border 
+border-forge-border hover:border-forge-border-hover hover:bg-forge-surface-hover",
+components\credit-hub\primitives\ForgeButton.tsx:44:      ghost: "bg-transparent text-forge-text 
+hover:bg-forge-surface-hover",
+components\credit-hub\primitives\ForgeButton.tsx:46:      white: "bg-white text-forge-bg hover:bg-gray-100",
+components\credit-hub\primitives\ForgeButton.tsx:78:          "focus:outline-none focus-visible:ring-2 
+focus-visible:ring-forge-primary focus-visible:ring-offset-2 focus-visible:ring-offset-forge-bg",
+components\credit-hub\primitives\ForgeCard.tsx:12:      default: "bg-forge-surface border border-forge-border",
+components\credit-hub\primitives\ForgeCard.tsx:13:      elevated: "bg-forge-surface-elevated border 
+border-forge-border shadow-md",
+components\credit-hub\primitives\ForgeCard.tsx:15:        "bg-forge-surface border border-forge-border cursor-pointer 
+transition-all duration-300 hover:border-forge-primary/30 hover:bg-forge-surface-hover hover:shadow-xl 
+hover:shadow-forge-primary/10 hover:-translate-y-0.5",
+components\credit-hub\primitives\ForgeInput.tsx:23:          <label htmlFor={inputId} className="block text-sm 
+font-medium text-forge-text">
+components\credit-hub\primitives\ForgeInput.tsx:31:            "relative flex items-center rounded-xl border-2 
+bg-forge-surface-elevated transition-all duration-200",
+components\credit-hub\primitives\ForgeInput.tsx:32:            focused && !error && "border-forge-primary 
+shadow-[0_0_0_3px_rgba(255,107,53,0.1)]",
+components\credit-hub\primitives\ForgeInput.tsx:33:            !focused && !error && "border-forge-border",
+components\credit-hub\primitives\ForgeInput.tsx:37:          {leftIcon && <span className="pl-4 
+text-forge-text-muted">{leftIcon}</span>}
+components\credit-hub\primitives\ForgeInput.tsx:43:              "w-full bg-transparent px-4 py-3 text-forge-text 
+placeholder:text-forge-text-subtle focus:outline-none",
+components\credit-hub\primitives\ForgeInput.tsx:61:          {rightIcon && <span className="pr-4 
+text-forge-text-muted">{rightIcon}</span>}
+components\credit-hub\primitives\ForgeInput.tsx:71:          <p id={`${inputId}-helper`} className="text-sm 
+text-forge-text-muted">
+components\credit-hub\primitives\ForgeProgress.tsx:15:      {label && <div className="text-sm 
+text-forge-text-muted">{label}</div>}
+components\credit-hub\primitives\ForgeProgress.tsx:16:      <div className="h-2 overflow-hidden rounded-full 
+bg-forge-surface-elevated">
+components\credit-hub\primitives\ForgeProgress.tsx:18:          className="h-full rounded-full bg-gradient-to-r 
+from-forge-primary to-forge-accent"
+components\credit-hub\primitives\ForgeSelect.tsx:22:          <label htmlFor={selectId} className="block text-sm 
+font-medium text-forge-text">
+components\credit-hub\primitives\ForgeSelect.tsx:31:              "h-12 w-full appearance-none rounded-xl border-2 
+border-forge-border bg-forge-surface-elevated px-4 pr-10 text-forge-text focus:border-forge-primary 
+focus:outline-none",
+components\credit-hub\primitives\ForgeSelect.tsx:41:          <ChevronDown className="pointer-events-none absolute 
+right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-forge-text-muted" />
+components\credit-hub\primitives\ForgeSelect.tsx:49:          <p id={`${selectId}-helper`} className="text-sm 
+text-forge-text-muted">
+components\credit-hub\primitives\ForgeSkeleton.tsx:8:        "animate-forge-shimmer rounded-xl bg-gradient-to-r 
+from-forge-surface via-forge-surface-elevated to-forge-surface bg-[length:200%_100%]",
+components\credit-hub\system\CHEmptyState.tsx:74:      <h3 className="mb-2 font-display text-xl font-bold 
+text-forge-text">{title}</h3>
+components\credit-hub\system\CHEmptyState.tsx:75:      <p className="mb-6 max-w-sm 
+text-forge-text-muted">{description}</p>
+components\credit-hub\system\CHErrorState.tsx:17:      <h2 className="font-display text-xl font-semibold 
+text-forge-text">{title}</h2>
+components\credit-hub\system\CHErrorState.tsx:18:      <p className="mt-2 text-forge-text-muted">{message}</p>
+components\credit-hub\system\CHFeatureFlagBanner.tsx:17:        <p className="text-sm text-forge-text">
+components\credit-hub\system\CHTenantGuard.tsx:17:      <div className="flex min-h-screen items-center justify-center 
+bg-forge-bg">
+components\credit-hub\system\CHTenantGuard.tsx:18:        <div className="animate-pulse 
+text-forge-text-muted">Cargando...</div>
+components\credit-hub\system\CHTenantGuard.tsx:25:      <div className="flex min-h-screen items-center justify-center 
+bg-forge-bg p-4">
+components\credit-hub\system\CHTenantGuard.tsx:27:          <Building2 className="mx-auto mb-4 h-16 w-16 
+text-forge-text-muted" />
+components\credit-hub\system\CHTenantGuard.tsx:28:          <h2 className="mb-2 font-display text-2xl font-bold 
+text-forge-text">Selecciona tu organización</h2>
+components\credit-hub\system\CHTenantGuard.tsx:29:          <p className="mb-6 text-forge-text-muted">
+components\credit-hub\system\ForgePageHeader.tsx:13:        <h1 className="font-display text-3xl font-bold 
+tracking-tight text-forge-text md:text-4xl">{title}</h1>
+components\credit-hub\system\ForgePageHeader.tsx:14:        {subtitle && <p className="mt-2 
+text-forge-text-muted">{subtitle}</p>}
+components\credit-hub\system\PortalShell.tsx:17:      <div data-portal={persona} className={cn("min-h-screen 
+bg-forge-bg text-forge-text font-sans", className)}>
+components\credit-hub\system\PullToRefresh.tsx:48:        <div className="flex h-10 w-10 items-center justify-center 
+rounded-full bg-forge-primary shadow-lg" aria-hidden="true">
+
+

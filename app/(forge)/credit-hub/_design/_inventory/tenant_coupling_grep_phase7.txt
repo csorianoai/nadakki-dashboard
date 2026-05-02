@@ -1,0 +1,24 @@
+﻿
+app\agents\live\page.tsx:13:const DEFAULT_TENANT = "credicefi";
+app\api\tenants\route.ts:15:        "X-Tenant-ID": req.headers.get("X-Tenant-ID") ?? req.headers.get("x-tenant-id") ?? 
+"credicefi",
+app\api\v1\sic\cases\[caseId]\documents\route.ts:15:    "credicefi";
+app\api\v1\sic\statements\route.ts:11:    "credicefi";
+app\api\v1\[[...path]]\route.ts:32:    "credicefi";
+app\settings\page.tsx:24:    companyName: "CrediCefi",
+app\sic\auditoria-acceso\page.tsx:11:  const tenant = tenantId || "credicefi";
+app\sic\comite\sesiones\[id]\page.tsx:32:  const tenant = tenantId || "credicefi";
+app\sic\comite\page.tsx:12:  const tenant = tenantId || "credicefi";
+app\sic\configuracion\page.tsx:41:  const tenant = tenantId || "credicefi";
+app\sic\expedientes\[id]\replay\page.tsx:21:  const tenant = tenantId || "credicefi";
+app\sic\metricas\page.tsx:14:  const tenant = tenantId || "credicefi";
+app\sic\portafolio\page.tsx:12:  const tenant = tenantId || "credicefi";
+app\sic\reportes\page.tsx:154:  const tenant = tenantId || "credicefi";
+app\sic\page.tsx:21:  const tenant = tenantId || "credicefi";
+components\sic\IndicadorEstadoSistema.tsx:19:    (tenantId && tenantId.trim()) || (authTenantId && 
+authTenantId.trim()) || "credicefi";
+components\sic\SicBarraContexto.tsx:22:  const tenant = tenantId || "credicefi";
+components\sic\SicBarraInstitucional.tsx:44:  const tenant = tenantId || "credicefi";
+components\ui\TenantSelector.tsx:102:          title="Introduce el tenant (ej. credicefi)"
+
+

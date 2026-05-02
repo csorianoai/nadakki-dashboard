@@ -1,0 +1,66 @@
+Phase 4 chunk 2 - legacy utility grep (verification gate)
+Files: bank/applications/[applicationId]/page.tsx, bank/audit/page.tsx, bank/compliance/page.tsx, components/forge/credit-hub/BankApplicationDetailView.tsx
+
+--- RAW OUTPUT ---
+
+app/(forge)/credit-hub/bank/applications/[applicationId]/page.tsx:25: text-forge-sm
+
+﻿C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\audit\page.tsx:42: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\audit\page.tsx:43: text-forge-md
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\audit\page.tsx:44: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:26: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:27: text-forge-md
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:28: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:36: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:40: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:44: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:45: text-forge-md
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:49: text-forge-md
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:51: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:61: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:62: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:72: text-forge-md
+C:\Users\ramon\Projects\nadakki-dashboard\app\(forge)\credit-hub\bank\compliance\page.tsx:73: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:82: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:83: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:88: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:170: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:204: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:205: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:212: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:213: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:228: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:277: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:280: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:281: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:284: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:285: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:288: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:289: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:292: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:293: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:310: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:315: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:323: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:329: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:330: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:334: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:359: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:380: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:381: text-forge-lg
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:384: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:385: text-forge-lg
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:388: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:389: text-forge-lg
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:392: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:393: text-forge-lg
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:432: text-forge-md
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:435: text-forge-xs
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:436: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:484: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:485: text-forge-sm
+C:\Users\ramon\Projects\nadakki-dashboard\components\forge\credit-hub\BankApplicationDetailView.tsx:536: text-forge-sm
+
+
+--- CLASSIFICATION ---
+All matches are v3.2 Forge tokens (text-forge-*), not Section A legacy aliases from TOKEN_MIGRATION_MAP.

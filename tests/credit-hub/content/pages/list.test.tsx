@@ -3,8 +3,12 @@ import ApplicationsListPage from "@/app/(forge)/credit-hub/dealer/applications/p
 import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { makeApplication } from "../testData";
 
+const mockSearchParams = new URLSearchParams();
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  usePathname: () => "/credit-hub/dealer/applications",
+  useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useCreditApplications", () => ({
@@ -16,6 +20,7 @@ const mockUseApplications = useCreditApplications as jest.Mock;
 describe("ApplicationsListPage", () => {
   beforeEach(() => {
     mockUseApplications.mockReset();
+    Array.from(mockSearchParams.keys()).forEach((k) => mockSearchParams.delete(k));
     mockUseApplications.mockReturnValue({
       data: [
         makeApplication({ application_id: "app-1", applicant_name: "Ana Pérez", status: "submitted", vehicle_make: "Toyota" }),
