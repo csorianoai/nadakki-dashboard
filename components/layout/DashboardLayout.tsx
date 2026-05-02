@@ -48,6 +48,7 @@ import {
   Clock,
   Zap,
   CreditCard,
+  BadgeDollarSign,
   FileText,
   GitBranch,
   Plug,
@@ -111,6 +112,13 @@ const navigationStructure: NavCore[] = [
     gradient: "linear-gradient(135deg, #0ea5e9, #0284c7)",
     modules: [
       { id: "sic-home", icon: <Home size={14} />, label: "Inicio SIC", href: "/sic" },
+      {
+        id: "credit-hub-forge",
+        icon: <BadgeDollarSign size={14} />,
+        label: "Credit Hub",
+        href: "/credit-hub/bank",
+        badge: "v1.0",
+      },
       {
         id: "credit-dealer",
         icon: <CreditCard size={14} />,

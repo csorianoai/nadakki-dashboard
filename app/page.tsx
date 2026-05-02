@@ -14,6 +14,8 @@ import {
   Loader2,
   Scale,
   ClipboardList,
+  BadgeDollarSign,
+  type LucideIcon,
 } from "lucide-react";
 import { useAgentRegistrySummary } from "@/app/hooks/useAgentRegistrySummary";
 import { AgentRegistryStatHome } from "@/components/agent-registry/AgentRegistryStatHome";
@@ -23,8 +25,23 @@ import { CORES_CONFIG } from "@/config/cores";
 const API_URL = "";
 
 /** Acceso rápido: producto principal + gobierno (alineado con rutas reales). */
-const QUICK_LINKS = [
+const QUICK_LINKS: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  color: string;
+  subtitle?: string;
+  badge?: string;
+}[] = [
   { href: "/agents/execute", label: "Ejecutar Agentes", icon: Zap, color: "from-cyan-500 to-blue-600" },
+  {
+    href: "/credit-hub/bank",
+    label: "Credit Hub",
+    subtitle: "Multi-tenant credit origination & decisioning",
+    icon: BadgeDollarSign,
+    color: "from-emerald-600 to-teal-700",
+    badge: "v1.0",
+  },
   { href: "/sic", label: "SIC", icon: ClipboardList, color: "from-sky-500 to-blue-700" },
   { href: "/legal", label: "Legal", icon: Scale, color: "from-violet-500 to-purple-700" },
   { href: "/compliance", label: "Compliance", icon: Shield, color: "from-emerald-500 to-teal-700" },
@@ -233,14 +250,26 @@ export default function HomePage() {
                   whileTap={{ scale: 0.98 }}
                   className="rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 p-5 hover:border-white/20 transition-colors"
                 >
-                  <div
-                    className={`w-10 h-10 rounded-lg bg-gradient-to-r ${link.color} flex items-center justify-center mb-3`}
-                  >
-                    <link.icon className="w-5 h-5 text-white" />
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div
+                      className={`w-10 h-10 rounded-lg bg-gradient-to-r ${link.color} flex items-center justify-center shrink-0`}
+                    >
+                      <link.icon className="w-5 h-5 text-white" />
+                    </div>
+                    {link.badge && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300/90 bg-emerald-500/15 border border-emerald-500/30 rounded px-1.5 py-0.5 shrink-0">
+                        {link.badge}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-white">{link.label}</span>
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-medium text-white block">{link.label}</span>
+                      {link.subtitle ? (
+                        <p className="text-xs text-gray-400 mt-1 leading-snug">{link.subtitle}</p>
+                      ) : null}
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
                   </div>
                 </motion.div>
               </Link>
