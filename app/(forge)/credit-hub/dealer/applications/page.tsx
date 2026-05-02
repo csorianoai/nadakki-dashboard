@@ -243,17 +243,24 @@ function DealerApplicationsListInner() {
     >
       <div className="space-y-6 px-4 py-6 md:space-y-8 md:px-8 md:py-8" data-persona={persona}>
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="font-display text-forge-2xl font-semibold text-forgeInk-900 md:text-forge-3xl">Solicitudes</h1>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+              <h1
+                className="min-w-0 font-display font-normal leading-tight tracking-[-0.01em] text-forgeInk-900"
+                style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
+              >
+                Solicitudes
+              </h1>
+              <p className="shrink-0 font-sans text-[13px] text-forgeInk-600 sm:text-right">
+                <span className="font-medium tabular-nums text-forgeInk-700">{filtered.length}</span>
+                <span className="text-forgeInk-500"> en vista · Última sync: </span>
+                <span>{formatSyncAge(applicationsQuery.dataUpdatedAt, tenantConfig.locale)}</span>
+              </p>
+            </div>
             {persona === "bank" ? (
               <p className="mt-1 text-forge-xs font-medium text-forgeInk-500">Vista seguimiento dealer (misma URL, datos filtrados).</p>
             ) : null}
             <p className="mt-2 max-w-xl text-forge-sm text-forgeInk-600">Historial completo con búsqueda y filtros por estado.</p>
-            <p className="mt-1 font-sans text-[13px] text-forgeInk-600">
-              <span className="font-medium tabular-nums text-forgeInk-700">{filtered.length}</span>
-              <span className="text-forgeInk-500"> en vista · Última sync: </span>
-              <span className="text-forgeInk-600">{formatSyncAge(applicationsQuery.dataUpdatedAt, tenantConfig.locale)}</span>
-            </p>
           </div>
           <Link href="/credit-hub/dealer/applications/new/applicant" className={cn(primaryCta, "hidden md:inline-flex")}>
             <Plus className="h-4 w-4 shrink-0" aria-hidden />

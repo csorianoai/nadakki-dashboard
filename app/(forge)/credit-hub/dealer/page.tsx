@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { useCreditStats } from "@/lib/credit-hub/hooks/useCreditStats";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
-import { forgeDealerDashboardHeadline } from "@/utils/forge-dealer-dashboard-greeting";
 import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { cn } from "@/lib/utils";
@@ -19,6 +18,18 @@ import { formatForgeCurrency } from "@/utils/forge-locale";
 
 const primaryCta =
   "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-forge-sm border border-forgeBrand-600 bg-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeInk-50 shadow-forge-xs transition-colors hover:bg-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 sm:w-auto";
+
+function forgeTimeGreeting(locale: string): string {
+  const h = new Date().getHours();
+  if (locale.toLowerCase().startsWith("es")) {
+    if (h < 12) return "Buenos días";
+    if (h < 19) return "Buenas tardes";
+    return "Buenas noches";
+  }
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 function volumeThisMonth(applications: CreditApplication[], locale: string, currency: string): string {
   const now = new Date();
@@ -121,11 +132,19 @@ export default function DealerDashboardPage() {
   };
 
   return (
-    <div className="space-y-6 px-4 py-6 md:space-y-8 md:px-8 md:py-8">
+    <div className="space-y-6 px-4 pt-6 pb-5 md:space-y-8 md:px-8 md:pt-8 md:pb-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="font-display text-forge-2xl font-semibold leading-tight text-forgeInk-900 md:text-forge-3xl">
-            {forgeDealerDashboardHeadline(tenantConfig.locale, greetingName)}
+          <p className="mb-2 font-sans text-[14px] font-normal leading-snug text-forgeInk-500">
+            {forgeTimeGreeting(tenantConfig.locale)}, {greetingName || "equipo"}
+          </p>
+          <h1
+            className="font-display font-normal leading-[1.1] tracking-[-0.01em] text-forgeInk-900"
+            style={{ fontSize: "clamp(32px, 4.5vw, 48px)" }}
+          >
+            {tenantConfig.locale.toLowerCase().startsWith("es")
+              ? "Sigamos concretando aprobaciones hoy."
+              : "Let's get someone approved today."}
           </h1>
           {persona === "bank" ? (
             <p className="mt-1 text-forge-xs font-medium text-forgeInk-500">Vista seguimiento dealer (misma URL, datos filtrados).</p>

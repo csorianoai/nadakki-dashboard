@@ -144,11 +144,15 @@ export default function ForgePreviewPage() {
             { label: "Forge preview" },
           ]}
         />
-        <h1 className="mt-4 font-display text-forge-md font-semibold text-forgeInk-800 sm:text-[length:var(--forge-text-xl)]">
+        <h1
+          className="mt-4 font-display font-normal leading-[1.1] tracking-[-0.015em] text-forgeInk-800"
+          style={{ fontSize: "clamp(48px, 6vw, 64px)" }}
+        >
           Forge component preview
         </h1>
-        <p className="mt-2 max-w-2xl text-forge-sm text-forgeInk-600">
-          Phase 2 playground — v3.2 tokens only. Open the command palette with{" "}
+        <p className="mt-2 font-sans text-forge-sm text-forgeInk-600">Multi-tenant credit origination UI · v1.0.0</p>
+        <p className="mt-2 max-w-2xl text-forge-xs text-forgeInk-500">
+          Phase 2 playground — v3.2 tokens. Command palette:{" "}
           <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">
             Ctrl K
           </kbd>

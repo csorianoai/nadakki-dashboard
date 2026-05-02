@@ -24,6 +24,18 @@ import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 import { formatForgeCurrency } from "@/utils/forge-locale";
 
+function forgeTimeGreeting(locale: string): string {
+  const h = new Date().getHours();
+  if (locale.toLowerCase().startsWith("es")) {
+    if (h < 12) return "Buenos días";
+    if (h < 19) return "Buenas tardes";
+    return "Buenas noches";
+  }
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 function priorityBadge(priority: BankQueueItem["priority"]) {
   if (priority === "ALTA") return <Badge variant="danger">Alta</Badge>;
   if (priority === "MEDIA") return <Badge variant="warning">Media</Badge>;
@@ -152,12 +164,17 @@ export default function BankDashboardPage() {
 
   return (
     <div className="space-y-8" data-persona={persona}>
-      <Card variant="default" className="border-forgeInk-200 bg-forgeSurface-card">
+      <Card variant="default" className="border-forgeInk-200 bg-forgeSurface-card px-6 pt-8 pb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-forge-xs font-semibold uppercase tracking-wide text-forgeBrand-600">Portal bancario</p>
-            <h1 className="mt-2 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">
-              Mesa de decisiones — {tenantConfig.institution_name}
+            <p className="mb-2 font-sans text-[14px] font-normal leading-snug text-forgeInk-500">
+              {forgeTimeGreeting(tenantConfig.locale)}, {tenantConfig.institution_name}
+            </p>
+            <h1
+              className="font-display font-normal leading-[1.1] tracking-[-0.015em] text-forgeInk-800"
+              style={{ fontSize: "clamp(36px, 5vw, 56px)" }}
+            >
+              Mesa de decisiones
             </h1>
             <p className="mt-2 max-w-2xl text-forge-sm text-forgeInk-600">{t.bank.hero_compliance_line}</p>
           </div>

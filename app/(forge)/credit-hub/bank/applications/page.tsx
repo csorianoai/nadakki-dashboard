@@ -262,18 +262,20 @@ function BankApplicationsQueueInner() {
   return (
     <div className="space-y-6" data-persona={persona}>
       <Card variant="default" className="border-forgeInk-200 p-6">
-        <p className="text-forge-xs font-semibold uppercase tracking-wide text-forgeBrand-600">Bandeja bancaria</p>
-        <h1 className="mt-1 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">
-          Solicitudes priorizadas
-        </h1>
-        <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-          <p className="text-forge-sm text-forgeInk-600">{t.bank.applications_subtitle}</p>
-          <p className="text-left font-sans text-[13px] text-forgeInk-600 sm:text-right">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+          <h1
+            className="min-w-0 font-display font-normal leading-tight tracking-[-0.01em] text-forgeInk-800"
+            style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
+          >
+            Solicitudes priorizadas
+          </h1>
+          <p className="shrink-0 font-sans text-[13px] text-forgeInk-600 sm:text-right">
             <span className="font-medium tabular-nums text-forgeInk-700">{filtered.length}</span>
             <span className="text-forgeInk-500"> en vista · Última sync: </span>
-            <span className="text-forgeInk-600">{formatSyncAge(queueQuery.dataUpdatedAt, tenantConfig.locale)}</span>
+            <span>{formatSyncAge(queueQuery.dataUpdatedAt, tenantConfig.locale)}</span>
           </p>
         </div>
+        <p className="mt-2 text-forge-sm text-forgeInk-600">{t.bank.applications_subtitle}</p>
       </Card>
 
       <div className="grid gap-3 md:grid-cols-[1fr_auto]">
