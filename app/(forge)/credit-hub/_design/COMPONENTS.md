@@ -8,7 +8,7 @@ App code imports from `@/components/forge` (see `components/forge/index.ts`).
 
 Presentational building blocks under `components/forge/ui/*` (and generic `layout/Sidebar`, `layout/Topbar` for previews):
 
-Button, IconButton, Input, Textarea, Select, Checkbox, RadioGroup, Switch, Card, EmptyState (optional **`icon`**, **`tone="success"`** for passive positive framing), Badge, StatusPill, Skeleton, Avatar, Modal, Drawer, Toast (`ForgeToaster` + `toast`), Tabs, Breadcrumb, DataTable, KpiCard, EvidenceCard, AuditTimeline, CommandPalette, MoneyInput, DateInput, ConsentCapture.
+Button, IconButton, Input, Textarea, Select, Checkbox, RadioGroup, Switch, Card, EmptyState (optional **`icon`**, **`tone="success"`** for passive positive framing), Badge, StatusPill, Skeleton, Avatar, Modal, Drawer, Toast (`ForgeToaster` + `toast`), Tabs, Breadcrumb, DataTable, KpiCard, MicroChart, EvidenceCard, AuditTimeline, CommandPalette, MoneyInput, DateInput, ConsentCapture.
 
 These primitives are **persona-agnostic** (no `usePersona` / no layout segments).
 
@@ -915,8 +915,9 @@ import { Input } from "@/components/forge";
 ```ts
 label: string;
 value: ReactNode;
+icon?: LucideIcon;
+trend?: KpiCardTrend; // direction, value, label
 hint?: string;
-trend?: ReactNode;
 className?: string;
 ```
 
@@ -950,6 +951,36 @@ import { KpiCard } from "@/components/forge";
 
 - **Compose** in page/feature modules under `components/forge/credit-hub/**`.
 - **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## MicroChart
+
+**File:** `components/forge/ui/MicroChart.tsx`
+
+**Purpose:** Compact Recharts line wrapper for Forge dashboards (institutional palette, no grid/area fill, 200px chart height, 400ms first-draw animation with **`prefers-reduced-motion`** → instant).
+
+**Primary props interface:** `MicroChartProps`
+
+```ts
+title: string;
+data: MicroChartRow[];
+lineKeys: string[];
+colors: string[];
+xKey?: string;
+lineLabels?: string[];
+className?: string;
+yTickFormatter?: (value: number) => string;
+```
+
+### DO / DON'T
+
+- **DO:** pass CSS token colors (e.g. `var(--forge-brand-500)`); keep charts below primary tables on bank home.
+- **DON'T:** exceed 150ms on UI transitions; rely on this for hero metrics (use `KpiCard`).
+
+### Related
+
+- [`POLISH.md`](./POLISH.md) Phase 9 bank chart wiring note · [`TOKENS.md`](./TOKENS.md) viz tokens
 
 ---
 
