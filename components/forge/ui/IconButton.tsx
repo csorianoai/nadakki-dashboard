@@ -23,7 +23,7 @@ export function IconButton({ variant = "default", className, children, ...props 
     <button
       type="button"
       className={cn(
-        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-forge-sm transition-colors duration-[var(--forge-duration-fast)] ease-out",
+        "inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-forge-sm transition-colors duration-100 ease-out motion-reduce:transition-none",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
         variantClasses[variant],
         className

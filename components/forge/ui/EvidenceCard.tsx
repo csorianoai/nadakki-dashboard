@@ -22,7 +22,8 @@ export function EvidenceCard({ title, body, sourceLabel, confidence, className }
   return (
     <article
       className={cn(
-        "rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-4 shadow-forge-xs ring-1 ring-forgeAccent-teal/15",
+        "cursor-default rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-4 shadow-forge-xs ring-1 ring-forgeAccent-teal/15",
+        "transition-shadow duration-100 ease-out motion-reduce:transition-none hover:shadow-forge-md",
         className
       )}
     >

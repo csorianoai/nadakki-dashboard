@@ -173,7 +173,7 @@ export function DataTable<Row>({
                 <tr
                   key={rid}
                   className={cn(
-                    "relative border-b border-forgeInk-100 transition-colors duration-100 ease-out last:border-0 hover:bg-forgeSurface-sunken",
+                    "relative border-b border-forgeInk-100 transition-colors duration-100 ease-out motion-reduce:transition-none last:border-0 hover:bg-forgeSurface-sunken",
                     rowExtra
                   )}
                 >
