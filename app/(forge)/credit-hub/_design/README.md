@@ -23,7 +23,7 @@ This `_design/` folder is the **living documentation root**: English technical r
 |----------|-------------|
 | **README.md** | Entry point, role map, directory tree, quick links. |
 | **DESIGN_SYSTEM.md** | Philosophy, benchmarks, anti-patterns, architecture non-negotiables, extend/compose/refuse. |
-| **TOKENS.md** | Token reference (hand-maintained until `npm run docs:tokens` lands in Step 2–3). |
+| **TOKENS.md** | Token reference + **`npm run docs:tokens`** auto-table from `tokens.css` (between `AUTOGEN` markers). |
 | **COMPONENTS.md** | Forge primitive catalog, usage rules, motion and a11y gates. |
 | **PAGES.md** | Hero route reference — **added Phase 8 Step 4** (not in repo until then). |
 | **MIGRATION.md** | Phase 4–7 migration notes, Phase 7.2 legacy Tailwind adapter resolution. |
@@ -81,10 +81,24 @@ _design/
 ├── HOW_TO_MODIFY.md          (Phase 8 Step 6)
 ├── REUSE_PLAYBOOK.md         (Phase 8 Step 7)
 ├── _assets/
-│   └── benchmarks/           # visual direction composites + metadata in DESIGN_SYSTEM.md
+│   ├── benchmarks/           # directional composites (Step 1)
+│   ├── components/         # `npm run docs:components` (Playwright / preview)
+│   └── pages/               # `npm run docs:pages` (9 heroes × desktop + mobile)
 └── _inventory/               # grep outputs, Lighthouse JSON, reusability screenshots
 ```
 
 ## CI note (docs validation)
 
-A dedicated **PR** workflow for `npm run docs:validate` is **recommended** when `tools/docs/validate-docs.mjs` lands (Phase 8 Step 2–9). The existing [`.github/workflows/auto-deploy-frontend.yml`](../../../../.github/workflows/auto-deploy-frontend.yml) is a **scheduled** deploy check and does **not** gate documentation drift; extend or add a workflow when you want merge blocking on Forge primitives vs `COMPONENTS.md`.
+A dedicated **PR** workflow that runs **`npm run docs:validate`** on changes under `components/forge/ui/**`, `components/forge/layout/**`, or `app/(forge)/credit-hub/_design/tokens.css` is **recommended** (Phase 8 Step 9). The existing [`.github/workflows/auto-deploy-frontend.yml`](../../../../.github/workflows/auto-deploy-frontend.yml) is a **scheduled** deploy check and does **not** gate documentation drift.
+
+## Automation (`tools/docs/`)
+
+| Script | npm | Purpose |
+|--------|-----|---------|
+| `build-tokens-md.mjs` | `npm run docs:tokens` | Regenerate the `<!-- AUTOGEN:TOKENS -->` region in `TOKENS.md` from `tokens.css`. |
+| `capture-components.mjs` | `npm run docs:components` | Playwright captures under `_assets/components/` from `/credit-hub/preview` (requires `next start` + `BASE_URL`). |
+| `capture-pages.mjs` | `npm run docs:pages` | Playwright captures 9 hero routes × desktop + mobile under `_assets/pages/`. |
+| `validate-docs.mjs` | `npm run docs:validate` | Ensures every `components/forge/ui` + `layout` file is mentioned in `COMPONENTS.md`. |
+| — | `npm run docs:all` | Runs all four in sequence. |
+
+**Playwright channel:** capture scripts try **`channel: "msedge"`** first (Windows), then fall back to bundled Chromium—same approach as `tools/capture-forge-reusability.mjs`.

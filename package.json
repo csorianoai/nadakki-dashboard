@@ -14,7 +14,12 @@
     "test:run": "jest",
     "dev:stable": "next dev --webpack -p 3001",
     "frontend:check": "powershell -ExecutionPolicy Bypass -File ./tools/frontend_full_check.ps1",
-    "frontend:nav-check": "node ./tools/frontend_nav_check.mjs"
+    "frontend:nav-check": "node ./tools/frontend_nav_check.mjs",
+    "docs:tokens": "node ./tools/docs/build-tokens-md.mjs",
+    "docs:components": "node ./tools/docs/capture-components.mjs",
+    "docs:pages": "node ./tools/docs/capture-pages.mjs",
+    "docs:validate": "node ./tools/docs/validate-docs.mjs",
+    "docs:all": "npm run docs:tokens && npm run docs:components && npm run docs:pages && npm run docs:validate"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.4",
