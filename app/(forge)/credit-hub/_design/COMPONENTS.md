@@ -1680,7 +1680,7 @@ beforeContent?: ReactNode;
 
 **File:** `components/forge/layout/ForgeAppSidebar.tsx`
 
-**Purpose:** Multi-tenant **module** navigation. Uses **`useTenantModules()`** (TanStack Query → **`GET /api/v1/tenants/{tenantId}/modules`**) and shows only entries the tenant’s **`modules`** list allows (with **`hasCreditHub()`** accepting `credit_hub` / `credit` / `forge_*` aliases).
+**Purpose:** Multi-tenant **module** navigation. Uses **`useTenantModules()`** (TanStack Query → **`GET /api/v1/tenants/{tenantId}/modules`**) where **`modules`** is an array of **`{ slug, label, enabled, … }`** (no separate `catalog` field). Only slugs in **`IMPLEMENTED_MODULE_SLUGS`** (currently `credit`, `legal`) render until more UIs ship; **labels come from the backend** response.
 
 ### DO / DON'T
 
