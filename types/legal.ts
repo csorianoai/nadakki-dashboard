@@ -51,6 +51,7 @@ export interface AgentRunResponse {
   rag_metadata?: RagMetadata;
   monitor?: AgentMonitor;
   latency_ms?: number;
+  follow_up_suggestions?: string[];
 }
 
 export interface AuditTrailEntry {

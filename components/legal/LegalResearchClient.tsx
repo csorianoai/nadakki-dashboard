@@ -14,6 +14,12 @@ import { LegalDisclaimer } from "@/components/legal/LegalDisclaimer";
 const CHAT_AGENT = "chat_asesor_legal";
 const MAX_CHARS = 4000;
 
+const STATIC_FALLBACK_CHIPS = [
+  "¿Cuál es el capital mínimo para una entidad de intermediación financiera?",
+  "¿Qué obligaciones AML tiene un banco según Ley 155-17?",
+  "¿Es válida una cláusula penal del 50% en contrato de préstamo?",
+];
+
 type ChatMessage =
   | { role: "user"; content: string }
   | {
@@ -150,17 +156,16 @@ export default function LegalResearchClient() {
     return <LegalErrorState message={tenantError || "Tenant no disponible"} />;
   }
 
+  const dynamicChips = lastAssistant?.run?.follow_up_suggestions;
   const prompts =
-    agentId === CHAT_AGENT
+    agentId !== CHAT_AGENT
       ? [
-          "¿Cuál es el capital mínimo para una entidad de intermediación financiera?",
-          "¿Qué obligaciones AML tiene un banco según Ley 155-17?",
-          "¿Es válida una cláusula penal del 50% en contrato de préstamo?",
-        ]
-      : [
           "Contrato de préstamo con interés elevado y cláusula penal 50%",
           "Cláusula de mora en hipoteca — riesgo reputacional",
-        ];
+        ]
+      : dynamicChips && dynamicChips.length > 0
+        ? dynamicChips
+        : STATIC_FALLBACK_CHIPS;
 
   return (
     <div className="space-y-4">
