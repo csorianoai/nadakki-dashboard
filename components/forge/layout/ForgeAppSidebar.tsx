@@ -3,40 +3,79 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { BarChart3, Gauge, Scale, ScrollText } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { BarChart3, Gauge, Megaphone, Scale, ScrollText, Wallet, Wrench } from "lucide-react";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenantModules } from "@/hooks/useTenantModules";
+import type { TenantModule } from "@/hooks/useTenantModules";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/forge/ui/Skeleton";
 
-type NavEntry = {
-  moduleId: string;
-  href: string;
-  label: string;
-  icon: typeof Gauge;
-};
+/** Slugs with a shipped UI in this repo — expand as modules ship. */
+const IMPLEMENTED_MODULE_SLUGS = new Set<string>(["credit", "legal"]);
 
-const MODULE_NAV: NavEntry[] = [
-  { moduleId: "credit_hub", href: "/credit-hub", label: "Credit Hub", icon: Gauge },
-  { moduleId: "legal", href: "/legal", label: "Legal Intelligence", icon: Scale },
-  { moduleId: "marketing", href: "/marketing", label: "Marketing AI", icon: BarChart3 },
-  { moduleId: "sic", href: "/sic", label: "Statement Intelligence", icon: ScrollText },
+type RouteDef = { slug: string; href: string; icon: LucideIcon };
+
+const ROUTE_REGISTRY: RouteDef[] = [
+  { slug: "credit", href: "/credit-hub", icon: Gauge },
+  { slug: "legal", href: "/legal", icon: Scale },
+  { slug: "sic", href: "/sic", icon: ScrollText },
+  { slug: "marketing", href: "/marketing", icon: Megaphone },
+  { slug: "advertising", href: "/advertising", icon: Megaphone },
+  { slug: "google_ads", href: "/advertising/google-ads", icon: BarChart3 },
+  { slug: "ame", href: "/ame", icon: BarChart3 },
+  { slug: "autopilot", href: "/autopilot", icon: BarChart3 },
+  { slug: "analytics", href: "/analytics", icon: BarChart3 },
+  { slug: "reports", href: "/reports", icon: BarChart3 },
+  { slug: "competitive_intel", href: "/competitor-research", icon: BarChart3 },
+  { slug: "whatsapp", href: "/marketing/whatsapp", icon: BarChart3 },
+  { slug: "booking", href: "/marketing/booking", icon: BarChart3 },
+  { slug: "closer", href: "/closer", icon: BarChart3 },
+  { slug: "billing", href: "/billing", icon: Wallet },
+  { slug: "consent", href: "/consent", icon: Wrench },
+  { slug: "knowledge_pipeline", href: "/library", icon: ScrollText },
+  { slug: "observability", href: "/onboarding/observability", icon: Wrench },
 ];
 
-function entryVisible(entry: NavEntry, hasModule: (m: string) => boolean, hasCreditHub: () => boolean): boolean {
-  if (entry.moduleId === "credit_hub") return hasCreditHub();
-  return hasModule(entry.moduleId);
+const ROUTE_BY_SLUG = new Map(ROUTE_REGISTRY.map((r) => [r.slug, r]));
+
+export type ForgeSidebarNavItem = {
+  slug: string;
+  label: string;
+  href: string;
+  icon: LucideIcon;
+};
+
+function buildSidebarItems(tenantModules: TenantModule[]): ForgeSidebarNavItem[] {
+  const out: ForgeSidebarNavItem[] = [];
+  for (const m of tenantModules) {
+    if (!m.enabled || !IMPLEMENTED_MODULE_SLUGS.has(m.slug)) continue;
+    const route = ROUTE_BY_SLUG.get(m.slug);
+    if (!route) continue;
+    out.push({
+      slug: m.slug,
+      label: m.label,
+      href: route.href,
+      icon: route.icon,
+    });
+  }
+  return out;
+}
+
+function isActivePath(slug: string, pathname: string | null): boolean {
+  if (slug === "credit") return Boolean(pathname?.startsWith("/credit-hub"));
+  if (slug === "legal") return pathname === "/legal" || Boolean(pathname?.startsWith("/legal/"));
+  const href = ROUTE_BY_SLUG.get(slug)?.href;
+  if (!href) return false;
+  return pathname === href || Boolean(pathname?.startsWith(`${href}/`));
 }
 
 export function ForgeAppSidebar() {
   const pathname = usePathname();
   const { tenantConfig } = useTenantConfig();
-  const { hasModule, hasCreditHub, isLoading, error } = useTenantModules();
+  const { modules, isLoading, error } = useTenantModules();
 
-  const items = useMemo(
-    () => MODULE_NAV.filter((e) => entryVisible(e, hasModule, hasCreditHub)),
-    [hasCreditHub, hasModule]
-  );
+  const items = useMemo(() => buildSidebarItems(modules), [modules]);
 
   return (
     <aside
@@ -76,15 +115,10 @@ export function ForgeAppSidebar() {
         ) : (
           items.map((item) => {
             const Icon = item.icon;
-            const active =
-              item.moduleId === "credit_hub"
-                ? Boolean(pathname?.startsWith("/credit-hub"))
-                : item.moduleId === "legal"
-                  ? pathname === "/legal" || Boolean(pathname?.startsWith("/legal/"))
-                  : pathname === item.href || Boolean(pathname?.startsWith(`${item.href}/`));
+            const active = isActivePath(item.slug, pathname);
             return (
               <Link
-                key={item.moduleId}
+                key={item.slug}
                 href={item.href}
                 className={cn(
                   "flex min-h-12 min-w-[44px] items-center gap-2 rounded-forge-sm px-3 py-3 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",

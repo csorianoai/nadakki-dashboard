@@ -3,19 +3,61 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 
-export interface ModuleCatalogItem {
-  module: string;
-  display_name: string;
+export interface TenantModule {
+  slug: string;
+  label: string;
   description?: string;
-  category?: string;
-  icon?: string;
+  category?: "core" | "marketing" | "analytics" | "channels" | "platform" | string;
+  enabled: boolean;
+  config?: Record<string, unknown> | null;
+  expires_at?: string | null;
+  assigned_at?: string;
 }
 
 export interface TenantModulesResponse {
   tenant_id: string;
   plan: string;
-  modules: string[];
-  catalog: ModuleCatalogItem[];
+  modules: TenantModule[];
+}
+
+function coerceTenantModulesResponse(json: unknown): TenantModulesResponse {
+  if (!json || typeof json !== "object") {
+    throw new Error("Invalid tenant modules response");
+  }
+  const o = json as Record<string, unknown>;
+  const tenant_id = String(o.tenant_id ?? "");
+  const plan = String(o.plan ?? "unknown");
+  const raw = o.modules;
+  if (!Array.isArray(raw)) {
+    return { tenant_id, plan, modules: [] };
+  }
+  if (raw.length > 0 && typeof raw[0] === "string") {
+    return {
+      tenant_id,
+      plan,
+      modules: (raw as string[]).map((slug) => ({
+        slug,
+        label: slug,
+        enabled: true,
+        assigned_at: "",
+      })),
+    };
+  }
+  const modules: TenantModule[] = raw.map((row: unknown) => {
+    const m = row as Record<string, unknown>;
+    const slug = String(m.slug ?? "");
+    return {
+      slug,
+      label: typeof m.label === "string" && m.label.trim() ? m.label : slug,
+      description: typeof m.description === "string" ? m.description : undefined,
+      category: typeof m.category === "string" ? m.category : undefined,
+      enabled: typeof m.enabled === "boolean" ? m.enabled : true,
+      config: m.config && typeof m.config === "object" ? (m.config as Record<string, unknown>) : null,
+      expires_at: typeof m.expires_at === "string" || m.expires_at === null ? (m.expires_at as string | null) : undefined,
+      assigned_at: typeof m.assigned_at === "string" ? m.assigned_at : "",
+    };
+  });
+  return { tenant_id, plan, modules };
 }
 
 async function fetchTenantModules(tenantId: string): Promise<TenantModulesResponse> {
@@ -25,7 +67,8 @@ async function fetchTenantModules(tenantId: string): Promise<TenantModulesRespon
   if (!res.ok) {
     throw new Error(`Failed to fetch tenant modules: ${res.status}`);
   }
-  return (await res.json()) as TenantModulesResponse;
+  const json: unknown = await res.json();
+  return coerceTenantModulesResponse(json);
 }
 
 export function useTenantModules() {
@@ -39,18 +82,18 @@ export function useTenantModules() {
     staleTime: 60_000,
   });
 
-  const normalized = (query.data?.modules ?? []).map((m) => m.toLowerCase());
+  const modules = query.data?.modules ?? [];
+  const enabledSlugs = new Set(modules.filter((m) => m.enabled).map((m) => m.slug));
 
-  const hasModule = (mod: string) => normalized.includes(mod.toLowerCase());
+  const hasModule = (slug: string) => enabledSlugs.has(slug);
 
-  /** Credit Hub may be exposed under several backend slugs. */
+  /** True if tenant has Credit Core (`credit` or legacy slug aliases). */
   const hasCreditHub = () =>
-    hasModule("credit_hub") || hasModule("credit") || hasModule("forge_credit") || hasModule("forge_credit_hub");
+    hasModule("credit") || hasModule("credit_hub") || hasModule("forge_credit") || hasModule("forge_credit_hub");
 
   return {
     plan: query.data?.plan ?? "loading",
-    modules: query.data?.modules ?? [],
-    catalog: query.data?.catalog ?? [],
+    modules,
     hasModule,
     hasCreditHub,
     isLoading: !tid || query.isLoading,
