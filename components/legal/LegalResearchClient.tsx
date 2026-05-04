@@ -29,7 +29,7 @@ function sessionKey(tenantId: string) {
 function buildInputs(agentId: string, message: string): Record<string, unknown> {
   switch (agentId) {
     case CHAT_AGENT:
-      return { pregunta: message, consulta: message };
+      return { mensaje: message, consulta: message };
     case "analizador_riesgo_contractual":
       return { contrato: message, tipo_analisis: "riesgo_contractual" };
     case "validador_amlkyc":
