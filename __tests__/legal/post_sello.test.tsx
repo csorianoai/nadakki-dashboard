@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
 import { DemoAcceptanceModal } from "@/components/legal/DemoAcceptanceModal";
-import ResearchPage from "@/app/legal/research/page";
+import ResearchPage from "@/app/(forge)/legal/research/page";
 
 const push = jest.fn();
 

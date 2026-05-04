@@ -9,6 +9,7 @@ import { ForgeToaster } from "@/components/forge/ui/Toast";
 import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { creditHubPersonaFromLayoutSegments } from "./creditHubPersonaFromSegments";
 import { ForgeCommandPaletteProvider } from "./ForgeCommandPaletteContext";
+import { ForgeAppShell } from "./ForgeAppShell";
 import { ForgeCreditHubSidebar } from "./ForgeCreditHubSidebar";
 import { ForgeCreditHubTopbar } from "./ForgeCreditHubTopbar";
 
@@ -34,20 +35,19 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
         </a>
         <CHTenantGuard>
           <ForgeCommandPaletteProvider>
-            <span
-              className="pointer-events-none fixed left-0 top-0 -z-10 h-4 w-4 bg-forgeBrand-500 opacity-0"
-              data-token-debug="brand-500"
-              aria-hidden
-            />
-            <div className="flex min-h-[calc(100vh-4rem)] flex-1">
-              <ForgeCreditHubSidebar />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <ForgeCreditHubTopbar />
-                <main id="main-content" className="min-h-0 flex-1">
-                  {children}
-                </main>
-              </div>
-            </div>
+            <ForgeAppShell
+              beforeContent={
+                <span
+                  className="pointer-events-none fixed left-0 top-0 -z-10 h-4 w-4 bg-forgeBrand-500 opacity-0"
+                  data-token-debug="brand-500"
+                  aria-hidden
+                />
+              }
+              sidebar={<ForgeCreditHubSidebar />}
+              topbar={<ForgeCreditHubTopbar />}
+            >
+              {children}
+            </ForgeAppShell>
           </ForgeCommandPaletteProvider>
         </CHTenantGuard>
         <ForgeToaster />

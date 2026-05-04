@@ -1474,11 +1474,30 @@ import { ForgeCommandPaletteContext } from "@/components/forge";
 
 ## ForgeCreditHubAppShell
 
-**File:** `components/forge/layout/ForgeCreditHubAppShell.tsx` · **Lines:** 58
+**File:** `components/forge/layout/ForgeCreditHubAppShell.tsx`
 
-**Purpose:** Forge design-system primitive `ForgeCreditHubAppShell` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Credit Hub shell — `PersonaProvider`, `CHTenantGuard`, `ForgeCommandPaletteProvider`, and **`ForgeAppShell`** with **`ForgeCreditHubSidebar`** + **`ForgeCreditHubTopbar`**. Use this for **`/credit-hub/*`** only. For non–Credit Hub modules (e.g. Legal under **`/legal`**), use **`ForgeAppShell`** + **`ForgeAppSidebar`** directly in that route’s layout (no `PersonaProvider`, no command palette in v1).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** `{ children: ReactNode }`
+
+### When to use which shell
+
+| Shell | Route | Persona | Command palette |
+|-------|-------|---------|-----------------|
+| **`ForgeCreditHubAppShell`** | `/credit-hub/*` | Yes (`bank` / `dealer`) | Yes (Ctrl/Cmd-K) |
+| **`ForgeAppShell`** + **`ForgeAppSidebar`** | e.g. `/legal/*` | No | Not mounted (Legal v1) |
+
+### Minimal example (Legal layout pattern)
+
+```tsx
+import { ForgeAppShell } from "@/components/forge/layout/ForgeAppShell";
+import { ForgeAppSidebar } from "@/components/forge/layout/ForgeAppSidebar";
+import { ForgeAppTopbar } from "@/components/forge/layout/ForgeAppTopbar";
+
+<ForgeAppShell sidebar={<ForgeAppSidebar />} topbar={<ForgeAppTopbar module="legal" />}>
+  {children}
+</ForgeAppShell>
+```
 
 ### Variants & states (preview)
 
@@ -1633,6 +1652,54 @@ import { ForgeCreditHubTopbar } from "@/components/forge";
 
 - **Compose** in page/feature modules under `components/forge/credit-hub/**`.
 - **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
+
+---
+
+## ForgeAppShell
+
+**File:** `components/forge/layout/ForgeAppShell.tsx`
+
+**Purpose:** Agnostic two-column layout: **sidebar** + **topbar** + **`<main id="main-content">`**. Optional **`beforeContent`** (e.g. Credit Hub token debug span). Does **not** mount command palette — Credit Hub wraps this tree with **`ForgeCommandPaletteProvider`**.
+
+**Primary props interface:** `ForgeAppShellProps`
+
+```ts
+sidebar: ReactNode;
+topbar: ReactNode;
+children: ReactNode;
+beforeContent?: ReactNode;
+```
+
+### Related
+
+- **`ForgeCreditHubAppShell`** · **`ForgeAppSidebar`** · **`ForgeAppTopbar`**
+
+---
+
+## ForgeAppSidebar
+
+**File:** `components/forge/layout/ForgeAppSidebar.tsx`
+
+**Purpose:** Multi-tenant **module** navigation. Uses **`useTenantModules()`** (TanStack Query → **`GET /api/v1/tenants/{tenantId}/modules`**) and shows only entries the tenant’s **`modules`** list allows (with **`hasCreditHub()`** accepting `credit_hub` / `credit` / `forge_*` aliases).
+
+### DO / DON'T
+
+- **DO:** add new rows to the internal registry with backend `module` ids that match the API.
+- **DON'T:** conflate Credit Hub **persona** (`bank`/`dealer`) with module gating — persona stays in **`ForgeCreditHubSidebar`**.
+
+---
+
+## ForgeAppTopbar
+
+**File:** `components/forge/layout/ForgeAppTopbar.tsx`
+
+**Purpose:** Top bar for non–Credit Hub Forge routes. Today supports **`module="legal"`** (institution title + “Legal Intelligence”). Composes primitive **`Topbar`**.
+
+**Primary props interface:** `ForgeAppTopbarProps`
+
+```ts
+module: "legal";
+```
 
 ---
 
