@@ -86,7 +86,7 @@ class LegalApiClient {
       `/agents/${encodeURIComponent(agentId)}/run`,
       {
         method: "POST",
-        body: JSON.stringify({ inputs, tenant_id: tenantId }),
+        body: JSON.stringify({ ...inputs, tenant_id: tenantId }),
       },
       tenantId
     );
