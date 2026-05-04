@@ -1,5 +1,5 @@
 import LegalHomeDashboard from "@/components/legal/LegalHomeDashboard";
 
-export default function LegalPage() {
+export default function LegalForgeHomePage() {
   return <LegalHomeDashboard />;
 }

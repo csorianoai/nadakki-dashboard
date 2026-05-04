@@ -7,6 +7,12 @@ function cleanBackendUrl(value) {
 
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      { source: "/legal-agents", destination: "/legal", permanent: false },
+      { source: "/legal-agents/:path*", destination: "/legal/:path*", permanent: false },
+    ];
+  },
   async rewrites() {
     const backendUrl = cleanBackendUrl(
       process.env.BACKEND_URL ||

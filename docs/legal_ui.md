@@ -2,10 +2,10 @@
 
 ## Rutas
 
-- `/legal` — Home Legal Intelligence Core (KPIs, agentes, actividad, salud)
-- `/legal/research` — Chat con agentes (`chat_asesor_legal` recomendado), RAG/citas, persistencia en `sessionStorage`
-- `/legal/audit` — Audit trail, filtros, exportación CSV (UTF-8 BOM)
-- Rutas adicionales existentes en `app/legal/` (p. ej. contracts) no forman parte del núcleo demo de tres pantallas pero comparten layout.
+- `/legal` — Home Legal Intelligence Core (Forge AppShell + `ModuleGate`); implementación en **`app/(forge)/legal/page.tsx`**
+- `/legal/research` — Chat con agentes
+- `/legal/audit` — Audit trail
+- Rutas adicionales (`/legal/contracts`, `/legal/config`) comparten el layout Forge en **`app/(forge)/legal/`**.
 
 ## Componentes (`components/legal/`)
 
@@ -60,7 +60,7 @@ Header obligatorio en cliente Legal Worker L: `X-Tenant-ID` (inyectado en `lib/a
 
 1. Backend: `cd nadakki-ai-suite` → `uvicorn main:app --host 127.0.0.1 --port 8010`
 2. Frontend: `cd nadakki-dashboard` → `npm run dev`
-3. Abrir `http://localhost:3000/legal` (rewrites envían `/api/legal/*` al backend)
+3. Abrir `http://localhost:3000/legal` (rutas bajo `app/(forge)/legal/`; rewrites envían `/api/legal/*` al backend)
 
 ## Demo script Credicefi
 

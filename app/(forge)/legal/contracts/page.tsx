@@ -7,7 +7,7 @@ import { CitationBadge } from "@/components/legal/CitationBadge";
 import { AuditTrailCard } from "@/components/legal/AuditTrailCard";
 import { LlmModeNotice } from "@/components/legal/LlmModeNotice";
 
-export default function ContractsPage() {
+export default function LegalForgeContractsPage() {
   const [texto, setTexto] = useState("");
   const { loading, result, submit, tenantMissing } = useLegalQuickCheck();
 

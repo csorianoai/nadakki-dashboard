@@ -2,7 +2,7 @@
 
 import { useKnowledgePackInfo } from "@/hooks/useLegal";
 
-export default function ConfigPage() {
+export default function LegalForgeConfigPage() {
   const { info, loading } = useKnowledgePackInfo("do");
 
   if (loading) return <p>Cargando...</p>;
