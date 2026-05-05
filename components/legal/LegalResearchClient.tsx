@@ -219,27 +219,6 @@ export default function LegalResearchClient() {
         </div>
       </div>
 
-      {agentId !== CHAT_AGENT && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/40">
-          <div className="flex gap-3">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" aria-hidden />
-            <div>
-              <p className="font-medium text-amber-900 dark:text-amber-100">Agente en optimización (Worker M)</p>
-              <p className="text-sm text-amber-800 dark:text-amber-200">
-                Scoring heurístico pendiente. Para demo se recomienda {CHAT_AGENT} con LLM validado.
-              </p>
-              <button
-                type="button"
-                className="mt-2 text-sm font-medium text-amber-900 underline dark:text-amber-100"
-                onClick={() => setAgentId(CHAT_AGENT)}
-              >
-                Volver a {CHAT_AGENT}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="flex flex-col gap-4 lg:flex-row">
         <div className="min-h-[420px] flex-1 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:max-w-[60%]">
           <div className="max-h-[calc(100vh-280px)] space-y-4 overflow-y-auto p-4">
