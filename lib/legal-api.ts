@@ -128,7 +128,7 @@ export const legalApi = {
     tenantId?: string | null
   ): Promise<{ ejecuciones: AuditEntry[] }> {
     return fetchAPI<{ ejecuciones: AuditEntry[] }>(
-      `/api/v1/legal/audit?limite=${encodeURIComponent(String(limite))}`,
+      `/api/v1/legal/audit-trail?limite=${encodeURIComponent(String(limite))}`,
       { method: "GET", tenantId: tenantId ?? undefined }
     );
   },
@@ -139,7 +139,7 @@ export const legalApi = {
   ): Promise<KnowledgePackInfo> {
     const q = encodeURIComponent(jurisdiccion);
     return fetchAPI<KnowledgePackInfo>(
-      `/api/v1/legal/config/knowledge-pack?jurisdiccion=${q}`,
+      `/api/v1/legal/knowledge-pack/status?jurisdiccion=${q}`,
       { method: "GET", tenantId: tenantId ?? undefined }
     );
   },
