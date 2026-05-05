@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Home, Search, FileText, ScrollText, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const links = [
-  { href: "/legal", label: "Home" },
-  { href: "/legal/research", label: "Research" },
-  { href: "/legal/audit", label: "Audit" },
+type NavLink = {
+  href: string;
+  label: string;
+  icon: typeof Home;
+};
+
+const links: NavLink[] = [
+  { href: "/legal", label: "Home", icon: Home },
+  { href: "/legal/research", label: "Research", icon: Search },
+  { href: "/legal/contracts", label: "Contratos", icon: FileText },
+  { href: "/legal/audit", label: "Audit", icon: ScrollText },
+  { href: "/legal/config", label: "Config", icon: Settings },
 ];
 
 export function LegalSubNav() {
@@ -18,19 +27,21 @@ export function LegalSubNav() {
       aria-label="Legal Core"
     >
       {links.map((l) => {
+        const Icon = l.icon;
         const active = pathname === l.href || (l.href !== "/legal" && pathname.startsWith(l.href));
         return (
           <Link
             key={l.href}
             href={l.href}
             className={cn(
-              "rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+              "inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
               active
-                ? "bg-blue-600 text-white dark:bg-blue-500"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                ? "bg-blue-600 text-white shadow-sm dark:bg-blue-500"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-slate-50"
             )}
           >
-            {l.label}
+            <Icon className="h-4 w-4" aria-hidden="true" />
+            <span>{l.label}</span>
           </Link>
         );
       })}
