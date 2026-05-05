@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, Scale, Send, Sparkles } from "lucide-react";
+import { AlertTriangle, Maximize2, Minimize2, Scale, Send, Sparkles } from "lucide-react";
 import { useLegalEffectiveTenantId, useLegalAgentRun } from "@/hooks/useLegal";
 import { trackEvent } from "@/lib/legal/telemetry";
 import type { AgentMonitor, AgentRunResponse, Citation, RagMetadata } from "@/types/legal";
@@ -60,6 +60,7 @@ export default function LegalResearchClient() {
   const [input, setInput] = useState("");
   const [tab, setTab] = useState<"citations" | "rag" | "monitor" | "audit">("citations");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
   const runHook = useLegalAgentRun(effectiveTenantId);
 
   useEffect(() => {
@@ -210,6 +211,16 @@ export default function LegalResearchClient() {
           </button>
           <button
             type="button"
+            onClick={() => setFullscreen(!fullscreen)}
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 inline-flex items-center gap-1.5"
+            aria-label={fullscreen ? "Comprimir" : "Expandir a pantalla completa"}
+            title={fullscreen ? "Comprimir" : "Expandir a pantalla completa"}
+          >
+            {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <span className="hidden sm:inline">{fullscreen ? "Comprimir" : "Expandir"}</span>
+          </button>
+          <button
+            type="button"
             onClick={copyLastRequestId}
             className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-700"
             aria-label="Copiar último Request ID"
@@ -219,9 +230,9 @@ export default function LegalResearchClient() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 lg:flex-row">
-        <div className="min-h-[420px] flex-1 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:max-w-[60%]">
-          <div className="max-h-[calc(100vh-280px)] space-y-4 overflow-y-auto p-4">
+      <div className={`flex flex-col gap-4 ${fullscreen ? "" : "lg:flex-row"}`}>
+        <div className={`min-h-[420px] flex-1 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 ${fullscreen ? "w-full" : "lg:max-w-[60%]"}`}>
+          <div className={`space-y-4 overflow-y-auto p-4 ${fullscreen ? "max-h-[calc(100vh-200px)]" : "max-h-[calc(100vh-280px)]"}`}>
             {messages.length === 0 && (
               <div className="flex flex-col items-center gap-4 py-6">
                 <div className="rounded-full bg-blue-50 p-3 dark:bg-blue-950/50">
@@ -344,7 +355,7 @@ export default function LegalResearchClient() {
         </div>
 
         <aside
-          className={`w-full flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:max-w-[40%] ${sidebarOpen ? "" : "hidden lg:block"}`}
+          className={`w-full flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${fullscreen ? "" : "lg:max-w-[40%]"} ${sidebarOpen ? "" : "hidden lg:block"}`}
         >
           <div className="mb-3 flex gap-2 border-b border-slate-200 pb-2 dark:border-slate-800">
             {(
