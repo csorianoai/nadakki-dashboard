@@ -3,10 +3,18 @@ import { useState, useEffect } from "react";
 import { Download, X, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { usePWA } from "@/app/hooks/usePWA";
 
+const PWA_DISMISS_KEY = "nadakki_pwa_install_banner_dismissed";
+
 export default function PWAPrompt() {
   const { isInstalled, isOnline, canInstall, isUpdateAvailable, install, update } = usePWA();
   const [dismissed, setDismissed] = useState(false);
   const [showOffline, setShowOffline] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(PWA_DISMISS_KEY) === "1") setDismissed(true);
+    } catch { /* ignore */ }
+  }, []);
 
   // Show offline indicator briefly when going offline
   useEffect(() => {
@@ -39,14 +47,14 @@ export default function PWAPrompt() {
                   Instalar
                 </button>
                 <button
-                  onClick={() => setDismissed(true)}
+                  onClick={() => { setDismissed(true); try { localStorage.setItem(PWA_DISMISS_KEY, "1"); } catch {} }}
                   className="px-4 py-2 bg-slate-700 text-slate-300 text-sm rounded-lg hover:bg-slate-600"
                 >
                   Ahora no
                 </button>
               </div>
             </div>
-            <button onClick={() => setDismissed(true)} className="text-slate-500 hover:text-white">
+            <button onClick={() => { setDismissed(true); try { localStorage.setItem(PWA_DISMISS_KEY, "1"); } catch {} }} className="text-slate-500 hover:text-white">
               <X className="w-5 h-5" />
             </button>
           </div>

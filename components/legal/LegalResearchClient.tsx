@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, Scale, Send } from "lucide-react";
+import { AlertTriangle, Scale, Send, Sparkles } from "lucide-react";
 import { useLegalEffectiveTenantId, useLegalAgentRun } from "@/hooks/useLegal";
 import { trackEvent } from "@/lib/legal/telemetry";
 import type { AgentMonitor, AgentRunResponse, Citation, RagMetadata } from "@/types/legal";
@@ -244,9 +244,40 @@ export default function LegalResearchClient() {
         <div className="min-h-[420px] flex-1 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:max-w-[60%]">
           <div className="max-h-[calc(100vh-280px)] space-y-4 overflow-y-auto p-4">
             {messages.length === 0 && (
-              <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                Escriba una consulta o use un prompt sugerido.
-              </p>
+              <div className="flex flex-col items-center gap-4 py-6">
+                <div className="rounded-full bg-blue-50 p-3 dark:bg-blue-950/50">
+                  <Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-slate-800 dark:text-slate-100">Consulta legal con IA</p>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Seleccione un tema o escriba su consulta.</p>
+                </div>
+                <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
+                  {([
+                    ["Penal", "Plazos de prescripcion para delitos financieros en RD"],
+                    ["Civil", "Requisitos para demanda en responsabilidad civil extracontractual"],
+                    ["Laboral", "Calculo de prestaciones laborales por desahucio del empleador"],
+                    ["Comercial", "Requisitos de constitucion de una SRL segun Ley 479-08"],
+                    ["Contratos", "Validez de clausula penal del 50% en contrato de prestamo"],
+                    ["Inmobiliario", "Proceso de saneamiento de titulo de propiedad inmobiliaria"],
+                    ["Compliance", "Obligaciones AML/KYC para entidades financieras segun Ley 155-17"],
+                    ["Tributario", "Regimen de facturacion electronica y deberes del contribuyente"],
+                  ] as const).map(([area, prompt]) => (
+                    <button
+                      key={area}
+                      type="button"
+                      className="group rounded-lg border border-slate-200 bg-white p-3 text-left transition-colors hover:border-blue-400 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-600 dark:hover:bg-blue-950/30"
+                      onClick={() => {
+                        setInput(prompt);
+                        document.getElementById("legal-research-input")?.focus();
+                      }}
+                    >
+                      <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{area}</span>
+                      <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">{prompt}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
             {messages.map((m, i) =>
               m.role === "user" ? (
@@ -294,10 +325,10 @@ export default function LegalResearchClient() {
               <button
                 key={idx}
                   type="button"
-                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-left text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  className="rounded-full border border-blue-200 bg-blue-50/80 px-3 py-1.5 text-left text-xs text-blue-800 transition-colors hover:border-blue-400 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200 dark:hover:bg-blue-900/60"
                   onClick={() => setInput(p)}
                 >
-                  {p.length > 52 ? `${p.slice(0, 52)}…` : p}
+                  {p.length > 60 ? `${p.slice(0, 60)}…` : p}
                 </button>
               ))}
             </div>

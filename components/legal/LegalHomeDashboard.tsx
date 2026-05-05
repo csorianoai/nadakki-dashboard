@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Activity, Bot, ShieldCheck, Users } from "lucide-react";
+import { Activity, Bot, Search, ShieldCheck, Users } from "lucide-react";
 import {
   useLegalEffectiveTenantId,
   useLegalAgents,
@@ -46,6 +46,28 @@ export default function LegalHomeDashboard() {
 
   const recent = useMemo(() => (audit.entries ?? []).slice(0, 5), [audit.entries]);
   const count24h = useMemo(() => (audit.entries ?? []).filter(entry24h).length, [audit.entries]);
+
+  const [agentSearch, setAgentSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  const categories = useMemo(() => {
+    const cats = new Set(agents.agents.map((a) => a.category));
+    return Array.from(cats).sort();
+  }, [agents.agents]);
+
+  const filteredAgents = useMemo(() => {
+    const q = agentSearch.toLowerCase().trim();
+    return agents.agents.filter((a) => {
+      if (categoryFilter && a.category !== categoryFilter) return false;
+      if (!q) return true;
+      return (
+        a.name.toLowerCase().includes(q) ||
+        (a.description ?? "").toLowerCase().includes(q) ||
+        a.category.toLowerCase().includes(q) ||
+        a.agent_id.toLowerCase().includes(q)
+      );
+    });
+  }, [agents.agents, agentSearch, categoryFilter]);
 
   useEffect(() => {
     if (effectiveTenantId) {
@@ -164,11 +186,49 @@ export default function LegalHomeDashboard() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          Agentes disponibles
-        </h2>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            Agentes disponibles
+            {!agents.loading && (
+              <span className="ml-2 text-sm font-normal text-slate-500">({filteredAgents.length})</span>
+            )}
+          </h2>
+          {!agents.loading && agents.agents.length > 0 && (
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+              <input
+                type="text"
+                placeholder="Buscar agente..."
+                value={agentSearch}
+                onChange={(e) => setAgentSearch(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-sm dark:border-slate-700 dark:bg-slate-900 sm:w-64"
+              />
+            </div>
+          )}
+        </div>
+        {!agents.loading && categories.length > 1 && (
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setCategoryFilter(null)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${categoryFilter === null ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"}`}
+            >
+              Todos
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${categoryFilter === cat ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
         {agents.loading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <LegalLoadingSkeleton key={i} variant="card" />
             ))}
@@ -183,9 +243,23 @@ export default function LegalHomeDashboard() {
               </Link>
             }
           />
+        ) : filteredAgents.length === 0 ? (
+          <LegalEmptyState
+            title="Sin resultados"
+            description={`No hay agentes que coincidan con "${agentSearch}"${categoryFilter ? ` en ${categoryFilter}` : ""}.`}
+            action={
+              <button
+                type="button"
+                onClick={() => { setAgentSearch(""); setCategoryFilter(null); }}
+                className="text-blue-600 underline dark:text-blue-400"
+              >
+                Limpiar filtros
+              </button>
+            }
+          />
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {agents.agents.map((a) => (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredAgents.map((a) => (
               <LegalAgentCard key={a.agent_id} agent={a} />
             ))}
           </div>
