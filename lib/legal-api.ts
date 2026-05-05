@@ -77,15 +77,22 @@ export interface AuditEntry {
 }
 
 export interface KnowledgePackInfo {
-  jurisdiction: string;
-  version: string;
-  verification_status: "pending_attorney_review" | "verified" | "expired";
+  jurisdiction?: string;
+  version?: string;
+  verification_status?: "pending_attorney_review" | "verified" | "expired";
   verified_by?: string;
   verified_at?: string;
   sha256_hash?: string;
-  practice_areas_covered: string[];
-  leyes_codificadas_count: number;
-  articulos_codificados_count: number;
+  practice_areas_covered?: string[];
+  leyes_codificadas_count?: number;
+  articulos_codificados_count?: number;
+  // Backend puede devolver estos nombres alternativos
+  status?: string;
+  pack_hash?: string;
+  leyes_cargadas?: number;
+  articulos_cargados?: number;
+  tenant_id?: string;
+  last_loaded_at?: string;
 }
 
 export function getLegalApiErrorMessage(e: unknown): string {

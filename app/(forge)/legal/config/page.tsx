@@ -13,20 +13,20 @@ export default function LegalForgeConfigPage() {
       <h2 className="text-2xl font-medium">Configuración Legal Core</h2>
 
       <div className="bg-white rounded-lg shadow border p-5">
-        <h3 className="font-medium mb-3">Knowledge Pack — Jurisdicción {info.jurisdiction.toUpperCase()}</h3>
+        <h3 className="font-medium mb-3">Knowledge Pack — Jurisdicción {(info.jurisdiction ?? 'do').toUpperCase()}</h3>
 
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div>
             <dt className="text-slate-500">Versión</dt>
-            <dd className="font-mono">{info.version}</dd>
+            <dd className="font-mono">{(info.version ?? 'N/A')}</dd>
           </div>
           <div>
             <dt className="text-slate-500">Estado</dt>
             <dd>
-              {info.verification_status === "verified" ? (
+              {(info.verification_status ?? info.status) === "verified" ? (
                 <span className="text-green-700 font-medium">✓ Verified</span>
               ) : (
-                <span className="text-amber-700 font-medium">⚠️ {info.verification_status}</span>
+                <span className="text-amber-700 font-medium">⚠️ {info.verification_status ?? info.status ?? 'unknown'}</span>
               )}
             </dd>
           </div>
@@ -45,22 +45,22 @@ export default function LegalForgeConfigPage() {
           <div>
             <dt className="text-slate-500">Hash SHA-256</dt>
             <dd className="font-mono text-xs">
-              {info.sha256_hash && info.sha256_hash.length > 32 ? `${info.sha256_hash.slice(0, 32)}…` : (info.sha256_hash ?? "—")}
+              {(info.sha256_hash ?? info.pack_hash) && (info.sha256_hash ?? info.pack_hash).length > 32 ? `${(info.sha256_hash ?? info.pack_hash).slice(0, 32)}…` : ((info.sha256_hash ?? info.pack_hash) ?? "—")}
             </dd>
           </div>
           <div>
             <dt className="text-slate-500">Leyes codificadas</dt>
-            <dd className="font-medium">{info.leyes_codificadas_count}</dd>
+            <dd className="font-medium">{(info.leyes_codificadas_count ?? info.leyes_cargadas ?? 0)}</dd>
           </div>
           <div>
             <dt className="text-slate-500">Artículos codificados</dt>
-            <dd className="font-medium">{info.articulos_codificados_count}</dd>
+            <dd className="font-medium">{(info.articulos_codificados_count ?? info.articulos_cargados ?? 0)}</dd>
           </div>
           <div className="md:col-span-2">
             <dt className="text-slate-500">Áreas de práctica</dt>
             <dd>
               <div className="flex flex-wrap gap-1 mt-1">
-                {info.practice_areas_covered.map((p) => (
+                {(info.practice_areas_covered ?? []).map((p) => (
                   <span key={p} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">
                     {p}
                   </span>
