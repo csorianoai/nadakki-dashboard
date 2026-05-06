@@ -1,0 +1,212 @@
+{
+  "list": {
+    "title": "Expedientes",
+    "filters": {
+      "state": "Estado",
+      "priority": "Prioridad",
+      "type": "Tipo de caso",
+      "search": "Buscar por título o número"
+    },
+    "empty": "No tienes expedientes activos. Crea uno desde el botón superior.",
+    "create_button": "Nuevo expediente",
+    "loading": "Cargando expedientes…",
+    "error": "No se pudieron cargar los expedientes"
+  },
+  "nav": {
+    "tasks": "Tareas",
+    "cases": "Expedientes",
+    "overview": "Resumen",
+    "timeline": "Línea de tiempo",
+    "documents": "Documentos",
+    "strategy": "Estrategia",
+    "deadlines": "Plazos",
+    "issues": "Incidencias",
+    "risk": "Riesgo",
+    "snapshots": "Versiones",
+    "related": "Relacionados",
+    "archive": "Archivo"
+  },
+  "states": {
+    "EVALUACION_INICIAL": "Evaluación inicial",
+    "INGESTION": "Ingreso de documentos",
+    "TRIAGE": "Análisis automático",
+    "STRATEGY": "Estrategia",
+    "ACTIVE": "Activo",
+    "HEARING": "Audiencia",
+    "JUDGMENT": "Sentencia",
+    "APPEAL": "Apelación",
+    "EXECUTION": "Ejecución",
+    "CLOSED": "Cerrado",
+    "ARCHIVED": "Archivado"
+  },
+  "priority": {
+    "low": "Baja",
+    "normal": "Normal",
+    "high": "Alta",
+    "critical": "Crítica"
+  },
+  "case_types": {
+    "defensa_civil_cobro_pesos": "Defensa civil — cobro de pesos",
+    "recurso_apelacion_civil": "Apelación civil",
+    "caso_penal_imputado": "Defensa penal — imputado",
+    "caso_penal_victima_querellante": "Acción penal — víctima o querellante",
+    "caso_penal_evaluacion_general": "Evaluación penal general"
+  },
+  "wizard": {
+    "title": "Crear nuevo expediente",
+    "submit": "Crear expediente",
+    "mode": {
+      "evaluacion": "Evaluación previa (sin compromiso)",
+      "ingesta": "Ingesta directa (caso ya tomado)"
+    },
+    "steps": {
+      "1": "Información básica",
+      "2": "Partes involucradas",
+      "3": "Documentos iniciales"
+    },
+    "errors": {
+      "title_required": "El título es obligatorio",
+      "client_required": "Debes agregar al menos un cliente",
+      "case_type_required": "Selecciona un tipo de caso"
+    }
+  },
+  "actions": {
+    "menu_title": "Acciones disponibles",
+    "no_actions": "No hay acciones disponibles en este estado",
+    "executing": "Ejecutando…",
+    "confirm": "Confirmar",
+    "confirm_execute": "¿Confirmar esta acción?",
+    "cancel": "Cancelar",
+    "blocked_by_mode": "Acción no disponible en modo degradado"
+  },
+  "deadlines": {
+    "title": "Plazos activos",
+    "auto_calculated": "Calculado automáticamente",
+    "human_override": "Modificado por abogado",
+    "days_remaining": "{days} días restantes",
+    "expired": "Vencido",
+    "override": "Modificar plazo",
+    "override_modal": {
+      "title": "Modificar plazo",
+      "new_date": "Nueva fecha de vencimiento",
+      "reason": "Razón de la modificación",
+      "legal_basis": "Base legal",
+      "warning": "Esta acción modifica un plazo legal calculado automáticamente. Quedará registrado en el expediente."
+    }
+  },
+  "strategy": {
+    "title": "Estrategias",
+    "multi_select_hint": "Puedes seleccionar varias estrategias para ejecutarlas en paralelo",
+    "expected_strength": "Fortaleza estimada",
+    "risks": "Riesgos",
+    "select_button": "Seleccionar estrategia",
+    "select_multiple": "Seleccionar {count} estrategias",
+    "apply": "Aplicar selección"
+  },
+  "documents": {
+    "title": "Documentos",
+    "upload": "Subir documento",
+    "none": "No hay documentos registrados",
+    "lifecycle": {
+      "draft": "Borrador",
+      "reviewed_by_agent": "Revisado por sistema",
+      "reviewed_by_attorney": "Revisado por abogado",
+      "finalized": "Finalizado",
+      "submitted_to_court": "Presentado al tribunal",
+      "received_by_court": "Recibido por tribunal",
+      "resolved": "Resuelto",
+      "rejected": "Rechazado"
+    },
+    "extracted_data_review": {
+      "title": "Verificar datos extraídos",
+      "warning": "Antes de calcular plazos, confirma los datos extraídos del documento.",
+      "save_corrections": "Guardar correcciones",
+      "confirm_as_is": "Confirmar tal cual"
+    }
+  },
+  "issues": {
+    "title": "Incidencias y errores reportados",
+    "report_button": "Reportar problema",
+    "none": "No hay incidencias abiertas",
+    "severity": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta",
+      "critical": "Crítica"
+    },
+    "types": {
+      "wrong_deadline": "Plazo incorrecto",
+      "wrong_strategy": "Estrategia inadecuada",
+      "bad_document_generation": "Documento mal generado",
+      "wrong_classification": "Clasificación errónea",
+      "missing_data": "Datos faltantes",
+      "jurisprudence_outdated": "Jurisprudencia obsoleta",
+      "agent_failure": "Falla de agente",
+      "data_extraction_error": "Error de extracción",
+      "state_machine_violation": "Violación de máquina de estados",
+      "conflict_of_interest": "Conflicto de interés",
+      "compliance_breach": "Violación de compliance",
+      "other": "Otro"
+    }
+  },
+  "snapshots": {
+    "title": "Versiones del expediente",
+    "create_manual": "Crear versión manual",
+    "view_diff": "Ver cambios",
+    "verify_chain": "Verificar integridad",
+    "chain_valid": "Cadena íntegra",
+    "chain_broken": "Cadena con inconsistencias",
+    "none": "No hay versiones guardadas"
+  },
+  "risk": {
+    "title": "Perfil de riesgo",
+    "probability_of_loss": "Probabilidad de pérdida",
+    "financial_exposure": "Exposición financiera",
+    "legal_complexity": "Complejidad legal",
+    "timeline_risk": "Riesgo de plazos",
+    "overall_score": "Riesgo global",
+    "empty": "Sin perfil de riesgo calculado"
+  },
+  "confidence": {
+    "title": "Confianza del expediente",
+    "factors": {
+      "documents_complete": "Documentos completos",
+      "extracted_data_verified": "Datos verificados",
+      "deadlines_validated": "Plazos validados",
+      "strategy_selected": "Estrategia escogida",
+      "actors_complete": "Partes completas",
+      "conflict_check_done": "Conflicto verificado"
+    }
+  },
+  "lock": {
+    "soft_warning": "{user} está editando este expediente",
+    "hard_blocked": "{user} tiene este expediente bloqueado para edición crítica",
+    "release_button": "Liberar bloqueo"
+  },
+  "disaster_mode": {
+    "LLM_DEGRADED": "Sistema operando sin asistencia de IA. Algunas acciones no están disponibles.",
+    "RAG_DEGRADED": "Sistema operando sin búsqueda de jurisprudencia.",
+    "CRITICAL_FALLBACK": "Sistema en modo de respaldo crítico. Solo lectura y operaciones básicas disponibles."
+  },
+  "compliance": {
+    "ley_91": "Esta información es asistencia legal automatizada. Requiere revisión por abogado autorizado conforme a la Ley 91 RD."
+  },
+  "actors": {
+    "title": "Partes",
+    "conflict_banner": "Se detectó posible conflicto de interés en una parte. Revisa antes de continuar."
+  },
+  "archive": {
+    "title": "Archivar expediente",
+    "description": "El archivo formal cierra el ciclo de retención visible. Esta acción queda auditada.",
+    "confirm": "Confirmar archivo",
+    "back": "Volver al expediente"
+  },
+  "related": {
+    "title": "Casos relacionados"
+  },
+  "timeline": {
+    "title": "Eventos",
+    "empty": "No hay eventos registrados",
+    "expand_trace": "Ver trazabilidad de decisión"
+  }
+}

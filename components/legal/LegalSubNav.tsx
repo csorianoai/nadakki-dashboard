@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, FileText, ScrollText, Settings } from "lucide-react";
+import { Home, Search, FileText, ScrollText, Settings, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavLink = {
@@ -12,11 +12,12 @@ type NavLink = {
 };
 
 const links: NavLink[] = [
-  { href: "/legal", label: "Home", icon: Home },
-  { href: "/legal/research", label: "Research", icon: Search },
+  { href: "/legal", label: "Inicio", icon: Home },
+  { href: "/legal/cases", label: "Expedientes", icon: Briefcase },
+  { href: "/legal/research", label: "Investigación", icon: Search },
   { href: "/legal/contracts", label: "Contratos", icon: FileText },
-  { href: "/legal/audit", label: "Audit", icon: ScrollText },
-  { href: "/legal/config", label: "Config", icon: Settings },
+  { href: "/legal/audit", label: "Auditoría", icon: ScrollText },
+  { href: "/legal/config", label: "Configuración", icon: Settings },
 ];
 
 export function LegalSubNav() {
@@ -24,7 +25,7 @@ export function LegalSubNav() {
   return (
     <nav
       className="mb-6 flex flex-wrap gap-2 border-b border-slate-200 pb-3 dark:border-slate-800"
-      aria-label="Legal Core"
+      aria-label="Legal"
     >
       {links.map((l) => {
         const Icon = l.icon;

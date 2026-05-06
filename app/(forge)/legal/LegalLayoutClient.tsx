@@ -6,6 +6,7 @@ import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHub
 import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
 import { LegalDisclaimerFooter } from "@/components/legal/LegalDisclaimerFooter";
 import { LegalSubNav } from "@/components/legal/LegalSubNav";
+import { DisasterModeProvider } from "@/app/providers/DisasterModeProvider";
 import { ForgeAppShell } from "@/components/forge/layout/ForgeAppShell";
 import { ForgeAppSidebar } from "@/components/forge/layout/ForgeAppSidebar";
 import { ForgeAppTopbar } from "@/components/forge/layout/ForgeAppTopbar";
@@ -35,14 +36,16 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
         <CHTenantGuard>
           <ForgeAppShell sidebar={<ForgeAppSidebar />} topbar={<ForgeAppTopbar module="legal" />}>
             <ModuleGate module="legal">
-              <div className="flex min-h-0 flex-1 flex-col px-4 py-6 md:px-8 md:py-8">
+              <DisasterModeProvider>
+                <div className="flex min-h-0 flex-1 flex-col px-4 py-6 md:px-8 md:py-8">
                 <DemoBannerStrong />
                 <LegalSubNav />
                 <div className="mt-2 min-h-0 flex-1">{children}</div>
                 <div className="mt-8 shrink-0">
                   <LegalDisclaimerFooter />
                 </div>
-              </div>
+                </div>
+              </DisasterModeProvider>
             </ModuleGate>
           </ForgeAppShell>
         </CHTenantGuard>
