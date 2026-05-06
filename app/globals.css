@@ -210,6 +210,55 @@ body {
   /* Typography */
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+
+  /* Legal Core — semantic aliases (chips / filtros; valores sin hex en TSX) */
+  --color-text-tertiary: var(--text-muted);
+  --color-text-secondary: var(--text-secondary);
+  --color-surface-1: var(--bg-secondary);
+  --color-surface-3: var(--bg-tertiary);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-active);
+  --color-focus-ring: var(--color-primary);
+  --color-accent-blue-soft: rgba(59, 130, 246, 0.15);
+  --color-accent-blue-strong: var(--color-blue);
+  --color-accent-blue-border: rgba(59, 130, 246, 0.45);
+  --color-success-strong: var(--color-green);
+
+  /* Practice area palette (Legal Core v2.2) */
+  --color-area-financial: hsl(214, 60%, 50%);
+  --color-area-financial-soft: hsl(214, 60%, 96%);
+  --color-area-financial-strong: hsl(214, 60%, 35%);
+  --color-area-financial-border: hsl(214, 60%, 85%);
+
+  --color-area-civil: hsl(28, 60%, 50%);
+  --color-area-civil-soft: hsl(28, 60%, 96%);
+  --color-area-civil-strong: hsl(28, 60%, 35%);
+  --color-area-civil-border: hsl(28, 60%, 85%);
+
+  --color-area-public: hsl(263, 50%, 50%);
+  --color-area-public-soft: hsl(263, 50%, 96%);
+  --color-area-public-strong: hsl(263, 50%, 35%);
+  --color-area-public-border: hsl(263, 50%, 85%);
+
+  --color-area-criminal: hsl(0, 60%, 50%);
+  --color-area-criminal-soft: hsl(0, 60%, 96%);
+  --color-area-criminal-strong: hsl(0, 60%, 38%);
+  --color-area-criminal-border: hsl(0, 60%, 85%);
+
+  --color-area-labor: hsl(160, 50%, 40%);
+  --color-area-labor-soft: hsl(160, 50%, 96%);
+  --color-area-labor-strong: hsl(160, 50%, 28%);
+  --color-area-labor-border: hsl(160, 50%, 85%);
+
+  --color-area-ip: hsl(190, 60%, 45%);
+  --color-area-ip-soft: hsl(190, 60%, 96%);
+  --color-area-ip-strong: hsl(190, 60%, 30%);
+  --color-area-ip-border: hsl(190, 60%, 85%);
+
+  --color-area-specialized: hsl(220, 10%, 50%);
+  --color-area-specialized-soft: hsl(220, 10%, 96%);
+  --color-area-specialized-strong: hsl(220, 10%, 30%);
+  --color-area-specialized-border: hsl(220, 10%, 85%);
 }
 
 /* ============================================

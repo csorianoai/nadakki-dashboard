@@ -7,6 +7,8 @@ import { DecisionBadge } from "@/components/legal/DecisionBadge";
 import { CitationBadge } from "@/components/legal/CitationBadge";
 import { AuditTrailCard } from "@/components/legal/AuditTrailCard";
 import { LlmModeNotice } from "@/components/legal/LlmModeNotice";
+import { PracticeAreaChipGroup } from "@/components/legal/PracticeAreaChipGroup";
+import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
 
 const CONTRACT_TYPES = [
   {
@@ -92,6 +94,7 @@ const ICON_COLORS: Record<string, string> = {
 export default function LegalForgeContractsPage() {
   const [texto, setTexto] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [practiceAreaTags, setPracticeAreaTags] = useState<string[]>(["civil", "bancario"]);
   const { loading, result, submit, tenantMissing } = useLegalQuickCheck();
 
   const handleAnalyze = async () => {
@@ -100,7 +103,7 @@ export default function LegalForgeContractsPage() {
       tipo_solicitud: "contrato_simple",
       texto,
       jurisdiccion: "DO",
-      etiquetas_area_practica: ["civil", "bancario"],
+      etiquetas_area_practica: practiceAreaTags,
     });
   };
 
@@ -130,6 +133,11 @@ export default function LegalForgeContractsPage() {
           Selecciona un tenant en el selector global para enviar análisis al Legal Core.
         </p>
       )}
+
+      <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700 dark:bg-slate-900/40">
+        <p className="mb-2 text-sm font-medium text-slate-800 dark:text-slate-200">Áreas de práctica del análisis</p>
+        <PracticeAreaFilter selected={practiceAreaTags} onChange={setPracticeAreaTags} />
+      </div>
 
       {/* Tipos de contratos */}
       {!result && (
@@ -200,6 +208,10 @@ export default function LegalForgeContractsPage() {
         <div className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <LlmModeNotice resultado={result} />
           <DecisionBadge decision={result.decision} />
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Áreas enviadas:</span>
+            <PracticeAreaChipGroup tags={practiceAreaTags} maxVisible={19} size="sm" />
+          </div>
           <p className="text-slate-700 dark:text-slate-300">{result.decision.explicacion}</p>
 
           {(result.codigos_razon?.length ?? 0) > 0 && (

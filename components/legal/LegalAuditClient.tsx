@@ -10,6 +10,8 @@ import { LegalErrorState } from "@/components/legal/LegalErrorState";
 import { LegalLoadingSkeleton } from "@/components/legal/LegalLoadingSkeleton";
 import { LegalEmptyState } from "@/components/legal/LegalEmptyState";
 import { AuditRiskBadge } from "@/components/legal/AuditRiskBadge";
+import { PracticeAreaChipGroup } from "@/components/legal/PracticeAreaChipGroup";
+import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
 
 function latencyClass(ms: number | undefined) {
   if (ms == null) return "text-slate-500";
@@ -27,6 +29,7 @@ function filterEntries(
     from?: string;
     to?: string;
     requestId?: string;
+    practiceAreas?: string[];
   }
 ): AuditTrailEntry[] {
   return entries.filter((e) => {
@@ -34,6 +37,11 @@ function filterEntries(
     if (opts.status && e.status !== opts.status) return false;
     if (opts.risk && (e.monitor?.riesgo_evaluado || "") !== opts.risk) return false;
     if (opts.requestId && !e.request_id.toLowerCase().includes(opts.requestId.toLowerCase())) return false;
+    if (opts.practiceAreas && opts.practiceAreas.length > 0) {
+      const tags = e.practice_area_tags ?? [];
+      if (tags.length === 0) return false;
+      if (!tags.some((t) => opts.practiceAreas!.includes(t))) return false;
+    }
     const t = new Date(e.timestamp).getTime();
     if (opts.from) {
       const f = new Date(opts.from).getTime();
@@ -58,6 +66,7 @@ export default function LegalAuditClient() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [reqSearch, setReqSearch] = useState("");
+  const [practiceAreaFilter, setPracticeAreaFilter] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const pageSize = 20;
@@ -74,8 +83,17 @@ export default function LegalAuditClient() {
   }, [effectiveTenantId]);
 
   const filtered = useMemo(
-    () => filterEntries(entries, { agent, status: status || undefined, risk: risk || undefined, from, to, requestId: reqSearch }),
-    [entries, agent, status, risk, from, to, reqSearch]
+    () =>
+      filterEntries(entries, {
+        agent,
+        status: status || undefined,
+        risk: risk || undefined,
+        from,
+        to,
+        requestId: reqSearch,
+        practiceAreas: practiceAreaFilter.length > 0 ? practiceAreaFilter : undefined,
+      }),
+    [entries, agent, status, risk, from, to, reqSearch, practiceAreaFilter]
   );
 
   const metrics = useMemo(() => {
@@ -207,6 +225,9 @@ export default function LegalAuditClient() {
             ))}
           </select>
         </div>
+        <div className="mt-3 flex flex-col gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+          <PracticeAreaFilter selected={practiceAreaFilter} onChange={setPracticeAreaFilter} placeholder="Filtrar por área legal" />
+        </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <input
             type="search"
@@ -226,6 +247,7 @@ export default function LegalAuditClient() {
               setFrom("");
               setTo("");
               setReqSearch("");
+              setPracticeAreaFilter([]);
               setPage(0);
             }}
           >
@@ -253,6 +275,7 @@ export default function LegalAuditClient() {
                   <th className="p-3 font-medium">Citas</th>
                   <th className="p-3 font-medium">Latencia</th>
                   <th className="p-3 font-medium">Riesgo</th>
+                  <th className="p-3 font-medium">Áreas</th>
                   <th className="p-3 font-medium">Acciones</th>
                 </tr>
               </thead>
@@ -275,6 +298,13 @@ export default function LegalAuditClient() {
                       <td className="p-3">
                         <AuditRiskBadge risk={e.monitor?.riesgo_evaluado} />
                       </td>
+                      <td className="p-3 max-w-[180px]">
+                        {(e.practice_area_tags?.length ?? 0) > 0 ? (
+                          <PracticeAreaChipGroup tags={e.practice_area_tags ?? []} maxVisible={3} size="sm" />
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </td>
                       <td className="p-3">
                         <button
                           type="button"
@@ -291,7 +321,7 @@ export default function LegalAuditClient() {
                     </tr>
                     {expanded === e.request_id && (
                       <tr className="bg-slate-50 dark:bg-slate-950/50">
-                        <td colSpan={7} className="p-4">
+                        <td colSpan={8} className="p-4">
                           <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-1 font-mono text-xs">
                               <p>

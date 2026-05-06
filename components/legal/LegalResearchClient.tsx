@@ -10,6 +10,7 @@ import { CitationCard } from "@/components/legal/CitationCard";
 import { LegalErrorState } from "@/components/legal/LegalErrorState";
 import { LegalLoadingSkeleton } from "@/components/legal/LegalLoadingSkeleton";
 import { LegalDisclaimer } from "@/components/legal/LegalDisclaimer";
+import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
 
 const CHAT_AGENT = "chat_asesor_legal";
 const MAX_CHARS = 4000;
@@ -61,6 +62,7 @@ export default function LegalResearchClient() {
   const [tab, setTab] = useState<"citations" | "rag" | "monitor" | "audit">("citations");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
+  const [practiceAreaFilter, setPracticeAreaFilter] = useState<string[]>([]);
   const runHook = useLegalAgentRun(effectiveTenantId);
 
   useEffect(() => {
@@ -102,6 +104,16 @@ export default function LegalResearchClient() {
     }
     return null;
   }, [messages]);
+
+  const filteredCitations = useMemo(() => {
+    const list = lastAssistant?.run?.citations ?? [];
+    if (practiceAreaFilter.length === 0) return list;
+    return list.filter((c) => {
+      const tags = c.practice_area_tags ?? [];
+      if (tags.length === 0) return true;
+      return tags.some((t) => practiceAreaFilter.includes(t));
+    });
+  }, [lastAssistant, practiceAreaFilter]);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -228,6 +240,11 @@ export default function LegalResearchClient() {
             Copiar Request ID
           </button>
         </div>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+        <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">Filtrar resultados de citas por área (cuando el backend envíe etiquetas)</p>
+        <PracticeAreaFilter selected={practiceAreaFilter} onChange={setPracticeAreaFilter} />
       </div>
 
       <div className={`flex flex-col gap-4 ${fullscreen ? "" : "lg:flex-row"}`}>
@@ -382,8 +399,10 @@ export default function LegalResearchClient() {
             <div className="space-y-3">
               {(lastAssistant.run.citations ?? []).length === 0 ? (
                 <p className="text-sm text-slate-500">Sin citas en la última respuesta.</p>
+              ) : filteredCitations.length === 0 ? (
+                <p className="text-sm text-slate-500">Ninguna cita coincide con el filtro de áreas.</p>
               ) : (
-                (lastAssistant.run.citations ?? []).map((c: Citation, idx: number) => (
+                filteredCitations.map((c: Citation, idx: number) => (
                   <CitationCard key={`${c.source_id}-${idx}`} citation={c} />
                 ))
               )}

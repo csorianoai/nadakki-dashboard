@@ -21,6 +21,8 @@ export interface Citation {
   article: string;
   layer: "capa_1" | "capa_2";
   quote_or_summary: string;
+  /** Cuando el backend envía clasificación por área de práctica */
+  practice_area_tags?: string[];
 }
 
 export interface RagMetadata {
@@ -66,6 +68,8 @@ export interface AuditTrailEntry {
   monitor?: AgentMonitor;
   latency_total_ms?: number;
   status?: string;
+  /** Áreas de práctica asociadas al evento (cuando el backend las provee) */
+  practice_area_tags?: string[];
 }
 
 export interface KnowledgePackStatus {

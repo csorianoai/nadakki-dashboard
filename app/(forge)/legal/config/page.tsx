@@ -1,6 +1,8 @@
 "use client";
 
 import { useKnowledgePackInfo } from "@/hooks/useLegal";
+import { PracticeAreaConfig } from "@/components/legal/PracticeAreaConfig";
+import { PracticeAreaChipGroup } from "@/components/legal/PracticeAreaChipGroup";
 
 export default function LegalForgeConfigPage() {
   const { info, loading } = useKnowledgePackInfo("do");
@@ -11,6 +13,10 @@ export default function LegalForgeConfigPage() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-medium">Configuración Legal Core</h2>
+
+      <div className="bg-white rounded-lg shadow border p-5">
+        <PracticeAreaConfig activeAreas={info.practice_areas_covered ?? []} />
+      </div>
 
       <div className="bg-white rounded-lg shadow border p-5">
         <h3 className="font-medium mb-3">Knowledge Pack — Jurisdicción {(info.jurisdiction ?? 'do').toUpperCase()}</h3>
@@ -58,14 +64,8 @@ export default function LegalForgeConfigPage() {
           </div>
           <div className="md:col-span-2">
             <dt className="text-slate-500">Áreas de práctica</dt>
-            <dd>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {(info.practice_areas_covered ?? []).map((p) => (
-                  <span key={p} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">
-                    {p}
-                  </span>
-                ))}
-              </div>
+            <dd className="mt-1">
+              <PracticeAreaChipGroup tags={info.practice_areas_covered ?? []} maxVisible={12} size="sm" />
             </dd>
           </div>
         </dl>
