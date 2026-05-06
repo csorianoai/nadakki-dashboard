@@ -6,6 +6,7 @@ import type {
   LegalApiError,
   LegalHealthResponse,
 } from "@/types/legal";
+import type { LegalTask } from "@/lib/legal/task-types";
 
 const API_BASE = "/api/legal";
 
@@ -116,6 +117,34 @@ class LegalApiClient {
 
   async getKnowledgePackStatus(tenantId: string): Promise<KnowledgePackStatus> {
     return this.fetch<KnowledgePackStatus>("/knowledge-pack/status", { method: "GET" }, tenantId);
+  }
+
+  async getTasks(tenantId: string, jurisdiction: string): Promise<{ tasks: LegalTask[] }> {
+    const q = new URLSearchParams();
+    q.set("jurisdiction", jurisdiction);
+    const raw = await this.fetch<unknown>(`/tasks?${q.toString()}`, { method: "GET" }, tenantId);
+    if (raw && typeof raw === "object" && "tasks" in raw && Array.isArray((raw as { tasks: unknown }).tasks)) {
+      return raw as { tasks: LegalTask[] };
+    }
+    if (Array.isArray(raw)) {
+      return { tasks: raw as LegalTask[] };
+    }
+    return { tasks: [] };
+  }
+
+  async executeTask(
+    tenantId: string,
+    taskId: string,
+    body: Record<string, unknown> = {}
+  ): Promise<Record<string, unknown>> {
+    return this.fetch<Record<string, unknown>>(
+      `/tasks/${encodeURIComponent(taskId)}/execute`,
+      {
+        method: "POST",
+        body: JSON.stringify({ ...body, tenant_id: tenantId }),
+      },
+      tenantId
+    );
   }
 }
 

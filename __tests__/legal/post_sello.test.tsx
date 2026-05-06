@@ -64,8 +64,8 @@ describe("Worker F — quitar guardrails restrictivos post sello", () => {
       mockUseKnowledgePackInfo.mockReturnValue({ info: packVerified, loading: false });
       const { container } = render(<DemoBannerStrong />);
       expect(container.querySelector(".bg-green-50")).toBeTruthy();
-      expect(screen.getByText(/Sistema en piloto controlado/i)).toBeInTheDocument();
-      expect(screen.getByText(/Conocimiento legal validado por abogado RD autorizado/i)).toBeInTheDocument();
+      expect(screen.getByText(/Piloto controlado/i)).toBeInTheDocument();
+      expect(screen.getByText(/Conocimiento legal validado por abogado RD/i)).toBeInTheDocument();
       expect(screen.getByText(/no sustituyen asesoría legal profesional/i)).toBeInTheDocument();
     });
 

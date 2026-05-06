@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
 import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
-import { LegalDisclaimer } from "@/components/legal/LegalDisclaimer";
+import { LegalDisclaimerFooter } from "@/components/legal/LegalDisclaimerFooter";
 import { LegalSubNav } from "@/components/legal/LegalSubNav";
 import { ForgeAppShell } from "@/components/forge/layout/ForgeAppShell";
 import { ForgeAppSidebar } from "@/components/forge/layout/ForgeAppSidebar";
@@ -35,12 +35,12 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
         <CHTenantGuard>
           <ForgeAppShell sidebar={<ForgeAppSidebar />} topbar={<ForgeAppTopbar module="legal" />}>
             <ModuleGate module="legal">
-              <div className="px-4 py-6 md:px-8 md:py-8">
+              <div className="flex min-h-0 flex-1 flex-col px-4 py-6 md:px-8 md:py-8">
                 <DemoBannerStrong />
                 <LegalSubNav />
-                <div className="mt-2">{children}</div>
-                <div className="mt-8">
-                  <LegalDisclaimer />
+                <div className="mt-2 min-h-0 flex-1">{children}</div>
+                <div className="mt-8 shrink-0">
+                  <LegalDisclaimerFooter />
                 </div>
               </div>
             </ModuleGate>
