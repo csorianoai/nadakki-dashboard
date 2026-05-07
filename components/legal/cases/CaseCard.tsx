@@ -10,7 +10,7 @@ import { daysUntil } from "@/lib/legal/cases/deadline-formatter";
 
 export function CaseCard({ legalCase: c }: { legalCase: LegalCase }) {
   const m = useLegalCasesMessages();
-  const nextDeadline = c.deadlines
+  const nextDeadline = (c.deadlines ?? [])
     .filter((d) => d.status === "active")
     .sort((a, b) => a.effective_deadline_date.localeCompare(b.effective_deadline_date))[0];
   const days = nextDeadline ? daysUntil(nextDeadline.effective_deadline_date) : null;
