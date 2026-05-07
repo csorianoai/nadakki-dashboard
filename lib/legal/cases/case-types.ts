@@ -210,3 +210,59 @@ export interface CreateCasePayload {
   >;
   related_case_ids?: string[];
 }
+
+/** Tipos de plantilla admitidos por el backend para generación con IA. */
+export type LegalGeneratedDocumentType =
+  | "demanda_civil_cobro_pesos"
+  | "contestacion_demanda_civil"
+  | "recurso_apelacion_civil"
+  | "denuncia_penal"
+  | "querella_penal"
+  | "escrito_acusacion_querellante";
+
+export const LEGAL_GENERATED_DOCUMENT_TYPES: LegalGeneratedDocumentType[] = [
+  "demanda_civil_cobro_pesos",
+  "contestacion_demanda_civil",
+  "recurso_apelacion_civil",
+  "denuncia_penal",
+  "querella_penal",
+  "escrito_acusacion_querellante",
+];
+
+export interface GenerateDocumentRequestBody {
+  document_type: LegalGeneratedDocumentType;
+  parameters: Record<string, unknown>;
+}
+
+/** Respuesta inmediata de POST .../documents/generate. */
+export interface GeneratedDocumentDraftResponse {
+  document_id: string;
+  status: "draft";
+  attorney_validated: boolean;
+  content?: string;
+}
+
+/** Ítem en GET .../documents/generated. */
+export interface GeneratedDocumentListItem {
+  document_id: string;
+  document_type?: string;
+  generated_at?: string;
+  attorney_validated?: boolean;
+  status?: string;
+  title?: string;
+}
+
+/** Detalle GET .../documents/generated/{doc_id}. */
+export interface GeneratedDocumentDetail {
+  document_id: string;
+  document_type: string;
+  content: string;
+  attorney_validated: boolean;
+  generated_at?: string;
+  citations?: unknown;
+}
+
+export interface GeneratedDocumentsListResponse {
+  documents: GeneratedDocumentListItem[];
+  count: number;
+}

@@ -48,6 +48,9 @@ export function CaseDetailHeader({
         <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/documents`}>
           {m.nav.documents}
         </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200 hover:bg-forgeBrand-50" href={`/legal/cases/${legalCase.case_id}/documents#documentos-generados-ia`}>
+          {m.nav.generated_ia}
+        </Link>
         <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/strategy`}>
           {m.nav.strategy}
         </Link>
