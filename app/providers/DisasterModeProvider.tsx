@@ -5,11 +5,13 @@ import { createContext, useContext } from "react";
 import { useDisasterMode } from "@/hooks/legal/useDisasterMode";
 import { CaseDisasterModeBanner } from "@/components/legal/cases/CaseDisasterModeBanner";
 import type { DisasterLevel } from "@/lib/legal/cases/case-types";
+import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 
 const DisasterModeContext = createContext<{ level: DisasterLevel }>({ level: "NORMAL" });
 
 export function DisasterModeProvider({ children }: { children: ReactNode }) {
-  const { data } = useDisasterMode();
+  const { effectiveTenantId } = useLegalEffectiveTenantId();
+  const { data } = useDisasterMode(effectiveTenantId);
   const level = (data?.level ?? "NORMAL") as DisasterLevel;
 
   return (

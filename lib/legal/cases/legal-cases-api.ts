@@ -362,8 +362,11 @@ export async function ingestDocument(
 }
 
 /** Modo degradado: endpoint opcional; si no existe, se asume NORMAL. */
-export async function fetchDisasterMode(): Promise<{ level: DisasterLevel }> {
-  const res = await fetch(`${LEGAL_PREFIX}/meta/disaster-mode`, { method: "GET" });
+export async function fetchDisasterMode(tenantId: string): Promise<{ level: DisasterLevel }> {
+  const res = await fetch(`${LEGAL_PREFIX}/meta/disaster-mode`, {
+    method: "GET",
+    headers: tenantHeaders(tenantId),
+  });
   if (!res.ok) return { level: "NORMAL" };
   const raw = await parseJson<Record<string, unknown>>(res);
   const level = raw.level as DisasterLevel | undefined;
