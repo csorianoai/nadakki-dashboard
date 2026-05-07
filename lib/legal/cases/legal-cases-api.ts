@@ -120,7 +120,7 @@ export async function fetchTimeline(
   tenantId: string,
   caseId: string
 ): Promise<{ events: CaseTimelineEvent[] }> {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/timeline`, {
+  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/events`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar línea de tiempo (${res.status})`);
@@ -148,7 +148,7 @@ export async function postDeadlineOverride(
   const res = await fetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/deadlines/${encodeURIComponent(deadlineId)}/override`,
     {
-      method: "POST",
+      method: "PATCH",
       headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }
@@ -195,7 +195,7 @@ export async function patchDocumentLifecycle(
   body: { new_status: string; notes?: string; submitted_to_court_acuse?: string }
 ) {
   const res = await fetch(
-    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(docId)}`,
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(docId)}/lifecycle`,
     {
       method: "PATCH",
       headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
@@ -251,7 +251,7 @@ export async function patchIssue(
   body: Record<string, unknown>
 ) {
   const res = await fetch(
-    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/issues/${encodeURIComponent(issueId)}`,
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/issues/${encodeURIComponent(issueId)}/resolve`,
     {
       method: "PATCH",
       headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
