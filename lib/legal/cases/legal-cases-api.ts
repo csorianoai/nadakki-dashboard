@@ -3,6 +3,11 @@ import type {
   CaseTimelineEvent,
   CreateCasePayload,
   DisasterLevel,
+  GenerateDocumentRequestBody,
+  GeneratedDocumentDetail,
+  GeneratedDocumentDraftResponse,
+  GeneratedDocumentsListResponse,
+  GeneratedDocumentListItem,
   LegalCase,
   ListCasesResponse,
   RiskProfile,
@@ -359,6 +364,72 @@ export async function ingestDocument(
   });
   if (!res.ok) throw new Error(`Error al subir documento (${res.status})`);
   return parseJson<unknown>(res);
+}
+
+export async function postGenerateDocument(
+  tenantId: string,
+  caseId: string,
+  body: GenerateDocumentRequestBody
+): Promise<GeneratedDocumentDraftResponse> {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/generate`,
+    {
+      method: "POST",
+      headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!res.ok) throw new Error(`Error al generar documento (${res.status})`);
+  const raw = await parseJson<Record<string, unknown>>(res);
+  const document_id =
+    typeof raw.document_id === "string" ? raw.document_id : (raw.id as string | undefined);
+  if (!document_id) throw new Error("Respuesta de generación incompleta");
+  const attorney_validated = Boolean(raw.attorney_validated);
+  return {
+    document_id,
+    status: "draft" as const,
+    attorney_validated,
+    content: typeof raw.content === "string" ? raw.content : undefined,
+  };
+}
+
+export async function fetchGeneratedDocuments(
+  tenantId: string,
+  caseId: string
+): Promise<GeneratedDocumentsListResponse> {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/generated`,
+    { headers: tenantHeaders(tenantId) }
+  );
+  if (!res.ok) throw new Error(`Error al cargar documentos generados (${res.status})`);
+  const raw = await parseJson<Record<string, unknown>>(res);
+  const docs = Array.isArray(raw.documents)
+    ? (raw.documents as GeneratedDocumentListItem[])
+    : Array.isArray(raw.items)
+      ? (raw.items as GeneratedDocumentListItem[])
+      : [];
+  const count = typeof raw.count === "number" ? raw.count : docs.length;
+  return { documents: docs, count };
+}
+
+export async function fetchGeneratedDocument(
+  tenantId: string,
+  caseId: string,
+  docId: string
+): Promise<GeneratedDocumentDetail> {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/generated/${encodeURIComponent(docId)}`,
+    { headers: tenantHeaders(tenantId) }
+  );
+  if (!res.ok) throw new Error(`Error al cargar documento (${res.status})`);
+  const raw = await parseJson<Record<string, unknown>>(res);
+  const document_id = typeof raw.document_id === "string" ? raw.document_id : docId;
+  const document_type = typeof raw.document_type === "string" ? raw.document_type : "";
+  const content = typeof raw.content === "string" ? raw.content : "";
+  const attorney_validated = Boolean(raw.attorney_validated);
+  const generated_at = typeof raw.generated_at === "string" ? raw.generated_at : undefined;
+  const citations = raw.citations;
+  return { document_id, document_type, content, attorney_validated, generated_at, citations };
 }
 
 /** Modo degradado: endpoint opcional; si no existe, se asume NORMAL. */

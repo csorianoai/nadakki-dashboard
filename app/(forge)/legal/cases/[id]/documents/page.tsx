@@ -4,20 +4,27 @@ import { use, useState } from "react";
 import { useLegalCase } from "@/hooks/legal/useLegalCase";
 import { useCaseDocuments } from "@/hooks/legal/useCaseDocuments";
 import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
+import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { CaseDetailHeader } from "@/components/legal/cases/CaseDetailHeader";
 import { CaseDocumentsList } from "@/components/legal/cases/CaseDocumentsList";
 import { CaseDocumentUploader } from "@/components/legal/cases/CaseDocumentUploader";
 import { CaseDocumentLifecycleSelector } from "@/components/legal/cases/CaseDocumentLifecycleSelector";
 import { CaseDocumentExtractedDataReview } from "@/components/legal/cases/CaseDocumentExtractedDataReview";
+import { DocumentGenerationButton } from "@/components/legal/cases/DocumentGenerationButton";
+import { GeneratedDocumentsList } from "@/components/legal/cases/GeneratedDocumentsList";
+import { GeneratedDocumentViewer } from "@/components/legal/cases/GeneratedDocumentViewer";
 import type { CaseDocument } from "@/lib/legal/cases/case-types";
 
 export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const msgs = useLegalCasesMessages();
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
   const { data: c, isLoading, error, refetch } = useLegalCase(effectiveTenantId, id);
   const { uploadDocument, uploading } = useCaseDocuments(effectiveTenantId, id);
   const [lifeDoc, setLifeDoc] = useState<CaseDocument | null>(null);
   const [reviewDoc, setReviewDoc] = useState<CaseDocument | null>(null);
+  const [genDialogOpen, setGenDialogOpen] = useState(false);
+  const [viewDocId, setViewDocId] = useState<string | null>(null);
 
   if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
@@ -48,6 +55,32 @@ export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ i
           else setLifeDoc(d);
         }}
       />
+
+      <section
+        id="documentos-generados-ia"
+        className="scroll-mt-24 space-y-4"
+        aria-labelledby="heading-documentos-ia"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="heading-documentos-ia" className="text-lg font-semibold text-forgeInk-900">
+            {msgs.generated_documents.title}
+          </h2>
+          <DocumentGenerationButton
+            tenantId={effectiveTenantId}
+            caseId={id}
+            open={genDialogOpen}
+            onOpenChange={setGenDialogOpen}
+          />
+        </div>
+        <GeneratedDocumentsList
+          tenantId={effectiveTenantId}
+          caseId={id}
+          onViewDocument={(docId) => setViewDocId(docId)}
+          showCtaWhenEmpty
+          onCtaGenerate={() => setGenDialogOpen(true)}
+        />
+      </section>
+
       {lifeDoc && effectiveTenantId ? (
         <CaseDocumentLifecycleSelector
           doc={lifeDoc}
@@ -70,6 +103,13 @@ export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ i
           }}
         />
       ) : null}
+      <GeneratedDocumentViewer
+        tenantId={effectiveTenantId}
+        caseId={id}
+        docId={viewDocId}
+        open={viewDocId !== null}
+        onClose={() => setViewDocId(null)}
+      />
     </main>
   );
 }
