@@ -20,13 +20,13 @@ export default function LegalCaseDetailPage({ params }: { params: Promise<{ id: 
     void refetch();
   }, [effectiveTenantId, id, refetch]);
 
-  if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
+  if (!tenantHydrated) return <p className="text-sm text-zinc-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
-    return <p className="text-sm text-forgeDanger-700">{tenantError ?? "Tenant no disponible"}</p>;
+    return <p className="text-sm text-red-400">{tenantError ?? "Tenant no disponible"}</p>;
   }
-  if (isLoading) return <p className="text-sm text-forgeInk-500">Cargando expediente…</p>;
+  if (isLoading) return <p className="text-sm text-zinc-500">Cargando expediente…</p>;
   if (error || !c) {
-    return <p className="text-sm text-forgeDanger-700">No se pudo cargar el expediente</p>;
+    return <p className="text-sm text-red-400">No se pudo cargar el expediente</p>;
   }
 
   return (

@@ -1,9 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { GeistSans } from "geist/font/sans";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
 import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
+import { LegalCoreShell } from "@/components/legal/LegalCoreShell";
 import { LegalDisclaimerFooter } from "@/components/legal/LegalDisclaimerFooter";
 import { LegalSubNav } from "@/components/legal/LegalSubNav";
 import { DisasterModeProvider } from "@/app/providers/DisasterModeProvider";
@@ -23,13 +25,13 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
     <>
       <CreditHubI18nBootstrap />
       <div
-        className="flex min-h-screen flex-col bg-forgeSurface-page text-forgeInk-800"
+        className={`flex min-h-screen flex-col bg-zinc-950 text-zinc-100 ${GeistSans.className}`}
         data-portal="legal"
         data-tenant={tenantAttr}
       >
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-forge-sm focus:bg-forgeBrand-600 focus:px-4 focus:py-2 focus:text-forgeInk-50 focus:shadow-forge-md"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-violet-600 focus:px-4 focus:py-2 focus:text-zinc-50 focus:shadow-lg"
         >
           Saltar al contenido principal
         </a>
@@ -37,13 +39,15 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
           <ForgeAppShell sidebar={<ForgeAppSidebar />} topbar={<ForgeAppTopbar module="legal" />}>
             <ModuleGate module="legal">
               <DisasterModeProvider>
-                <div className="flex min-h-0 flex-1 flex-col px-4 py-6 md:px-8 md:py-8">
-                <DemoBannerStrong />
-                <LegalSubNav />
-                <div className="mt-2 min-h-0 flex-1">{children}</div>
-                <div className="mt-8 shrink-0">
-                  <LegalDisclaimerFooter />
-                </div>
+                <div className="mx-auto flex min-h-0 w-full max-w-screen-2xl flex-1 flex-col px-4 py-5 md:px-6 md:py-6">
+                  <DemoBannerStrong />
+                  <LegalSubNav />
+                  <LegalCoreShell>
+                    <div className="min-h-0 flex-1">{children}</div>
+                  </LegalCoreShell>
+                  <div className="mt-10 shrink-0">
+                    <LegalDisclaimerFooter />
+                  </div>
                 </div>
               </DisasterModeProvider>
             </ModuleGate>
