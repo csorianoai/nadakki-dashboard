@@ -10,56 +10,7 @@
     "empty": "No tienes expedientes activos. Crea uno desde el botón superior.",
     "create_button": "Nuevo expediente",
     "loading": "Cargando expedientes…",
-    "error": "No se pudieron cargar los expedientes",
-    "revolution": {
-      "subtitle": "Tablero operativo institucional con lectura rápida, jerárquico y estable.",
-      "command": {
-        "bar_label": "Barra de mandos compacta para expedientes",
-        "search_placeholder": "Filtrar por título, número o texto interno…",
-        "filters_label": "Filtros contextuales",
-        "quick_focus_filters": "Filtros rápidos"
-      },
-      "filters_panel": {
-        "toggle_advanced": "Filtros detallados",
-        "advanced_hint": "Estado jurídico, prioridad y tipo de proceso",
-        "clear_advanced": "Limpiar filtros detallados"
-      },
-      "stats": {
-        "region_label": "Telemetría operativa consolidada por tenant cargado",
-        "sub_total": "Total expedientes",
-        "sub_active": "En proceso",
-        "sub_deadlines": "Plazos próximos 7 días",
-        "sub_health": "Índice de salud (sin incidentes graves)"
-      },
-      "preset": {
-        "active_only": "Solo procesos vitales",
-        "deadlines_week": "Plazos < 7 días",
-        "priority_hot": "Prioridad alta o superior"
-      },
-      "empty": {
-        "title": "Aún sin expedientes asignados",
-        "body": "Inicia un expediente para activar el tablero con lectura densa, plazos y métricas operativas.",
-        "cta": "Crear expediente",
-        "footnote": "Diseñado para equipos legales de alto rendimiento"
-      },
-      "row": {
-        "primary_party": "Cliente principal",
-        "no_client": "Sin parte prioritaria",
-        "phase": "Fase procesal",
-        "next_deadline": "Próximo plazo",
-        "no_deadline": "Sin plazo activo",
-        "strategies": "Estrategias",
-        "documents_bundle": "Documentos",
-        "generated_hint": "IA",
-        "generated_list_note": "Consulta vista documentación en expediente.",
-        "amount": "Monto",
-        "activity": "Actividad",
-        "risk_marker": "Plazo crítico",
-        "open_detail": "Abrir expediente"
-      },
-      "load_more": "Mostrar más expedientes",
-      "load_more_hint": "Dividimos la lista para mantener interacción fluida"
-    }
+    "error": "No se pudieron cargar los expedientes"
   },
   "nav": {
     "tasks": "Tareas",
