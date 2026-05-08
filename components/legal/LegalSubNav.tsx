@@ -25,7 +25,7 @@ export function LegalSubNav() {
   const pathname = usePathname();
   return (
     <nav
-      className="sticky top-0 z-20 -mx-4 mb-2 border-b border-zinc-800/50 bg-zinc-950/60 px-2 py-3 backdrop-blur-md md:-mx-6"
+      className="sticky top-14 z-20 -mx-4 mb-2 border-b border-zinc-800/50 bg-zinc-950/60 px-2 py-3 backdrop-blur-md md:-mx-6"
       aria-label="Legal"
     >
       <div className="flex flex-wrap gap-2">

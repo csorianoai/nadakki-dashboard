@@ -18,9 +18,9 @@ export function ForgeAppShell({ sidebar, topbar, children, beforeContent }: Forg
   return (
     <>
       {beforeContent}
-      <div className="flex min-h-[calc(100vh-4rem)] flex-1">
+      <div className="flex min-h-screen flex-1">
         {sidebar}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           {topbar}
           <main id="main-content" className="min-h-0 flex-1">
             {children}

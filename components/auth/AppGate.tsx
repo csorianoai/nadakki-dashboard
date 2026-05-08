@@ -17,6 +17,16 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  if (pathname.startsWith("/legal")) {
+    return (
+      <RequireAuth>
+        {children}
+        <OnboardingAgent />
+        <PWAPrompt />
+      </RequireAuth>
+    );
+  }
+
   if (pathname.startsWith("/consent")) {
     return <>{children}</>;
   }
