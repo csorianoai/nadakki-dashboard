@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { GeistSans } from "geist/font/sans";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
+import { DeadlineNotificationBanner } from "@/components/legal/DeadlineNotificationBanner";
 import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
 import { LegalCoreShell } from "@/components/legal/LegalCoreShell";
 import { LegalDisclaimerFooter } from "@/components/legal/LegalDisclaimerFooter";
@@ -41,6 +42,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
               <DisasterModeProvider>
                 <div className="mx-auto flex min-h-0 w-full max-w-screen-2xl flex-1 flex-col px-4 py-5 md:px-6 md:py-6">
                   <DemoBannerStrong />
+                  <DeadlineNotificationBanner />
                   <LegalSubNav />
                   <LegalCoreShell>
                     <div className="min-h-0 flex-1">{children}</div>
