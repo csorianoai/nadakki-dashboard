@@ -36,11 +36,11 @@ function qc(ui: React.ReactElement) {
 describe("CaseList", () => {
   it("muestra vacío cuando no hay expedientes", () => {
     render(qc(<CaseList cases={[]} loading={false} error={null} />));
-    expect(screen.getByText(/Aún sin expedientes asignados/i)).toBeInTheDocument();
+    expect(screen.getByText(/No tienes expedientes activos/i)).toBeInTheDocument();
   });
 
-  it("renderiza fila clicable cuando hay expedientes", () => {
+  it("renderiza tarjetas cuando hay expedientes", () => {
     render(qc(<CaseList cases={[baseCase({ case_id: "a", title: "Uno" })]} loading={false} error={null} />));
-    expect(screen.getByRole("link", { name: /Abrir expediente: Uno/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
   });
 });
