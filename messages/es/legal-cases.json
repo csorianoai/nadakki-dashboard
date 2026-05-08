@@ -82,6 +82,13 @@
     "cancel": "Cancelar",
     "blocked_by_mode": "Acción no disponible en modo degradado"
   },
+  "deadline_notifications": {
+    "one": "1 plazo próximo a vencer",
+    "many": "{count} plazos próximos a vencer",
+    "peremptory": "perentorio",
+    "expired": "Vencido",
+    "and_more": "y {count} más…"
+  },
   "deadlines": {
     "title": "Plazos activos",
     "auto_calculated": "Calculado automáticamente",

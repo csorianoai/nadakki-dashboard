@@ -432,6 +432,44 @@ export async function fetchGeneratedDocument(
   return { document_id, document_type, content, attorney_validated, generated_at, citations };
 }
 
+// ─── Deadline Notifications (Phase 3) ───────────────────────────────
+
+export async function fetchUpcomingDeadlines(
+  tenantId: string,
+  horizonDays: number = 30,
+  includeAcknowledged: boolean = false,
+): Promise<{ deadlines: Record<string, unknown>[]; count: number; horizon_days: number }> {
+  const q = new URLSearchParams();
+  q.set("horizon_days", String(horizonDays));
+  if (includeAcknowledged) q.set("include_acknowledged", "true");
+  const res = await fetch(`${LEGAL_PREFIX}/deadlines/upcoming?${q.toString()}`, {
+    headers: tenantHeaders(tenantId),
+  });
+  if (!res.ok) throw new Error(`Error al cargar plazos próximos (${res.status})`);
+  const raw = await parseJson<Record<string, unknown>>(res);
+  const deadlines = Array.isArray(raw.deadlines) ? raw.deadlines : [];
+  const count = typeof raw.count === "number" ? raw.count : deadlines.length;
+  const horizon_days = typeof raw.horizon_days === "number" ? raw.horizon_days : horizonDays;
+  return { deadlines, count, horizon_days };
+}
+
+export async function postAcknowledgeDeadline(
+  tenantId: string,
+  deadlineId: string,
+  acknowledgedBy: string,
+): Promise<unknown> {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/deadlines/${encodeURIComponent(deadlineId)}/acknowledge`,
+    {
+      method: "POST",
+      headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
+      body: JSON.stringify({ acknowledged_by: acknowledgedBy }),
+    },
+  );
+  if (!res.ok) throw new Error(`Error al confirmar plazo (${res.status})`);
+  return parseJson<unknown>(res);
+}
+
 /** Modo degradado: endpoint opcional; si no existe, se asume NORMAL. */
 export async function fetchDisasterMode(tenantId: string): Promise<{ level: DisasterLevel }> {
   const res = await fetch(`${LEGAL_PREFIX}/meta/disaster-mode`, {
