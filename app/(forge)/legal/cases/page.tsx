@@ -1,39 +1,45 @@
 "use client";
 
-import Link from "next/link";
+import { GeistSans } from "geist/font/sans";
 import { CaseList } from "@/components/legal/cases/CaseList";
 import { useLegalCases } from "@/hooks/legal/useLegalCases";
-import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
+import { cn } from "@/lib/utils";
 
 export default function LegalCasesListPage() {
-  const m = useLegalCasesMessages();
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
   const { data, isLoading, isError, error } = useLegalCases(effectiveTenantId);
 
+  const shellcn = cn(GeistSans.className, "dark isolate mx-auto max-w-screen-2xl px-6 text-zinc-100");
+
   if (!tenantHydrated) {
-    return <p className="text-sm text-forgeInk-500">Cargando tenant…</p>;
+    return (
+      <main id="main-content" className="min-h-0">
+        <div className={shellcn}>
+          <p className="text-sm text-zinc-400" role="status" aria-live="polite">
+            Cargando contexto multitenant…
+          </p>
+        </div>
+      </main>
+    );
   }
   if (!effectiveTenantId || tenantError) {
     return (
-      <p className="text-sm text-forgeDanger-700" role="alert">
-        {tenantError ?? "Tenant no disponible para expedientes"}
-      </p>
+      <main id="main-content" className="min-h-0">
+        <div className={shellcn}>
+          <p className="text-sm text-orange-400" role="alert">
+            {tenantError ?? "Cliente sin tenant activo disponible"}
+          </p>
+        </div>
+      </main>
     );
   }
 
   return (
-    <main id="main-content" className="min-h-0">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-forgeInk-900">{m.list.title}</h1>
-        <Link
-          href="/legal/cases/new"
-          className="inline-flex items-center rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeInk-50 hover:bg-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
-        >
-          {m.list.create_button}
-        </Link>
-      </header>
-      <CaseList cases={data?.cases ?? []} loading={isLoading} error={isError ? (error as Error) : null} />
+    <main id="main-content" className={cn(shellcn, "min-h-[70vh]")}>
+      <div className="rounded-[32px] border border-zinc-800/80 bg-zinc-950/95 p-8 shadow-2xl shadow-black/40 ring-1 ring-zinc-800/60 backdrop-blur-2xl">
+        <CaseList cases={data?.cases ?? []} loading={isLoading} error={isError ? (error as Error) : null} />
+      </div>
     </main>
   );
 }
