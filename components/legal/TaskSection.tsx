@@ -25,13 +25,13 @@ export function TaskSection({ title, icon, headerBarClass, cardLeftBorderClass, 
         <span className="text-lg" aria-hidden>
           {icon}
         </span>
-        <h2 id={`section-${slug}`} className="text-forge-md font-semibold text-forge-text">
+        <h2 id={`section-${slug}`} className="text-base font-semibold tracking-tight text-zinc-100">
           {title}
         </h2>
       </div>
       <div className="flex flex-col gap-3">
         {tasks.length === 0 ? (
-          <p className="text-forge-sm text-forge-text-muted">—</p>
+          <p className="text-sm text-zinc-500">—</p>
         ) : (
           tasks.map((task) => {
             const enabled = tenantSatisfiesTaskFeatures(task, isFeatureEnabled);

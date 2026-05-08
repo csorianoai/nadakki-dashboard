@@ -12,23 +12,26 @@ export default function LegalCasesListPage() {
   const { data, isLoading, isError, error } = useLegalCases(effectiveTenantId);
 
   if (!tenantHydrated) {
-    return <p className="text-sm text-forgeInk-500">Cargando tenant…</p>;
+    return <p className="text-sm text-zinc-500">Cargando tenant…</p>;
   }
   if (!effectiveTenantId || tenantError) {
     return (
-      <p className="text-sm text-forgeDanger-700" role="alert">
+      <p className="text-sm text-red-400" role="alert">
         {tenantError ?? "Tenant no disponible para expedientes"}
       </p>
     );
   }
 
   return (
-    <main id="main-content" className="min-h-0">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-forgeInk-900">{m.list.title}</h1>
+    <main id="main-content" className="min-h-0 space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-800/50 pb-6">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{m.nav.cases}</p>
+          <h1 className="mt-1 text-2xl font-medium tracking-tight text-zinc-100 md:text-3xl">{m.list.title}</h1>
+        </div>
         <Link
           href="/legal/cases/new"
-          className="inline-flex items-center rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeInk-50 hover:bg-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+          className="inline-flex items-center rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
         >
           {m.list.create_button}
         </Link>
