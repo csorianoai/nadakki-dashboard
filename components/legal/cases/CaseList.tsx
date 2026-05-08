@@ -5,6 +5,16 @@ import type { CasePriority, CaseState, LegalCase } from "@/lib/legal/cases/case-
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { CaseCard } from "@/components/legal/cases/CaseCard";
 
+function CaseListSkeleton() {
+  return (
+    <ul className="grid gap-4 md:grid-cols-2" aria-busy aria-live="polite">
+      {[0, 1, 2, 3].map((i) => (
+        <li key={i} className="h-36 animate-pulse rounded-xl bg-zinc-800/50" />
+      ))}
+    </ul>
+  );
+}
+
 export function CaseList({
   cases,
   loading,
@@ -35,83 +45,98 @@ export function CaseList({
 
   if (loading) {
     return (
-      <p className="text-forgeInk-500" aria-live="polite">
-        {m.list.loading}
-      </p>
+      <div className="space-y-4">
+        <p className="text-sm text-zinc-500" aria-live="polite">
+          {m.list.loading}
+        </p>
+        <CaseListSkeleton />
+      </div>
     );
   }
   if (error) {
     return (
-      <p className="text-forgeDanger-700" role="alert">
+      <p className="text-sm text-red-400" role="alert">
         {m.list.error}
       </p>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <div
-        className="flex flex-wrap items-end gap-3 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-4"
+        className="rounded-2xl border border-zinc-800/50 bg-zinc-900/40 p-6 backdrop-blur-sm"
         role="search"
         aria-label={m.list.filters.search}
       >
-        <label className="flex flex-col gap-1 text-xs font-medium text-forgeInk-600">
-          {m.list.filters.search}
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="min-w-[12rem] rounded-forge-sm border border-forgeInk-200 px-2 py-1.5 text-sm"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-forgeInk-600">
-          {m.list.filters.state}
-          <select
-            value={state}
-            onChange={(e) => setState(e.target.value as CaseState | "")}
-            className="rounded-forge-sm border border-forgeInk-200 px-2 py-1.5 text-sm"
-          >
-            <option value="">—</option>
-            {(Object.keys(m.states) as CaseState[]).map((s) => (
-              <option key={s} value={s}>
-                {m.states[s]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-forgeInk-600">
-          {m.list.filters.priority}
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as CasePriority | "")}
-            className="rounded-forge-sm border border-forgeInk-200 px-2 py-1.5 text-sm"
-          >
-            <option value="">—</option>
-            {(Object.keys(m.priority) as CasePriority[]).map((p) => (
-              <option key={p} value={p}>
-                {m.priority[p]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-forgeInk-600">
-          {m.list.filters.type}
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="rounded-forge-sm border border-forgeInk-200 px-2 py-1.5 text-sm"
-          >
-            <option value="">—</option>
-            {(Object.keys(m.case_types) as Array<keyof typeof m.case_types>).map((t) => (
-              <option key={t} value={t}>
-                {m.case_types[t]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-wrap items-center gap-6 text-sm tabular-nums text-zinc-300">
+          <span>
+            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">{m.list.stats_total}</span>{" "}
+            <span className="font-medium text-zinc-100">{cases.length}</span>
+          </span>
+          <span>
+            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">{m.list.stats_visible}</span>{" "}
+            <span className="font-medium text-zinc-100">{filtered.length}</span>
+          </span>
+        </div>
+        <div className="mt-6 flex flex-wrap items-end gap-4">
+          <label className="flex min-w-[12rem] flex-col gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500">
+            {m.list.filters.search}
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm font-normal normal-case tracking-normal text-zinc-100 placeholder:text-zinc-600 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500">
+            {m.list.filters.state}
+            <select
+              value={state}
+              onChange={(e) => setState(e.target.value as CaseState | "")}
+              className="rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm font-normal normal-case tracking-normal text-zinc-100 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+            >
+              <option value="">—</option>
+              {(Object.keys(m.states) as CaseState[]).map((s) => (
+                <option key={s} value={s}>
+                  {m.states[s]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500">
+            {m.list.filters.priority}
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as CasePriority | "")}
+              className="rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm font-normal normal-case tracking-normal text-zinc-100 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+            >
+              <option value="">—</option>
+              {(Object.keys(m.priority) as CasePriority[]).map((p) => (
+                <option key={p} value={p}>
+                  {m.priority[p]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500">
+            {m.list.filters.type}
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm font-normal normal-case tracking-normal text-zinc-100 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+            >
+              <option value="">—</option>
+              {(Object.keys(m.case_types) as Array<keyof typeof m.case_types>).map((t) => (
+                <option key={t} value={t}>
+                  {m.case_types[t]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <p className="rounded-forge-md border border-dashed border-forgeInk-200 p-8 text-center text-forgeInk-600">
+        <p className="rounded-xl border border-dashed border-zinc-700/50 bg-zinc-900/20 p-10 text-center text-sm text-zinc-500">
           {m.list.empty}
         </p>
       ) : (

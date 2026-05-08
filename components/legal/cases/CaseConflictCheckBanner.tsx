@@ -5,7 +5,7 @@ import type { CaseActor } from "@/lib/legal/cases/case-types";
 
 export function CaseConflictCheckBanner({ actors }: { actors: CaseActor[] }) {
   const m = useLegalCasesMessages();
-  const conflict = actors.some((a) => a.conflict_detected);
+  const conflict = (actors ?? []).some((a) => a.conflict_detected);
   if (!conflict) return null;
   return (
     <div
