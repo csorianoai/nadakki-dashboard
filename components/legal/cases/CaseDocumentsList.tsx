@@ -11,12 +11,12 @@ export function CaseDocumentsList({
   onSelect?: (doc: CaseDocument) => void;
 }) {
   const m = useLegalCasesMessages();
-  if (!documents.length) {
+  if (!(documents ?? []).length) {
     return <p className="text-sm text-forgeInk-500">{m.documents.none}</p>;
   }
   return (
     <ul className="divide-y divide-forgeInk-100 rounded-forge-md border border-forgeInk-200">
-      {documents.map((d) => {
+      {(documents ?? []).map((d) => {
         const life = m.documents.lifecycle[d.lifecycle_status as DocumentLifecycleStatus] ?? d.lifecycle_status;
         return (
           <li key={d.document_id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">

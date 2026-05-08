@@ -23,7 +23,7 @@ export function CaseDeadlinesPanel({
     <div>
       <h2 className="mb-3 text-sm font-semibold text-forgeInk-900">{m.deadlines.title}</h2>
       <ul className="space-y-3">
-        {deadlines.map((d) => {
+        {(deadlines ?? []).map((d) => {
           const days = daysUntil(d.effective_deadline_date);
           return (
             <li
