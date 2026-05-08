@@ -26,25 +26,25 @@ export function RecentActivityList({ entries, loading }: Props) {
     return (
       <ul className="space-y-2" aria-busy>
         {[0, 1, 2, 3, 4].map((i) => (
-          <li key={i} className="h-10 animate-pulse rounded-lg bg-zinc-800/50" />
+          <li key={i} className="h-10 animate-pulse rounded-forge-sm bg-forgeSurface-sunken" />
         ))}
       </ul>
     );
   }
 
   if (!entries.length) {
-    return <p className="text-sm text-zinc-500">{m.recent_empty}</p>;
+    return <p className="text-forge-sm text-forge-text-muted">{m.recent_empty}</p>;
   }
 
   return (
-    <ul className="divide-y divide-zinc-800/50 overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/40">
+    <ul className="divide-y divide-forgeInk-200 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card">
       {entries.map((e) => (
         <li key={e.request_id} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
           <div>
-            <p className="text-sm font-medium text-zinc-200">{e.agent_id}</p>
-            <p className="text-xs tabular-nums text-zinc-500">{e.request_id.slice(0, 8)}…</p>
+            <p className="text-forge-sm font-medium text-forge-text">{e.agent_id}</p>
+            <p className="text-xs text-forge-text-subtle">{e.request_id.slice(0, 8)}…</p>
           </div>
-          <time className="text-xs tabular-nums text-zinc-500" dateTime={e.timestamp}>
+          <time className="text-xs tabular-nums text-forge-text-muted" dateTime={e.timestamp}>
             {formatAgo(e.timestamp)}
           </time>
         </li>

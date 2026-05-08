@@ -34,23 +34,23 @@ export function LegalStatusStrip({ tenantId }: Props) {
   const sysOk = health.data?.status === "healthy" && !health.error;
 
   return (
-    <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/40 px-6 py-4 backdrop-blur-sm md:px-8">
+    <div className="border-b border-forgeInk-200 bg-forgeSurface-sunken px-6 py-3 md:px-8">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{m.kpi_open_cases}</p>
-          <p className="mt-1 text-base font-medium tabular-nums tracking-tight text-zinc-100">{count24h}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-forge-text-subtle">{m.kpi_open_cases}</p>
+          <p className="mt-1 text-forge-md font-semibold tabular-nums text-forge-text">{count24h}</p>
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{m.kpi_pending_review}</p>
-          <p className="mt-1 text-base font-medium tabular-nums tracking-tight text-zinc-100">{pendingReview}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-forge-text-subtle">{m.kpi_pending_review}</p>
+          <p className="mt-1 text-forge-md font-semibold tabular-nums text-forge-text">{pendingReview}</p>
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{m.kpi_knowledge_pack}</p>
-          <p className="mt-1 truncate text-base font-medium tracking-tight text-zinc-200">{kpLabel}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-forge-text-subtle">{m.kpi_knowledge_pack}</p>
+          <p className="mt-1 truncate text-forge-md font-semibold text-forge-text">{kpLabel}</p>
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{m.kpi_system}</p>
-          <p className={`mt-1 text-base font-medium tracking-tight ${sysOk ? "text-emerald-400" : "text-amber-400"}`}>
+          <p className="text-xs font-medium uppercase tracking-wide text-forge-text-subtle">{m.kpi_system}</p>
+          <p className={`mt-1 text-forge-md font-semibold ${sysOk ? "text-forge-success" : "text-forge-warning"}`}>
             {health.loading ? "…" : sysOk ? m.kpi_ok : m.kpi_degraded}
           </p>
         </div>

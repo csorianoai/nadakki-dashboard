@@ -3,17 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import type { CasePriority, CaseType } from "@/lib/legal/cases/case-types";
 import { createCase } from "@/lib/legal/cases/legal-cases-api";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { CaseTypeSelector } from "@/components/legal/cases/CaseTypeSelector";
-import { cn } from "@/lib/utils";
 
 type Mode = "evaluacion" | "ingesta";
-
-const inputClass =
-  "mt-1 w-full rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/30";
 
 export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
   const m = useLegalCasesMessages();
@@ -79,81 +74,47 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
 
   const back = () => setStep((s) => Math.max(1, s - 1));
 
-  const steps = [1, 2, 3] as const;
-
   return (
-    <div className="mx-auto max-w-2xl rounded-2xl border border-zinc-800/50 bg-gradient-to-br from-zinc-900/90 to-zinc-950 p-6 shadow-xl md:p-8">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-medium tracking-tight text-zinc-100">{m.wizard.title}</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            {m.wizard.steps[String(step) as "1" | "2" | "3"]}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {steps.map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <motion.div
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium tabular-nums",
-                  step >= s
-                    ? "bg-gradient-to-br from-violet-600 to-indigo-600 text-white"
-                    : "border border-zinc-700 bg-zinc-900/50 text-zinc-500"
-                )}
-                layout
-              >
-                {s}
-              </motion.div>
-              {s < 3 ? <span className="h-px w-4 bg-zinc-800" aria-hidden /> : null}
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="mx-auto max-w-2xl rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-6 shadow-forge-xs">
+      <h1 className="text-xl font-semibold text-forgeInk-900">{m.wizard.title}</h1>
+      <p className="mt-1 text-sm text-forgeInk-600">
+        Paso {step} de 3 — {m.wizard.steps[String(step) as "1" | "2" | "3"]}
+      </p>
 
-      <div className="mt-4 flex flex-wrap gap-4 border-b border-zinc-800/50 pb-4">
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
-          <input
-            type="radio"
-            className="border-zinc-600 text-violet-500 focus:ring-violet-500"
-            checked={mode === "evaluacion"}
-            onChange={() => setMode("evaluacion")}
-          />
+      <div className="mt-4 flex gap-4 border-b border-forgeInk-100 pb-4">
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input type="radio" checked={mode === "evaluacion"} onChange={() => setMode("evaluacion")} />
           {m.wizard.mode.evaluacion}
         </label>
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-300">
-          <input
-            type="radio"
-            className="border-zinc-600 text-violet-500 focus:ring-violet-500"
-            checked={mode === "ingesta"}
-            onChange={() => setMode("ingesta")}
-          />
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input type="radio" checked={mode === "ingesta"} onChange={() => setMode("ingesta")} />
           {m.wizard.mode.ingesta}
         </label>
       </div>
 
       {err ? (
-        <p className="mt-3 text-sm text-red-400" role="alert">
+        <p className="mt-3 text-sm text-forgeDanger-700" role="alert">
           {err}
         </p>
       ) : null}
 
       {step === 1 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 space-y-4"
-        >
+        <div className="mt-6 space-y-4">
           <CaseTypeSelector value={caseType} onChange={setCaseType} />
-          <label className="block text-sm font-medium text-zinc-300">
+          <label className="block text-sm font-medium text-forgeInk-800">
             Título del expediente
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1 w-full rounded-forge-sm border border-forgeInk-200 px-3 py-2"
+            />
           </label>
-          <label className="block text-sm font-medium text-zinc-300">
+          <label className="block text-sm font-medium text-forgeInk-800">
             Prioridad
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as CasePriority)}
-              className={inputClass}
+              className="mt-1 w-full rounded-forge-sm border border-forgeInk-200 px-3 py-2"
             >
               {(Object.keys(m.priority) as CasePriority[]).map((p) => (
                 <option key={p} value={p}>
@@ -162,38 +123,34 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
               ))}
             </select>
           </label>
-        </motion.div>
+        </div>
       ) : null}
 
       {step === 2 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 space-y-4"
-        >
-          <label className="block text-sm font-medium text-zinc-300">
+        <div className="mt-6 space-y-4">
+          <label className="block text-sm font-medium text-forgeInk-800">
             Nombre del cliente
-            <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={inputClass} />
+            <input
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              className="mt-1 w-full rounded-forge-sm border border-forgeInk-200 px-3 py-2"
+            />
           </label>
-          <label className="block text-sm font-medium text-zinc-300">
+          <label className="block text-sm font-medium text-forgeInk-800">
             Contraparte (opcional)
             <input
               value={counterpartyName}
               onChange={(e) => setCounterpartyName(e.target.value)}
-              className={inputClass}
+              className="mt-1 w-full rounded-forge-sm border border-forgeInk-200 px-3 py-2"
             />
           </label>
-        </motion.div>
+        </div>
       ) : null}
 
       {step === 3 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 space-y-3 text-sm text-zinc-300"
-        >
+        <div className="mt-6 space-y-3 text-sm text-forgeInk-700">
           <p>{m.wizard.steps["3"]}: puedes adjuntar documentos después desde el detalle del expediente.</p>
-          <ul className="list-inside list-disc text-zinc-400">
+          <ul className="list-inside list-disc text-forgeInk-600">
             <li>
               {m.case_types[caseType]} — {title}
             </li>
@@ -201,13 +158,13 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
               Cliente: {clientName || "—"}
             </li>
           </ul>
-        </motion.div>
+        </div>
       ) : null}
 
       <div className="mt-8 flex justify-between gap-2">
         <button
           type="button"
-          className="rounded-lg px-4 py-2 text-sm text-zinc-300 ring-1 ring-zinc-700 transition-colors hover:bg-zinc-900 disabled:opacity-40"
+          className="rounded-forge-sm px-4 py-2 text-sm text-forgeInk-700 ring-1 ring-forgeInk-200"
           onClick={back}
           disabled={step === 1}
         >
@@ -216,7 +173,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
         {step < 3 ? (
           <button
             type="button"
-            className="rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110"
+            className="rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeInk-50"
             onClick={next}
           >
             Siguiente
@@ -225,7 +182,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
           <button
             type="button"
             disabled={mut.isPending}
-            className="rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:brightness-110 disabled:opacity-50"
+            className="rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeInk-50 disabled:opacity-50"
             onClick={() => mut.mutate()}
           >
             {m.wizard.submit}

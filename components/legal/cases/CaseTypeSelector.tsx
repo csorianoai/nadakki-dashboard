@@ -21,14 +21,11 @@ export function CaseTypeSelector({
   const m = useLegalCasesMessages();
   return (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-medium text-zinc-300">Tipo de expediente</legend>
+      <legend className="text-sm font-medium text-forgeInk-800">Tipo de expediente</legend>
       {TYPES.map((t) => (
-        <label
-          key={t}
-          className="flex cursor-pointer items-start gap-2 rounded-lg border border-zinc-800/50 p-3 transition-colors has-[:checked]:border-violet-500/50 has-[:checked]:bg-violet-950/20"
-        >
+        <label key={t} className="flex cursor-pointer items-start gap-2 rounded-forge-sm border border-forgeInk-100 p-2 has-[:checked]:border-forgeBrand-500">
           <input type="radio" name="case_type" value={t} checked={value === t} onChange={() => onChange(t)} />
-          <span className="text-sm text-zinc-200">{m.case_types[t]}</span>
+          <span className="text-sm text-forgeInk-800">{m.case_types[t]}</span>
         </label>
       ))}
     </fieldset>

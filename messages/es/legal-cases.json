@@ -10,9 +10,7 @@
     "empty": "No tienes expedientes activos. Crea uno desde el botón superior.",
     "create_button": "Nuevo expediente",
     "loading": "Cargando expedientes…",
-    "error": "No se pudieron cargar los expedientes",
-    "stats_total": "Total",
-    "stats_visible": "Visibles con filtros"
+    "error": "No se pudieron cargar los expedientes"
   },
   "nav": {
     "tasks": "Tareas",

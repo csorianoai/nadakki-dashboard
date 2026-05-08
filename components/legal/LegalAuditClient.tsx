@@ -77,11 +77,6 @@ export default function LegalAuditClient() {
   }, [searchParams]);
 
   useEffect(() => {
-    const a = searchParams.get("agent")?.trim();
-    if (a) setAgent(a);
-  }, [searchParams]);
-
-  useEffect(() => {
     if (effectiveTenantId) {
       trackEvent("legal_page_view", { page: "audit", tenant_id: effectiveTenantId });
     }

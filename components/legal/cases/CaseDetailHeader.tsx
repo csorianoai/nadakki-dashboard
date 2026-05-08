@@ -1,9 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import type { LegalCase } from "@/lib/legal/cases/case-types";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { CaseStateIndicator } from "@/components/legal/cases/CaseStateIndicator";
@@ -12,9 +9,6 @@ import { CaseConfidenceMeter } from "@/components/legal/cases/CaseConfidenceMete
 import { CaseRiskBadge } from "@/components/legal/cases/CaseRiskBadge";
 import { CaseLockBanner } from "@/components/legal/cases/CaseLockBanner";
 import { CaseConflictCheckBanner } from "@/components/legal/cases/CaseConflictCheckBanner";
-import { cn } from "@/lib/utils";
-
-const GENERATED_HASH = "#documentos-generados-ia";
 
 export function CaseDetailHeader({
   legalCase,
@@ -24,118 +18,60 @@ export function CaseDetailHeader({
   onReleaseLock?: () => void;
 }) {
   const m = useLegalCasesMessages();
-  const pathname = usePathname();
-  const [hash, setHash] = useState("");
-  useEffect(() => {
-    setHash(typeof window !== "undefined" ? window.location.hash : "");
-    const onHash = () => setHash(window.location.hash);
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
-
-  const base = `/legal/cases/${legalCase.case_id}`;
   const typeLabel = m.case_types[legalCase.case_type] ?? legalCase.case_type;
-
-  const navItems = useMemo(
-    () =>
-      [
-        { href: base, segment: "", label: m.nav.overview, danger: false },
-        { href: `${base}/timeline`, segment: "timeline", label: m.nav.timeline, danger: false },
-        { href: `${base}/documents`, segment: "documents", label: m.nav.documents, danger: false },
-        {
-          href: `${base}/documents${GENERATED_HASH}`,
-          segment: "documents-ia",
-          label: m.nav.generated_ia,
-          danger: false,
-        },
-        { href: `${base}/strategy`, segment: "strategy", label: m.nav.strategy, danger: false },
-        { href: `${base}/deadlines`, segment: "deadlines", label: m.nav.deadlines, danger: false },
-        { href: `${base}/issues`, segment: "issues", label: m.nav.issues, danger: false },
-        { href: `${base}/risk`, segment: "risk", label: m.nav.risk, danger: false },
-        { href: `${base}/snapshots`, segment: "snapshots", label: m.nav.snapshots, danger: false },
-        { href: `${base}/related`, segment: "related", label: m.nav.related, danger: false },
-        { href: `${base}/archive`, segment: "archive", label: m.nav.archive, danger: true },
-      ] as const,
-    [m.nav, base]
-  );
-
-  const isActive = (item: (typeof navItems)[number]) => {
-    if (item.segment === "") {
-      return pathname === base || pathname === `${base}/`;
-    }
-    if (item.segment === "documents-ia") {
-      return pathname.startsWith(`${base}/documents`) && hash === GENERATED_HASH;
-    }
-    if (item.segment === "documents") {
-      return pathname.startsWith(`${base}/documents`) && hash !== GENERATED_HASH;
-    }
-    return pathname.startsWith(`${base}/${item.segment}`);
-  };
-
-  const docCount = legalCase.documents?.length ?? 0;
-  const deadlineCount = (legalCase.deadlines ?? []).filter((d) => d.status === "active").length;
-
   return (
-    <header className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-zinc-800/50 bg-gradient-to-br from-zinc-900/80 via-zinc-950 to-zinc-900 p-6 backdrop-blur-md md:p-8">
-        <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-violet-600/5 blur-3xl" />
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <CaseStateIndicator state={legalCase.state} />
-              <CasePriorityBadge priority={legalCase.priority} />
-              <CaseRiskBadge profile={legalCase.risk_profile} />
-            </div>
-            <h1 className="text-2xl font-medium tracking-tight text-zinc-100 md:text-3xl">{legalCase.title}</h1>
-            <p className="text-sm tabular-nums text-zinc-400">
-              {legalCase.case_number_internal} · {typeLabel}
-            </p>
-            <p className="text-xs text-zinc-500">{m.compliance.ley_91}</p>
-            <div className="flex flex-wrap gap-4 pt-2 text-sm tabular-nums text-zinc-400">
-              <span>
-                Docs <span className="font-medium text-zinc-200">{docCount}</span>
-              </span>
-              <span>
-                Plazos activos <span className="font-medium text-zinc-200">{deadlineCount}</span>
-              </span>
-            </div>
-          </div>
+    <header className="mb-6 space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-forgeInk-900">{legalCase.title}</h1>
+          <p className="text-sm text-forgeInk-600">
+            {legalCase.case_number_internal} · {typeLabel}
+          </p>
+          <p className="mt-2 text-xs text-forgeInk-500">{m.compliance.ley_91}</p>
         </div>
-        <CaseConflictCheckBanner actors={legalCase.actors} />
-        <CaseLockBanner lock={legalCase.active_lock} onRelease={onReleaseLock} />
-        {legalCase.confidence ? <CaseConfidenceMeter confidence={legalCase.confidence} /> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <CaseStateIndicator state={legalCase.state} />
+          <CasePriorityBadge priority={legalCase.priority} />
+          <CaseRiskBadge profile={legalCase.risk_profile} />
+        </div>
       </div>
-
-      <nav aria-label="Secciones del expediente" className="-mx-1 flex flex-wrap gap-1 border-b border-zinc-800/50 pb-1">
-        {navItems.map((item) => {
-          const active = isActive(item);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "relative rounded-lg px-3 py-2 text-sm font-medium tracking-tight transition-colors",
-                active ? "text-zinc-100" : "text-zinc-500 hover:bg-zinc-900/80 hover:text-zinc-300",
-                item.danger && !active ? "hover:text-red-300" : "",
-                item.danger && active ? "text-red-400" : ""
-              )}
-            >
-              {active ? (
-                <motion.span
-                  layoutId="case-detail-tab-bg"
-                  className={cn(
-                    "absolute inset-0 -z-10 rounded-lg ring-1",
-                    item.danger
-                      ? "bg-red-950/40 ring-red-500/30"
-                      : "bg-gradient-to-br from-violet-600/25 to-indigo-600/15 ring-violet-500/25"
-                  )}
-                  transition={{ type: "spring", stiffness: 380, damping: 34 }}
-                />
-              ) : null}
-              <span className="relative z-10">{item.label}</span>
-            </Link>
-          );
-        })}
+      <CaseConflictCheckBanner actors={legalCase.actors} />
+      <CaseLockBanner lock={legalCase.active_lock} onRelease={onReleaseLock} />
+      {legalCase.confidence ? <CaseConfidenceMeter confidence={legalCase.confidence} /> : null}
+      <nav aria-label="Secciones del expediente" className="flex flex-wrap gap-2 text-sm">
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200 hover:bg-forgeBrand-50" href={`/legal/cases/${legalCase.case_id}`}>
+          {m.nav.overview}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/timeline`}>
+          {m.nav.timeline}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/documents`}>
+          {m.nav.documents}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200 hover:bg-forgeBrand-50" href={`/legal/cases/${legalCase.case_id}/documents#documentos-generados-ia`}>
+          {m.nav.generated_ia}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/strategy`}>
+          {m.nav.strategy}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/deadlines`}>
+          {m.nav.deadlines}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/issues`}>
+          {m.nav.issues}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/risk`}>
+          {m.nav.risk}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/snapshots`}>
+          {m.nav.snapshots}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeInk-200" href={`/legal/cases/${legalCase.case_id}/related`}>
+          {m.nav.related}
+        </Link>
+        <Link className="rounded-forge-sm px-3 py-1.5 ring-1 ring-forgeDanger-200 text-forgeDanger-800" href={`/legal/cases/${legalCase.case_id}/archive`}>
+          {m.nav.archive}
+        </Link>
       </nav>
     </header>
   );

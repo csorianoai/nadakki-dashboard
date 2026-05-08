@@ -238,8 +238,8 @@ export default function LegalHomeDashboard() {
             title="Sin agentes publicados"
             description="El backend no devolvió agentes para este tenant o aún no hay catálogo."
             action={
-              <Link href="/agents" className="text-violet-400 underline underline-offset-2 hover:text-violet-300">
-                Ver centro de agentes
+              <Link href="/legal-agents" className="text-blue-600 underline dark:text-blue-400">
+                Ver catálogo legacy
               </Link>
             }
           />
