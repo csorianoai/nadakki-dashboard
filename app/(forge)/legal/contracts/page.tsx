@@ -9,6 +9,9 @@ import { AuditTrailCard } from "@/components/legal/AuditTrailCard";
 import { LlmModeNotice } from "@/components/legal/LlmModeNotice";
 import { PracticeAreaChipGroup } from "@/components/legal/PracticeAreaChipGroup";
 import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
+import { DocumentDropzone } from "@/components/shared/DocumentDropzone";
+import type { UploadedFile } from "@/lib/shared/document-upload-types";
+import { mergePlainFromUploads } from "@/lib/legal/document-upload-client";
 
 const CONTRACT_TYPES = [
   {
@@ -16,56 +19,64 @@ const CONTRACT_TYPES = [
     label: "Préstamo",
     icon: FileSignature,
     color: "blue",
-    prompt: "Analiza este contrato de préstamo. Verifica tasas de interés, cláusula penal, plazos de pago, y garantías. Identifica cláusulas leoninas según la Ley 358-05 de protección al consumidor.\n\n[Pega aquí el contrato]",
+    prompt:
+      "Analiza este contrato de préstamo. Verifica tasas de interés, cláusula penal, plazos de pago, y garantías. Identifica cláusulas leoninas según la Ley 358-05 de protección al consumidor.",
   },
   {
     id: "servicio",
     label: "Servicio",
     icon: Briefcase,
     color: "emerald",
-    prompt: "Analiza este contrato de prestación de servicios. Revisa obligaciones de las partes, plazos, contraprestación, propiedad intelectual, confidencialidad y causales de terminación.\n\n[Pega aquí el contrato]",
+    prompt:
+      "Analiza este contrato de prestación de servicios. Revisa obligaciones de las partes, plazos, contraprestación, propiedad intelectual, confidencialidad y causales de terminación.",
   },
   {
     id: "nda",
     label: "Confidencialidad (NDA)",
     icon: Shield,
     color: "amber",
-    prompt: "Analiza este acuerdo de confidencialidad (NDA). Verifica alcance de la información confidencial, duración de obligaciones, excepciones, retorno de información y consecuencias por incumplimiento.\n\n[Pega aquí el contrato]",
+    prompt:
+      "Analiza este acuerdo de confidencialidad (NDA). Verifica alcance de la información confidencial, duración de obligaciones, excepciones, retorno de información y consecuencias por incumplimiento.",
   },
   {
     id: "compraventa",
     label: "Compraventa",
     icon: ScrollText,
     color: "purple",
-    prompt: "Analiza este contrato de compraventa. Revisa identificación del bien, precio, forma de pago, transferencia de propiedad, garantías y vicios ocultos según el Código Civil.\n\n[Pega aquí el contrato]",
+    prompt:
+      "Analiza este contrato de compraventa. Revisa identificación del bien, precio, forma de pago, transferencia de propiedad, garantías y vicios ocultos según el Código Civil.",
   },
   {
     id: "arrendamiento",
     label: "Arrendamiento",
     icon: Home,
     color: "indigo",
-    prompt: "Analiza este contrato de arrendamiento. Revisa duración, canon, ajustes, garantías, obligaciones del arrendador y arrendatario, mejoras y causales de terminación según Ley 4314 sobre Inquilinato en RD.\n\n[Pega aquí el contrato]",
+    prompt:
+      "Analiza este contrato de arrendamiento. Revisa duración, canon, ajustes, garantías, obligaciones del arrendador y arrendatario, mejoras y causales de terminación según Ley 4314 sobre Inquilinato en RD.",
   },
   {
     id: "empleo",
     label: "Empleo",
     icon: Users,
     color: "rose",
-    prompt: "Analiza este contrato de trabajo. Verifica cláusulas según el Código de Trabajo (Ley 16-92): jornada, salario, prestaciones, períodos de prueba, causales de terminación, no competencia y confidencialidad.\n\n[Pega aquí el contrato]",
+    prompt:
+      "Analiza este contrato de trabajo. Verifica cláusulas según el Código de Trabajo (Ley 16-92): jornada, salario, prestaciones, períodos de prueba, causales de terminación, no competencia y confidencialidad.",
   },
   {
     id: "software",
     label: "Software/SaaS",
     icon: Code,
     color: "cyan",
-    prompt: "Analiza este contrato de software o SaaS. Revisa licenciamiento, propiedad intelectual, SLA, datos personales (Ley 172-13), límites de responsabilidad, y términos de soporte.\n\n[Pega aquí el contrato]",
+    prompt:
+      "Analiza este contrato de software o SaaS. Revisa licenciamiento, propiedad intelectual, SLA, datos personales (Ley 172-13), límites de responsabilidad, y términos de soporte.",
   },
   {
     id: "otro",
     label: "Otro tipo",
     icon: FileText,
     color: "slate",
-    prompt: "Analiza este contrato. Identifica tipo de contrato, partes, objeto, obligaciones principales, cláusulas riesgosas y aspectos de cumplimiento normativo aplicables.\n\n[Pega aquí el contrato]",
+    prompt:
+      "Analiza este contrato. Identifica tipo de contrato, partes, objeto, obligaciones principales, cláusulas riesgosas y aspectos de cumplimiento normativo aplicables.",
   },
 ] as const;
 
@@ -93,15 +104,18 @@ const ICON_COLORS: Record<string, string> = {
 
 export default function LegalForgeContractsPage() {
   const [texto, setTexto] = useState("");
+  const [contractFiles, setContractFiles] = useState<UploadedFile[]>([]);
+  const [analysisPrompt, setAnalysisPrompt] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [practiceAreaTags, setPracticeAreaTags] = useState<string[]>(["civil", "bancario"]);
   const { loading, result, submit, tenantMissing } = useLegalQuickCheck();
 
   const handleAnalyze = async () => {
-    if (!texto.trim()) return;
+    const bodyText = [analysisPrompt.trim(), texto.trim()].filter(Boolean).join("\n\n---\n\n");
+    if (!bodyText) return;
     await submit({
       tipo_solicitud: "contrato_simple",
-      texto,
+      texto: bodyText,
       jurisdiccion: "DO",
       etiquetas_area_practica: practiceAreaTags,
     });
@@ -109,8 +123,7 @@ export default function LegalForgeContractsPage() {
 
   const handleTypeSelect = (typeId: string, prompt: string) => {
     setSelectedType(typeId);
-    setTexto(prompt);
-    document.getElementById("contract-textarea")?.focus();
+    setAnalysisPrompt(prompt);
   };
 
   return (
@@ -163,18 +176,36 @@ export default function LegalForgeContractsPage() {
         </div>
       )}
 
-      {/* Textarea */}
-      <div className="space-y-2">
+      {/* Carga de documento + texto derivado */}
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Documento del contrato</p>
+        <DocumentDropzone
+          uploadedFiles={contractFiles}
+          onFilesChange={setContractFiles}
+          maxFiles={5}
+          multiple
+          title="Sube el contrato (PDF, Word o imagen)"
+          subtitle="La extracción es simulada en desarrollo; puedes corregir el texto abajo."
+          onUploadComplete={(ready) => {
+            const t = mergePlainFromUploads(ready);
+            if (t) setTexto(t);
+          }}
+        />
         <label htmlFor="contract-textarea" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-          Texto del contrato
+          Texto derivado para el análisis (editable)
         </label>
         <textarea
           id="contract-textarea"
           className="w-full min-h-[240px] rounded-lg border border-slate-300 bg-white p-3 font-mono text-sm shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:focus:ring-blue-900"
-          placeholder="Pega aquí el texto del contrato a analizar..."
+          placeholder="El texto se rellena al subir un archivo, o puedes escribir o pegar aquí."
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
         />
+        {analysisPrompt ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Tipo seleccionado: se antepondrán las instrucciones de análisis al enviar.
+          </p>
+        ) : null}
         <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
           <span className="text-blue-500">💡</span>
           <span>Tip: el análisis detecta cláusulas leoninas, riesgos de cumplimiento, y validez según normativa RD.</span>
@@ -186,16 +217,21 @@ export default function LegalForgeContractsPage() {
         <button
           type="button"
           onClick={() => void handleAnalyze()}
-          disabled={loading || !texto.trim() || tenantMissing}
+          disabled={loading || (!texto.trim() && !analysisPrompt.trim()) || tenantMissing}
           className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:from-blue-700 hover:to-blue-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
         >
           <Scale className="h-4 w-4" />
           {loading ? "Analizando contrato..." : "Analizar contrato"}
         </button>
-        {texto.trim() && !loading && (
+        {(texto.trim() || analysisPrompt) && !loading && (
           <button
             type="button"
-            onClick={() => { setTexto(""); setSelectedType(null); }}
+            onClick={() => {
+              setTexto("");
+              setSelectedType(null);
+              setAnalysisPrompt("");
+              setContractFiles([]);
+            }}
             className="text-sm text-slate-500 underline hover:text-slate-700 dark:hover:text-slate-300"
           >
             Limpiar

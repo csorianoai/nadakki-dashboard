@@ -11,6 +11,9 @@ import { LegalErrorState } from "@/components/legal/LegalErrorState";
 import { LegalLoadingSkeleton } from "@/components/legal/LegalLoadingSkeleton";
 import { LegalDisclaimer } from "@/components/legal/LegalDisclaimer";
 import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
+import { DocumentDropzone } from "@/components/shared/DocumentDropzone";
+import { mergePlainFromUploads } from "@/lib/legal/document-upload-client";
+import type { UploadedFile } from "@/lib/shared/document-upload-types";
 
 const CHAT_AGENT = "chat_asesor_legal";
 const MAX_CHARS = 4000;
@@ -59,6 +62,7 @@ export default function LegalResearchClient() {
   const [agentId, setAgentId] = useState(initialAgent);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const [researchFiles, setResearchFiles] = useState<UploadedFile[]>([]);
   const [tab, setTab] = useState<"citations" | "rag" | "monitor" | "audit">("citations");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
@@ -105,6 +109,12 @@ export default function LegalResearchClient() {
     return null;
   }, [messages]);
 
+  const combinedQueryLen = useMemo(
+    () =>
+      [mergePlainFromUploads(researchFiles), input.trim()].filter(Boolean).join("\n\n---\n\n").length,
+    [researchFiles, input]
+  );
+
   const filteredCitations = useMemo(() => {
     const list = lastAssistant?.run?.citations ?? [];
     if (practiceAreaFilter.length === 0) return list;
@@ -116,10 +126,13 @@ export default function LegalResearchClient() {
   }, [lastAssistant, practiceAreaFilter]);
 
   const send = useCallback(async () => {
-    const text = input.trim();
+    const fromDocs = mergePlainFromUploads(researchFiles);
+    const typed = input.trim();
+    const text = [fromDocs, typed].filter(Boolean).join("\n\n---\n\n");
     if (!text || !effectiveTenantId) return;
     if (text.length > MAX_CHARS) return;
     setInput("");
+    setResearchFiles([]);
     setMessages((m) => [...m, { role: "user", content: text }]);
     trackEvent("legal_agent_run_started", { agent_id: agentId, tenant_id: effectiveTenantId });
     const t0 = Date.now();
@@ -148,7 +161,7 @@ export default function LegalResearchClient() {
       else if (http >= 500) msg = `Error interno (${http}). Si persiste, reporte al equipo.`;
       setMessages((m) => [...m, { role: "assistant", content: `**Error**\n${msg}` }]);
     }
-  }, [agentId, effectiveTenantId, input, runHook]);
+  }, [agentId, effectiveTenantId, input, researchFiles, runHook]);
 
   const newChat = () => {
     setMessages([]);
@@ -339,13 +352,25 @@ export default function LegalResearchClient() {
                 </button>
               ))}
             </div>
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Documento opcional</p>
+              <DocumentDropzone
+                compact
+                uploadedFiles={researchFiles}
+                onFilesChange={setResearchFiles}
+                maxFiles={3}
+                multiple
+                disabled={runHook.loading}
+                title="Adjunta un documento (opcional)"
+                subtitle="Se combinará con tu consulta escrita; extracción mock en desarrollo."
+              />
+            </div>
             <div className="flex gap-2">
               <textarea
                 id="legal-research-input"
                 aria-label="Consulta legal"
                 className="min-h-[48px] flex-1 resize-y rounded-lg border border-slate-300 bg-white p-2 text-sm dark:border-slate-700 dark:bg-slate-950"
                 rows={2}
-                maxLength={MAX_CHARS}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -360,14 +385,18 @@ export default function LegalResearchClient() {
               <button
                 type="button"
                 aria-label="Enviar consulta"
-                disabled={runHook.loading || !input.trim()}
+                disabled={
+                  runHook.loading || (!input.trim() && !mergePlainFromUploads(researchFiles).trim())
+                }
                 onClick={() => void send()}
                 className="self-end rounded-lg bg-blue-600 p-3 text-white hover:bg-blue-700 disabled:opacity-50"
               >
                 <Send className="h-5 w-5" />
               </button>
             </div>
-            <p className="mt-1 text-right text-xs text-slate-400">{input.length}/{MAX_CHARS}</p>
+            <p className="mt-1 text-right text-xs text-slate-400">
+              {combinedQueryLen}/{MAX_CHARS} (consulta combinada: documento + texto)
+            </p>
           </div>
         </div>
 

@@ -63,14 +63,15 @@
       "ingesta": "Ingesta directa (caso ya tomado)"
     },
     "steps": {
-      "1": "Información básica",
-      "2": "Partes involucradas",
-      "3": "Documentos iniciales"
+      "1": "Documentos del caso",
+      "2": "Datos y partes (revisión IA)",
+      "3": "Confirmar creación"
     },
     "errors": {
       "title_required": "El título es obligatorio",
       "client_required": "Debes agregar al menos un cliente",
-      "case_type_required": "Selecciona un tipo de caso"
+      "case_type_required": "Selecciona un tipo de caso",
+      "documents_required": "Sube al menos un documento y espera a que termine el procesamiento"
     }
   },
   "actions": {

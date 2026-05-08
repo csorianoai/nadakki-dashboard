@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { TaskExecutionResult } from "@/components/legal/TaskExecutionResult";
 import { useLegalHomeMessages } from "@/hooks/useLegalHomeMessages";
 import type { LegalTask, LegalTaskRequiredInput } from "@/lib/legal/task-types";
+import { DocumentDropzone } from "@/components/shared/DocumentDropzone";
+import { ExtractedDataPanel } from "@/components/shared/ExtractedDataPanel";
+import type { ExtractedDocumentData } from "@/lib/shared/document-upload-types";
+import type { UploadedFile } from "@/lib/shared/document-upload-types";
+import { mergePlainFromUploads } from "@/lib/legal/document-upload-client";
 
 type Props = {
   task: LegalTask;
@@ -20,19 +25,90 @@ type Props = {
 function buildInitialValues(inputs: LegalTaskRequiredInput[]): Record<string, string> {
   const o: Record<string, string> = {};
   for (const i of inputs) {
-    if (i.type !== "file") o[i.field] = "";
+    if (i.type !== "file" && i.type !== "textarea" && i.type !== "text") o[i.field] = "";
   }
   return o;
+}
+
+function useDocumentFieldLimits(task: LegalTask, field: LegalTaskRequiredInput) {
+  return useMemo(() => {
+    const id = task.task_id.toLowerCase();
+    const fl = field.field.toLowerCase();
+    if (id.includes("compar") || fl.includes("version") || fl.includes("compare")) {
+      return { maxFiles: 2 as const, multiple: true };
+    }
+    return { maxFiles: 1 as const, multiple: false };
+  }, [field.field, task.task_id]);
+}
+
+function DocumentField({
+  inp,
+  task,
+  disabled,
+  files,
+  onFilesChange,
+  value,
+  onSummaryChange,
+}: {
+  inp: LegalTaskRequiredInput;
+  task: LegalTask;
+  disabled: boolean;
+  files: UploadedFile[];
+  onFilesChange: (next: UploadedFile[]) => void;
+  value: string;
+  onSummaryChange: (text: string) => void;
+}) {
+  const { maxFiles, multiple } = useDocumentFieldLimits(task, inp);
+  const formats = inp.formats?.length ? inp.formats.map((x) => `.${x.replace(/^\./, "")}`) : undefined;
+
+  const ready = files.filter((f) => f.status === "ready");
+  const firstData: ExtractedDocumentData | undefined = ready[0]?.extractedData;
+  const panelData: ExtractedDocumentData | undefined = firstData
+    ? { ...firstData, plain_text_summary: value || firstData.plain_text_summary }
+    : value
+      ? { plain_text_summary: value }
+      : undefined;
+
+  return (
+    <div className="space-y-2">
+      <DocumentDropzone
+        title={inp.label_es ?? inp.field}
+        subtitle="PDF, Word, imagen o ZIP. La IA extraerá el texto (mock en desarrollo)."
+        disabled={disabled}
+        uploadedFiles={files}
+        onFilesChange={onFilesChange}
+        maxFiles={maxFiles}
+        multiple={multiple}
+        accept={formats}
+        compact
+        onUploadComplete={(uploaded) => {
+          const t = mergePlainFromUploads(uploaded);
+          if (t) onSummaryChange(t);
+        }}
+      />
+      {panelData && (panelData.plain_text_summary || panelData.document_type) ? (
+        <ExtractedDataPanel
+          data={panelData}
+          onChange={(next) => onSummaryChange(next.plain_text_summary ?? "")}
+          editable={!disabled}
+        />
+      ) : null}
+    </div>
+  );
 }
 
 export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props) {
   const m = useLegalHomeMessages();
   const [values, setValues] = useState<Record<string, string>>(() => buildInitialValues(task.required_inputs));
-  const [files, setFiles] = useState<Record<string, File | null>>({});
+  const [uploadsByField, setUploadsByField] = useState<Record<string, UploadedFile[]>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [phase, setPhase] = useState<"form" | "processing" | "done">("form");
+
+  const setUploads = useCallback((field: string, next: UploadedFile[]) => {
+    setUploadsByField((prev) => ({ ...prev, [field]: next }));
+  }, []);
 
   const onSubmit = useCallback(async () => {
     if (!tenantId.trim()) {
@@ -46,8 +122,15 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
     }
     try {
       const payload: Record<string, unknown> = { ...values };
-      for (const [k, f] of Object.entries(files)) {
-        if (f) payload[k] = f.name;
+      for (const inp of task.required_inputs) {
+        if (inp.type === "text" || inp.type === "textarea" || inp.type === "file") {
+          const merged = mergePlainFromUploads(uploadsByField[inp.field] ?? []);
+          payload[inp.field] = merged || values[inp.field] || "";
+          const ids = (uploadsByField[inp.field] ?? [])
+            .filter((f) => f.status === "ready" && f.serverFileId)
+            .map((f) => f.serverFileId as string);
+          if (ids.length) payload[`${inp.field}_file_ids`] = ids;
+        }
       }
       const out = await runExecute(tenantId, task.task_id, { inputs: payload });
       setResult(out);
@@ -59,7 +142,7 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
     } finally {
       setBusy(false);
     }
-  }, [files, runExecute, task.sync_mode, task.task_id, tenantId, values]);
+  }, [runExecute, task.sync_mode, task.required_inputs, task.task_id, tenantId, uploadsByField, values]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-forgeSurface-overlay p-4 sm:items-center">
@@ -95,31 +178,22 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
           ) : null}
 
           {phase === "form" ? (
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               {task.required_inputs.map((inp) => (
                 <div key={inp.field}>
                   <label className="mb-1 block text-xs font-medium text-forge-text-muted" htmlFor={inp.field}>
                     {inp.label_es ?? inp.field}
                     {inp.required ? " *" : ""}
                   </label>
-                  {inp.type === "file" ? (
-                    <input
-                      id={inp.field}
-                      type="file"
-                      accept={(inp.formats ?? ["pdf"]).map((x) => `.${x}`).join(",")}
-                      className="block w-full text-forge-sm text-forge-text"
-                      onChange={(ev) => {
-                        const f = ev.target.files?.[0] ?? null;
-                        setFiles((prev) => ({ ...prev, [inp.field]: f }));
-                      }}
-                    />
-                  ) : inp.type === "textarea" ? (
-                    <textarea
-                      id={inp.field}
-                      rows={4}
+                  {inp.type === "file" || inp.type === "textarea" || inp.type === "text" ? (
+                    <DocumentField
+                      inp={inp}
+                      task={task}
+                      disabled={busy}
+                      files={uploadsByField[inp.field] ?? []}
+                      onFilesChange={(next) => setUploads(inp.field, next)}
                       value={values[inp.field] ?? ""}
-                      onChange={(e) => setValues((v) => ({ ...v, [inp.field]: e.target.value }))}
-                      className="w-full rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card px-3 py-2 text-forge-sm text-forge-text"
+                      onSummaryChange={(text) => setValues((v) => ({ ...v, [inp.field]: text }))}
                     />
                   ) : (
                     <input

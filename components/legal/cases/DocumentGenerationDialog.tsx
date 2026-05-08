@@ -6,6 +6,9 @@ import { LEGAL_GENERATED_DOCUMENT_TYPES } from "@/lib/legal/cases/case-types";
 import { useGenerateDocument } from "@/hooks/legal/useDocumentGeneration";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { toast } from "@/components/forge/ui/Toast";
+import { DocumentDropzone } from "@/components/shared/DocumentDropzone";
+import type { UploadedFile } from "@/lib/shared/document-upload-types";
+import { mergePlainFromUploads } from "@/lib/legal/document-upload-client";
 
 type Props = {
   tenantId: string;
@@ -21,11 +24,13 @@ export function DocumentGenerationDialog({ tenantId, caseId, open, onClose }: Pr
   const [docType, setDocType] = useState<LegalGeneratedDocumentType>("demanda_civil_cobro_pesos");
   const [instructions, setInstructions] = useState("");
   const [jsonExtra, setJsonExtra] = useState("");
+  const [refDocs, setRefDocs] = useState<UploadedFile[]>([]);
 
   if (!open) return null;
 
   const submit = async () => {
-    const trimmed = instructions.trim();
+    const fromDocs = mergePlainFromUploads(refDocs);
+    const trimmed = [fromDocs, instructions.trim()].filter(Boolean).join("\n\n---\n\n");
     if (!trimmed) {
       toast.error(m.error_instructions);
       return;
@@ -49,6 +54,7 @@ export function DocumentGenerationDialog({ tenantId, caseId, open, onClose }: Pr
       toast.success(m.success);
       setInstructions("");
       setJsonExtra("");
+      setRefDocs([]);
       onClose();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : m.error_generate;
@@ -89,6 +95,23 @@ export function DocumentGenerationDialog({ tenantId, caseId, open, onClose }: Pr
               </option>
             ))}
           </select>
+
+          <div className="rounded-forge-sm border border-forgeInk-200/80 bg-forgeSurface-sunken/30 p-3">
+            <p className="mb-2 text-sm font-medium text-forgeInk-800">Documentos de referencia (opcional)</p>
+            <p className="mb-2 text-xs text-forgeInk-500">
+              Adjunta PDF o Word: el texto extraído (mock) se fusionará con las instrucciones al generar.
+            </p>
+            <DocumentDropzone
+              compact
+              uploadedFiles={refDocs}
+              onFilesChange={setRefDocs}
+              maxFiles={5}
+              multiple
+              disabled={isPending}
+              title="Adjuntar referencias"
+              subtitle="Opcional — hasta 5 archivos"
+            />
+          </div>
 
           <div>
             <label htmlFor="gen-doc-instructions" className="block text-sm font-medium text-forgeInk-800">
