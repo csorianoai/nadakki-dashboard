@@ -582,3 +582,64 @@ export async function fetchStrategyComparison(
       : [],
   };
 }
+
+// ─── Jurisdictions (Phase 7) ────────────────────────────────────────
+
+export interface Jurisdiction {
+  code: string;
+  name: string;
+  status: string;
+  version: string;
+  description: string;
+}
+
+export interface JurisdictionsResponse {
+  jurisdictions: Jurisdiction[];
+  count: number;
+}
+
+export interface KnowledgePackStatus {
+  jurisdiction: string;
+  pack_status: string;
+  pack_hash: string;
+  leyes_cargadas: number;
+  articulos_level_1: number;
+  last_loaded_at: string;
+  is_skeleton: boolean;
+}
+
+export async function fetchJurisdictions(
+  tenantId: string,
+): Promise<JurisdictionsResponse> {
+  const res = await fetch(`${LEGAL_PREFIX}/jurisdictions`, {
+    headers: tenantHeaders(tenantId),
+  });
+  if (!res.ok) throw new Error(`Error al cargar jurisdicciones (${res.status})`);
+  const raw = await parseJson<Record<string, unknown>>(res);
+  const jurisdictions = Array.isArray(raw.jurisdictions) ? raw.jurisdictions : [];
+  return {
+    jurisdictions: jurisdictions as Jurisdiction[],
+    count: typeof raw.count === "number" ? raw.count : jurisdictions.length,
+  };
+}
+
+export async function fetchKnowledgePackStatus(
+  tenantId: string,
+  jurisdiction: string = "do",
+): Promise<KnowledgePackStatus> {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/knowledge-pack/status?jurisdiction=${encodeURIComponent(jurisdiction)}`,
+    { headers: tenantHeaders(tenantId) },
+  );
+  if (!res.ok) throw new Error(`Error al cargar estado knowledge pack (${res.status})`);
+  const raw = await parseJson<Record<string, unknown>>(res);
+  return {
+    jurisdiction: (raw.jurisdiction as string) ?? jurisdiction.toUpperCase(),
+    pack_status: (raw.pack_status as string) ?? "unknown",
+    pack_hash: (raw.pack_hash as string) ?? "",
+    leyes_cargadas: typeof raw.leyes_cargadas === "number" ? raw.leyes_cargadas : 0,
+    articulos_level_1: typeof raw.articulos_level_1 === "number" ? raw.articulos_level_1 : 0,
+    last_loaded_at: (raw.last_loaded_at as string) ?? "",
+    is_skeleton: Boolean(raw.is_skeleton),
+  };
+}
