@@ -535,3 +535,50 @@ export async function fetchDisasterMode(tenantId: string): Promise<{ level: Disa
   }
   return { level: "NORMAL" };
 }
+
+// ─── Strategy Comparator (Phase 6) ─────────────────────────────────
+
+export interface StrategyComparisonEntry {
+  case_id: string;
+  case_title: string | null;
+  case_type: string | null;
+  state: string | null;
+  strategies: {
+    strategy_id: string;
+    strategy_type: string;
+    title: string;
+    expected_strength: string;
+    expected_duration_days: number;
+    risks: string[];
+    selected: boolean;
+  }[];
+  strategy_count: number;
+  error: string | null;
+}
+
+export interface StrategyComparisonResponse {
+  comparisons: StrategyComparisonEntry[];
+  case_count: number;
+  strategy_types_across_cases: string[];
+}
+
+export async function fetchStrategyComparison(
+  tenantId: string,
+  caseIds: string[],
+): Promise<StrategyComparisonResponse> {
+  const ids = caseIds.filter((id) => id.trim()).join(",");
+  const res = await fetch(
+    `${LEGAL_PREFIX}/strategies/compare?case_ids=${encodeURIComponent(ids)}`,
+    { headers: tenantHeaders(tenantId) },
+  );
+  if (!res.ok) throw new Error(`Error al comparar estrategias (${res.status})`);
+  const raw = await parseJson<Record<string, unknown>>(res);
+  const comparisons = Array.isArray(raw.comparisons) ? raw.comparisons : [];
+  return {
+    comparisons: comparisons as StrategyComparisonEntry[],
+    case_count: typeof raw.case_count === "number" ? raw.case_count : comparisons.length,
+    strategy_types_across_cases: Array.isArray(raw.strategy_types_across_cases)
+      ? (raw.strategy_types_across_cases as string[])
+      : [],
+  };
+}
