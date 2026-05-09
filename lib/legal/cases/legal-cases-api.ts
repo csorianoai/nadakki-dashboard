@@ -470,6 +470,46 @@ export async function postAcknowledgeDeadline(
   return parseJson<unknown>(res);
 }
 
+// ─── Document Versioning (Phase 4) ──────────────────────────────────
+
+export async function fetchDocumentVersions(
+  tenantId: string,
+  caseId: string,
+  documentId: string,
+): Promise<{ versions: Record<string, unknown>[]; count: number; document_id: string }> {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(documentId)}/versions`,
+    { headers: tenantHeaders(tenantId) },
+  );
+  if (!res.ok) throw new Error(`Error al cargar versiones (${res.status})`);
+  const raw = await parseJson<Record<string, unknown>>(res);
+  const versions = Array.isArray(raw.versions) ? raw.versions : [];
+  const count = typeof raw.count === "number" ? raw.count : versions.length;
+  return { versions, count, document_id: documentId };
+}
+
+export async function postDocumentVersion(
+  tenantId: string,
+  caseId: string,
+  documentId: string,
+  body: { content: string; createdBy?: string; reason?: string },
+): Promise<unknown> {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(documentId)}/versions`,
+    {
+      method: "POST",
+      headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: body.content,
+        created_by: body.createdBy,
+        reason: body.reason,
+      }),
+    },
+  );
+  if (!res.ok) throw new Error(`Error al crear versión (${res.status})`);
+  return parseJson<unknown>(res);
+}
+
 /** Modo degradado: endpoint opcional; si no existe, se asume NORMAL. */
 export async function fetchDisasterMode(tenantId: string): Promise<{ level: DisasterLevel }> {
   const res = await fetch(`${LEGAL_PREFIX}/meta/disaster-mode`, {
