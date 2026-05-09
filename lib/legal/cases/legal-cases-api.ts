@@ -510,6 +510,12 @@ export async function postDocumentVersion(
   return parseJson<unknown>(res);
 }
 
+// ─── PDF Export (Phase 5) ───────────────────────────────────────────
+
+export function getPdfExportUrl(caseId: string, documentId: string): string {
+  return `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(documentId)}/pdf`;
+}
+
 /** Modo degradado: endpoint opcional; si no existe, se asume NORMAL. */
 export async function fetchDisasterMode(tenantId: string): Promise<{ level: DisasterLevel }> {
   const res = await fetch(`${LEGAL_PREFIX}/meta/disaster-mode`, {
