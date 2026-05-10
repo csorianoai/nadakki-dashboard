@@ -13,13 +13,13 @@ export function CaseConfidenceMeter({ confidence }: { confidence?: CaseConfidenc
     </li>
   ));
   return (
-    <div className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-card p-3">
+    <div className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card p-3">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-forgeInk-800">{m.confidence.title}</span>
+        <span className="text-sm font-medium text-forgeGray-800">{m.confidence.title}</span>
         <span className="text-sm font-semibold text-forgeBrand-700">{pct}%</span>
       </div>
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-forgeInk-100"
+        className="h-2 w-full overflow-hidden rounded-full bg-forgeGray-100"
         role="meter"
         aria-valuemin={0}
         aria-valuemax={100}
@@ -32,7 +32,7 @@ export function CaseConfidenceMeter({ confidence }: { confidence?: CaseConfidenc
         />
       </div>
       {factorLines.length > 0 ? (
-        <ul className="mt-2 list-inside list-disc text-xs text-forgeInk-600">{factorLines}</ul>
+        <ul className="mt-2 list-inside list-disc text-xs text-forgeGray-600">{factorLines}</ul>
       ) : null}
     </div>
   );

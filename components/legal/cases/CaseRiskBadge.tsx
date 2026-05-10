@@ -28,11 +28,11 @@ export function CaseRiskBadge({ profile }: { profile?: RiskProfile | null }) {
       </button>
       {open ? (
         <div
-          className="absolute right-0 z-20 mt-1 w-72 rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-raised p-3 text-left text-xs shadow-forge-md"
+          className="absolute right-0 z-20 mt-1 w-72 rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-raised p-3 text-left text-xs shadow-forge-md"
           role="region"
         >
           <p>
-            <span className="font-medium text-forgeInk-800">{m.risk.probability_of_loss}:</span>{" "}
+            <span className="font-medium text-forgeGray-800">{m.risk.probability_of_loss}:</span>{" "}
             {Math.round(profile.probability_of_loss * 100)}%
           </p>
           {profile.financial_exposure ? (

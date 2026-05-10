@@ -94,7 +94,7 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 
 ## Auto-generated token reference
 
-**Generated from `tokens.css` on 2026-05-02.** Do not edit this block by hand. Regenerate: `npm run docs:tokens`.
+**Generated from `tokens.css` on 2026-05-10.** Do not edit this block by hand. Regenerate: `npm run docs:tokens`.
 
 ### Tailwind bridge (excerpt)
 
@@ -108,7 +108,7 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
           600: 'var(--forge-brand-600)',
           700: 'var(--forge-brand-700)',
           800: 'var(--forge-brand-800)',
-         …`
+          900: 'var…`
 
 ### BEFORE / AFTER (migration)
 
@@ -145,9 +145,9 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 
 | Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
 |--------|----------|-------|--------------------|-------------|----------|
-| — | `--forge-border-default` | 1px solid var(--forge-ink-300) | border + `var()` | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
-| — | `--forge-border-strong` | 1px solid var(--forge-ink-500) | border + `var()` | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
-| — | `--forge-border-subtle` | 1px solid var(--forge-ink-200) | border + `var()` | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-border-default` | 1px solid var(--forge-gray-300) | border + `var()` | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-border-strong` | 1px solid var(--forge-gray-500) | border + `var()` | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-border-subtle` | 1px solid var(--forge-gray-200) | border + `var()` | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
 | — | `--forge-bp-desktop` | 1280px | reference breakpoints (CSS only) | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
 | — | `--forge-bp-mobile` | 640px | reference breakpoints (CSS only) | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
 | — | `--forge-bp-tablet` | 1024px | reference breakpoints (CSS only) | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
@@ -211,20 +211,20 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 | — | `--forge-weight-regular` | 400 | composition / motion tokens | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
 | — | `--forge-weight-semibold` | 600 | composition / motion tokens | Semantic usage for **DATA VIZ** group. | Outside `.forge-app` without legacy fallbacks. |
 
-### INK
+### GRAY — NEUTRAL SCALE
 
 | Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
 |--------|----------|-------|--------------------|-------------|----------|
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#eef1f4"/></svg> | `--forge-ink-100` | #eef1f4 | `text-forgeInk-100` / `border-forgeInk-100` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#dde3ea"/></svg> | `--forge-ink-200` | #dde3ea | `text-forgeInk-200` / `border-forgeInk-200` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#c2cbd6"/></svg> | `--forge-ink-300` | #c2cbd6 | `text-forgeInk-300` / `border-forgeInk-300` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#8c97a6"/></svg> | `--forge-ink-400` | #8c97a6 | `text-forgeInk-400` / `border-forgeInk-400` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#f7f8fa"/></svg> | `--forge-ink-50` | #f7f8fa | `text-forgeInk-50` / `border-forgeInk-50` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#5a6478"/></svg> | `--forge-ink-500` | #5a6478 | `text-forgeInk-500` / `border-forgeInk-500` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#3d4759"/></svg> | `--forge-ink-600` | #3d4759 | `text-forgeInk-600` / `border-forgeInk-600` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#2a3447"/></svg> | `--forge-ink-700` | #2a3447 | `text-forgeInk-700` / `border-forgeInk-700` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#1a2540"/></svg> | `--forge-ink-800` | #1a2540 | `text-forgeInk-800` / `border-forgeInk-800` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
-| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#0f1729"/></svg> | `--forge-ink-900` | #0f1729 | `text-forgeInk-900` / `border-forgeInk-900` | Semantic usage for **INK** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#eef1f4"/></svg> | `--forge-gray-100` | #eef1f4 | `text-forgeGray-100` / `border-forgeGray-100` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#dde3ea"/></svg> | `--forge-gray-200` | #dde3ea | `text-forgeGray-200` / `border-forgeGray-200` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#c2cbd6"/></svg> | `--forge-gray-300` | #c2cbd6 | `text-forgeGray-300` / `border-forgeGray-300` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#8c97a6"/></svg> | `--forge-gray-400` | #8c97a6 | `text-forgeGray-400` / `border-forgeGray-400` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#f7f8fa"/></svg> | `--forge-gray-50` | #f7f8fa | `text-forgeGray-50` / `border-forgeGray-50` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#5a6478"/></svg> | `--forge-gray-500` | #5a6478 | `text-forgeGray-500` / `border-forgeGray-500` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#3d4759"/></svg> | `--forge-gray-600` | #3d4759 | `text-forgeGray-600` / `border-forgeGray-600` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#2a3447"/></svg> | `--forge-gray-700` | #2a3447 | `text-forgeGray-700` / `border-forgeGray-700` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#1a2540"/></svg> | `--forge-gray-800` | #1a2540 | `text-forgeGray-800` / `border-forgeGray-800` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#0f1729"/></svg> | `--forge-gray-900` | #0f1729 | `text-forgeGray-900` / `border-forgeGray-900` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
 
 ### SEMANTIC
 
@@ -236,9 +236,9 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#eff6ff"/></svg> | `--forge-info-50` | #eff6ff | `text-forgeInfo-50` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#1f60b5"/></svg> | `--forge-info-500` | #1f60b5 | `text-forgeInfo-500` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#154a8c"/></svg> | `--forge-info-700` | #154a8c | `text-forgeInfo-700` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
-| — | `--forge-neutral-50` | var(--forge-ink-100) | `text-forgeNeutral-50` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
-| — | `--forge-neutral-500` | var(--forge-ink-500) | `text-forgeNeutral-500` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
-| — | `--forge-neutral-700` | var(--forge-ink-700) | `text-forgeNeutral-700` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-neutral-50` | var(--forge-gray-100) | `text-forgeNeutral-50` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-neutral-500` | var(--forge-gray-500) | `text-forgeNeutral-500` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-neutral-700` | var(--forge-gray-700) | `text-forgeNeutral-700` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#ecfdf5"/></svg> | `--forge-success-50` | #ecfdf5 | `text-forgeSuccess-50` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#0f7a3e"/></svg> | `--forge-success-500` | #0f7a3e | `text-forgeSuccess-500` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#0a5a2e"/></svg> | `--forge-success-700` | #0a5a2e | `text-forgeSuccess-700` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |

@@ -79,11 +79,11 @@ export function ForgeAppSidebar() {
 
   return (
     <aside
-      className="hidden w-56 shrink-0 flex-col border-r border-forgeInk-200 bg-forgeSurface-card lg:flex"
+      className="hidden w-56 shrink-0 flex-col border-r border-forgeGray-200 bg-forgeSurface-card lg:flex"
       aria-label="Modules navigation"
     >
       <div
-        className="border-b border-forgeInk-700/30 bg-gradient-to-b from-forgeBrand-900 to-forgeBrand-950 px-4 py-3"
+        className="border-b border-forgeGray-700/30 bg-gradient-to-b from-forgeBrand-900 to-forgeBrand-950 px-4 py-3"
         data-forge-app-sidebar-header
       >
         {tenantConfig.branding.logo_url ? (
@@ -99,8 +99,8 @@ export function ForgeAppSidebar() {
             />
           </div>
         ) : null}
-        <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-300">Nadakki</p>
-        <p className="text-forge-sm font-medium text-forgeInk-50">Dashboard</p>
+        <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-300">Nadakki</p>
+        <p className="text-forge-sm font-medium text-forgeGray-50">Dashboard</p>
       </div>
       <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Primary modules">
         {isLoading ? (
@@ -111,7 +111,7 @@ export function ForgeAppSidebar() {
         ) : error ? (
           <p className="px-2 py-2 text-forge-xs text-forgeDanger-600">No se pudieron cargar los módulos.</p>
         ) : items.length === 0 ? (
-          <p className="px-2 py-2 text-forge-xs text-forgeInk-500">No hay módulos habilitados para este tenant.</p>
+          <p className="px-2 py-2 text-forge-xs text-forgeGray-500">No hay módulos habilitados para este tenant.</p>
         ) : (
           items.map((item) => {
             const Icon = item.icon;
@@ -123,11 +123,11 @@ export function ForgeAppSidebar() {
                 className={cn(
                   "flex min-h-12 min-w-[44px] items-center gap-2 rounded-forge-sm px-3 py-3 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-                  active ? "bg-forgeSurface-sunken text-forgeBrand-700" : "text-forgeInk-700 hover:bg-forgeSurface-sunken hover:text-forgeInk-900"
+                  active ? "bg-forgeSurface-sunken text-forgeBrand-700" : "text-forgeGray-700 hover:bg-forgeSurface-sunken hover:text-forgeGray-900"
                 )}
                 aria-current={active ? "page" : undefined}
               >
-                <Icon className="h-4 w-4 shrink-0 text-forgeInk-500" aria-hidden />
+                <Icon className="h-4 w-4 shrink-0 text-forgeGray-500" aria-hidden />
                 {item.label}
               </Link>
             );

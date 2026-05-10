@@ -26,7 +26,7 @@ export function CaseSnapshotsList({ caseId, snapshots }: { caseId: string; snaps
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <h2 className="text-sm font-semibold text-forgeInk-900">{m.snapshots.title}</h2>
+        <h2 className="text-sm font-semibold text-forgeGray-900">{m.snapshots.title}</h2>
         <button type="button" className="text-xs font-medium text-forgeBrand-700 hover:underline" onClick={verify}>
           {m.snapshots.verify_chain}
         </button>
@@ -37,13 +37,13 @@ export function CaseSnapshotsList({ caseId, snapshots }: { caseId: string; snaps
         </p>
       ) : null}
       {!ordered.length ? (
-        <p className="text-sm text-forgeInk-500">{m.snapshots.none}</p>
+        <p className="text-sm text-forgeGray-500">{m.snapshots.none}</p>
       ) : (
         <ul className="space-y-2">
           {ordered.map((s) => (
-            <li key={s.snapshot_id} className="rounded-forge-md border border-forgeInk-200 p-3 text-sm">
-              <p className="font-medium text-forgeInk-900">{s.snapshot_reason ?? "—"}</p>
-              <p className="text-xs text-forgeInk-500">{new Date(s.created_at).toLocaleString("es-DO")}</p>
+            <li key={s.snapshot_id} className="rounded-forge-md border border-forgeGray-200 p-3 text-sm">
+              <p className="font-medium text-forgeGray-900">{s.snapshot_reason ?? "—"}</p>
+              <p className="text-xs text-forgeGray-500">{new Date(s.created_at).toLocaleString("es-DO")}</p>
               <Link href={`/legal/cases/${caseId}/snapshots?snapshot=${s.snapshot_id}`} className="mt-1 inline-block text-xs font-medium text-forgeBrand-700">
                 {m.snapshots.view_diff}
               </Link>

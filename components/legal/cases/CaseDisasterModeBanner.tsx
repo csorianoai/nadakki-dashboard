@@ -15,7 +15,7 @@ export function CaseDisasterModeBanner({ level }: { level: DisasterLevel }) {
   return (
     <div
       role="status"
-      className="mb-4 rounded-forge-sm border border-forgeWarning-500 bg-forgeWarning-50 px-4 py-3 text-sm text-forgeInk-800"
+      className="mb-4 rounded-forge-sm border border-forgeWarning-500 bg-forgeWarning-50 px-4 py-3 text-sm text-forgeGray-800"
     >
       {text}
     </div>

@@ -20,7 +20,7 @@ export function CaseLockBanner({
   const tone =
     lock.lock_scope === "hard"
       ? "border-forgeDanger-500 bg-forgeDanger-50 text-forgeDanger-900"
-      : "border-forgeWarning-500 bg-forgeWarning-50 text-forgeInk-900";
+      : "border-forgeWarning-500 bg-forgeWarning-50 text-forgeGray-900";
   return (
     <div
       role="status"

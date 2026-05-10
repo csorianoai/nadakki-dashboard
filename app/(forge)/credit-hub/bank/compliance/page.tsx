@@ -31,8 +31,8 @@ export default function BankCompliancePage() {
     <div className="space-y-6" data-persona={persona}>
       <div>
         <p className="text-forge-xs font-semibold uppercase tracking-[0.18em] text-forgeBrand-600">{t.bank.compliance_kicker}</p>
-        <h1 className="mt-1 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">{complianceSurface.heroTitle}</h1>
-        <p className="mt-2 text-forge-sm text-forgeInk-600">{complianceSurface.heroDescription}</p>
+        <h1 className="mt-1 font-display text-forge-md font-bold text-forgeGray-800 sm:text-[length:var(--forge-text-2xl)]">{complianceSurface.heroTitle}</h1>
+        <p className="mt-2 text-forge-sm text-forgeGray-600">{complianceSurface.heroDescription}</p>
       </div>
       {queue.isLoading ? (
         <Skeleton className="min-h-80 w-full rounded-forge-lg" />
@@ -40,22 +40,22 @@ export default function BankCompliancePage() {
         <>
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="p-4">
-              <p className="text-forge-sm text-forgeInk-500">{t.bank.compliance_percent_label}</p>
-              <p className="mt-2 font-display text-[length:var(--forge-text-2xl)] font-bold text-forgeInk-800">{pct}%</p>
+              <p className="text-forge-sm text-forgeGray-500">{t.bank.compliance_percent_label}</p>
+              <p className="mt-2 font-display text-[length:var(--forge-text-2xl)] font-bold text-forgeGray-800">{pct}%</p>
             </Card>
             <Card className="p-4">
-              <p className="text-forge-sm text-forgeInk-500">{t.bank.issues_detected}</p>
+              <p className="text-forge-sm text-forgeGray-500">{t.bank.issues_detected}</p>
               <p className="mt-2 font-display text-[length:var(--forge-text-2xl)] font-bold text-forgeWarning-700">{withIssues.length}</p>
             </Card>
             <Card className="p-4">
-              <p className="text-forge-sm text-forgeInk-500">Última auditoría</p>
-              <p className="mt-2 font-display text-forge-md font-semibold text-forgeInk-800">
+              <p className="text-forge-sm text-forgeGray-500">Última auditoría</p>
+              <p className="mt-2 font-display text-forge-md font-semibold text-forgeGray-800">
                 {new Date().toLocaleString(tenantConfig.locale, { dateStyle: "medium", timeStyle: "short" })}
               </p>
             </Card>
           </div>
           <Card className="p-4 sm:p-6">
-            <h2 className="font-display text-forge-md font-semibold text-forgeInk-800">{complianceSurface.issuesSectionTitle}</h2>
+            <h2 className="font-display text-forge-md font-semibold text-forgeGray-800">{complianceSurface.issuesSectionTitle}</h2>
             {withIssues.length === 0 ? (
               <EmptyState
                 titleLevel={2}
@@ -71,11 +71,11 @@ export default function BankCompliancePage() {
                   <li key={item.application_id}>
                     <Link
                       href={`/credit-hub/bank/applications/${item.application_id}`}
-                      className="flex min-h-12 flex-wrap items-center justify-between gap-3 rounded-forge-md border border-forgeInk-100 bg-forgeSurface-sunken px-4 py-3 transition-colors hover:border-forgeBrand-300 hover:bg-forgeSurface-card"
+                      className="flex min-h-12 flex-wrap items-center justify-between gap-3 rounded-forge-md border border-forgeGray-100 bg-forgeSurface-sunken px-4 py-3 transition-colors hover:border-forgeBrand-300 hover:bg-forgeSurface-card"
                     >
                       <div>
-                        <p className="font-forgeMono text-forge-xs text-forgeInk-600">{item.application_id}</p>
-                        <p className="text-forge-sm font-medium text-forgeInk-800">{item.applicant_name || "Cliente"}</p>
+                        <p className="font-forgeMono text-forge-xs text-forgeGray-600">{item.application_id}</p>
+                        <p className="text-forge-sm font-medium text-forgeGray-800">{item.applicant_name || "Cliente"}</p>
                       </div>
                       <Badge variant="warning">{t.bank.review_compliance_badge}</Badge>
                     </Link>
@@ -85,8 +85,8 @@ export default function BankCompliancePage() {
             )}
           </Card>
           <Card className="p-4 sm:p-6">
-            <h2 className="font-display text-forge-md font-semibold text-forgeInk-800">{t.bank.rtbf_title}</h2>
-            <p className="mt-2 text-forge-sm text-forgeInk-600">{complianceSurface.rtbfDescription}</p>
+            <h2 className="font-display text-forge-md font-semibold text-forgeGray-800">{t.bank.rtbf_title}</h2>
+            <p className="mt-2 text-forge-sm text-forgeGray-600">{complianceSurface.rtbfDescription}</p>
           </Card>
         </>
       )}

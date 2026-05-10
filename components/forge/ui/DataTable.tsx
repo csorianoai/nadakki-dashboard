@@ -70,7 +70,7 @@ function SortAffix({ direction }: { direction: DataTableSortDirection }) {
     return <ChevronDown className="h-3 w-3 shrink-0 text-forgeBrand-600" aria-hidden />;
   }
   return (
-    <span className="inline-flex h-3 w-3 shrink-0 items-center justify-center text-forgeInk-400" aria-hidden>
+    <span className="inline-flex h-3 w-3 shrink-0 items-center justify-center text-forgeGray-400" aria-hidden>
       <span className="text-[10px] leading-none">↕</span>
     </span>
   );
@@ -96,11 +96,11 @@ export function DataTable<Row>({
 
   return (
     <div
-      className={cn("overflow-x-auto rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card", className)}
+      className={cn("overflow-x-auto rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card", className)}
       aria-busy={loading || undefined}
     >
       <table className={cn("w-full min-w-0 border-collapse text-left", d.table)}>
-        <thead className="sticky top-0 z-10 border-b border-forgeInk-100 bg-forgeSurface-card/95 shadow-sm backdrop-blur-sm">
+        <thead className="sticky top-0 z-10 border-b border-forgeGray-100 bg-forgeSurface-card/95 shadow-sm backdrop-blur-sm">
           <tr>
             {columns.map((col) => {
               const sortable = Boolean(col.onSort);
@@ -113,7 +113,7 @@ export function DataTable<Row>({
                   aria-sort={ariaSort}
                   className={cn(
                     d.th,
-                    "font-sans text-[12px] font-medium uppercase tracking-wide text-forgeInk-600",
+                    "font-sans text-[12px] font-medium uppercase tracking-wide text-forgeGray-600",
                     sortable && "align-middle",
                     col.className
                   )}
@@ -123,8 +123,8 @@ export function DataTable<Row>({
                       type="button"
                       onClick={() => col.onSort?.()}
                       className={cn(
-                        "-mx-1 inline-flex w-full min-w-0 max-w-full items-center justify-start gap-1 rounded-forge-sm px-1 py-0.5 text-left font-medium uppercase tracking-wide text-forgeInk-600 transition-colors duration-100 ease-out",
-                        "hover:bg-forgeInk-50/80 hover:text-forgeInk-900",
+                        "-mx-1 inline-flex w-full min-w-0 max-w-full items-center justify-start gap-1 rounded-forge-sm px-1 py-0.5 text-left font-medium uppercase tracking-wide text-forgeGray-600 transition-colors duration-100 ease-out",
+                        "hover:bg-forgeGray-50/80 hover:text-forgeGray-900",
                         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
                         sortActive && "text-forgeBrand-700"
                       )}
@@ -143,7 +143,7 @@ export function DataTable<Row>({
         <tbody>
           {loading ? (
             skeletonKeys.map((sk) => (
-              <tr key={sk} className="border-b border-forgeInk-100 last:border-0">
+              <tr key={sk} className="border-b border-forgeGray-100 last:border-0">
                 {columns.map((col) => (
                   <td key={col.id} className={cn(d.td, col.className)}>
                     <Skeleton className="h-4 w-full max-w-[12rem]" />
@@ -173,12 +173,12 @@ export function DataTable<Row>({
                 <tr
                   key={rid}
                   className={cn(
-                    "relative border-b border-forgeInk-100 transition-colors duration-100 ease-out motion-reduce:transition-none last:border-0 hover:bg-forgeSurface-sunken",
+                    "relative border-b border-forgeGray-100 transition-colors duration-100 ease-out motion-reduce:transition-none last:border-0 hover:bg-forgeSurface-sunken",
                     rowExtra
                   )}
                 >
                   {columns.map((col) => (
-                    <td key={col.id} className={cn(d.td, "text-forgeInk-800", col.className)}>
+                    <td key={col.id} className={cn(d.td, "text-forgeGray-800", col.className)}>
                       {col.cell(row)}
                     </td>
                   ))}

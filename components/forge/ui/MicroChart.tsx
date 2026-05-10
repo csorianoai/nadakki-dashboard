@@ -48,29 +48,29 @@ export function MicroChart({
 
   if (data.length === 0) {
     return (
-      <div className={cn("rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-4", className)}>
-        <p className="font-sans text-[14px] font-medium text-forgeInk-700">{title}</p>
-        <p className="mt-4 text-forge-sm text-forgeInk-500">Sin datos</p>
+      <div className={cn("rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-4", className)}>
+        <p className="font-sans text-[14px] font-medium text-forgeGray-700">{title}</p>
+        <p className="mt-4 text-forge-sm text-forgeGray-500">Sin datos</p>
       </div>
     );
   }
 
   return (
-    <div className={cn("rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-4 shadow-forge-xs", className)}>
-      <p className="font-sans text-[14px] font-medium text-forgeInk-700">{title}</p>
+    <div className={cn("rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-4 shadow-forge-xs", className)}>
+      <p className="font-sans text-[14px] font-medium text-forgeGray-700">{title}</p>
       <div className="mt-3 h-[200px] w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
             <XAxis
               dataKey={xKey}
-              tick={{ fontSize: 11, fill: "var(--forge-ink-500)" }}
+              tick={{ fontSize: 11, fill: "var(--forge-gray-500)" }}
               axisLine={false}
               tickLine={false}
               interval="preserveStartEnd"
             />
             <YAxis
               width={40}
-              tick={{ fontSize: 11, fill: "var(--forge-ink-500)" }}
+              tick={{ fontSize: 11, fill: "var(--forge-gray-500)" }}
               axisLine={false}
               tickLine={false}
               tickFormatter={yTickFormatter}
@@ -79,15 +79,15 @@ export function MicroChart({
               isAnimationActive={false}
               contentStyle={{
                 borderRadius: 8,
-                border: "1px solid var(--forge-ink-200)",
+                border: "1px solid var(--forge-gray-200)",
                 fontSize: 12,
                 background: "var(--forge-surface-card)",
-                color: "var(--forge-ink-800)",
+                color: "var(--forge-gray-800)",
               }}
             />
             <Legend
               wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-              formatter={(value) => <span className="text-forgeInk-600">{String(value)}</span>}
+              formatter={(value) => <span className="text-forgeGray-600">{String(value)}</span>}
             />
             {lineKeys.map((key, idx) => (
               <Line

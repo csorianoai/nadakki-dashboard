@@ -28,7 +28,7 @@ export function CaseDocumentUploader({
       <button
         type="button"
         disabled={busy}
-        className="rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeInk-50 hover:bg-forgeBrand-700 disabled:opacity-50"
+        className="rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeGray-50 hover:bg-forgeBrand-700 disabled:opacity-50"
         onClick={() => ref.current?.click()}
       >
         {m.documents.upload}

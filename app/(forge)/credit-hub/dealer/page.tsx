@@ -17,7 +17,7 @@ import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 import { formatForgeCurrency } from "@/utils/forge-locale";
 
 const primaryCta =
-  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-forge-sm border border-forgeBrand-600 bg-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeInk-50 shadow-forge-xs transition-colors hover:bg-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 sm:w-auto";
+  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-forge-sm border border-forgeBrand-600 bg-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeGray-50 shadow-forge-xs transition-colors hover:bg-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 sm:w-auto";
 
 function forgeTimeGreeting(locale: string): string {
   const h = new Date().getHours();
@@ -74,8 +74,8 @@ export default function DealerDashboardPage() {
         header: "Solicitante",
         cell: (row: CreditApplication) => (
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate font-medium text-forgeInk-900">{row.applicant_name || "—"}</span>
-            <span className="truncate font-mono text-forge-xs text-forgeInk-500">{row.application_id}</span>
+            <span className="truncate font-medium text-forgeGray-900">{row.applicant_name || "—"}</span>
+            <span className="truncate font-mono text-forge-xs text-forgeGray-500">{row.application_id}</span>
           </div>
         ),
       },
@@ -84,7 +84,7 @@ export default function DealerDashboardPage() {
         header: "Monto",
         className: "text-right tabular-nums [font-feature-settings:'tnum']",
         cell: (row: CreditApplication) => (
-          <span className="font-forgeMono text-forge-sm font-medium text-forgeInk-800">
+          <span className="font-forgeMono text-forge-sm font-medium text-forgeGray-800">
             {formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code)}
           </span>
         ),
@@ -98,7 +98,7 @@ export default function DealerDashboardPage() {
       {
         id: "submitted",
         header: "Enviada",
-        className: "whitespace-nowrap text-forgeInk-600",
+        className: "whitespace-nowrap text-forgeGray-600",
         cell: (row: CreditApplication) => (
           <span className="text-forge-xs">
             {new Intl.DateTimeFormat(tenantConfig.locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US", {
@@ -135,11 +135,11 @@ export default function DealerDashboardPage() {
     <div className="space-y-6 px-4 pt-6 pb-5 md:space-y-8 md:px-8 md:pt-8 md:pb-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="mb-2 font-sans text-[14px] font-normal leading-snug text-forgeInk-500">
+          <p className="mb-2 font-sans text-[14px] font-normal leading-snug text-forgeGray-500">
             {forgeTimeGreeting(tenantConfig.locale)}, {greetingName || "equipo"}
           </p>
           <h1
-            className="font-display font-normal leading-[1.1] tracking-[-0.01em] text-forgeInk-900"
+            className="font-display font-normal leading-[1.1] tracking-[-0.01em] text-forgeGray-900"
             style={{ fontSize: "clamp(32px, 4.5vw, 48px)" }}
           >
             {tenantConfig.locale.toLowerCase().startsWith("es")
@@ -147,9 +147,9 @@ export default function DealerDashboardPage() {
               : "Let's get someone approved today."}
           </h1>
           {persona === "bank" ? (
-            <p className="mt-1 text-forge-xs font-medium text-forgeInk-500">Vista seguimiento dealer (misma URL, datos filtrados).</p>
+            <p className="mt-1 text-forge-xs font-medium text-forgeGray-500">Vista seguimiento dealer (misma URL, datos filtrados).</p>
           ) : null}
-          <p className="mt-2 max-w-xl text-forge-sm text-forgeInk-600">
+          <p className="mt-2 max-w-xl text-forge-sm text-forgeGray-600">
             Revisa el embudo, abre solicitudes activas y envía una nueva cuando tengas al cliente listo.
           </p>
         </div>
@@ -185,7 +185,7 @@ export default function DealerDashboardPage() {
 
       <section aria-label="Solicitudes activas">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-          <h2 className="font-display text-forge-lg font-semibold text-forgeInk-900">Mis solicitudes activas</h2>
+          <h2 className="font-display text-forge-lg font-semibold text-forgeGray-900">Mis solicitudes activas</h2>
           <Link href="/credit-hub/dealer/applications" className="text-forge-xs font-medium text-forgeBrand-600 hover:underline">
             Ver historial completo
           </Link>

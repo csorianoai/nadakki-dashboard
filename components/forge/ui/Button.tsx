@@ -35,29 +35,29 @@ const sizeClasses: Record<ButtonSize, string> = {
 /** Hover/active only — not used when the control is `disabled && !loading` (muted) or frozen loading. */
 const variantInteractive: Record<ButtonVariant, string> = {
   primary:
-    "bg-forgeBrand-500 text-forgeInk-50 shadow-forge-xs border border-forgeBrand-600 hover:bg-forgeBrand-600 active:bg-forgeBrand-700",
+    "bg-forgeBrand-500 text-forgeGray-50 shadow-forge-xs border border-forgeBrand-600 hover:bg-forgeBrand-600 active:bg-forgeBrand-700",
   secondary:
-    "bg-forgeSurface-card text-forgeInk-800 border border-forgeInk-200 hover:bg-forgeSurface-sunken active:bg-forgeInk-100",
-  ghost: "bg-transparent text-forgeInk-700 border border-transparent hover:bg-forgeSurface-sunken",
-  danger: "bg-forgeDanger-500 text-forgeInk-50 border border-forgeDanger-700 hover:bg-forgeDanger-700 active:bg-forgeDanger-800",
+    "bg-forgeSurface-card text-forgeGray-800 border border-forgeGray-200 hover:bg-forgeSurface-sunken active:bg-forgeGray-100",
+  ghost: "bg-transparent text-forgeGray-700 border border-transparent hover:bg-forgeSurface-sunken",
+  danger: "bg-forgeDanger-500 text-forgeGray-50 border border-forgeDanger-700 hover:bg-forgeDanger-700 active:bg-forgeDanger-800",
   link: "bg-transparent text-forgeBrand-600 border-0 shadow-none p-0 min-h-0 underline-offset-2 hover:underline",
 };
 
 /** Frozen appearance while `loading` (native `disabled` would suppress `:hover` on interactive classes). */
 const variantLoadingFrozen: Record<ButtonVariant, string> = {
-  primary: "cursor-wait border border-forgeBrand-600 bg-forgeBrand-500 text-forgeInk-50 shadow-forge-xs",
-  secondary: "cursor-wait border border-forgeInk-200 bg-forgeSurface-card text-forgeInk-800",
-  ghost: "cursor-wait border border-transparent bg-transparent text-forgeInk-700",
-  danger: "cursor-wait border border-forgeDanger-700 bg-forgeDanger-500 text-forgeInk-50",
+  primary: "cursor-wait border border-forgeBrand-600 bg-forgeBrand-500 text-forgeGray-50 shadow-forge-xs",
+  secondary: "cursor-wait border border-forgeGray-200 bg-forgeSurface-card text-forgeGray-800",
+  ghost: "cursor-wait border border-transparent bg-transparent text-forgeGray-700",
+  danger: "cursor-wait border border-forgeDanger-700 bg-forgeDanger-500 text-forgeGray-50",
   link: "cursor-wait border-0 bg-transparent p-0 min-h-0 text-forgeBrand-600 shadow-none",
 };
 
 const variantMuted: Record<ButtonVariant, string> = {
-  primary: "cursor-not-allowed border-forgeInk-200 bg-forgeInk-100 text-forgeInk-400 shadow-none",
-  secondary: "cursor-not-allowed border-forgeInk-200 bg-forgeInk-100 text-forgeInk-400",
-  ghost: "cursor-not-allowed border-transparent bg-transparent text-forgeInk-300",
-  danger: "cursor-not-allowed border-forgeInk-200 bg-forgeInk-100 text-forgeInk-400",
-  link: "cursor-not-allowed border-0 bg-transparent p-0 min-h-0 text-forgeInk-400 shadow-none hover:no-underline",
+  primary: "cursor-not-allowed border-forgeGray-200 bg-forgeGray-100 text-forgeGray-400 shadow-none",
+  secondary: "cursor-not-allowed border-forgeGray-200 bg-forgeGray-100 text-forgeGray-400",
+  ghost: "cursor-not-allowed border-transparent bg-transparent text-forgeGray-300",
+  danger: "cursor-not-allowed border-forgeGray-200 bg-forgeGray-100 text-forgeGray-400",
+  link: "cursor-not-allowed border-0 bg-transparent p-0 min-h-0 text-forgeGray-400 shadow-none hover:no-underline",
 };
 
 export function Button({

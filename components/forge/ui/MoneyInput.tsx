@@ -28,7 +28,7 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={inputId} className={cn("text-forge-sm font-medium", disabled ? "text-forgeInk-400" : "text-forgeInk-700")}>
+      <label htmlFor={inputId} className={cn("text-forge-sm font-medium", disabled ? "text-forgeGray-400" : "text-forgeGray-700")}>
         {label}
       </label>
       <div className="relative">
@@ -49,22 +49,22 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(function
           aria-invalid={Boolean(error)}
           className={cn(
             "w-full rounded-forge-sm border bg-forgeSurface-card px-3 py-2 pr-28 font-forgeMono text-forge-sm shadow-forge-xs outline-none transition-[border-color,background-color] duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-            error ? "border-forgeDanger-500" : "border-forgeInk-200",
-            !error && !disabled && "hover:border-forgeInk-300 hover:bg-forgeSurface-sunken/50",
-            disabled && "cursor-not-allowed border-forgeInk-100 bg-forgeInk-50 text-forgeInk-400",
-            !disabled && "text-forgeInk-800"
+            error ? "border-forgeDanger-500" : "border-forgeGray-200",
+            !error && !disabled && "hover:border-forgeGray-300 hover:bg-forgeSurface-sunken/50",
+            disabled && "cursor-not-allowed border-forgeGray-100 bg-forgeGray-50 text-forgeGray-400",
+            !disabled && "text-forgeGray-800"
           )}
           {...props}
         />
         <span
-          className="pointer-events-none absolute inset-y-0 right-2 flex max-w-[40%] items-center truncate text-forge-xs text-forgeInk-500"
+          className="pointer-events-none absolute inset-y-0 right-2 flex max-w-[40%] items-center truncate text-forge-xs text-forgeGray-500"
           aria-hidden
         >
           {display}
         </span>
       </div>
       {hint && !error ? (
-        <p id={hintId} className="text-forge-xs text-forgeInk-500">
+        <p id={hintId} className="text-forge-xs text-forgeGray-500">
           {hint}
         </p>
       ) : null}

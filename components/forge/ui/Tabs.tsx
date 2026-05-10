@@ -30,7 +30,7 @@ export function Tabs({ tabs, value, onValueChange, className, variant = "line" }
         aria-orientation="horizontal"
         className={cn(
           "flex flex-wrap gap-1",
-          variant === "line" && "border-b border-forgeInk-200",
+          variant === "line" && "border-b border-forgeGray-200",
           variant === "pills" && "rounded-forge-md bg-forgeSurface-sunken p-1"
         )}
       >
@@ -53,11 +53,11 @@ export function Tabs({ tabs, value, onValueChange, className, variant = "line" }
                 variant === "line" &&
                   (selected
                     ? "-mb-px border-b-2 border-forgeBrand-500 text-forgeBrand-700"
-                    : "-mb-px border-b-2 border-forgeInk-200 text-forgeInk-500 hover:border-forgeInk-300 hover:text-forgeInk-700"),
+                    : "-mb-px border-b-2 border-forgeGray-200 text-forgeGray-500 hover:border-forgeGray-300 hover:text-forgeGray-700"),
                 variant === "pills" &&
-                  (selected ? "bg-forgeSurface-card text-forgeInk-800 shadow-forge-xs" : "text-forgeInk-600 hover:text-forgeInk-800"),
+                  (selected ? "bg-forgeSurface-card text-forgeGray-800 shadow-forge-xs" : "text-forgeGray-600 hover:text-forgeGray-800"),
                 tab.disabled &&
-                  "cursor-not-allowed !border-transparent bg-transparent text-forgeInk-300 hover:!border-transparent hover:bg-transparent hover:text-forgeInk-300"
+                  "cursor-not-allowed !border-transparent bg-transparent text-forgeGray-300 hover:!border-transparent hover:bg-transparent hover:text-forgeGray-300"
               )}
             >
               {tab.label}
@@ -71,7 +71,7 @@ export function Tabs({ tabs, value, onValueChange, className, variant = "line" }
           id={`${baseId}-panel-${active.id}`}
           aria-labelledby={`${baseId}-tab-${active.id}`}
           tabIndex={0}
-          className="min-h-[120px] rounded-forge-md border border-forgeInk-100 bg-forgeSurface-card p-4 text-forge-sm text-forgeInk-800"
+          className="min-h-[120px] rounded-forge-md border border-forgeGray-100 bg-forgeSurface-card p-4 text-forge-sm text-forgeGray-800"
         >
           {active.panel}
         </div>

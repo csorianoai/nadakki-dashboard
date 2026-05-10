@@ -42,7 +42,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-[calc(100dvh-5rem)] flex-col pb-28">
-      <header className="border-b border-forgeInk-200 bg-forgeSurface-card px-4 py-3 md:px-8">
+      <header className="border-b border-forgeGray-200 bg-forgeSurface-card px-4 py-3 md:px-8">
         <div className="mx-auto flex max-w-3xl flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
             <button
@@ -52,7 +52,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
             >
               ← Volver al panel
             </button>
-            <Link href="/credit-hub/dealer/applications" className="text-forge-xs text-forgeInk-500 hover:text-forgeInk-700">
+            <Link href="/credit-hub/dealer/applications" className="text-forge-xs text-forgeGray-500 hover:text-forgeGray-700">
               Mis solicitudes
             </Link>
           </div>
@@ -68,9 +68,9 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
                   className={cn(
                     "rounded-forge-sm px-2.5 py-1.5 text-forge-xs font-medium transition-colors",
                     active && "bg-forgeBrand-500 text-white shadow-forge-sm",
-                    !active && done && "bg-forgeInk-100 text-forgeInk-800",
-                    !active && !done && muted && "bg-forgeSurface-sunken text-forgeInk-700",
-                    !active && !done && !muted && "bg-forgeInk-50 text-forgeInk-600"
+                    !active && done && "bg-forgeGray-100 text-forgeGray-800",
+                    !active && !done && muted && "bg-forgeSurface-sunken text-forgeGray-700",
+                    !active && !done && !muted && "bg-forgeGray-50 text-forgeGray-600"
                   )}
                 >
                   {STEP_LABELS[i]}
@@ -86,7 +86,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
           {submitError}
         </p>
       ) : null}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-forgeInk-200 bg-forgeSurface-card/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-forgeGray-200 bg-forgeSurface-card/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:backdrop-blur-sm">
         <div className="mx-auto flex max-w-3xl items-stretch justify-between gap-2">
           <Button type="button" variant="secondary" className="min-h-12 min-w-0 flex-1 shrink" onClick={goPrev} disabled={stepIndex === 0}>
             Anterior
@@ -130,7 +130,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
           </div>
         }
       >
-        <p className="text-forge-sm text-forgeInk-600">
+        <p className="text-forge-sm text-forgeGray-600">
           Si sales sin guardar, los datos no enviados pueden perderse en otro navegador o dispositivo. Usa &quot;Guardar borrador y salir&quot; para
           volcar ahora en el almacenamiento local.
         </p>

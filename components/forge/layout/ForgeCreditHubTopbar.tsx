@@ -62,7 +62,7 @@ export function ForgeCreditHubTopbar({
           />
         </span>
       ) : null}
-      <p className="text-forge-xs font-medium uppercase tracking-wide text-forgeInk-500">
+      <p className="text-forge-xs font-medium uppercase tracking-wide text-forgeGray-500">
         {personaLabel(persona)} portal
       </p>
     </div>

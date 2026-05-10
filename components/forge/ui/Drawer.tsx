@@ -63,7 +63,7 @@ export function Drawer({
   return createPortal(
     <dialog
       ref={dialogRef}
-      className="fixed inset-0 z-50 m-0 h-full max-h-none w-full max-w-none border-0 bg-transparent p-0 text-forgeInk-800 backdrop:bg-forgeSurface-overlay"
+      className="fixed inset-0 z-50 m-0 h-full max-h-none w-full max-w-none border-0 bg-transparent p-0 text-forgeGray-800 backdrop:bg-forgeSurface-overlay"
     >
       <div
         role="presentation"
@@ -72,23 +72,23 @@ export function Drawer({
       >
         <div
           className={cn(
-            "flex h-full w-[min(100vw,400px)] flex-col border-forgeInk-200 bg-forgeSurface-card shadow-forge-lg",
+            "flex h-full w-[min(100vw,400px)] flex-col border-forgeGray-200 bg-forgeSurface-card shadow-forge-lg",
             side === "right" ? "border-l" : "border-r",
             className
           )}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <header className="flex items-start justify-between gap-4 border-b border-forgeInk-100 px-5 py-4">
+          <header className="flex items-start justify-between gap-4 border-b border-forgeGray-100 px-5 py-4">
             <div className="min-w-0">
-              <h2 className="font-display text-forge-md font-semibold text-forgeInk-800">{title}</h2>
-              {description ? <p className="mt-1 text-forge-sm text-forgeInk-500">{description}</p> : null}
+              <h2 className="font-display text-forge-md font-semibold text-forgeGray-800">{title}</h2>
+              {description ? <p className="mt-1 text-forge-sm text-forgeGray-500">{description}</p> : null}
             </div>
             <IconButton aria-label="Close panel" variant="subtle" onClick={onClose} className="shrink-0">
               <X className="h-4 w-4" aria-hidden />
             </IconButton>
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-forge-sm">{children}</div>
-          {footer ? <footer className="border-t border-forgeInk-100 px-5 py-4">{footer}</footer> : null}
+          {footer ? <footer className="border-t border-forgeGray-100 px-5 py-4">{footer}</footer> : null}
         </div>
       </div>
     </dialog>,

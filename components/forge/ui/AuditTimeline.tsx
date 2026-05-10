@@ -20,16 +20,16 @@ export interface AuditTimelineProps {
 
 export function AuditTimeline({ entries, className }: AuditTimelineProps) {
   return (
-    <ol className={cn("relative border-l border-forgeInk-200 pl-6", className)}>
+    <ol className={cn("relative border-l border-forgeGray-200 pl-6", className)}>
       {entries.map((e, i) => (
         <li key={e.id} className={cn("relative pb-8 last:pb-0", i === 0 && "-mt-0.5")}>
           <span
             className="absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-forge-pill border-2 border-forgeSurface-card bg-forgeBrand-500"
             aria-hidden
           />
-          <p className="text-forge-xs text-forgeInk-500">{e.timestampLabel}</p>
-          <p className="mt-1 text-forge-sm font-medium text-forgeInk-800">
-            <span className="text-forgeInk-600">{e.actorLabel}</span>
+          <p className="text-forge-xs text-forgeGray-500">{e.timestampLabel}</p>
+          <p className="mt-1 text-forge-sm font-medium text-forgeGray-800">
+            <span className="text-forgeGray-600">{e.actorLabel}</span>
             {" — "}
             {e.href ? (
               <Link
@@ -42,7 +42,7 @@ export function AuditTimeline({ entries, className }: AuditTimelineProps) {
               e.actionLabel
             )}
           </p>
-          {e.detail ? <p className="mt-1 text-forge-sm text-forgeInk-600">{e.detail}</p> : null}
+          {e.detail ? <p className="mt-1 text-forge-sm text-forgeGray-600">{e.detail}</p> : null}
         </li>
       ))}
     </ol>

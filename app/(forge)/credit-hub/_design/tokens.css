@@ -1,7 +1,7 @@
 /**
  * Forge Credit Hub — v3.2 design tokens (institutional).
  * Scoped to .forge-app so legacy :root tokens in styles/forge-tokens.css stay intact.
- * Bank (default): light surfaces + ink scale. Dealer dark overrides: **dormant** (commented) until Phase 4.
+ * Bank (default): light surfaces + gray scale (neutral UI). Dealer dark overrides: **dormant** (commented) until Phase 4.
  * Tenant: .forge-app[data-tenant="slug"] (Phase 8 sets attribute on Forge root).
  */
 
@@ -19,17 +19,17 @@
   --forge-brand-900: #0a1d36;
   --forge-brand-950: #050f1f;
 
-  /* ─── INK (text + icons + borders) ───────────────────────────────── */
-  --forge-ink-50: #f7f8fa;
-  --forge-ink-100: #eef1f4;
-  --forge-ink-200: #dde3ea;
-  --forge-ink-300: #c2cbd6;
-  --forge-ink-400: #8c97a6;
-  --forge-ink-500: #5a6478;
-  --forge-ink-600: #3d4759;
-  --forge-ink-700: #2a3447;
-  --forge-ink-800: #1a2540;
-  --forge-ink-900: #0f1729;
+  /* ─── GRAY — neutral scale (borders, muted chrome, body text on light surfaces) ───────────────────────────────── */
+  --forge-gray-50: #f7f8fa;
+  --forge-gray-100: #eef1f4;
+  --forge-gray-200: #dde3ea;
+  --forge-gray-300: #c2cbd6;
+  --forge-gray-400: #8c97a6;
+  --forge-gray-500: #5a6478;
+  --forge-gray-600: #3d4759;
+  --forge-gray-700: #2a3447;
+  --forge-gray-800: #1a2540;
+  --forge-gray-900: #0f1729;
 
   /* ─── SURFACE (light — bank institutional default) ────────────────── */
   --forge-surface-page: #f7f8fa;
@@ -55,9 +55,9 @@
   --forge-info-500: #1f60b5;
   --forge-info-700: #154a8c;
 
-  --forge-neutral-50: var(--forge-ink-100);
-  --forge-neutral-500: var(--forge-ink-500);
-  --forge-neutral-700: var(--forge-ink-700);
+  --forge-neutral-50: var(--forge-gray-100);
+  --forge-neutral-500: var(--forge-gray-500);
+  --forge-neutral-700: var(--forge-gray-700);
 
   /* ─── ACCENT (sparingly — AI evidence, highlights) ─────────────────── */
   --forge-accent-gold: #c8940a;
@@ -131,9 +131,9 @@
   --forge-shadow-md: 0 4px 6px -1px rgba(15, 23, 41, 0.06), 0 2px 4px -1px rgba(15, 23, 41, 0.04);
   --forge-shadow-lg: 0 10px 15px -3px rgba(15, 23, 41, 0.08), 0 4px 6px -2px rgba(15, 23, 41, 0.04);
 
-  --forge-border-subtle: 1px solid var(--forge-ink-200);
-  --forge-border-default: 1px solid var(--forge-ink-300);
-  --forge-border-strong: 1px solid var(--forge-ink-500);
+  --forge-border-subtle: 1px solid var(--forge-gray-200);
+  --forge-border-default: 1px solid var(--forge-gray-300);
+  --forge-border-strong: 1px solid var(--forge-gray-500);
 
   /* Motion */
   --forge-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -151,7 +151,7 @@
   font-family: var(--forge-font-body);
   font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
   font-variant-numeric: tabular-nums;
-  color: var(--forge-ink-800);
+  color: var(--forge-gray-800);
   background-color: var(--forge-surface-page);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -174,20 +174,20 @@
   --forge-surface-sunken: #232b45;
   --forge-surface-overlay: rgba(10, 14, 26, 0.72);
 
-  --forge-ink-50: #131829;
-  --forge-ink-100: #1a2138;
-  --forge-ink-200: rgba(255, 255, 255, 0.08);
-  --forge-ink-300: rgba(255, 255, 255, 0.12);
-  --forge-ink-400: #8b95a8;
-  --forge-ink-500: #8b95a8;
-  --forge-ink-600: #c2cbd6;
-  --forge-ink-700: #dde3ea;
-  --forge-ink-800: #f5f7fa;
-  --forge-ink-900: #f7f8fa;
+  --forge-gray-50: #131829;
+  --forge-gray-100: #1a2138;
+  --forge-gray-200: rgba(255, 255, 255, 0.08);
+  --forge-gray-300: rgba(255, 255, 255, 0.12);
+  --forge-gray-400: #8b95a8;
+  --forge-gray-500: #8b95a8;
+  --forge-gray-600: #c2cbd6;
+  --forge-gray-700: #dde3ea;
+  --forge-gray-800: #f5f7fa;
+  --forge-gray-900: #f7f8fa;
 
-  --forge-neutral-50: var(--forge-ink-100);
-  --forge-neutral-500: var(--forge-ink-500);
-  --forge-neutral-700: var(--forge-ink-700);
+  --forge-neutral-50: var(--forge-gray-100);
+  --forge-neutral-500: var(--forge-gray-500);
+  --forge-neutral-700: var(--forge-gray-700);
 
   --forge-border-subtle: 1px solid rgba(255, 255, 255, 0.08);
   --forge-border-default: 1px solid rgba(255, 255, 255, 0.12);
@@ -198,7 +198,7 @@
   --forge-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.28), 0 2px 4px -1px rgba(0, 0, 0, 0.22);
   --forge-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -2px rgba(0, 0, 0, 0.24);
 
-  color: var(--forge-ink-800);
+  color: var(--forge-gray-800);
   background-color: var(--forge-surface-page);
 }
 */
@@ -221,17 +221,17 @@
 
 .forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] {
   background-color: var(--forge-brand-900);
-  color: var(--forge-ink-50);
+  color: var(--forge-gray-50);
   border-color: color-mix(in srgb, var(--forge-brand-700) 55%, transparent);
 }
 
-.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeInk-500,
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeGray-500,
 .forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeBrand-700 {
-  color: color-mix(in srgb, var(--forge-ink-50) 82%, transparent);
+  color: color-mix(in srgb, var(--forge-gray-50) 82%, transparent);
 }
 
 .forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeBrand-700 {
-  color: var(--forge-ink-50);
+  color: var(--forge-gray-50);
 }
 
 .forge-app[data-tenant="credicefi"] {

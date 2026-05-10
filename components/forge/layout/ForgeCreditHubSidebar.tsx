@@ -66,11 +66,11 @@ export function ForgeCreditHubSidebar({
 
   return (
     <aside
-      className="hidden w-56 shrink-0 flex-col border-r border-forgeInk-200 bg-forgeSurface-card lg:flex"
+      className="hidden w-56 shrink-0 flex-col border-r border-forgeGray-200 bg-forgeSurface-card lg:flex"
       aria-label={`${personaLabel(persona)} navigation`}
     >
       <div
-        className="border-b border-forgeInk-700/30 bg-gradient-to-b from-forgeBrand-900 to-forgeBrand-950 px-4 py-3"
+        className="border-b border-forgeGray-700/30 bg-gradient-to-b from-forgeBrand-900 to-forgeBrand-950 px-4 py-3"
         data-forge-sidebar-header
       >
         {showHeaderSkeleton ? (
@@ -96,8 +96,8 @@ export function ForgeCreditHubSidebar({
                 />
               </div>
             ) : null}
-            <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-300">Forge</p>
-            <p className="text-forge-sm font-medium text-forgeInk-50">{personaLabel(persona)}</p>
+            <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-300">Forge</p>
+            <p className="text-forge-sm font-medium text-forgeGray-50">{personaLabel(persona)}</p>
           </>
         )}
       </div>
@@ -116,20 +116,20 @@ export function ForgeCreditHubSidebar({
               className={cn(
                 "flex min-h-12 min-w-[44px] items-center gap-2 rounded-forge-sm px-3 py-3 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-                active ? "bg-forgeSurface-sunken text-forgeBrand-700" : "text-forgeInk-700 hover:bg-forgeSurface-sunken hover:text-forgeInk-900"
+                active ? "bg-forgeSurface-sunken text-forgeBrand-700" : "text-forgeGray-700 hover:bg-forgeSurface-sunken hover:text-forgeGray-900"
               )}
               aria-current={active ? "page" : undefined}
             >
-              <Icon className="h-4 w-4 shrink-0 text-forgeInk-500" aria-hidden />
+              <Icon className="h-4 w-4 shrink-0 text-forgeGray-500" aria-hidden />
               {item.label}
             </Link>
           );
         })}
       </nav>
-      <div className="border-t border-forgeInk-100 px-3 pb-3 pt-5">
+      <div className="border-t border-forgeGray-100 px-3 pb-3 pt-5">
         <Link
           href="/credit-hub/preview"
-          className="flex min-h-12 w-full min-w-[44px] items-center rounded-forge-sm px-2 py-3 text-forge-xs font-medium text-forgeInk-500 hover:bg-forgeSurface-sunken hover:text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+          className="flex min-h-12 w-full min-w-[44px] items-center rounded-forge-sm px-2 py-3 text-forge-xs font-medium text-forgeGray-500 hover:bg-forgeSurface-sunken hover:text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
         >
           UI preview
         </Link>

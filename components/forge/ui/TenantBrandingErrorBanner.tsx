@@ -60,7 +60,7 @@ export function TenantBrandingErrorBanner({
         <p>
           <span className="font-semibold">{message}</span>
         </p>
-        <p className="mt-1 font-forgeMono text-forge-xs text-forgeInk-500">
+        <p className="mt-1 font-forgeMono text-forge-xs text-forgeGray-500">
           Reference: {referenceId}
         </p>
       </div>

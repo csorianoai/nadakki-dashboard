@@ -69,7 +69,7 @@ function buildQueryString(q: string, status: FilterId, density: DataTableDensity
 }
 
 const primaryCta =
-  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-forge-sm border border-forgeBrand-600 bg-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeInk-50 shadow-forge-xs transition-colors hover:bg-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 sm:w-auto";
+  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-forge-sm border border-forgeBrand-600 bg-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeGray-50 shadow-forge-xs transition-colors hover:bg-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 sm:w-auto";
 
 const densitySelectOptions: { value: DataTableDensity; label: string }[] = [
   { value: "comfortable", label: "Cómoda" },
@@ -171,8 +171,8 @@ function DealerApplicationsListInner() {
         header: "Solicitante",
         cell: (row: CreditApplication) => (
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate font-medium text-forgeInk-900">{row.applicant_name || "—"}</span>
-            <span className="truncate font-mono text-forge-xs text-forgeInk-500">{row.application_id}</span>
+            <span className="truncate font-medium text-forgeGray-900">{row.applicant_name || "—"}</span>
+            <span className="truncate font-mono text-forge-xs text-forgeGray-500">{row.application_id}</span>
           </div>
         ),
       },
@@ -180,7 +180,7 @@ function DealerApplicationsListInner() {
         id: "vehicle",
         header: "Vehículo",
         cell: (row: CreditApplication) => (
-          <span className="text-forgeInk-600">
+          <span className="text-forgeGray-600">
             {[row.vehicle_year, row.vehicle_make, row.vehicle_model].filter(Boolean).join(" ") || "—"}
           </span>
         ),
@@ -190,7 +190,7 @@ function DealerApplicationsListInner() {
         header: "Monto",
         className: "text-right tabular-nums [font-feature-settings:'tnum']",
         cell: (row: CreditApplication) => (
-          <span className="font-forgeMono text-forge-sm font-medium text-forgeInk-800">
+          <span className="font-forgeMono text-forge-sm font-medium text-forgeGray-800">
             {formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code)}
           </span>
         ),
@@ -204,7 +204,7 @@ function DealerApplicationsListInner() {
       {
         id: "submitted",
         header: "Enviada",
-        className: "whitespace-nowrap text-forgeInk-600",
+        className: "whitespace-nowrap text-forgeGray-600",
         cell: (row: CreditApplication) => (
           <span className="text-forge-xs">{formatShortDateTime(row.created_at, tenantConfig.locale)}</span>
         ),
@@ -246,21 +246,21 @@ function DealerApplicationsListInner() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
               <h1
-                className="min-w-0 font-display font-normal leading-tight tracking-[-0.01em] text-forgeInk-900"
+                className="min-w-0 font-display font-normal leading-tight tracking-[-0.01em] text-forgeGray-900"
                 style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
               >
                 Solicitudes
               </h1>
-              <p className="shrink-0 font-sans text-[13px] text-forgeInk-600 sm:text-right">
-                <span className="font-medium tabular-nums text-forgeInk-700">{filtered.length}</span>
-                <span className="text-forgeInk-500"> en vista · Última sync: </span>
+              <p className="shrink-0 font-sans text-[13px] text-forgeGray-600 sm:text-right">
+                <span className="font-medium tabular-nums text-forgeGray-700">{filtered.length}</span>
+                <span className="text-forgeGray-500"> en vista · Última sync: </span>
                 <span>{formatSyncAge(applicationsQuery.dataUpdatedAt, tenantConfig.locale)}</span>
               </p>
             </div>
             {persona === "bank" ? (
-              <p className="mt-1 text-forge-xs font-medium text-forgeInk-500">Vista seguimiento dealer (misma URL, datos filtrados).</p>
+              <p className="mt-1 text-forge-xs font-medium text-forgeGray-500">Vista seguimiento dealer (misma URL, datos filtrados).</p>
             ) : null}
-            <p className="mt-2 max-w-xl text-forge-sm text-forgeInk-600">Historial completo con búsqueda y filtros por estado.</p>
+            <p className="mt-2 max-w-xl text-forge-sm text-forgeGray-600">Historial completo con búsqueda y filtros por estado.</p>
           </div>
           <Link href="/credit-hub/dealer/applications/new/applicant" className={cn(primaryCta, "hidden md:inline-flex")}>
             <Plus className="h-4 w-4 shrink-0" aria-hidden />
@@ -311,10 +311,10 @@ function DealerApplicationsListInner() {
                 className={cn(
                   "rounded-forge-sm px-3 py-2 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-                  selected ? "bg-forgeSurface-card text-forgeInk-800 shadow-forge-xs" : "text-forgeInk-600 hover:text-forgeInk-800"
+                  selected ? "bg-forgeSurface-card text-forgeGray-800 shadow-forge-xs" : "text-forgeGray-600 hover:text-forgeGray-800"
                 )}
               >
-                {filter.label} <span className="tabular-nums text-forgeInk-500">({count})</span>
+                {filter.label} <span className="tabular-nums text-forgeGray-500">({count})</span>
               </button>
             );
           })}
@@ -370,7 +370,7 @@ function DealerApplicationsListInner() {
 
         <Link
           href="/credit-hub/dealer/applications/new/applicant"
-          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-forgeBrand-500 text-forgeInk-50 shadow-forge-md md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+          className="fixed bottom-24 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-forgeBrand-500 text-forgeGray-50 shadow-forge-md md:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
           aria-label="Nueva solicitud"
         >
           <Plus className="h-6 w-6" aria-hidden />

@@ -45,8 +45,8 @@ export default function BankAuditPage() {
     <div className="space-y-6" data-persona={persona}>
       <div>
         <p className="text-forge-xs font-semibold uppercase tracking-[0.18em] text-forgeBrand-600">{t.bank.audit_kicker}</p>
-        <h1 className="mt-1 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">Visor de auditoría</h1>
-        <p className="mt-2 text-forge-sm text-forgeInk-600">
+        <h1 className="mt-1 font-display text-forge-md font-bold text-forgeGray-800 sm:text-[length:var(--forge-text-2xl)]">Visor de auditoría</h1>
+        <p className="mt-2 text-forge-sm text-forgeGray-600">
           Línea de tiempo desde la bandeja activa.{" "}
           <Link href="/credit-hub/bank/applications" className="text-forgeBrand-600 hover:text-forgeBrand-700">
             Abrir bandeja
@@ -65,7 +65,7 @@ export default function BankAuditPage() {
             action={
               <Link
                 href="/credit-hub/bank/applications"
-                className="inline-flex min-h-12 items-center justify-center rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-card px-4 text-forge-sm font-medium text-forgeInk-800 shadow-forge-xs hover:bg-forgeSurface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+                className="inline-flex min-h-12 items-center justify-center rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card px-4 text-forge-sm font-medium text-forgeGray-800 shadow-forge-xs hover:bg-forgeSurface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
               >
                 {empty.bankAuditClearCta}
               </Link>

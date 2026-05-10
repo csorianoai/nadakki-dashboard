@@ -31,14 +31,14 @@ export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId
     }
   };
 
-  if (isLoading) return <p className="text-sm text-forgeInk-500">{m.actions.executing}</p>;
-  if (!actions.length) return <p className="text-sm text-forgeInk-500">{m.actions.no_actions}</p>;
+  if (isLoading) return <p className="text-sm text-forgeGray-500">{m.actions.executing}</p>;
+  if (!actions.length) return <p className="text-sm text-forgeGray-500">{m.actions.no_actions}</p>;
 
   return (
-    <div className="rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-4">
-      <h2 className="mb-2 text-sm font-semibold text-forgeInk-900">{m.actions.menu_title}</h2>
+    <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-4">
+      <h2 className="mb-2 text-sm font-semibold text-forgeGray-900">{m.actions.menu_title}</h2>
       {level !== "NORMAL" && (
-        <p className="mb-2 text-xs text-forgeInk-600">{m.actions.blocked_by_mode}</p>
+        <p className="mb-2 text-xs text-forgeGray-600">{m.actions.blocked_by_mode}</p>
       )}
       <ul className="space-y-2">
         {actions.map((a) => (
@@ -50,7 +50,7 @@ export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId
               onClick={() => void exec(a)}
             >
               <span className="font-medium">{a.display_name}</span>
-              <span className="mt-0.5 block text-xs text-forgeInk-600">{a.description}</span>
+              <span className="mt-0.5 block text-xs text-forgeGray-600">{a.description}</span>
             </button>
           </li>
         ))}

@@ -87,11 +87,11 @@ export function DealerWizardCoBorrowerStep() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-display text-forge-xl font-semibold text-forgeInk-800">{t.wizard.sections.garante_title}</h2>
-        <p className="mt-1 text-forge-sm text-forgeInk-500">{t.wizard.sections.garante_sub}</p>
+        <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.garante_title}</h2>
+        <p className="mt-1 text-forge-sm text-forgeGray-500">{t.wizard.sections.garante_sub}</p>
       </div>
       {tenantConfig.features_enabled.garante_required ? (
-        <div className="rounded-forge-md border border-forgeBrand-500/40 bg-forgeBrand-500/10 p-3 text-forge-sm text-forgeInk-800">
+        <div className="rounded-forge-md border border-forgeBrand-500/40 bg-forgeBrand-500/10 p-3 text-forge-sm text-forgeGray-800">
           {t.wizard.garante_auto_required}
         </div>
       ) : null}
@@ -108,8 +108,8 @@ export function DealerWizardCoBorrowerStep() {
       ) : null}
       {tenantConfig.features_enabled.garante_required || formData.co_debtor_required === "yes" ? (
         <div className="grid gap-4 border-l-2 border-forgeBrand-500/40 pl-4 md:grid-cols-2 md:pl-6">
-          <div className="md:col-span-2 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4">
-            <h3 className="font-semibold text-forgeInk-800">{t.wizard.garante_data_title}</h3>
+          <div className="md:col-span-2 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4">
+            <h3 className="font-semibold text-forgeGray-800">{t.wizard.garante_data_title}</h3>
           </div>
           <Select label="Tipo de documento garante *" value={coDoc} onChange={(e) => updateField("co_debtor_document_type", e.target.value)} options={docTypeSelect} />
           {coDoc === "OTRO" ? (
@@ -140,9 +140,9 @@ export function DealerWizardCoBorrowerStep() {
               error={garanteErrors.co_debtor_date_of_birth}
             />
           </div>
-          <div className="rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-3">
-            <p className="text-forge-xs text-forgeInk-500">{t.wizard.age_guarantor}</p>
-            <p className="font-semibold text-forgeInk-800">{coAge === null ? t.common.no_data : t.wizard.years_suffix(coAge)}</p>
+          <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-3">
+            <p className="text-forge-xs text-forgeGray-500">{t.wizard.age_guarantor}</p>
+            <p className="font-semibold text-forgeGray-800">{coAge === null ? t.common.no_data : t.wizard.years_suffix(coAge)}</p>
           </div>
           <Input label="Teléfono garante *" type="tel" value={formData.co_debtor_phone} onChange={(e) => updateField("co_debtor_phone", e.target.value)} />
           <Input label="Correo electrónico garante *" type="email" value={formData.co_debtor_email} onChange={(e) => updateField("co_debtor_email", e.target.value)} />
@@ -185,7 +185,7 @@ export function DealerWizardCoBorrowerStep() {
               onValueChange={(iso) => updateField("co_debtor_employment_start_date", iso)}
             />
             {coEmploymentTenure?.isValid ? (
-              <p className="text-forge-sm text-forgeInk-500">Antigüedad: {coEmploymentTenure.display}</p>
+              <p className="text-forge-sm text-forgeGray-500">Antigüedad: {coEmploymentTenure.display}</p>
             ) : null}
           </div>
           <Select

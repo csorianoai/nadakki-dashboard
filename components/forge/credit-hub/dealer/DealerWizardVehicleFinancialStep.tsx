@@ -82,8 +82,8 @@ export function DealerWizardVehicleFinancialStep() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-display text-forge-xl font-semibold text-forgeInk-800">{t.wizard.sections.financial_title}</h2>
-        <p className="mt-1 text-forge-sm text-forgeInk-500">{t.wizard.sections.financial_sub}</p>
+        <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.financial_title}</h2>
+        <p className="mt-1 text-forge-sm text-forgeGray-500">{t.wizard.sections.financial_sub}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Input label="Plazo deseado *" placeholder="Ej: 48 meses" value={formData.desired_term} onChange={(e) => updateField("desired_term", e.target.value)} />
@@ -123,8 +123,8 @@ export function DealerWizardVehicleFinancialStep() {
             options={[{ value: "", label: t.common.select_placeholder }, ...(catalogs?.banks ?? []).map((b) => ({ value: b, label: b }))]}
           />
         ) : null}
-        <div className="md:col-span-2 border-t border-forgeInk-200 pt-4">
-          <h3 className="font-semibold text-forgeInk-800">{t.wizard.vehicle_section}</h3>
+        <div className="md:col-span-2 border-t border-forgeGray-200 pt-4">
+          <h3 className="font-semibold text-forgeGray-800">{t.wizard.vehicle_section}</h3>
         </div>
         <Select
           label="Tipo de producto *"
@@ -181,19 +181,19 @@ export function DealerWizardVehicleFinancialStep() {
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">
-          <p className="text-forge-xs text-forgeInk-500">{t.wizard.amount_finance}</p>
-          <p className="font-semibold tabular-nums text-forgeInk-800">{formatForgeCurrency(amountToFinance, tenantConfig.locale, tenantConfig.currency_code)}</p>
+          <p className="text-forge-xs text-forgeGray-500">{t.wizard.amount_finance}</p>
+          <p className="font-semibold tabular-nums text-forgeGray-800">{formatForgeCurrency(amountToFinance, tenantConfig.locale, tenantConfig.currency_code)}</p>
         </div>
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">
-          <p className="text-forge-xs text-forgeInk-500">{t.wizard.ltv_label}</p>
-          <p className="font-semibold tabular-nums text-forgeInk-800">{Math.round(ltvPercent)}%</p>
+          <p className="text-forge-xs text-forgeGray-500">{t.wizard.ltv_label}</p>
+          <p className="font-semibold tabular-nums text-forgeGray-800">{Math.round(ltvPercent)}%</p>
           {ltvPercent / 100 > tenantConfig.ltv_max ? (
             <p className="text-forge-xs text-forgeDanger-600">{t.wizard.ltv_exceeds}</p>
           ) : null}
         </div>
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">
-          <p className="text-forge-xs text-forgeInk-500">{t.wizard.estimated_capacity}</p>
-          <p className="font-semibold tabular-nums text-forgeInk-800">
+          <p className="text-forge-xs text-forgeGray-500">{t.wizard.estimated_capacity}</p>
+          <p className="font-semibold tabular-nums text-forgeGray-800">
             {formatForgeCurrency(estimatedCapacity, tenantConfig.locale, tenantConfig.currency_code)}
           </p>
         </div>

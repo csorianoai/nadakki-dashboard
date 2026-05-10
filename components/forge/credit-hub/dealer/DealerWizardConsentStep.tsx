@@ -9,7 +9,7 @@ export function DealerWizardConsentStep() {
 
   return (
     <div className="space-y-4">
-      <p className="text-forge-xs text-forgeInk-500">
+      <p className="text-forge-xs text-forgeGray-500">
         Al enviar, se registra marca de tiempo ISO 8601, hash de auditoría (incluye resumen cifrado de la firma) y, cuando la red lo permite, la IP obtenida vía{" "}
         <code className="rounded bg-forgeSurface-sunken px-1">/api/credit-hub/client-metadata</code> en el servidor.
       </p>

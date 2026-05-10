@@ -33,7 +33,7 @@ export function Textarea({
           htmlFor={tid}
           className={cn(
             "text-forge-sm font-medium",
-            disabled ? "cursor-not-allowed text-forgeInk-400" : "text-forgeInk-700"
+            disabled ? "cursor-not-allowed text-forgeGray-400" : "text-forgeGray-700"
           )}
         >
           {label}
@@ -46,11 +46,11 @@ export function Textarea({
         defaultValue={defaultValue}
         disabled={disabled}
         className={cn(
-          "min-h-[96px] w-full resize-y rounded-forge-sm border bg-forgeSurface-card px-3 py-2 text-forge-sm outline-none transition-[border-color,background-color] duration-[var(--forge-duration-fast)] ease-out placeholder:text-forgeInk-400 focus-visible:border-forgeBrand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-          error ? "border-forgeDanger-500" : "border-forgeInk-200",
-          !error && !disabled && "hover:border-forgeInk-300 hover:bg-forgeSurface-sunken/50",
-          disabled && "cursor-not-allowed border-forgeInk-100 bg-forgeInk-50 text-forgeInk-400",
-          !disabled && "text-forgeInk-800",
+          "min-h-[96px] w-full resize-y rounded-forge-sm border bg-forgeSurface-card px-3 py-2 text-forge-sm outline-none transition-[border-color,background-color] duration-[var(--forge-duration-fast)] ease-out placeholder:text-forgeGray-400 focus-visible:border-forgeBrand-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
+          error ? "border-forgeDanger-500" : "border-forgeGray-200",
+          !error && !disabled && "hover:border-forgeGray-300 hover:bg-forgeSurface-sunken/50",
+          disabled && "cursor-not-allowed border-forgeGray-100 bg-forgeGray-50 text-forgeGray-400",
+          !disabled && "text-forgeGray-800",
           className
         )}
         aria-invalid={Boolean(error)}
@@ -59,14 +59,14 @@ export function Textarea({
       />
       <div className="flex justify-between gap-2">
         {helper && !error ? (
-          <p id={`${tid}-help`} className="text-forge-xs text-forgeInk-500">
+          <p id={`${tid}-help`} className="text-forge-xs text-forgeGray-500">
             {helper}
           </p>
         ) : (
           <span />
         )}
         {maxLength != null ? (
-          <p id={`${tid}-count`} className="text-forge-xs text-forgeInk-400">
+          <p id={`${tid}-count`} className="text-forge-xs text-forgeGray-400">
             {len ?? 0}/{maxLength}
           </p>
         ) : null}

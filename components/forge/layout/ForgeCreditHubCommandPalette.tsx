@@ -247,23 +247,23 @@ export function ForgeCreditHubCommandPalette({ open, onOpenChange }: { open: boo
           </div>
         }
       >
-        <ul className="list-inside list-disc space-y-2 text-forge-sm text-forgeInk-700">
+        <ul className="list-inside list-disc space-y-2 text-forge-sm text-forgeGray-700">
           <li>
-            <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Ctrl+K</kbd> /{" "}
-            <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">⌘K</kbd> — {p.scPalette}
+            <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Ctrl+K</kbd> /{" "}
+            <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">⌘K</kbd> — {p.scPalette}
           </li>
           <li>
-            <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Esc</kbd> — {p.scEsc}
+            <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Esc</kbd> — {p.scEsc}
           </li>
           <li>
-            <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Tab</kbd> — {p.scTab}
+            <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Tab</kbd> — {p.scTab}
           </li>
           <li>
-            <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Shift+Tab</kbd> —{" "}
+            <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Shift+Tab</kbd> —{" "}
             {p.scShiftTab}
           </li>
           <li>
-            <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Enter</kbd> — {p.scEnter}
+            <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">Enter</kbd> — {p.scEnter}
           </li>
         </ul>
       </Modal>

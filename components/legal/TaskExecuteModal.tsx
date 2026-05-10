@@ -67,9 +67,9 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
         role="dialog"
         aria-modal="true"
         aria-labelledby="task-modal-title"
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-forge-lg border border-forgeInk-200 bg-forgeSurface-card shadow-forge-lg"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-forge-lg border border-forgeGray-200 bg-forgeSurface-card shadow-forge-lg"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-forgeInk-200 px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-forgeGray-200 px-5 py-4">
           <h2 id="task-modal-title" className="text-lg font-semibold text-forge-text">
             {m.modal_title}
           </h2>
@@ -119,7 +119,7 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
                       rows={4}
                       value={values[inp.field] ?? ""}
                       onChange={(e) => setValues((v) => ({ ...v, [inp.field]: e.target.value }))}
-                      className="w-full rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card px-3 py-2 text-forge-sm text-forge-text"
+                      className="w-full rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card px-3 py-2 text-forge-sm text-forge-text"
                     />
                   ) : (
                     <input
@@ -127,7 +127,7 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
                       type="text"
                       value={values[inp.field] ?? ""}
                       onChange={(e) => setValues((v) => ({ ...v, [inp.field]: e.target.value }))}
-                      className="w-full rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card px-3 py-2 text-forge-sm text-forge-text"
+                      className="w-full rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card px-3 py-2 text-forge-sm text-forge-text"
                     />
                   )}
                 </div>
@@ -142,7 +142,7 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
           <div className="mt-6 flex justify-end gap-2">
             <button
               type="button"
-              className="rounded-forge-md border border-forgeInk-200 px-4 py-2 text-forge-sm font-medium text-forge-text hover:bg-forgeSurface-sunken"
+              className="rounded-forge-md border border-forgeGray-200 px-4 py-2 text-forge-sm font-medium text-forge-text hover:bg-forgeSurface-sunken"
               onClick={onClose}
             >
               {phase === "done" ? m.modal_close : m.modal_cancel}

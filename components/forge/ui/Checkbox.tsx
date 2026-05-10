@@ -33,7 +33,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     <label
       className={cn(
         "inline-flex items-center gap-2 text-forge-sm",
-        disabled ? "cursor-not-allowed text-forgeInk-400" : "cursor-pointer text-forgeInk-800 hover:text-forgeInk-900",
+        disabled ? "cursor-not-allowed text-forgeGray-400" : "cursor-pointer text-forgeGray-800 hover:text-forgeGray-900",
         className
       )}
     >
@@ -41,7 +41,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
         ref={mergeRefs(ref, innerRef)}
         type="checkbox"
         disabled={disabled}
-        className="h-4 w-4 rounded-forge-sm border-forgeInk-300 text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 disabled:cursor-not-allowed disabled:border-forgeInk-200 disabled:bg-forgeInk-100 disabled:text-forgeInk-400"
+        className="h-4 w-4 rounded-forge-sm border-forgeGray-300 text-forgeBrand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 disabled:cursor-not-allowed disabled:border-forgeGray-200 disabled:bg-forgeGray-100 disabled:text-forgeGray-400"
         {...props}
       />
       {label ? <span>{label}</span> : null}

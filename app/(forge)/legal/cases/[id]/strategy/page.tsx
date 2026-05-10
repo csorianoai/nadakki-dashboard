@@ -17,18 +17,18 @@ export default function LegalCaseStrategyPage({ params }: { params: Promise<{ id
 
   const strategies: CaseStrategy[] = st?.strategies ?? c?.strategies ?? [];
 
-  if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
+  if (!tenantHydrated) return <p className="text-sm text-forgeGray-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
     return <p className="text-sm text-forgeDanger-700">{tenantError ?? "Tenant no disponible"}</p>;
   }
   if (isLoading || error || !c) {
-    return <p className="text-sm text-forgeInk-500">{isLoading ? "Cargando…" : "Error"}</p>;
+    return <p className="text-sm text-forgeGray-500">{isLoading ? "Cargando…" : "Error"}</p>;
   }
 
   return (
     <main id="main-content" className="min-h-0 space-y-6">
       <CaseDetailHeader legalCase={c} />
-      {ls ? <p className="text-sm text-forgeInk-500">Cargando estrategias…</p> : null}
+      {ls ? <p className="text-sm text-forgeGray-500">Cargando estrategias…</p> : null}
       <CaseStrategyMultiSelect
         strategies={strategies}
         selectedIds={selected}

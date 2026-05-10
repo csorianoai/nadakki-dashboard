@@ -64,7 +64,8 @@ function tailwindHint(name) {
   const rest = restParts.join("-");
   if (family === "brand" && /^\d+$/.test(rest))
     return `\`text-forgeBrand-${rest}\` / \`bg-forgeBrand-${rest}\` / \`border-forgeBrand-${rest}\``;
-  if (family === "ink" && /^\d+$/.test(rest)) return `\`text-forgeInk-${rest}\` / \`border-forgeInk-${rest}\``;
+  if (family === "gray" && /^\d+$/.test(rest))
+    return `\`text-forgeGray-${rest}\` / \`border-forgeGray-${rest}\``;
   if (family === "surface" && rest) return `\`bg-forgeSurface-${rest}\``;
   if (["success", "warning", "danger", "info", "neutral"].includes(family) && /^\d+$/.test(rest))
     return `\`text-forge${family[0].toUpperCase() + family.slice(1)}-${rest}\``;

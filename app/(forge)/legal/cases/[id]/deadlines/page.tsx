@@ -11,12 +11,12 @@ export default function LegalCaseDeadlinesPage({ params }: { params: Promise<{ i
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
   const { data: c, isLoading, error, refetch } = useLegalCase(effectiveTenantId, id);
 
-  if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
+  if (!tenantHydrated) return <p className="text-sm text-forgeGray-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
     return <p className="text-sm text-forgeDanger-700">{tenantError ?? "Tenant no disponible"}</p>;
   }
   if (isLoading || error || !c) {
-    return <p className="text-sm text-forgeInk-500">{isLoading ? "Cargando…" : "Error"}</p>;
+    return <p className="text-sm text-forgeGray-500">{isLoading ? "Cargando…" : "Error"}</p>;
   }
 
   return (

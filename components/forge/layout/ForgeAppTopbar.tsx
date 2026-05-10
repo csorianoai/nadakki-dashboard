@@ -22,7 +22,7 @@ export function ForgeAppTopbar({ module }: ForgeAppTopbarProps) {
       <Topbar
         title={`${org} — Legal Intelligence`}
         leading={
-          <p className="text-forge-xs font-medium uppercase tracking-wide text-forgeInk-500">Legal module</p>
+          <p className="text-forge-xs font-medium uppercase tracking-wide text-forgeGray-500">Legal module</p>
         }
       />
     );

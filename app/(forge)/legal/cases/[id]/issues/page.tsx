@@ -18,12 +18,12 @@ export default function LegalCaseIssuesPage({ params }: { params: Promise<{ id: 
 
   const issues: CaseIssue[] = iss?.issues ?? [];
 
-  if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
+  if (!tenantHydrated) return <p className="text-sm text-forgeGray-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
     return <p className="text-sm text-forgeDanger-700">{tenantError ?? "Tenant no disponible"}</p>;
   }
   if (isLoading || error || !c) {
-    return <p className="text-sm text-forgeInk-500">{isLoading ? "Cargando…" : "Error"}</p>;
+    return <p className="text-sm text-forgeGray-500">{isLoading ? "Cargando…" : "Error"}</p>;
   }
 
   return (

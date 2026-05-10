@@ -15,22 +15,22 @@ export default function LegalCaseTimelinePage({ params }: { params: Promise<{ id
   const { data: c, isLoading: loadingCase, error: errCase } = useLegalCase(effectiveTenantId, id);
   const { data: tl, isLoading: loadingTl, error: errTl } = useCaseTimeline(effectiveTenantId, id);
 
-  if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
+  if (!tenantHydrated) return <p className="text-sm text-forgeGray-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
     return <p className="text-sm text-forgeDanger-700">{tenantError ?? "Tenant no disponible"}</p>;
   }
   if (loadingCase || errCase || !c) {
-    return <p className="text-sm text-forgeInk-500">{loadingCase ? "Cargando…" : "Error"}</p>;
+    return <p className="text-sm text-forgeGray-500">{loadingCase ? "Cargando…" : "Error"}</p>;
   }
 
   return (
     <main id="main-content" className="min-h-0 space-y-6">
       <CaseDetailHeader legalCase={c} />
       <section aria-labelledby="timeline-heading">
-        <h2 id="timeline-heading" className="mb-4 text-lg font-semibold text-forgeInk-900">
+        <h2 id="timeline-heading" className="mb-4 text-lg font-semibold text-forgeGray-900">
           {m.timeline.title}
         </h2>
-        {loadingTl ? <p className="text-sm text-forgeInk-500">Cargando eventos…</p> : null}
+        {loadingTl ? <p className="text-sm text-forgeGray-500">Cargando eventos…</p> : null}
         {errTl ? <p className="text-sm text-forgeDanger-700">No se pudo cargar la línea de tiempo</p> : null}
         {tl ? <CaseTimeline events={tl.events} /> : null}
       </section>

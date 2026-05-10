@@ -7,9 +7,9 @@ export function CaseStrategyCard({ strategy: s }: { strategy: CaseStrategy }) {
   const m = useLegalCasesMessages();
   return (
     <div className="flex-1 text-sm">
-      <p className="font-semibold text-forgeInk-900">{s.name}</p>
-      <p className="text-forgeInk-600">{s.description}</p>
-      <p className="mt-1 text-xs text-forgeInk-500">
+      <p className="font-semibold text-forgeGray-900">{s.name}</p>
+      <p className="text-forgeGray-600">{s.description}</p>
+      <p className="mt-1 text-xs text-forgeGray-500">
         {m.strategy.expected_strength}: {Math.round(s.expected_strength * 100)}%
       </p>
       {s.risks?.length ? (

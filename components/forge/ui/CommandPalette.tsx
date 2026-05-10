@@ -102,29 +102,29 @@ export function CommandPalette({
     >
       <Command
         className={cn(
-          "w-full max-w-lg overflow-hidden rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card shadow-forge-lg",
+          "w-full max-w-lg overflow-hidden rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card shadow-forge-lg",
           className
         )}
         onMouseDown={(e) => e.stopPropagation()}
         shouldFilter
         loop
       >
-        <div className="flex items-center gap-2 border-b border-forgeInk-100 px-3">
-          <Search className="h-4 w-4 shrink-0 text-forgeInk-400" aria-hidden />
+        <div className="flex items-center gap-2 border-b border-forgeGray-100 px-3">
+          <Search className="h-4 w-4 shrink-0 text-forgeGray-400" aria-hidden />
           <Command.Input
             value={search}
             onValueChange={setSearch}
             placeholder={placeholder}
-            className="h-11 w-full bg-transparent py-2 text-forge-sm text-forgeInk-800 outline-none placeholder:text-forgeInk-400"
+            className="h-11 w-full bg-transparent py-2 text-forge-sm text-forgeGray-800 outline-none placeholder:text-forgeGray-400"
           />
         </div>
         <Command.List className="max-h-72 overflow-y-auto p-2">
-          <Command.Empty className="px-3 py-6 text-center text-forge-sm text-forgeInk-500">{emptyMessage}</Command.Empty>
+          <Command.Empty className="px-3 py-6 text-center text-forge-sm text-forgeGray-500">{emptyMessage}</Command.Empty>
           {resolvedGroups.map((g) => (
             <Command.Group
               key={g.id}
               heading={g.heading}
-              className="text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-400"
+              className="text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-400"
             >
               {g.actions.map((a) => (
                 <Command.Item
@@ -135,25 +135,25 @@ export function CommandPalette({
                     a.onSelect();
                     onOpenChange(false);
                   }}
-                  className="flex cursor-pointer items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm text-forgeInk-800 transition-colors duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 aria-selected:bg-forgeSurface-sunken aria-selected:text-forgeBrand-700"
+                  className="flex cursor-pointer items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm text-forgeGray-800 transition-colors duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 aria-selected:bg-forgeSurface-sunken aria-selected:text-forgeBrand-700"
                 >
-                  {a.icon ? <span className="text-forgeInk-500">{a.icon}</span> : null}
+                  {a.icon ? <span className="text-forgeGray-500">{a.icon}</span> : null}
                   {a.label}
                 </Command.Item>
               ))}
             </Command.Group>
           ))}
         </Command.List>
-        <div className="border-t border-forgeInk-100 px-3 py-2 text-forge-xs text-forgeInk-500">
-          <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
+        <div className="border-t border-forgeGray-100 px-3 py-2 text-forge-xs text-forgeGray-500">
+          <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
             Esc
           </kbd>{" "}
           close ·{" "}
-          <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
+          <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
             Ctrl+K
           </kbd>
           {" / "}
-          <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
+          <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
             ⌘K
           </kbd>{" "}
           toggle

@@ -26,8 +26,8 @@ export function ModuleGate({ module, children, fallback }: ModuleGateProps) {
     return (
       fallback ?? (
         <div className="p-4 md:p-6">
-          <div className="rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-6 text-center shadow-forge-xs">
-            <p className="text-forge-sm text-forgeInk-700">Este módulo no está disponible en tu plan.</p>
+          <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-6 text-center shadow-forge-xs">
+            <p className="text-forge-sm text-forgeGray-700">Este módulo no está disponible en tu plan.</p>
           </div>
         </div>
       )

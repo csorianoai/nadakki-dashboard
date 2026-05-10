@@ -126,8 +126,8 @@ export function DealerWizardApplicantEmploymentStep() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-display text-forge-xl font-semibold text-forgeInk-800">{t.wizard.sections.applicant_title}</h2>
-        <p className="mt-1 text-forge-sm text-forgeInk-500">{t.wizard.sections.applicant_sub}</p>
+        <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.applicant_title}</h2>
+        <p className="mt-1 text-forge-sm text-forgeGray-500">{t.wizard.sections.applicant_sub}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Input
@@ -165,9 +165,9 @@ export function DealerWizardApplicantEmploymentStep() {
           value={formData.applicant_date_of_birth}
           onValueChange={(iso) => updateField("applicant_date_of_birth", iso)}
         />
-        <div className="rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-3 md:col-span-1">
-          <p className="text-forge-xs text-forgeInk-500">{t.wizard.calculated_age}</p>
-          <p className="font-semibold text-forgeInk-800">{age === null ? t.common.no_data : t.wizard.years_suffix(age)}</p>
+        <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3 md:col-span-1">
+          <p className="text-forge-xs text-forgeGray-500">{t.wizard.calculated_age}</p>
+          <p className="font-semibold text-forgeGray-800">{age === null ? t.common.no_data : t.wizard.years_suffix(age)}</p>
           {age !== null && age < tenantConfig.min_age ? (
             <p className="mt-1 text-forge-xs text-forgeDanger-600">{t.validation.age_min(tenantConfig.min_age)}</p>
           ) : null}
@@ -208,8 +208,8 @@ export function DealerWizardApplicantEmploymentStep() {
       </div>
 
       <div>
-        <h2 className="font-display text-forge-xl font-semibold text-forgeInk-800">{t.wizard.sections.employment_title}</h2>
-        <p className="mt-1 text-forge-sm text-forgeInk-500">{t.wizard.sections.employment_sub}</p>
+        <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.employment_title}</h2>
+        <p className="mt-1 text-forge-sm text-forgeGray-500">{t.wizard.sections.employment_sub}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <Select
@@ -233,9 +233,9 @@ export function DealerWizardApplicantEmploymentStep() {
           value={formData.employment_start_date}
           onValueChange={(iso) => updateField("employment_start_date", iso)}
         />
-        <div className="rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-3">
-          <p className="text-forge-xs text-forgeInk-500">{t.wizard.calculated_tenure}</p>
-          <p className="font-semibold text-forgeInk-800">{tenureLabel}</p>
+        <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3">
+          <p className="text-forge-xs text-forgeGray-500">{t.wizard.calculated_tenure}</p>
+          <p className="font-semibold text-forgeGray-800">{tenureLabel}</p>
         </div>
         <Input
           label="Ingreso mensual neto *"
@@ -277,15 +277,15 @@ export function DealerWizardApplicantEmploymentStep() {
           />
         </div>
         {formData.has_other_income === "yes" ? (
-          <div className="md:col-span-2 space-y-3 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4">
+          <div className="md:col-span-2 space-y-3 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-forge-sm font-medium text-forgeInk-800">Otras fuentes de ingreso</p>
+              <p className="text-forge-sm font-medium text-forgeGray-800">Otras fuentes de ingreso</p>
               <Button type="button" variant="secondary" size="sm" onClick={addOtherIncomeRow}>
                 Agregar fuente de ingreso
               </Button>
             </div>
             {formData.other_incomes.map((row) => (
-              <div key={row.id} className="grid gap-3 rounded-forge-sm border border-forgeInk-100 bg-forgeSurface-card p-3 md:grid-cols-2">
+              <div key={row.id} className="grid gap-3 rounded-forge-sm border border-forgeGray-100 bg-forgeSurface-card p-3 md:grid-cols-2">
                 <Select
                   label="Concepto *"
                   value={row.concept}
@@ -336,7 +336,7 @@ export function DealerWizardApplicantEmploymentStep() {
           </div>
         ) : null}
       </div>
-      <div className="rounded-forge-md bg-forgeBrand-500/10 p-4 text-forge-sm text-forgeInk-700">
+      <div className="rounded-forge-md bg-forgeBrand-500/10 p-4 text-forge-sm text-forgeGray-700">
         Ingreso total mensual estimado:{" "}
         <span className="font-semibold tabular-nums">{formatForgeCurrency(totalIncomeDisplay, tenantConfig.locale, tenantConfig.currency_code)}</span>
       </div>

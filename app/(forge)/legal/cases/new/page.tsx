@@ -5,7 +5,7 @@ import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 
 export default function LegalCasesNewPage() {
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
-  if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
+  if (!tenantHydrated) return <p className="text-sm text-forgeGray-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
     return <p className="text-sm text-forgeDanger-700">{tenantError ?? "Tenant no disponible"}</p>;
   }

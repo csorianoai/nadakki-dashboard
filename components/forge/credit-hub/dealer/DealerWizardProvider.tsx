@@ -400,7 +400,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
           toast.info(copy.draftSaved, {
             duration: 2000,
             className:
-              "border-forgeInk-100/80 bg-forgeSurface-sunken/95 text-forgeInk-600 shadow-forge-sm opacity-95 saturate-75",
+              "border-forgeGray-100/80 bg-forgeSurface-sunken/95 text-forgeGray-600 shadow-forge-sm opacity-95 saturate-75",
           });
         }
       } else {

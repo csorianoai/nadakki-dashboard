@@ -14,7 +14,7 @@ const toneMap: Record<StatusPillTone, string> = {
   warning: "bg-forgeWarning-50 text-forgeWarning-700 ring-1 ring-inset ring-forgeWarning-500/40",
   danger: "bg-forgeDanger-50 text-forgeDanger-700 ring-1 ring-inset ring-forgeDanger-500/40",
   info: "bg-forgeInfo-50 text-forgeInfo-700 ring-1 ring-inset ring-forgeInfo-500/40",
-  neutral: "bg-forgeNeutral-50 text-forgeNeutral-700 ring-1 ring-inset ring-forgeInk-200",
+  neutral: "bg-forgeNeutral-50 text-forgeNeutral-700 ring-1 ring-inset ring-forgeGray-200",
 };
 
 /** Uppercase application status — pair with text; never color alone (a11y). */

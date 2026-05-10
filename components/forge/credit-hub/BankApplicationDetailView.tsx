@@ -87,8 +87,8 @@ function DecisionCommentsPanel({ existingJustification }: { existingJustificatio
     <div className="space-y-4">
       {existingJustification ? (
         <Card className="p-4">
-          <p className="text-forge-xs font-semibold text-forgeInk-500">Justificación de decisión registrada</p>
-          <p className="mt-2 text-forge-sm text-forgeInk-800">{existingJustification}</p>
+          <p className="text-forge-xs font-semibold text-forgeGray-500">Justificación de decisión registrada</p>
+          <p className="mt-2 text-forge-sm text-forgeGray-800">{existingJustification}</p>
         </Card>
       ) : null}
       {showEmpty ? (
@@ -117,7 +117,7 @@ function DecisionCommentsPanel({ existingJustification }: { existingJustificatio
           onChange={(e) => setInternalNote(e.target.value)}
           rows={4}
         />
-        <p className="mt-2 text-forge-xs text-forgeInk-500">
+        <p className="mt-2 text-forge-xs text-forgeGray-500">
           La persistencia de comentarios sigue el flujo de API del banco; este campo no envía datos hasta integrarse con el endpoint de notas.
         </p>
       </div>
@@ -224,7 +224,7 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
             <p>
               Puntaje <strong>{analysis.score}</strong> · Banda <strong>{analysis.approval_band}</strong>
             </p>
-            <p className="mt-2 text-forge-xs text-forgeInk-500">Confianza del motor: {(analysis.confidence * 100).toFixed(0)}%</p>
+            <p className="mt-2 text-forge-xs text-forgeGray-500">Confianza del motor: {(analysis.confidence * 100).toFixed(0)}%</p>
           </>
         ),
         sourceLabel: analysis.engine,
@@ -331,23 +331,23 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
       <div className="space-y-6 lg:col-span-8">
         {analysis ? <ScoreVisual analysis={analysis} /> : null}
         <Card className="p-4">
-          <h2 className="font-display text-forge-sm font-semibold text-forgeInk-800">Resumen del solicitante</h2>
+          <h2 className="font-display text-forge-sm font-semibold text-forgeGray-800">Resumen del solicitante</h2>
           <dl className="mt-3 grid gap-3 sm:grid-cols-2">
             <div>
-              <dt className="text-forge-xs text-forgeInk-500">Nombre</dt>
-              <dd className="text-forge-sm font-medium text-forgeInk-800">{String(applicant?.full_name || "Cliente sin nombre")}</dd>
+              <dt className="text-forge-xs text-forgeGray-500">Nombre</dt>
+              <dd className="text-forge-sm font-medium text-forgeGray-800">{String(applicant?.full_name || "Cliente sin nombre")}</dd>
             </div>
             <div>
-              <dt className="text-forge-xs text-forgeInk-500">ID solicitud</dt>
-              <dd className="font-forgeMono text-forge-xs text-forgeInk-700">{application.application_id}</dd>
+              <dt className="text-forge-xs text-forgeGray-500">ID solicitud</dt>
+              <dd className="font-forgeMono text-forge-xs text-forgeGray-700">{application.application_id}</dd>
             </div>
             <div>
-              <dt className="text-forge-xs text-forgeInk-500">Monto solicitado</dt>
-              <dd className="text-forge-sm font-medium text-forgeInk-800">{formatDop(Number(financial?.requested_amount || 0))}</dd>
+              <dt className="text-forge-xs text-forgeGray-500">Monto solicitado</dt>
+              <dd className="text-forge-sm font-medium text-forgeGray-800">{formatDop(Number(financial?.requested_amount || 0))}</dd>
             </div>
             <div>
-              <dt className="text-forge-xs text-forgeInk-500">Vehículo</dt>
-              <dd className="text-forge-sm font-medium text-forgeInk-800">
+              <dt className="text-forge-xs text-forgeGray-500">Vehículo</dt>
+              <dd className="text-forge-sm font-medium text-forgeGray-800">
                 {String(vehicle?.make || "")} {String(vehicle?.model || "")}
               </dd>
             </div>
@@ -364,12 +364,12 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
               <Shield className="h-5 w-5 shrink-0 text-forgeWarning-600" aria-hidden />
             )}
             <div>
-              <h2 className="font-display text-forge-sm font-semibold text-forgeInk-800">{t.bank_ui.compliance_card_title}</h2>
+              <h2 className="font-display text-forge-sm font-semibold text-forgeGray-800">{t.bank_ui.compliance_card_title}</h2>
               <Badge variant={compliance?.ley_172_13_compliant ? "success" : "warning"} className="mt-2">
                 {compliance?.ley_172_13_compliant ? t.bank_ui.compliance_ok : t.bank_ui.compliance_attention}
               </Badge>
               {compliance?.issues?.length ? (
-                <ul className="mt-3 space-y-1 text-forge-xs text-forgeInk-600">
+                <ul className="mt-3 space-y-1 text-forge-xs text-forgeGray-600">
                   {compliance.issues.map((issue) => (
                     <li key={issue.type}>
                       {issue.type}: {issue.action_required}
@@ -377,18 +377,18 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2 text-forge-xs text-forgeInk-500">Consentimientos y documentos mínimos según informe.</p>
+                <p className="mt-2 text-forge-xs text-forgeGray-500">Consentimientos y documentos mínimos según informe.</p>
               )}
             </div>
           </div>
         </Card>
         <Card className="p-4">
-          <h2 className="font-display text-forge-sm font-semibold text-forgeInk-800">Recomendación IA (no ejecuta decisiones)</h2>
-          <p className="mt-2 text-forge-sm text-forgeInk-700">
+          <h2 className="font-display text-forge-sm font-semibold text-forgeGray-800">Recomendación IA (no ejecuta decisiones)</h2>
+          <p className="mt-2 text-forge-sm text-forgeGray-700">
             {analysis?.explanation || "El motor emitió una recomendación; la decisión final y su justificación son siempre humanas y auditables."}
           </p>
           {existing ? (
-            <p className="mt-3 text-forge-xs text-forgeInk-500">
+            <p className="mt-3 text-forge-xs text-forgeGray-500">
               Decisión registrada: <strong>{existing.decision}</strong> por {existing.decided_by}
             </p>
           ) : null}
@@ -410,10 +410,10 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
               key={key}
               type="button"
               onClick={() => setDrawer({ title: label, description: `Vista previa local · ${application.application_id}` })}
-              className="flex min-h-12 flex-col items-center justify-center gap-2 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4 text-center transition-colors hover:border-forgeBrand-400 hover:bg-forgeSurface-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+              className="flex min-h-12 flex-col items-center justify-center gap-2 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4 text-center transition-colors hover:border-forgeBrand-400 hover:bg-forgeSurface-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
             >
-              <FileText className="h-8 w-8 text-forgeInk-400" aria-hidden />
-              <span className="text-forge-xs font-medium text-forgeInk-700">{label}</span>
+              <FileText className="h-8 w-8 text-forgeGray-400" aria-hidden />
+              <span className="text-forge-xs font-medium text-forgeGray-700">{label}</span>
             </button>
           );
         })}
@@ -434,20 +434,20 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
     analysis?.metrics ? (
       <div className="grid gap-4 sm:grid-cols-2">
         <Card className="p-4">
-          <p className="text-forge-xs text-forgeInk-500">DTI</p>
-          <p className="mt-1 font-display text-forge-lg font-semibold text-forgeInk-800">{(analysis.metrics.dti * 100).toFixed(1)}%</p>
+          <p className="text-forge-xs text-forgeGray-500">DTI</p>
+          <p className="mt-1 font-display text-forge-lg font-semibold text-forgeGray-800">{(analysis.metrics.dti * 100).toFixed(1)}%</p>
         </Card>
         <Card className="p-4">
-          <p className="text-forge-xs text-forgeInk-500">Capacidad de pago</p>
-          <p className="mt-1 font-display text-forge-lg font-semibold text-forgeInk-800">{formatDop(analysis.metrics.payment_capacity)}</p>
+          <p className="text-forge-xs text-forgeGray-500">Capacidad de pago</p>
+          <p className="mt-1 font-display text-forge-lg font-semibold text-forgeGray-800">{formatDop(analysis.metrics.payment_capacity)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-forge-xs text-forgeInk-500">Cuota estimada</p>
-          <p className="mt-1 font-display text-forge-lg font-semibold text-forgeInk-800">{formatDop(analysis.metrics.estimated_payment)}</p>
+          <p className="text-forge-xs text-forgeGray-500">Cuota estimada</p>
+          <p className="mt-1 font-display text-forge-lg font-semibold text-forgeGray-800">{formatDop(analysis.metrics.estimated_payment)}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-forge-xs text-forgeInk-500">Monto financiado (motor)</p>
-          <p className="mt-1 font-display text-forge-lg font-semibold text-forgeInk-800">{formatDop(analysis.metrics.financed_amount)}</p>
+          <p className="text-forge-xs text-forgeGray-500">Monto financiado (motor)</p>
+          <p className="mt-1 font-display text-forge-lg font-semibold text-forgeGray-800">{formatDop(analysis.metrics.financed_amount)}</p>
         </Card>
       </div>
     ) : (
@@ -486,11 +486,11 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
               </Badge>
             ) : null}
           </div>
-          <h1 className="mt-2 font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-2xl)]">
+          <h1 className="mt-2 font-display text-forge-md font-bold text-forgeGray-800 sm:text-[length:var(--forge-text-2xl)]">
             {String(applicant?.full_name || "Cliente sin nombre")}
           </h1>
-          <p className="font-forgeMono text-forge-xs text-forgeInk-500">{application.application_id}</p>
-          <p className="mt-1 text-forge-sm text-forgeInk-600">
+          <p className="font-forgeMono text-forge-xs text-forgeGray-500">{application.application_id}</p>
+          <p className="mt-1 text-forge-sm text-forgeGray-600">
             <Link href="/credit-hub/bank/applications" className="inline-flex min-h-12 items-center text-forgeBrand-600 hover:text-forgeBrand-700">
               ← Volver a la bandeja
             </Link>
@@ -538,8 +538,8 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
 
       {counterOfferQuery.data ? (
         <Card className="border border-forgeInfo-200 bg-forgeInfo-50/40 p-4">
-          <h2 className="font-display text-forge-sm font-semibold text-forgeInk-800">Contra-oferta sugerida</h2>
-          <p className="mt-1 text-forge-sm text-forgeInk-600">{counterOfferQuery.data.explanation}</p>
+          <h2 className="font-display text-forge-sm font-semibold text-forgeGray-800">Contra-oferta sugerida</h2>
+          <p className="mt-1 text-forge-sm text-forgeGray-600">{counterOfferQuery.data.explanation}</p>
           <Button type="button" variant="secondary" className="mt-3 min-h-12" onClick={applyCounterOffer}>
             Usar contra-oferta en la decisión
           </Button>
@@ -590,7 +590,7 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
           </Button>
         }
       >
-        <p className="text-forge-sm text-forgeInk-700">
+        <p className="text-forge-sm text-forgeGray-700">
           Vista previa del documento (contenido binario no incrustado). Use el sistema documental del banco para la versión firmada.
         </p>
       </Drawer>

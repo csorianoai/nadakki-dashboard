@@ -20,19 +20,19 @@ function renderCitations(citations: unknown, heading: string): ReactNode {
   if (citations === null || citations === undefined) return null;
   if (typeof citations === "string") {
     return (
-      <div className="mt-6 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4">
-        <h3 className="text-sm font-semibold text-forgeInk-900">{heading}</h3>
-        <p className="mt-2 whitespace-pre-wrap text-sm text-forgeInk-700">{citations}</p>
+      <div className="mt-6 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4">
+        <h3 className="text-sm font-semibold text-forgeGray-900">{heading}</h3>
+        <p className="mt-2 whitespace-pre-wrap text-sm text-forgeGray-700">{citations}</p>
       </div>
     );
   }
   if (Array.isArray(citations)) {
     return (
-      <div className="mt-6 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4">
-        <h3 id="generated-doc-citations" className="text-sm font-semibold text-forgeInk-900">
+      <div className="mt-6 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4">
+        <h3 id="generated-doc-citations" className="text-sm font-semibold text-forgeGray-900">
           {heading}
         </h3>
-        <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-forgeInk-700" aria-labelledby="generated-doc-citations">
+        <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-forgeGray-700" aria-labelledby="generated-doc-citations">
           {citations.map((item, idx) => (
             <li key={typeof item === "string" ? item : idx}>
               {typeof item === "string" || typeof item === "number"
@@ -45,9 +45,9 @@ function renderCitations(citations: unknown, heading: string): ReactNode {
     );
   }
   return (
-    <div className="mt-6 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4">
-      <h3 className="text-sm font-semibold text-forgeInk-900">{heading}</h3>
-      <pre className="mt-2 max-h-48 overflow-auto rounded-forge-sm bg-forgeInk-900/5 p-3 font-mono text-xs text-forgeInk-800">
+    <div className="mt-6 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4">
+      <h3 className="text-sm font-semibold text-forgeGray-900">{heading}</h3>
+      <pre className="mt-2 max-h-48 overflow-auto rounded-forge-sm bg-forgeGray-900/5 p-3 font-mono text-xs text-forgeGray-800">
         {JSON.stringify(citations, null, 2)}
       </pre>
     </div>
@@ -88,24 +88,24 @@ export function GeneratedDocumentViewer({ tenantId, caseId, docId, open, onClose
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-forgeInk-900/50 p-4"
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-forgeGray-900/50 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="generated-doc-viewer-title"
     >
-      <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card shadow-forge-lg">
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-forgeInk-100 px-5 py-4">
+      <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card shadow-forge-lg">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-forgeGray-100 px-5 py-4">
           <div className="min-w-0">
-            <h2 id="generated-doc-viewer-title" className="truncate text-lg font-semibold text-forgeInk-900">
+            <h2 id="generated-doc-viewer-title" className="truncate text-lg font-semibold text-forgeGray-900">
               {mList.open_details}
             </h2>
-            <p className="mt-1 text-xs text-forgeInk-600">
-              <span className="font-medium text-forgeInk-800">{mList.type_label}:</span> {typeLabel}
+            <p className="mt-1 text-xs text-forgeGray-600">
+              <span className="font-medium text-forgeGray-800">{mList.type_label}:</span> {typeLabel}
             </p>
           </div>
           <button
             type="button"
-            className="shrink-0 rounded-forge-sm px-3 py-1.5 text-sm text-forgeInk-700 ring-1 ring-forgeInk-200 hover:bg-forgeSurface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+            className="shrink-0 rounded-forge-sm px-3 py-1.5 text-sm text-forgeGray-700 ring-1 ring-forgeGray-200 hover:bg-forgeSurface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
             onClick={onClose}
             aria-label={mList.viewer_close}
           >
@@ -123,7 +123,7 @@ export function GeneratedDocumentViewer({ tenantId, caseId, docId, open, onClose
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {isLoading ? (
-            <p className="text-sm text-forgeInk-500" role="status" aria-live="polite">
+            <p className="text-sm text-forgeGray-500" role="status" aria-live="polite">
               {mList.viewer_loading}
             </p>
           ) : null}
@@ -144,9 +144,9 @@ export function GeneratedDocumentViewer({ tenantId, caseId, docId, open, onClose
 
           {!isLoading && !isError && data ? (
             <>
-              <dl className="mb-4 grid gap-2 text-xs text-forgeInk-600 sm:grid-cols-2">
+              <dl className="mb-4 grid gap-2 text-xs text-forgeGray-600 sm:grid-cols-2">
                 <div>
-                  <dt className="font-medium text-forgeInk-700">{mList.generated_at}</dt>
+                  <dt className="font-medium text-forgeGray-700">{mList.generated_at}</dt>
                   <dd>
                     {data.generated_at ? (
                       <time dateTime={data.generated_at}>
@@ -158,17 +158,17 @@ export function GeneratedDocumentViewer({ tenantId, caseId, docId, open, onClose
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-forgeInk-700">{mGen.metadata_validation}</dt>
+                  <dt className="font-medium text-forgeGray-700">{mGen.metadata_validation}</dt>
                   <dd>
                     {data.attorney_validated ? mGen.metadata_validation_yes : mGen.metadata_validation_no}
                   </dd>
                 </div>
               </dl>
 
-              <div className="flex flex-wrap gap-2 border-b border-forgeInk-100 pb-4">
+              <div className="flex flex-wrap gap-2 border-b border-forgeGray-100 pb-4">
                 <button
                   type="button"
-                  className="inline-flex rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeInk-50 hover:bg-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 disabled:opacity-50"
+                  className="inline-flex rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeGray-50 hover:bg-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 disabled:opacity-50"
                   onClick={() => void copyContent()}
                   disabled={!data.content}
                   aria-label={mGen.copy}
@@ -177,7 +177,7 @@ export function GeneratedDocumentViewer({ tenantId, caseId, docId, open, onClose
                 </button>
                 <button
                   type="button"
-                  className="inline-flex rounded-forge-sm px-4 py-2 text-sm text-forgeInk-500 ring-1 ring-forgeInk-200"
+                  className="inline-flex rounded-forge-sm px-4 py-2 text-sm text-forgeGray-500 ring-1 ring-forgeGray-200"
                   disabled
                   title={mGen.mark_validated_disabled}
                   aria-label={mGen.mark_validated_placeholder}
@@ -187,12 +187,12 @@ export function GeneratedDocumentViewer({ tenantId, caseId, docId, open, onClose
               </div>
 
               <div
-                className="max-w-none pt-4 text-sm leading-relaxed text-forgeInk-900 [&_a]:text-forgeBrand-700 [&_a]:underline [&_code]:rounded-forge-sm [&_code]:bg-forgeNeutral-100 [&_code]:px-1 [&_code]:text-forgeInk-900 [&_h1]:my-3 [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:my-3 [&_h2]:text-base [&_h2]:font-semibold [&_li]:my-1 [&_p]:my-2 [&_ul]:my-2 [&_ul]:pl-4"
+                className="max-w-none pt-4 text-sm leading-relaxed text-forgeGray-900 [&_a]:text-forgeBrand-700 [&_a]:underline [&_code]:rounded-forge-sm [&_code]:bg-forgeNeutral-100 [&_code]:px-1 [&_code]:text-forgeGray-900 [&_h1]:my-3 [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:my-3 [&_h2]:text-base [&_h2]:font-semibold [&_li]:my-1 [&_p]:my-2 [&_ul]:my-2 [&_ul]:pl-4"
               >
                 {data.content ? (
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.content}</ReactMarkdown>
                 ) : (
-                  <p className="text-sm text-forgeInk-500">{mList.empty}</p>
+                  <p className="text-sm text-forgeGray-500">{mList.empty}</p>
                 )}
               </div>
 

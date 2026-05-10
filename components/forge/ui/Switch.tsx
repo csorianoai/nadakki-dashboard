@@ -29,9 +29,9 @@ export function Switch({ checked, onCheckedChange, label, className, id, disable
         onClick={() => onCheckedChange(!checked)}
         className={cn(
           "relative h-6 w-10 shrink-0 rounded-forge-pill border transition-[border-color,background-color] duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-          checked ? "border-forgeBrand-600 bg-forgeBrand-500" : "border-forgeInk-200 bg-forgeSurface-sunken",
-          !disabled && "hover:border-forgeInk-300",
-          disabled && "cursor-not-allowed border-forgeInk-100 bg-forgeInk-100"
+          checked ? "border-forgeBrand-600 bg-forgeBrand-500" : "border-forgeGray-200 bg-forgeSurface-sunken",
+          !disabled && "hover:border-forgeGray-300",
+          disabled && "cursor-not-allowed border-forgeGray-100 bg-forgeGray-100"
         )}
         {...props}
       >
@@ -39,11 +39,11 @@ export function Switch({ checked, onCheckedChange, label, className, id, disable
           className={cn(
             "absolute top-0.5 h-4 w-4 rounded-forge-pill bg-forgeSurface-card shadow-forge-xs transition-transform duration-[var(--forge-duration-fast)] ease-out",
             checked ? "translate-x-4" : "translate-x-0.5",
-            disabled && "bg-forgeInk-50 shadow-none"
+            disabled && "bg-forgeGray-50 shadow-none"
           )}
         />
       </button>
-      <span className={cn("text-forge-sm", disabled ? "text-forgeInk-400" : "text-forgeInk-800")}>{label}</span>
+      <span className={cn("text-forge-sm", disabled ? "text-forgeGray-400" : "text-forgeGray-800")}>{label}</span>
     </label>
   );
 }

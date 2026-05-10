@@ -56,7 +56,7 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
   return (
     <PersonaProvider persona={persona}>
       <div
-        className="flex min-h-screen flex-col bg-forgeSurface-page text-forgeInk-800"
+        className="flex min-h-screen flex-col bg-forgeSurface-page text-forgeGray-800"
         data-portal={persona}
         data-tenant={tenantAttr}
         style={brandingStyle}
@@ -64,7 +64,7 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
         <CHFeatureFlagBanner />
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-forge-sm focus:bg-forgeBrand-600 focus:px-4 focus:py-2 focus:text-forgeInk-50 focus:shadow-forge-md"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-forge-sm focus:bg-forgeBrand-600 focus:px-4 focus:py-2 focus:text-forgeGray-50 focus:shadow-forge-md"
         >
           Saltar al contenido principal
         </a>

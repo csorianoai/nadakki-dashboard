@@ -24,7 +24,7 @@ export function ConsentCapture({
   className,
 }: ConsentCaptureProps) {
   return (
-    <div className={cn("rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4", className)}>
+    <div className={cn("rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4", className)}>
       <div className="flex gap-3">
         <Checkbox
           aria-label={consentAriaLabel}
@@ -33,7 +33,7 @@ export function ConsentCapture({
           onChange={(e) => onCheckedChange(e.target.checked)}
           className="shrink-0 pt-0.5"
         />
-        <div className="min-w-0 text-forge-sm leading-relaxed text-forgeInk-700">{children}</div>
+        <div className="min-w-0 text-forge-sm leading-relaxed text-forgeGray-700">{children}</div>
       </div>
     </div>
   );

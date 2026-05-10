@@ -163,9 +163,9 @@ export default function BankDashboardPage() {
         header: "Solicitante",
         cell: (row: BankQueueItem) => (
           <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-forgeInk-800">{row.applicant_name || "Cliente sin nombre"}</span>
-            <span className="font-mono text-[13px] font-semibold text-forgeInk-700">{row.application_id}</span>
-            <span className="text-forge-xs text-forgeInk-500">
+            <span className="font-medium text-forgeGray-800">{row.applicant_name || "Cliente sin nombre"}</span>
+            <span className="font-mono text-[13px] font-semibold text-forgeGray-700">{row.application_id}</span>
+            <span className="text-forge-xs text-forgeGray-500">
               {t.bank.application_score_label}:{" "}
               <span className="font-forgeMono font-semibold tabular-nums">{row.score}</span>
             </span>
@@ -177,7 +177,7 @@ export default function BankDashboardPage() {
         id: "product",
         header: "Producto / dealer",
         cell: (row: BankQueueItem) => (
-          <span className="text-forge-sm text-forgeInk-600">
+          <span className="text-forge-sm text-forgeGray-600">
             {row.vehicle_label || "—"} · {row.dealer_name || "—"}
           </span>
         ),
@@ -187,7 +187,7 @@ export default function BankDashboardPage() {
         header: "Monto",
         className: "text-right tabular-nums [font-feature-settings:'tnum']",
         cell: (row: BankQueueItem) => (
-          <span className="font-forgeMono text-forge-sm font-medium text-forgeInk-800">
+          <span className="font-forgeMono text-forge-sm font-medium text-forgeGray-800">
             {formatForgeCurrency(Number(row.requested_amount) || 0, tenantConfig.locale, tenantConfig.currency_code)}
           </span>
         ),
@@ -201,7 +201,7 @@ export default function BankDashboardPage() {
       {
         id: "submitted",
         header: "Enviada",
-        className: "whitespace-nowrap text-forgeInk-600",
+        className: "whitespace-nowrap text-forgeGray-600",
         cell: (row: BankQueueItem) => (
           <span className="text-forge-xs">
             {row.created_at
@@ -233,19 +233,19 @@ export default function BankDashboardPage() {
 
   return (
     <div className="space-y-8" data-persona={persona}>
-      <Card variant="default" className="border-forgeInk-200 bg-forgeSurface-card px-6 pt-8 pb-6">
+      <Card variant="default" className="border-forgeGray-200 bg-forgeSurface-card px-6 pt-8 pb-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="mb-2 font-sans text-[14px] font-normal leading-snug text-forgeInk-500">
+            <p className="mb-2 font-sans text-[14px] font-normal leading-snug text-forgeGray-500">
               {forgeTimeGreeting(tenantConfig.locale)}, {tenantConfig.institution_name}
             </p>
             <h1
-              className="font-display font-normal leading-[1.1] tracking-[-0.015em] text-forgeInk-800"
+              className="font-display font-normal leading-[1.1] tracking-[-0.015em] text-forgeGray-800"
               style={{ fontSize: "clamp(36px, 5vw, 56px)" }}
             >
               Mesa de decisiones
             </h1>
-            <p className="mt-2 max-w-2xl text-forge-sm text-forgeInk-600">{t.bank.hero_compliance_line}</p>
+            <p className="mt-2 max-w-2xl text-forge-sm text-forgeGray-600">{t.bank.hero_compliance_line}</p>
           </div>
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-forge-md bg-forgeBrand-50 text-forgeBrand-600">
             <Building2 className="h-8 w-8" aria-hidden />
@@ -285,7 +285,7 @@ export default function BankDashboardPage() {
 
       <section className="space-y-4" aria-labelledby="bank-queue-heading">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 id="bank-queue-heading" className="font-display text-forge-md font-bold text-forgeInk-800 sm:text-[length:var(--forge-text-xl)]">
+          <h2 id="bank-queue-heading" className="font-display text-forge-md font-bold text-forgeGray-800 sm:text-[length:var(--forge-text-xl)]">
             Bandeja priorizada
           </h2>
           <Button
@@ -358,8 +358,8 @@ export default function BankDashboardPage() {
         )}
       </section>
 
-      <section className="mt-12 border-t border-forgeInk-100 pt-8" aria-labelledby="bank-insights-heading">
-        <h2 id="bank-insights-heading" className="font-sans text-[16px] font-medium text-forgeInk-700">
+      <section className="mt-12 border-t border-forgeGray-100 pt-8" aria-labelledby="bank-insights-heading">
+        <h2 id="bank-insights-heading" className="font-sans text-[16px] font-medium text-forgeGray-700">
           Insights
         </h2>
         <div className="mt-6 grid gap-6 lg:grid-cols-2">

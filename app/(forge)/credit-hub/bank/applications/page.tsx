@@ -186,7 +186,7 @@ function BankApplicationsQueueInner() {
         id: "application_id",
         header: "ID",
         cell: (row: BankQueueItem) => (
-          <span className="font-mono text-[13px] font-semibold text-forgeInk-900">{row.application_id}</span>
+          <span className="font-mono text-[13px] font-semibold text-forgeGray-900">{row.application_id}</span>
         ),
       },
       {
@@ -194,13 +194,13 @@ function BankApplicationsQueueInner() {
         header: "Solicitante",
         cell: (row: BankQueueItem) => (
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="font-medium text-forgeInk-800">{row.applicant_name || "Cliente sin nombre"}</span>
-            <span className="text-forge-xs text-forgeInk-500">
+            <span className="font-medium text-forgeGray-800">{row.applicant_name || "Cliente sin nombre"}</span>
+            <span className="text-forge-xs text-forgeGray-500">
               {row.vehicle_label || "—"} · {row.dealer_name || "—"}
             </span>
-            <span className="text-forge-xs text-forgeInk-500">
+            <span className="text-forge-xs text-forgeGray-500">
               {t.bank.application_score_label}:{" "}
-              <span className="font-forgeMono font-semibold tabular-nums text-forgeInk-700">{row.score}</span> ·{" "}
+              <span className="font-forgeMono font-semibold tabular-nums text-forgeGray-700">{row.score}</span> ·{" "}
               <StatusPill tone={priorityTone(row.priority)} className="align-middle">
                 {row.priority}
               </StatusPill>
@@ -213,7 +213,7 @@ function BankApplicationsQueueInner() {
         header: "Monto",
         className: "text-right tabular-nums [font-feature-settings:'tnum']",
         cell: (row: BankQueueItem) => (
-          <span className="font-forgeMono text-forge-sm font-medium text-forgeInk-800">{formatDop(row.requested_amount)}</span>
+          <span className="font-forgeMono text-forge-sm font-medium text-forgeGray-800">{formatDop(row.requested_amount)}</span>
         ),
       },
       {
@@ -225,7 +225,7 @@ function BankApplicationsQueueInner() {
       {
         id: "submitted",
         header: "Enviada",
-        className: "whitespace-nowrap text-forgeInk-600",
+        className: "whitespace-nowrap text-forgeGray-600",
         cell: (row: BankQueueItem) => (
           <span className="text-forge-xs">{formatShortDateTime(row.created_at, tenantConfig.locale)}</span>
         ),
@@ -261,21 +261,21 @@ function BankApplicationsQueueInner() {
 
   return (
     <div className="space-y-6" data-persona={persona}>
-      <Card variant="default" className="border-forgeInk-200 p-6">
+      <Card variant="default" className="border-forgeGray-200 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
           <h1
-            className="min-w-0 font-display font-normal leading-tight tracking-[-0.01em] text-forgeInk-800"
+            className="min-w-0 font-display font-normal leading-tight tracking-[-0.01em] text-forgeGray-800"
             style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
           >
             Solicitudes priorizadas
           </h1>
-          <p className="shrink-0 font-sans text-[13px] text-forgeInk-600 sm:text-right">
-            <span className="font-medium tabular-nums text-forgeInk-700">{filtered.length}</span>
-            <span className="text-forgeInk-500"> en vista · Última sync: </span>
+          <p className="shrink-0 font-sans text-[13px] text-forgeGray-600 sm:text-right">
+            <span className="font-medium tabular-nums text-forgeGray-700">{filtered.length}</span>
+            <span className="text-forgeGray-500"> en vista · Última sync: </span>
             <span>{formatSyncAge(queueQuery.dataUpdatedAt, tenantConfig.locale)}</span>
           </p>
         </div>
-        <p className="mt-2 text-forge-sm text-forgeInk-600">{t.bank.applications_subtitle}</p>
+        <p className="mt-2 text-forge-sm text-forgeGray-600">{t.bank.applications_subtitle}</p>
       </Card>
 
       <div className="grid gap-3 md:grid-cols-[1fr_auto]">
@@ -288,7 +288,7 @@ function BankApplicationsQueueInner() {
           prefix={<Search className="h-4 w-4" aria-hidden />}
         />
         <Card variant="inset" className="flex items-center px-4 py-3">
-          <p className="text-forge-sm text-forgeInk-600">{t.bank.queue_order_caption}</p>
+          <p className="text-forge-sm text-forgeGray-600">{t.bank.queue_order_caption}</p>
         </Card>
       </div>
 
@@ -364,7 +364,7 @@ function BankApplicationsQueueInner() {
             </div>
           </Card>
           {bulkMutation.data ? (
-            <p className="mt-2 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-3 text-forge-sm text-forgeInk-800">
+            <p className="mt-2 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3 text-forge-sm text-forgeGray-800">
               {t.bank.bulk_result(bulkMutation.data.processed, bulkMutation.data.skipped, bulkMutation.data.errors)}
             </p>
           ) : null}

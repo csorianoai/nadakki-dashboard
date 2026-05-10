@@ -15,7 +15,7 @@ export function Skeleton({ className, label }: SkeletonProps) {
       {...(decorative
         ? { "aria-hidden": true as const }
         : { role: "status" as const, "aria-label": label })}
-      className={cn("block animate-pulse rounded-forge-sm bg-forgeInk-100", className)}
+      className={cn("block animate-pulse rounded-forge-sm bg-forgeGray-100", className)}
     />
   );
 }

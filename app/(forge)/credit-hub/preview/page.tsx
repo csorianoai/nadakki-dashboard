@@ -49,8 +49,8 @@ import {
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="scroll-mt-4 border-b border-forgeInk-100 py-10 last:border-0">
-      <h2 className="mb-6 font-display text-forge-md font-semibold text-forgeInk-800">{title}</h2>
+    <section className="scroll-mt-4 border-b border-forgeGray-100 py-10 last:border-0">
+      <h2 className="mb-6 font-display text-forge-md font-semibold text-forgeGray-800">{title}</h2>
       {children}
     </section>
   );
@@ -106,7 +106,7 @@ export default function ForgePreviewPage() {
   );
 
   return (
-    <div className="min-h-screen bg-forgeSurface-page pb-24 text-forgeInk-800">
+    <div className="min-h-screen bg-forgeSurface-page pb-24 text-forgeGray-800">
       <ForgeToaster />
       <Modal
         open={modalOpen}
@@ -124,7 +124,7 @@ export default function ForgePreviewPage() {
           </div>
         }
       >
-        <p className="text-forge-sm text-forgeInk-600">Body content uses the same typography scale as production screens.</p>
+        <p className="text-forge-sm text-forgeGray-600">Body content uses the same typography scale as production screens.</p>
       </Modal>
       <Drawer
         open={drawerOpen}
@@ -133,7 +133,7 @@ export default function ForgePreviewPage() {
         description="Drawer panel for secondary workflows."
         footer={<Button fullWidth onClick={() => setDrawerOpen(false)}>Apply</Button>}
       >
-        <p className="text-forge-sm text-forgeInk-600">Filter controls would live here.</p>
+        <p className="text-forge-sm text-forgeGray-600">Filter controls would live here.</p>
       </Drawer>
 
       <div className="mx-auto max-w-5xl px-4 pt-8">
@@ -145,15 +145,15 @@ export default function ForgePreviewPage() {
           ]}
         />
         <h1
-          className="mt-4 font-display font-normal leading-[1.1] tracking-[-0.015em] text-forgeInk-800"
+          className="mt-4 font-display font-normal leading-[1.1] tracking-[-0.015em] text-forgeGray-800"
           style={{ fontSize: "clamp(48px, 6vw, 64px)" }}
         >
           Forge component preview
         </h1>
-        <p className="mt-2 font-sans text-forge-sm text-forgeInk-600">Multi-tenant credit origination UI · v1.0.0</p>
-        <p className="mt-2 max-w-2xl text-forge-xs text-forgeInk-500">
+        <p className="mt-2 font-sans text-forge-sm text-forgeGray-600">Multi-tenant credit origination UI · v1.0.0</p>
+        <p className="mt-2 max-w-2xl text-forge-xs text-forgeGray-500">
           Phase 2 playground — v3.2 tokens. Command palette:{" "}
-          <kbd className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">
+          <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1 font-forgeMono text-forge-xs">
             Ctrl K
           </kbd>
           .
@@ -170,7 +170,7 @@ export default function ForgePreviewPage() {
                 { id: "d", label: "Dashboard", href: "#layout", icon: <LayoutDashboard aria-hidden /> },
                 { id: "s", label: "Settings", href: "#layout", icon: <Settings aria-hidden /> },
               ]}
-              footer={<span className="text-forge-xs text-forgeInk-500">Layout preview</span>}
+              footer={<span className="text-forge-xs text-forgeGray-500">Layout preview</span>}
             />
             <div className="flex min-w-0 flex-1 flex-col bg-forgeSurface-page">
               <Topbar
@@ -216,7 +216,7 @@ export default function ForgePreviewPage() {
         <Section title="Buttons & icon buttons">
           <div className="space-y-8">
             <div>
-              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Variants (default)</h3>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">Variants (default)</h3>
               <div className="flex flex-wrap gap-3">
                 <Button variant="primary">Primary</Button>
                 <Button variant="secondary">Secondary</Button>
@@ -232,7 +232,7 @@ export default function ForgePreviewPage() {
               </div>
             </div>
             <div>
-              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Loading (leading spinner, label visible)</h3>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">Loading (leading spinner, label visible)</h3>
               <div className="flex flex-wrap gap-3">
                 <Button variant="primary" loading>
                   Primary
@@ -255,7 +255,7 @@ export default function ForgePreviewPage() {
               </div>
             </div>
             <div>
-              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Disabled (no hover lift)</h3>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">Disabled (no hover lift)</h3>
               <div className="flex flex-wrap gap-3">
                 <Button variant="primary" disabled>
                   Primary
@@ -275,7 +275,7 @@ export default function ForgePreviewPage() {
               </div>
             </div>
             <div>
-              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">IconButton</h3>
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">IconButton</h3>
               <div className="flex flex-wrap items-center gap-3">
                 <IconButton aria-label="User" variant="default">
                   <User className="h-4 w-4" aria-hidden />
@@ -292,15 +292,15 @@ export default function ForgePreviewPage() {
               </div>
             </div>
             <div>
-              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">
+              <h3 className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">
                 Focus on surfaces (Tab through — brand-500 ring)
               </h3>
-              <p className="mb-3 max-w-2xl text-forge-xs text-forgeInk-500">
+              <p className="mb-3 max-w-2xl text-forge-xs text-forgeGray-500">
                 Light card, deep brand header, and modal scrim tint — primary/secondary/icon controls should keep a visible focus outline.
               </p>
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-card p-4">
-                  <p className="mb-3 text-forge-xs text-forgeInk-500">Card surface</p>
+                <div className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card p-4">
+                  <p className="mb-3 text-forge-xs text-forgeGray-500">Card surface</p>
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="primary">
                       Primary
@@ -314,12 +314,12 @@ export default function ForgePreviewPage() {
                   </div>
                 </div>
                 <div className="rounded-forge-sm bg-forgeBrand-900 p-4">
-                  <p className="mb-3 text-forge-xs text-forgeInk-200">Brand-900 header</p>
+                  <p className="mb-3 text-forge-xs text-forgeGray-200">Brand-900 header</p>
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="primary">
                       Primary
                     </Button>
-                    <IconButton aria-label="Bell on navy" variant="default" className="border-forgeInk-600 bg-forgeBrand-800 text-forgeInk-50 hover:bg-forgeBrand-700">
+                    <IconButton aria-label="Bell on navy" variant="default" className="border-forgeGray-600 bg-forgeBrand-800 text-forgeGray-50 hover:bg-forgeBrand-700">
                       <Bell className="h-4 w-4" aria-hidden />
                     </IconButton>
                   </div>
@@ -328,7 +328,7 @@ export default function ForgePreviewPage() {
                   className="rounded-forge-sm p-4"
                   style={{ backgroundColor: "rgba(15, 23, 41, 0.48)" }}
                 >
-                  <p className="mb-3 text-forge-xs text-forgeInk-100">Modal scrim (rgba 15,23,41,0.48)</p>
+                  <p className="mb-3 text-forge-xs text-forgeGray-100">Modal scrim (rgba 15,23,41,0.48)</p>
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="primary">
                       Primary
@@ -349,7 +349,7 @@ export default function ForgePreviewPage() {
         <Section title="Form controls">
           <div className="grid gap-10 lg:grid-cols-2">
             <div className="max-w-xl space-y-6">
-              <h3 className="text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Default</h3>
+              <h3 className="text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">Default</h3>
               <Input name="legal-name" label="Legal name" placeholder="Ada Lovelace" />
               <Textarea name="preview-notes" label="Notes" placeholder="Internal notes…" rows={3} />
               <Select
@@ -380,7 +380,7 @@ export default function ForgePreviewPage() {
               <Switch checked={sw} onCheckedChange={setSw} label="Desktop notifications" />
             </div>
             <div className="max-w-xl space-y-6">
-              <h3 className="text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Disabled &amp; error</h3>
+              <h3 className="text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">Disabled &amp; error</h3>
               <Input
                 name="preview-legal-err"
                 label="Client name"
@@ -440,17 +440,17 @@ export default function ForgePreviewPage() {
         <Section title="Cards, empty state, badges">
           <div className="grid gap-4 md:grid-cols-2">
             <Card variant="default">
-              <p className="text-forge-sm font-medium text-forgeInk-800">Default card</p>
-              <p className="mt-2 text-forge-sm text-forgeInk-600">Shadow-xs, raised surface.</p>
+              <p className="text-forge-sm font-medium text-forgeGray-800">Default card</p>
+              <p className="mt-2 text-forge-sm text-forgeGray-600">Shadow-xs, raised surface.</p>
             </Card>
             <Card variant="outlined">
-              <p className="text-forge-sm font-medium text-forgeInk-800">Outlined</p>
-              <p className="mt-2 text-forge-sm text-forgeInk-600">No elevation — dense stacks.</p>
+              <p className="text-forge-sm font-medium text-forgeGray-800">Outlined</p>
+              <p className="mt-2 text-forge-sm text-forgeGray-600">No elevation — dense stacks.</p>
             </Card>
           </div>
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
             <div>
-              <p className="mb-2 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">EmptyState — default + CTA</p>
+              <p className="mb-2 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">EmptyState — default + CTA</p>
               <EmptyState
                 icon={<Inbox />}
                 title="No applications match these filters"
@@ -459,7 +459,7 @@ export default function ForgePreviewPage() {
               />
             </div>
             <div>
-              <p className="mb-2 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">EmptyState — passive (card context)</p>
+              <p className="mb-2 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">EmptyState — passive (card context)</p>
               <Card variant="default" className="p-4">
                 <EmptyState
                   tone="success"
@@ -572,7 +572,7 @@ export default function ForgePreviewPage() {
               </Button>
             }
           />
-          <p className="mt-8 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">DataTable — empty row (success / passive)</p>
+          <p className="mt-8 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">DataTable — empty row (success / passive)</p>
           <DataTable<DemoRow>
             getRowId={(r) => r.id}
             rows={[]}
@@ -583,21 +583,21 @@ export default function ForgePreviewPage() {
             emptyTone="success"
             emptyIcon={<CheckCircle2 className="text-forgeSuccess-600" />}
           />
-          <div className="mt-6 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-4">
-            <p className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-500">Bulk action bar (layout only)</p>
+          <div className="mt-6 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4">
+            <p className="mb-3 text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">Bulk action bar (layout only)</p>
             <div className="flex flex-wrap items-center gap-4">
               <Checkbox
                 label="Select all demo rows"
                 checked={bulkDemoSelected.length === tableRows.length}
                 onChange={(e) => setBulkDemoSelected(e.target.checked ? tableRows.map((r) => r.id) : [])}
               />
-              <span className="text-forge-sm text-forgeInk-600">
+              <span className="text-forge-sm text-forgeGray-600">
                 {bulkDemoSelected.length} selected — uses same tokens as bank queue bulk strip.
               </span>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-forgeInk-100 pt-4">
-            <p className="text-forge-xs text-forgeInk-500">Pagination (no forge Pagination primitive — button disabled spec)</p>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-forgeGray-100 pt-4">
+            <p className="text-forge-xs text-forgeGray-500">Pagination (no forge Pagination primitive — button disabled spec)</p>
             <div className="flex gap-2">
               <Button size="sm" variant="secondary" disabled>
                 Previous

@@ -59,7 +59,7 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
       <div className="p-4 md:p-8">
         <Card className="mx-auto max-w-lg p-8 text-center">
           <p className="font-medium text-forgeDanger-700">{notFound ? t.dealer.detail_not_found : t.dealer.detail_load_error}</p>
-          <p className="mt-2 text-forge-sm text-forgeInk-500">
+          <p className="mt-2 text-forge-sm text-forgeGray-500">
             {notFound ? t.dealer.detail_not_found_hint : error instanceof Error ? error.message : t.dealer.detail_retry_hint}
           </p>
           <div className="mt-6 flex justify-center gap-3">
@@ -90,14 +90,14 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
         </Button>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="font-display text-forge-2xl font-semibold text-forgeInk-800 md:text-forge-3xl">{data.applicant_name}</h1>
-            <p className="mt-1 font-mono text-forge-xs text-forgeInk-500">{data.application_id}</p>
+            <h1 className="font-display text-forge-2xl font-semibold text-forgeGray-800 md:text-forge-3xl">{data.applicant_name}</h1>
+            <p className="mt-1 font-mono text-forge-xs text-forgeGray-500">{data.application_id}</p>
             <div className="mt-2">
               <ApplicationStatusBadge status={data.status} />
             </div>
           </div>
           {persona === "bank" ? (
-            <p className="max-w-sm rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-3 py-2 text-forge-xs text-forgeInk-600">
+            <p className="max-w-sm rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-3 py-2 text-forge-xs text-forgeGray-600">
               Vista seguimiento dealer: mismos datos públicos, sin paneles internos del banco.
             </p>
           ) : null}
@@ -105,9 +105,9 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
       </div>
 
       <Card className="p-5 md:p-6">
-        <h2 className="font-display text-forge-md font-semibold text-forgeInk-800">Estado de tu solicitud</h2>
+        <h2 className="font-display text-forge-md font-semibold text-forgeGray-800">Estado de tu solicitud</h2>
         {approved ? (
-          <div className="mt-4 space-y-3 text-forge-sm text-forgeInk-700">
+          <div className="mt-4 space-y-3 text-forge-sm text-forgeGray-700">
             <p className="rounded-forge-sm bg-forgeSuccess-50 px-3 py-2 text-forgeSuccess-900">
               ¡Felicitaciones! Esta solicitud fue <strong>aprobada</strong>. El banco se pondrá en contacto para los siguientes pasos de formalización y
               desembolso.
@@ -115,13 +115,13 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
             <p>
               Contacto de la institución: <strong>{tenantConfig.institution_name}</strong>
             </p>
-            <p className="text-forge-xs text-forgeInk-500">
+            <p className="text-forge-xs text-forgeGray-500">
               Si necesitas actualizar datos de contacto del cliente, coordina con tu ejecutivo de cuenta.
             </p>
           </div>
         ) : null}
         {rejected ? (
-          <div className="mt-4 space-y-3 text-forge-sm text-forgeInk-700">
+          <div className="mt-4 space-y-3 text-forge-sm text-forgeGray-700">
             <p className="rounded-forge-sm bg-forgeDanger-50 px-3 py-2 text-forgeDanger-900">
               Esta solicitud no fue aprobada en esta ocasión. Motivo general: <strong>{rejectionCategory(data.decision)}</strong>.
             </p>
@@ -132,14 +132,14 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
           </div>
         ) : null}
         {!approved && !rejected ? (
-          <div className="mt-4 space-y-2 text-forge-sm text-forgeInk-700">
+          <div className="mt-4 space-y-2 text-forge-sm text-forgeGray-700">
             <p>
-              Etapa actual: <span className="font-medium text-forgeInk-900">{stageLabel(status)}</span>
+              Etapa actual: <span className="font-medium text-forgeGray-900">{stageLabel(status)}</span>
             </p>
-            <p className="text-forgeInk-600">
+            <p className="text-forgeGray-600">
               Tiempo estimado de respuesta: <span className="font-medium">3 a 5 días hábiles</span> desde la última actualización.
             </p>
-            <p className="text-forge-xs text-forgeInk-500">
+            <p className="text-forge-xs text-forgeGray-500">
               Si falta documentación, el banco la solicitará por los canales registrados. Revisa el historial abajo.
             </p>
           </div>
@@ -147,71 +147,71 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
       </Card>
 
       <Card className="p-5 md:p-6">
-        <h2 className="mb-4 flex items-center gap-2 font-display text-forge-md font-semibold text-forgeInk-800">
-          <User className="h-5 w-5 text-forgeInk-500" aria-hidden />
+        <h2 className="mb-4 flex items-center gap-2 font-display text-forge-md font-semibold text-forgeGray-800">
+          <User className="h-5 w-5 text-forgeGray-500" aria-hidden />
           Cliente y monto
         </h2>
         <dl className="space-y-3 text-forge-sm">
           <div>
-            <dt className="text-forge-xs text-forgeInk-500">{t.dealer.field_name}</dt>
-            <dd className="text-forgeInk-900">{data.applicant_name}</dd>
+            <dt className="text-forge-xs text-forgeGray-500">{t.dealer.field_name}</dt>
+            <dd className="text-forgeGray-900">{data.applicant_name}</dd>
           </div>
           {data.applicant_email ? (
             <div className="flex items-start gap-2">
-              <Mail className="mt-0.5 h-4 w-4 shrink-0 text-forgeInk-400" aria-hidden />
+              <Mail className="mt-0.5 h-4 w-4 shrink-0 text-forgeGray-400" aria-hidden />
               <div>
-                <dt className="text-forge-xs text-forgeInk-500">{t.dealer.field_email}</dt>
-                <dd className="text-forgeInk-900">{data.applicant_email}</dd>
+                <dt className="text-forge-xs text-forgeGray-500">{t.dealer.field_email}</dt>
+                <dd className="text-forgeGray-900">{data.applicant_email}</dd>
               </div>
             </div>
           ) : null}
           {data.applicant_phone ? (
             <div className="flex items-start gap-2">
-              <Phone className="mt-0.5 h-4 w-4 shrink-0 text-forgeInk-400" aria-hidden />
+              <Phone className="mt-0.5 h-4 w-4 shrink-0 text-forgeGray-400" aria-hidden />
               <div>
-                <dt className="text-forge-xs text-forgeInk-500">{t.dealer.field_phone}</dt>
-                <dd className="text-forgeInk-900">{data.applicant_phone}</dd>
+                <dt className="text-forge-xs text-forgeGray-500">{t.dealer.field_phone}</dt>
+                <dd className="text-forgeGray-900">{data.applicant_phone}</dd>
               </div>
             </div>
           ) : null}
           <div>
-            <dt className="text-forge-xs text-forgeInk-500">{t.dealer.field_amount}</dt>
-            <dd className="font-mono font-semibold text-forgeInk-900">{formatForgeCurrency(amount, tenantConfig.locale, tenantConfig.currency_code)}</dd>
+            <dt className="text-forge-xs text-forgeGray-500">{t.dealer.field_amount}</dt>
+            <dd className="font-mono font-semibold text-forgeGray-900">{formatForgeCurrency(amount, tenantConfig.locale, tenantConfig.currency_code)}</dd>
           </div>
         </dl>
       </Card>
 
       <Card className="p-5 md:p-6">
-        <h2 className="mb-4 flex items-center gap-2 font-display text-forge-md font-semibold text-forgeInk-800">
-          <Car className="h-5 w-5 text-forgeInk-500" aria-hidden />
+        <h2 className="mb-4 flex items-center gap-2 font-display text-forge-md font-semibold text-forgeGray-800">
+          <Car className="h-5 w-5 text-forgeGray-500" aria-hidden />
           {t.dealer.vehicle_heading}
         </h2>
         {!data.vehicle_year && !data.vehicle_make && !data.vehicle_model && !data.vehicle_vin ? (
-          <p className="text-forge-sm text-forgeInk-500">Sin información de vehículo registrada aún.</p>
+          <p className="text-forge-sm text-forgeGray-500">Sin información de vehículo registrada aún.</p>
         ) : (
           <dl className="grid grid-cols-2 gap-3 text-forge-sm">
             {data.vehicle_year ? (
               <div>
-                <dt className="text-forge-xs text-forgeInk-500">Año</dt>
-                <dd className="text-forgeInk-900">{data.vehicle_year}</dd>
+                <dt className="text-forge-xs text-forgeGray-500">Año</dt>
+                <dd className="text-forgeGray-900">{data.vehicle_year}</dd>
               </div>
             ) : null}
             {data.vehicle_make ? (
               <div>
-                <dt className="text-forge-xs text-forgeInk-500">Marca</dt>
-                <dd className="text-forgeInk-900">{data.vehicle_make}</dd>
+                <dt className="text-forge-xs text-forgeGray-500">Marca</dt>
+                <dd className="text-forgeGray-900">{data.vehicle_make}</dd>
               </div>
             ) : null}
             {data.vehicle_model ? (
               <div className="col-span-2">
-                <dt className="text-forge-xs text-forgeInk-500">Modelo</dt>
-                <dd className="text-forgeInk-900">{data.vehicle_model}</dd>
+                <dt className="text-forge-xs text-forgeGray-500">Modelo</dt>
+                <dd className="text-forgeGray-900">{data.vehicle_model}</dd>
               </div>
             ) : null}
             {data.vehicle_vin ? (
               <div className="col-span-2">
-                <dt className="text-forge-xs text-forgeInk-500">VIN</dt>
-                <dd className="font-mono text-forge-sm text-forgeInk-900">{data.vehicle_vin}</dd>
+                <dt className="text-forge-xs text-forgeGray-500">VIN</dt>
+                <dd className="font-mono text-forge-sm text-forgeGray-900">{data.vehicle_vin}</dd>
               </div>
             ) : null}
           </dl>
@@ -219,8 +219,8 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
       </Card>
 
       <Card className="p-5 md:p-6">
-        <h2 className="mb-4 flex items-center gap-2 font-display text-forge-md font-semibold text-forgeInk-800">
-          <Clock className="h-5 w-5 text-forgeInk-500" aria-hidden />
+        <h2 className="mb-4 flex items-center gap-2 font-display text-forge-md font-semibold text-forgeGray-800">
+          <Clock className="h-5 w-5 text-forgeGray-500" aria-hidden />
           {t.dealer.timeline_heading}
         </h2>
         <div className="space-y-4">
@@ -228,17 +228,17 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
             <div key={event.id} className="flex items-start gap-3">
               <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-forgeBrand-500" aria-hidden />
               <div>
-                <p className="font-medium text-forgeInk-900">{event.title}</p>
-                {event.description ? <p className="text-forge-sm text-forgeInk-600">{event.description}</p> : null}
-                <p className="text-forge-xs text-forgeInk-500">{new Date(event.created_at).toLocaleString(tenantConfig.locale)}</p>
+                <p className="font-medium text-forgeGray-900">{event.title}</p>
+                {event.description ? <p className="text-forge-sm text-forgeGray-600">{event.description}</p> : null}
+                <p className="text-forge-xs text-forgeGray-500">{new Date(event.created_at).toLocaleString(tenantConfig.locale)}</p>
               </div>
             </div>
           ))}
           <div className="flex items-start gap-3">
             <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-forgeSuccess-600" aria-hidden />
             <div>
-              <p className="font-medium text-forgeInk-900">{t.dealer.application_created}</p>
-              <p className="text-forge-sm text-forgeInk-600">{new Date(data.created_at).toLocaleString(tenantConfig.locale)}</p>
+              <p className="font-medium text-forgeGray-900">{t.dealer.application_created}</p>
+              <p className="text-forge-sm text-forgeGray-600">{new Date(data.created_at).toLocaleString(tenantConfig.locale)}</p>
             </div>
           </div>
         </div>

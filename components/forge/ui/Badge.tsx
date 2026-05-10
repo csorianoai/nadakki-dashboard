@@ -14,7 +14,7 @@ const map: Record<BadgeVariant, string> = {
   warning: "bg-forgeWarning-50 text-forgeWarning-700 border-forgeWarning-500/30",
   danger: "bg-forgeDanger-50 text-forgeDanger-700 border-forgeDanger-500/30",
   info: "bg-forgeInfo-50 text-forgeInfo-700 border-forgeInfo-500/30",
-  neutral: "bg-forgeNeutral-50 text-forgeNeutral-700 border-forgeInk-200",
+  neutral: "bg-forgeNeutral-50 text-forgeNeutral-700 border-forgeGray-200",
 };
 
 export function Badge({ variant = "neutral", className, children, ...props }: BadgeProps) {

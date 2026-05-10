@@ -47,16 +47,16 @@ export function CaseIssueReportModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-forgeInk-900/40 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-lg rounded-forge-md border border-forgeInk-200 bg-forgeSurface-card p-6 shadow-forge-md">
-        <h2 className="text-lg font-semibold text-forgeInk-900">{m.issues.report_button}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-forgeGray-900/40 p-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-lg rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-6 shadow-forge-md">
+        <h2 className="text-lg font-semibold text-forgeGray-900">{m.issues.report_button}</h2>
         <div className="mt-4 space-y-3">
-          <label className="block text-sm font-medium text-forgeInk-800">
+          <label className="block text-sm font-medium text-forgeGray-800">
             Tipo
             <select
               value={issueType}
               onChange={(e) => setIssueType(e.target.value)}
-              className="mt-1 w-full rounded-forge-sm border border-forgeInk-200 px-2 py-2"
+              className="mt-1 w-full rounded-forge-sm border border-forgeGray-200 px-2 py-2"
             >
               {(Object.keys(m.issues.types) as Array<keyof typeof m.issues.types>).map((k) => (
                 <option key={k} value={k}>
@@ -65,12 +65,12 @@ export function CaseIssueReportModal({
               ))}
             </select>
           </label>
-          <label className="block text-sm font-medium text-forgeInk-800">
+          <label className="block text-sm font-medium text-forgeGray-800">
             Gravedad
             <select
               value={severity}
               onChange={(e) => setSeverity(e.target.value as IssueSeverity)}
-              className="mt-1 w-full rounded-forge-sm border border-forgeInk-200 px-2 py-2"
+              className="mt-1 w-full rounded-forge-sm border border-forgeGray-200 px-2 py-2"
             >
               {(Object.keys(m.issues.severity) as IssueSeverity[]).map((k) => (
                 <option key={k} value={k}>
@@ -79,21 +79,21 @@ export function CaseIssueReportModal({
               ))}
             </select>
           </label>
-          <label className="block text-sm font-medium text-forgeInk-800">
+          <label className="block text-sm font-medium text-forgeGray-800">
             Título
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full rounded-forge-sm border border-forgeInk-200 px-2 py-2"
+              className="mt-1 w-full rounded-forge-sm border border-forgeGray-200 px-2 py-2"
             />
           </label>
-          <label className="block text-sm font-medium text-forgeInk-800">
+          <label className="block text-sm font-medium text-forgeGray-800">
             Descripción
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="mt-1 w-full rounded-forge-sm border border-forgeInk-200 px-2 py-2"
+              className="mt-1 w-full rounded-forge-sm border border-forgeGray-200 px-2 py-2"
             />
           </label>
         </div>
@@ -103,13 +103,13 @@ export function CaseIssueReportModal({
           </p>
         ) : null}
         <div className="mt-6 flex justify-end gap-2">
-          <button type="button" className="rounded-forge-sm px-3 py-2 text-sm text-forgeInk-700 ring-1 ring-forgeInk-200" onClick={onClose}>
+          <button type="button" className="rounded-forge-sm px-3 py-2 text-sm text-forgeGray-700 ring-1 ring-forgeGray-200" onClick={onClose}>
             {m.actions.cancel}
           </button>
           <button
             type="button"
             disabled={mutating}
-            className="rounded-forge-sm bg-forgeBrand-600 px-3 py-2 text-sm font-medium text-forgeInk-50 hover:bg-forgeBrand-700 disabled:opacity-50"
+            className="rounded-forge-sm bg-forgeBrand-600 px-3 py-2 text-sm font-medium text-forgeGray-50 hover:bg-forgeBrand-700 disabled:opacity-50"
             onClick={() => void submit()}
           >
             {m.actions.confirm}

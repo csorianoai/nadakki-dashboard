@@ -36,7 +36,7 @@ export function PdfDownloadButton({
     <button
       type="button"
       onClick={() => void handleDownload()}
-      className="rounded-forge-sm border border-forgeInk-300 bg-forgeSurface-card px-3 py-1.5 text-xs font-medium text-forgeInk-700 hover:bg-forgeInk-100"
+      className="rounded-forge-sm border border-forgeGray-300 bg-forgeSurface-card px-3 py-1.5 text-xs font-medium text-forgeGray-700 hover:bg-forgeGray-100"
       data-testid="pdf-download-button"
     >
       {label}

@@ -13,7 +13,7 @@ export function DocumentVersionsList({ tenantId, caseId, documentId }: Props) {
   const { data, isLoading, isError } = useDocumentVersions(tenantId, caseId, documentId);
 
   if (isLoading) {
-    return <p className="text-sm text-forgeInk-500">Cargando versiones…</p>;
+    return <p className="text-sm text-forgeGray-500">Cargando versiones…</p>;
   }
 
   if (isError) {
@@ -28,7 +28,7 @@ export function DocumentVersionsList({ tenantId, caseId, documentId }: Props) {
 
   if (versions.length === 0) {
     return (
-      <p className="text-sm text-forgeInk-500" data-testid="no-versions">
+      <p className="text-sm text-forgeGray-500" data-testid="no-versions">
         Sin historial de versiones.
       </p>
     );
@@ -36,7 +36,7 @@ export function DocumentVersionsList({ tenantId, caseId, documentId }: Props) {
 
   return (
     <div data-testid="document-versions-list">
-      <h3 className="mb-2 text-sm font-semibold text-forgeInk-900">
+      <h3 className="mb-2 text-sm font-semibold text-forgeGray-900">
         Historial de versiones ({versions.length})
       </h3>
       <ul className="space-y-2">
@@ -47,23 +47,23 @@ export function DocumentVersionsList({ tenantId, caseId, documentId }: Props) {
           return (
             <li
               key={v.version_id}
-              className="rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-card p-3 text-sm"
+              className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card p-3 text-sm"
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-forgeInk-900">
+                <span className="font-medium text-forgeGray-900">
                   v{v.version_number}
                 </span>
-                <span className="text-xs text-forgeInk-500">{dateStr}</span>
+                <span className="text-xs text-forgeGray-500">{dateStr}</span>
               </div>
               {v.reason && (
-                <p className="mt-1 text-xs text-forgeInk-600">{v.reason}</p>
+                <p className="mt-1 text-xs text-forgeGray-600">{v.reason}</p>
               )}
               {v.created_by && (
-                <p className="mt-0.5 text-xs text-forgeInk-400">
+                <p className="mt-0.5 text-xs text-forgeGray-400">
                   Por: {v.created_by}
                 </p>
               )}
-              <p className="mt-1 font-mono text-xs text-forgeInk-400">
+              <p className="mt-1 font-mono text-xs text-forgeGray-400">
                 {v.content_hash.slice(0, 12)}…
               </p>
             </li>

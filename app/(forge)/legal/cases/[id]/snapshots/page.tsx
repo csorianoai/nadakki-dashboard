@@ -16,12 +16,12 @@ export default function LegalCaseSnapshotsPage({ params }: { params: Promise<{ i
   const { data: sn, refetch, createSnapshot, creating } = useCaseSnapshots(effectiveTenantId, id);
   const [msg, setMsg] = useState<string | null>(null);
 
-  if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
+  if (!tenantHydrated) return <p className="text-sm text-forgeGray-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
     return <p className="text-sm text-forgeDanger-700">{tenantError ?? "Tenant no disponible"}</p>;
   }
   if (isLoading || error || !c) {
-    return <p className="text-sm text-forgeInk-500">{isLoading ? "Cargando…" : "Error"}</p>;
+    return <p className="text-sm text-forgeGray-500">{isLoading ? "Cargando…" : "Error"}</p>;
   }
 
   const snapshots = sn?.snapshots ?? [];
@@ -33,7 +33,7 @@ export default function LegalCaseSnapshotsPage({ params }: { params: Promise<{ i
         <button
           type="button"
           disabled={creating}
-          className="rounded-forge-sm bg-forgeBrand-600 px-3 py-2 text-sm font-medium text-forgeInk-50 disabled:opacity-50"
+          className="rounded-forge-sm bg-forgeBrand-600 px-3 py-2 text-sm font-medium text-forgeGray-50 disabled:opacity-50"
           onClick={async () => {
             setMsg(null);
             try {

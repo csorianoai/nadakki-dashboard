@@ -11,9 +11,9 @@ export function CaseRelatedCasesPanel({ payload }: { payload: unknown }) {
       : [];
   return (
     <div>
-      <h2 className="mb-2 text-sm font-semibold text-forgeInk-900">{m.related.title}</h2>
+      <h2 className="mb-2 text-sm font-semibold text-forgeGray-900">{m.related.title}</h2>
       {!list.length ? (
-        <p className="text-sm text-forgeInk-500">Sin expedientes relacionados</p>
+        <p className="text-sm text-forgeGray-500">Sin expedientes relacionados</p>
       ) : (
         <ul className="space-y-2">
           {list.map((c) => (

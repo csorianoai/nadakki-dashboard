@@ -26,12 +26,12 @@ export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ i
   const [genDialogOpen, setGenDialogOpen] = useState(false);
   const [viewDocId, setViewDocId] = useState<string | null>(null);
 
-  if (!tenantHydrated) return <p className="text-sm text-forgeInk-500">Cargando…</p>;
+  if (!tenantHydrated) return <p className="text-sm text-forgeGray-500">Cargando…</p>;
   if (!effectiveTenantId || tenantError) {
     return <p className="text-sm text-forgeDanger-700">{tenantError ?? "Tenant no disponible"}</p>;
   }
   if (isLoading || error || !c) {
-    return <p className="text-sm text-forgeInk-500">{isLoading ? "Cargando…" : "Error"}</p>;
+    return <p className="text-sm text-forgeGray-500">{isLoading ? "Cargando…" : "Error"}</p>;
   }
 
   return (
@@ -62,7 +62,7 @@ export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ i
         aria-labelledby="heading-documentos-ia"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="heading-documentos-ia" className="text-lg font-semibold text-forgeInk-900">
+          <h2 id="heading-documentos-ia" className="text-lg font-semibold text-forgeGray-900">
             {msgs.generated_documents.title}
           </h2>
           <DocumentGenerationButton

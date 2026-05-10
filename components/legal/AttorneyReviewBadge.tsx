@@ -21,7 +21,7 @@ export function AttorneyReviewBadge({ variant = "full" }: Props) {
 
 export function AttorneyReviewRecommendedBadge() {
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-forge-sm border border-forgeInk-200 bg-forgeSurface-sunken px-2 py-1 text-xs font-medium text-forge-text-muted">
+    <div className="inline-flex items-center gap-1.5 rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-2 py-1 text-xs font-medium text-forge-text-muted">
       <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-forge-warning" aria-hidden />
       <span>Revisión recomendada</span>
     </div>

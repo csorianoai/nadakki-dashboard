@@ -31,10 +31,10 @@ export function DealerWizardDocumentsStep() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="font-display text-forge-xl font-semibold text-forgeInk-800">{t.wizard.sections.documents_title}</h2>
-        <p className="mt-1 text-forge-sm text-forgeInk-500">{t.wizard.sections.documents_sub}</p>
+        <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.documents_title}</h2>
+        <p className="mt-1 text-forge-sm text-forgeGray-500">{t.wizard.sections.documents_sub}</p>
       </div>
-      <p className="text-forge-sm text-forgeInk-500">
+      <p className="text-forge-sm text-forgeGray-500">
         {t.documents.counter(receivedCount, Math.max(totalCount, docList.length))}
         {requiredMissing > 0 ? <span className="ml-2 text-forgeDanger-600">({t.documents.missing_required(requiredMissing)})</span> : null}
       </p>
@@ -43,7 +43,7 @@ export function DealerWizardDocumentsStep() {
           const k = tenantDocumentKey(document);
           const checked = Boolean(formData.documents_received[k]);
           return (
-            <div key={k} className="flex flex-col gap-2 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-3">
+            <div key={k} className="flex flex-col gap-2 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3">
               <div className="flex items-start justify-between gap-2">
                 <Checkbox
                   label={`${document.label}${document.required ? " *" : ` (${t.common.optional_short})`}`}
@@ -51,11 +51,11 @@ export function DealerWizardDocumentsStep() {
                   onChange={(e) => updateDocumentReceived(k, e.target.checked)}
                   className="items-start"
                 />
-                <span className={`shrink-0 text-forge-xs tabular-nums ${checked ? "text-forgeSuccess-700" : "text-forgeInk-400"}`}>
+                <span className={`shrink-0 text-forge-xs tabular-nums ${checked ? "text-forgeSuccess-700" : "text-forgeGray-400"}`}>
                   {checked ? t.documents.received : t.documents.pending}
                 </span>
               </div>
-              {document.tooltip ? <p className="text-forge-xs text-forgeInk-500">{document.tooltip}</p> : null}
+              {document.tooltip ? <p className="text-forge-xs text-forgeGray-500">{document.tooltip}</p> : null}
               <Textarea
                 placeholder={t.wizard.doc_notes_placeholder}
                 value={formData.document_notes[k] ?? ""}
@@ -68,12 +68,12 @@ export function DealerWizardDocumentsStep() {
         })}
       </div>
       <div className="space-y-3">
-        <h4 className="text-forge-sm font-medium text-forgeInk-800">{t.wizard.additional_docs_title}</h4>
+        <h4 className="text-forge-sm font-medium text-forgeGray-800">{t.wizard.additional_docs_title}</h4>
         <Button type="button" variant="secondary" size="sm" onClick={addAdditionalDocumentRow}>
           {t.wizard.add_additional_doc}
         </Button>
         {formData.additional_document_items.map((row) => (
-          <div key={row.id} className="flex flex-wrap items-end gap-2 rounded-forge-md border border-forgeInk-200 bg-forgeSurface-sunken p-3">
+          <div key={row.id} className="flex flex-wrap items-end gap-2 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3">
             <div className="min-w-[12rem] flex-1">
               <Input
                 label={t.wizard.additional_doc_label}
