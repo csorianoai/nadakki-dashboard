@@ -1,4 +1,4 @@
-# Forge Credit Hub — components
+# Forge Credit Hub ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â components
 
 ## Barrel
 
@@ -12,40 +12,40 @@ Button, IconButton, Input, Textarea, Select, Checkbox, RadioGroup, Switch, Card,
 
 These primitives are **persona-agnostic** (no `usePersona` / no layout segments).
 
-### DataTable — mobile strategy
+### DataTable ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â mobile strategy
 
 **Mobile strategy:** use **`density="compact"`** (or `dense`) plus **`overflow-x-auto`** on the table wrapper and **`min-w-0`** on text-heavy cells so small viewports scroll horizontally **inside** the table instead of breaking the page layout. Chunk 3 mobile screenshots (iPhone SE) confirmed no horizontal page scroll on dealer surfaces.
 
-The master prompt originally suggested a separate **`<DataTableMobileCard>`** component for card-based mobile rows. That component **was not built**: the **density + scroll** approach was sufficient for dealer/bank table UX, and a density toggle preserves a real table on tablets where bankers and dealers often want columns. If a future tenant requires **cards-not-tables** on mobile, introduce `DataTableMobileCard` (or a `variant="cards"` on `DataTable`) then — the API surface is already considered.
+The master prompt originally suggested a separate **`<DataTableMobileCard>`** component for card-based mobile rows. That component **was not built**: the **density + scroll** approach was sufficient for dealer/bank table UX, and a density toggle preserves a real table on tablets where bankers and dealers often want columns. If a future tenant requires **cards-not-tables** on mobile, introduce `DataTableMobileCard` (or a `variant="cards"` on `DataTable`) then ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â the API surface is already considered.
 
 ### Button & IconButton (Phase 5 polish)
 
 - **`Button` loading:** Inline spinner is **leading** (left of the label), never replacing the label. Matches common fintech defaults (Stripe / Linear). `aria-busy="true"` while `loading` is set; the element is `disabled` during loading to prevent double-submit.
-- **`Button` disabled vs loading:** `disabled` alone → muted ink/surface (no spinner). `loading` → variant colors + leading spinner + `aria-busy`. If both props are true, **loading UI wins** (spinner + busy + frozen variant colors); callers should prefer **`loading` only** during submission instead of also forcing `disabled`.
+- **`Button` disabled vs loading:** `disabled` alone ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ muted ink/surface (no spinner). `loading` ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ variant colors + leading spinner + `aria-busy`. If both props are true, **loading UI wins** (spinner + busy + frozen variant colors); callers should prefer **`loading` only** during submission instead of also forcing `disabled`.
 - **`IconButton`:** `aria-label` is **required in TypeScript** on the primitive. Missing labels at call sites are bugs to fix in app code, not by loosening the primitive.
-- **Focus ring:** `focus-visible:outline` **2px** `forgeBrand-500` + **2px** offset on both primitives. On very dark brand chrome, if the ring ever fails WCAG focus-indicator contrast against adjacent pixels, consider `forgeBrand-300` for that surface or a double-ring treatment — validate in `/credit-hub/preview` “Focus on surfaces” swatches before changing tokens.
+- **Focus ring:** `focus-visible:outline` **2px** `forgeBrand-500` + **2px** offset on both primitives. On very dark brand chrome, if the ring ever fails WCAG focus-indicator contrast against adjacent pixels, consider `forgeBrand-300` for that surface or a double-ring treatment ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â validate in `/credit-hub/preview` ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œFocus on surfacesÃƒÂ¢Ã¢â€šÂ¬Ã‚Â swatches before changing tokens.
 
 ### DataTable
 
-- **Empty:** Zero rows render **`<EmptyState>`** inside the table (not a bare “no data” text row). Pass **`emptyDescription`** / **`emptyAction`** when you need copy + CTA beyond **`emptyLabel`**. Optional **`emptyIcon`** (decorative) and **`emptyTone="success"`** for positive “all clear” grids (Item 4).
+- **Empty:** Zero rows render **`<EmptyState>`** inside the table (not a bare ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œno dataÃƒÂ¢Ã¢â€šÂ¬Ã‚Â text row). Pass **`emptyDescription`** / **`emptyAction`** when you need copy + CTA beyond **`emptyLabel`**. Optional **`emptyIcon`** (decorative) and **`emptyTone="success"`** for positive ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œall clearÃƒÂ¢Ã¢â€šÂ¬Ã‚Â grids (Item 4).
 - **Loading:** Set **`loading`** to show a skeleton **body** with the same column count as **`columns`** (use **`skeletonRowCount`** to tune height). The wrapper sets **`aria-busy`**.
 - **Sort (optional):** If a column defines **`onSort`**, the header is a button with **`aria-sort`** reflecting **`sort`** (`ascending` | `descending` | `none`). Icons are decorative (`aria-hidden`).
 - **Rows:** Body rows use a **subtle hover** background only (no transform / layout shift).
 
-### Navigation — Tabs, Breadcrumb, CommandPalette (`layout/Sidebar`, `layout/Topbar`)
+### Navigation ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tabs, Breadcrumb, CommandPalette (`layout/Sidebar`, `layout/Topbar`)
 
 - **`Tabs` (`line`):** Active indicator **`border-forgeBrand-500`**; inactive baseline uses **`border-forgeInk-200`** (not a fully invisible underline) so the tab bar reads as a structured control strip.
-- **`CommandPalette`:** **`closeOnBackdropClick`** (default `true`) mirrors Modal/Drawer backdrop policy for audits that need a non-dismissible surface. Supports **`groups`** (cmdk `Command.Group`), optional **controlled `search` / `onSearchChange`** for dynamic first-class rows (e.g. “search applications for …”), custom **`emptyMessage`** when filtering yields no commands, and **`keyboardShortcut={false}`** when **`ForgeCommandPaletteProvider`** owns **Ctrl+K / ⌘K** globally.
-- **`ForgeCommandPaletteProvider`** (`components/forge/layout/ForgeCommandPaletteContext.tsx`): mounted inside **`ForgeCreditHubAppShell`**; registers **Ctrl+K / ⌘K**, restores focus after close, and renders **`ForgeCreditHubCommandPalette`** (`components/forge/layout/ForgeCreditHubCommandPalette.tsx` — persona-aware navigation, table-density deep links to **`/credit-hub/{persona}/applications?density=`**, AML/compliance shortcut, **“Switch institution (coming soon)”** dormant row, keyboard-shortcuts **Modal**). **`ForgeCreditHubTopbar`** adds a search **`IconButton`** calling **`useForgeCommandPalette().toggle`**. Labels use **`utils/forge-palette-copy.ts`** (EN/ES). **Telemetry:** none in repo — skipped.
-- **`Topbar`:** **`actions`** slot carries global chrome (e.g. command palette) — compose **`Button`** / **`IconButton`** only (Group 2 sweep applies).
+- **`CommandPalette`:** **`closeOnBackdropClick`** (default `true`) mirrors Modal/Drawer backdrop policy for audits that need a non-dismissible surface. Supports **`groups`** (cmdk `Command.Group`), optional **controlled `search` / `onSearchChange`** for dynamic first-class rows (e.g. ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œsearch applications for ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â), custom **`emptyMessage`** when filtering yields no commands, and **`keyboardShortcut={false}`** when **`ForgeCommandPaletteProvider`** owns **Ctrl+K / ÃƒÂ¢Ã…â€™Ã‹Å“K** globally.
+- **`ForgeCommandPaletteProvider`** (`components/forge/layout/ForgeCommandPaletteContext.tsx`): mounted inside **`ForgeCreditHubAppShell`**; registers **Ctrl+K / ÃƒÂ¢Ã…â€™Ã‹Å“K**, restores focus after close, and renders **`ForgeCreditHubCommandPalette`** (`components/forge/layout/ForgeCreditHubCommandPalette.tsx` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â persona-aware navigation, table-density deep links to **`/credit-hub/{persona}/applications?density=`**, AML/compliance shortcut, **ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œSwitch institution (coming soon)ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â** dormant row, keyboard-shortcuts **Modal**). **`ForgeCreditHubTopbar`** adds a search **`IconButton`** calling **`useForgeCommandPalette().toggle`**. Labels use **`utils/forge-palette-copy.ts`** (EN/ES). **Telemetry:** none in repo ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â skipped.
+- **`Topbar`:** **`actions`** slot carries global chrome (e.g. command palette) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â compose **`Button`** / **`IconButton`** only (Group 2 sweep applies).
 
-### Overlays — Modal, Drawer, Toast
+### Overlays ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Modal, Drawer, Toast
 
-- **`Modal` / `Drawer`:** **`closeOnBackdropClick`** (default `true`) — set `false` for non-dismissible flows (still use **`Esc`** / explicit close affordances). **`Modal`** uses native **`<dialog>`** light-dismiss when clicking the dialog element itself (backdrop hit target).
+- **`Modal` / `Drawer`:** **`closeOnBackdropClick`** (default `true`) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â set `false` for non-dismissible flows (still use **`Esc`** / explicit close affordances). **`Modal`** uses native **`<dialog>`** light-dismiss when clicking the dialog element itself (backdrop hit target).
 - **`ForgeToaster` (Sonner):** Toast surface includes **`motion-reduce:transition-none`** / **`motion-reduce:animate-none`** so auto-dismiss does not rely on motion for comprehension.
 - **Mount policy (Item 3):** **`ForgeToaster`** is mounted **once** in **`ForgeCreditHubAppShell`** (all `/credit-hub/*` Forge routes). Legacy **`/credit/*`** routes that still use **`DocumentUploader`** mount a **separate** **`CreditForgeToaster`** in **`app/credit/layout.tsx`** so Sonner is available without duplicating per page. Do **not** add another `<ForgeToaster />` on individual pages under those shells.
-- **Sonner options:** **`position="top-right"`**, **`visibleToasts={3}`**, per-call **`duration`** from callers (`toast.success(msg, { duration: … })`).
-- **Dealer wizard autosave toasts:** Background **localStorage** autosave (10s) shows **at most one** subtle **info** success toast **per browser session** (`sessionStorage` gate); subsequent successful saves are **silent** (institutional preference for silent success over repeated affirmation). Autosave **failure** uses **`toast.warning`** with a **“Reintentar”** / **“Retry”** action that runs a manual save. Copy + EN/ES split lives in **`utils/forge-toast-copy.ts`** (`forgeWizardToasts`), keyed off **`useTenantConfig().tenantConfig.locale`** (Forge) or **`TenantSettings.language`** (legacy uploader) via **`forgeToastLangFromLocale`**. Bank decision + legacy document upload strings use the same helper module.
+- **Sonner options:** **`position="top-right"`**, **`visibleToasts={3}`**, per-call **`duration`** from callers (`toast.success(msg, { duration: ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ })`).
+- **Dealer wizard autosave toasts:** Background **localStorage** autosave (10s) shows **at most one** subtle **info** success toast **per browser session** (`sessionStorage` gate); subsequent successful saves are **silent** (institutional preference for silent success over repeated affirmation). Autosave **failure** uses **`toast.warning`** with a **ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œReintentarÃƒÂ¢Ã¢â€šÂ¬Ã‚Â** / **ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œRetryÃƒÂ¢Ã¢â€šÂ¬Ã‚Â** action that runs a manual save. Copy + EN/ES split lives in **`utils/forge-toast-copy.ts`** (`forgeWizardToasts`), keyed off **`useTenantConfig().tenantConfig.locale`** (Forge) or **`TenantSettings.language`** (legacy uploader) via **`forgeToastLangFromLocale`**. Bank decision + legacy document upload strings use the same helper module.
 
 ## Preview playground
 
@@ -57,31 +57,31 @@ Next.js treats leading-underscore segments as **private folders**, so the playgr
 ## App shell (Phase 3)
 
 - **`ForgeCreditHubAppShell`** (`components/forge/layout/ForgeCreditHubAppShell.tsx`) wraps Credit Hub in `app/(forge)/credit-hub/layout.tsx`: sidebar, top bar, tenant guard, `data-portal` + **`data-tenant`** (from `useTenant` in `lib/credit-hub/hooks/useTenant.ts`).
-- **`ForgeCreditHubSidebar`** / **`ForgeCreditHubTopbar`** consume **`usePersona()`** and **`TenantContext`** / i18n for labels — they **do not** import `useSelectedLayoutSegments`.
+- **`ForgeCreditHubSidebar`** / **`ForgeCreditHubTopbar`** consume **`usePersona()`** and **`TenantContext`** / i18n for labels ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â they **do not** import `useSelectedLayoutSegments`.
 
 ### Persona contract (Phase 8 refactor scope)
 
-**Rule:** Every Forge file under `components/forge/ui/*` and every persona-aware layout module under `components/forge/layout/*` except the shell seam must consume **`usePersona()`** — **not** `useSelectedLayoutSegments()` directly.
+**Rule:** Every Forge file under `components/forge/ui/*` and every persona-aware layout module under `components/forge/layout/*` except the shell seam must consume **`usePersona()`** ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â **not** `useSelectedLayoutSegments()` directly.
 
 **Single seam today:** `creditHubPersonaFromSegments.ts` is the **only** module that reads layout segments; it is called from **`ForgeCreditHubAppShell`** solely to **seed** `PersonaProvider`. Replacing that seam in Phase 8 is a **small, localized** change (swap segment resolver for tenant-driven persona feeding the same `PersonaProvider`).
 
-### DEFERRED TO PHASE 8 — URL-derived persona (accepted debt)
+### DEFERRED TO PHASE 8 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â URL-derived persona (accepted debt)
 
-**Current implementation:** Persona (`bank` | `dealer`) fed to `PersonaProvider` is derived from **`useSelectedLayoutSegments()`** via **`creditHubPersonaFromLayoutSegments()`** (implemented in `creditHubPersonaFromSegments.ts`), keyed off the first route segment under `/credit-hub` (`bank` / `dealer`). This **does not** meet the stricter “no URL-derived persona” guardrail from the Phase 3 brief.
+**Current implementation:** Persona (`bank` | `dealer`) fed to `PersonaProvider` is derived from **`useSelectedLayoutSegments()`** via **`creditHubPersonaFromLayoutSegments()`** (implemented in `creditHubPersonaFromSegments.ts`), keyed off the first route segment under `/credit-hub` (`bank` / `dealer`). This **does not** meet the stricter ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œno URL-derived personaÃƒÂ¢Ã¢â€šÂ¬Ã‚Â guardrail from the Phase 3 brief.
 
-**Target implementation:** Derive persona from **`TenantContext`** (and/or auth-derived role metadata) once Path A/B decisions allow extending tenant metadata **without** breaking other cores — see `TENANT_CONTEXT_EXTENSION.md` (ForgeBrandingProvider / Path B).
+**Target implementation:** Derive persona from **`TenantContext`** (and/or auth-derived role metadata) once Path A/B decisions allow extending tenant metadata **without** breaking other cores ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see `TENANT_CONTEXT_EXTENSION.md` (ForgeBrandingProvider / Path B).
 
-**Why deferred:** Correct fix requires coordinated **`TenantContext`** / Forge provider work — **explicitly Phase 8** territory; **`TenantContext.tsx` and `lib/credit-hub/hooks/useTenant.ts` remain unchanged** in Phases 2–4 per guardrails.
+**Why deferred:** Correct fix requires coordinated **`TenantContext`** / Forge provider work ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â **explicitly Phase 8** territory; **`TenantContext.tsx` and `lib/credit-hub/hooks/useTenant.ts` remain unchanged** in Phases 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“4 per guardrails.
 
 **Refactor scope:** Downstream components already use **`usePersona()`**; Phase 8 replaces **only** how `PersonaProvider` gets its `persona` prop (today: `ForgeCreditHubAppShell` + segment helper).
 
 **Acceptance (Phase 8):** Phase 8 acceptance criteria will include **removing segment-based persona** in favor of tenant-driven (or role-driven) resolution, with regression checks on bank/dealer nav and `data-portal` styling.
 
-**Interim risk acceptance:** URL ↔ persona alignment matches current folder layout (`bank/*`, `dealer/*`); no security boundary relies on persona today (server enforces `tenant_id` + JWT role).
+**Interim risk acceptance:** URL ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Â persona alignment matches current folder layout (`bank/*`, `dealer/*`); no security boundary relies on persona today (server enforces `tenant_id` + JWT role).
 
 ## Lighthouse accessibility (Phase 4 gate)
 
-**Gate hygiene (local / Windows — avoid false `__next_error__` shells):** Before a Lighthouse run that **gates** a merge or a phase sign-off, **stop every** local `next start` / `next dev` bound to the ports you use for audits (e.g. `3000`, `3010`, `3012`, `3013`, `3015`), **delete `.next`**, run **`npx next build --webpack`**, then start **exactly one** fresh **`npx next start -p <port>`** for the audit. Stale bundles or **two servers** on different ports can leave `curl` looking healthy while a headless run briefly hits a torn-down or half-updated process — symptoms match **`html#__next_error__`** in the saved JSON. If that selector appears, **discard the JSON**, clean as above, and re-run (see `_design/_inventory/lh_error_shell_diagnosis.md`).
+**Gate hygiene (local / Windows ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â avoid false `__next_error__` shells):** Before a Lighthouse run that **gates** a merge or a phase sign-off, **stop every** local `next start` / `next dev` bound to the ports you use for audits (e.g. `3000`, `3010`, `3012`, `3013`, `3015`), **delete `.next`**, run **`npx next build --webpack`**, then start **exactly one** fresh **`npx next start -p <port>`** for the audit. Stale bundles or **two servers** on different ports can leave `curl` looking healthy while a headless run briefly hits a torn-down or half-updated process ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â symptoms match **`html#__next_error__`** in the saved JSON. If that selector appears, **discard the JSON**, clean as above, and re-run (see `_design/_inventory/lh_error_shell_diagnosis.md`).
 
 **Canonical verification:** run against a **fresh** production build so HTML matches `app/layout.tsx` (viewport, lang) and client chunks are current:
 
@@ -102,7 +102,7 @@ npx lighthouse "http://localhost:3010/credit-hub/bank" --only-categories=accessi
 
 On some Windows installs, `npx lighthouse` fails after the run with **`EPERM`** while `chrome-launcher` deletes its temp profile (`rmSync` on `%TEMP%\lighthouse.*`). The audit may still complete; if it does not, try **one** of these (in order of convenience):
 
-1. **Pinned user data dir + project temp (recommended on Windows):** `chrome-launcher` also creates a throwaway profile under `%TEMP%` (or `.tmp\lighthouse.*` under the repo). If cleanup hits **`EPERM`**, point **`TMP` and `TEMP`** at a project folder you own, and pin Chromium’s profile:
+1. **Pinned user data dir + project temp (recommended on Windows):** `chrome-launcher` also creates a throwaway profile under `%TEMP%` (or `.tmp\lighthouse.*` under the repo). If cleanup hits **`EPERM`**, point **`TMP` and `TEMP`** at a project folder you own, and pin ChromiumÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s profile:
 
    ```powershell
    New-Item -ItemType Directory -Force -Path ".\tmp\lh-chrome-profile",".\tmp\lh-tmp" | Out-Null
@@ -121,25 +121,25 @@ On some Windows installs, `npx lighthouse` fails after the run with **`EPERM`** 
 
 2. **`--quiet` / logging:** some environments report fewer launcher races with `--quiet` (optional).
 
-3. **Manual DevTools:** open the URL in Chrome → **Lighthouse** panel → Accessibility → **Analyze page load** → **Save as JSON** (or export) into the same `_design/_inventory/` filenames. This satisfies the Phase 4 gate when CLI is blocked locally.
+3. **Manual DevTools:** open the URL in Chrome ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ **Lighthouse** panel ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Accessibility ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ **Analyze page load** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ **Save as JSON** (or export) into the same `_design/_inventory/` filenames. This satisfies the Phase 4 gate when CLI is blocked locally.
 
 4. **CI as canonical gate:** Linux CI agents typically do not hit this `EPERM`; keep Lighthouse in CI for regression if local Windows remains flaky.
 
-**If none of the above work:** document the limitation in this section and rely on **CI + manual DevTools JSON** for evidence; do not block merges on a single machine’s launcher policy alone.
+**If none of the above work:** document the limitation in this section and rely on **CI + manual DevTools JSON** for evidence; do not block merges on a single machineÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s launcher policy alone.
 
 **Forge-specific fixes in tree:** root viewport allows zoom (`maximumScale: 5`); Credit Hub shell uses a **`<main id="main-content">`** landmark; sidebar and inline table actions meet **target-size**; `EmptyState` supports **`titleLevel`** so empty bands under an `h1` can use an **`h2`** title (heading order).
 
 **Artifacts:** decoded final screenshots and full JSON live under `app/(forge)/credit-hub/_design/_inventory/` (see `INVESTIGATION_phase4_chunk1_gates.md`).
 
-**Bank application detail (`/credit-hub/bank/applications/[applicationId]`):** a prior **HTTP 500** during document load led to a temporary **full-route** `next/dynamic(..., { ssr: false })` workaround. **SSR investigation** (`_design/_inventory/ssr_root_cause_phase4_detail.md`) showed a **clean `next build` + fresh `next start`** returns **200** with a **direct** import of `BankApplicationDetailView` — no `ssr: false` required on current builds. If a 500 reappears, capture **server stderr** and treat as **CAT E** (stale `.next` / old server process) until a stack trace proves a library (**CAT A/D**).
+**Bank application detail (`/credit-hub/bank/applications/[applicationId]`):** a prior **HTTP 500** during document load led to a temporary **full-route** `next/dynamic(..., { ssr: false })` workaround. **SSR investigation** (`_design/_inventory/ssr_root_cause_phase4_detail.md`) showed a **clean `next build` + fresh `next start`** returns **200** with a **direct** import of `BankApplicationDetailView` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â no `ssr: false` required on current builds. If a 500 reappears, capture **server stderr** and treat as **CAT E** (stale `.next` / old server process) until a stack trace proves a library (**CAT A/D**).
 
 ## Motion policy (Phase 7)
 
-Forge **does not ship a JavaScript animation library**. Runtime uses **`lib/motion-stub.tsx`** only as a compatibility shim for legacy JSX that still references `motion.*` / `AnimatePresence`: motion-only props are stripped and the underlying DOM element is rendered. **New surfaces** must use **CSS transitions** or the **Web Animations API** where animation is truly required for comprehension (e.g. pull-to-refresh affordance). If a change “needs” a motion library, the animation is probably **decorative** — remove it instead.
+Forge **does not ship a JavaScript animation library**. Runtime uses **`lib/motion-stub.tsx`** only as a compatibility shim for legacy JSX that still references `motion.*` / `AnimatePresence`: motion-only props are stripped and the underlying DOM element is rendered. **New surfaces** must use **CSS transitions** or the **Web Animations API** where animation is truly required for comprehension (e.g. pull-to-refresh affordance). If a change ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œneedsÃƒÂ¢Ã¢â€šÂ¬Ã‚Â a motion library, the animation is probably **decorative** ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â remove it instead.
 
-## DataTable — pagination
+### DataTable subsection - pagination
 
-`DataTable` **does not** embed page controls. Pagination lives at the **page level** when needed (URL-driven `page` / `pageSize` + buttons composing **`Button`**). Keep this pattern unless multiple unrelated tables need an identical pager API — then extract a **`Pagination`** primitive.
+`DataTable` **does not** embed page controls. Pagination lives at the **page level** when needed (URL-driven `page` / `pageSize` + buttons composing **`Button`**). Keep this pattern unless multiple unrelated tables need an identical pager API ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â then extract a **`Pagination`** primitive.
 
 ## Tooltips
 
@@ -153,9 +153,9 @@ Forge **does not use tooltips**. Prefer visible labels, helper text, `aria-descr
 
 ## AuditTimeline
 
-**File:** `components/forge/ui/AuditTimeline.tsx` · **Lines:** 51
+**File:** `components/forge/ui/AuditTimeline.tsx` Ãƒâ€šÃ‚Â· **Lines:** 51
 
-**Purpose:** Forge design-system primitive `AuditTimeline` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `AuditTimeline` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `AuditTimelineProps`
 
@@ -166,13 +166,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![AuditTimeline](./_assets/components/evidence-audit/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -188,7 +188,7 @@ import { AuditTimeline } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -199,9 +199,9 @@ import { AuditTimeline } from "@/components/forge";
 
 ## Avatar
 
-**File:** `components/forge/ui/Avatar.tsx` · **Lines:** 50
+**File:** `components/forge/ui/Avatar.tsx` Ãƒâ€šÃ‚Â· **Lines:** 50
 
-**Purpose:** Forge design-system primitive `Avatar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Avatar` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `AvatarProps`
 
@@ -215,13 +215,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Avatar](./_assets/components/skeleton-avatar/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -237,7 +237,7 @@ import { Avatar } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -248,21 +248,21 @@ import { Avatar } from "@/components/forge";
 
 ## Badge
 
-**File:** `components/forge/ui/Badge.tsx` · **Lines:** 34
+**File:** `components/forge/ui/Badge.tsx` Ãƒâ€šÃ‚Â· **Lines:** 34
 
-**Purpose:** Forge design-system primitive `Badge` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Badge` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Badge](./_assets/components/cards-badges-empty/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -278,7 +278,7 @@ import { Badge } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -289,9 +289,9 @@ import { Badge } from "@/components/forge";
 
 ## Breadcrumb
 
-**File:** `components/forge/ui/Breadcrumb.tsx` · **Lines:** 42
+**File:** `components/forge/ui/Breadcrumb.tsx` Ãƒâ€šÃ‚Â· **Lines:** 42
 
-**Purpose:** Forge design-system primitive `Breadcrumb` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Breadcrumb` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `BreadcrumbProps`
 
@@ -302,13 +302,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -324,7 +324,7 @@ import { Breadcrumb } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -335,15 +335,15 @@ import { Breadcrumb } from "@/components/forge";
 
 ## Button
 
-**File:** `components/forge/ui/Button.tsx` · **Lines:** 114
+**File:** `components/forge/ui/Button.tsx` Ãƒâ€šÃ‚Â· **Lines:** 114
 
-**Purpose:** Forge design-system primitive `Button` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Button` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Button](./_assets/components/button/variants-default.png)
 
@@ -357,7 +357,7 @@ Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run do
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -373,7 +373,7 @@ import { Button } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -384,21 +384,21 @@ import { Button } from "@/components/forge";
 
 ## Card
 
-**File:** `components/forge/ui/Card.tsx` · **Lines:** 21
+**File:** `components/forge/ui/Card.tsx` Ãƒâ€šÃ‚Â· **Lines:** 21
 
-**Purpose:** Forge design-system primitive `Card` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Card` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Card](./_assets/components/cards-badges-empty/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -414,7 +414,7 @@ import { Card } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -425,21 +425,21 @@ import { Card } from "@/components/forge";
 
 ## Checkbox
 
-**File:** `components/forge/ui/Checkbox.tsx` · **Lines:** 51
+**File:** `components/forge/ui/Checkbox.tsx` Ãƒâ€šÃ‚Â· **Lines:** 51
 
-**Purpose:** Forge design-system primitive `Checkbox` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Checkbox` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Checkbox](./_assets/components/form-controls/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -455,7 +455,7 @@ import { Checkbox } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -466,16 +466,16 @@ import { Checkbox } from "@/components/forge";
 
 ## CommandPalette
 
-**File:** `components/forge/ui/CommandPalette.tsx` · **Lines:** 165
+**File:** `components/forge/ui/CommandPalette.tsx` Ãƒâ€šÃ‚Â· **Lines:** 165
 
-**Purpose:** Forge design-system primitive `CommandPalette` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `CommandPalette` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `CommandPaletteProps`
 
 ```ts
 open: boolean;
 onOpenChange: (open: boolean) => void;
-/** Flat list (single “Actions” group). Ignored if `groups` is set. */
+/** Flat list (single ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œActionsÃƒÂ¢Ã¢â€šÂ¬Ã‚Â group). Ignored if `groups` is set. */
 actions?: CommandPaletteAction[];
 /** Grouped commands (cmdk `Command.Group`). */
 groups?: CommandPaletteGroup[];
@@ -485,20 +485,20 @@ onSearchChange?: (value: string) => void;
 placeholder?: string;
 className?: string;
 closeOnBackdropClick?: boolean;
-/** When false, does not register ⌘K / Ctrl+K (default true). */
+/** When false, does not register ÃƒÂ¢Ã…â€™Ã‹Å“K / Ctrl+K (default true). */
 keyboardShortcut?: boolean;
 emptyMessage?: string;
 ```
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![CommandPalette](./_assets/components/command-palette/open.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -514,7 +514,7 @@ import { CommandPalette } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -525,9 +525,9 @@ import { CommandPalette } from "@/components/forge";
 
 ## ConsentCapture
 
-**File:** `components/forge/ui/ConsentCapture.tsx` · **Lines:** 41
+**File:** `components/forge/ui/ConsentCapture.tsx` Ãƒâ€šÃ‚Â· **Lines:** 41
 
-**Purpose:** Forge design-system primitive `ConsentCapture` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `ConsentCapture` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `ConsentCaptureProps`
 
@@ -544,13 +544,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![ConsentCapture](./_assets/components/consent-capture/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -566,7 +566,7 @@ import { ConsentCapture } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -577,15 +577,15 @@ import { ConsentCapture } from "@/components/forge";
 
 ## DataTable
 
-**File:** `components/forge/ui/DataTable.tsx` · **Lines:** 182
+**File:** `components/forge/ui/DataTable.tsx` Ãƒâ€šÃ‚Â· **Lines:** 182
 
-**Purpose:** Forge design-system primitive `DataTable` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `DataTable` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![DataTable](./_assets/components/datatable/density-comfortable-mode-data.png)
 
@@ -599,7 +599,7 @@ Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run do
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -615,7 +615,7 @@ import { DataTable } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -626,21 +626,21 @@ import { DataTable } from "@/components/forge";
 
 ## DateInput
 
-**File:** `components/forge/ui/DateInput.tsx` · **Lines:** 69
+**File:** `components/forge/ui/DateInput.tsx` Ãƒâ€šÃ‚Â· **Lines:** 69
 
-**Purpose:** Forge design-system primitive `DateInput` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `DateInput` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -656,7 +656,7 @@ import { DateInput } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -667,9 +667,9 @@ import { DateInput } from "@/components/forge";
 
 ## Drawer
 
-**File:** `components/forge/ui/Drawer.tsx` · **Lines:** 98
+**File:** `components/forge/ui/Drawer.tsx` Ãƒâ€šÃ‚Â· **Lines:** 98
 
-**Purpose:** Forge design-system primitive `Drawer` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Drawer` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `DrawerProps`
 
@@ -688,13 +688,13 @@ closeOnBackdropClick?: boolean;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Drawer](./_assets/components/overlays/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -710,7 +710,7 @@ import { Drawer } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -721,9 +721,9 @@ import { Drawer } from "@/components/forge";
 
 ## EmptyState
 
-**File:** `components/forge/ui/EmptyState.tsx` · **Lines:** 42
+**File:** `components/forge/ui/EmptyState.tsx` Ãƒâ€šÃ‚Â· **Lines:** 42
 
-**Purpose:** Forge design-system primitive `EmptyState` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `EmptyState` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `EmptyStateProps`
 
@@ -736,19 +736,19 @@ titleLevel?: 2 | 3;
 description?: string;
 action?: ReactNode;
 className?: string;
-/** Passive positive framing (e.g. compliance “all clear”). */
+/** Passive positive framing (e.g. compliance ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œall clearÃƒÂ¢Ã¢â€šÂ¬Ã‚Â). */
 tone?: "default" | "success";
 ```
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![EmptyState](./_assets/components/cards-badges-empty/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -764,7 +764,7 @@ import { EmptyState } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -775,9 +775,9 @@ import { EmptyState } from "@/components/forge";
 
 ## EvidenceCard
 
-**File:** `components/forge/ui/EvidenceCard.tsx` · **Lines:** 42
+**File:** `components/forge/ui/EvidenceCard.tsx` Ãƒâ€šÃ‚Â· **Lines:** 42
 
-**Purpose:** Forge design-system primitive `EvidenceCard` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `EvidenceCard` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `EvidenceCardProps`
 
@@ -791,13 +791,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![EvidenceCard](./_assets/components/evidence-audit/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -813,7 +813,7 @@ import { EvidenceCard } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -824,21 +824,21 @@ import { EvidenceCard } from "@/components/forge";
 
 ## IconButton
 
-**File:** `components/forge/ui/IconButton.tsx` · **Lines:** 37
+**File:** `components/forge/ui/IconButton.tsx` Ãƒâ€šÃ‚Â· **Lines:** 37
 
-**Purpose:** Forge design-system primitive `IconButton` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `IconButton` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -854,7 +854,7 @@ import { IconButton } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -865,21 +865,21 @@ import { IconButton } from "@/components/forge";
 
 ## Input
 
-**File:** `components/forge/ui/Input.tsx` · **Lines:** 71
+**File:** `components/forge/ui/Input.tsx` Ãƒâ€šÃ‚Â· **Lines:** 71
 
-**Purpose:** Forge design-system primitive `Input` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Input` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Input](./_assets/components/form-controls/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -895,7 +895,7 @@ import { Input } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -906,9 +906,9 @@ import { Input } from "@/components/forge";
 
 ## KpiCard
 
-**File:** `components/forge/ui/KpiCard.tsx` · **Lines:** 26
+**File:** `components/forge/ui/KpiCard.tsx` Ãƒâ€šÃ‚Â· **Lines:** 26
 
-**Purpose:** Forge design-system primitive `KpiCard` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `KpiCard` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `KpiCardProps`
 
@@ -923,13 +923,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -945,7 +945,7 @@ import { KpiCard } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -958,7 +958,7 @@ import { KpiCard } from "@/components/forge";
 
 **File:** `components/forge/ui/MicroChart.tsx`
 
-**Purpose:** Compact Recharts line wrapper for Forge dashboards (institutional palette, no grid/area fill, 200px chart height, 400ms first-draw animation with **`prefers-reduced-motion`** → instant).
+**Purpose:** Compact Recharts line wrapper for Forge dashboards (institutional palette, no grid/area fill, 200px chart height, 400ms first-draw animation with **`prefers-reduced-motion`** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ instant).
 
 **Primary props interface:** `MicroChartProps`
 
@@ -980,15 +980,15 @@ yTickFormatter?: (value: number) => string;
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 9 bank chart wiring note · [`TOKENS.md`](./TOKENS.md) viz tokens
+- [`POLISH.md`](./POLISH.md) Phase 9 bank chart wiring note Ãƒâ€šÃ‚Â· [`TOKENS.md`](./TOKENS.md) viz tokens
 
 ---
 
 ## Modal
 
-**File:** `components/forge/ui/Modal.tsx` · **Lines:** 75
+**File:** `components/forge/ui/Modal.tsx` Ãƒâ€šÃ‚Â· **Lines:** 75
 
-**Purpose:** Forge design-system primitive `Modal` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Modal` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `ModalProps`
 
@@ -1006,13 +1006,13 @@ closeOnBackdropClick?: boolean;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Modal](./_assets/components/overlays/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1028,7 +1028,7 @@ import { Modal } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1039,21 +1039,21 @@ import { Modal } from "@/components/forge";
 
 ## MoneyInput
 
-**File:** `components/forge/ui/MoneyInput.tsx` · **Lines:** 79
+**File:** `components/forge/ui/MoneyInput.tsx` Ãƒâ€šÃ‚Â· **Lines:** 79
 
-**Purpose:** Forge design-system primitive `MoneyInput` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `MoneyInput` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1069,7 +1069,7 @@ import { MoneyInput } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1080,9 +1080,9 @@ import { MoneyInput } from "@/components/forge";
 
 ## RadioGroup
 
-**File:** `components/forge/ui/RadioGroup.tsx` · **Lines:** 50
+**File:** `components/forge/ui/RadioGroup.tsx` Ãƒâ€šÃ‚Â· **Lines:** 50
 
-**Purpose:** Forge design-system primitive `RadioGroup` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `RadioGroup` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `RadioGroupProps`
 
@@ -1098,13 +1098,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1120,7 +1120,7 @@ import { RadioGroup } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1131,21 +1131,21 @@ import { RadioGroup } from "@/components/forge";
 
 ## Select
 
-**File:** `components/forge/ui/Select.tsx` · **Lines:** 70
+**File:** `components/forge/ui/Select.tsx` Ãƒâ€šÃ‚Â· **Lines:** 70
 
-**Purpose:** Forge design-system primitive `Select` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Select` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Select](./_assets/components/form-controls/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1161,7 +1161,7 @@ import { Select } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1172,9 +1172,9 @@ import { Select } from "@/components/forge";
 
 ## Skeleton
 
-**File:** `components/forge/ui/Skeleton.tsx` · **Lines:** 22
+**File:** `components/forge/ui/Skeleton.tsx` Ãƒâ€šÃ‚Â· **Lines:** 22
 
-**Purpose:** Forge design-system primitive `Skeleton` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Skeleton` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `SkeletonProps`
 
@@ -1186,13 +1186,13 @@ label?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Skeleton](./_assets/components/skeleton-avatar/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1208,7 +1208,7 @@ import { Skeleton } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1219,21 +1219,21 @@ import { Skeleton } from "@/components/forge";
 
 ## StatusPill
 
-**File:** `components/forge/ui/StatusPill.tsx` · **Lines:** 35
+**File:** `components/forge/ui/StatusPill.tsx` Ãƒâ€šÃ‚Â· **Lines:** 35
 
-**Purpose:** Forge design-system primitive `StatusPill` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `StatusPill` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![StatusPill](./_assets/components/cards-badges-empty/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1249,7 +1249,7 @@ import { StatusPill } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1260,21 +1260,21 @@ import { StatusPill } from "@/components/forge";
 
 ## Switch
 
-**File:** `components/forge/ui/Switch.tsx` · **Lines:** 50
+**File:** `components/forge/ui/Switch.tsx` Ãƒâ€šÃ‚Â· **Lines:** 50
 
-**Purpose:** Forge design-system primitive `Switch` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Switch` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1290,7 +1290,7 @@ import { Switch } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1301,9 +1301,9 @@ import { Switch } from "@/components/forge";
 
 ## Tabs
 
-**File:** `components/forge/ui/Tabs.tsx` · **Lines:** 82
+**File:** `components/forge/ui/Tabs.tsx` Ãƒâ€šÃ‚Â· **Lines:** 82
 
-**Purpose:** Forge design-system primitive `Tabs` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Tabs` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `TabsProps`
 
@@ -1312,19 +1312,19 @@ tabs: TabDef[];
 value: string;
 onValueChange: (id: string) => void;
 className?: string;
-/** Visual style — both meet Forge density; `pills` for filters, `line` for settings. */
+/** Visual style ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â both meet Forge density; `pills` for filters, `line` for settings. */
 variant?: "line" | "pills";
 ```
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Tabs](./_assets/components/tabs/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1340,7 +1340,7 @@ import { Tabs } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1351,21 +1351,21 @@ import { Tabs } from "@/components/forge";
 
 ## Textarea
 
-**File:** `components/forge/ui/Textarea.tsx` · **Lines:** 82
+**File:** `components/forge/ui/Textarea.tsx` Ãƒâ€šÃ‚Â· **Lines:** 82
 
-**Purpose:** Forge design-system primitive `Textarea` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Textarea` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1381,7 +1381,7 @@ import { Textarea } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1392,21 +1392,21 @@ import { Textarea } from "@/components/forge";
 
 ## Toast
 
-**File:** `components/forge/ui/Toast.tsx` · **Lines:** 32
+**File:** `components/forge/ui/Toast.tsx` Ãƒâ€šÃ‚Â· **Lines:** 32
 
-**Purpose:** Forge design-system primitive `Toast` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Toast` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Toast](./_assets/components/overlays/section.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1422,7 +1422,7 @@ import { ForgeToaster, toast } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1433,21 +1433,21 @@ import { ForgeToaster, toast } from "@/components/forge";
 
 ## ForgeCommandPaletteContext
 
-**File:** `components/forge/layout/ForgeCommandPaletteContext.tsx` · **Lines:** 54
+**File:** `components/forge/layout/ForgeCommandPaletteContext.tsx` Ãƒâ€šÃ‚Â· **Lines:** 54
 
-**Purpose:** Forge design-system primitive `ForgeCommandPaletteContext` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `ForgeCommandPaletteContext` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1463,7 +1463,7 @@ import { ForgeCommandPaletteContext } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1476,7 +1476,7 @@ import { ForgeCommandPaletteContext } from "@/components/forge";
 
 **File:** `components/forge/layout/ForgeCreditHubAppShell.tsx`
 
-**Purpose:** Credit Hub shell — `PersonaProvider`, `CHTenantGuard`, `ForgeCommandPaletteProvider`, and **`ForgeAppShell`** with **`ForgeCreditHubSidebar`** + **`ForgeCreditHubTopbar`**. Use this for **`/credit-hub/*`** only. For non–Credit Hub modules (e.g. Legal under **`/legal`**), use **`ForgeAppShell`** + **`ForgeAppSidebar`** directly in that route’s layout (no `PersonaProvider`, no command palette in v1).
+**Purpose:** Credit Hub shell ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â `PersonaProvider`, `CHTenantGuard`, `ForgeCommandPaletteProvider`, and **`ForgeAppShell`** with **`ForgeCreditHubSidebar`** + **`ForgeCreditHubTopbar`**. Use this for **`/credit-hub/*`** only. For nonÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“Credit Hub modules (e.g. Legal under **`/legal`**), use **`ForgeAppShell`** + **`ForgeAppSidebar`** directly in that routeÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s layout (no `PersonaProvider`, no command palette in v1).
 
 **Props:** `{ children: ReactNode }`
 
@@ -1501,13 +1501,13 @@ import { ForgeAppTopbar } from "@/components/forge/layout/ForgeAppTopbar";
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1523,7 +1523,7 @@ import { ForgeCreditHubAppShell } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1534,21 +1534,21 @@ import { ForgeCreditHubAppShell } from "@/components/forge";
 
 ## ForgeCreditHubCommandPalette
 
-**File:** `components/forge/layout/ForgeCreditHubCommandPalette.tsx` · **Lines:** 273
+**File:** `components/forge/layout/ForgeCreditHubCommandPalette.tsx` Ãƒâ€šÃ‚Â· **Lines:** 273
 
-**Purpose:** Forge design-system primitive `ForgeCreditHubCommandPalette` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `ForgeCreditHubCommandPalette` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1564,7 +1564,7 @@ import { ForgeCreditHubCommandPalette } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1575,21 +1575,21 @@ import { ForgeCreditHubCommandPalette } from "@/components/forge";
 
 ## ForgeCreditHubSidebar
 
-**File:** `components/forge/layout/ForgeCreditHubSidebar.tsx` · **Lines:** 110
+**File:** `components/forge/layout/ForgeCreditHubSidebar.tsx` Ãƒâ€šÃ‚Â· **Lines:** 110
 
-**Purpose:** Forge design-system primitive `ForgeCreditHubSidebar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `ForgeCreditHubSidebar` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1605,7 +1605,7 @@ import { ForgeCreditHubSidebar } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1616,21 +1616,21 @@ import { ForgeCreditHubSidebar } from "@/components/forge";
 
 ## ForgeCreditHubTopbar
 
-**File:** `components/forge/layout/ForgeCreditHubTopbar.tsx` · **Lines:** 31
+**File:** `components/forge/layout/ForgeCreditHubTopbar.tsx` Ãƒâ€šÃ‚Â· **Lines:** 31
 
-**Purpose:** Forge design-system primitive `ForgeCreditHubTopbar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `ForgeCreditHubTopbar` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1646,7 +1646,7 @@ import { ForgeCreditHubTopbar } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1659,7 +1659,7 @@ import { ForgeCreditHubTopbar } from "@/components/forge";
 
 **File:** `components/forge/layout/ForgeAppShell.tsx`
 
-**Purpose:** Agnostic two-column layout: **sidebar** + **topbar** + **`<main id="main-content">`**. Optional **`beforeContent`** (e.g. Credit Hub token debug span). Does **not** mount command palette — Credit Hub wraps this tree with **`ForgeCommandPaletteProvider`**.
+**Purpose:** Agnostic two-column layout: **sidebar** + **topbar** + **`<main id="main-content">`**. Optional **`beforeContent`** (e.g. Credit Hub token debug span). Does **not** mount command palette ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Credit Hub wraps this tree with **`ForgeCommandPaletteProvider`**.
 
 **Primary props interface:** `ForgeAppShellProps`
 
@@ -1672,7 +1672,7 @@ beforeContent?: ReactNode;
 
 ### Related
 
-- **`ForgeCreditHubAppShell`** · **`ForgeAppSidebar`** · **`ForgeAppTopbar`**
+- **`ForgeCreditHubAppShell`** Ãƒâ€šÃ‚Â· **`ForgeAppSidebar`** Ãƒâ€šÃ‚Â· **`ForgeAppTopbar`**
 
 ---
 
@@ -1680,12 +1680,12 @@ beforeContent?: ReactNode;
 
 **File:** `components/forge/layout/ForgeAppSidebar.tsx`
 
-**Purpose:** Multi-tenant **module** navigation. Uses **`useTenantModules()`** (TanStack Query → **`GET /api/v1/tenants/{tenantId}/modules`**) where **`modules`** is an array of **`{ slug, label, enabled, … }`** (no separate `catalog` field). Only slugs in **`IMPLEMENTED_MODULE_SLUGS`** (currently `credit`, `legal`) render until more UIs ship; **labels come from the backend** response.
+**Purpose:** Multi-tenant **module** navigation. Uses **`useTenantModules()`** (TanStack Query ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ **`GET /api/v1/tenants/{tenantId}/modules`**) where **`modules`** is an array of **`{ slug, label, enabled, ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ }`** (no separate `catalog` field). Only slugs in **`IMPLEMENTED_MODULE_SLUGS`** (currently `credit`, `legal`) render until more UIs ship; **labels come from the backend** response.
 
 ### DO / DON'T
 
 - **DO:** add new rows to the internal registry with backend `module` ids that match the API.
-- **DON'T:** conflate Credit Hub **persona** (`bank`/`dealer`) with module gating — persona stays in **`ForgeCreditHubSidebar`**.
+- **DON'T:** conflate Credit Hub **persona** (`bank`/`dealer`) with module gating ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â persona stays in **`ForgeCreditHubSidebar`**.
 
 ---
 
@@ -1693,7 +1693,7 @@ beforeContent?: ReactNode;
 
 **File:** `components/forge/layout/ForgeAppTopbar.tsx`
 
-**Purpose:** Top bar for non–Credit Hub Forge routes. Today supports **`module="legal"`** (institution title + “Legal Intelligence”). Composes primitive **`Topbar`**.
+**Purpose:** Top bar for nonÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“Credit Hub Forge routes. Today supports **`module="legal"`** (institution title + ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œLegal IntelligenceÃƒÂ¢Ã¢â€šÂ¬Ã‚Â). Composes primitive **`Topbar`**.
 
 **Primary props interface:** `ForgeAppTopbarProps`
 
@@ -1705,9 +1705,9 @@ module: "legal";
 
 ## Sidebar
 
-**File:** `components/forge/layout/Sidebar.tsx` · **Lines:** 54
+**File:** `components/forge/layout/Sidebar.tsx` Ãƒâ€šÃ‚Â· **Lines:** 54
 
-**Purpose:** Forge design-system primitive `Sidebar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Sidebar` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `SidebarProps`
 
@@ -1720,13 +1720,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Sidebar](./_assets/components/layout/sidebar-topbar-kpi.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1742,7 +1742,7 @@ import { Sidebar } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1753,9 +1753,9 @@ import { Sidebar } from "@/components/forge";
 
 ## Topbar
 
-**File:** `components/forge/layout/Topbar.tsx` · **Lines:** 30
+**File:** `components/forge/layout/Topbar.tsx` Ãƒâ€šÃ‚Â· **Lines:** 30
 
-**Purpose:** Forge design-system primitive `Topbar` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `Topbar` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
 **Primary props interface:** `TopbarProps`
 
@@ -1769,13 +1769,13 @@ className?: string;
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
 ![Topbar](./_assets/components/layout/sidebar-topbar-kpi.png)
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1791,7 +1791,7 @@ import { Topbar } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1802,21 +1802,21 @@ import { Topbar } from "@/components/forge";
 
 ## creditHubPersonaFromSegments
 
-**File:** `components/forge/layout/creditHubPersonaFromSegments.ts` · **Lines:** 14
+**File:** `components/forge/layout/creditHubPersonaFromSegments.ts` Ãƒâ€šÃ‚Â· **Lines:** 14
 
-**Purpose:** Forge design-system primitive `creditHubPersonaFromSegments` — see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
+**Purpose:** Forge design-system primitive `creditHubPersonaFromSegments` ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â see barrel export in `components/forge/index.ts`. Legacy `components/credit-hub/**` is **out of scope** for this catalog (Phase 7.2 Case B).
 
-**Props:** See source for `export interface …Props` and runtime props.
+**Props:** See source for `export interface ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Props` and runtime props.
 
 ### Variants & states (preview)
 
-Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
 
-_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
 
 ### DO / DON'T (from Phase 5 polish)
 
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this file’s earlier sections.
+- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
 - **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
 
 ### Accessibility
@@ -1832,7 +1832,7 @@ import { creditHubPersonaFromSegments } from "@/components/forge";
 
 ### Related
 
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2–5 · [`MIGRATION.md`](./MIGRATION.md)
+- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
 
 ### Compose vs extend
 
@@ -1841,6 +1841,56 @@ import { creditHubPersonaFromSegments } from "@/components/forge";
 
 ---
 
+## TenantBrandingErrorBanner
+
+**File:** `components/forge/ui/TenantBrandingErrorBanner.tsx` Ãƒâ€šÃ‚Â· **Lines:** 72
+
+**Purpose:** Persistent error banner shown across the Forge Credit Hub chrome whenever `useTenantBranding` enters an error state (P10-05). Sits between the topbar and main content per the approved P10-05 mockup, with a subtle danger-tinted background, a leading `AlertTriangle` icon (icon + text per design rule "status SIEMPRE icono+texto"), the operator-facing `Reference: ERR-...` id, and a Retry button that re-runs the fetch.
+
+**Primary props interface:** `TenantBrandingErrorBannerProps`
+
+```ts
+referenceId: string;        // Stable id (ERR-...) shown for support escalation
+error?: unknown;            // Optional typed error for specific messages
+onRetry: () => void;        // Re-runs the underlying tenant-branding query
+```
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** use stable `referenceId` (do not regenerate per render); branch error message on `instanceof TenantBrandingNotFoundError | ForbiddenError | NetworkError`; mount once at shell level (not per page).
+- **DON'T:** use `toast.error()` instead (banner is persistent by design); hide on retry click (let `useTenantBranding` resolve and unmount the banner naturally).
+
+### Accessibility
+
+- `role="alert"` so assistive tech announces the failure on render.
+- Icon is `aria-hidden` because surrounding text already communicates the error state.
+- Retry button has explicit text label (not icon-only).
+
+### Minimal example
+
+```tsx
+import { TenantBrandingErrorBanner } from "@/components/forge/ui/TenantBrandingErrorBanner";
+
+{isError && (
+  <TenantBrandingErrorBanner
+    referenceId={errorReferenceIdRef.current}
+    error={error}
+    onRetry={refetch}
+  />
+)}
+```
+
+### Related
+
+- [`P10-05_ADAPTER_ANALYSIS.md`](./P10-05_ADAPTER_ANALYSIS.md) Ãƒâ€šÃ‚Â· [`TENANT_THEMING.md`](./TENANT_THEMING.md)
+- Consumes typed errors from `lib/credit-hub/api/tenant-branding-client.ts`
+
+### Compose vs extend
+
+- **Compose** at the AppShell level (mounted in `ForgeCreditHubAppShell`).
+- **Extend** the primitive only if other tenant-scoped fetches need similar persistent error UI (then generalize and update this doc).
+
+---
 <!-- PHASE8_PRIMITIVE_CATALOG_END -->
 
 
