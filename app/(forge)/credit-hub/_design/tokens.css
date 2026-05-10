@@ -1,7 +1,7 @@
 /**
  * Forge Credit Hub — v3.2 design tokens (institutional).
  * Scoped to .forge-app so legacy :root tokens in styles/forge-tokens.css stay intact.
- * Bank (default): light surfaces + gray scale (neutral UI). Dealer dark overrides: **dormant** (commented) until Phase 4.
+ * Bank (default): light surfaces + gray scale (neutral UI). Dealer portal dark overrides live under `.forge-app[data-theme="dark"]` (vars dormant — no toggle in Step 2).
  * Tenant: .forge-app[data-tenant="slug"] (Phase 8 sets attribute on Forge root).
  */
 
@@ -148,6 +148,93 @@
   --forge-bp-desktop: 1280px;
   --forge-bp-wide: 1536px;
 
+  /* === NEW FAMILIES (P11-01 Step 2, Posture B — additive only) ================= */
+
+  /* ─── Tenant accent (semantic 4-stop — complements --forge-brand-* ramp) ───── */
+  --forge-tenant-primary:        var(--forge-brand-500);         /* Credicefi base navy by default; tenant blocks override */
+  --forge-tenant-primary-strong: var(--forge-brand-600);
+  --forge-tenant-primary-soft:   color-mix(in srgb, var(--forge-brand-500) 10%, transparent);
+  --forge-tenant-dark:           var(--forge-brand-900);
+
+  /* ─── Ink hierarchy (4 levels — text only, DEC1 freed) ────────────────────────── */
+  --forge-ink-1: #1E3A8A;
+  --forge-ink-2: #1E40AF;
+  --forge-ink-3: #1D4ED8;
+  --forge-ink-4: #3B82F6;
+
+  /* ─── Bg scale (semantic layer aligned to Navy Inverso light proto) ──────────── */
+  --forge-bg-base:           #DBEAFE;
+  --forge-bg-raised:         #FFFFFF;
+  --forge-bg-elev:           #EFF6FF;
+  --forge-bg-overlay:        rgba(30, 58, 138, 0.05);
+  --forge-bg-overlay-strong: rgba(30, 58, 138, 0.08);
+
+  /* ─── Lines / divider (--forge-border-* remains shorthand borders) ──────────── */
+  --forge-line-1: rgba(30, 58, 138, 0.12);
+  --forge-line-2: rgba(30, 58, 138, 0.18);
+  --forge-line-3: rgba(30, 58, 138, 0.28);
+
+  /* ─── Semantic translucent derivatives (additive; ramps above unchanged) ───── */
+  --forge-success-bg:   color-mix(in srgb, var(--forge-success-500) 10%, transparent);
+  --forge-success-line: color-mix(in srgb, var(--forge-success-500) 28%, transparent);
+  --forge-warning-bg:   color-mix(in srgb, var(--forge-warning-500) 10%, transparent);
+  --forge-warning-line: color-mix(in srgb, var(--forge-warning-500) 30%, transparent);
+  --forge-danger-bg:    color-mix(in srgb, var(--forge-danger-500)  10%, transparent);
+  --forge-danger-line:  color-mix(in srgb, var(--forge-danger-500)  30%, transparent);
+  --forge-info-bg:      color-mix(in srgb, var(--forge-info-500)    10%, transparent);
+  --forge-info-line:    color-mix(in srgb, var(--forge-info-500)    28%, transparent);
+  --forge-accent-gold-bg:   color-mix(in srgb, var(--forge-accent-gold) 12%, transparent);
+  --forge-accent-gold-line: color-mix(in srgb, var(--forge-accent-gold) 40%, transparent);
+
+  /* ─── Type extras ────────────────────────────────────────────────────────────── */
+  --forge-text-2xs:  10px;
+  --forge-text-hero: 96px;
+
+  /* ─── Radius ────────────────────────────────────────────────────────────────── */
+  --forge-radius-xl: 12px;
+
+  /* ─── Shadow ──────────────────────────────────────────────────────────────────── */
+  --forge-shadow-modal: 0 24px 60px rgba(15, 23, 41, 0.18);
+
+  /* ─── Easing (additive; --forge-ease-out/in-out unchanged) ─────────────────── */
+  --forge-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --forge-curve-fast:  cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* === SHORT-PREFIX ALIASES (D6) ================================================ */
+
+  /* Spacing (--sN → --forge-space-N); proto skips some indices */
+  --s1:  var(--forge-space-1);
+  --s2:  var(--forge-space-2);
+  --s3:  var(--forge-space-3);
+  --s4:  var(--forge-space-4);
+  --s5:  var(--forge-space-5);
+  --s6:  var(--forge-space-6);
+  --s8:  var(--forge-space-8);
+  --s10: var(--forge-space-10);
+  --s12: var(--forge-space-12);
+  --s16: var(--forge-space-16);
+  --s20: var(--forge-space-20);
+
+  --r-sm: var(--forge-radius-sm);
+  --r-md: var(--forge-radius-md);
+  --r-lg: var(--forge-radius-lg);
+  --r-xl: var(--forge-radius-xl);
+
+  --sh-1:     var(--forge-shadow-xs);
+  --sh-2:     var(--forge-shadow-sm);
+  --sh-3:     var(--forge-shadow-lg);
+  --sh-modal: var(--forge-shadow-modal);
+
+  --viz-1: var(--forge-viz-1);
+  --viz-2: var(--forge-viz-2);
+  --viz-3: var(--forge-viz-3);
+  --viz-4: var(--forge-viz-4);
+  --viz-5: var(--forge-viz-5);
+  --viz-6: var(--forge-viz-6);
+
+  --ease-spring: var(--forge-ease-spring);
+  --ease-fast:   var(--forge-curve-fast);
+
   font-family: var(--forge-font-body);
   font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
   font-variant-numeric: tabular-nums;
@@ -156,52 +243,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-/*
- * Dealer dark mode override (DORMANT)
- * -----------------------------------
- * Decision deferred to Phase 4 per Cesar 2026-05-01.
- * Architecture preserved here so re-enabling is one diff.
- * Do NOT consume these tokens from any component until
- * Phase 4 explicitly approves dealer dark mode.
- */
-
-/* DORMANT — re-enable in Phase 4 if dealer dark mode is approved.
-.forge-app [data-portal="dealer"] {
-  --forge-surface-page: #0a0e1a;
-  --forge-surface-card: #131829;
-  --forge-surface-raised: #1a2138;
-  --forge-surface-sunken: #232b45;
-  --forge-surface-overlay: rgba(10, 14, 26, 0.72);
-
-  --forge-gray-50: #131829;
-  --forge-gray-100: #1a2138;
-  --forge-gray-200: rgba(255, 255, 255, 0.08);
-  --forge-gray-300: rgba(255, 255, 255, 0.12);
-  --forge-gray-400: #8b95a8;
-  --forge-gray-500: #8b95a8;
-  --forge-gray-600: #c2cbd6;
-  --forge-gray-700: #dde3ea;
-  --forge-gray-800: #f5f7fa;
-  --forge-gray-900: #f7f8fa;
-
-  --forge-neutral-50: var(--forge-gray-100);
-  --forge-neutral-500: var(--forge-gray-500);
-  --forge-neutral-700: var(--forge-gray-700);
-
-  --forge-border-subtle: 1px solid rgba(255, 255, 255, 0.08);
-  --forge-border-default: 1px solid rgba(255, 255, 255, 0.12);
-  --forge-border-strong: 1px solid rgba(255, 255, 255, 0.2);
-
-  --forge-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  --forge-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.25), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  --forge-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.28), 0 2px 4px -1px rgba(0, 0, 0, 0.22);
-  --forge-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -2px rgba(0, 0, 0, 0.24);
-
-  color: var(--forge-gray-800);
-  background-color: var(--forge-surface-page);
-}
-*/
 
 /* Tenant examples (Phase 8 — ForgeBrandingProvider sets data-tenant on .forge-app) */
 .forge-app[data-tenant="test-mx-tenant-uuid"] {
@@ -240,7 +281,7 @@
   --forge-brand-900: #081e3d;
 }
 
-.forge-app[data-tenant="banco-piloto"] {
+.forge-app[data-tenant="banco-piloto-rd"] {
   --forge-brand-500: #0b5345;
   --forge-brand-600: #074035;
   --forge-brand-900: #032620;
@@ -253,4 +294,55 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* === DARK THEME OVERRIDE (DORMANT, D4 — no UI sets data-theme until Sprint 4+) === */
+
+.forge-app[data-theme="dark"] {
+  --forge-bg-base:           #0F1A2E;
+  --forge-bg-raised:         #182338;
+  --forge-bg-elev:           #1F2B45;
+  --forge-bg-overlay:        rgba(255, 255, 255, 0.04);
+  --forge-bg-overlay-strong: rgba(255, 255, 255, 0.08);
+
+  --forge-ink-1: #E8ECF7;
+  --forge-ink-2: #A8B2C8;
+  --forge-ink-3: #7E8AA1;
+  --forge-ink-4: #4D5872;
+
+  --forge-line-1: rgba(255, 255, 255, 0.07);
+  --forge-line-2: #2A3654;
+  --forge-line-3: rgba(255, 255, 255, 0.20);
+
+  --forge-tenant-primary:        var(--forge-brand-400);
+  --forge-tenant-primary-strong: var(--forge-brand-500);
+  --forge-tenant-primary-soft:   color-mix(in srgb, var(--forge-brand-400) 14%, transparent);
+  --forge-tenant-dark:           var(--forge-brand-900);
+}
+
+/* Dark elevations — heavier for dark backgrounds */
+.forge-app[data-theme="dark"] {
+  --forge-shadow-xs:    0 1px 2px rgba(0, 0, 0, 0.30);
+  --forge-shadow-sm:    0 2px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --forge-shadow-md:    0 4px 12px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --forge-shadow-lg:    0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --forge-shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.forge-app[data-theme="dark"][data-tenant="credicefi"] {
+  --forge-tenant-primary:        #4F8FD9;
+  --forge-tenant-primary-strong: #2E5F97;
+  --forge-tenant-primary-soft:   rgba(79, 143, 217, 0.14);
+}
+
+.forge-app[data-theme="dark"][data-tenant="banco-piloto-rd"] {
+  --forge-tenant-primary:        #4ADE80;
+  --forge-tenant-primary-strong: #1B5E20;
+  --forge-tenant-primary-soft:   rgba(74, 222, 128, 0.14);
+}
+
+.forge-app[data-theme="dark"][data-tenant="test-mx-tenant-uuid"] {
+  --forge-tenant-primary:        #C084FC;
+  --forge-tenant-primary-strong: #6B21A8;
+  --forge-tenant-primary-soft:   rgba(192, 132, 252, 0.14);
 }
