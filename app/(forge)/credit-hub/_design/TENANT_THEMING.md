@@ -17,14 +17,12 @@
 | `regulatory_profile` | enum | p. ej. `DO_LEY_172_13` — alinear con textos de cumplimiento. |
 | `copy_overrides` | JSON opcional | Claves por pantalla / sección (Apéndice B v3.2). |
 
-> **Nota de implementación:** el fetch real a `tenant_branding` aún está en evolución — ver [`TENANT_CONTEXT_EXTENSION.md`](./TENANT_CONTEXT_EXTENSION.md) y [`AUDIT.md`](./AUDIT.md) (Path B). Este contrato describe el **objetivo** operativo.
-
 ---
 
 ## B. Flujo de onboarding (15 minutos)
 
 1. Crear fila de tenant en tu **servicio de identidad** (fuera de este repo).
-2. Insertar branding mínimo (SQL ilustrativo — **ajusta nombres de tabla/columnas** a tu backend):
+2. Insertar branding mínimo (ajusta nombres de tabla/columnas a tu backend):
 
 ```sql
 -- Ejemplo ilustrativo (PostgreSQL)
@@ -105,3 +103,10 @@ VALUES (
 ## Referencia Phase 6
 
 Ver [`REUSABILITY_TEST.md`](./REUSABILITY_TEST.md): **TestBank Mexico** — fixture `NEXT_PUBLIC_FORGE_TEST_TENANT=mx`, ajuste de contraste en primario `#7B1F1F` y evidencia Lighthouse.
+
+---
+
+## Env Var Resolution (P10-05 fix BUG-002)
+
+`tenant-branding-client.ts` uses fallback chain:
+`NEXT_PUBLIC_API_BASE_URL` → `NEXT_PUBLIC_API_URL` → `NEXT_PUBLIC_NADAKKI_API_BASE` → empty string. This handles repos with mixed env var conventions.

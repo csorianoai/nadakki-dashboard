@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>P10-05 · Tenant Branding States Mockup</title>
+<meta name="viewport" content="width=1280">
+<style>
+/* =====================================================================
+   FORGE TOKENS (extracted verbatim from app/(forge)/credit-hub/_design/tokens.css)
+   ===================================================================== */
+:root {
+  --forge-brand-50: #f0f4fa;
+  --forge-brand-100: #dce6f2;
+  --forge-brand-500: #2e5f97;
+  --forge-brand-600: #1e477a;
+  --forge-brand-900: #0a1d36;
+
+  --forge-ink-50: #f7f8fa;
+  --forge-ink-100: #eef1f4;
+  --forge-ink-200: #dde3ea;
+  --forge-ink-300: #c2cbd6;
+  --forge-ink-400: #8c97a6;
+  --forge-ink-500: #5a6478;
+  --forge-ink-600: #3d4759;
+  --forge-ink-700: #2a3447;
+  --forge-ink-800: #1a2540;
+  --forge-ink-900: #0f1729;
+
+  --forge-surface-page: #f7f8fa;
+  --forge-surface-card: #ffffff;
+  --forge-surface-sunken: #f0f2f5;
+
+  --forge-success-50: #ecfdf5;
+  --forge-success-500: #0f7a3e;
+  --forge-warning-500: #b7791f;
+  --forge-danger-50: #fef2f2;
+  --forge-danger-500: #b5201e;
+  --forge-danger-700: #8a1816;
+
+  --forge-font-display: "Source Serif Pro", Georgia, serif;
+  --forge-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+  --forge-font-mono: "IBM Plex Mono", ui-monospace, "Menlo", monospace;
+
+  --forge-text-xs: 11px;
+  --forge-text-sm: 13px;
+  --forge-text-base: 14px;
+  --forge-text-md: 16px;
+  --forge-text-lg: 18px;
+  --forge-text-xl: 22px;
+  --forge-text-2xl: 28px;
+  --forge-text-3xl: 36px;
+
+  --forge-weight-medium: 500;
+  --forge-weight-semibold: 600;
+  --forge-weight-bold: 700;
+
+  --forge-space-1: 4px;
+  --forge-space-2: 8px;
+  --forge-space-3: 12px;
+  --forge-space-4: 16px;
+  --forge-space-5: 20px;
+  --forge-space-6: 24px;
+  --forge-space-8: 32px;
+  --forge-space-10: 40px;
+  --forge-space-12: 48px;
+
+  --forge-radius-sm: 4px;
+  --forge-radius-md: 6px;
+  --forge-radius-lg: 8px;
+  --forge-radius-pill: 9999px;
+
+  --forge-shadow-xs: 0 1px 2px 0 rgba(15, 23, 41, 0.04);
+  --forge-shadow-sm: 0 1px 3px 0 rgba(15, 23, 41, 0.06), 0 1px 2px 0 rgba(15, 23, 41, 0.04);
+
+  --forge-border-subtle: 1px solid var(--forge-ink-200);
+  --forge-border-default: 1px solid var(--forge-ink-300);
+
+  --forge-duration-fast: 120ms;
+  --forge-duration-base: 180ms;
+  --forge-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Tenant override — Credicefi (verbatim from tokens.css) */
+[data-tenant="credicefi"] {
+  --forge-brand-500: #1b4a8c;
+  --forge-brand-600: #133766;
+  --forge-brand-900: #081e3d;
+}
+
+/* =====================================================================
+   MOCKUP CHROME — page wrapper for visual review
+   ===================================================================== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: var(--forge-font-body);
+  font-size: var(--forge-text-base);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+  background: var(--forge-ink-100);
+  color: var(--forge-ink-800);
+  -webkit-font-smoothing: antialiased;
+}
+
+.mockup-doc {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--forge-space-8) var(--forge-space-6);
+}
+
+.mockup-doc-title {
+  font-family: var(--forge-font-display);
+  font-size: var(--forge-text-2xl);
+  font-weight: var(--forge-weight-semibold);
+  color: var(--forge-ink-800);
+  margin-bottom: var(--forge-space-2);
+}
+
+.mockup-doc-meta {
+  font-size: var(--forge-text-sm);
+  color: var(--forge-ink-500);
+  margin-bottom: var(--forge-space-8);
+}
+
+.mockup-section {
+  margin-bottom: var(--forge-space-12);
+}
+
+.mockup-section-title {
+  font-family: var(--forge-font-display);
+  font-size: var(--forge-text-xl);
+  font-weight: var(--forge-weight-semibold);
+  color: var(--forge-ink-800);
+  margin-bottom: var(--forge-space-2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--forge-space-3);
+}
+
+.mockup-section-title .state-pill {
+  font-family: var(--forge-font-body);
+  font-size: var(--forge-text-xs);
+  font-weight: var(--forge-weight-semibold);
+  padding: 2px 8px;
+  border-radius: var(--forge-radius-pill);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.state-pill.loading { background: var(--forge-ink-100); color: var(--forge-ink-600); }
+.state-pill.error { background: var(--forge-danger-50); color: var(--forge-danger-700); }
+.state-pill.success { background: var(--forge-success-50); color: var(--forge-success-500); }
+
+.mockup-section-desc {
+  font-size: var(--forge-text-sm);
+  color: var(--forge-ink-500);
+  max-width: 720px;
+  line-height: 1.5;
+  margin-bottom: var(--forge-space-5);
+}
+
+/* =====================================================================
+   FORGE APP SHELL — chrome común en los 3 estados
+   Layout: sidebar fija (left, 240px) + main (flex 1)
+   Topbar dentro del main (sticky top, 56px)
+   ===================================================================== */
+.forge-app {
+  background: var(--forge-surface-page);
+  color: var(--forge-ink-800);
+  border: var(--forge-border-subtle);
+  border-radius: var(--forge-radius-lg);
+  box-shadow: var(--forge-shadow-sm);
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 540px;
+  overflow: hidden;
+}
+
+/* SIDEBAR — invariable (nav siempre visible, IA no cambia) */
+.forge-sidebar {
+  background: var(--forge-surface-card);
+  border-right: var(--forge-border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.forge-sidebar-header {
+  background: var(--forge-brand-500);
+  color: var(--forge-ink-50);
+  padding: var(--forge-space-5) var(--forge-space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-3);
+  min-height: 64px;
+  border-bottom: 1px solid color-mix(in srgb, var(--forge-brand-700) 50%, transparent);
+}
+
+[data-tenant="credicefi"] .forge-sidebar-header {
+  background: var(--forge-brand-900); /* Phase 9 L5 sidebar gradient depth */
+}
+
+.forge-sidebar-header-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--forge-radius-sm);
+  background: rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--forge-font-display);
+  font-weight: var(--forge-weight-bold);
+  font-size: var(--forge-text-md);
+}
+
+.forge-sidebar-header-name {
+  font-size: var(--forge-text-sm);
+  font-weight: var(--forge-weight-semibold);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.forge-sidebar-header-name .sub {
+  display: block;
+  font-size: var(--forge-text-xs);
+  font-weight: var(--forge-weight-medium);
+  color: rgba(255,255,255,0.7);
+  margin-top: 2px;
+}
+
+.forge-sidebar-nav {
+  padding: var(--forge-space-4) var(--forge-space-2);
+  flex: 1;
+}
+
+.forge-sidebar-section-label {
+  font-size: var(--forge-text-xs);
+  font-weight: var(--forge-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--forge-ink-400);
+  padding: var(--forge-space-3) var(--forge-space-3) var(--forge-space-2);
+}
+
+.forge-sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-3);
+  padding: var(--forge-space-2) var(--forge-space-3);
+  border-radius: var(--forge-radius-md);
+  font-size: var(--forge-text-sm);
+  font-weight: var(--forge-weight-medium);
+  color: var(--forge-ink-600);
+  transition: background-color var(--forge-duration-fast) var(--forge-ease-out);
+  cursor: default;
+}
+
+.forge-sidebar-nav-item:hover {
+  background: var(--forge-surface-sunken);
+  color: var(--forge-ink-800);
+}
+
+.forge-sidebar-nav-item.active {
+  background: var(--forge-brand-50);
+  color: var(--forge-brand-600);
+  font-weight: var(--forge-weight-semibold);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* MAIN COLUMN */
+.forge-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* TOPBAR — slot tenant info (logo + display_name) varía entre estados */
+.forge-topbar {
+  background: var(--forge-surface-card);
+  border-bottom: var(--forge-border-subtle);
+  padding: 0 var(--forge-space-6);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.forge-topbar-tenant {
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-3);
+}
+
+.forge-topbar-tenant-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--forge-radius-sm);
+  background: var(--forge-brand-500);
+  color: var(--forge-ink-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--forge-font-display);
+  font-weight: var(--forge-weight-bold);
+  font-size: var(--forge-text-md);
+}
+
+[data-tenant="credicefi"] .forge-topbar-tenant-logo {
+  background: var(--forge-brand-900);
+}
+
+.forge-topbar-tenant-name {
+  font-family: var(--forge-font-display);
+  font-size: var(--forge-text-md);
+  font-weight: var(--forge-weight-semibold);
+  color: var(--forge-ink-800);
+  line-height: 1.2;
+}
+
+.forge-topbar-tenant-name .sub {
+  display: block;
+  font-family: var(--forge-font-body);
+  font-size: var(--forge-text-xs);
+  font-weight: var(--forge-weight-medium);
+  color: var(--forge-ink-500);
+  margin-top: 2px;
+}
+
+.forge-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-3);
+}
+
+.forge-topbar-iconbtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--forge-radius-md);
+  background: transparent;
+  color: var(--forge-ink-500);
+  cursor: pointer;
+  border: none;
+  transition: background-color var(--forge-duration-fast) var(--forge-ease-out);
+}
+
+.forge-topbar-iconbtn:hover {
+  background: var(--forge-surface-sunken);
+  color: var(--forge-ink-800);
+}
+
+.forge-topbar-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--forge-radius-pill);
+  background: var(--forge-ink-200);
+  color: var(--forge-ink-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--forge-text-xs);
+  font-weight: var(--forge-weight-semibold);
+}
+
+/* MAIN CONTENT — KPI strip + applications list */
+.forge-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--forge-space-6);
+  background: var(--forge-surface-page);
+}
+
+.forge-page-eyebrow {
+  font-size: var(--forge-text-xs);
+  font-weight: var(--forge-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--forge-ink-400);
+  margin-bottom: var(--forge-space-2);
+}
+
+.forge-page-title {
+  font-family: var(--forge-font-display);
+  font-size: var(--forge-text-2xl);
+  font-weight: var(--forge-weight-semibold);
+  color: var(--forge-ink-800);
+  margin-bottom: var(--forge-space-6);
+  line-height: 1.15;
+}
+
+.forge-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--forge-space-4);
+  margin-bottom: var(--forge-space-6);
+}
+
+.forge-kpi-card {
+  background: var(--forge-surface-card);
+  border: var(--forge-border-subtle);
+  border-radius: var(--forge-radius-lg);
+  box-shadow: var(--forge-shadow-xs);
+  padding: var(--forge-space-5);
+}
+
+.forge-kpi-label {
+  font-size: var(--forge-text-xs);
+  font-weight: var(--forge-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--forge-ink-500);
+  margin-bottom: var(--forge-space-3);
+}
+
+.forge-kpi-value {
+  font-family: var(--forge-font-display);
+  font-size: var(--forge-text-2xl);
+  font-weight: var(--forge-weight-semibold);
+  color: var(--forge-ink-800);
+  line-height: 1;
+  margin-bottom: var(--forge-space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.forge-kpi-delta {
+  font-size: var(--forge-text-xs);
+  color: var(--forge-success-500);
+  font-weight: var(--forge-weight-medium);
+}
+
+/* DataTable rows mini */
+.forge-data-card {
+  background: var(--forge-surface-card);
+  border: var(--forge-border-subtle);
+  border-radius: var(--forge-radius-lg);
+  box-shadow: var(--forge-shadow-xs);
+  overflow: hidden;
+}
+
+.forge-data-card-header {
+  padding: var(--forge-space-4) var(--forge-space-5);
+  border-bottom: var(--forge-border-subtle);
+  font-family: var(--forge-font-display);
+  font-size: var(--forge-text-md);
+  font-weight: var(--forge-weight-semibold);
+  color: var(--forge-ink-800);
+}
+
+.forge-data-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 140px 120px;
+  gap: var(--forge-space-4);
+  padding: var(--forge-space-3) var(--forge-space-5);
+  align-items: center;
+  border-bottom: 1px solid var(--forge-ink-100);
+  font-size: var(--forge-text-sm);
+}
+
+.forge-data-row:last-child { border-bottom: none; }
+.forge-data-row:hover { background: var(--forge-surface-sunken); }
+
+.forge-data-row .id {
+  font-family: var(--forge-font-mono);
+  font-size: var(--forge-text-xs);
+  color: var(--forge-ink-500);
+}
+
+.forge-data-row .applicant {
+  font-weight: var(--forge-weight-medium);
+  color: var(--forge-ink-800);
+}
+
+.forge-data-row .amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--forge-weight-medium);
+  color: var(--forge-ink-800);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--forge-radius-pill);
+  font-size: var(--forge-text-xs);
+  font-weight: var(--forge-weight-semibold);
+  letter-spacing: 0.02em;
+}
+
+.status-pill.success {
+  background: var(--forge-success-50);
+  color: var(--forge-success-500);
+}
+
+.status-pill.warning {
+  background: #fffbeb;
+  color: var(--forge-warning-500);
+}
+
+.status-pill.icon { width: 10px; height: 10px; stroke-width: 2.5; }
+
+/* =====================================================================
+   STATE 1 · LOADING — skeleton shimmer en slots tenant-specific
+   ===================================================================== */
+
+@keyframes forge-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--forge-ink-100) 0%,
+    var(--forge-ink-200) 50%,
+    var(--forge-ink-100) 100%
+  );
+  background-size: 200% 100%;
+  animation: forge-shimmer 1.4s linear infinite;
+  border-radius: var(--forge-radius-sm);
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--forge-ink-100);
+  }
+}
+
+.skeleton.logo-32 { width: 32px; height: 32px; border-radius: var(--forge-radius-sm); }
+.skeleton.text-md { width: 140px; height: 14px; }
+.skeleton.text-sm { width: 80px; height: 11px; margin-top: 4px; }
+.skeleton.kpi-value { width: 96px; height: 26px; margin: 4px 0; }
+.skeleton.kpi-delta { width: 56px; height: 11px; }
+.skeleton.row-id { width: 88px; height: 11px; }
+.skeleton.row-name { width: 60%; height: 13px; }
+.skeleton.row-amount { width: 80px; height: 13px; margin-left: auto; }
+.skeleton.row-pill { width: 96px; height: 18px; border-radius: var(--forge-radius-pill); }
+
+/* Skeleton in sidebar — only the header content (logo + name), nav items NEVER skeleton */
+.forge-sidebar-header.is-loading .skeleton.logo-32 {
+  background: rgba(255,255,255,0.18);
+}
+.forge-sidebar-header.is-loading .skeleton.text-md {
+  background: rgba(255,255,255,0.18);
+  width: 96px;
+}
+.forge-sidebar-header.is-loading .skeleton.text-sm {
+  background: rgba(255,255,255,0.12);
+  width: 56px;
+}
+
+/* =====================================================================
+   STATE 2 · ERROR — banner + fallback to default branding
+   ===================================================================== */
+
+.forge-error-banner {
+  background: var(--forge-danger-50);
+  border-left: 3px solid var(--forge-danger-500);
+  border-bottom: 1px solid color-mix(in srgb, var(--forge-danger-500) 18%, transparent);
+  padding: var(--forge-space-3) var(--forge-space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--forge-space-4);
+  flex-shrink: 0;
+}
+
+.forge-error-banner-icon {
+  color: var(--forge-danger-500);
+  flex-shrink: 0;
+}
+
+.forge-error-banner-body {
+  flex: 1;
+  font-size: var(--forge-text-sm);
+  color: var(--forge-danger-700);
+  line-height: 1.4;
+}
+
+.forge-error-banner-body strong {
+  font-weight: var(--forge-weight-semibold);
+}
+
+.forge-error-banner-body .ref {
+  font-family: var(--forge-font-mono);
+  font-size: var(--forge-text-xs);
+  color: var(--forge-danger-700);
+  margin-left: var(--forge-space-2);
+}
+
+.forge-error-banner-action {
+  background: var(--forge-surface-card);
+  border: 1px solid var(--forge-danger-500);
+  color: var(--forge-danger-700);
+  font-size: var(--forge-text-sm);
+  font-weight: var(--forge-weight-semibold);
+  font-family: inherit;
+  padding: 6px 12px;
+  border-radius: var(--forge-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--forge-duration-fast) var(--forge-ease-out);
+}
+
+.forge-error-banner-action:hover {
+  background: var(--forge-danger-50);
+}
+
+/* =====================================================================
+   ANNOTATION TAGS (visual review aid — not part of the real component)
+   ===================================================================== */
+
+.annotation {
+  font-family: var(--forge-font-mono);
+  font-size: 10px;
+  color: var(--forge-ink-400);
+  background: var(--forge-ink-50);
+  border: 1px dashed var(--forge-ink-300);
+  border-radius: var(--forge-radius-sm);
+  padding: 2px 6px;
+  display: inline-block;
+  letter-spacing: 0;
+}
+
+.annotation-strip {
+  margin-top: var(--forge-space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--forge-space-2);
+}
+
+</style>
+</head>
+<body>
+<div class="mockup-doc">
+
+  <h1 class="mockup-doc-title">P10-05 · Tenant Branding — visual states mockup</h1>
+  <div class="mockup-doc-meta">
+    Forge Credit Hub · 2026-05-09 · Cowork ·
+    Tokens read verbatim from <code>app/(forge)/credit-hub/_design/tokens.css</code> ·
+    Layout chrome stable across the 3 states; only tenant-specific slots vary
+  </div>
+
+  <!-- ================================================================
+       STATE 1 · LOADING
+       ================================================================ -->
+  <section class="mockup-section">
+    <h2 class="mockup-section-title">
+      State 1 — Loading
+      <span class="state-pill loading">isPending: true</span>
+    </h2>
+    <p class="mockup-section-desc">
+      First render after mount. <code>useTenantBranding(tenantId)</code> is fetching
+      <code>GET /api/v2/tenants/{id}/branding</code>. Sidebar nav and main content shell render immediately
+      with default tokens (no spinner, no full-page block). Only the slots that <em>require</em> tenant
+      data — topbar logo, tenant name, sidebar header tint, currency formatters, status labels — show
+      shimmer skeletons. Skeleton respects <code>prefers-reduced-motion: reduce</code> (no animation).
+    </p>
+
+    <div class="forge-app">
+      <!-- Sidebar -->
+      <aside class="forge-sidebar">
+        <div class="forge-sidebar-header is-loading">
+          <span class="skeleton logo-32"></span>
+          <div>
+            <span class="skeleton text-md"></span>
+            <span class="skeleton text-sm"></span>
+          </div>
+        </div>
+        <nav class="forge-sidebar-nav">
+          <div class="forge-sidebar-section-label">Bank</div>
+          <div class="forge-sidebar-nav-item active">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+            Dashboard
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            Applications
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>
+            Compliance
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            Audit
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main column -->
+      <div class="forge-main">
+        <header class="forge-topbar">
+          <div class="forge-topbar-tenant">
+            <span class="skeleton logo-32"></span>
+            <div>
+              <span class="skeleton text-md"></span>
+              <span class="skeleton text-sm"></span>
+            </div>
+          </div>
+          <div class="forge-topbar-actions">
+            <button class="forge-topbar-iconbtn" aria-label="Search (Cmd+K)">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </button>
+            <button class="forge-topbar-iconbtn" aria-label="Notifications">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            <span class="forge-topbar-avatar">CS</span>
+          </div>
+        </header>
+
+        <main class="forge-content">
+          <div class="forge-page-eyebrow">Bank · Operations</div>
+          <h1 class="forge-page-title">Pending review · 7 applications</h1>
+
+          <div class="forge-kpi-strip">
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Pending review</div>
+              <span class="skeleton kpi-value"></span>
+              <span class="skeleton kpi-delta"></span>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Approved this week</div>
+              <span class="skeleton kpi-value"></span>
+              <span class="skeleton kpi-delta"></span>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">AML alerts</div>
+              <span class="skeleton kpi-value"></span>
+              <span class="skeleton kpi-delta"></span>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Avg decision time</div>
+              <span class="skeleton kpi-value"></span>
+              <span class="skeleton kpi-delta"></span>
+            </div>
+          </div>
+
+          <div class="forge-data-card">
+            <div class="forge-data-card-header">Recent applications</div>
+            <div class="forge-data-row">
+              <span class="skeleton row-id"></span>
+              <span class="skeleton row-name"></span>
+              <span class="skeleton row-amount"></span>
+              <span class="skeleton row-pill"></span>
+            </div>
+            <div class="forge-data-row">
+              <span class="skeleton row-id"></span>
+              <span class="skeleton row-name"></span>
+              <span class="skeleton row-amount"></span>
+              <span class="skeleton row-pill"></span>
+            </div>
+            <div class="forge-data-row">
+              <span class="skeleton row-id"></span>
+              <span class="skeleton row-name"></span>
+              <span class="skeleton row-amount"></span>
+              <span class="skeleton row-pill"></span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="annotation-strip">
+      <span class="annotation">topbar logo: skeleton 32×32 shimmer</span>
+      <span class="annotation">topbar tenant_name: skeleton 14px</span>
+      <span class="annotation">sidebar header bg: --forge-brand-500 (default, no tenant override)</span>
+      <span class="annotation">KPI values: skeleton (no formatter yet — locale unknown)</span>
+      <span class="annotation">DataTable rows: skeleton 5 rows max (per Forge DataTable spec)</span>
+      <span class="annotation">duration: shimmer 1.4s linear infinite, motion-reduce: none</span>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       STATE 2 · ERROR
+       ================================================================ -->
+  <section class="mockup-section">
+    <h2 class="mockup-section-title">
+      State 2 — Error (fetch failed, fallback to default branding)
+      <span class="state-pill error">isError: true</span>
+    </h2>
+    <p class="mockup-section-desc">
+      Network failure, 500, or 403 from <code>/api/v2/tenants/{id}/branding</code>. Hook returns
+      default branding (Forge canonical: navy <code>--forge-brand-500: #2e5f97</code>, en-US locale,
+      USD currency, English status labels). Top banner notifies the user explicitly with a
+      <strong>Reference ID</strong> for support. Retry button re-runs the query. Sidebar nav unchanged.
+    </p>
+
+    <div class="forge-app">
+      <!-- Sidebar — default brand-500 (no tenant override) -->
+      <aside class="forge-sidebar">
+        <div class="forge-sidebar-header">
+          <div class="forge-sidebar-header-mark">F</div>
+          <div class="forge-sidebar-header-name">
+            Forge Credit Hub
+            <span class="sub">Default theme</span>
+          </div>
+        </div>
+        <nav class="forge-sidebar-nav">
+          <div class="forge-sidebar-section-label">Bank</div>
+          <div class="forge-sidebar-nav-item active">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+            Dashboard
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            Applications
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>
+            Compliance
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            Audit
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main -->
+      <div class="forge-main">
+        <!-- Error banner — sits between topbar and content -->
+        <header class="forge-topbar">
+          <div class="forge-topbar-tenant">
+            <div class="forge-topbar-tenant-logo">F</div>
+            <div class="forge-topbar-tenant-name">
+              Forge Credit Hub
+              <span class="sub">Default theme</span>
+            </div>
+          </div>
+          <div class="forge-topbar-actions">
+            <button class="forge-topbar-iconbtn" aria-label="Search (Cmd+K)">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </button>
+            <button class="forge-topbar-iconbtn" aria-label="Notifications">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            <span class="forge-topbar-avatar">CS</span>
+          </div>
+        </header>
+
+        <div class="forge-error-banner" role="alert">
+          <svg class="icon forge-error-banner-icon" viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div class="forge-error-banner-body">
+            <strong>Could not load institution branding.</strong>
+            Using default theme. <span class="ref">Reference: ERR-2026-05-09-1847</span>
+          </div>
+          <button class="forge-error-banner-action">Retry</button>
+        </div>
+
+        <main class="forge-content">
+          <div class="forge-page-eyebrow">Bank · Operations</div>
+          <h1 class="forge-page-title">Pending review · 7 applications</h1>
+
+          <div class="forge-kpi-strip">
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Pending review</div>
+              <div class="forge-kpi-value">7</div>
+              <div class="forge-kpi-delta">+2 vs last week</div>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Approved this week</div>
+              <div class="forge-kpi-value">$1,847,500</div>
+              <div class="forge-kpi-delta">+12.4%</div>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">AML alerts</div>
+              <div class="forge-kpi-value">2</div>
+              <div class="forge-kpi-delta" style="color: var(--forge-warning-500)">attention required</div>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Avg decision time</div>
+              <div class="forge-kpi-value">14m</div>
+              <div class="forge-kpi-delta">-3m vs last week</div>
+            </div>
+          </div>
+
+          <div class="forge-data-card">
+            <div class="forge-data-card-header">Recent applications</div>
+            <div class="forge-data-row">
+              <span class="id">APP-1847-A1B2</span>
+              <span class="applicant">García Pérez, Juan</span>
+              <span class="amount">$18,250</span>
+              <span><span class="status-pill warning"><svg class="icon status-pill icon" viewBox="0 0 24 24" style="width:10px;height:10px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>Pending review</span></span>
+            </div>
+            <div class="forge-data-row">
+              <span class="id">APP-1846-C3D4</span>
+              <span class="applicant">Almonte Soriano, Ramón</span>
+              <span class="amount">$24,500</span>
+              <span><span class="status-pill success"><svg class="icon status-pill icon" viewBox="0 0 24 24" style="width:10px;height:10px"><polyline points="20 6 9 17 4 12"/></svg>Approved</span></span>
+            </div>
+            <div class="forge-data-row">
+              <span class="id">APP-1845-E5F6</span>
+              <span class="applicant">Mora Castillo, Lucía</span>
+              <span class="amount">$32,100</span>
+              <span><span class="status-pill warning"><svg class="icon status-pill icon" viewBox="0 0 24 24" style="width:10px;height:10px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>Pending review</span></span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="annotation-strip">
+      <span class="annotation">banner: --forge-danger-50 bg + --forge-danger-500 border-left 3px</span>
+      <span class="annotation">role="alert" — screen readers anuncian al render</span>
+      <span class="annotation">Reference ID format: ERR-YYYY-MM-DD-NNNN (mono font)</span>
+      <span class="annotation">Retry button: outline danger, no full filled (no rojo dominante)</span>
+      <span class="annotation">currency fallback: Intl.NumberFormat('en-US', { currency: 'USD' })</span>
+      <span class="annotation">status labels fallback: English ("Pending review", "Approved")</span>
+      <span class="annotation">sidebar header: --forge-brand-500 (NO override)</span>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       STATE 3 · SUCCESS
+       ================================================================ -->
+  <section class="mockup-section">
+    <h2 class="mockup-section-title">
+      State 3 — Success (Credicefi tenant branding applied)
+      <span class="state-pill success">isSuccess: true</span>
+    </h2>
+    <p class="mockup-section-desc">
+      Hook returned <code>{ tenant_id: "credicefi", display_name: "Credicefi", logo_url, brand_primary: "#1b4a8c", brand_dark: "#081e3d", locale: "es-DO", currency: "DOP", application_status_labels: { ... } }</code>.
+      CSS variables overridden via <code>data-tenant="credicefi"</code> on <code>.forge-app</code> (or via inline style on layout). Sidebar header darkens to <code>--forge-brand-900</code> (Phase 9 L5 depth pattern). Currency renders with <code>Intl.NumberFormat("es-DO", { currency: "DOP" })</code> = <code>RD$1,847,500</code>. Status pill labels in Spanish.
+    </p>
+
+    <div class="forge-app" data-tenant="credicefi">
+      <!-- Sidebar — Credicefi navy -->
+      <aside class="forge-sidebar">
+        <div class="forge-sidebar-header">
+          <div class="forge-sidebar-header-mark">C</div>
+          <div class="forge-sidebar-header-name">
+            Credicefi
+            <span class="sub">Crédito automotriz · DO</span>
+          </div>
+        </div>
+        <nav class="forge-sidebar-nav">
+          <div class="forge-sidebar-section-label">Banco</div>
+          <div class="forge-sidebar-nav-item active">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+            Tablero
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            Solicitudes
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg>
+            Cumplimiento
+          </div>
+          <div class="forge-sidebar-nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+            Auditoría
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main -->
+      <div class="forge-main">
+        <header class="forge-topbar">
+          <div class="forge-topbar-tenant">
+            <div class="forge-topbar-tenant-logo">C</div>
+            <div class="forge-topbar-tenant-name">
+              Credicefi
+              <span class="sub">Mesa de decisiones · DOP</span>
+            </div>
+          </div>
+          <div class="forge-topbar-actions">
+            <button class="forge-topbar-iconbtn" aria-label="Buscar (Cmd+K)">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </button>
+            <button class="forge-topbar-iconbtn" aria-label="Notificaciones">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            </button>
+            <span class="forge-topbar-avatar">CS</span>
+          </div>
+        </header>
+
+        <main class="forge-content">
+          <div class="forge-page-eyebrow">Banco · Operaciones</div>
+          <h1 class="forge-page-title">En revisión · 7 solicitudes</h1>
+
+          <div class="forge-kpi-strip">
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">En revisión</div>
+              <div class="forge-kpi-value">7</div>
+              <div class="forge-kpi-delta">+2 vs semana pasada</div>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Aprobadas esta semana</div>
+              <div class="forge-kpi-value">RD$1,847,500</div>
+              <div class="forge-kpi-delta">+12.4%</div>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Alertas AML</div>
+              <div class="forge-kpi-value">2</div>
+              <div class="forge-kpi-delta" style="color: var(--forge-warning-500)">requiere atención</div>
+            </div>
+            <div class="forge-kpi-card">
+              <div class="forge-kpi-label">Tiempo prom. decisión</div>
+              <div class="forge-kpi-value">14m</div>
+              <div class="forge-kpi-delta">-3m vs semana pasada</div>
+            </div>
+          </div>
+
+          <div class="forge-data-card">
+            <div class="forge-data-card-header">Solicitudes recientes</div>
+            <div class="forge-data-row">
+              <span class="id">APP-1847-A1B2</span>
+              <span class="applicant">García Pérez, Juan</span>
+              <span class="amount">RD$1,825,000</span>
+              <span><span class="status-pill warning"><svg class="icon status-pill icon" viewBox="0 0 24 24" style="width:10px;height:10px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>En revisión</span></span>
+            </div>
+            <div class="forge-data-row">
+              <span class="id">APP-1846-C3D4</span>
+              <span class="applicant">Almonte Soriano, Ramón</span>
+              <span class="amount">RD$2,450,000</span>
+              <span><span class="status-pill success"><svg class="icon status-pill icon" viewBox="0 0 24 24" style="width:10px;height:10px"><polyline points="20 6 9 17 4 12"/></svg>Aprobada</span></span>
+            </div>
+            <div class="forge-data-row">
+              <span class="id">APP-1845-E5F6</span>
+              <span class="applicant">Mora Castillo, Lucía</span>
+              <span class="amount">RD$3,210,000</span>
+              <span><span class="status-pill warning"><svg class="icon status-pill icon" viewBox="0 0 24 24" style="width:10px;height:10px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>En revisión</span></span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="annotation-strip">
+      <span class="annotation">data-tenant="credicefi" → CSS vars override en cascada</span>
+      <span class="annotation">topbar logo: --forge-brand-900 = #081e3d (Credicefi navy depth)</span>
+      <span class="annotation">sidebar header: --forge-brand-900 (Phase 9 L5 sidebar depth)</span>
+      <span class="annotation">font-display "C" en logo: Source Serif Pro semibold</span>
+      <span class="annotation">currency: Intl.NumberFormat("es-DO", { currency: "DOP" }) → RD$1,847,500</span>
+      <span class="annotation">status labels: branding.application_status_labels.PENDING_REVIEW = "En revisión"</span>
+      <span class="annotation">aria-label en iconbtn: "Buscar" / "Notificaciones" (locale ES)</span>
+      <span class="annotation">tabular-nums activo en .amount + .forge-kpi-value</span>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       NOTAS DE INTEGRACIÓN
+       ================================================================ -->
+  <section class="mockup-section">
+    <h2 class="mockup-section-title" style="color: var(--forge-ink-600); font-size: var(--forge-text-lg);">
+      Decisiones de mockup (para review de Cesar)
+    </h2>
+    <ul style="font-size: var(--forge-text-sm); color: var(--forge-ink-600); line-height: 1.65; max-width: 880px; padding-left: var(--forge-space-5);">
+      <li><strong>Sidebar nav nunca skeleton:</strong> la IA es invariable, el usuario no debe ver "loading" en la nav. Solo el sidebar header (logo+name del tenant) entra en estado loading.</li>
+      <li><strong>Main content sí renderiza con default branding</strong> mientras fetch corre, en lugar de bloquear toda la página. Esto es el "chrome estable + slots fluidos" del REF-3 (Goldman Marquee).</li>
+      <li><strong>Banner de error no es modal ni toast:</strong> es persistente hasta que el usuario haga retry o el fetch tenga éxito. El banker debe estar consciente del fallback durante toda la sesión.</li>
+      <li><strong>Banner format ERR-YYYY-MM-DD-NNNN:</strong> matches el formato documentado en <code>_API_CONTRACT.md</code> §"MANEJO DE ERRORES".</li>
+      <li><strong>Skeleton shimmer 1.4s linear:</strong> ligeramente más lento que el <code>--forge-duration-base: 180ms</code> porque es ambient, no transition. Aún respeta <code>prefers-reduced-motion</code>.</li>
+      <li><strong>NO hay "Selecciona una institución":</strong> caso edge de tenantId vacío en JWT — bug de auth, no UX. Documentado para Phase 11. Si ocurre, banner rojo + UI deshabilitada.</li>
+      <li><strong>Avatar "CS"</strong> en topbar es del usuario logueado, NO del tenant. No cambia entre estados.</li>
+      <li><strong>El logo placeholder "C"</strong> en SUCCESS es un fallback visual del mockup (sin acceso a CDN aquí). En TSX real será <code>&lt;Image src={branding.logo_url} alt={branding.display_name}&gt;</code> con loader y `unoptimized` o config en `next.config.js`.</li>
+    </ul>
+  </section>
+
+  <section class="mockup-section">
+    <h2 class="mockup-section-title" style="color: var(--forge-ink-600); font-size: var(--forge-text-lg);">
+      Cómo se traduce a TSX (preview del approach)
+    </h2>
+    <pre style="font-family: var(--forge-font-mono); font-size: 12px; background: var(--forge-ink-900); color: var(--forge-ink-100); padding: var(--forge-space-5); border-radius: var(--forge-radius-md); overflow-x: auto; line-height: 1.5;">
+// lib/credit-hub/hooks/useTenantBranding.ts
+export function useTenantBranding(tenantId: string | null) {
+  return useQuery({
+    queryKey: ['tenant-branding', tenantId],
+    queryFn: () =&gt; fetchTenantBranding(tenantId!),
+    enabled: !!tenantId,
+    staleTime: 5 * 60_000,        // 5min
+    retry: 2,
+    placeholderData: undefined,    // no use default while loading; show skeleton
+  });
+}
+
+// components/forge/layout/ForgeCreditHubAppShell.tsx (simplified)
+export function ForgeCreditHubAppShell({ children }) {
+  const { tenantId } = useTenant();
+  const { data: branding, isPending, isError, refetch } = useTenantBranding(tenantId);
+  const effective = branding ?? DEFAULT_BRANDING;
+
+  return (
+    &lt;div
+      className="forge-app"
+      data-tenant={branding?.tenant_id}              // only set when SUCCESS
+      style={branding ? {
+        '--forge-brand-500': branding.brand_primary,
+        '--forge-brand-900': branding.brand_dark,
+      } as CSSProperties : undefined}
+    &gt;
+      &lt;ForgeCreditHubSidebar
+        tenantName={isPending ? null : effective.display_name}
+        showHeaderSkeleton={isPending}
+      /&gt;
+      &lt;div className="forge-main"&gt;
+        &lt;ForgeCreditHubTopbar
+          logoUrl={isPending ? null : effective.logo_url}
+          tenantName={isPending ? null : effective.display_name}
+          locale={effective.locale}
+          showLogoSkeleton={isPending}
+        /&gt;
+        {isError &amp;&amp; &lt;TenantBrandingErrorBanner referenceId={makeRef()} onRetry={refetch} /&gt;}
+        &lt;TenantBrandingProvider value={effective}&gt;
+          {children}                                   {/* main content can render */}
+        &lt;/TenantBrandingProvider&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</pre>
+  </section>
+
+</div>
+</body>
+</html>

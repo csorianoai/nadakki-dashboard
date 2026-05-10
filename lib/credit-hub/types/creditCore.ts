@@ -7,7 +7,7 @@
  *
  * Verified canonical (Phase 1.5 investigation, 2026-05):
  * - Backend: `nadakki-ai-suite/validation_output.txt`
- *   (`default_tenant` → name "CrediCefi", slug "credicefi")
+ *   (`default_tenant` â†’ name "CrediCefi", slug "credicefi")
  * - Backend tooling: `tools/credit-hub/validate-bank-portal.ps1`
  * - Frontend env: `.env.example` `NEXT_PUBLIC_DEFAULT_TENANT_ID`
  *
@@ -16,6 +16,33 @@
  * this is the source of truth.
  */
 export const DEFAULT_CREDIT_TENANT_ID = "0a91ee98-2dbe-46d0-a43c-3fc2dbd42242";
+
+/**
+ * Mapping from tenant UUID (used in JWT/session) to tenant slug
+ * (used by backend `tenant_branding` table as primary key).
+ *
+ * Verified (P10-05 BUG-001 fix, 2026-05-10):
+ * - Backend seed in `nadakki-ai-suite/backend/db/setup.py`
+ * - PowerShell smoke test confirmed:
+ *   - GET /api/v2/tenants/credicefi/branding -> 200
+ *   - GET /api/v2/tenants/banco-piloto-rd/branding -> 200
+ *
+ * TODO P10-09: replace with backend-provided mapping via
+ * `/api/v2/tenants/{uuid}/resolve-slug` once that endpoint exists.
+ */
+export const TENANT_UUID_TO_SLUG: Record<string, string> = {
+  "0a91ee98-2dbe-46d0-a43c-3fc2dbd42242": "credicefi",
+  "550e8400-e29b-41d4-a716-446655440099": "banco-piloto-rd",
+  "366b3c6c-a899-4320-805e-5c1d7c896f74": "sf-rentals-nadaki-excursions",
+};
+
+/**
+ * Resolves a tenant identifier (UUID or slug) to its canonical slug.
+ * Returns the input unchanged if it's already a slug or unknown.
+ */
+export function resolveTenantSlug(tenantIdOrSlug: string): string {
+  return TENANT_UUID_TO_SLUG[tenantIdOrSlug] ?? tenantIdOrSlug;
+}
 
 export type CreditApplicationStatus =
   | "draft"

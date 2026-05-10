@@ -1,12 +1,28 @@
 "use client";
 
+/**
+ * IMPORT CYCLE WARNING:
+ * This file imports adaptBrandingToConfigShape and warnOnceForCaller.
+ * Both export function declarations (hoisted at parse time), allowing
+ * the cycle to resolve. If you ever convert these to const/arrow
+ * exports, the cycle will break at runtime. Keep them as
+ * function declarations.
+ *
+ * If you need to refactor: split this file so the proxy logic
+ * lives in a separate module that imports the adapter, breaking
+ * the cycle at the file boundary.
+ */
+
 import { useMemo } from "react";
 import { getForgeTestTenantBankingConfig } from "@/lib/credit-hub/forge-test-tenant-override";
+import { adaptBrandingToConfigShape } from "@/lib/credit-hub/utils/adaptBrandingToConfigShape";
+import { warnOnceForCaller } from "@/lib/credit-hub/utils/warnOnceForCaller";
 import { useTenant } from "./useTenant";
-import type { TenantBankingConfig } from "../types/tenantConfig";
+import { useTenantBranding } from "./useTenantBranding";
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
+import type { TenantBankingConfig } from "../types/tenantConfig";
 
-/** Valores por defecto República Dominicana — simulador y políticas de exhibición en tenant. */
+/** Valores por defecto RepÃºblica Dominicana â€” simulador y polÃ­ticas de exhibiciÃ³n en tenant. */
 const DEFAULT_DO_SIMULATOR_CONFIG: Pick<
   TenantBankingConfig,
   | "default_rate"
@@ -41,10 +57,20 @@ const DEFAULT_DO_SIMULATOR_CONFIG: Pick<
   payment_capacity_ratio: 0.4,
 };
 
+/**
+ * Returns the canonical Dominican-Republic baseline `TenantBankingConfig`
+ * used as the fallback whenever the tenant-branding fetch is loading,
+ * errored, or returns a partial response. **Do not modify** â€” the parity
+ * test in `__tests__/adaptBrandingToConfigShape.test.ts` depends on these
+ * exact defaults.
+ *
+ * @param tenantId - the effective tenant id (used only to populate
+ *                   `tenant_id` on the returned object)
+ */
 export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingConfig {
   return {
     tenant_id: tenantId,
-    institution_name: "Institución financiera",
+    institution_name: "InstituciÃ³n financiera",
     institution_type: "FINANCIAL_INSTITUTION",
     country_code: "DO",
     currency_code: "DOP",
@@ -59,7 +85,7 @@ export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingCo
     },
     scoring_thresholds: { excellent: 800, good: 700, fair: 580 },
     vehicle_types: ["Nuevo", "Usado", "Demo"],
-    product_types: ["Vehículo nuevo", "Vehículo usado", "Motor", "Camión", "Maquinaria", "Otro"],
+    product_types: ["VehÃ­culo nuevo", "VehÃ­culo usado", "Motor", "CamiÃ³n", "Maquinaria", "Otro"],
     document_types: { primary_id: "CEDULA", alternative_ids: ["PASAPORTE", "OTRO"] },
     min_age: 18,
     max_age: 75,
@@ -76,14 +102,51 @@ export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingCo
   };
 }
 
+/**
+ * @deprecated Migrate to `useTenantBranding` for chrome fields, or to
+ * `useTenantBankingPolicy` (P10-09 pending) for banking policy fields.
+ * This hook proxies `useTenantBranding` for chrome and falls back to
+ * defaults for banking policy.
+ *
+ * Behavior preserved verbatim from the legacy implementation:
+ * - Returns the exact `{ tenantConfig, loading }` shape that all 30
+ *   existing call-sites consume.
+ * - The `NEXT_PUBLIC_FORGE_TEST_TENANT=mx` override path is honored
+ *   first via `getForgeTestTenantBankingConfig()`, identical to before.
+ * - Loading and error states resolve to the canonical default config so
+ *   chrome consumers never crash.
+ *
+ * Logs a single dev-only `console.warn` per unique call site, surfacing
+ * the deprecation without spamming the console.
+ */
 export function useTenantConfig(): { tenantConfig: TenantBankingConfig; loading: boolean } {
-  const { tenantId, loading } = useTenant();
-  const config = useMemo(() => {
+  const { tenantId, tenantSlug, loading: tenantLoading } = useTenant();
+  // P10-05 BUG-001 fix: pass tenantSlug (resolved by useTenant), not tenantId
+  // (UUID). Backend `/api/v2/tenants/{slug}/branding` keys by slug.
+  const { data: branding, isPending } = useTenantBranding(tenantSlug);
+
+  if (process.env.NODE_ENV !== "production") {
+    warnOnceForCaller(
+      "useTenantConfig is deprecated. Migrate to useTenantBranding for chrome fields (P10-05), or to useTenantBankingPolicy for banking policy (P10-09 pending).",
+    );
+  }
+
+  const tenantConfig = useMemo<TenantBankingConfig>(() => {
+    // Test override path preserved unchanged (NEXT_PUBLIC_FORGE_TEST_TENANT=mx).
     const test = getForgeTestTenantBankingConfig();
     if (test) return test;
-    return getDefaultTenantBankingConfig(tenantId || "tenant-no-disponible");
-  }, [tenantId]);
-  return { tenantConfig: config, loading };
+
+    const effectiveTenantId = tenantId || "tenant-no-disponible";
+
+    if (branding) {
+      return adaptBrandingToConfigShape(branding, effectiveTenantId);
+    }
+
+    // Loading or error â†’ default. Banking policy is always default until P10-09.
+    return getDefaultTenantBankingConfig(effectiveTenantId);
+  }, [branding, tenantId]);
+
+  return { tenantConfig, loading: tenantLoading || isPending };
 }
 
 export { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
