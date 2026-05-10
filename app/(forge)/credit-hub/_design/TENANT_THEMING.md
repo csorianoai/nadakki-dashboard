@@ -103,3 +103,10 @@ VALUES (
 ## Referencia Phase 6
 
 Ver [`REUSABILITY_TEST.md`](./REUSABILITY_TEST.md): **TestBank Mexico** — fixture `NEXT_PUBLIC_FORGE_TEST_TENANT=mx`, ajuste de contraste en primario `#7B1F1F` y evidencia Lighthouse.
+
+---
+
+## Env Var Resolution (P10-05 fix BUG-002)
+
+`tenant-branding-client.ts` uses fallback chain:
+`NEXT_PUBLIC_API_BASE_URL` → `NEXT_PUBLIC_API_URL` → `NEXT_PUBLIC_NADAKKI_API_BASE` → empty string. This handles repos with mixed env var conventions.

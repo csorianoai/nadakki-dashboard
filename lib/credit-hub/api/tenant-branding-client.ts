@@ -4,7 +4,18 @@ import type { TenantBranding } from "@/lib/credit-hub/types/tenantBranding";
 
 const SIC_TOKEN_KEY = "nadakki_sic_token";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+// P10-05 fix BUG-002: fallback chain across the env var names that already exist
+// in this repo. `_API_CONTRACT.md` documents `NEXT_PUBLIC_API_BASE_URL`, but
+// most other clients (credit-api, spyfu, document-intelligence, autopilot,
+// scheduler-status, legal/telemetry, public-consent-client) read
+// `NEXT_PUBLIC_API_URL`. A handful of legacy callsites use
+// `NEXT_PUBLIC_NADAKKI_API_BASE`. We accept all three so a stock `.env.local`
+// from any path doesn't dead-end this client.
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_NADAKKI_API_BASE ||
+  "";
 
 /**
  * Base error class for all `tenant-branding` fetch failures. Always carries
@@ -102,7 +113,9 @@ export async function fetchTenantBranding(tenantId: string): Promise<TenantBrand
 
   if (!API_BASE) {
     throw new TenantBrandingNetworkError(
-      new Error("NEXT_PUBLIC_API_BASE_URL is not defined"),
+      new Error(
+        "API base URL is not defined (set NEXT_PUBLIC_API_URL or NEXT_PUBLIC_API_BASE_URL)",
+      ),
       referenceId,
     );
   }

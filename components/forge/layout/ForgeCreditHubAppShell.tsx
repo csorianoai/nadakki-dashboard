@@ -31,8 +31,10 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments();
   const persona = useMemo(() => creditHubPersonaFromLayoutSegments(segments), [segments]);
   const { tenantId, tenantSlug } = useCreditHubTenant();
+  // P10-05 BUG-001 fix: pass tenantSlug (resolved by useTenant), not tenantId
+  // (UUID). Backend `/api/v2/tenants/{slug}/branding` keys by slug.
   const { data: branding, isPending, isError, error, refetch } =
-    useTenantBranding(tenantId);
+    useTenantBranding(tenantSlug);
 
   // Stable per-mount reference id for the error banner. We do not regenerate
   // it on each render to avoid the user seeing the id change while reading.
