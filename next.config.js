@@ -11,6 +11,12 @@ const nextConfig = {
     return [
       { source: "/legal-agents", destination: "/legal", permanent: false },
       { source: "/legal-agents/:path*", destination: "/legal/:path*", permanent: false },
+      // P11-S0: legacy / audit URLs → canonical Credit Hub routes (no new pages)
+      {
+        source: "/credit-hub/dealer/simulator",
+        destination: "/credit-hub/dealer/preapproval",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {
