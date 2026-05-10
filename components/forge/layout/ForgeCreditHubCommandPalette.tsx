@@ -144,9 +144,9 @@ export function ForgeCreditHubCommandPalette({ open, onOpenChange }: { open: boo
             {
               id: "bank-queue",
               label: p.bankQueue,
-              keywords: ["pending", "review"],
+              keywords: ["pending", "review", "queue", "applications", "bandeja"],
               icon: <Building2 className="h-4 w-4" aria-hidden />,
-              onSelect: () => go("/credit-hub/bank"),
+              onSelect: () => go("/credit-hub/bank/applications"),
             },
             {
               id: "bank-audit",

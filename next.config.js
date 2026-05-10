@@ -17,6 +17,11 @@ const nextConfig = {
         destination: "/credit-hub/dealer/preapproval",
         permanent: false,
       },
+      {
+        source: "/credit-hub/bank/queue",
+        destination: "/credit-hub/bank/applications",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {
