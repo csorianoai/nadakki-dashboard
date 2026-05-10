@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,11 @@ export interface ModalProps {
 
 export function Modal({ open, onClose, title, description, children, footer, className, closeOnBackdropClick = true }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const el = dialogRef.current;
@@ -42,7 +47,7 @@ export function Modal({ open, onClose, title, description, children, footer, cla
     return () => el.removeEventListener("cancel", onCancel);
   }, [onClose]);
 
-  if (typeof document === "undefined") return null;
+  if (!mounted) return null;
 
   return createPortal(
     <dialog
