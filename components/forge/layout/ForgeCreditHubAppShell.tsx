@@ -1,23 +1,55 @@
 "use client";
 
-import { type ReactNode, useMemo } from "react";
+import { type CSSProperties, type ReactNode, useMemo, useRef } from "react";
 import { useSelectedLayoutSegments } from "next/navigation";
 import { PersonaProvider } from "@/components/credit-hub/system/PersonaProvider";
 import { CHFeatureFlagBanner } from "@/components/credit-hub/system/CHFeatureFlagBanner";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { ForgeToaster } from "@/components/forge/ui/Toast";
+import { TenantBrandingErrorBanner } from "@/components/forge/ui/TenantBrandingErrorBanner";
 import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
+import { useTenantBranding } from "@/lib/credit-hub/hooks/useTenantBranding";
 import { creditHubPersonaFromLayoutSegments } from "./creditHubPersonaFromSegments";
 import { ForgeCommandPaletteProvider } from "./ForgeCommandPaletteContext";
 import { ForgeAppShell } from "./ForgeAppShell";
 import { ForgeCreditHubSidebar } from "./ForgeCreditHubSidebar";
 import { ForgeCreditHubTopbar } from "./ForgeCreditHubTopbar";
 
+/**
+ * Top-level shell for the Forge Credit Hub. Wires the live tenant-branding
+ * fetch into the chrome:
+ *
+ * - On success: applies `data-tenant` and the per-tenant CSS variables
+ *   (`--forge-brand-500`, `--forge-brand-900`) inline so `tokens.css`
+ *   ramps cascade through the entire `.forge-app` subtree.
+ * - On loading: forwards `showHeaderSkeleton` / `showLogoSkeleton` props
+ *   to sidebar and topbar so only the tenant-specific slots shimmer.
+ * - On error: renders the persistent `TenantBrandingErrorBanner` between
+ *   topbar and main content; chrome continues with default tokens.
+ */
 export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments();
   const persona = useMemo(() => creditHubPersonaFromLayoutSegments(segments), [segments]);
-  const { tenantSlug } = useCreditHubTenant();
-  const tenantAttr = tenantSlug ?? undefined;
+  const { tenantId, tenantSlug } = useCreditHubTenant();
+  const { data: branding, isPending, isError, error, refetch } =
+    useTenantBranding(tenantId);
+
+  // Stable per-mount reference id for the error banner. We do not regenerate
+  // it on each render to avoid the user seeing the id change while reading.
+  const errorReferenceIdRef = useRef<string>(
+    `ERR-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+  );
+
+  // Only commit data-tenant when fetch succeeded; never with a default value.
+  const tenantAttr = branding?.tenant_id ?? tenantSlug ?? undefined;
+
+  // CSS variables flow through tokens.css; only set when fetch succeeded.
+  const brandingStyle: CSSProperties | undefined = branding
+    ? ({
+        ["--forge-brand-500" as string]: branding.brand_primary,
+        ["--forge-brand-900" as string]: branding.brand_dark,
+      } as CSSProperties)
+    : undefined;
 
   return (
     <PersonaProvider persona={persona}>
@@ -25,6 +57,7 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
         className="flex min-h-screen flex-col bg-forgeSurface-page text-forgeInk-800"
         data-portal={persona}
         data-tenant={tenantAttr}
+        style={brandingStyle}
       >
         <CHFeatureFlagBanner />
         <a
@@ -43,9 +76,26 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
                   aria-hidden
                 />
               }
-              sidebar={<ForgeCreditHubSidebar />}
-              topbar={<ForgeCreditHubTopbar />}
+              sidebar={
+                <ForgeCreditHubSidebar showHeaderSkeleton={isPending} />
+              }
+              topbar={
+                <ForgeCreditHubTopbar
+                  logoUrl={isPending ? null : branding?.logo_url ?? null}
+                  tenantName={isPending ? null : branding?.display_name ?? null}
+                  showLogoSkeleton={isPending}
+                />
+              }
             >
+              {isError ? (
+                <TenantBrandingErrorBanner
+                  referenceId={errorReferenceIdRef.current}
+                  error={error}
+                  onRetry={() => {
+                    void refetch();
+                  }}
+                />
+              ) : null}
               {children}
             </ForgeAppShell>
           </ForgeCommandPaletteProvider>

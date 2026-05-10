@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
+import { Skeleton } from "@/components/forge/ui/Skeleton";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,24 @@ import { personaLabel } from "@/lib/credit-hub/design/persona";
 
 type NavItem = { id: string; href: string; label: string; icon: typeof Home };
 
-export function ForgeCreditHubSidebar() {
+export interface ForgeCreditHubSidebarProps {
+  /**
+   * When true, the tenant-specific portion of the sidebar header (logo +
+   * institution name) renders as a shimmer skeleton. The nav itself never
+   * skeletons — IA is invariable across tenants per design rule.
+   */
+  showHeaderSkeleton?: boolean;
+}
+
+/**
+ * Forge Credit Hub primary sidebar. Contains a tenant-themed header
+ * (skeleton during branding fetch) and the persona-specific nav. The
+ * nav (Bank vs Dealer) is invariable; only the header reflects tenant
+ * branding.
+ */
+export function ForgeCreditHubSidebar({
+  showHeaderSkeleton = false,
+}: ForgeCreditHubSidebarProps) {
   const pathname = usePathname();
   const persona = usePersona();
   const t = useTranslations();
@@ -55,21 +73,33 @@ export function ForgeCreditHubSidebar() {
         className="border-b border-forgeInk-700/30 bg-gradient-to-b from-forgeBrand-900 to-forgeBrand-950 px-4 py-3"
         data-forge-sidebar-header
       >
-        {tenantConfig.branding.logo_url ? (
-          <div className="mb-2 flex items-center gap-2">
-            {/* eslint-disable-next-line @next/next/no-img-element -- tenant-provided same-origin SVG */}
-            <img
-              src={tenantConfig.branding.logo_url}
-              alt=""
-              width={200}
-              height={48}
-              className="h-10 w-auto max-w-[200px] object-contain object-left"
-              aria-hidden
-            />
+        {showHeaderSkeleton ? (
+          <div className="flex items-center gap-3" aria-hidden>
+            <Skeleton className="h-8 w-8 motion-reduce:animate-none" />
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-3 w-24 motion-reduce:animate-none" />
+              <Skeleton className="h-2.5 w-14 motion-reduce:animate-none" />
+            </div>
           </div>
-        ) : null}
-        <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-300">Forge</p>
-        <p className="text-forge-sm font-medium text-forgeInk-50">{personaLabel(persona)}</p>
+        ) : (
+          <>
+            {tenantConfig.branding.logo_url ? (
+              <div className="mb-2 flex items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element -- tenant-provided same-origin SVG */}
+                <img
+                  src={tenantConfig.branding.logo_url}
+                  alt=""
+                  width={200}
+                  height={48}
+                  className="h-10 w-auto max-w-[200px] object-contain object-left"
+                  aria-hidden
+                />
+              </div>
+            ) : null}
+            <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeInk-300">Forge</p>
+            <p className="text-forge-sm font-medium text-forgeInk-50">{personaLabel(persona)}</p>
+          </>
+        )}
       </div>
       <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Primary">
         {items.map((item) => {

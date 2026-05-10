@@ -237,6 +237,57 @@ Reescribo el backlog reflejando el estado real. Conservo el formato original (Pe
   - [ ] Mínimo confirmar: #11 (CrediCefi hardcoded, supuestamente resuelto en Phase 7.5), #19 (Source Serif 4 vs Space Grotesk — ⚠️ probable still open), #23 (rounded-2xl widespread — verificar si solo en legacy o también en forge/ui), #34 (stale IA), todos los del bloque "12. TODO/FIXME/console"
   - [ ] Commit: `docs(forge): audit Phase 0 resolution map`
 
+#### P10-10 · Test infrastructure: `renderWithQueryClient` helper + migration of broken tests (NEW · consecuencia de P10-05 proxy)
+- **Persona:** SHARED · **Estado:** TODO · **Estimación:** 4-6 hrs (incremental, no big-bang)
+- **Bloqueado por:** P10-05 merged
+- **Tarea:** Crear test helper que envuelva con `QueryClientProvider` y migrar los ~30 tests que fallan con "No QueryClient set" después de que `useTenantConfig` pasó a ser un proxy de `useTenantBranding` (que internamente usa `useQuery`). Estos tests **no son regresiones funcionales** — fallarían igual si cualquier consumer nuevo de react-query se hubiera introducido. Es deuda de test infrastructure que debe migrarse para mantener la suite verde.
+- **Contexto técnico:**
+  - Después de P10-05, `useTenantConfig()` llama internamente a `useTenantBranding(tenantId)` → `useQuery(...)`.
+  - Tests existentes renderizan componentes consumiendo `useTenantConfig` sin envolverlos en `QueryClientProvider` → react-query lanza `Error: No QueryClient set, use QueryClientProvider to set one`.
+  - El comportamiento real-world está OK porque `app/(forge)/credit-hub/layout.tsx` monta `CHQueryProvider`. Solo los tests aislados rompen.
+- **DoD:**
+  - [ ] Crear `tests/helpers/renderWithQueryClient.tsx` con:
+    - `QueryClient` configurado para tests (`staleTime: 0`, `retry: false`, `gcTime: Infinity`)
+    - Helper `renderWithQueryClient(ui, options?)` que envuelve `render()` de `@testing-library/react`
+    - Helper `wrapWithQueryClient(children)` para usos que no necesitan render completo (ej. `renderHook`)
+  - [ ] Extraer del jest run de P10-05 integration la lista exacta de los ~30 tests fallando con "No QueryClient set" → guardar lista en `_design/_inventory/p10-10-tests-to-migrate.md`
+  - [ ] Migrar en grupos de 5-10 tests por PR (sub-tasks: P10-10a, P10-10b, P10-10c, ...) — cada PR independiente, fácil de revisar
+  - [ ] Adicional dentro del scope: arreglar 2 tests pre-existing que ya fallaban antes de P10-05:
+    - `bank/pages/dashboard.test.tsx` — `useRouter fail invariant` (probablemente falta mock de `next/navigation`)
+    - `content/pages/new.test.tsx` — `redirect is not a function` (mismo patrón, mock de `next/navigation`)
+    - Estos pueden necesitar un setup adicional en `jest.setup.tsx` para mockear `next/navigation` globalmente
+  - [ ] DoD final: `npm test` verde sin warnings de "No QueryClient set", sin fails pre-existing
+  - [ ] Commit por PR: `test(forge): migrate <area> tests to renderWithQueryClient (P10-10x of N)`
+
+#### P10-09 · Multi-tenant Banking Policy fetch (NEW · cierra el "teatro" del 75% restante post-P10-05)
+- **Persona:** SHARED · **Estado:** TODO · **Estimación:** 4-6 hrs
+- **Bloqueado por:** P10-05 merged + Ramon implementa endpoint backend
+- **Tarea:** Cerrar el bug "multi-tenant es teatro" en el banking policy layer (wizard, simulator, document types, features, edad/empleo, allowed terms, rates). P10-05 resolvió el chrome (~25% del shape `TenantBankingConfig`); este task resuelve el ~75% restante (~10-15 consumers que actualmente leen defaults DO desde el adapter).
+- **Contexto:**
+  - Hoy `adaptBrandingToConfigShape` mapea solo los campos que `/api/v2/tenants/{id}/branding` retorna (chrome). Todo lo demás (`ltv_max`, `dti_max`, `default_rate`, `allowed_terms`, `document_types`, `features_enabled`, `vehicle_types`, `product_types`, `min_age`, `max_age`, `min_employment_years`, `risk_multipliers`, etc.) cae al `getDefaultTenantBankingConfig()` Dominicano.
+  - Resultado: un tenant Banco Boliviano vería logo+colors+currency real, pero el wizard pediría CEDULA (default DO) en vez de DNI/CI, simulator usaría rates DO, edad min/max DO, etc.
+  - Documentado como deuda explícita en `_design/P10-05_ADAPTER_ANALYSIS.md` §5.
+- **DoD:**
+  - [ ] **Backend (Ramon):** nuevo endpoint `GET /api/v2/tenants/{id}/banking-policy`. Response shape sirve: `ltv_max`, `dti_max`, `default_rate`, `min_rate`, `max_rate`, `allowed_terms`, `default_term`, `product_limits`, `dti_warning_ratio`, `min_roi_threshold`, `risk_multipliers`, `payment_capacity_ratio`, `garante_minimum_income_ratio`, `document_types`, `features_enabled`, `vehicle_types`, `product_types`, `required_documents`, `consent_methods_enabled`, `min_age`, `max_age`, `min_employment_years`, `pii_masking_enabled`, `regulatory_profile`, `institution_type`, `country_code`. Documentar en `_API_CONTRACT.md`.
+  - [ ] **Frontend:** nuevo hook `useTenantBankingPolicy(tenantId)` siguiendo el mismo patrón que `useTenantBranding`:
+    - react-query con `queryKey: ['tenant-banking-policy', tenantId]`, `staleTime: 10 * 60_000` (policy cambia menos que branding), `gcTime: 30 * 60_000`, `retry: 2`, `retryDelay: 1000`, `refetchOnWindowFocus: false`, `refetchOnReconnect: true`
+    - 4 typed error classes paralelas a `tenant-branding-client.ts` (Base, NotFound, Forbidden, Network)
+    - JSDoc completo con rationale de cada opt
+  - [ ] **Adapter:** extender `adaptBrandingToConfigShape` (rename a `adaptToTenantConfig` o crear nuevo `composeTenantConfig(branding, policy, tenantId)`):
+    - Compone branding (chrome) + policy (banking) en `TenantBankingConfig` completo
+    - Si solo branding existe (loading policy) → usa policy default + branding real (estado parcial coherente)
+    - Si solo policy existe (loading branding) → usa branding default + policy real
+    - Si ninguno → default completo (igual que hoy)
+  - [ ] **Migration:** 10-15 consumers que leen `tenantConfig.ltv_max`, `dti_max`, `features_enabled`, `document_types`, `vehicle_types`, `product_types`, etc. siguen funcionando vía proxy — el cambio es transparente. Lista de consumers en `_design/P10-05_ADAPTER_ANALYSIS.md` §2.2 (Bucket C).
+  - [ ] **Test:** parity test con 3 fixtures (Credicefi DO, Banco Piloto DO, TestBank Mexico MX):
+    - Cada fixture incluye branding + policy realistas distintas (ej. TestBank MX usa INE en `document_types.primary_id`, peso MXN, locale es-MX, etc.)
+    - Verificar que el output del adapter compuesto cambia coherentemente entre tenants
+  - [ ] **Update `_design/TENANT_THEMING.md`** con nueva sección "Banking policy override" + ejemplos
+  - [ ] **Update `_design/P10-05_ADAPTER_ANALYSIS.md` §5** marcando el "hallazgo arquitectural" como CLOSED y apuntando a este P10-09
+  - [ ] **Update narrativa de producto:** mover de "shipping in P10-09" a "shipped" en docs internas
+  - [ ] **Verification gates:** `npm run build` verde, `npm run lint` verde, `npm test` verde (asume P10-10 ya cerró), Lighthouse a11y `/credit-hub/preview` ≥ 0.95
+  - [ ] Commit: `feat(forge): P10-09 live banking policy fetch — close multi-tenant teatro completely`
+
 ---
 
 ## D. Tareas que YA estaban DONE (resumen)
@@ -252,6 +303,8 @@ Reescribo el backlog reflejando el estado real. Conservo el formato original (Pe
 | ID | Título | Impacto si no se hace |
 |---|---|---|
 | **P10-05** ⭐ | Live `tenant_branding` fetch | Multi-tenant es teatro — bloquea valor diferencial del producto |
+| **P10-10** ⭐ | Test infra: `renderWithQueryClient` helper + migration | Suite de tests queda en rojo permanentemente post-P10-05; CI bloqueado; cualquier futuro consumer de react-query empeora el problema |
+| **P10-09** ⭐ | Multi-tenant Banking Policy fetch | Cierra el "teatro" del 75% restante (wizard pide CEDULA a tenants no-DO, simulator usa rates DO, document types y features DO para todos los tenants) — sin esto, multi-tenant solo es chrome real, banking sigue ficticio |
 | **P10-02** | Triple capa Forge consolidation | Tech debt acumulándose con cada PR; código nuevo importa la familia equivocada |
 | **P10-03** | Disposition `app/credit/*` | Confusión + esfuerzo duplicado en bug fixes en dos sistemas |
 | **P10-01** | MicroChart real series | UX bank dashboard es "demo" — banker pregunta "qué datos son" en demo y rompe credibilidad |
@@ -280,10 +333,12 @@ Reescribo el backlog reflejando el estado real. Conservo el formato original (Pe
 
 | Sesión | Bloque sugerido |
 |---|---|
-| Sesión 2 | P10-08 (resolution map) → P10-04 (persona refactor) |
-| Sesión 3 | P10-02 (Forge triplication consolidation — análisis primero, después PRs por componente) |
-| Sesión 4 | P10-03 (`app/credit/*` disposition — depende de input de Cesar sobre uso real) |
+| Sesión 2 | **P10-10 (test infra migration — bloquea CI)** → P10-08 (resolution map) → P10-04 (persona refactor) |
+| Sesión 3 | **P10-09 (banking policy frontend — depende de Ramon ship el endpoint backend)** + P10-02 (Forge triplication análisis) |
+| Sesión 4 | P10-02 ejecución (PRs por componente) + P10-03 (`app/credit/*` disposition — depende de input de Cesar) |
 | Sesión 5 | P10-06 (WizardContainer cleanup) + P10-01 (MicroChart real series — depende de endpoint backend) |
+
+**Nota sobre P10-09:** El frontend (hook + adapter extension + tests) toma 4-6 hrs, pero está bloqueado por Ramon shippeando el endpoint backend `GET /api/v2/tenants/{id}/banking-policy`. Coordina con Ramon antes de Sesión 3 — si el endpoint no está, P10-09 cae a Sesión 4.
 
 ---
 
