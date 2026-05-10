@@ -1,3 +1,17 @@
+# ⚠️ DEPRECATED 2026-05-09 — superseded by `_TASK_BACKLOG_v2.md`
+
+> **DEPRECATION NOTICE**
+>
+> Este documento es la versión 1 del backlog de Nadakki Forge Credit Hub. Quedó **deprecado el 2026-05-09** porque asumía un proyecto greenfield, mientras que el sistema real estaba en **Phase 9 V3 validation completada** (2026-05-02). Las 30 tareas P0-P3 listadas abajo están done, canceladas por deferral, o sustituidas por construcción paralela documentada en `app/(forge)/credit-hub/_design/`.
+>
+> **Para el backlog activo, ver:** [`_TASK_BACKLOG_v2.md`](./_TASK_BACKLOG_v2.md)
+>
+> **Para el razonamiento del pivot, ver:** [`_SESSION_PIVOT_REASONING_2026-05-09.md`](./_SESSION_PIVOT_REASONING_2026-05-09.md)
+>
+> **Conserved for historical reference.** No iniciar trabajo nuevo basado en este documento.
+
+---
+
 # _TASK_BACKLOG.md — NADAKKI FORGE CREDIT HUB
 ## Backlog priorizado para Cowork
 ### Fuente: NADAKKI_FORGE_MASTER_REDESIGN_PROMPT_v3 + Sprint 6 Master Prompt
