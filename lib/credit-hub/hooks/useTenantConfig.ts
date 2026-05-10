@@ -22,7 +22,7 @@ import { useTenantBranding } from "./useTenantBranding";
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
 import type { TenantBankingConfig } from "../types/tenantConfig";
 
-/** Valores por defecto RepÃºblica Dominicana â€” simulador y polÃ­ticas de exhibiciÃ³n en tenant. */
+/** Valores por defecto República Dominicana — simulador y políticas de exhibición en tenant. */
 const DEFAULT_DO_SIMULATOR_CONFIG: Pick<
   TenantBankingConfig,
   | "default_rate"
@@ -60,9 +60,9 @@ const DEFAULT_DO_SIMULATOR_CONFIG: Pick<
 /**
  * Returns the canonical Dominican-Republic baseline `TenantBankingConfig`
  * used as the fallback whenever the tenant-branding fetch is loading,
- * errored, or returns a partial response. **Do not modify** â€” the parity
+ * errored, or returns a partial response. **Do not modify** — the parity
  * test in `__tests__/adaptBrandingToConfigShape.test.ts` depends on these
- * exact defaults.
+ * exact defaults (numeric/policy fields — keep in sync).
  *
  * @param tenantId - the effective tenant id (used only to populate
  *                   `tenant_id` on the returned object)
@@ -70,7 +70,7 @@ const DEFAULT_DO_SIMULATOR_CONFIG: Pick<
 export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingConfig {
   return {
     tenant_id: tenantId,
-    institution_name: "InstituciÃ³n financiera",
+    institution_name: "Institución financiera",
     institution_type: "FINANCIAL_INSTITUTION",
     country_code: "DO",
     currency_code: "DOP",
@@ -85,7 +85,7 @@ export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingCo
     },
     scoring_thresholds: { excellent: 800, good: 700, fair: 580 },
     vehicle_types: ["Nuevo", "Usado", "Demo"],
-    product_types: ["VehÃ­culo nuevo", "VehÃ­culo usado", "Motor", "CamiÃ³n", "Maquinaria", "Otro"],
+    product_types: ["Vehículo nuevo", "Vehículo usado", "Motor", "Camión", "Maquinaria", "Otro"],
     document_types: { primary_id: "CEDULA", alternative_ids: ["PASAPORTE", "OTRO"] },
     min_age: 18,
     max_age: 75,
@@ -142,7 +142,7 @@ export function useTenantConfig(): { tenantConfig: TenantBankingConfig; loading:
       return adaptBrandingToConfigShape(branding, effectiveTenantId);
     }
 
-    // Loading or error â†’ default. Banking policy is always default until P10-09.
+    // Loading or error → default. Banking policy is always default until P10-09.
     return getDefaultTenantBankingConfig(effectiveTenantId);
   }, [branding, tenantId]);
 

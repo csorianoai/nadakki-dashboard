@@ -7,7 +7,7 @@
  *
  * Verified canonical (Phase 1.5 investigation, 2026-05):
  * - Backend: `nadakki-ai-suite/validation_output.txt`
- *   (`default_tenant` â†’ name "CrediCefi", slug "credicefi")
+ *   (`default_tenant` → name "CrediCefi", slug "credicefi")
  * - Backend tooling: `tools/credit-hub/validate-bank-portal.ps1`
  * - Frontend env: `.env.example` `NEXT_PUBLIC_DEFAULT_TENANT_ID`
  *
