@@ -488,3 +488,130 @@ All gating signals resolved:
 
 Sprint 1: ~33% complete, on track
 
+
+---
+
+## SPRINT 1 - 90% COMPLETE - 2026-05-11 16:51
+
+### Final Status (Day 2)
+
+PROGRESO TOTAL:
+
+P11-01 Visual System V2:        100% - MERGED to main (917c1e0)
+P11-02 FASE A+B (RBAC schema):  100% - PUSHED (90f3e37e)
+P11-02 FASE C (Auth API):       100% - PUSHED (735850bf)
+P11-02 FASE D (Tests 42/42):   100% - PUSHED (b1bb3d6a)
+P11-03 Auth Hooks Frontend:    100% - PUSHED (34e282d3)
+P11-04 Auth UI Frontend:       100% - PUSHED (d874e5a)
+Manus Audits (3 docs):         100% - PUSHED to main (00904b1)
+
+Sprint 1: 90% complete
+
+### Commits Total Sprint 1
+
+Backend (feat/p11-02-rbac-implementation):
+- 90f3e37e RBAC tables in setup.py
+- 735850bf FASE C Auth API endpoints
+- b1bb3d6a FASE D 42 pytest tests
+
+Frontend:
+- 917c1e0 P11-01 Visual System V2 (main)
+- 34e282d P11-03 Auth hooks (feat/p11-03)
+- d874e5a P11-04 Auth UI (feat/p11-04)
+
+### Code Stats
+
+Backend:
+- 9 new Python files
+- 42 pytest tests passing
+- 6 Auth endpoints
+- 7 middleware deps
+- ~1500 lines of code
+
+Frontend:
+- 13 new TypeScript files
+- 7 hooks/utilities (P11-03)
+- 6 UI components (P11-04)
+- TypeScript: 0 errors
+- ~789 lines of code
+
+Tests + Docs:
+- 42 pytest tests
+- 3 Manus audit reports
+- _design_p11_audit/ growing
+
+### Technical Issues Resolved (8 total)
+
+Backend (FASE C):
+1. passlib+bcrypt Python 3.14 incompat -> use bcrypt directly
+2. users.id INTEGER not TEXT -> str() coercion
+3. Route collision with SIC auth -> reorder in main.py
+4. email-validator missing -> installed
+
+Backend (FASE D):
+5. SQLite database locked -> WAL mode + timeout 10s
+6. Token blacklist cross-contamination -> clear in fixture
+7. Identical tokens same second -> sleep 1.1s
+8. Windows PermissionError -> try/except
+
+Frontend (P11-04):
+9. LegacyAuthProvider name collision -> rename + coexist
+10. Duplicate /login route -> remove app/login/page.tsx
+11. Turbopack SWC blocked Windows -> use --webpack
+12. .next stale types -> cleanup after route removal
+
+### Decisions Locked
+
+- JWT v2 coexists with admin_auth.py legacy (no breaking)
+- AuthProvider v2 coexists with LegacyAuthProvider (gradual migration)
+- 9 cores supported (credit/legal/marketing/sic + 4 future + platform)
+- 18 role templates, 45 permissions seeded
+- WAL mode for SQLite tests (concurrent writes)
+- Forge tokens (--forge-*) used throughout auth UI
+- Light-first design + dark mode dormant
+
+### Pending for Sprint 2
+
+P11-05 to P11-08:
+- Tenant Branding Backend + Frontend
+- Multi-tenant Chrome refinement
+- Platform Shell + BUG-003 fix
+- Login UI integration in main app shell (use existing UserMenu, TenantSwitcher)
+- BUG-003 data-tenant child fix
+- F logo brand mark refinement
+
+OAuth Blockers (deferred):
+- Meta tokens refresh endpoint
+- Google OAuth migration SQLite -> PostgreSQL
+- Tenant slug/id inconsistencies
+
+P11-SEC-01:
+- Rotate admin keys to env vars in Render
+- NEW_KEYS_TEMP.md preserved locally
+
+### Lessons Learned
+
+1. Trabajo paralelo 3 agentes = 2.5x leverage real
+2. Cursor + Claude Code complementarios (UI + tests)
+3. PowerShell tiene limites de paste largo (>10k chars se trunca)
+4. Migration strategy gradual (coexistencia legacy + v2) funciona
+5. _design_p11_audit/ con docs es asset durable
+6. Tests son investment, no costo (42 tests salvaron 4 issues sutiles)
+7. CTO leverage real cuando arquitectura + ejecucion + supervision son coordinadas
+
+### Team Performance
+
+Day 1 (Cesar PC):
+- Sprint 0 closure
+- P11-01 mergeado
+- P11-02 RBAC schema
+
+Day 2 (Ramon PC):
+- P11-02 FASE C + D (Claude Code)
+- P11-03 hooks (Cursor)
+- P11-04 UI (Cursor)
+- Manus audits
+
+Total time: ~2 days
+Equivalent traditional: ~2 weeks
+
