@@ -1,0 +1,362 @@
+/* ============================================================
+   Forge V2 Tokens — P11-01 Migration
+   DEC1: --forge-ink-* freed for text levels (legacy grayscale --forge-ink-50..900
+         renamed to --forge-gray-* in Step 1 of P11-01 — Cursor's track)
+   DEC2: Light-first default; dark mode toggle is opt-in via [data-theme="dark"]
+         and lands on V1 Slate Navy (NOT carbon-black; carbon was validated as
+         visually fatiguing — see Navy Inverso variant + WCAG report).
+   DEC3: Long tenant slugs with country code: credicefi · banco-piloto-rd · testbank-mx
+   Generated: 2026-05-10 (P11-01 pre-work, Step 2 input)
+
+   Source structure: forge-design-preview/forge/tokens.css (prototype, dark-first)
+                     adapted to production polarity + tenant slug alignment.
+   WCAG AA validated for both themes (see Navy Inverso contrast tables).
+============================================================ */
+
+:root {
+  /* ---- Tenant accent (Credicefi default) — LIGHT THEME values ---- */
+  --forge-tenant-primary: #1E40AF;        /* blue-800, light-mode-tuned (was #4F8FD9 in dark) */
+  --forge-tenant-primary-strong: #1E3A8A; /* blue-900, hover */
+  --forge-tenant-primary-soft: rgba(30, 64, 175, 0.10);
+  --forge-tenant-dark: #1A2540;           /* unchanged across themes (sidebar gradient anchor) */
+
+  /* ---- Surface scale (Navy Inverso light) ---- */
+  --forge-bg-base:    #DBEAFE;            /* page background — light blue, NOT pure white */
+  --forge-bg-raised:  #FFFFFF;            /* cards, primary surfaces */
+  --forge-bg-elev:    #EFF6FF;            /* hovered card / drawer / elevated */
+  --forge-bg-overlay:        rgba(30, 58, 138, 0.05);   /* navy translucent (hovers, glass) */
+  --forge-bg-overlay-strong: rgba(30, 58, 138, 0.08);
+
+  /* ---- Lines / borders (navy-tinted) ---- */
+  --forge-line-1: rgba(30, 58, 138, 0.12);
+  --forge-line-2: rgba(30, 58, 138, 0.18);
+  --forge-line-3: rgba(30, 58, 138, 0.28);
+
+  /* ---- Ink (text hierarchy — DEC1 freed for 4-level proto semantics) ---- */
+  --forge-ink-1: #1E3A8A;                 /* primary text — blue-900 (AAA 8.49:1 on bg-base) */
+  --forge-ink-2: #1E40AF;                 /* secondary — blue-800 (AAA 7.15:1) */
+  --forge-ink-3: #1D4ED8;                 /* tertiary / labels — blue-700 (AA 5.49:1, WCAG-adjusted from #3B82F6) */
+  --forge-ink-4: #3B82F6;                 /* disabled — blue-500 (3.01:1, exempt per WCAG §1.4.3) */
+
+  /* ---- Semantic (status palette — same in both themes) ---- */
+  --forge-success-500: #22C55E;
+  --forge-success-bg:  rgba(34, 197, 94, 0.10);
+  --forge-success-line: rgba(34, 197, 94, 0.28);
+
+  --forge-warning-500: #F59E0B;
+  --forge-warning-bg:  rgba(245, 158, 11, 0.10);
+  --forge-warning-line: rgba(245, 158, 11, 0.30);
+
+  --forge-danger-500: #EF4444;
+  --forge-danger-bg:  rgba(239, 68, 68, 0.10);
+  --forge-danger-line: rgba(239, 68, 68, 0.30);
+
+  --forge-info-500: #60A5FA;
+  --forge-info-bg:  rgba(96, 165, 250, 0.10);
+  --forge-info-line: rgba(96, 165, 250, 0.28);
+
+  --forge-accent-gold: #D4A655;
+  --forge-accent-gold-bg: rgba(212, 166, 85, 0.12);
+  --forge-accent-gold-line: rgba(212, 166, 85, 0.40);
+
+  /* ---- Data viz palette (charts, sparklines) ---- */
+  --viz-1: #4F8FD9;
+  --viz-2: #22C55E;
+  --viz-3: #F59E0B;
+  --viz-4: #A78BFA;
+  --viz-5: #F472B6;
+  --viz-6: #2DD4BF;
+
+  /* ---- Type ---- */
+  --forge-font-display: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --forge-font-body:    "Inter", system-ui, -apple-system, sans-serif;
+  --forge-font-mono:    "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+
+  --forge-text-2xs: 10px;
+  --forge-text-xs:  11px;
+  --forge-text-sm:  12px;
+  --forge-text-base:13px;
+  --forge-text-md:  14px;
+  --forge-text-lg:  16px;
+  --forge-text-xl:  20px;
+  --forge-text-2xl: 26px;
+  --forge-text-3xl: 36px;
+  --forge-text-4xl: 48px;
+  --forge-text-hero: 96px;
+
+  /* ---- Space (proto short prefix; production uses --forge-space-*; see DIFF doc) ---- */
+  --s1: 4px;  --s2: 8px;  --s3: 12px;  --s4: 16px;
+  --s5: 20px; --s6: 24px; --s8: 32px;  --s10: 40px;
+  --s12: 48px; --s16: 64px; --s20: 80px;
+
+  /* ---- Radius (proto short prefix; production uses --forge-radius-*; see DIFF doc) ---- */
+  --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px;
+
+  /* ---- Shadow (soft Stripe/Apple style for light theme) ---- */
+  --sh-1:     0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --sh-2:     0 4px 6px rgba(15, 23, 42, 0.04), 0 2px 4px rgba(15, 23, 42, 0.06);
+  --sh-3:     0 10px 15px rgba(15, 23, 42, 0.06), 0 4px 6px rgba(15, 23, 42, 0.04);
+  --sh-modal: 0 20px 25px rgba(15, 23, 42, 0.10), 0 10px 10px rgba(15, 23, 42, 0.04);
+
+  /* ---- Motion ---- */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-fast:   cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================
+   DARK THEME — V1 Slate Navy (toggle via [data-theme="dark"])
+   Validated as restful alternative to carbon black per Navy Inverso iteration.
+   Surface, line, ink and shadow scales adapted to dark-on-dark legibility.
+   Tenant primaries reset to dark-mode-tuned brighter variants below.
+============================================================ */
+[data-theme="dark"] {
+  --forge-tenant-primary: #4F8FD9;                  /* dark-tuned of #2E5F97 */
+  --forge-tenant-primary-strong: #2E5F97;
+  --forge-tenant-primary-soft: rgba(79, 143, 217, 0.14);
+
+  --forge-bg-base:    #0F1A2E;                       /* slate navy (NOT carbon #0A0E1A) */
+  --forge-bg-raised:  #182338;
+  --forge-bg-elev:    #1F2B45;
+  --forge-bg-overlay:        rgba(255, 255, 255, 0.04);
+  --forge-bg-overlay-strong: rgba(255, 255, 255, 0.08);
+
+  --forge-line-1: rgba(255, 255, 255, 0.07);
+  --forge-line-2: #2A3654;
+  --forge-line-3: rgba(255, 255, 255, 0.20);
+
+  --forge-ink-1: #E8ECF7;                            /* AAA 14.72:1 on bg-base */
+  --forge-ink-2: #A8B2C8;                            /* AAA 8.17:1 */
+  --forge-ink-3: #7E8AA1;                            /* AA 5.00:1 */
+  --forge-ink-4: #4D5872;                            /* disabled, WCAG-exempt */
+
+  /* Heavy shadows tuned for dark bg */
+  --sh-1:     0 1px 2px rgba(0, 0, 0, 0.30);
+  --sh-2:     0 2px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --sh-3:     0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --sh-modal: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* ============================================================
+   TENANT OVERRIDES — DEC3 long slugs
+   Light theme defaults; [data-theme="dark"][data-tenant="X"] below adjusts
+   to brighter dark-mode-tuned accents.
+============================================================ */
+[data-tenant="credicefi"] {
+  --forge-tenant-primary: #1E40AF;
+  --forge-tenant-primary-strong: #1E3A8A;
+  --forge-tenant-primary-soft: rgba(30, 64, 175, 0.10);
+  --forge-tenant-dark: #1A2540;
+}
+[data-tenant="banco-piloto-rd"] {
+  --forge-tenant-primary: #166534;                   /* green-800, AA 5.84:1 on bg-base */
+  --forge-tenant-primary-strong: #14532D;            /* green-900, hover */
+  --forge-tenant-primary-soft: rgba(22, 101, 52, 0.10);
+  --forge-tenant-dark: #0D2818;
+}
+[data-tenant="testbank-mx"] {
+  --forge-tenant-primary: #7E22CE;                   /* purple-700, AA 5.72:1 */
+  --forge-tenant-primary-strong: #6B21A8;            /* purple-800, hover */
+  --forge-tenant-primary-soft: rgba(126, 34, 206, 0.10);
+  --forge-tenant-dark: #2E1065;
+}
+
+/* Dark-mode tenant accent overrides (brighter, dark-tuned) */
+[data-theme="dark"][data-tenant="credicefi"] {
+  --forge-tenant-primary: #4F8FD9;
+  --forge-tenant-primary-strong: #2E5F97;
+  --forge-tenant-primary-soft: rgba(79, 143, 217, 0.14);
+}
+[data-theme="dark"][data-tenant="banco-piloto-rd"] {
+  --forge-tenant-primary: #4ADE80;
+  --forge-tenant-primary-strong: #1B5E20;
+  --forge-tenant-primary-soft: rgba(74, 222, 128, 0.14);
+}
+[data-theme="dark"][data-tenant="testbank-mx"] {
+  --forge-tenant-primary: #C084FC;
+  --forge-tenant-primary-strong: #6B21A8;
+  --forge-tenant-primary-soft: rgba(192, 132, 252, 0.14);
+}
+
+/* ============================================================ */
+/* GLOBAL — same as prototype, scoped to body/document          */
+/* ============================================================ */
+
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; }
+body {
+  margin: 0;
+  background: var(--forge-bg-base);
+  color: var(--forge-ink-1);
+  font-family: var(--forge-font-body);
+  font-size: var(--forge-text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+.tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.serif { font-family: var(--forge-font-display); font-weight: 500; letter-spacing: -0.01em; }
+.mono { font-family: var(--forge-font-mono); font-feature-settings: "tnum"; }
+.label-eyebrow {
+  font-size: var(--forge-text-2xs);
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--forge-ink-3);
+}
+::selection { background: var(--forge-tenant-primary-soft); color: var(--forge-ink-1); }
+
+/* Focus rings */
+*:focus-visible {
+  outline: 2px solid var(--forge-tenant-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--forge-line-2); border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--forge-line-3); background-clip: padding-box; border: 2px solid transparent; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ============================================================ */
+/* PRIMITIVES — same as prototype                              */
+/* ============================================================ */
+
+.card {
+  background: var(--forge-bg-raised);
+  border: 1px solid var(--forge-line-1);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+}
+.card-tight { padding: var(--s4); }
+.card-pad   { padding: var(--s6); }
+
+.divider { height: 1px; background: var(--forge-line-1); }
+.vdivider { width: 1px; background: var(--forge-line-1); align-self: stretch; }
+
+/* Badge */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 8px;
+  border-radius: 999px;
+  font-size: var(--forge-text-xs);
+  font-weight: 500;
+  border: 1px solid var(--forge-line-2);
+  background: var(--forge-bg-overlay);
+  color: var(--forge-ink-2);
+  white-space: nowrap;
+}
+.badge-dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.badge.success { color: var(--forge-success-500); border-color: var(--forge-success-line); background: var(--forge-success-bg); }
+.badge.warning { color: var(--forge-warning-500); border-color: var(--forge-warning-line); background: var(--forge-warning-bg); }
+.badge.danger  { color: var(--forge-danger-500);  border-color: var(--forge-danger-line);  background: var(--forge-danger-bg); }
+.badge.info    { color: var(--forge-info-500);    border-color: var(--forge-info-line);    background: var(--forge-info-bg); }
+.badge.gold    { color: var(--forge-accent-gold); border-color: var(--forge-accent-gold-line); background: var(--forge-accent-gold-bg); }
+.badge.tenant  { color: var(--forge-tenant-primary); border-color: var(--forge-tenant-primary); background: var(--forge-tenant-primary-soft); }
+
+/* Pill (status) */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 24px; padding: 0 10px;
+  border-radius: var(--r-md);
+  font-size: var(--forge-text-xs);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.pill.solid-success { background: var(--forge-success-bg); color: var(--forge-success-500); }
+.pill.solid-warning { background: var(--forge-warning-bg); color: var(--forge-warning-500); }
+.pill.solid-danger  { background: var(--forge-danger-bg);  color: var(--forge-danger-500); }
+.pill.solid-info    { background: var(--forge-info-bg);    color: var(--forge-info-500); }
+.pill.solid-neutral { background: var(--forge-bg-overlay-strong); color: var(--forge-ink-2); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 32px; padding: 0 12px;
+  border-radius: var(--r-md);
+  font-size: var(--forge-text-sm);
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms var(--ease-fast), border-color 120ms var(--ease-fast), color 120ms var(--ease-fast);
+}
+.btn-sm { height: 26px; padding: 0 8px; font-size: var(--forge-text-xs); }
+.btn-lg { height: 40px; padding: 0 18px; font-size: var(--forge-text-md); }
+.btn-primary { background: var(--forge-tenant-primary); color: #fff; border-color: var(--forge-tenant-primary); }
+.btn-primary:hover { background: var(--forge-tenant-primary-strong); border-color: var(--forge-tenant-primary-strong); }
+.btn-secondary { background: var(--forge-bg-overlay); color: var(--forge-ink-1); border-color: var(--forge-line-2); }
+.btn-secondary:hover { background: var(--forge-bg-overlay-strong); border-color: var(--forge-line-3); }
+.btn-ghost { background: transparent; color: var(--forge-ink-2); }
+.btn-ghost:hover { background: var(--forge-bg-overlay); color: var(--forge-ink-1); }
+.btn-danger { background: var(--forge-danger-bg); color: var(--forge-danger-500); border-color: var(--forge-danger-line); }
+.btn-danger:hover { background: rgba(239, 68, 68, 0.18); }
+.btn-success { background: var(--forge-success-bg); color: var(--forge-success-500); border-color: var(--forge-success-line); }
+.btn-success:hover { background: rgba(34, 197, 94, 0.18); }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--forge-ink-2);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.icon-btn:hover { background: var(--forge-bg-overlay); color: var(--forge-ink-1); }
+
+/* Inputs */
+.input {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  background: var(--forge-bg-overlay);
+  border: 1px solid var(--forge-line-2);
+  color: var(--forge-ink-1);
+  font-family: inherit;
+  font-size: var(--forge-text-sm);
+  width: 100%;
+}
+.input::placeholder { color: var(--forge-ink-4); }
+.input:focus { background: var(--forge-bg-elev); border-color: var(--forge-tenant-primary); outline: none; }
+
+/* Tables */
+table.dt { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.dt thead th {
+  position: sticky; top: 0;
+  background: var(--forge-bg-raised);
+  text-align: left;
+  font-size: var(--forge-text-2xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--forge-ink-3);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--forge-line-2);
+  white-space: nowrap;
+  z-index: 2;
+}
+table.dt tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--forge-line-1);
+  font-size: var(--forge-text-sm);
+  color: var(--forge-ink-1);
+  white-space: nowrap;
+}
+table.dt tbody tr:hover td { background: var(--forge-bg-overlay); }
+table.dt tbody tr.selected td { background: var(--forge-tenant-primary-soft); }
+table.dt td.num, table.dt th.num { text-align: right; }
+
+/* Spark + chart shells */
+.chart-frame { position: relative; width: 100%; }
+.chart-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.grid-line { stroke: var(--forge-line-1); stroke-width: 1; }
+.axis-tick { fill: var(--forge-ink-3); font-size: 10px; }
+
+/* EvidenceCard left rail */
+.evidence-rail { width: 3px; background: var(--forge-accent-gold); border-radius: 2px 0 0 2px; }

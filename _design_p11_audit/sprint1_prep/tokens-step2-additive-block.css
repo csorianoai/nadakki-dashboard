@@ -1,0 +1,223 @@
+/* ============================================================
+   P11-01 Step 2 — Additive Token Block (Cursor implementation target)
+   ============================================================
+   Locked decisions (Cesar, 2026-05-10):
+   D1 = Posture B (additive — preserve all existing tokens)
+   D2 = Preserve CURRENT values (no semantic-hex / accent-gold / type-scale updates)
+   D3 = Scoped to .forge-app (NOT :root)
+   D4 = Dark mode vars present but DORMANT (no UI toggle in Step 2)
+   D5 = Rename banco-piloto → banco-piloto-rd ONLY (testbank slug deferred)
+   D6 = Both naming conventions — short-prefix aliases point to long-prefix sources
+
+   HOW TO APPLY:
+     1. Open  app/(forge)/credit-hub/_design/tokens.css
+     2. Locate the existing  .forge-app { ... }  block.
+     3. Append the section "STEP-2-ADDITIVE: NEW FAMILIES" inside that
+        same .forge-app { ... } block, right before the closing brace.
+     4. Append the section "STEP-2-ADDITIVE: SHORT-PREFIX ALIASES (D6)"
+        immediately after the brace closes (still inside .forge-app via
+        nested rule); see notes inline.
+     5. RENAME the existing selector  .forge-app[data-tenant="banco-piloto"]
+        to  .forge-app[data-tenant="banco-piloto-rd"]  (D5 — single rename,
+        same values; SQL migration on the tenants table coordinated with
+        backend track).
+     6. Append the "STEP-2-ADDITIVE: DARK THEME OVERRIDE (DORMANT, D4)"
+        block at the end of the file, outside the .forge-app rule (it
+        scopes its own selector .forge-app[data-theme="dark"]).
+     7. Delete the commented-out dormant dealer-dark block (lines 169-204
+        of current tokens.css — superseded by D4 unified dark-theme block).
+     8. Save the original as
+        tokens.css.backup-step2-{date}.css  before editing.
+     9. Run  npm run typecheck  and the 6-test VISUAL_VALIDATION_CHECKLIST
+        before opening the PR.
+
+   ZERO-RENAME GUARANTEE (Posture B): no existing variable's name or value
+   is modified by this block. Existing components keep rendering identically.
+*/
+
+/* ============================================================ */
+/* STEP-2-ADDITIVE: NEW FAMILIES                                */
+/* Insert this block inside the existing  .forge-app { ... }    */
+/* rule, immediately before its closing brace.                  */
+/* ============================================================ */
+
+  /* ─── Tenant accent (semantic 4-stop — complements --forge-brand-* ramp) ── */
+  --forge-tenant-primary:        var(--forge-brand-500);         /* Credicefi base navy by default; tenant blocks override */
+  --forge-tenant-primary-strong: var(--forge-brand-600);
+  --forge-tenant-primary-soft:   color-mix(in srgb, var(--forge-brand-500) 10%, transparent);
+  --forge-tenant-dark:           var(--forge-brand-900);
+
+  /* ─── Ink hierarchy (4 levels — text only, DEC1 freed) ──────────────────── */
+  --forge-ink-1: #1E3A8A;                  /* primary text  — blue-900 (AAA 8.49:1 on bg-base) */
+  --forge-ink-2: #1E40AF;                  /* secondary     — blue-800 (AAA 7.15:1) */
+  --forge-ink-3: #1D4ED8;                  /* tertiary      — blue-700 (AA  5.49:1, WCAG-adjusted) */
+  --forge-ink-4: #3B82F6;                  /* disabled      — blue-500 (3.01:1, exempt per WCAG §1.4.3) */
+
+  /* ─── Bg / surface scale (Navy Inverso light defaults) ─────────────────── */
+  /* Note: production already exposes --forge-surface-page/card/raised/sunken.
+     The new --forge-bg-* family is a SEPARATE semantic layer for the new
+     prototype-aligned components (hero metric, EvidenceCard chart slot, etc.)
+     Surface-page and bg-base happen to be the same color here but conceptually
+     "surface" is the legacy chrome layer and "bg" is the V2 page-level palette. */
+  --forge-bg-base:           #DBEAFE;                            /* light blue page bg */
+  --forge-bg-raised:         #FFFFFF;                            /* cards */
+  --forge-bg-elev:           #EFF6FF;                            /* hovered card / drawer */
+  --forge-bg-overlay:        rgba(30, 58, 138, 0.05);            /* hover tint, navy-translucent */
+  --forge-bg-overlay-strong: rgba(30, 58, 138, 0.08);
+
+  /* ─── Lines / divider color-only tokens (--forge-border-* keeps shorthand) */
+  --forge-line-1: rgba(30, 58, 138, 0.12);
+  --forge-line-2: rgba(30, 58, 138, 0.18);
+  --forge-line-3: rgba(30, 58, 138, 0.28);
+
+  /* ─── Semantic translucent derivatives (ADD; -50/500/700 keep CURRENT) ─── */
+  --forge-success-bg:   color-mix(in srgb, var(--forge-success-500) 10%, transparent);
+  --forge-success-line: color-mix(in srgb, var(--forge-success-500) 28%, transparent);
+  --forge-warning-bg:   color-mix(in srgb, var(--forge-warning-500) 10%, transparent);
+  --forge-warning-line: color-mix(in srgb, var(--forge-warning-500) 30%, transparent);
+  --forge-danger-bg:    color-mix(in srgb, var(--forge-danger-500)  10%, transparent);
+  --forge-danger-line:  color-mix(in srgb, var(--forge-danger-500)  30%, transparent);
+  --forge-info-bg:      color-mix(in srgb, var(--forge-info-500)    10%, transparent);
+  --forge-info-line:    color-mix(in srgb, var(--forge-info-500)    28%, transparent);
+  --forge-accent-gold-bg:   color-mix(in srgb, var(--forge-accent-gold) 12%, transparent);
+  --forge-accent-gold-line: color-mix(in srgb, var(--forge-accent-gold) 40%, transparent);
+
+  /* ─── Type scale extras (2xs and hero — additive) ──────────────────────── */
+  --forge-text-2xs:  10px;                  /* labels, axis ticks, mono captions */
+  --forge-text-hero: 96px;                  /* Bank Dashboard hero metric */
+
+  /* ─── Radius extra (12px — not currently in production) ────────────────── */
+  --forge-radius-xl: 12px;                  /* cards on landing pages, modals */
+
+  /* ─── Modal shadow (heavier than --forge-shadow-lg) ────────────────────── */
+  --forge-shadow-modal: 0 24px 60px rgba(15, 23, 41, 0.18);
+
+  /* ─── Easing extras (proto-derived; --forge-ease-out/in-out unchanged) ─── */
+  --forge-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --forge-ease-fast-v2: cubic-bezier(0.4, 0, 0.2, 1);   /* renamed to avoid clash with --forge-duration-fast */
+
+/* ============================================================ */
+/* STEP-2-ADDITIVE: SHORT-PREFIX ALIASES (D6)                   */
+/* Insert this block ALSO inside the  .forge-app { ... }  rule, */
+/* right after the NEW FAMILIES section above. These are pure   */
+/* aliases — short-prefix names from the prototype resolve to   */
+/* the long-prefix sources in production.                       */
+/* ============================================================ */
+
+  /* Spacing aliases (--sN → --forge-space-N) — proto uses --s1..--s20 */
+  --s1:  var(--forge-space-1);
+  --s2:  var(--forge-space-2);
+  --s3:  var(--forge-space-3);
+  --s4:  var(--forge-space-4);
+  --s5:  var(--forge-space-5);
+  --s6:  var(--forge-space-6);
+  --s8:  var(--forge-space-8);
+  --s10: var(--forge-space-10);
+  --s12: var(--forge-space-12);
+  --s16: var(--forge-space-16);
+  --s20: var(--forge-space-20);
+
+  /* Radius aliases (--r-X → --forge-radius-X) */
+  --r-sm: var(--forge-radius-sm);
+  --r-md: var(--forge-radius-md);
+  --r-lg: var(--forge-radius-lg);
+  --r-xl: var(--forge-radius-xl);          /* newly added above */
+
+  /* Shadow aliases (--shN → --forge-shadow-X; semantic mapping) */
+  --sh-1:     var(--forge-shadow-xs);
+  --sh-2:     var(--forge-shadow-sm);
+  --sh-3:     var(--forge-shadow-lg);      /* proto's --sh-3 is the "card lift"; production's lg fits */
+  --sh-modal: var(--forge-shadow-modal);   /* newly added above */
+
+  /* Viz aliases (--viz-N → --forge-viz-N; same stops, both naming styles) */
+  --viz-1: var(--forge-viz-1);
+  --viz-2: var(--forge-viz-2);
+  --viz-3: var(--forge-viz-3);
+  --viz-4: var(--forge-viz-4);
+  --viz-5: var(--forge-viz-5);
+  --viz-6: var(--forge-viz-6);
+
+  /* Easing aliases */
+  --ease-spring: var(--forge-ease-spring);
+  --ease-fast:   var(--forge-ease-fast-v2);
+
+/* ============================================================ */
+/* STEP-2-RENAME (D5): tenant slug                              */
+/* Find this selector in the current tokens.css and update it:  */
+/*                                                              */
+/*   FROM:  .forge-app[data-tenant="banco-piloto"] { ... }      */
+/*   TO:    .forge-app[data-tenant="banco-piloto-rd"] { ... }   */
+/*                                                              */
+/* No value changes inside the block — just selector rename.    */
+/* The companion SQL migration on the tenants table must land   */
+/* atomically (backend track coordinates).                      */
+/*                                                              */
+/* The testbank slug stays as test-mx-tenant-uuid for now.      */
+/* Per D5, full rename is deferred to a later ticket.           */
+/* ============================================================ */
+
+/* ============================================================ */
+/* STEP-2-ADDITIVE: DARK THEME OVERRIDE (DORMANT, D4)           */
+/* Append at the end of tokens.css, outside the .forge-app rule */
+/* (it scopes itself via .forge-app[data-theme="dark"]).        */
+/* No component activates this in Step 2 — vars present but the */
+/* page won't visually flip until a future UI toggle sets       */
+/* data-theme="dark" on the .forge-app root.                    */
+/* ============================================================ */
+
+.forge-app[data-theme="dark"] {
+  /* Surface */
+  --forge-bg-base:           #0F1A2E;
+  --forge-bg-raised:         #182338;
+  --forge-bg-elev:           #1F2B45;
+  --forge-bg-overlay:        rgba(255, 255, 255, 0.04);
+  --forge-bg-overlay-strong: rgba(255, 255, 255, 0.08);
+
+  /* Ink */
+  --forge-ink-1: #E8ECF7;                   /* AAA 14.72:1 on bg-base */
+  --forge-ink-2: #A8B2C8;                   /* AAA 8.17:1 */
+  --forge-ink-3: #7E8AA1;                   /* AA  5.00:1 */
+  --forge-ink-4: #4D5872;                   /* disabled, WCAG-exempt */
+
+  /* Lines */
+  --forge-line-1: rgba(255, 255, 255, 0.07);
+  --forge-line-2: #2A3654;
+  --forge-line-3: rgba(255, 255, 255, 0.20);
+
+  /* Tenant accent — brighter, dark-tuned base (overridden by tenant blocks below) */
+  --forge-tenant-primary:        var(--forge-brand-400);
+  --forge-tenant-primary-strong: var(--forge-brand-500);
+  --forge-tenant-primary-soft:   color-mix(in srgb, var(--forge-brand-400) 14%, transparent);
+  --forge-tenant-dark:           var(--forge-brand-900);
+}
+
+/* Dark-mode shadow overrides — heavier for dark bg */
+.forge-app[data-theme="dark"] {
+  --forge-shadow-xs:    0 1px 2px rgba(0, 0, 0, 0.30);
+  --forge-shadow-sm:    0 2px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --forge-shadow-md:    0 4px 12px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --forge-shadow-lg:    0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --forge-shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* Dark-mode tenant accents override (light-defined tenant blocks above lose
+   on light, override-on-dark restores brighter values). */
+.forge-app[data-theme="dark"][data-tenant="credicefi"] {
+  --forge-tenant-primary:        #4F8FD9;
+  --forge-tenant-primary-strong: #2E5F97;
+  --forge-tenant-primary-soft:   rgba(79, 143, 217, 0.14);
+}
+.forge-app[data-theme="dark"][data-tenant="banco-piloto-rd"] {
+  --forge-tenant-primary:        #4ADE80;
+  --forge-tenant-primary-strong: #1B5E20;
+  --forge-tenant-primary-soft:   rgba(74, 222, 128, 0.14);
+}
+.forge-app[data-theme="dark"][data-tenant="test-mx-tenant-uuid"] {
+  --forge-tenant-primary:        #C084FC;
+  --forge-tenant-primary-strong: #6B21A8;
+  --forge-tenant-primary-soft:   rgba(192, 132, 252, 0.14);
+}
+
+/* ============================================================ */
+/* END OF STEP-2 ADDITIVE BLOCK                                 */
+/* ============================================================ */
