@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/lib/auth/auth-context";
+import { AuthProvider as LegacyAuthProvider } from "@/contexts/AuthContext";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import PWAPrompt from "@/components/pwa/PWAPrompt";
@@ -51,11 +52,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <AuthProvider>
-            <TenantProvider>
-              <ToastProvider>
-                <AppGate>{children}</AppGate>
-              </ToastProvider>
-            </TenantProvider>
+            <LegacyAuthProvider>
+              <TenantProvider>
+                <ToastProvider>
+                  <AppGate>{children}</AppGate>
+                </ToastProvider>
+              </TenantProvider>
+            </LegacyAuthProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
