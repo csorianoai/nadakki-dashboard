@@ -1,0 +1,156 @@
+"use client";
+
+import { createContext, useState, useEffect, ReactNode } from "react";
+import {
+  loginV2,
+  logoutV2,
+  getMeV2,
+  switchTenantV2,
+  switchRoleV2,
+  refreshTokenV2,
+  type UserInfo,
+  type TenantInfo,
+  type RoleInfo,
+} from "@/lib/api/auth-v2";
+import { tokenStorage } from "./token-storage";
+
+export interface AuthContextValue {
+  user: UserInfo | null;
+  tenant: TenantInfo | null;
+  activeRole: RoleInfo | null;
+  allRoles: RoleInfo[];
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string, tenantSlug?: string) => Promise<{ ok: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  switchTenant: (tenantId?: string, tenantSlug?: string) => Promise<{ ok: boolean; error?: string }>;
+  switchRole: (coreName: string, roleKey: string) => Promise<{ ok: boolean; error?: string }>;
+  refreshSession: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [tenant, setTenant] = useState<TenantInfo | null>(null);
+  const [activeRole, setActiveRole] = useState<RoleInfo | null>(null);
+  const [allRoles, setAllRoles] = useState<RoleInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const init = async () => {
+      const refreshToken = tokenStorage.getRefreshToken();
+      if (!refreshToken) {
+        setIsLoading(false);
+        return;
+      }
+      const result = await refreshTokenV2(refreshToken);
+      if (result.ok && result.data) {
+        tokenStorage.setTokens({
+          accessToken: result.data.access_token,
+          refreshToken: result.data.refresh_token,
+        });
+        const me = await getMeV2(result.data.access_token);
+        if (me.ok && me.data) {
+          setUser(me.data.user);
+          setTenant(me.data.current_tenant);
+          setAllRoles(me.data.active_roles);
+          if (me.data.active_roles.length > 0) {
+            setActiveRole(me.data.active_roles[0]);
+          }
+        }
+      } else {
+        tokenStorage.clearTokens();
+      }
+      setIsLoading(false);
+    };
+    init();
+  }, []);
+
+  const login = async (email: string, password: string, tenantSlug?: string) => {
+    const result = await loginV2(email, password, tenantSlug);
+    if (!result.ok || !result.data) {
+      return { ok: false, error: result.error || "Login failed" };
+    }
+    tokenStorage.setTokens({
+      accessToken: result.data.access_token,
+      refreshToken: result.data.refresh_token,
+    });
+    setUser(result.data.user_info);
+    setTenant(result.data.tenant_info);
+    setActiveRole(result.data.active_role);
+    const me = await getMeV2(result.data.access_token);
+    if (me.ok && me.data) {
+      setAllRoles(me.data.active_roles);
+    }
+    return { ok: true };
+  };
+
+  const logout = async () => {
+    const token = tokenStorage.getAccessToken();
+    if (token) await logoutV2(token);
+    tokenStorage.clearTokens();
+    setUser(null);
+    setTenant(null);
+    setActiveRole(null);
+    setAllRoles([]);
+  };
+
+  const switchTenant = async (tenantId?: string, tenantSlug?: string) => {
+    const token = tokenStorage.getAccessToken();
+    if (!token) return { ok: false, error: "Not authenticated" };
+    const result = await switchTenantV2(token, tenantId, tenantSlug);
+    if (!result.ok || !result.data) return { ok: false, error: result.error };
+    tokenStorage.setTokens({
+      accessToken: result.data.access_token,
+      refreshToken: result.data.refresh_token,
+    });
+    setTenant(result.data.new_tenant);
+    setAllRoles(result.data.active_roles);
+    if (result.data.active_roles.length > 0) {
+      setActiveRole(result.data.active_roles[0]);
+    }
+    return { ok: true };
+  };
+
+  const switchRole = async (coreName: string, roleKey: string) => {
+    const token = tokenStorage.getAccessToken();
+    if (!token) return { ok: false, error: "Not authenticated" };
+    const result = await switchRoleV2(token, coreName, roleKey);
+    if (!result.ok || !result.data) return { ok: false, error: result.error };
+    tokenStorage.setTokens({
+      accessToken: result.data.access_token,
+      refreshToken: result.data.refresh_token,
+    });
+    setActiveRole(result.data.active_role);
+    return { ok: true };
+  };
+
+  const refreshSession = async () => {
+    const refreshToken = tokenStorage.getRefreshToken();
+    if (!refreshToken) return;
+    const result = await refreshTokenV2(refreshToken);
+    if (result.ok && result.data) {
+      tokenStorage.setTokens({
+        accessToken: result.data.access_token,
+        refreshToken: result.data.refresh_token,
+      });
+    }
+  };
+
+  const value: AuthContextValue = {
+    user,
+    tenant,
+    activeRole,
+    allRoles,
+    isAuthenticated: user !== null,
+    isLoading,
+    login,
+    logout,
+    switchTenant,
+    switchRole,
+    refreshSession,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
