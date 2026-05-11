@@ -35,7 +35,7 @@ export function exportLegalAuditCsv(tenantId: string, rows: AuditTrailEntry[]): 
   const link = document.createElement("a");
   link.href = url;
   const now = new Date();
-  const ts = now.toISOString().replace(/[-:T.Z]/g, "").slice(0, 15);
+  const ts = now.toISOString().replace(new RegExp("[-:T.Z]", "g"), "").slice(0, 15);
   link.download = `legal_audit_${tenantId}_${ts}.csv`;
   link.click();
   URL.revokeObjectURL(url);
