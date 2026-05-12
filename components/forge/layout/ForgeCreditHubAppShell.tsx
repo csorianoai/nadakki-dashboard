@@ -20,7 +20,7 @@ import { ForgeCreditHubTopbar } from "./ForgeCreditHubTopbar";
  * fetch into the chrome:
  *
  * - On success: applies `data-tenant` and the per-tenant CSS variables
- *   (`--forge-brand-500`, `--forge-brand-900`) inline so `tokens.css`
+ *   (`--forge-brand-500`, `--forge-brand-900`) inline so `forge-tokens-v2.css`
  *   ramps cascade through the entire `.forge-app` subtree.
  * - On loading: forwards `showHeaderSkeleton` / `showLogoSkeleton` props
  *   to sidebar and topbar so only the tenant-specific slots shimmer.
@@ -45,7 +45,7 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
   // Only commit data-tenant when fetch succeeded; never with a default value.
   const tenantAttr = branding?.tenant_id ?? tenantSlug ?? undefined;
 
-  // CSS variables flow through tokens.css; only set when fetch succeeded.
+  // CSS variables flow through forge-tokens-v2.css; only set when fetch succeeded.
   const brandingStyle: CSSProperties | undefined = branding
     ? ({
         ["--forge-brand-500" as string]: branding.brand_primary,

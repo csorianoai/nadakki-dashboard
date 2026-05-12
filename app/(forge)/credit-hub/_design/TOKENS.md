@@ -6,31 +6,33 @@ This document describes the **institutional token layer** introduced in Phase 1,
 
 | File | Role |
 |------|------|
-| `app/(forge)/credit-hub/_design/tokens.css` | **v3.2 semantic system** — brand/ink/surface/semantic type/motion/radii/shadows scoped to `.forge-app`. |
-| `styles/forge-tokens.css` | **Legacy portal palette** — `--forge-primary`, `--forge-bg`, `[data-portal="dealer"|"bank"]`, spacing/radius/shadows used by current `ForgeCard`, `PortalShell`, etc. **Do not delete** until Phases 4–7 migrate components. |
-| `app/(forge)/credit-hub/forge-globals.css` | Imports **legacy first**, then **v3.2** (`@import` order). Also defines `.forge-route`. |
+| `styles/forge-tokens-v2.css` | **Canonical consolidated tokens** — `:root` portal personas + `.forge-app` v3.2 + semantic aliases (`--forge-bg-page`, `--forge-text-primary`, `--forge-brand-*`), `[data-theme="dark"]`, `[data-tenant-id]` / `[data-tenant]` (P11-06). |
+| `styles/forge-tokens.css` | Re-exports **forge-tokens-v2.css** (bookmarks / legacy path). Portal `[data-portal]` vars remain for Tailwind dual-var fallbacks outside `.forge-app`. |
+| `app/(forge)/credit-hub/_design/tokens.css` | Thin re-export of **forge-tokens-v2.css** (historical edit path). |
+| `app/(forge)/credit-hub/forge-globals.css` | Imports **forge-tokens-v2.css** for Forge routes (also loaded globally from `app/layout.tsx`). |
 
 ## Import convention (Phase 1)
 
-1. `app/(forge)/credit-hub/layout.tsx` imports `./forge-globals.css` (client layout — ensures all Credit Hub routes load both layers).
-2. `app/(forge)/layout.tsx` loads **fonts only** (`next/font`) and wraps children in `.forge-app` with CSS variables from Inter, JetBrains Mono, and Source Serif 4.
+1. **`app/layout.tsx`** imports **`styles/forge-tokens-v2.css`** first so `:root` portal vars + `.forge-app` tokens exist app-wide.
+2. **`app/(forge)/credit-hub/CreditHubLayoutClient.tsx`** imports `./forge-globals.css`, which imports **`forge-tokens-v2.css`** again for Forge bundles (harmless duplicate).
+3. **`app/(forge)/layout.tsx`** loads **fonts only** (`next/font`) and wraps children in `.forge-app` with CSS variables from Inter, JetBrains Mono, and Source Serif 4.
 
 Space Grotesk is **deprecated for Forge**; it is not imported in the Forge layout. It was never listed in `package.json` (it comes from `next/font/google`); other cores are unchanged.
 
 ## Dual theme (architectural decision)
 
 - **Bank persona (default under `.forge-app`):** **Light institutional** surfaces and ink scale per master prompt Part 4 (Goldman-style direction). New variables: `--forge-surface-page`, `--forge-ink-*`, `--forge-brand-*`, etc.
-- **Dealer persona (v3.2 semantic overrides):** **Dormant from Phase 1.5** — the `.forge-app [data-portal="dealer"]` block in `_design/tokens.css` is commented out until Phase 4 re-approves dealer dark on v3.2 tokens. **Legacy** dealer dark still comes from `styles/forge-tokens.css` (`--forge-bg`, etc.) via Tailwind fallbacks.
-- **Legacy `styles/forge-tokens.css`:** Still supplies `--forge-bg`, `--forge-text`, gradients, and portal-specific colors for **existing components** until refactors remove them.
+- **Dealer persona (v3.2 semantic overrides):** **Dormant from Phase 1.5** — the `.forge-app [data-portal="dealer"]` block remains commented until Phase 4 re-approves dealer dark on v3.2 tokens. **Legacy** dealer dark comes from **`forge-tokens-v2.css`** `[data-portal="dealer"]` (`--forge-bg`, gradients, etc.) via Tailwind fallbacks.
+- **Legacy portal vars:** Defined in **`forge-tokens-v2.css`** `:root[data-portal]` blocks; thin **`styles/forge-tokens.css`** re-export preserved for tooling paths until Phase 7 migration empties consumers.
 
 New light defaults do **not** automatically switch old `bg-forge-bg` / `text-forge-text` utilities to light mode; that is a later presentation migration.
 
 ## Tenant overrides
 
-Examples in `tokens.css`:
+Examples in `forge-tokens-v2.css`:
 
-- `.forge-app[data-tenant="credicefi"]`
-- `.forge-app[data-tenant="banco-piloto"]`
+- `.forge-app[data-tenant="credicefi"]` / `body[data-tenant-id="credicefi"] .forge-app`
+- `.forge-app[data-tenant="banco-piloto-rd"]`
 
 **Phase 8** will implement **Path B — `ForgeBrandingProvider`** (see `TENANT_CONTEXT_EXTENSION.md`) to set `data-tenant` and dynamic brand CSS from `tenant_branding`, without extending `TenantContext.tsx` API.
 
@@ -94,7 +96,7 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 
 ## Auto-generated token reference
 
-**Generated from `tokens.css` on 2026-05-10.** Do not edit this block by hand. Regenerate: `npm run docs:tokens`.
+**Generated from `styles/forge-tokens-v2.css` on 2026-05-12.** Do not edit this block by hand. Regenerate: `npm run docs:tokens`.
 
 ### Tailwind bridge (excerpt)
 
@@ -108,7 +110,7 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
           600: 'var(--forge-brand-600)',
           700: 'var(--forge-brand-700)',
           800: 'var(--forge-brand-800)',
-          900: 'var…`
+         …`
 
 ### BEFORE / AFTER (migration)
 
@@ -125,6 +127,35 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#c8940a"/></svg> | `--forge-accent-gold` | #c8940a | `text-forgeAccent-gold` | Semantic usage for **ACCENT** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#0a7ea4"/></svg> | `--forge-accent-teal` | #0a7ea4 | `text-forgeAccent-teal` | Semantic usage for **ACCENT** group. | Outside `.forge-app` without legacy fallbacks. |
 
+### BG SCALE
+
+| Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
+|--------|----------|-------|--------------------|-------------|----------|
+| — | `--forge-accent-gold-bg` | color-mix(in srgb, var(--forge-accent-gold) 12%, transparent) | `text-forgeAccent-gold-bg` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-accent-gold-line` | color-mix(in srgb, var(--forge-accent-gold) 40%, transparent) | `text-forgeAccent-gold-line` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#dbeafe"/></svg> | `--forge-bg-base` | #dbeafe | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#eff6ff"/></svg> | `--forge-bg-elev` | #eff6ff | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-bg-overlay` | rgba(30, 58, 138, 0.05) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-bg-overlay-strong` | rgba(30, 58, 138, 0.08) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#ffffff"/></svg> | `--forge-bg-raised` | #ffffff | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-curve-fast` | cubic-bezier(0.4, 0, 0.2, 1) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-danger-bg` | color-mix(in srgb, var(--forge-danger-500) 10%, transparent) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-danger-line` | color-mix(in srgb, var(--forge-danger-500) 30%, transparent) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-ease-spring` | cubic-bezier(0.22, 1, 0.36, 1) | composition / motion tokens | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-info-bg` | color-mix(in srgb, var(--forge-info-500) 10%, transparent) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-info-line` | color-mix(in srgb, var(--forge-info-500) 28%, transparent) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-line-1` | rgba(30, 58, 138, 0.12) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-line-2` | rgba(30, 58, 138, 0.18) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-line-3` | rgba(30, 58, 138, 0.28) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-radius-xl` | 12px | `rounded-forge-xl` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-shadow-modal` | 0 24px 60px rgba(15, 23, 41, 0.18) | `shadow-forge-modal` (if mapped) | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-success-bg` | color-mix(in srgb, var(--forge-success-500) 10%, transparent) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-success-line` | color-mix(in srgb, var(--forge-success-500) 28%, transparent) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-text-2xs` | 10px | `text-[length:var(--forge-text-2xs)]` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-text-hero` | 96px | `text-[length:var(--forge-text-hero)]` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-warning-bg` | color-mix(in srgb, var(--forge-warning-500) 10%, transparent) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-warning-line` | color-mix(in srgb, var(--forge-warning-500) 30%, transparent) | `tailwind.config.js` | Semantic usage for **BG SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
+
 ### BRAND
 
 | Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
@@ -140,6 +171,8 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#0f2849"/></svg> | `--forge-brand-800` | #0f2849 | `text-forgeBrand-800` / `bg-forgeBrand-800` / `border-forgeBrand-800` | Semantic usage for **BRAND** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#0a1d36"/></svg> | `--forge-brand-900` | #0a1d36 | `text-forgeBrand-900` / `bg-forgeBrand-900` / `border-forgeBrand-900` | Semantic usage for **BRAND** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#050f1f"/></svg> | `--forge-brand-950` | #050f1f | `text-forgeBrand-950` / `bg-forgeBrand-950` / `border-forgeBrand-950` | Semantic usage for **BRAND** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-brand-primary` | var(--forge-brand-500) | `tailwind.config.js` | Semantic usage for **BRAND** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-brand-secondary` | var(--forge-brand-700) | `tailwind.config.js` | Semantic usage for **BRAND** group. | Outside `.forge-app` without legacy fallbacks. |
 
 ### DATA VIZ
 
@@ -226,6 +259,39 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#1a2540"/></svg> | `--forge-gray-800` | #1a2540 | `text-forgeGray-800` / `border-forgeGray-800` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#0f1729"/></svg> | `--forge-gray-900` | #0f1729 | `text-forgeGray-900` / `border-forgeGray-900` | Semantic usage for **GRAY — NEUTRAL SCALE** group. | Outside `.forge-app` without legacy fallbacks. |
 
+### INK HIERARCHY
+
+| Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
+|--------|----------|-------|--------------------|-------------|----------|
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#1e3a8a"/></svg> | `--forge-ink-1` | #1e3a8a | `tailwind.config.js` | Semantic usage for **INK HIERARCHY** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#1e40af"/></svg> | `--forge-ink-2` | #1e40af | `tailwind.config.js` | Semantic usage for **INK HIERARCHY** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#1d4ed8"/></svg> | `--forge-ink-3` | #1d4ed8 | `tailwind.config.js` | Semantic usage for **INK HIERARCHY** group. | Outside `.forge-app` without legacy fallbacks. |
+| <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#3b82f6"/></svg> | `--forge-ink-4` | #3b82f6 | `tailwind.config.js` | Semantic usage for **INK HIERARCHY** group. | Outside `.forge-app` without legacy fallbacks. |
+
+### LEGACY FLAT ALIASES
+
+| Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
+|--------|----------|-------|--------------------|-------------|----------|
+| — | `--forge-accent` | var(--forge-accent-gold) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-accent-hover` | color-mix(in srgb, var(--forge-accent-gold) 85%, black) | `text-forgeAccent-hover` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-bg` | var(--forge-bg-page) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-border` | var(--forge-gray-200) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-border-focus` | var(--forge-brand-500) | border + `var()` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-border-hover` | var(--forge-gray-300) | border + `var()` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-danger` | var(--forge-danger-500) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-info` | var(--forge-info-500) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-primary` | var(--forge-brand-primary) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-primary-active` | var(--forge-brand-700) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-primary-hover` | var(--forge-brand-600) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-success` | var(--forge-success-500) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-surface` | var(--forge-surface-card) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-surface-elevated` | var(--forge-surface-raised) | `bg-forgeSurface-elevated` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-surface-hover` | var(--forge-surface-sunken) | `bg-forgeSurface-hover` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-text` | var(--forge-text-primary) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-text-muted` | var(--forge-gray-500) | `text-[length:var(--forge-text-muted)]` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-text-subtle` | var(--forge-gray-400) | `text-[length:var(--forge-text-subtle)]` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-warning` | var(--forge-warning-500) | `tailwind.config.js` | Semantic usage for **LEGACY FLAT ALIASES** group. | Outside `.forge-app` without legacy fallbacks. |
+
 ### SEMANTIC
 
 | Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
@@ -246,6 +312,13 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#b7791f"/></svg> | `--forge-warning-500` | #b7791f | `text-forgeWarning-500` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#8c5a14"/></svg> | `--forge-warning-700` | #8c5a14 | `text-forgeWarning-700` | Semantic usage for **SEMANTIC** group. | Outside `.forge-app` without legacy fallbacks. |
 
+### SEMANTIC PAGE / TEXT
+
+| Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
+|--------|----------|-------|--------------------|-------------|----------|
+| — | `--forge-bg-page` | var(--forge-surface-page) | `tailwind.config.js` | Semantic usage for **SEMANTIC PAGE / TEXT** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-text-primary` | var(--forge-gray-800) | `text-[length:var(--forge-text-primary)]` | Semantic usage for **SEMANTIC PAGE / TEXT** group. | Outside `.forge-app` without legacy fallbacks. |
+
 ### SURFACE
 
 | Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
@@ -256,10 +329,19 @@ Dealer overrides repeat the same **names** with dark-appropriate values under `.
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#ffffff"/></svg> | `--forge-surface-raised` | #ffffff | `bg-forgeSurface-raised` | Semantic usage for **SURFACE** group. | Outside `.forge-app` without legacy fallbacks. |
 | <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" aria-hidden="true"><rect width="24" height="14" rx="2" fill="#f0f2f5"/></svg> | `--forge-surface-sunken` | #f0f2f5 | `bg-forgeSurface-sunken` | Semantic usage for **SURFACE** group. | Outside `.forge-app` without legacy fallbacks. |
 
+### TENANT ACCENT
+
+| Swatch | Variable | Value | Tailwind (typical) | When to use | When NOT |
+|--------|----------|-------|--------------------|-------------|----------|
+| — | `--forge-tenant-dark` | var(--forge-brand-900) | `tailwind.config.js` | Semantic usage for **TENANT ACCENT** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-tenant-primary` | var(--forge-brand-500) | `tailwind.config.js` | Semantic usage for **TENANT ACCENT** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-tenant-primary-soft` | color-mix(in srgb, var(--forge-brand-500) 10%, transparent) | `tailwind.config.js` | Semantic usage for **TENANT ACCENT** group. | Outside `.forge-app` without legacy fallbacks. |
+| — | `--forge-tenant-primary-strong` | var(--forge-brand-600) | `tailwind.config.js` | Semantic usage for **TENANT ACCENT** group. | Outside `.forge-app` without legacy fallbacks. |
+
 ### Notes
 
-- Tenant overrides and dormant dealer blocks live **outside** this autogen slice — see source `tokens.css`.
-- Phase 7.2 Case B: legacy `styles/forge-tokens.css` + Tailwind PERMANENT ALIASES remain until `components/credit-hub/**` migrates.
+- Tenant overrides and portal personas live **outside** this autogen slice — see source `styles/forge-tokens-v2.css`.
+- Phase 7.2 Case B: Tailwind PERMANENT LEGACY ALIASES remain until `components/credit-hub/**` migrates (`styles/forge-tokens.css` re-exports v2).
 
 
 <!-- AUTOGEN:TOKENS END -->

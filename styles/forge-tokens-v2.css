@@ -1,0 +1,593 @@
+/**
+ * Forge design tokens — consolidated single source (P11-06 Task 1).
+ * Merges: legacy portal palette + Credit Hub v3.2 + additive prototype families (NEW_tokens reference).
+ *
+ * - Semantic aliases: --forge-bg-page, --forge-text-primary, --forge-brand-primary / --forge-brand-secondary
+ * - Dark: [data-theme="dark"] on .forge-app OR any ancestor (html/body)
+ * - Tenant: body[data-tenant-id], .forge-app[data-tenant-id], .forge-app[data-tenant] (transition)
+ * - Legacy portal vars + gradients: [data-portal="dealer"|"bank"|"customer"|"admin"]
+ */
+
+/* =============================================================================
+   :ROOT PRIMITIVES — shared spacing / radius / shadow / z-index (outside .forge-app)
+   ============================================================================= */
+:root {
+  --forge-space-1: 4px;
+  --forge-space-2: 8px;
+  --forge-space-3: 12px;
+  --forge-space-4: 16px;
+  --forge-space-6: 24px;
+  --forge-space-8: 32px;
+  --forge-space-12: 48px;
+  --forge-space-16: 64px;
+
+  --forge-radius-sm: 6px;
+  --forge-radius-md: 8px;
+  --forge-radius-lg: 12px;
+  --forge-radius-xl: 16px;
+  --forge-radius-2xl: 24px;
+  --forge-radius-full: 9999px;
+
+  --forge-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --forge-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --forge-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --forge-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --forge-shadow-glow-orange: 0 0 24px rgba(255, 107, 53, 0.3);
+  --forge-shadow-glow-success: 0 0 24px rgba(0, 200, 150, 0.3);
+
+  --forge-z-dropdown: 1000;
+  --forge-z-sticky: 1020;
+  --forge-z-fixed: 1030;
+  --forge-z-modal-backdrop: 1040;
+  --forge-z-modal: 1050;
+  --forge-z-popover: 1060;
+  --forge-z-tooltip: 1070;
+  --forge-z-toast: 1080;
+}
+
+/* =============================================================================
+   LEGACY PORTAL PALETTE — Tailwind dual-var fallbacks outside full v3.2 scope
+   ============================================================================= */
+
+:root[data-portal="dealer"],
+[data-portal="dealer"] {
+  --forge-primary: #ff6b35;
+  --forge-primary-hover: #e55a2b;
+  --forge-primary-active: #cc4f26;
+  --forge-accent: #ffb627;
+  --forge-accent-hover: #e5a422;
+
+  --forge-bg: #0a0e1a;
+  --forge-surface: #131829;
+  --forge-surface-elevated: #1a2138;
+  --forge-surface-hover: #232b45;
+
+  --forge-text: #f5f7fa;
+  --forge-text-muted: #8b95a8;
+  --forge-text-subtle: #5c6680;
+
+  --forge-border: rgba(255, 255, 255, 0.08);
+  --forge-border-hover: rgba(255, 255, 255, 0.16);
+  --forge-border-focus: var(--forge-primary);
+
+  --forge-success: #00c896;
+  --forge-warning: #ffb627;
+  --forge-danger: #ff4757;
+  --forge-info: #3b82f6;
+
+  --forge-gradient-hero: linear-gradient(135deg, #ff6b35 0%, #ff8c42 50%, #ffb627 100%);
+  --forge-gradient-button: linear-gradient(135deg, #ff6b35 0%, #e55a2b 100%);
+  --forge-gradient-ai: linear-gradient(90deg, #ff6b35 0%, #ffb627 100%);
+}
+
+:root[data-portal="bank"],
+[data-portal="bank"] {
+  --forge-primary: #1e3a8a;
+  --forge-primary-hover: #1e40af;
+  --forge-primary-active: #1d4ed8;
+  --forge-accent: #06b6d4;
+  --forge-accent-hover: #0891b2;
+
+  --forge-bg: #0b1120;
+  --forge-surface: #131c2e;
+  --forge-surface-elevated: #1a2540;
+  --forge-surface-hover: #223052;
+
+  --forge-text: #f0f4f8;
+  --forge-text-muted: #94a3b8;
+  --forge-text-subtle: #64748b;
+
+  --forge-border: rgba(255, 255, 255, 0.08);
+  --forge-border-hover: rgba(255, 255, 255, 0.16);
+  --forge-border-focus: var(--forge-primary);
+
+  --forge-success: #10b981;
+  --forge-warning: #f59e0b;
+  --forge-danger: #ef4444;
+  --forge-info: #06b6d4;
+}
+
+:root[data-portal="customer"],
+[data-portal="customer"] {
+  --forge-primary: #059669;
+  --forge-primary-hover: #047857;
+  --forge-primary-active: #065f46;
+  --forge-accent: #14b8a6;
+  --forge-accent-hover: #0d9488;
+
+  --forge-bg: #fafbfc;
+  --forge-surface: #ffffff;
+  --forge-surface-elevated: #f1f5f9;
+  --forge-surface-hover: #e2e8f0;
+
+  --forge-text: #0f172a;
+  --forge-text-muted: #64748b;
+  --forge-text-subtle: #94a3b8;
+
+  --forge-border: rgba(15, 23, 42, 0.1);
+  --forge-border-hover: rgba(15, 23, 42, 0.18);
+  --forge-border-focus: var(--forge-primary);
+
+  --forge-success: #059669;
+  --forge-warning: #d97706;
+  --forge-danger: #dc2626;
+  --forge-info: #0284c7;
+}
+
+:root[data-portal="admin"],
+[data-portal="admin"] {
+  --forge-primary: #8b5cf6;
+  --forge-primary-hover: #7c3aed;
+  --forge-primary-active: #6d28d9;
+  --forge-accent: #f59e0b;
+  --forge-accent-hover: #d97706;
+
+  --forge-bg: #09090b;
+  --forge-surface: #18181b;
+  --forge-surface-elevated: #27272a;
+  --forge-surface-hover: #3f3f46;
+
+  --forge-text: #fafafa;
+  --forge-text-muted: #a1a1aa;
+  --forge-text-subtle: #71717a;
+
+  --forge-border: rgba(255, 255, 255, 0.08);
+  --forge-border-hover: rgba(255, 255, 255, 0.16);
+  --forge-border-focus: var(--forge-primary);
+
+  --forge-success: #10b981;
+  --forge-warning: #f59e0b;
+  --forge-danger: #ef4444;
+  --forge-info: #3b82f6;
+}
+
+/* =============================================================================
+   .forge-app — v3.2 institutional system (+ prototype additive families)
+   ============================================================================= */
+
+.forge-app {
+  /* ─── BRAND (overridable per tenant) ────────────────────────────────── */
+  --forge-brand-50: #f0f4fa;
+  --forge-brand-100: #dce6f2;
+  --forge-brand-200: #b6c8e0;
+  --forge-brand-300: #8aa5c9;
+  --forge-brand-400: #5c82b0;
+  --forge-brand-500: #2e5f97;
+  --forge-brand-600: #1e477a;
+  --forge-brand-700: #163660;
+  --forge-brand-800: #0f2849;
+  --forge-brand-900: #0a1d36;
+  --forge-brand-950: #050f1f;
+
+  /* P11-06 semantic brand shortcuts (API branding maps here) */
+  --forge-brand-primary: var(--forge-brand-500);
+  --forge-brand-secondary: var(--forge-brand-700);
+
+  /* ─── SEMANTIC PAGE / TEXT (P11-06) ───────────────────────────────────── */
+  --forge-bg-page: var(--forge-surface-page);
+  --forge-text-primary: var(--forge-gray-800);
+
+  /* ─── GRAY — neutral scale ───────────────────────────────────────────── */
+  --forge-gray-50: #f7f8fa;
+  --forge-gray-100: #eef1f4;
+  --forge-gray-200: #dde3ea;
+  --forge-gray-300: #c2cbd6;
+  --forge-gray-400: #8c97a6;
+  --forge-gray-500: #5a6478;
+  --forge-gray-600: #3d4759;
+  --forge-gray-700: #2a3447;
+  --forge-gray-800: #1a2540;
+  --forge-gray-900: #0f1729;
+
+  /* ─── SURFACE (light — bank institutional default) ──────────────────── */
+  --forge-surface-page: #f7f8fa;
+  --forge-surface-card: #ffffff;
+  --forge-surface-raised: #ffffff;
+  --forge-surface-sunken: #f0f2f5;
+  --forge-surface-overlay: rgba(15, 23, 41, 0.48);
+
+  /* ─── SEMANTIC (status — not brand) ─────────────────────────────────── */
+  --forge-success-50: #ecfdf5;
+  --forge-success-500: #0f7a3e;
+  --forge-success-700: #0a5a2e;
+
+  --forge-warning-50: #fffbeb;
+  --forge-warning-500: #b7791f;
+  --forge-warning-700: #8c5a14;
+
+  --forge-danger-50: #fef2f2;
+  --forge-danger-500: #b5201e;
+  --forge-danger-700: #8a1816;
+
+  --forge-info-50: #eff6ff;
+  --forge-info-500: #1f60b5;
+  --forge-info-700: #154a8c;
+
+  --forge-neutral-50: var(--forge-gray-100);
+  --forge-neutral-500: var(--forge-gray-500);
+  --forge-neutral-700: var(--forge-gray-700);
+
+  /* ─── ACCENT ────────────────────────────────────────────────────────── */
+  --forge-accent-gold: #c8940a;
+  --forge-accent-teal: #0a7ea4;
+
+  /* ─── DATA VIZ ──────────────────────────────────────────────────────── */
+  --forge-viz-1: #2e5f97;
+  --forge-viz-2: #0a7ea4;
+  --forge-viz-3: #0f7a3e;
+  --forge-viz-4: #c8940a;
+  --forge-viz-5: #8a4fbf;
+  --forge-viz-6: #b5201e;
+
+  --forge-font-display: var(--forge-font-display-opt), "Source Serif Pro", Georgia, serif;
+  --forge-font-body: var(--forge-font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --forge-font-mono: var(--forge-font-mono-opt), "IBM Plex Mono", ui-monospace, monospace;
+
+  --forge-text-xs: 11px;
+  --forge-text-sm: 13px;
+  --forge-text-base: 14px;
+  --forge-text-md: 16px;
+  --forge-text-lg: 18px;
+  --forge-text-xl: 22px;
+  --forge-text-2xl: 28px;
+  --forge-text-3xl: 36px;
+  --forge-text-4xl: 48px;
+
+  --forge-leading-tight: 1.15;
+  --forge-leading-snug: 1.35;
+  --forge-leading-normal: 1.5;
+  --forge-leading-relaxed: 1.65;
+
+  --forge-tracking-tight: -0.02em;
+  --forge-tracking-normal: 0;
+  --forge-tracking-wide: 0.04em;
+  --forge-tracking-wider: 0.08em;
+
+  --forge-weight-regular: 400;
+  --forge-weight-medium: 500;
+  --forge-weight-semibold: 600;
+  --forge-weight-bold: 700;
+
+  --forge-space-0: 0;
+  --forge-space-1: 4px;
+  --forge-space-2: 8px;
+  --forge-space-3: 12px;
+  --forge-space-4: 16px;
+  --forge-space-5: 20px;
+  --forge-space-6: 24px;
+  --forge-space-8: 32px;
+  --forge-space-10: 40px;
+  --forge-space-12: 48px;
+  --forge-space-16: 64px;
+  --forge-space-20: 80px;
+  --forge-space-24: 96px;
+
+  --forge-radius-none: 0;
+  --forge-radius-sm: 4px;
+  --forge-radius-md: 6px;
+  --forge-radius-lg: 8px;
+  --forge-radius-pill: 9999px;
+
+  --forge-shadow-none: none;
+  --forge-shadow-xs: 0 1px 2px 0 rgba(15, 23, 41, 0.04);
+  --forge-shadow-sm: 0 1px 3px 0 rgba(15, 23, 41, 0.06), 0 1px 2px 0 rgba(15, 23, 41, 0.04);
+  --forge-shadow-md: 0 4px 6px -1px rgba(15, 23, 41, 0.06), 0 2px 4px -1px rgba(15, 23, 41, 0.04);
+  --forge-shadow-lg: 0 10px 15px -3px rgba(15, 23, 41, 0.08), 0 4px 6px -2px rgba(15, 23, 41, 0.04);
+
+  --forge-border-subtle: 1px solid var(--forge-gray-200);
+  --forge-border-default: 1px solid var(--forge-gray-300);
+  --forge-border-strong: 1px solid var(--forge-gray-500);
+
+  --forge-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --forge-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --forge-duration-fast: 120ms;
+  --forge-duration-base: 180ms;
+  --forge-duration-slow: 240ms;
+
+  --forge-bp-mobile: 640px;
+  --forge-bp-tablet: 1024px;
+  --forge-bp-desktop: 1280px;
+  --forge-bp-wide: 1536px;
+
+  /* ─── Tenant accent (additive) ──────────────────────────────────────── */
+  --forge-tenant-primary: var(--forge-brand-500);
+  --forge-tenant-primary-strong: var(--forge-brand-600);
+  --forge-tenant-primary-soft: color-mix(in srgb, var(--forge-brand-500) 10%, transparent);
+  --forge-tenant-dark: var(--forge-brand-900);
+
+  /* ─── Ink hierarchy ─────────────────────────────────────────────────── */
+  --forge-ink-1: #1e3a8a;
+  --forge-ink-2: #1e40af;
+  --forge-ink-3: #1d4ed8;
+  --forge-ink-4: #3b82f6;
+
+  /* ─── Bg scale (Navy Inverso light layer) ───────────────────────────── */
+  --forge-bg-base: #dbeafe;
+  --forge-bg-raised: #ffffff;
+  --forge-bg-elev: #eff6ff;
+  --forge-bg-overlay: rgba(30, 58, 138, 0.05);
+  --forge-bg-overlay-strong: rgba(30, 58, 138, 0.08);
+
+  --forge-line-1: rgba(30, 58, 138, 0.12);
+  --forge-line-2: rgba(30, 58, 138, 0.18);
+  --forge-line-3: rgba(30, 58, 138, 0.28);
+
+  --forge-success-bg: color-mix(in srgb, var(--forge-success-500) 10%, transparent);
+  --forge-success-line: color-mix(in srgb, var(--forge-success-500) 28%, transparent);
+  --forge-warning-bg: color-mix(in srgb, var(--forge-warning-500) 10%, transparent);
+  --forge-warning-line: color-mix(in srgb, var(--forge-warning-500) 30%, transparent);
+  --forge-danger-bg: color-mix(in srgb, var(--forge-danger-500) 10%, transparent);
+  --forge-danger-line: color-mix(in srgb, var(--forge-danger-500) 30%, transparent);
+  --forge-info-bg: color-mix(in srgb, var(--forge-info-500) 10%, transparent);
+  --forge-info-line: color-mix(in srgb, var(--forge-info-500) 28%, transparent);
+  --forge-accent-gold-bg: color-mix(in srgb, var(--forge-accent-gold) 12%, transparent);
+  --forge-accent-gold-line: color-mix(in srgb, var(--forge-accent-gold) 40%, transparent);
+
+  --forge-text-2xs: 10px;
+  --forge-text-hero: 96px;
+
+  --forge-radius-xl: 12px;
+
+  --forge-shadow-modal: 0 24px 60px rgba(15, 23, 41, 0.18);
+
+  --forge-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --forge-curve-fast: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ─── SHORT-PREFIX ALIASES (proto compat) ───────────────────────────── */
+  --s1: var(--forge-space-1);
+  --s2: var(--forge-space-2);
+  --s3: var(--forge-space-3);
+  --s4: var(--forge-space-4);
+  --s5: var(--forge-space-5);
+  --s6: var(--forge-space-6);
+  --s8: var(--forge-space-8);
+  --s10: var(--forge-space-10);
+  --s12: var(--forge-space-12);
+  --s16: var(--forge-space-16);
+  --s20: var(--forge-space-20);
+
+  --r-sm: var(--forge-radius-sm);
+  --r-md: var(--forge-radius-md);
+  --r-lg: var(--forge-radius-lg);
+  --r-xl: var(--forge-radius-xl);
+
+  --sh-1: var(--forge-shadow-xs);
+  --sh-2: var(--forge-shadow-sm);
+  --sh-3: var(--forge-shadow-lg);
+  --sh-modal: var(--forge-shadow-modal);
+
+  --viz-1: var(--forge-viz-1);
+  --viz-2: var(--forge-viz-2);
+  --viz-3: var(--forge-viz-3);
+  --viz-4: var(--forge-viz-4);
+  --viz-5: var(--forge-viz-5);
+  --viz-6: var(--forge-viz-6);
+
+  --ease-spring: var(--forge-ease-spring);
+  --ease-fast: var(--forge-curve-fast);
+
+  /* ─── LEGACY FLAT ALIASES (portal / Tailwind dual-var consumers) ────────── */
+  --forge-primary: var(--forge-brand-primary);
+  --forge-primary-hover: var(--forge-brand-600);
+  --forge-primary-active: var(--forge-brand-700);
+  --forge-accent: var(--forge-accent-gold);
+  --forge-accent-hover: color-mix(in srgb, var(--forge-accent-gold) 85%, black);
+
+  --forge-bg: var(--forge-bg-page);
+  --forge-surface: var(--forge-surface-card);
+  --forge-surface-elevated: var(--forge-surface-raised);
+  --forge-surface-hover: var(--forge-surface-sunken);
+
+  --forge-text: var(--forge-text-primary);
+  --forge-text-muted: var(--forge-gray-500);
+  --forge-text-subtle: var(--forge-gray-400);
+
+  --forge-border: var(--forge-gray-200);
+  --forge-border-hover: var(--forge-gray-300);
+  --forge-border-focus: var(--forge-brand-500);
+
+  --forge-success: var(--forge-success-500);
+  --forge-warning: var(--forge-warning-500);
+  --forge-danger: var(--forge-danger-500);
+  --forge-info: var(--forge-info-500);
+
+  font-family: var(--forge-font-body);
+  font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--forge-text-primary);
+  background-color: var(--forge-bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================================================
+   TENANT BRANDING — data-tenant-id (canonical) + data-tenant (compat)
+   ============================================================================= */
+
+body[data-tenant-id="test-mx-tenant-uuid"] .forge-app,
+body[data-tenant-id="test-mx-tenant-uuid"].forge-app,
+.forge-app[data-tenant="test-mx-tenant-uuid"],
+.forge-app[data-tenant-id="test-mx-tenant-uuid"] {
+  --forge-brand-50: #fdf2f2;
+  --forge-brand-100: #f5d6d6;
+  --forge-brand-200: #e8b4b4;
+  --forge-brand-300: #d48a8a;
+  --forge-brand-400: #b55555;
+  --forge-brand-500: #7b1f1f;
+  --forge-brand-600: #661a1a;
+  --forge-brand-700: #551515;
+  --forge-brand-800: #451212;
+  --forge-brand-900: #3d0a0a;
+  --forge-brand-950: #260606;
+  --forge-brand-primary: var(--forge-brand-500);
+  --forge-brand-secondary: var(--forge-brand-900);
+  --forge-viz-1: #7b1f1f;
+}
+
+body[data-tenant-id="test-mx-tenant-uuid"] .forge-app [data-forge-sidebar-header],
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header],
+.forge-app[data-tenant-id="test-mx-tenant-uuid"] [data-forge-sidebar-header] {
+  background-color: var(--forge-brand-900);
+  color: var(--forge-gray-50);
+  border-color: color-mix(in srgb, var(--forge-brand-700) 55%, transparent);
+}
+
+body[data-tenant-id="test-mx-tenant-uuid"] .forge-app [data-forge-sidebar-header] .text-forgeGray-500,
+body[data-tenant-id="test-mx-tenant-uuid"] .forge-app [data-forge-sidebar-header] .text-forgeBrand-700,
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeGray-500,
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeBrand-700 {
+  color: color-mix(in srgb, var(--forge-gray-50) 82%, transparent);
+}
+
+body[data-tenant-id="test-mx-tenant-uuid"] .forge-app [data-forge-sidebar-header] .text-forgeBrand-700,
+.forge-app[data-tenant="test-mx-tenant-uuid"] [data-forge-sidebar-header] .text-forgeBrand-700 {
+  color: var(--forge-gray-50);
+}
+
+/* DEC3 slug alias (NEW_tokens reference) — same ramp as test-mx-tenant-uuid */
+body[data-tenant-id="testbank-mx"] .forge-app,
+body[data-tenant-id="testbank-mx"].forge-app,
+.forge-app[data-tenant="testbank-mx"],
+.forge-app[data-tenant-id="testbank-mx"] {
+  --forge-brand-primary: #7e22ce;
+  --forge-brand-secondary: #2e1065;
+  --forge-tenant-primary: #7e22ce;
+  --forge-tenant-primary-strong: #6b21a8;
+  --forge-tenant-primary-soft: rgba(126, 34, 206, 0.1);
+  --forge-tenant-dark: #2e1065;
+}
+
+body[data-tenant-id="credicefi"] .forge-app,
+body[data-tenant-id="credicefi"].forge-app,
+.forge-app[data-tenant="credicefi"],
+.forge-app[data-tenant-id="credicefi"] {
+  --forge-brand-500: #1b4a8c;
+  --forge-brand-600: #133766;
+  --forge-brand-900: #081e3d;
+  --forge-brand-primary: var(--forge-brand-500);
+  --forge-brand-secondary: var(--forge-brand-900);
+}
+
+body[data-tenant-id="banco-piloto-rd"] .forge-app,
+body[data-tenant-id="banco-piloto-rd"].forge-app,
+.forge-app[data-tenant="banco-piloto-rd"],
+.forge-app[data-tenant-id="banco-piloto-rd"] {
+  --forge-brand-500: #0b5345;
+  --forge-brand-600: #074035;
+  --forge-brand-900: #032620;
+  --forge-brand-primary: var(--forge-brand-500);
+  --forge-brand-secondary: var(--forge-brand-900);
+}
+
+/* =============================================================================
+   DARK THEME — ancestor or self [data-theme="dark"]
+   ============================================================================= */
+
+[data-theme="dark"] .forge-app,
+.forge-app[data-theme="dark"] {
+  --forge-bg-base: #0f1a2e;
+  --forge-bg-raised: #182338;
+  --forge-bg-elev: #1f2b45;
+  --forge-bg-overlay: rgba(255, 255, 255, 0.04);
+  --forge-bg-overlay-strong: rgba(255, 255, 255, 0.08);
+
+  --forge-ink-1: #e8ecf7;
+  --forge-ink-2: #a8b2c8;
+  --forge-ink-3: #7e8aa1;
+  --forge-ink-4: #4d5872;
+
+  --forge-bg-page: var(--forge-bg-base);
+  --forge-text-primary: var(--forge-ink-1);
+
+  --forge-surface-page: var(--forge-bg-base);
+  --forge-surface-card: var(--forge-bg-raised);
+  --forge-surface-raised: var(--forge-bg-elev);
+  --forge-surface-sunken: #162036;
+
+  --forge-line-1: rgba(255, 255, 255, 0.07);
+  --forge-line-2: #2a3654;
+  --forge-line-3: rgba(255, 255, 255, 0.2);
+
+  --forge-tenant-primary: var(--forge-brand-400);
+  --forge-tenant-primary-strong: var(--forge-brand-500);
+  --forge-tenant-primary-soft: color-mix(in srgb, var(--forge-brand-400) 14%, transparent);
+  --forge-tenant-dark: var(--forge-brand-900);
+
+  --forge-brand-primary: var(--forge-brand-400);
+  --forge-brand-secondary: var(--forge-brand-600);
+
+  --forge-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --forge-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --forge-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --forge-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --forge-shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.55);
+
+  --sh-1: var(--forge-shadow-xs);
+  --sh-2: var(--forge-shadow-sm);
+  --sh-3: var(--forge-shadow-lg);
+  --sh-modal: var(--forge-shadow-modal);
+
+  --forge-border: var(--forge-line-2);
+  --forge-border-hover: var(--forge-line-3);
+  --forge-text-muted: var(--forge-ink-3);
+  --forge-text-subtle: var(--forge-ink-4);
+}
+
+[data-theme="dark"] .forge-app[data-tenant="credicefi"],
+[data-theme="dark"] body[data-tenant-id="credicefi"] .forge-app,
+.forge-app[data-theme="dark"][data-tenant="credicefi"],
+body[data-tenant-id="credicefi"] .forge-app[data-theme="dark"] {
+  --forge-tenant-primary: #4f8fd9;
+  --forge-tenant-primary-strong: #2e5f97;
+  --forge-tenant-primary-soft: rgba(79, 143, 217, 0.14);
+}
+
+[data-theme="dark"] .forge-app[data-tenant="banco-piloto-rd"],
+[data-theme="dark"] body[data-tenant-id="banco-piloto-rd"] .forge-app,
+.forge-app[data-theme="dark"][data-tenant="banco-piloto-rd"],
+body[data-tenant-id="banco-piloto-rd"] .forge-app[data-theme="dark"] {
+  --forge-tenant-primary: #4ade80;
+  --forge-tenant-primary-strong: #1b5e20;
+  --forge-tenant-primary-soft: rgba(74, 222, 128, 0.14);
+}
+
+[data-theme="dark"] .forge-app[data-tenant="test-mx-tenant-uuid"],
+[data-theme="dark"] body[data-tenant-id="test-mx-tenant-uuid"] .forge-app,
+.forge-app[data-theme="dark"][data-tenant="test-mx-tenant-uuid"],
+body[data-tenant-id="test-mx-tenant-uuid"] .forge-app[data-theme="dark"],
+[data-theme="dark"] .forge-app[data-tenant="testbank-mx"],
+[data-theme="dark"] body[data-tenant-id="testbank-mx"] .forge-app {
+  --forge-tenant-primary: #c084fc;
+  --forge-tenant-primary-strong: #6b21a8;
+  --forge-tenant-primary-soft: rgba(192, 132, 252, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

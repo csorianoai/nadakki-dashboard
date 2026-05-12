@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "components/forge/**"
+      - "styles/forge-tokens-v2.css"
       - "app/(forge)/credit-hub/_design/tokens.css"
       - "app/(forge)/credit-hub/_design/COMPONENTS.md"
       - "tools/docs/validate-docs.mjs"

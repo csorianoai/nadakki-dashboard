@@ -8,7 +8,7 @@ export function isForgeMxTestTenantBuild(): boolean {
   return process.env.NEXT_PUBLIC_FORGE_TEST_TENANT === "mx";
 }
 
-/** Sets `[data-tenant]` on `.forge-app` so `_design/tokens.css` tenant ramp applies. */
+/** Sets `[data-tenant]` on `.forge-app` so `styles/forge-tokens-v2.css` tenant ramp applies. */
 export function forgeAppDataTenantAttribute(): string | undefined {
   return isForgeMxTestTenantBuild() ? FORGE_TEST_MX_TENANT_ID : undefined;
 }

@@ -6,7 +6,7 @@ import type { TenantBankingConfig } from "@/lib/credit-hub/types/tenantConfig";
 // placeholder "#ff6b35" never consumed in production.
 // Confirmed via grep 2026-05-09: only 4 reads of branding.*
 // in Forge codebase, all on branding.logo_url. CSS institutional
-// colors apply via [data-tenant] in tokens.css, not JS.
+// colors apply via [data-tenant] / [data-tenant-id] in forge-tokens-v2.css, not JS.
 // See _design/P10-05_ADAPTER_ANALYSIS.md §1 for evidence.
 
 /**
