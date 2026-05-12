@@ -2,11 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "../styles/forge-tokens-v2.css";
 import "./globals.css";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { AuthProvider } from "@/lib/auth/auth-context";
-import { AuthProvider as LegacyAuthProvider } from "@/contexts/AuthContext";
-import { TenantProvider } from "@/contexts/TenantContext";
-import { ToastProvider } from "@/components/ui/Toast";
+import { AppProviders } from "@/components/providers/AppProviders";
 import PWAPrompt from "@/components/pwa/PWAPrompt";
 import AppGate from "@/components/auth/AppGate";
 
@@ -51,17 +47,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className={inter.className}>
-        <ThemeProvider>
-          <AuthProvider>
-            <LegacyAuthProvider>
-              <TenantProvider>
-                <ToastProvider>
-                  <AppGate>{children}</AppGate>
-                </ToastProvider>
-              </TenantProvider>
-            </LegacyAuthProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <AppProviders>
+          <AppGate>{children}</AppGate>
+        </AppProviders>
       </body>
     </html>
   );

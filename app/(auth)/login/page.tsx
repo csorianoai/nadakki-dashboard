@@ -52,7 +52,7 @@ export default function LoginPage() {
             Nadakki AI Suite
           </h1>
           <p className="text-sm text-[var(--forge-text-muted)] mb-6">
-            Inicia sesion para continuar
+            Inicia sesión para continuar
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -66,7 +66,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent-primary)] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
                 placeholder="admin@credicefi.com"
               />
             </div>
@@ -81,7 +81,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent-primary)] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
               />
             </div>
 
@@ -93,11 +93,11 @@ export default function LoginPage() {
                 type="text"
                 value={tenantSlug}
                 onChange={(e) => setTenantSlug(e.target.value)}
-                className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent-primary)] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
                 placeholder="credicefi"
               />
               <p className="text-xs text-[var(--forge-text-muted)] mt-1">
-                Dejar vacio para tenant por defecto
+                Dejar vacío para tenant por defecto
               </p>
             </div>
 
@@ -110,9 +110,9 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-[var(--forge-accent-primary)] text-white py-2 px-4 rounded-md hover:opacity-90 disabled:opacity-50 transition-opacity font-medium"
+              className="w-full bg-[var(--forge-accent)] text-white py-2 px-4 rounded-md hover:opacity-90 disabled:opacity-50 transition-opacity font-medium"
             >
-              {submitting ? "Iniciando sesion..." : "Iniciar Sesion"}
+              {submitting ? "Iniciando sesión..." : "Iniciar Sesión"}
             </button>
           </form>
 
