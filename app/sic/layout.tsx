@@ -11,12 +11,12 @@ export default function SicLayout({
   children: React.ReactNode;
 }) {
   const { settings } = useTenant();
-  const primaryColor = settings?.primaryColor ?? "#0ea5e9";
+  const primaryColor = settings?.primaryColor ?? "#7c3aed";
 
   return (
     <DemoProvider>
       <div
-        className="min-h-screen bg-[#0a0f1c]"
+        className="min-h-screen bg-zinc-950"
         style={{ "--sic-primary": primaryColor } as React.CSSProperties}
       >
         <SicBarraInstitucional />
