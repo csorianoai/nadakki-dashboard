@@ -32,38 +32,36 @@ export function UserMenu() {
   return (
     <div className="relative" ref={menuRef}>
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-[var(--forge-bg-hover)] transition-colors"
+        className="flex items-center gap-2 rounded-forge-sm px-3 py-1.5 transition-colors hover:bg-forgeSurface-sunken"
         aria-label="User menu"
       >
-        <div className="w-8 h-8 rounded-full bg-[var(--forge-accent-primary)] text-white flex items-center justify-center text-sm font-semibold">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forgeBrand-600 text-forge-sm font-semibold text-forgeGray-50">
           {initials}
         </div>
-        <span className="text-sm text-[var(--forge-text-default)] hidden md:inline">
-          {user.email.split("@")[0]}
-        </span>
+        <span className="hidden text-forge-sm text-forgeGray-800 md:inline">{user.email.split("@")[0]}</span>
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-[var(--forge-bg-surface)] border border-[var(--forge-border-default)] rounded-md shadow-lg z-50">
-          <div className="px-4 py-3 border-b border-[var(--forge-border-default)]">
-            <p className="text-sm font-medium text-[var(--forge-text-default)] truncate">
-              {user.email}
-            </p>
-            <p className="text-xs text-[var(--forge-text-muted)] mt-1">
+      {open ? (
+        <div className="absolute right-0 z-50 mt-2 w-64 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card shadow-forge-lg">
+          <div className="border-b border-forgeGray-200 px-4 py-3">
+            <p className="truncate text-forge-sm font-medium text-forgeGray-800">{user.email}</p>
+            <p className="mt-1 text-forge-xs text-forgeGray-500">
               {user.is_active ? "Cuenta activa" : "Cuenta inactiva"}
             </p>
           </div>
           <div className="py-1">
             <button
+              type="button"
               onClick={handleLogout}
-              className="w-full text-left px-4 py-2 text-sm text-[var(--forge-text-default)] hover:bg-[var(--forge-bg-hover)] transition-colors"
+              className="w-full px-4 py-2 text-left text-forge-sm text-forgeGray-800 transition-colors hover:bg-forgeSurface-sunken"
             >
               Cerrar sesion
             </button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

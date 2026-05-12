@@ -22,10 +22,10 @@ export function ProtectedRoute({ children, fallbackPath = "/login" }: ProtectedR
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--forge-bg-app)]">
+      <div className="flex min-h-screen items-center justify-center bg-forgeSurface-page">
         <div className="flex flex-col items-center gap-2">
-          <div className="w-8 h-8 border-2 border-[var(--forge-accent-primary)] border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-[var(--forge-text-muted)] text-sm">Verificando sesion...</div>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-forgeBrand-500 border-t-transparent" />
+          <div className="text-forge-sm text-forgeGray-500">Verificando sesion...</div>
         </div>
       </div>
     );

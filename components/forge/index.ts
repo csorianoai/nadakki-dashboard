@@ -35,4 +35,5 @@ export * from "./layout/ForgeAppSidebar";
 export * from "./layout/ForgeAppTopbar";
 export * from "./layout/ForgeCreditHubSidebar";
 export * from "./layout/ForgeCreditHubTopbar";
-export { ForgeCommandPaletteProvider, useForgeCommandPalette } from "./layout/ForgeCommandPaletteContext";
+export { ForgeCommandPaletteProvider, useForgeCommandPalette, useForgeCommandPaletteOptional } from "./layout/ForgeCommandPaletteContext";
+export * from "./layout/GlobalForgeAppShell";

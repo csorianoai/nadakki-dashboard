@@ -51,3 +51,8 @@ export function useForgeCommandPalette(): ForgeCommandPaletteContextValue {
   if (!ctx) throw new Error("useForgeCommandPalette must be used within ForgeCommandPaletteProvider");
   return ctx;
 }
+
+/** Safe where Credit Hub does not mount `ForgeCommandPaletteProvider` (e.g. global top bar). */
+export function useForgeCommandPaletteOptional(): ForgeCommandPaletteContextValue | null {
+  return useContext(ForgeCommandPaletteContext);
+}

@@ -10,9 +10,7 @@ import { LegalCoreShell } from "@/components/legal/LegalCoreShell";
 import { LegalDisclaimerFooter } from "@/components/legal/LegalDisclaimerFooter";
 import { LegalSubNav } from "@/components/legal/LegalSubNav";
 import { DisasterModeProvider } from "@/app/providers/DisasterModeProvider";
-import { ForgeAppShell } from "@/components/forge/layout/ForgeAppShell";
 import { ForgeAppSidebar } from "@/components/forge/layout/ForgeAppSidebar";
-import { ForgeAppTopbar } from "@/components/forge/layout/ForgeAppTopbar";
 import { ForgeToaster } from "@/components/forge/ui/Toast";
 import { ModuleGate } from "@/lib/feature-gating/ModuleGate";
 import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -26,7 +24,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
     <>
       <CreditHubI18nBootstrap />
       <div
-        className={`flex min-h-screen flex-col bg-zinc-950 text-zinc-100 ${GeistSans.className}`}
+        className={`flex min-h-0 flex-1 flex-col ${GeistSans.className}`}
         data-portal="legal"
         data-tenant={tenantAttr}
       >
@@ -37,23 +35,26 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
           Saltar al contenido principal
         </a>
         <CHTenantGuard>
-          <ForgeAppShell sidebar={<ForgeAppSidebar />} topbar={<ForgeAppTopbar module="legal" />}>
-            <ModuleGate module="legal">
-              <DisasterModeProvider>
-                <div className="mx-auto flex min-h-0 w-full max-w-screen-2xl flex-1 flex-col px-4 py-5 md:px-6 md:py-6">
-                  <DemoBannerStrong />
-                  <DeadlineNotificationBanner />
-                  <LegalSubNav />
-                  <LegalCoreShell>
-                    <div className="min-h-0 flex-1">{children}</div>
-                  </LegalCoreShell>
-                  <div className="mt-10 shrink-0">
-                    <LegalDisclaimerFooter />
+          <ModuleGate module="legal">
+            <DisasterModeProvider>
+              <div className="flex min-h-0 flex-1">
+                <ForgeAppSidebar />
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-zinc-950 text-zinc-100">
+                  <div className="mx-auto flex min-h-0 w-full max-w-screen-2xl flex-1 flex-col px-4 py-5 md:px-6 md:py-6">
+                    <DemoBannerStrong />
+                    <DeadlineNotificationBanner />
+                    <LegalSubNav />
+                    <LegalCoreShell>
+                      <div className="min-h-0 flex-1">{children}</div>
+                    </LegalCoreShell>
+                    <div className="mt-10 shrink-0">
+                      <LegalDisclaimerFooter />
+                    </div>
                   </div>
                 </div>
-              </DisasterModeProvider>
-            </ModuleGate>
-          </ForgeAppShell>
+              </div>
+            </DisasterModeProvider>
+          </ModuleGate>
         </CHTenantGuard>
         <ForgeToaster />
       </div>
