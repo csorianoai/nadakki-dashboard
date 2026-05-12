@@ -27,6 +27,15 @@ export interface TenantBranding {
   application_status_labels: TenantBrandingStatusLabels;
   /** Per-tenant copy overrides keyed by stable string id. */
   copy_overrides: Record<string, string>;
+
+  /** Optional extras (P11-05+) — tolerated when omitted in older payloads. */
+  accent_color?: string;
+  secondary_color?: string;
+  /** Optional raw CSS applied by advanced tenants (backend contract P11-05). */
+  custom_css?: string;
+  /** Web font stack name e.g. "Inter", applied as primary UI font alongside fallbacks. */
+  font_family?: string | null;
+  dark_mode_enabled?: boolean;
 }
 
 /**
