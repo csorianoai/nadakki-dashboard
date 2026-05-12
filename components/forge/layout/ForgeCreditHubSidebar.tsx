@@ -18,6 +18,7 @@ import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { Skeleton } from "@/components/forge/ui/Skeleton";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { cn } from "@/lib/utils";
 import { personaLabel } from "@/lib/credit-hub/design/persona";
 
@@ -45,6 +46,11 @@ export function ForgeCreditHubSidebar({
   const persona = usePersona();
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
+  const { data: branding, isPending: brandingPending } = useTenantBranding();
+
+  const loadingHeader = showHeaderSkeleton || brandingPending;
+  const logoSrc = branding?.logo_url ?? tenantConfig.branding.logo_url ?? null;
+  const institutionLabel = branding?.display_name?.trim() ?? tenantConfig.institution_name?.trim();
 
   const items: NavItem[] = useMemo(() => {
     if (persona === "dealer") {
@@ -73,7 +79,7 @@ export function ForgeCreditHubSidebar({
         className="border-b border-forgeGray-700/30 bg-gradient-to-b from-forgeBrand-900 to-forgeBrand-950 px-4 py-3"
         data-forge-sidebar-header
       >
-        {showHeaderSkeleton ? (
+        {loadingHeader ? (
           <div className="flex items-center gap-3" aria-hidden>
             <Skeleton className="h-8 w-8 motion-reduce:animate-none" />
             <div className="flex flex-col gap-1">
@@ -83,11 +89,11 @@ export function ForgeCreditHubSidebar({
           </div>
         ) : (
           <>
-            {tenantConfig.branding.logo_url ? (
+            {logoSrc ? (
               <div className="mb-2 flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element -- tenant-provided same-origin SVG */}
                 <img
-                  src={tenantConfig.branding.logo_url}
+                  src={logoSrc}
                   alt=""
                   width={200}
                   height={48}
@@ -97,6 +103,9 @@ export function ForgeCreditHubSidebar({
               </div>
             ) : null}
             <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-300">Forge</p>
+            {institutionLabel ? (
+              <p className="text-forge-xs font-medium text-forgeGray-200/90">{institutionLabel}</p>
+            ) : null}
             <p className="text-forge-sm font-medium text-forgeGray-50">{personaLabel(persona)}</p>
           </>
         )}

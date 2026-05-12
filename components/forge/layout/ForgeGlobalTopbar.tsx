@@ -6,8 +6,8 @@ import { Menu, Search } from "lucide-react";
 import { TenantSwitcher } from "@/components/forge/auth/TenantSwitcher";
 import { UserMenu } from "@/components/forge/auth/UserMenu";
 import { IconButton } from "@/components/forge/ui/IconButton";
-import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
-import { useTenantBranding } from "@/lib/credit-hub/hooks/useTenantBranding";
+import { Skeleton } from "@/components/forge/ui/Skeleton";
+import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { useForgeCommandPaletteOptional } from "./ForgeCommandPaletteContext";
 import { Topbar } from "./Topbar";
 
@@ -15,27 +15,42 @@ export interface ForgeGlobalTopbarProps {
   onMenuClick: () => void;
 }
 
-function useGlobalTopbarTitle(pathname: string | null): string {
+function useGlobalTopbarFallbackTitle(pathname: string | null): string {
   if (!pathname) return "NADAKKI";
   if (pathname.startsWith("/credit-hub")) return "Credit Hub";
   if (pathname.startsWith("/legal")) return "Legal Intelligence";
   if (pathname.startsWith("/marketing")) return "Marketing";
   if (pathname.startsWith("/sic")) return "SIC";
+  if (pathname.startsWith("/admin/branding")) return "Institution branding";
+  if (pathname.startsWith("/admin")) return "Admin";
   return "NADAKKI";
 }
 
 export function ForgeGlobalTopbar({ onMenuClick }: ForgeGlobalTopbarProps) {
   const pathname = usePathname();
   const palette = useForgeCommandPaletteOptional();
-  const { tenantSlug } = useCreditHubTenant();
-  const onCreditHub = pathname?.startsWith("/credit-hub") ?? false;
-  const { data: branding } = useTenantBranding(onCreditHub ? tenantSlug : null);
+  const { data: branding, isPending } = useTenantBranding();
 
-  const baseTitle = useGlobalTopbarTitle(pathname ?? null);
+  const baseTitle = useGlobalTopbarFallbackTitle(pathname ?? null);
   const title =
-    onCreditHub && branding?.display_name?.trim() ? branding.display_name.trim() : baseTitle;
+    pathname?.startsWith("/admin/branding")
+      ? "Institution branding"
+      : branding?.display_name?.trim()
+        ? branding.display_name.trim()
+        : baseTitle;
 
+  const onCreditHub = pathname?.startsWith("/credit-hub") ?? false;
   const showSearch = onCreditHub && Boolean(palette);
+
+  const logoSlot =
+    branding?.logo_url && !isPending ? (
+      <span className="inline-flex h-8 w-auto max-w-[120px] items-center overflow-hidden rounded-forge-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element -- tenant-hosted logo */}
+        <img src={branding.logo_url} alt="" className="max-h-8 w-auto object-contain" />
+      </span>
+    ) : isPending ? (
+      <Skeleton className="h-8 w-8 motion-reduce:animate-none" label="Logo" />
+    ) : null;
 
   const leading = (
     <div className="flex flex-wrap items-center gap-3">
@@ -54,6 +69,7 @@ export function ForgeGlobalTopbar({ onMenuClick }: ForgeGlobalTopbarProps) {
       >
         Nadakki
       </Link>
+      {logoSlot}
     </div>
   );
 

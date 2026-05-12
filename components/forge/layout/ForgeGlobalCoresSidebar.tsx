@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, Megaphone, Scale, Shield } from "lucide-react";
+import { Landmark, Megaphone, Scale, Settings, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRBAC } from "@/hooks/useRBAC";
 import { cn } from "@/lib/utils";
@@ -23,29 +23,58 @@ type CoreNav = {
 
 const CORE_NAV: CoreNav[] = [
   { id: "credit", coreMatchers: ["credit"], href: "/credit-hub", label: "Credit", Icon: Landmark },
-  { id: "legal", coreMatchers: ["legal"], href: "/legal/cases", label: "Legal", Icon: Scale },
-  { id: "marketing", coreMatchers: ["marketing"], href: "/marketing", label: "Marketing", Icon: Megaphone },
-  { id: "sic", coreMatchers: ["sic", "platform"], href: "/sic/portafolio", label: "SIC", Icon: Shield },
+  { id: "legal", coreMatchers: ["legal"], href: "/legal-hub", label: "Legal", Icon: Scale },
+  { id: "marketing", coreMatchers: ["marketing"], href: "/marketing-hub", label: "Marketing", Icon: Megaphone },
+  { id: "sic", coreMatchers: ["sic", "platform"], href: "/sic", label: "SIC", Icon: Shield },
 ];
 
+const ADMIN_ENTRY: CoreNav = {
+  id: "admin",
+  coreMatchers: [],
+  href: "/admin",
+  label: "Admin",
+  Icon: Settings,
+};
+
+function userCanAccessAdmin(allRoles: { core_name: string; role_key: string }[]): boolean {
+  return allRoles.some(
+    (r) =>
+      r.role_key === "tenant_admin" ||
+      r.role_key === "platform_superadmin" ||
+      (r.core_name === "platform" && r.role_key === "support_agent"),
+  );
+}
+
+/**
+ * Show a core if the user has a matching RBAC role, or the tenant lists that
+ * core in `subscribed_cores`, or there is no subscription list (show all for
+ * backward compatibility / local dev).
+ */
 function hasCoreAccess(
   core: CoreNav,
   allRoles: { core_name: string }[],
   subscribed: string[] | undefined,
 ): boolean {
-  const roleMatch = allRoles.some((r) => core.coreMatchers.includes(r.core_name));
-  const subMatch = (subscribed ?? []).some((c) => core.coreMatchers.includes(c));
-  if (roleMatch || subMatch) return true;
-  if (allRoles.length === 0 && (!subscribed || subscribed.length === 0)) return true;
-  return false;
+  const roleHit = allRoles.some((r) => core.coreMatchers.includes(r.core_name));
+  if (roleHit) return true;
+
+  const hasSubscriptionList = subscribed && subscribed.length > 0;
+
+  const subHit = (subscribed ?? []).some((c) => core.coreMatchers.includes(c));
+
+  /* No subscription telemetry → permissive defaults; route guards enforce access. */
+  if (!hasSubscriptionList) return true;
+
+  return subHit;
 }
 
 function isCoreActive(id: string, pathname: string | null): boolean {
   if (!pathname) return false;
   if (id === "credit") return pathname.startsWith("/credit-hub");
-  if (id === "legal") return pathname.startsWith("/legal");
-  if (id === "marketing") return pathname.startsWith("/marketing");
+  if (id === "legal") return pathname.startsWith("/legal") || pathname.startsWith("/legal-hub");
+  if (id === "marketing") return pathname.startsWith("/marketing") || pathname.startsWith("/marketing-hub");
   if (id === "sic") return pathname.startsWith("/sic");
+  if (id === "admin") return pathname.startsWith("/admin");
   return false;
 }
 
@@ -54,10 +83,12 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
   const { tenant } = useAuth();
   const { allRoles } = useRBAC();
 
-  const visible = useMemo(
+  const visiblePrimary = useMemo(
     () => CORE_NAV.filter((c) => hasCoreAccess(c, allRoles, tenant?.subscribed_cores)),
     [allRoles, tenant?.subscribed_cores],
   );
+
+  const showAdmin = userCanAccessAdmin(allRoles);
 
   return (
     <>
@@ -82,8 +113,8 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
             Cores
           </p>
         </div>
-        <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Core navigation">
-          {visible.map(({ id, href, label, Icon }) => {
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2" aria-label="Core navigation">
+          {visiblePrimary.map(({ id, href, label, Icon }) => {
             const active = isCoreActive(id, pathname);
             return (
               <Link
@@ -104,6 +135,37 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
               </Link>
             );
           })}
+          {showAdmin ? (
+            <Link
+              href={ADMIN_ENTRY.href}
+              onClick={onNavigate}
+              className={cn(
+                "flex min-h-12 items-center gap-2 rounded-forge-sm px-3 py-3 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
+                isCoreActive("admin", pathname)
+                  ? "bg-forgeSurface-sunken text-forgeBrand-700"
+                  : "text-forgeGray-700 hover:bg-forgeSurface-sunken hover:text-forgeGray-900",
+              )}
+              aria-current={isCoreActive("admin", pathname) ? "page" : undefined}
+            >
+              <ADMIN_ENTRY.Icon className="h-4 w-4 shrink-0 text-forgeGray-500" aria-hidden />
+              {ADMIN_ENTRY.label}
+            </Link>
+          ) : null}
+          {showAdmin ? (
+            <Link
+              href="/admin/branding"
+              onClick={onNavigate}
+              className={cn(
+                "ml-6 flex min-h-10 items-center rounded-forge-sm px-2 py-2 text-forge-xs font-medium transition-colors duration-[var(--forge-duration-fast)]",
+                pathname?.startsWith("/admin/branding")
+                  ? "text-forgeBrand-700"
+                  : "text-forgeGray-600 hover:bg-forgeSurface-sunken hover:text-forgeGray-900",
+              )}
+            >
+              Institution branding
+            </Link>
+          ) : null}
         </nav>
       </aside>
     </>
