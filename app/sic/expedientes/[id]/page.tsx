@@ -35,22 +35,22 @@ import { MemoEjecutivo } from "@/components/sic/MemoEjecutivo";
 import { PanelDocumentos } from "@/components/sic/PanelDocumentos";
 import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
 const ESTADOS_BADGE: Record<string, string> = {
-  RECIBIDO: "bg-slate-500/30 text-slate-300",
+  RECIBIDO: "bg-zinc-600/30 text-zinc-300",
   EN_VALIDACION: "bg-amber-500/30 text-amber-300",
-  EN_ANALISIS_IA: "bg-blue-500/30 text-blue-300",
-  EN_REVISION_ANALISTA: "bg-cyan-500/30 text-cyan-300",
-  EN_COMITE: "bg-violet-500/30 text-violet-300",
+  EN_ANALISIS_IA: "bg-violet-500/30 text-violet-300",
+  EN_REVISION_ANALISTA: "bg-indigo-500/30 text-indigo-300",
+  EN_COMITE: "bg-violet-600/30 text-violet-200",
   REQUIERE_INFORMACION: "bg-orange-500/30 text-orange-300",
   APROBADO: "bg-emerald-500/30 text-emerald-300",
   RECHAZADO: "bg-red-500/30 text-red-300",
-  ARCHIVADO: "bg-slate-600/30 text-slate-400",
-  REABIERTO: "bg-cyan-500/30 text-cyan-300",
+  ARCHIVADO: "bg-zinc-700/30 text-zinc-400",
+  REABIERTO: "bg-indigo-500/30 text-indigo-300",
 };
 
 function Panel({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-slate-700/50 bg-slate-900/50 p-4 h-full flex flex-col">
-      <h3 className="text-xs font-600 text-slate-400 uppercase tracking-wide mb-3">{titulo}</h3>
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 h-full flex flex-col">
+      <h3 className="text-xs font-600 text-zinc-500 uppercase tracking-wide mb-3">{titulo}</h3>
       <div className="flex-1 overflow-auto text-sm">{children}</div>
     </div>
   );
@@ -200,7 +200,7 @@ export default function SicExpedienteIdPage() {
     return (
       <div className="p-6">
         <EmptySic titulo="Expediente no encontrado" mensaje="El expediente solicitado no existe o no tiene acceso.">
-          <Link href="/sic/expedientes" className="mt-4 inline-block text-cyan-400 hover:underline text-sm">
+          <Link href="/sic/expedientes" className="mt-4 inline-block text-violet-400 hover:underline text-sm">
             Volver a expedientes
           </Link>
         </EmptySic>
@@ -213,32 +213,32 @@ export default function SicExpedienteIdPage() {
   const hayEvidencia = timeline.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c] p-4">
+    <div className="p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <Link href="/sic/expedientes" className="text-slate-500 hover:text-slate-300 text-xs mb-1 inline-block">
+          <Link href="/sic/expedientes" className="text-zinc-500 hover:text-zinc-300 text-xs mb-1 inline-block">
             ← Expedientes
           </Link>
-          <h1 className="text-lg font-700 text-slate-100 m-0">
-            Expediente <span className="font-mono text-cyan-300">{e.expediente_id}</span>
+          <h1 className="text-lg font-700 text-zinc-100 m-0">
+            Expediente <span className="font-mono text-violet-300">{e.expediente_id}</span>
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/sic/expedientes/${id}/replay`}
-            className="text-cyan-400 hover:underline text-xs"
+            className="text-violet-400 hover:underline text-xs"
           >
             Replay
           </Link>
           <span
             className={`px-2 py-1 rounded text-xs font-semibold ${
-              ESTADOS_BADGE[(e.estado_expediente as EstadoExpediente) ?? ""] ?? "bg-slate-600/30 text-slate-400"
+              ESTADOS_BADGE[(e.estado_expediente as EstadoExpediente) ?? ""] ?? "bg-zinc-700/30 text-zinc-400"
             }`}
           >
             {e.estado_expediente ?? "—"}
           </span>
           {permisos?.rol && (
-            <span className="text-slate-500 text-xs">Rol: {permisos.rol}</span>
+            <span className="text-zinc-500 text-xs">Rol: {permisos.rol}</span>
           )}
         </div>
       </div>
@@ -252,11 +252,11 @@ export default function SicExpedienteIdPage() {
       {/* Señales de confianza */}
       <div className="flex flex-wrap gap-2 mb-4">
         {e.version_activa && (
-          <span className="px-2 py-0.5 rounded bg-slate-700/50 text-slate-300 text-xs">
+          <span className="px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 text-xs">
             Versión activa: {e.version_activa}
           </span>
         )}
-        <span className="px-2 py-0.5 rounded bg-slate-700/50 text-slate-300 text-xs">
+        <span className="px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 text-xs">
           Decisión IA: {e.decision_actual ?? "—"}
         </span>
         {e.decision_final_humana && (
@@ -264,36 +264,36 @@ export default function SicExpedienteIdPage() {
             Decisión final: {e.decision_final_humana}
           </span>
         )}
-        <span className={`px-2 py-0.5 rounded text-xs ${hayOverride ? "bg-amber-500/20 text-amber-300" : "bg-slate-700/50 text-slate-400"}`}>
+        <span className={`px-2 py-0.5 rounded text-xs ${hayOverride ? "bg-amber-500/20 text-amber-300" : "bg-zinc-800/80 text-zinc-400"}`}>
           Override: {hayOverride ? "Sí" : "No"}
         </span>
-        <span className={`px-2 py-0.5 rounded text-xs ${timeline.length > 0 ? "bg-cyan-500/20 text-cyan-300" : "bg-slate-700/50 text-slate-400"}`}>
+        <span className={`px-2 py-0.5 rounded text-xs ${timeline.length > 0 ? "bg-violet-500/20 text-violet-300" : "bg-zinc-800/80 text-zinc-400"}`}>
           Trazabilidad: {timeline.length > 0 ? "Sí" : "Parcial"}
         </span>
-        <span className={`px-2 py-0.5 rounded text-xs ${hayEvidencia ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-400"}`}>
+        <span className={`px-2 py-0.5 rounded text-xs ${hayEvidencia ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-400"}`}>
           Evidencia: {hayEvidencia ? "Disponible" : "No"}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4" style={{ minHeight: "calc(100vh - 200px)" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[calc(100vh-12.5rem)]">
         <div className="lg:col-span-3 space-y-4">
           <Panel titulo="Controles del expediente">
             <div className="space-y-2 text-xs">
               <div className="flex flex-wrap gap-1">
-                <span className={`px-2 py-0.5 rounded ${puedeOverride ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-500"}`}>
+                <span className={`px-2 py-0.5 rounded ${puedeOverride ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-500"}`}>
                   Decidir: {puedeOverride ? "Sí" : "No"}
                 </span>
-                <span className={`px-2 py-0.5 rounded ${puedeOverride ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-500"}`}>
+                <span className={`px-2 py-0.5 rounded ${puedeOverride ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-500"}`}>
                   Override: {puedeOverride ? "Sí" : "No"}
                 </span>
-                <span className={`px-2 py-0.5 rounded ${puedeCambiarEstado ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-500"}`}>
+                <span className={`px-2 py-0.5 rounded ${puedeCambiarEstado ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-500"}`}>
                   Transición: {puedeCambiarEstado ? "Sí" : "No"}
                 </span>
-                <span className={`px-2 py-0.5 rounded ${puedeExportar ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700/50 text-slate-500"}`}>
+                <span className={`px-2 py-0.5 rounded ${puedeExportar ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-500"}`}>
                   Exportar: {puedeExportar ? "Sí" : "No"}
                 </span>
               </div>
-              {permisos?.rol && <p className="text-slate-500">Rol actual: {permisos.rol}</p>}
+              {permisos?.rol && <p className="text-zinc-500">Rol actual: {permisos.rol}</p>}
             </div>
           </Panel>
           <Panel titulo="Estado y transición">
@@ -303,7 +303,7 @@ export default function SicExpedienteIdPage() {
                   <select
                     value={nuevoEstado}
                     onChange={(e) => setNuevoEstado(e.target.value)}
-                    className="w-full bg-slate-800/80 border border-slate-600 rounded px-2 py-1.5 text-slate-200 text-xs"
+                    className="w-full bg-zinc-900/80 border border-zinc-700 rounded-lg px-2 py-1.5 text-zinc-200 text-xs focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/30"
                   >
                     <option value="">Cambiar a…</option>
                     {transiciones.map((t) => (
@@ -313,33 +313,33 @@ export default function SicExpedienteIdPage() {
                   <button
                     onClick={handleCambiarEstado}
                     disabled={!nuevoEstado}
-                    className="mt-1 w-full rounded px-2 py-1 bg-slate-700 text-slate-200 text-xs hover:bg-slate-600 disabled:opacity-50"
+                    className="mt-1 w-full rounded-lg px-2 py-1 bg-zinc-800 text-zinc-200 text-xs hover:bg-zinc-700 disabled:opacity-50"
                   >
                     Transicionar
                   </button>
                 </div>
               )}
               {!puedeCambiarEstado && (
-                <p className="text-slate-500 text-xs italic">No tiene permiso para cambiar estado.</p>
+                <p className="text-zinc-500 text-xs italic">No tiene permiso para cambiar estado.</p>
               )}
             </div>
           </Panel>
           <Panel titulo="Datos del expediente">
-            <dl className="space-y-2 text-slate-300 text-xs">
-              <div><dt className="text-slate-500">Cliente</dt><dd>{e.referencia_cliente ?? "—"}</dd></div>
-              <div><dt className="text-slate-500">Producto</dt><dd>{e.referencia_producto ?? "—"}</dd></div>
-              <div><dt className="text-slate-500">Asignado</dt><dd>{e.asignado_a ?? "—"}</dd></div>
-              <div><dt className="text-slate-500">Creado</dt><dd>{e.fecha_creacion ?? "—"}</dd></div>
+            <dl className="space-y-2 text-zinc-300 text-xs">
+              <div><dt className="text-zinc-500">Cliente</dt><dd>{e.referencia_cliente ?? "—"}</dd></div>
+              <div><dt className="text-zinc-500">Producto</dt><dd>{e.referencia_producto ?? "—"}</dd></div>
+              <div><dt className="text-zinc-500">Asignado</dt><dd>{e.asignado_a ?? "—"}</dd></div>
+              <div><dt className="text-zinc-500">Creado</dt><dd>{e.fecha_creacion ?? "—"}</dd></div>
             </dl>
           </Panel>
           <Panel titulo="Línea de tiempo">
             {timeline.length === 0 ? (
-              <p className="text-slate-500 text-xs">Sin eventos</p>
+              <p className="text-zinc-500 text-xs">Sin eventos</p>
             ) : (
               <ul className="space-y-2">
                 {(timeline as { fecha?: string; evento?: string; tipo?: string; detalle?: string }[]).map((ev, i) => (
-                  <li key={i} className="text-xs text-slate-300 border-l-2 border-cyan-500/50 pl-2">
-                    <span className="text-slate-500">{ev.fecha ?? ev.tipo ?? "—"}</span>
+                  <li key={i} className="text-xs text-zinc-300 border-l-2 border-violet-500/50 pl-2">
+                    <span className="text-zinc-500">{ev.fecha ?? ev.tipo ?? "—"}</span>
                     <span className="ml-1">{ev.evento ?? ev.detalle ?? ""}</span>
                   </li>
                 ))}
@@ -357,7 +357,7 @@ export default function SicExpedienteIdPage() {
             />
           </Panel>
           <Panel titulo="Explicabilidad">
-            <div className="text-muted-foreground text-sm p-4">
+            <div className="text-zinc-500 text-sm p-4">
               Módulo en desarrollo — próximamente disponible
             </div>
           </Panel>
@@ -365,14 +365,14 @@ export default function SicExpedienteIdPage() {
             {puedeAbrirComparador ? (
               <ComparadorVersiones versiones={versiones} onComparar={handleCompararVersiones} />
             ) : (
-              <p className="text-slate-500 text-xs italic">No tiene permiso para abrir el comparador.</p>
+              <p className="text-zinc-500 text-xs italic">No tiene permiso para abrir el comparador.</p>
             )}
           </Panel>
           <Panel titulo="Memo ejecutivo">
             <MemoEjecutivo expediente={e} explicabilidad={null} />
           </Panel>
           <Panel titulo="KPIs y alertas">
-            <p className="text-slate-500 text-xs">Datos de análisis en reporte.</p>
+            <p className="text-zinc-500 text-xs">Datos de análisis en reporte.</p>
           </Panel>
         </div>
 
@@ -380,9 +380,9 @@ export default function SicExpedienteIdPage() {
           <Panel titulo="Notas del analista">
             <div className="space-y-3">
               {notas.map((n) => (
-                <div key={n.nota_id} className="text-xs text-slate-300 p-2 bg-slate-800/50 rounded">
+                <div key={n.nota_id} className="text-xs text-zinc-300 p-2 bg-zinc-900/60 rounded-lg border border-zinc-800/80">
                   {n.contenido}
-                  <p className="text-slate-500 mt-1">{n.fecha_creacion ?? n.rol_usuario}</p>
+                  <p className="text-zinc-500 mt-1">{n.fecha_creacion ?? n.rol_usuario}</p>
                 </div>
               ))}
               <div>
@@ -391,12 +391,12 @@ export default function SicExpedienteIdPage() {
                   onChange={(ev) => setNuevaNota(ev.target.value)}
                   placeholder="Nueva nota…"
                   rows={2}
-                  className="w-full bg-slate-800/80 border border-slate-600 rounded px-2 py-1 text-slate-200 text-xs resize-none"
+                  className="w-full bg-zinc-900/80 border border-zinc-700 rounded-lg px-2 py-1 text-zinc-200 text-xs resize-none focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/30"
                 />
                 <button
                   onClick={handleCrearNota}
                   disabled={creandoNota || !nuevaNota.trim()}
-                  className="mt-1 rounded px-3 py-1 bg-cyan-600 text-white text-xs font-medium hover:bg-cyan-500 disabled:opacity-50"
+                  className="mt-1 rounded-lg px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-medium hover:brightness-110 disabled:opacity-50"
                 >
                   Guardar
                 </button>
@@ -414,11 +414,11 @@ export default function SicExpedienteIdPage() {
           </Panel>
           <Panel titulo="Auditoría">
             {!puedeVerAuditoria ? (
-              <p className="text-slate-500 text-xs italic">No tiene permiso para ver auditoría.</p>
+              <p className="text-zinc-500 text-xs italic">No tiene permiso para ver auditoría.</p>
             ) : auditoria.length === 0 ? (
-              <p className="text-slate-500 text-xs">Sin eventos</p>
+              <p className="text-zinc-500 text-xs">Sin eventos</p>
             ) : (
-              <ul className="space-y-1 text-xs text-slate-300">
+              <ul className="space-y-1 text-xs text-zinc-300">
                 {(auditoria as EventoAuditoria[]).map((a, i) => {
                   const tieneEv = Boolean(a.evidencia_id);
                   return (
@@ -436,10 +436,10 @@ export default function SicExpedienteIdPage() {
                                 })
                               );
                           }}
-                          className="text-left hover:text-cyan-400 hover:underline"
+                          className="text-left hover:text-violet-400 hover:underline"
                         >
                           {a.tipo_evento ?? a.fecha_evento} — {a.detalle ?? ""}
-                          <span className="ml-1 text-cyan-500/80 text-[10px]">[evidencia]</span>
+                          <span className="ml-1 text-violet-400/80 text-[10px]">[evidencia]</span>
                         </button>
                       ) : (
                         <span>{a.tipo_evento ?? a.fecha_evento} — {a.detalle ?? ""}</span>
@@ -461,25 +461,25 @@ export default function SicExpedienteIdPage() {
           </Panel>
           <Panel titulo="Exportaciones">
             <div className="space-y-2">
-              <div className="text-muted-foreground text-sm p-2">
+              <div className="text-zinc-500 text-sm p-2">
                 Módulo en desarrollo — historial de exportaciones por expediente no disponible.
               </div>
               {!puedeExportar ? (
-                <p className="text-slate-500 text-xs italic">No tiene permiso para exportar.</p>
+                <p className="text-zinc-500 text-xs italic">No tiene permiso para exportar.</p>
               ) : (
                 <>
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={handleExportarPDF}
                       disabled={!!exportando}
-                      className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 disabled:opacity-50"
+                      className="rounded-lg px-3 py-1.5 bg-zinc-800 text-zinc-200 text-xs font-medium border border-zinc-700 hover:bg-zinc-700 disabled:opacity-50"
                     >
                       {exportando === "pdf" ? "Generando…" : "PDF ejecutivo"}
                     </button>
                     <button
                       onClick={handleExportarZIP}
                       disabled={!!exportando}
-                      className="rounded px-3 py-1.5 bg-slate-700 text-slate-200 text-xs font-medium hover:bg-slate-600 disabled:opacity-50"
+                      className="rounded-lg px-3 py-1.5 bg-zinc-800 text-zinc-200 text-xs font-medium border border-zinc-700 hover:bg-zinc-700 disabled:opacity-50"
                     >
                       {exportando === "zip" ? "Generando…" : "ZIP bancario"}
                     </button>
@@ -487,7 +487,7 @@ export default function SicExpedienteIdPage() {
                       type="button"
                       disabled
                       title="No disponible en esta versión"
-                      className="rounded px-3 py-1.5 bg-slate-800 text-slate-500 text-xs font-medium cursor-not-allowed opacity-60"
+                      className="rounded-lg px-3 py-1.5 bg-zinc-900 text-zinc-500 text-xs font-medium cursor-not-allowed opacity-60 border border-zinc-800"
                     >
                       Paquete regulatorio
                     </button>

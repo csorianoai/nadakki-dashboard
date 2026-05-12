@@ -16,28 +16,27 @@ const MODULOS = [
   { href: "/sic/demo", label: "Modo Demo", desc: "Presentaciones con datos simulados" },
 ];
 
+const BTN_PRIMARY =
+  "inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-700 text-white shadow-lg shadow-violet-950/40 transition-all hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400";
+const BTN_SECONDARY =
+  "inline-flex items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900/80 px-5 py-3 text-sm font-600 text-zinc-200 hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400";
+
 export default function SicPage() {
   const { tenantId } = useTenant();
   const tenant = tenantId || "credicefi";
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c] p-6">
-      <h1 className="text-2xl font-800 text-slate-100 m-0 mb-1">SIC — Sistema de Información Crediticia</h1>
-      <p className="text-slate-500 text-sm mb-4">
+    <div className="p-6">
+      <h1 className="text-2xl font-800 text-zinc-100 m-0 mb-1">SIC — Sistema de Información Crediticia</h1>
+      <p className="text-zinc-500 text-sm mb-4">
         Plataforma operativa de riesgo crediticio. Tenant: {tenant}
       </p>
 
       <div className="flex flex-wrap gap-3 mb-6">
-        <Link
-          href="/sic/nuevo-analisis"
-          className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-5 py-3 text-sm font-700 text-white hover:bg-cyan-500 shadow-lg shadow-cyan-900/25"
-        >
+        <Link href="/sic/nuevo-analisis" className={BTN_PRIMARY}>
           Nuevo Análisis
         </Link>
-        <Link
-          href="/sic/nuevo-analisis"
-          className="inline-flex items-center justify-center rounded-xl border border-cyan-500/50 bg-slate-900/70 px-5 py-3 text-sm font-600 text-cyan-200 hover:bg-slate-800/80"
-        >
+        <Link href="/sic/nuevo-analisis" className={BTN_SECONDARY}>
           Subir Estado de Cuenta
         </Link>
       </div>
@@ -47,25 +46,31 @@ export default function SicPage() {
           <Link
             key={m.href}
             href={m.href}
-            className="block rounded-xl border border-slate-700/50 bg-slate-900/50 p-5 hover:border-cyan-500/50 hover:bg-slate-800/50 transition-colors"
+            className="block rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 hover:border-violet-500/40 hover:bg-zinc-800/50 transition-colors"
           >
-            <h2 className="text-slate-100 font-600 text-base m-0 mb-1">{m.label}</h2>
-            <p className="text-slate-500 text-xs m-0">{m.desc}</p>
+            <h2 className="text-zinc-100 font-600 text-base m-0 mb-1">{m.label}</h2>
+            <p className="text-zinc-500 text-xs m-0">{m.desc}</p>
           </Link>
         ))}
       </div>
 
-      <div className="mt-8 rounded-xl border border-slate-700/50 bg-slate-900/50 p-6">
-        <h3 className="text-sm font-600 text-slate-300 mb-2">Acceso rápido</h3>
-        <p className="text-slate-500 text-sm mb-4">
+      <div className="mt-8 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <h3 className="text-sm font-600 text-zinc-300 mb-2">Acceso rápido</h3>
+        <p className="text-zinc-500 text-sm mb-4">
           Vista integral, Decision Replay y Memo Ejecutivo disponibles en cada expediente.
         </p>
         <div className="flex gap-2">
-          <Link href="/sic/expedientes" className="text-cyan-400 hover:underline text-sm">Expedientes</Link>
-          <span className="text-slate-600">·</span>
-          <Link href="/sic/portafolio" className="text-cyan-400 hover:underline text-sm">Portafolio</Link>
-          <span className="text-slate-600">·</span>
-          <Link href="/sic/reportes" className="text-cyan-400 hover:underline text-sm">Reportes</Link>
+          <Link href="/sic/expedientes" className="text-violet-400 hover:underline text-sm">
+            Expedientes
+          </Link>
+          <span className="text-zinc-600">·</span>
+          <Link href="/sic/portafolio" className="text-violet-400 hover:underline text-sm">
+            Portafolio
+          </Link>
+          <span className="text-zinc-600">·</span>
+          <Link href="/sic/reportes" className="text-violet-400 hover:underline text-sm">
+            Reportes
+          </Link>
         </div>
       </div>
     </div>

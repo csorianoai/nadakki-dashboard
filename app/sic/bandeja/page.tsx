@@ -6,17 +6,20 @@ import Link from "next/link";
 import { fetchExpedientes, type Expediente, type EstadoExpediente } from "@/lib/api/sic";
 
 const ESTADOS_BADGE: Record<string, string> = {
-  RECIBIDO: "bg-slate-500/30 text-slate-300",
+  RECIBIDO: "bg-zinc-600/30 text-zinc-300",
   EN_VALIDACION: "bg-amber-500/30 text-amber-300",
-  EN_ANALISIS_IA: "bg-blue-500/30 text-blue-300",
-  EN_REVISION_ANALISTA: "bg-cyan-500/30 text-cyan-300",
-  EN_COMITE: "bg-violet-500/30 text-violet-300",
+  EN_ANALISIS_IA: "bg-violet-500/30 text-violet-300",
+  EN_REVISION_ANALISTA: "bg-indigo-500/30 text-indigo-300",
+  EN_COMITE: "bg-violet-600/30 text-violet-200",
   REQUIERE_INFORMACION: "bg-orange-500/30 text-orange-300",
   APROBADO: "bg-emerald-500/30 text-emerald-300",
   RECHAZADO: "bg-red-500/30 text-red-300",
-  ARCHIVADO: "bg-slate-600/30 text-slate-400",
-  REABIERTO: "bg-cyan-500/30 text-cyan-300",
+  ARCHIVADO: "bg-zinc-700/30 text-zinc-400",
+  REABIERTO: "bg-indigo-500/30 text-indigo-300",
 };
+
+const BTN_PRIMARY =
+  "shrink-0 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2 text-sm font-600 text-white shadow-sm transition-all hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400";
 
 export default function SicBandejaPage() {
   const { tenantId } = useTenant();
@@ -31,35 +34,42 @@ export default function SicBandejaPage() {
       setExpedientes([]);
       setLoading(false);
       setError("No hay tenant activo");
-      return () => { alive = false; };
+      return () => {
+        alive = false;
+      };
     }
     setError(null);
     fetchExpedientes(tenant)
-      .then((list) => { if (alive) setExpedientes(list); })
-      .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
+      .then((list) => {
+        if (alive) setExpedientes(list);
+      })
+      .catch((e) => {
+        if (alive) setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, [tenant]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1c] p-6 flex items-center justify-center">
-        <div className="text-slate-400 text-sm">Cargando bandeja…</div>
+      <div className="p-6 flex items-center justify-center min-h-[40vh]">
+        <div className="text-zinc-400 text-sm">Cargando bandeja…</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c] p-6">
+    <div className="p-6">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl font-700 text-slate-100 m-0 mb-1">Bandeja de Expedientes</h1>
-          <p className="text-slate-500 text-sm m-0">Expedientes recibidos para análisis crediticio</p>
+          <h1 className="text-xl font-700 text-zinc-100 m-0 mb-1">Bandeja de Expedientes</h1>
+          <p className="text-zinc-500 text-sm m-0">Expedientes recibidos para análisis crediticio</p>
         </div>
-        <Link
-          href="/sic/nuevo-analisis"
-          className="shrink-0 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-600 text-white hover:bg-cyan-500"
-        >
+        <Link href="/sic/nuevo-analisis" className={BTN_PRIMARY}>
           + Nuevo
         </Link>
       </div>
@@ -71,46 +81,49 @@ export default function SicBandejaPage() {
       )}
 
       {!error && expedientes.length === 0 ? (
-        <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-12 text-center">
-          <p className="text-slate-400 text-sm">No hay datos disponibles.</p>
-          <p className="text-slate-500 text-xs mt-1">Los expedientes aparecerán aquí al crearse</p>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-12 text-center">
+          <p className="text-zinc-400 text-sm">No hay datos disponibles.</p>
+          <p className="text-zinc-500 text-xs mt-1">Los expedientes aparecerán aquí al crearse</p>
         </div>
       ) : expedientes.length > 0 ? (
-        <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 overflow-hidden">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-700/80">
-                <th className="px-4 py-3 text-slate-400 font-600">ID / Referencia</th>
-                <th className="px-4 py-3 text-slate-400 font-600">Estado</th>
-                <th className="px-4 py-3 text-slate-400 font-600">Producto</th>
-                <th className="px-4 py-3 text-slate-400 font-600">Actualización</th>
-                <th className="px-4 py-3 text-slate-400 font-600"></th>
+              <tr className="border-b border-zinc-800">
+                <th className="px-4 py-3 text-zinc-500 font-600">ID / Referencia</th>
+                <th className="px-4 py-3 text-zinc-500 font-600">Estado</th>
+                <th className="px-4 py-3 text-zinc-500 font-600">Producto</th>
+                <th className="px-4 py-3 text-zinc-500 font-600">Actualización</th>
+                <th className="px-4 py-3 text-zinc-500 font-600"></th>
               </tr>
             </thead>
             <tbody>
               {expedientes.map((e) => (
-                <tr key={e.expediente_id} className="border-b border-slate-700/50 hover:bg-slate-800/30">
+                <tr key={e.expediente_id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
                   <td className="px-4 py-3">
-                    <span className="font-mono text-cyan-300">{e.expediente_id}</span>
+                    <span className="font-mono text-violet-300">{e.expediente_id}</span>
                     {e.referencia_cliente && (
-                      <span className="text-slate-500 text-xs ml-2">({e.referencia_cliente})</span>
+                      <span className="text-zinc-500 text-xs ml-2">({e.referencia_cliente})</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        ESTADOS_BADGE[(e.estado_expediente as EstadoExpediente) ?? ""] ?? "bg-slate-600/30 text-slate-400"
+                        ESTADOS_BADGE[(e.estado_expediente as EstadoExpediente) ?? ""] ??
+                        "bg-zinc-700/30 text-zinc-400"
                       }`}
                     >
                       {e.estado_expediente ?? "—"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-300">{e.referencia_producto ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-500 text-xs">{e.fecha_actualizacion ?? e.fecha_creacion ?? "—"}</td>
+                  <td className="px-4 py-3 text-zinc-300">{e.referencia_producto ?? "—"}</td>
+                  <td className="px-4 py-3 text-zinc-500 text-xs">
+                    {e.fecha_actualizacion ?? e.fecha_creacion ?? "—"}
+                  </td>
                   <td className="px-4 py-3">
                     <Link
                       href={`/sic/expedientes/${e.expediente_id}`}
-                      className="text-cyan-400 hover:underline text-xs"
+                      className="text-violet-400 hover:underline text-xs"
                     >
                       Abrir
                     </Link>

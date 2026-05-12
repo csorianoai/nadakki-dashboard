@@ -9,18 +9,18 @@ interface EstadoBaseProps {
 export function LoadingSic({ titulo = "Cargando", mensaje }: EstadoBaseProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
-      <div className="w-8 h-8 border-2 border-cyan-500/50 border-t-cyan-400 rounded-full animate-spin mb-4" />
-      <p className="text-slate-300 text-sm font-medium">{titulo}</p>
-      {mensaje && <p className="text-slate-500 text-xs mt-1">{mensaje}</p>}
+      <div className="w-8 h-8 border-2 border-violet-500/50 border-t-violet-400 rounded-full animate-spin mb-4" />
+      <p className="text-zinc-300 text-sm font-medium">{titulo}</p>
+      {mensaje && <p className="text-zinc-500 text-xs mt-1">{mensaje}</p>}
     </div>
   );
 }
 
 export function EmptySic({ titulo = "Sin datos", mensaje, children }: EstadoBaseProps) {
   return (
-    <div className="py-12 px-4 text-center border border-slate-700/50 rounded-lg bg-slate-900/30">
-      <p className="text-slate-400 text-sm font-medium">{titulo}</p>
-      {mensaje && <p className="text-slate-500 text-xs mt-1">{mensaje}</p>}
+    <div className="py-12 px-4 text-center border border-zinc-800 rounded-lg bg-zinc-950/30">
+      <p className="text-zinc-400 text-sm font-medium">{titulo}</p>
+      {mensaje && <p className="text-zinc-500 text-xs mt-1">{mensaje}</p>}
       {children}
     </div>
   );
