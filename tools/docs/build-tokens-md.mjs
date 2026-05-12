@@ -1,5 +1,5 @@
 /**
- * Regenerate TOKENS.md autogen region from tokens.css + tailwind.config.js hints.
+ * Regenerate TOKENS.md autogen region from forge-tokens-v2.css + tailwind.config.js hints.
  * Idempotent: stable ordering. Usage: node tools/docs/build-tokens-md.mjs
  */
 import fs from "fs";
@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..", "..");
-const TOKENS_CSS = path.join(ROOT, "app", "(forge)", "credit-hub", "_design", "tokens.css");
+const TOKENS_CSS = path.join(ROOT, "styles", "forge-tokens-v2.css");
 const TAILWIND = path.join(ROOT, "tailwind.config.js");
 const TOKENS_MD = path.join(ROOT, "app", "(forge)", "credit-hub", "_design", "TOKENS.md");
 
@@ -17,7 +17,7 @@ const MARK_END = "<!-- AUTOGEN:TOKENS END -->";
 
 function extractForgeAppBlock(css) {
   const start = css.indexOf(".forge-app {");
-  if (start === -1) throw new Error("tokens.css: missing .forge-app { block");
+  if (start === -1) throw new Error("forge-tokens-v2.css: missing .forge-app { block");
   let i = start + ".forge-app {".length;
   let depth = 1;
   while (i < css.length && depth > 0) {
@@ -93,7 +93,7 @@ function readTailwindSnippet() {
 function buildMarkdown(sections) {
   const iso = new Date().toISOString().slice(0, 10);
   let md = `## Auto-generated token reference\n\n`;
-  md += `**Generated from \`tokens.css\` on ${iso}.** Do not edit this block by hand. Regenerate: \`npm run docs:tokens\`.\n\n`;
+  md += `**Generated from \`styles/forge-tokens-v2.css\` on ${iso}.** Do not edit this block by hand. Regenerate: \`npm run docs:tokens\`.\n\n`;
   md += `### Tailwind bridge (excerpt)\n\n`;
   md += readTailwindSnippet();
   md += `\n\n### BEFORE / AFTER (migration)\n\n`;
@@ -118,8 +118,8 @@ function buildMarkdown(sections) {
     md += "\n";
   }
   md += `### Notes\n\n`;
-  md += `- Tenant overrides and dormant dealer blocks live **outside** this autogen slice — see source \`tokens.css\`.\n`;
-  md += `- Phase 7.2 Case B: legacy \`styles/forge-tokens.css\` + Tailwind PERMANENT ALIASES remain until \`components/credit-hub/**\` migrates.\n`;
+  md += `- Tenant overrides and portal personas live **outside** this autogen slice — see source \`styles/forge-tokens-v2.css\`.\n`;
+  md += `- Phase 7.2 Case B: Tailwind PERMANENT LEGACY ALIASES remain until \`components/credit-hub/**\` migrates (\`styles/forge-tokens.css\` re-exports v2).\n`;
   return md;
 }
 

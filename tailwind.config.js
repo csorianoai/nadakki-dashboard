@@ -18,7 +18,7 @@ module.exports = {
         // aliases must resolve.
         //
         // Dual var(): prefer v3.2 custom properties on .forge-app; fall back
-        // to styles/forge-tokens.css portal variables outside .forge-app.
+        // to styles/forge-tokens-v2.css portal variables outside .forge-app.
         //
         // To remove: migrate or replace components/credit-hub with
         // components/forge equivalents, then verify grep is empty:
@@ -26,7 +26,7 @@ module.exports = {
         //     -Include *.tsx,*.ts `
         //     | Select-String -Pattern '(bg|text|border|ring|from|to|via)-forge-(primary|bg|surface-elevated|surface-hover|border|border-hover|text|text-muted|text-subtle)' `
         //     | Where-Object { $_.Path -notmatch 'components\\credit-hub' }
-        // and then delete this block + styles/forge-tokens.css.
+        // and then delete this block + styles/forge-tokens-v2.css.
         // ─────────────────────────────────────────────────────────
         'forge-primary': 'var(--forge-brand-500, var(--forge-primary))',
         'forge-primary-hover': 'var(--forge-brand-600, var(--forge-primary-hover))',
@@ -45,7 +45,7 @@ module.exports = {
         'forge-warning': 'var(--forge-warning-500, var(--forge-warning))',
         'forge-danger': 'var(--forge-danger-500, var(--forge-danger))',
         'forge-info': 'var(--forge-info-500, var(--forge-info))',
-        /* v3.2 institutional tokens (inherit from .forge-app — see _design/tokens.css) */
+        /* v3.2 institutional tokens (inherit from .forge-app — see styles/forge-tokens-v2.css) */
         forgeBrand: {
           50: 'var(--forge-brand-50)',
           100: 'var(--forge-brand-100)',
