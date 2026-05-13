@@ -93,93 +93,6 @@ const calculateStatisticalSignificance = (variantA: Variant, variantB: Variant):
   return confidence;
 };
 
-const SAMPLE_EXPERIMENTS: Experiment[] = [
-  {
-    id: "exp-1",
-    name: "Asunto Email - Urgencia vs Beneficio",
-    description: "Comparando asuntos con sentido de urgencia vs enfoque en beneficios",
-    type: "subject",
-    status: "running",
-    variants: [
-      { id: "v1", name: "Control (Urgencia)", content: "! Ultima oportunidad: 50% OFF termina hoy", traffic: 50,
-        metrics: { impressions: 5240, clicks: 892, conversions: 156, ctr: 17.0, conversionRate: 17.5 } },
-      { id: "v2", name: "Variante (Beneficio)", content: "Ahorra $500 en tu proxima compra", traffic: 50,
-        metrics: { impressions: 5180, clicks: 1036, conversions: 203, ctr: 20.0, conversionRate: 19.6 } }
-    ],
-    winner: "v2",
-    confidence: 94.5,
-    segment: "Usuarios Activos",
-    startDate: "2026-01-01",
-    endDate: null,
-    created_at: "2026-01-01T10:00:00Z",
-    goal: "conversions",
-    minSampleSize: 5000
-  },
-  {
-    id: "exp-2",
-    name: "CTA Button - Color Test",
-    description: "Verde vs Azul en boton principal de compra",
-    type: "cta",
-    status: "completed",
-    variants: [
-      { id: "v1", name: "Verde", content: "Boton verde #22c55e", traffic: 50,
-        metrics: { impressions: 12400, clicks: 1860, conversions: 372, ctr: 15.0, conversionRate: 20.0 } },
-      { id: "v2", name: "Azul", content: "Boton azul #3b82f6", traffic: 50,
-        metrics: { impressions: 12380, clicks: 1609, conversions: 322, ctr: 13.0, conversionRate: 20.0 } }
-    ],
-    winner: "v1",
-    confidence: 97.2,
-    segment: "Todos",
-    startDate: "2025-12-15",
-    endDate: "2025-12-28",
-    created_at: "2025-12-15T08:00:00Z",
-    goal: "clicks",
-    minSampleSize: 10000
-  },
-  {
-    id: "exp-3",
-    name: "Horario de Envio - Manana vs Tarde",
-    description: "Probando envio 9am vs 3pm para mejor engagement",
-    type: "timing",
-    status: "running",
-    variants: [
-      { id: "v1", name: "Manana (9am)", content: "Envio programado 9:00 AM", traffic: 50,
-        metrics: { impressions: 3200, clicks: 544, conversions: 87, ctr: 17.0, conversionRate: 16.0 } },
-      { id: "v2", name: "Tarde (3pm)", content: "Envio programado 3:00 PM", traffic: 50,
-        metrics: { impressions: 3180, clicks: 509, conversions: 76, ctr: 16.0, conversionRate: 14.9 } }
-    ],
-    winner: null,
-    confidence: 72.3,
-    segment: "Leads Calientes",
-    startDate: "2026-01-03",
-    endDate: null,
-    created_at: "2026-01-03T14:00:00Z",
-    goal: "conversions",
-    minSampleSize: 5000
-  },
-  {
-    id: "exp-4",
-    name: "Landing Page - Hero Image",
-    description: "Imagen de producto vs imagen de personas usando el producto",
-    type: "design",
-    status: "draft",
-    variants: [
-      { id: "v1", name: "Producto Solo", content: "Hero con imagen del producto", traffic: 50,
-        metrics: { impressions: 0, clicks: 0, conversions: 0, ctr: 0, conversionRate: 0 } },
-      { id: "v2", name: "Producto + Personas", content: "Hero con personas usando producto", traffic: 50,
-        metrics: { impressions: 0, clicks: 0, conversions: 0, ctr: 0, conversionRate: 0 } }
-    ],
-    winner: null,
-    confidence: 0,
-    segment: "Todos",
-    startDate: "",
-    endDate: null,
-    created_at: "2026-01-05T09:00:00Z",
-    goal: "conversions",
-    minSampleSize: 8000
-  }
-];
-
 // ***************************************
 // MAIN COMPONENT
 // ***************************************
@@ -218,10 +131,9 @@ export default function ABTestingPage() {
   }, []);
 
   useEffect(() => {
-    if (experiments.length > 0) {
-      localStorage.setItem("nadakki_experiments_v1", JSON.stringify(experiments));
-    }
-  }, [experiments]);
+    if (loading) return;
+    localStorage.setItem("nadakki_experiments_v1", JSON.stringify(experiments));
+  }, [experiments, loading]);
 
   const addVariant = () => {
     if (variants.length >= 4) return;
@@ -393,8 +305,8 @@ export default function ABTestingPage() {
             <div>
               <h1 className="text-3xl font-bold text-white">A/B Testing (local, parcial)</h1>
               <p className="text-sm text-slate-400 mt-1 m-0 max-w-xl">
-                Los experimentos se guardan solo en este navegador; no hay sincronización con backend. La UI sirve para
-                prototipar; las métricas mostradas son de demostración.
+                Los experimentos se guardan solo en este navegador; no hay sincronización con backend. Las métricas
+                reflejan lo que guardes por variante (o cero hasta que existan datos reales enlazados).
               </p>
             </div>
           </div>
@@ -681,7 +593,8 @@ export default function ABTestingPage() {
       ) : experiments.length === 0 ? (
         <div className="text-center py-20">
           <Split className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400">No hay experimentos. Crea tu primer A/B test!</p>
+          <p className="text-gray-300 font-medium m-0">No tienes experimentos A/B activos. Crea tu primer experimento.</p>
+          <p className="text-sm text-gray-500 mt-2 m-0">No se cargan datos de ejemplo; solo lo que guardes en este navegador.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4">

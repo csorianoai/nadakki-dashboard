@@ -353,7 +353,7 @@ function mapSegmentFromApi(r: Record<string, unknown>, index: number): Segment {
         ? r.predicted_conversion
         : typeof r.predictedConversion === "number"
           ? r.predictedConversion
-          : 0.1,
+          : 0,
     created_at:
       typeof r.created_at === "string"
         ? r.created_at
@@ -791,9 +791,13 @@ export default function SegmentsPage() {
   // Stats
   const totalUsers = segments.reduce((acc, s) => acc + s.size, 0);
   const activeSegments = segments.filter(s => s.status === "active").length;
-  const avgConversion = segments.length > 0 
-    ? (segments.reduce((acc, s) => acc + s.predictedConversion, 0) / segments.length * 100).toFixed(1)
-    : "0";
+  const avgConversionDisplay = useMemo(() => {
+    const withConv = segments.filter((s) => s.predictedConversion != null);
+    if (withConv.length === 0) return "N/A";
+    const pct =
+      (withConv.reduce((acc, s) => acc + (s.predictedConversion as number), 0) / withConv.length) * 100;
+    return `${pct.toFixed(1)}%`;
+  }, [segments]);
 
   return (
     <div className="ndk-page ndk-fade-in">
@@ -860,7 +864,7 @@ export default function SegmentsPage() {
       <div className="grid grid-cols-4 gap-6 mb-8">
         <StatCard value={totalUsers.toLocaleString()} label="Total Usuarios" icon={<Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
         <StatCard value={activeSegments.toString()} label="Segmentos Activos" icon={<Target className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value={avgConversion + "%"} label="Conversion Promedio" icon={<TrendingUp className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
+        <StatCard value={avgConversionDisplay} label="Conversion Promedio" icon={<TrendingUp className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
         <StatCard value={segments.reduce((acc, s) => acc + s.stats.campaigns_used, 0).toString()} label="Campanas Usadas" icon={<BarChart3 className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
       </div>
 
@@ -1127,7 +1131,7 @@ export default function SegmentsPage() {
                   <div className="p-2 bg-white/5 rounded-lg">
                     <div className="flex items-center gap-1 text-purple-400">
                       <TrendingUp className="w-3 h-3" />
-                      <span className="font-bold text-sm">{(segment.predictedConversion * 100).toFixed(1)}%</span>
+                      <span className="font-bold text-sm">{segment.predictedConversion ? `${(segment.predictedConversion * 100).toFixed(1)}%` : "N/A"}</span>
                     </div>
                     <span className="text-[10px] text-gray-500">conversion</span>
                   </div>
