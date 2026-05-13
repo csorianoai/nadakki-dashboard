@@ -353,7 +353,7 @@ function mapSegmentFromApi(r: Record<string, unknown>, index: number): Segment {
         ? r.predicted_conversion
         : typeof r.predictedConversion === "number"
           ? r.predictedConversion
-          : 0.1,
+          : 0,
     created_at:
       typeof r.created_at === "string"
         ? r.created_at
@@ -1131,7 +1131,7 @@ export default function SegmentsPage() {
                   <div className="p-2 bg-white/5 rounded-lg">
                     <div className="flex items-center gap-1 text-purple-400">
                       <TrendingUp className="w-3 h-3" />
-                      <span className="font-bold text-sm">{(segment.predictedConversion * 100).toFixed(1)}%</span>
+                      <span className="font-bold text-sm">{segment.predictedConversion ? `${(segment.predictedConversion * 100).toFixed(1)}%` : "N/A"}</span>
                     </div>
                     <span className="text-[10px] text-gray-500">conversion</span>
                   </div>
