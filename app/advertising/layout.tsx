@@ -1,14 +1,22 @@
 import type { ReactNode } from "react";
 
 /**
- * Advertising routes embed marketing surfaces (e.g. `GoogleAdsClient` with `embed`)
- * that assume the NADAKKI dark canvas (`--bg-primary` / `--text-primary` from ThemeProvider),
- * not the light Forge shell. Without this wrapper, `text-white` and glass cards render on the
- * institutional cream page background (contrast failures).
+ * Advertising routes embed marketing surfaces (e.g. `GoogleAdsClient` with `embed`) that assume
+ * a dark NADAKKI-style canvas (`text-white`, glass cards), while the Forge `main` slot defaults to
+ * light institutional tokens — causing white-on-cream contrast failures.
+ *
+ * Do **not** wrap with `GlobalForgeAppShell` here: `AppGate` already mounts it once for the whole
+ * app. Extra shells would duplicate sidebars/topbars.
+ *
+ * Pattern: force Tailwind `dark` scope + explicit slate background so embedded clients match
+ * `/marketing/google-ads` (full `ndk-page` + dark theme) visually.
  */
 export default function AdvertisingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="dark ndk-fade-in min-h-full w-full bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased">
+    <div
+      className="dark ndk-fade-in min-h-screen w-full bg-slate-950 text-slate-100 antialiased [color-scheme:dark]"
+      data-advertising-dark-canvas
+    >
       {children}
     </div>
   );
