@@ -1,14 +1,13 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "@/lib/motion-stub";
-import { 
+import {
   FileText, Image, Video, Mic, Sparkles, Wand2, Copy, Download,
   RefreshCw, Save, Trash2, Clock, Star, Folder, Search, Filter,
   Plus, ChevronRight, Loader2, Check, X, Zap, Brain, MessageSquare
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const CONTENT_TYPES = [
@@ -22,17 +21,10 @@ const CONTENT_TYPES = [
 
 const TEMPLATES = [
   { id: "t1", name: "Welcome Email", type: "email", preview: "Welcome to [Brand]! We're thrilled to have you..." },
-  { id: "t2", name: "Promo Announcement", type: "social", preview: "🎉 Big news! For the next 48 hours..." },
+  { id: "t2", name: "Promo Announcement", type: "social", preview: "Big news! For the next 48 hours..." },
   { id: "t3", name: "Product Launch", type: "ad", preview: "Introducing the all-new [Product]..." },
   { id: "t4", name: "Newsletter Intro", type: "email", preview: "This week in [Brand]: Top stories and updates..." },
-  { id: "t5", name: "Flash Sale SMS", type: "sms", preview: "⚡ FLASH SALE: 50% off everything for 24hrs only!" },
-];
-
-const RECENT_CONTENT = [
-  { id: "c1", title: "Black Friday Email Campaign", type: "email", created: "2 hours ago", words: 245 },
-  { id: "c2", title: "Instagram Product Teaser", type: "social", created: "5 hours ago", words: 42 },
-  { id: "c3", title: "Google Ads Headlines", type: "ad", created: "1 day ago", words: 89 },
-  { id: "c4", title: "Weekly Newsletter", type: "email", created: "2 days ago", words: 512 },
+  { id: "t5", name: "Flash Sale SMS", type: "sms", preview: "FLASH SALE: 50% off everything for 24hrs only!" },
 ];
 
 export default function ContentStudioPage() {
@@ -47,17 +39,17 @@ export default function ContentStudioPage() {
     if (!prompt || !selectedType) return;
     setGenerating(true);
     setGeneratedContent("");
-    
-    // Simulate AI generation
+
+    // TODO: Replace with real AI generation endpoint: POST /api/marketing/content/generate
     await new Promise(r => setTimeout(r, 2000));
-    
+
     const samples: Record<string, string> = {
       email: `Subject: ${prompt}\n\nHi [First Name],\n\nWe're excited to share something special with you today. As one of our valued customers, you're getting early access to our latest offering.\n\n${prompt}\n\nThis exclusive opportunity is available for a limited time only. Don't miss out on the chance to be among the first to experience what we've been working on.\n\nClick below to learn more and secure your spot.\n\n[CTA Button]\n\nBest regards,\nThe [Brand] Team`,
-      social: `🚀 ${prompt}\n\nWe've been working on something BIG and we can't wait to share it with you!\n\n✨ Key highlights:\n• Feature 1\n• Feature 2\n• Feature 3\n\nDrop a 🙌 if you're excited!\n\n#Marketing #Innovation #Growth`,
+      social: `${prompt}\n\nWe've been working on something BIG and we can't wait to share it with you!\n\nKey highlights:\n- Feature 1\n- Feature 2\n- Feature 3\n\n#Marketing #Innovation #Growth`,
       ad: `Headline 1: ${prompt} - Limited Time Offer\nHeadline 2: Discover the Secret to ${prompt}\nHeadline 3: Transform Your Results with ${prompt}\n\nDescription 1: Join thousands of satisfied customers. Start your free trial today.\nDescription 2: Award-winning solution trusted by industry leaders. See why.`,
-      sms: `[Brand]: ${prompt}! 🎉 Use code SAVE20 for 20% off. Valid 48hrs only. Shop now: [link] Reply STOP to opt out`,
+      sms: `[Brand]: ${prompt}! Use code SAVE20 for 20% off. Valid 48hrs only. Shop now: [link] Reply STOP to opt out`,
     };
-    
+
     setGeneratedContent(samples[selectedType] || samples.email);
     setGenerating(false);
   };
@@ -83,22 +75,6 @@ export default function ContentStudioPage() {
             <p className="text-gray-400">Genera contenido de marketing con IA</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white">
-            <Folder className="w-4 h-4" /> My Content
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white">
-            <Star className="w-4 h-4" /> Saved
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard value="1,247" label="Content Generated" icon={<FileText className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-        <StatCard value="89%" label="Satisfaction Rate" icon={<Star className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
-        <StatCard value="45K" label="Words This Month" icon={<Sparkles className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
-        <StatCard value="2.3s" label="Avg Generation Time" icon={<Clock className="w-6 h-6 text-green-400" />} color="#22c55e" />
       </div>
 
       <div className="grid grid-cols-3 gap-6">
@@ -107,7 +83,7 @@ export default function ContentStudioPage() {
           <GlassCard className="p-5">
             <h3 className="text-lg font-bold text-white mb-4">Content Type</h3>
             <div className="space-y-2">
-              {CONTENT_TYPES?.map(type => (
+              {CONTENT_TYPES.map(type => (
                 <button key={type.id} onClick={() => setSelectedType(type.id)}
                   className={`w-full p-3 text-left rounded-xl border transition-all flex items-center gap-3 ${
                     selectedType === type.id ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"
@@ -142,7 +118,7 @@ export default function ContentStudioPage() {
         <div className="col-span-2 space-y-6">
           <GlassCard className="p-6">
             <h3 className="text-lg font-bold text-white mb-4">AI Content Generator</h3>
-            
+
             <div className="mb-4">
               <label className="text-sm text-gray-400 block mb-2">What do you want to create?</label>
               <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3}
@@ -208,28 +184,8 @@ export default function ContentStudioPage() {
               </GlassCard>
             </motion.div>
           )}
-
-          {/* Recent Content */}
-          <GlassCard className="p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Recent Content</h3>
-            <div className="space-y-3">
-              {RECENT_CONTENT?.map(c => (
-                <div key={c.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <div className="text-sm font-medium text-white">{c.title}</div>
-                      <div className="text-xs text-gray-500">{c.type} • {c.words} words • {c.created}</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-500" />
-                </div>
-              ))}
-            </div>
-          </GlassCard>
         </div>
       </div>
     </div>
   );
 }
-

@@ -184,7 +184,7 @@ const getOperatorWeight = (operator: string): number => {
 };
 
 const calculateSegmentSize = (groups: ConditionGroup[]): number => {
-  const totalUsers = 12450;
+  const totalUsers = 1000; // Estimate base; real count comes from API
   let estimated = totalUsers;
   
   groups.forEach(group => {
@@ -789,7 +789,7 @@ export default function SegmentsPage() {
   }, [segments, searchQuery]);
 
   // Stats
-  const totalUsers = 12450;
+  const totalUsers = segments.reduce((acc, s) => acc + s.size, 0);
   const activeSegments = segments.filter(s => s.status === "active").length;
   const avgConversion = segments.length > 0 
     ? (segments.reduce((acc, s) => acc + s.predictedConversion, 0) / segments.length * 100).toFixed(1)
