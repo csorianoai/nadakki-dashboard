@@ -1,94 +1,225 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Landmark, Megaphone, Scale, Settings, Shield } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useRBAC } from "@/hooks/useRBAC";
 import { cn } from "@/lib/utils";
+import {
+  NAV_SECTIONS,
+  type NavBadge,
+  type NavItem,
+  type NavSection,
+  collectExpandIdsForPath,
+  filterSectionsForUser,
+  isHrefActive,
+  userCanAccessAdminNav,
+} from "./forge-global-sidebar-nav";
 
 export type ForgeGlobalCoresSidebarProps = {
   mobileOpen: boolean;
   onNavigate?: () => void;
 };
 
-type CoreNav = {
-  id: string;
-  coreMatchers: string[];
-  href: string;
-  label: string;
-  Icon: typeof Landmark;
-};
+const STORAGE_KEY = "forge-global-sidebar-expanded-v1";
 
-const CORE_NAV: CoreNav[] = [
-  { id: "credit", coreMatchers: ["credit"], href: "/credit-hub", label: "Credit", Icon: Landmark },
-  { id: "legal", coreMatchers: ["legal"], href: "/legal-hub", label: "Legal", Icon: Scale },
-  { id: "marketing", coreMatchers: ["marketing"], href: "/marketing-hub", label: "Marketing", Icon: Megaphone },
-  { id: "sic", coreMatchers: ["sic", "platform"], href: "/sic", label: "SIC", Icon: Shield },
-];
-
-const ADMIN_ENTRY: CoreNav = {
-  id: "admin",
-  coreMatchers: [],
-  href: "/admin",
-  label: "Admin",
-  Icon: Settings,
-};
-
-function userCanAccessAdmin(allRoles: { core_name: string; role_key: string }[]): boolean {
-  return allRoles.some(
-    (r) =>
-      r.role_key === "tenant_admin" ||
-      r.role_key === "platform_superadmin" ||
-      (r.core_name === "platform" && r.role_key === "support_agent"),
-  );
+function defaultExpandedAllSections(): Record<string, boolean> {
+  const initial: Record<string, boolean> = {};
+  NAV_SECTIONS.forEach((s) => {
+    initial[s.id] = true;
+  });
+  return initial;
 }
 
-/**
- * Show a core if the user has a matching RBAC role, or the tenant lists that
- * core in `subscribed_cores`, or there is no subscription list (show all for
- * backward compatibility / local dev).
- */
-function hasCoreAccess(
-  core: CoreNav,
-  allRoles: { core_name: string }[],
-  subscribed: string[] | undefined,
-): boolean {
-  const roleHit = allRoles.some((r) => core.coreMatchers.includes(r.core_name));
-  if (roleHit) return true;
-
-  const hasSubscriptionList = subscribed && subscribed.length > 0;
-
-  const subHit = (subscribed ?? []).some((c) => core.coreMatchers.includes(c));
-
-  /* No subscription telemetry → permissive defaults; route guards enforce access. */
-  if (!hasSubscriptionList) return true;
-
-  return subHit;
+function loadExpanded(): Record<string, boolean> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, boolean>;
+    return typeof parsed === "object" && parsed !== null ? parsed : {};
+  } catch {
+    return {};
+  }
 }
 
-function isCoreActive(id: string, pathname: string | null): boolean {
-  if (!pathname) return false;
-  if (id === "credit") return pathname.startsWith("/credit-hub");
-  if (id === "legal") return pathname.startsWith("/legal") || pathname.startsWith("/legal-hub");
-  if (id === "marketing") return pathname.startsWith("/marketing") || pathname.startsWith("/marketing-hub");
-  if (id === "sic") return pathname.startsWith("/sic");
-  if (id === "admin") return pathname.startsWith("/admin");
-  return false;
+function badgeClasses(b: NavBadge): string {
+  switch (b) {
+    case "NEW":
+      return "bg-forgeBrand-100 text-forgeBrand-800 border border-forgeBrand-200";
+    case "BETA":
+      return "bg-amber-100 text-amber-800 border border-amber-200";
+    case "POPULAR":
+      return "bg-emerald-100 text-emerald-800 border border-emerald-200";
+    default:
+      return "bg-forgeGray-100 text-forgeGray-700";
+  }
 }
 
 export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalCoresSidebarProps) {
   const pathname = usePathname();
-  const { tenant } = useAuth();
-  const { allRoles } = useRBAC();
+  const { tenant, allRoles } = useAuth();
+  const showAdmin = userCanAccessAdminNav(allRoles);
 
-  const visiblePrimary = useMemo(
-    () => CORE_NAV.filter((c) => hasCoreAccess(c, allRoles, tenant?.subscribed_cores)),
-    [allRoles, tenant?.subscribed_cores],
+  const visibleSections = useMemo(
+    () => filterSectionsForUser(NAV_SECTIONS, allRoles, tenant?.subscribed_cores, showAdmin),
+    [allRoles, showAdmin, tenant?.subscribed_cores],
   );
 
-  const showAdmin = userCanAccessAdmin(allRoles);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const fromLs = loadExpanded();
+    if (Object.keys(fromLs).length === 0) {
+      setExpanded(defaultExpandedAllSections());
+    } else {
+      setExpanded(fromLs);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(expanded));
+    } catch {
+      /* ignore quota */
+    }
+  }, [expanded, hydrated]);
+
+  useEffect(() => {
+    const auto = collectExpandIdsForPath(visibleSections, pathname ?? null);
+    setExpanded((prev) => {
+      const next = { ...prev };
+      auto.forEach((id) => {
+        next[id] = true;
+      });
+      return next;
+    });
+  }, [pathname, visibleSections]);
+
+  const toggle = useCallback((id: string) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
+  const renderBadge = (b: NavBadge | undefined) =>
+    b ? (
+      <span
+        className={cn(
+          "ml-auto shrink-0 rounded-forge-sm px-1.5 py-px text-[10px] font-semibold uppercase leading-tight tracking-wide",
+          badgeClasses(b),
+        )}
+      >
+        {b}
+      </span>
+    ) : null;
+
+  const renderLink = (item: NavItem, depth: number) => {
+    if (!item.href) return null;
+    const active = isHrefActive(item.href, pathname);
+    return (
+      <Link
+        href={item.href}
+        onClick={onNavigate}
+        className={cn(
+          "flex min-h-9 items-center gap-2 rounded-forge-sm py-1.5 pr-2 text-forge-xs font-medium transition-colors duration-[var(--forge-duration-fast)]",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
+          active
+            ? "bg-forgeSurface-sunken text-forgeBrand-700"
+            : "text-forgeGray-700 hover:bg-forgeSurface-sunken hover:text-forgeGray-900",
+        )}
+        style={{ paddingLeft: 10 + depth * 12 }}
+        aria-current={active ? "page" : undefined}
+      >
+        {item.icon ? (
+          <item.icon className="h-3.5 w-3.5 shrink-0 text-forgeGray-500" aria-hidden />
+        ) : (
+          <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        )}
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        {renderBadge(item.badge)}
+      </Link>
+    );
+  };
+
+  const renderFolder = (item: NavItem, depth: number) => {
+    const open = expanded[item.id] ?? false;
+    const hasKids = Boolean(item.children?.length);
+    if (!hasKids) return renderLink(item, depth);
+
+    return (
+      <div className="flex flex-col" key={item.id}>
+        <button
+          type="button"
+          onClick={() => toggle(item.id)}
+          className={cn(
+            "flex min-h-9 w-full items-center gap-1 rounded-forge-sm py-1.5 pr-2 text-left text-forge-xs font-semibold text-forgeGray-800 transition-colors duration-[var(--forge-duration-fast)]",
+            "hover:bg-forgeSurface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
+          )}
+          style={{ paddingLeft: 6 + depth * 12 }}
+          aria-expanded={open}
+        >
+          <ChevronRight
+            className={cn("h-3.5 w-3.5 shrink-0 text-forgeGray-500 transition-transform duration-200", open && "rotate-90")}
+            aria-hidden
+          />
+          {item.icon ? <item.icon className="h-3.5 w-3.5 shrink-0 text-forgeGray-500" aria-hidden /> : null}
+          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          {renderBadge(item.badge)}
+        </button>
+        <div
+          className={cn(
+            "overflow-hidden transition-[max-height] duration-200 ease-out motion-reduce:transition-none",
+            open ? "max-h-[4000px] opacity-100" : "max-h-0 opacity-0",
+          )}
+        >
+          <div className="ml-0 space-y-0.5 pt-0.5">{item.children!.map((ch) => renderNavItem(ch, depth + 1))}</div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderNavItem = (item: NavItem, depth: number): ReactNode => {
+    if (item.children && item.children.length > 0) {
+      return <div key={item.id}>{renderFolder(item, depth)}</div>;
+    }
+    return <div key={item.id}>{renderLink(item, depth)}</div>;
+  };
+
+  const renderSection = (section: NavSection) => {
+    const open = expanded[section.id] ?? false;
+    const SectionIcon = section.icon;
+    return (
+      <div key={section.id} className="flex flex-col border-b border-forgeGray-100 last:border-b-0">
+        <button
+          type="button"
+          onClick={() => toggle(section.id)}
+          className={cn(
+            "flex w-full items-center gap-2 rounded-forge-sm px-2 py-2.5 text-left text-forge-xs font-bold uppercase tracking-wide text-forgeGray-600 transition-colors duration-[var(--forge-duration-fast)]",
+            "hover:bg-forgeSurface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
+          )}
+          aria-expanded={open}
+        >
+          <ChevronRight
+            className={cn("h-4 w-4 shrink-0 text-forgeGray-500 transition-transform duration-200", open && "rotate-90")}
+            aria-hidden
+          />
+          <SectionIcon className="h-4 w-4 shrink-0 text-forgeGray-500" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{section.label}</span>
+        </button>
+        <div
+          className={cn(
+            "overflow-hidden transition-[max-height] duration-200 ease-out motion-reduce:transition-none",
+            open ? "max-h-[8000px] opacity-100" : "max-h-0 opacity-0",
+          )}
+        >
+          <div className="space-y-0.5 pb-3 pl-1">{section.children.map((item) => renderNavItem(item, 0))}</div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -103,69 +234,19 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-56 shrink-0 flex-col border-r border-forgeGray-200 bg-forgeSurface-card transition-transform motion-reduce:transition-none lg:static lg:z-auto lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-[18rem] shrink-0 flex-col border-r border-forgeGray-200 bg-forgeSurface-card transition-transform motion-reduce:transition-none lg:static lg:z-auto lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
-        aria-label="Product cores"
+        aria-label="Navegación principal"
       >
-        <div className="border-b border-forgeGray-200 px-4 py-3">
-          <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">
-            Cores
+        <div className="border-b border-forgeGray-200 px-3 py-3">
+          <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-500">Producto</p>
+          <p className="mt-0.5 text-[10px] leading-snug text-forgeGray-500">
+            Cores, workflows y administración ({visibleSections.length} secciones)
           </p>
         </div>
-        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2" aria-label="Core navigation">
-          {visiblePrimary.map(({ id, href, label, Icon }) => {
-            const active = isCoreActive(id, pathname);
-            return (
-              <Link
-                key={id}
-                href={href}
-                onClick={onNavigate}
-                className={cn(
-                  "flex min-h-12 items-center gap-2 rounded-forge-sm px-3 py-3 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
-                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-                  active
-                    ? "bg-forgeSurface-sunken text-forgeBrand-700"
-                    : "text-forgeGray-700 hover:bg-forgeSurface-sunken hover:text-forgeGray-900",
-                )}
-                aria-current={active ? "page" : undefined}
-              >
-                <Icon className="h-4 w-4 shrink-0 text-forgeGray-500" aria-hidden />
-                {label}
-              </Link>
-            );
-          })}
-          {showAdmin ? (
-            <Link
-              href={ADMIN_ENTRY.href}
-              onClick={onNavigate}
-              className={cn(
-                "flex min-h-12 items-center gap-2 rounded-forge-sm px-3 py-3 text-forge-sm font-medium transition-colors duration-[var(--forge-duration-fast)]",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500",
-                isCoreActive("admin", pathname)
-                  ? "bg-forgeSurface-sunken text-forgeBrand-700"
-                  : "text-forgeGray-700 hover:bg-forgeSurface-sunken hover:text-forgeGray-900",
-              )}
-              aria-current={isCoreActive("admin", pathname) ? "page" : undefined}
-            >
-              <ADMIN_ENTRY.Icon className="h-4 w-4 shrink-0 text-forgeGray-500" aria-hidden />
-              {ADMIN_ENTRY.label}
-            </Link>
-          ) : null}
-          {showAdmin ? (
-            <Link
-              href="/admin/branding"
-              onClick={onNavigate}
-              className={cn(
-                "ml-6 flex min-h-10 items-center rounded-forge-sm px-2 py-2 text-forge-xs font-medium transition-colors duration-[var(--forge-duration-fast)]",
-                pathname?.startsWith("/admin/branding")
-                  ? "text-forgeBrand-700"
-                  : "text-forgeGray-600 hover:bg-forgeSurface-sunken hover:text-forgeGray-900",
-              )}
-            >
-              Institution branding
-            </Link>
-          ) : null}
+        <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden" aria-label="Navegación por módulos">
+          {visibleSections.map(renderSection)}
         </nav>
       </aside>
     </>
