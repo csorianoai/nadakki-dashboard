@@ -11,7 +11,7 @@ export async function POST(
 ) {
   const { agentId } = await params;
   const tenantId =
-    req.headers.get("X-Tenant-ID") ||
+    req.headers.get("x-resolved-tenant-id") ||
     req.headers.get("x-tenant-id") ||
     "";
   if (!tenantId) {

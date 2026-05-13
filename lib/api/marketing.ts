@@ -1,9 +1,22 @@
 import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
 import { CAMPAIGNS_API, MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
+import { tokenStorage } from "@/lib/auth/token-storage";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
 const BACKEND_URL = "https://nadakki-ai-suite.onrender.com";
+
+/** Attach JWT Authorization header if available (tenant isolation). */
+function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  const h: Record<string, string> = { ...extra };
+  if (typeof window !== "undefined") {
+    const token = tokenStorage.getAccessToken();
+    if (token && !h["Authorization"]) {
+      h["Authorization"] = `Bearer ${token}`;
+    }
+  }
+  return h;
+}
 
 /** Stable reference for fetchWithFallback (avoids a fresh `{}` per call). */
 const FALLBACK_EMPTY_JSON: Record<string, unknown> = {};
@@ -139,11 +152,11 @@ export async function patchMarketingCampaignStatus(
   try {
     const res = await fetch(url, {
       method: "PATCH",
-      headers: {
+      headers: authHeaders({
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Tenant-ID": tenantId,
-      },
+      }),
       body: JSON.stringify({ status }),
     });
     const httpStatus = res.status;
@@ -187,11 +200,11 @@ export async function updateMarketingCampaign(
   try {
     const res = await fetch(url, {
       method: "PUT",
-      headers: {
+      headers: authHeaders({
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Tenant-ID": tenantId,
-      },
+      }),
       body: JSON.stringify(payload),
     });
     const status = res.status;
@@ -311,11 +324,11 @@ export async function createMarketingCampaign(
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: {
+      headers: authHeaders({
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Tenant-ID": tenantId,
-      },
+      }),
       body: JSON.stringify(body),
     });
     const status = res.status;
@@ -368,10 +381,10 @@ export async function activateMarketingCampaign(
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: {
+      headers: authHeaders({
         Accept: "application/json",
         "X-Tenant-ID": tenantId,
-      },
+      }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -407,11 +420,11 @@ export async function postMarketingLaunchPilot(
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: {
+      headers: authHeaders({
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Tenant-ID": tenantId,
-      },
+      }),
       body: JSON.stringify(body),
     });
     const status = res.status;
@@ -490,7 +503,7 @@ export async function fetchMarketingJourneys(tenantId: string): Promise<{
   const url = `${MARKETING_ENDPOINTS.JOURNEYS}${qs}`;
   try {
     const res = await fetch(url, {
-      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+      headers: authHeaders({ Accept: "application/json", "X-Tenant-ID": tenantId }),
     });
     const json = (await res.json().catch(() => null)) as unknown;
     if (!res.ok) {
@@ -515,7 +528,7 @@ export async function fetchMarketingJourneyById(
   const url = MARKETING_ENDPOINTS.JOURNEY_BY_ID(journeyId);
   try {
     const res = await fetch(url, {
-      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+      headers: authHeaders({ Accept: "application/json", "X-Tenant-ID": tenantId }),
     });
     const json = (await res.json().catch(() => null)) as unknown;
     if (!res.ok) {
@@ -543,11 +556,11 @@ export async function createMarketingJourney(
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: {
+      headers: authHeaders({
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Tenant-ID": tenantId,
-      },
+      }),
       body: JSON.stringify(body),
     });
     const status = res.status;
@@ -572,11 +585,11 @@ export async function updateMarketingJourney(
   try {
     const res = await fetch(url, {
       method: "PUT",
-      headers: {
+      headers: authHeaders({
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-Tenant-ID": tenantId,
-      },
+      }),
       body: JSON.stringify(body),
     });
     const status = res.status;
@@ -600,7 +613,7 @@ export async function activateMarketingJourney(
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+      headers: authHeaders({ Accept: "application/json", "X-Tenant-ID": tenantId }),
     });
     const status = res.status;
     const json = (await res.json().catch(() => null)) as unknown;
@@ -623,7 +636,7 @@ export async function pauseMarketingJourney(
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+      headers: authHeaders({ Accept: "application/json", "X-Tenant-ID": tenantId }),
     });
     const status = res.status;
     const json = (await res.json().catch(() => null)) as unknown;
@@ -663,7 +676,7 @@ export async function runMarketingJourney(
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+      headers: authHeaders({ Accept: "application/json", "X-Tenant-ID": tenantId }),
     });
     const status = res.status;
     const json = (await res.json().catch(() => null)) as unknown;
@@ -685,7 +698,7 @@ export async function fetchMarketingJourneyRuns(
   const url = MARKETING_ENDPOINTS.JOURNEY_RUNS(journeyId);
   try {
     const res = await fetch(url, {
-      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+      headers: authHeaders({ Accept: "application/json", "X-Tenant-ID": tenantId }),
     });
     const json = (await res.json().catch(() => null)) as unknown;
     if (!res.ok) {
@@ -717,7 +730,7 @@ export async function deleteMarketingJourney(
   try {
     const res = await fetch(url, {
       method: "DELETE",
-      headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+      headers: authHeaders({ Accept: "application/json", "X-Tenant-ID": tenantId }),
     });
     const status = res.status;
     const json = (await res.json().catch(() => null)) as unknown;
@@ -736,7 +749,7 @@ export async function fetchSocialStatus(tenantId: string) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 10000);
     const r = await fetch(`/api/social/status/${tenantId}`, {
-      headers: { "X-Tenant-ID": tenantId },
+      headers: authHeaders({ "X-Tenant-ID": tenantId }),
       signal: ctrl.signal,
     });
     clearTimeout(timer);

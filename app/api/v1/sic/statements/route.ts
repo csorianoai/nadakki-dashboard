@@ -6,7 +6,7 @@ const BACKEND_URL =
 
 export async function POST(req: NextRequest) {
   const tenantId =
-    req.headers.get("X-Tenant-ID") ||
+    req.headers.get("x-resolved-tenant-id") ||
     req.headers.get("x-tenant-id") ||
     "credicefi";
 

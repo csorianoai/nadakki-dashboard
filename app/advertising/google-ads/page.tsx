@@ -316,7 +316,9 @@ export default function GoogleAdsPage() {
       <AdvertisingDashboardLive title="Google Ads — Dashboard API" />
       <div>
         <h1 className="text-4xl font-bold mb-2">💰 Google Ads Hub</h1>
-        <p className="text-gray-600">Agentes especializados de automatizacion - Conectados al Backend</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          Agentes especializados de automatizacion - Conectados al Backend
+        </p>
       </div>
 
       <section className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-slate-900/40 p-4">

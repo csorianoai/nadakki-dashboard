@@ -1,6 +1,11 @@
 /**
  * Safe JSON fetch for dashboard panels: never throws; non-OK or network errors return fallback.
+ *
+ * Automatically includes the JWT Authorization header on same-origin
+ * requests if the user is authenticated (tenant isolation enforcement).
  */
+
+import { tokenStorage } from "@/lib/auth/token-storage";
 
 export type FetchSource = "live" | "fallback";
 
@@ -53,6 +58,13 @@ export async function fetchWithFallback<T>(
     };
     if (tenantId) {
       headers["X-Tenant-ID"] = tenantId;
+    }
+    // Attach JWT for tenant isolation (middleware.ts enforces)
+    if (!headers["Authorization"] && typeof window !== "undefined") {
+      const token = tokenStorage.getAccessToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
     }
 
     const response = await fetch(resolved, {
