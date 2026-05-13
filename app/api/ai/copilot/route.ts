@@ -26,9 +26,10 @@ export async function POST(request: NextRequest) {
 
     const responseTime = Date.now() - startTime;
 
-    // Registrar la conversacion
+    // Registrar la conversacion — use middleware-resolved tenant ID
+    const resolvedTenantId = request.headers.get('x-resolved-tenant-id');
     const log = conversationLogger.log({
-      tenantId: context.tenant_id || 'default',
+      tenantId: resolvedTenantId || 'default',
       sessionId: currentSessionId,
       query: message,
       response: response.content,
