@@ -6,7 +6,8 @@ import { conversationLogger } from "@/lib/agents/analytics/conversation-logger";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const tenantId = searchParams.get('tenantId') || undefined;
+    // Use middleware-resolved tenant ID (never trust query params for scoping)
+    const tenantId = request.headers.get('x-resolved-tenant-id') || undefined;
     const action = searchParams.get('action') || 'summary';
 
     switch (action) {
