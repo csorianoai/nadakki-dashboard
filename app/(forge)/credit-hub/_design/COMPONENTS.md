@@ -145,6 +145,36 @@ Forge **does not ship a JavaScript animation library**. Runtime uses **`lib/moti
 
 Forge **does not use tooltips**. Prefer visible labels, helper text, `aria-describedby`, and inline descriptions. Tooltips fail on touch-first workflows and add cognitive load. If a surface seems to need a tooltip, the information probably belongs **visible** in the layout.
 
+## GlobalForgeAppShell
+
+**File:** `components/forge/layout/GlobalForgeAppShell.tsx`
+
+Root authenticated shell: loads Inter / mono / display fonts, renders `ForgeAppShell` with `ForgeGlobalCoresSidebar` + `ForgeGlobalTopbar`. Tenant attribute `data-tenant` from `forgeAppDataTenantAttribute()` for test overrides.
+
+## ForgeGlobalCoresSidebar
+
+**File:** `components/forge/layout/ForgeGlobalCoresSidebar.tsx`
+
+Multi-hub navigation: expands/collapses sections from `forge-global-sidebar-nav.ts`, applies per-core visual identity from `forge-sidebar-core-themes.ts` (dark zinc rail, colored headers, active link glow). Top: tenant logo or NADAKKI gradient; bottom: user initials, email, role chip, link to `/tenants`. Expand state persisted under `forge-global-sidebar-expanded-v1`.
+
+## ForgeGlobalTopbar
+
+**File:** `components/forge/layout/ForgeGlobalTopbar.tsx`
+
+Global top bar: mobile menu trigger, optional institution logo/title from `useTenantBranding`, Credit Hub command palette search when applicable, `TenantSwitcher`, `UserMenu`.
+
+## forge-global-sidebar-nav
+
+**File:** `components/forge/layout/forge-global-sidebar-nav.ts`
+
+Exports `NAV_SECTIONS` (Credit, Legal, Marketing, SIC, Workflows, Admin links), RBAC filtering (`filterSectionsForUser`, `userCanAccessAdminNav`, `isPlatformSuperAdmin`), and path helpers (`isHrefActive`, `collectExpandIdsForPath`). Source of truth for sidebar URLs; keep in sync with `SIDEBAR_NAV_MAP.md`.
+
+## forge-sidebar-core-themes
+
+**File:** `components/forge/layout/forge-sidebar-core-themes.ts`
+
+Per-hub Tailwind token sets (`SIDEBAR_CORE_THEMES`), `getSidebarTheme(sectionId)`, and `roleAccentClasses` for the sidebar footer role chip. See also `SIDEBAR_COLOR_PALETTE.md` at repo root.
+
 
 <!-- PHASE8_PRIMITIVE_CATALOG_START -->
 
