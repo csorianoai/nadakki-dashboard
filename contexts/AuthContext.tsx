@@ -14,22 +14,7 @@ const STORAGE_KEYS = {
   sicToken: "nadakki_sic_token",
 } as const;
 
-const DEMO_USERS: Record<string, { password: string; tenantId: string; tenantName: string; role: string; plan: string }> = {
-  "admin@sfrentals.com": {
-    password: "admin123",
-    tenantId: "sf-rentals-nadaki-excursions",
-    tenantName: "SF Rentals Nadaki Excursions",
-    role: "admin",
-    plan: "enterprise",
-  },
-  "admin@nadakki.com": {
-    password: "admin123",
-    tenantId: "credicefi",
-    tenantName: "CrediCefi",
-    role: "admin",
-    plan: "pro",
-  },
-};
+// Legacy demo credentials removed — use auth_v2 login flow instead.
 
 function readFromStorage() {
   if (typeof window === "undefined") return null;
@@ -94,48 +79,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     const key = email.trim().toLowerCase();
-    const demo = DEMO_USERS[key];
-    if (!demo || demo.password !== password) {
-      setState((s) => ({ ...s, error: "Credenciales incorrectas" }));
-      return false;
-    }
 
-    // Obtain SIC JWT from backend for protected SIC API calls
+    // Authenticate via backend
     try {
       const res = await fetch("/api/v1/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: key, password }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        const token = data?.access_token;
-        if (token && typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEYS.sicToken, token);
-        }
+      if (!res.ok) {
+        setState((s) => ({ ...s, error: "Credenciales incorrectas" }));
+        return false;
       }
+      const data = await res.json();
+      const token = data?.access_token;
+      const tenantId = data?.tenant_info?.slug ?? data?.tenant_id ?? "";
+      const tenantName = data?.tenant_info?.display_name ?? data?.tenant_name ?? "—";
+      const role = data?.active_role?.role_key ?? "viewer";
+
+      if (token && typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEYS.sicToken, token);
+      }
+      if (typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEYS.auth, "true");
+        localStorage.setItem(STORAGE_KEYS.tenantId, tenantId);
+        localStorage.setItem(STORAGE_KEYS.tenantName, tenantName);
+        localStorage.setItem(STORAGE_KEYS.role, role);
+        localStorage.setItem(STORAGE_KEYS.plan, "pro");
+      }
+      setState({
+        isAuthenticated: true,
+        tenantId,
+        tenantName,
+        role: role as UserRole,
+        plan: "pro",
+        isLoading: false,
+        error: null,
+      });
+      return true;
     } catch {
-      // Backend unreachable — SIC will fall back to demo/401; keep local auth
+      setState((s) => ({ ...s, error: "No se pudo conectar al servidor" }));
+      return false;
     }
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEYS.auth, "true");
-      localStorage.setItem(STORAGE_KEYS.tenantId, demo.tenantId);
-      localStorage.setItem(STORAGE_KEYS.tenantName, demo.tenantName);
-      localStorage.setItem(STORAGE_KEYS.role, demo.role);
-      localStorage.setItem(STORAGE_KEYS.plan, demo.plan);
-    }
-
-    setState({
-      isAuthenticated: true,
-      tenantId: demo.tenantId,
-      tenantName: demo.tenantName,
-      role: demo.role as UserRole,
-      plan: demo.plan,
-      isLoading: false,
-      error: null,
-    });
-    return true;
   }, []);
 
   const logout = useCallback(() => {

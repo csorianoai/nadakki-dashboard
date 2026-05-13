@@ -25,67 +25,21 @@ export function cancelAllRequests(): void {
 }
 
 // ***************************************************************
-// MOCK DATA (fallback when backend unavailable)
+// EMPTY FALLBACKS (returned when backend unavailable)
 // ***************************************************************
-const MOCK_ANALYTICS: AnalyticsOverview = {
-  mau: { name: "MAU", value: 12450, current: 12450, change: 12, trend: "up" },
-  dau: { name: "DAU", value: 3420, current: 3420, change: 8, trend: "up" },
-  daily_sessions: { name: "Sessions", value: 8750, current: 8750, change: 5, trend: "up" },
-  data_source: "mock",
-  generated_at: new Date().toISOString(),
-  total_users: 12450,
-  active_users: 8234,
-  total_campaigns: 47,
-  active_campaigns: 12,
-  total_revenue: { name: "Revenue", value: 125000, current: 125000, change: 8, trend: "up" },
-  conversion_rate: 3.2,
-  email_open_rate: 24.5,
-  click_rate: 4.8,
-  period: "30d",
-  trend: { users: 12, campaigns: 5, revenue: 8 },
-  top_campaigns: [
-    { id: "1", name: "Summer Sale 2025", clicks: 15420, conversions: 892, revenue: 45000 },
-    { id: "2", name: "Black Friday Early", clicks: 12300, conversions: 654, revenue: 32000 },
-    { id: "3", name: "Newsletter Weekly", clicks: 8900, conversions: 234, revenue: 12000 },
-  ],
-  kpis: [
-    { name: "MAU", value: 12450, target: 15000, unit: "users" },
-    { name: "Conversion Rate", value: 3.2, target: 4.0, unit: "%" },
-    { name: "Revenue", value: 125000, target: 150000, unit: "$" },
-  ],
-  time_series: [
-    { date: "2025-12-01", sessions: 1200, users: 890, revenue: 4500, events: 3400 },
-    { date: "2025-12-08", sessions: 1350, users: 920, revenue: 5200, events: 3800 },
-    { date: "2025-12-15", sessions: 1100, users: 780, revenue: 3900, events: 3100 },
-    { date: "2025-12-22", sessions: 1450, users: 1020, revenue: 6100, events: 4200 },
-    { date: "2025-12-29", sessions: 1600, users: 1150, revenue: 7200, events: 4800 },
-    { date: "2026-01-05", sessions: 1750, users: 1280, revenue: 8500, events: 5400 },
-  ],
-  funnel: [
-    { stage: "Visitors", count: 50000, percentage: 100 },
-    { stage: "Signups", count: 12450, percentage: 24.9 },
-    { stage: "Activated", count: 8234, percentage: 16.5 },
-    { stage: "Converted", count: 2450, percentage: 4.9 },
-  ],
+const EMPTY_METRIC: MetricValue = { name: "", value: 0, current: 0, change: 0, trend: "neutral" };
+
+const EMPTY_ANALYTICS: AnalyticsOverview = {
+  mau: EMPTY_METRIC, dau: EMPTY_METRIC, daily_sessions: EMPTY_METRIC,
+  data_source: "mock", generated_at: new Date().toISOString(),
+  total_users: 0, active_users: 0, total_campaigns: 0, active_campaigns: 0,
+  total_revenue: EMPTY_METRIC, conversion_rate: 0, email_open_rate: 0, click_rate: 0,
+  period: "30d", trend: { users: 0, campaigns: 0, revenue: 0 },
+  top_campaigns: [], kpis: [], time_series: [], funnel: [],
 };
 
-const MOCK_CAMPAIGNS: Campaign[] = [
-  { id: "1", name: "Summer Sale 2025", status: "active", type: "email", created_at: "2025-12-01", updated_at: "2026-01-05", description: "Summer promotion campaign", subject: "Hot Summer Deals!", content: "<p>Check out our summer deals</p>", audience_size: 15000, stats: { sent: 15000, opened: 3675, clicked: 892, conversions: 234 } },
-  { id: "2", name: "Black Friday Early", status: "active", type: "email", created_at: "2025-11-15", updated_at: "2026-01-03", description: "Early Black Friday deals", subject: "Black Friday Starts Now!", content: "<p>Early access to deals</p>", audience_size: 20000, stats: { sent: 20000, opened: 4900, clicked: 654, conversions: 189 } },
-  { id: "3", name: "Newsletter Weekly", status: "active", type: "newsletter", created_at: "2025-10-01", updated_at: "2026-01-07", description: "Weekly newsletter", subject: "Your Weekly Update", content: "<p>Weekly news</p>", audience_size: 8000, stats: { sent: 8000, opened: 2160, clicked: 234, conversions: 67 } },
-  { id: "4", name: "Product Launch", status: "draft", type: "email", created_at: "2026-01-01", updated_at: "2026-01-06", description: "New product launch", subject: "Introducing Our New Product", content: "<p>New product</p>", audience_size: 0, stats: { sent: 0, opened: 0, clicked: 0, conversions: 0 } },
-  { id: "5", name: "Retargeting Q1", status: "paused", type: "ads", created_at: "2025-12-15", updated_at: "2026-01-02", description: "Q1 retargeting campaign", subject: "Come Back!", content: "<p>We miss you</p>", audience_size: 5000, stats: { sent: 5000, opened: 1250, clicked: 180, conversions: 45 } },
-];
-
-const MOCK_REALTIME = {
-  active_users: 234,
-  events_per_minute: 156,
-  sessions_per_minute: 23,
-  top_pages: [
-    { page: "/dashboard", users: 89 },
-    { page: "/campaigns", users: 45 },
-    { page: "/analytics", users: 34 },
-  ],
+const EMPTY_REALTIME: RealtimeData = {
+  active_users: 0, events_per_minute: 0, sessions_per_minute: 0, top_pages: [],
 };
 
 // ***************************************************************
@@ -266,27 +220,27 @@ async function fetchWithFallback<T>(
 // Analytics API
 export const analyticsAPI = {
   getOverview: (tenantId: string = "default", period: string = "30d", signal?: AbortSignal): Promise<AnalyticsOverview> => 
-    fetchWithFallback(`/api/analytics/overview?tenant=${tenantId}&period=${period}`, MOCK_ANALYTICS, { signal }),
+    fetchWithFallback(`/api/analytics/overview?tenant=${tenantId}&period=${period}`, EMPTY_ANALYTICS, { signal }),
   
   getMetrics: (tenantId: string = "default", signal?: AbortSignal): Promise<AnalyticsOverview> => 
-    fetchWithFallback(`/api/analytics/metrics?tenant=${tenantId}`, MOCK_ANALYTICS, { signal }),
+    fetchWithFallback(`/api/analytics/metrics?tenant=${tenantId}`, EMPTY_ANALYTICS, { signal }),
   
   getRealtime: (tenantId: string = "default", signal?: AbortSignal): Promise<RealtimeData> =>
-    fetchWithFallback(`/api/analytics/realtime?tenant=${tenantId}`, MOCK_REALTIME, { signal }),
+    fetchWithFallback(`/api/analytics/realtime?tenant=${tenantId}`, EMPTY_REALTIME, { signal }),
   
   getTimeSeries: (period: string = "30d", tenantId: string = "default", signal?: AbortSignal) =>
-    fetchWithFallback(`/api/analytics/time-series?period=${period}&tenant=${tenantId}`, MOCK_ANALYTICS.time_series, { signal }),
+    fetchWithFallback(`/api/analytics/time-series?period=${period}&tenant=${tenantId}`, EMPTY_ANALYTICS.time_series, { signal }),
   
   getPerformance: (metric: string, period: string = "30d", tenantId: string = "default", signal?: AbortSignal): Promise<PerformanceChartData[]> =>
     fetchWithFallback(`/api/analytics/performance?metric=${metric}&period=${period}&tenant=${tenantId}`, 
-      MOCK_ANALYTICS.time_series || [], { signal }),
+      EMPTY_ANALYTICS.time_series || [], { signal }),
 };
 
 // Campaigns API — backend v2 at /campaigns (no /api prefix)
 export const campaignsAPI = {
   getAll: async (signal?: AbortSignal, tenantId?: string): Promise<Campaign[]> => {
     const q = tenantId ? `?tenant_id=${encodeURIComponent(tenantId)}` : "";
-    const raw = await fetchWithFallback<Campaign[]>(`/campaigns${q}`, MOCK_CAMPAIGNS, { signal });
+    const raw = await fetchWithFallback<Campaign[]>(`/campaigns${q}`, [] as Campaign[], { signal });
     return (Array.isArray(raw) ? raw : []).map(normalizeCampaign);
   },
 
@@ -298,7 +252,7 @@ export const campaignsAPI = {
   },
 
   getById: async (id: string, signal?: AbortSignal): Promise<Campaign> => {
-    const raw = await fetchWithFallback(`/campaigns/${id}`, MOCK_CAMPAIGNS.find(c => c.id === id) || MOCK_CAMPAIGNS[0], { signal });
+    const raw = await fetchWithFallback(`/campaigns/${id}`, { id, name: "", status: "draft", type: "email", created_at: "", updated_at: "" } as Campaign, { signal });
     return normalizeCampaign(raw);
   },
 

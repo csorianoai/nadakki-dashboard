@@ -64,26 +64,9 @@ function isSameLocalDay(iso: string, ref: Date): boolean {
   }
 }
 
-/** Mock series for bank dashboard Insights (Phase 9 v3); replace with `useBankVolumeSeries` when API exists. */
-const BANK_DASHBOARD_VOLUME_MOCK = [
-  { label: "1", submitted: 28, approved: 21, rejected: 5 },
-  { label: "5", submitted: 32, approved: 25, rejected: 4 },
-  { label: "10", submitted: 36, approved: 29, rejected: 5 },
-  { label: "15", submitted: 34, approved: 27, rejected: 6 },
-  { label: "20", submitted: 40, approved: 31, rejected: 5 },
-  { label: "25", submitted: 38, approved: 30, rejected: 4 },
-  { label: "30", submitted: 42, approved: 33, rejected: 5 },
-];
-
-const BANK_DASHBOARD_APPROVAL_MOCK = [
-  { label: "1", rate: 58 },
-  { label: "5", rate: 61 },
-  { label: "10", rate: 63 },
-  { label: "15", rate: 62 },
-  { label: "20", rate: 65 },
-  { label: "25", rate: 67 },
-  { label: "30", rate: 68 },
-];
+// Volume and approval trend series — empty until useBankVolumeSeries API is available.
+const BANK_DASHBOARD_VOLUME_MOCK: { label: string; submitted: number; approved: number; rejected: number }[] = [];
+const BANK_DASHBOARD_APPROVAL_MOCK: { label: string; rate: number }[] = [];
 
 export default function BankDashboardPage() {
   const router = useRouter();
