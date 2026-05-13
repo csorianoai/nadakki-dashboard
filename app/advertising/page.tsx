@@ -21,7 +21,7 @@ export default function AdvertisingPage() {
           <Link
             key={p.name}
             href={p.href}
-            className="block border-2 border-gray-200 rounded-xl p-6 hover:border-blue-500 hover:bg-blue-50 transition-all"
+            className="block rounded-xl border-2 border-[var(--border-primary)] p-6 transition-all hover:border-[var(--accent-primary)] hover:bg-[var(--bg-hover)]"
           >
             <div className="text-3xl mb-3">{p.icon}</div>
             <h3 className="text-xl font-bold">{p.name}</h3>

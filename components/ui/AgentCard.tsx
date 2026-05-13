@@ -36,9 +36,12 @@ export function AgentCard({
   coreColor,
 }: AgentCardProps) {
   const statusColors: Record<string, string> = {
-    active: "bg-green-100 text-green-800 border-green-200",
-    inactive: "bg-gray-100 text-gray-800 border-gray-200",
-    pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    active:
+      "bg-green-100 text-green-800 border-green-200 dark:bg-green-950/50 dark:text-green-300 dark:border-green-800",
+    inactive:
+      "bg-gray-100 text-gray-800 border-gray-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600",
+    pending:
+      "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-200 dark:border-yellow-800",
   };
 
   return (
@@ -46,18 +49,18 @@ export function AgentCard({
       onClick={onSelect}
       className={`border-2 rounded-lg p-5 cursor-pointer transition-all ${
         isSelected
-          ? "border-blue-500 bg-blue-50 shadow-lg"
-          : "border-gray-200 hover:border-blue-300 hover:shadow-md"
+          ? "border-blue-500 bg-blue-50 shadow-lg dark:border-blue-400 dark:bg-blue-950/35"
+          : "border-gray-200 hover:border-blue-300 hover:shadow-md dark:border-slate-600 dark:bg-slate-900/40 dark:hover:border-blue-500"
       }`}
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-start gap-3">
           <span className="text-3xl">{icon}</span>
           <div>
-            <h3 className="font-bold text-lg">{displayName || name}</h3>
-            <p className="text-sm text-gray-600 mt-1">{description || "Sin descripción"}</p>
+            <h3 className="font-bold text-lg dark:text-slate-100">{displayName || name}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{description || "Sin descripción"}</p>
             {category && (
-              <span className="text-xs font-semibold px-2 py-1 mt-2 inline-block bg-gray-100 text-gray-800 rounded-full">
+              <span className="text-xs font-semibold px-2 py-1 mt-2 inline-block bg-gray-100 text-gray-800 rounded-full dark:bg-slate-800 dark:text-slate-200">
                 {category}
               </span>
             )}
@@ -73,11 +76,11 @@ export function AgentCard({
       </div>
 
       {metrics && metrics.length > 0 && (
-        <div className="mt-4 grid grid-cols-2 gap-3 py-3 border-t border-gray-200">
+        <div className="mt-4 grid grid-cols-2 gap-3 py-3 border-t border-gray-200 dark:border-slate-600">
           {metrics.map((metric, idx) => (
             <div key={idx} className="text-center">
-              <div className="font-bold text-lg text-blue-600">{metric.value}</div>
-              <div className="text-xs text-gray-500">{metric.label}</div>
+              <div className="font-bold text-lg text-blue-600 dark:text-blue-400">{metric.value}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{metric.label}</div>
             </div>
           ))}
         </div>
