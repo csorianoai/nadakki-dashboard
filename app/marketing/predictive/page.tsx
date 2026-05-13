@@ -1,371 +1,75 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "@/lib/motion-stub";
-import { 
+import {
   Brain, TrendingUp, TrendingDown, Users, Target, Zap,
   AlertTriangle, CheckCircle, Clock, RefreshCw, Loader2,
   BarChart3, Activity, DollarSign, ArrowUp, ArrowDown,
   Download, Sparkles
 } from "lucide-react";
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, Area, ComposedChart, Legend
-} from "recharts";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
-/** Same-origin; proxied via next.config rewrites */
-const API_URL = "";
-
-interface SegmentPrediction {
-  id: string;
-  name: string;
-  size: number;
-  conversionProbability: number;
-  churnRisk: number;
-  expectedRevenue: number;
-  trend: "up" | "down" | "stable";
-  confidence: number;
-  recommendations: string[];
-}
-
-interface MetricForecast {
-  date: string;
-  predicted: number;
-  lower: number;
-  upper: number;
-  actual?: number;
-}
-
-interface ChurnAlert {
-  userId: string;
-  userName: string;
-  riskScore: number;
-  lastActivity: string;
-  suggestedAction: string;
-}
-
-const SEGMENT_PREDICTIONS: SegmentPrediction[] = [
-  { id: "seg-1", name: "Leads Calientes", size: 1850, conversionProbability: 0.28, churnRisk: 0.05, expectedRevenue: 92500, trend: "up", confidence: 0.94,
-    recommendations: ["Enviar oferta personalizada", "Llamada de seguimiento en 48h", "Activar secuencia de nurturing"] },
-  { id: "seg-2", name: "Usuarios Premium Activos", size: 890, conversionProbability: 0.18, churnRisk: 0.08, expectedRevenue: 178000, trend: "stable", confidence: 0.91,
-    recommendations: ["Programa de fidelizacion", "Oferta de upgrade", "Encuesta de satisfaccion"] },
-  { id: "seg-3", name: "En Riesgo de Churn", size: 1240, conversionProbability: 0.05, churnRisk: 0.72, expectedRevenue: 12400, trend: "down", confidence: 0.89,
-    recommendations: ["Campana de retencion urgente", "Descuento especial", "Contacto directo del CS"] },
-  { id: "seg-4", name: "Nuevos Registros (7d)", size: 456, conversionProbability: 0.15, churnRisk: 0.25, expectedRevenue: 22800, trend: "up", confidence: 0.87,
-    recommendations: ["Onboarding automatizado", "Email de bienvenida", "Webinar introductorio"] },
-  { id: "seg-5", name: "Usuarios Inactivos", size: 2340, conversionProbability: 0.03, churnRisk: 0.85, expectedRevenue: 4680, trend: "down", confidence: 0.92,
-    recommendations: ["Campana de win-back", "Encuesta de salida", "Oferta de reactivacion"] },
-  { id: "seg-6", name: "Alto LTV", size: 520, conversionProbability: 0.22, churnRisk: 0.04, expectedRevenue: 260000, trend: "up", confidence: 0.95,
-    recommendations: ["Programa VIP", "Acceso anticipado a features", "Account manager dedicado"] }
-];
-
-const REVENUE_FORECAST: MetricForecast[] = [
-  { date: "Ene 1", predicted: 45000, lower: 42000, upper: 48000, actual: 46200 },
-  { date: "Ene 8", predicted: 48000, lower: 44000, upper: 52000, actual: 47800 },
-  { date: "Ene 15", predicted: 52000, lower: 47000, upper: 57000, actual: 53100 },
-  { date: "Ene 22", predicted: 55000, lower: 49000, upper: 61000 },
-  { date: "Ene 29", predicted: 58000, lower: 51000, upper: 65000 },
-  { date: "Feb 5", predicted: 62000, lower: 54000, upper: 70000 },
-  { date: "Feb 12", predicted: 65000, lower: 56000, upper: 74000 },
-];
-
-const CHURN_ALERTS: ChurnAlert[] = [
-  { userId: "u-1", userName: "Empresa ABC", riskScore: 0.92, lastActivity: "hace 45 dias", suggestedAction: "Llamada urgente del CS" },
-  { userId: "u-2", userName: "Tech Solutions", riskScore: 0.87, lastActivity: "hace 38 dias", suggestedAction: "Email de reactivacion" },
-  { userId: "u-3", userName: "Marketing Pro", riskScore: 0.81, lastActivity: "hace 32 dias", suggestedAction: "Oferta especial -30%" },
-  { userId: "u-4", userName: "Digital Agency", riskScore: 0.76, lastActivity: "hace 28 dias", suggestedAction: "Webinar personalizado" },
-  { userId: "u-5", userName: "StartupXYZ", riskScore: 0.71, lastActivity: "hace 25 dias", suggestedAction: "Demo de nuevas features" },
-];
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-3 shadow-xl">
-        <p className="text-white font-medium mb-2">{label}</p>
-        {payload?.map((entry: any, index: number) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: ${(entry.value / 1000).toFixed(1)}K
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
+/**
+ * Predictive Analytics — empty state.
+ *
+ * This page requires ML prediction endpoints that don't exist yet:
+ * - GET /api/marketing/predictions/segments
+ * - GET /api/marketing/predictions/revenue
+ * - GET /api/marketing/alerts/churn
+ *
+ * When those endpoints are built, wire them here.
+ */
 export default function PredictivePage() {
-  const [loading, setLoading] = useState(true);
-  const [predictions, setPredictions] = useState<SegmentPrediction[]>([]);
-  const [forecast, setForecast] = useState<MetricForecast[]>([]);
-  const [churnAlerts, setChurnAlerts] = useState<ChurnAlert[]>([]);
-  const [selectedSegment, setSelectedSegment] = useState<SegmentPrediction | null>(null);
-  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("30d");
-  const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    setPredictions(SEGMENT_PREDICTIONS);
-    setForecast(REVENUE_FORECAST);
-    setChurnAlerts(CHURN_ALERTS);
-    setLoading(false);
-  };
-
-  const refreshPredictions = async () => {
-    setRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setPredictions(predictions?.map(p => ({
-      ...p,
-      conversionProbability: Math.min(1, Math.max(0, p.conversionProbability + (Math.random() - 0.5) * 0.05)),
-      churnRisk: Math.min(1, Math.max(0, p.churnRisk + (Math.random() - 0.5) * 0.05)),
-      expectedRevenue: Math.round(p.expectedRevenue * (0.95 + Math.random() * 0.1))
-    })));
-    setRefreshing(false);
-  };
-
-  const totalExpectedRevenue = predictions.reduce((acc, p) => acc + p.expectedRevenue, 0);
-  const avgConversion = predictions.reduce((acc, p) => acc + p.conversionProbability, 0) / Math.max(predictions.length, 1);
-  const highRiskUsers = predictions.filter(p => p.churnRisk > 0.5).reduce((acc, p) => acc + p.size, 0);
-  const modelAccuracy = predictions.reduce((acc, p) => acc + p.confidence, 0) / Math.max(predictions.length, 1);
-
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/marketing">
-        <StatusBadge status="active" label="IA Predictiva" size="lg" />
+        <StatusBadge status="warning" label="IA Predictiva" size="lg" />
       </NavigationBar>
 
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-              <Brain className="w-8 h-8 text-purple-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Metricas Predictivas</h1>
-              <p className="text-gray-400">Predicciones de IA para optimizar tus decisiones</p>
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+            <Brain className="w-8 h-8 text-purple-400" />
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex bg-white/5 rounded-lg p-1">
-              {(["7d", "30d", "90d"] as const).map(range => (
-                <button key={range} onClick={() => setTimeRange(range)}
-                  className={"px-3 py-1.5 rounded-md text-sm font-medium transition-colors " +
-                    (timeRange === range ? "bg-purple-500 text-white" : "text-gray-400 hover:text-white")}>
-                  {range}
-                </button>
-              ))}
-            </div>
-            <button onClick={refreshPredictions} disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-xl text-white font-medium disabled:opacity-50">
-              <RefreshCw className={"w-4 h-4 " + (refreshing ? "animate-spin" : "")} />
-              {refreshing ? "Actualizando..." : "Actualizar IA"}
-            </button>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Metricas Predictivas</h1>
+            <p className="text-gray-400">Predicciones de IA para optimizar tus decisiones</p>
           </div>
         </div>
       </motion.div>
 
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-32">
-          <Brain className="w-16 h-16 text-purple-400 mb-4 animate-pulse" />
-          <p className="text-white text-lg mb-2">Analizando datos con IA...</p>
-          <p className="text-gray-500 text-sm">Calculando predicciones y tendencias</p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-4 gap-6 mb-8">
-            <StatCard value={"$" + (totalExpectedRevenue / 1000).toFixed(0) + "K"} label="Revenue Esperado (30d)" icon={<DollarSign className="w-6 h-6 text-green-400" />} color="#22c55e" />
-            <StatCard value={(avgConversion * 100).toFixed(1) + "%"} label="Conversion Promedio" icon={<Target className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-            <StatCard value={highRiskUsers.toLocaleString()} label="Usuarios en Riesgo" icon={<AlertTriangle className="w-6 h-6 text-red-400" />} color="#ef4444" />
-            <StatCard value={(modelAccuracy * 100).toFixed(0) + "%"} label="Precision del Modelo" icon={<Sparkles className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
-          </div>
+      <div className="text-center py-20">
+        <Brain className="w-16 h-16 text-gray-600 mx-auto mb-6" />
+        <h2 className="text-xl font-semibold text-white mb-2">Modelos predictivos no configurados</h2>
+        <p className="text-gray-400 max-w-lg mx-auto mb-4">
+          Las metricas predictivas requieren datos historicos de campanas, conversiones y comportamiento de usuarios.
+          Una vez que tengas suficientes datos, los modelos de IA generaran predicciones automaticamente.
+        </p>
 
-          {/* Grafico con Recharts */}
-          <GlassCard className="p-6 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-bold text-white">Proyeccion de Revenue</h3>
-                <p className="text-sm text-gray-400">Prediccion con intervalo de confianza del 95%</p>
-              </div>
-              <button className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 text-sm">
-                <Download className="w-4 h-4" /> Exportar
-              </button>
-            </div>
-
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={forecast} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="colorConfidence" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={{ stroke: '#374151' }} />
-                <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={{ stroke: '#374151' }}
-                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ paddingTop: 20 }} />
-                <Area type="monotone" dataKey="upper" stroke="transparent" fill="url(#colorConfidence)" name="Intervalo Superior" />
-                <Area type="monotone" dataKey="lower" stroke="transparent" fill="#0a0f1c" name="Intervalo Inferior" />
-                <Line type="monotone" dataKey="predicted" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }} name="Prediccion" activeDot={{ r: 6, fill: '#8b5cf6' }} />
-                <Line type="monotone" dataKey="actual" stroke="#22c55e" strokeWidth={3} dot={{ fill: '#22c55e', strokeWidth: 2, r: 5 }} name="Actual" connectNulls={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-
-            <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500" />
-                <span className="text-xs text-gray-400">Prediccion IA</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-xs text-gray-400">Datos Reales</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-3 rounded bg-purple-500/30" />
-                <span className="text-xs text-gray-400">Intervalo 95%</span>
-              </div>
-            </div>
+        <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mt-12">
+          <GlassCard className="p-5 text-center">
+            <TrendingUp className="w-8 h-8 text-purple-400 mx-auto mb-3" />
+            <h3 className="text-white font-medium mb-1">Proyeccion de Revenue</h3>
+            <p className="text-gray-500 text-xs">Prediccion semanal con intervalo de confianza del 95%</p>
           </GlassCard>
+          <GlassCard className="p-5 text-center">
+            <Users className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+            <h3 className="text-white font-medium mb-1">Segmentos Predictivos</h3>
+            <p className="text-gray-500 text-xs">Probabilidad de conversion y riesgo de churn por segmento</p>
+          </GlassCard>
+          <GlassCard className="p-5 text-center">
+            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+            <h3 className="text-white font-medium mb-1">Alertas de Churn</h3>
+            <p className="text-gray-500 text-xs">Deteccion temprana de clientes en riesgo de abandono</p>
+          </GlassCard>
+        </div>
 
-          <div className="grid grid-cols-3 gap-6 mb-8">
-            <div className="col-span-2">
-              <h3 className="text-lg font-bold text-white mb-4">Predicciones por Segmento</h3>
-              <div className="space-y-3">
-                {predictions?.map((pred, i) => (
-                  <motion.div key={pred.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
-                    <GlassCard className={"p-4 cursor-pointer hover:border-purple-500/30 transition-colors " +
-                      (selectedSegment?.id === pred.id ? "border-purple-500/50" : "")}
-                      onClick={() => setSelectedSegment(selectedSegment?.id === pred.id ? null : pred)}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={"p-2 rounded-lg " +
-                            (pred.churnRisk > 0.5 ? "bg-red-500/20" : pred.conversionProbability > 0.15 ? "bg-green-500/20" : "bg-blue-500/20")}>
-                            {pred.churnRisk > 0.5 ? <AlertTriangle className="w-5 h-5 text-red-400" /> :
-                             pred.conversionProbability > 0.15 ? <TrendingUp className="w-5 h-5 text-green-400" /> :
-                             <Activity className="w-5 h-5 text-blue-400" />}
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-white">{pred.name}</h4>
-                            <p className="text-xs text-gray-500">{pred.size.toLocaleString()} usuarios</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {pred.trend === "up" && <ArrowUp className="w-4 h-4 text-green-400" />}
-                          {pred.trend === "down" && <ArrowDown className="w-4 h-4 text-red-400" />}
-                          {pred.trend === "stable" && <span className="w-4 h-0.5 bg-gray-400" />}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-4 text-center">
-                        <div>
-                          <p className={"text-lg font-bold " + (pred.conversionProbability > 0.15 ? "text-green-400" : "text-white")}>
-                            {(pred.conversionProbability * 100).toFixed(1)}%
-                          </p>
-                          <p className="text-[10px] text-gray-500">Conversion</p>
-                        </div>
-                        <div>
-                          <p className={"text-lg font-bold " + (pred.churnRisk > 0.5 ? "text-red-400" : pred.churnRisk > 0.3 ? "text-yellow-400" : "text-green-400")}>
-                            {(pred.churnRisk * 100).toFixed(0)}%
-                          </p>
-                          <p className="text-[10px] text-gray-500">Riesgo Churn</p>
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-purple-400">${(pred.expectedRevenue / 1000).toFixed(0)}K</p>
-                          <p className="text-[10px] text-gray-500">Revenue Esp.</p>
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-cyan-400">{(pred.confidence * 100).toFixed(0)}%</p>
-                          <p className="text-[10px] text-gray-500">Confianza</p>
-                        </div>
-                      </div>
-
-                      {selectedSegment?.id === pred.id && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-                          className="mt-4 pt-4 border-t border-white/10">
-                          <p className="text-xs text-gray-400 mb-2">Acciones Recomendadas:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {pred?.recommendations?.map((rec, ri) => (
-                              <span key={ri} className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-lg">
-                                {rec}
-                              </span>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </GlassCard>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
-                Alertas de Churn
-              </h3>
-              <GlassCard className="p-4">
-                <div className="space-y-3">
-                  {churnAlerts?.map((alert, i) => (
-                    <motion.div key={alert.userId} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}
-                      className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-white text-sm">{alert.userName}</span>
-                        <span className={"px-2 py-0.5 text-xs rounded-full font-bold " +
-                          (alert.riskScore > 0.85 ? "bg-red-500 text-white" : "bg-red-500/30 text-red-400")}>
-                          {(alert.riskScore * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mb-2">Ultima actividad: {alert.lastActivity}</p>
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-3 h-3 text-yellow-400" />
-                        <span className="text-xs text-yellow-400">{alert.suggestedAction}</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-                <button className="w-full mt-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 text-sm font-medium transition-colors">
-                  Ver todos ({churnAlerts.length})
-                </button>
-              </GlassCard>
-
-              <GlassCard className="p-4 mt-4">
-                <h4 className="font-medium text-white mb-3 flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-purple-400" />
-                  Informacion del Modelo
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Modelo</span>
-                    <span className="text-white">NADAKKI Predictive v2.1</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Ultima actualizacion</span>
-                    <span className="text-white">Hace 2 horas</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Datos procesados</span>
-                    <span className="text-white">124,502 registros</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Precision historica</span>
-                    <span className="text-green-400">91.2%</span>
-                  </div>
-                </div>
-              </GlassCard>
-            </div>
-          </div>
-        </>
-      )}
+        <p className="text-gray-600 text-sm mt-12">
+          Requisitos: al menos 30 dias de datos de campanas y 100+ contactos activos.
+        </p>
+      </div>
     </div>
   );
 }
-
-

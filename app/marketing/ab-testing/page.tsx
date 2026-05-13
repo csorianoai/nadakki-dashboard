@@ -210,15 +210,11 @@ export default function ABTestingPage() {
     const saved = localStorage.getItem("nadakki_experiments_v1");
     if (saved) {
       try {
-        setExperiments(JSON.parse(saved));
-        setLoading(false);
-        return;
-      } catch {}
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setExperiments(parsed);
+      } catch { /* ignore corrupt localStorage */ }
     }
-    setTimeout(() => {
-      setExperiments(SAMPLE_EXPERIMENTS);
-      setLoading(false);
-    }, 800);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
