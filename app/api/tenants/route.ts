@@ -5,14 +5,25 @@ const BACKEND_URL =
   "https://nadakki-ai-suite.onrender.com";
 
 export async function GET(req: NextRequest) {
+  // Authorization is enforced by middleware.ts — if we reach here,
+  // the request has a valid JWT.  Forward it to the backend so the
+  // Render RLS middleware can scope the tenant list.
+  const auth = req.headers.get("authorization");
+  if (!auth) {
+    return NextResponse.json(
+      { error: "Authentication required" },
+      { status: 401 }
+    );
+  }
+
   try {
     const res = await fetch(`${BACKEND_URL}/api/v1/tenants`, {
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "X-Role": "admin",
-        "X-Tenant-ID": req.headers.get("X-Tenant-ID") ?? req.headers.get("x-tenant-id") ?? "credicefi",
+        "Authorization": auth,
+        "X-Tenant-ID": req.headers.get("x-resolved-tenant-id") ?? req.headers.get("x-tenant-id") ?? "credicefi",
       },
     });
     const text = await res.text().catch(() => "");

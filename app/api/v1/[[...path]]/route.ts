@@ -26,8 +26,10 @@ async function proxyRequest(
   const url = new URL(req.url);
   const query = url.search;
   const target = `${BACKEND_URL}/api/v1/${pathStr}${query}`;
+  // Use the resolved tenant_id from middleware (JWT-enforced),
+  // falling back to the raw header for backward compat.
   const tenantId =
-    req.headers.get("X-Tenant-ID") ||
+    req.headers.get("x-resolved-tenant-id") ||
     req.headers.get("x-tenant-id") ||
     "credicefi";
 
@@ -36,10 +38,9 @@ async function proxyRequest(
       "Content-Type": "application/json",
       "X-Tenant-ID": tenantId,
     };
-    if (path[0] === "tenants" && path.length === 1) {
-      headers["X-Role"] = "admin";
-    }
-    const auth = req.headers.get("Authorization");
+    // Always forward the Authorization header so the backend
+    // RLS middleware can enforce tenant isolation server-side.
+    const auth = req.headers.get("Authorization") || req.headers.get("authorization");
     if (auth) headers["Authorization"] = auth;
     if (req.headers.get("Accept")?.includes("text/event-stream")) {
       headers["Accept"] = "text/event-stream";

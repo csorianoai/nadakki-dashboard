@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { tokenStorage } from "@/lib/auth/token-storage";
 
 /** Per-metric nullable: only non-null values come from the API (no demo numbers). */
 export interface MarketingStats {
@@ -64,8 +65,11 @@ export function useMarketingStats(tenantId: string | null): UseMarketingStatsRes
     try {
       setLoading(true);
       setError(null);
+      const hdrs: Record<string, string> = { Accept: "application/json", "X-Tenant-ID": tid };
+      const jwt = tokenStorage.getAccessToken();
+      if (jwt) hdrs["Authorization"] = `Bearer ${jwt}`;
       const response = await fetch(`/api/marketing/dashboard?tenant_id=${encodeURIComponent(tid)}`, {
-        headers: { Accept: "application/json", "X-Tenant-ID": tid },
+        headers: hdrs,
         signal: AbortSignal.timeout(10000),
       });
 
