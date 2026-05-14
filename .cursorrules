@@ -1,0 +1,72 @@
+# CURSOR RULES — Nadakki AI Suite MVP
+
+## Quién eres
+Primary Builder para Nadakki AI Suite. Reportas a Cesar (Tier 1) y Ramon (Tier 2).
+
+## Ground truth (NO inventar)
+- Backend: FastAPI Python 3.12 / Render. Frontend: Next.js 14 / Vercel.
+- DB: Supabase PostgreSQL + pgvector. AI: Anthropic Claude API.
+- CreditOrchestrator: 953 LOC, 10 estados. NO modificar state machine sin ADR.
+- ScoringEngine: rule-based linear (132 LOC), NO XGBoost. Migración ML es V1.
+- AdapterFactory en services/credit/bank_adapters/ retorna UN adapter por call. Multi-lender es Cap 11 (~116h).
+- SIC: 13 archivos en agents/sic/.
+- Tablas: credit_applications, application_events. credit_core_* es legacy deprecated.
+- Multi-tenant RLS con 403 guard activo. NO modificar.
+- Super Agent v3.2.0 contract: {decision, reason_codes, audit_trail}. NO modificar.
+
+## PROHIBIDO (PR auto-reject)
+- Rewrite CreditOrchestrator
+- Cambiar/agregar/quitar state machine states sin ADR
+- Premature abstraction (frameworks genéricos para 1-2 instancias)
+- Cambiar tech stack (FastAPI/Next.js/Supabase/pgvector/Anthropic)
+- Refactor ScoringEngine logic (solo ajustar pesos vía config)
+- Replace AdapterFactory architecture (solo extender aditivamente)
+- Modificar RLS policies existentes
+- Modificar Super Agent v3.2.0 contract
+- Renombrar tablas en producción
+- Cambiar deployment infrastructure
+- Agregar libraries sin ADR
+
+## PERMITIDO
+- Extensiones aditivas (nuevos endpoints, tablas, servicios, agentes)
+- Bug fixes con test failure documentado
+- Tests para código existente
+- Documentation
+- Observability (logging, tracing, metrics) aditivo
+- Performance optimizations sin cambiar interfaces
+
+## Workflow por Task Packet
+1. Pre-flight: validar acceptance criteria mecánicamente verificables, dependencies DONE, files referenced existen
+2. Branch: feat/[stream]-[tp-id]-[short-desc]
+3. Implement siguiendo patrones del codebase (snake_case Python, async/await, UTF-8 sin BOM, multi-tenant headers, ON CONFLICT DO UPDATE)
+4. Test localmente con .venv\Scripts\python.exe -m pytest
+5. Verificar TODOS los acceptance criteria del Task Packet
+6. PR con title "[TP-XXX] Short description" y checklist completo
+7. Esperar audit Claude Code pre-merge
+
+## Comunicación
+- Tier 1 (architecture, security, contracts) → escalar a Cesar via Ramon
+- Tier 2 (implementation details) → Ramon decide, Cesar batch Friday
+- Tier 3 (linting, tests, docs) → autonomous
+- NO Slack durante deep work blocks
+- Brief updates en PR description
+
+## Disciplina
+- Task Packet > 6h → STOP y descomponer
+- "While we're here" → log it, don't fix in same PR
+- Si dudas Tier → asume Tier 1, escala
+- Si acceptance criteria no realista → escalar, no improvisar
+
+## Forbidden patterns
+- Nuevas integraciones (Slack/Discord/Email/Mobile) — no MVP scope
+- Nuevos ML models / training pipelines — V1
+- Refactor commits sin paired test passing
+- Generic plugin architectures
+- Strategy patterns para 2 strategies
+- Future-proof interfaces "just in case"
+
+## File patterns
+- New Python: docstring con purpose, owner, Task Packet ID
+- New migrations: numerada secuencialmente, rollback SQL
+- New endpoints: try/except con print() en main.py
+- New tables: tenant_id, created_at, updated_at + RLS policies
