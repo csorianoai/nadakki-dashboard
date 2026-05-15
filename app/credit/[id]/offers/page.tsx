@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { OfferComparisonCards } from "@/components/credit/OfferComparisonCards";
@@ -11,13 +11,11 @@ import { useSelectOffer } from "@/hooks/useSelectOffer";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import type { Offer } from "@/types/credit-offers";
 
-interface OffersPageProps {
-  params: { id: string };
-}
-
-export default function OffersPage({ params }: OffersPageProps) {
+export default function OffersPage() {
   const router = useRouter();
-  const applicationId = params.id;
+  const routeParams = useParams();
+  const applicationId =
+    typeof routeParams?.id === "string" ? routeParams.id : "";
   const { tenantId } = useAuthContext();
 
   const [modalOffer, setModalOffer] = useState<Offer | null>(null);
@@ -33,7 +31,8 @@ export default function OffersPage({ params }: OffersPageProps) {
   const { data, isLoading, isError, error, refetch } = useOffers({
     applicationId,
     tenantId,
-    refetchInterval: 5000, // poll every 5s while page open
+    enabled: Boolean(applicationId && tenantId),
+    refetchInterval: applicationId ? 5000 : undefined, // poll every 5s while page open
   });
 
   const offers = data?.offers ?? [];
@@ -92,6 +91,17 @@ export default function OffersPage({ params }: OffersPageProps) {
     },
     [selectOffer],
   );
+
+  if (!applicationId) {
+    return (
+      <div className="container py-8" data-testid="offers-error">
+        <h2 className="text-lg font-semibold">Aplicación no encontrada</h2>
+        <p className="text-sm text-muted-foreground">
+          Falta el identificador de la aplicación en la URL.
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

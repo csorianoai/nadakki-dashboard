@@ -10,6 +10,9 @@ const pushMock = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
+  useParams: () => ({
+    id: "00000000-0000-0000-0000-000000000001",
+  }),
 }));
 
 jest.mock("@/hooks/useAuthContext", () => ({
@@ -51,7 +54,7 @@ const APP_ID = MOCK_OFFERS_2_LENDERS.application_id;
 
 describe("OffersPage", () => {
   it("test_page_renders_offers — fetches and renders OfferComparisonCards with offers list", async () => {
-    render(<OffersPage params={{ id: APP_ID }} />);
+    render(<OffersPage />);
     await waitFor(() => {
       expect(screen.getByTestId("offers-page")).toBeInTheDocument();
     });
@@ -61,7 +64,7 @@ describe("OffersPage", () => {
 
   it("test_modal_opens_on_select — clicking select on a card opens SelectionConfirmModal", async () => {
     const user = userEvent.setup();
-    render(<OffersPage params={{ id: APP_ID }} />);
+    render(<OffersPage />);
     await waitFor(() => screen.getByTestId("offers-page"));
 
     const firstOfferId = MOCK_OFFERS_2_LENDERS.offers[0].id;
@@ -76,7 +79,7 @@ describe("OffersPage", () => {
 
   it("test_modal_cancel_closes — clicking Cancel closes modal without selecting", async () => {
     const user = userEvent.setup();
-    render(<OffersPage params={{ id: APP_ID }} />);
+    render(<OffersPage />);
     await waitFor(() => screen.getByTestId("offers-page"));
 
     const firstOfferId = MOCK_OFFERS_2_LENDERS.offers[0].id;
@@ -94,7 +97,7 @@ describe("OffersPage", () => {
 
   it("test_modal_confirm_calls_useSelectOffer — clicking Confirm triggers mutation + 500ms latency mock", async () => {
     const user = userEvent.setup();
-    render(<OffersPage params={{ id: APP_ID }} />);
+    render(<OffersPage />);
 
     await waitFor(() => screen.getByTestId("offers-page"));
 
@@ -117,7 +120,7 @@ describe("OffersPage", () => {
 
   it("test_success_toast_redirects — after successful selection, redirects to funding route", async () => {
     const user = userEvent.setup();
-    render(<OffersPage params={{ id: APP_ID }} />);
+    render(<OffersPage />);
     await waitFor(() => screen.getByTestId("offers-page"));
 
     const firstOfferId = MOCK_OFFERS_2_LENDERS.offers[0].id;
@@ -148,7 +151,7 @@ describe("OffersPage", () => {
     );
 
     const user = userEvent.setup();
-    render(<OffersPage params={{ id: APP_ID }} />);
+    render(<OffersPage />);
     await waitFor(() => screen.getByTestId("offers-page"));
 
     const firstOfferId = MOCK_OFFERS_2_LENDERS.offers[0].id;
