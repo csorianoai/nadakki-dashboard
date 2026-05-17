@@ -8,9 +8,10 @@
     "build:webpack": "next build --webpack",
     "build:turbopack": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint app/page.tsx components/layout/AgentCountDisplay.tsx components/layout/SidebarSuiteStats.tsx app/hooks/useAgentRegistrySummary.ts lib/api/agent-registry.ts lib/api/endpoints.ts lib/agent-registry/parse-summary.ts components/agent-registry/AgentRegistryStatHome.tsx types/agent-registry.ts --max-warnings 0",
+    "lint": "eslint app/page.tsx components/layout/AgentCountDisplay.tsx components/layout/SidebarSuiteStats.tsx app/hooks/useAgentRegistrySummary.ts lib/api/agent-registry.ts lib/api/endpoints.ts lib/agent-registry/parse-summary.ts components/agent-registry/AgentRegistryStatHome.tsx types/agent-registry.ts \"app/(bank)/bank/applications/queue/**/*.{ts,tsx}\" lib/bank-queue/**/*.ts components/bank-queue/**/*.tsx tests/bank/**/*.{ts,tsx} e2e/**/*.ts playwright.config.ts --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "type-check": "tsc --noEmit",
+    "test:e2e": "playwright test",
     "test": "jest",
     "test:run": "jest",
     "dev:stable": "next dev --webpack -p 3001",
@@ -45,6 +46,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
