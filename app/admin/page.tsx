@@ -6,7 +6,7 @@ import {
   Settings, Bot, FileText, Shield, Database, 
   Users, Activity, Server, ArrowRight, Cog,
   CreditCard, BarChart3, Key, Monitor,
-  Rocket, Gauge, MessageCircle, Sparkles, ClipboardList, Loader2, Search
+  Rocket, Gauge, MessageCircle, Sparkles, ClipboardList, Loader2, Search, LineChart
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
@@ -78,6 +78,14 @@ const ADMIN_MODULES_BASE = [
   { id: "db", name: "Database Status", icon: Database, desc: "Estado de conexion y esquema DB", href: "/admin/db", color: "#06b6d4" },
   { id: "billing", name: "Billing", icon: CreditCard, desc: "Planes y facturacion", href: "/admin/billing", color: "#10b981" },
   { id: "usage", name: "Usage", icon: BarChart3, desc: "Ejecuciones y limites por tenant", href: "/admin/usage", color: "#f59e0b" },
+  {
+    id: "observability",
+    name: "Observabilidad",
+    icon: LineChart,
+    desc: "Dashboards métricas, audit trail y SLA (tenant admin)",
+    href: "/admin/observability/dashboard",
+    color: "#38bdf8",
+  },
   { id: "api-keys", name: "API Keys", icon: Key, desc: "Gestion de claves API", href: "/admin/api-keys", color: "#8b5cf6" },
   { id: "system", name: "System Info", icon: Monitor, desc: "Estado del sistema", href: "/admin/system", color: "#06b6d4" },
   { id: "qa", name: "QA Piloto", icon: Activity, desc: "Verificacion operativa del tenant", href: "/admin/qa", color: "#22c55e" },
