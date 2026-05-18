@@ -1,12 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import type { BankApplicationStipulation } from "@/lib/bank-application-detail/types";
 
 export interface StipulationsPanelProps {
+  applicationId: string;
   stipulations: BankApplicationStipulation[] | undefined;
 }
 
-export function StipulationsPanel({ stipulations }: StipulationsPanelProps) {
+export function StipulationsPanel({ applicationId, stipulations }: StipulationsPanelProps) {
   const rows = stipulations?.length ? stipulations : [];
 
   return (
@@ -14,9 +16,17 @@ export function StipulationsPanel({ stipulations }: StipulationsPanelProps) {
       className="rounded-xl border border-forgeGray-200 bg-white p-6 shadow-sm"
       aria-labelledby="stips-section-title"
     >
-      <h2 id="stips-section-title" className="text-lg font-semibold text-forgeGray-900">
-        Estipulaciones
-      </h2>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <h2 id="stips-section-title" className="text-lg font-semibold text-forgeGray-900">
+          Estipulaciones
+        </h2>
+        <Link
+          href={`/bank/applications/${encodeURIComponent(applicationId)}/stipulations`}
+          className="no-print text-forge-xs font-medium text-forgeBrand-700 hover:underline"
+        >
+          Gestionar →
+        </Link>
+      </div>
       {rows.length === 0 ? (
         <p className="mt-4 text-forge-sm text-forgeGray-600">Sin estipulaciones activas.</p>
       ) : (

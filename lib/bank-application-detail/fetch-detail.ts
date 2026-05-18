@@ -19,13 +19,22 @@ export function readBankApplicationAuthToken(): string | null {
   return raw && raw.trim() ? raw.trim() : null;
 }
 
+export type BankApplicationApiRole = typeof BANK_ANALYST_ROLE_HEADER | "TENANT_ADMIN";
+
 export function buildBankApplicationDetailHeaders(token: string): Record<string, string> {
+  return buildBankApplicationDetailHeadersWithRole(token, BANK_ANALYST_ROLE_HEADER);
+}
+
+export function buildBankApplicationDetailHeadersWithRole(
+  token: string,
+  role: BankApplicationApiRole,
+): Record<string, string> {
   const tid = decodeJwtTid(token);
   if (!tid) throw new BankApplicationAuthError();
   return {
     Authorization: `Bearer ${token}`,
     "X-Tenant-ID": tid,
-    "X-Role": BANK_ANALYST_ROLE_HEADER,
+    "X-Role": role,
     "X-Correlation-ID": randomCorrelationId(),
   };
 }

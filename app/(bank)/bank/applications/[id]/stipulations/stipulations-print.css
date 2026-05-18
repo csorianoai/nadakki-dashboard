@@ -1,0 +1,9 @@
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .bank-stipulations-print {
+    background: #fff !important;
+    color: #111 !important;
+  }
+}
