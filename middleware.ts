@@ -43,6 +43,10 @@ const PUBLIC_PREFIXES = [
   "/api/credit-hub/client-metadata", // IP detection utility
 ];
 
+/** HMAC token–authenticated stipulation mobile upload (EP-T4-5); no JWT. */
+const PUBLIC_STIPULATION_UPLOAD_PATH_RE =
+  /^\/api\/v2\/credit\/applications\/[^/]+\/stipulations\/[^/]+\/(upload-link\/validate|upload)$/;
+
 // ── Tenant-context keywords in URL path segments ─────────────────────────────
 // When a UUID appears after one of these segments, treat it as a tenant ID.
 const TENANT_PATH_KEYWORDS = new Set([
@@ -121,6 +125,10 @@ export function middleware(request: NextRequest) {
 
   // Skip public routes
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
+  if (PUBLIC_STIPULATION_UPLOAD_PATH_RE.test(pathname)) {
     return NextResponse.next();
   }
 

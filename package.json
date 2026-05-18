@@ -8,7 +8,7 @@
     "build:webpack": "next build --webpack",
     "build:turbopack": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint app/page.tsx components/layout/AgentCountDisplay.tsx components/layout/SidebarSuiteStats.tsx app/hooks/useAgentRegistrySummary.ts lib/api/agent-registry.ts lib/api/endpoints.ts lib/agent-registry/parse-summary.ts components/agent-registry/AgentRegistryStatHome.tsx types/agent-registry.ts \"app/(bank)/bank/applications/**/*.tsx\" lib/bank-application-detail/**/*.ts lib/bank-decision/**/*.ts components/bank-application-detail/**/*.tsx components/ui/dialog.tsx --max-warnings 0",
+    "lint": "eslint app/page.tsx components/layout/AgentCountDisplay.tsx components/layout/SidebarSuiteStats.tsx app/hooks/useAgentRegistrySummary.ts lib/api/agent-registry.ts lib/api/endpoints.ts lib/agent-registry/parse-summary.ts components/agent-registry/AgentRegistryStatHome.tsx types/agent-registry.ts --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "type-check": "tsc --noEmit",
     "test": "jest",
@@ -24,8 +24,6 @@
     "docs:all": "npm run docs:tokens && npm run docs:components && npm run docs:pages && npm run docs:validate"
   },
   "dependencies": {
-    "@radix-ui/react-dialog": "^1.1.15",
-    "@sentry/react": "^10.53.1",
     "@tanstack/react-query": "^5.100.4",
     "@vercel/kv": "^3.0.0",
     "canvas-confetti": "^1.9.4",
@@ -38,18 +36,16 @@
     "next-pwa": "^5.6.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "@radix-ui/react-dialog": "^1.1.15",
     "react-hot-toast": "^2.6.0",
     "react-markdown": "^10.1.0",
     "recharts": "^3.6.0",
     "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
-    "swr": "^2.4.1",
     "tailwind-merge": "^2.2.0",
-    "web-vitals": "^5.2.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
