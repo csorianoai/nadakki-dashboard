@@ -20,7 +20,7 @@ jest.mock("recharts", () => {
     ResponsiveContainer: ({ children }: { children?: React.ReactNode }) =>
       React.createElement("div", { "data-testid": "recharts-container" }, children),
     BarChart: ({ children }: { children?: React.ReactNode }) =>
-      React.createElement("div", null, children),
+      React.createElement("div", { "data-testid": "recharts-bar-chart" }, children),
     LineChart: ({ children }: { children?: React.ReactNode }) =>
       React.createElement("div", { "data-testid": "recharts-line-chart" }, children),
     PieChart: ({ children }: { children?: React.ReactNode }) =>
@@ -35,5 +35,8 @@ jest.mock("recharts", () => {
     XAxis: () => null,
     YAxis: () => null,
     Tooltip: () => null,
+    AreaChart: ({ children }: { children?: React.ReactNode }) =>
+      React.createElement("div", { "data-testid": "recharts-area-chart" }, children),
+    Area: () => null,
   };
 });
