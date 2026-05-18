@@ -1,0 +1,230 @@
+"use client";
+
+import { use, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { BankApplicationDetailErrorBoundary } from "@/components/bank-application-detail/BankApplicationDetailErrorBoundary";
+import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
+import { OPTIMISTIC_CLAIM_TIMEOUT_MS } from "@/lib/bank-application-detail/constants";
+import { BankApplicationAuthError, BankApplicationHttpError } from "@/lib/bank-application-detail/errors";
+import { fetchBankApplicationDetail } from "@/lib/bank-application-detail/fetch-detail";
+import type { BankApplicationDetailResponse } from "@/lib/bank-application-detail/types";
+import { ActivityLog } from "./components/ActivityLog";
+import { ActionPanel } from "./components/ActionPanel";
+import { ApplicationDetailSkeleton } from "./components/ApplicationDetailSkeleton";
+import { ApplicationHeader } from "./components/ApplicationHeader";
+import { BorrowerSection } from "./components/BorrowerSection";
+import { DocumentChecklist } from "./components/DocumentChecklist";
+import { NotesPanel } from "./components/NotesPanel";
+import { ScoringSection } from "./components/ScoringSection";
+import { StipulationsPanel } from "./components/StipulationsPanel";
+import { VehicleSection } from "./components/VehicleSection";
+
+function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [detail, setDetail] = useState<BankApplicationDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [claimLoading, setClaimLoading] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErrorCode(null);
+    try {
+      const data = await fetchBankApplicationDetail(id);
+      setDetail(data);
+    } catch (err) {
+      if (err instanceof BankApplicationAuthError) {
+        window.location.href = `/login?next=${encodeURIComponent(pathname)}`;
+        return;
+      }
+      if (err instanceof BankApplicationHttpError) {
+        if (err.status === 401) {
+          window.location.href = `/login?next=${encodeURIComponent(pathname)}`;
+          return;
+        }
+        if (err.status === 403) {
+          setErrorCode("forbidden");
+          console.error("bank_application_detail.forbidden", { status: err.status });
+          return;
+        }
+        if (err.status === 404) {
+          setErrorCode("not_found");
+          return;
+        }
+        if (err.status === 503) {
+          setErrorCode("unavailable");
+          toast.error("Servicio no disponible. Intenta de nuevo.");
+          console.error("bank_application_detail.unavailable", { status: err.status });
+          return;
+        }
+        if (err.status >= 500) {
+          toast.error("Error del servidor al cargar el detalle.");
+          console.error("bank_application_detail.server_error", { status: err.status });
+        }
+      } else {
+        console.error("bank_application_detail.load_failed", { error: err });
+        toast.error("No se pudo cargar el detalle.");
+      }
+      setDetail(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, pathname]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleClaim = useCallback(async () => {
+    setClaimLoading(true);
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), OPTIMISTIC_CLAIM_TIMEOUT_MS);
+    try {
+      const res = await claimBankApplication(id, controller.signal);
+      window.clearTimeout(timer);
+      if (res.status === 401) {
+        window.location.href = `/login?next=${encodeURIComponent(pathname)}`;
+        return;
+      }
+      if (res.status === 403) {
+        toast.error("Permiso denegado para reclamar.");
+        return;
+      }
+      if (res.status === 409) {
+        toast.message("Esta solicitud ya está tomada por otro analista.", { duration: 4500 });
+        await load();
+        return;
+      }
+      if (res.status === 503) {
+        toast.error("Servicio no disponible.");
+        return;
+      }
+      if (res.status >= 500) {
+        toast.error("Error del servidor al reclamar.");
+        return;
+      }
+      if (!res.ok) {
+        toast.error("No se pudo reclamar la solicitud.");
+        return;
+      }
+      toast.success("Solicitud reclamada.");
+      await load();
+    } catch (e) {
+      window.clearTimeout(timer);
+      console.error("bank_application_detail.claim_failed", { applicationId: id, error: e });
+      toast.error("Red interrumpida o tiempo agotado.");
+    } finally {
+      setClaimLoading(false);
+    }
+  }, [id, load, pathname]);
+
+  const handleDecide = useCallback(() => {
+    toast.info("Flujo de decisión: continuará en el modal de decisión (EP siguiente).", { duration: 4000 });
+  }, []);
+
+  if (loading) {
+    return <ApplicationDetailSkeleton />;
+  }
+
+  if (errorCode === "not_found") {
+    return (
+      <main className="mx-auto max-w-2xl p-8 text-center">
+        <h1 className="text-xl font-semibold text-forgeGray-900">Solicitud no encontrada</h1>
+        <p className="mt-2 text-forge-sm text-forgeGray-600">Verifica el enlace o vuelve a la bandeja.</p>
+        <Link
+          href="/bank/applications/queue"
+          className="mt-6 inline-block text-forge-sm font-medium text-forgeBrand-700 underline-offset-4 hover:underline"
+        >
+          Ir a la bandeja
+        </Link>
+      </main>
+    );
+  }
+
+  if (errorCode === "forbidden") {
+    return (
+      <main className="mx-auto max-w-2xl p-8 text-center" role="alert">
+        <h1 className="text-xl font-semibold text-rose-900">Acceso denegado</h1>
+        <p className="mt-2 text-forge-sm text-forgeGray-700">Tu rol no puede ver esta solicitud.</p>
+        <button
+          type="button"
+          className="mt-6 rounded-lg border border-forgeGray-300 px-4 py-2 text-forge-sm"
+          onClick={() => router.push("/bank/applications/queue")}
+        >
+          Volver a la bandeja
+        </button>
+      </main>
+    );
+  }
+
+  if (!detail) {
+    return (
+      <main className="mx-auto max-w-2xl p-8 text-center">
+        <p className="text-forge-sm text-forgeGray-700">No se pudo cargar esta solicitud.</p>
+        <button
+          type="button"
+          className="mt-4 rounded-lg bg-forgeBrand-600 px-4 py-2 text-forge-sm font-medium text-white"
+          onClick={() => void load()}
+        >
+          Reintentar
+        </button>
+      </main>
+    );
+  }
+
+  return (
+    <main className="bank-application-detail mx-auto max-w-6xl space-y-6 p-4 md:p-8" aria-label="Detalle de solicitud bancaria">
+      <nav aria-label="Migas">
+        <Link
+          href="/bank/applications/queue"
+          className="text-forge-sm font-medium text-forgeBrand-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+        >
+          ← Bandeja
+        </Link>
+      </nav>
+
+      <ApplicationHeader detail={detail} />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <BorrowerSection borrower={detail.borrower} />
+        <VehicleSection vehicle={detail.vehicle} />
+      </div>
+
+      <ScoringSection scoring={detail.scoring} />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DocumentChecklist documents={detail.documents} />
+        <StipulationsPanel stipulations={detail.stipulations} />
+      </div>
+
+      <ActionPanel detail={detail} claimLoading={claimLoading} onClaim={handleClaim} onDecide={handleDecide} />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ActivityLog events={detail.recent_events} eventsCount={detail.events_count} />
+        <NotesPanel notes={detail.notes} />
+      </div>
+
+      {detail.last_process_result && Object.keys(detail.last_process_result).length > 0 ? (
+        <section className="rounded-xl border border-forgeGray-200 bg-forgeGray-50/50 p-6">
+          <h2 className="text-lg font-semibold text-forgeGray-900">Último resultado de proceso</h2>
+          <pre className="mt-3 max-h-48 overflow-auto rounded-md bg-white p-3 font-forgeMono text-[11px] text-forgeGray-800">
+            {JSON.stringify(detail.last_process_result, null, 2)}
+          </pre>
+        </section>
+      ) : null}
+    </main>
+  );
+}
+
+export default function BankApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <BankApplicationDetailErrorBoundary>
+      <BankApplicationDetailInner params={params} />
+    </BankApplicationDetailErrorBoundary>
+  );
+}
