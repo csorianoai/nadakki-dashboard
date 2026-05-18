@@ -8,9 +8,17 @@ export interface ActionPanelProps {
   claimLoading: boolean;
   onClaim: () => void;
   onDecide: () => void;
+  /** When true, analyst cannot open decision (e.g. not claim owner). */
+  decideDisabled?: boolean;
 }
 
-export function ActionPanel({ detail, claimLoading, onClaim, onDecide }: ActionPanelProps) {
+export function ActionPanel({
+  detail,
+  claimLoading,
+  onClaim,
+  onDecide,
+  decideDisabled = false,
+}: ActionPanelProps) {
   const owns = detail.bank_claim?.current_user_owns === true;
   const canClaim =
     !owns &&
@@ -44,8 +52,10 @@ export function ActionPanel({ detail, claimLoading, onClaim, onDecide }: ActionP
         </button>
         <button
           type="button"
+          disabled={decideDisabled}
+          title={decideDisabled ? "Reclama la solicitud como analista para decidir" : undefined}
           onClick={onDecide}
-          className="min-h-11 rounded-lg border border-forgeGray-300 bg-white px-4 py-2 text-forge-sm font-medium text-forgeGray-900 hover:bg-forgeGray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
+          className="min-h-11 rounded-lg border border-forgeGray-300 bg-white px-4 py-2 text-forge-sm font-medium text-forgeGray-900 hover:bg-forgeGray-50 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
         >
           Decisión
         </button>
