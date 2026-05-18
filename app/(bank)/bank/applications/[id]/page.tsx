@@ -20,6 +20,7 @@ import { NotesPanel } from "./components/NotesPanel";
 import { ScoringSection } from "./components/ScoringSection";
 import { StipulationsPanel } from "./components/StipulationsPanel";
 import { VehicleSection } from "./components/VehicleSection";
+import { DecisionFormModal } from "./components/DecisionFormModal";
 
 function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -30,6 +31,7 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [claimLoading, setClaimLoading] = useState(false);
+  const [decisionOpen, setDecisionOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -124,8 +126,13 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
   }, [id, load, pathname]);
 
   const handleDecide = useCallback(() => {
-    toast.info("Flujo de decisión: continuará en el modal de decisión (EP siguiente).", { duration: 4000 });
-  }, []);
+    const owns = detail?.bank_claim?.current_user_owns === true;
+    if (!owns) {
+      toast.error("Debes reclamar la solicitud antes de registrar una decisión.");
+      return;
+    }
+    setDecisionOpen(true);
+  }, [detail?.bank_claim?.current_user_owns]);
 
   if (loading) {
     return <ApplicationDetailSkeleton />;
@@ -202,7 +209,29 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
         <StipulationsPanel stipulations={detail.stipulations} />
       </div>
 
-      <ActionPanel detail={detail} claimLoading={claimLoading} onClaim={handleClaim} onDecide={handleDecide} />
+      <ActionPanel
+        detail={detail}
+        claimLoading={claimLoading}
+        decideDisabled={detail.bank_claim?.current_user_owns !== true}
+        onClaim={handleClaim}
+        onDecide={handleDecide}
+      />
+
+      <DecisionFormModal
+        applicationId={detail.application_id}
+        analystActorId={detail.bank_claim?.analyst_id ?? detail.bank_claim?.claimed_by}
+        currency={detail.currency}
+        grossMonthlyIncome={detail.borrower?.income_monthly}
+        baselineAmount={detail.amount}
+        initialStipulations={(detail.stipulations ?? []).map((s) => ({
+          id: s.id,
+          description: s.description ?? "",
+          status: s.status,
+        }))}
+        open={decisionOpen}
+        onOpenChange={setDecisionOpen}
+        onSubmitted={() => load()}
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <ActivityLog events={detail.recent_events} eventsCount={detail.events_count} />

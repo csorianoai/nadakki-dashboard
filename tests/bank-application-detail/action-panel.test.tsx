@@ -37,4 +37,17 @@ describe("ActionPanel", () => {
     await userEvent.click(screen.getByRole("button", { name: /decisión/i }));
     expect(onDecide).toHaveBeenCalledTimes(1);
   });
+
+  test("disables decisión when decideDisabled true", () => {
+    render(
+      <ActionPanel
+        detail={baseDetail()}
+        claimLoading={false}
+        onClaim={jest.fn()}
+        onDecide={jest.fn()}
+        decideDisabled
+      />,
+    );
+    expect(screen.getByRole("button", { name: /decisión/i })).toBeDisabled();
+  });
 });
