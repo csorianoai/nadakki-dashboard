@@ -32,11 +32,13 @@ test.describe("EP-T3-2 observability smoke", () => {
     await page.goto(`/bank/applications/${APP_ID}`);
     await expect(page.getByText("F. *** Last")).toBeVisible();
     await expect(page.getByRole("main", { name: /detalle de solicitud bancaria/i })).toBeVisible();
+    await expect(page.locator("[data-nadakki-track=bank.claim.click]")).toBeVisible();
+    await expect(page.locator("[data-nadakki-track=bank.decide.open]")).toBeVisible();
   });
 
-  test("credit-hub dealer home responds", async ({ page }) => {
-    await page.goto("/credit-hub/dealer");
-    await expect(page).toHaveURL(/\/credit-hub\/dealer\/?$/);
-    await expect(page.locator("body")).toBeVisible();
+  test("route error boundary shows fallback UI", async ({ page }) => {
+    await page.goto("/testing/observability-boundary");
+    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page.getByText(/algo salió mal/i)).toBeVisible();
   });
 });

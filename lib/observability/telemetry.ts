@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/react";
-import { SENTRY_SAMPLE_RATE_DEV, SENTRY_SAMPLE_RATE_PROD } from "@/lib/observability/constants";
+import { getSentryTracesSampleRate, isTelemetryEnabled } from "@/lib/observability/constants";
 
 let clientInitialized = false;
 
@@ -8,12 +8,30 @@ export function resetClientTelemetryForTests(): void {
 }
 
 const SENSITIVE_KEY_RE =
-  /(password|passwd|secret|token|authorization|bearer|ssn|social_security|email|phone|credit_card|card_number|cvv|pin)\b/i;
+  /(password|passwd|secret|token|authorization|bearer|ssn|social_security|email|phone|credit_card|card_number|cvv|pin|cedula|cédula|national_id)\b/i;
+
+/** Aligned with backend redaction style (SPEC-T3-002). */
+const MASK_EMAIL = "x***@***.com";
+const MASK_PHONE = "XXX-XXX-XXXX";
+const MASK_CEDULA = "XXX-XXXXXXX-X";
 
 function scrubString(s: string): string {
   let out = s;
-  out = out.replace(/\b[\w.%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, "[redacted-email]");
-  out = out.replace(/\b\+?\d[\d\s().-]{8,}\b/g, "[redacted-phone]");
+  // Cédula dominicana-style (before generic digit runs)
+  out = out.replace(/\b\d{3}-\d{7}-\d\b/g, MASK_CEDULA);
+  out = out.replace(/\b\d{3}\s+\d{7}\s+\d\b/g, MASK_CEDULA);
+  // Teléfono: (809) 555-1234 / 809-555-1234 / +1 …
+  out = out.replace(/\(\d{3}\)\s*\d{3}[-.\s]?\d{4}\b/g, MASK_PHONE);
+  out = out.replace(
+    /\b(?:\+?1[-.\s]?)?(?:\(\d{3}\)|\d{3})[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
+    MASK_PHONE,
+  );
+  out = out.replace(/\b\+1\s+\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, MASK_PHONE);
+  out = out.replace(/\b\+?\d{1,3}[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g, MASK_PHONE);
+  out = out.replace(/\+\s*XXX-XXX-XXXX/g, MASK_PHONE);
+  // Correo
+  out = out.replace(/\b[\w.%+-]+@[\w.-]+\.[A-Za-z]{2,}\b/g, MASK_EMAIL);
+  // PAN / tarjeta (defense in depth)
   out = out.replace(/\b(?:\d[ -]*?){13,16}\b/g, "[redacted-pan]");
   return out;
 }
@@ -64,16 +82,13 @@ export function scrubSentryEvent<T extends Sentry.Event>(event: T): T {
   return event;
 }
 
-function getTracesSampleRate(): number {
-  return process.env.NODE_ENV === "production" ? SENTRY_SAMPLE_RATE_PROD : SENTRY_SAMPLE_RATE_DEV;
-}
-
 /**
  * Initializes browser Sentry (client components only).
- * DSN from NEXT_PUBLIC_SENTRY_DSN; no-op when unset.
+ * Skips when {@link isTelemetryEnabled} is false, or DSN is unset.
  */
 export function initClientTelemetry(): void {
   if (typeof window === "undefined" || clientInitialized) return;
+  if (!isTelemetryEnabled()) return;
 
   const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN?.trim();
   if (!dsn) return;
@@ -83,7 +98,7 @@ export function initClientTelemetry(): void {
   Sentry.init({
     dsn,
     environment: process.env.NODE_ENV,
-    tracesSampleRate: getTracesSampleRate(),
+    tracesSampleRate: getSentryTracesSampleRate(),
     replaysSessionSampleRate: isProd ? 0.05 : 1.0,
     replaysOnErrorSampleRate: 1.0,
     integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
