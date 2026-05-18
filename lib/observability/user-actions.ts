@@ -1,7 +1,12 @@
 import * as Sentry from "@sentry/react";
 import { scrubUnknown } from "@/lib/observability/telemetry";
 
-export type CriticalUserAction = "claim" | "decide" | "upload";
+export type CriticalUserAction =
+  | "claim"
+  | "decide"
+  | "upload"
+  | "stipulation_verify"
+  | "stipulation_reject";
 
 /**
  * Manual tracking for high-value flows (claim / decide / upload).
