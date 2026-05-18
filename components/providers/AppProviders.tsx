@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { TenantBrandingProvider } from "@/components/providers/TenantBrandingProvider";
+import { ObservabilityBootstrap } from "@/components/observability/ObservabilityBootstrap";
 import { ToastProvider } from "@/components/ui/Toast";
 
 /**
@@ -16,6 +17,7 @@ import { ToastProvider } from "@/components/ui/Toast";
  *     ThemeProvider            — CSS vars / dark mode
  *       AuthProvider           — V2 JWT auth (single instance)
  *         TenantProvider       — tenant context synced from legacy + auth
+ *           ObservabilityBootstrap — Sentry + Web Vitals + page views (client)
  *           TenantBrandingProvider — branding fetch + CSS var injection (`data-tenant-id` on body)
  *             ToastProvider     — notifications
  */
@@ -38,6 +40,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <ThemeProvider>
         <AuthProvider>
           <TenantProvider>
+            <ObservabilityBootstrap />
             <TenantBrandingProvider>
               <ToastProvider>{children}</ToastProvider>
             </TenantBrandingProvider>

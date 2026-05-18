@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTenant } from "@/contexts/TenantContext";
 import { BankApplicationDetailErrorBoundary } from "@/components/bank-application-detail/BankApplicationDetailErrorBoundary";
 import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
 import { OPTIMISTIC_CLAIM_TIMEOUT_MS } from "@/lib/bank-application-detail/constants";
@@ -21,11 +22,14 @@ import { ScoringSection } from "./components/ScoringSection";
 import { StipulationsPanel } from "./components/StipulationsPanel";
 import { VehicleSection } from "./components/VehicleSection";
 import { DecisionFormModal } from "./components/DecisionFormModal";
+import { captureApiError } from "@/lib/observability/telemetry";
+import { trackCriticalUserAction } from "@/lib/observability/user-actions";
 
 function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const pathname = usePathname();
+  const { tenantId } = useTenant();
 
   const [detail, setDetail] = useState<BankApplicationDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,15 +72,26 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
           toast.error("Error del servidor al cargar el detalle.");
           console.error("bank_application_detail.server_error", { status: err.status });
         }
+        captureApiError(err, {
+          endpoint: `/api/v2/credit/applications/${id}`,
+          status: err.status,
+          method: "GET",
+          tenantId,
+        });
       } else {
         console.error("bank_application_detail.load_failed", { error: err });
+        captureApiError(err, {
+          endpoint: `/api/v2/credit/applications/${id}`,
+          method: "GET",
+          tenantId,
+        });
         toast.error("No se pudo cargar el detalle.");
       }
       setDetail(null);
     } finally {
       setLoading(false);
     }
-  }, [id, pathname]);
+  }, [id, pathname, tenantId]);
 
   useEffect(() => {
     void load();
@@ -111,19 +126,31 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
         return;
       }
       if (!res.ok) {
+        captureApiError(new Error(`claim failed: ${res.status}`), {
+          endpoint: `/api/v2/credit/applications/${id}/claim`,
+          status: res.status,
+          method: "POST",
+          tenantId,
+        });
         toast.error("No se pudo reclamar la solicitud.");
         return;
       }
       toast.success("Solicitud reclamada.");
+      trackCriticalUserAction("claim", { application_id: id }, tenantId);
       await load();
     } catch (e) {
       window.clearTimeout(timer);
       console.error("bank_application_detail.claim_failed", { applicationId: id, error: e });
+      captureApiError(e, {
+        endpoint: `/api/v2/credit/applications/${id}/claim`,
+        method: "POST",
+        tenantId,
+      });
       toast.error("Red interrumpida o tiempo agotado.");
     } finally {
       setClaimLoading(false);
     }
-  }, [id, load, pathname]);
+  }, [id, load, pathname, tenantId]);
 
   const handleDecide = useCallback(() => {
     const owns = detail?.bank_claim?.current_user_owns === true;

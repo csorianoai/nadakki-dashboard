@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { useTenant } from "@/contexts/TenantContext";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,8 @@ import { DecisionConfirmDialog } from "./DecisionConfirmDialog";
 import { DecisionTypeSelector } from "./DecisionTypeSelector";
 import { ReasonCodesSelect } from "./ReasonCodesSelect";
 import { StipulationsBuilder } from "./StipulationsBuilder";
+import { captureApiError } from "@/lib/observability/telemetry";
+import { trackCriticalUserAction } from "@/lib/observability/user-actions";
 
 export interface DecisionFormModalProps {
   applicationId: string;
@@ -56,6 +59,7 @@ export function DecisionFormModal({
   onSubmitted,
 }: DecisionFormModalProps) {
   const pathname = usePathname();
+  const { tenantId } = useTenant();
   const [confirmClose, setConfirmClose] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -153,6 +157,11 @@ export function DecisionFormModal({
     try {
       const res = await submitBankDecision(applicationId, payload, analystActorId.trim());
       toast.success(`Decisión registrada: ${res.decision_type}`);
+      trackCriticalUserAction(
+        "decide",
+        { application_id: applicationId, decision_type: res.decision_type },
+        tenantId,
+      );
       if (res.adverse_action_letter_url) {
         toast.message("Carta de acción adversa disponible.", { duration: 5000 });
       }
@@ -176,9 +185,20 @@ export function DecisionFormModal({
         } else {
           toast.error(e.message || "No se pudo registrar la decisión.");
         }
+        captureApiError(e, {
+          endpoint: `/api/v2/credit/applications/${applicationId}/decision`,
+          status: e.status,
+          method: "POST",
+          tenantId,
+        });
         return;
       }
       toast.error("No se pudo registrar la decisión.");
+      captureApiError(e, {
+        endpoint: `/api/v2/credit/applications/${applicationId}/decision`,
+        method: "POST",
+        tenantId,
+      });
     } finally {
       setBusy(false);
     }

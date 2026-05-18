@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { captureClientException } from "@/lib/observability/telemetry";
 
 interface Props {
   children: ReactNode;
@@ -18,6 +19,10 @@ export class BankApplicationDetailErrorBoundary extends Component<Props, State> 
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
+    captureClientException(error, {
+      boundary: "bank_application_detail",
+      componentStack: info.componentStack?.slice(0, 500),
+    });
     console.error("bank_application_detail.boundary_error", {
       message: error.message,
       name: error.name,
