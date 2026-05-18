@@ -37,6 +37,8 @@ export interface BankApplicationEvent {
 
 export interface BankApplicationClaim {
   claimed_by?: string | null;
+  /** Analyst UUID for X-Actor-ID on decide (EP-13) */
+  analyst_id?: string | null;
   claimed_at?: string | null;
   current_user_owns?: boolean;
 }

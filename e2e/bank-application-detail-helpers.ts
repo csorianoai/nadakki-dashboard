@@ -42,3 +42,17 @@ export function sampleDetailBody(applicationId: string) {
     hours_until_sla: 3.5,
   };
 }
+
+/** Detail with claim ready for decision modal (EP-11 e2e). */
+export function sampleDetailOwnedClaim(applicationId: string) {
+  const base = sampleDetailBody(applicationId);
+  return {
+    ...base,
+    bank_claim: {
+      analyst_id: "11111111-1111-4111-8111-111111111111",
+      claimed_by: "11111111-1111-4111-8111-111111111111",
+      claimed_at: new Date().toISOString(),
+      current_user_owns: true,
+    },
+  };
+}
