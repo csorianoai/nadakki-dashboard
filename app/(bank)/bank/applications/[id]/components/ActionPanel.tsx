@@ -46,6 +46,7 @@ export function ActionPanel({
           type="button"
           disabled={!canClaim || claimLoading}
           onClick={onClaim}
+          data-nadakki-track="bank.claim.click"
           className="min-h-11 rounded-lg bg-forgeBrand-600 px-4 py-2 text-forge-sm font-medium text-white hover:bg-forgeBrand-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
         >
           {claimLoading ? "Reclamando…" : "Reclamar"}
@@ -55,6 +56,7 @@ export function ActionPanel({
           disabled={decideDisabled}
           title={decideDisabled ? "Reclama la solicitud como analista para decidir" : undefined}
           onClick={onDecide}
+          data-nadakki-track="bank.decide.open"
           className="min-h-11 rounded-lg border border-forgeGray-300 bg-white px-4 py-2 text-forge-sm font-medium text-forgeGray-900 hover:bg-forgeGray-50 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
         >
           Decisión
