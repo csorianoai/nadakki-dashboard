@@ -6,7 +6,9 @@ export type CriticalUserAction =
   | "decide"
   | "upload"
   | "stipulation_verify"
-  | "stipulation_reject";
+  | "stipulation_reject"
+  | "stipulation_create"
+  | "stipulation_bulk_send_dealer";
 
 /**
  * Manual tracking for high-value flows (claim / decide / upload).

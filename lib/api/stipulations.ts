@@ -6,7 +6,9 @@ import { BankApplicationAuthError, BankApplicationHttpError } from "@/lib/bank-a
 import type {
   CreditStipulation,
   StipulationAuditEntry,
+  StipulationCreatePayload,
   StipulationStatus,
+  StipulationUploadLinkResult,
   StipulationsApiRole,
 } from "@/lib/api/stipulations-types";
 import { resolveStipulationsApiRoleFromStorage } from "@/lib/bank/stipulations/resolve-role";
@@ -71,6 +73,14 @@ function normalizeStipulationRow(row: unknown): CreditStipulation | null {
     rejected_at: typeof o.rejected_at === "string" ? o.rejected_at : undefined,
     reject_reason: typeof o.reject_reason === "string" ? o.reject_reason : undefined,
     notes: typeof o.notes === "string" ? o.notes : undefined,
+    type: typeof o.type === "string" ? o.type : undefined,
+    dealer_id:
+      typeof o.dealer_id === "string"
+        ? o.dealer_id
+        : typeof (o as { dealerId?: unknown }).dealerId === "string"
+          ? String((o as { dealerId?: string }).dealerId)
+          : undefined,
+    sla_deadline: typeof o.sla_deadline === "string" ? o.sla_deadline : undefined,
   };
 }
 
@@ -168,6 +178,67 @@ export async function rejectStipulation(
   return normalizeStipulationRow(row);
 }
 
+export async function createStipulation(
+  applicationId: string,
+  payload: StipulationCreatePayload,
+  role: StipulationsApiRole = resolveStipulationsApiRoleFromStorage(),
+): Promise<CreditStipulation | null> {
+  const bodyPayload: Record<string, unknown> = {
+    type: payload.type.trim(),
+    dealer_id: payload.dealer_id.trim(),
+  };
+  if (payload.description?.trim()) bodyPayload.description = payload.description.trim();
+  if (payload.sla_hours != null && payload.sla_hours > 0) bodyPayload.sla_hours = payload.sla_hours;
+
+  const res = await creditJson(
+    applicationId,
+    "/stipulations",
+    { method: "POST", body: JSON.stringify(bodyPayload) },
+    role,
+  );
+  const body = await parseJsonBody(res);
+  assertOk(res, body);
+  const row =
+    body && typeof body === "object"
+      ? (body as Record<string, unknown>).data ?? (body as Record<string, unknown>).stipulation ?? body
+      : null;
+  return normalizeStipulationRow(row);
+}
+
+export async function postStipulationUploadLink(
+  applicationId: string,
+  stipulationId: string,
+  role: StipulationsApiRole = resolveStipulationsApiRoleFromStorage(),
+): Promise<StipulationUploadLinkResult> {
+  const res = await creditJson(
+    applicationId,
+    `/stipulations/${encodeURIComponent(stipulationId)}/upload-link`,
+    { method: "POST", body: "{}" },
+    role,
+  );
+  const body = await parseJsonBody(res);
+  assertOk(res, body);
+  if (!body || typeof body !== "object") {
+    throw new BankApplicationHttpError("invalid_upload_link_response", 500);
+  }
+  const o = body as Record<string, unknown>;
+  const sid = o.stipulation_id;
+  const upload = o.upload_url;
+  const tok = o.token;
+  const exp = o.expires_at;
+  const qr = o.qr_payload;
+  if (typeof sid !== "string" || typeof upload !== "string" || typeof tok !== "string" || typeof exp !== "string") {
+    throw new BankApplicationHttpError("invalid_upload_link_shape", 500);
+  }
+  return {
+    stipulation_id: sid,
+    upload_url: upload,
+    token: tok,
+    expires_at: typeof exp === "string" ? exp : String(exp),
+    qr_payload: typeof qr === "string" ? qr : "",
+  };
+}
+
 export async function getStipulationAudit(
   applicationId: string,
   stipulationId: string,
@@ -213,6 +284,35 @@ export async function getStipulationAudit(
     });
   }
   return out;
+}
+
+/**
+ * Agent-4 / META MVP: notifies dealer Analyst UI that new stipulations are pending review.
+ * Fails softly when Agent-2 has not wired the endpoint yet (404/405/501).
+ */
+export async function notifyDealerStipulationWorkflow(
+  applicationId: string,
+  stipulation_ids: string[],
+  role: StipulationsApiRole = resolveStipulationsApiRoleFromStorage(),
+): Promise<{ ok: boolean; unsupported?: boolean }> {
+  const res = await creditJson(
+    applicationId,
+    "/stipulations/workflow-notify-dealer",
+    {
+      method: "POST",
+      body: JSON.stringify({ stipulation_ids }),
+    },
+    role,
+  );
+  if (res.status === 404 || res.status === 405 || res.status === 501) {
+    return { ok: false, unsupported: true };
+  }
+  const body = await parseJsonBody(res);
+  if (!res.ok) {
+    return { ok: false };
+  }
+  assertOk(res, body);
+  return { ok: true };
 }
 
 /** Download stipulation proof (PDF/image). Returns blob; caller revokes object URLs. */

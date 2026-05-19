@@ -13,7 +13,28 @@ export interface CreditStipulation {
   rejected_at?: string;
   reject_reason?: string;
   notes?: string;
+  /** Backend stipulation type (EP-12a) */
+  type?: string;
+  dealer_id?: string;
+  sla_deadline?: string;
 }
+
+export interface StipulationUploadLinkResult {
+  stipulation_id: string;
+  upload_url: string;
+  token: string;
+  expires_at: string;
+  qr_payload: string;
+}
+
+export interface StipulationCreatePayload {
+  type: string;
+  description?: string;
+  dealer_id: string;
+  sla_hours?: number | null;
+}
+
+export type StipulationsApiRole = "BANK_ANALYST" | "TENANT_ADMIN";
 
 export interface StipulationAuditEntry {
   id: string;
@@ -22,5 +43,3 @@ export interface StipulationAuditEntry {
   action: string;
   detail?: string;
 }
-
-export type StipulationsApiRole = "BANK_ANALYST" | "TENANT_ADMIN";
