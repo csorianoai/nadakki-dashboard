@@ -27,6 +27,8 @@ export interface UseAppHealthScoreReturn {
 
 /** Derives weighted health score breakdown for overlays and analytics callers. */
 export function useAppHealthScore(config: UseAppHealthScoreConfig): UseAppHealthScoreReturn {
+  void config.applicationId;
+  void config.tenantId;
   const applicationData = config.applicationData;
 
   const factors = useMemo(
