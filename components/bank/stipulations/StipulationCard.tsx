@@ -57,6 +57,21 @@ export function StipulationCard({
           {stipulation.title ? (
             <p className="mt-1 text-forge-sm text-forgeGray-600">{stipulation.description}</p>
           ) : null}
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-forge-xs text-forgeGray-500">
+            {stipulation.type ? (
+              <span>
+                Tipo: <span className="font-forgeMono text-forgeGray-700">{stipulation.type}</span>
+              </span>
+            ) : null}
+            {stipulation.sla_deadline ? (
+              <span>
+                SLA:{" "}
+                <time dateTime={stipulation.sla_deadline}>
+                  {new Date(stipulation.sla_deadline).toLocaleString()}
+                </time>
+              </span>
+            ) : null}
+          </div>
         </div>
         <StipulationStatusBadge status={stipulation.status} />
       </div>

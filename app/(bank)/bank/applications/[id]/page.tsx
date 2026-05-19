@@ -233,7 +233,11 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
 
       <div className="grid gap-6 lg:grid-cols-2">
         <DocumentChecklist documents={detail.documents} />
-        <StipulationsPanel applicationId={detail.application_id} stipulations={detail.stipulations} />
+        <StipulationsPanel
+          applicationId={detail.application_id}
+          stipulations={detail.stipulations}
+          tenantId={tenantId}
+        />
       </div>
 
       <ActionPanel

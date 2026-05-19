@@ -3,11 +3,16 @@
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import useSWR from "swr";
 import { toast } from "sonner";
 import { useTenant } from "@/contexts/TenantContext";
 import { BankApplicationAuthError, BankApplicationHttpError } from "@/lib/bank-application-detail/errors";
+import { fetchBankApplicationDetail } from "@/lib/bank-application-detail/fetch-detail";
 import { useStipulations } from "@/hooks/useStipulations";
 import { StipulationsList } from "@/components/bank/stipulations/StipulationsList";
+import { StipulationsModal } from "@/components/bank/StipulationsModal";
+import { Button } from "@/components/ui/button";
+import { isBankStipulationWorkflowUiEnabled } from "@/lib/env/bank-stipulation-workflow";
 import { StipulationsPageSkeleton } from "@/components/bank/stipulations/StipulationsPageSkeleton";
 import { StipulationVerifyModal } from "@/components/bank/stipulations/StipulationVerifyModal";
 import { StipulationRejectModal } from "@/components/bank/stipulations/StipulationRejectModal";
@@ -20,13 +25,34 @@ export function StipulationsAdminClient({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const pathname = usePathname();
   const { tenantId } = useTenant();
-  const { stipulations, error, isLoading, isValidating, mutate, role, canMutate, verify, reject } =
-    useStipulations(id);
+  const {
+    stipulations,
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+    role,
+    canMutate,
+    verify,
+    reject,
+    create,
+    sendPendingToDealer,
+  } = useStipulations(id, tenantId);
+
+  const { data: appDetail } = useSWR(
+    id ? (["bank-application-detail-dealer", id] as const) : null,
+    ([, appId]) => fetchBankApplicationDetail(appId),
+    { revalidateOnFocus: false, shouldRetryOnError: false },
+  );
+  const dealerId = appDetail?.dealer?.id?.trim() ?? "";
+
+  const workflowUi = isBankStipulationWorkflowUiEnabled();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [verifyId, setVerifyId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
 
   const list = stipulations ?? [];
   const selectedIndex = useMemo(() => list.findIndex((s) => s.id === selectedId), [list, selectedId]);
@@ -53,7 +79,7 @@ export function StipulationsAdminClient({ params }: { params: Promise<{ id: stri
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
-      if (verifyId || rejectId || previewId) return;
+      if (verifyId || rejectId || previewId || workflowModalOpen) return;
       if (e.key === "j" || e.key === "J") {
         e.preventDefault();
         moveSelection(1);
@@ -72,11 +98,49 @@ export function StipulationsAdminClient({ params }: { params: Promise<{ id: stri
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [canMutate, moveSelection, previewId, rejectId, selectedId, stipById, verifyId]);
+  }, [canMutate, moveSelection, previewId, rejectId, selectedId, stipById, verifyId, workflowModalOpen]);
 
   const activeVerify = stipById(verifyId);
   const activeReject = stipById(rejectId);
   const activePreview = stipById(previewId);
+
+  const bulkSlot = useMemo(() => {
+    if (!workflowUi || !canMutate) return null;
+    return (
+      <>
+        <Button type="button" onClick={() => setWorkflowModalOpen(true)} data-testid="stip-workflow-new">
+          Nueva estipulación
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={async () => {
+            try {
+              const r = await sendPendingToDealer();
+              toast.success(
+                r.uploadLinksIssued === 0
+                  ? "No hay estipulaciones en estado pendiente."
+                  : r.notifyUnsupported
+                    ? `Se generaron ${r.uploadLinksIssued} enlace(s). Notificación al dealer aún no disponible.`
+                    : `Se generaron ${r.uploadLinksIssued} enlace(s) y se notificó al dealer.`,
+              );
+              trackCriticalUserAction(
+                "stipulation_bulk_send_dealer",
+                { application_id: id, count: r.uploadLinksIssued },
+                tenantId,
+              );
+            } catch (err) {
+              toast.error("No se pudo enviar enlaces / notificar.");
+              captureApiError(err, { endpoint: "stipulations_workflow_bulk", method: "POST", tenantId });
+            }
+          }}
+          data-testid="stip-workflow-send-pending"
+        >
+          Enviar enlaces pendientes
+        </Button>
+      </>
+    );
+  }, [workflowUi, canMutate, sendPendingToDealer, id, tenantId]);
 
   if (isLoading) {
     return <StipulationsPageSkeleton />;
@@ -133,6 +197,12 @@ export function StipulationsAdminClient({ params }: { params: Promise<{ id: stri
         </p>
       </header>
 
+      {bulkSlot && !list.length ? (
+        <div className="no-print flex flex-wrap gap-2" data-testid="stip-workflow-toolbar-empty">
+          {bulkSlot}
+        </div>
+      ) : null}
+
       {!list.length ? (
         <div
           className="rounded-xl border border-dashed border-forgeGray-200 bg-forgeGray-50/60 p-10 text-center"
@@ -152,6 +222,7 @@ export function StipulationsAdminClient({ params }: { params: Promise<{ id: stri
           onPreview={setPreviewId}
           onVerify={setVerifyId}
           onReject={setRejectId}
+          bulkActionsSlot={bulkSlot}
         />
       )}
 
@@ -211,6 +282,31 @@ export function StipulationsAdminClient({ params }: { params: Promise<{ id: stri
           role={role}
           title={activePreview.description}
           onClose={() => setPreviewId(null)}
+        />
+      ) : null}
+
+      {workflowUi ? (
+        <StipulationsModal
+          applicationId={id}
+          dealerId={dealerId}
+          tenantId={tenantId}
+          isOpen={workflowModalOpen}
+          onClose={() => setWorkflowModalOpen(false)}
+          onSave={async (payload) => {
+            try {
+              await create(payload);
+              toast.success("Estipulación creada.");
+              trackCriticalUserAction("stipulation_create", { application_id: id, type: payload.type }, tenantId);
+            } catch (err) {
+              toast.error("No se pudo crear la estipulación.");
+              captureApiError(err, {
+                endpoint: `/api/v2/credit/applications/${id}/stipulations`,
+                method: "POST",
+                tenantId,
+              });
+              throw err;
+            }
+          }}
         />
       ) : null}
     </main>
