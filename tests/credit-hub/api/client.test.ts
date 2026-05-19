@@ -3,8 +3,10 @@ import {
   CHMutationForbiddenError,
   TenantRequiredError,
   chFetch,
+  resolveCreditHubFetchUrl,
 } from "@/lib/credit-hub/api/client";
 import { FeatureDisabledError } from "@/lib/credit-hub/utils/featureDisabled";
+import { tokenStorage } from "@/lib/auth/token-storage";
 
 const uuidV4Re =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -33,9 +35,66 @@ function installFetchMock() {
   return jest.spyOn(global, "fetch");
 }
 
+function resetPublicApiEnv(): Record<string, string | undefined> {
+  const keys = ["NEXT_PUBLIC_API_BASE_URL", "NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_NADAKKI_API_BASE"] as const;
+  const snapshot: Record<string, string | undefined> = {};
+  for (const k of keys) {
+    snapshot[k] = process.env[k];
+    delete process.env[k];
+  }
+  return snapshot;
+}
+
+function restorePublicApiEnv(snapshot: Record<string, string | undefined>): void {
+  for (const [k, v] of Object.entries(snapshot)) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+}
+
+describe("resolveCreditHubFetchUrl", () => {
+  let snapshot: Record<string, string | undefined>;
+
+  beforeEach(() => {
+    snapshot = resetPublicApiEnv();
+    tokenStorage.clearTokens();
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    restorePublicApiEnv(snapshot);
+    tokenStorage.clearTokens();
+    window.localStorage.clear();
+  });
+
+  test("returns relative path unchanged when no API base env is set", () => {
+    expect(resolveCreditHubFetchUrl("/api/v1/sic/credit-applications")).toBe("/api/v1/sic/credit-applications");
+  });
+
+  test("prefixes NEXT_PUBLIC_API_URL and trims slashes", () => {
+    process.env.NEXT_PUBLIC_API_URL = "https://nadakki-ai-suite.onrender.com/";
+    expect(resolveCreditHubFetchUrl("/api/v1/foo")).toBe("https://nadakki-ai-suite.onrender.com/api/v1/foo");
+  });
+
+  test("does not double-prefix absolute http(s) URLs", () => {
+    process.env.NEXT_PUBLIC_API_URL = "https://nadakki-ai-suite.onrender.com";
+    expect(resolveCreditHubFetchUrl("https://other.example/api")).toBe("https://other.example/api");
+  });
+});
+
 describe("chFetch - headers", () => {
+  let snapshot: Record<string, string | undefined>;
+
   beforeEach(() => {
     jest.restoreAllMocks();
+    snapshot = resetPublicApiEnv();
+    window.localStorage.clear();
+    tokenStorage.clearTokens();
+  });
+
+  afterEach(() => {
+    restorePublicApiEnv(snapshot);
+    tokenStorage.clearTokens();
     window.localStorage.clear();
   });
 
@@ -69,8 +128,18 @@ describe("chFetch - headers", () => {
 });
 
 describe("chFetch - auth and routing", () => {
+  let snapshot: Record<string, string | undefined>;
+
   beforeEach(() => {
     jest.restoreAllMocks();
+    snapshot = resetPublicApiEnv();
+    window.localStorage.clear();
+    tokenStorage.clearTokens();
+  });
+
+  afterEach(() => {
+    restorePublicApiEnv(snapshot);
+    tokenStorage.clearTokens();
     window.localStorage.clear();
   });
 
@@ -82,6 +151,15 @@ describe("chFetch - auth and routing", () => {
     expect(headers.Authorization).toBe("Bearer jwt.abc.123");
   });
 
+  test("prefers Auth v2 access token from tokenStorage over legacy localStorage key", async () => {
+    tokenStorage.setTokens({ accessToken: "v2-access", refreshToken: "v2-refresh" });
+    window.localStorage.setItem("nadakki_sic_token", "legacy-should-not-win");
+    const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({}));
+    await chFetch("/api/v1/sic/test", { tenantId: "t", actorRole: "dealer" });
+    const headers = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer v2-access");
+  });
+
   test("does NOT send Authorization header when token is absent", async () => {
     const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({}));
     await chFetch("/api/v1/sic/test", { tenantId: "t", actorRole: "dealer" });
@@ -89,7 +167,7 @@ describe("chFetch - auth and routing", () => {
     expect(headers.Authorization).toBeUndefined();
   });
 
-  test("uses relative path with no API_BASE prefix", async () => {
+  test("uses relative URL when no public API base env is set", async () => {
     const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({}));
     await chFetch("/api/v1/sic/credit-applications", {
       tenantId: "t",
@@ -97,11 +175,31 @@ describe("chFetch - auth and routing", () => {
     });
     expect(fetchSpy.mock.calls[0][0]).toBe("/api/v1/sic/credit-applications");
   });
+
+  test("uses absolute backend URL when NEXT_PUBLIC_API_URL is set", async () => {
+    process.env.NEXT_PUBLIC_API_URL = "https://nadakki-ai-suite.onrender.com";
+    const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({}));
+    await chFetch("/api/v1/sic/credit-applications", {
+      tenantId: "t",
+      actorRole: "dealer",
+    });
+    expect(fetchSpy.mock.calls[0][0]).toBe("https://nadakki-ai-suite.onrender.com/api/v1/sic/credit-applications");
+  });
 });
 
 describe("chFetch - error handling", () => {
+  let snapshot: Record<string, string | undefined>;
+
   beforeEach(() => {
     jest.restoreAllMocks();
+    snapshot = resetPublicApiEnv();
+    window.localStorage.clear();
+    tokenStorage.clearTokens();
+  });
+
+  afterEach(() => {
+    restorePublicApiEnv(snapshot);
+    tokenStorage.clearTokens();
     window.localStorage.clear();
   });
 

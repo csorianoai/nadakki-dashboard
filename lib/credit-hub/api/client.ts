@@ -1,5 +1,7 @@
 "use client";
 
+import { tokenStorage } from "@/lib/auth/token-storage";
+
 import { throwIfChFeatureDisabled } from "../utils/featureDisabled";
 
 export class TenantRequiredError extends Error {
@@ -32,8 +34,35 @@ export interface CHRequestInit extends Omit<RequestInit, "headers"> {
   headers?: Record<string, string>;
 }
 
-const SIC_TOKEN_KEY = "nadakki_sic_token";
+/** Legacy login (`contexts/AuthContext.tsx`) persists JWT under `nadakki_sic_token`. Auth v2 keeps the access token in memory (`tokenStorage.getAccessToken`). */
+const LEGACY_ACCESS_TOKEN_STORAGE_KEY = "nadakki_sic_token";
 const DASHBOARD_ROLE_KEY = "nadakki_role";
+
+/** Prefer `NEXT_PUBLIC_API_URL`; fallbacks match other dashboard API clients (see tenant-branding-client). */
+function getCreditHubApiBaseUrl(): string {
+  const raw =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_NADAKKI_API_BASE ||
+    "";
+  return raw.trim().replace(/\/+$/, "");
+}
+
+/** Exported for unit tests — resolves relative Credit Hub paths against public API base. */
+export function resolveCreditHubFetchUrl(path: string): string {
+  const trimmedPath = path.trim();
+  if (/^https?:\/\//i.test(trimmedPath)) return trimmedPath;
+  const base = getCreditHubApiBaseUrl();
+  const normalizedPath = trimmedPath.startsWith("/") ? trimmedPath : `/${trimmedPath}`;
+  if (!base) return normalizedPath;
+  return `${base}${normalizedPath}`;
+}
+
+function readBearerAccessToken(): string | null {
+  const fromAuthV2 = tokenStorage.getAccessToken();
+  if (fromAuthV2) return fromAuthV2;
+  return getLocalStorageItem(LEGACY_ACCESS_TOKEN_STORAGE_KEY);
+}
 
 function getLocalStorageItem(key: string): string | null {
   if (typeof window === "undefined") return null;
@@ -76,6 +105,7 @@ async function parseResponseBody(response: Response): Promise<unknown> {
 
 function redirectToLogin(): void {
   if (typeof window === "undefined") return;
+  if (window.location.pathname.startsWith("/login")) return;
   window.location.href = "/login?next=" + encodeURIComponent(window.location.pathname);
 }
 
@@ -90,11 +120,11 @@ export async function chFetch<T>(path: string, init: CHRequestInit): Promise<T> 
   }
 
   const idemKey = init.idempotencyKey ?? (isMutation ? randomUUID() : undefined);
-  const sicToken = getLocalStorageItem(SIC_TOKEN_KEY);
+  const bearerAccessToken = readBearerAccessToken();
   const headers: Record<string, string> = {
     "X-Tenant-ID": init.tenantId,
     "X-Actor-Role": init.actorRole,
-    ...(sicToken ? { Authorization: `Bearer ${sicToken}` } : {}),
+    ...(bearerAccessToken ? { Authorization: `Bearer ${bearerAccessToken}` } : {}),
     ...(idemKey ? { "Idempotency-Key": idemKey } : {}),
     ...(init.body ? { "Content-Type": "application/json" } : {}),
     ...(init.headers ?? {}),
@@ -105,7 +135,8 @@ export async function chFetch<T>(path: string, init: CHRequestInit): Promise<T> 
   const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
   try {
-    const response = await fetch(path, {
+    const url = resolveCreditHubFetchUrl(path);
+    const response = await fetch(url, {
       ...init,
       method,
       headers,
