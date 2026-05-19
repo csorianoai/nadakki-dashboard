@@ -12,6 +12,7 @@ module.exports = {
   modulePathIgnorePatterns: ["<rootDir>/legacy/"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^react-pdf/dist/.*\\.css$": "<rootDir>/tests/__mocks__/styleMockEmpty.js",
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.tsx"],
   transform: {

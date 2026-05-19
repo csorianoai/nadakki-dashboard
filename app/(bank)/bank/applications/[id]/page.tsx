@@ -24,6 +24,16 @@ import { VehicleSection } from "./components/VehicleSection";
 import { DecisionFormModal } from "./components/DecisionFormModal";
 import { captureApiError } from "@/lib/observability/telemetry";
 import { trackCriticalUserAction } from "@/lib/observability/user-actions";
+import { DocumentPreviewPane } from "@/components/bank/DocumentPreviewPane";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { isDocumentPreviewUiEnabled } from "@/lib/env/feature-document-preview-ui";
 
 function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -36,6 +46,7 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [claimLoading, setClaimLoading] = useState(false);
   const [decisionOpen, setDecisionOpen] = useState(false);
+  const [previewDocId, setPreviewDocId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -232,7 +243,13 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
       <ScoringSection scoring={detail.scoring} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <DocumentChecklist documents={detail.documents} />
+        <DocumentChecklist
+          documents={detail.documents}
+          applicationId={detail.application_id}
+          tenantId={tenantId ?? ""}
+          previewEnabled={isDocumentPreviewUiEnabled()}
+          onOpenPreview={(documentIdKey) => setPreviewDocId(documentIdKey)}
+        />
         <StipulationsPanel
           applicationId={detail.application_id}
           stipulations={detail.stipulations}
@@ -277,6 +294,34 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
           </pre>
         </section>
       ) : null}
+
+      <Dialog open={Boolean(previewDocId) && isDocumentPreviewUiEnabled()} onOpenChange={(open) => !open && setPreviewDocId(null)}>
+        <DialogContent className="flex max-h-[min(840px,88vh)] w-[min(1200px,96vw)] max-w-none flex-col overflow-hidden rounded-lg bg-white shadow-xl">
+          <DialogHeader className="space-y-0">
+            <DialogTitle className="text-base font-semibold text-forgeGray-900">Vista previa documento</DialogTitle>
+            <p className="text-[11px] text-forgeGray-500">{previewDocId}</p>
+          </DialogHeader>
+
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {previewDocId && tenantId.trim() ? (
+              <DocumentPreviewPane
+                key={previewDocId}
+                documentId={previewDocId}
+                applicationId={detail.application_id}
+                tenantId={tenantId.trim()}
+              />
+            ) : (
+              <p className="text-forge-xs text-forgeGray-600">Selecciona tenant válido antes de cargar páginas.</p>
+            )}
+          </div>
+
+          <DialogFooter className="mt-4 flex-shrink-0 sm:justify-between">
+            <DialogClose className="rounded-md border px-3 py-1 text-sm" type="button" aria-label="Cerrar diálogo">
+              Cerrar
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
