@@ -10,6 +10,7 @@ import {
   ValidationBanner,
   DossierCard,
   AppHealthScore,
+  RiskBasedUI,
 } from "@/components/credit";
 import { BestOfferHero } from "@/components/credit/commercial/BestOfferHero";
 import { ExecutiveSummaryCard } from "@/components/credit/commercial/ExecutiveSummaryCard";
@@ -36,8 +37,12 @@ import {
 } from "@/lib/credit-api";
 import { useTenant } from "@/contexts/TenantContext";
 import type { ApplicationHealthData } from "@/lib/credit/app-health-score";
-import { applicationDataFromDealerSources } from "@/lib/credit/app-health-score";
+import {
+  applicationDataFromDealerSources,
+  calculateApplicationHealthScore,
+} from "@/lib/credit/app-health-score";
 import { isAppHealthScoreFeatureEnabled } from "@/lib/env/feature-app-health-score";
+import { isRiskBasedUxFeatureEnabled } from "@/lib/env/feature-risk-based-ux";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DecisionSnapshotCard } from "@/components/credit/forge";
@@ -197,6 +202,11 @@ export function DealerApplicationClient({
     return out;
   }, [healthBase, healthOverrides]);
 
+  const readinessScore = useMemo(
+    () => calculateApplicationHealthScore(mergedHealthData),
+    [mergedHealthData]
+  );
+
   const patchHealthOverrides = useCallback((patch: Partial<ApplicationHealthData>) => {
     setHealthOverrides((prev) => {
       const base = { ...prev };
@@ -323,6 +333,10 @@ export function DealerApplicationClient({
           applicationData={mergedHealthData}
           onApplicationDataPatch={patchHealthOverrides}
         />
+      ) : null}
+
+      {tenantId && isRiskBasedUxFeatureEnabled() ? (
+        <RiskBasedUI applicationId={applicationId} tenantId={tenantId} score={readinessScore} />
       ) : null}
 
       {loading && !dossier ? (

@@ -12,6 +12,7 @@ export { ValidationBanner } from "./ValidationBanner";
 export { CompressedWizard } from "./CompressedWizard";
 export { estimateMonthlyPayment } from "./CompressedWizardSteps";
 export { AppHealthScore } from "./AppHealthScore";
+export { RiskBasedUI } from "./RiskBasedUI";
 export { NarrativeCard } from "./commercial/NarrativeCard";
 export { PdfActionsPanel } from "./commercial/PdfActionsPanel";
 export { ExecutiveSummaryCard } from "./commercial/ExecutiveSummaryCard";
