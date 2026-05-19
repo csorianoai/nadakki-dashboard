@@ -9,6 +9,8 @@ export { OptimizationPanel } from "./OptimizationPanel";
 export { SimilarCasesPanel } from "./SimilarCasesPanel";
 export { DossierCard } from "./DossierCard";
 export { ValidationBanner } from "./ValidationBanner";
+export { CompressedWizard } from "./CompressedWizard";
+export { estimateMonthlyPayment } from "./CompressedWizardSteps";
 export { NarrativeCard } from "./commercial/NarrativeCard";
 export { PdfActionsPanel } from "./commercial/PdfActionsPanel";
 export { ExecutiveSummaryCard } from "./commercial/ExecutiveSummaryCard";

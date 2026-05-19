@@ -1,10 +1,10 @@
 import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
-import { DealerNewWizard } from "./DealerNewWizard";
+import { DealerNewEntry } from "./DealerNewEntry";
 
 export default function CreditDealerNewPage() {
   return (
     <CreditTenantGate>
-      <DealerNewWizard />
+      <DealerNewEntry />
     </CreditTenantGate>
   );
 }
