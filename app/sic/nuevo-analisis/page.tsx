@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 export default function SicNuevoAnalisisPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function SicNuevoAnalisisPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/v1/sic/cases", {
+      const res = await apiFetch("/api/v1/sic/cases", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 import { fetchConfigBanco, type ConfigBanco } from "@/lib/api/sic";
+import { apiFetch } from "@/lib/api/fetch-client";
 import { LoadingSic, ErrorSic } from "@/components/sic/EstadosSic";
 import SICRegulatoryBadge from "@/components/sic/SICRegulatoryBadge";
 
@@ -24,7 +25,7 @@ async function fetchSICMultiTenantConfig(
   tenantId: string
 ): Promise<SICMultiTenantConfig | null> {
   try {
-    const res = await fetch("/api/v2/sic-mt/config", {
+    const res = await apiFetch("/api/v2/sic-mt/config", {
       headers: { "X-Tenant-ID": tenantId },
       cache: "no-store",
     });

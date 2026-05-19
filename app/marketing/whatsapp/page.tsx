@@ -5,6 +5,7 @@ import { Loader2, MessageCircle, RefreshCw } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 type WhatsAppConfig = {
   status?: "connected" | "not_configured" | "pending" | string;
@@ -42,7 +43,7 @@ export default function MarketingWhatsAppPage() {
     setLoading(true);
     setConfigError(null);
     try {
-      const res = await fetch("/api/v1/whatsapp/config", {
+      const res = await apiFetch("/api/v1/whatsapp/config", {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -78,7 +79,7 @@ export default function MarketingWhatsAppPage() {
     setSimError(null);
     setSimReply(null);
     try {
-      const res = await fetch("/api/v1/whatsapp/simulate", {
+      const res = await apiFetch("/api/v1/whatsapp/simulate", {
         method: "POST",
         headers: {
           Accept: "application/json",

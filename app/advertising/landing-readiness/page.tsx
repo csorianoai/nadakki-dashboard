@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const FALLBACK_TENANT = "sf-rentals-nadaki-excursions";
 
@@ -43,7 +44,7 @@ export default function LandingReadinessPage() {
     setError("");
     setReport(null);
     try {
-      const res = await fetch("/api/v1/landing-readiness/analyze", {
+      const res = await apiFetch("/api/v1/landing-readiness/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

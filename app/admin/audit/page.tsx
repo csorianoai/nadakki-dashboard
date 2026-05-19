@@ -5,6 +5,7 @@ import { Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 function detailFromUnknown(json: unknown, fallback: string): string {
   if (!json || typeof json !== "object") return fallback;
@@ -35,7 +36,7 @@ export default function AdminAuditPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/v1/system/audit", {
+      const res = await apiFetch("/api/v1/system/audit", {
         method: "GET",
         headers: {
           Accept: "application/json",

@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
+import { apiFetch } from "@/lib/api/fetch-client";
+
 export type UserRole = "owner" | "admin" | "editor" | "viewer";
 
 const STORAGE_KEYS = {
@@ -82,7 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Authenticate via backend
     try {
-      const res = await fetch("/api/v1/auth/login", {
+      const res = await apiFetch("/api/v1/auth/login", {
+        skipAuthHeaders: true,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: key, password }),
