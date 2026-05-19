@@ -9,6 +9,7 @@ import {
   SimilarCasesPanel,
   ValidationBanner,
   DossierCard,
+  AppHealthScore,
 } from "@/components/credit";
 import { BestOfferHero } from "@/components/credit/commercial/BestOfferHero";
 import { ExecutiveSummaryCard } from "@/components/credit/commercial/ExecutiveSummaryCard";
@@ -34,6 +35,9 @@ import {
   type NarrativeResult,
 } from "@/lib/credit-api";
 import { useTenant } from "@/contexts/TenantContext";
+import type { ApplicationHealthData } from "@/lib/credit/app-health-score";
+import { applicationDataFromDealerSources } from "@/lib/credit/app-health-score";
+import { isAppHealthScoreFeatureEnabled } from "@/lib/env/feature-app-health-score";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DecisionSnapshotCard } from "@/components/credit/forge";
@@ -157,6 +161,57 @@ export function DealerApplicationClient({
     return loan / val;
   }, [dossier?.vehicle]);
 
+  const [healthOverrides, setHealthOverrides] = useState<
+    Partial<ApplicationHealthData>
+  >({});
+  useEffect(() => setHealthOverrides({}), [applicationId]);
+
+  const healthBase = useMemo(
+    (): ApplicationHealthData =>
+      applicationDataFromDealerSources({
+        applicant: dossier?.applicant,
+        vehicle: dossier?.vehicle,
+        aiScore: score,
+        ltvFraction: ltv,
+        completeness,
+      }),
+    [
+      dossier?.applicant,
+      dossier?.vehicle,
+      score,
+      ltv,
+      completeness?.missing_categories,
+      completeness?.completeness_pct,
+    ]
+  );
+
+  const mergedHealthData = useMemo((): ApplicationHealthData => {
+    const out = { ...healthBase };
+    for (const [k, val] of Object.entries(healthOverrides) as [
+      keyof ApplicationHealthData,
+      number | undefined
+    ][]) {
+      if (val !== undefined && !Number.isNaN(val)) (out[k] as number) = val;
+      else delete out[k];
+    }
+    return out;
+  }, [healthBase, healthOverrides]);
+
+  const patchHealthOverrides = useCallback((patch: Partial<ApplicationHealthData>) => {
+    setHealthOverrides((prev) => {
+      const base = { ...prev };
+      for (const [key, raw] of Object.entries(patch) as [
+        keyof ApplicationHealthData,
+        number | undefined
+      ][]) {
+        if (raw === undefined || (typeof raw === "number" && Number.isNaN(raw))) {
+          delete base[key];
+        } else base[key] = raw;
+      }
+      return base;
+    });
+  }, []);
+
   const bestId =
     rank?.best_overall?.offer_id != null
       ? String(rank.best_overall.offer_id)
@@ -260,6 +315,15 @@ export function DealerApplicationClient({
 
       <ValidationBanner error={error} />
       {pdfErr && <ValidationBanner error={pdfErr} />}
+
+      {tenantId && isAppHealthScoreFeatureEnabled() ? (
+        <AppHealthScore
+          applicationId={applicationId}
+          tenantId={tenantId}
+          applicationData={mergedHealthData}
+          onApplicationDataPatch={patchHealthOverrides}
+        />
+      ) : null}
 
       {loading && !dossier ? (
         <div className="grid gap-4 md:grid-cols-2">
