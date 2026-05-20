@@ -5,6 +5,7 @@ import { Loader2, SendHorizontal } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 function detailFromUnknown(json: unknown, fallback: string): string {
   if (!json || typeof json !== "object") return fallback;
@@ -44,7 +45,7 @@ export default function MarketingBookingPage() {
     setError(null);
     setResult(null);
     try {
-      const res = await fetch("/api/v1/booking/intent", {
+      const res = await apiFetch("/api/v1/booking/intent", {
         method: "POST",
         headers: {
           Accept: "application/json",

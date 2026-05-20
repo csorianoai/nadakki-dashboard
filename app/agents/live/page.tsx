@@ -8,6 +8,7 @@ import {
   ExecutionView,
   RunHistory,
 } from "@/components/live-panel";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const LIVE_TENANT_KEY = "nadakki_live_tenant";
 const DEFAULT_TENANT = "credicefi";
@@ -117,7 +118,7 @@ export default function LivePanelPage() {
     const load = async () => {
       setLoadingAgents(true);
       try {
-        const res = await fetch("/api/v1/agents/ids", {
+        const res = await apiFetch("/api/v1/agents/ids", {
           headers: { "X-Tenant-ID": tenantId, "Content-Type": "application/json" },
         });
         if (!res.ok) {

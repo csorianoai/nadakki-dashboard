@@ -14,6 +14,7 @@ import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import AutonomousHealthPanel from "@/components/system/AutonomousHealthPanel";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 type AuditEventDisplay = {
   type: "success" | "warning" | "error" | "info";
@@ -122,7 +123,7 @@ export default function AdminPage() {
     setEventsError(null);
     try {
       const url = `/api/v1/audit/logs?tenant_id=${encodeURIComponent(tid)}&limit=8`;
-      const res = await fetch(url, { headers: { Accept: "application/json", "X-Tenant-ID": tid }, cache: "no-store" });
+      const res = await apiFetch(url, { headers: { Accept: "application/json", "X-Tenant-ID": tid }, cache: "no-store" });
       if (!res.ok) {
         setRecentEvents([]);
         setEventsError(`No se pudieron cargar eventos (HTTP ${res.status}).`);

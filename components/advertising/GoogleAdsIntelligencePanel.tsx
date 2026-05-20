@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, ChevronRight, Loader2, Sparkles } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const FALLBACK_TENANT = "sf-rentals-nadaki-excursions";
 
@@ -85,8 +86,8 @@ export default function GoogleAdsIntelligencePanel() {
     try {
       const headers = { Accept: "application/json", "X-Tenant-ID": effectiveTenant };
       const [modRes, fitRes] = await Promise.all([
-        fetch("/api/v1/google-ads/modules/status", { cache: "no-store", headers }),
-        fetch("/api/v1/google-ads/fundamentals/evaluate-fit", {
+        apiFetch("/api/v1/google-ads/modules/status", { cache: "no-store", headers }),
+        apiFetch("/api/v1/google-ads/fundamentals/evaluate-fit", {
           method: "POST",
           cache: "no-store",
           headers: { ...headers, "Content-Type": "application/json" },

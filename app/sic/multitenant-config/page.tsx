@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const FALLBACK_TENANT = "sf-rentals-nadaki-excursions";
 
@@ -17,7 +18,7 @@ export default function SicMultitenantConfigPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/v2/sic-mt/status", {
+      const res = await apiFetch("/api/v2/sic-mt/status", {
         cache: "no-store",
         headers: { Accept: "application/json", "X-Tenant-ID": effectiveTenant },
       });

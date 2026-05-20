@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 type WizardPayload = {
   wizard_responses: {
@@ -84,7 +85,7 @@ export function TenantProfileActivationPanel() {
       return null;
     }
     const body: WizardPayload = { ...payload, dry_run: dryRun };
-    const res = await fetch("/api/v1/tenants/build-profile", {
+    const res = await apiFetch("/api/v1/tenants/build-profile", {
       method: "POST",
       headers: {
         Accept: "application/json",
