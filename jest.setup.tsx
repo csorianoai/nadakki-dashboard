@@ -23,6 +23,29 @@ jest.mock("recharts", () => {
       React.createElement("div", { "data-testid": "recharts-bar-chart" }, children),
     LineChart: ({ children }: { children?: React.ReactNode }) =>
       React.createElement("div", { "data-testid": "recharts-line-chart" }, children),
+    ScatterChart: ({ children }: { children?: React.ReactNode }) =>
+      React.createElement("div", { "data-testid": "recharts-scatter-chart" }, children),
+    Scatter: ({
+      data,
+    }: {
+      data?: { amountBucket?: string; riskBucket?: string; volume?: number }[];
+    }) =>
+      React.createElement(
+        "ul",
+        { "data-testid": "risk-heatmap-points" },
+        (data ?? []).map((cell, idx) =>
+          React.createElement(
+            "li",
+            {
+              key: `${cell.amountBucket ?? "a"}-${cell.riskBucket ?? "r"}-${idx}`,
+              "data-volume": cell.volume,
+            },
+            `${cell.amountBucket}×${cell.riskBucket}`,
+          ),
+        ),
+      ),
+    Rectangle: () => null,
+    ZAxis: () => null,
     PieChart: ({ children }: { children?: React.ReactNode }) =>
       React.createElement("div", null, children),
     Bar: () => null,
