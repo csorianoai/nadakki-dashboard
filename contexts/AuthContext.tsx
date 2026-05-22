@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Authenticate via backend
     try {
-      const res = await apiFetch("/api/v1/auth/login", {
+      const res = await apiFetch("/api/v2/auth/login", {
         skipAuthHeaders: true,
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -81,7 +81,12 @@ export interface SwitchRoleResponse {
   active_role: RoleInfo;
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const BASE_URL = (
+  process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://nadakki-ai-suite.onrender.com"
+);
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<ApiResult<T>> {
   try {

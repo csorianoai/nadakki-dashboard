@@ -1,11 +1,22 @@
 /**
  * Credit Dealer — typed client for /api/v2/credit/* (FastAPI).
  * Every call requires tenantId (pass from useTenant()). No hardcoded tenants.
+ *
+ * Canonical env var: NEXT_PUBLIC_NADAKKI_API_URL
+ * Fallback chain: NEXT_PUBLIC_NADAKKI_API_URL → NEXT_PUBLIC_API_URL
+ *   → NEXT_PUBLIC_API_BASE_URL → https://nadakki-ai-suite.onrender.com
  */
 
+import { tokenStorage } from "@/lib/auth/token-storage";
+
 const BACKEND_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+  process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://nadakki-ai-suite.onrender.com"
 ).replace(/\/$/, "");
+
+const LEGACY_ACCESS_TOKEN_KEY = "nadakki_sic_token";
 
 export class CreditApiError extends Error {
   constructor(
@@ -333,11 +344,24 @@ function requireTenant(tenantId: string): string {
   return t;
 }
 
+function readBearerToken(): string | null {
+  const v2 = tokenStorage.getAccessToken();
+  if (v2) return v2;
+  if (typeof window !== "undefined") {
+    return window.localStorage.getItem(LEGACY_ACCESS_TOKEN_KEY);
+  }
+  return null;
+}
+
 function baseHeaders(tenantId: string, withJsonBody: boolean): HeadersInit {
   const h: Record<string, string> = {
     Accept: "application/json",
     "X-Tenant-ID": tenantId.trim(),
   };
+  const token = readBearerToken();
+  if (token) {
+    h["Authorization"] = `Bearer ${token}`;
+  }
   if (withJsonBody) {
     h["Content-Type"] = "application/json";
   }
@@ -520,14 +544,18 @@ export async function createOffer(
   return handleJson(res);
 }
 
-/** GET .../offers */
+/**
+ * GET /credit/applications/{id}/offers
+ * NOTE: The offers listing endpoint lives under /credit/ (no /api/v2 prefix).
+ * This matches the backend router mount and the useOffers hook.
+ */
 export async function listOffers(
   tenantId: string,
   applicationId: string
 ): Promise<{ offers: Record<string, unknown>[]; trace_id?: string }> {
   const tid = requireTenant(tenantId);
   const res = await fetch(
-    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/offers`,
+    `${BACKEND_URL}/credit/applications/${encodeURIComponent(applicationId)}/offers`,
     { headers: baseHeaders(tid, false) }
   );
   return handleJson(res);
