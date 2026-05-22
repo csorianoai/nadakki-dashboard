@@ -38,12 +38,12 @@ export interface CHRequestInit extends Omit<RequestInit, "headers"> {
 const LEGACY_ACCESS_TOKEN_STORAGE_KEY = "nadakki_sic_token";
 const DASHBOARD_ROLE_KEY = "nadakki_role";
 
-/** Prefer `NEXT_PUBLIC_API_URL`; fallbacks match other dashboard API clients (see tenant-branding-client). */
+/** Canonical fallback chain — matches fetch-client.ts and credit-api.ts. */
 function getCreditHubApiBaseUrl(): string {
   const raw =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_NADAKKI_API_BASE ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
     "";
   return raw.trim().replace(/\/+$/, "");
 }

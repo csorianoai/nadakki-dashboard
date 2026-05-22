@@ -19,5 +19,7 @@ export function useHealth() {
       }),
     enabled: !!tenantId,
     staleTime: 30_000,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 }
