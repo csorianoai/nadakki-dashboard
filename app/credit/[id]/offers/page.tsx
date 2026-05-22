@@ -43,11 +43,10 @@ export default function OffersPage() {
     offers,
     onSuccess: (offer) => {
       toast.success(`Oferta de ${offer.lender_code} seleccionada`, {
-        description: "Redirigiendo a funding workflow...",
+        description: "Redirigiendo a confirmación...",
       });
       setModalOffer(null);
-      // Redirect to funding placeholder route — TP-CAP11-funding pending
-      setTimeout(() => router.push(`/credit/${applicationId}/funding`), 600);
+      setTimeout(() => router.push(`/credit/${applicationId}/confirmation`), 600);
     },
     onError: (err) => {
       toast.error("Error al seleccionar oferta", {

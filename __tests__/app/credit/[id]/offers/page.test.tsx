@@ -4,7 +4,6 @@ import userEvent from "@testing-library/user-event";
 import OffersPage from "@/app/credit/[id]/offers/page";
 import { MOCK_OFFERS_2_LENDERS } from "@/docs/frontend/mock-data";
 import type { OffersResponse } from "@/types/credit-offers";
-import * as UseSelectOfferModule from "@/hooks/useSelectOffer";
 
 const pushMock = jest.fn();
 
@@ -37,9 +36,18 @@ beforeEach(() => {
   pushMock.mockClear();
   toastSuccessMock.mockClear();
   toastErrorMock.mockClear();
-  fetchMock.mockResolvedValue({
-    ok: true,
-    json: async () => MOCK_OFFERS_2_LENDERS as OffersResponse,
+  fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (init?.method === "POST" && url.includes("/accept")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => MOCK_OFFERS_2_LENDERS.offers[0],
+      });
+    }
+    return Promise.resolve({
+      ok: true,
+      json: async () => MOCK_OFFERS_2_LENDERS as OffersResponse,
+    });
   });
   globalThis.fetch = fetchMock as unknown as typeof fetch;
 });
@@ -95,7 +103,7 @@ describe("OffersPage", () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 
-  it("test_modal_confirm_calls_useSelectOffer — clicking Confirm triggers mutation + 500ms latency mock", async () => {
+  it("test_modal_confirm_calls_useSelectOffer — clicking Confirm triggers accept POST", async () => {
     const user = userEvent.setup();
     render(<OffersPage />);
 
@@ -118,7 +126,7 @@ describe("OffersPage", () => {
     );
   });
 
-  it("test_success_toast_redirects — after successful selection, redirects to funding route", async () => {
+  it("test_success_toast_redirects — after successful selection, redirects to confirmation route", async () => {
     const user = userEvent.setup();
     render(<OffersPage />);
     await waitFor(() => screen.getByTestId("offers-page"));
@@ -130,25 +138,32 @@ describe("OffersPage", () => {
 
     await waitFor(
       () => {
-        expect(pushMock).toHaveBeenCalledWith(`/credit/${APP_ID}/funding`);
+        expect(pushMock).toHaveBeenCalledWith(`/credit/${APP_ID}/confirmation`);
       },
       { timeout: 4000 },
     );
   });
 
-  it("test_error_toast_shows_retry — if selectOffer rejects, toast.error with Retry action surfaces", async () => {
-    jest.spyOn(UseSelectOfferModule, "useSelectOffer").mockImplementation(
-      ({ onError }) => ({
-        selectOffer: jest.fn(async () => {
-          const err = new Error("Mock failure for retry test");
-          onError?.(err);
-          throw err;
-        }),
-        selectedOfferId: null,
-        isSubmitting: false,
-        error: null,
-      }),
-    );
+  it("test_error_toast_shows_retry — if accept POST fails, toast.error with Retry action surfaces", async () => {
+    // Drain redirect timers from prior tests (onSuccess uses setTimeout 600ms)
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    pushMock.mockClear();
+    toastErrorMock.mockClear();
+
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (init?.method === "POST" && url.includes("/accept")) {
+        return Promise.resolve({
+          ok: false,
+          status: 409,
+          json: async () => ({ detail: "Mock failure for retry test" }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => MOCK_OFFERS_2_LENDERS as OffersResponse,
+      });
+    });
 
     const user = userEvent.setup();
     render(<OffersPage />);

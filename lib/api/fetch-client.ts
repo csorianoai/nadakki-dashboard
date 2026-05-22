@@ -16,9 +16,9 @@ export function resolveApiUrl(path: string): string {
   if (/^https?:\/\//i.test(trimmedPath)) return trimmedPath;
 
   const raw =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_NADAKKI_API_BASE ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
     "";
 
   const trimmedBase = raw.trim().replace(/\/+$/, "");
