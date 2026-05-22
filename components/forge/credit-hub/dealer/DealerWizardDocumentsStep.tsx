@@ -4,6 +4,7 @@ import { tenantDocumentKey } from "@/components/credit-hub/dealer/wizard/WizardC
 import { Button, Checkbox, Input, Textarea } from "@/components/forge";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useDealerWizard } from "./DealerWizardProvider";
+import { DocumentUploadZone } from "./DocumentUploadZone";
 
 function isFilled(value: string): boolean {
   return value.trim().length > 0;
@@ -19,6 +20,9 @@ export function DealerWizardDocumentsStep() {
     updateAdditionalDocumentRow,
     removeAdditionalDocumentRow,
     requiredDocumentsList,
+    pendingFiles,
+    setPendingFile,
+    isSubmitting,
   } = useDealerWizard();
 
   const docList = requiredDocumentsList;
@@ -42,13 +46,20 @@ export function DealerWizardDocumentsStep() {
         {docList.map((document) => {
           const k = tenantDocumentKey(document);
           const checked = Boolean(formData.documents_received[k]);
+          const entry = pendingFiles.get(k);
           return (
             <div key={k} className="flex flex-col gap-2 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3">
               <div className="flex items-start justify-between gap-2">
                 <Checkbox
                   label={`${document.label}${document.required ? " *" : ` (${t.common.optional_short})`}`}
                   checked={checked}
-                  onChange={(e) => updateDocumentReceived(k, e.target.checked)}
+                  onChange={(e) => {
+                    updateDocumentReceived(k, e.target.checked);
+                    // If unchecking and there's a file, remove it too
+                    if (!e.target.checked && entry) {
+                      setPendingFile(k, null);
+                    }
+                  }}
                   className="items-start"
                 />
                 <span className={`shrink-0 text-forge-xs tabular-nums ${checked ? "text-forgeSuccess-700" : "text-forgeGray-400"}`}>
@@ -56,6 +67,17 @@ export function DealerWizardDocumentsStep() {
                 </span>
               </div>
               {document.tooltip ? <p className="text-forge-xs text-forgeGray-500">{document.tooltip}</p> : null}
+
+              <DocumentUploadZone
+                documentKey={k}
+                disabled={isSubmitting}
+                file={entry?.file ?? null}
+                status={entry?.status ?? "idle"}
+                previewUrl={entry?.previewUrl}
+                errorMessage={entry?.errorMessage}
+                onFileSelect={setPendingFile}
+              />
+
               <Textarea
                 placeholder={t.wizard.doc_notes_placeholder}
                 value={formData.document_notes[k] ?? ""}
@@ -67,6 +89,9 @@ export function DealerWizardDocumentsStep() {
           );
         })}
       </div>
+      <p className="text-forge-xs text-forgeGray-400">
+        Los archivos se subirán automáticamente al enviar la solicitud. También puede marcar documentos como recibidos sin subir archivo si los tiene en físico.
+      </p>
       <div className="space-y-3">
         <h4 className="text-forge-sm font-medium text-forgeGray-800">{t.wizard.additional_docs_title}</h4>
         <Button type="button" variant="secondary" size="sm" onClick={addAdditionalDocumentRow}>

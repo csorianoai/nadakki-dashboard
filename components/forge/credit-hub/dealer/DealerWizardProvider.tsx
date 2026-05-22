@@ -22,6 +22,7 @@ import {
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { CreditHubTranslations } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
 import {
@@ -31,6 +32,8 @@ import {
 } from "./dealerWizardPaths";
 import { toast } from "@/components/forge";
 import { forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast-copy";
+import { uploadDocument } from "@/lib/credit-api";
+import type { UploadStatus } from "./DocumentUploadZone";
 
 const STORAGE_KEY = "forge-dealer-wizard-draft-v1";
 /** Session flag: show at most one subtle autosave success toast (institutional UX — silent thereafter). */
@@ -116,6 +119,26 @@ async function withConsentAuditMetadata(form: ApplicationFormData): Promise<Appl
   };
 }
 
+/** Map wizard document keys to backend document_type enum values. */
+const DOC_KEY_TO_BACKEND_TYPE: Record<string, string> = {
+  id_front: "CEDULA_FRENTE",
+  id_back: "CEDULA_REVERSO",
+  employment_letter: "CARTA_TRABAJO",
+  bank_statements: "ESTADO_CUENTA",
+  income_evidence: "RECIBO_NOMINA",
+  address_proof: "COMPROBANTE_DOMICILIO",
+  vehicle_documents: "REGISTRO_VEHICULO",
+  personal_references: "OTRO",
+  other_documents: "OTRO",
+};
+
+export interface PendingFileEntry {
+  file: File;
+  status: UploadStatus;
+  previewUrl: string | null;
+  errorMessage: string | null;
+}
+
 export type DealerWizardContextValue = {
   formData: ApplicationFormData;
   updateField: <K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => void;
@@ -143,6 +166,8 @@ export type DealerWizardContextValue = {
   submitError: string | null;
   consentApplicationId: string;
   consentApplicationIdReady: boolean;
+  pendingFiles: Map<string, PendingFileEntry>;
+  setPendingFile: (key: string, file: File | null) => void;
 };
 
 const DealerWizardContext = createContext<DealerWizardContextValue | null>(null);
@@ -183,10 +208,17 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     ]
   );
 
+  const { tenantId } = useTenant();
+
   const [formData, setFormData] = useState<ApplicationFormData>(initialApplicationFormData);
   const formDataRef = useRef(formData);
   formDataRef.current = formData;
   const hydratedRef = useRef(false);
+
+  // --- Pending document files (not serializable to localStorage) ---
+  const [pendingFiles, setPendingFiles] = useState<Map<string, PendingFileEntry>>(new Map());
+  const pendingFilesRef = useRef(pendingFiles);
+  pendingFilesRef.current = pendingFiles;
   const presetAppliedRef = useRef(false);
   const createMutation = useCreateCreditApplication();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -349,6 +381,34 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setPendingFile = useCallback((key: string, file: File | null) => {
+    setPendingFiles((prev) => {
+      const next = new Map(prev);
+      // Revoke old preview URL
+      const old = prev.get(key);
+      if (old?.previewUrl) URL.revokeObjectURL(old.previewUrl);
+
+      if (!file) {
+        next.delete(key);
+        return next;
+      }
+      const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
+      next.set(key, { file, status: "selected", previewUrl, errorMessage: null });
+      return next;
+    });
+    // Auto-check "received" when file is selected; uncheck when removed
+    updateDocumentReceived(key, file !== null);
+  }, [updateDocumentReceived]);
+
+  // Clean up preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      pendingFilesRef.current.forEach((entry) => {
+        if (entry.previewUrl) URL.revokeObjectURL(entry.previewUrl);
+      });
+    };
+  }, []);
+
   const canAdvance = useMemo(
     () => segmentCanAdvance(stepIndex, formData, validationConfig, t),
     [formData, stepIndex, validationConfig, t]
@@ -442,13 +502,48 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       );
       clearDraftStorage();
       setFormData(initialApplicationFormData);
+
+      // Upload pending document files in background (fire-and-forget)
+      const files = new Map(pendingFilesRef.current);
+      if (files.size > 0 && tenantId && result.application_id) {
+        const appId = result.application_id;
+        const tid = tenantId;
+        // Update statuses to "uploading"
+        setPendingFiles((prev) => {
+          const next = new Map(prev);
+          for (const [k, entry] of next) {
+            next.set(k, { ...entry, status: "uploading" });
+          }
+          return next;
+        });
+        // Upload each file
+        void (async () => {
+          let ok = 0;
+          let fail = 0;
+          for (const [docKey, entry] of files) {
+            const backendType = DOC_KEY_TO_BACKEND_TYPE[docKey] ?? "OTRO";
+            try {
+              await uploadDocument(tid, appId, entry.file, backendType);
+              ok++;
+            } catch {
+              fail++;
+            }
+          }
+          if (fail > 0) {
+            toast.warning(`${ok} documento(s) subido(s), ${fail} con error`, { duration: 6000 });
+          } else if (ok > 0) {
+            toast.success(`${ok} documento(s) subido(s) correctamente`, { duration: 4000 });
+          }
+        })();
+      }
+
       return result;
     } catch (err) {
       const msg = err instanceof Error ? err.message : t.toasts.application_failed;
       setSubmitError(msg);
       throw err;
     }
-  }, [clearDraftStorage, defaultDocType, formData, createMutation, validationConfig, t]);
+  }, [clearDraftStorage, defaultDocType, formData, createMutation, validationConfig, t, tenantId]);
 
   const value = useMemo(
     (): DealerWizardContextValue => ({
@@ -478,6 +573,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       submitError,
       consentApplicationId,
       consentApplicationIdReady,
+      pendingFiles,
+      setPendingFile,
     }),
     [
       formData,
@@ -506,6 +603,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       submitError,
       consentApplicationId,
       consentApplicationIdReady,
+      pendingFiles,
+      setPendingFile,
     ]
   );
 
