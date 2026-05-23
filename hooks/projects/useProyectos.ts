@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import { useAuth } from "@/hooks/useAuth";
 import {
   createProyecto,
   getAuditTrail,
@@ -12,8 +12,15 @@ import {
 import type { CreateProyectoPayload } from "@/lib/projects/types";
 import { projectsKeys } from "./queryKeys";
 
+/** Auth V2 current tenant UUID (header `X-Tenant-ID`) — not the legacy TenantContext slug chain. */
+function useActiveTenantId(): string | undefined {
+  const { tenant } = useAuth();
+  const id = tenant?.id?.trim();
+  return id || undefined;
+}
+
 export function useProyectos() {
-  const { tenantId } = useTenant();
+  const tenantId = useActiveTenantId();
 
   return useQuery({
     queryKey: projectsKeys.proyectos(tenantId ?? ""),
@@ -24,7 +31,7 @@ export function useProyectos() {
 }
 
 export function useProyecto(proyectoId: string | undefined) {
-  const { tenantId } = useTenant();
+  const tenantId = useActiveTenantId();
 
   return useQuery({
     queryKey: projectsKeys.proyecto(tenantId ?? "", proyectoId ?? ""),
@@ -35,7 +42,7 @@ export function useProyecto(proyectoId: string | undefined) {
 }
 
 export function useProyectoHealth() {
-  const { tenantId } = useTenant();
+  const tenantId = useActiveTenantId();
 
   return useQuery({
     queryKey: projectsKeys.health(tenantId ?? ""),
@@ -47,7 +54,7 @@ export function useProyectoHealth() {
 }
 
 export function useProyectoAuditTrail(proyectoId: string | undefined) {
-  const { tenantId } = useTenant();
+  const tenantId = useActiveTenantId();
 
   return useQuery({
     queryKey: projectsKeys.auditTrail(tenantId ?? "", proyectoId ?? ""),
@@ -60,7 +67,7 @@ export function useProyectoAuditTrail(proyectoId: string | undefined) {
 
 export function useCreateProyecto() {
   const qc = useQueryClient();
-  const { tenantId } = useTenant();
+  const tenantId = useActiveTenantId();
 
   return useMutation({
     mutationFn: async (payload: CreateProyectoPayload) => {

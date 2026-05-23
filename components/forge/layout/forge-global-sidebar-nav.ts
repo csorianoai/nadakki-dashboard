@@ -90,6 +90,15 @@ export function isPlatformSuperAdmin(allRoles: { role_key: string }[]): boolean 
   return allRoles.some((r) => r.role_key === "platform_superadmin");
 }
 
+/**
+ * Bypass hub visibility rules (subscriptions + matcher roles) so admins can navigate every Forge core.
+ * Navigation only — API authorization remains on the backend.
+ */
+export function userSeesAllForgeHubSections(allRoles: RoleInfo[]): boolean {
+  if (isPlatformSuperAdmin(allRoles)) return true;
+  return allRoles.some((r) => r.role_key === "tenant_admin");
+}
+
 export function isHrefActive(href: string, pathname: string | null): boolean {
   if (!pathname) return false;
   if (href === "/") return pathname === "/";
@@ -113,11 +122,12 @@ export function filterSectionsForUser(
   showAdmin: boolean,
 ): NavSection[] {
   const isSuper = isPlatformSuperAdmin(allRoles);
+  const seesAllHubs = userSeesAllForgeHubSections(allRoles);
 
   return sections
     .filter((sec) => {
       if (sec.id === "admin") return showAdmin;
-      if (isSuper) return true;
+      if (seesAllHubs) return true;
       const synthetic: CoreNav = { id: sec.id, coreMatchers: sec.coreMatchers };
       return hasCoreAccess(synthetic, allRoles, subscribed);
     })
