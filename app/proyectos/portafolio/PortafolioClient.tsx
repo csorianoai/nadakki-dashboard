@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { getPortafolio } from "@/app/hooks/useProyectos";
+import { ProyectosDisclaimerBanner } from "@/components/proyectos/ProyectosDisclaimerBanner";
+import { ProyectosSpecialistReviewBanner } from "@/components/proyectos/ProyectosSpecialistReviewBanner";
 import { ProyectosDataViewer } from "@/components/proyectos/ProyectosDataViewer";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -35,6 +37,10 @@ export function PortafolioClient() {
 
   return (
     <div className="space-y-6">
+      <div className="grid gap-3 lg:grid-cols-2">
+        <ProyectosDisclaimerBanner />
+        <ProyectosSpecialistReviewBanner />
+      </div>
       <Link href="/proyectos" className="text-sm font-medium text-violet-600 underline dark:text-violet-400">
         ← Volver al panel Projects
       </Link>
