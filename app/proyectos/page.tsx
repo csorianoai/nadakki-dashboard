@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Activity, FolderKanban, Plug } from "lucide-react";
-import { Badge, Card, DataTable, KpiCard } from "@/components/forge";
+import { Badge, Button, Card, DataTable, KpiCard } from "@/components/forge";
 import { useProyectoHealth, useProyectos } from "@/hooks/projects/useProyectos";
 import { ProjectsApiError } from "@/lib/projects/projectsClient";
 import type { Proyecto } from "@/lib/projects/types";
@@ -35,17 +36,24 @@ export default function ProyectosDashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div>
-        <p className="text-forge-xs font-semibold uppercase tracking-wider text-forgeBrand-600">
-          Projects Core
-        </p>
-        <h1 className="font-display text-forge-2xl font-semibold tracking-tight text-forgeGray-900">
-          Proyectos
-        </h1>
-        <p className="mt-2 max-w-2xl text-forge-sm text-forgeGray-600">
-          Panel inicial: cartera en tabla y KPIs locales. Las llamadas van a `/api/v1/proyectos` con
-          rewrites hacia backend cuando esté disponible.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-forge-xs font-semibold uppercase tracking-wider text-forgeBrand-600">
+            Projects Core
+          </p>
+          <h1 className="font-display text-forge-2xl font-semibold tracking-tight text-forgeGray-900">
+            Proyectos
+          </h1>
+          <p className="mt-2 max-w-2xl text-forge-sm text-forgeGray-600">
+            Panel inicial: cartera en tabla y KPIs locales. Las llamadas van a `/api/v1/proyectos` con rewrites hacia backend
+            cuando esté disponible.
+          </p>
+        </div>
+        <Link href="/proyectos/new">
+          <Button variant="primary" type="button" className="min-h-11">
+            Nuevo proyecto
+          </Button>
+        </Link>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

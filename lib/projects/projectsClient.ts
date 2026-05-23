@@ -1,4 +1,4 @@
-import type { AuditTrailEntry, Proyecto } from "./types";
+import type { AuditTrailEntry, CreateProyectoPayload, Proyecto, ProyectoDocumentStub } from "./types";
 
 export const PROJECTS_BASE = "/api/v1/proyectos";
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -43,11 +43,49 @@ interface ProjectsRequestInit extends Omit<RequestInit, "headers"> {
   headers?: Record<string, string>;
 }
 
+function numOrUndefined(v: unknown): number | undefined {
+  if (v === undefined || v === null) return undefined;
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v.replace(",", "."));
+    return Number.isNaN(n) ? undefined : n;
+  }
+  return undefined;
+}
+
+function normalizeDocuments(raw: unknown): ProyectoDocumentStub[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const docs: ProyectoDocumentStub[] = [];
+  for (const d of raw) {
+    if (!d || typeof d !== "object") continue;
+    const o = d as Record<string, unknown>;
+    docs.push({
+      id: typeof o.id === "string" ? o.id : undefined,
+      label: typeof o.label === "string" ? o.label : undefined,
+      name: typeof o.name === "string" ? o.name : undefined,
+    });
+  }
+  return docs.length ? docs : undefined;
+}
+
 function normalizeProyecto(raw: unknown): Proyecto {
   if (!raw || typeof raw !== "object") {
     return { id: String(raw ?? "") };
   }
   const o = raw as Record<string, unknown>;
+  const viability = numOrUndefined(o.viability_score);
+  const risk = numOrUndefined(o.risk_score);
+  const budget = numOrUndefined(
+    o.preliminary_budget_minor_units ?? o.preliminary_budget ?? o.budget_minor_units
+  );
+  const documents = normalizeDocuments((o.documents ?? o.attachments) as unknown);
+  const project_type =
+    typeof o.project_type === "string"
+      ? o.project_type
+      : typeof o.type === "string"
+        ? o.type
+        : undefined;
+
   return {
     id: String(o.id ?? o.uuid ?? ""),
     name: typeof o.name === "string" ? o.name : (o.title as string) ?? null,
@@ -56,6 +94,13 @@ function normalizeProyecto(raw: unknown): Proyecto {
     description: typeof o.description === "string" ? o.description : undefined,
     created_at: typeof o.created_at === "string" ? o.created_at : undefined,
     updated_at: typeof o.updated_at === "string" ? o.updated_at : undefined,
+    project_type,
+    methodology_pack: typeof o.methodology_pack === "string" ? o.methodology_pack : undefined,
+    viability_score: viability,
+    risk_score: risk,
+    preliminary_budget_minor_units: budget,
+    budget_currency: typeof o.budget_currency === "string" ? o.budget_currency : undefined,
+    documents,
   };
 }
 
@@ -131,6 +176,21 @@ export async function listProyectos(params: {
     tenantId: params.tenantId,
   });
   return normalizeProyectos(raw);
+}
+
+export async function createProyecto(params: {
+  tenantId: string;
+  payload: CreateProyectoPayload;
+}): Promise<Proyecto> {
+  const raw = await projectsFetch<unknown>("", {
+    method: "POST",
+    tenantId: params.tenantId,
+    body: JSON.stringify(params.payload),
+  });
+  if (raw && typeof raw === "object" && "data" in raw && (raw as Record<string, unknown>).data !== undefined) {
+    return normalizeProyecto((raw as Record<string, unknown>).data);
+  }
+  return normalizeProyecto(raw);
 }
 
 export async function getProyecto(params: { tenantId: string; id: string }): Promise<Proyecto> {
