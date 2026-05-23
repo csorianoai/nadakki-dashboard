@@ -24,6 +24,7 @@ import {
   Link2,
   Megaphone,
   Palette,
+  PencilRuler,
   Scale,
   ScrollText,
   Settings,
@@ -307,7 +308,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     id: "projects-hub",
     label: "Proyectos",
-    icon: FolderKanban,
+    icon: PencilRuler,
     coreMatchers: ["projects"],
     children: [
       {
@@ -315,6 +316,32 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Panel",
         href: "/proyectos",
         icon: LayoutDashboard,
+      },
+      {
+        id: "projects-portfolio",
+        label: "Portafolio",
+        href: "/proyectos/portafolio",
+        icon: FolderKanban,
+      },
+      {
+        id: "projects-dashboards-group",
+        label: "Dashboards",
+        icon: BarChart3,
+        children: [
+          { id: "projects-dash-ceo", label: "CEO", href: "/proyectos/dashboards/ceo" },
+          { id: "projects-dash-pm", label: "PM", href: "/proyectos/dashboards/pm" },
+          {
+            id: "projects-dash-inv",
+            label: "Inversionista",
+            href: "/proyectos/dashboards/inversionista",
+          },
+        ],
+      },
+      {
+        id: "projects-new",
+        label: "Nuevo proyecto",
+        href: "/proyectos/new",
+        icon: Zap,
       },
     ],
   },

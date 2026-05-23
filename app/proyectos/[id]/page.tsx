@@ -3,7 +3,6 @@
 import { use } from "react";
 import { Button, Card, Skeleton } from "@/components/forge";
 import { ProyectoCommandCenterView } from "@/components/proyectos/ProyectoCommandCenterView";
-import { ProyectosWorkspaceNav } from "@/components/proyectos/ProyectosWorkspaceNav";
 import { useProyecto } from "@/hooks/projects/useProyectos";
 import { ProjectsApiError } from "@/lib/projects/projectsClient";
 
@@ -32,10 +31,5 @@ export default function ProyectoCommandCenterPage({
     );
   }
 
-  return (
-    <>
-      <ProyectosWorkspaceNav proyectoId={query.data.id} />
-      <ProyectoCommandCenterView proyecto={query.data} />
-    </>
-  );
+  return <ProyectoCommandCenterView proyecto={query.data} />;
 }

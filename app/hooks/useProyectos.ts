@@ -1,7 +1,10 @@
 /**
  * Projects Core — client-side fetch helpers for /api/v1/proyectos/* (FastAPI).
- * Pattern mirrors {@link "@/app/hooks/useCredit"}: direct BACKEND_URL + JSON + X-Tenant-ID (no silent defaults — caller passes tenant from TenantContext).
+ * Same auth shape as {@link lib/credit-api}: `X-Tenant-ID` + `Authorization: Bearer` from
+ * {@link getAuthHeaders} (Auth V2 in-memory token, legacy `nadakki_sic_token` fallback).
  */
+
+import { getAuthHeaders } from "@/lib/api/fetch-client";
 
 const BACKEND_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -26,7 +29,8 @@ function proyectoHeaders(
 ): HeadersInit {
   const h: Record<string, string> = {
     Accept: "application/json",
-    "X-Tenant-ID": tenantId,
+    "X-Tenant-ID": tenantId.trim(),
+    ...getAuthHeaders(),
   };
   if (opts?.jsonBody !== false) {
     h["Content-Type"] = "application/json";
@@ -43,13 +47,16 @@ async function proyectoFetchUnknown(
   pathSuffix: string,
   init?: Omit<RequestInit, "headers"> & { omitContentType?: boolean }
 ): Promise<unknown | null> {
-  const omitJson = init?.omitContentType === true;
+  const method = (init?.method ?? "GET").toUpperCase();
+  const hasBody = init?.body != null && method !== "GET" && method !== "HEAD";
+  const omitJson = init?.omitContentType === true || !hasBody;
   const url = `${PROJECTS_BASE}${pathSuffix}`;
   const { omitContentType: _omit, ...restInit } = init ?? {};
   const res = await fetch(url, {
     ...restInit,
     headers: proyectoHeaders(tenantId, omitJson ? { jsonBody: false } : undefined),
     method: restInit.method ?? "GET",
+    credentials: restInit.credentials ?? "include",
   });
 
   const textRaw = await res.text().catch(() => "");

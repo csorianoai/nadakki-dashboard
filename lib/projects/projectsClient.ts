@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "@/lib/api/fetch-client";
 import type { AuditTrailEntry, CreateProyectoPayload, Proyecto, ProyectoDocumentStub } from "./types";
 
 export const PROJECTS_BASE = "/api/v1/proyectos";
@@ -137,15 +138,23 @@ async function projectsFetch<T>(path: string, init: ProjectsRequestInit): Promis
   const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
+    const method = (init.method ?? "GET").toUpperCase();
+    const hasJsonBody = Boolean(init.body) && method !== "GET" && method !== "HEAD";
+    const baseHeaders: Record<string, string> = {
+      Accept: "application/json",
+      "X-Tenant-ID": init.tenantId.trim(),
+      ...getAuthHeaders(),
+      ...(init.headers ?? {}),
+    };
+    if (hasJsonBody) {
+      baseHeaders["Content-Type"] = "application/json";
+    }
+
     const response = await fetch(`${PROJECTS_BASE}${path}`, {
       ...init,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Tenant-ID": init.tenantId,
-        ...(init.headers ?? {}),
-      },
+      headers: baseHeaders,
       signal: controller.signal,
-      credentials: "include",
+      credentials: init.credentials ?? "include",
     });
     const body = await parseResponseBody(response);
 

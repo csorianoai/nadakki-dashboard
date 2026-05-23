@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const WORKSPACE_PAGES: { slug: string; label: string }[] = [
-  { slug: "", label: "Resumen" },
+  { slug: "", label: "Detalle" },
   { slug: "master-plan", label: "Master plan" },
   { slug: "escenarios", label: "Escenarios" },
   { slug: "wbs", label: "WBS" },
