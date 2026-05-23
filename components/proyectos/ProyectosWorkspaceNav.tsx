@@ -27,7 +27,10 @@ export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
     >
       {WORKSPACE_PAGES.map(({ slug, label }) => {
         const href = slug ? `${base}/${slug}` : base;
-        const active = pathname === href || pathname.startsWith(`${href}/`);
+        const isRoot = slug === "";
+        const active = isRoot
+          ? pathname === href || pathname === `${href}/`
+          : pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={slug || "_root"}
