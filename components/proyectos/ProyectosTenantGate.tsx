@@ -1,16 +1,16 @@
 "use client";
 
-import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
- * Projects workspace routes use X-Tenant-ID from {@link TenantContext} / top bar.
- * No silent default tenant (parity with Credit tenant gate pattern).
+ * Must match Forge session ({@link "@/hooks/useAuth"} / Auth V2). Legacy {@link TenantContext}
+ * does not mirror the Forge login tenant — use `tenant.id` (UUID for X-Tenant-ID) here.
  */
 export function ProyectosTenantGate({ children }: { children: ReactNode }) {
-  const { tenantId } = useTenant();
-  const tid = tenantId?.trim() ?? "";
+  const { tenant } = useAuth();
+  const tid = tenant?.id?.trim() ?? "";
   if (!tid) {
     return (
       <div className="mx-auto max-w-lg space-y-4 p-8 text-center">
