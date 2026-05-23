@@ -1,0 +1,11 @@
+import { ProyectosTenantGate } from "@/components/proyectos/ProyectosTenantGate";
+import { WbsClient } from "./WbsClient";
+
+export default async function WbsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return (
+    <ProyectosTenantGate>
+      <WbsClient proyectoId={decodeURIComponent(id)} />
+    </ProyectosTenantGate>
+  );
+}
