@@ -27,7 +27,13 @@ export type ForgeGlobalCoresSidebarProps = {
 
 const STORAGE_KEY = "forge-global-sidebar-expanded-v1";
 
-const CORE_SECTION_IDS = new Set(["credit-hub", "legal-hub", "marketing-hub", "sic-hub"]);
+const CORE_SECTION_IDS = new Set([
+  "credit-hub",
+  "legal-hub",
+  "marketing-hub",
+  "projects-hub",
+  "sic-hub",
+]);
 
 function defaultExpandedAllSections(): Record<string, boolean> {
   const initial: Record<string, boolean> = {};

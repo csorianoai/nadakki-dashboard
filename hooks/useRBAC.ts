@@ -26,6 +26,17 @@ const ROLE_PERMS: Record<string, Record<string, string[]>> = {
     support_agent: ["tickets:*"],
     tenant_admin: ["users:*"],
   },
+  /** CAP-103 / PRD §4 — keys align with `core_name=projects`; resync matrix when PRD is in-repo. */
+  projects: {
+    ceo: ["*:*"],
+    project_manager: ["proyecto:*", "tasks:*", "envelope:*", "audit:read"],
+    finance: ["proyecto:read", "budget:*", "proyecto:finance"],
+    legal: ["proyecto:read", "legal:*", "documents:read"],
+    marketing: ["proyecto:read", "marketing:*"],
+    investor: ["proyecto:read", "reports:read"],
+    contractor: ["proyecto:read", "tasks:*", "deliverables:*"],
+    viewer: ["proyecto:read", "audit:read"],
+  },
 };
 
 export function useRBAC() {

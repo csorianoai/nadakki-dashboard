@@ -43,6 +43,8 @@ const nextConfig = {
       { source: "/metrics", destination: `${backendUrl}/metrics` },
       { source: "/cores", destination: `${backendUrl}/cores` },
       { source: "/api/v1/sic/:path*", destination: `${backendUrl}/api/v1/sic/:path*` },
+      { source: "/api/v1/proyectos", destination: `${backendUrl}/api/v1/proyectos` },
+      { source: "/api/v1/proyectos/:path*", destination: `${backendUrl}/api/v1/proyectos/:path*` },
       { source: "/api/v1/auth/:path*", destination: `${backendUrl}/api/v1/auth/:path*` },
       { source: "/api/v1/ame/:path*", destination: `${backendUrl}/api/v1/ame/:path*` },
       { source: "/api/v1/advertising/:path*", destination: `${backendUrl}/api/v1/advertising/:path*` },

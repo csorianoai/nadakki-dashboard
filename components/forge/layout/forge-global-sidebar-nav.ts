@@ -305,6 +305,20 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    id: "projects-hub",
+    label: "Proyectos",
+    icon: FolderKanban,
+    coreMatchers: ["projects"],
+    children: [
+      {
+        id: "projects-dash",
+        label: "Panel",
+        href: "/proyectos",
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
     id: "sic-hub",
     label: "SIC (Cobros)",
     icon: Shield,
@@ -333,7 +347,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "workflows",
     label: "Workflows",
     icon: Workflow,
-    coreMatchers: ["marketing", "credit", "legal", "sic", "platform"],
+    coreMatchers: ["marketing", "credit", "legal", "sic", "projects", "platform"],
     children: [
       { id: "wf-all", label: "Todos los workflows", href: "/workflows", icon: Workflow },
       { id: "wf-ab", label: "A/B Testing", href: "/workflows/ab-testing-experimentation" },
