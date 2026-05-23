@@ -2,18 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Input, Select, Tabs, Textarea, toast } from "@/components/forge";
-import { useCreateProyecto } from "@/hooks/projects/useProyectos";
-import { ProjectsApiError } from "@/lib/projects/projectsClient";
+import { createProyecto, ProyectosApiError } from "@/app/hooks/useProyectos";
+import { Button, Card, Input, Select, Tabs, Textarea } from "@/components/forge";
 import {
   METHODOLOGY_LABELS_ES,
   METHODOLOGY_PACK_IDS,
   PROJECT_TYPE_CODES,
   PROJECT_TYPE_LABELS_ES,
-  type CreateProyectoPayload,
   type MethodologyPackId,
   type ProjectTypeCode,
 } from "@/lib/projects/types";
+import { useTenant } from "@/contexts/TenantContext";
 
 const STEPS = [
   { id: "basic", label: "1 · Datos" },
@@ -65,6 +64,45 @@ const currencyOptions = [
   { value: "EUR", label: "EUR" },
 ];
 
+/**
+ * Payload JSON POST /api/v1/proyectos — alinea con scaffolding previo hasta que el YAML
+ * Nadakki_ProjectsCore_02_API_Contract_v1_1 esté en este repo para cotejo literal.
+ */
+function buildCreatePayload(draft: DraftForm): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    name: draft.name.trim(),
+    project_type: draft.project_type,
+    methodology_pack: draft.methodology_pack,
+    budget_currency: draft.budget_currency,
+  };
+
+  const desc = draft.description.trim();
+  if (desc) body.description = desc;
+
+  if (draft.preliminary_budget_minor_units.trim()) {
+    const normalized = draft.preliminary_budget_minor_units.replace(/,/g, "").replace(/\s+/g, "");
+    body.preliminary_budget_minor_units = Math.round(Number(normalized));
+  }
+
+  return body;
+}
+
+/** Extrae id devuelto por varias envolturas API habituales. */
+function extractProyectoCreateId(payload: unknown): string | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const o = payload as Record<string, unknown>;
+  const direct = o.id ?? o.uuid ?? o.proyecto_id ?? o.project_id;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+
+  const data = o.data;
+  if (data && typeof data === "object") {
+    const d = data as Record<string, unknown>;
+    const inner = d.id ?? d.uuid ?? d.proyecto_id;
+    if (typeof inner === "string" && inner.trim()) return inner.trim();
+  }
+  return undefined;
+}
+
 function validateDraft(d: DraftForm): Partial<Record<keyof DraftForm | "budget", string>> {
   const e: Partial<Record<keyof DraftForm | "budget", string>> = {};
   if (!d.name.trim()) e.name = "Nombre del proyecto obligatorio.";
@@ -80,11 +118,16 @@ function validateDraft(d: DraftForm): Partial<Record<keyof DraftForm | "budget",
 
 export function ProyectoIntakeWizard() {
   const router = useRouter();
+  const { tenantId } = useTenant();
+  const tid = (tenantId ?? "").trim();
+
   const [step, setStep] = useState<StepId>("basic");
   const [draft, setDraft] = useState<DraftForm>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [announce, setAnnounce] = useState("");
-  const createMutation = useCreateProyecto();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successNote, setSuccessNote] = useState<string | null>(null);
 
   const stepIndex = useMemo(() => STEPS.findIndex((s) => s.id === step), [step]);
   const progressPct = ((stepIndex + 1) / STEPS.length) * 100;
@@ -96,6 +139,8 @@ export function ProyectoIntakeWizard() {
   const patch = useCallback((p: Partial<DraftForm>) => {
     setDraft((prev) => ({ ...prev, ...p }));
     setErrors({});
+    setSubmitError(null);
+    setSuccessNote(null);
   }, []);
 
   const canLeaveStep = useCallback(
@@ -135,6 +180,8 @@ export function ProyectoIntakeWizard() {
     const next = STEPS[Math.min(i + 1, STEPS.length - 1)].id;
     setStep(next);
     setErrors({});
+    setSubmitError(null);
+    setSuccessNote(null);
   }, [canLeaveStep, step]);
 
   const goPrev = useCallback(() => {
@@ -142,45 +189,53 @@ export function ProyectoIntakeWizard() {
     if (i <= 0) return;
     setStep(STEPS[i - 1].id);
     setErrors({});
+    setSubmitError(null);
+    setSuccessNote(null);
   }, [step]);
 
   const onSubmit = useCallback(async () => {
-    const v = validateDraft(draft);
-    setErrors(v as Record<string, string>);
-    if (Object.keys(v).length > 0) {
-      toast.error("Revisa los campos marcados antes de crear el proyecto.", { duration: 5000 });
+    if (!tid) {
+      setSubmitError("No hay tenant activo. Selecciona institución en la cabecera.");
       return;
     }
 
-    let budgetMinor: number | undefined;
-    if (draft.preliminary_budget_minor_units.trim()) {
-      const normalized = draft.preliminary_budget_minor_units.replace(/,/g, "").replace(/\s+/g, "");
-      budgetMinor = Math.round(Number(normalized));
+    const v = validateDraft(draft);
+    setErrors(v as Record<string, string>);
+    if (Object.keys(v).length > 0) {
+      setSubmitError("Corrige los campos marcados antes de crear el proyecto.");
+      return;
     }
 
-    const payload: CreateProyectoPayload = {
-      name: draft.name.trim(),
-      project_type: draft.project_type as ProjectTypeCode,
-      methodology_pack: draft.methodology_pack,
-      preliminary_budget_minor_units: budgetMinor,
-      budget_currency: draft.budget_currency,
-      description: draft.description.trim() || null,
-    };
+    setSubmitting(true);
+    setSubmitError(null);
+    setSuccessNote(null);
+
+    const apiBody = buildCreatePayload(draft);
 
     try {
-      const created = await createMutation.mutateAsync(payload);
-      if (!created.id) {
-        toast.success("Creación solicitada — ID pendiente hasta que backend normalice.", { duration: 5000 });
-        router.push("/proyectos");
+      const raw = await createProyecto(tid, apiBody);
+      const newId = extractProyectoCreateId(raw);
+      setSuccessNote("Proyecto creado correctamente.");
+
+      if (newId) {
+        router.push(`/proyectos/${encodeURIComponent(newId)}`);
         return;
       }
-      toast.success("Proyecto creado", { duration: 4000 });
-      router.push(`/proyectos/${encodeURIComponent(created.id)}`);
+      setSubmitError(
+        "El servidor respondió OK pero sin `id` reconocido en JSON. Consulta auditoría/consola o revisa contrato YAML.",
+      );
     } catch (err) {
-      const msg = err instanceof ProjectsApiError ? err.message : "No se pudo crear el proyecto (backend no disponible o error de validación).";
-      toast.error(msg, { duration: 6000 });
+      const msg =
+        err instanceof ProyectosApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Error desconocido al crear proyecto.";
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
     }
-  }, [createMutation, draft, router]);
+  }, [draft, router, tid]);
 
   const basicPanel = (
     <div className="space-y-4">
@@ -210,7 +265,8 @@ export function ProyectoIntakeWizard() {
   const methodologyPanel = (
     <div className="space-y-4">
       <p className="text-forge-sm text-forgeGray-600">
-        Elige el paquete metodológico que gobernará rituals y gates. Contrato puede ampliarlo con YAML de catálogo.
+        Elige el paquete metodológico que gobernará rituals y gates. Verifica nomenclatura con el contrato NADAKKI
+        Projects Core cuando el YAML esté en este repositorio.
       </p>
       <Select
         label="Paquete metodológico"
@@ -235,7 +291,7 @@ export function ProyectoIntakeWizard() {
         <Input
           label="Presupuesto preliminar (unidades minoritarias)"
           inputMode="decimal"
-          helper="Opcional hasta que financiero confirme. Usa mismo criterio que backend (minor units)."
+          helper="Opcional. Se envía como entero rounded (minor units) según acuerdos backend."
           value={draft.preliminary_budget_minor_units}
           onChange={(e) => patch({ preliminary_budget_minor_units: e.target.value })}
           error={errors.preliminary_budget_minor_units ?? errors.budget}
@@ -270,9 +326,15 @@ export function ProyectoIntakeWizard() {
           </dd>
         </div>
       </dl>
+      <div className="rounded-forge-md border border-forgeGray-200 bg-white p-3 font-forgeMono text-[11px] text-forgeGray-600 dark:bg-gray-950/40">
+        <p className="mb-2 font-semibold text-forgeGray-800 dark:text-gray-100">Vista previa JSON (POST)</p>
+        <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all">
+          {JSON.stringify(buildCreatePayload(draft), null, 2)}
+        </pre>
+      </div>
       <p className="text-forge-xs text-forgeGray-500">
-        Al confirmar se envía <code className="font-forgeMono">POST /api/v1/proyectos</code> con cabecera{" "}
-        <code className="font-forgeMono">X-Tenant-ID</code>.
+        Ejecución <code className="font-forgeMono">POST {process.env.NEXT_PUBLIC_API_URL || "BACKEND_URL"}/api/v1/proyectos</code>{" "}
+        con cabecera <code className="font-forgeMono">X-Tenant-ID</code> desde el tenant activo (sin defaults).
       </p>
     </div>
   );
@@ -290,18 +352,41 @@ export function ProyectoIntakeWizard() {
             : reviewPanel,
   }));
 
+  const busyDisabled = submitting;
+
   return (
     <div className="mx-auto max-w-3xl space-y-6" data-testid="proyecto-intake-wizard">
       <div aria-live="polite" className="sr-only">
         {announce}
       </div>
 
+      {submitError ? (
+        <Card className="border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/40">
+          <p className="text-forge-sm font-medium text-red-900 dark:text-red-100">{submitError}</p>
+        </Card>
+      ) : null}
+
+      {successNote && !submitError ? (
+        <Card className="border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/40">
+          <p className="text-forge-sm font-medium text-green-900 dark:text-green-100">{successNote}</p>
+        </Card>
+      ) : null}
+
+      {!tid ? (
+        <Card variant="outlined" className="border-amber-200 bg-amber-50/90 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+          <p className="text-forge-sm text-amber-950 dark:text-amber-100">
+            Esperando tenant institucional desde el selector global. Esta pantalla debería mostrarse bajo gate;
+            si llegaste aquí sin tenant selecciona una institución.
+          </p>
+        </Card>
+      ) : null}
+
       <Card className="overflow-hidden border border-forgeGray-200 p-5">
         <p className="text-forge-xs font-semibold uppercase tracking-wider text-forgeBrand-600">
           Alta de proyecto · Intake wizard
         </p>
         <p className="mt-2 text-forge-xs text-forgeGray-500">
-          Flujo paralelo al backend — los pasos pueden guardarse cuando exista borrador persistente en API.
+          El formulario ejecuta llamada POST real al Projects Core mediante <code className="font-forgeMono text-[10px]">createProyecto</code>.
         </p>
 
         <div
@@ -330,12 +415,12 @@ export function ProyectoIntakeWizard() {
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button type="button" variant="secondary" className="min-h-11" disabled={stepIndex === 0 || createMutation.isPending} onClick={goPrev}>
+        <Button type="button" variant="secondary" className="min-h-11" disabled={stepIndex === 0 || busyDisabled} onClick={goPrev}>
           Atrás
         </Button>
         <div className="flex gap-2">
           {step !== "review" ? (
-            <Button type="button" variant="primary" className="min-h-11" disabled={createMutation.isPending} onClick={goNext}>
+            <Button type="button" variant="primary" className="min-h-11" disabled={busyDisabled} onClick={goNext}>
               Siguiente
             </Button>
           ) : (
@@ -343,7 +428,8 @@ export function ProyectoIntakeWizard() {
               type="button"
               variant="primary"
               className="min-h-11"
-              loading={createMutation.isPending}
+              loading={busyDisabled}
+              disabled={busyDisabled || !tid}
               onClick={() => void onSubmit()}
             >
               Crear proyecto

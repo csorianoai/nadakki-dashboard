@@ -158,3 +158,60 @@ export async function getPortafolio(tenantId: string): Promise<unknown | null> {
     return null;
   }
 }
+
+/** ---- Mutaciones POST (mismo cliente fetch; payloads = NADAKKI YAML — verificar cuando el archivo esté en este repo). */
+
+/**
+ * POST /api/v1/proyectos — creación proyecto (`body` JSON tal cual espera gateway).
+ */
+export async function createProyecto(tenantId: string, body: Record<string, unknown>): Promise<unknown | null> {
+  return proyectoFetchUnknown(tenantId, "", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+/**
+ * POST /api/v1/proyectos/{id}/state
+ * SCHEMA body: pendiente YAML en-repo — función para cabler clientes cuando el payload esté definido aquí.
+ */
+export async function advanceState(
+  tenantId: string,
+  proyectoId: string,
+  body: Record<string, unknown>
+): Promise<unknown | null> {
+  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/state`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+/**
+ * POST /api/v1/proyectos/{id}/charter
+ * SCHEMA body: pendiente YAML en-repo.
+ */
+export async function createCharter(
+  tenantId: string,
+  proyectoId: string,
+  body: Record<string, unknown>
+): Promise<unknown | null> {
+  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/charter`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+/**
+ * POST /api/v1/proyectos/{id}/terrenos
+ * SCHEMA body: pendiente YAML en-repo (ruta según gateway producción).
+ */
+export async function createTerreno(
+  tenantId: string,
+  proyectoId: string,
+  body: Record<string, unknown>
+): Promise<unknown | null> {
+  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/terrenos`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
