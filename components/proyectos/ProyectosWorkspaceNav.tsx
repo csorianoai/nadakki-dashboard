@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const WORKSPACE_PAGES: { slug: string; label: string }[] = [
   { slug: "", label: "Detalle" },
+  { slug: "analisis", label: "Análisis" },
   { slug: "master-plan", label: "Master plan" },
   { slug: "escenarios", label: "Escenarios" },
   { slug: "wbs", label: "WBS" },
