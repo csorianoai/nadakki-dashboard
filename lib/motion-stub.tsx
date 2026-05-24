@@ -44,6 +44,13 @@ function motionTag(tag: keyof React.JSX.IntrinsicElements) {
 export const motion = {
   div: motionTag("div"),
   span: motionTag("span"),
+  /** Table-friendly stubs (marketing / projetos dashboards). */
+  table: motionTag("table"),
+  thead: motionTag("thead"),
+  tbody: motionTag("tbody"),
+  tr: motionTag("tr"),
+  td: motionTag("td"),
+  th: motionTag("th"),
   section: motionTag("section"),
   article: motionTag("article"),
   main: motionTag("main"),

@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import BlueprintProjectsChrome from "@/components/proyectos/BlueprintProjectsChrome";
 
 export const metadata: Metadata = {
   title: "Proyectos | NADAKKI",
-  description: "Projects Core — panel y operaciones de portafolio",
+  description: "Projects Core — blueprint vivo, portafolio y tableros",
 };
 
 /**
- * Route content renders inside GlobalForgeAppShell (ForgeAppShell main slot under AppGate) —
- * do not nest another ForgeAppShell here.
+ * Superficie unificada "Blueprint vivo" (Marketing-aligned). Forge shell envuelve el slot principal.
  */
 export default function ProyectosLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-h-0 bg-forgeSurface-page p-4 text-forgeGray-900 md:p-8">{children}</div>
-  );
+  return <BlueprintProjectsChrome>{children}</BlueprintProjectsChrome>;
 }

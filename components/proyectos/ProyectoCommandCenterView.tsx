@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
-import { AlertTriangle, FileText, Gauge, Goal, ScrollText } from "lucide-react";
+import { AlertTriangle, FileText, Gauge, Goal, PencilRuler, ScrollText } from "lucide-react";
 import {
   AuditTimeline,
   type AuditTimelineEntry,
@@ -14,10 +14,24 @@ import {
   Skeleton,
   Tabs,
 } from "@/components/forge";
-import { EstadoBadge } from "@/components/proyectos/EstadoBadge";
+import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
+import { motion } from "@/lib/motion-stub";
+import {
+  BP_ACCENTS,
+  formatBudgetMillionsUsd,
+  proyectoStateBadgeStatus,
+  displayProjectName,
+} from "@/components/proyectos/blueprint-projects-helpers";
+import { useAnimatedCount } from "@/components/proyectos/useAnimatedMetric";
 import { useProyectoAuditTrail } from "@/hooks/projects/useProyectos";
 import type { AuditTrailEntry, Proyecto, ProyectoDocumentStub } from "@/lib/projects/types";
-import { PROYECTO_STATE_LABELS_ES, PROYECTO_STATES, type ProyectoState } from "@/lib/projects/types";
+import {
+  PROYECTO_STATE_LABELS_ES,
+  PROYECTO_STATES,
+  type ProyectoState,
+  isProyectoState,
+} from "@/lib/projects/types";
 import { cn } from "@/lib/utils";
 
 function fmtScore(value: number | null | undefined): string {
@@ -25,8 +39,10 @@ function fmtScore(value: number | null | undefined): string {
   return Number(value).toFixed(1);
 }
 
-function proyectDisplayName(row: Proyecto): string {
-  return row.name ?? row.title ?? `Proyecto ${row.id.slice(0, 8)}`;
+function stateBadgeLabel(state: string | null | undefined): string {
+  if (!state) return "Sin estado";
+  const u = state.toUpperCase();
+  return isProyectoState(u) ? PROYECTO_STATE_LABELS_ES[u] : state;
 }
 
 function normalizedState(state: string | null | undefined): string {
@@ -70,6 +86,9 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
   const [drawer, setDrawer] = useState<null | ProyectoDocumentStub>(null);
 
   const curIdx = stateIndex(proyecto.state ?? undefined);
+  const phaseProgressPct =
+    curIdx >= 0 ? Math.round((curIdx / Math.max(PROYECTO_STATES.length - 1, 1)) * 100) : 0;
+  const animatedPhasePct = useAnimatedCount(phaseProgressPct, 960);
 
   const documentsPanel = useMemo(() => {
     const docs = proyecto.documents ?? [];
@@ -152,7 +171,12 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-forge-xs text-forgeGray-500">Estado actual:</span>
-          <EstadoBadge state={proyecto.state} />
+          <StatusBadge
+            status={proyectoStateBadgeStatus(proyecto.state)}
+            label={stateBadgeLabel(proyecto.state)}
+            size="sm"
+            pulse={false}
+          />
         </div>
       </div>
     );
@@ -241,27 +265,88 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <EstadoBadge state={proyecto.state} className="text-forge-xs" />
-            {proyecto.project_type ? (
-              <span className="rounded-forge-pill border border-forgeGray-200 bg-forgeNeutral-50 px-2 py-0.5 text-forge-xs font-medium text-forgeGray-700">
-                {proyecto.project_type}
-              </span>
-            ) : null}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <GlassCard
+          hover={false}
+          className={cn(
+            "relative overflow-hidden border border-amber-400/25 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-6",
+            "shadow-[0_0_60px_-12px_rgba(245,158,11,0.35)]",
+          )}
+        >
+          <div
+            className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full opacity-50 blur-[80px]"
+            style={{ background: `radial-gradient(circle at 30% 30%, ${BP_ACCENTS.primary}, transparent 65%)` }}
+            aria-hidden
+          />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-amber-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-200">
+                  <PencilRuler className="h-3.5 w-3.5 text-amber-300" aria-hidden />
+                  Blueprint obra
+                </span>
+                <StatusBadge
+                  status={proyectoStateBadgeStatus(proyecto.state)}
+                  label={stateBadgeLabel(proyecto.state)}
+                  size="sm"
+                />
+                {proyecto.project_type ? (
+                  <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-forge-xs font-medium text-zinc-200">
+                    {proyecto.project_type}
+                  </span>
+                ) : null}
+              </div>
+              <motion.h1
+                className="mt-4 font-display text-2xl font-bold tracking-tight text-white drop-shadow-sm sm:text-3xl md:text-[2rem]"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.08, duration: 0.35 }}
+              >
+                {displayProjectName(proyecto)}
+              </motion.h1>
+              <p className="mt-2 font-forgeMono text-xs text-zinc-400">{proyectoId}</p>
+              <div className="mt-5 flex flex-wrap items-baseline gap-4 text-sm text-zinc-300">
+                <span>
+                  Presupuesto prelim.:{" "}
+                  <strong className="font-mono text-amber-200">{formatBudgetMillionsUsd(proyecto)}</strong>
+                </span>
+              </div>
+              <Link
+                href="/proyectos"
+                className="mt-3 inline-flex min-h-10 items-center text-sm font-medium text-amber-300/95 transition-colors hover:text-amber-200"
+              >
+                ← Panel de proyectos
+              </Link>
+            </div>
+            <div className="min-w-[min(100%,260px)] flex-1 space-y-2 lg:max-w-sm lg:self-center">
+              <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+                <span>Avance máquina de estados</span>
+                <span className="font-mono tabular-nums text-amber-200">{animatedPhasePct}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/[0.08] ring-1 ring-inset ring-white/10">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-700 via-amber-400 to-amber-200 shadow-[0_0_22px_rgba(251,191,36,0.55)]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${animatedPhasePct}%` }}
+                  transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.06 }}
+                  role="progressbar"
+                  aria-valuenow={animatedPhasePct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                />
+              </div>
+              <p className="text-[11px] leading-relaxed text-zinc-500">
+                Fases del core proyectadas sobre el ciclo vivo de la obra — actualizado con el último estado
+                registrado en tenant.
+              </p>
+            </div>
           </div>
-          <h1 className="mt-2 font-display text-forge-md font-bold text-forgeGray-800 sm:text-[length:var(--forge-text-2xl)]">
-            {proyectDisplayName(proyecto)}
-          </h1>
-          <p className="font-forgeMono text-forge-xs text-forgeGray-500">{proyectoId}</p>
-          <p className="mt-1 text-forge-sm text-forgeGray-600">
-            <Link href="/proyectos" className="inline-flex min-h-10 items-center text-forgeBrand-600 hover:text-forgeBrand-700">
-              ← Volver al panel
-            </Link>
-          </p>
-        </div>
-      </div>
+        </GlassCard>
+      </motion.div>
 
       <Tabs tabs={tabDefs} value={tab} onValueChange={setTab} />
 

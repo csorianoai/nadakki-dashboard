@@ -14,7 +14,7 @@ export function ProyectosSpecialistReviewBanner({
     <aside
       role="status"
       className={cn(
-        "rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 shadow-sm dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-50",
+        "rounded-2xl border border-sky-400/30 bg-gradient-to-br from-sky-500/15 to-cyan-500/10 p-4 text-sm text-sky-50 shadow-lg backdrop-blur-sm",
         variant === "compact" && "p-3 text-xs",
         className,
       )}

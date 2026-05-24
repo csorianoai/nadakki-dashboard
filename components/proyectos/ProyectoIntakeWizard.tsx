@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProyecto, ProyectosApiError } from "@/app/hooks/useProyectos";
-import { Button, Card, Input, Select, Tabs, Textarea } from "@/components/forge";
+import { Button, Input, Select, Tabs, Textarea } from "@/components/forge";
+import { motion } from "@/lib/motion-stub";
 import {
   METHODOLOGY_LABELS_ES,
   METHODOLOGY_PACK_IDS,
@@ -12,7 +13,8 @@ import {
   type MethodologyPackId,
   type ProjectTypeCode,
 } from "@/lib/projects/types";
-import { useTenant } from "@/contexts/TenantContext";
+import GlassCard from "@/components/ui/GlassCard";
+import { useForgeProjectsTenantId } from "@/components/proyectos/useForgeProjectsTenantId";
 
 const STEPS = [
   { id: "basic", label: "1 · Datos" },
@@ -118,8 +120,7 @@ function validateDraft(d: DraftForm): Partial<Record<keyof DraftForm | "budget",
 
 export function ProyectoIntakeWizard() {
   const router = useRouter();
-  const { tenantId } = useTenant();
-  const tid = (tenantId ?? "").trim();
+  const tid = useForgeProjectsTenantId() ?? "";
 
   const [step, setStep] = useState<StepId>("basic");
   const [draft, setDraft] = useState<DraftForm>(EMPTY);
@@ -301,24 +302,24 @@ export function ProyectoIntakeWizard() {
   );
 
   const reviewPanel = (
-    <div className="space-y-3 text-forge-sm text-forgeGray-800">
-      <dl className="grid gap-2 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4">
+    <div className="space-y-3 text-sm text-zinc-200">
+      <dl className="grid gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-4">
         <div>
-          <dt className="text-forge-xs font-semibold text-forgeGray-500">Nombre</dt>
-          <dd>{draft.name || "—"}</dd>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Nombre</dt>
+          <dd className="text-white">{draft.name || "—"}</dd>
         </div>
         <div>
-          <dt className="text-forge-xs font-semibold text-forgeGray-500">Tipo</dt>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Tipo</dt>
           <dd>{draft.project_type ? PROJECT_TYPE_LABELS_ES[draft.project_type as ProjectTypeCode] : "—"}</dd>
         </div>
         <div>
-          <dt className="text-forge-xs font-semibold text-forgeGray-500">Metodología</dt>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Metodología</dt>
           <dd>
             {draft.methodology_pack ? METHODOLOGY_LABELS_ES[draft.methodology_pack as MethodologyPackId] : "—"}
           </dd>
         </div>
         <div>
-          <dt className="text-forge-xs font-semibold text-forgeGray-500">Presupuesto</dt>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Presupuesto</dt>
           <dd>
             {draft.preliminary_budget_minor_units.trim()
               ? `${draft.preliminary_budget_minor_units} ${draft.budget_currency}`
@@ -326,15 +327,13 @@ export function ProyectoIntakeWizard() {
           </dd>
         </div>
       </dl>
-      <div className="rounded-forge-md border border-forgeGray-200 bg-white p-3 font-forgeMono text-[11px] text-forgeGray-600 dark:bg-gray-950/40">
-        <p className="mb-2 font-semibold text-forgeGray-800 dark:text-gray-100">Vista previa JSON (POST)</p>
-        <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all">
-          {JSON.stringify(buildCreatePayload(draft), null, 2)}
-        </pre>
-      </div>
-      <p className="text-forge-xs text-forgeGray-500">
-        Ejecución <code className="font-forgeMono">POST {process.env.NEXT_PUBLIC_API_URL || "BACKEND_URL"}/api/v1/proyectos</code>{" "}
-        con cabecera <code className="font-forgeMono">X-Tenant-ID</code> desde el tenant activo (sin defaults).
+      <GlassCard hover={false} className="p-4 font-mono text-[11px] leading-relaxed text-emerald-100/95">
+        <p className="mb-2 font-semibold text-amber-100">Vista previa JSON · POST vivo</p>
+        <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all">{JSON.stringify(buildCreatePayload(draft), null, 2)}</pre>
+      </GlassCard>
+      <p className="text-[11px] text-zinc-500">
+        POST <span className="font-mono text-amber-200/90">{process.env.NEXT_PUBLIC_API_URL || "BACKEND_URL"}/api/v1/proyectos</span> +{" "}
+        <span className="font-mono">X-Tenant-ID</span> Auth V2.
       </p>
     </div>
   );
@@ -361,51 +360,52 @@ export function ProyectoIntakeWizard() {
       </div>
 
       {submitError ? (
-        <Card className="border border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/40">
-          <p className="text-forge-sm font-medium text-red-900 dark:text-red-100">{submitError}</p>
-        </Card>
+        <GlassCard hover={false} className="border border-rose-500/40 bg-rose-500/10 p-4">
+          <p className="text-sm font-medium text-rose-100">{submitError}</p>
+        </GlassCard>
       ) : null}
 
       {successNote && !submitError ? (
-        <Card className="border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/40">
-          <p className="text-forge-sm font-medium text-green-900 dark:text-green-100">{successNote}</p>
-        </Card>
+        <GlassCard hover={false} className="border border-emerald-500/35 bg-emerald-500/10 p-4">
+          <p className="text-sm font-medium text-emerald-50">{successNote}</p>
+        </GlassCard>
       ) : null}
 
       {!tid ? (
-        <Card variant="outlined" className="border-amber-200 bg-amber-50/90 p-4 dark:border-amber-800 dark:bg-amber-950/30">
-          <p className="text-forge-sm text-amber-950 dark:text-amber-100">
-            Esperando tenant institucional desde el selector global. Esta pantalla debería mostrarse bajo gate;
-            si llegaste aquí sin tenant selecciona una institución.
+        <GlassCard hover={false} className="border border-amber-400/35 bg-amber-500/[0.12] p-4">
+          <p className="text-sm text-amber-50">
+            Esperando tenant institucional Auth V2. Selecciona tenant Forge y vuelve.
           </p>
-        </Card>
+        </GlassCard>
       ) : null}
 
-      <Card className="overflow-hidden border border-forgeGray-200 p-5">
-        <p className="text-forge-xs font-semibold uppercase tracking-wider text-forgeBrand-600">
-          Alta de proyecto · Intake wizard
+      <GlassCard hover={false} className="p-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: "#fbbf24" }}>
+          Alta de proyecto · Intake blueprint
         </p>
-        <p className="mt-2 text-forge-xs text-forgeGray-500">
-          El formulario ejecuta llamada POST real al Projects Core mediante <code className="font-forgeMono text-[10px]">createProyecto</code>.
+        <p className="mt-3 text-xs text-zinc-400">
+          POST real al núcleo vía createProyecto — wizard con mismo pulido vivo que Marketing.
         </p>
 
         <div
-          className="mt-4 h-2 w-full overflow-hidden rounded-forge-md bg-forgeGray-100"
+          className="mt-6 h-2.5 w-full overflow-hidden rounded-full bg-white/[0.08]"
           role="progressbar"
           aria-valuenow={Math.round(progressPct)}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Progreso del wizard"
         >
-          <div
-            className="h-full bg-forgeBrand-500 transition-all duration-[var(--forge-duration-fast)] ease-out"
-            style={{ width: `${progressPct}%` }}
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-amber-600 via-amber-400 to-yellow-300 shadow-[0_0_28px_-4px_rgba(251,191,36,0.95)]"
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPct}%` }}
+            transition={{ duration: 0.55 }}
           />
         </div>
-        <p className="mt-2 font-forgeMono text-forge-xs text-forgeGray-500">
+        <p className="mt-2 font-mono text-[11px] text-zinc-500">
           Paso {stepIndex + 1} / {STEPS.length}
         </p>
-      </Card>
+      </GlassCard>
 
       <Tabs
         variant="pills"

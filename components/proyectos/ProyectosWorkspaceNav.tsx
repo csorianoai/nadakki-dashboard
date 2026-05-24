@@ -14,7 +14,7 @@ const WORKSPACE_PAGES: { slug: string; label: string }[] = [
   { slug: "audit", label: "Auditoría" },
 ];
 
-/** Sub-nave del workspace dentro de `/proyectos/[id]` (CAP-85..90). */
+/** Sub-nave del workspace dentro de `/proyectos/[id]` — estilo blueprint / ndk-page. */
 export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
   const pathname = usePathname();
   const safeId = encodeURIComponent(proyectoId);
@@ -23,7 +23,7 @@ export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
   return (
     <nav
       aria-label="Workspace proyecto"
-      className="mb-6 flex flex-wrap gap-2 border-b border-gray-200 pb-3 dark:border-gray-700"
+      className="mb-8 flex flex-wrap gap-2 border-b border-white/10 pb-4"
     >
       {WORKSPACE_PAGES.map(({ slug, label }) => {
         const href = slug ? `${base}/${slug}` : base;
@@ -36,10 +36,10 @@ export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
             key={slug || "_root"}
             href={href}
             className={cn(
-              "inline-flex min-h-[40px] items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "inline-flex min-h-[40px] items-center rounded-xl px-3.5 py-2 text-sm font-semibold tracking-tight transition-all duration-200",
               active
-                ? "bg-violet-100 text-violet-900 ring-2 ring-violet-300 dark:bg-violet-950/60 dark:text-violet-50 dark:ring-violet-600"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100",
+                ? "bg-gradient-to-r from-amber-500/25 to-amber-600/15 text-amber-100 shadow-[0_0_24px_-4px_rgba(245,158,11,0.45)] ring-1 ring-amber-400/40"
+                : "border border-transparent text-zinc-400 hover:border-white/10 hover:bg-white/5 hover:text-zinc-100",
             )}
           >
             {label}

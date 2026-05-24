@@ -14,7 +14,7 @@ export function ProyectosDisclaimerBanner({
     <aside
       role="note"
       className={cn(
-        "rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 shadow-sm dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-50",
+        "rounded-2xl border border-amber-400/35 bg-gradient-to-br from-amber-500/15 to-transparent p-4 text-sm text-amber-50 shadow-lg shadow-amber-500/10 backdrop-blur-sm",
         variant === "compact" && "p-3 text-xs",
         className,
       )}
