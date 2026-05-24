@@ -2,24 +2,25 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createProyecto, ProyectosApiError } from "@/app/hooks/useProyectos";
-import { Button, Input, Select, Tabs, Textarea } from "@/components/forge";
+import { Button, Input, Modal, Select, Tabs } from "@/components/forge";
 import { motion } from "@/lib/motion-stub";
-import {
-  METHODOLOGY_LABELS_ES,
-  METHODOLOGY_PACK_IDS,
-  PROJECT_TYPE_CODES,
-  PROJECT_TYPE_LABELS_ES,
-  type MethodologyPackId,
-  type ProjectTypeCode,
-} from "@/lib/projects/types";
 import GlassCard from "@/components/ui/GlassCard";
+import {
+  BACKEND_PROJECT_TYPE_LABELS_ES,
+  BACKEND_PROJECT_TYPES,
+  type BackendClassification,
+  type BackendProjectType,
+  BACKEND_CLASSIFICATION_LABELS_ES,
+  BACKEND_CLASSIFICATIONS,
+} from "@/components/proyectos/projectsCoreEnums";
 import { useForgeProjectsTenantId } from "@/components/proyectos/useForgeProjectsTenantId";
 
 const STEPS = [
-  { id: "basic", label: "1 · Datos" },
-  { id: "methodology", label: "2 · Metodología" },
-  { id: "budget", label: "3 · Presupuesto" },
+  { id: "identity", label: "1 · Identidad" },
+  { id: "clasificacion", label: "2 · Clasificación" },
+  { id: "presupuesto", label: "3 · Presupuesto" },
   { id: "review", label: "4 · Revisión" },
 ] as const;
 
@@ -27,69 +28,79 @@ type StepId = (typeof STEPS)[number]["id"];
 
 interface DraftForm {
   name: string;
-  project_type: ProjectTypeCode | "";
-  methodology_pack: MethodologyPackId | "";
-  preliminary_budget_minor_units: string;
-  budget_currency: string;
-  description: string;
+  project_type: BackendProjectType | "";
+  codigo_interno: string;
+  classification: BackendClassification | "";
+  industry_overlay: string;
+  sponsor_user_id: string;
+  pmo_director_user_id: string;
+  budget_envelope_usd: string;
 }
 
 const EMPTY: DraftForm = {
   name: "",
   project_type: "",
-  methodology_pack: "",
-  preliminary_budget_minor_units: "",
-  budget_currency: "MXN",
-  description: "",
+  codigo_interno: "",
+  classification: "",
+  industry_overlay: "",
+  sponsor_user_id: "",
+  pmo_director_user_id: "",
+  budget_envelope_usd: "",
 };
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const projectTypeOptions = [
   { value: "", label: "Seleccionar tipo de proyecto…", disabled: true },
-  ...PROJECT_TYPE_CODES.map((code) => ({
+  ...BACKEND_PROJECT_TYPES.map((code) => ({
     value: code,
-    label: PROJECT_TYPE_LABELS_ES[code],
+    label: BACKEND_PROJECT_TYPE_LABELS_ES[code],
   })),
 ];
 
-const methodologyOptions = [
-  { value: "", label: "Seleccionar paquete…", disabled: true },
-  ...METHODOLOGY_PACK_IDS.map((id) => ({
-    value: id,
-    label: METHODOLOGY_LABELS_ES[id],
+const classificationOptions = [
+  { value: "", label: "Sin clasificación (opcional)", disabled: true },
+  ...BACKEND_CLASSIFICATIONS.map((code) => ({
+    value: code,
+    label: BACKEND_CLASSIFICATION_LABELS_ES[code],
   })),
-];
-
-const currencyOptions = [
-  { value: "MXN", label: "MXN" },
-  { value: "USD", label: "USD" },
-  { value: "DOP", label: "DOP" },
-  { value: "EUR", label: "EUR" },
 ];
 
 /**
- * Payload JSON POST /api/v1/proyectos — alinea con scaffolding previo hasta que el YAML
- * Nadakki_ProjectsCore_02_API_Contract_v1_1 esté en este repo para cotejo literal.
+ * Payload POST /api/v1/proyectos — sólo campos soportados por gateway (sin fechas).
  */
 function buildCreatePayload(draft: DraftForm): Record<string, unknown> {
   const body: Record<string, unknown> = {
-    name: draft.name.trim(),
-    project_type: draft.project_type,
-    methodology_pack: draft.methodology_pack,
-    budget_currency: draft.budget_currency,
+    nombre: draft.name.trim(),
+    project_type: draft.project_type as string,
   };
 
-  const desc = draft.description.trim();
-  if (desc) body.description = desc;
+  const code = draft.codigo_interno.trim();
+  if (code) body.codigo_interno = code;
 
-  if (draft.preliminary_budget_minor_units.trim()) {
-    const normalized = draft.preliminary_budget_minor_units.replace(/,/g, "").replace(/\s+/g, "");
-    body.preliminary_budget_minor_units = Math.round(Number(normalized));
+  if (draft.classification) body.classification = draft.classification;
+
+  const overlay = draft.industry_overlay.trim();
+  if (overlay) body.industry_overlay = overlay;
+
+  const sponsor = draft.sponsor_user_id.trim();
+  if (sponsor) body.sponsor_user_id = sponsor;
+
+  const pmo = draft.pmo_director_user_id.trim();
+  if (pmo) body.pmo_director_user_id = pmo;
+
+  const normalizedBudget = draft.budget_envelope_usd.replace(/,/g, "").replace(/\s+/g, "").trim();
+  if (normalizedBudget !== "") {
+    const n = Number(normalizedBudget);
+    if (!Number.isNaN(n) && Number.isFinite(n) && n >= 0) {
+      body.budget_envelope_usd = n;
+    }
   }
 
   return body;
 }
 
-/** Extrae id devuelto por varias envolturas API habituales. */
 function extractProyectoCreateId(payload: unknown): string | undefined {
   if (!payload || typeof payload !== "object") return undefined;
   const o = payload as Record<string, unknown>;
@@ -105,33 +116,46 @@ function extractProyectoCreateId(payload: unknown): string | undefined {
   return undefined;
 }
 
-function validateDraft(d: DraftForm): Partial<Record<keyof DraftForm | "budget", string>> {
-  const e: Partial<Record<keyof DraftForm | "budget", string>> = {};
-  if (!d.name.trim()) e.name = "Nombre del proyecto obligatorio.";
-  if (!d.project_type) e.project_type = "Selecciona uno de los 11 tipos.";
-  if (!d.methodology_pack) e.methodology_pack = "Elige una metodología base.";
-  if (d.preliminary_budget_minor_units.trim()) {
-    const normalized = d.preliminary_budget_minor_units.replace(/,/g, "").replace(/\s+/g, "");
-    const n = Number(normalized);
-    if (!Number.isFinite(n) || n < 0) e.budget = "Importe debe ser ≥ 0 (unidades minoritarias sin decimales o con punto decimal).";
+/** Formato legible USD para input (solo ayuda UI; servidor recibe número) */
+function formatUsdHelp(raw: string): string {
+  const n = Number(raw.replace(/,/g, "").replace(/\s+/g, ""));
+  if (!raw.trim() || Number.isNaN(n)) return "";
+  try {
+    return new Intl.NumberFormat("es-DO", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  } catch {
+    return "";
   }
-  return e;
 }
 
 export function ProyectoIntakeWizard() {
   const router = useRouter();
   const tid = useForgeProjectsTenantId() ?? "";
 
-  const [step, setStep] = useState<StepId>("basic");
+  const [step, setStep] = useState<StepId>("identity");
   const [draft, setDraft] = useState<DraftForm>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [announce, setAnnounce] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [successNote, setSuccessNote] = useState<string | null>(null);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   const stepIndex = useMemo(() => STEPS.findIndex((s) => s.id === step), [step]);
   const progressPct = ((stepIndex + 1) / STEPS.length) * 100;
+
+  const uuidErrors = useMemo(() => {
+    const e: Partial<Record<"sponsor_user_id" | "pmo_director_user_id", string>> = {};
+    const s = draft.sponsor_user_id.trim();
+    if (s && !UUID_RE.test(s)) e.sponsor_user_id = "Debe ser un UUID v4 válido.";
+    const p = draft.pmo_director_user_id.trim();
+    if (p && !UUID_RE.test(p)) e.pmo_director_user_id = "Debe ser un UUID v4 válido.";
+    return e;
+  }, [draft.sponsor_user_id, draft.pmo_director_user_id]);
+
+  const canSubmitCreation = Boolean(
+    draft.name.trim() && draft.project_type && Object.keys(uuidErrors).length === 0,
+  );
+
+  const budgetPreview = useMemo(() => formatUsdHelp(draft.budget_envelope_usd), [draft.budget_envelope_usd]);
 
   useEffect(() => {
     setAnnounce(`Paso ${stepIndex + 1} de ${STEPS.length}: ${STEPS[stepIndex]?.label ?? step}`);
@@ -141,38 +165,40 @@ export function ProyectoIntakeWizard() {
     setDraft((prev) => ({ ...prev, ...p }));
     setErrors({});
     setSubmitError(null);
-    setSuccessNote(null);
   }, []);
 
   const canLeaveStep = useCallback(
     (from: StepId): boolean => {
-      if (from === "basic") {
+      if (from === "identity") {
         if (!draft.name.trim()) {
           setErrors({ name: "Nombre del proyecto obligatorio." });
           return false;
         }
         if (!draft.project_type) {
-          setErrors({ project_type: "Selecciona uno de los 11 tipos." });
+          setErrors({ project_type: "Selecciona un tipo válido para el CORE." });
           return false;
         }
       }
-      if (from === "methodology") {
-        if (!draft.methodology_pack) {
-          setErrors({ methodology_pack: "Elige una metodología base." });
+      if (from === "clasificacion") {
+        const ue = uuidErrors;
+        if (Object.keys(ue).length > 0) {
+          setErrors(ue as Record<string, string>);
           return false;
         }
       }
-      if (from === "budget" && draft.preliminary_budget_minor_units.trim()) {
-        const normalized = draft.preliminary_budget_minor_units.replace(/,/g, "").replace(/\s+/g, "");
-        const n = Number(normalized);
-        if (!Number.isFinite(n) || n < 0) {
-          setErrors({ preliminary_budget_minor_units: "Importe inválido." });
-          return false;
+      if (from === "presupuesto") {
+        const norm = draft.budget_envelope_usd.replace(/,/g, "").replace(/\s+/g, "").trim();
+        if (norm !== "") {
+          const n = Number(norm);
+          if (!Number.isFinite(n) || n < 0) {
+            setErrors({ budget_envelope_usd: "Montos ≥ 0; usa punto o coma como separador decimal si aplica." });
+            return false;
+          }
         }
       }
       return true;
     },
-    [draft],
+    [draft.budget_envelope_usd, draft.name, draft.project_type, uuidErrors],
   );
 
   const goNext = useCallback(() => {
@@ -182,7 +208,6 @@ export function ProyectoIntakeWizard() {
     setStep(next);
     setErrors({});
     setSubmitError(null);
-    setSuccessNote(null);
   }, [canLeaveStep, step]);
 
   const goPrev = useCallback(() => {
@@ -191,39 +216,48 @@ export function ProyectoIntakeWizard() {
     setStep(STEPS[i - 1].id);
     setErrors({});
     setSubmitError(null);
-    setSuccessNote(null);
   }, [step]);
 
   const onSubmit = useCallback(async () => {
     if (!tid) {
-      setSubmitError("No hay tenant activo. Selecciona institución en la cabecera.");
+      setSubmitError("No hay tenant activo (UUID Auth V2).");
+      toast.error("Falta tenant", { description: "Selecciona institución antes de crear." });
       return;
     }
-
-    const v = validateDraft(draft);
-    setErrors(v as Record<string, string>);
-    if (Object.keys(v).length > 0) {
-      setSubmitError("Corrige los campos marcados antes de crear el proyecto.");
+    if (!canSubmitCreation) {
+      setSubmitError("Nombre y tipo de proyecto son obligatorios. Revisa los UUID opcionales.");
+      toast.warning("Completa datos requeridos", { description: "Nombre y tipo de proyecto." });
       return;
     }
 
     setSubmitting(true);
     setSubmitError(null);
-    setSuccessNote(null);
+
+    const normBudget = draft.budget_envelope_usd.replace(/,/g, "").replace(/\s+/g, "").trim();
+    if (normBudget !== "") {
+      const bn = Number(normBudget);
+      if (!Number.isFinite(bn) || bn < 0) {
+        toast.warning("Revisa el sobre presupuesto", { description: "Debe ser un número ≥ 0." });
+        setSubmitting(false);
+        return;
+      }
+    }
 
     const apiBody = buildCreatePayload(draft);
 
     try {
       const raw = await createProyecto(tid, apiBody);
       const newId = extractProyectoCreateId(raw);
-      setSuccessNote("Proyecto creado correctamente.");
+      toast.success("Proyecto creado", {
+        description: newId ? `Blueprint activo · ID ${newId.slice(0, 8)}…` : "Sincronizado con Projects Core.",
+      });
 
       if (newId) {
         router.push(`/proyectos/${encodeURIComponent(newId)}`);
         return;
       }
       setSubmitError(
-        "El servidor respondió OK pero sin `id` reconocido en JSON. Consulta auditoría/consola o revisa contrato YAML.",
+        "Respuesta OK sin `id` reconocido. Revisa el contrato POST o la consola red.",
       );
     } catch (err) {
       const msg =
@@ -233,13 +267,18 @@ export function ProyectoIntakeWizard() {
             ? err.message
             : "Error desconocido al crear proyecto.";
       setSubmitError(msg);
+      toast.error("No se creó el proyecto", { description: msg });
     } finally {
       setSubmitting(false);
     }
-  }, [draft, router, tid]);
+  }, [draft, router, tid, canSubmitCreation]);
 
-  const basicPanel = (
+  const identityPanel = (
     <div className="space-y-4">
+      <p className="text-xs leading-relaxed text-zinc-500">
+        Objetivos de obra y nomenclatura pública — el estado inicial lo fija el backend (<span className="font-mono text-amber-200/90">INTAKE</span>
+        ).
+      </p>
       <Input
         label="Nombre del proyecto"
         required
@@ -248,93 +287,147 @@ export function ProyectoIntakeWizard() {
         error={errors.name}
       />
       <Select
-        label="Tipo de proyecto (11 categorías estándar)"
+        label="Tipo de proyecto (CORE)"
         value={draft.project_type}
-        onChange={(e) => patch({ project_type: e.target.value as ProjectTypeCode | "" })}
+        onChange={(e) => patch({ project_type: e.target.value as BackendProjectType | "" })}
         options={projectTypeOptions}
         error={errors.project_type}
       />
-      <Textarea
-        label="Descripción (opcional)"
-        rows={3}
-        value={draft.description}
-        onChange={(e) => patch({ description: e.target.value })}
+      <Input
+        label="Código interno (opcional)"
+        value={draft.codigo_interno}
+        onChange={(e) => patch({ codigo_interno: e.target.value })}
+        helper="Referencia ledger / SAP — sólo texto."
       />
     </div>
   );
 
-  const methodologyPanel = (
+  const clasificacionPanel = (
     <div className="space-y-4">
-      <p className="text-forge-sm text-forgeGray-600">
-        Elige el paquete metodológico que gobernará rituals y gates. Verifica nomenclatura con el contrato NADAKKI
-        Projects Core cuando el YAML esté en este repositorio.
-      </p>
       <Select
-        label="Paquete metodológico"
-        value={draft.methodology_pack}
-        onChange={(e) => patch({ methodology_pack: e.target.value as MethodologyPackId | "" })}
-        options={methodologyOptions}
-        error={errors.methodology_pack}
+        label="Clasificación de confidencialidad"
+        value={draft.classification}
+        onChange={(e) => patch({ classification: e.target.value as BackendClassification | "" })}
+        options={classificationOptions}
       />
+      <Input
+        label="Industry overlay"
+        value={draft.industry_overlay}
+        onChange={(e) => patch({ industry_overlay: e.target.value })}
+        helper="Vertical de negocio (texto libre). No enviar fechas al crear proyecto."
+      />
+      <Input
+        label="Sponsor · user ID UUID (opcional)"
+        value={draft.sponsor_user_id}
+        onChange={(e) => patch({ sponsor_user_id: e.target.value })}
+        error={errors.sponsor_user_id}
+      />
+      <Input
+        label="PMO director · user ID UUID (opcional)"
+        value={draft.pmo_director_user_id}
+        onChange={(e) => patch({ pmo_director_user_id: e.target.value })}
+        error={errors.pmo_director_user_id}
+      />
+      <button
+        type="button"
+        className="text-[11px] font-semibold text-amber-300 underline-offset-4 hover:text-amber-100 hover:underline"
+        onClick={() => setInfoModalOpen(true)}
+      >
+        Por qué no pedimos fechas en el alta
+      </button>
+      <Modal
+        open={infoModalOpen}
+        onClose={() => setInfoModalOpen(false)}
+        title="Sin fechas en POST"
+        description="El núcleo valida DATE estrictamente; hasta que el YAML esté enlazado, evita envío accidental."
+        className="border-amber-400/35 bg-zinc-950 text-zinc-100 backdrop:bg-black/80 !text-zinc-100"
+        footer={
+          <Button type="button" variant="secondary" onClick={() => setInfoModalOpen(false)}>
+            Entendido
+          </Button>
+        }
+      >
+        <p className="text-sm text-zinc-300">
+          Los campos <span className="font-mono text-amber-200">fecha_inicio_target</span> /{" "}
+          <span className="font-mono text-amber-200">fecha_fin_target</span> son DATE server-side y hoy pueden romperse con strings ISO desde el navegador. El wizard sólo usa campos whitelisteados hasta alinear serializers.
+        </p>
+      </Modal>
     </div>
   );
 
-  const budgetPanel = (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Select
-        className="sm:col-span-1"
-        label="Moneda referencial"
-        value={draft.budget_currency}
-        onChange={(e) => patch({ budget_currency: e.target.value })}
-        options={currencyOptions}
+  const presupuestoPanel = (
+    <div className="space-y-4">
+      <Input
+        label="Sobre presupuesto (USD)"
+        inputMode="decimal"
+        helper="Equivalente servidor: budget_envelope_usd (number). Ej. 28500000 o 28,500,000"
+        value={draft.budget_envelope_usd}
+        onChange={(e) => patch({ budget_envelope_usd: e.target.value })}
+        error={errors.budget_envelope_usd}
       />
-      <div className="sm:col-span-2">
-        <Input
-          label="Presupuesto preliminar (unidades minoritarias)"
-          inputMode="decimal"
-          helper="Opcional. Se envía como entero rounded (minor units) según acuerdos backend."
-          value={draft.preliminary_budget_minor_units}
-          onChange={(e) => patch({ preliminary_budget_minor_units: e.target.value })}
-          error={errors.preliminary_budget_minor_units ?? errors.budget}
-        />
-      </div>
+      {budgetPreview ? (
+        <p className="text-[11px] text-zinc-500">
+          Vista rápida: <span className="font-mono text-emerald-200/95">{budgetPreview}</span>
+        </p>
+      ) : null}
     </div>
   );
+
+  const previewPayload = useMemo(() => buildCreatePayload(draft), [draft]);
 
   const reviewPanel = (
     <div className="space-y-3 text-sm text-zinc-200">
-      <dl className="grid gap-2 rounded-xl border border-white/10 bg-white/[0.04] p-4">
+      <dl className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4">
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Nombre</dt>
-          <dd className="text-white">{draft.name || "—"}</dd>
+          <dd className="font-medium text-white">{draft.name || "—"}</dd>
         </div>
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Tipo</dt>
-          <dd>{draft.project_type ? PROJECT_TYPE_LABELS_ES[draft.project_type as ProjectTypeCode] : "—"}</dd>
-        </div>
-        <div>
-          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Metodología</dt>
           <dd>
-            {draft.methodology_pack ? METHODOLOGY_LABELS_ES[draft.methodology_pack as MethodologyPackId] : "—"}
+            {draft.project_type
+              ? BACKEND_PROJECT_TYPE_LABELS_ES[draft.project_type as BackendProjectType]
+              : "—"}
           </dd>
         </div>
         <div>
-          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Presupuesto</dt>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Código interno</dt>
+          <dd className="font-mono text-xs">{draft.codigo_interno.trim() || "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Clasificación</dt>
           <dd>
-            {draft.preliminary_budget_minor_units.trim()
-              ? `${draft.preliminary_budget_minor_units} ${draft.budget_currency}`
-              : "Sin capturar"}
+            {draft.classification
+              ? BACKEND_CLASSIFICATION_LABELS_ES[draft.classification as BackendClassification]
+              : "—"}
           </dd>
+        </div>
+        <div>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Industry overlay</dt>
+          <dd>{draft.industry_overlay.trim() || "—"}</dd>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">Sponsor</dt>
+            <dd className="break-all font-mono text-[11px] text-zinc-400">{draft.sponsor_user_id.trim() || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">PMO director</dt>
+            <dd className="break-all font-mono text-[11px] text-zinc-400">{draft.pmo_director_user_id.trim() || "—"}</dd>
+          </div>
+        </div>
+        <div>
+          <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">budget_envelope_usd</dt>
+          <dd className="font-mono text-emerald-200/90">{String(previewPayload.budget_envelope_usd ?? "—")}</dd>
         </div>
       </dl>
       <GlassCard hover={false} className="p-4 font-mono text-[11px] leading-relaxed text-emerald-100/95">
-        <p className="mb-2 font-semibold text-amber-100">Vista previa JSON · POST vivo</p>
-        <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all">{JSON.stringify(buildCreatePayload(draft), null, 2)}</pre>
+        <p className="mb-2 font-semibold text-amber-100">Vista previa JSON · POST</p>
+        <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-all">{JSON.stringify(previewPayload, null, 2)}</pre>
       </GlassCard>
-      <p className="text-[11px] text-zinc-500">
-        POST <span className="font-mono text-amber-200/90">{process.env.NEXT_PUBLIC_API_URL || "BACKEND_URL"}/api/v1/proyectos</span> +{" "}
-        <span className="font-mono">X-Tenant-ID</span> Auth V2.
-      </p>
+      {!canSubmitCreation ? (
+        <p className="text-[11px] text-rose-300/95">Completa nombre, tipo de proyecto y UUID válidos antes de crear.</p>
+      ) : null}
     </div>
   );
 
@@ -342,12 +435,12 @@ export function ProyectoIntakeWizard() {
     id: s.id,
     label: s.label,
     panel:
-      s.id === "basic"
-        ? basicPanel
-        : s.id === "methodology"
-          ? methodologyPanel
-          : s.id === "budget"
-            ? budgetPanel
+      s.id === "identity"
+        ? identityPanel
+        : s.id === "clasificacion"
+          ? clasificacionPanel
+          : s.id === "presupuesto"
+            ? presupuestoPanel
             : reviewPanel,
   }));
 
@@ -365,17 +458,9 @@ export function ProyectoIntakeWizard() {
         </GlassCard>
       ) : null}
 
-      {successNote && !submitError ? (
-        <GlassCard hover={false} className="border border-emerald-500/35 bg-emerald-500/10 p-4">
-          <p className="text-sm font-medium text-emerald-50">{successNote}</p>
-        </GlassCard>
-      ) : null}
-
       {!tid ? (
         <GlassCard hover={false} className="border border-amber-400/35 bg-amber-500/[0.12] p-4">
-          <p className="text-sm text-amber-50">
-            Esperando tenant institucional Auth V2. Selecciona tenant Forge y vuelve.
-          </p>
+          <p className="text-sm text-amber-50">Esperando tenant institucional (UUID) Auth V2.</p>
         </GlassCard>
       ) : null}
 
@@ -384,7 +469,7 @@ export function ProyectoIntakeWizard() {
           Alta de proyecto · Intake blueprint
         </p>
         <p className="mt-3 text-xs text-zinc-400">
-          POST real al núcleo vía createProyecto — wizard con mismo pulido vivo que Marketing.
+          POST completo contra Projects Core sin fechas legacy — mismo pulido vivo que Marketing.
         </p>
 
         <div
@@ -407,12 +492,7 @@ export function ProyectoIntakeWizard() {
         </p>
       </GlassCard>
 
-      <Tabs
-        variant="pills"
-        value={step}
-        onValueChange={(id) => setStep(id as StepId)}
-        tabs={tabDefs}
-      />
+      <Tabs variant="pills" value={step} onValueChange={(id) => setStep(id as StepId)} tabs={tabDefs} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button type="button" variant="secondary" className="min-h-11" disabled={stepIndex === 0 || busyDisabled} onClick={goPrev}>
@@ -429,7 +509,7 @@ export function ProyectoIntakeWizard() {
               variant="primary"
               className="min-h-11"
               loading={busyDisabled}
-              disabled={busyDisabled || !tid}
+              disabled={busyDisabled || !tid || !canSubmitCreation}
               onClick={() => void onSubmit()}
             >
               Crear proyecto
