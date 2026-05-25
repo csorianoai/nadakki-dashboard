@@ -24,6 +24,7 @@ import {
   Link2,
   Megaphone,
   Palette,
+  PencilRuler,
   Scale,
   ScrollText,
   Settings,
@@ -89,6 +90,15 @@ export function isPlatformSuperAdmin(allRoles: { role_key: string }[]): boolean 
   return allRoles.some((r) => r.role_key === "platform_superadmin");
 }
 
+/**
+ * Bypass hub visibility rules (subscriptions + matcher roles) so admins can navigate every Forge core.
+ * Navigation only — API authorization remains on the backend.
+ */
+export function userSeesAllForgeHubSections(allRoles: RoleInfo[]): boolean {
+  if (isPlatformSuperAdmin(allRoles)) return true;
+  return allRoles.some((r) => r.role_key === "tenant_admin");
+}
+
 export function isHrefActive(href: string, pathname: string | null): boolean {
   if (!pathname) return false;
   if (href === "/") return pathname === "/";
@@ -112,11 +122,12 @@ export function filterSectionsForUser(
   showAdmin: boolean,
 ): NavSection[] {
   const isSuper = isPlatformSuperAdmin(allRoles);
+  const seesAllHubs = userSeesAllForgeHubSections(allRoles);
 
   return sections
     .filter((sec) => {
       if (sec.id === "admin") return showAdmin;
-      if (isSuper) return true;
+      if (seesAllHubs) return true;
       const synthetic: CoreNav = { id: sec.id, coreMatchers: sec.coreMatchers };
       return hasCoreAccess(synthetic, allRoles, subscribed);
     })
@@ -305,6 +316,46 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    id: "projects-hub",
+    label: "Proyectos",
+    icon: PencilRuler,
+    coreMatchers: ["projects"],
+    children: [
+      {
+        id: "projects-dash",
+        label: "Panel",
+        href: "/proyectos",
+        icon: LayoutDashboard,
+      },
+      {
+        id: "projects-portfolio",
+        label: "Portafolio",
+        href: "/proyectos/portafolio",
+        icon: FolderKanban,
+      },
+      {
+        id: "projects-dashboards-group",
+        label: "Dashboards",
+        icon: BarChart3,
+        children: [
+          { id: "projects-dash-ceo", label: "CEO", href: "/proyectos/dashboards/ceo" },
+          { id: "projects-dash-pm", label: "PM", href: "/proyectos/dashboards/pm" },
+          {
+            id: "projects-dash-inv",
+            label: "Inversionista",
+            href: "/proyectos/dashboards/inversionista",
+          },
+        ],
+      },
+      {
+        id: "projects-new",
+        label: "Nuevo proyecto",
+        href: "/proyectos/new",
+        icon: Zap,
+      },
+    ],
+  },
+  {
     id: "sic-hub",
     label: "SIC (Cobros)",
     icon: Shield,
@@ -333,7 +384,7 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "workflows",
     label: "Workflows",
     icon: Workflow,
-    coreMatchers: ["marketing", "credit", "legal", "sic", "platform"],
+    coreMatchers: ["marketing", "credit", "legal", "sic", "projects", "platform"],
     children: [
       { id: "wf-all", label: "Todos los workflows", href: "/workflows", icon: Workflow },
       { id: "wf-ab", label: "A/B Testing", href: "/workflows/ab-testing-experimentation" },
