@@ -170,6 +170,128 @@ function missingHint(field: string): string {
   return "Completa este input en la tarjeta y reintenta el análisis.";
 }
 
+type RecommendationKind = "GO" | "REVISE" | "NO_GO" | "UNKNOWN";
+
+function normalizeRecommendation(value: string | undefined): RecommendationKind {
+  const normalized = (value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (/(avanzar|aprobar)/.test(normalized)) return "GO";
+  if (/(revisar|ajustar)/.test(normalized)) return "REVISE";
+  if (/(rechazar|detener)/.test(normalized)) return "NO_GO";
+  return "UNKNOWN";
+}
+
+function RecommendationBadge({ value }: { value: string | undefined }) {
+  const kind = normalizeRecommendation(value);
+  const config: Record<RecommendationKind, { label: string; className: string; caption: string }> = {
+    GO: {
+      label: "GO",
+      className: "border-emerald-400/35 bg-emerald-500/15 text-emerald-100 shadow-emerald-500/20",
+      caption: "Recomendación ejecutiva",
+    },
+    REVISE: {
+      label: "REVISE",
+      className: "border-amber-400/40 bg-amber-500/15 text-amber-100 shadow-amber-500/20",
+      caption: "Recomendación ejecutiva",
+    },
+    NO_GO: {
+      label: "NO-GO",
+      className: "border-rose-400/40 bg-rose-500/15 text-rose-100 shadow-rose-500/20",
+      caption: "Recomendación ejecutiva",
+    },
+    UNKNOWN: {
+      label: "SIN DECISIÓN",
+      className: "border-zinc-500/35 bg-zinc-500/10 text-zinc-200 shadow-zinc-500/10",
+      caption: "El agente no emitió decisión ejecutiva",
+    },
+  };
+  const selected = config[kind];
+
+  return (
+    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-lg ${selected.className}`}>
+      <span className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-75">{selected.caption}</span>
+      <span className="font-mono text-xs font-bold">{selected.label}</span>
+    </div>
+  );
+}
+
+function numericPercent(value: unknown): string {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  const pct = value <= 1 ? value * 100 : value;
+  return `${Math.round(pct)}%`;
+}
+
+function relevanceScore(value: unknown): string {
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
+  return value.toFixed(3);
+}
+
+function MarketSourcesCard({ metadata }: { metadata: Record<string, unknown> }) {
+  const ragCount = typeof metadata.rag_context_count === "number" ? metadata.rag_context_count : 0;
+  const rawSources = Array.isArray(metadata.fuentes_mercado) ? metadata.fuentes_mercado : [];
+  const sources = rawSources
+    .map((source) => asRecord(source))
+    .filter((source) => Object.keys(source).length > 0);
+
+  return (
+    <GlassCard hover={false} className="border border-amber-400/25 bg-amber-500/[0.055] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200/85">
+            Fuentes de mercado utilizadas
+          </p>
+          <p className="mt-1 text-sm text-zinc-400">
+            Contextos RAG verificados: <span className="font-mono text-amber-100">{ragCount}</span>
+          </p>
+        </div>
+        <StatusBadge status={sources.length ? "active" : "inactive"} label={sources.length ? "RAG activo" : "Sin RAG"} size="sm" pulse={false} />
+      </div>
+
+      {sources.length ? (
+        <div className="mt-4 grid gap-3">
+          {sources.map((source, idx) => {
+            const title =
+              typeof source.fuente === "string" && source.fuente.trim()
+                ? source.fuente.trim()
+                : typeof source.document_titulo === "string" && source.document_titulo.trim()
+                  ? source.document_titulo.trim()
+                  : `Fuente de mercado ${idx + 1}`;
+            const date = typeof source.fecha_dato === "string" && source.fecha_dato.trim() ? source.fecha_dato.trim() : "Fecha no disponible";
+
+            return (
+              <div key={`${title}-${idx}`} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold leading-relaxed text-white">{title}</p>
+                    <p className="mt-1 font-mono text-[11px] text-zinc-500">fecha_dato: {date}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:min-w-[190px]">
+                    <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-2 text-center">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-200/75">Calidad</p>
+                      <p className="mt-1 font-mono text-sm font-semibold text-emerald-100">
+                        {numericPercent(source.source_quality_score)}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 p-2 text-center">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-200/75">Relevancia</p>
+                      <p className="mt-1 font-mono text-sm font-semibold text-amber-100">{relevanceScore(source.score)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-white/[0.025] p-4">
+          <p className="text-sm leading-relaxed text-zinc-300">
+            Este análisis no recibió contexto RAG verificado; la recomendación se basa en los datos del proyecto.
+          </p>
+        </div>
+      )}
+    </GlassCard>
+  );
+}
+
 function MetadataList({ data }: { data: Record<string, unknown> }) {
   const entries = Object.entries(data).filter(([, value]) => value !== undefined && value !== null && value !== "");
   if (!entries.length) return <p className="text-sm text-zinc-500">Sin metadata adicional devuelta por el agente.</p>;
@@ -214,6 +336,7 @@ function ReportShell({
   const insufficient = accion === "datos_insuficientes";
   const metadata = asRecord(result?.decision_block?.metadata);
   const reasons = result?.reason_codes ?? [];
+  const hasMissingData = insufficient || missing.length > 0;
 
   return (
     <motion.div
@@ -223,12 +346,7 @@ function ReportShell({
       className="mt-5 space-y-4"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <StatusBadge
-          status={insufficient ? "warning" : envelope.success === false ? "error" : "active"}
-          label={insufficient ? "Faltan datos" : accion.replace(/_/g, " ")}
-          size="sm"
-          pulse={false}
-        />
+        <RecommendationBadge value={accion} />
         <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 font-mono text-[11px] text-amber-100">
           Confidence {confidencePercent(result)}
         </span>
@@ -239,7 +357,9 @@ function ReportShell({
         ) : null}
       </div>
 
-      {insufficient ? (
+      <MarketSourcesCard metadata={metadata} />
+
+      {hasMissingData ? (
         <GlassCard hover={false} className="border border-amber-400/30 bg-amber-500/[0.08] p-4">
           <div className="flex gap-3">
             <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" aria-hidden />
@@ -264,30 +384,43 @@ function ReportShell({
             </div>
           </div>
         </GlassCard>
-      ) : (
-        <GlassCard hover={false} className="border border-emerald-400/20 bg-emerald-500/[0.045] p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/85">Informe del agente</p>
-          <div className="mt-4 space-y-4">
-            <MetadataList data={metadata} />
-            {reasons.length ? (
-              <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">Reason codes</p>
-                <ul className="space-y-2">
-                  {reasons.map((reason, idx) => (
-                    <li key={`${reason.code ?? "reason"}-${idx}`} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-[11px] text-amber-200">{reason.code ?? `R-${idx + 1}`}</span>
-                        {reason.category ? <span className="text-[11px] text-zinc-500">{reason.category}</span> : null}
-                      </div>
-                      <p className="mt-1 text-sm leading-relaxed text-zinc-200">{reason.description ?? "Sin descripción."}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </div>
+      ) : null}
+
+      {reasons.length ? (
+        <GlassCard hover={false} className="border border-white/12 bg-white/[0.035] p-4">
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">Reason codes</p>
+          <ul className="space-y-2">
+            {reasons.map((reason, idx) => (
+              <li key={`${reason.code ?? "reason"}-${idx}`} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-[11px] text-amber-200">{reason.code ?? `R-${idx + 1}`}</span>
+                  {reason.category ? <span className="text-[11px] text-zinc-500">{reason.category}</span> : null}
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-200">{reason.description ?? "Sin descripción."}</p>
+              </li>
+            ))}
+          </ul>
         </GlassCard>
-      )}
+      ) : null}
+
+      <details className="group rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+          Metadata técnica
+          <span className="text-amber-200 transition-transform group-open:rotate-45">+</span>
+        </summary>
+        <div className="mt-4">
+          <MetadataList data={metadata} />
+        </div>
+      </details>
+
+      {envelope.success === false && envelope.error ? (
+        <GlassCard hover={false} className="border border-rose-500/35 bg-rose-500/10 p-4">
+          <p className="text-sm font-semibold text-rose-100">El dispatcher reportó un error</p>
+          <p className="mt-1 text-sm leading-relaxed text-rose-200/85">
+            {formatValue(envelope.error) || "Sin detalle adicional."}
+          </p>
+        </GlassCard>
+      ) : null}
 
       <div className="flex flex-wrap gap-3 border-t border-white/10 pt-3 font-mono text-[10px] text-zinc-500">
         {envelope.execution_id ? <span>execution_id: {envelope.execution_id}</span> : null}
