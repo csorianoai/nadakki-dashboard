@@ -1,25 +1,25 @@
-Ôªø"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-/** Sub-nave del workspace dentro de `/proyectos/[id]` ‚Äî estilo blueprint / ndk-page. */
+/** Sub-nave del workspace dentro de `/proyectos/[id]` ó estilo blueprint / ndk-page. */
 export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
   const pathname = usePathname();
   const comiteEnabled = process.env.NEXT_PUBLIC_COMMITTEE_ENABLED === "true";
   const masterplanEnabled = process.env.NEXT_PUBLIC_MASTERPLAN_ENABLED === "true";
   const workspacePages: { slug: string; label: string }[] = [
     { slug: "", label: "Detalle" },
-    { slug: "analisis", label: "An√°lisis" },
+    { slug: "analisis", label: "An·lisis" },
     { slug: "master-plan", label: "Master plan" },
     { slug: "escenarios", label: "Escenarios" },
     { slug: "wbs", label: "WBS" },
     { slug: "riesgos", label: "Riesgos" },
-    ...(comiteEnabled ? [{ slug: "comite", label: "Comit√©" }] : []),
-    ...(masterplanEnabled ? [{ slug: "masterplan", label: "Comit√© MP" }] : []),
+    ...(comiteEnabled ? [{ slug: "comite", label: "ComitÈ" }] : []),
+    ...(masterplanEnabled ? [{ slug: "masterplan", label: "Comite MP" }] : []),
     { slug: "documentos", label: "Documentos" },
-    { slug: "audit", label: "Auditor√≠a" },
+    { slug: "audit", label: "AuditorÌa" },
   ];
   const safeId = encodeURIComponent(proyectoId);
   const base = `/proyectos/${safeId}`;
@@ -53,3 +53,4 @@ export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
     </nav>
   );
 }
+
