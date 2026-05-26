@@ -16,6 +16,7 @@ import {
   projectsCorePost,
   ProjectsCoreMutationError,
 } from "@/components/proyectos/projectsCoreMutationClient";
+import { proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 
 const HEAT = ["rgba(251,113,133,0.15)", "rgba(251,191,36,0.3)", "rgba(245,158,11,0.55)", "rgba(220,38,38,0.55)"];
 
@@ -183,7 +184,7 @@ export function RiesgosClient({ proyectoId }: { proyectoId: string }) {
     setScanLoading(true);
     setScanSummary(null);
     try {
-      const result = await projectsCorePost(tid, `/${encodeURIComponent(proyectoId)}/riesgos/scan`, {});
+      const result = await projectsCorePost(tid, proyectoApiSuffix(proyectoId, "riesgos", "scan"), {});
       const summary = riskScanSummary(result);
       setScanSummary(summary);
       toast.success("Análisis de riesgos completado", { description: summary });
@@ -364,7 +365,7 @@ export function RiesgosClient({ proyectoId }: { proyectoId: string }) {
 
       <ProyectosDataViewer
         title="Payload riesgos (JSON técnico)"
-        subtitle={`GET /api/v1/proyectos/{id}/riesgos`}
+        subtitle={`GET /api/v1/proyectos/${proyectoId}/riesgos`}
         loading={loading}
         error={error}
         data={data}

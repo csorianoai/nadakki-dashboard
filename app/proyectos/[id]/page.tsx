@@ -8,6 +8,7 @@ import { ProyectoCommandCenterView } from "@/components/proyectos/ProyectoComman
 import GlassCard from "@/components/ui/GlassCard";
 import { useProyecto } from "@/hooks/projects/useProyectos";
 import { ProjectsApiError } from "@/lib/projects/projectsClient";
+import { resolveProyectoRouteId } from "@/lib/projects/proyectoApiPaths";
 
 export default function ProyectoCommandCenterPage({
   params,
@@ -15,7 +16,17 @@ export default function ProyectoCommandCenterPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const query = useProyecto(decodeURIComponent(id));
+  const proyectoId = resolveProyectoRouteId(id);
+  const query = useProyecto(proyectoId ?? undefined);
+
+  if (!proyectoId) {
+    return (
+      <GlassCard hover={false} className="mx-auto max-w-lg border border-amber-500/35 p-8 text-center">
+        <p className="text-sm font-semibold text-amber-100">Identificador de proyecto inválido.</p>
+        <p className="mt-2 text-sm text-zinc-400">Abre un proyecto desde el portafolio para cargar el workspace.</p>
+      </GlassCard>
+    );
+  }
 
   if (query.isPending) {
     return (

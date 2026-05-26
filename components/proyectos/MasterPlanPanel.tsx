@@ -12,6 +12,7 @@ import {
   ProjectsCoreMutationError,
   projectsCorePost,
 } from "@/components/proyectos/projectsCoreMutationClient";
+import { proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 
 /** Payload fijo de demo — conectar a terreno real del proyecto en fase posterior. */
 const DEMO_MASTERPLAN_PAYLOAD: Record<string, unknown> = {
@@ -147,7 +148,7 @@ export function MasterPlanPanel({ proyectoId }: { proyectoId: string }) {
     try {
       const raw = await projectsCorePost(
         tenantId,
-        `/${encodeURIComponent(proyectoId)}/masterplan`,
+        proyectoApiSuffix(proyectoId, "masterplan"),
         DEMO_MASTERPLAN_PAYLOAD,
       );
       const parsed = asMasterPlanEnvelope(raw);

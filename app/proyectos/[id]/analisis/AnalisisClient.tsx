@@ -14,6 +14,7 @@ import {
   ProjectsCoreMutationError,
   projectsCorePost,
 } from "@/components/proyectos/projectsCoreMutationClient";
+import { proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 import { useProyecto } from "@/hooks/projects/useProyectos";
 
 type AnalysisId = "mercado" | "valoracion" | "absorcion";
@@ -534,7 +535,7 @@ export function AnalisisClient({ proyectoId }: { proyectoId: string }) {
       setLoading((prev) => ({ ...prev, [config.id]: true }));
       setErrors((prev) => ({ ...prev, [config.id]: undefined }));
       try {
-        const raw = await projectsCorePost(tid, `/${encodeURIComponent(proyectoId)}/${config.endpoint}`, payload);
+        const raw = await projectsCorePost(tid, proyectoApiSuffix(proyectoId, config.endpoint), payload);
         setResults((prev) => ({ ...prev, [config.id]: asEnvelope(raw) }));
         toast.success("Análisis ejecutado", { description: config.title });
       } catch (e) {

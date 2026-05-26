@@ -143,7 +143,7 @@ export function AuditProjectClient({ proyectoId }: { proyectoId: string }) {
 
       <ProyectosDataViewer
         title="Payload audit trail sin procesar"
-        subtitle={`GET /api/v1/proyectos/{id}/audit-trail`}
+        subtitle={`GET /api/v1/proyectos/${proyectoId}/audit-trail`}
         loading={trailLoading}
         error={trailError}
         data={trailData}

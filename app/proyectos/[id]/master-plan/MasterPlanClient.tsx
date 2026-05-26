@@ -56,7 +56,7 @@ export function MasterPlanClient({ proyectoId }: { proyectoId: string }) {
 
       <ProyectosDataViewer
         title="Master plan — payload"
-        subtitle={`GET /api/v1/proyectos/{id}/master-plan`}
+        subtitle={`GET /api/v1/proyectos/${proyectoId}/master-plan`}
         loading={loading}
         error={error}
         data={data}

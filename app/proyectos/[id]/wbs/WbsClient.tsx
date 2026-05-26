@@ -18,6 +18,7 @@ import {
   projectsCorePost,
   ProjectsCoreMutationError,
 } from "@/components/proyectos/projectsCoreMutationClient";
+import { proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 
 const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 const PROJECTS_BASE = `${BACKEND_URL}/api/v1/proyectos`;
@@ -92,7 +93,7 @@ async function patchWbsTask(
   tareaId: string,
   payload: Record<string, unknown>,
 ): Promise<unknown> {
-  const url = `${PROJECTS_BASE}/${encodeURIComponent(proyectoId)}/wbs/tareas/${encodeURIComponent(tareaId)}`;
+  const url = `${PROJECTS_BASE}${proyectoApiSuffix(proyectoId, "wbs", "tareas", tareaId)}`;
   const res = await fetch(url, {
     method: "PATCH",
     headers: {
@@ -225,7 +226,7 @@ export function WbsClient({ proyectoId }: { proyectoId: string }) {
     setGenerating(true);
     setGenerationSummary(null);
     try {
-      const result = await projectsCorePost(tid, `/${encodeURIComponent(proyectoId)}/wbs`, {});
+      const result = await projectsCorePost(tid, proyectoApiSuffix(proyectoId, "wbs"), {});
       const summary = wbsGenerationSummary(result);
       setGenerationSummary(summary);
       toast.success("WBS generado con IA", { description: summary });
@@ -489,7 +490,7 @@ export function WbsClient({ proyectoId }: { proyectoId: string }) {
 
       <ProyectosDataViewer
         title="Payload técnico WBS"
-        subtitle={`GET /api/v1/proyectos/{id}/wbs`}
+        subtitle={`GET /api/v1/proyectos/${proyectoId}/wbs`}
         loading={loading}
         error={error}
         data={data}

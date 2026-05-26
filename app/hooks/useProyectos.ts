@@ -5,6 +5,7 @@
  */
 
 import { getAuthHeaders } from "@/lib/api/fetch-client";
+import { assertResolvedApiPath, proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 
 const BACKEND_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -38,10 +39,6 @@ function proyectoHeaders(
   return h;
 }
 
-function encodeId(id: string): string {
-  return encodeURIComponent(id);
-}
-
 async function proyectoFetchUnknown(
   tenantId: string,
   pathSuffix: string,
@@ -50,7 +47,7 @@ async function proyectoFetchUnknown(
   const method = (init?.method ?? "GET").toUpperCase();
   const hasBody = init?.body != null && method !== "GET" && method !== "HEAD";
   const omitJson = init?.omitContentType === true || !hasBody;
-  const url = `${PROJECTS_BASE}${pathSuffix}`;
+  const url = `${PROJECTS_BASE}${pathSuffix === "" ? "" : assertResolvedApiPath(pathSuffix)}`;
   const { omitContentType: _omit, ...restInit } = init ?? {};
   const res = await fetch(url, {
     ...restInit,
@@ -90,7 +87,7 @@ export async function listProyectos(tenantId: string): Promise<unknown | null> {
 /** GET /api/v1/proyectos/{id} — null on recoverable failures (parity with Credit getApplication). */
 export async function getProyecto(tenantId: string, proyectoId: string): Promise<unknown | null> {
   try {
-    return await proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}`);
+    return await proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId));
   } catch {
     return null;
   }
@@ -101,7 +98,7 @@ export async function getMasterPlan(
   tenantId: string,
   proyectoId: string
 ): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/master-plan`);
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "master-plan"));
 }
 
 /** GET /api/v1/proyectos/{id}/escenarios */
@@ -109,17 +106,17 @@ export async function getEscenarios(
   tenantId: string,
   proyectoId: string
 ): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/escenarios`);
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "escenarios"));
 }
 
 /** GET /api/v1/proyectos/{id}/wbs */
 export async function getWbs(tenantId: string, proyectoId: string): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/wbs`);
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "wbs"));
 }
 
 /** GET /api/v1/proyectos/{id}/riesgos */
 export async function getRiesgos(tenantId: string, proyectoId: string): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/riesgos`);
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "riesgos"));
 }
 
 /** GET /api/v1/proyectos/{id}/documentos */
@@ -127,7 +124,7 @@ export async function getDocumentos(
   tenantId: string,
   proyectoId: string
 ): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/documentos`);
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "documentos"));
 }
 
 /** GET /api/v1/proyectos/{id}/audit-trail */
@@ -135,7 +132,7 @@ export async function getAuditTrailProject(
   tenantId: string,
   proyectoId: string
 ): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/audit-trail`);
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "audit-trail"));
 }
 
 /**
@@ -146,7 +143,10 @@ export async function verifyProyectosAuditTrail(
   tenantId: string,
   proyectoId: string
 ): Promise<unknown | null> {
-  const paths = [`/${encodeId(proyectoId)}/audit/verify`, `/${encodeId(proyectoId)}/audit-trail/verify`];
+  const paths = [
+    proyectoApiSuffix(proyectoId, "audit", "verify"),
+    proyectoApiSuffix(proyectoId, "audit-trail", "verify"),
+  ];
   for (const p of paths) {
     try {
       return await proyectoFetchUnknown(tenantId, p);
@@ -187,7 +187,7 @@ export async function advanceState(
   proyectoId: string,
   body: Record<string, unknown>
 ): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/state`, {
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "state"), {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -202,7 +202,7 @@ export async function createCharter(
   proyectoId: string,
   body: Record<string, unknown>
 ): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/charter`, {
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "charter"), {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -217,7 +217,7 @@ export async function createTerreno(
   proyectoId: string,
   body: Record<string, unknown>
 ): Promise<unknown | null> {
-  return proyectoFetchUnknown(tenantId, `/${encodeId(proyectoId)}/terrenos`, {
+  return proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "terrenos"), {
     method: "POST",
     body: JSON.stringify(body),
   });

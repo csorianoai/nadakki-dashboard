@@ -56,7 +56,7 @@ export function DocumentosClient({ proyectoId }: { proyectoId: string }) {
 
       <ProyectosDataViewer
         title="Documentación · JSON"
-        subtitle={`GET /api/v1/proyectos/{id}/documentos`}
+        subtitle={`GET /api/v1/proyectos/${proyectoId}/documentos`}
         loading={loading}
         error={error}
         data={data}

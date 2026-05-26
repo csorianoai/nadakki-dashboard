@@ -73,7 +73,7 @@ export function EscenariosClient({ proyectoId }: { proyectoId: string }) {
 
       <ProyectosDataViewer
         title="Escenarios (respuesta servidor)"
-        subtitle={`GET /api/v1/proyectos/{id}/escenarios`}
+        subtitle={`GET /api/v1/proyectos/${proyectoId}/escenarios`}
         loading={loading}
         error={error}
         data={data}

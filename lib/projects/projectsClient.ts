@@ -1,4 +1,5 @@
 import { getAuthHeaders } from "@/lib/api/fetch-client";
+import { assertResolvedApiPath, proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 import type { AuditTrailEntry, CreateProyectoPayload, Proyecto, ProyectoDocumentStub } from "./types";
 
 export const PROJECTS_BASE = "/api/v1/proyectos";
@@ -88,7 +89,7 @@ function normalizeProyecto(raw: unknown): Proyecto {
         : undefined;
 
   return {
-    id: String(o.id ?? o.uuid ?? ""),
+    id: String(o.id ?? o.uuid ?? o.proyecto_id ?? o.project_id ?? ""),
     name: typeof o.name === "string" ? o.name : (o.title as string) ?? null,
     title: typeof o.title === "string" ? o.title : undefined,
     state: typeof o.state === "string" ? o.state : undefined,
@@ -150,7 +151,7 @@ async function projectsFetch<T>(path: string, init: ProjectsRequestInit): Promis
       baseHeaders["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(`${PROJECTS_BASE}${path}`, {
+    const response = await fetch(`${PROJECTS_BASE}${path === "" ? "" : assertResolvedApiPath(path)}`, {
       ...init,
       headers: baseHeaders,
       signal: controller.signal,
@@ -203,7 +204,7 @@ export async function createProyecto(params: {
 }
 
 export async function getProyecto(params: { tenantId: string; id: string }): Promise<Proyecto> {
-  const raw = await projectsFetch<unknown>(`/${encodeURIComponent(params.id)}`, {
+  const raw = await projectsFetch<unknown>(proyectoApiSuffix(params.id), {
     method: "GET",
     tenantId: params.tenantId,
   });
@@ -225,7 +226,7 @@ export async function getAuditTrail(params: {
   proyectoId: string;
 }): Promise<AuditTrailEntry[]> {
   const raw = await projectsFetch<unknown>(
-    `/${encodeURIComponent(params.proyectoId)}/audit-trail`,
+    proyectoApiSuffix(params.proyectoId, "audit-trail"),
     {
       method: "GET",
       tenantId: params.tenantId,

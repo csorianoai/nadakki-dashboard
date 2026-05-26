@@ -3,6 +3,7 @@
  * Replica cabeceras de {@link app/hooks/useProyectos} sin modificar ese módulo.
  */
 import { getAuthHeaders } from "@/lib/api/fetch-client";
+import { assertResolvedApiPath, proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 
 const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 const PROJECTS_BASE = `${BACKEND_URL}/api/v1/proyectos`;
@@ -16,10 +17,6 @@ export class ProjectsCoreMutationError extends Error {
     super(message);
     this.name = "ProjectsCoreMutationError";
   }
-}
-
-function encodeId(id: string): string {
-  return encodeURIComponent(id);
 }
 
 function headers(tenantId: string): HeadersInit {
@@ -42,14 +39,25 @@ async function parseBody(res: Response): Promise<unknown> {
 }
 
 /**
- * POST bajo colección proyecto (suffix con leading slash ej. `/id/wbs`).
+ * POST bajo colección proyecto.
+ * Prefer {@link proyectoApiSuffix} for path construction — rejects unresolved `{id}` placeholders.
  */
 export async function projectsCorePost(
   tenantId: string,
   pathSuffix: string,
   jsonBody: Record<string, unknown>,
 ): Promise<unknown> {
-  const url = `${PROJECTS_BASE}${pathSuffix}`;
+  let resolvedPath: string;
+  try {
+    resolvedPath = assertResolvedApiPath(pathSuffix);
+  } catch (error) {
+    throw new ProjectsCoreMutationError(
+      error instanceof Error ? error.message : "Invalid Projects API path",
+      0,
+    );
+  }
+
+  const url = `${PROJECTS_BASE}${resolvedPath}`;
   const res = await fetch(url, {
     method: "POST",
     headers: headers(tenantId),
@@ -79,7 +87,7 @@ export async function createWbsItem(
   proyectoId: string,
   payload: Record<string, unknown>,
 ): Promise<unknown> {
-  return projectsCorePost(tenantId, `/${encodeId(proyectoId)}/wbs`, payload);
+  return projectsCorePost(tenantId, proyectoApiSuffix(proyectoId, "wbs"), payload);
 }
 
 /** POST crear riesgo */
@@ -88,5 +96,5 @@ export async function createProyectoRiesgo(
   proyectoId: string,
   payload: Record<string, unknown>,
 ): Promise<unknown> {
-  return projectsCorePost(tenantId, `/${encodeId(proyectoId)}/riesgos`, payload);
+  return projectsCorePost(tenantId, proyectoApiSuffix(proyectoId, "riesgos"), payload);
 }

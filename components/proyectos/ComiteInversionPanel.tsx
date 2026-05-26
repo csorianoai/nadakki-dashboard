@@ -12,6 +12,7 @@ import {
   ProjectsCoreMutationError,
   projectsCorePost,
 } from "@/components/proyectos/projectsCoreMutationClient";
+import { proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 
 /** Payload fijo de demo (Fase 1C) — conectar a inputs del proyecto en fase posterior. */
 const DEMO_COMITE_PAYLOAD: Record<string, unknown> = {
@@ -140,7 +141,7 @@ export function ComiteInversionPanel({ proyectoId }: { proyectoId: string }) {
     try {
       const raw = await projectsCorePost(
         tenantId,
-        `/${encodeURIComponent(proyectoId)}/comite`,
+        proyectoApiSuffix(proyectoId, "comite"),
         DEMO_COMITE_PAYLOAD,
       );
       const parsed = asComiteEnvelope(raw);
