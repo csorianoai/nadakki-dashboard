@@ -170,33 +170,30 @@ function missingHint(field: string): string {
   return "Completa este input en la tarjeta y reintenta el análisis.";
 }
 
-type RecommendationKind = "FAVORABLE" | "CAUTELA" | "ALERTA" | "UNKNOWN";
+type RecommendationKind = "GO" | "REVISE" | "NO_GO" | "UNKNOWN";
 
 function normalizeRecommendation(value: string | undefined): RecommendationKind {
   const normalized = (value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (/favorable/.test(normalized)) return "FAVORABLE";
-  if (/cautela/.test(normalized)) return "CAUTELA";
-  if (/alerta/.test(normalized)) return "ALERTA";
-  if (/(avanzar|aprobar)/.test(normalized)) return "FAVORABLE";
-  if (/(revisar|ajustar)/.test(normalized)) return "CAUTELA";
-  if (/(rechazar|detener)/.test(normalized)) return "ALERTA";
+  if (/(favorable|avanzar|aprobar)/.test(normalized)) return "GO";
+  if (/(cautela|revisar|ajustar)/.test(normalized)) return "REVISE";
+  if (/(alerta|rechazar|detener)/.test(normalized)) return "NO_GO";
   return "UNKNOWN";
 }
 
 function RecommendationBadge({ value }: { value: string | undefined }) {
   const kind = normalizeRecommendation(value);
   const config: Record<RecommendationKind, { label: string; className: string; caption: string }> = {
-    FAVORABLE: {
+    GO: {
       label: "FAVORABLE",
       className: "border-emerald-400/35 bg-emerald-500/15 text-emerald-100 shadow-emerald-500/20",
       caption: "Señal analítica",
     },
-    CAUTELA: {
+    REVISE: {
       label: "CAUTELA",
       className: "border-amber-400/40 bg-amber-500/15 text-amber-100 shadow-amber-500/20",
       caption: "Señal analítica",
     },
-    ALERTA: {
+    NO_GO: {
       label: "ALERTA",
       className: "border-rose-400/40 bg-rose-500/15 text-rose-100 shadow-rose-500/20",
       caption: "Señal analítica",
@@ -204,7 +201,7 @@ function RecommendationBadge({ value }: { value: string | undefined }) {
     UNKNOWN: {
       label: "SIN SEÑAL CONCLUYENTE",
       className: "border-zinc-500/35 bg-zinc-500/10 text-zinc-200 shadow-zinc-500/10",
-      caption: "Señal analítica",
+      caption: "Análisis sin señal suficiente",
     },
   };
   const selected = config[kind];
@@ -338,12 +335,11 @@ function ReportShell({
   const missing = result?.datos_faltantes ?? [];
   const insufficient = accion === "datos_insuficientes";
   const metadata = asRecord(result?.decision_block?.metadata);
-  const recomendacion =
-    typeof metadata.recomendacion === "string" && metadata.recomendacion.trim()
-      ? metadata.recomendacion.trim()
-      : accion;
   const reasons = result?.reason_codes ?? [];
   const hasMissingData = insufficient || missing.length > 0;
+  // Señal analítica: prioriza metadata.recomendacion; fallback a accion (retrocompat).
+  const recomendacion =
+    (typeof metadata.recomendacion === "string" && metadata.recomendacion) || accion;
 
   return (
     <motion.div
@@ -357,7 +353,7 @@ function ReportShell({
         <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 font-mono text-[11px] text-amber-100">
           Confidence {confidencePercent(result)}
         </span>
-        <span className="rounded-full border border-sky-400/30 bg-sky-400/10 px-2.5 py-1 text-[11px] font-semibold text-sky-100">
+        <span className="rounded-full border border-sky-400/25 bg-sky-400/10 px-2.5 py-1 text-[11px] font-semibold text-sky-100">
           Sujeta a verificación humana
         </span>
         {result?.requiere_aprobacion_humana ? (
@@ -398,38 +394,39 @@ function ReportShell({
 
       {reasons.length ? (
         <GlassCard hover={false} className="border border-white/12 bg-white/[0.035] p-4">
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">Reason codes</p>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">Factores que sustentan la señal</p>
           <ul className="space-y-2">
-            {reasons.map((reason, idx) => {
-              const category = (reason.category ?? "").toUpperCase();
-              const isFavorable = category === "FAVORABLE";
-              const isRiesgo = category === "RIESGO";
-              const cardClass = isFavorable
-                ? "rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-3"
-                : isRiesgo
-                  ? "rounded-xl border border-rose-400/25 bg-rose-500/10 p-3"
-                  : "rounded-xl border border-white/10 bg-black/20 p-3";
-              const codeClass = isFavorable
-                ? "font-mono text-[11px] text-emerald-200"
-                : isRiesgo
-                  ? "font-mono text-[11px] text-rose-200"
-                  : "font-mono text-[11px] text-amber-200";
-              const categoryClass = isFavorable
-                ? "text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-300"
-                : isRiesgo
-                  ? "text-[11px] font-semibold uppercase tracking-[0.08em] text-rose-300"
-                  : "text-[11px] text-zinc-500";
-
-              return (
-                <li key={`${reason.code ?? "reason"}-${idx}`} className={cardClass}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={codeClass}>{reason.code ?? `R-${idx + 1}`}</span>
-                    {reason.category ? <span className={categoryClass}>{reason.category}</span> : null}
-                  </div>
-                  <p className="mt-1 text-sm leading-relaxed text-zinc-200">{reason.description ?? "Sin descripción."}</p>
-                </li>
-              );
-            })}
+            {reasons.map((reason, idx) => (
+              <li
+                key={`${reason.code ?? "reason"}-${idx}`}
+                className={`rounded-xl border p-3 ${
+                  reason.category === "FAVORABLE"
+                    ? "border-emerald-400/20 bg-emerald-500/[0.07]"
+                    : reason.category === "RIESGO"
+                      ? "border-rose-400/20 bg-rose-500/[0.07]"
+                      : "border-white/10 bg-black/20"
+                }`}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-[0.14em] ${
+                      reason.category === "FAVORABLE"
+                        ? "text-emerald-200"
+                        : reason.category === "RIESGO"
+                          ? "text-rose-200"
+                          : "text-zinc-400"
+                    }`}
+                  >
+                    {reason.category === "FAVORABLE"
+                      ? "✓ Favorable"
+                      : reason.category === "RIESGO"
+                        ? "⚠ Riesgo"
+                        : (reason.category ?? reason.code ?? `R-${idx + 1}`)}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-200">{reason.description ?? "Sin descripción."}</p>
+              </li>
+            ))}
           </ul>
         </GlassCard>
       ) : null}
