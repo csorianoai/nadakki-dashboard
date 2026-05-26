@@ -24,6 +24,7 @@ import {
   proyectoStateBadgeStatus,
   displayProjectName,
 } from "@/components/proyectos/blueprint-projects-helpers";
+import { ComiteInversionPanel } from "@/components/proyectos/ComiteInversionPanel";
 import { useAnimatedCount } from "@/components/proyectos/useAnimatedMetric";
 import { useProyectoAuditTrail } from "@/hooks/projects/useProyectos";
 import type { AuditTrailEntry, Proyecto, ProyectoDocumentStub } from "@/lib/projects/types";
@@ -177,6 +178,7 @@ export interface ProyectoCommandCenterViewProps {
 
 export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterViewProps) {
   const router = useRouter();
+  const comiteEnabled = process.env.NEXT_PUBLIC_COMMITTEE_ENABLED === "true";
   const proyectoId = proyecto.id;
   const auditQuery = useProyectoAuditTrail(proyectoId);
   const [tab, setTab] = useState("resumen");
@@ -393,6 +395,9 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
 
   const tabDefs = [
     { id: "resumen", label: "Resumen", panel: overviewPanel },
+    ...(comiteEnabled
+      ? [{ id: "comite", label: "Comité", panel: <ComiteInversionPanel proyectoId={proyectoId} /> }]
+      : []),
     { id: "timeline", label: "Timeline", panel: timelinePanel },
     { id: "documentos", label: "Documentos", panel: documentsPanel },
     { id: "audit", label: "Audit trail", panel: auditPanel },
