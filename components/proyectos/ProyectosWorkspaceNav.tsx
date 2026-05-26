@@ -4,20 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const WORKSPACE_PAGES: { slug: string; label: string }[] = [
-  { slug: "", label: "Detalle" },
-  { slug: "analisis", label: "Análisis" },
-  { slug: "master-plan", label: "Master plan" },
-  { slug: "escenarios", label: "Escenarios" },
-  { slug: "wbs", label: "WBS" },
-  { slug: "riesgos", label: "Riesgos" },
-  { slug: "documentos", label: "Documentos" },
-  { slug: "audit", label: "Auditoría" },
-];
-
 /** Sub-nave del workspace dentro de `/proyectos/[id]` — estilo blueprint / ndk-page. */
 export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
   const pathname = usePathname();
+  const comiteEnabled = process.env.NEXT_PUBLIC_COMMITTEE_ENABLED === "true";
+  const workspacePages: { slug: string; label: string }[] = [
+    { slug: "", label: "Detalle" },
+    { slug: "analisis", label: "Análisis" },
+    { slug: "master-plan", label: "Master plan" },
+    { slug: "escenarios", label: "Escenarios" },
+    { slug: "wbs", label: "WBS" },
+    { slug: "riesgos", label: "Riesgos" },
+    ...(comiteEnabled ? [{ slug: "comite", label: "Comité" }] : []),
+    { slug: "documentos", label: "Documentos" },
+    { slug: "audit", label: "Auditoría" },
+  ];
   const safeId = encodeURIComponent(proyectoId);
   const base = `/proyectos/${safeId}`;
 
@@ -26,7 +27,7 @@ export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
       aria-label="Workspace proyecto"
       className="mb-8 flex flex-wrap gap-2 border-b border-white/10 pb-4"
     >
-      {WORKSPACE_PAGES.map(({ slug, label }) => {
+      {workspacePages.map(({ slug, label }) => {
         const href = slug ? `${base}/${slug}` : base;
         const isRoot = slug === "";
         const active = isRoot
