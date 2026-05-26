@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { motion } from "@/lib/motion-stub";
-import { AlertTriangle, PlusCircle } from "lucide-react";
+import { AlertTriangle, PlusCircle, Sparkles } from "lucide-react";
 import { Button, Input, Modal, Select, Textarea } from "@/components/forge";
 import GlassCard from "@/components/ui/GlassCard";
 import { getRiesgos } from "@/app/hooks/useProyectos";
@@ -13,6 +13,7 @@ import { BP_ACCENTS, asObjectArray, coerceNumber } from "@/components/proyectos/
 import { useForgeProjectsTenantId } from "@/components/proyectos/useForgeProjectsTenantId";
 import {
   createProyectoRiesgo,
+  projectsCorePost,
   ProjectsCoreMutationError,
 } from "@/components/proyectos/projectsCoreMutationClient";
 
@@ -34,6 +35,42 @@ function riskTitle(row: Record<string, unknown>, idx: number): string {
   return String(row.title ?? row.titulo ?? row.name ?? row.code ?? `R-${idx + 1}`);
 }
 
+function isAgentIdentified(row: Record<string, unknown>): boolean {
+  const value = row.identificado_por_agente ?? row.identified_by_agent;
+  return value === true || value === 1 || value === "1" || String(value).toLowerCase() === "true";
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+function countFromValue(value: unknown): number | null {
+  if (Array.isArray(value)) return value.length;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function riskScanSummary(result: unknown): string {
+  const envelope = asRecord(result);
+  const metadata = asRecord(envelope?.metadata);
+  const count =
+    countFromValue(metadata?.riesgos_identificados) ??
+    countFromValue(metadata?.riesgos_sugeridos) ??
+    countFromValue(metadata?.risk_count) ??
+    countFromValue(envelope?.riesgos_sugeridos) ??
+    countFromValue(envelope?.riesgos);
+
+  if (count !== null) {
+    return `El agente identificó ${count} ${count === 1 ? "riesgo" : "riesgos"}.`;
+  }
+
+  return "El agente completó el radar y se actualizó la lista.";
+}
+
 const SCORE_OPTS = ["1", "2", "3", "4", "5"].map((n) => ({
   value: n,
   label: `${n} · ${Number(n) >= 4 ? "Alto++" : Number(n) === 3 ? "Medio" : "Bajo"}`,
@@ -47,6 +84,8 @@ export function RiesgosClient({ proyectoId }: { proyectoId: string }) {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanSummary, setScanSummary] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [probabilidad, setProbabilidad] = useState("3");
@@ -135,6 +174,33 @@ export function RiesgosClient({ proyectoId }: { proyectoId: string }) {
     }
   };
 
+  const runRiskScan = async () => {
+    if (!tid) {
+      toast.error("Sin tenant para analizar riesgos");
+      return;
+    }
+
+    setScanLoading(true);
+    setScanSummary(null);
+    try {
+      const result = await projectsCorePost(tid, `/${encodeURIComponent(proyectoId)}/riesgos/scan`, {});
+      const summary = riskScanSummary(result);
+      setScanSummary(summary);
+      toast.success("Análisis de riesgos completado", { description: summary });
+      await load();
+    } catch (e) {
+      const msg =
+        e instanceof ProjectsCoreMutationError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Error al analizar riesgos con IA";
+      toast.error("No se completó el análisis de riesgos", { description: msg.slice(0, 220) });
+    } finally {
+      setScanLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-10 pb-8">
       <Link
@@ -155,12 +221,31 @@ export function RiesgosClient({ proyectoId }: { proyectoId: string }) {
               </p>
             </div>
           </div>
-          <Button type="button" variant="primary" className="min-h-11 gap-2 shadow-lg shadow-rose-500/15" onClick={() => setModalOpen(true)}>
-            <PlusCircle className="h-4 w-4" aria-hidden />
-            Añadir riesgo
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="min-h-11 gap-2"
+              loading={scanLoading}
+              disabled={!tid || loading}
+              onClick={() => void runRiskScan()}
+            >
+              <Sparkles className="h-4 w-4" aria-hidden />
+              Analizar riesgos con IA
+            </Button>
+            <Button type="button" variant="primary" className="min-h-11 gap-2 shadow-lg shadow-rose-500/15" onClick={() => setModalOpen(true)}>
+              <PlusCircle className="h-4 w-4" aria-hidden />
+              Añadir riesgo
+            </Button>
+          </div>
         </GlassCard>
       </motion.div>
+
+      {scanSummary ? (
+        <GlassCard hover={false} className="border border-amber-300/20 bg-amber-300/5 p-4 text-sm text-amber-100">
+          {scanSummary}
+        </GlassCard>
+      ) : null}
 
       <Modal
         open={modalOpen}
@@ -243,7 +328,16 @@ export function RiesgosClient({ proyectoId }: { proyectoId: string }) {
                 <tbody>
                   {risks.slice(0, 25).map((r, idx) => (
                     <tr key={idx} className="border-t border-white/5">
-                      <td className="py-2 pr-2 font-semibold text-white">{riskTitle(r, idx)}</td>
+                      <td className="py-2 pr-2 font-semibold text-white">
+                        <span className="inline-flex items-center gap-2">
+                          <span>{riskTitle(r, idx)}</span>
+                          {isAgentIdentified(r) ? (
+                            <span className="rounded-full border border-amber-300/35 bg-amber-300/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-amber-100">
+                              IA
+                            </span>
+                          ) : null}
+                        </span>
+                      </td>
                       <td className="py-2 font-mono text-amber-200">
                         {coerceNumber(r.probability ?? r.probability_score ?? r.probabilidad, idx % 5)}
                       </td>
