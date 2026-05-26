@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, FileText, Gauge, Goal, PencilRuler, ScrollText } from "lucide-react";
 import {
@@ -62,6 +63,101 @@ function timelineDotClass(done: boolean, active: boolean, pending: boolean): str
   return "border-forgeGray-200 bg-white text-forgeGray-500";
 }
 
+interface NextAction {
+  label: string;
+  href: string;
+  variant?: "primary" | "secondary";
+}
+
+interface NextActionPlan {
+  eyebrow: string;
+  title: string;
+  description: string;
+  actions: NextAction[];
+}
+
+function nextActionPlanForState(proyectoId: string, state: string | null | undefined, curIdx: number): NextActionPlan {
+  const safeId = encodeURIComponent(proyectoId);
+  const base = `/proyectos/${safeId}`;
+  const normalized = normalizedState(state);
+
+  if (normalized === "INTAKE") {
+    return {
+      eyebrow: "Intake activo",
+      title: "Completa el primer paquete de decisión",
+      description: "El proyecto está naciendo. Revisa el contexto base, ejecuta análisis y deja trazabilidad documental antes de avanzar.",
+      actions: [
+        { label: "Generar/Revisar Charter", href: base, variant: "primary" },
+        { label: "Ver análisis", href: `${base}/analisis`, variant: "secondary" },
+        { label: "Documentos", href: `${base}/documentos`, variant: "secondary" },
+      ],
+    };
+  }
+
+  if (normalized === "SCOPING" || normalized === "PLANNING" || (curIdx >= 0 && curIdx <= 2)) {
+    return {
+      eyebrow: "Planificación",
+      title: "Estructura ejecución y riesgos",
+      description: "Convierte la intención en plan operativo: desglose de trabajo, riesgos iniciales y señales de análisis inmobiliario.",
+      actions: [
+        { label: "Generar WBS", href: `${base}/wbs`, variant: "primary" },
+        { label: "Registrar riesgos", href: `${base}/riesgos`, variant: "secondary" },
+        { label: "Ver análisis", href: `${base}/analisis`, variant: "secondary" },
+      ],
+    };
+  }
+
+  if (normalized === "ACTIVE" || normalized === "REVIEW" || normalized === "FINANCE_REVIEW" || normalized === "LEGAL_REVIEW") {
+    return {
+      eyebrow: "Ejecución / revisión",
+      title: "Enfoca comité y seguimiento",
+      description: "El proyecto ya requiere lectura ejecutiva: revisa análisis, tableros y riesgos antes del siguiente comité.",
+      actions: [
+        { label: "Ver análisis inmobiliario", href: `${base}/analisis`, variant: "primary" },
+        { label: "Dashboard CEO", href: "/proyectos/dashboards/ceo", variant: "secondary" },
+        { label: "Riesgos", href: `${base}/riesgos`, variant: "secondary" },
+      ],
+    };
+  }
+
+  if (normalized === "ON_HOLD") {
+    return {
+      eyebrow: "En pausa",
+      title: "Desbloquea la decisión pendiente",
+      description: "Prioriza riesgos, evidencia y análisis para decidir si el proyecto vuelve a ejecución o escala a comité.",
+      actions: [
+        { label: "Revisar riesgos", href: `${base}/riesgos`, variant: "primary" },
+        { label: "Ver análisis", href: `${base}/analisis`, variant: "secondary" },
+        { label: "Dashboard PM", href: "/proyectos/dashboards/pm", variant: "secondary" },
+      ],
+    };
+  }
+
+  if (normalized === "CERRADO") {
+    return {
+      eyebrow: "Cierre",
+      title: "Consolida aprendizaje y reporting",
+      description: "El proyecto está cerrado. Revisa análisis, documentos y tableros para alimentar la siguiente decisión de inversión.",
+      actions: [
+        { label: "Ver análisis inmobiliario", href: `${base}/analisis`, variant: "primary" },
+        { label: "Dashboard inversionista", href: "/proyectos/dashboards/inversionista", variant: "secondary" },
+        { label: "Documentos", href: `${base}/documentos`, variant: "secondary" },
+      ],
+    };
+  }
+
+  return {
+    eyebrow: "Siguiente paso",
+    title: "Continúa con señales operativas",
+    description: "No reconocimos el estado exacto, pero puedes avanzar revisando análisis, WBS y tablero ejecutivo.",
+    actions: [
+      { label: "Ver análisis", href: `${base}/analisis`, variant: "primary" },
+      { label: "Ver WBS", href: `${base}/wbs`, variant: "secondary" },
+      { label: "Dashboard CEO", href: "/proyectos/dashboards/ceo", variant: "secondary" },
+    ],
+  };
+}
+
 function auditEntriesFromApi(entries: AuditTrailEntry[], proyectoId: string): AuditTimelineEntry[] {
   return entries.map((e, i) => ({
     id: String(e.id ?? `${proyectoId}-audit-${i}`),
@@ -80,6 +176,7 @@ export interface ProyectoCommandCenterViewProps {
 }
 
 export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterViewProps) {
+  const router = useRouter();
   const proyectoId = proyecto.id;
   const auditQuery = useProyectoAuditTrail(proyectoId);
   const [tab, setTab] = useState("resumen");
@@ -89,6 +186,10 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
   const phaseProgressPct =
     curIdx >= 0 ? Math.round((curIdx / Math.max(PROYECTO_STATES.length - 1, 1)) * 100) : 0;
   const animatedPhasePct = useAnimatedCount(phaseProgressPct, 960);
+  const nextActionPlan = useMemo(
+    () => nextActionPlanForState(proyectoId, proyecto.state ?? undefined, curIdx),
+    [curIdx, proyecto.state, proyectoId],
+  );
 
   const documentsPanel = useMemo(() => {
     const docs = proyecto.documents ?? [];
@@ -214,6 +315,40 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
 
   const overviewPanel = (
     <div className="space-y-6">
+      <GlassCard
+        hover={false}
+        className="relative overflow-hidden border border-forgeBrand-400/30 bg-gradient-to-br from-forgeBrand-500/15 via-white/[0.04] to-transparent p-5"
+      >
+        <div
+          className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full opacity-45 blur-[68px]"
+          style={{ background: `radial-gradient(circle at 30% 30%, ${BP_ACCENTS.primary}, transparent 65%)` }}
+          aria-hidden
+        />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200/90">
+              {nextActionPlan.eyebrow}
+            </p>
+            <h2 className="mt-2 font-display text-xl font-bold text-white">Siguiente acción recomendada</h2>
+            <p className="mt-2 text-sm font-semibold text-zinc-100">{nextActionPlan.title}</p>
+            <p className="mt-1 text-sm leading-relaxed text-zinc-400">{nextActionPlan.description}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 lg:justify-end">
+            {nextActionPlan.actions.map((action) => (
+              <Button
+                key={`${action.href}-${action.label}`}
+                type="button"
+                variant={action.variant ?? "secondary"}
+                className="min-h-11"
+                onClick={() => router.push(action.href)}
+              >
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </GlassCard>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <KpiCard
           label="Viabilidad (score)"
