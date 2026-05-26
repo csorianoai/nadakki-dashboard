@@ -389,7 +389,7 @@ export function buildCreateApplicationPayload(
   };
 }
 
-function isFilled(value: string): boolean {
+export function isFilled(value: string): boolean {
   return value.trim().length > 0;
 }
 
@@ -410,13 +410,13 @@ function documentsPayloadFromForm(formData: ApplicationFormData): CreateCreditAp
   };
 }
 
-function documentIsValid(type: string, value: string): boolean {
+export function documentIsValid(type: string, value: string): boolean {
   if (type === "CEDULA") return validateDominicanCedula(value);
   if (type === "PASAPORTE") return validatePassport(value);
   return isFilled(value);
 }
 
-function ageFromInput(value: string): number | null {
+export function ageFromInput(value: string): number | null {
   const date = parseDateInput(value);
   return date ? calculateAge(date) : null;
 }
@@ -557,7 +557,7 @@ function requiredHint(step: number, data: ApplicationFormData, requiredDocs: Ten
   return t.wizard.hints.generic;
 }
 
-function numeric(value: string | number | null | undefined): number {
+export function numeric(value: string | number | null | undefined): number {
   const parsed = Number(String(value ?? "0").replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
 }

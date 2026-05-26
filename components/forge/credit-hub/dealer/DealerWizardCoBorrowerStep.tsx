@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   documentTypeSelectOptions,
   getGaranteInlineErrors,
@@ -28,7 +28,17 @@ export function DealerWizardCoBorrowerStep() {
   const { tenantConfig } = useTenantConfig();
   const { catalogs } = useCatalogs();
   const administrativeDivisions = useAdministrativeDivisions(tenantConfig.country_code);
-  const { formData, updateField, validationConfig } = useDealerWizard();
+  const { formData, updateField, validationConfig, showValidationErrors, touchedFields, touchField, fieldErrors } = useDealerWizard();
+
+  const shouldShowError = useCallback(
+    (name: string): string | undefined => {
+      if ((showValidationErrors || touchedFields.has(name)) && fieldErrors[name]) {
+        return fieldErrors[name];
+      }
+      return undefined;
+    },
+    [showValidationErrors, touchedFields, fieldErrors]
+  );
 
   const defaultDocType = tenantConfig.document_types.primary_id ?? "CEDULA";
   const coDoc = formData.co_debtor_document_type || defaultDocType;
@@ -127,36 +137,42 @@ export function DealerWizardCoBorrowerStep() {
               onChange={(e) =>
                 updateField("co_debtor_identification", coDoc === "CEDULA" ? cleanDominicanCedula(e.target.value) : e.target.value.toUpperCase())
               }
-              error={garanteErrors.co_debtor_identification}
+              onBlur={() => touchField("co_debtor_identification")}
+              error={garanteErrors.co_debtor_identification ?? shouldShowError("co_debtor_identification")}
             />
           </div>
-          <Input label="Nombre completo garante *" value={formData.co_debtor_full_name} onChange={(e) => updateField("co_debtor_full_name", e.target.value)} />
+          <Input label="Nombre completo garante *" value={formData.co_debtor_full_name} onChange={(e) => updateField("co_debtor_full_name", e.target.value)} onBlur={() => touchField("co_debtor_full_name")} error={shouldShowError("co_debtor_full_name")} />
           <div className="space-y-1">
             <DateInput
               label="Fecha de nacimiento garante *"
               locale={tenantConfig.locale}
               value={formData.co_debtor_date_of_birth}
               onValueChange={(iso) => updateField("co_debtor_date_of_birth", iso)}
-              error={garanteErrors.co_debtor_date_of_birth}
+              onBlur={() => touchField("co_debtor_date_of_birth")}
+              error={garanteErrors.co_debtor_date_of_birth ?? shouldShowError("co_debtor_date_of_birth")}
             />
           </div>
           <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-3">
             <p className="text-forge-xs text-forgeGray-500">{t.wizard.age_guarantor}</p>
             <p className="font-semibold text-forgeGray-800">{coAge === null ? t.common.no_data : t.wizard.years_suffix(coAge)}</p>
           </div>
-          <Input label="Teléfono garante *" type="tel" value={formData.co_debtor_phone} onChange={(e) => updateField("co_debtor_phone", e.target.value)} />
-          <Input label="Correo electrónico garante *" type="email" value={formData.co_debtor_email} onChange={(e) => updateField("co_debtor_email", e.target.value)} />
-          <Input label="Dirección garante *" className="md:col-span-2" value={formData.co_debtor_address} onChange={(e) => updateField("co_debtor_address", e.target.value)} />
+          <Input label="Teléfono garante *" type="tel" value={formData.co_debtor_phone} onChange={(e) => updateField("co_debtor_phone", e.target.value)} onBlur={() => touchField("co_debtor_phone")} error={shouldShowError("co_debtor_phone")} />
+          <Input label="Correo electrónico garante *" type="email" value={formData.co_debtor_email} onChange={(e) => updateField("co_debtor_email", e.target.value)} onBlur={() => touchField("co_debtor_email")} error={shouldShowError("co_debtor_email")} />
+          <Input label="Dirección garante *" className="md:col-span-2" value={formData.co_debtor_address} onChange={(e) => updateField("co_debtor_address", e.target.value)} onBlur={() => touchField("co_debtor_address")} error={shouldShowError("co_debtor_address")} />
           <Select
             label="Provincia garante *"
             value={formData.co_debtor_province}
             onChange={(e) => updateField("co_debtor_province", e.target.value)}
+            onBlur={() => touchField("co_debtor_province")}
+            error={shouldShowError("co_debtor_province")}
             options={provinceOptions}
           />
           <Select
             label="Municipio garante *"
             value={formData.co_debtor_city}
             onChange={(e) => updateField("co_debtor_city", e.target.value)}
+            onBlur={() => touchField("co_debtor_city")}
+            error={shouldShowError("co_debtor_city")}
             options={coMunicipalityOptions}
             disabled={!selectedCoDebtorProvince}
           />
@@ -166,11 +182,12 @@ export function DealerWizardCoBorrowerStep() {
               inputMode="decimal"
               value={formData.co_debtor_monthly_income}
               onChange={(e) => updateField("co_debtor_monthly_income", cleanDecimalInput(e.target.value))}
-              error={garanteErrors.co_debtor_monthly_income}
+              onBlur={() => touchField("co_debtor_monthly_income")}
+              error={garanteErrors.co_debtor_monthly_income ?? shouldShowError("co_debtor_monthly_income")}
             />
             {garanteIncomeWarning ? <p className="text-forge-xs text-forgeWarning-700">{garanteIncomeWarning}</p> : null}
           </div>
-          <Input label="Empresa donde labora garante *" value={formData.co_debtor_employer_name} onChange={(e) => updateField("co_debtor_employer_name", e.target.value)} />
+          <Input label="Empresa donde labora garante *" value={formData.co_debtor_employer_name} onChange={(e) => updateField("co_debtor_employer_name", e.target.value)} onBlur={() => touchField("co_debtor_employer_name")} error={shouldShowError("co_debtor_employer_name")} />
           <Input
             label="Ocupación / tipo laboral del cofirmante"
             value={formData.co_debtor_employment}
@@ -183,6 +200,8 @@ export function DealerWizardCoBorrowerStep() {
               locale={tenantConfig.locale}
               value={formData.co_debtor_employment_start_date}
               onValueChange={(iso) => updateField("co_debtor_employment_start_date", iso)}
+              onBlur={() => touchField("co_debtor_employment_start_date")}
+              error={shouldShowError("co_debtor_employment_start_date")}
             />
             {coEmploymentTenure?.isValid ? (
               <p className="text-forge-sm text-forgeGray-500">Antigüedad: {coEmploymentTenure.display}</p>
@@ -192,6 +211,8 @@ export function DealerWizardCoBorrowerStep() {
             label="Relación con solicitante *"
             value={formData.co_debtor_relationship}
             onChange={(e) => updateField("co_debtor_relationship", e.target.value)}
+            onBlur={() => touchField("co_debtor_relationship")}
+            error={shouldShowError("co_debtor_relationship")}
             options={[
               { value: "", label: t.common.select_placeholder },
               ...(catalogs?.relationshipTypes ?? [...DO_RELATIONSHIP_TYPES]).map((r) => ({ value: r, label: r })),
@@ -203,7 +224,8 @@ export function DealerWizardCoBorrowerStep() {
                 label="Especifique relación *"
                 value={formData.co_debtor_relationship_other}
                 onChange={(e) => updateField("co_debtor_relationship_other", e.target.value)}
-                error={garanteErrors.co_debtor_relationship_other}
+                onBlur={() => touchField("co_debtor_relationship_other")}
+                error={garanteErrors.co_debtor_relationship_other ?? shouldShowError("co_debtor_relationship_other")}
               />
             </div>
           ) : null}

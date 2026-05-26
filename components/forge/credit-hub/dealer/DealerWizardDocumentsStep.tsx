@@ -2,6 +2,7 @@
 
 import { tenantDocumentKey } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { Button, Checkbox, Input, Textarea } from "@/components/forge";
+import { cn } from "@/lib/utils";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useDealerWizard } from "./DealerWizardProvider";
 import { DocumentUploadZone } from "./DocumentUploadZone";
@@ -23,6 +24,8 @@ export function DealerWizardDocumentsStep() {
     pendingFiles,
     setPendingFile,
     isSubmitting,
+    showValidationErrors,
+    fieldErrors,
   } = useDealerWizard();
 
   const docList = requiredDocumentsList;
@@ -47,8 +50,17 @@ export function DealerWizardDocumentsStep() {
           const k = tenantDocumentKey(document);
           const checked = Boolean(formData.documents_received[k]);
           const entry = pendingFiles.get(k);
+          const docErrorKey = `doc_${k}`;
+          const hasDocError = showValidationErrors && Boolean(fieldErrors[docErrorKey]);
           return (
-            <div key={k} className="flex flex-col gap-2 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3">
+            <div
+              key={k}
+              className={cn(
+                "flex flex-col gap-2 rounded-forge-md border bg-forgeSurface-sunken p-3",
+                hasDocError ? "border-forgeDanger-500" : "border-forgeGray-200"
+              )}
+              aria-invalid={hasDocError || undefined}
+            >
               <div className="flex items-start justify-between gap-2">
                 <Checkbox
                   label={`${document.label}${document.required ? " *" : ` (${t.common.optional_short})`}`}
@@ -67,6 +79,7 @@ export function DealerWizardDocumentsStep() {
                 </span>
               </div>
               {document.tooltip ? <p className="text-forge-xs text-forgeGray-500">{document.tooltip}</p> : null}
+              {hasDocError ? <p className="text-forge-xs text-forgeDanger-500">{fieldErrors[docErrorKey]}</p> : null}
 
               <DocumentUploadZone
                 documentKey={k}

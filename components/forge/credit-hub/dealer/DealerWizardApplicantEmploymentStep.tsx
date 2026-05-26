@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { documentTypeSelectOptions } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { Button, Checkbox, DateInput, Input, Select } from "@/components/forge";
 import { formatDominicanCedula, cleanDominicanCedula } from "@/lib/credit/formatters/dominican-id";
@@ -49,7 +49,21 @@ export function DealerWizardApplicantEmploymentStep() {
     addOtherIncomeRow,
     removeOtherIncomeRow,
     setHasOtherIncome,
+    showValidationErrors,
+    touchedFields,
+    touchField,
+    fieldErrors,
   } = useDealerWizard();
+
+  const shouldShowError = useCallback(
+    (name: string): string | undefined => {
+      if ((showValidationErrors || touchedFields.has(name)) && fieldErrors[name]) {
+        return fieldErrors[name];
+      }
+      return undefined;
+    },
+    [showValidationErrors, touchedFields, fieldErrors]
+  );
 
   const applicantDoc = formData.applicant_document_type || tenantConfig.document_types.primary_id;
   const birthDate = parseDateInput(formData.applicant_date_of_birth);
@@ -135,6 +149,8 @@ export function DealerWizardApplicantEmploymentStep() {
           autoComplete="name"
           value={formData.applicant_full_name}
           onChange={(e) => updateField("applicant_full_name", e.target.value)}
+          onBlur={() => touchField("applicant_full_name")}
+          error={shouldShowError("applicant_full_name")}
         />
         <Select
           label="Tipo de documento *"
@@ -157,13 +173,16 @@ export function DealerWizardApplicantEmploymentStep() {
           onChange={(e) =>
             updateField("applicant_identification", applicantDoc === "CEDULA" ? cleanDominicanCedula(e.target.value) : e.target.value.toUpperCase())
           }
-          error={docError}
+          onBlur={() => touchField("applicant_identification")}
+          error={docError ?? shouldShowError("applicant_identification")}
         />
         <DateInput
           label="Fecha de nacimiento *"
           locale={tenantConfig.locale}
           value={formData.applicant_date_of_birth}
           onValueChange={(iso) => updateField("applicant_date_of_birth", iso)}
+          onBlur={() => touchField("applicant_date_of_birth")}
+          error={shouldShowError("applicant_date_of_birth")}
         />
         <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3 md:col-span-1">
           <p className="text-forge-xs text-forgeGray-500">{t.wizard.calculated_age}</p>
@@ -179,6 +198,8 @@ export function DealerWizardApplicantEmploymentStep() {
           label="Estado civil *"
           value={formData.applicant_marital_status}
           onChange={(e) => updateField("applicant_marital_status", e.target.value)}
+          onBlur={() => touchField("applicant_marital_status")}
+          error={shouldShowError("applicant_marital_status")}
           options={[
             { value: "", label: t.common.select_placeholder },
             { value: "single", label: "Soltero/a" },
@@ -188,20 +209,24 @@ export function DealerWizardApplicantEmploymentStep() {
             { value: "widowed", label: "Viudo/a" },
           ]}
         />
-        <Input label="Teléfono *" type="tel" autoComplete="tel" value={formData.applicant_phone} onChange={(e) => updateField("applicant_phone", e.target.value)} />
-        <Input label="Correo electrónico *" type="email" autoComplete="email" value={formData.applicant_email} onChange={(e) => updateField("applicant_email", e.target.value)} />
-        <Input label="País *" value={formData.applicant_country} onChange={(e) => updateField("applicant_country", e.target.value)} />
-        <Input label="Dirección *" className="md:col-span-2" value={formData.applicant_address} onChange={(e) => updateField("applicant_address", e.target.value)} />
+        <Input label="Teléfono *" type="tel" autoComplete="tel" value={formData.applicant_phone} onChange={(e) => updateField("applicant_phone", e.target.value)} onBlur={() => touchField("applicant_phone")} error={shouldShowError("applicant_phone")} />
+        <Input label="Correo electrónico *" type="email" autoComplete="email" value={formData.applicant_email} onChange={(e) => updateField("applicant_email", e.target.value)} onBlur={() => touchField("applicant_email")} error={shouldShowError("applicant_email")} />
+        <Input label="País *" value={formData.applicant_country} onChange={(e) => updateField("applicant_country", e.target.value)} onBlur={() => touchField("applicant_country")} error={shouldShowError("applicant_country")} />
+        <Input label="Dirección *" className="md:col-span-2" value={formData.applicant_address} onChange={(e) => updateField("applicant_address", e.target.value)} onBlur={() => touchField("applicant_address")} error={shouldShowError("applicant_address")} />
         <Select
           label="Provincia *"
           value={formData.applicant_province}
           onChange={(e) => updateField("applicant_province", e.target.value)}
+          onBlur={() => touchField("applicant_province")}
+          error={shouldShowError("applicant_province")}
           options={provinceOptions}
         />
         <Select
           label="Municipio *"
           value={formData.applicant_city}
           onChange={(e) => updateField("applicant_city", e.target.value)}
+          onBlur={() => touchField("applicant_city")}
+          error={shouldShowError("applicant_city")}
           options={applicantMunicipalityOptions}
           disabled={!selectedApplicantProvince}
         />
@@ -216,6 +241,8 @@ export function DealerWizardApplicantEmploymentStep() {
           label="Tipo de empleo *"
           value={formData.employment_type}
           onChange={(e) => updateField("employment_type", e.target.value)}
+          onBlur={() => touchField("employment_type")}
+          error={shouldShowError("employment_type")}
           options={[
             { value: "", label: t.common.select_placeholder },
             { value: "employee", label: "Empleado privado" },
@@ -225,13 +252,15 @@ export function DealerWizardApplicantEmploymentStep() {
             { value: "retired", label: "Pensionado" },
           ]}
         />
-        <Input label="Empresa donde trabaja *" value={formData.employer_name} onChange={(e) => updateField("employer_name", e.target.value)} />
-        <Input label="Cargo *" value={formData.employment_position} onChange={(e) => updateField("employment_position", e.target.value)} />
+        <Input label="Empresa donde trabaja *" value={formData.employer_name} onChange={(e) => updateField("employer_name", e.target.value)} onBlur={() => touchField("employer_name")} error={shouldShowError("employer_name")} />
+        <Input label="Cargo *" value={formData.employment_position} onChange={(e) => updateField("employment_position", e.target.value)} onBlur={() => touchField("employment_position")} error={shouldShowError("employment_position")} />
         <DateInput
           label="Fecha de ingreso al empleo *"
           locale={tenantConfig.locale}
           value={formData.employment_start_date}
           onValueChange={(iso) => updateField("employment_start_date", iso)}
+          onBlur={() => touchField("employment_start_date")}
+          error={shouldShowError("employment_start_date")}
         />
         <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3">
           <p className="text-forge-xs text-forgeGray-500">{t.wizard.calculated_tenure}</p>
@@ -242,19 +271,25 @@ export function DealerWizardApplicantEmploymentStep() {
           inputMode="decimal"
           value={formData.monthly_income}
           onChange={(e) => updateField("monthly_income", cleanDecimalInput(e.target.value))}
+          onBlur={() => touchField("monthly_income")}
+          error={shouldShowError("monthly_income")}
         />
-        <Input label="Teléfono empresa *" type="tel" value={formData.work_phone} onChange={(e) => updateField("work_phone", e.target.value)} />
-        <Input label="Dirección de la empresa *" className="md:col-span-2" value={formData.employer_address} onChange={(e) => updateField("employer_address", e.target.value)} />
+        <Input label="Teléfono empresa *" type="tel" value={formData.work_phone} onChange={(e) => updateField("work_phone", e.target.value)} onBlur={() => touchField("work_phone")} error={shouldShowError("work_phone")} />
+        <Input label="Dirección de la empresa *" className="md:col-span-2" value={formData.employer_address} onChange={(e) => updateField("employer_address", e.target.value)} onBlur={() => touchField("employer_address")} error={shouldShowError("employer_address")} />
         <Select
           label="Provincia empresa *"
           value={formData.employer_province}
           onChange={(e) => updateField("employer_province", e.target.value)}
+          onBlur={() => touchField("employer_province")}
+          error={shouldShowError("employer_province")}
           options={provinceOptions}
         />
         <Select
           label="Municipio empresa *"
           value={formData.employer_city}
           onChange={(e) => updateField("employer_city", e.target.value)}
+          onBlur={() => touchField("employer_city")}
+          error={shouldShowError("employer_city")}
           options={employerMunicipalityOptions}
           disabled={!selectedEmployerProvince}
         />
@@ -262,6 +297,8 @@ export function DealerWizardApplicantEmploymentStep() {
           label="Tipo de contrato *"
           value={formData.contract_type}
           onChange={(e) => updateField("contract_type", e.target.value)}
+          onBlur={() => touchField("contract_type")}
+          error={shouldShowError("contract_type")}
           disabled={catalogsLoading || !catalogs}
           options={[{ value: "", label: t.common.select_placeholder }, ...contractOptions]}
         />
@@ -290,6 +327,8 @@ export function DealerWizardApplicantEmploymentStep() {
                   label="Concepto *"
                   value={row.concept}
                   onChange={(e) => updateOtherIncomeRow(row.id, { concept: e.target.value })}
+                  onBlur={() => touchField(`other_income_${row.id}_concept`)}
+                  error={shouldShowError(`other_income_${row.id}_concept`)}
                   disabled={catalogsLoading || !catalogs}
                   options={(catalogs?.incomeConcepts ?? ["Otro"]).map((c) => ({ value: c, label: c }))}
                 />
@@ -298,11 +337,15 @@ export function DealerWizardApplicantEmploymentStep() {
                   inputMode="decimal"
                   value={row.amount}
                   onChange={(e) => updateOtherIncomeRow(row.id, { amount: cleanDecimalInput(e.target.value) })}
+                  onBlur={() => touchField(`other_income_${row.id}_amount`)}
+                  error={shouldShowError(`other_income_${row.id}_amount`)}
                 />
                 <Select
                   label="Frecuencia *"
                   value={row.frequency}
                   onChange={(e) => updateOtherIncomeRow(row.id, { frequency: e.target.value as Frequency })}
+                  onBlur={() => touchField(`other_income_${row.id}_frequency`)}
+                  error={shouldShowError(`other_income_${row.id}_frequency`)}
                   disabled={catalogsLoading || !catalogs}
                   options={(catalogs?.paymentFrequencies ?? ["MENSUAL"]).map((f) => ({ value: f, label: f }))}
                 />
@@ -312,6 +355,8 @@ export function DealerWizardApplicantEmploymentStep() {
                     inputMode="decimal"
                     value={row.variable_avg_6_months ?? ""}
                     onChange={(e) => updateOtherIncomeRow(row.id, { variable_avg_6_months: cleanDecimalInput(e.target.value) })}
+                    onBlur={() => touchField(`other_income_${row.id}_variable_avg`)}
+                    error={shouldShowError(`other_income_${row.id}_variable_avg`)}
                   />
                 ) : null}
                 <Checkbox

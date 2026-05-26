@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { Button, Modal, toast } from "@/components/forge";
 import { cn } from "@/lib/utils";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
@@ -15,7 +16,11 @@ const STEP_LABELS = ["1 Solicitante", "2 Co-firmante", "3 Vehículo", "4 Documen
 export function DealerWizardChrome({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
-  const { stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError } = useDealerWizard();
+  const {
+    stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication,
+    canAdvance, isSubmitting, submitError,
+    attemptAdvance, stepsValidity, visitedSteps, showValidationErrors,
+  } = useDealerWizard();
   const [exitOpen, setExitOpen] = useState(false);
 
   const handleExitConfirm = () => {
@@ -26,7 +31,11 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
 
   const handlePrimary = async () => {
     if (stepIndex < 4) {
-      goNext();
+      attemptAdvance();
+      return;
+    }
+    if (!canAdvance) {
+      attemptAdvance();
       return;
     }
     try {
@@ -61,12 +70,14 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
               const active = i === stepIndex;
               const done = i < stepIndex;
               const muted = i > stepIndex;
+              const visited = visitedSteps.has(i);
+              const valid = stepsValidity[i];
               return (
                 <Link
                   key={slug}
                   href={dealerWizardStepHref(slug)}
                   className={cn(
-                    "rounded-forge-sm px-2.5 py-1.5 text-forge-xs font-medium transition-colors",
+                    "inline-flex items-center gap-1 rounded-forge-sm px-2.5 py-1.5 text-forge-xs font-medium transition-colors",
                     active && "bg-forgeBrand-500 text-white shadow-forge-sm",
                     !active && done && "bg-forgeGray-100 text-forgeGray-800",
                     !active && !done && muted && "bg-forgeSurface-sunken text-forgeGray-700",
@@ -74,6 +85,11 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
                   )}
                 >
                   {STEP_LABELS[i]}
+                  {!active && visited && valid ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-forgeSuccess-600" />
+                  ) : !active && visited && !valid && showValidationErrors ? (
+                    <span className="inline-block h-2 w-2 rounded-full bg-forgeDanger-500" />
+                  ) : null}
                 </Link>
               );
             })}
@@ -95,7 +111,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
             Guardar borrador
           </Button>
           {stepIndex < 4 ? (
-            <Button type="button" variant="primary" className="min-h-12 min-w-0 flex-1 shrink" onClick={goNext} disabled={!canAdvance}>
+            <Button type="button" variant="primary" className="min-h-12 min-w-0 flex-1 shrink" onClick={attemptAdvance}>
               Siguiente
             </Button>
           ) : (
@@ -104,7 +120,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
               variant="primary"
               className="min-h-12 min-w-0 flex-1 shrink"
               onClick={() => void handlePrimary()}
-              disabled={!canAdvance || isSubmitting}
+              disabled={isSubmitting}
             >
               {isSubmitting ? "Enviando…" : "Enviar solicitud"}
             </Button>

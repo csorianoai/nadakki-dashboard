@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { PreApprovalBadge } from "@/components/credit-hub/dealer/wizard/PreApprovalBadge";
 import { Input, Select } from "@/components/forge";
 import {
@@ -33,7 +33,17 @@ export function DealerWizardVehicleFinancialStep() {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
   const { catalogs, loading: catalogsLoading } = useCatalogs();
-  const { formData, updateField } = useDealerWizard();
+  const { formData, updateField, showValidationErrors, touchedFields, touchField, fieldErrors } = useDealerWizard();
+
+  const shouldShowError = useCallback(
+    (name: string): string | undefined => {
+      if ((showValidationErrors || touchedFields.has(name)) && fieldErrors[name]) {
+        return fieldErrors[name];
+      }
+      return undefined;
+    },
+    [showValidationErrors, touchedFields, fieldErrors]
+  );
 
   const otherMonthlyStep = formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
   const amountToFinance = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
@@ -130,12 +140,16 @@ export function DealerWizardVehicleFinancialStep() {
           label="Tipo de producto *"
           value={formData.product_type}
           onChange={(e) => updateField("product_type", e.target.value)}
+          onBlur={() => touchField("product_type")}
+          error={shouldShowError("product_type")}
           options={productTypeOptions}
         />
         <Select
           label="Marca *"
           value={formData.vehicle_make}
           onChange={(e) => updateField("vehicle_make", e.target.value)}
+          onBlur={() => touchField("vehicle_make")}
+          error={shouldShowError("vehicle_make")}
           disabled={catalogsLoading || !catalogs}
           options={[
             { value: "", label: t.common.select_placeholder },
@@ -145,12 +159,14 @@ export function DealerWizardVehicleFinancialStep() {
         {formData.vehicle_make === "Otros" ? (
           <Input label="Especifique marca *" value={formData.vehicle_brand_other} onChange={(e) => updateField("vehicle_brand_other", e.target.value)} />
         ) : null}
-        <Input label="Modelo *" value={formData.vehicle_model} onChange={(e) => updateField("vehicle_model", e.target.value)} />
+        <Input label="Modelo *" value={formData.vehicle_model} onChange={(e) => updateField("vehicle_model", e.target.value)} onBlur={() => touchField("vehicle_model")} error={shouldShowError("vehicle_model")} />
         <Input label="Sub-modelo / versión (opcional)" value={formData.vehicle_version} onChange={(e) => updateField("vehicle_version", e.target.value)} />
         <Select
           label="Año *"
           value={formData.vehicle_year}
           onChange={(e) => updateField("vehicle_year", e.target.value)}
+          onBlur={() => touchField("vehicle_year")}
+          error={shouldShowError("vehicle_year")}
           options={[{ value: "", label: t.common.select_placeholder }, ...yearOptions]}
         />
         <Input label="Color (opcional)" value={formData.vehicle_color} onChange={(e) => updateField("vehicle_color", e.target.value)} />
@@ -159,11 +175,15 @@ export function DealerWizardVehicleFinancialStep() {
           inputMode="decimal"
           value={formData.vehicle_price}
           onChange={(e) => updateField("vehicle_price", cleanDecimalInput(e.target.value))}
+          onBlur={() => touchField("vehicle_price")}
+          error={shouldShowError("vehicle_price")}
         />
         <Select
           label="Condición *"
           value={formData.vehicle_condition}
           onChange={(e) => updateField("vehicle_condition", e.target.value)}
+          onBlur={() => touchField("vehicle_condition")}
+          error={shouldShowError("vehicle_condition")}
           options={[
             { value: "new", label: "Nuevo" },
             { value: "used", label: "Usado" },
@@ -177,7 +197,7 @@ export function DealerWizardVehicleFinancialStep() {
             onChange={(e) => updateField("vehicle_mileage", e.target.value)}
           />
         ) : null}
-        <Input label="Dealer / Suplidor *" value={formData.dealer_supplier} onChange={(e) => updateField("dealer_supplier", e.target.value)} />
+        <Input label="Dealer / Suplidor *" value={formData.dealer_supplier} onChange={(e) => updateField("dealer_supplier", e.target.value)} onBlur={() => touchField("dealer_supplier")} error={shouldShowError("dealer_supplier")} />
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">

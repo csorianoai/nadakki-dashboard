@@ -20,6 +20,10 @@ import {
   type OtherIncomeFormRow,
   type WizardStepValidationConfig,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
+import {
+  getSegmentFieldErrors,
+  getStepsValidity,
+} from "@/components/credit-hub/dealer/wizard/wizardFieldErrors";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -168,6 +172,13 @@ export type DealerWizardContextValue = {
   consentApplicationIdReady: boolean;
   pendingFiles: Map<string, PendingFileEntry>;
   setPendingFile: (key: string, file: File | null) => void;
+  showValidationErrors: boolean;
+  touchedFields: Set<string>;
+  touchField: (name: string) => void;
+  fieldErrors: Record<string, string>;
+  attemptAdvance: () => void;
+  stepsValidity: boolean[];
+  visitedSteps: Set<number>;
 };
 
 const DealerWizardContext = createContext<DealerWizardContextValue | null>(null);
@@ -222,6 +233,9 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const presetAppliedRef = useRef(false);
   const createMutation = useCreateCreditApplication();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+  const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([0]));
 
   const stepIndex = dealerWizardStepIndexFromPathname(pathname);
 
@@ -229,6 +243,17 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     () => JSON.stringify(formData) !== JSON.stringify(initialApplicationFormData),
     [formData]
   );
+
+  // Reset showValidationErrors on step change + track visited
+  useEffect(() => {
+    setShowValidationErrors(false);
+    setVisitedSteps((prev) => {
+      if (prev.has(stepIndex)) return prev;
+      const next = new Set(prev);
+      next.add(stepIndex);
+      return next;
+    });
+  }, [stepIndex]);
 
   useEffect(() => {
     if (hydratedRef.current) return;
@@ -409,6 +434,25 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const touchField = useCallback((name: string) => {
+    setTouchedFields((prev) => {
+      if (prev.has(name)) return prev;
+      const next = new Set(prev);
+      next.add(name);
+      return next;
+    });
+  }, []);
+
+  const fieldErrors = useMemo(
+    () => getSegmentFieldErrors(stepIndex, formData, validationConfig, t),
+    [stepIndex, formData, validationConfig, t]
+  );
+
+  const stepsValidity = useMemo(
+    () => getStepsValidity(formData, validationConfig, t),
+    [formData, validationConfig, t]
+  );
+
   const canAdvance = useMemo(
     () => segmentCanAdvance(stepIndex, formData, validationConfig, t),
     [formData, stepIndex, validationConfig, t]
@@ -418,6 +462,21 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     if (!segmentCanAdvance(stepIndex, formData, validationConfig, t)) return;
     const next = Math.min(stepIndex + 1, 4);
     router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next)));
+  }, [formData, router, stepIndex, validationConfig, t]);
+
+  const attemptAdvance = useCallback(() => {
+    if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
+      const next = Math.min(stepIndex + 1, 4);
+      router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next)));
+      return;
+    }
+    setShowValidationErrors(true);
+    const errCount = Object.keys(getSegmentFieldErrors(stepIndex, formData, validationConfig, t)).length;
+    toast.warning(`${errCount} campo(s) con errores`, { duration: 4000 });
+    requestAnimationFrame(() => {
+      const first = document.querySelector('[aria-invalid="true"]');
+      if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
   }, [formData, router, stepIndex, validationConfig, t]);
 
   const goPrev = useCallback(() => {
@@ -575,6 +634,13 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       consentApplicationIdReady,
       pendingFiles,
       setPendingFile,
+      showValidationErrors,
+      touchedFields,
+      touchField,
+      fieldErrors,
+      attemptAdvance,
+      stepsValidity,
+      visitedSteps,
     }),
     [
       formData,
@@ -605,6 +671,13 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       consentApplicationIdReady,
       pendingFiles,
       setPendingFile,
+      showValidationErrors,
+      touchedFields,
+      touchField,
+      fieldErrors,
+      attemptAdvance,
+      stepsValidity,
+      visitedSteps,
     ]
   );
 
