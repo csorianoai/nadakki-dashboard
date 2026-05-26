@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
   const pathname = usePathname();
   const comiteEnabled = process.env.NEXT_PUBLIC_COMMITTEE_ENABLED === "true";
+  const masterplanEnabled = process.env.NEXT_PUBLIC_MASTERPLAN_ENABLED === "true";
   const workspacePages: { slug: string; label: string }[] = [
     { slug: "", label: "Detalle" },
     { slug: "analisis", label: "Análisis" },
@@ -16,6 +17,7 @@ export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
     { slug: "wbs", label: "WBS" },
     { slug: "riesgos", label: "Riesgos" },
     ...(comiteEnabled ? [{ slug: "comite", label: "Comité" }] : []),
+    ...(masterplanEnabled ? [{ slug: "masterplan", label: "Master Plan" }] : []),
     { slug: "documentos", label: "Documentos" },
     { slug: "audit", label: "Auditoría" },
   ];
