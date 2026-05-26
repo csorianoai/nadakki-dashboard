@@ -174,9 +174,9 @@ type RecommendationKind = "GO" | "REVISE" | "NO_GO" | "UNKNOWN";
 
 function normalizeRecommendation(value: string | undefined): RecommendationKind {
   const normalized = (value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (/(avanzar|aprobar)/.test(normalized)) return "GO";
-  if (/(revisar|ajustar)/.test(normalized)) return "REVISE";
-  if (/(rechazar|detener)/.test(normalized)) return "NO_GO";
+  if (/(favorable|avanzar|aprobar)/.test(normalized)) return "GO";
+  if (/(cautela|revisar|ajustar)/.test(normalized)) return "REVISE";
+  if (/(alerta|rechazar|detener)/.test(normalized)) return "NO_GO";
   return "UNKNOWN";
 }
 
@@ -184,24 +184,24 @@ function RecommendationBadge({ value }: { value: string | undefined }) {
   const kind = normalizeRecommendation(value);
   const config: Record<RecommendationKind, { label: string; className: string; caption: string }> = {
     GO: {
-      label: "GO",
+      label: "FAVORABLE",
       className: "border-emerald-400/35 bg-emerald-500/15 text-emerald-100 shadow-emerald-500/20",
-      caption: "Recomendación ejecutiva",
+      caption: "Señal analítica",
     },
     REVISE: {
-      label: "REVISE",
+      label: "CAUTELA",
       className: "border-amber-400/40 bg-amber-500/15 text-amber-100 shadow-amber-500/20",
-      caption: "Recomendación ejecutiva",
+      caption: "Señal analítica",
     },
     NO_GO: {
-      label: "NO-GO",
+      label: "ALERTA",
       className: "border-rose-400/40 bg-rose-500/15 text-rose-100 shadow-rose-500/20",
-      caption: "Recomendación ejecutiva",
+      caption: "Señal analítica",
     },
     UNKNOWN: {
-      label: "SIN DECISIÓN",
+      label: "SIN SEÑAL CONCLUYENTE",
       className: "border-zinc-500/35 bg-zinc-500/10 text-zinc-200 shadow-zinc-500/10",
-      caption: "El agente no emitió decisión ejecutiva",
+      caption: "Análisis sin señal suficiente",
     },
   };
   const selected = config[kind];
@@ -337,6 +337,9 @@ function ReportShell({
   const metadata = asRecord(result?.decision_block?.metadata);
   const reasons = result?.reason_codes ?? [];
   const hasMissingData = insufficient || missing.length > 0;
+  // Señal analítica: prioriza metadata.recomendacion; fallback a accion (retrocompat).
+  const recomendacion =
+    (typeof metadata.recomendacion === "string" && metadata.recomendacion) || accion;
 
   return (
     <motion.div
@@ -346,9 +349,12 @@ function ReportShell({
       className="mt-5 space-y-4"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <RecommendationBadge value={accion} />
+        <RecommendationBadge value={recomendacion} />
         <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 font-mono text-[11px] text-amber-100">
           Confidence {confidencePercent(result)}
+        </span>
+        <span className="rounded-full border border-sky-400/25 bg-sky-400/10 px-2.5 py-1 text-[11px] font-semibold text-sky-100">
+          Sujeta a verificación humana
         </span>
         {result?.requiere_aprobacion_humana ? (
           <span className="rounded-full border border-sky-400/30 bg-sky-400/10 px-2.5 py-1 text-[11px] font-semibold text-sky-100">
@@ -388,13 +394,35 @@ function ReportShell({
 
       {reasons.length ? (
         <GlassCard hover={false} className="border border-white/12 bg-white/[0.035] p-4">
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">Reason codes</p>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">Factores que sustentan la señal</p>
           <ul className="space-y-2">
             {reasons.map((reason, idx) => (
-              <li key={`${reason.code ?? "reason"}-${idx}`} className="rounded-xl border border-white/10 bg-black/20 p-3">
+              <li
+                key={`${reason.code ?? "reason"}-${idx}`}
+                className={`rounded-xl border p-3 ${
+                  reason.category === "FAVORABLE"
+                    ? "border-emerald-400/20 bg-emerald-500/[0.07]"
+                    : reason.category === "RIESGO"
+                      ? "border-rose-400/20 bg-rose-500/[0.07]"
+                      : "border-white/10 bg-black/20"
+                }`}
+              >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-[11px] text-amber-200">{reason.code ?? `R-${idx + 1}`}</span>
-                  {reason.category ? <span className="text-[11px] text-zinc-500">{reason.category}</span> : null}
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-[0.14em] ${
+                      reason.category === "FAVORABLE"
+                        ? "text-emerald-200"
+                        : reason.category === "RIESGO"
+                          ? "text-rose-200"
+                          : "text-zinc-400"
+                    }`}
+                  >
+                    {reason.category === "FAVORABLE"
+                      ? "✓ Favorable"
+                      : reason.category === "RIESGO"
+                        ? "⚠ Riesgo"
+                        : (reason.category ?? reason.code ?? `R-${idx + 1}`)}
+                  </span>
                 </div>
                 <p className="mt-1 text-sm leading-relaxed text-zinc-200">{reason.description ?? "Sin descripción."}</p>
               </li>
