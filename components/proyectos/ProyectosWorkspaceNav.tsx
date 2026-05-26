@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,7 +17,7 @@ export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
     { slug: "wbs", label: "WBS" },
     { slug: "riesgos", label: "Riesgos" },
     ...(comiteEnabled ? [{ slug: "comite", label: "Comité" }] : []),
-    ...(masterplanEnabled ? [{ slug: "masterplan", label: "Master Plan" }] : []),
+    ...(masterplanEnabled ? [{ slug: "masterplan", label: "Comité MP" }] : []),
     { slug: "documentos", label: "Documentos" },
     { slug: "audit", label: "Auditoría" },
   ];
