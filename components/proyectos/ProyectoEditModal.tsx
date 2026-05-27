@@ -57,7 +57,6 @@ export function ProyectoEditModal({
 }: ProyectoEditModalProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [initial, setInitial] = useState<ProyectoEditFormValues | null>(null);
   const [form, setForm] = useState<ProyectoEditFormValues | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -77,12 +76,10 @@ export function ProyectoEditModal({
         if (cancelled) return;
         if (!raw) {
           setLoadError("No se pudo cargar el proyecto.");
-          setInitial(null);
           setForm(null);
           return;
         }
         const values = proyectoRawToForm(raw);
-        setInitial(values);
         setForm(values);
       } catch (err) {
         if (!cancelled) setLoadError(apiErrorMessage(err));
@@ -111,7 +108,7 @@ export function ProyectoEditModal({
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!initial || !form || !tenantId) return;
+    if (!form || !tenantId) return;
 
     const validation = validateProyectoEditForm(form);
     if (validation) {
@@ -119,12 +116,7 @@ export function ProyectoEditModal({
       return;
     }
 
-    const updates = buildProyectoPatchPayload(initial, form);
-    if (Object.keys(updates).length === 0) {
-      toast.info("Sin cambios", { description: "No hay campos modificados para guardar." });
-      onClose();
-      return;
-    }
+    const updates = buildProyectoPatchPayload(form);
 
     setSaving(true);
     setValidationError(null);
@@ -138,7 +130,7 @@ export function ProyectoEditModal({
     } finally {
       setSaving(false);
     }
-  }, [form, initial, onClose, onSaved, proyectoId, tenantId]);
+  }, [form, onClose, onSaved, proyectoId, tenantId]);
 
   return (
     <>
@@ -149,7 +141,7 @@ export function ProyectoEditModal({
         closeOnBackdropClick={false}
         className="!z-50 backdrop:bg-transparent"
         title="Editar proyecto"
-        description="Actualiza los campos del proyecto. Solo se envían al servidor los valores modificados."
+        description="Actualiza los campos del proyecto. Los valores del formulario se envían al servidor al guardar."
         footer={
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" disabled={saving} onClick={onClose}>

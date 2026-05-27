@@ -1,20 +1,31 @@
 "use client";
 
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "@/lib/motion-stub";
 import { Layers, Radar } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
 import NavigationBar from "@/components/ui/NavigationBar";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { listProyectos } from "@/app/hooks/useProyectos";
 import {
   BP_ACCENTS,
-  displayProjectName,
   formatBudgetMillionsUsd,
+  parseProjectsList,
   proyectoStateBadgeStatus,
 } from "@/components/proyectos/blueprint-projects-helpers";
 import { ProyectosDisclaimerBanner } from "@/components/proyectos/ProyectosDisclaimerBanner";
 import { ProyectosSpecialistReviewBanner } from "@/components/proyectos/ProyectosSpecialistReviewBanner";
-import { useProyectos } from "@/hooks/projects/useProyectos";
+import { useForgeProjectsTenantId } from "@/components/proyectos/useForgeProjectsTenantId";
+import type { Proyecto } from "@/lib/projects/types";
+
+function portafolioTileTitle(p: Proyecto): string {
+  const nombre = (p as Proyecto & { nombre?: string | null }).nombre;
+  if (typeof nombre === "string" && nombre.trim()) return nombre.trim();
+  if (p.name?.trim()) return p.name.trim();
+  if (p.title?.trim()) return p.title.trim();
+  return `Proyecto ${p.id.slice(0, 8)}`;
+}
 
 function progressFromState(state: string | null | undefined): number {
   const s = (state ?? "").toUpperCase();
@@ -25,7 +36,13 @@ function progressFromState(state: string | null | undefined): number {
 
 /** CAP-91 — Vista de cartera navegable tipo CORE_MODULES blueprint. */
 export function PortafolioClient() {
-  const { data: proyectos, isPending } = useProyectos();
+  const tenantId = useForgeProjectsTenantId();
+  const { data: proyectos, isPending } = useQuery({
+    queryKey: ["proyectos", "portafolio", tenantId],
+    queryFn: async () => parseProjectsList(await listProyectos(tenantId!)),
+    enabled: Boolean(tenantId),
+    staleTime: 30_000,
+  });
   const rows = proyectos ?? [];
 
   return (
@@ -40,7 +57,7 @@ export function PortafolioClient() {
           </p>
           <h1 className="mt-1 text-3xl font-extrabold text-white">Portafolio inmobiliario</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Mosaicos de proyecto con estado, presupuesto sembrado en vivo — pulsa cualquier obra para abrir la mesa táctica `[id]`.
+            Mosaicos de proyecto con estado, presupuesto sembrado en vivo — pulsa cualquier obra para abrir la mesa táctica del proyecto.
           </p>
         </div>
         <Radar className="h-14 w-14 text-amber-400 opacity-85" aria-hidden />
@@ -79,7 +96,7 @@ export function PortafolioClient() {
                     ) : null}
                     <span className="font-mono text-[10px] text-zinc-500">{formatBudgetMillionsUsd(p)}</span>
                   </div>
-                  <h2 className="text-lg font-bold text-white transition-colors group-hover:text-amber-200">{displayProjectName(p)}</h2>
+                  <h2 className="text-lg font-bold text-white transition-colors group-hover:text-amber-200">{portafolioTileTitle(p)}</h2>
                   <p className="mt-1 line-clamp-2 text-xs uppercase tracking-[0.12em] text-zinc-500">{String(p.project_type ?? "TIPO_DESCONOCIDO")}</p>
                   <div className="mt-6">
                     <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
