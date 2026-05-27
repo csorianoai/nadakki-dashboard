@@ -400,3 +400,104 @@ export async function createTerreno(
     body: JSON.stringify(body),
   });
 }
+
+export interface ProyectoUpdatable {
+  nombre?: string;
+  codigo_interno?: string;
+  sponsor_user_id?: string;
+  pmo_director_user_id?: string;
+  budget_envelope_usd?: number;
+  budget_capex_usd?: number;
+  budget_opex_usd?: number;
+  fecha_inicio_target?: string;
+  fecha_fin_target?: string;
+  updated_by?: string;
+}
+
+export interface StateTransitionResponse {
+  from_state?: string;
+  to_state?: string;
+  transition_allowed?: boolean;
+  [key: string]: unknown;
+}
+
+function extractApiDetail(body: unknown, fallback: string): string {
+  if (typeof body === "string" && body.trim()) return body;
+  if (body && typeof body === "object") {
+    const o = body as Record<string, unknown>;
+    if (typeof o.detail === "string") return o.detail;
+    if (o.detail) return JSON.stringify(o.detail);
+    if (typeof o.message === "string") return o.message;
+  }
+  return fallback;
+}
+
+/** PATCH /api/v1/proyectos/{project_id} — partial update (COALESCE server-side). */
+export async function updateProyecto(
+  tenantId: string,
+  proyectoId: string,
+  updates: Partial<ProyectoUpdatable>,
+): Promise<unknown> {
+  const payload = { ...updates, updated_by: updates.updated_by ?? "dashboard-user" };
+  const result = await proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId), {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  if (result === null) {
+    throw new ProyectosApiError("Empty response from PATCH proyecto", 500);
+  }
+  return result;
+}
+
+/** POST /api/v1/proyectos/{project_id}/state — state machine transition. */
+export async function transitionProyectoState(
+  tenantId: string,
+  proyectoId: string,
+  targetState: string,
+  justification: string,
+): Promise<StateTransitionResponse> {
+  const result = await proyectoFetchUnknown(tenantId, proyectoApiSuffix(proyectoId, "state"), {
+    method: "POST",
+    body: JSON.stringify({
+      target_state: targetState,
+      justification: justification.trim(),
+      actor_id: "dashboard-user",
+    }),
+  });
+  return (result ?? {}) as StateTransitionResponse;
+}
+
+/** DELETE /api/v1/proyectos/{project_id} — soft delete (204 No Content). */
+export async function deleteProyecto(tenantId: string, proyectoId: string): Promise<void> {
+  const url = `${PROJECTS_BASE}${proyectoApiSuffix(proyectoId)}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: proyectoHeaders(tenantId, { jsonBody: false }),
+    credentials: "include",
+  });
+
+  if (res.status === 204) return;
+
+  const text = await res.text().catch(() => "");
+  let parsed: unknown;
+  try {
+    parsed = text ? JSON.parse(text) : null;
+  } catch {
+    parsed = text;
+  }
+
+  if (res.status === 404) {
+    throw new ProyectosApiError("Proyecto no encontrado o ya eliminado", 404, parsed);
+  }
+  if (res.status === 409) {
+    throw new ProyectosApiError(
+      extractApiDetail(parsed, "Estado no permite soft delete"),
+      409,
+      parsed,
+    );
+  }
+
+  if (!res.ok) {
+    throw new ProyectosApiError(extractApiDetail(parsed, res.statusText || "Delete failed"), res.status, parsed);
+  }
+}

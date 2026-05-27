@@ -61,5 +61,10 @@ export default function ProyectoCommandCenterPage({
     );
   }
 
-  return <ProyectoCommandCenterView proyecto={query.data} />;
+  return (
+    <ProyectoCommandCenterView
+      proyecto={query.data}
+      onRefresh={() => void query.refetch()}
+    />
+  );
 }
