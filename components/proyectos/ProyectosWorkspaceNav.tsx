@@ -20,6 +20,7 @@ export function ProyectosWorkspaceNav({ proyectoId }: { proyectoId: string }) {
     ...(comiteEnabled ? [{ slug: "comite", label: "Comite" }] : []),
     ...(masterplanEnabled ? [{ slug: "masterplan", label: "Comite MP" }] : []),
     { slug: "documentos", label: "Documentos" },
+    { slug: "finanzas", label: "Finanzas" },
     { slug: "audit", label: "Auditoria" },
   ];
 
