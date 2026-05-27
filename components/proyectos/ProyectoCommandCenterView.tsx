@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Edit3, FileText, Gauge, Goal, PencilRuler, ScrollText } from "lucide-react";
 import {
   AuditTimeline,
@@ -34,6 +35,7 @@ import {
   isProyectoState,
 } from "@/lib/projects/types";
 import { cn } from "@/lib/utils";
+import { getProyecto } from "@/app/hooks/useProyectos";
 import { ProyectoDangerZone } from "@/components/proyectos/ProyectoDangerZone";
 import { ProyectoEditModal } from "@/components/proyectos/ProyectoEditModal";
 import { useForgeProjectsTenantId } from "@/components/proyectos/useForgeProjectsTenantId";
@@ -41,6 +43,26 @@ import { useForgeProjectsTenantId } from "@/components/proyectos/useForgeProject
 function fmtScore(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "—";
   return Number(value).toFixed(1);
+}
+
+function workspaceProjectTitle(proyecto: Proyecto, rawNombre?: string | null): string {
+  if (rawNombre?.trim()) return rawNombre.trim();
+  const nombre = (proyecto as Proyecto & { nombre?: string | null }).nombre;
+  if (typeof nombre === "string" && nombre.trim()) return nombre.trim();
+  if (proyecto.name?.trim()) return proyecto.name.trim();
+  if (proyecto.title?.trim()) return proyecto.title.trim();
+  return `Proyecto ${proyecto.id.slice(0, 8)}`;
+}
+
+function nombreFromRawProyecto(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const nombre = typeof o.nombre === "string" ? o.nombre.trim() : "";
+  if (nombre) return nombre;
+  const name = typeof o.name === "string" ? o.name.trim() : "";
+  if (name) return name;
+  const title = typeof o.title === "string" ? o.title.trim() : "";
+  return title || null;
 }
 
 function stateBadgeLabel(state: string | null | undefined): string {
@@ -181,8 +203,16 @@ export interface ProyectoCommandCenterViewProps {
 
 export function ProyectoCommandCenterView({ proyecto, onRefresh }: ProyectoCommandCenterViewProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const tenantId = useForgeProjectsTenantId() ?? "";
   const proyectoId = proyecto.id;
+  const headerTitleQuery = useQuery({
+    queryKey: ["proyecto-workspace-title", tenantId, proyectoId],
+    queryFn: async () => nombreFromRawProyecto(await getProyecto(tenantId, proyectoId)),
+    enabled: Boolean(tenantId && proyectoId),
+    staleTime: 30_000,
+  });
+  const headerTitle = workspaceProjectTitle(proyecto, headerTitleQuery.data);
   const auditQuery = useProyectoAuditTrail(proyectoId);
   const [tab, setTab] = useState("resumen");
   const [drawer, setDrawer] = useState<null | ProyectoDocumentStub>(null);
@@ -453,7 +483,7 @@ export function ProyectoCommandCenterView({ proyecto, onRefresh }: ProyectoComma
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.08, duration: 0.35 }}
               >
-                {displayProjectName(proyecto)}
+                {headerTitle}
               </motion.h1>
               <p className="mt-2 font-forgeMono text-xs text-zinc-400">{proyectoId}</p>
               <div className="mt-5 flex flex-wrap items-baseline gap-4 text-sm text-zinc-300">
@@ -530,7 +560,10 @@ export function ProyectoCommandCenterView({ proyecto, onRefresh }: ProyectoComma
         tenantId={tenantId}
         proyectoId={proyectoId}
         onClose={() => setEditOpen(false)}
-        onSaved={() => onRefresh?.()}
+        onSaved={() => {
+          onRefresh?.();
+          void queryClient.invalidateQueries({ queryKey: ["proyecto-workspace-title", tenantId, proyectoId] });
+        }}
       />
     </div>
   );
