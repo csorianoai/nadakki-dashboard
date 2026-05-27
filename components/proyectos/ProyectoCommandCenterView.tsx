@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
-import { AlertTriangle, FileText, Gauge, Goal, PencilRuler, ScrollText } from "lucide-react";
+import { AlertTriangle, Edit3, FileText, Gauge, Goal, PencilRuler, ScrollText } from "lucide-react";
 import {
   AuditTimeline,
   type AuditTimelineEntry,
@@ -34,6 +34,9 @@ import {
   isProyectoState,
 } from "@/lib/projects/types";
 import { cn } from "@/lib/utils";
+import { ProyectoDangerZone } from "@/components/proyectos/ProyectoDangerZone";
+import { ProyectoEditModal } from "@/components/proyectos/ProyectoEditModal";
+import { useForgeProjectsTenantId } from "@/components/proyectos/useForgeProjectsTenantId";
 
 function fmtScore(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "—";
@@ -173,14 +176,17 @@ function auditEntriesFromApi(entries: AuditTrailEntry[], proyectoId: string): Au
 
 export interface ProyectoCommandCenterViewProps {
   proyecto: Proyecto;
+  onRefresh?: () => void;
 }
 
-export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterViewProps) {
+export function ProyectoCommandCenterView({ proyecto, onRefresh }: ProyectoCommandCenterViewProps) {
   const router = useRouter();
+  const tenantId = useForgeProjectsTenantId() ?? "";
   const proyectoId = proyecto.id;
   const auditQuery = useProyectoAuditTrail(proyectoId);
   const [tab, setTab] = useState("resumen");
   const [drawer, setDrawer] = useState<null | ProyectoDocumentStub>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const curIdx = stateIndex(proyecto.state ?? undefined);
   const phaseProgressPct =
@@ -388,6 +394,12 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
           </div>
         </dl>
       </Card>
+
+      <ProyectoDangerZone
+        tenantId={tenantId}
+        proyectoId={proyectoId}
+        projectLabel={displayProjectName(proyecto)}
+      />
     </div>
   );
 
@@ -450,6 +462,18 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
                   <strong className="font-mono text-amber-200">{formatBudgetMillionsUsd(proyecto)}</strong>
                 </span>
               </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="min-h-10 border-white/15 bg-white/10 text-white hover:bg-white/15"
+                  disabled={!tenantId}
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Edit3 className="mr-2 h-4 w-4" aria-hidden />
+                  Editar proyecto
+                </Button>
+              </div>
               <Link
                 href="/proyectos"
                 className="mt-3 inline-flex min-h-10 items-center text-sm font-medium text-amber-300/95 transition-colors hover:text-amber-200"
@@ -500,6 +524,14 @@ export function ProyectoCommandCenterView({ proyecto }: ProyectoCommandCenterVie
           Vista previa local (binario/API documental pendiente). Usa tu repositorio documental oficial para versiones firmadas.
         </p>
       </Drawer>
+
+      <ProyectoEditModal
+        open={editOpen}
+        tenantId={tenantId}
+        proyectoId={proyectoId}
+        onClose={() => setEditOpen(false)}
+        onSaved={() => onRefresh?.()}
+      />
     </div>
   );
 }
