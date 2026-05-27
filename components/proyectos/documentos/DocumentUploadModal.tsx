@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input, Modal, Select } from "@/components/forge";
@@ -118,11 +119,44 @@ export function DocumentUploadModal({
     }
   }, [classification, docSubtype, files, onClose, onComplete, proyectoId, resolvedDocType, tenantId]);
 
+  const handleClose = useCallback(() => {
+    if (!uploading) onClose();
+  }, [onClose, uploading]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, handleClose]);
+
+  const overlay =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            role="presentation"
+            aria-hidden
+            onClick={handleClose}
+          />,
+          document.body,
+        )
+      : null;
+
   return (
-    <Modal
-      open={open}
-      onClose={() => !uploading && onClose()}
-      title="Metadatos del documento"
+    <>
+      {overlay}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        closeOnBackdropClick={false}
+        className="!z-50 backdrop:bg-transparent"
+        title="Metadatos del documento"
       description="Asigna tipo y clasificación antes de subir. Los mismos metadatos se aplican a todos los archivos de esta tanda."
       footer={
         <div className="flex flex-wrap justify-end gap-2">
@@ -204,5 +238,6 @@ export function DocumentUploadModal({
         </div>
       </div>
     </Modal>
+    </>
   );
 }
