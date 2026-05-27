@@ -19,8 +19,12 @@ export interface FinanzasListFilters {
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
+  /** Client-side page index (derived from limit/offset when API uses offset pagination). */
   page: number;
   page_size: number;
+  /** Present on API responses using limit/offset pagination. */
+  limit?: number;
+  offset?: number;
 }
 
 export interface LineItem {
@@ -62,12 +66,20 @@ export type CotizacionStatus = "received" | "approved" | "rejected" | "converted
 export type OrdenCompraStatus = "draft" | "issued" | "accepted" | "cancelled" | "closed";
 export type FacturaValidationStatus =
   | "draft"
+  | "pending"
   | "received"
   | "needs_pm_review"
   | "approved"
   | "rejected";
 export type FacturaPaymentStatus = "unpaid" | "partial" | "paid";
-export type PagoStatus = "pending" | "paid" | "reversed";
+/** API `estado_pago` values; UI maps draft/scheduled/processing → pending. */
+export type PagoStatus =
+  | "draft"
+  | "scheduled"
+  | "processing"
+  | "pending"
+  | "paid"
+  | "reversed";
 export type DealStatus = "open" | "closed" | "cancelled";
 
 export type EconomicEventType =
