@@ -502,8 +502,9 @@ export async function deleteProyecto(tenantId: string, proyectoId: string): Prom
   }
 }
 
-// --- Finanzas (Fase 2) — mock-backed; swap to fetch when backend merges ---
+// --- Finanzas (Fase 2) — facturas/pagos/eventos → production API; cotizaciones/OC → mocks (WS-B) ---
 export {
+  FinanzasApiError,
   getFinanceOverview,
   getBudget,
   getBudgetVariance,
