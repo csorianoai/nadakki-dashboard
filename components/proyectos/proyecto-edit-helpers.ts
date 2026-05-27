@@ -37,38 +37,21 @@ export function proyectoRawToForm(raw: unknown): ProyectoEditFormValues {
   };
 }
 
-export function buildProyectoPatchPayload(
-  initial: ProyectoEditFormValues,
-  current: ProyectoEditFormValues,
-): Partial<ProyectoUpdatable> {
-  const updates: Partial<ProyectoUpdatable> = {};
+export function buildProyectoPatchPayload(form: ProyectoEditFormValues): Partial<ProyectoUpdatable> {
+  const payload: Partial<ProyectoUpdatable> = {
+    nombre: form.nombre.trim(),
+    budget_envelope_usd: form.budget_envelope_usd,
+    budget_capex_usd: form.budget_capex_usd,
+    budget_opex_usd: form.budget_opex_usd,
+  };
 
-  const nombre = current.nombre.trim();
-  if (nombre !== initial.nombre.trim()) updates.nombre = nombre;
+  const codigo = form.codigo_interno.trim();
+  if (codigo) payload.codigo_interno = codigo;
 
-  const codigo = current.codigo_interno.trim();
-  if (codigo !== initial.codigo_interno.trim()) {
-    updates.codigo_interno = codigo || undefined;
-  }
+  if (form.fecha_inicio_target) payload.fecha_inicio_target = form.fecha_inicio_target;
+  if (form.fecha_fin_target) payload.fecha_fin_target = form.fecha_fin_target;
 
-  if (current.budget_envelope_usd !== initial.budget_envelope_usd) {
-    updates.budget_envelope_usd = current.budget_envelope_usd;
-  }
-  if (current.budget_capex_usd !== initial.budget_capex_usd) {
-    updates.budget_capex_usd = current.budget_capex_usd;
-  }
-  if (current.budget_opex_usd !== initial.budget_opex_usd) {
-    updates.budget_opex_usd = current.budget_opex_usd;
-  }
-
-  if (current.fecha_inicio_target !== initial.fecha_inicio_target) {
-    updates.fecha_inicio_target = current.fecha_inicio_target || undefined;
-  }
-  if (current.fecha_fin_target !== initial.fecha_fin_target) {
-    updates.fecha_fin_target = current.fecha_fin_target || undefined;
-  }
-
-  return updates;
+  return payload;
 }
 
 export function validateProyectoEditForm(values: ProyectoEditFormValues): string | null {
