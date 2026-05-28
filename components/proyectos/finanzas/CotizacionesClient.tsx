@@ -3,14 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input, Modal } from "@/components/forge";
+import { Button, Input, Modal, Select } from "@/components/forge";
 import {
   approveCotizacion,
   convertCotizacionToPO,
   createCotizacion,
+  listContratistas,
   listCotizaciones,
   rejectCotizacion,
 } from "@/app/hooks/useProyectos";
+import type { Contratista } from "@/app/hooks/useProyectos";
 import { AmountDisplay } from "@/components/proyectos/finanzas/AmountDisplay";
 import { FilterBar } from "@/components/proyectos/finanzas/FilterBar";
 import { FinanzasEmptyState } from "@/components/proyectos/finanzas/EmptyState";
@@ -34,14 +36,19 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
   const [convertTarget, setConvertTarget] = useState<Cotizacion | null>(null);
   const [action, setAction] = useState<{ mode: "approve" | "reject"; row: Cotizacion } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [form, setForm] = useState({ numero: "", contratista: "", categoria: "", monto: "" });
+  const [contratistas, setContratistas] = useState<Contratista[]>([]);
+  const [form, setForm] = useState({ numero: "", contratista_id: "", categoria: "", monto: "" });
 
   const load = useCallback(async () => {
     if (!tenantId) return;
     setLoading(true);
     try {
-      const res = await listCotizaciones(tenantId, proyectoId, { search, sort_by: "fecha_emision", sort_dir: "desc" });
+      const [res, ctrs] = await Promise.all([
+        listCotizaciones(tenantId, proyectoId, { search, sort_by: "fecha_emision", sort_dir: "desc" }),
+        listContratistas(tenantId),
+      ]);
       setRows(res.items);
+      setContratistas(ctrs);
     } finally {
       setLoading(false);
     }
@@ -51,13 +58,19 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
     void load();
   }, [load]);
 
+  const selectedContratista = contratistas.find((c) => c.id === form.contratista_id);
+
   const create = async () => {
     if (!tenantId) return;
+    if (!form.contratista_id) {
+      toast.error("Selecciona un contratista");
+      return;
+    }
     await createCotizacion(tenantId, proyectoId, {
       tenant_id: tenantId,
       project_id: proyectoId,
-      contratista_id: crypto.randomUUID(),
-      contratista_nombre: form.contratista || "Contratista nuevo",
+      contratista_id: form.contratista_id,
+      contratista_nombre: selectedContratista?.nombre_comercial || selectedContratista?.razon_social || "",
       numero_cotizacion: form.numero || `COT-${Date.now()}`,
       categoria: form.categoria || "General",
       monto_total_usd: Number(form.monto) || 0,
@@ -67,6 +80,7 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
     });
     toast.success("Cotización registrada (received)");
     setCreateOpen(false);
+    setForm({ numero: "", contratista_id: "", categoria: "", monto: "" });
     void load();
   };
 
@@ -150,7 +164,24 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
         footer={<div className="flex justify-end gap-2"><Button variant="secondary" onClick={handleClose}>Cancelar</Button><Button onClick={() => void create()}>Guardar</Button></div>}>
         <div className="space-y-3">
           <Input label="Número" value={form.numero} onChange={(e) => setForm((f) => ({ ...f, numero: e.target.value }))} />
-          <Input label="Contratista" value={form.contratista} onChange={(e) => setForm((f) => ({ ...f, contratista: e.target.value }))} />
+          {contratistas.length ? (
+            <Select
+              label="Contratista"
+              value={form.contratista_id}
+              onChange={(e) => setForm((f) => ({ ...f, contratista_id: e.target.value }))}
+              options={[
+                { value: "", label: "— Seleccionar contratista —", disabled: true },
+                ...contratistas.map((c) => ({
+                  value: c.id,
+                  label: c.nombre_comercial || c.razon_social,
+                })),
+              ]}
+            />
+          ) : (
+            <p className="text-forge-xs text-forgeDanger-500">
+              No hay contratistas registrados. Agrega uno primero en la sección de contratistas del proyecto.
+            </p>
+          )}
           <Input label="Categoría" value={form.categoria} onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))} />
           <Input label="Monto USD" type="number" value={form.monto} onChange={(e) => setForm((f) => ({ ...f, monto: e.target.value }))} />
         </div>

@@ -662,6 +662,23 @@ export async function deleteFactura(tenantId: string, facturaId: string): Promis
   await finanzasFetch<void>(tenantId, `/facturas/${facturaId}`, { method: "DELETE" });
 }
 
+// ── Contratistas ──────────────────────────────────────────────────────────
+
+export interface Contratista {
+  id: string;
+  razon_social: string;
+  nombre_comercial?: string;
+}
+
+export async function listContratistas(tenantId: string): Promise<Contratista[]> {
+  const raw = await finanzasFetch<Record<string, unknown>[]>(tenantId, `/contratistas`);
+  return (Array.isArray(raw) ? raw : []).map((r) => ({
+    id: String(r.id ?? ""),
+    razon_social: String(r.razon_social ?? ""),
+    nombre_comercial: r.nombre_comercial ? String(r.nombre_comercial) : undefined,
+  }));
+}
+
 // ── Cotizaciones (API) ─────────────────────────────────────────────────────
 
 export async function listCotizaciones(
