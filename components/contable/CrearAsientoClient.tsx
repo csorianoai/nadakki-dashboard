@@ -47,9 +47,13 @@ export function CrearAsientoClient() {
   const [lineas, setLineas] = useState<AsientoLineaInput[]>([emptyLine(), emptyLine()]);
 
   const exchangeRate = Number(header.exchange_rate) || 1;
+  const lineasPosteables = useMemo(
+    () => lineas.filter((l) => l.cuenta_id && (l.debe_original > 0 || l.haber_original > 0)),
+    [lineas],
+  );
   const { totalDebe, totalHaber, cuadra } = useMemo(
-    () => sumAsientoSides(lineas, exchangeRate),
-    [lineas, exchangeRate],
+    () => sumAsientoSides(lineasPosteables, exchangeRate),
+    [lineasPosteables, exchangeRate],
   );
 
   const cuentaOptions = useMemo(
@@ -84,7 +88,7 @@ export function CrearAsientoClient() {
     descripcion: header.descripcion,
     currency: header.currency,
     exchange_rate: exchangeRate,
-    lineas: lineas.filter((l) => l.cuenta_id && (l.debe_original > 0 || l.haber_original > 0)),
+    lineas: lineasPosteables,
   });
 
   const saveDraft = async () => {
@@ -158,7 +162,11 @@ export function CrearAsientoClient() {
           <Button variant="secondary" disabled={saving} onClick={() => void saveDraft()}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guardar borrador"}
           </Button>
-          <Button disabled={!cuadra || posting} onClick={() => void post()}>
+          <Button
+            disabled={!cuadra || posting}
+            title={!cuadra ? "El asiento debe cuadrar (debe = haber) antes de postear" : undefined}
+            onClick={() => void post()}
+          >
             {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Postear"}
           </Button>
         </div>
