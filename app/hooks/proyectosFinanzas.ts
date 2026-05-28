@@ -1,6 +1,6 @@
 /**
- * Proyectos Finanzas hooks — facturas / pagos / eventos wired to production API.
- * Cotizaciones, OC, budget, deals remain mock-backed until WS-B merges (see TODO[WS-B]).
+ * Proyectos Finanzas hooks — production API (facturas, pagos, eventos, cotizaciones, OC, deals, budget).
+ * Overview/variance KPIs remain mock until dedicated backend endpoints ship.
  */
 
 import { getAuthHeaders, resolveApiUrl } from "@/lib/api/fetch-client";
@@ -304,6 +304,147 @@ function toEconomicEvent(row: Record<string, unknown>): EconomicEvent {
   };
 }
 
+function unwrapRecord(raw: Record<string, unknown>, keys: string[]): Record<string, unknown> {
+  for (const key of keys) {
+    const nested = raw[key];
+    if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+      return nested as Record<string, unknown>;
+    }
+  }
+  return raw;
+}
+
+function toCotizacion(row: Record<string, unknown>, extras?: Partial<Cotizacion>): Cotizacion {
+  const contratista = row.contratista as Record<string, unknown> | null | undefined;
+  return {
+    id: String(row.id),
+    tenant_id: String(row.tenant_id),
+    project_id: String(row.project_id),
+    contratista_id: String(row.contratista_id ?? ""),
+    contratista_nombre: String(
+      extras?.contratista_nombre ?? contratista?.razon_social ?? row.contratista_nombre ?? "Contratista",
+    ),
+    numero_cotizacion: String(row.numero_cotizacion ?? ""),
+    categoria: String(extras?.categoria ?? row.categoria ?? row.notes ?? "General"),
+    monto_total_usd: Number(row.monto_total_usd ?? 0),
+    currency: (String(row.moneda_original ?? row.currency ?? "USD") as CurrencyCode),
+    status: String(row.status ?? "draft") as Cotizacion["status"],
+    fecha_emision: String(row.fecha_emision ?? "").slice(0, 10),
+    fecha_validez: row.fecha_vencimiento ? String(row.fecha_vencimiento).slice(0, 10) : undefined,
+    line_items: parseLineItems(row.line_items),
+    notas: row.notes ? String(row.notes) : undefined,
+    created_at: String(row.created_at ?? new Date().toISOString()),
+    updated_at: String(row.updated_at ?? row.created_at ?? new Date().toISOString()),
+    ...extras,
+  };
+}
+
+function toOrdenCompra(row: Record<string, unknown>, extras?: Partial<OrdenCompra>): OrdenCompra {
+  const contratista = row.contratista as Record<string, unknown> | null | undefined;
+  return {
+    id: String(row.id),
+    tenant_id: String(row.tenant_id),
+    project_id: String(row.project_id),
+    cotizacion_id: row.cotizacion_id ? String(row.cotizacion_id) : undefined,
+    contratista_id: String(row.contratista_id ?? ""),
+    contratista_nombre: String(
+      extras?.contratista_nombre ?? contratista?.razon_social ?? row.contratista_nombre ?? "Contratista",
+    ),
+    numero_oc: String(row.numero_oc ?? ""),
+    monto_total_usd: Number(row.monto_total_usd ?? 0),
+    currency: (String(row.moneda_original ?? row.currency ?? "USD") as CurrencyCode),
+    status: String(row.status ?? "draft") as OrdenCompra["status"],
+    fecha_emision: String(row.fecha_emision ?? "").slice(0, 10),
+    fecha_entrega_esperada: row.fecha_entrega_esperada
+      ? String(row.fecha_entrega_esperada).slice(0, 10)
+      : undefined,
+    line_items: parseLineItems(row.line_items),
+    notas: row.notes ? String(row.notes) : undefined,
+    created_at: String(row.created_at ?? new Date().toISOString()),
+    updated_at: String(row.updated_at ?? row.created_at ?? new Date().toISOString()),
+    ...extras,
+  };
+}
+
+function mapDealStatus(raw: string): Deal["status"] {
+  if (raw === "closed") return "closed";
+  if (raw === "cancelled") return "cancelled";
+  return "open";
+}
+
+function toDeal(row: Record<string, unknown>, extras?: Partial<Deal>): Deal {
+  return {
+    id: String(row.id),
+    tenant_id: String(row.tenant_id ?? extras?.tenant_id ?? ""),
+    project_id: String(row.project_id),
+    titulo: String(row.deal_name ?? extras?.titulo ?? ""),
+    contraparte: String(extras?.contraparte ?? row.counterparty_type ?? "Contraparte"),
+    monto_usd: Number(row.deal_value_usd ?? extras?.monto_usd ?? 0),
+    currency: (String(row.currency ?? "USD") as CurrencyCode),
+    status: mapDealStatus(String(row.status ?? "drafting")),
+    fecha_inicio: String(row.initiated_at ?? extras?.fecha_inicio ?? row.created_at ?? "")
+      .slice(0, 10),
+    fecha_cierre_esperada: extras?.fecha_cierre_esperada,
+    fecha_cierre: row.closed_at ? String(row.closed_at).slice(0, 10) : undefined,
+    notas: row.notes ? String(row.notes) : undefined,
+    created_at: String(row.initiated_at ?? row.created_at ?? new Date().toISOString()),
+    updated_at: String(row.updated_at ?? row.initiated_at ?? row.created_at ?? new Date().toISOString()),
+    ...extras,
+  };
+}
+
+function toCreateCotizacionBody(payload: CreateCotizacionPayload): Record<string, unknown> {
+  return {
+    contratista_id: payload.contratista_id,
+    numero_cotizacion: payload.numero_cotizacion,
+    fecha_emision: payload.fecha_emision,
+    monto_subtotal_usd: payload.monto_total_usd,
+    monto_total_usd: payload.monto_total_usd,
+    monto_impuesto_usd: 0,
+    moneda_original: payload.currency ?? "USD",
+    line_items: payload.line_items ?? [],
+    notes: payload.notas ?? payload.categoria,
+    fecha_vencimiento: payload.fecha_validez,
+    created_by: "dashboard-user",
+  };
+}
+
+function toCreateOrdenCompraBody(payload: CreateOrdenCompraPayload): Record<string, unknown> {
+  return {
+    contratista_id: payload.contratista_id,
+    cotizacion_id: payload.cotizacion_id,
+    numero_oc: payload.numero_oc ?? `OC-${Date.now()}`,
+    fecha_emision: payload.fecha_emision,
+    monto_subtotal_usd: payload.monto_total_usd,
+    monto_total_usd: payload.monto_total_usd,
+    monto_impuesto_usd: 0,
+    moneda_original: payload.currency ?? "USD",
+    line_items: payload.line_items ?? [],
+    notes: payload.notas,
+    created_by: "dashboard-user",
+  };
+}
+
+function toCreateDealBody(payload: CreateDealPayload): Record<string, unknown> {
+  return {
+    deal_type: (payload as CreateDealPayload & { deal_type?: string }).deal_type ?? "jv",
+    deal_name: payload.titulo,
+    counterparty_name: payload.contraparte,
+    counterparty_type:
+      (payload as CreateDealPayload & { counterparty_type?: string }).counterparty_type ?? "developer",
+    deal_value_usd: payload.monto_usd,
+    counterparty_country: (payload as CreateDealPayload & { counterparty_country?: string })
+      .counterparty_country,
+    created_by: "dashboard-user",
+  };
+}
+
+function filterBySearch<T>(items: T[], search?: string): T[] {
+  if (!search?.trim()) return items;
+  const q = search.trim().toLowerCase();
+  return items.filter((row) => JSON.stringify(row).toLowerCase().includes(q));
+}
+
 function toCreateFacturaBody(payload: CreateFacturaPayload): Record<string, unknown> {
   return {
     contratista_id: payload.contratista_id,
@@ -353,17 +494,33 @@ async function enrichFacturasWithPayment(
   return items.map((f) => byId.get(f.id) ?? f);
 }
 
-// ── Budget / overview (mock until backend KPI endpoints) ─────────────────
+// ── Budget / overview ──────────────────────────────────────────────────────
 
 export async function getFinanceOverview(tenantId: string, projectId: string): Promise<FinanceOverview> {
+  // TODO[finanzas-overview-backend]: no GET /finanzas/overview in prod (404) — keep mock KPIs
   return mock.mockGetFinanceOverview(tenantId, projectId);
 }
 
 export async function getBudget(tenantId: string, projectId: string): Promise<BudgetSnapshot> {
-  return mock.mockGetBudget(tenantId, projectId);
+  if (USE_MOCKS) return mock.mockGetBudget(tenantId, projectId);
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/${projectId}`);
+  const envelope = Number(row.budget_envelope_usd ?? 0);
+  const pct = Number(row.budget_contingencia_pct ?? 10);
+  return {
+    project_id: String(row.id ?? projectId),
+    tenant_id: String(row.tenant_id ?? tenantId),
+    envelope_usd: envelope,
+    capex_usd: Number(row.budget_capex_usd ?? 0),
+    opex_usd: Number(row.budget_opex_usd ?? 0),
+    contingencia_usd: envelope > 0 ? (envelope * pct) / 100 : 0,
+    currency: "USD",
+    updated_at: row.updated_at ? String(row.updated_at) : undefined,
+  };
 }
 
 export async function getBudgetVariance(tenantId: string, projectId: string): Promise<BudgetVarianceReport> {
+  // TODO[finanzas-variance-backend]: no variance endpoint in prod — keep mock report
   return mock.mockGetBudgetVariance(tenantId, projectId);
 }
 
@@ -372,7 +529,18 @@ export async function updateBudget(
   projectId: string,
   payload: UpdateBudgetPayload,
 ): Promise<BudgetSnapshot> {
-  return mock.mockUpdateBudget(tenantId, projectId, payload);
+  if (USE_MOCKS) return mock.mockUpdateBudget(tenantId, projectId, payload);
+
+  await finanzasFetch<Record<string, unknown>>(tenantId, `/${projectId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      budget_envelope_usd: payload.envelope_usd,
+      budget_capex_usd: payload.capex_usd,
+      budget_opex_usd: payload.opex_usd,
+      updated_by: payload.actor_id ?? "dashboard-user",
+    }),
+  });
+  return getBudget(tenantId, projectId);
 }
 
 // ── Facturas (API) ───────────────────────────────────────────────────────
@@ -494,19 +662,37 @@ export async function deleteFactura(tenantId: string, facturaId: string): Promis
   await finanzasFetch<void>(tenantId, `/facturas/${facturaId}`, { method: "DELETE" });
 }
 
-// ── Cotizaciones / OC — TODO[WS-B] ───────────────────────────────────────
+// ── Cotizaciones (API) ─────────────────────────────────────────────────────
 
 export async function listCotizaciones(
   tenantId: string,
   projectId: string,
   filters?: FinanzasListFilters,
 ): Promise<PaginatedResponse<Cotizacion>> {
-  // TODO[WS-B]: switch to real API when phase2/backend-procurement merges
-  return mock.mockListCotizaciones(tenantId, projectId, filters);
+  if (USE_MOCKS) return mock.mockListCotizaciones(tenantId, projectId, filters);
+
+  const raw = await finanzasFetch<{ items: unknown[]; total: number; limit?: number; offset?: number }>(
+    tenantId,
+    `/${projectId}/cotizaciones${listQuery(filters)}`,
+  );
+  let items = toPaginated(raw, toCotizacion).items;
+  items = filterBySearch(items, filters?.search);
+  return {
+    ...toPaginated({ ...raw, items: items as unknown[] }, toCotizacion),
+    items,
+    total: filters?.search ? items.length : raw.total,
+  };
 }
 
 export async function getCotizacion(tenantId: string, cotizacionId: string): Promise<Cotizacion | null> {
-  return mock.mockGetCotizacion(tenantId, cotizacionId);
+  if (USE_MOCKS) return mock.mockGetCotizacion(tenantId, cotizacionId);
+  try {
+    const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/cotizaciones/${cotizacionId}`);
+    return toCotizacion(row);
+  } catch (e) {
+    if (e instanceof FinanzasApiError && e.status === 404) return null;
+    throw e;
+  }
 }
 
 export async function createCotizacion(
@@ -514,7 +700,17 @@ export async function createCotizacion(
   projectId: string,
   payload: CreateCotizacionPayload,
 ): Promise<Cotizacion> {
-  return mock.mockCreateCotizacion(tenantId, projectId, payload);
+  if (USE_MOCKS) return mock.mockCreateCotizacion(tenantId, projectId, payload);
+
+  const raw = await finanzasFetch<Record<string, unknown>>(tenantId, `/${projectId}/cotizaciones`, {
+    method: "POST",
+    body: JSON.stringify(toCreateCotizacionBody(payload)),
+  });
+  const row = unwrapRecord(raw, ["cotizacion"]);
+  return toCotizacion(row, {
+    contratista_nombre: payload.contratista_nombre,
+    categoria: payload.categoria,
+  });
 }
 
 export async function updateCotizacion(
@@ -522,7 +718,25 @@ export async function updateCotizacion(
   cotizacionId: string,
   payload: UpdateCotizacionPayload,
 ): Promise<Cotizacion> {
-  return mock.mockUpdateCotizacion(tenantId, cotizacionId, payload);
+  if (USE_MOCKS) return mock.mockUpdateCotizacion(tenantId, cotizacionId, payload);
+
+  const body: Record<string, unknown> = {};
+  if (payload.monto_total_usd != null) {
+    body.monto_total_usd = payload.monto_total_usd;
+    body.monto_subtotal_usd = payload.monto_total_usd;
+  }
+  if (payload.line_items != null) body.line_items = payload.line_items;
+  if (payload.notas != null) body.notes = payload.notas;
+  if (payload.fecha_validez != null) body.fecha_vencimiento = payload.fecha_validez;
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/cotizaciones/${cotizacionId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  return toCotizacion(row, {
+    contratista_nombre: payload.contratista_nombre,
+    categoria: payload.categoria,
+  });
 }
 
 export async function approveCotizacion(
@@ -530,7 +744,16 @@ export async function approveCotizacion(
   cotizacionId: string,
   body: ApprovalBody,
 ): Promise<Cotizacion> {
-  return mock.mockApproveCotizacion(tenantId, cotizacionId, body);
+  if (USE_MOCKS) return mock.mockApproveCotizacion(tenantId, cotizacionId, body);
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/cotizaciones/${cotizacionId}/approve`, {
+    method: "POST",
+    body: JSON.stringify({
+      actor_id: body.actor_id ?? "dashboard-user",
+      justification: body.justification,
+    }),
+  });
+  return toCotizacion(row);
 }
 
 export async function rejectCotizacion(
@@ -538,7 +761,17 @@ export async function rejectCotizacion(
   cotizacionId: string,
   body: RejectBody,
 ): Promise<Cotizacion> {
-  return mock.mockRejectCotizacion(tenantId, cotizacionId, body);
+  if (USE_MOCKS) return mock.mockRejectCotizacion(tenantId, cotizacionId, body);
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/cotizaciones/${cotizacionId}/reject`, {
+    method: "POST",
+    body: JSON.stringify({
+      actor_id: body.actor_id ?? "dashboard-user",
+      justification: body.justification,
+      reason_codes: body.reason_codes?.length ? body.reason_codes : ["PM_REJECT"],
+    }),
+  });
+  return toCotizacion(row);
 }
 
 export async function convertCotizacionToPO(
@@ -546,24 +779,58 @@ export async function convertCotizacionToPO(
   cotizacionId: string,
   body: ConvertCotizacionToPOBody,
 ): Promise<OrdenCompra> {
-  return mock.mockConvertCotizacionToPO(tenantId, cotizacionId, body);
+  if (USE_MOCKS) return mock.mockConvertCotizacionToPO(tenantId, cotizacionId, body);
+
+  const raw = await finanzasFetch<Record<string, unknown>>(
+    tenantId,
+    `/cotizaciones/${cotizacionId}/convert-to-po`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        actor_id: body.actor_id ?? "dashboard-user",
+      }),
+    },
+  );
+  const oc = unwrapRecord(raw, ["orden_compra"]);
+  return toOrdenCompra(oc);
 }
 
 export async function deleteCotizacion(tenantId: string, cotizacionId: string): Promise<void> {
-  return mock.mockDeleteCotizacion(tenantId, cotizacionId);
+  if (USE_MOCKS) return mock.mockDeleteCotizacion(tenantId, cotizacionId);
+  await finanzasFetch<void>(tenantId, `/cotizaciones/${cotizacionId}`, { method: "DELETE" });
 }
+
+// ── Ordenes de Compra (API) ────────────────────────────────────────────────
 
 export async function listOrdenesCompra(
   tenantId: string,
   projectId: string,
   filters?: FinanzasListFilters,
 ): Promise<PaginatedResponse<OrdenCompra>> {
-  // TODO[WS-B]: switch to real API when phase2/backend-procurement merges
-  return mock.mockListOrdenesCompra(tenantId, projectId, filters);
+  if (USE_MOCKS) return mock.mockListOrdenesCompra(tenantId, projectId, filters);
+
+  const raw = await finanzasFetch<{ items: unknown[]; total: number; limit?: number; offset?: number }>(
+    tenantId,
+    `/${projectId}/ordenes-compra${listQuery(filters)}`,
+  );
+  let items = toPaginated(raw, toOrdenCompra).items;
+  items = filterBySearch(items, filters?.search);
+  return {
+    ...toPaginated({ ...raw, items: items as unknown[] }, toOrdenCompra),
+    items,
+    total: filters?.search ? items.length : raw.total,
+  };
 }
 
 export async function getOrdenCompra(tenantId: string, ocId: string): Promise<OrdenCompra | null> {
-  return mock.mockGetOrdenCompra(tenantId, ocId);
+  if (USE_MOCKS) return mock.mockGetOrdenCompra(tenantId, ocId);
+  try {
+    const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/ordenes-compra/${ocId}`);
+    return toOrdenCompra(row);
+  } catch (e) {
+    if (e instanceof FinanzasApiError && e.status === 404) return null;
+    throw e;
+  }
 }
 
 export async function createOrdenCompra(
@@ -571,7 +838,14 @@ export async function createOrdenCompra(
   projectId: string,
   payload: CreateOrdenCompraPayload,
 ): Promise<OrdenCompra> {
-  return mock.mockCreateOrdenCompra(tenantId, projectId, payload);
+  if (USE_MOCKS) return mock.mockCreateOrdenCompra(tenantId, projectId, payload);
+
+  const raw = await finanzasFetch<Record<string, unknown>>(tenantId, `/${projectId}/ordenes-compra`, {
+    method: "POST",
+    body: JSON.stringify(toCreateOrdenCompraBody(payload)),
+  });
+  const row = unwrapRecord(raw, ["orden_compra"]);
+  return toOrdenCompra(row, { contratista_nombre: payload.contratista_nombre });
 }
 
 export async function updateOrdenCompra(
@@ -579,7 +853,21 @@ export async function updateOrdenCompra(
   ocId: string,
   payload: UpdateOrdenCompraPayload,
 ): Promise<OrdenCompra> {
-  return mock.mockUpdateOrdenCompra(tenantId, ocId, payload);
+  if (USE_MOCKS) return mock.mockUpdateOrdenCompra(tenantId, ocId, payload);
+
+  const body: Record<string, unknown> = {};
+  if (payload.monto_total_usd != null) {
+    body.monto_total_usd = payload.monto_total_usd;
+    body.monto_subtotal_usd = payload.monto_total_usd;
+  }
+  if (payload.line_items != null) body.line_items = payload.line_items;
+  if (payload.notas != null) body.notes = payload.notas;
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/ordenes-compra/${ocId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  return toOrdenCompra(row, { contratista_nombre: payload.contratista_nombre });
 }
 
 export async function issueOrdenCompra(
@@ -587,7 +875,16 @@ export async function issueOrdenCompra(
   ocId: string,
   body: IssueOrdenCompraBody,
 ): Promise<OrdenCompra> {
-  return mock.mockIssueOrdenCompra(tenantId, ocId, body);
+  if (USE_MOCKS) return mock.mockIssueOrdenCompra(tenantId, ocId, body);
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/ordenes-compra/${ocId}/issue`, {
+    method: "POST",
+    body: JSON.stringify({
+      actor_id: body.actor_id ?? "dashboard-user",
+      notes: body.justification,
+    }),
+  });
+  return toOrdenCompra(row);
 }
 
 export async function cancelOrdenCompra(
@@ -595,7 +892,16 @@ export async function cancelOrdenCompra(
   ocId: string,
   body: CancelOrdenCompraBody,
 ): Promise<OrdenCompra> {
-  return mock.mockCancelOrdenCompra(tenantId, ocId, body);
+  if (USE_MOCKS) return mock.mockCancelOrdenCompra(tenantId, ocId, body);
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/ordenes-compra/${ocId}/cancel`, {
+    method: "POST",
+    body: JSON.stringify({
+      actor_id: body.actor_id ?? "dashboard-user",
+      reason: body.justification,
+    }),
+  });
+  return toOrdenCompra(row);
 }
 
 export async function closeOrdenCompra(
@@ -603,11 +909,20 @@ export async function closeOrdenCompra(
   ocId: string,
   body: CloseOrdenCompraBody,
 ): Promise<OrdenCompra> {
-  return mock.mockCloseOrdenCompra(tenantId, ocId, body);
+  if (USE_MOCKS) return mock.mockCloseOrdenCompra(tenantId, ocId, body);
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/ordenes-compra/${ocId}/close`, {
+    method: "POST",
+    body: JSON.stringify({
+      actor_id: body.actor_id ?? "dashboard-user",
+    }),
+  });
+  return toOrdenCompra(row);
 }
 
 export async function deleteOrdenCompra(tenantId: string, ocId: string): Promise<void> {
-  return mock.mockDeleteOrdenCompra(tenantId, ocId);
+  if (USE_MOCKS) return mock.mockDeleteOrdenCompra(tenantId, ocId);
+  await finanzasFetch<void>(tenantId, `/ordenes-compra/${ocId}`, { method: "DELETE" });
 }
 
 // ── Pagos (API) ──────────────────────────────────────────────────────────
@@ -720,18 +1035,31 @@ export async function deletePago(tenantId: string, pagoId: string): Promise<void
   await finanzasFetch<void>(tenantId, `/pagos/${pagoId}`, { method: "DELETE" });
 }
 
-// ── Deals — TODO[WS-B] (legacy array endpoint differs from finanzas contract) ─
+// ── Deals (partial API — list + create only) ───────────────────────────────
 
 export async function listDeals(
   tenantId: string,
   projectId: string,
   filters?: FinanzasListFilters,
 ): Promise<PaginatedResponse<Deal>> {
-  // TODO[WS-B]: switch to real API when phase2/backend-procurement merges
-  return mock.mockListDeals(tenantId, projectId, filters);
+  if (USE_MOCKS) return mock.mockListDeals(tenantId, projectId, filters);
+
+  const rows = await finanzasFetch<unknown[]>(tenantId, `/${projectId}/deals`);
+  let items = (rows ?? []).map((row) =>
+    toDeal(row as Record<string, unknown>, { tenant_id: tenantId, project_id: projectId }),
+  );
+  items = filterBySearch(items, filters?.search);
+  return {
+    items,
+    total: items.length,
+    page: 1,
+    page_size: items.length || filters?.page_size || 100,
+  };
 }
 
 export async function getDeal(tenantId: string, dealId: string): Promise<Deal | null> {
+  // TODO[deals-backend]: no GET /deals/{id} in prod — mock fallback
+  if (USE_MOCKS) return mock.mockGetDeal(tenantId, dealId);
   return mock.mockGetDeal(tenantId, dealId);
 }
 
@@ -740,7 +1068,20 @@ export async function createDeal(
   projectId: string,
   payload: CreateDealPayload,
 ): Promise<Deal> {
-  return mock.mockCreateDeal(tenantId, projectId, payload);
+  if (USE_MOCKS) return mock.mockCreateDeal(tenantId, projectId, payload);
+
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/${projectId}/deals`, {
+    method: "POST",
+    body: JSON.stringify(toCreateDealBody(payload)),
+  });
+  return toDeal(row, {
+    tenant_id: tenantId,
+    project_id: projectId,
+    titulo: payload.titulo,
+    contraparte: payload.contraparte,
+    monto_usd: payload.monto_usd,
+    fecha_inicio: payload.fecha_inicio,
+  });
 }
 
 export async function updateDeal(
@@ -748,6 +1089,7 @@ export async function updateDeal(
   dealId: string,
   payload: UpdateDealPayload,
 ): Promise<Deal> {
+  // TODO[deals-backend]: no PATCH /deals/{id} in prod
   return mock.mockUpdateDeal(tenantId, dealId, payload);
 }
 
@@ -756,10 +1098,12 @@ export async function closeDeal(
   dealId: string,
   body: CloseDealBody,
 ): Promise<Deal> {
+  // TODO[deals-backend]: no POST /deals/{id}/close in prod
   return mock.mockCloseDeal(tenantId, dealId, body);
 }
 
 export async function deleteDeal(tenantId: string, dealId: string): Promise<void> {
+  // TODO[deals-backend]: no DELETE /deals/{id} in prod
   return mock.mockDeleteDeal(tenantId, dealId);
 }
 

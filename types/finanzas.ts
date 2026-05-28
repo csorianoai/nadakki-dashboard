@@ -62,8 +62,23 @@ export interface BudgetVarianceReport {
   totals: BudgetVarianceRow;
 }
 
-export type CotizacionStatus = "received" | "approved" | "rejected" | "converted_to_po";
-export type OrdenCompraStatus = "draft" | "issued" | "accepted" | "cancelled" | "closed";
+export type CotizacionStatus =
+  | "draft"
+  | "received"
+  | "under_review"
+  | "approved"
+  | "rejected"
+  | "converted_to_po"
+  | "cancelled"
+  | "expired";
+export type OrdenCompraStatus =
+  | "draft"
+  | "issued"
+  | "accepted"
+  | "partially_invoiced"
+  | "fully_invoiced"
+  | "cancelled"
+  | "closed";
 export type FacturaValidationStatus =
   | "draft"
   | "pending"
