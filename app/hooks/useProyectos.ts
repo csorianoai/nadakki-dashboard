@@ -505,6 +505,10 @@ export async function deleteProyecto(tenantId: string, proyectoId: string): Prom
 // --- Finanzas (Fase 2) — facturas/pagos/eventos → production API; cotizaciones/OC → mocks (WS-B) ---
 export {
   FinanzasApiError,
+  listContratistas,
+  createContratista,
+  type Contratista,
+  type CreateContratistaPayload,
   getFinanceOverview,
   getBudget,
   getBudgetVariance,

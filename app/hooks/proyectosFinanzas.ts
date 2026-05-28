@@ -662,6 +662,65 @@ export async function deleteFactura(tenantId: string, facturaId: string): Promis
   await finanzasFetch<void>(tenantId, `/facturas/${facturaId}`, { method: "DELETE" });
 }
 
+// ── Contratistas ──────────────────────────────────────────────────────────
+
+export interface Contratista {
+  id: string;
+  razon_social: string;
+  nombre_comercial?: string;
+}
+
+export interface CreateContratistaPayload {
+  razon_social: string;
+  tax_id: string;
+  pais_origen?: string;
+  nombre_comercial?: string;
+}
+
+function toContratista(row: Record<string, unknown>): Contratista {
+  return {
+    id: String(row.id ?? ""),
+    razon_social: String(row.razon_social ?? ""),
+    nombre_comercial: row.nombre_comercial ? String(row.nombre_comercial) : undefined,
+  };
+}
+
+/** Tenant-scoped list — GET /api/v1/proyectos/contratistas */
+export async function listContratistas(tenantId: string): Promise<Contratista[]> {
+  if (USE_MOCKS) {
+    return [
+      { id: "cont-001", razon_social: "Constructora del Caribe SRL", nombre_comercial: "CDC" },
+      { id: "cont-002", razon_social: "Instalaciones Técnicas RD" },
+    ];
+  }
+  const raw = await finanzasFetch<Record<string, unknown>[]>(tenantId, `/contratistas`);
+  return (Array.isArray(raw) ? raw : []).map((r) => toContratista(r));
+}
+
+export async function createContratista(
+  tenantId: string,
+  payload: CreateContratistaPayload,
+): Promise<Contratista> {
+  if (USE_MOCKS) {
+    return {
+      id: crypto.randomUUID(),
+      razon_social: payload.razon_social,
+      nombre_comercial: payload.nombre_comercial,
+    };
+  }
+  const row = await finanzasFetch<Record<string, unknown>>(tenantId, `/contratistas`, {
+    method: "POST",
+    body: JSON.stringify({
+      razon_social: payload.razon_social,
+      tax_id: payload.tax_id,
+      pais_origen: payload.pais_origen ?? "DO",
+      nombre_comercial: payload.nombre_comercial,
+      created_by: "dashboard-user",
+    }),
+  });
+  return toContratista(row);
+}
+
 // ── Cotizaciones (API) ─────────────────────────────────────────────────────
 
 export async function listCotizaciones(
