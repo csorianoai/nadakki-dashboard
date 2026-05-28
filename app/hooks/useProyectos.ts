@@ -506,7 +506,9 @@ export async function deleteProyecto(tenantId: string, proyectoId: string): Prom
 export {
   FinanzasApiError,
   listContratistas,
+  createContratista,
   type Contratista,
+  type CreateContratistaPayload,
   getFinanceOverview,
   getBudget,
   getBudgetVariance,

@@ -7,7 +7,9 @@ import { Button, Input, Modal, Select } from "@/components/forge";
 import {
   approveCotizacion,
   convertCotizacionToPO,
+  createContratista,
   createCotizacion,
+  FinanzasApiError,
   listContratistas,
   listCotizaciones,
   rejectCotizacion,
@@ -38,17 +40,26 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [contratistas, setContratistas] = useState<Contratista[]>([]);
   const [form, setForm] = useState({ numero: "", contratista_id: "", categoria: "", monto: "" });
+  const [newContratista, setNewContratista] = useState({ razon_social: "", tax_id: "" });
+  const [creatingContratista, setCreatingContratista] = useState(false);
+  const [showContratistaForm, setShowContratistaForm] = useState(false);
 
   const load = useCallback(async () => {
     if (!tenantId) return;
     setLoading(true);
     try {
-      const [res, ctrs] = await Promise.all([
-        listCotizaciones(tenantId, proyectoId, { search, sort_by: "fecha_emision", sort_dir: "desc" }),
-        listContratistas(tenantId),
-      ]);
+      const res = await listCotizaciones(tenantId, proyectoId, {
+        search,
+        sort_by: "fecha_emision",
+        sort_dir: "desc",
+      });
       setRows(res.items);
-      setContratistas(ctrs);
+      try {
+        const ctrs = await listContratistas(tenantId);
+        setContratistas(ctrs);
+      } catch {
+        setContratistas([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -58,7 +69,41 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!createOpen) {
+      setShowContratistaForm(false);
+      setNewContratista({ razon_social: "", tax_id: "" });
+    }
+  }, [createOpen]);
+
   const selectedContratista = contratistas.find((c) => c.id === form.contratista_id);
+
+  const registerContratista = async () => {
+    if (!tenantId) return;
+    if (!newContratista.razon_social.trim() || !newContratista.tax_id.trim()) {
+      toast.error("Razón social y RNC/tax ID son obligatorios");
+      return;
+    }
+    setCreatingContratista(true);
+    try {
+      const created = await createContratista(tenantId, {
+        razon_social: newContratista.razon_social.trim(),
+        tax_id: newContratista.tax_id.trim(),
+        pais_origen: "DO",
+      });
+      setContratistas((prev) => [...prev, created]);
+      setForm((f) => ({ ...f, contratista_id: created.id }));
+      setNewContratista({ razon_social: "", tax_id: "" });
+      setShowContratistaForm(false);
+      toast.success("Contratista registrado");
+    } catch (e) {
+      toast.error("No se pudo registrar el contratista", {
+        description: e instanceof FinanzasApiError ? e.message : e instanceof Error ? e.message : "",
+      });
+    } finally {
+      setCreatingContratista(false);
+    }
+  };
 
   const create = async () => {
     if (!tenantId) return;
@@ -66,22 +111,28 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
       toast.error("Selecciona un contratista");
       return;
     }
-    await createCotizacion(tenantId, proyectoId, {
-      tenant_id: tenantId,
-      project_id: proyectoId,
-      contratista_id: form.contratista_id,
-      contratista_nombre: selectedContratista?.nombre_comercial || selectedContratista?.razon_social || "",
-      numero_cotizacion: form.numero || `COT-${Date.now()}`,
-      categoria: form.categoria || "General",
-      monto_total_usd: Number(form.monto) || 0,
-      currency: "USD",
-      fecha_emision: new Date().toISOString().slice(0, 10),
-      line_items: [],
-    });
-    toast.success("Cotización registrada (received)");
-    setCreateOpen(false);
-    setForm({ numero: "", contratista_id: "", categoria: "", monto: "" });
-    void load();
+    try {
+      await createCotizacion(tenantId, proyectoId, {
+        tenant_id: tenantId,
+        project_id: proyectoId,
+        contratista_id: form.contratista_id,
+        contratista_nombre: selectedContratista?.nombre_comercial || selectedContratista?.razon_social || "",
+        numero_cotizacion: form.numero || `COT-${Date.now()}`,
+        categoria: form.categoria || "General",
+        monto_total_usd: Number(form.monto) || 0,
+        currency: "USD",
+        fecha_emision: new Date().toISOString().slice(0, 10),
+        line_items: [],
+      });
+      toast.success("Cotización registrada");
+      setCreateOpen(false);
+      setForm({ numero: "", contratista_id: "", categoria: "", monto: "" });
+      void load();
+    } catch (e) {
+      toast.error("No se pudo crear la cotización", {
+        description: e instanceof FinanzasApiError ? e.message : e instanceof Error ? e.message : "",
+      });
+    }
   };
 
   const { overlay, handleClose } = useModalBackdrop(createOpen, () => setCreateOpen(false));
@@ -161,7 +212,12 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
 
       {overlay}
       <Modal open={createOpen} onClose={handleClose} closeOnBackdropClick={false} className="!z-50 backdrop:bg-transparent" title="Nueva cotización"
-        footer={<div className="flex justify-end gap-2"><Button variant="secondary" onClick={handleClose}>Cancelar</Button><Button onClick={() => void create()}>Guardar</Button></div>}>
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={handleClose}>Cancelar</Button>
+            <Button onClick={() => void create()} disabled={!form.contratista_id}>Guardar</Button>
+          </div>
+        }>
         <div className="space-y-3">
           <Input label="Número" value={form.numero} onChange={(e) => setForm((f) => ({ ...f, numero: e.target.value }))} />
           {contratistas.length ? (
@@ -178,9 +234,37 @@ export function CotizacionesClient({ proyectoId }: { proyectoId: string }) {
               ]}
             />
           ) : (
-            <p className="text-forge-xs text-forgeDanger-500">
-              No hay contratistas registrados. Agrega uno primero en la sección de contratistas del proyecto.
-            </p>
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-3">
+              <p className="text-sm text-amber-100">
+                Primero agrega un contratista al tenant antes de crear una cotización.
+              </p>
+              {showContratistaForm ? (
+                <>
+                  <Input
+                    label="Razón social"
+                    value={newContratista.razon_social}
+                    onChange={(e) => setNewContratista((f) => ({ ...f, razon_social: e.target.value }))}
+                  />
+                  <Input
+                    label="RNC / Tax ID"
+                    value={newContratista.tax_id}
+                    onChange={(e) => setNewContratista((f) => ({ ...f, tax_id: e.target.value }))}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={creatingContratista}
+                    onClick={() => void registerContratista()}
+                  >
+                    {creatingContratista ? "Registrando…" : "Registrar contratista"}
+                  </Button>
+                </>
+              ) : (
+                <Button type="button" variant="secondary" onClick={() => setShowContratistaForm(true)}>
+                  + Crear contratista
+                </Button>
+              )}
+            </div>
           )}
           <Input label="Categoría" value={form.categoria} onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value }))} />
           <Input label="Monto USD" type="number" value={form.monto} onChange={(e) => setForm((f) => ({ ...f, monto: e.target.value }))} />
