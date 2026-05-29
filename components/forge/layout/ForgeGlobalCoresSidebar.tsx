@@ -26,14 +26,55 @@ export type ForgeGlobalCoresSidebarProps = {
 };
 
 const STORAGE_KEY = "forge-global-sidebar-expanded-v2";
+const STORAGE_KEY_V1 = "forge-global-sidebar-expanded-v1";
+
+const KNOWN_CORE_IDS = new Set(NAV_SECTIONS.map((s) => s.id));
+
+function migrateV1ToV2(): Record<string, boolean> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_V1);
+    if (!raw) return null;
+
+    const v1 = JSON.parse(raw) as Record<string, boolean>;
+    if (typeof v1 !== "object" || v1 === null) return null;
+
+    const v2: Record<string, boolean> = {};
+    for (const [key, value] of Object.entries(v1)) {
+      if (typeof value !== "boolean") continue;
+      if (key === "workflows") {
+        if (value) {
+          v2["marketing-hub"] = true;
+          v2["m-workflows"] = true;
+        }
+        continue;
+      }
+      if (KNOWN_CORE_IDS.has(key) || key.includes("-")) {
+        v2[key] = value;
+      }
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(v2));
+    localStorage.removeItem(STORAGE_KEY_V1);
+
+    if (process.env.NODE_ENV === "development") {
+      console.info("[sidebar] Migrated localStorage v1 → v2", Object.keys(v2).length, "keys");
+    }
+    return v2;
+  } catch {
+    return null;
+  }
+}
 
 function loadExpanded(): Record<string, boolean> {
   if (typeof window === "undefined") return {};
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as Record<string, boolean>;
-    return typeof parsed === "object" && parsed !== null ? parsed : {};
+    const rawV2 = localStorage.getItem(STORAGE_KEY);
+    if (rawV2) {
+      const parsed = JSON.parse(rawV2) as Record<string, boolean>;
+      if (typeof parsed === "object" && parsed !== null) return parsed;
+    }
+    return migrateV1ToV2() ?? {};
   } catch {
     return {};
   }
