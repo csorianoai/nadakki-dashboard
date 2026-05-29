@@ -96,6 +96,36 @@ function hasCoreAccess(
   return subHit;
 }
 
+export type EmptyCoreReason = "plan" | "role";
+
+/** Why a core has no visible sub-items after RBAC filtering. */
+export function getEmptyCoreReason(
+  section: NavSection,
+  allRoles: RoleInfo[],
+  subscribed: string[] | undefined,
+  showAdmin: boolean,
+): EmptyCoreReason {
+  if (section.id === "admin") {
+    return "role";
+  }
+
+  const roleHit = allRoles.some((r) => section.coreMatchers.includes(r.core_name));
+  const hasSubscriptionList = Boolean(subscribed && subscribed.length > 0);
+  const subHit = (subscribed ?? []).some((c) => section.coreMatchers.includes(c));
+
+  if (hasSubscriptionList && !subHit && !roleHit) {
+    return "plan";
+  }
+  return "role";
+}
+
+export function getEmptyCoreMessage(reason: EmptyCoreReason): string {
+  if (reason === "plan") {
+    return "Módulo no disponible en tu plan. Contacta a tu administrador para upgrade.";
+  }
+  return "No tienes permisos para acceder a este módulo. Contacta a tu administrador.";
+}
+
 export function isPlatformSuperAdmin(allRoles: { role_key: string }[]): boolean {
   return allRoles.some((r) => r.role_key === "platform_superadmin");
 }

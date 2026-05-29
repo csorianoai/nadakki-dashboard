@@ -15,6 +15,8 @@ import {
   type NavSection,
   collectExpandIdsForPath,
   filterSectionsForUser,
+  getEmptyCoreMessage,
+  getEmptyCoreReason,
   isHrefActive,
   userCanAccessAdminNav,
 } from "./forge-global-sidebar-nav";
@@ -281,6 +283,9 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     const HeaderIcon = theme.Icon;
     const isActive = sectionHasActiveRoute(section, pathname ?? null);
     const emptyCore = section.children.length === 0;
+    const emptyMessage = getEmptyCoreMessage(
+      getEmptyCoreReason(section, allRoles, tenant?.subscribed_cores, showAdmin),
+    );
 
     return (
       <div key={section.id} className="mb-0.5">
@@ -312,7 +317,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
         >
           <div className="space-y-0.5 pb-1 pt-0.5">
             {emptyCore ? (
-              <p className="px-9 py-2 text-xs italic text-zinc-500">Módulo no disponible en tu plan</p>
+              <p className="px-9 py-2 text-xs italic text-zinc-500">{emptyMessage}</p>
             ) : (
               section.children.map((item) => renderNavItem(item, 0))
             )}
