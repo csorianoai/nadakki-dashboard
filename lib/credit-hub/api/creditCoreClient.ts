@@ -4,6 +4,7 @@ import {
   normalizeEvents,
   normalizeStats,
 } from "./normalizers";
+import { tokenStorage } from "@/lib/auth/token-storage";
 import type {
   CreateCreditApplicationPayload,
   CreditApplication,
@@ -13,6 +14,7 @@ import type {
 
 const CREDIT_CORE_BASE = "/api/v2/credit";
 const REQUEST_TIMEOUT_MS = 30_000;
+const LEGACY_ACCESS_TOKEN_STORAGE_KEY = "nadakki_sic_token";
 
 export class CreditCoreApiError extends Error {
   constructor(
@@ -54,9 +56,17 @@ interface CreditCoreRequestInit extends Omit<RequestInit, "headers"> {
   headers?: Record<string, string>;
 }
 
+function readBearerAccessToken(): string | null {
+  const fromAuthV2 = tokenStorage.getAccessToken();
+  if (fromAuthV2) return fromAuthV2;
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(LEGACY_ACCESS_TOKEN_STORAGE_KEY);
+}
+
 async function creditCoreFetch<T>(path: string, init: CreditCoreRequestInit): Promise<T> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const bearerAccessToken = readBearerAccessToken();
 
   try {
     const response = await fetch(`${CREDIT_CORE_BASE}${path}`, {
@@ -64,6 +74,7 @@ async function creditCoreFetch<T>(path: string, init: CreditCoreRequestInit): Pr
       headers: {
         "Content-Type": "application/json",
         "X-Tenant-ID": init.tenantId,
+        ...(bearerAccessToken ? { Authorization: `Bearer ${bearerAccessToken}` } : {}),
         ...(init.headers ?? {}),
       },
       signal: controller.signal,
