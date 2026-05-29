@@ -627,10 +627,12 @@ export async function downloadPdf(
   if (typeof document === "undefined") {
     throw new Error("PDF download must run in the browser");
   }
+  const token = readBearerToken();
   const res = await fetch(url, {
     headers: {
       Accept: "application/pdf",
       "X-Tenant-ID": tid,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
   if (!res.ok) {
