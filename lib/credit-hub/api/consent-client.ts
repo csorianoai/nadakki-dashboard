@@ -1,5 +1,8 @@
+import { tokenStorage } from "@/lib/auth/token-storage";
+
 const CREDIT_CONSENT_BASE = "/api/v2/credit/consent";
 const REQUEST_TIMEOUT_MS = 30_000;
+const LEGACY_ACCESS_TOKEN_STORAGE_KEY = "nadakki_sic_token";
 
 export interface ConsentInitiateResponse {
   token?: string;
@@ -51,12 +54,25 @@ function messageFromBody(body: unknown, fallback: string): string {
   return fallback;
 }
 
+function readBearerAccessToken(): string | null {
+  const fromAuthV2 = tokenStorage.getAccessToken();
+  if (fromAuthV2) return fromAuthV2;
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(LEGACY_ACCESS_TOKEN_STORAGE_KEY);
+}
+
 export class ConsentApiClient {
   constructor(private readonly tenantId: string) {}
 
   private headers(includeTenant: boolean): Record<string, string> {
     const h: Record<string, string> = { "Content-Type": "application/json" };
-    if (includeTenant) h["X-Tenant-ID"] = this.tenantId;
+    if (includeTenant) {
+      h["X-Tenant-ID"] = this.tenantId;
+      const bearerAccessToken = readBearerAccessToken();
+      if (bearerAccessToken) {
+        h["Authorization"] = `Bearer ${bearerAccessToken}`;
+      }
+    }
     return h;
   }
 
