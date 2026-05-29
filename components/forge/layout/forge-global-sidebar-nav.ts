@@ -52,6 +52,8 @@ export type NavItem = {
   href?: string;
   badge?: NavBadge;
   icon?: LucideIcon;
+  /** Visual group header inside large cores (render-only). */
+  groupLabel?: string;
   children?: NavItem[];
   /** Hidden unless the user has `platform_superadmin`. */
   superAdminOnly?: boolean;
@@ -125,6 +127,18 @@ export function getEmptyCoreMessage(reason: EmptyCoreReason): string {
   }
   return "No tienes permisos para acceder a este módulo. Contacta a tu administrador.";
 }
+
+/** Count leaf links in a nav subtree (for grouped rendering threshold). */
+export function countNavLeaves(items: NavItem[]): number {
+  let n = 0;
+  for (const item of items) {
+    if (item.href) n += 1;
+    if (item.children) n += countNavLeaves(item.children);
+  }
+  return n;
+}
+
+export const LARGE_CORE_LEAF_THRESHOLD = 15;
 
 export function isPlatformSuperAdmin(allRoles: { role_key: string }[]): boolean {
   return allRoles.some((r) => r.role_key === "platform_superadmin");
@@ -256,27 +270,29 @@ export const NAV_SECTIONS: NavSection[] = [
     alwaysVisible: true,
     children: [
       {
-        id: "m-suite",
-        label: "Suite",
+        id: "m-comando",
+        groupLabel: "Comando",
+        label: "Comando",
         icon: LayoutDashboard,
         children: [
           { id: "m-root", label: "Overview", href: "/marketing" },
           { id: "m-hub-entry", label: "Marketing Hub", href: "/marketing-hub" },
           { id: "m-overview", label: "Panorama", href: "/marketing/overview" },
           { id: "m-command", label: "Command Center", href: "/marketing/command-center", badge: "POPULAR" },
+          { id: "m-run", label: "Run", href: "/marketing/run" },
           { id: "m-calendar", label: "Calendario", href: "/marketing/calendar" },
           { id: "m-onboarding", label: "Onboarding", href: "/marketing/onboarding" },
         ],
       },
       {
         id: "m-campaigns",
+        groupLabel: "Campañas",
         label: "Campañas",
         icon: Megaphone,
         children: [
           { id: "m-campaigns-list", label: "Listado", href: "/marketing/campaigns" },
           { id: "m-campaigns-new", label: "Nueva campaña", href: "/marketing/campaigns/new" },
           { id: "m-campaigns-editor", label: "Editor", href: "/marketing/campaigns/editor" },
-          { id: "m-ab", label: "A/B Testing", href: "/marketing/ab-testing" },
           { id: "m-campaigns-root", label: "Campañas (root)", href: "/campaigns" },
           { id: "m-campaigns-active", label: "Activas (root)", href: "/campaigns/active" },
           { id: "m-campaigns-autogen", label: "Autogen (root)", href: "/campaigns/autogen" },
@@ -285,65 +301,15 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
-        id: "m-engagement",
-        label: "Engagement",
-        icon: Users,
-        children: [
-          { id: "m-journeys", label: "Customer Journeys", href: "/marketing/journeys" },
-          { id: "m-journeys-new", label: "Nuevo journey", href: "/marketing/journeys/new" },
-          { id: "m-email", label: "Email builder", href: "/marketing/email-builder" },
-          { id: "m-wa", label: "WhatsApp", href: "/marketing/whatsapp" },
-          { id: "m-social-conn", label: "Social connections", href: "/marketing/social-connections" },
-          { id: "m-templates", label: "Plantillas IA", href: "/marketing/templates" },
-          { id: "m-templates-create", label: "Nueva plantilla", href: "/marketing/templates/create", badge: "NEW" },
-          { id: "m-booking", label: "Booking", href: "/marketing/booking" },
-          { id: "m-content", label: "Contenido", href: "/marketing/content" },
-          { id: "m-social", label: "Social", href: "/marketing/social" },
-          { id: "m-social-root", label: "Social hub", href: "/social" },
-          { id: "m-social-analytics", label: "Social analytics", href: "/social/analytics" },
-          { id: "m-social-inbox", label: "Social inbox", href: "/social/inbox" },
-          { id: "m-email-root", label: "Email (root)", href: "/email" },
-          { id: "m-email-campaigns", label: "Email campañas", href: "/email/campaigns" },
-          { id: "m-email-templates", label: "Email plantillas", href: "/email/templates" },
-        ],
-      },
-      {
-        id: "m-intel",
-        label: "Inteligencia",
-        icon: LineChart,
-        children: [
-          { id: "m-analytics", label: "Analytics", href: "/marketing/analytics" },
-          { id: "m-attrib", label: "Atribución", href: "/marketing/attribution" },
-          { id: "m-predict", label: "Predictive AI", href: "/marketing/predictive", badge: "BETA" },
-          { id: "m-compete", label: "Competencia", href: "/marketing/competitive" },
-          { id: "m-audience", label: "Audience builder", href: "/marketing/audience-builder" },
-          { id: "m-segments", label: "Segmentos", href: "/marketing/segments" },
-          { id: "m-leads", label: "Leads & scoring", href: "/marketing/leads" },
-          { id: "m-analytics-root", label: "Analytics (global)", href: "/analytics" },
-          { id: "m-analytics-agents", label: "Analytics agentes", href: "/analytics/agents" },
-          { id: "m-analytics-campaigns", label: "Analytics campañas", href: "/analytics/campaigns" },
-          { id: "m-analytics-conversions", label: "Analytics conversiones", href: "/analytics/conversions" },
-          { id: "m-analytics-reports", label: "Analytics reportes", href: "/analytics/reports" },
-          { id: "m-analytics-roi", label: "Analytics ROI", href: "/analytics/roi" },
-          { id: "m-segments-root", label: "Segmentos (root)", href: "/segments" },
-          { id: "m-segments-builder", label: "Segment builder", href: "/segments/builder" },
-          { id: "m-segments-insights", label: "Segment insights", href: "/segments/insights" },
-          { id: "m-leads-root", label: "Leads (root)", href: "/leads" },
-          { id: "m-leads-pipeline", label: "Leads pipeline", href: "/leads/pipeline" },
-          { id: "m-leads-scoring", label: "Leads scoring", href: "/leads/scoring" },
-          { id: "m-audiences", label: "Audiences", href: "/audiences" },
-          { id: "m-audiences-mgr", label: "Audience manager", href: "/audiences/manager" },
-          { id: "m-intelligence", label: "Intelligence", href: "/intelligence" },
-          { id: "m-intelligence-brand", label: "Brand intelligence", href: "/intelligence/brand" },
-          { id: "m-intelligence-comp", label: "Competitors", href: "/intelligence/competitors" },
-          { id: "m-competitor", label: "Competitor research", href: "/competitor-research" },
-        ],
-      },
-      {
-        id: "m-content-lib",
-        label: "Contenido & library",
+        id: "m-contenido",
+        groupLabel: "Contenido",
+        label: "Contenido",
         icon: FileText,
         children: [
+          { id: "m-templates", label: "Plantillas IA", href: "/marketing/templates" },
+          { id: "m-templates-create", label: "Nueva plantilla", href: "/marketing/templates/create", badge: "NEW" },
+          { id: "m-email", label: "Email builder", href: "/marketing/email-builder" },
+          { id: "m-content", label: "Contenido", href: "/marketing/content" },
           { id: "m-content-root", label: "Content hub", href: "/content" },
           { id: "m-content-cal", label: "Content calendar", href: "/content/calendar" },
           { id: "m-content-studio", label: "Content studio", href: "/content/studio" },
@@ -353,14 +319,76 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
-        id: "m-agents",
-        label: "Agentes & automatización",
+        id: "m-audiencias",
+        groupLabel: "Audiencias y Leads",
+        label: "Audiencias y Leads",
+        icon: Users,
+        children: [
+          { id: "m-audience", label: "Audience builder", href: "/marketing/audience-builder" },
+          { id: "m-segments", label: "Segmentos", href: "/marketing/segments" },
+          { id: "m-leads", label: "Leads & scoring", href: "/marketing/leads" },
+          { id: "m-segments-root", label: "Segmentos (root)", href: "/segments" },
+          { id: "m-segments-builder", label: "Segment builder", href: "/segments/builder" },
+          { id: "m-segments-insights", label: "Segment insights", href: "/segments/insights" },
+          { id: "m-leads-root", label: "Leads (root)", href: "/leads" },
+          { id: "m-leads-pipeline", label: "Leads pipeline", href: "/leads/pipeline" },
+          { id: "m-leads-scoring", label: "Leads scoring", href: "/leads/scoring" },
+          { id: "m-audiences", label: "Audiences", href: "/audiences" },
+          { id: "m-audiences-mgr", label: "Audience manager", href: "/audiences/manager" },
+        ],
+      },
+      {
+        id: "m-canales",
+        groupLabel: "Canales",
+        label: "Canales",
+        icon: Globe,
+        children: [
+          { id: "m-journeys", label: "Customer Journeys", href: "/marketing/journeys" },
+          { id: "m-journeys-new", label: "Nuevo journey", href: "/marketing/journeys/new" },
+          { id: "m-wa", label: "WhatsApp", href: "/marketing/whatsapp" },
+          { id: "m-social-conn", label: "Social connections", href: "/marketing/social-connections" },
+          { id: "m-social", label: "Social", href: "/marketing/social" },
+          { id: "m-social-root", label: "Social hub", href: "/social" },
+          { id: "m-social-analytics", label: "Social analytics", href: "/social/analytics" },
+          { id: "m-social-inbox", label: "Social inbox", href: "/social/inbox" },
+          { id: "m-email-root", label: "Email (root)", href: "/email" },
+          { id: "m-email-campaigns", label: "Email campañas", href: "/email/campaigns" },
+          { id: "m-email-templates", label: "Email plantillas", href: "/email/templates" },
+          { id: "m-booking", label: "Booking", href: "/marketing/booking" },
+        ],
+      },
+      {
+        id: "m-analytics-group",
+        groupLabel: "Analytics",
+        label: "Analytics",
+        icon: LineChart,
+        children: [
+          { id: "m-analytics", label: "Analytics", href: "/marketing/analytics" },
+          { id: "m-attrib", label: "Atribución", href: "/marketing/attribution" },
+          { id: "m-predict", label: "Predictive AI", href: "/marketing/predictive", badge: "BETA" },
+          { id: "m-compete", label: "Competencia", href: "/marketing/competitive" },
+          { id: "m-ab", label: "A/B Testing", href: "/marketing/ab-testing" },
+          { id: "m-analytics-root", label: "Analytics (global)", href: "/analytics" },
+          { id: "m-analytics-agents", label: "Analytics agentes", href: "/analytics/agents" },
+          { id: "m-analytics-campaigns", label: "Analytics campañas", href: "/analytics/campaigns" },
+          { id: "m-analytics-conversions", label: "Analytics conversiones", href: "/analytics/conversions" },
+          { id: "m-analytics-reports", label: "Analytics reportes", href: "/analytics/reports" },
+          { id: "m-analytics-roi", label: "Analytics ROI", href: "/analytics/roi" },
+          { id: "m-intelligence", label: "Intelligence", href: "/intelligence" },
+          { id: "m-intelligence-brand", label: "Brand intelligence", href: "/intelligence/brand" },
+          { id: "m-intelligence-comp", label: "Competitors", href: "/intelligence/competitors" },
+          { id: "m-competitor", label: "Competitor research", href: "/competitor-research" },
+        ],
+      },
+      {
+        id: "m-automation",
+        groupLabel: "Automatización",
+        label: "Automatización",
         icon: Bot,
         children: [
           { id: "m-agents-list", label: "Agentes marketing", href: "/marketing/agents" },
           { id: "m-autopilot", label: "Autopilot", href: "/autopilot", badge: "BETA" },
           { id: "m-ame", label: "AME (autónomo)", href: "/ame", badge: "NEW" },
-          { id: "m-run", label: "Ejecutar", href: "/marketing/run" },
           { id: "m-integrations", label: "Integraciones", href: "/marketing/integrations" },
           { id: "m-automations", label: "Automations", href: "/automations" },
           { id: "m-automations-rules", label: "Automation rules", href: "/automations/rules" },
@@ -372,6 +400,7 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         id: "m-workflows",
+        groupLabel: "Workflows",
         label: "Workflows",
         icon: Workflow,
         children: [
@@ -397,11 +426,27 @@ export const NAV_SECTIONS: NavSection[] = [
     coreMatchers: ["credit"],
     alwaysVisible: true,
     children: [
-      { id: "credit-dashboard", label: "Panel", href: "/credit-hub", icon: LayoutDashboard },
-      { id: "credit-bank", label: "Banca", href: "/credit-hub/bank", icon: Banknote },
-      { id: "credit-dealer", label: "Dealer", href: "/credit-hub/dealer", icon: Building2 },
+      {
+        id: "credit-acceso",
+        groupLabel: "Acceso",
+        label: "Acceso",
+        icon: LayoutDashboard,
+        children: [
+          { id: "credit-dashboard", label: "Panel", href: "/credit-hub" },
+          { id: "credit-bank", label: "Banca", href: "/credit-hub/bank" },
+          { id: "credit-dealer", label: "Dealer", href: "/credit-hub/dealer" },
+          {
+            id: "credit-new",
+            label: "Nueva solicitud",
+            href: "/credit-hub/dealer/applications/new",
+            badge: "NEW",
+          },
+          { id: "credit-preapproval", label: "Preaprobación", href: "/credit-hub/dealer/preapproval" },
+        ],
+      },
       {
         id: "credit-apps-group",
+        groupLabel: "Solicitudes",
         label: "Solicitudes",
         icon: FolderKanban,
         children: [
@@ -410,31 +455,32 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
-        id: "credit-new",
-        label: "Nueva solicitud",
-        href: "/credit-hub/dealer/applications/new",
-        badge: "NEW",
-        icon: Zap,
+        id: "credit-analytics-group",
+        groupLabel: "Analítica y cumplimiento",
+        label: "Analítica y cumplimiento",
+        icon: BarChart3,
+        children: [
+          { id: "credit-analytics", label: "Analítica / reportes", href: "/credit-hub/bank/analytics" },
+          { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank/compliance" },
+          { id: "credit-audit-ch", label: "Auditoría (hub)", href: "/credit-hub/bank/audit" },
+          { id: "credit-compliance-root", label: "Compliance (root)", href: "/compliance" },
+          { id: "credit-bank-analytics", label: "Bank analytics (root)", href: "/bank/analytics" },
+        ],
       },
-      { id: "credit-preapproval", label: "Preaprobación", href: "/credit-hub/dealer/preapproval", icon: Activity },
-      { id: "credit-analytics", label: "Analítica / reportes", href: "/credit-hub/bank/analytics", icon: BarChart3 },
-      { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank/compliance", icon: Shield },
-      { id: "credit-audit-ch", label: "Auditoría (hub)", href: "/credit-hub/bank/audit", icon: ScrollText },
       {
         id: "credit-legacy-group",
-        label: "Legacy / gateway",
+        groupLabel: "Legacy y herramientas",
+        label: "Legacy y herramientas",
         icon: Link2,
         children: [
           { id: "credit-legacy", label: "Crédito (legacy)", href: "/credit" },
           { id: "credit-legacy-new", label: "Nuevo (legacy)", href: "/credit/new" },
+          { id: "credit-decisioning", label: "Decisioning", href: "/decision" },
+          { id: "credit-components", label: "Componentes UI", href: "/credit-hub/components" },
+          { id: "credit-preview", label: "Preview", href: "/credit-hub/preview" },
+          { id: "credit-agents-legacy", label: "Agentes crédito", href: "/credit-agents" },
         ],
       },
-      { id: "credit-decisioning", label: "Decisioning", href: "/decision", icon: Cpu },
-      { id: "credit-components", label: "Componentes UI", href: "/credit-hub/components", icon: Layers },
-      { id: "credit-preview", label: "Preview", href: "/credit-hub/preview", icon: Globe },
-      { id: "credit-agents-legacy", label: "Agentes crédito", href: "/credit-agents", icon: Bot },
-      { id: "credit-compliance-root", label: "Compliance (root)", href: "/compliance", icon: Shield },
-      { id: "credit-bank-analytics", label: "Bank analytics (root)", href: "/bank/analytics", icon: BarChart3 },
     ],
   },
   {
@@ -462,23 +508,55 @@ export const NAV_SECTIONS: NavSection[] = [
     coreMatchers: ["sic", "platform"],
     alwaysVisible: true,
     children: [
-      { id: "sic-dash", label: "Dashboard", href: "/sic", icon: LayoutDashboard },
-      { id: "sic-expedientes", label: "Expedientes", href: "/sic/expedientes", icon: FolderKanban },
-      { id: "sic-bandeja", label: "Bandeja", href: "/sic/bandeja", icon: Briefcase },
-      { id: "sic-nuevo", label: "Nuevo análisis", href: "/sic/nuevo-analisis", icon: Zap },
-      { id: "sic-reportes", label: "Reportes", href: "/sic/reportes", icon: BarChart3 },
-      { id: "sic-metricas", label: "Métricas", href: "/sic/metricas", icon: Activity },
-      { id: "sic-portafolio", label: "Portafolio", href: "/sic/portafolio", icon: LineChart },
-      { id: "sic-comite", label: "Comité", href: "/sic/comite", icon: Users },
-      { id: "sic-sesiones", label: "Sesiones comité", href: "/sic/comite/sesiones", icon: ScrollText },
-      { id: "sic-export", label: "Exportaciones", href: "/sic/exportaciones", icon: Database },
-      { id: "sic-audit", label: "Auditoría", href: "/sic/auditoria", icon: Gavel },
-      { id: "sic-audit-acceso", label: "Auditoría de acceso", href: "/sic/auditoria-acceso", icon: Key },
-      { id: "sic-config", label: "Configuración", href: "/sic/configuracion", icon: Cog },
-      { id: "sic-mt", label: "Multi-tenant config", href: "/sic/multitenant-config", icon: Webhook },
-      { id: "sic-demo", label: "Modo demo", href: "/sic/demo", icon: Palette },
-      { id: "sic-list", label: "Listado (legacy)", href: "/sic/list", icon: FileText },
-      { id: "sic-upload", label: "Carga", href: "/sic/upload", icon: Cloud },
+      {
+        id: "sic-ops-group",
+        groupLabel: "Operación",
+        label: "Operación",
+        icon: Briefcase,
+        children: [
+          { id: "sic-dash", label: "Dashboard", href: "/sic" },
+          { id: "sic-expedientes", label: "Expedientes", href: "/sic/expedientes" },
+          { id: "sic-bandeja", label: "Bandeja", href: "/sic/bandeja" },
+          { id: "sic-nuevo", label: "Nuevo análisis", href: "/sic/nuevo-analisis" },
+          { id: "sic-upload", label: "Carga", href: "/sic/upload" },
+          { id: "sic-list", label: "Listado (legacy)", href: "/sic/list" },
+        ],
+      },
+      {
+        id: "sic-reportes-group",
+        groupLabel: "Reportes",
+        label: "Reportes",
+        icon: BarChart3,
+        children: [
+          { id: "sic-reportes", label: "Reportes", href: "/sic/reportes" },
+          { id: "sic-metricas", label: "Métricas", href: "/sic/metricas" },
+          { id: "sic-portafolio", label: "Portafolio", href: "/sic/portafolio" },
+          { id: "sic-export", label: "Exportaciones", href: "/sic/exportaciones" },
+        ],
+      },
+      {
+        id: "sic-comite-group",
+        groupLabel: "Comité",
+        label: "Comité",
+        icon: Users,
+        children: [
+          { id: "sic-comite", label: "Comité", href: "/sic/comite" },
+          { id: "sic-sesiones", label: "Sesiones comité", href: "/sic/comite/sesiones" },
+        ],
+      },
+      {
+        id: "sic-sistema-group",
+        groupLabel: "Sistema",
+        label: "Sistema",
+        icon: Cog,
+        children: [
+          { id: "sic-audit", label: "Auditoría", href: "/sic/auditoria" },
+          { id: "sic-audit-acceso", label: "Auditoría de acceso", href: "/sic/auditoria-acceso" },
+          { id: "sic-config", label: "Configuración", href: "/sic/configuracion" },
+          { id: "sic-mt", label: "Multi-tenant config", href: "/sic/multitenant-config" },
+          { id: "sic-demo", label: "Modo demo", href: "/sic/demo" },
+        ],
+      },
     ],
   },
   {
@@ -565,6 +643,7 @@ export const NAV_SECTIONS: NavSection[] = [
     children: [
       {
         id: "adm-platform",
+        groupLabel: "Plataforma",
         label: "Plataforma",
         icon: Building2,
         children: [
@@ -588,6 +667,7 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         id: "adm-settings",
+        groupLabel: "Configuración",
         label: "Configuración",
         icon: Wrench,
         children: [
@@ -605,6 +685,7 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         id: "adm-agents",
+        groupLabel: "Agentes",
         label: "Agentes",
         icon: Bot,
         children: [

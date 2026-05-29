@@ -9,11 +9,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { cn } from "@/lib/utils";
 import {
+  LARGE_CORE_LEAF_THRESHOLD,
   NAV_SECTIONS,
   type NavBadge,
   type NavItem,
   type NavSection,
   collectExpandIdsForPath,
+  countNavLeaves,
   filterSectionsForUser,
   getEmptyCoreMessage,
   getEmptyCoreReason,
@@ -134,6 +136,14 @@ function SidebarBrand({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+function NavGroupHeader({ label }: { label: string }) {
+  return (
+    <div className="px-6 pb-0.5 pt-2 first:pt-1">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+    </div>
+  );
+}
+
 function sectionHasActiveRoute(section: NavSection, pathname: string | null): boolean {
   if (!pathname) return false;
   function walk(it: NavItem): boolean {
@@ -228,13 +238,14 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     );
   };
 
-  const renderFolder = (item: NavItem, depth: number): ReactNode => {
+  const renderFolder = (item: NavItem, depth: number, showGroupHeader: boolean): ReactNode => {
     const open = expanded[item.id] ?? false;
     const hasKids = Boolean(item.children?.length);
     if (!hasKids) return renderLink(item, depth);
 
     return (
       <div key={item.id} className="flex flex-col">
+        {showGroupHeader && item.groupLabel ? <NavGroupHeader label={item.groupLabel} /> : null}
         <button
           type="button"
           onClick={() => toggle(item.id)}
@@ -264,17 +275,25 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
             open ? "max-h-[4000px] opacity-100" : "max-h-0 opacity-0",
           )}
         >
-          <div className="space-y-0.5">{item.children!.map((ch) => renderNavItem(ch, depth + 1))}</div>
+          <div className="space-y-0.5">{item.children!.map((ch) => renderNavItem(ch, depth + 1, false))}</div>
         </div>
       </div>
     );
   };
 
-  const renderNavItem = (item: NavItem, depth: number): ReactNode => {
+  const renderNavItem = (item: NavItem, depth: number, showGroupHeader: boolean): ReactNode => {
     if (item.children && item.children.length > 0) {
-      return renderFolder(item, depth);
+      return renderFolder(item, depth, showGroupHeader);
     }
     return renderLink(item, depth);
+  };
+
+  const renderSectionChildren = (section: NavSection) => {
+    const useGroupedLayout =
+      countNavLeaves(section.children) > LARGE_CORE_LEAF_THRESHOLD ||
+      section.children.some((item) => item.groupLabel);
+
+    return section.children.map((item) => renderNavItem(item, 0, useGroupedLayout));
   };
 
   const renderSection = (section: NavSection) => {
@@ -319,7 +338,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
             {emptyCore ? (
               <p className="px-9 py-2 text-xs italic text-zinc-500">{emptyMessage}</p>
             ) : (
-              section.children.map((item) => renderNavItem(item, 0))
+              renderSectionChildren(section)
             )}
           </div>
         </div>
