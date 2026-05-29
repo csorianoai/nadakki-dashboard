@@ -50,22 +50,39 @@ flowchart TB
   - Roles con acceso al core (`allRoles[].core_name`)
   - `tenant_admin` / `platform_superadmin` ven todos los sub-items
   - `superAdminOnly: true` en items de admin
-- **Core sin sub-items visibles:** mensaje *"Módulo no disponible en tu plan"*.
+- **Core sin sub-items visibles:** mensaje según causa (`getEmptyCoreReason`):
+  - **Plan:** *"Módulo no disponible en tu plan. Contacta a tu administrador para upgrade."*
+  - **Rol:** *"No tienes permisos para acceder a este módulo. Contacta a tu administrador."*
 
 Función principal: `filterSectionsForUser()` en `components/forge/layout/forge-global-sidebar-nav.ts`.
+Mensajes vacíos: `getEmptyCoreReason()` + `getEmptyCoreMessage()`.
+
+## Agrupación visual en cores grandes
+
+Cores con más de **15 links** (o con `groupLabel` en items) muestran mini-headers de grupo:
+
+| Core | Grupos |
+|---|---|
+| Marketing Hub | Comando, Campañas, Contenido, Audiencias y Leads, Canales, Analytics, Automatización, Workflows |
+| Credit Hub | Acceso, Solicitudes, Analítica y cumplimiento, Legacy y herramientas |
+| SIC Hub | Operación, Reportes, Comité, Sistema |
+| Admin | Plataforma, Configuración, Agentes |
+
+Campo opcional en `NavItem`: `groupLabel?: string` — usado por el render para `NavGroupHeader`.
 
 ## Persistencia expand/collapse
 
 - Clave: `forge-global-sidebar-expanded-v2` (localStorage)
+- Migración automática desde `forge-global-sidebar-expanded-v1` (una sola vez; borra v1)
 - Default: solo el core de la ruta activa se expande automáticamente
-- Click en core: toggle manual
+- Click en core: toggle manual (sin cambiar color del header — violeta solo en ruta activa)
 
 ## Estilo visual (Notion/Linear)
 
 | Elemento | Clases |
 |---|---|
 | Core header | `text-sm font-semibold text-zinc-100 px-3 py-2` |
-| Core activo | `bg-violet-500/10 text-violet-300 border-l-2 border-violet-500` |
+| Core activo | `bg-violet-500/10 text-violet-300 border-l-2 border-violet-500` (solo ruta activa, no al expandir) |
 | Sub-item | `text-xs pl-9 text-zinc-400` |
 | Sub-item activo | `text-violet-300 bg-violet-500/5 border-l-2 border-violet-500` |
 | Branding fallback | `"Nadakki AI Suite"` |
