@@ -279,7 +279,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     const open = expanded[section.id] ?? false;
     const theme = getSidebarTheme(section.id);
     const HeaderIcon = theme.Icon;
-    const hasActiveInTree = sectionHasActiveRoute(section, pathname ?? null);
+    const isActive = sectionHasActiveRoute(section, pathname ?? null);
     const emptyCore = section.children.length === 0;
 
     return (
@@ -290,7 +290,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
           className={cn(
             "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-semibold transition-colors duration-150",
             "focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/40",
-            hasActiveInTree || open
+            isActive
               ? "border-l-2 border-violet-500 bg-violet-500/10 text-violet-300"
               : "border-l-2 border-transparent text-zinc-100 hover:bg-zinc-800/60",
           )}
