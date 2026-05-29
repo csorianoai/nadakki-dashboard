@@ -88,9 +88,10 @@ function normalizeProyecto(raw: unknown): Proyecto {
         ? o.type
         : undefined;
 
+  const nombreStr = typeof o.nombre === "string" ? o.nombre : undefined;
   return {
     id: String(o.id ?? o.uuid ?? o.proyecto_id ?? o.project_id ?? ""),
-    name: typeof o.name === "string" ? o.name : (o.title as string) ?? null,
+    name: typeof o.name === "string" ? o.name : nombreStr ?? (o.title as string) ?? null,
     title: typeof o.title === "string" ? o.title : undefined,
     state: typeof o.state === "string" ? o.state : undefined,
     description: typeof o.description === "string" ? o.description : undefined,

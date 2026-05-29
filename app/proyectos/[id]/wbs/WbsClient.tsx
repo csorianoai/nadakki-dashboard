@@ -20,8 +20,7 @@ import {
 } from "@/components/proyectos/projectsCoreMutationClient";
 import { proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 
-const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
-const PROJECTS_BASE = `${BACKEND_URL}/api/v1/proyectos`;
+const PROJECTS_BASE = "/api/v1/proyectos";
 
 /** Mini-plan por fases — duración modelo si API no tipa duración literal. */
 function ganttFromWbs(rows: Record<string, unknown>[]) {

@@ -32,6 +32,8 @@ export function formatBudgetMillionsUsd(p: Proyecto): string {
 }
 
 export function displayProjectName(row: Proyecto): string {
+  const nombre = (row as Proyecto & { nombre?: string | null }).nombre;
+  if (typeof nombre === "string" && nombre.trim()) return nombre.trim();
   return row.name ?? row.title ?? `Proyecto ${row.id.slice(0, 8)}`;
 }
 
