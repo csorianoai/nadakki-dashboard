@@ -7,11 +7,8 @@
 import { getAuthHeaders } from "@/lib/api/fetch-client";
 import { assertResolvedApiPath, proyectoApiSuffix } from "@/lib/projects/proyectoApiPaths";
 
-const BACKEND_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-).replace(/\/$/, "");
-
-const PROJECTS_BASE = `${BACKEND_URL}/api/v1/proyectos`;
+/** Same-origin proxy as {@link lib/projects/projectsClient} — avoids localhost:8000 fallback. */
+const PROJECTS_BASE = "/api/v1/proyectos";
 
 export class ProyectosApiError extends Error {
   constructor(

@@ -27,9 +27,12 @@ const nextConfig = {
   async rewrites() {
     const backendUrl = cleanBackendUrl(
       process.env.BACKEND_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
       process.env.NEXT_PUBLIC_RENDER_API_URL ||
-      "http://127.0.0.1:8000"
+      "https://nadakki-ai-suite.onrender.com"
     );
     return [
       {
@@ -43,8 +46,7 @@ const nextConfig = {
       { source: "/metrics", destination: `${backendUrl}/metrics` },
       { source: "/cores", destination: `${backendUrl}/cores` },
       { source: "/api/v1/sic/:path*", destination: `${backendUrl}/api/v1/sic/:path*` },
-      { source: "/api/v1/proyectos", destination: `${backendUrl}/api/v1/proyectos` },
-      { source: "/api/v1/proyectos/:path*", destination: `${backendUrl}/api/v1/proyectos/:path*` },
+      // /api/v1/proyectos/* → app/api/v1/[[...path]]/route.ts (JWT tenant + X-Tenant-ID)
       { source: "/api/v1/auth/:path*", destination: `${backendUrl}/api/v1/auth/:path*` },
       { source: "/api/v1/ame/:path*", destination: `${backendUrl}/api/v1/ame/:path*` },
       { source: "/api/v1/advertising/:path*", destination: `${backendUrl}/api/v1/advertising/:path*` },
