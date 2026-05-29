@@ -18,30 +18,14 @@ import {
   isHrefActive,
   userCanAccessAdminNav,
 } from "./forge-global-sidebar-nav";
-import { getSidebarTheme, roleAccentClasses, type SidebarCoreTheme } from "./forge-sidebar-core-themes";
+import { getSidebarTheme, roleAccentClasses } from "./forge-sidebar-core-themes";
 
 export type ForgeGlobalCoresSidebarProps = {
   mobileOpen: boolean;
   onNavigate?: () => void;
 };
 
-const STORAGE_KEY = "forge-global-sidebar-expanded-v1";
-
-const CORE_SECTION_IDS = new Set([
-  "credit-hub",
-  "legal-hub",
-  "marketing-hub",
-  "projects-hub",
-  "sic-hub",
-]);
-
-function defaultExpandedAllSections(): Record<string, boolean> {
-  const initial: Record<string, boolean> = {};
-  NAV_SECTIONS.forEach((s) => {
-    initial[s.id] = true;
-  });
-  return initial;
-}
+const STORAGE_KEY = "forge-global-sidebar-expanded-v2";
 
 function loadExpanded(): Record<string, boolean> {
   if (typeof window === "undefined") return {};
@@ -82,20 +66,15 @@ function userInitials(user: UserInfo | null): string {
   return email.slice(0, 2).toUpperCase() || "?";
 }
 
-function GroupLabel({ children }: { children: string }) {
-  return (
-    <div className="px-3 pt-3 first:pt-2">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">{children}</p>
-      <div className="mt-1.5 h-px bg-zinc-800/90" />
-    </div>
-  );
-}
-
 function SidebarBrand({ onNavigate }: { onNavigate?: () => void }) {
   const { data: branding, isPending } = useTenantBranding();
   return (
     <div className="border-b border-zinc-800 px-3 py-4">
-      <Link href="/" onClick={onNavigate} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 rounded-md">
+      <Link
+        href="/"
+        onClick={onNavigate}
+        className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+      >
         {branding?.logo_url && !isPending ? (
           <span className="inline-flex h-9 max-w-[10rem] items-center overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element -- tenant-hosted logo */}
@@ -104,14 +83,21 @@ function SidebarBrand({ onNavigate }: { onNavigate?: () => void }) {
         ) : isPending ? (
           <div className="h-8 w-24 animate-pulse rounded bg-zinc-800/80" />
         ) : (
-          <span className="block bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-xl font-bold tracking-tight text-transparent">
-            NADAKKI
-          </span>
+          <span className="block text-sm font-semibold tracking-tight text-zinc-100">Nadakki AI Suite</span>
         )}
       </Link>
       <p className="mt-1.5 text-[10px] font-medium text-zinc-500">Suite operativa</p>
     </div>
   );
+}
+
+function sectionHasActiveRoute(section: NavSection, pathname: string | null): boolean {
+  if (!pathname) return false;
+  function walk(it: NavItem): boolean {
+    if (it.href && isHrefActive(it.href, pathname)) return true;
+    return it.children?.some(walk) ?? false;
+  }
+  return section.children.some(walk);
 }
 
 export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalCoresSidebarProps) {
@@ -124,18 +110,11 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     [allRoles, showAdmin, tenant?.subscribed_cores],
   );
 
-  const firstCoreIndex = visibleSections.findIndex((s) => CORE_SECTION_IDS.has(s.id));
-
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const fromLs = loadExpanded();
-    if (Object.keys(fromLs).length === 0) {
-      setExpanded(defaultExpandedAllSections());
-    } else {
-      setExpanded(fromLs);
-    }
+    setExpanded(loadExpanded());
     setHydrated(true);
   }, []);
 
@@ -149,6 +128,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
   }, [expanded, hydrated]);
 
   useEffect(() => {
+    if (!hydrated) return;
     const auto = collectExpandIdsForPath(visibleSections, pathname ?? null);
     setExpanded((prev) => {
       const next = { ...prev };
@@ -157,7 +137,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
       });
       return next;
     });
-  }, [pathname, visibleSections]);
+  }, [pathname, visibleSections, hydrated]);
 
   const toggle = useCallback((id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -175,32 +155,27 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
       </span>
     ) : null;
 
-  const renderLink = (item: NavItem, depth: number, theme: SidebarCoreTheme) => {
+  const renderLink = (item: NavItem, depth: number) => {
     if (!item.href) return null;
     const active = isHrefActive(item.href, pathname);
-    const pad = 12 + depth * 12;
+    const isSubItem = depth >= 1;
     return (
       <Link
+        key={item.id}
         href={item.href}
         onClick={onNavigate}
-        style={{ paddingLeft: pad, paddingRight: 8 }}
         className={cn(
-          "flex min-h-9 items-center gap-2 rounded-lg py-2 text-sm transition-all duration-200 ease-in-out",
-          "focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+          "flex min-h-8 items-center gap-2 rounded-md py-1.5 pr-3 transition-colors duration-150",
+          isSubItem ? "pl-9 text-xs" : "pl-6 text-xs",
+          "focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/40",
           active
-            ? cn(
-                theme.linkActiveBg,
-                theme.linkActiveText,
-                "border-l-2",
-                theme.linkActiveBorder,
-                theme.linkActiveShadow,
-              )
-            : cn(theme.linkMuted, theme.linkHover, "border-l-2 border-transparent hover:bg-zinc-900/60"),
+            ? "border-l-2 border-violet-500 bg-violet-500/5 text-violet-300"
+            : "border-l-2 border-transparent text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200",
         )}
         aria-current={active ? "page" : undefined}
       >
         {item.icon ? (
-          <item.icon className={cn("h-3.5 w-3.5 shrink-0", active ? theme.linkActiveText : "text-zinc-500")} aria-hidden />
+          <item.icon className={cn("h-3.5 w-3.5 shrink-0", active ? "text-violet-300" : "text-zinc-500")} aria-hidden />
         ) : (
           <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-600" aria-hidden />
         )}
@@ -210,23 +185,21 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     );
   };
 
-  const renderFolder = (item: NavItem, depth: number, theme: SidebarCoreTheme) => {
+  const renderFolder = (item: NavItem, depth: number): ReactNode => {
     const open = expanded[item.id] ?? false;
     const hasKids = Boolean(item.children?.length);
-    if (!hasKids) return renderLink(item, depth, theme);
-    const pad = 8 + depth * 12;
+    if (!hasKids) return renderLink(item, depth);
 
     return (
-      <div className="flex flex-col">
+      <div key={item.id} className="flex flex-col">
         <button
           type="button"
           onClick={() => toggle(item.id)}
-          style={{ paddingLeft: pad, paddingRight: 8 }}
           className={cn(
-            "flex min-h-9 w-full items-center gap-2 rounded-lg py-2 text-left text-sm font-semibold transition-colors duration-200 ease-in-out",
+            "flex min-h-8 w-full items-center gap-2 rounded-md py-1.5 pr-3 text-left text-xs font-medium transition-colors",
+            depth >= 1 ? "pl-9" : "pl-6",
+            "text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200",
             "focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/40",
-            theme.folderMuted,
-            theme.folderHover,
           )}
           aria-expanded={open}
         >
@@ -238,7 +211,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
           <span className="min-w-0 flex-1 truncate">{item.label}</span>
           {renderBadge(item.badge)}
           <ChevronRight
-            className={cn("h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-200 ease-in-out", open && "rotate-90")}
+            className={cn("h-3.5 w-3.5 shrink-0 text-zinc-500 transition-transform duration-200", open && "rotate-90")}
             aria-hidden
           />
         </button>
@@ -248,63 +221,45 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
             open ? "max-h-[4000px] opacity-100" : "max-h-0 opacity-0",
           )}
         >
-          <div className="space-y-0.5 pt-0.5">{item.children!.map((ch) => renderNavItem(ch, depth + 1, theme))}</div>
+          <div className="space-y-0.5">{item.children!.map((ch) => renderNavItem(ch, depth + 1))}</div>
         </div>
       </div>
     );
   };
 
-  const renderNavItem = (item: NavItem, depth: number, theme: SidebarCoreTheme): ReactNode => {
+  const renderNavItem = (item: NavItem, depth: number): ReactNode => {
     if (item.children && item.children.length > 0) {
-      return (
-        <div key={item.id} className="flex flex-col">
-          {renderFolder(item, depth, theme)}
-        </div>
-      );
+      return renderFolder(item, depth);
     }
-    return <div key={item.id}>{renderLink(item, depth, theme)}</div>;
+    return renderLink(item, depth);
   };
 
   const renderSection = (section: NavSection) => {
     const open = expanded[section.id] ?? false;
     const theme = getSidebarTheme(section.id);
     const HeaderIcon = theme.Icon;
-    const hasActiveInTree =
-      pathname &&
-      section.children.some(function walk(it: NavItem): boolean {
-        if (it.href && isHrefActive(it.href, pathname)) return true;
-        return it.children?.some(walk) ?? false;
-      });
+    const hasActiveInTree = sectionHasActiveRoute(section, pathname ?? null);
+    const emptyCore = section.children.length === 0;
 
     return (
-      <div
-        key={section.id}
-        className={cn(
-          "mx-2 mb-2 overflow-hidden rounded-xl border border-zinc-800/80 transition-colors duration-200",
-          open && theme.sectionTint,
-          open && "ring-1 ring-inset ring-white/5",
-        )}
-      >
+      <div key={section.id} className="mb-0.5">
         <button
           type="button"
           onClick={() => toggle(section.id)}
           className={cn(
-            "flex w-full items-center gap-3 px-2 py-3 text-left transition-colors duration-200 ease-in-out",
-            "border-l-4 bg-zinc-900/40",
-            open ? theme.borderExpanded : "border-transparent",
-            theme.rowHover,
-            open ? theme.headerActive : theme.headerIdle,
-            hasActiveInTree && !open && "ring-1 ring-inset ring-white/5",
+            "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-semibold transition-colors duration-150",
             "focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/40",
+            hasActiveInTree || open
+              ? "border-l-2 border-violet-500 bg-violet-500/10 text-violet-300"
+              : "border-l-2 border-transparent text-zinc-100 hover:bg-zinc-800/60",
           )}
           aria-expanded={open}
         >
-          <div className={cn("rounded-lg p-2 ring-1 ring-inset", theme.iconBox, theme.headerRing)}>
-            <HeaderIcon className={cn("h-5 w-5", theme.iconText)} aria-hidden />
-          </div>
-          <span className="min-w-0 flex-1 text-base font-semibold leading-tight">{section.label}</span>
+          <HeaderIcon className={cn("h-[18px] w-[18px] shrink-0", theme.iconText)} aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{section.label}</span>
+          {renderBadge(section.badge)}
           <ChevronRight
-            className={cn("h-5 w-5 shrink-0 text-zinc-500 transition-transform duration-200 ease-in-out", open && "rotate-90")}
+            className={cn("h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-200", open && "rotate-90")}
             aria-hidden
           />
         </button>
@@ -314,7 +269,13 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
             open ? "max-h-[8000px] opacity-100" : "max-h-0 opacity-0",
           )}
         >
-          <div className="space-y-0.5 border-t border-zinc-800/60 px-1 py-2">{section.children.map((item) => renderNavItem(item, 0, theme))}</div>
+          <div className="space-y-0.5 pb-1 pt-0.5">
+            {emptyCore ? (
+              <p className="px-9 py-2 text-xs italic text-zinc-500">Módulo no disponible en tu plan</p>
+            ) : (
+              section.children.map((item) => renderNavItem(item, 0))
+            )}
+          </div>
         </div>
       </div>
     );
@@ -340,21 +301,8 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
       >
         <SidebarBrand onNavigate={onNavigate} />
 
-        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pb-2" aria-label="Navegación por módulos">
-          {visibleSections.flatMap((section, index) => {
-            const out: ReactNode[] = [];
-            if (index === firstCoreIndex && firstCoreIndex >= 0) {
-              out.push(<GroupLabel key={`label-cores-${section.id}`}>Cores</GroupLabel>);
-            }
-            if (section.id === "workflows") {
-              out.push(<GroupLabel key="label-automation">Automation</GroupLabel>);
-            }
-            if (section.id === "admin") {
-              out.push(<GroupLabel key="label-platform">Platform</GroupLabel>);
-            }
-            out.push(renderSection(section));
-            return out;
-          })}
+        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-1 py-2 pb-2" aria-label="Navegación por módulos">
+          {visibleSections.map((section) => renderSection(section))}
         </nav>
 
         <div className="mt-auto border-t border-zinc-800 bg-zinc-950/95 p-3">
