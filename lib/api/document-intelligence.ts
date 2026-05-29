@@ -12,10 +12,12 @@
  */
 
 import { CreditApiError } from "@/lib/credit-api";
+import { tokenStorage } from "@/lib/auth/token-storage";
 
 const BACKEND_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 ).replace(/\/$/, "");
+const LEGACY_ACCESS_TOKEN_STORAGE_KEY = "nadakki_sic_token";
 
 export type ExtractionStatus =
   | "pending"
@@ -35,11 +37,22 @@ function requireTenant(tenantId: string): string {
   return t;
 }
 
+function readBearerAccessToken(): string | null {
+  const fromAuthV2 = tokenStorage.getAccessToken();
+  if (fromAuthV2) return fromAuthV2;
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(LEGACY_ACCESS_TOKEN_STORAGE_KEY);
+}
+
 function baseHeaders(tenantId: string, withJson: boolean): HeadersInit {
   const h: Record<string, string> = {
     Accept: "application/json",
     "X-Tenant-ID": tenantId.trim(),
   };
+  const bearerAccessToken = readBearerAccessToken();
+  if (bearerAccessToken) {
+    h["Authorization"] = `Bearer ${bearerAccessToken}`;
+  }
   if (withJson) h["Content-Type"] = "application/json";
   return h;
 }
