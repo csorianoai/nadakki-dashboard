@@ -1,9 +1,13 @@
 // NEVER forward to /run (RLS bug on backend).
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL =
+const BACKEND_URL = (
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://nadakki-ai-suite.onrender.com";
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://nadakki-ai-suite.onrender.com"
+).replace(/\/$/, "");
 
 async function proxyRequest(
   req: NextRequest,

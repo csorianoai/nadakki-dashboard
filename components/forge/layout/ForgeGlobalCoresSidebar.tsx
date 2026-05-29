@@ -23,6 +23,7 @@ import {
   userCanAccessAdminNav,
 } from "./forge-global-sidebar-nav";
 import { getSidebarTheme, roleAccentClasses } from "./forge-sidebar-core-themes";
+import { ProyectosFinanzasSidebarLinks } from "./ProyectosFinanzasSidebarLinks";
 
 export type ForgeGlobalCoresSidebarProps = {
   mobileOpen: boolean;
@@ -293,7 +294,18 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
       countNavLeaves(section.children) > LARGE_CORE_LEAF_THRESHOLD ||
       section.children.some((item) => item.groupLabel);
 
-    return section.children.map((item) => renderNavItem(item, 0, useGroupedLayout));
+    const items = section.children.map((item) => renderNavItem(item, 0, useGroupedLayout));
+
+    if (section.id === "projects-hub") {
+      return (
+        <>
+          {items}
+          <ProyectosFinanzasSidebarLinks onNavigate={onNavigate} />
+        </>
+      );
+    }
+
+    return items;
   };
 
   const renderSection = (section: NavSection) => {
