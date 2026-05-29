@@ -754,6 +754,7 @@ export async function uploadDocument(
   const form = new FormData();
   form.append("file", file);
   form.append("document_type", documentType);
+  const token = readBearerToken();
   const res = await fetch(
     `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/upload`,
     {
@@ -761,6 +762,7 @@ export async function uploadDocument(
       headers: {
         Accept: "application/json",
         "X-Tenant-ID": tid,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: form,
     }
