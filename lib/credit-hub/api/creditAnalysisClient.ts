@@ -1,8 +1,10 @@
 import { CreditCoreApiError } from "./creditCoreClient";
+import { tokenStorage } from "@/lib/auth/token-storage";
 import type { CreditAnalysisResult } from "../types/creditAnalysis";
 
 const CREDIT_CORE_BASE = "/api/v2/credit";
 const REQUEST_TIMEOUT_MS = 30_000;
+const LEGACY_ACCESS_TOKEN_STORAGE_KEY = "nadakki_sic_token";
 
 async function parseResponseBody(response: Response): Promise<unknown> {
   try {
@@ -33,12 +35,20 @@ function responseMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
+function readBearerAccessToken(): string | null {
+  const fromAuthV2 = tokenStorage.getAccessToken();
+  if (fromAuthV2) return fromAuthV2;
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(LEGACY_ACCESS_TOKEN_STORAGE_KEY);
+}
+
 async function creditAnalysisFetch<T>(
   path: string,
   init: Omit<RequestInit, "headers"> & { tenantId: string; headers?: Record<string, string> }
 ): Promise<{ data: T; headers: Headers }> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const bearerAccessToken = readBearerAccessToken();
 
   try {
     const response = await fetch(`${CREDIT_CORE_BASE}${path}`, {
@@ -46,6 +56,7 @@ async function creditAnalysisFetch<T>(
       headers: {
         "Content-Type": "application/json",
         "X-Tenant-ID": init.tenantId,
+        ...(bearerAccessToken ? { Authorization: `Bearer ${bearerAccessToken}` } : {}),
         ...(init.headers ?? {}),
       },
       signal: controller.signal,
