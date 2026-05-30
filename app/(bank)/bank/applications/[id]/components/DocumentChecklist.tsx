@@ -22,7 +22,7 @@ export function DocumentChecklist({
   authToken,
   onOpenPreview,
 }: DocumentChecklistProps) {
-  const rows = documents?.length ? documents : [];
+  const rows = useMemo(() => (documents?.length ? documents : []), [documents]);
   const rowsWithIds = useMemo(() => rows.filter((doc) => doc.id), [rows]);
 
   useEffect(() => {

@@ -54,7 +54,7 @@ export function StipulationsAdminClient({ params }: { params: Promise<{ id: stri
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [workflowModalOpen, setWorkflowModalOpen] = useState(false);
 
-  const list = stipulations ?? [];
+  const list = useMemo(() => stipulations ?? [], [stipulations]);
   const selectedIndex = useMemo(() => list.findIndex((s) => s.id === selectedId), [list, selectedId]);
 
   useEffect(() => {
