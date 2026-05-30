@@ -3,9 +3,12 @@
  * Pattern: direct fetch to NEXT_PUBLIC_API_URL with JSON + X-Tenant-ID (same as app/api/health, SIC routes).
  */
 
+import { tokenStorage } from "@/lib/auth/token-storage";
+
 const BACKEND_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 ).replace(/\/$/, "");
+const LEGACY_ACCESS_TOKEN_KEY = "nadakki_sic_token";
 
 /** Safe segment for sessionStorage keys; avoids empty or pathological tenant strings. */
 function tenantStorageSegment(tenantId?: string | null): string {
@@ -169,6 +172,15 @@ export interface CreditProcessResult {
   } | null;
 }
 
+function readBearerToken(): string | null {
+  const v2 = tokenStorage.getAccessToken();
+  if (v2) return v2;
+  if (typeof window !== "undefined") {
+    return window.localStorage.getItem(LEGACY_ACCESS_TOKEN_KEY);
+  }
+  return null;
+}
+
 function creditHeaders(
   tenantId: string,
   opts?: { jsonBody?: boolean }
@@ -177,6 +189,10 @@ function creditHeaders(
     Accept: "application/json",
     "X-Tenant-ID": tenantId,
   };
+  const token = readBearerToken();
+  if (token) {
+    h["Authorization"] = `Bearer ${token}`;
+  }
   if (opts?.jsonBody !== false) {
     h["Content-Type"] = "application/json";
   }

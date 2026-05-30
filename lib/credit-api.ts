@@ -627,10 +627,12 @@ export async function downloadPdf(
   if (typeof document === "undefined") {
     throw new Error("PDF download must run in the browser");
   }
+  const token = readBearerToken();
   const res = await fetch(url, {
     headers: {
       Accept: "application/pdf",
       "X-Tenant-ID": tid,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
   if (!res.ok) {
@@ -752,6 +754,7 @@ export async function uploadDocument(
   const form = new FormData();
   form.append("file", file);
   form.append("document_type", documentType);
+  const token = readBearerToken();
   const res = await fetch(
     `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/upload`,
     {
@@ -759,6 +762,7 @@ export async function uploadDocument(
       headers: {
         Accept: "application/json",
         "X-Tenant-ID": tid,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: form,
     }
