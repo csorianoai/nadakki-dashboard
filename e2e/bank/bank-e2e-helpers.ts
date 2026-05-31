@@ -42,6 +42,7 @@ export async function routeStipulationsAndNotify(
   items: unknown[]
 ): Promise<void> {
   const listPath = `/api/v2/credit/applications/${applicationId}/stipulations`;
+  const stipulations = items.map((item) => ({ ...(item as Record<string, unknown>) }));
 
   await page.route(`**/api/v2/credit/applications/${applicationId}/stipulations**`, async (route: Route) => {
     const url = route.request().url();
@@ -56,7 +57,7 @@ export async function routeStipulationsAndNotify(
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ data: { stipulations: items } }),
+        body: JSON.stringify({ data: { stipulations } }),
       });
       return;
     }
@@ -87,6 +88,7 @@ export async function routeStipulationsAndNotify(
     }
 
     if (method === "POST" && pathname === listPath) {
+      stipulations.push({ id: "stip-new", description: "E2E created", status: "pending" });
       await route.fulfill({
         status: 201,
         contentType: "application/json",
@@ -96,6 +98,12 @@ export async function routeStipulationsAndNotify(
     }
 
     if (method === "POST" && pathname.includes("/verify")) {
+      const sid = pathname.match(/stipulations\/([^/]+)\/verify/)?.[1] ?? "s1";
+      const row = stipulations.find((item) => item.id === sid);
+      if (row) {
+        row.status = "verified";
+        row.verified_at = new Date().toISOString();
+      }
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -107,6 +115,12 @@ export async function routeStipulationsAndNotify(
     }
 
     if (method === "POST" && pathname.includes("/reject")) {
+      const sid = pathname.match(/stipulations\/([^/]+)\/reject/)?.[1] ?? "s2";
+      const row = stipulations.find((item) => item.id === sid);
+      if (row) {
+        row.status = "rejected";
+        row.rejected_at = new Date().toISOString();
+      }
       await route.fulfill({
         status: 200,
         contentType: "application/json",

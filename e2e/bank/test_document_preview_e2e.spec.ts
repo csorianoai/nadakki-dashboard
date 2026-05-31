@@ -35,6 +35,7 @@ test.describe("Bank document preview E2E", () => {
   test("opens PDF in preview pane", async ({ page }) => {
     await openPreviewOrSkip(page);
     await expect(page.getByTestId("pdf-document")).toBeVisible({ timeout: 25_000 });
+    await expect(page.getByTestId("thumbnail-sidebar")).toBeVisible();
   });
 
   test("renders multi-page PDF correctly", async ({ page }) => {
@@ -47,6 +48,7 @@ test.describe("Bank document preview E2E", () => {
     await page.getByRole("button", { name: "150%" }).click();
     await expect(page.getByRole("button", { name: "150%" })).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "100%" }).click();
+    await expect(page.getByRole("button", { name: "100%" })).toHaveAttribute("aria-pressed", "true");
   });
 
   test("rotate document buttons work", async ({ page }) => {
@@ -61,6 +63,7 @@ test.describe("Bank document preview E2E", () => {
     await routeDocumentPreviewSuccess(page, APP_ID, "doc-compare-b", "sample-paystub.pdf");
     await page.getByTestId("compare-trigger").click();
     await expect(page.getByTestId("comparison-pane")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("comparison-pane")).toContainText(/doc-compare-b/i);
   });
 
   test("download original document", async ({ page }) => {
@@ -69,6 +72,7 @@ test.describe("Bank document preview E2E", () => {
     await page.getByTestId("download-doc").click();
     const d = await dl;
     expect(d.suggestedFilename()).toMatch(/\.pdf$/i);
+    expect(d.suggestedFilename()).toContain(DOC_ID);
   });
 
   test("search within document text", async ({ page }) => {
@@ -80,6 +84,16 @@ test.describe("Bank document preview E2E", () => {
     await openPreviewOrSkip(page);
     await page.getByRole("button", { name: /mini página 2/i }).click();
     await expect(page.getByTestId("page-indicator")).toContainText("2 / 3");
+  });
+
+  test("toolbar page navigation controls move across multi-page PDF", async ({ page }) => {
+    await openPreviewOrSkip(page);
+    await page.getByTestId("page-next").click();
+    await expect(page.getByTestId("page-indicator")).toContainText("2 / 3");
+    await page.getByTestId("page-last").click();
+    await expect(page.getByTestId("page-indicator")).toContainText("3 / 3");
+    await page.getByTestId("page-first").click();
+    await expect(page.getByTestId("page-indicator")).toContainText("1 / 3");
   });
 
   test("PDF loading state shows skeleton", async ({ page }) => {
