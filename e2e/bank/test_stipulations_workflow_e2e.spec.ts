@@ -10,8 +10,20 @@ const APP_ID = "00000000-0000-4000-8000-00000000a601";
 const DESKTOP = "chromium-desktop";
 
 const stipList = [
-  { id: "s1", description: "Comprobante de ingresos", status: "pending" },
-  { id: "s2", description: "Referencias", status: "pending" },
+  {
+    id: "s1",
+    title: "Comprobante de ingresos",
+    description: "Comprobante de ingresos",
+    type: "income",
+    status: "uploaded",
+  },
+  {
+    id: "s2",
+    title: "Referencias",
+    description: "Referencias",
+    type: "reference",
+    status: "pending",
+  },
 ];
 
 async function openOrchestrationOrSkip(page: import("@playwright/test").Page): Promise<void> {
@@ -44,8 +56,26 @@ test.describe("Bank stipulations workflow E2E", () => {
   test("applies template stipulations bulk", async ({ page }) => {
     await openOrchestrationOrSkip(page);
     await page.getByTestId("bank-workflow-tpl-paystubs-3mo").click();
+    await expect(page.getByText(/Últimos 3 estados de nómina|paystub|nómina/i)).toBeVisible();
     await page.getByTestId("bank-workflow-bulk-sent").click();
     await expect(page.locator('[data-testid="workflow-stipulation-row"]').first()).toBeVisible();
+    await expect(page.getByText(/marcada como enviada|enviada/i).first()).toBeVisible();
+  });
+
+  test("full stipulations request, fulfill, and audit flow", async ({ page }) => {
+    await page.goto(`/bank/applications/${APP_ID}/stipulations`);
+    const firstCard = page.getByTestId("stipulation-card-s1");
+    await expect(firstCard).toContainText(/Comprobante de ingresos/i);
+    await expect(firstCard.getByText(/Uploaded|Subido|Cargado|Pendiente/i).first()).toBeVisible();
+
+    await firstCard.getByRole("button", { name: /^verificar$/i }).click();
+    await page.getByRole("dialog").getByLabel(/notas/i).fill("E2E audit: income document accepted");
+    await page.getByRole("dialog").getByRole("button", { name: /confirmar verificación/i }).click();
+    await expect(page.getByText(/verificada|verified/i)).toBeVisible({ timeout: 12_000 });
+
+    await firstCard.click();
+    await expect(page.getByRole("heading", { name: /historial/i })).toBeVisible();
+    await expect(page.getByText(/402-0000000-0|upload/i)).toBeVisible({ timeout: 12_000 });
   });
 
   test("creates custom stipulation", async ({ page }) => {
@@ -74,6 +104,16 @@ test.describe("Bank stipulations workflow E2E", () => {
     await openOrchestrationOrSkip(page);
     await page.getByTestId("bank-workflow-send-dealer").click();
     await expect(page.getByText(/notificación ejecutada|servicio agent-2/i)).toBeVisible({ timeout: 9000 });
+  });
+
+  test("notification flow to dealer from admin page reflects generated links", async ({ page }) => {
+    await page.goto(`/bank/applications/${APP_ID}/stipulations`);
+    const send = page.getByTestId("stip-workflow-send-pending");
+    if (!(await send.isVisible({ timeout: 8000 }).catch(() => false))) {
+      test.skip(true, "Bank stipulation workflow toolbar disabled.");
+    }
+    await send.click();
+    await expect(page.getByText(/enlace|notificó|notificación|pendiente/i).first()).toBeVisible({ timeout: 12_000 });
   });
 
   test("marks stipulation as fulfilled", async ({ page }) => {
