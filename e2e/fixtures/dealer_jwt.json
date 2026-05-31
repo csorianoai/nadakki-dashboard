@@ -1,0 +1,16 @@
+{
+  "description": "Dealer E2E mock JWT fixture for Vercel preview runs. It is intentionally unsigned and must only be used by browser-side test mocks.",
+  "tenant_slug": "credicefi",
+  "role": "dealer",
+  "token_type": "Bearer",
+  "access_token": "e2e.mock.dealer.jwt",
+  "claims": {
+    "sub": "dealer-e2e-user",
+    "email": "dealer-e2e@nadakki.test",
+    "tenant_id": "credicefi",
+    "roles": ["dealer"],
+    "permissions": ["credit:dealer:read", "credit:dealer:create", "credit:dealer:update"],
+    "aud": "nadakki-dashboard-preview",
+    "iss": "nadakki-e2e"
+  }
+}

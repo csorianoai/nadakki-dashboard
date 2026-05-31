@@ -73,11 +73,11 @@ test.describe("Dealer mobile responsive E2E", () => {
     }
   });
 
-  test("Lighthouse mobile score > 85", async ({}, testInfo) => {
+  test("Lighthouse mobile score > 90", async ({}, testInfo) => {
     test.skip(testInfo.project.name !== IPHONE_SE);
     test.skip(
       true,
-      "Lighthouse is not automated in this repo yet. Run `npx lighthouse` against E2E_BASE_URL mobile; see docs/testing/dealer_e2e_plan.md."
+      "Lighthouse is not automated in this repo yet. Run `npx lighthouse` against the PR preview URL and require performance > 0.90; see docs/testing/dealer_e2e_plan.md."
     );
   });
 });

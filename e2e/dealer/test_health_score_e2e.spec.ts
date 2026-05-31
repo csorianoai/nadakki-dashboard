@@ -35,6 +35,20 @@ test.describe("Dealer App Health Score E2E", () => {
     await expect(page.getByTestId("app-health-gauge-fill")).toBeVisible();
   });
 
+  test("score calculation matches weighted model for strong profile", async ({ page }) => {
+    await gotoDealerCommandOrSkip(page);
+    await fillHealthCalibration(page, {
+      credit: 760,
+      dti: 10,
+      ltv: 40,
+      employmentYears: 5,
+      documentsProvided: 3,
+      documentsRequired: 3,
+    });
+    await expect(page.getByRole("meter")).toHaveAttribute("aria-valuenow", "83");
+    await expect(page.getByRole("heading", { name: /Indicador de salud \(83\/100\)/i })).toBeVisible();
+  });
+
   test("health score updates as form filled", async ({ page }) => {
     await gotoDealerCommandOrSkip(page);
     const meter = page.getByRole("meter");
@@ -42,6 +56,31 @@ test.describe("Dealer App Health Score E2E", () => {
     await fillHealthCalibration(page, { credit: 400 });
     const after = await meter.getAttribute("aria-valuenow");
     expect(before).not.toEqual(after);
+  });
+
+  test("visual feedback changes when score moves between zones", async ({ page }) => {
+    await gotoDealerCommandOrSkip(page);
+    await fillHealthCalibration(page, {
+      credit: 320,
+      dti: 50,
+      ltv: 100,
+      employmentYears: 0,
+      documentsProvided: 0,
+      documentsRequired: 3,
+    });
+    await expect(page.getByTestId("app-health-zone")).toHaveAttribute("data-zone", "poor");
+    await expect(page.getByRole("meter")).toHaveAttribute("aria-valuenow", "13");
+
+    await fillHealthCalibration(page, {
+      credit: 820,
+      dti: 5,
+      ltv: 40,
+      employmentYears: 5,
+      documentsProvided: 3,
+      documentsRequired: 3,
+    });
+    await expect(page.getByTestId("app-health-zone")).toHaveAttribute("data-zone", "excellent");
+    await expect(page.getByTestId("app-health-gauge-fill")).toHaveAttribute("style", /width: 88%/);
   });
 
   test("suggestions display when score < 60", async ({ page }) => {

@@ -8,11 +8,15 @@ export const TENANT_SLUG = process.env.E2E_TENANT_SLUG ?? "credicefi";
 export const SAMPLE_VIN = "1HGBH41JXMN109186";
 
 export const MOCK_APP_ID = "e2e-dealer-mock-app-001";
+export const DEALER_JWT_FIXTURE = "../fixtures/dealer_jwt.json";
 
 /**
  * Login via `/login` (email, password, tenant slug).
  */
 export async function loginAsDealer(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("nadakki:e2e:jwt-fixture", "dealer_jwt");
+  });
   await page.goto("/login");
   await page.getByLabel(/Email/i).fill(LOGIN_EMAIL);
   await page.getByLabel(/^Password/i).fill(LOGIN_PWD);

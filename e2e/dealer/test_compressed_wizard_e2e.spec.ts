@@ -47,6 +47,16 @@ async function fillStepDeal(page: import("@playwright/test").Page): Promise<void
   await box.getByLabel(/Inicial/i).fill("120000");
 }
 
+async function expectValidationKeepsCurrentStep(
+  page: import("@playwright/test").Page,
+  stepTestId: string,
+  expected: RegExp
+): Promise<void> {
+  await page.getByTestId("cw-next").click();
+  await expect(page.getByTestId(stepTestId)).toBeVisible();
+  await expect(page.getByRole("alert").first()).toContainText(expected);
+}
+
 async function completeReviewAndSubmit(page: import("@playwright/test").Page): Promise<void> {
   await page.getByTestId("cw-step-review").getByText(/Autorizo consulta buró/i).click();
   await page.getByTestId("cw-step-review").getByText(/Ley 172-13/i).click();
@@ -82,16 +92,39 @@ test.describe("Dealer Compressed Wizard E2E", () => {
     expect(elapsedSec).toBeLessThan(25 * 60);
   });
 
+  test("walks the full 5-step dealer wizard labels", async ({ page }) => {
+    await expect(page.getByText(/Paso 1\/5/i)).toBeVisible();
+    await fillStepApplicant(page);
+    await page.getByTestId("cw-next").click();
+    await expect(page.getByText(/Paso 2\/5/i)).toBeVisible();
+    await fillStepEmployment(page);
+    await page.getByTestId("cw-next").click();
+    await expect(page.getByText(/Paso 3\/5/i)).toBeVisible();
+    await fillStepVehicleVinOnly(page);
+    await page.getByTestId("cw-next").click();
+    await expect(page.getByText(/Paso 4\/5/i)).toBeVisible();
+    await fillStepDeal(page);
+    await page.getByTestId("cw-next").click();
+    await expect(page.getByText(/Paso 5\/5/i)).toBeVisible();
+    await expect(page.getByTestId("cw-step-review")).toContainText(/Resumen|Autorizo|Ley 172-13/i);
+  });
+
   test("smart defaults populate correctly", async ({ page }) => {
+    await expect(page.getByTestId("cw-step-employment")).toBeHidden();
+    await expect(page.getByTestId("cw-step-vehicle")).toBeHidden();
+    await expect(page.getByTestId("cw-step-deal")).toBeHidden();
+    await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "20");
     await fillStepApplicant(page);
     await page.getByTestId("cw-next").click();
     await expect(page.getByText(/1 años/)).toBeVisible();
     await fillStepEmployment(page);
     await page.getByTestId("cw-next").click();
+    await expect(page.getByRole("radio", { name: /Usado/i })).toBeChecked();
     await fillStepVehicleVinOnly(page);
     await page.getByTestId("cw-next").click();
     const deal = page.getByTestId("cw-step-deal");
     await expect(deal.getByLabel(/Plazo/i)).toHaveValue("60");
+    await expect(deal.getByText(/Cuota estimada/i)).toBeVisible();
     await page.getByRole("button", { name: /Atrás/i }).click();
     await expect(page.getByTestId("cw-step-vehicle")).toBeVisible();
   });
@@ -148,6 +181,20 @@ test.describe("Dealer Compressed Wizard E2E", () => {
   test("validation errors show inline", async ({ page }) => {
     await page.getByTestId("cw-next").click();
     await expect(page.getByRole("alert").first()).toContainText(/Requerido|incompleto|inválido/i);
+  });
+
+  test("form validation works on each wizard step", async ({ page }) => {
+    await expectValidationKeepsCurrentStep(page, "cw-step-applicant", /Requerido|incompleta|inválido/i);
+    await fillStepApplicant(page);
+    await expectValidationKeepsCurrentStep(page, "cw-step-employment", /Requerido|mayor a 0/i);
+    await fillStepEmployment(page);
+    await expectValidationKeepsCurrentStep(page, "cw-step-vehicle", /VIN válido|marca\/modelo\/año/i);
+    await fillStepVehicleVinOnly(page);
+    await expectValidationKeepsCurrentStep(page, "cw-step-deal", /Requerido|Inválido/i);
+    await fillStepDeal(page);
+    await page.getByTestId("cw-next").click();
+    await page.getByTestId("cw-submit").click();
+    await expect(page.getByRole("alert").first()).toContainText(/autorizar buró|política/i);
   });
 
   test("wizard prevents skip required fields", async ({ page }) => {
