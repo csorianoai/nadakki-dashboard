@@ -43,6 +43,9 @@ export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
   return "/";
 }
 
+/** Max time to wait for refresh + /me during session init. */
+const SESSION_INIT_TIMEOUT_MS = 10_000;
+
 export interface AuthContextValue {
   user: UserInfo | null;
   tenant: TenantInfo | null;
@@ -50,6 +53,10 @@ export interface AuthContextValue {
   allRoles: RoleInfo[];
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** Non-null when the session init failed (timeout, network error, etc.). */
+  initError: string | null;
+  /** Retry the session init after a failure. */
+  retryInit: () => void;
   login: (
     email: string,
     password: string,
@@ -69,36 +76,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [activeRole, setActiveRole] = useState<RoleInfo | null>(null);
   const [allRoles, setAllRoles] = useState<RoleInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [initAttempt, setInitAttempt] = useState(0);
+
+  const retryInit = useCallback(() => {
+    setInitError(null);
+    setIsLoading(true);
+    setInitAttempt((n) => n + 1);
+  }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        cancelled = true;
+        setInitError("El servidor no respondio a tiempo. Verifica tu conexion.");
+        setIsLoading(false);
+      }
+    }, SESSION_INIT_TIMEOUT_MS);
+
     const init = async () => {
       const refreshToken = tokenStorage.getRefreshToken();
       if (!refreshToken) {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
+        clearTimeout(timeout);
         return;
       }
-      const result = await refreshTokenV2(refreshToken);
-      if (result.ok && result.data) {
-        tokenStorage.setTokens({
-          accessToken: result.data.access_token,
-          refreshToken: result.data.refresh_token,
-        });
-        const me = await getMeV2(result.data.access_token);
-        if (me.ok && me.data) {
-          setUser(me.data.user);
-          setTenant(me.data.current_tenant);
-          setAllRoles(me.data.active_roles);
-          if (me.data.active_roles.length > 0) {
-            setActiveRole(me.data.active_roles[0]);
+      try {
+        const result = await refreshTokenV2(refreshToken);
+        if (cancelled) return;
+        if (result.ok && result.data) {
+          tokenStorage.setTokens({
+            accessToken: result.data.access_token,
+            refreshToken: result.data.refresh_token,
+          });
+          const me = await getMeV2(result.data.access_token);
+          if (cancelled) return;
+          if (me.ok && me.data) {
+            setUser(me.data.user);
+            setTenant(me.data.current_tenant);
+            setAllRoles(me.data.active_roles);
+            if (me.data.active_roles.length > 0) {
+              setActiveRole(me.data.active_roles[0]);
+            }
           }
+        } else {
+          tokenStorage.clearTokens();
         }
-      } else {
-        tokenStorage.clearTokens();
+        if (!cancelled) setIsLoading(false);
+      } catch (err) {
+        if (cancelled) return;
+        setInitError(err instanceof Error ? err.message : "Error verificando sesion");
+        setIsLoading(false);
       }
-      setIsLoading(false);
+      clearTimeout(timeout);
     };
     init();
-  }, []);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [initAttempt]);
 
   const login = async (email: string, password: string, tenantSlug?: string) => {
     const result = await loginV2(email, password, tenantSlug);
@@ -177,6 +216,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     allRoles,
     isAuthenticated: user !== null,
     isLoading,
+    initError,
+    retryInit,
     login,
     logout,
     switchTenant,
