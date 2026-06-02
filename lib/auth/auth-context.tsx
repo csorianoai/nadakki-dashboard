@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useState, useEffect, useCallback, ReactNode } from "react";
 import {
   loginV2,
   logoutV2,
@@ -14,6 +14,35 @@ import {
 } from "@/lib/api/auth-v2";
 import { tokenStorage } from "./token-storage";
 
+const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
+  platform_superadmin: "/",
+  tenant_admin: "/",
+  sic_admin: "/sic",
+  legal_admin: "/legal-hub",
+  marketing_admin: "/marketing",
+  credit_admin: "/",
+};
+
+/** First matching role wins; credit-hub is intentionally not used (feature-flag off). */
+const POST_LOGIN_ROLE_PRIORITY = [
+  "platform_superadmin",
+  "tenant_admin",
+  "sic_admin",
+  "legal_admin",
+  "marketing_admin",
+  "credit_admin",
+] as const;
+
+export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
+  const keys = new Set(roles.map((r) => r.role_key));
+  for (const roleKey of POST_LOGIN_ROLE_PRIORITY) {
+    if (keys.has(roleKey)) {
+      return POST_LOGIN_REDIRECT_BY_ROLE[roleKey] ?? "/";
+    }
+  }
+  return "/";
+}
+
 export interface AuthContextValue {
   user: UserInfo | null;
   tenant: TenantInfo | null;
@@ -21,7 +50,11 @@ export interface AuthContextValue {
   allRoles: RoleInfo[];
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, tenantSlug?: string) => Promise<{ ok: boolean; error?: string }>;
+  login: (
+    email: string,
+    password: string,
+    tenantSlug?: string,
+  ) => Promise<{ ok: boolean; error?: string; redirectTo?: string }>;
   logout: () => Promise<void>;
   switchTenant: (tenantId?: string, tenantSlug?: string) => Promise<{ ok: boolean; error?: string }>;
   switchRole: (coreName: string, roleKey: string) => Promise<{ ok: boolean; error?: string }>;
@@ -80,10 +113,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTenant(result.data.tenant_info);
     setActiveRole(result.data.active_role);
     const me = await getMeV2(result.data.access_token);
-    if (me.ok && me.data) {
-      setAllRoles(me.data.active_roles);
-    }
-    return { ok: true };
+    const roles = me.ok && me.data ? me.data.active_roles : [result.data.active_role];
+    setAllRoles(roles);
+    return { ok: true, redirectTo: getPostLoginRedirectPath(roles) };
   };
 
   const logout = async () => {
