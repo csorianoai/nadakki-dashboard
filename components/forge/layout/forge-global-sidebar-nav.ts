@@ -34,6 +34,7 @@ import {
   ScrollText,
   Settings,
   Shield,
+  ShieldCheck,
   Sparkles,
   Target,
   Users,
@@ -632,6 +633,22 @@ export const NAV_SECTIONS: NavSection[] = [
       { id: "adv-unified", label: "Unified", href: "/advertising/unified" },
       { id: "adv-landing", label: "Landing readiness", href: "/advertising/landing-readiness" },
       { id: "adv-google-legacy", label: "Google (marketing)", href: "/marketing/google-ads" },
+    ],
+  },
+  {
+    id: "governance-hub",
+    label: "Governance",
+    icon: ShieldCheck,
+    coreMatchers: ["admin", "platform"],
+    alwaysVisible: false,
+    children: [
+      {
+        id: "governance-system-health",
+        label: "System Health",
+        href: "/admin/governance",
+        icon: Activity,
+        superAdminOnly: true,
+      },
     ],
   },
   {
