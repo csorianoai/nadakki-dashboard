@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { getPostLoginRedirectPath } from "@/lib/auth/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, allRoles, activeRole } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,9 +17,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/credit-hub");
+      const roles = allRoles.length > 0 ? allRoles : activeRole ? [activeRole] : [];
+      router.push(getPostLoginRedirectPath(roles));
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, allRoles, activeRole, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +35,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/credit-hub");
+    router.push(result.redirectTo ?? "/");
   };
 
   if (isLoading) {
