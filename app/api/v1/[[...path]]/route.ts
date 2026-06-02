@@ -15,11 +15,14 @@ async function proxyRequest(
   method: string
 ): Promise<NextResponse> {
   const pathStr = path.join("/");
-  // Block legacy tenant run endpoints that hit /run (RLS); allow ops operational paths like
-  // ops/google-ads-agent/checks/run (Google Ads Agent check runner — not tenant pipeline /run).
+  // Block legacy tenant run endpoints that hit /run (RLS); allow known safe /run paths:
+  // - ops/google-ads-agent/checks/run (Agent check runner)
+  // - governance/run (NGC audit trigger)
   const isGoogleAdsAgentOpsChecks = pathStr.startsWith("ops/google-ads-agent/checks/");
+  const isGovernanceRun = pathStr === "governance/run";
   if (
     !isGoogleAdsAgentOpsChecks &&
+    !isGovernanceRun &&
     (pathStr.includes("/run") || path[path.length - 1] === "run")
   ) {
     return NextResponse.json(

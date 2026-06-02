@@ -132,15 +132,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // ── 3. Require JWT for ALL non-public API routes ──────────────────────
+  // ── 3. Extract JWT (if present) for tenant isolation ──────────────────
   const authHeader = request.headers.get("authorization") || "";
   const hasJwt = authHeader.startsWith("Bearer ");
 
   if (!hasJwt) {
-    return NextResponse.json(
-      { error: "Authentication required", code: "MISSING_AUTH" },
-      { status: 401 }
-    );
+    // No JWT: pass through without tenant isolation.
+    // The Render backend ASGI middleware (db/rls.py) is the auth authority
+    // and will reject unauthenticated requests that require auth.
+    // Many frontend callers (admin pages, legacy modules) send tokens
+    // directly to the backend or rely on the backend's own auth layer.
+    return NextResponse.next();
   }
 
   // ── 4. Validate JWT and enforce tenant isolation ──────────────────────
