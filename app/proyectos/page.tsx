@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "@/lib/motion-stub";
 import {
   Activity,
@@ -28,6 +28,24 @@ import { useAnimatedCount } from "@/components/proyectos/useAnimatedMetric";
 import { useProyectoHealth, useProyectos } from "@/hooks/projects/useProyectos";
 import { ProjectsApiError } from "@/lib/projects/projectsClient";
 import type { Proyecto } from "@/lib/projects/types";
+
+const LOADING_TIMEOUT_MS = 10_000;
+
+function friendlyProjectsError(error: unknown): { title: string; detail: string } {
+  if (error instanceof ProjectsApiError) {
+    if (error.status === 401)
+      return { title: "Sesion expirada", detail: "Tu token de acceso ya no es valido. Reintenta o inicia sesion de nuevo." };
+    if (error.status === 403)
+      return { title: "Sin permisos", detail: "No tienes acceso a los proyectos de este tenant." };
+    if (error.status >= 500)
+      return { title: "Error de servidor", detail: "El backend no pudo procesar la solicitud. Intenta de nuevo en unos momentos." };
+    if (error.status === 408 || error.status === 0)
+      return { title: "Sin conexion", detail: "No se pudo conectar con el servidor. Verifica tu conexion a internet." };
+  }
+  if (error instanceof Error && /failed to fetch|network/i.test(error.message))
+    return { title: "Sin conexion", detail: "No se pudo conectar con el servidor. Verifica tu conexion a internet." };
+  return { title: "Error cargando proyectos", detail: "Ocurrio un error inesperado. Intenta de nuevo." };
+}
 
 const QUICK_LINKS = [
   {
@@ -73,8 +91,15 @@ const QUICK_LINKS = [
 ] as const;
 
 export default function ProyectosDashboardPage() {
-  const { data: proyectos, isPending, isError, error } = useProyectos();
+  const { data: proyectos, isPending, isError, error, refetch } = useProyectos();
   const health = useProyectoHealth();
+  const [loadingSlow, setLoadingSlow] = useState(false);
+
+  useEffect(() => {
+    if (!isPending) { setLoadingSlow(false); return; }
+    const timer = window.setTimeout(() => setLoadingSlow(true), LOADING_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [isPending]);
 
   const rows = proyectos ?? [];
   const activeCount = useMemo(
@@ -90,10 +115,7 @@ export default function ProyectosDashboardPage() {
     [rows],
   );
 
-  let errorDetail: string | undefined;
-  if (isError && error instanceof ProjectsApiError) {
-    errorDetail = error.message;
-  }
+  const friendlyError = isError ? friendlyProjectsError(error) : null;
 
   const healthOk =
     health.data !== undefined && !health.isError && !health.isPending;
@@ -182,11 +204,18 @@ export default function ProyectosDashboardPage() {
         </div>
       ) : null}
 
-      {isError ? (
+      {isError && friendlyError ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <GlassCard hover={false} className="border border-rose-500/35 bg-rose-500/[0.08] p-6">
-            <p className="text-lg font-bold text-rose-100">Sin tablero de cartera temporal</p>
-            <p className="mt-2 text-sm text-rose-200/90">{errorDetail ?? "Revisa autorización o políticas del tenant"}</p>
+            <p className="text-lg font-bold text-rose-100">{friendlyError.title}</p>
+            <p className="mt-2 text-sm text-rose-200/90">{friendlyError.detail}</p>
+            <button
+              type="button"
+              onClick={() => void refetch()}
+              className="mt-4 rounded-xl border border-white/15 bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+            >
+              Reintentar
+            </button>
           </GlassCard>
         </motion.div>
       ) : null}
@@ -258,8 +287,20 @@ export default function ProyectosDashboardPage() {
         </div>
         <div className="overflow-x-auto p-4 pb-8">
           {isPending ? (
-            <div className="flex h-40 items-center justify-center text-zinc-500">
-              <Loader2 className="mr-3 h-6 w-6 animate-spin text-amber-400" /> Mapeando obras digitales…
+            <div className="flex h-40 flex-col items-center justify-center gap-3 text-zinc-500">
+              <div className="flex items-center">
+                <Loader2 className="mr-3 h-6 w-6 animate-spin text-amber-400" />
+                {loadingSlow ? "El servidor esta tardando mas de lo esperado…" : "Cargando proyectos…"}
+              </div>
+              {loadingSlow && (
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  className="rounded-xl border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-white/15"
+                >
+                  Reintentar
+                </button>
+              )}
             </div>
           ) : rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">

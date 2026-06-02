@@ -47,12 +47,28 @@ export default function ProyectoCommandCenterPage({
   }
 
   if (query.isError || !query.data) {
-    const detail = query.error instanceof ProjectsApiError ? query.error.message : undefined;
+    let errorTitle = "No se pudo cargar este proyecto.";
+    let errorDetail: string | undefined;
+    if (query.error instanceof ProjectsApiError) {
+      if (query.error.status === 401) {
+        errorTitle = "Sesion expirada";
+        errorDetail = "Tu token de acceso ya no es valido. Reintenta o inicia sesion de nuevo.";
+      } else if (query.error.status === 403) {
+        errorTitle = "Sin permisos";
+        errorDetail = "No tienes acceso a este proyecto.";
+      } else if (query.error.status >= 500) {
+        errorTitle = "Error de servidor";
+        errorDetail = "El backend no pudo procesar la solicitud. Intenta de nuevo en unos momentos.";
+      } else if (query.error.status === 408 || query.error.status === 0) {
+        errorTitle = "Sin conexion";
+        errorDetail = "No se pudo conectar con el servidor. Verifica tu conexion a internet.";
+      }
+    }
     return (
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
         <GlassCard hover={false} className="mx-auto max-w-lg border border-rose-500/35 bg-gradient-to-br from-rose-950/40 via-white/[0.04] to-transparent p-8 text-center backdrop-blur-xl">
-          <p className="text-sm font-semibold text-rose-100">No se pudo cargar este proyecto.</p>
-          {detail ? <p className="mt-2 font-forgeMono text-[11px] text-rose-200/85">{detail}</p> : null}
+          <p className="text-sm font-semibold text-rose-100">{errorTitle}</p>
+          {errorDetail ? <p className="mt-2 text-[12px] text-rose-200/85">{errorDetail}</p> : null}
           <Button type="button" variant="secondary" className="mt-6 min-h-11 border-white/15 bg-white/10 text-white hover:bg-white/15" onClick={() => void query.refetch()}>
             Reintentar
           </Button>
