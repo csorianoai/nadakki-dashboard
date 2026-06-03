@@ -15,8 +15,24 @@ import type {
 
 const actorRole: BankActorRole = "bank_analyst";
 
-export function getQueue(params: { tenantId: string; filters?: Record<string, string> }): Promise<BankQueueResponse> {
-  const query = params.filters ? `?${new URLSearchParams(params.filters).toString()}` : "";
+export type BankQueueRequestParams = {
+  tenantId: string;
+  limit?: number;
+  offset?: number;
+  filters?: Record<string, string>;
+};
+
+export function getQueue(params: BankQueueRequestParams): Promise<BankQueueResponse> {
+  const search = new URLSearchParams();
+  if (params.limit != null) search.set("limit", String(params.limit));
+  if (params.offset != null) search.set("offset", String(params.offset));
+  if (params.filters) {
+    for (const [key, value] of Object.entries(params.filters)) {
+      const trimmed = String(value ?? "").trim();
+      if (trimmed) search.set(key, trimmed);
+    }
+  }
+  const query = search.toString() ? `?${search.toString()}` : "";
   return chFetch<BankQueueResponse>(`/api/v2/credit/applications/queue${query}`, {
     tenantId: params.tenantId,
     actorRole,

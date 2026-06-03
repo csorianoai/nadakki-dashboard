@@ -32,6 +32,21 @@ describe("bankClient", () => {
     expect(headers["X-Actor-Role"]).toBe("bank_analyst");
   });
 
+  test("getQueue sends limit, offset, and filters", async () => {
+    const fetchSpy = installFetchMock().mockResolvedValue(
+      await mockJson({ applications: [], total: 0, total_count: 0 })
+    );
+    await getQueue({
+      tenantId: "tenant-a",
+      limit: 20,
+      offset: 40,
+      filters: { q: "acme", status: "" },
+    });
+    expect(fetchSpy.mock.calls[0][0]).toBe(
+      "/api/v2/credit/applications/queue?limit=20&offset=40&q=acme"
+    );
+  });
+
   test("recordDecision posts to decide endpoint", async () => {
     const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({ decision: "APROBADO" }));
     await recordDecision({

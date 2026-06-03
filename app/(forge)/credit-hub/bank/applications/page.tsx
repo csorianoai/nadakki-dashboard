@@ -18,6 +18,8 @@ import {
   Textarea,
 } from "@/components/forge";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { BankQueuePagination } from "@/components/credit-hub/bank/BankQueuePagination";
+import { BANK_QUEUE_PAGE_SIZE, resolveBankQueueTotal } from "@/lib/credit-hub/bank/queuePagination";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useBulkActions } from "@/lib/credit-hub/hooks/useBulkActions";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
@@ -97,9 +99,17 @@ function BankApplicationsQueueInner() {
   const searchParams = useSearchParams();
   const { tenantConfig } = useTenantConfig();
   const empty = forgeEmptyCopy(tenantConfig.locale);
-  const queueQuery = useBankQueue();
-  const applications = queueQuery.data?.applications ?? [];
   const urlQ = searchParams.get("q") ?? "";
+  const urlPageRaw = searchParams.get("page") ?? "1";
+  const page = Math.max(1, Number.parseInt(urlPageRaw, 10) || 1);
+  const queueFilters = useMemo(() => (urlQ.trim() ? { q: urlQ.trim() } : undefined), [urlQ]);
+  const queueQuery = useBankQueue({
+    limit: BANK_QUEUE_PAGE_SIZE,
+    offset: (page - 1) * BANK_QUEUE_PAGE_SIZE,
+    filters: queueFilters,
+  });
+  const applications = queueQuery.data?.applications ?? [];
+  const queueTotal = resolveBankQueueTotal(queueQuery.data);
   const [search, setSearch] = useState(urlQ);
   const [selected, setSelected] = useState<string[]>([]);
   const [rule, setRule] = useState<BankBulkRule>("APROBAR_SCORE_GTE_800");
@@ -111,10 +121,17 @@ function BankApplicationsQueueInner() {
   }, [urlQ]);
 
   const replaceQuery = useCallback(
-    (q: string) => {
+    (next: { q?: string; page?: number }) => {
       const p = new URLSearchParams(searchParams.toString());
-      if (q.trim()) p.set("q", q.trim());
-      else p.delete("q");
+      if (next.q !== undefined) {
+        if (next.q.trim()) p.set("q", next.q.trim());
+        else p.delete("q");
+        p.delete("page");
+      }
+      if (next.page !== undefined) {
+        if (next.page > 1) p.set("page", String(next.page));
+        else p.delete("page");
+      }
       const qs = p.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
@@ -123,14 +140,21 @@ function BankApplicationsQueueInner() {
 
   useEffect(() => {
     if (search.trim() === urlQ.trim()) return;
-    const id = window.setTimeout(() => replaceQuery(search), 400);
+    const id = window.setTimeout(() => replaceQuery({ q: search }), 400);
     return () => window.clearTimeout(id);
   }, [search, urlQ, replaceQuery]);
 
   const clearFilters = () => {
     setSearch("");
-    replaceQuery("");
+    replaceQuery({ q: "" });
   };
+
+  const goToPage = useCallback(
+    (nextPage: number) => {
+      replaceQuery({ page: Math.max(1, nextPage) });
+    },
+    [replaceQuery]
+  );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -270,8 +294,10 @@ function BankApplicationsQueueInner() {
             Solicitudes priorizadas
           </h1>
           <p className="shrink-0 font-sans text-[13px] text-forgeGray-600 sm:text-right">
-            <span className="font-medium tabular-nums text-forgeGray-700">{filtered.length}</span>
-            <span className="text-forgeGray-500"> en vista · Última sync: </span>
+            <span className="font-medium tabular-nums text-forgeGray-700">
+              {queueTotal != null ? queueTotal : filtered.length}
+            </span>
+            <span className="text-forgeGray-500"> en bandeja · Última sync: </span>
             <span>{formatSyncAge(queueQuery.dataUpdatedAt, tenantConfig.locale)}</span>
           </p>
         </div>
@@ -302,7 +328,18 @@ function BankApplicationsQueueInner() {
           titleLevel={2}
           icon={<AlertCircle className="text-forgeDanger-500" />}
           title={empty.bankAppsErrorTitle}
-          description={empty.bankAppsErrorBody}
+          description="Error cargando la bandeja. Intente de nuevo."
+          action={
+            <Button
+              type="button"
+              variant="secondary"
+              className="min-h-12"
+              loading={queueQuery.isFetching}
+              onClick={() => void queueQuery.refetch()}
+            >
+              Reintentar
+            </Button>
+          }
         />
       ) : applications.length === 0 ? (
         <EmptyState titleLevel={2} icon={<Inbox />} title={empty.bankAppsEmptyTitle} description={empty.bankAppsEmptyBody} />
@@ -319,17 +356,28 @@ function BankApplicationsQueueInner() {
           }
         />
       ) : (
-        <DataTable<BankQueueItem>
-          getRowId={(r) => r.application_id}
-          getRowClassName={(row) =>
-            selected.includes(row.application_id)
-              ? "before:absolute before:inset-y-0 before:left-0 before:z-0 before:w-0.5 before:bg-forgeBrand-500"
-              : undefined
-          }
-          rows={filtered}
-          columns={columns}
-          emptyLabel="Sin filas"
-        />
+        <div className="space-y-4">
+          <DataTable<BankQueueItem>
+            getRowId={(r) => r.application_id}
+            getRowClassName={(row) =>
+              selected.includes(row.application_id)
+                ? "before:absolute before:inset-y-0 before:left-0 before:z-0 before:w-0.5 before:bg-forgeBrand-500"
+                : undefined
+            }
+            rows={filtered}
+            columns={columns}
+            emptyLabel="Sin filas"
+          />
+          <BankQueuePagination
+            page={page}
+            pageSize={BANK_QUEUE_PAGE_SIZE}
+            rowCount={filtered.length}
+            meta={queueQuery.data}
+            locale={tenantConfig.locale}
+            onPageChange={goToPage}
+            disabled={queueQuery.isFetching}
+          />
+        </div>
       )}
 
       {selected.length > 0 ? (
