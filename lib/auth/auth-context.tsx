@@ -44,7 +44,7 @@ export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
 }
 
 /** Max time to wait for refresh + /me during session init. */
-const SESSION_INIT_TIMEOUT_MS = 10_000;
+const SESSION_INIT_TIMEOUT_MS = 30_000;
 
 export interface AuthContextValue {
   user: UserInfo | null;
