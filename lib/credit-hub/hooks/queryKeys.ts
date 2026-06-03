@@ -16,8 +16,10 @@ export const chKeys = {
     ["credit-hub", "credit-core", "events", tenantId, applicationId] as const,
   creditAnalysis: (tenantId: string, applicationId: string) =>
     ["credit-hub", "credit-core", "analysis", tenantId, applicationId] as const,
-  bankQueue: (tenantId: string) =>
-    ["credit-hub", "bank", "queue", tenantId] as const,
+  bankQueue: (
+    tenantId: string,
+    query?: { limit?: number; offset?: number; filters?: Record<string, string> }
+  ) => ["credit-hub", "bank", "queue", tenantId, query ?? null] as const,
   bankApplication: (tenantId: string, applicationId: string) =>
     ["credit-hub", "bank", "application", tenantId, applicationId] as const,
   bankAnalytics: (tenantId: string, period = "30d") =>

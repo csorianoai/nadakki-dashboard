@@ -50,7 +50,10 @@ export interface BankQueueItem {
 
 export interface BankQueueResponse {
   applications: BankQueueItem[];
+  /** Legacy total field from API. */
   total: number;
+  /** Paginated queue total (PR #307); preferred when present. */
+  total_count?: number;
   tenant_id: string;
 }
 
