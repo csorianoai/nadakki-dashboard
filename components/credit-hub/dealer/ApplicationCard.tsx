@@ -27,9 +27,12 @@ function getInitials(name: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function formatTimeAgo(dateString: string): string {
+function formatTimeAgo(dateString: string | null | undefined): string {
+  if (!dateString) return "—";
   const date = new Date(dateString);
+  if (isNaN(date.getTime()) || date.getFullYear() < 2000) return "—";
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 0) return "—";
 
   if (seconds < 60) return "hace un momento";
   if (seconds < 3600) return `hace ${Math.floor(seconds / 60)} min`;
