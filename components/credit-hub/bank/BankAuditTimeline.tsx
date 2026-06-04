@@ -23,7 +23,7 @@ export function BankAuditTimeline({ audit }: { audit?: BankAuditTrail }) {
               <div>
                 <p className="font-medium text-forge-text">{event.event}</p>
                 <p className="text-xs text-forge-text-muted">
-                  {event.by} · {new Date(event.timestamp).toLocaleString("es-DO")}
+                  {event.by} · {event.timestamp && !isNaN(new Date(event.timestamp).getTime()) && new Date(event.timestamp).getFullYear() >= 2000 ? new Date(event.timestamp).toLocaleString("es-DO") : "\u2014"}
                 </p>
               </div>
             </div>
