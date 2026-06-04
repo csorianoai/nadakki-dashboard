@@ -149,14 +149,16 @@ export function middleware(request: NextRequest) {
   const token = authHeader.slice(7);
   const payload = decodeJwtPayload(token);
 
-  if (!payload || !payload.tid) {
+  // JWT claim: backend v2 uses "tenant_id", some legacy tokens use "tid"
+  const rawTid = payload?.tenant_id ?? payload?.tid;
+  if (!payload || !rawTid) {
     return NextResponse.json(
       { error: "Invalid token", code: "INVALID_TOKEN" },
       { status: 401 }
     );
   }
 
-  const jwtTid = String(payload.tid);
+  const jwtTid = String(rawTid);
   const roles = Array.isArray(payload.roles) ? payload.roles : [];
   const isPlatformSuperadmin = roles.some(
     (r: unknown) =>

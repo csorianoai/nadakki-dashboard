@@ -20,6 +20,7 @@ function readSrc(relPath: string): string {
 
 describe("BFF v2 proxy route handler", () => {
   const src = readSrc("app/api/v2/[[...path]]/route.ts");
+  const shared = readSrc("lib/api/bff-proxy-headers.ts");
 
   test("file exists and is non-empty", () => {
     expect(src.length).toBeGreaterThan(100);
@@ -45,8 +46,8 @@ describe("BFF v2 proxy route handler", () => {
     expect(src).toMatch(/export\s+async\s+function\s+DELETE/);
   });
 
-  test("forwards Authorization header", () => {
-    expect(src).toContain('req.headers.get("Authorization")');
+  test("forwards Authorization header via shared builder", () => {
+    expect(src).toContain("buildBffUpstreamHeaders");
   });
 
   test("targets /api/v2/ on backend", () => {
@@ -54,16 +55,17 @@ describe("BFF v2 proxy route handler", () => {
   });
 
   test("forwards X-Role header for bank endpoints", () => {
-    expect(src).toContain('"X-Role"');
+    expect(shared).toContain('"X-Role"');
   });
 
   test("forwards Idempotency-Key header", () => {
-    expect(src).toContain('"Idempotency-Key"');
+    expect(shared).toContain('"Idempotency-Key"');
   });
 });
 
 describe("BFF v1 proxy route handler", () => {
   const src = readSrc("app/api/v1/[[...path]]/route.ts");
+  const shared = readSrc("lib/api/bff-proxy-headers.ts");
 
   test("exports GET handler", () => {
     expect(src).toMatch(/export\s+async\s+function\s+GET/);
@@ -83,6 +85,15 @@ describe("BFF v1 proxy route handler", () => {
 
   test("exports DELETE handler", () => {
     expect(src).toMatch(/export\s+async\s+function\s+DELETE/);
+  });
+
+  test("forwards Authorization via shared BFF header builder", () => {
+    expect(src).toContain("buildBffUpstreamHeaders");
+    expect(shared).toMatch(/req\.headers\.get\("Authorization"\)/);
+  });
+
+  test("does not hardcode default tenant credicefi", () => {
+    expect(src).not.toMatch(/"credicefi"/);
   });
 });
 

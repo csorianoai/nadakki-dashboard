@@ -10,6 +10,7 @@
  * request to the Render backend.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { buildBffUpstreamHeaders, resolveBffTenantId } from "@/lib/api/bff-proxy-headers";
 
 const BACKEND_URL = (
   process.env.NEXT_PUBLIC_BACKEND_URL ||
@@ -29,55 +30,10 @@ async function proxyRequest(
   const query = url.search;
   const target = `${BACKEND_URL}/api/v2/${pathStr}${query}`;
 
-  // Use the resolved tenant_id from middleware (JWT-enforced),
-  // falling back to the raw header for backward compat.
-  const tenantId =
-    req.headers.get("x-resolved-tenant-id") ||
-    req.headers.get("x-tenant-id") ||
-    "";
+  const tenantId = resolveBffTenantId(req);
 
   try {
-    const headers: Record<string, string> = {};
-
-    // Forward content-type from original request (supports JSON + multipart)
-    const ct = req.headers.get("content-type");
-    if (ct) headers["Content-Type"] = ct;
-    if (!ct && method !== "GET" && method !== "HEAD") {
-      headers["Content-Type"] = "application/json";
-    }
-
-    if (tenantId) headers["X-Tenant-ID"] = tenantId;
-
-    // Forward Authorization header for backend RLS enforcement.
-    const auth =
-      req.headers.get("Authorization") || req.headers.get("authorization");
-    if (auth) headers["Authorization"] = auth;
-
-    // Forward role/actor headers used by bank endpoints
-    const role = req.headers.get("X-Role") || req.headers.get("x-role");
-    if (role) headers["X-Role"] = role;
-    const actorRole =
-      req.headers.get("X-Actor-Role") || req.headers.get("x-actor-role");
-    if (actorRole) headers["X-Actor-Role"] = actorRole;
-    const actorId =
-      req.headers.get("X-Actor-ID") || req.headers.get("x-actor-id");
-    if (actorId) headers["X-Actor-ID"] = actorId;
-    const correlationId =
-      req.headers.get("X-Correlation-ID") ||
-      req.headers.get("x-correlation-id");
-    if (correlationId) headers["X-Correlation-ID"] = correlationId;
-    const idempotencyKey =
-      req.headers.get("Idempotency-Key") ||
-      req.headers.get("idempotency-key");
-    if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
-
-    // SSE support
-    if (req.headers.get("Accept")?.includes("text/event-stream")) {
-      headers["Accept"] = "text/event-stream";
-    }
-    if (req.headers.get("Last-Event-ID")) {
-      headers["Last-Event-ID"] = req.headers.get("Last-Event-ID")!;
-    }
+    const headers = buildBffUpstreamHeaders(req, method, tenantId);
 
     const init: RequestInit = { method, headers };
     if (method !== "GET" && method !== "HEAD") {

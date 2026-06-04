@@ -24,6 +24,7 @@ import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useBulkActions } from "@/lib/credit-hub/hooks/useBulkActions";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { BankBulkRule, BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
+import { formatSyncAgeMs } from "@/lib/utils/formatTimestamp";
 import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
 function formatShortDateTime(iso: string | null, locale: string): string {
@@ -35,21 +36,6 @@ function formatShortDateTime(iso: string | null, locale: string): string {
     return "—";
   }
 }
-
-function formatSyncAge(dataUpdatedAt: number | undefined, locale: string): string {
-  if (dataUpdatedAt == null || Number.isNaN(dataUpdatedAt)) return "—";
-  const sec = Math.max(0, Math.floor((Date.now() - dataUpdatedAt) / 1000));
-  const loc = locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US";
-  const rtf = new Intl.RelativeTimeFormat(loc, { numeric: "auto" });
-  if (sec < 45) return rtf.format(-sec, "second");
-  const min = Math.floor(sec / 60);
-  if (min < 60) return rtf.format(-min, "minute");
-  const hr = Math.floor(min / 60);
-  if (hr < 72) return rtf.format(-hr, "hour");
-  const day = Math.floor(hr / 24);
-  return rtf.format(-day, "day");
-}
-
 
 function formatDop(value: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(value || 0);
@@ -298,7 +284,7 @@ function BankApplicationsQueueInner() {
               {queueTotal != null ? queueTotal : filtered.length}
             </span>
             <span className="text-forgeGray-500"> en bandeja · Última sync: </span>
-            <span>{formatSyncAge(queueQuery.dataUpdatedAt, tenantConfig.locale)}</span>
+            <span>{formatSyncAgeMs(queueQuery.dataUpdatedAt, tenantConfig.locale)}</span>
           </p>
         </div>
         <p className="mt-2 text-forge-sm text-forgeGray-600">{t.bank.applications_subtitle}</p>
