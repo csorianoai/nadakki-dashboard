@@ -1,5 +1,6 @@
 // NEVER forward to /run (RLS bug on backend).
 import { NextRequest, NextResponse } from "next/server";
+import { buildBffUpstreamHeaders, resolveBffTenantId } from "@/lib/api/bff-proxy-headers";
 
 const BACKEND_URL = (
   process.env.NEXT_PUBLIC_BACKEND_URL ||
@@ -33,28 +34,10 @@ async function proxyRequest(
   const url = new URL(req.url);
   const query = url.search;
   const target = `${BACKEND_URL}/api/v1/${pathStr}${query}`;
-  // Use the resolved tenant_id from middleware (JWT-enforced),
-  // falling back to the raw header for backward compat.
-  const tenantId =
-    req.headers.get("x-resolved-tenant-id") ||
-    req.headers.get("x-tenant-id") ||
-    "credicefi";
+  const tenantId = resolveBffTenantId(req);
 
   try {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "X-Tenant-ID": tenantId,
-    };
-    // Always forward the Authorization header so the backend
-    // RLS middleware can enforce tenant isolation server-side.
-    const auth = req.headers.get("Authorization") || req.headers.get("authorization");
-    if (auth) headers["Authorization"] = auth;
-    if (req.headers.get("Accept")?.includes("text/event-stream")) {
-      headers["Accept"] = "text/event-stream";
-    }
-    if (req.headers.get("Last-Event-ID")) {
-      headers["Last-Event-ID"] = req.headers.get("Last-Event-ID")!;
-    }
+    const headers = buildBffUpstreamHeaders(req, method, tenantId);
 
     const init: RequestInit = { method, headers };
     if (method !== "GET" && method !== "HEAD") {

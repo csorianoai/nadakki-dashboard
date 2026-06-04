@@ -6,6 +6,7 @@ import { ArrowRight, Car, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
+import { formatTimeAgo } from "@/lib/utils/formatTimestamp";
 import { ApplicationStatusBadge } from "./ApplicationStatusBadge";
 
 function getAvatarColors(name: string): { bg: string; text: string } {
@@ -25,20 +26,6 @@ function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
-
-function formatTimeAgo(dateString: string | null | undefined): string {
-  if (!dateString) return "\u2014";
-  const date = new Date(dateString);
-  if (isNaN(date.getTime()) || date.getFullYear() < 2000) return "\u2014";
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 0) return "\u2014";
-
-  if (seconds < 60) return "hace un momento";
-  if (seconds < 3600) return `hace ${Math.floor(seconds / 60)} min`;
-  if (seconds < 86400) return `hace ${Math.floor(seconds / 3600)}h`;
-  if (seconds < 604800) return `hace ${Math.floor(seconds / 86400)}d`;
-  return date.toLocaleDateString("es-DO", { day: "numeric", month: "short" });
 }
 
 function statusBarClass(status: string): string {

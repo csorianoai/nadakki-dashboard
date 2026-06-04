@@ -23,6 +23,7 @@ import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { cn } from "@/lib/utils";
 import { formatForgeCurrency } from "@/utils/forge-locale";
+import { formatSyncAgeMs } from "@/lib/utils/formatTimestamp";
 import { forgeEmptyCopy } from "@/utils/forge-empty-copy";
 
 function formatShortDateTime(iso: string, locale: string): string {
@@ -32,20 +33,6 @@ function formatShortDateTime(iso: string, locale: string): string {
   } catch {
     return "—";
   }
-}
-
-function formatSyncAge(dataUpdatedAt: number | undefined, locale: string): string {
-  if (dataUpdatedAt == null || Number.isNaN(dataUpdatedAt)) return "—";
-  const sec = Math.max(0, Math.floor((Date.now() - dataUpdatedAt) / 1000));
-  const loc = locale.toLowerCase().startsWith("es") ? "es-DO" : "en-US";
-  const rtf = new Intl.RelativeTimeFormat(loc, { numeric: "auto" });
-  if (sec < 45) return rtf.format(-sec, "second");
-  const min = Math.floor(sec / 60);
-  if (min < 60) return rtf.format(-min, "minute");
-  const hr = Math.floor(min / 60);
-  if (hr < 72) return rtf.format(-hr, "hour");
-  const day = Math.floor(hr / 24);
-  return rtf.format(-day, "day");
 }
 
 const FILTER_IDS = ["all", "draft", "submitted", "processing", "approved", "rejected"] as const;
@@ -254,7 +241,7 @@ function DealerApplicationsListInner() {
               <p className="shrink-0 font-sans text-[13px] text-forgeGray-600 sm:text-right">
                 <span className="font-medium tabular-nums text-forgeGray-700">{filtered.length}</span>
                 <span className="text-forgeGray-500"> en vista · Última sync: </span>
-                <span>{formatSyncAge(applicationsQuery.dataUpdatedAt, tenantConfig.locale)}</span>
+                <span>{formatSyncAgeMs(applicationsQuery.dataUpdatedAt, tenantConfig.locale)}</span>
               </p>
             </div>
             {persona === "bank" ? (
