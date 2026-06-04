@@ -1,4 +1,14 @@
-// NEVER forward to /run (RLS bug on backend).
+/**
+ * BFF catch-all proxy for /api/v2/* -> Render backend.
+ *
+ * Mirrors app/api/v1/[[...path]]/route.ts but targets /api/v2/.
+ * Bank decision, claim, detail, queue, analytics, and other v2 endpoints
+ * use relative URLs (/api/v2/credit/...) that hit this handler.
+ *
+ * The Next.js Edge middleware (middleware.ts) runs first, enforcing
+ * tenant isolation via JWT claims before this handler forwards the
+ * request to the Render backend.
+ */
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = (
@@ -15,40 +25,53 @@ async function proxyRequest(
   method: string
 ): Promise<NextResponse> {
   const pathStr = path.join("/");
-  // Block legacy tenant run endpoints that hit /run (RLS); allow known safe /run paths:
-  // - ops/google-ads-agent/checks/run (Agent check runner)
-  // - governance/run (NGC audit trigger)
-  const isGoogleAdsAgentOpsChecks = pathStr.startsWith("ops/google-ads-agent/checks/");
-  const isGovernanceRun = pathStr === "governance/run";
-  if (
-    !isGoogleAdsAgentOpsChecks &&
-    !isGovernanceRun &&
-    (pathStr.includes("/run") || path[path.length - 1] === "run")
-  ) {
-    return NextResponse.json(
-      { error: "/run is disabled; use /execute instead (RLS bug)" },
-      { status: 400 }
-    );
-  }
   const url = new URL(req.url);
   const query = url.search;
-  const target = `${BACKEND_URL}/api/v1/${pathStr}${query}`;
+  const target = `${BACKEND_URL}/api/v2/${pathStr}${query}`;
+
   // Use the resolved tenant_id from middleware (JWT-enforced),
   // falling back to the raw header for backward compat.
   const tenantId =
     req.headers.get("x-resolved-tenant-id") ||
     req.headers.get("x-tenant-id") ||
-    "credicefi";
+    "";
 
   try {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "X-Tenant-ID": tenantId,
-    };
-    // Always forward the Authorization header so the backend
-    // RLS middleware can enforce tenant isolation server-side.
-    const auth = req.headers.get("Authorization") || req.headers.get("authorization");
+    const headers: Record<string, string> = {};
+
+    // Forward content-type from original request (supports JSON + multipart)
+    const ct = req.headers.get("content-type");
+    if (ct) headers["Content-Type"] = ct;
+    if (!ct && method !== "GET" && method !== "HEAD") {
+      headers["Content-Type"] = "application/json";
+    }
+
+    if (tenantId) headers["X-Tenant-ID"] = tenantId;
+
+    // Forward Authorization header for backend RLS enforcement.
+    const auth =
+      req.headers.get("Authorization") || req.headers.get("authorization");
     if (auth) headers["Authorization"] = auth;
+
+    // Forward role/actor headers used by bank endpoints
+    const role = req.headers.get("X-Role") || req.headers.get("x-role");
+    if (role) headers["X-Role"] = role;
+    const actorRole =
+      req.headers.get("X-Actor-Role") || req.headers.get("x-actor-role");
+    if (actorRole) headers["X-Actor-Role"] = actorRole;
+    const actorId =
+      req.headers.get("X-Actor-ID") || req.headers.get("x-actor-id");
+    if (actorId) headers["X-Actor-ID"] = actorId;
+    const correlationId =
+      req.headers.get("X-Correlation-ID") ||
+      req.headers.get("x-correlation-id");
+    if (correlationId) headers["X-Correlation-ID"] = correlationId;
+    const idempotencyKey =
+      req.headers.get("Idempotency-Key") ||
+      req.headers.get("idempotency-key");
+    if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+
+    // SSE support
     if (req.headers.get("Accept")?.includes("text/event-stream")) {
       headers["Accept"] = "text/event-stream";
     }
@@ -65,23 +88,12 @@ async function proxyRequest(
     const res = await fetch(target, { ...init, cache: "no-store" });
     const text = await res.text().catch(() => "");
 
-    const isRunsPath =
-      Array.isArray(path) &&
-      path.length >= 3 &&
-      path[0] === "tenants" &&
-      path[2] === "runs";
-
     if (!res.ok) {
-      if (isRunsPath && (res.status === 500 || res.status === 503)) {
-        const limit = Number(req.nextUrl.searchParams.get("limit") ?? "20") || 20;
-        const offset = Number(req.nextUrl.searchParams.get("offset") ?? "0") || 0;
-        return NextResponse.json(
-          { runs: [], pagination: { limit, offset, total: 0 } },
-          { status: 200 }
-        );
-      }
       return NextResponse.json(
-        { error: `Upstream error ${res.status}`, details: text.slice(0, 500) },
+        {
+          error: `Upstream error ${res.status}`,
+          details: text.slice(0, 500),
+        },
         { status: res.status }
       );
     }
