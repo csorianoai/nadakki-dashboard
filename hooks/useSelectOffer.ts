@@ -20,9 +20,11 @@ export interface UseSelectOfferResult {
   error: Error | null;
 }
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_NADAKKI_API_URL ??
-  "https://nadakki-ai-suite.onrender.com";
+/**
+ * CORS fix (Audit #4.1): Always use relative URLs in the browser so requests
+ * route through the Next.js BFF same-origin proxy instead of hitting the
+ * Render backend directly (which rejects the OPTIONS preflight).
+ */
 
 const LEGACY_ACCESS_TOKEN_STORAGE_KEY = "nadakki_sic_token";
 
@@ -76,7 +78,7 @@ export function useSelectOffer(
 
   const buildUrl = useCallback(
     (offerId: string): string =>
-      `${BACKEND_URL}/api/v2/credit/applications/${applicationId}/offers/${offerId}/accept`,
+      `/api/v2/credit/applications/${applicationId}/offers/${offerId}/accept`,
     [applicationId],
   );
 

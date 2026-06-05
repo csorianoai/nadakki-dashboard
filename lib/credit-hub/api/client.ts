@@ -38,8 +38,16 @@ export interface CHRequestInit extends Omit<RequestInit, "headers"> {
 const LEGACY_ACCESS_TOKEN_STORAGE_KEY = "nadakki_sic_token";
 const DASHBOARD_ROLE_KEY = "nadakki_role";
 
-/** Canonical fallback chain — matches fetch-client.ts and credit-api.ts. */
+/** Canonical fallback chain — matches fetch-client.ts and credit-api.ts.
+ *
+ * CORS fix (Audit #4.1): In the browser, always return "" so chFetch
+ * uses relative URLs that route through Next.js same-origin (rewrites
+ * or BFF catch-all). The external base URL is only used server-side.
+ */
 function getCreditHubApiBaseUrl(): string {
+  // Browser: always use relative paths → same-origin via Next.js proxy
+  if (typeof window !== "undefined") return "";
+
   const raw =
     process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
