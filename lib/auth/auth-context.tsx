@@ -14,6 +14,36 @@ import {
 } from "@/lib/api/auth-v2";
 import { tokenStorage } from "./token-storage";
 
+// ── localStorage keys that must stay in sync with JWT claims ──────────────
+const LS_KEYS = {
+  auth: "nadakki_auth",
+  tenantId: "nadakki_tenant_id",
+  tenantName: "nadakki_tenant_name",
+  role: "nadakki_role",
+  plan: "nadakki_plan",
+  sicToken: "nadakki_sic_token",
+} as const;
+
+/** Write tenant/role state to localStorage so legacy contexts, WebSocket
+ *  client, and fetch-client all see the current JWT-derived values. */
+function syncLocalStorage(tenant: TenantInfo, role?: RoleInfo | null, accessToken?: string) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LS_KEYS.auth, "true");
+  localStorage.setItem(LS_KEYS.tenantId, tenant.id);
+  localStorage.setItem(LS_KEYS.tenantName, tenant.display_name);
+  if (role) localStorage.setItem(LS_KEYS.role, role.role_key);
+  localStorage.setItem(LS_KEYS.plan, "pro");
+  if (accessToken) localStorage.setItem(LS_KEYS.sicToken, accessToken);
+}
+
+/** Clear all nadakki_* keys on logout. */
+function clearLocalStorage() {
+  if (typeof window === "undefined") return;
+  for (const key of Object.values(LS_KEYS)) {
+    localStorage.removeItem(key);
+  }
+}
+
 const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
   platform_superadmin: "/",
   tenant_admin: "/",
@@ -116,9 +146,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(me.data.user);
             setTenant(me.data.current_tenant);
             setAllRoles(me.data.active_roles);
-            if (me.data.active_roles.length > 0) {
-              setActiveRole(me.data.active_roles[0]);
-            }
+            const firstRole = me.data.active_roles.length > 0 ? me.data.active_roles[0] : null;
+            if (firstRole) setActiveRole(firstRole);
+            // Keep localStorage in sync on session restore
+            syncLocalStorage(me.data.current_tenant, firstRole, result.data.access_token);
           }
         } else {
           tokenStorage.clearTokens();
@@ -151,6 +182,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(result.data.user_info);
     setTenant(result.data.tenant_info);
     setActiveRole(result.data.active_role);
+
+    // P0 #1 fix: sync localStorage so legacy contexts, WebSocket client,
+    // and fetch-client all use the JWT-derived tenant_id (not stale value).
+    syncLocalStorage(result.data.tenant_info, result.data.active_role, result.data.access_token);
+
     const me = await getMeV2(result.data.access_token);
     const roles = me.ok && me.data ? me.data.active_roles : [result.data.active_role];
     setAllRoles(roles);
@@ -161,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = tokenStorage.getAccessToken();
     if (token) await logoutV2(token);
     tokenStorage.clearTokens();
+    clearLocalStorage();
     setUser(null);
     setTenant(null);
     setActiveRole(null);
@@ -178,9 +215,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setTenant(result.data.new_tenant);
     setAllRoles(result.data.active_roles);
-    if (result.data.active_roles.length > 0) {
-      setActiveRole(result.data.active_roles[0]);
-    }
+    const newRole = result.data.active_roles.length > 0 ? result.data.active_roles[0] : null;
+    if (newRole) setActiveRole(newRole);
+    syncLocalStorage(result.data.new_tenant, newRole, result.data.access_token);
     return { ok: true };
   };
 
