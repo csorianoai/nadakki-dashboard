@@ -6,6 +6,7 @@ import type {
   BankDashboardAnalytics,
   BankDecision,
   BankDecisionRequest,
+  BankDecisionType,
   BankQueueResponse,
   BankReviewApplication,
   BulkDecisionResult,
@@ -14,6 +15,62 @@ import type {
 } from "../types/bankDecision";
 
 const actorRole: BankActorRole = "bank_analyst";
+
+/**
+ * Map legacy Spanish decision values to backend enum.
+ * Backend DecideRequest expects: "APPROVE" | "REJECT" | "COUNTER".
+ */
+const DECISION_TYPE_MAP: Record<BankDecisionType, string> = {
+  APROBADO: "APPROVE",
+  RECHAZADO: "REJECT",
+  CONTRA_OFERTA: "COUNTER",
+  EN_REVISION: "COUNTER", // treated as counter with no_match
+};
+
+/** Default reason code per decision type (backend requires min 1). */
+const DEFAULT_REASON_CODE: Record<string, string[]> = {
+  APPROVE: ["RC001_APPROVE"],
+  REJECT: ["RC101_REJECT_CREDIT_POLICY"],
+  COUNTER: ["RC201_COUNTER_AMOUNT"],
+};
+
+/**
+ * Transform legacy BankDecisionRequest → backend DecideRequest.
+ *
+ * Audit #4.2: The legacy payload sent `decision` (Spanish) + flat `terms`.
+ * The backend expects `decision_type` (English enum) + `counter_terms`
+ * (only for COUNTER) + `reason_codes` (required, min 1).
+ */
+function toBankDecideRequestBody(legacy: BankDecisionRequest): Record<string, unknown> {
+  const decisionType = DECISION_TYPE_MAP[legacy.decision] ?? legacy.decision;
+  const reasonCodes = DEFAULT_REASON_CODE[decisionType] ?? ["RC001_APPROVE"];
+
+  const body: Record<string, unknown> = {
+    decision_type: decisionType,
+    reason_codes: reasonCodes,
+    notes: legacy.justification || "",
+    adverse_action: decisionType === "REJECT",
+  };
+
+  if (decisionType === "COUNTER") {
+    body.counter_terms = {
+      amount: legacy.terms.approved_amount,
+      interest_rate: legacy.terms.interest_rate,
+      term_months: legacy.terms.term_months,
+      down_payment_pct: legacy.terms.down_payment_required,
+      no_match: legacy.decision === "EN_REVISION",
+    };
+  }
+
+  if (decisionType === "APPROVE" && legacy.terms.conditions.length > 0) {
+    body.stipulations = legacy.terms.conditions.map((cond, i) => ({
+      code: `STIP-${i + 1}`,
+      description: cond,
+    }));
+  }
+
+  return body;
+}
 
 export type BankQueueRequestParams = {
   tenantId: string;
@@ -54,11 +111,12 @@ export function recordDecision(params: {
   applicationId: string;
   body: BankDecisionRequest;
 }): Promise<BankDecision> {
+  const backendBody = toBankDecideRequestBody(params.body);
   return chFetch<BankDecision>(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/decide`, {
     tenantId: params.tenantId,
     actorRole,
     method: "POST",
-    body: JSON.stringify(params.body),
+    body: JSON.stringify(backendBody),
   });
 }
 
