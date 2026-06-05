@@ -107,3 +107,14 @@ export async function DELETE(
   const { path = [] } = await params;
   return proxyRequest(req, path, "DELETE");
 }
+
+/**
+ * OPTIONS handler — defence-in-depth for CORS preflight.
+ *
+ * Browsers send OPTIONS with custom headers (Authorization, X-Tenant-ID).
+ * Since the BFF is same-origin, the browser should NOT send a preflight, but
+ * if a misconfigured client or proxy does, returning 204 prevents a hard 405.
+ */
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 });
+}
