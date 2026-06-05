@@ -1,10 +1,13 @@
 "use client";
 
 import { tokenStorage } from "@/lib/auth/token-storage";
+import { refreshAccessToken, isTokenExpiringSoon } from "@/lib/auth/token-refresh";
 
 export type ApiFetchInit = RequestInit & {
   /** Skip Bearer injection (e.g. legacy `/api/v1/auth/login` before tokens exist). */
   skipAuthHeaders?: boolean;
+  /** Skip retry-on-401 logic (used internally to prevent recursion). */
+  _isRetry?: boolean;
 };
 
 /**
@@ -43,9 +46,18 @@ export function getAuthHeaders(): Record<string, string> {
 /**
  * Browser fetch with backend base URL + optional Bearer (unless {@link ApiFetchInit.skipAuthHeaders}).
  * Keeps caller headers; fills Authorization only when absent.
+ *
+ * Audit #4 P1: On 401, attempts a single token refresh + retry.
+ * If the retry also fails, returns the 401 response without looping.
  */
 export async function apiFetch(path: string, init: ApiFetchInit = {}): Promise<Response> {
-  const { skipAuthHeaders, ...fetchInit } = init;
+  const { skipAuthHeaders, _isRetry, ...fetchInit } = init;
+
+  // Layer 1 (proactive): if token is about to expire, refresh before the request
+  if (!skipAuthHeaders && !_isRetry && isTokenExpiringSoon(30)) {
+    await refreshAccessToken();
+  }
+
   const url = resolveApiUrl(path);
   const headers = new Headers(fetchInit.headers ?? undefined);
 
@@ -61,9 +73,19 @@ export async function apiFetch(path: string, init: ApiFetchInit = {}): Promise<R
     headers.set("Content-Type", "application/json");
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...fetchInit,
     headers,
     credentials: fetchInit.credentials ?? "include",
   });
+
+  // Layer 2 (reactive): retry once on 401 with a refreshed token
+  if (response.status === 401 && !skipAuthHeaders && !_isRetry) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      return apiFetch(path, { ...init, _isRetry: true });
+    }
+  }
+
+  return response;
 }
