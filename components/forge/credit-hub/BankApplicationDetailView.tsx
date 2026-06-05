@@ -36,6 +36,7 @@ import type {
   BankReviewApplication,
   ComplianceReport,
 } from "@/lib/credit-hub/types/bankDecision";
+import { useAuth } from "@/hooks/useAuth";
 
 function defaultTerms(application: BankReviewApplication): BankDecisionTerms {
   const analysis = application.application_payload.analysis;
@@ -134,6 +135,7 @@ export interface BankApplicationDetailViewProps {
 export function BankApplicationDetailView({ application, compliance, audit }: BankApplicationDetailViewProps) {
   const persona = usePersona();
   const t = useTranslations();
+  const { user } = useAuth();
   const payload = application.application_payload;
   const analysis = payload.analysis;
   const applicant = payload.applicant as Record<string, unknown> | undefined;
@@ -174,7 +176,7 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
     const body: BankDecisionRequest = {
       decision: decisionModal.decision,
       justification: modalComment.trim(),
-      analyst_id: "bank-analyst-demo",
+      analyst_id: user?.id || "unknown",
       terms,
     };
     const lang = forgeToastLangFromLocale(tenantConfig.locale);

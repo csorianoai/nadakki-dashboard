@@ -9,6 +9,7 @@ import { BankCounterOfferModal } from "./BankCounterOfferModal";
 import { BankDecisionForm } from "./BankDecisionForm";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { forgeBankDecisionToasts, forgeToastLangFromLocale, formatToastApplicationId } from "@/utils/forge-toast-copy";
+import { useAuth } from "@/hooks/useAuth";
 
 function defaultTerms(application?: BankReviewApplication): BankDecisionTerms {
   const analysis = application?.application_payload.analysis;
@@ -24,6 +25,7 @@ function defaultTerms(application?: BankReviewApplication): BankDecisionTerms {
 
 export function BankDecisionPanel({ application }: { application: BankReviewApplication }) {
   const t = useTranslations();
+  const { user } = useAuth();
   const { tenantConfig } = useTenantConfig();
   const decisionMutation = useBankDecision(application.application_id);
   const counterOfferQuery = useBankCounterOffer(application.application_id);
@@ -40,6 +42,7 @@ export function BankDecisionPanel({ application }: { application: BankReviewAppl
       <BankDecisionForm
         defaultTerms={defaultTerms(application)}
         counterOffer={counterOfferQuery.data}
+        analystId={user?.id}
         loading={decisionMutation.isPending}
         onSubmit={async (body: BankDecisionRequest) => {
           const lang = forgeToastLangFromLocale(tenantConfig.locale);

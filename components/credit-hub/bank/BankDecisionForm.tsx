@@ -17,11 +17,14 @@ const decisionOptions: Array<[BankDecisionType, string]> = [
 export function BankDecisionForm({
   defaultTerms,
   counterOffer,
+  analystId,
   onSubmit,
   loading,
 }: {
   defaultTerms: BankDecisionTerms;
   counterOffer?: CounterOffer;
+  /** Analyst identifier from auth context. Falls back to "unknown" if not provided. */
+  analystId?: string;
   onSubmit: (body: BankDecisionRequest) => void | Promise<void>;
   loading?: boolean;
 }) {
@@ -80,7 +83,7 @@ export function BankDecisionForm({
         size="lg"
         loading={loading}
         disabled={!justification.trim()}
-        onClick={() => onSubmit({ decision, justification, analyst_id: "bank-analyst-demo", terms })}
+        onClick={() => onSubmit({ decision, justification, analyst_id: analystId || "unknown", terms })}
       >
         Confirmar decisión
       </ForgeButton>
