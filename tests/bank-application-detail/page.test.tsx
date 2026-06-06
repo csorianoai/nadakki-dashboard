@@ -9,7 +9,11 @@ jest.mock("@/lib/bank-application-detail/fetch-detail", () => ({
 }));
 
 jest.mock("@/lib/bank-application-detail/claim-application", () => ({
-  claimBankApplication: jest.fn().mockResolvedValue({ ok: true, status: 204 }),
+  claimBankApplication: jest.fn().mockResolvedValue({ ok: true, status: 200 }),
+}));
+
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: { id: "test-analyst-id", email: "test@test.com", is_active: true, mfa_enabled: false } }),
 }));
 
 jest.mock("next/navigation", () => ({

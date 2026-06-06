@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ import { ScoringSection } from "./components/ScoringSection";
 import { StipulationsPanel } from "./components/StipulationsPanel";
 import { VehicleSection } from "./components/VehicleSection";
 import { DecisionFormModal } from "./components/DecisionFormModal";
+import { useAuth } from "@/hooks/useAuth";
 import { captureApiError } from "@/lib/observability/telemetry";
 import { trackCriticalUserAction } from "@/lib/observability/user-actions";
 import { DocumentPreviewPane } from "@/components/bank/DocumentPreviewPane";
@@ -40,6 +41,7 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
   const router = useRouter();
   const pathname = usePathname();
   const { tenantId } = useTenant();
+  const { user } = useAuth();
 
   const [detail, setDetail] = useState<BankApplicationDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,6 +49,7 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
   const [claimLoading, setClaimLoading] = useState(false);
   const [decisionOpen, setDecisionOpen] = useState(false);
   const [previewDocId, setPreviewDocId] = useState<string | null>(null);
+  const autoClaimAttempted = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -108,12 +111,36 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
     void load();
   }, [load]);
 
+  // Auto-claim on mount (Audit #4.4 — backend requires claim before decide).
+  // Fires once after detail loads. Idempotent: self-retry returns 200.
+  useEffect(() => {
+    if (!detail || autoClaimAttempted.current) return;
+    if (detail.bank_claim?.current_user_owns === true) return;
+    const status = detail.queue_status;
+    if (status !== "pending" && status !== "reviewing") return;
+    const analystId = user?.id;
+    if (!analystId) return;
+
+    autoClaimAttempted.current = true;
+    void (async () => {
+      try {
+        const res = await claimBankApplication(id, analystId);
+        if (res.ok || res.status === 409) {
+          await load();
+        }
+      } catch {
+        // Network error — silently ignore, manual Reclamar button still available
+      }
+    })();
+  }, [detail, id, load, user?.id]);
+
   const handleClaim = useCallback(async () => {
     setClaimLoading(true);
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), OPTIMISTIC_CLAIM_TIMEOUT_MS);
     try {
-      const res = await claimBankApplication(id, controller.signal);
+      const analystId = user?.id || "unknown";
+      const res = await claimBankApplication(id, analystId, controller.signal);
       window.clearTimeout(timer);
       if (res.status === 401) {
         window.location.href = `/login?next=${encodeURIComponent(pathname)}`;
@@ -161,7 +188,7 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
     } finally {
       setClaimLoading(false);
     }
-  }, [id, load, pathname, tenantId]);
+  }, [id, load, pathname, tenantId, user?.id]);
 
   const handleDecide = useCallback(() => {
     const owns = detail?.bank_claim?.current_user_owns === true;
