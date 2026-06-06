@@ -106,13 +106,41 @@ export function getApplicationForReview(params: {
   });
 }
 
-export function recordDecision(params: {
+/**
+ * Claim-before-decide (Audit #4.6).
+ *
+ * Backend requires POST /claim before POST /decide. Instead of relying on
+ * useEffect (which failed in production — 0 invocations despite being in
+ * bundle), we claim atomically right before deciding in the handler itself.
+ *
+ * Idempotent: self-retry returns 200, so calling claim on every decide is safe.
+ * 409 = another analyst owns it → throw (correct behavior, cannot decide).
+ */
+export async function recordDecision(params: {
   tenantId: string;
   applicationId: string;
   body: BankDecisionRequest;
 }): Promise<BankDecision> {
+  const analystId = params.body.analyst_id || "unknown";
+  const appPath = `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}`;
+
+  // Step 1: Claim (idempotent — self-retry = 200, other-analyst = 409 throw)
+  console.log("[claim-before-decide] attempting claim", {
+    applicationId: params.applicationId,
+    analystId,
+    decisionType: params.body.decision,
+  });
+  await chFetch<unknown>(`${appPath}/claim`, {
+    tenantId: params.tenantId,
+    actorRole,
+    method: "POST",
+    body: JSON.stringify({ analyst_id: analystId }),
+  });
+  console.log("[claim-before-decide] claim succeeded, proceeding to decide");
+
+  // Step 2: Decide (app is now claimed by us)
   const backendBody = toBankDecideRequestBody(params.body);
-  return chFetch<BankDecision>(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/decide`, {
+  return chFetch<BankDecision>(`${appPath}/decide`, {
     tenantId: params.tenantId,
     actorRole,
     method: "POST",
