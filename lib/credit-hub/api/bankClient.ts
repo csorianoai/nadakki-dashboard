@@ -210,3 +210,41 @@ export function getAuditTrail(params: { tenantId: string; applicationId: string 
     actorRole,
   });
 }
+
+export interface ComplianceApproval {
+  status: "approved";
+  approved_at: string;
+  approved_by: string;
+}
+
+/** Check compliance approval stamped in application payload (Ley 172-13). */
+export function isComplianceApproved(application: Pick<BankReviewApplication, "application_payload"> | null | undefined): boolean {
+  const ca = application?.application_payload?.compliance_approval as { status?: string } | undefined;
+  return ca?.status === "approved";
+}
+
+/**
+ * Approve compliance for an application (Sub-K / PR #313).
+ * Idempotent on backend — safe to call when already approved.
+ */
+export async function approveCompliance(params: {
+  tenantId: string;
+  applicationId: string;
+  notes?: string;
+}): Promise<{ ok: true; compliance: ComplianceApproval } | { ok: false; error: string }> {
+  try {
+    const data = await chFetch<{ compliance: ComplianceApproval }>(
+      `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/compliance/approve`,
+      {
+        tenantId: params.tenantId,
+        actorRole: "compliance_officer",
+        method: "POST",
+        body: JSON.stringify({ notes: params.notes ?? "Compliance verified - Ley 172-13" }),
+      }
+    );
+    return { ok: true, compliance: data.compliance };
+  } catch (err) {
+    const error = err instanceof Error ? err.message : "unknown";
+    return { ok: false, error };
+  }
+}
