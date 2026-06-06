@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { FileText, MessageSquareText, ScrollText, Shield, Sparkles } from "lucide-react";
 import { CreditAnalysisPanel } from "@/components/credit-hub/dealer/analysis/CreditAnalysisPanel";
 import { ScoreVisual } from "@/components/credit-hub/dealer/analysis/ScoreVisual";
@@ -37,6 +37,7 @@ import type {
   ComplianceReport,
 } from "@/lib/credit-hub/types/bankDecision";
 import { useAuth } from "@/hooks/useAuth";
+import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
 
 function defaultTerms(application: BankReviewApplication): BankDecisionTerms {
   const analysis = application.application_payload.analysis;
@@ -146,6 +147,17 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
   const decisionMutation = useBankDecision(application.application_id);
   const counterOfferQuery = useBankCounterOffer(application.application_id);
   const existing = payload.bank_decision;
+
+  // Auto-claim on mount (Audit #4.4 — backend requires claim before decide).
+  const autoClaimAttempted = useRef(false);
+  useEffect(() => {
+    if (autoClaimAttempted.current) return;
+    if (existing) return; // decision already made — skip claim
+    const analystId = user?.id;
+    if (!analystId) return;
+    autoClaimAttempted.current = true;
+    void claimBankApplication(application.application_id, analystId).catch(() => {});
+  }, [application.application_id, existing, user?.id]);
 
   const [tab, setTab] = useState("overview");
   const [terms, setTerms] = useState<BankDecisionTerms>(() => defaultTerms(application));
