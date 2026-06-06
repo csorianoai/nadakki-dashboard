@@ -23,7 +23,9 @@ import {
   toast,
   type StatusPillTone,
 } from "@/components/forge";
+import { approveCompliance, isComplianceApproved } from "@/lib/credit-hub/api/bankClient";
 import { useBankCounterOffer, useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { forgeBankDecisionToasts, forgeToastLangFromLocale, formatToastApplicationId } from "@/utils/forge-toast-copy";
@@ -136,6 +138,7 @@ export interface BankApplicationDetailViewProps {
 export function BankApplicationDetailView({ application, compliance, audit }: BankApplicationDetailViewProps) {
   const persona = usePersona();
   const t = useTranslations();
+  const { tenantId } = useTenant();
   const { user } = useAuth();
   const payload = application.application_payload;
   const analysis = payload.analysis;
@@ -164,6 +167,34 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
   const [decisionModal, setDecisionModal] = useState<null | { decision: BankDecisionType; title: string }>(null);
   const [modalComment, setModalComment] = useState("");
   const [drawer, setDrawer] = useState<null | { title: string; description: string }>(null);
+  const [complianceApproving, setComplianceApproving] = useState(false);
+  const [complianceApproved, setComplianceApproved] = useState(() => isComplianceApproved(application));
+
+  useEffect(() => {
+    setComplianceApproved(isComplianceApproved(application));
+  }, [application]);
+
+  const handleApproveCompliance = useCallback(async () => {
+    if (!tenantId) {
+      toast.error("Tenant no disponible para aprobar cumplimiento");
+      return;
+    }
+    setComplianceApproving(true);
+    try {
+      const result = await approveCompliance({
+        tenantId,
+        applicationId: application.application_id,
+      });
+      if (result.ok === false) {
+        toast.error(`Error: ${result.error}`);
+        return;
+      }
+      setComplianceApproved(true);
+      toast.success("Cumplimiento aprobado - Ley 172-13");
+    } finally {
+      setComplianceApproving(false);
+    }
+  }, [application.application_id, tenantId]);
 
   const applyCounterOffer = useCallback(() => {
     const o = counterOfferQuery.data;
@@ -489,6 +520,45 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
 
   return (
     <div className="space-y-6">
+      {!complianceApproved ? (
+        <Card className="border border-forgeWarning-200 bg-forgeWarning-50/40 p-4 dark:border-forgeWarning-800 dark:bg-forgeWarning-900/20">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl" aria-hidden>
+              ⚖️
+            </span>
+            <div className="flex-1">
+              <h3 className="font-display text-forge-sm font-semibold text-forgeWarning-900 dark:text-forgeWarning-100">
+                Cumplimiento Pendiente (Ley 172-13)
+              </h3>
+              <p className="mt-1 text-forge-sm text-forgeWarning-800 dark:text-forgeWarning-200">
+                Verifique KYC, AML y consentimientos antes de aprobar la decisión crediticia. Esta acción es auditable.
+              </p>
+              <Button
+                type="button"
+                variant="primary"
+                className="mt-3 min-h-12 bg-forgeWarning-600 hover:bg-forgeWarning-700 dark:bg-forgeWarning-600 dark:hover:bg-forgeWarning-700"
+                loading={complianceApproving}
+                disabled={complianceApproving}
+                onClick={() => void handleApproveCompliance()}
+              >
+                {complianceApproving ? "Aprobando..." : "✓ Aprobar Cumplimiento"}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <Card className="border border-forgeSuccess-200 bg-forgeSuccess-50/40 p-3 dark:border-forgeSuccess-800 dark:bg-forgeSuccess-900/20">
+          <div className="flex items-center gap-2">
+            <span className="text-forgeSuccess-600 dark:text-forgeSuccess-400" aria-hidden>
+              ✓
+            </span>
+            <p className="text-forge-sm text-forgeSuccess-900 dark:text-forgeSuccess-100">
+              Cumplimiento aprobado - Listo para decisión crediticia
+            </p>
+          </div>
+        </Card>
+      )}
+
       <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -539,6 +609,8 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
             type="button"
             variant="primary"
             className="min-h-12 min-w-[44px]"
+            disabled={!complianceApproved}
+            title={!complianceApproved ? "Debe aprobar cumplimiento primero" : undefined}
             onClick={() => {
               setTerms(defaultTerms(application));
               setDecisionModal({ decision: "APROBADO", title: "Aprobar solicitud" });
