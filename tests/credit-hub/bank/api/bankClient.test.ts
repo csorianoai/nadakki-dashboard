@@ -47,7 +47,7 @@ describe("bankClient", () => {
     );
   });
 
-  test("recordDecision posts to decide endpoint", async () => {
+  test("recordDecision claims then posts to decide endpoint", async () => {
     const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({ decision: "APROBADO" }));
     await recordDecision({
       tenantId: "tenant-a",
@@ -59,8 +59,12 @@ describe("bankClient", () => {
         terms: { approved_amount: 900000, interest_rate: 18, term_months: 60, down_payment_required: 300000, conditions: [] },
       },
     });
-    expect(fetchSpy.mock.calls[0][0]).toBe("/api/v2/credit/applications/app-1/decide");
+    // Audit #4.6: claim-before-decide — claim is call[0], decide is call[1]
+    expect(fetchSpy.mock.calls[0][0]).toBe("/api/v2/credit/applications/app-1/claim");
     expect(fetchSpy.mock.calls[0][1]?.method).toBe("POST");
+    expect(JSON.parse(String(fetchSpy.mock.calls[0][1]?.body))).toEqual({ analyst_id: "analyst-1" });
+    expect(fetchSpy.mock.calls[1][0]).toBe("/api/v2/credit/applications/app-1/decide");
+    expect(fetchSpy.mock.calls[1][1]?.method).toBe("POST");
   });
 
   test("bulkDecide sends rule and selected applications", async () => {
