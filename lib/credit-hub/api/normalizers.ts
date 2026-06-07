@@ -1,4 +1,4 @@
-import type { CreditApplication, CreditEvent, CreditStats } from "../types/creditCore";
+import type { CreditApplication, CreditApplicationStatus, CreditDecision, CreditEvent, CreditStats } from "../types/creditCore";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -48,31 +48,112 @@ function countStatus(applications: CreditApplication[], statuses: string[]): num
   return applications.filter((application) => statuses.includes(application.status)).length;
 }
 
+/** Map backend state (UPPERCASE) to frontend CreditApplicationStatus. */
+function mapBackendState(rawState: string): CreditApplicationStatus {
+  switch (rawState.toUpperCase()) {
+    case "DRAFT": return "draft";
+    case "SUBMITTED":
+    case "BANK_SUBMITTED": return "submitted";
+    case "PROCESSING":
+    case "HYBRID_IN_PROGRESS": return "processing";
+    case "PROCESSED":
+    case "BANK_COMPLETE":
+    case "COMPLETED": return "processed";
+    case "APPROVED":
+    case "APPROVED_WITH_STIPULATIONS": return "approved";
+    case "REJECTED":
+    case "DECLINED": return "rejected";
+    case "OFFER_SELECTED": return "offered";
+    case "CONDITIONED": return "conditioned";
+    case "MANUAL_REVIEW": return "manual_review";
+    default: return rawState.toLowerCase() as CreditApplicationStatus;
+  }
+}
+
+/** Map backend bank decision (Spanish) to frontend CreditDecision. */
+function mapBankDecision(decision: string | null): CreditDecision | null {
+  if (!decision) return null;
+  switch (decision.toUpperCase()) {
+    case "APROBADO": return "approved";
+    case "RECHAZADO": return "rejected";
+    case "CONTRA_OFERTA": return "conditioned";
+    default: return decision.toLowerCase() as CreditDecision;
+  }
+}
+
 export function normalizeApplication(raw: unknown): CreditApplication {
   const record = isRecord(raw) ? raw : {};
+
+  // Extract nested application_payload (detail-endpoint responses)
+  const payload = isRecord(record.application_payload) ? (record.application_payload as AnyRecord) : {};
+  const payloadApplicant = isRecord(payload.applicant) ? (payload.applicant as AnyRecord) : {};
+  const payloadFinancial = isRecord(payload.financial) ? (payload.financial as AnyRecord)
+    : isRecord(payload.financial_info) ? (payload.financial_info as AnyRecord) : {};
+  const payloadVehicle = isRecord(payload.vehicle) ? (payload.vehicle as AnyRecord) : {};
+  const payloadBankDecision = isRecord(payload.bank_decision) ? (payload.bank_decision as AnyRecord) : {};
+
   const id = pickString(record, ["id", "application_id", "applicationId"], "—");
-  const applicantName = pickString(record, ["applicant_name", "applicantName", "name"], "—");
-  const requestedAmount = pickString(record, ["requested_amount", "requestedAmount", "amount"], "0");
-  const status = pickString(record, ["status"], "unknown").toLowerCase() as CreditApplication["status"];
-  const decision = pickNullableString(record, ["decision", "recommendation"]);
+
+  // Applicant name: top-level → payload.applicant.full_name → borrower_name_masked
+  const applicantName = pickString(record, ["applicant_name", "applicantName", "name"])
+    || pickString(payloadApplicant, ["full_name", "name"])
+    || pickString(record, ["borrower_name_masked"])
+    || "—";
+
+  // Requested amount: top-level → payload.financial.requested_amount
+  const requestedAmount = pickString(record, ["requested_amount", "requestedAmount", "amount"])
+    || pickString(payloadFinancial, ["requested_amount", "requestedAmount", "amount"])
+    || "0";
+
+  // Status: prefer top-level "status"; fall back to "state" with backend→frontend mapping
+  let status: CreditApplication["status"];
+  const rawStatus = pickString(record, ["status"]);
+  if (rawStatus && rawStatus !== "unknown") {
+    status = rawStatus.toLowerCase() as CreditApplication["status"];
+  } else {
+    const rawState = pickString(record, ["state"]);
+    status = rawState ? mapBackendState(rawState) : "unknown";
+  }
+
+  // Decision: top-level → payload.bank_decision.decision (mapped from Spanish)
+  const topDecision = pickNullableString(record, ["decision", "recommendation"]);
+  const bankDecisionStr = pickNullableString(payloadBankDecision, ["decision"]);
+  const decision = topDecision || mapBankDecision(bankDecisionStr);
+
   const riskScore = pickNumber(record, ["risk_score", "riskScore"]);
   const score = pickNumber(record, ["score", "credit_score", "creditScore"]);
   const createdAt = pickDate(record, ["created_at", "createdAt", "created"]);
   const updatedAt = pickDate(record, ["updated_at", "updatedAt", "updated"]) || createdAt;
+
+  // Vehicle: top-level → payload.vehicle
+  const vehicleVin = pickNullableString(record, ["vehicle_vin", "vehicleVin", "vin"])
+    || pickNullableString(payloadVehicle, ["vin"]);
+  const vehicleYear = pickNumber(record, ["vehicle_year", "vehicleYear"])
+    ?? pickNumber(payloadVehicle, ["year"]);
+  const vehicleMake = pickNullableString(record, ["vehicle_make", "vehicleMake", "make"])
+    || pickNullableString(payloadVehicle, ["make"]);
+  const vehicleModel = pickNullableString(record, ["vehicle_model", "vehicleModel", "model"])
+    || pickNullableString(payloadVehicle, ["model"]);
+
+  // Applicant contact: top-level → payload.applicant
+  const applicantEmail = pickNullableString(record, ["applicant_email", "applicantEmail", "email"])
+    || pickNullableString(payloadApplicant, ["email"]);
+  const applicantPhone = pickNullableString(record, ["applicant_phone", "applicantPhone", "phone"])
+    || pickNullableString(payloadApplicant, ["phone"]);
 
   return {
     id,
     application_id: id,
     tenant_id: pickNullableString(record, ["tenant_id", "tenantId"]),
     applicant_name: applicantName,
-    applicant_email: pickNullableString(record, ["applicant_email", "applicantEmail", "email"]),
-    applicant_phone: pickNullableString(record, ["applicant_phone", "applicantPhone", "phone"]),
-    monthly_income: (record.monthly_income ?? record.monthlyIncome ?? null) as string | number | null,
-    vehicle_vin: pickNullableString(record, ["vehicle_vin", "vehicleVin", "vin"]),
-    vehicle_year: pickNumber(record, ["vehicle_year", "vehicleYear"]),
-    vehicle_make: pickNullableString(record, ["vehicle_make", "vehicleMake", "make"]),
-    vehicle_model: pickNullableString(record, ["vehicle_model", "vehicleModel", "model"]),
-    vehicle_price: (record.vehicle_price ?? record.vehiclePrice ?? null) as string | number | null,
+    applicant_email: applicantEmail,
+    applicant_phone: applicantPhone,
+    monthly_income: (record.monthly_income ?? record.monthlyIncome ?? payload.monthly_income ?? null) as string | number | null,
+    vehicle_vin: vehicleVin,
+    vehicle_year: vehicleYear,
+    vehicle_make: vehicleMake,
+    vehicle_model: vehicleModel,
+    vehicle_price: (record.vehicle_price ?? record.vehiclePrice ?? payloadVehicle.price ?? null) as string | number | null,
     requested_amount: requestedAmount,
     down_payment: (record.down_payment ?? record.downPayment ?? null) as string | null,
     status,
