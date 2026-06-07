@@ -32,6 +32,7 @@ function stageLabel(status: CreditApplicationStatus): string {
     case "draft":
       return "Borrador";
     case "approved":
+    case "approved_with_stipulations":
       return "Aprobada";
     case "rejected":
     case "declined":
@@ -82,9 +83,10 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
       };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await fetch(`/api/v2/credit/applications/${applicationId}/offers/${applicationId}/accept`, {
+      const res = await fetch(`/api/v2/credit/applications/${applicationId}/accept-decision`, {
         method: "POST",
         headers,
+        body: JSON.stringify({ notes: "Oferta aceptada por el dealer" }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -133,7 +135,7 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
 
   const amount = Number(data.requested_amount || 0);
   const status = data.status;
-  const approved = status === "approved" || data.decision === "approved";
+  const approved = status === "approved" || status === "approved_with_stipulations" || data.decision === "approved";
   const rejected = status === "rejected" || status === "declined" || data.decision === "rejected" || data.decision === "declined";
 
   // Extract bank decision terms from raw API response

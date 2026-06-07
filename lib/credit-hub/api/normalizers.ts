@@ -120,6 +120,20 @@ export function normalizeApplication(raw: unknown): CreditApplication {
   const bankDecisionStr = pickNullableString(payloadBankDecision, ["decision"]);
   const decision = topDecision || mapBankDecision(bankDecisionStr);
 
+  // Override status based on bank_decision when state is a "processing" state
+  // but the bank has already rendered a decision (APROBADO/RECHAZADO)
+  if (decision && (status === "processed" || status === "processing" || status === "unknown")) {
+    const hasStipulations = Array.isArray(payload.bank_decision_stipulations)
+      && (payload.bank_decision_stipulations as unknown[]).length > 0;
+    if (decision === "approved") {
+      status = hasStipulations ? "approved_with_stipulations" as CreditApplicationStatus : "approved";
+    } else if (decision === "rejected") {
+      status = "rejected";
+    } else if (decision === "conditioned") {
+      status = "conditioned";
+    }
+  }
+
   const riskScore = pickNumber(record, ["risk_score", "riskScore"]);
   const score = pickNumber(record, ["score", "credit_score", "creditScore"]);
   const createdAt = pickDate(record, ["created_at", "createdAt", "created"]);

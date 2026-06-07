@@ -16,6 +16,7 @@ const statusConfig: Record<string, { label: string; bg: string; text: string; pu
   cancelled: { label: "Cancelada", bg: "bg-slate-500/10", text: "text-slate-400" },
   under_review: { label: "En revisión", bg: "bg-forge-info/10", text: "text-forge-info" },
   approved: { label: "Aprobada", bg: "bg-forge-success/10", text: "text-forge-success" },
+  approved_with_stipulations: { label: "Aprobada con condiciones", bg: "bg-forge-success/10", text: "text-forge-success" },
   declined: { label: "Rechazada", bg: "bg-forge-danger/10", text: "text-forge-danger" },
   conditioned: { label: "Condicionada", bg: "bg-forge-warning/10", text: "text-forge-warning" },
 };
