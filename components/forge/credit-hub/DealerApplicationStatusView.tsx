@@ -2,16 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Car, Clock, Mail, Phone, User } from "lucide-react";
+import { useCallback, useState } from "react";
+import { ArrowLeft, Car, CheckCircle, Clock, DollarSign, FileText, Mail, Phone, User } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
 import { Button, Card, Skeleton } from "@/components/forge";
 import { CreditCoreApiError } from "@/lib/credit-hub/api/creditCoreClient";
+import { tokenStorage } from "@/lib/auth/token-storage";
 import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
 import { formatForgeCurrency } from "@/utils/forge-locale";
+
+type AnyRecord = Record<string, unknown>;
 
 function stageLabel(status: CreditApplicationStatus): string {
   switch (status) {
@@ -26,6 +31,13 @@ function stageLabel(status: CreditApplicationStatus): string {
       return "Condicionada — pendiente de cumplimiento";
     case "draft":
       return "Borrador";
+    case "approved":
+      return "Aprobada";
+    case "rejected":
+    case "declined":
+      return "Rechazada";
+    case "offered":
+      return "Oferta disponible";
     default:
       return "En trámite";
   }
@@ -33,16 +45,58 @@ function stageLabel(status: CreditApplicationStatus): string {
 
 function rejectionCategory(decision: string | null): string {
   const d = (decision ?? "").toLowerCase();
-  if (d.includes("declin") || d.includes("reject")) return "Política de crédito o capacidad de pago";
+  if (d.includes("declin") || d.includes("reject") || d.includes("rechaz")) return "Política de crédito o capacidad de pago";
   return "No aprobada en esta ocasión";
+}
+
+/** Extract nested object safely from raw API response. */
+function extractPayload(raw: unknown): { bankDecision: AnyRecord; terms: AnyRecord; stipulations: AnyRecord[] } {
+  const record = (raw && typeof raw === "object" ? raw : {}) as AnyRecord;
+  const payload = (record.application_payload && typeof record.application_payload === "object" ? record.application_payload : {}) as AnyRecord;
+  const bankDecision = (payload.bank_decision && typeof payload.bank_decision === "object" ? payload.bank_decision : {}) as AnyRecord;
+  const terms = (bankDecision.terms && typeof bankDecision.terms === "object" ? bankDecision.terms : {}) as AnyRecord;
+  const stipulations = Array.isArray(payload.bank_decision_stipulations) ? (payload.bank_decision_stipulations as AnyRecord[]) : [];
+  return { bankDecision, terms, stipulations };
 }
 
 export function DealerApplicationStatusView({ applicationId }: { applicationId: string }) {
   const router = useRouter();
   const t = useTranslations();
   const persona = usePersona();
+  const { tenantId } = useTenant();
   const { tenantConfig } = useTenantConfig();
   const { application: data, events, isLoading, error, refetch } = useCreditApplicationDetail(applicationId);
+
+  const [acceptState, setAcceptState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [acceptError, setAcceptError] = useState<string | null>(null);
+
+  const handleAcceptOffer = useCallback(async () => {
+    if (!tenantId || acceptState === "loading") return;
+    setAcceptState("loading");
+    setAcceptError(null);
+    try {
+      const token = tokenStorage.getAccessToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-Tenant-ID": tenantId,
+      };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(`/api/v2/credit/applications/${applicationId}/offers/${applicationId}/accept`, {
+        method: "POST",
+        headers,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(typeof body.detail === "string" ? body.detail : `HTTP ${res.status}`);
+      }
+      setAcceptState("success");
+      void refetch();
+    } catch (err) {
+      setAcceptState("error");
+      setAcceptError(err instanceof Error ? err.message : "Error al aceptar la oferta");
+    }
+  }, [applicationId, tenantId, acceptState, refetch]);
 
   if (isLoading) {
     return (
@@ -81,6 +135,13 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
   const status = data.status;
   const approved = status === "approved" || data.decision === "approved";
   const rejected = status === "rejected" || status === "declined" || data.decision === "rejected" || data.decision === "declined";
+
+  // Extract bank decision terms from raw API response
+  const { bankDecision, terms, stipulations } = extractPayload(data.raw);
+  const hasOffer = approved && !!(terms.approved_amount || terms.interest_rate || terms.term_months);
+  const approvedAmount = Number(terms.approved_amount || 0);
+  const interestRate = Number(terms.interest_rate || 0);
+  const termMonths = Number(terms.term_months || 0);
 
   return (
     <div className="space-y-6 p-4 md:p-8">
@@ -145,6 +206,93 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
           </div>
         ) : null}
       </Card>
+
+      {hasOffer ? (
+        <Card className="border-forgeSuccess-200 bg-forgeSuccess-50/30 p-5 md:p-6">
+          <h2 className="mb-4 flex items-center gap-2 font-display text-forge-md font-semibold text-forgeGray-800">
+            <DollarSign className="h-5 w-5 text-forgeSuccess-600" aria-hidden />
+            Oferta aprobada
+          </h2>
+          <dl className="grid grid-cols-3 gap-4 text-forge-sm">
+            {approvedAmount > 0 ? (
+              <div>
+                <dt className="text-forge-xs text-forgeGray-500">Monto aprobado</dt>
+                <dd className="font-mono text-forge-lg font-semibold text-forgeSuccess-800">
+                  {formatForgeCurrency(approvedAmount, tenantConfig.locale, tenantConfig.currency_code)}
+                </dd>
+              </div>
+            ) : null}
+            {interestRate > 0 ? (
+              <div>
+                <dt className="text-forge-xs text-forgeGray-500">Tasa de interés</dt>
+                <dd className="font-mono text-forge-lg font-semibold text-forgeGray-900">{interestRate}%</dd>
+              </div>
+            ) : null}
+            {termMonths > 0 ? (
+              <div>
+                <dt className="text-forge-xs text-forgeGray-500">Plazo</dt>
+                <dd className="font-mono text-forge-lg font-semibold text-forgeGray-900">{termMonths} meses</dd>
+              </div>
+            ) : null}
+          </dl>
+
+          {terms.down_payment_required ? (
+            <p className="mt-3 text-forge-sm text-forgeGray-600">
+              Inicial requerida: <strong className="font-mono">{formatForgeCurrency(Number(terms.down_payment_required), tenantConfig.locale, tenantConfig.currency_code)}</strong>
+            </p>
+          ) : null}
+
+          {Array.isArray(terms.conditions) && terms.conditions.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-forge-xs font-medium text-forgeGray-500">Condiciones:</p>
+              <ul className="mt-1 list-inside list-disc space-y-1 text-forge-sm text-forgeGray-700">
+                {(terms.conditions as string[]).map((c, i) => <li key={i}>{c}</li>)}
+              </ul>
+            </div>
+          ) : null}
+
+          {stipulations.length > 0 ? (
+            <div className="mt-4 rounded-forge-sm border border-forge-warning/30 bg-forge-warning/5 p-3">
+              <h3 className="flex items-center gap-1.5 text-forge-xs font-semibold text-forge-warning">
+                <FileText className="h-4 w-4" aria-hidden />
+                Estipulaciones pendientes ({stipulations.length})
+              </h3>
+              <ul className="mt-2 space-y-1 text-forge-sm text-forgeGray-700">
+                {stipulations.map((s, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="mt-0.5 text-forge-warning">&#8226;</span>
+                    <span>{String(s.description || s.code || `Estipulación ${i + 1}`)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="mt-5">
+            {acceptState === "success" ? (
+              <p className="flex items-center gap-2 text-forge-sm font-medium text-forgeSuccess-700">
+                <CheckCircle className="h-5 w-5" aria-hidden />
+                Oferta aceptada exitosamente
+              </p>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="primary"
+                  className="min-w-[200px]"
+                  disabled={acceptState === "loading"}
+                  onClick={() => void handleAcceptOffer()}
+                >
+                  {acceptState === "loading" ? "Procesando..." : "Aceptar oferta"}
+                </Button>
+                {acceptState === "error" && acceptError ? (
+                  <p className="mt-2 text-forge-sm text-forgeDanger-700">{acceptError}</p>
+                ) : null}
+              </>
+            )}
+          </div>
+        </Card>
+      ) : null}
 
       <Card className="p-5 md:p-6">
         <h2 className="mb-4 flex items-center gap-2 font-display text-forge-md font-semibold text-forgeGray-800">
