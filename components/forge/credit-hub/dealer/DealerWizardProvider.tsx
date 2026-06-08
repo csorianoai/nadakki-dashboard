@@ -21,6 +21,7 @@ import {
   type WizardStepValidationConfig,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
+import { processApplication } from "@/lib/credit-hub/api/creditCoreClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
@@ -502,6 +503,29 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       );
       clearDraftStorage();
       setFormData(initialApplicationFormData);
+
+      // Trigger AI scoring in background (fire-and-forget, graceful failure)
+      // Sprint 4 P0-2: Forge wizard must call /process so bank analysts get AI scores.
+      // If this fails, the app is already created — bank-direct flow still works (Sub-O).
+      if (tenantId && result.application_id) {
+        void (async () => {
+          try {
+            await processApplication({
+              tenantId,
+              applicationId: result.application_id,
+              mode: "BANK_ONLY",
+            });
+            console.info("[forge-wizard] processApplication success", {
+              applicationId: result.application_id,
+            });
+          } catch (err) {
+            console.warn("[forge-wizard] processApplication failed — bank analyst will decide without AI score", {
+              applicationId: result.application_id,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        })();
+      }
 
       // Upload pending document files in background (fire-and-forget)
       const files = new Map(pendingFilesRef.current);
