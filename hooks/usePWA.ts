@@ -6,7 +6,7 @@ interface PWAState {
   isOnline: boolean;
   canInstall: boolean;
   isUpdateAvailable: boolean;
-  registration: ServiceWorkerRegistration | null;
+  displayMode: "standalone" | "browser";
 }
 
 interface BeforeInstallPromptEvent extends Event {
@@ -22,54 +22,31 @@ export function usePWA() {
     isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
     canInstall: false,
     isUpdateAvailable: false,
-    registration: null,
+    displayMode: "browser",
   });
-
-  // Register service worker
-  useEffect(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-
-    const registerSW = async () => {
-      try {
-        const registration = await navigator.serviceWorker.register("/sw.js", {
-          scope: "/",
-        });
-
-        setState((s) => ({ ...s, registration }));
-
-        // Check for updates
-        registration.addEventListener("updatefound", () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener("statechange", () => {
-              if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-                setState((s) => ({ ...s, isUpdateAvailable: true }));
-              }
-            });
-          }
-        });
-
-        console.log("[PWA] Service Worker registered");
-      } catch (error) {
-        console.error("[PWA] Service Worker registration failed:", error);
-      }
-    };
-
-    registerSW();
-  }, []);
 
   // Check if already installed
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const checkInstalled = () => {
-      const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+      const isStandalone = window.matchMedia(
+        "(display-mode: standalone)",
+      ).matches;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const isIOSStandalone = (navigator as any).standalone === true;
-      setState((s) => ({ ...s, isInstalled: isStandalone || isIOSStandalone }));
+      const installed = isStandalone || isIOSStandalone;
+      setState((s) => ({
+        ...s,
+        isInstalled: installed,
+        displayMode: installed ? "standalone" : "browser",
+      }));
     };
 
     checkInstalled();
-    window.matchMedia("(display-mode: standalone)").addEventListener("change", checkInstalled);
+    const mq = window.matchMedia("(display-mode: standalone)");
+    mq.addEventListener("change", checkInstalled);
+    return () => mq.removeEventListener("change", checkInstalled);
   }, []);
 
   // Listen for install prompt
@@ -102,7 +79,26 @@ export function usePWA() {
     };
   }, []);
 
-  // Install app
+  // Listen for SW update
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator))
+      return;
+
+    const handleControllerChange = () => {
+      setState((s) => ({ ...s, isUpdateAvailable: true }));
+    };
+
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      handleControllerChange,
+    );
+    return () =>
+      navigator.serviceWorker.removeEventListener(
+        "controllerchange",
+        handleControllerChange,
+      );
+  }, []);
+
   const install = useCallback(async () => {
     if (!deferredPrompt) return false;
 
@@ -117,12 +113,9 @@ export function usePWA() {
     }
   }, []);
 
-  // Update app
-  const update = useCallback(async () => {
-    if (!state.registration?.waiting) return;
-    state.registration.waiting.postMessage({ type: "SKIP_WAITING" });
+  const update = useCallback(() => {
     window.location.reload();
-  }, [state.registration]);
+  }, []);
 
   return {
     ...state,
