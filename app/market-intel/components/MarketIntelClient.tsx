@@ -1,25 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Play, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { ForgePageHeader } from "@/components/credit-hub/system/ForgePageHeader";
 import { EmptyState } from "@/components/forge/ui/EmptyState";
 import { useMarketIntelTenant } from "../hooks/useMarketIntelTenant";
-import {
-  createRun,
-  getRun,
-  getSnapshot,
-  listRuns,
-  startRun,
-  uploadDocument,
-  validateRun,
-} from "../lib/api";
+import { createRun, getRun, getSnapshot, listRuns, startRun } from "../lib/api";
 import type { CreateRunBody, RunResponse, SnapshotPayload } from "../lib/types";
 import { RunSelector } from "./RunSelector";
-import { RunStatusBadge } from "./RunStatusBadge";
-import { IntelligenceView } from "./IntelligenceView";
-import { DocumentUploadPanel } from "./DocumentUploadPanel";
-import { ValidatePanel } from "./ValidatePanel";
+import { RunWorkspace } from "./RunWorkspace";
 
 export function MarketIntelClient() {
   const { effectiveTenantId, tenantHydrated, tenantError } = useMarketIntelTenant();
@@ -30,11 +19,6 @@ export function MarketIntelClient() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [starting, setStarting] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [validating, setValidating] = useState(false);
-  const [counselRequired, setCounselRequired] = useState(false);
-  const [alreadyValidated, setAlreadyValidated] = useState(false);
-  const [lastUploaded, setLastUploaded] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refreshRuns = useCallback(async () => {
@@ -54,14 +38,14 @@ export function MarketIntelClient() {
     }
     const run = await getRun(effectiveTenantId, selectedRunId);
     setActiveRun(run);
-    if (run.status === "needs_validation" || run.status === "validated") {
-      const snap = await getSnapshot(effectiveTenantId, selectedRunId);
-      setSnapshot(snap);
-    } else {
+
+    if (run.status === "draft") {
       setSnapshot(null);
+      return;
     }
-    setAlreadyValidated(run.status === "validated");
-    setCounselRequired(false);
+
+    const snap = await getSnapshot(effectiveTenantId, selectedRunId);
+    setSnapshot(snap);
   }, [effectiveTenantId, selectedRunId]);
 
   useEffect(() => {
@@ -110,41 +94,6 @@ export function MarketIntelClient() {
     }
   };
 
-  const handleUpload = async (file: File) => {
-    if (!effectiveTenantId || !selectedRunId) return;
-    setUploading(true);
-    try {
-      const res = await uploadDocument(effectiveTenantId, selectedRunId, file);
-      setLastUploaded(res.filename);
-      await refreshActiveRun();
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleValidate = async (counselSigned: boolean) => {
-    if (!effectiveTenantId || !selectedRunId) return;
-    setValidating(true);
-    setError(null);
-    try {
-      const result = await validateRun(effectiveTenantId, selectedRunId, {
-        counsel_signed: counselSigned,
-      });
-      setActiveRun(result.run);
-      setCounselRequired(Boolean(result.counselRequired));
-      setAlreadyValidated(Boolean(result.alreadyValidated));
-      await refreshRuns();
-      if (result.run.status === "validated") {
-        const snap = await getSnapshot(effectiveTenantId, selectedRunId);
-        setSnapshot(snap);
-      }
-    } catch {
-      setError("No se pudo validar la investigación.");
-    } finally {
-      setValidating(false);
-    }
-  };
-
   if (!tenantHydrated) {
     return <p className="text-forge-sm text-forgeGray-500">Cargando…</p>;
   }
@@ -161,7 +110,7 @@ export function MarketIntelClient() {
     <main id="main-content" className="market-intel-mee min-h-0 space-y-6">
       <ForgePageHeader
         title="Inteligencia de Mercado"
-        subtitle="Market Entry Engine — investigación, validación y estrategia de entrada"
+        subtitle="Market Entry Engine — investigación y estrategia de entrada"
         action={
           <button
             type="button"
@@ -193,79 +142,22 @@ export function MarketIntelClient() {
           creating={creating}
         />
 
-        <div className="min-w-0 flex-1 space-y-6">
-          {loading ? (
-            <p className="text-forge-sm text-forgeGray-500">Cargando investigaciones…</p>
-          ) : !activeRun ? (
-            <EmptyState
-              title="Seleccione una investigación"
-              description="Elija un run existente o cree uno nuevo para comenzar."
-            />
-          ) : (
-            <>
-              <header className="flex flex-col gap-3 rounded-forge-lg border border-forgeGray-200 bg-forgeSurface-card p-4 shadow-forge-xs sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">
-                    {activeRun.product.replace(/_/g, " ")}
-                  </h2>
-                  <p className="mt-1 text-forge-sm text-forgeGray-500">
-                    {activeRun.country_iso} · {activeRun.vertical.replace(/_/g, " ")} ·{" "}
-                    {activeRun.currency}
-                  </p>
-                </div>
-                <RunStatusBadge status={activeRun.status} />
-              </header>
-
-              {activeRun.status === "draft" || activeRun.status === "researching" ? (
-                <EmptyState
-                  title={
-                    activeRun.status === "researching"
-                      ? "Investigación en curso"
-                      : "Sin snapshot aún"
-                  }
-                  description={
-                    activeRun.status === "researching"
-                      ? "El motor está recopilando fuentes. Vuelva a actualizar en unos momentos."
-                      : "Inicie la investigación para generar el snapshot de inteligencia."
-                  }
-                  action={
-                    activeRun.status === "draft" ? (
-                      <button
-                        type="button"
-                        disabled={starting}
-                        onClick={() => void handleStart()}
-                        className="inline-flex min-h-[40px] items-center gap-2 rounded-forge-sm bg-[var(--mee-accent)] px-4 py-2 text-forge-sm font-semibold text-white disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--mee-accent)]"
-                      >
-                        <Play className="h-4 w-4" aria-hidden />
-                        {starting ? "Iniciando…" : "Iniciar investigación"}
-                      </button>
-                    ) : undefined
-                  }
-                />
-              ) : null}
-
-              {snapshot ? <IntelligenceView snapshot={snapshot} /> : null}
-
-              {activeRun.status === "needs_validation" || activeRun.status === "validated" ? (
-                <>
-                  <DocumentUploadPanel
-                    onUpload={handleUpload}
-                    uploading={uploading}
-                    lastUploaded={lastUploaded}
-                  />
-                  <ValidatePanel
-                    run={activeRun}
-                    findings={snapshot?.findings ?? []}
-                    onValidate={handleValidate}
-                    validating={validating}
-                    counselRequired={counselRequired}
-                    alreadyValidated={alreadyValidated}
-                  />
-                </>
-              ) : null}
-            </>
-          )}
-        </div>
+        {loading ? (
+          <p className="text-forge-sm text-forgeGray-500">Cargando investigaciones…</p>
+        ) : !activeRun ? (
+          <EmptyState
+            title="Seleccione una investigación"
+            description="Elija un run existente o cree uno nuevo para comenzar."
+            className="min-w-0 flex-1"
+          />
+        ) : (
+          <RunWorkspace
+            run={activeRun}
+            snapshot={snapshot}
+            starting={starting}
+            onStart={() => void handleStart()}
+          />
+        )}
       </div>
     </main>
   );

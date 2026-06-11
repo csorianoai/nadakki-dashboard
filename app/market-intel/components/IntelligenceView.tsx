@@ -10,9 +10,10 @@ import { PricingProposalSection } from "./PricingProposalSection";
 
 interface IntelligenceViewProps {
   snapshot: SnapshotPayload;
+  currency?: string;
 }
 
-export function IntelligenceView({ snapshot }: IntelligenceViewProps) {
+export function IntelligenceView({ snapshot, currency = "DOP" }: IntelligenceViewProps) {
   const overview = snapshot.market_overview ?? {};
   const shares = overview.institution_shares ?? [];
   const priorityTiers = overview.priority_tiers ?? [];
@@ -28,7 +29,11 @@ export function IntelligenceView({ snapshot }: IntelligenceViewProps) {
         <p className="font-display text-forge-lg font-semibold text-forgeGray-800">{headline}</p>
       ) : null}
 
-      <MetricsStrip summary={snapshot.sources_summary} totalMarketRd={totalMarketRd} />
+      <MetricsStrip
+        summary={snapshot.sources_summary}
+        totalMarketValue={totalMarketRd}
+        currency={currency}
+      />
 
       {wedgeCallout ? (
         <aside
@@ -42,7 +47,7 @@ export function IntelligenceView({ snapshot }: IntelligenceViewProps) {
         </aside>
       ) : null}
 
-      {shares.length > 0 ? <InstitutionChart shares={shares} /> : null}
+      {shares.length > 0 ? <InstitutionChart shares={shares} currency={currency} /> : null}
 
       {priorityTiers.length > 0 ? (
         <section

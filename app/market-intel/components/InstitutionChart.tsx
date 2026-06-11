@@ -8,9 +8,10 @@ type ChartMode = "portfolio" | "participation";
 
 interface InstitutionChartProps {
   shares: InstitutionShare[];
+  currency?: string;
 }
 
-export function InstitutionChart({ shares }: InstitutionChartProps) {
+export function InstitutionChart({ shares, currency = "DOP" }: InstitutionChartProps) {
   const [mode, setMode] = useState<ChartMode>("portfolio");
 
   const maxValue = useMemo(() => {
@@ -56,7 +57,7 @@ export function InstitutionChart({ shares }: InstitutionChartProps) {
                 : "text-forgeGray-600 hover:text-forgeGray-800"
             }`}
           >
-            Cartera RD$
+            Cartera local
           </button>
           <button
             type="button"

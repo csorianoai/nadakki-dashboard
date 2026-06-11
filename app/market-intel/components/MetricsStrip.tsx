@@ -4,10 +4,15 @@ import type { SourcesSummary } from "../lib/types";
 
 interface MetricsStripProps {
   summary: SourcesSummary;
-  totalMarketRd?: number;
+  totalMarketValue?: number;
+  currency?: string;
 }
 
-export function MetricsStrip({ summary, totalMarketRd }: MetricsStripProps) {
+export function MetricsStrip({
+  summary,
+  totalMarketValue,
+  currency = "DOP",
+}: MetricsStripProps) {
   const high = summary.by_confidence?.high ?? 0;
   const medium = summary.by_confidence?.medium ?? 0;
   const low = summary.by_confidence?.low ?? 0;
@@ -17,14 +22,16 @@ export function MetricsStrip({ summary, totalMarketRd }: MetricsStripProps) {
     { label: "Alta confianza", value: String(high) },
     { label: "Media confianza", value: String(medium) },
     { label: "Baja confianza", value: String(low) },
-    ...(totalMarketRd
+    ...(totalMarketValue
       ? [
           {
-            label: "Mercado (RD$)",
+            label: `Mercado local (${currency})`,
             value: new Intl.NumberFormat("es-DO", {
+              style: "currency",
+              currency,
               notation: "compact",
               maximumFractionDigits: 1,
-            }).format(totalMarketRd),
+            }).format(totalMarketValue),
           },
         ]
       : []),

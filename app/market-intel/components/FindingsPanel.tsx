@@ -25,6 +25,12 @@ export function FindingsPanel({ findings }: { findings: Finding[] }) {
         ) : null}
       </div>
 
+      {counselBlocked.length > 0 ? (
+        <p className="mt-2 rounded-forge-md border border-forgeWarning-500/30 bg-forgeWarning-50/60 px-3 py-2 text-forge-sm text-forgeWarning-800">
+          Los hallazgos marcados bloquean la validación hasta revisión de counsel.
+        </p>
+      ) : null}
+
       <ul className="mt-3 space-y-3">
         {findings.map((f) => (
           <li
