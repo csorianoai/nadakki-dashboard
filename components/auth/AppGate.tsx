@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import OnboardingAgent from "@/components/ai/OnboardingAgent";
-import PWAPrompt from "@/components/pwa/PWAPrompt";
 import { ProtectedRoute } from "@/components/forge/auth/ProtectedRoute";
 import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
 
@@ -22,7 +21,6 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
       <>
         <GlobalForgeAppShell>{children}</GlobalForgeAppShell>
         <OnboardingAgent />
-        <PWAPrompt />
       </>
     </ProtectedRoute>
   );

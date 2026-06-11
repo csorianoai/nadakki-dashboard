@@ -22,10 +22,7 @@ jest.mock("@/components/ai/OnboardingAgent", () => ({
   default: () => <div data-testid="bot-widget" />,
 }));
 
-jest.mock("@/components/pwa/PWAPrompt", () => ({
-  __esModule: true,
-  default: () => <div data-testid="pwa-prompt" />,
-}));
+// PWAPrompt removed — now in layout via PWAClientProvider
 
 describe("Forge layout isolation", () => {
   test("does not render Nadakki shell for credit-hub routes", () => {
