@@ -1,6 +1,9 @@
 /** Market Intelligence API contract (frozen — F5b). */
 
-export type RunStatus = "draft" | "researching" | "needs_validation" | "validated";
+export type KnownRunStatus = "draft" | "researching" | "needs_validation" | "validated";
+
+/** Backend may emit additional status values beyond the four known gates. */
+export type RunStatus = KnownRunStatus | (string & {});
 
 export interface RunResponse {
   id: string;
@@ -82,6 +85,16 @@ export interface SnapshotPayload {
   pricing_proposal?: Record<string, unknown>;
   validation_state: string;
   metadata: Record<string, unknown>;
+}
+
+/** GET /runs/{id}/snapshot — row envelope; intelligence lives in `payload`. */
+export interface SnapshotRow {
+  id: string;
+  run_id: string;
+  phase: string;
+  version: string;
+  payload: unknown;
+  created_at: string;
 }
 
 export class MarketIntelApiError extends Error {

@@ -12,8 +12,12 @@ import {
 import {
   MarketIntelApiError,
   type CreateRunBody,
+  type Finding,
+  type MarketOverview,
   type RunResponse,
   type SnapshotPayload,
+  type SnapshotRow,
+  type SourcesSummary,
   type UploadResponse,
   type ValidateRunBody,
   type ValidateRunResult,
@@ -29,6 +33,154 @@ function requireTenant(tenantId: string): string {
   return t;
 }
 
+function asRecord(raw: unknown): Record<string, unknown> | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  return raw as Record<string, unknown>;
+}
+
+function asString(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+function parseEmbeddedJson(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+/** /runs and /runs/{id} — typed RunResponse with defensive coercion. */
+export function normalizeRunResponse(raw: unknown): RunResponse {
+  const o = asRecord(raw);
+  if (!o) {
+    throw new MarketIntelApiError("Respuesta de run inválida", 502);
+  }
+
+  const now = new Date().toISOString();
+  return {
+    id: asString(o.id, "unknown"),
+    status: asString(o.status, "draft"),
+    country_iso: asString(o.country_iso),
+    vertical: asString(o.vertical),
+    product: asString(o.product),
+    currency: asString(o.currency),
+    validated_by: typeof o.validated_by === "string" ? o.validated_by : undefined,
+    validated_at: typeof o.validated_at === "string" ? o.validated_at : undefined,
+    snapshot_sha256: typeof o.snapshot_sha256 === "string" ? o.snapshot_sha256 : undefined,
+    created_at: asString(o.created_at, now),
+    updated_at: asString(o.updated_at, now),
+  };
+}
+
+/**
+ * /start and /validate return raw dicts — merge defensively onto a base run.
+ * Reads `status` and other present fields without assuming a strict schema.
+ */
+function coerceRunFromDict(raw: unknown, base: RunResponse): RunResponse {
+  const o = asRecord(raw);
+  if (!o) return base;
+
+  if (typeof o.id === "string" && typeof o.country_iso === "string") {
+    return normalizeRunResponse(raw);
+  }
+
+  const merged: RunResponse = { ...base };
+  if (typeof o.status === "string" && o.status) merged.status = o.status;
+  if (typeof o.validated_by === "string") merged.validated_by = o.validated_by;
+  if (typeof o.validated_at === "string") merged.validated_at = o.validated_at;
+  if (typeof o.snapshot_sha256 === "string") merged.snapshot_sha256 = o.snapshot_sha256;
+  if (typeof o.updated_at === "string") merged.updated_at = o.updated_at;
+  return merged;
+}
+
+function coerceSnapshotPayload(raw: unknown): SnapshotPayload | null {
+  const o = asRecord(raw);
+  if (!o) return null;
+
+  const sourcesRaw = asRecord(o.sources_summary);
+  const findingsRaw = o.findings;
+  const overviewRaw = asRecord(o.market_overview);
+
+  if (!sourcesRaw || !overviewRaw) return null;
+
+  const byLevel = asRecord(sourcesRaw.by_level) ?? {};
+  const byConfidence = asRecord(sourcesRaw.by_confidence) ?? {};
+
+  const sources_summary: SourcesSummary = {
+    total: typeof sourcesRaw.total === "number" ? sourcesRaw.total : 0,
+    by_level: Object.fromEntries(
+      Object.entries(byLevel).map(([k, v]) => [k, typeof v === "number" ? v : 0])
+    ),
+    by_confidence: Object.fromEntries(
+      Object.entries(byConfidence).map(([k, v]) => [k, typeof v === "number" ? v : 0])
+    ),
+  };
+
+  const findings: Finding[] = Array.isArray(findingsRaw)
+    ? findingsRaw
+        .map((item) => {
+          const f = asRecord(item);
+          if (!f) return null;
+          return {
+            source_name: asString(f.source_name),
+            source_level: asString(f.source_level),
+            confidence: asString(f.confidence),
+            category: asString(f.category),
+            tier: asString(f.tier),
+            validation_status: asString(f.validation_status),
+            requires_counsel_review: Boolean(f.requires_counsel_review),
+            summary: asString(f.summary),
+            data_points: Array.isArray(f.data_points)
+              ? f.data_points.filter(
+                  (dp): dp is Record<string, unknown> =>
+                    Boolean(dp) && typeof dp === "object" && !Array.isArray(dp)
+                )
+              : [],
+          } satisfies Finding;
+        })
+        .filter((f): f is Finding => f !== null)
+    : [];
+
+  const market_overview = overviewRaw as unknown as MarketOverview;
+  const metadataRaw = asRecord(o.metadata);
+
+  return {
+    sources_summary,
+    findings,
+    market_overview,
+    entry_strategy: asRecord(o.entry_strategy) ?? undefined,
+    pricing_proposal: asRecord(o.pricing_proposal) ?? undefined,
+    validation_state: asString(o.validation_state, "unknown"),
+    metadata: metadataRaw ?? {},
+  };
+}
+
+/** Parse GET /snapshot row envelope → intelligence in `.payload`. */
+export function parseSnapshotRow(raw: unknown): SnapshotPayload | null {
+  const o = asRecord(raw);
+  if (!o) return null;
+
+  if ("payload" in o) {
+    const row: SnapshotRow = {
+      id: asString(o.id),
+      run_id: asString(o.run_id),
+      phase: asString(o.phase),
+      version: asString(o.version),
+      payload: o.payload,
+      created_at: asString(o.created_at),
+    };
+    void row;
+    const payloadRaw = parseEmbeddedJson(o.payload);
+    return coerceSnapshotPayload(payloadRaw);
+  }
+
+  return coerceSnapshotPayload(raw);
+}
+
 async function parseDetail(res: Response): Promise<unknown> {
   const text = await res.text();
   if (!text) return null;
@@ -39,7 +191,7 @@ async function parseDetail(res: Response): Promise<unknown> {
   }
 }
 
-async function handleJson<T>(res: Response): Promise<T> {
+async function handleJson(res: Response): Promise<unknown> {
   const detail = await parseDetail(res);
   if (!res.ok) {
     let msg = `Error HTTP ${res.status}`;
@@ -51,7 +203,7 @@ async function handleJson<T>(res: Response): Promise<T> {
     } else if (typeof detail === "string") msg = detail;
     throw new MarketIntelApiError(msg, res.status, detail);
   }
-  return detail as T;
+  return detail;
 }
 
 function tenantHeaders(tenantId: string, extra?: HeadersInit): Headers {
@@ -85,8 +237,9 @@ export async function listRuns(tenantId: string): Promise<RunResponse[]> {
         method: "GET",
         headers: tenantHeaders(tid),
       });
-      const data = await handleJson<RunResponse[]>(res);
-      return Array.isArray(data) ? data : [];
+      const data = await handleJson(res);
+      if (!Array.isArray(data)) return [];
+      return data.map((item) => normalizeRunResponse(item));
     },
     () => [...FIXTURE_RUNS]
   );
@@ -100,7 +253,7 @@ export async function getRun(tenantId: string, runId: string): Promise<RunRespon
         method: "GET",
         headers: tenantHeaders(tid),
       });
-      return handleJson<RunResponse>(res);
+      return normalizeRunResponse(await handleJson(res));
     },
     () => {
       const found = fixtureRunById(runId);
@@ -130,7 +283,7 @@ export async function createRun(tenantId: string, body: CreateRunBody): Promise<
     headers: tenantHeaders(tid, { "Content-Type": "application/json" }),
     body: JSON.stringify(body),
   });
-  return handleJson<RunResponse>(res);
+  return normalizeRunResponse(await handleJson(res));
 }
 
 export async function startRun(tenantId: string, runId: string): Promise<RunResponse> {
@@ -140,11 +293,14 @@ export async function startRun(tenantId: string, runId: string): Promise<RunResp
     if (!base) throw new MarketIntelApiError("Run no encontrado", 404);
     return { ...base, status: "needs_validation", updated_at: new Date().toISOString() };
   }
+
+  const base = await getRun(tid, runId);
   const res = await apiFetch(`${BASE}/runs/${encodeURIComponent(runId)}/start`, {
     method: "POST",
     headers: tenantHeaders(tid),
   });
-  return handleJson<RunResponse>(res);
+  const raw = await handleJson(res);
+  return coerceRunFromDict(raw, base);
 }
 
 export async function getSnapshot(tenantId: string, runId: string): Promise<SnapshotPayload | null> {
@@ -156,7 +312,8 @@ export async function getSnapshot(tenantId: string, runId: string): Promise<Snap
         headers: tenantHeaders(tid),
       });
       if (res.status === 404) return null;
-      return handleJson<SnapshotPayload>(res);
+      const raw = await handleJson(res);
+      return parseSnapshotRow(raw);
     },
     () => fixtureSnapshotByRunId(runId)
   );
@@ -184,7 +341,16 @@ export async function uploadDocument(
     headers: tenantHeaders(tid),
     body: form,
   });
-  return handleJson<UploadResponse>(res);
+  const raw = await handleJson(res);
+  const o = asRecord(raw);
+  if (!o) throw new MarketIntelApiError("Respuesta de upload inválida", 502);
+  return {
+    id: asString(o.id, `doc-${Date.now()}`),
+    source_name: asString(o.source_name, file.name),
+    source_level: asString(o.source_level, "operator_upload"),
+    filename: asString(o.filename, file.name),
+    uploaded_at: asString(o.uploaded_at, new Date().toISOString()),
+  };
 }
 
 export async function validateRun(
@@ -216,6 +382,8 @@ export async function validateRun(
     };
   }
 
+  const base = await getRun(tid, runId);
+
   const res = await apiFetch(`${BASE}/runs/${encodeURIComponent(runId)}/validate`, {
     method: "POST",
     headers: tenantHeaders(tid, { "Content-Type": "application/json" }),
@@ -223,17 +391,14 @@ export async function validateRun(
   });
 
   if (res.status === 400) {
-    const base = await getRun(tid, runId);
     return { run: base, counselRequired: true };
   }
   if (res.status === 409) {
-    const base = await getRun(tid, runId);
     return { run: base, alreadyValidated: true };
   }
 
-  const run = await handleJson<RunResponse>(res);
-  return { run };
+  const raw = await handleJson(res);
+  return { run: coerceRunFromDict(raw, base) };
 }
 
-// Re-export error class for consumers
 export { MarketIntelApiError } from "./types";
