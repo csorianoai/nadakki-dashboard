@@ -5,20 +5,36 @@ import { RefreshCw } from "lucide-react";
 import { ForgePageHeader } from "@/components/credit-hub/system/ForgePageHeader";
 import { EmptyState } from "@/components/forge/ui/EmptyState";
 import { useMarketIntelTenant } from "../hooks/useMarketIntelTenant";
-import { createRun, getRun, getSnapshot, listRuns, startRun } from "../lib/api";
-import type { CreateRunBody, RunResponse, SnapshotPayload } from "../lib/types";
+import {
+  createRun,
+  getRun,
+  getSnapshot,
+  listPacks,
+  listRuns,
+  startRun,
+  uploadDocument,
+  validateRun,
+} from "../lib/api";
+import type { CreateRunBody, MarketIntelPack, RunResponse, SnapshotPayload } from "../lib/types";
 import { RunSelector } from "./RunSelector";
 import { RunWorkspace } from "./RunWorkspace";
 
 export function MarketIntelClient() {
   const { effectiveTenantId, tenantHydrated, tenantError } = useMarketIntelTenant();
   const [runs, setRuns] = useState<RunResponse[]>([]);
+  const [packs, setPacks] = useState<MarketIntelPack[]>([]);
+  const [packsLoading, setPacksLoading] = useState(true);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [activeRun, setActiveRun] = useState<RunResponse | null>(null);
   const [snapshot, setSnapshot] = useState<SnapshotPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [counselRequired, setCounselRequired] = useState(false);
+  const [alreadyValidated, setAlreadyValidated] = useState(false);
+  const [lastUploaded, setLastUploaded] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refreshRuns = useCallback(async () => {
@@ -38,6 +54,8 @@ export function MarketIntelClient() {
     }
     const run = await getRun(effectiveTenantId, selectedRunId);
     setActiveRun(run);
+    setAlreadyValidated(run.status === "validated");
+    setCounselRequired(false);
 
     if (run.status === "draft") {
       setSnapshot(null);
@@ -51,10 +69,19 @@ export function MarketIntelClient() {
   useEffect(() => {
     if (!tenantHydrated || !effectiveTenantId) return;
     setLoading(true);
+    setPacksLoading(true);
     setError(null);
-    void refreshRuns()
+    void Promise.all([
+      refreshRuns(),
+      listPacks(effectiveTenantId)
+        .then(setPacks)
+        .catch(() => setPacks([])),
+    ])
       .catch(() => setError("No se pudieron cargar las investigaciones."))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setPacksLoading(false);
+      });
   }, [tenantHydrated, effectiveTenantId, refreshRuns]);
 
   useEffect(() => {
@@ -94,6 +121,50 @@ export function MarketIntelClient() {
     }
   };
 
+  const handleUpload = async (file: File) => {
+    if (!effectiveTenantId || !selectedRunId) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const res = await uploadDocument(effectiveTenantId, selectedRunId, file);
+      setLastUploaded(`${res.filename} (${res.source_level})`);
+    } catch {
+      throw new Error("upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleValidate = async (counselSigned: boolean) => {
+    if (!effectiveTenantId || !selectedRunId) return;
+    setValidating(true);
+    setError(null);
+    try {
+      const result = await validateRun(effectiveTenantId, selectedRunId, {
+        counsel_signed: counselSigned,
+      });
+
+      if (result.counselRequired) {
+        setCounselRequired(true);
+        return;
+      }
+
+      setCounselRequired(false);
+      setAlreadyValidated(Boolean(result.alreadyValidated));
+      setActiveRun(result.run);
+      await refreshRuns();
+
+      if (result.run.status === "validated" || result.alreadyValidated) {
+        const snap = await getSnapshot(effectiveTenantId, selectedRunId);
+        setSnapshot(snap);
+      }
+    } catch {
+      setError("No se pudo validar la investigación.");
+    } finally {
+      setValidating(false);
+    }
+  };
+
   if (!tenantHydrated) {
     return <p className="text-forge-sm text-forgeGray-500">Cargando…</p>;
   }
@@ -110,7 +181,7 @@ export function MarketIntelClient() {
     <main id="main-content" className="market-intel-mee min-h-0 space-y-6">
       <ForgePageHeader
         title="Inteligencia de Mercado"
-        subtitle="Market Entry Engine — investigación y estrategia de entrada"
+        subtitle="Market Entry Engine — investigación, validación y estrategia de entrada"
         action={
           <button
             type="button"
@@ -136,6 +207,8 @@ export function MarketIntelClient() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <RunSelector
           runs={runs}
+          packs={packs}
+          packsLoading={packsLoading}
           selectedRunId={selectedRunId}
           onSelect={setSelectedRunId}
           onCreate={handleCreate}
@@ -156,6 +229,13 @@ export function MarketIntelClient() {
             snapshot={snapshot}
             starting={starting}
             onStart={() => void handleStart()}
+            onUpload={handleUpload}
+            uploading={uploading}
+            lastUploaded={lastUploaded}
+            onValidate={handleValidate}
+            validating={validating}
+            counselRequired={counselRequired}
+            alreadyValidated={alreadyValidated}
           />
         )}
       </div>

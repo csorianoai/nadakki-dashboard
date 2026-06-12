@@ -54,7 +54,10 @@ export function DocumentUploadPanel({ onUpload, uploading, lastUploaded }: Docum
         </label>
         {lastUploaded ? (
           <p className="text-forge-xs text-forgeSuccess-700" role="status">
-            Último: {lastUploaded}
+            Registrado como <span className="font-forgeMono">operator_upload</span>: {lastUploaded}
+            <span className="mt-0.5 block text-forgeGray-500">
+              Se reflejará al re-investigar.
+            </span>
           </p>
         ) : null}
       </div>
