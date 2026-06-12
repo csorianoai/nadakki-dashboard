@@ -1,9 +1,3 @@
-export const COUNTRY_OPTIONS = [
-  { iso: "DO", label: "República Dominicana" },
-  { iso: "PR", label: "Puerto Rico" },
-  { iso: "MX", label: "México" },
-] as const;
-
 export const VERTICAL_OPTIONS = [
   { value: "consumer_credit", label: "Crédito de consumo" },
   { value: "sme_lending", label: "Crédito PYME" },

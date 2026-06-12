@@ -19,6 +19,15 @@ export interface RunResponse {
   updated_at: string;
 }
 
+/** GET /packs — country selector; `vertical` is module id ("market_intel"), not business vertical. */
+export interface MarketIntelPack {
+  country_iso: string;
+  name: string;
+  vertical: string;
+  version: string;
+  status: string;
+}
+
 export interface CreateRunBody {
   country_iso: string;
   vertical: string;

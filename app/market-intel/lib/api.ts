@@ -5,6 +5,7 @@
 
 import { apiFetch } from "@/lib/api/fetch-client";
 import {
+  FIXTURE_PACKS,
   FIXTURE_RUNS,
   fixtureRunById,
   fixtureSnapshotByRunId,
@@ -13,6 +14,7 @@ import {
   MarketIntelApiError,
   type CreateRunBody,
   type Finding,
+  type MarketIntelPack,
   type MarketOverview,
   type RunResponse,
   type SnapshotPayload,
@@ -76,9 +78,30 @@ export function normalizeRunResponse(raw: unknown): RunResponse {
   };
 }
 
+function normalizePack(raw: unknown): MarketIntelPack | null {
+  const o = asRecord(raw);
+  if (!o) return null;
+  const country_iso = asString(o.country_iso);
+  const name = asString(o.name);
+  if (!country_iso || !name) return null;
+  return {
+    country_iso,
+    name,
+    vertical: asString(o.vertical, "market_intel"),
+    version: asString(o.version),
+    status: asString(o.status),
+  };
+}
+
+function normalizePacksList(raw: unknown): MarketIntelPack[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => normalizePack(item))
+    .filter((pack): pack is MarketIntelPack => pack !== null);
+}
+
 /**
- * /start and /validate return raw dicts — merge defensively onto a base run.
- * Reads `status` and other present fields without assuming a strict schema.
+ * /start returns raw dict — merge defensively onto a base run.
  */
 function coerceRunFromDict(raw: unknown, base: RunResponse): RunResponse {
   const o = asRecord(raw);
@@ -217,15 +240,30 @@ function useFixtureRuns(): boolean {
   return process.env.NEXT_PUBLIC_MARKET_INTEL_USE_FIXTURES === "true";
 }
 
+/** Fixtures only when NEXT_PUBLIC_MARKET_INTEL_USE_FIXTURES=true — never silent fallback on live errors. */
 async function withFixtureFallback<T>(
   live: () => Promise<T>,
   fallback: () => T
 ): Promise<T> {
   if (useFixtureRuns()) return fallback();
+  return live();
+}
+
+/** GET /packs — country dropdown; falls back to FIXTURE_PACKS on any live failure. */
+export async function listPacks(tenantId: string): Promise<MarketIntelPack[]> {
+  const tid = requireTenant(tenantId);
+  if (useFixtureRuns()) return [...FIXTURE_PACKS];
   try {
-    return await live();
+    const res = await apiFetch(`${BASE}/packs`, {
+      method: "GET",
+      headers: tenantHeaders(tid),
+    });
+    if (!res.ok) return [...FIXTURE_PACKS];
+    const raw = await parseDetail(res);
+    const packs = normalizePacksList(raw);
+    return packs.length > 0 ? packs : [...FIXTURE_PACKS];
   } catch {
-    return fallback();
+    return [...FIXTURE_PACKS];
   }
 }
 
@@ -307,13 +345,18 @@ export async function getSnapshot(tenantId: string, runId: string): Promise<Snap
   const tid = requireTenant(tenantId);
   return withFixtureFallback(
     async () => {
-      const res = await apiFetch(`${BASE}/runs/${encodeURIComponent(runId)}/snapshot`, {
-        method: "GET",
-        headers: tenantHeaders(tid),
-      });
-      if (res.status === 404) return null;
-      const raw = await handleJson(res);
-      return parseSnapshotRow(raw);
+      try {
+        const res = await apiFetch(`${BASE}/runs/${encodeURIComponent(runId)}/snapshot`, {
+          method: "GET",
+          headers: tenantHeaders(tid),
+        });
+        // researching / not ready yet — progress state, not an error
+        if (res.status === 404 || res.status === 204) return null;
+        const raw = await handleJson(res);
+        return parseSnapshotRow(raw);
+      } catch {
+        return null;
+      }
     },
     () => fixtureSnapshotByRunId(runId)
   );
@@ -393,12 +436,30 @@ export async function validateRun(
   if (res.status === 400) {
     return { run: base, counselRequired: true };
   }
+
+  const raw = await parseDetail(res);
+
   if (res.status === 409) {
-    return { run: base, alreadyValidated: true };
+    const o = asRecord(raw);
+    const run =
+      o && typeof o.id === "string"
+        ? normalizeRunResponse(raw)
+        : await getRun(tid, runId);
+    return { run, alreadyValidated: true };
   }
 
-  const raw = await handleJson(res);
-  return { run: coerceRunFromDict(raw, base) };
+  if (!res.ok) {
+    let msg = `Error HTTP ${res.status}`;
+    if (raw && typeof raw === "object" && raw !== null) {
+      const root = raw as Record<string, unknown>;
+      if (typeof root.detail === "string") msg = root.detail;
+      else if (typeof root.message === "string") msg = root.message;
+    }
+    throw new MarketIntelApiError(msg, res.status, raw);
+  }
+
+  const run = normalizeRunResponse(raw);
+  return { run };
 }
 
 export { MarketIntelApiError } from "./types";

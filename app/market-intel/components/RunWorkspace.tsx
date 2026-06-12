@@ -3,21 +3,42 @@
 import { Play } from "lucide-react";
 import { EmptyState } from "@/components/forge/ui/EmptyState";
 import type { RunResponse, SnapshotPayload } from "../lib/types";
-import { RunStatusBadge } from "./RunStatusBadge";
+import { DocumentUploadPanel } from "./DocumentUploadPanel";
 import { IntelligenceView } from "./IntelligenceView";
+import { RunStatusBadge } from "./RunStatusBadge";
+import { ValidatePanel } from "./ValidatePanel";
 
 interface RunWorkspaceProps {
   run: RunResponse;
   snapshot: SnapshotPayload | null;
   starting: boolean;
   onStart: () => void;
+  onUpload: (file: File) => Promise<void>;
+  uploading: boolean;
+  lastUploaded: string | null;
+  onValidate: (counselSigned: boolean) => Promise<void>;
+  validating: boolean;
+  counselRequired: boolean;
+  alreadyValidated: boolean;
 }
 
 function formatLabel(value: string): string {
   return value.replace(/_/g, " ");
 }
 
-export function RunWorkspace({ run, snapshot, starting, onStart }: RunWorkspaceProps) {
+export function RunWorkspace({
+  run,
+  snapshot,
+  starting,
+  onStart,
+  onUpload,
+  uploading,
+  lastUploaded,
+  onValidate,
+  validating,
+  counselRequired,
+  alreadyValidated,
+}: RunWorkspaceProps) {
   const showStartCta = run.status === "draft" && !snapshot;
   const showResearchingWait = run.status === "researching" && !snapshot;
 
@@ -63,6 +84,21 @@ export function RunWorkspace({ run, snapshot, starting, onStart }: RunWorkspaceP
       {snapshot ? (
         <IntelligenceView snapshot={snapshot} currency={run.currency} />
       ) : null}
+
+      <DocumentUploadPanel
+        onUpload={onUpload}
+        uploading={uploading}
+        lastUploaded={lastUploaded}
+      />
+
+      <ValidatePanel
+        run={run}
+        findings={snapshot?.findings ?? []}
+        onValidate={onValidate}
+        validating={validating}
+        counselRequired={counselRequired}
+        alreadyValidated={alreadyValidated}
+      />
     </div>
   );
 }

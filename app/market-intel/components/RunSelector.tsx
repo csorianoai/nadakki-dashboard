@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import type { CreateRunBody, RunResponse } from "../lib/types";
+import type { CreateRunBody, MarketIntelPack, RunResponse } from "../lib/types";
 import {
-  COUNTRY_OPTIONS,
   INSTITUTION_TYPE_OPTIONS,
   PRODUCT_OPTIONS,
   VERTICAL_OPTIONS,
@@ -13,6 +12,8 @@ import { RunStatusBadge } from "./RunStatusBadge";
 
 interface RunSelectorProps {
   runs: RunResponse[];
+  packs: MarketIntelPack[];
+  packsLoading: boolean;
   selectedRunId: string | null;
   onSelect: (runId: string) => void;
   onCreate: (body: CreateRunBody) => Promise<void>;
@@ -21,19 +22,27 @@ interface RunSelectorProps {
 
 export function RunSelector({
   runs,
+  packs,
+  packsLoading,
   selectedRunId,
   onSelect,
   onCreate,
   creating,
 }: RunSelectorProps) {
   const [showForm, setShowForm] = useState(false);
-  const [countryIso, setCountryIso] = useState("DO");
+  const [countryIso, setCountryIso] = useState("");
   const [vertical, setVertical] = useState("consumer_credit");
   const [product, setProduct] = useState("personal_loan");
   const [institutionTypes, setInstitutionTypes] = useState<string[]>([
     "commercial_bank",
     "cooperative",
   ]);
+
+  useEffect(() => {
+    if (!countryIso && packs.length > 0) {
+      setCountryIso(packs[0].country_iso);
+    }
+  }, [packs, countryIso]);
 
   const toggleInstitution = (value: string) => {
     setInstitutionTypes((prev) =>
@@ -42,6 +51,7 @@ export function RunSelector({
   };
 
   const handleCreate = async () => {
+    if (!countryIso) return;
     await onCreate({
       country_iso: countryIso,
       vertical,
@@ -84,18 +94,25 @@ export function RunSelector({
             <select
               value={countryIso}
               onChange={(e) => setCountryIso(e.target.value)}
-              className="mt-1 w-full rounded-forge-sm border border-forgeGray-200 bg-white px-2 py-1.5 text-forge-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--mee-accent)]"
+              disabled={packsLoading || packs.length === 0}
+              className="mt-1 w-full rounded-forge-sm border border-forgeGray-200 bg-white px-2 py-1.5 text-forge-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--mee-accent)] disabled:opacity-50"
             >
-              {COUNTRY_OPTIONS.map((c) => (
-                <option key={c.iso} value={c.iso}>
-                  {c.label}
-                </option>
-              ))}
+              {packsLoading ? (
+                <option value="">Cargando países…</option>
+              ) : packs.length === 0 ? (
+                <option value="">Sin países disponibles</option>
+              ) : (
+                packs.map((pack) => (
+                  <option key={pack.country_iso} value={pack.country_iso}>
+                    {pack.name}
+                  </option>
+                ))
+              )}
             </select>
           </label>
 
           <label className="block text-forge-xs font-medium text-forgeGray-600">
-            Vertical
+            Vertical de negocio
             <select
               value={vertical}
               onChange={(e) => setVertical(e.target.value)}
@@ -148,7 +165,7 @@ export function RunSelector({
 
           <button
             type="submit"
-            disabled={creating}
+            disabled={creating || !countryIso}
             className="w-full rounded-forge-sm bg-[var(--mee-accent)] px-3 py-2 text-forge-sm font-semibold text-white disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--mee-accent)]"
           >
             {creating ? "Creando…" : "Crear investigación"}

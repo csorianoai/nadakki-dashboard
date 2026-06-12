@@ -1,4 +1,29 @@
-import type { RunResponse, SnapshotPayload } from "./types";
+import type { MarketIntelPack, RunResponse, SnapshotPayload } from "./types";
+
+/** Fallback when GET /packs is unavailable — `vertical` is module id, not business vertical. */
+export const FIXTURE_PACKS: MarketIntelPack[] = [
+  {
+    country_iso: "DO",
+    name: "República Dominicana",
+    vertical: "market_intel",
+    version: "1.0",
+    status: "active",
+  },
+  {
+    country_iso: "PR",
+    name: "Puerto Rico",
+    vertical: "market_intel",
+    version: "1.0",
+    status: "active",
+  },
+  {
+    country_iso: "MX",
+    name: "México",
+    vertical: "market_intel",
+    version: "1.0",
+    status: "active",
+  },
+];
 
 const now = new Date().toISOString();
 
