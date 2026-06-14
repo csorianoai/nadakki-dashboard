@@ -2,11 +2,11 @@
 
 import type { SnapshotPayload } from "../lib/types";
 import { MetricsStrip } from "./MetricsStrip";
-import { InstitutionChart } from "./InstitutionChart";
 import { SourcesList } from "./SourcesList";
 import { FindingsPanel } from "./FindingsPanel";
 import { EntryStrategySection } from "./EntryStrategySection";
 import { PricingProposalSection } from "./PricingProposalSection";
+import { MarketOverviewSection } from "./MarketOverviewSection";
 
 interface IntelligenceViewProps {
   snapshot: SnapshotPayload;
@@ -15,7 +15,6 @@ interface IntelligenceViewProps {
 
 export function IntelligenceView({ snapshot, currency = "DOP" }: IntelligenceViewProps) {
   const overview = snapshot.market_overview ?? {};
-  const shares = overview.institution_shares ?? [];
   const priorityTiers = overview.priority_tiers ?? [];
   const wedgeCallout =
     typeof overview.wedge_callout === "string" ? overview.wedge_callout : null;
@@ -47,7 +46,7 @@ export function IntelligenceView({ snapshot, currency = "DOP" }: IntelligenceVie
         </aside>
       ) : null}
 
-      {shares.length > 0 ? <InstitutionChart shares={shares} currency={currency} /> : null}
+      <MarketOverviewSection overview={overview} currency={currency} />
 
       {priorityTiers.length > 0 ? (
         <section

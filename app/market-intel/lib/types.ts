@@ -76,6 +76,11 @@ export interface MarketOverview {
   headline?: string;
   wedge_callout?: string;
   total_market_rd?: number;
+  market_size_local?: number | null;
+  market_size_usd?: number | null;
+  growth_rate_pct?: number | null;
+  key_players?: string[];
+  regulatory_environment?: string | null;
   institution_shares?: InstitutionShare[];
   priority_tiers?: Array<{
     tier: string;
@@ -86,12 +91,37 @@ export interface MarketOverview {
   [key: string]: unknown;
 }
 
+export interface PricingPlan {
+  name: string;
+  setup_fee?: number;
+  per_application_fee?: number;
+  [key: string]: unknown;
+}
+
+export interface DealerTier {
+  tier: string;
+  monthly_fee?: number;
+  features?: string[];
+  [key: string]: unknown;
+}
+
+export interface PricingProposal {
+  tier?: string;
+  currency?: string;
+  fx_to_usd?: number;
+  validation_status?: string;
+  requires_counsel_review?: boolean;
+  plans?: PricingPlan[];
+  dealer_tiers?: DealerTier[];
+  [key: string]: unknown;
+}
+
 export interface SnapshotPayload {
   sources_summary: SourcesSummary;
   findings: Finding[];
   market_overview: MarketOverview;
   entry_strategy?: Record<string, unknown>;
-  pricing_proposal?: Record<string, unknown>;
+  pricing_proposal?: PricingProposal;
   validation_state: string;
   metadata: Record<string, unknown>;
 }
