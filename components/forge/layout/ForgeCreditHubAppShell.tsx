@@ -48,8 +48,10 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
               aria-hidden
             />
             <div className="flex min-h-0 min-w-0 flex-1">
-              <ForgeCreditHubSidebar showHeaderSkeleton={isPending} />
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">{children}</div>
+              <div className="sticky top-0 hidden max-h-[calc(100dvh-3.5rem)] shrink-0 self-start overflow-y-auto lg:block">
+                <ForgeCreditHubSidebar showHeaderSkeleton={isPending} />
+              </div>
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
             </div>
           </ForgeCommandPaletteProvider>
         </CHTenantGuard>
