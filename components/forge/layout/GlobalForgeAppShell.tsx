@@ -36,7 +36,7 @@ export function GlobalForgeAppShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} forge-app flex min-h-screen flex-col antialiased`}
+      className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} forge-app flex h-screen flex-col overflow-hidden antialiased`}
       data-tenant={forgeTenantAttr}
     >
       <ForgeAppShell

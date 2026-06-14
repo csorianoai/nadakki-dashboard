@@ -49,7 +49,7 @@ export function ForgeCreditHubAppShell({ children }: { children: ReactNode }) {
             />
             <div className="flex min-h-0 min-w-0 flex-1">
               <ForgeCreditHubSidebar showHeaderSkeleton={isPending} />
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">{children}</div>
             </div>
           </ForgeCommandPaletteProvider>
         </CHTenantGuard>
