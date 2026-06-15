@@ -1,16 +1,19 @@
 "use client";
 
+import { useMemo } from "react";
 import { CardHeader } from "../CardHeader";
 import { TIER_COLOR } from "../Chips";
 import { ICN, Ic } from "../Icons";
 import { EmptyState } from "../States";
 import { fmtLocal } from "../../lib/formatters";
-import type { DrawerPick, EntryStrategy } from "../../lib/types";
+import { filterEntryStrategyTiers } from "../../lib/mee-filters";
+import type { DrawerPick, EntryStrategy, MeeFilters } from "../../lib/types";
 
 interface EntryStrategySectionProps {
   strategy: EntryStrategy | undefined;
   cur: string;
   onPick: (pick: DrawerPick) => void;
+  filters: MeeFilters;
 }
 
 const SEG_LABEL: Record<string, string> = {
@@ -19,7 +22,12 @@ const SEG_LABEL: Record<string, string> = {
   comercial: "Flota comercial",
 };
 
-export function EntryStrategySection({ strategy, cur, onPick }: EntryStrategySectionProps) {
+export function EntryStrategySection({ strategy, cur, onPick, filters }: EntryStrategySectionProps) {
+  const tiers = useMemo(
+    () => (strategy ? filterEntryStrategyTiers(strategy, filters) : []),
+    [strategy, filters]
+  );
+
   if (!strategy) {
     return (
       <div className="card">
@@ -27,6 +35,18 @@ export function EntryStrategySection({ strategy, cur, onPick }: EntryStrategySec
           icon={ICN.target}
           title="Estrategia de entrada en preparación"
           body="El agente strategist aún no ha generado la estrategia para este run."
+        />
+      </div>
+    );
+  }
+
+  if (!tiers.length) {
+    return (
+      <div className="card">
+        <EmptyState
+          icon={ICN.target}
+          title="Ningún tier coincide con los filtros"
+          body="Ajusta el segmento o el tier para ver el plan de abordaje institucional."
         />
       </div>
     );
@@ -145,7 +165,7 @@ export function EntryStrategySection({ strategy, cur, onPick }: EntryStrategySec
             alignItems: "start",
           }}
         >
-          {strategy.institution_tiers.map((t, i) => (
+          {tiers.map((t, i) => (
             <div key={i} className="card" style={{ overflow: "hidden" }}>
               <div
                 style={{
