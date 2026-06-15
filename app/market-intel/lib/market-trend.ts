@@ -12,7 +12,7 @@ export function deriveMarketTrend(
 ): MarketTrendPoint[] {
   const end = marketSizeLocal;
   const g = growthRatePct / 100;
-  const yrs = [2020, 2021, 2022, 2023, 2024];
+  const yrs = [2021, 2022, 2023, 2024, 2025];
   let v = end;
   const back: number[] = [];
   for (let i = yrs.length - 1; i >= 0; i--) {

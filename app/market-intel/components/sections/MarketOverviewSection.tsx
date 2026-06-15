@@ -75,7 +75,7 @@ export function MarketOverviewSection({
           <CardHeader
             eyebrow="Tamaño y crecimiento"
             title="Mercado de crédito automotriz"
-            sub="Cartera vigente del sistema · serie 2020–2024"
+            sub="Cartera vigente del sistema · serie 2021–2025"
             actions={
               growthRate ? (
                 <span className="chip pos">
