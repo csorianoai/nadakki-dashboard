@@ -53,7 +53,15 @@ export interface SourcesSummary {
   by_confidence: Record<string, number>;
 }
 
+export interface FindingDataPoint {
+  metric: string;
+  value: number;
+  unit: string;
+  year?: number;
+}
+
 export interface Finding {
+  id?: string;
   source_name: string;
   source_level: string;
   confidence: string;
@@ -62,7 +70,7 @@ export interface Finding {
   validation_status: string;
   requires_counsel_review: boolean;
   summary: string;
-  data_points: Array<Record<string, unknown>>;
+  data_points: FindingDataPoint[];
 }
 
 export interface InstitutionShare {
@@ -70,6 +78,29 @@ export interface InstitutionShare {
   tier: string;
   portfolio_rd: number;
   participation_pct: number;
+  source?: string;
+  units?: number;
+}
+
+export interface EntryStrategyInstitution {
+  name: string;
+  portfolio_rd: number;
+  participation_pct: number;
+  source?: string;
+  tier?: string;
+}
+
+export interface EntryStrategyTier {
+  tier: string;
+  rationale: string;
+  names: EntryStrategyInstitution[];
+}
+
+export interface EntryStrategy {
+  target_segment: string;
+  angle: string;
+  sales_arguments: string[];
+  institution_tiers: EntryStrategyTier[];
 }
 
 export interface MarketOverview {
@@ -79,6 +110,9 @@ export interface MarketOverview {
   market_size_local?: number | null;
   market_size_usd?: number | null;
   growth_rate_pct?: number | null;
+  avg_interest_rate_pct?: number | null;
+  npl_ratio_pct?: number | null;
+  digital_approval_rate_pct?: number | null;
   key_players?: string[];
   regulatory_environment?: string | null;
   institution_shares?: InstitutionShare[];
@@ -91,15 +125,44 @@ export interface MarketOverview {
   [key: string]: unknown;
 }
 
+export interface PipelineStep {
+  agent: string;
+  label: string;
+  status: string;
+  duration_s: number;
+  sources?: number;
+  findings?: number;
+}
+
+export interface MeeFilters {
+  segment: "all" | "usados" | "nuevos" | "comercial";
+  confidence: "all" | "alto" | "medio" | "bajo";
+  tier: "all" | "Tier1" | "Tier2" | "Tier3";
+}
+
+export type DrawerPick =
+  | { type: "institution"; data: InstitutionShare & { tier?: string } }
+  | { type: "finding"; data: Finding };
+
+export interface SnapshotViewModel extends SnapshotPayload {
+  pipeline?: PipelineStep[];
+}
+
 export interface PricingPlan {
   name: string;
   setup_fee?: number;
   per_application_fee?: number;
+  monthly_min?: number;
+  target?: string;
+  features?: string[];
   [key: string]: unknown;
 }
 
 export interface DealerTier {
   tier: string;
+  label?: string;
+  discount_pct?: number;
+  min_apps_month?: number;
   monthly_fee?: number;
   features?: string[];
   [key: string]: unknown;
