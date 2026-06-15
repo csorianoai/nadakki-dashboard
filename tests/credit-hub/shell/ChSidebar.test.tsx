@@ -5,22 +5,22 @@ describe("ChSidebar", () => {
   test("renders bank navigation labels", () => {
     render(
       <div className="credit-hub-forge" data-persona="bank">
-        <ChSidebar persona="bank" activePath="/credit-hub/bank/applications" institutionName="Test Bank" />
+        <ChSidebar persona="bank" active="bandeja" institutionName="TestBank Mexico" />
       </div>
     );
-    expect(screen.getByRole("complementary", { name: /Portal bancario navigation/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Bandeja/i })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: /Analítica/i })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: /Bank navigation/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Bandeja/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Analítica/i })).toBeInTheDocument();
   });
 
   test("renders dealer navigation labels", () => {
     render(
       <div className="credit-hub-forge" data-persona="dealer">
-        <ChSidebar persona="dealer" activePath="/credit-hub/dealer" institutionName="Test Dealer" />
+        <ChSidebar persona="dealer" active="nueva" institutionName="Auto Plaza" />
       </div>
     );
-    expect(screen.getByRole("complementary", { name: /Portal dealer navigation/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Simulador/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Nueva/i })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: /Dealer navigation/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Preaprobación/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Nueva/i })).toBeInTheDocument();
   });
 });

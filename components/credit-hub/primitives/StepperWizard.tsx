@@ -1,51 +1,106 @@
 "use client";
 
-import Link from "next/link";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { StepperWizardProps } from "@/lib/credit-hub/ch-types";
+import type { StepperWizardProps, StepperWizardStep } from "@/lib/credit-hub/ch-types";
 
-export function StepperWizard({ steps, currentIndex, className }: StepperWizardProps) {
+function normalizeSteps(steps: StepperWizardProps["steps"]): StepperWizardStep[] {
+  if (!steps?.length) {
+    return [
+      { label: "Datos personales" },
+      { label: "Ingresos" },
+      { label: "Buró" },
+      { label: "Decisión" },
+    ];
+  }
+  return steps.map((s, i) => (typeof s === "string" ? { id: String(i), label: s } : s));
+}
+
+export function StepperWizard({
+  steps,
+  current,
+  currentIndex,
+  errorStep = null,
+  onStep,
+  className,
+}: StepperWizardProps) {
+  const data = normalizeSteps(steps);
+  const cur = current ?? currentIndex ?? 1;
+
   return (
-    <nav aria-label="Progreso del formulario" className={cn("flex flex-wrap gap-2", className)}>
-      {steps.map((step, index) => {
-        const active = index === currentIndex;
-        const complete = index < currentIndex;
-        const content = (
-          <>
-            <span
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold"
-              style={{
-                background: active || complete ? "var(--ch-persona-primary)" : "var(--ch-surface-2)",
-                color: active || complete ? "#fff" : "var(--ch-ink-3)",
-              }}
-            >
-              {index + 1}
-            </span>
-            <span className="text-xs font-medium" style={{ color: active ? "var(--ch-ink)" : "var(--ch-ink-3)" }}>
-              {step.label}
-            </span>
-          </>
-        );
-
-        const shellClass = cn(
-          "inline-flex min-h-10 items-center gap-2 rounded-[var(--ch-r)] px-2 py-1",
-          active ? "bg-[var(--ch-persona-primary-soft)]" : undefined
-        );
-
-        if (step.href && !active) {
-          return (
-            <Link key={step.id} href={step.href} className={shellClass} aria-current={active ? "step" : undefined}>
-              {content}
-            </Link>
-          );
-        }
+    <div className={cn(className)} style={{ display: "flex", alignItems: "flex-start", gap: 0, overflowX: "auto", paddingBottom: 4 }}>
+      {data.map((step, i) => {
+        const done = i < cur;
+        const active = i === cur;
+        const err = i === errorStep;
+        const last = i === data.length - 1;
 
         return (
-          <div key={step.id} className={shellClass} aria-current={active ? "step" : undefined}>
-            {content}
+          <div key={step.id ?? i} style={{ display: "flex", alignItems: "center", flex: last ? "0 0 auto" : "1 1 0" }}>
+            <button
+              type="button"
+              onClick={() => onStep?.(i)}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 7,
+                background: "none",
+                border: "none",
+                cursor: onStep ? "pointer" : "default",
+                fontFamily: "inherit",
+                padding: "0 4px",
+                minWidth: 72,
+              }}
+            >
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 999,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  border: "2px solid",
+                  borderColor: err ? "var(--ch-danger)" : done || active ? "var(--ch-persona)" : "var(--ch-line-2)",
+                  background: done ? "var(--ch-persona)" : active ? "var(--ch-persona-soft)" : "var(--ch-surface)",
+                  color: done ? "#fff" : active ? "var(--ch-persona-text)" : "var(--ch-text-3)",
+                  transition: "all 0.15s",
+                }}
+              >
+                {done ? <Check className="h-3.5 w-3.5" aria-hidden /> : i + 1}
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: active ? 600 : 500,
+                  color: err ? "var(--ch-danger)" : active ? "var(--ch-text)" : "var(--ch-text-3)",
+                  textAlign: "center",
+                  lineHeight: 1.3,
+                  maxWidth: 80,
+                }}
+              >
+                {step.label}
+              </span>
+            </button>
+            {!last ? (
+              <div
+                style={{
+                  flex: 1,
+                  height: 2,
+                  background: done ? "var(--ch-persona)" : "var(--ch-line-2)",
+                  margin: "0 2px",
+                  marginBottom: 22,
+                  borderRadius: 1,
+                  minWidth: 16,
+                }}
+              />
+            ) : null}
           </div>
         );
       })}
-    </nav>
+    </div>
   );
 }

@@ -8,8 +8,8 @@ describe("ScoreVisual", () => {
         <ScoreVisual score={742} />
       </div>
     );
-    expect(screen.getByRole("img", { name: /Puntaje crediticio 742/i })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Score 742, riesgo Bajo/i })).toBeInTheDocument();
     expect(screen.getByText("742")).toBeInTheDocument();
-    expect(screen.getByText("Excelente")).toBeInTheDocument();
+    expect(screen.getByText(/Riesgo bajo/i)).toBeInTheDocument();
   });
 });
