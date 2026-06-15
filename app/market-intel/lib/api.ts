@@ -14,6 +14,7 @@ import {
   MarketIntelApiError,
   type CreateRunBody,
   type Finding,
+  type FindingDataPoint,
   type MarketIntelPack,
   type MarketOverview,
   type RunResponse,
@@ -24,6 +25,7 @@ import {
   type ValidateRunBody,
   type ValidateRunResult,
 } from "./types";
+import { normalizeFindingDataPoints } from "./snapshot-helpers";
 
 const BASE = "/api/v1/market-intel";
 
@@ -148,7 +150,9 @@ function coerceSnapshotPayload(raw: unknown): SnapshotPayload | null {
         .map((item) => {
           const f = asRecord(item);
           if (!f) return null;
-          return {
+          const dataPointsRaw = Array.isArray(f.data_points) ? f.data_points : [];
+          const data_points: FindingDataPoint[] = normalizeFindingDataPoints(dataPointsRaw);
+          const finding: Finding = {
             source_name: asString(f.source_name),
             source_level: asString(f.source_level),
             confidence: asString(f.confidence),
@@ -157,13 +161,10 @@ function coerceSnapshotPayload(raw: unknown): SnapshotPayload | null {
             validation_status: asString(f.validation_status),
             requires_counsel_review: Boolean(f.requires_counsel_review),
             summary: asString(f.summary),
-            data_points: Array.isArray(f.data_points)
-              ? f.data_points.filter(
-                  (dp): dp is Record<string, unknown> =>
-                    Boolean(dp) && typeof dp === "object" && !Array.isArray(dp)
-                )
-              : [],
-          } satisfies Finding;
+            data_points,
+          };
+          if (typeof f.id === "string" && f.id) finding.id = f.id;
+          return finding;
         })
         .filter((f): f is Finding => f !== null)
     : [];

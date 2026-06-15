@@ -81,7 +81,7 @@ export const FIXTURE_SNAPSHOTS: Record<string, SnapshotPayload> = {
         validation_status: "verified",
         requires_counsel_review: false,
         summary: "Requisitos de capital mínimo para originadores no bancarios al 12%.",
-        data_points: [{ metric: "capital_min_pct", value: 12 }],
+        data_points: [{ metric: "capital_min_pct", value: 12, unit: "pct" }],
       },
       {
         source_name: "Informe sectorial Q1 2025",
@@ -92,7 +92,7 @@ export const FIXTURE_SNAPSHOTS: Record<string, SnapshotPayload> = {
         validation_status: "pending",
         requires_counsel_review: true,
         summary: "La cuña de mercado entre bancos comerciales y cooperativas se estrecha 1.2 pp.",
-        data_points: [{ metric: "wedge_delta_pp", value: -1.2 }],
+        data_points: [{ metric: "wedge_delta_pp", value: -1.2, unit: "pct" }],
       },
       {
         source_name: "Documento interno — política de precios",

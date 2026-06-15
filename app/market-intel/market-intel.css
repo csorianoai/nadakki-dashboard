@@ -1,14 +1,238 @@
-/**
- * MEE (Market Entry Engine) accent — scoped to market-intel routes only.
- * Base typography/colors inherit from GlobalForgeAppShell (.forge-app).
- */
-.market-intel-root,
+/* ============================================================
+   MEE · Market Entry Engine — Design Tokens
+   Scoped to .market-intel-mee (no global :root/body/html).
+============================================================ */
+
 .market-intel-mee {
-  --mee-accent: var(--forge-accent-teal, #0d9488);
-  --mee-accent-strong: #0f766e;
-  --mee-accent-soft: rgba(13, 148, 136, 0.1);
-  --mee-accent-soft-hover: rgba(13, 148, 136, 0.16);
-  --mee-tier-1: #0d9488;
-  --mee-tier-2: #0891b2;
-  --mee-tier-3: #6366f1;
+  /* Surface */
+  --mee-bg:        #FAFAF9;
+  --mee-surface:   #FFFFFF;
+  --mee-surface-2: #F6F6F5;
+  --mee-surface-3: #F1F1EF;
+
+  /* Lines */
+  --mee-line:      #E7E5E4;
+  --mee-line-2:    #D6D3D1;
+  --mee-line-strong:#A8A29E;
+
+  /* Ink */
+  --mee-ink:       #1C1917;
+  --mee-ink-2:     #44403C;
+  --mee-ink-3:     #78716C;
+  --mee-ink-4:     #A8A29E;
+
+  /* Accent — Credit Hub amber (tenant-overridable) */
+  --mee-accent:        #B45309;
+  --mee-accent-strong: #92400E;
+  --mee-accent-mid:    #D97706;
+  --mee-accent-bright: #F59E0B;
+  --mee-accent-soft:   #FEF3C7;
+  --mee-accent-soft-2: #FDE68A;
+  --mee-accent-line:   #FCD34D;
+
+  /* Semantic */
+  --mee-pos:      #15803D;
+  --mee-pos-soft: #DCFCE7;
+  --mee-warn:     #B45309;
+  --mee-warn-soft:#FEF3C7;
+  --mee-neg:      #B91C1C;
+  --mee-neg-soft: #FEE2E2;
+  --mee-info:     #1D4ED8;
+  --mee-info-soft:#DBEAFE;
+  --mee-legal:    #6D28D9;
+  --mee-legal-soft:#EDE9FE;
+
+  /* Tier scale (concentration) */
+  --mee-tier1: #92400E;
+  --mee-tier2: #D97706;
+  --mee-tier3: #FBBF24;
+  --mee-tier-other: #D6D3D1;
+
+  /* Confidence */
+  --mee-conf-alto:  #15803D;
+  --mee-conf-medio: #B45309;
+  --mee-conf-bajo:  #78716C;
+
+  /* Type */
+  --mee-font-sans: "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
+  --mee-font-serif:"Newsreader", "Source Serif 4", Georgia, serif;
+  --mee-font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  /* Radius */
+  --mee-r-sm: 4px; --mee-r: 6px; --mee-r-lg: 8px; --mee-r-xl: 12px;
+
+  /* Shadow — restrained */
+  --mee-sh-1: 0 1px 2px rgba(28,25,23,0.04), 0 1px 1px rgba(28,25,23,0.03);
+  --mee-sh-2: 0 2px 8px rgba(28,25,23,0.06), 0 1px 2px rgba(28,25,23,0.04);
+  --mee-sh-drawer: -16px 0 48px rgba(28,25,23,0.14);
+
+  /* Tenant (DO default) */
+  --mee-cur: "RD$";
+
+  background: var(--mee-bg);
+  color: var(--mee-ink);
+  font-family: var(--mee-font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+.market-intel-mee,
+.market-intel-mee *,
+.market-intel-mee *::before,
+.market-intel-mee *::after {
+  box-sizing: border-box;
+}
+
+.market-intel-mee .mono {
+  font-family: var(--mee-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.market-intel-mee .tnum { font-variant-numeric: tabular-nums; }
+.market-intel-mee .serif {
+  font-family: var(--mee-font-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.market-intel-mee .eyebrow {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--mee-ink-3); white-space: nowrap;
+}
+
+.market-intel-mee ::selection { background: var(--mee-accent-soft-2); }
+.market-intel-mee *:focus-visible {
+  outline: 2px solid var(--mee-accent-mid);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.market-intel-mee ::-webkit-scrollbar { width: 11px; height: 11px; }
+.market-intel-mee ::-webkit-scrollbar-thumb {
+  background: var(--mee-line-2);
+  border-radius: 6px;
+  border: 3px solid var(--mee-bg);
+  background-clip: padding-box;
+}
+.market-intel-mee ::-webkit-scrollbar-thumb:hover {
+  background: var(--mee-line-strong);
+  background-clip: padding-box;
+  border: 3px solid var(--mee-bg);
+}
+.market-intel-mee ::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .market-intel-mee * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Primitives ---------- */
+.market-intel-mee .card {
+  background: var(--mee-surface);
+  border: 1px solid var(--mee-line);
+  border-radius: var(--mee-r-lg);
+}
+.market-intel-mee .card-h {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 14px 18px; border-bottom: 1px solid var(--mee-line);
+}
+.market-intel-mee .card-title { font-size: 14px; font-weight: 600; color: var(--mee-ink); }
+.market-intel-mee .card-sub { font-size: 12px; color: var(--mee-ink-3); margin-top: 2px; }
+
+.market-intel-mee .chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 22px; padding: 0 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 500; white-space: nowrap;
+  border: 1px solid var(--mee-line-2); background: var(--mee-surface-2); color: var(--mee-ink-2);
+}
+.market-intel-mee .chip .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.market-intel-mee .chip.amber  { color: var(--mee-accent); background: var(--mee-accent-soft); border-color: var(--mee-accent-line); }
+.market-intel-mee .chip.pos    { color: var(--mee-pos);  background: var(--mee-pos-soft);  border-color: #BBF7D0; }
+.market-intel-mee .chip.warn   { color: var(--mee-warn); background: var(--mee-warn-soft); border-color: var(--mee-accent-line); }
+.market-intel-mee .chip.neg    { color: var(--mee-neg);  background: var(--mee-neg-soft);  border-color: #FECACA; }
+.market-intel-mee .chip.info   { color: var(--mee-info); background: var(--mee-info-soft); border-color: #BFDBFE; }
+.market-intel-mee .chip.legal  { color: var(--mee-legal);background: var(--mee-legal-soft);border-color: #DDD6FE; }
+
+.market-intel-mee .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 32px; padding: 0 13px; border-radius: var(--mee-r);
+  font-size: 13px; font-weight: 500; font-family: inherit;
+  border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.market-intel-mee .btn-sm { height: 27px; padding: 0 9px; font-size: 12px; }
+.market-intel-mee .btn-primary { background: var(--mee-accent-mid); color: #fff; border-color: var(--mee-accent-mid); }
+.market-intel-mee .btn-primary:hover { background: var(--mee-accent-strong); border-color: var(--mee-accent-strong); }
+.market-intel-mee .btn-secondary { background: var(--mee-surface); color: var(--mee-ink); border-color: var(--mee-line-2); }
+.market-intel-mee .btn-secondary:hover { background: var(--mee-surface-2); border-color: var(--mee-line-strong); }
+.market-intel-mee .btn-ghost { background: transparent; color: var(--mee-ink-2); }
+.market-intel-mee .btn-ghost:hover { background: var(--mee-surface-2); color: var(--mee-ink); }
+
+.market-intel-mee .icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: var(--mee-r);
+  background: transparent; color: var(--mee-ink-3); border: 1px solid transparent; cursor: pointer;
+}
+.market-intel-mee .icon-btn:hover { background: var(--mee-surface-2); color: var(--mee-ink); }
+
+.market-intel-mee .input {
+  height: 32px; padding: 0 10px 0 30px; width: 100%;
+  border-radius: var(--mee-r); border: 1px solid var(--mee-line-2);
+  background: var(--mee-surface); color: var(--mee-ink);
+  font-family: inherit; font-size: 13px;
+}
+.market-intel-mee .input::placeholder { color: var(--mee-ink-4); }
+.market-intel-mee .input:focus { border-color: var(--mee-accent-mid); outline: none; }
+
+.market-intel-mee .seg {
+  display: inline-flex;
+  background: var(--mee-surface-2);
+  border: 1px solid var(--mee-line);
+  border-radius: var(--mee-r);
+  padding: 2px;
+  gap: 2px;
+}
+.market-intel-mee .seg button {
+  height: 24px; padding: 0 10px; border: none; background: transparent;
+  border-radius: 4px; font-family: inherit; font-size: 12px; font-weight: 500;
+  color: var(--mee-ink-3); cursor: pointer; white-space: nowrap;
+}
+.market-intel-mee .seg button[data-on="true"] {
+  background: var(--mee-surface);
+  color: var(--mee-ink);
+  box-shadow: var(--mee-sh-1);
+}
+
+.market-intel-mee table.t { width: 100%; border-collapse: collapse; }
+.market-intel-mee table.t thead th {
+  text-align: left; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--mee-ink-3); padding: 9px 14px; border-bottom: 1px solid var(--mee-line); white-space: nowrap;
+}
+.market-intel-mee table.t tbody td { padding: 11px 14px; border-bottom: 1px solid var(--mee-line); font-size: 13px; }
+.market-intel-mee table.t tbody tr:last-child td { border-bottom: none; }
+.market-intel-mee table.t tbody tr.click { cursor: pointer; }
+.market-intel-mee table.t tbody tr.click:hover td { background: var(--mee-surface-2); }
+.market-intel-mee table.t td.num,
+.market-intel-mee table.t th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--mee-font-mono);
+}
+
+.market-intel-mee .sk {
+  background: linear-gradient(90deg, var(--mee-surface-2) 25%, var(--mee-surface-3) 37%, var(--mee-surface-2) 63%);
+  background-size: 400% 100%;
+  animation: mee-skn 1.4s ease infinite;
+  border-radius: 4px;
+}
+@keyframes mee-skn {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.market-intel-mee .fade { }
