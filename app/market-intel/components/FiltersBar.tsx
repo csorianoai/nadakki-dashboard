@@ -9,7 +9,18 @@ interface FiltersBarProps {
   setFilters: Dispatch<SetStateAction<MeeFilters>>;
 }
 
+export function countActiveMeeFilters(filters: MeeFilters): number {
+  let n = 0;
+  if (filters.segment !== "all") n += 1;
+  if (filters.confidence !== "all") n += 1;
+  if (filters.tier !== "all") n += 1;
+  return n;
+}
+
 export function FiltersBar({ filters, setFilters }: FiltersBarProps) {
+  const activeCount = countActiveMeeFilters(filters);
+  const hasActiveFilters = activeCount > 0;
+
   const seg = (key: keyof MeeFilters, opts: Array<{ v: MeeFilters[typeof key]; l: string }>) => (
     <div className="seg" role="group" aria-label={key}>
       {opts.map((o) => (
@@ -17,6 +28,7 @@ export function FiltersBar({ filters, setFilters }: FiltersBarProps) {
           key={String(o.v)}
           type="button"
           data-on={filters[key] === o.v}
+          aria-pressed={filters[key] === o.v}
           onClick={() => setFilters((f) => ({ ...f, [key]: o.v }))}
         >
           {o.l}
@@ -25,20 +37,18 @@ export function FiltersBar({ filters, setFilters }: FiltersBarProps) {
     </div>
   );
 
-  const hasActiveFilters =
-    filters.segment !== "all" || filters.confidence !== "all" || filters.tier !== "all";
-
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
-        flexWrap: "wrap",
-        padding: "10px 0",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div className="mee-filters-bar">
+      <div className="mee-filters-bar__lead">
+        <span className="eyebrow">Filtros</span>
+        {activeCount > 0 ? (
+          <span className="chip amber mee-filters-count" aria-label={`${activeCount} filtros activos`}>
+            · {activeCount}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mee-filters-bar__group">
         <span className="eyebrow">Segmento</span>
         {seg("segment", [
           { v: "all", l: "Todos" },
@@ -47,7 +57,8 @@ export function FiltersBar({ filters, setFilters }: FiltersBarProps) {
           { v: "comercial", l: "Comercial" },
         ])}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+
+      <div className="mee-filters-bar__group">
         <span className="eyebrow">Confianza</span>
         {seg("confidence", [
           { v: "all", l: "Toda" },
@@ -56,7 +67,8 @@ export function FiltersBar({ filters, setFilters }: FiltersBarProps) {
           { v: "bajo", l: "Baja" },
         ])}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+
+      <div className="mee-filters-bar__group">
         <span className="eyebrow">Tier</span>
         {seg("tier", [
           { v: "all", l: "Todos" },
@@ -65,11 +77,12 @@ export function FiltersBar({ filters, setFilters }: FiltersBarProps) {
           { v: "Tier3", l: "T3" },
         ])}
       </div>
-      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+
+      <div className="mee-filters-bar__actions">
         {hasActiveFilters ? (
           <button
             type="button"
-            className="btn btn-ghost btn-sm"
+            className="mee-filters-clear"
             onClick={() =>
               setFilters({ segment: "all", confidence: "all", tier: "all" })
             }

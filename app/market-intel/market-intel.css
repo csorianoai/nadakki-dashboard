@@ -198,14 +198,113 @@
   gap: 2px;
 }
 .market-intel-mee .seg button {
-  height: 24px; padding: 0 10px; border: none; background: transparent;
-  border-radius: 4px; font-family: inherit; font-size: 12px; font-weight: 500;
-  color: var(--mee-ink-3); cursor: pointer; white-space: nowrap;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--mee-line-2);
+  background: transparent;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mee-ink-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.market-intel-mee .seg button:hover:not([data-on="true"]) {
+  background: var(--mee-surface);
+  border-color: var(--mee-accent-mid);
+  color: var(--mee-ink-2);
 }
 .market-intel-mee .seg button[data-on="true"] {
-  background: var(--mee-surface);
-  color: var(--mee-ink);
+  background: var(--mee-accent-soft);
+  border-color: var(--mee-accent-strong);
+  color: var(--mee-accent);
+  font-weight: 600;
   box-shadow: var(--mee-sh-1);
+}
+.market-intel-mee .seg button:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-intel-mee .seg button:active {
+    transform: none;
+  }
+}
+
+/* FiltersBar — affordance + active count */
+.market-intel-mee .mee-filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+.market-intel-mee .mee-filters-bar__lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.market-intel-mee .mee-filters-count {
+  height: 20px;
+  padding: 0 7px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.market-intel-mee .mee-filters-bar__group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.market-intel-mee .mee-filters-bar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.market-intel-mee .mee-filters-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 27px;
+  padding: 0 10px;
+  border-radius: var(--mee-r);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--mee-accent);
+  background: var(--mee-accent-soft);
+  border: 1px solid var(--mee-accent-line);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.market-intel-mee .mee-filters-clear:hover {
+  background: var(--mee-accent-soft-2);
+  border-color: var(--mee-accent-mid);
+  color: var(--mee-accent-strong);
+}
+.market-intel-mee .mee-filters-clear:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-intel-mee .mee-filters-clear:active {
+    transform: none;
+  }
 }
 
 .market-intel-mee table.t { width: 100%; border-collapse: collapse; }
