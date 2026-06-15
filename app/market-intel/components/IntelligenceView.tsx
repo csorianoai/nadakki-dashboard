@@ -300,7 +300,7 @@ export function IntelligenceView({
                     label="Morosidad"
                     value={`${mo.npl_ratio_pct ?? "—"}`}
                     unit={mo.npl_ratio_pct != null ? "%" : undefined}
-                    sub="sistema · 2024"
+                    sub="sistema · 2025"
                   />
                 </div>
                 <div>
