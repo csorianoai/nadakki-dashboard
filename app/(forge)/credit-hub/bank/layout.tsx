@@ -2,11 +2,12 @@
 
 import { type ReactNode } from "react";
 import { RouteErrorBoundary } from "@/lib/observability/error-boundary";
+import { BankChShell } from "@/components/credit-hub/bank/BankChShell";
 
 export default function BankLayout({ children }: { children: ReactNode }) {
   return (
     <RouteErrorBoundary segment="credit-hub.bank">
-      <div className="mx-auto w-full max-w-7xl p-4 md:p-8">{children}</div>
+      <BankChShell>{children}</BankChShell>
     </RouteErrorBoundary>
   );
 }

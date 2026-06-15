@@ -1,28 +1,38 @@
 "use client";
 
 import { use } from "react";
-import { BankApplicationDetailView } from "@/components/forge/credit-hub/BankApplicationDetailView";
-import { Button, Card, Skeleton } from "@/components/forge";
-import { useBankApplication, useBankAuditTrail, useBankCompliance } from "@/lib/credit-hub/hooks/useBankDecision";
+import { BankDetailLayout } from "@/components/credit-hub/bank/BankDetailLayout";
+import { DetailSkeleton, EmptyStateRich } from "@/components/credit-hub/primitives";
+import { useBankApplication, useBankAuditTrail, useBankCompliance, useBankCounterOffer } from "@/lib/credit-hub/hooks/useBankDecision";
 
 export default function BankApplicationReviewPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
   const appQuery = useBankApplication(applicationId);
   const complianceQuery = useBankCompliance(applicationId);
   const auditQuery = useBankAuditTrail(applicationId);
+  const counterOfferQuery = useBankCounterOffer(applicationId);
 
-  if (appQuery.isLoading) {
-    return <Skeleton className="min-h-[24rem] w-full rounded-forge-lg" />;
-  }
+  if (appQuery.isLoading) return <DetailSkeleton />;
   if (appQuery.error || !appQuery.data) {
     return (
-      <Card className="p-8 text-center">
-        <p className="text-forge-sm font-medium text-forgeDanger-700">No se pudo cargar la solicitud para revisión.</p>
-        <Button type="button" variant="secondary" className="mt-4 min-h-12" onClick={() => void appQuery.refetch()}>
-          Reintentar
-        </Button>
-      </Card>
+      <EmptyStateRich
+        variant="error"
+        primary={
+          <button type="button" className="ch-btn ch-btn-secondary" onClick={() => void appQuery.refetch()}>
+            Reintentar
+          </button>
+        }
+      />
     );
   }
-  return <BankApplicationDetailView application={appQuery.data} compliance={complianceQuery.data} audit={auditQuery.data} />;
+
+  return (
+    <BankDetailLayout
+      application={appQuery.data}
+      compliance={complianceQuery.data}
+      audit={auditQuery.data}
+      counterOffer={counterOfferQuery.data}
+      isComplianceLoading={complianceQuery.isLoading}
+    />
+  );
 }
