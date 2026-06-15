@@ -6,15 +6,16 @@ import { Donut, HBar, MarketTrend, type HBarDatum } from "../Charts";
 import { TIER_COLOR } from "../Chips";
 import { ICN, Ic } from "../Icons";
 import { fmtLocal } from "../../lib/formatters";
+import { filterInstitutionShares, scaleMarketSizeForSegment } from "../../lib/mee-filters";
 import { deriveMarketTrend } from "../../lib/market-trend";
-import type { DrawerPick, InstitutionShare, MarketOverview } from "../../lib/types";
+import type { DrawerPick, InstitutionShare, MarketOverview, MeeFilters } from "../../lib/types";
 
 interface MarketOverviewSectionProps {
   overview: MarketOverview;
   cur: string;
   fx: number;
   onPick: (pick: DrawerPick) => void;
-  segment?: string;
+  filters: MeeFilters;
 }
 
 export function MarketOverviewSection({
@@ -22,12 +23,30 @@ export function MarketOverviewSection({
   cur,
   fx,
   onPick,
+  filters,
 }: MarketOverviewSectionProps) {
   const mo = overview;
-  const shares = mo.institution_shares ?? [];
+  const shares = useMemo(
+    () => filterInstitutionShares(mo.institution_shares ?? [], filters),
+    [mo.institution_shares, filters]
+  );
   const keyPlayers = mo.key_players ?? [];
+  const visibleKeyPlayers = useMemo(() => {
+    if (filters.tier === "all") return keyPlayers;
+    const shareNames = shares.map((s) => s.name.toLowerCase());
+    return keyPlayers.filter((p) => {
+      const m = p.match(/^(.+?)\s*\(/);
+      const name = (m ? m[1] : p).trim().toLowerCase();
+      return shareNames.some(
+        (sn) => sn.includes(name) || name.includes(sn.split(/\s+/)[0] ?? ""),
+      );
+    });
+  }, [keyPlayers, shares, filters.tier]);
   const growthRate = mo.growth_rate_pct ?? 0;
-  const marketSizeLocal = mo.market_size_local ?? 0;
+  const marketSizeLocal = useMemo(
+    () => scaleMarketSizeForSegment(mo.market_size_local ?? 0, filters.segment),
+    [mo.market_size_local, filters.segment]
+  );
 
   const trendData = useMemo(
     () => deriveMarketTrend(marketSizeLocal, growthRate),
@@ -223,10 +242,10 @@ export function MarketOverviewSection({
           <CardHeader
             eyebrow="Competidores"
             title="Jugadores clave"
-            sub={`${keyPlayers.length} entidades identificadas`}
+            sub={`${visibleKeyPlayers.length} entidades identificadas`}
           />
           <div style={{ padding: "6px 0" }}>
-            {keyPlayers.map((p, i) => {
+            {visibleKeyPlayers.map((p, i) => {
               const m = p.match(/^(.+?)\s*\((.+)\)$/);
               const name = m ? m[1].trim() : p;
               const detail = m ? m[2] : "";

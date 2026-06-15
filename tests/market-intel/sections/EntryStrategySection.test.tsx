@@ -11,6 +11,7 @@ describe("EntryStrategySection", () => {
         strategy={snapshotFullEntryStrategy}
         cur="RD$"
         onPick={onPick}
+        filters={{ segment: "all", confidence: "all", tier: "all" }}
       />,
     );
 

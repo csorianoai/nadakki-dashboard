@@ -394,7 +394,10 @@ export function IntelligenceView({
 
             {snapshot ? (
               <>
-                {(tab === "hallazgos" || tab === "panorama" || tab === "estrategia") && (
+                {(tab === "hallazgos" ||
+                  tab === "panorama" ||
+                  tab === "estrategia" ||
+                  tab === "fuentes") && (
                   <FiltersBar filters={filters} setFilters={setFilters} />
                 )}
                 {tab === "panorama" && (
@@ -403,7 +406,7 @@ export function IntelligenceView({
                     cur={cur}
                     fx={fx}
                     onPick={onPick}
-                    segment={filters.segment}
+                    filters={filters}
                   />
                 )}
                 {tab === "hallazgos" && (
@@ -412,10 +415,16 @@ export function IntelligenceView({
                     cur={cur}
                     onPick={onPick}
                     filters={filters}
+                    institutionShares={mo.institution_shares ?? []}
                   />
                 )}
                 {tab === "estrategia" && (
-                  <EntryStrategySection strategy={entryStrategy} cur={cur} onPick={onPick} />
+                  <EntryStrategySection
+                    strategy={entryStrategy}
+                    cur={cur}
+                    onPick={onPick}
+                    filters={filters}
+                  />
                 )}
                 {tab === "precios" && (
                   <PricingProposalSection pricing={pricingProposal} cur={cur} />
@@ -425,6 +434,8 @@ export function IntelligenceView({
                     summary={snapshot.sources_summary}
                     findings={snapshot.findings}
                     onPick={onPick}
+                    filters={filters}
+                    institutionShares={mo.institution_shares ?? []}
                   />
                 )}
                 {tab === "validacion" && (

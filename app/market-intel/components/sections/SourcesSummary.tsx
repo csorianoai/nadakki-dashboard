@@ -1,28 +1,50 @@
 "use client";
 
+import { useMemo } from "react";
 import { CardHeader } from "../CardHeader";
 import { CatChip, ConfChip, LevelChip } from "../Chips";
 import { Donut, StackBar } from "../Charts";
 import { ICN, Ic } from "../Icons";
+import { deriveSourcesSummary, filterFindings } from "../../lib/mee-filters";
 import { findingKey } from "../../lib/snapshot-helpers";
-import type { DrawerPick, Finding, SourcesSummary } from "../../lib/types";
+import type { DrawerPick, Finding, InstitutionShare, MeeFilters, SourcesSummary } from "../../lib/types";
 
 interface SourcesSummaryProps {
   summary: SourcesSummary;
   findings: Finding[];
   onPick: (pick: DrawerPick) => void;
+  filters: MeeFilters;
+  institutionShares?: InstitutionShare[];
 }
 
-export function SourcesSummary({ summary, findings, onPick }: SourcesSummaryProps) {
+export function SourcesSummary({
+  summary,
+  findings,
+  onPick,
+  filters,
+  institutionShares = [],
+}: SourcesSummaryProps) {
+  const filteredFindings = useMemo(
+    () => filterFindings(findings, filters, institutionShares),
+    [findings, filters, institutionShares]
+  );
+  const filteredSummary = useMemo(
+    () =>
+      filters.confidence === "all" && filters.segment === "all" && filters.tier === "all"
+        ? summary
+        : deriveSourcesSummary(filteredFindings),
+    [summary, filteredFindings, filters]
+  );
+
   const levelSeg = [
-    { label: "Nivel 1", value: summary.by_level["1"] || 0, color: "var(--mee-info)" },
-    { label: "Nivel 2", value: summary.by_level["2"] || 0, color: "var(--mee-tier3)" },
-    { label: "Nivel 3", value: summary.by_level["3"] || 0, color: "var(--mee-ink-4)" },
+    { label: "Nivel 1", value: filteredSummary.by_level["1"] || 0, color: "var(--mee-info)" },
+    { label: "Nivel 2", value: filteredSummary.by_level["2"] || 0, color: "var(--mee-tier3)" },
+    { label: "Nivel 3", value: filteredSummary.by_level["3"] || 0, color: "var(--mee-ink-4)" },
   ];
   const confDonut = [
-    { label: "Alta", value: summary.by_confidence.alto || 0, color: "var(--mee-conf-alto)" },
-    { label: "Media", value: summary.by_confidence.medio || 0, color: "var(--mee-conf-medio)" },
-    { label: "Baja", value: summary.by_confidence.bajo || 0, color: "var(--mee-conf-bajo)" },
+    { label: "Alta", value: filteredSummary.by_confidence.alto || 0, color: "var(--mee-conf-alto)" },
+    { label: "Media", value: filteredSummary.by_confidence.medio || 0, color: "var(--mee-conf-medio)" },
+    { label: "Baja", value: filteredSummary.by_confidence.bajo || 0, color: "var(--mee-conf-bajo)" },
   ];
 
   return (
@@ -40,7 +62,7 @@ export function SourcesSummary({ summary, findings, onPick }: SourcesSummaryProp
           <CardHeader
             eyebrow="Calidad de evidencia"
             title="Confianza"
-            sub={`${summary.total} fuentes totales`}
+            sub={`${filteredSummary.total} fuentes visibles`}
           />
           <div
             style={{
@@ -54,7 +76,7 @@ export function SourcesSummary({ summary, findings, onPick }: SourcesSummaryProp
               data={confDonut}
               size={132}
               thickness={18}
-              centerValue={summary.total}
+              centerValue={filteredSummary.total}
               centerLabel="fuentes"
             />
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 9 }}>
@@ -169,7 +191,7 @@ export function SourcesSummary({ summary, findings, onPick }: SourcesSummaryProp
             </tr>
           </thead>
           <tbody>
-            {findings.map((f, index) => (
+            {filteredFindings.map((f, index) => (
               <tr
                 key={findingKey(f, index)}
                 className="click"

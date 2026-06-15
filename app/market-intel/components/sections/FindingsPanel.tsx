@@ -6,24 +6,28 @@ import { ICN, Ic } from "../Icons";
 import { EmptyState } from "../States";
 import { fmtDataPoint } from "../../lib/formatters";
 import { METRIC_LABELS } from "../../lib/metric-labels";
+import { filterFindings } from "../../lib/mee-filters";
 import { findingKey } from "../../lib/snapshot-helpers";
-import type { DrawerPick, Finding, MeeFilters } from "../../lib/types";
+import type { DrawerPick, Finding, InstitutionShare, MeeFilters } from "../../lib/types";
 
 interface FindingsPanelProps {
   findings: Finding[];
   cur: string;
   onPick: (pick: DrawerPick) => void;
   filters: MeeFilters;
+  institutionShares?: InstitutionShare[];
 }
 
-export function FindingsPanel({ findings, cur, onPick, filters }: FindingsPanelProps) {
+export function FindingsPanel({
+  findings,
+  cur,
+  onPick,
+  filters,
+  institutionShares = [],
+}: FindingsPanelProps) {
   const list = useMemo(
-    () =>
-      findings.filter((f) => {
-        if (filters.confidence !== "all" && f.confidence !== filters.confidence) return false;
-        return true;
-      }),
-    [findings, filters]
+    () => filterFindings(findings, filters, institutionShares),
+    [findings, filters, institutionShares]
   );
 
   if (!list.length) {

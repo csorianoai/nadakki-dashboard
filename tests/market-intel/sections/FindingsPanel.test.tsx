@@ -12,6 +12,7 @@ describe("FindingsPanel", () => {
         cur="RD$"
         onPick={onPick}
         filters={{ segment: "all", confidence: "alto", tier: "all" }}
+        institutionShares={snapshotFull.market_overview.institution_shares ?? []}
       />,
     );
 

@@ -11,6 +11,7 @@ describe("MarketOverviewSection", () => {
         cur="RD$"
         fx={62}
         onPick={() => {}}
+        filters={{ segment: "all", confidence: "all", tier: "all" }}
       />,
     );
 
@@ -26,10 +27,26 @@ describe("MarketOverviewSection", () => {
         cur="RD$"
         fx={62}
         onPick={() => {}}
+        filters={{ segment: "all", confidence: "all", tier: "all" }}
       />,
     );
 
     expect(document.body.textContent).not.toContain("null");
     expect(document.body.textContent).not.toContain("[object Object]");
+  });
+
+  it("filtra institution shares por tier", () => {
+    render(
+      <MarketOverviewSection
+        overview={snapshotFull.market_overview}
+        cur="RD$"
+        fx={62}
+        onPick={() => {}}
+        filters={{ segment: "all", confidence: "all", tier: "Tier2" }}
+      />,
+    );
+
+    expect(screen.getByText("BHD León")).toBeInTheDocument();
+    expect(screen.queryByText("Banco Popular Dominicano")).not.toBeInTheDocument();
   });
 });
