@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 
 const DEV_FALLBACK_TENANT =
@@ -13,35 +14,40 @@ export function useMarketIntelTenant(): {
   tenantHydrated: boolean;
   tenantError: string | null;
 } {
-  const { tenantId } = useTenant();
-  const [hydrated, setHydrated] = useState(false);
+  const { tenant, isLoading: authLoading } = useAuth();
+  const { tenantId: legacyTenantId } = useTenant();
   const [timeoutError, setTimeoutError] = useState<string | null>(null);
-  const tid = tenantId?.trim() || "";
+
+  const tid = useMemo(() => {
+    const fromAuth = tenant?.id?.trim() ?? "";
+    const fromLegacy = legacyTenantId?.trim() ?? "";
+    return fromAuth || fromLegacy;
+  }, [tenant?.id, legacyTenantId]);
+
+  const tenantHydrated = !authLoading;
 
   useEffect(() => {
-    const t = setTimeout(() => setHydrated(true), 0);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    if (tid || DEV_FALLBACK_TENANT) return;
+    if (!tenantHydrated) return;
+    if (tid || DEV_FALLBACK_TENANT) {
+      setTimeoutError(null);
+      return;
+    }
     const timer = setTimeout(() => {
       setTimeoutError("No se pudo determinar el tenant activo");
     }, 5000);
     return () => clearTimeout(timer);
-  }, [hydrated, tid]);
+  }, [tenantHydrated, tid]);
 
   const effectiveTenantId = useMemo(() => {
     if (tid) return tid;
     return DEV_FALLBACK_TENANT;
   }, [tid]);
 
-  const tenantError = !effectiveTenantId && hydrated ? timeoutError : null;
+  const tenantError = !effectiveTenantId && tenantHydrated ? timeoutError : null;
 
   return {
     effectiveTenantId,
-    tenantHydrated: hydrated,
+    tenantHydrated,
     tenantError,
   };
 }
