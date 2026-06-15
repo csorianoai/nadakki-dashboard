@@ -1,6 +1,7 @@
 "use client";
 
 import "./forge-globals.css";
+import "@/app/credit-hub/credit-hub.css";
 import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
 import { ForgeCreditHubAppShell } from "@/components/forge";
 
