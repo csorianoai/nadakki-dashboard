@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, Check, Loader2, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { chMoneyExact } from "@/lib/credit-hub/ch-base";
@@ -29,15 +29,27 @@ export function DecisionPanel({
   const [state, setState] = useState(stateProp);
   const [justif, setJustif] = useState("");
 
+  useEffect(() => {
+    setState(stateProp);
+  }, [stateProp]);
+
   const modes: Array<{ k: DecisionMode; label: string; cls: string; icon: React.ReactNode }> = [
     { k: "approve", label: "Aprobar", cls: "ch-btn-success", icon: <Check className="h-3.5 w-3.5" aria-hidden /> },
     { k: "counter", label: "Contraoferta", cls: "ch-btn-secondary", icon: <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden /> },
     { k: "reject", label: "Rechazar", cls: "ch-btn-danger", icon: <X className="h-3.5 w-3.5" aria-hidden /> },
   ];
 
-  const submit = () => {
+  const submit = async () => {
     setState("loading");
-    onSubmit?.(mode, justif);
+    if (onSubmit) {
+      try {
+        await onSubmit(mode, justif);
+        setState("success");
+      } catch {
+        setState("error");
+      }
+      return;
+    }
     window.setTimeout(() => setState("success"), 1100);
   };
 
