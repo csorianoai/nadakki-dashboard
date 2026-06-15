@@ -1,126 +1,431 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import {
   BarChart3,
-  Calculator,
-  ClipboardList,
+  Bell,
+  Clock,
   FileText,
-  Gauge,
-  History,
+  Grid3X3,
   Home,
+  Inbox,
+  LogOut,
+  PanelLeft,
   Plus,
-  ShieldCheck,
+  Scale,
+  User,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { chPersonaLabel } from "@/lib/credit-hub/ch-base";
-import type { ChNavItem, ChSidebarProps, PersonaType } from "@/lib/credit-hub/ch-types";
+import type { ChBottomNavProps, ChNavGroup, ChNavItem, ChSidebarProps, PersonaType } from "@/lib/credit-hub/ch-types";
 
-function navItems(persona: PersonaType): ChNavItem[] {
-  if (persona === "dealer") {
-    return [
-      { id: "d-home", href: "/credit-hub/dealer", label: "Panel", icon: Home },
-      { id: "d-apps", href: "/credit-hub/dealer/applications", label: "Solicitudes", icon: FileText },
-      { id: "d-pre", href: "/credit-hub/dealer/preapproval", label: "Simulador", icon: Calculator },
-      { id: "d-new", href: "/credit-hub/dealer/applications/new", label: "Nueva", icon: Plus },
-    ];
+export const CH_NAV: Record<
+  PersonaType,
+  {
+    tenant: string;
+    initials: string;
+    groups: ChNavGroup[];
+    user: { name: string; role: string; initials: string };
   }
-  return [
-    { id: "b-dash", href: "/credit-hub/bank", label: "Panel", icon: Gauge },
-    { id: "b-queue", href: "/credit-hub/bank/applications", label: "Bandeja", icon: ClipboardList },
-    { id: "b-analytics", href: "/credit-hub/bank/analytics", label: "Analítica", icon: BarChart3 },
-    { id: "b-comp", href: "/credit-hub/bank/compliance", label: "Cumplimiento", icon: ShieldCheck },
-    { id: "b-audit", href: "/credit-hub/bank/audit", label: "Auditoría", icon: History },
-  ];
+> = {
+  bank: {
+    tenant: "TestBank Mexico",
+    initials: "TB",
+    groups: [
+      {
+        label: "Operación",
+        items: [
+          { id: "panel", label: "Panel", icon: Grid3X3 },
+          { id: "bandeja", label: "Bandeja", icon: Inbox, badge: "47" },
+        ],
+      },
+      {
+        label: "Inteligencia",
+        items: [{ id: "analitica", label: "Analítica", icon: BarChart3 }],
+      },
+      {
+        label: "Control",
+        items: [
+          { id: "auditoria", label: "Auditoría", icon: Clock },
+          { id: "cumplimiento", label: "Cumplimiento", icon: Scale, badge: "3" },
+        ],
+      },
+    ],
+    user: { name: "María Reyes", role: "Analista de riesgo · L3", initials: "MR" },
+  },
+  dealer: {
+    tenant: "Auto Plaza · TestBank",
+    initials: "AP",
+    groups: [
+      {
+        label: "Mostrador",
+        items: [
+          { id: "inicio", label: "Inicio", icon: Home },
+          { id: "solicitudes", label: "Solicitudes", icon: FileText, badge: "8" },
+          { id: "nueva", label: "Nueva", icon: Plus },
+          { id: "preaprobacion", label: "Preaprobación", icon: Zap },
+        ],
+      },
+      {
+        label: "Cuenta",
+        items: [
+          { id: "notificaciones", label: "Notificaciones", icon: Bell, badge: "2" },
+          { id: "perfil", label: "Perfil", icon: User },
+        ],
+      },
+    ],
+    user: { name: "Jorge Salinas", role: "Asesor de piso", initials: "JS" },
+  },
+};
+
+function TenantMark({ initials, size = 30 }: { initials: string; size?: number }) {
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 7,
+        background: "var(--ch-persona)",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: 700,
+        fontSize: size * 0.36,
+        letterSpacing: "0.02em",
+        flexShrink: 0,
+        fontFamily: "var(--ch-font-sans)",
+      }}
+    >
+      {initials}
+    </div>
+  );
 }
 
-function isActive(pathname: string | undefined, href: string): boolean {
-  if (!pathname) return false;
-  if (pathname === href) return true;
-  if (href === "/credit-hub/bank" || href === "/credit-hub/dealer") return false;
-  return pathname.startsWith(href);
+function NavItemButton({
+  item,
+  active,
+  collapsed,
+  onClick,
+}: {
+  item: ChNavItem;
+  active: boolean;
+  collapsed: boolean;
+  onClick?: () => void;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={collapsed ? item.label : undefined}
+      style={{
+        position: "relative",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: 11,
+        padding: collapsed ? "9px 0" : "8px 11px",
+        justifyContent: collapsed ? "center" : "flex-start",
+        border: "none",
+        background: active ? "var(--ch-accent-soft)" : "transparent",
+        borderRadius: "var(--ch-r-md)",
+        cursor: "pointer",
+        fontFamily: "inherit",
+        fontSize: "var(--ch-text-sm)",
+        fontWeight: active ? 600 : 500,
+        color: active ? "var(--ch-accent-text)" : "var(--ch-text-2)",
+        marginBottom: 2,
+        transition: "background var(--ch-t-fast) var(--ch-ease)",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) e.currentTarget.style.background = "var(--ch-surface-2)";
+      }}
+      onMouseLeave={(e) => {
+        if (!active) e.currentTarget.style.background = "transparent";
+      }}
+    >
+      {active ? (
+        <span
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 6,
+            bottom: 6,
+            width: 3,
+            borderRadius: "0 3px 3px 0",
+            background: "var(--ch-persona)",
+          }}
+        />
+      ) : null}
+      <Icon
+        className="shrink-0"
+        style={{ width: 18, height: 18, color: active ? "var(--ch-persona)" : "var(--ch-text-3)" }}
+        strokeWidth={active ? 2 : 1.7}
+        aria-hidden
+      />
+      {!collapsed ? (
+        <span style={{ flex: 1, textAlign: "left", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {item.label}
+        </span>
+      ) : null}
+      {!collapsed && item.badge ? (
+        <span
+          className="ch-mono"
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            minWidth: 18,
+            height: 18,
+            padding: "0 5px",
+            borderRadius: 999,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: active ? "var(--ch-persona)" : "var(--ch-surface-3)",
+            color: active ? "#fff" : "var(--ch-text-3)",
+          }}
+        >
+          {item.badge}
+        </span>
+      ) : null}
+      {collapsed && item.badge ? (
+        <span
+          style={{
+            position: "absolute",
+            top: 4,
+            right: 8,
+            width: 7,
+            height: 7,
+            borderRadius: 999,
+            background: "var(--ch-persona)",
+            border: "1.5px solid var(--ch-surface)",
+          }}
+        />
+      ) : null}
+    </button>
+  );
 }
 
-export function ChSidebar({ persona, activePath = "", institutionName, logoUrl, className }: ChSidebarProps) {
-  const items = navItems(persona);
+export function ChSidebar({
+  persona = "bank",
+  active,
+  activePath,
+  onNavigate,
+  collapsed: cProp,
+  onToggleCollapse,
+  institutionName,
+  logoUrl,
+  className,
+}: ChSidebarProps) {
+  const [cState, setCState] = useState(false);
+  const collapsed = cProp !== undefined ? cProp : cState;
+  const toggle = onToggleCollapse ?? (() => setCState((c) => !c));
+  const cfg = CH_NAV[persona];
+  const firstId = cfg.groups[0]?.items[0]?.id ?? "panel";
+  const act = active ?? activePath ?? firstId;
 
   return (
     <aside
-      className={cn("hidden shrink-0 flex-col lg:flex", className)}
+      className={cn(className)}
+      role="navigation"
+      aria-label={`${persona === "bank" ? "Bank" : "Dealer"} navigation`}
       style={{
-        width: "var(--ch-sidebar-w)",
-        background: "var(--ch-persona-sidebar-bg)",
-        color: "var(--ch-persona-sidebar-ink)",
-        borderRight: "1px solid rgba(255,255,255,0.08)",
+        width: collapsed ? 64 : 240,
+        flexShrink: 0,
+        borderRight: "1px solid var(--ch-line)",
+        background: "var(--ch-surface)",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        transition: "width var(--ch-t-base) var(--ch-ease)",
       }}
-      aria-label={`${chPersonaLabel(persona)} navigation`}
     >
-      <div className="border-b border-white/10 px-4 py-4">
+      <div
+        style={{
+          height: 56,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: collapsed ? "0" : "0 14px",
+          justifyContent: collapsed ? "center" : "flex-start",
+          borderBottom: "1px solid var(--ch-line)",
+          flexShrink: 0,
+        }}
+      >
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt="" className="mb-2 h-8 w-auto max-w-[180px] object-contain object-left" aria-hidden />
-        ) : null}
-        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--ch-persona-sidebar-muted)]">Forge</p>
-        {institutionName ? <p className="text-xs text-[var(--ch-persona-sidebar-muted)]">{institutionName}</p> : null}
-        <p className="mt-1 text-sm font-semibold">{chPersonaLabel(persona)}</p>
-      </div>
-      <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Primary">
-        {items.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(activePath, item.href);
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={cn(
-                "flex min-h-11 items-center gap-2 rounded-[var(--ch-r)] px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
-                active ? "bg-white/12 text-white" : "text-[var(--ch-persona-sidebar-muted)] hover:bg-white/8 hover:text-white"
-              )}
-              aria-current={active ? "page" : undefined}
+          <img src={logoUrl} alt="" style={{ height: 30, width: "auto" }} aria-hidden />
+        ) : (
+          <TenantMark initials={institutionName?.slice(0, 2).toUpperCase() ?? cfg.initials} />
+        )}
+        {!collapsed ? (
+          <div style={{ minWidth: 0, lineHeight: 1.25 }}>
+            <div
+              style={{
+                fontSize: "var(--ch-text-sm)",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
             >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden />
-              {item.label}
-            </Link>
-          );
-        })}
+              {institutionName ?? cfg.tenant}
+            </div>
+            <div className="ch-mono" style={{ fontSize: 10, color: "var(--ch-text-3)", whiteSpace: "nowrap" }}>
+              CREDIT HUB · {persona === "bank" ? "BANCO" : "DEALER"}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "8px 8px" }}>
+        {cfg.groups.map((g, gi) => (
+          <div key={g.label} style={{ marginBottom: 8 }}>
+            {!collapsed ? <div className="ch-eyebrow" style={{ padding: "10px 11px 6px" }}>{g.label}</div> : null}
+            {collapsed && gi > 0 ? <div className="ch-divider" style={{ margin: "8px 10px" }} /> : null}
+            {g.items.map((it) => (
+              <NavItemButton
+                key={it.id}
+                item={it}
+                active={act === it.id || act === it.href}
+                collapsed={collapsed}
+                onClick={() => onNavigate?.(it.id)}
+              />
+            ))}
+          </div>
+        ))}
       </nav>
+
+      <div style={{ borderTop: "1px solid var(--ch-line)", padding: collapsed ? "8px 0" : 10, flexShrink: 0 }}>
+        <button
+          type="button"
+          className="ch-icon-btn"
+          onClick={toggle}
+          title={collapsed ? "Expandir" : "Colapsar"}
+          style={{ width: collapsed ? "100%" : 30, marginBottom: collapsed ? 8 : 10 }}
+        >
+          <PanelLeft className="h-4 w-4" aria-hidden />
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: collapsed ? "center" : "flex-start" }}>
+          <div
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 999,
+              background: "var(--ch-surface-3)",
+              color: "var(--ch-text-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 11,
+              fontWeight: 600,
+              flexShrink: 0,
+            }}
+          >
+            {cfg.user.initials}
+          </div>
+          {!collapsed ? (
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {cfg.user.name}
+              </div>
+              <div style={{ fontSize: 10.5, color: "var(--ch-text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {cfg.user.role}
+              </div>
+            </div>
+          ) : null}
+          {!collapsed ? (
+            <button type="button" className="ch-icon-btn" title="Cerrar sesión" style={{ width: 28, height: 28 }}>
+              <LogOut className="h-[15px] w-[15px]" aria-hidden />
+            </button>
+          ) : null}
+        </div>
+      </div>
     </aside>
   );
 }
 
-export interface ChBottomNavProps {
-  persona: PersonaType;
-  activePath?: string;
-  className?: string;
-}
-
-export function ChBottomNav({ persona, activePath = "", className }: ChBottomNavProps) {
-  const items = navItems(persona).slice(0, 4);
+export function ChBottomNav({ persona = "dealer", active, activePath, onNavigate, className }: ChBottomNavProps) {
+  const cfg = CH_NAV[persona];
+  const items = cfg.groups.flatMap((g) => g.items).slice(0, 5);
+  const act = active ?? activePath ?? items[0]?.id;
 
   return (
     <nav
-      className={cn("fixed inset-x-0 bottom-0 z-40 flex border-t lg:hidden", className)}
-      style={{
-        height: "var(--ch-bottom-nav-h)",
-        background: "var(--ch-surface)",
-        borderColor: "var(--ch-line)",
-      }}
+      className={cn(className)}
       aria-label="Mobile navigation"
+      style={{ display: "flex", borderTop: "1px solid var(--ch-line)", background: "var(--ch-surface)", height: 60, flexShrink: 0 }}
     >
-      {items.map((item) => {
-        const Icon = item.icon;
-        const active = isActive(activePath, item.href);
+      {items.map((it) => {
+        const on = act === it.id || act === it.href;
+        const Icon = it.icon;
         return (
-          <Link
-            key={item.id}
-            href={item.href}
-            className="flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold focus-visible:outline focus-visible:outline-2"
-            style={{ color: active ? "var(--ch-persona-primary)" : "var(--ch-ink-3)" }}
-            aria-current={active ? "page" : undefined}
+          <button
+            key={it.id}
+            type="button"
+            onClick={() => onNavigate?.(it.id)}
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 3,
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              position: "relative",
+              color: on ? "var(--ch-persona-text)" : "var(--ch-text-3)",
+            }}
           >
-            <Icon className="h-5 w-5" aria-hidden />
-            {item.label}
-          </Link>
+            {on ? (
+              <span
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: "30%",
+                  right: "30%",
+                  height: 2.5,
+                  borderRadius: 3,
+                  background: "var(--ch-persona)",
+                }}
+              />
+            ) : null}
+            <div style={{ position: "relative" }}>
+              <Icon
+                className="h-5 w-5"
+                style={{ color: on ? "var(--ch-persona)" : "var(--ch-text-3)" }}
+                strokeWidth={on ? 2 : 1.7}
+                aria-hidden
+              />
+              {it.badge ? (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: -3,
+                    right: -6,
+                    minWidth: 14,
+                    height: 14,
+                    padding: "0 3px",
+                    borderRadius: 999,
+                    background: "var(--ch-danger)",
+                    color: "#fff",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {it.badge}
+                </span>
+              ) : null}
+            </div>
+            <span style={{ fontSize: 10, fontWeight: on ? 600 : 500 }}>{it.label}</span>
+          </button>
         );
       })}
     </nav>

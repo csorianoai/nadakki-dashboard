@@ -1,206 +1,225 @@
 /* ============================================================
-   Credit Hub Package 0 — Design Tokens (--ch-*)
-   Scoped to .credit-hub-forge (coexists with --forge-* / --mee-*).
-   Bank persona: slate-blue. Dealer persona: teal. Accent: amber.
+   NADAKKI · CREDIT HUB — Package 0 · Design Tokens
+   Namespace: --ch-*  ·  Scope: .credit-hub-forge
+   Light institutional. Module accent = amber (from MEE).
+   Persona accent: Bank = slate-blue · Dealer = teal.
+   Does NOT collide with --forge-* or --mee-*.
 ============================================================ */
 
 .credit-hub-forge {
-  --ch-bg: #fafaf9;
-  --ch-surface: #ffffff;
-  --ch-surface-2: #f6f6f5;
-  --ch-surface-3: #f1f1ef;
-  --ch-line: #e7e5e4;
-  --ch-line-2: #d6d3d1;
-  --ch-line-strong: #a8a29e;
-  --ch-ink: #1c1917;
-  --ch-ink-2: #44403c;
-  --ch-ink-3: #78716c;
-  --ch-ink-4: #a8a29e;
-  --ch-accent: #b45309;
-  --ch-accent-strong: #92400e;
-  --ch-accent-mid: #d97706;
-  --ch-accent-soft: #fef3c7;
-  --ch-pos: #15803d;
-  --ch-pos-soft: #dcfce7;
-  --ch-warn: #b45309;
-  --ch-warn-soft: #fef3c7;
-  --ch-neg: #b91c1c;
-  --ch-neg-soft: #fee2e2;
-  --ch-info: #1d4ed8;
-  --ch-info-soft: #dbeafe;
-  --ch-persona-primary: #1e3a8a;
-  --ch-persona-primary-hover: #1e40af;
-  --ch-persona-primary-soft: #dbeafe;
-  --ch-persona-sidebar-bg: #0f172a;
-  --ch-persona-sidebar-ink: #f8fafc;
-  --ch-persona-sidebar-muted: #94a3b8;
-  --ch-font-sans: "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
-  --ch-font-serif: "Newsreader", "Source Serif 4", Georgia, serif;
-  --ch-font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
-  --ch-r-sm: 4px;
-  --ch-r: 6px;
-  --ch-r-lg: 8px;
-  --ch-r-xl: 12px;
-  --ch-sh-1: 0 1px 2px rgba(28, 25, 23, 0.04), 0 1px 1px rgba(28, 25, 23, 0.03);
-  --ch-sh-2: 0 2px 8px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04);
-  --ch-sidebar-w: 15rem;
-  --ch-topbar-h: 3.5rem;
-  --ch-bottom-nav-h: 4rem;
-  background: var(--ch-bg);
-  color: var(--ch-ink);
+  /* === COLORES — superficie / ink === */
+  --ch-bg:        #FAFAF9;   /* stone-50, warm paper */
+  --ch-surface:   #FFFFFF;
+  --ch-surface-2: #F6F6F5;   /* elevación 2 / inset */
+  --ch-surface-3: #F1F0EE;
+  --ch-line:      #E7E5E4;   /* bordes sutiles */
+  --ch-line-2:    #D6D3D1;   /* bordes visibles, affordance */
+  --ch-line-strong:#A8A29E;
+  --ch-text:      #1C1917;   /* principal */
+  --ch-text-2:    #44403C;   /* secundario */
+  --ch-text-3:    #78716C;   /* terciario / muted */
+  --ch-text-4:    #A8A29E;   /* disabled */
+
+  /* === Accent ámbar del módulo (heredado conceptualmente de MEE) === */
+  --ch-accent:        #B45309;  /* amber-700, AA sobre blanco */
+  --ch-accent-soft:   #FEF3C7;  /* fondo chips/badges */
+  --ch-accent-mid:    #D97706;  /* hover / fills */
+  --ch-accent-strong: #92400E;  /* border activo */
+  --ch-accent-text:   #92400E;  /* texto sobre accent-soft */
+  --ch-accent-line:   #FCD34D;
+
+  /* === Colores de persona === */
+  --ch-bank-accent:      #2F4A6B;  /* slate-blue institucional */
+  --ch-bank-accent-soft: #E8EDF3;
+  --ch-bank-accent-text: #23395B;
+  --ch-dealer-accent:      #0D9488;  /* teal operacional */
+  --ch-dealer-accent-soft: #CCFBF1;
+  --ch-dealer-accent-text: #0F766E;
+
+  /* persona resuelta (default = bank) */
+  --ch-persona:      var(--ch-bank-accent);
+  --ch-persona-soft: var(--ch-bank-accent-soft);
+  --ch-persona-text: var(--ch-bank-accent-text);
+
+  /* === Estados semánticos === */
+  --ch-success: #15803D;  --ch-success-soft: #DCFCE7;  --ch-success-text: #166534;
+  --ch-warning: #B45309;  --ch-warning-soft: #FEF3C7;  --ch-warning-text: #92400E;
+  --ch-danger:  #B91C1C;  --ch-danger-soft:  #FEE2E2;  --ch-danger-text:  #991B1B;
+  --ch-info:    #1D4ED8;  --ch-info-soft:    #DBEAFE;  --ch-info-text:    #1E40AF;
+
+  /* === Risk (Credit Hub es heavy en risk) === */
+  --ch-risk-low:      #15803D;  --ch-risk-low-soft:      #DCFCE7;
+  --ch-risk-medium:   #B45309;  --ch-risk-medium-soft:   #FEF3C7;
+  --ch-risk-high:     #DC2626;  --ch-risk-high-soft:     #FEE2E2;
+  --ch-risk-critical: #7F1D1D;  --ch-risk-critical-soft: #FECACA;
+
+  /* === TIPOGRAFÍA === */
+  --ch-font-display: "Newsreader", "Source Serif 4", Georgia, serif;
+  --ch-font-sans:    "Inter Tight", "Inter", system-ui, -apple-system, sans-serif;
+  --ch-font-mono:    "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  /* escala 1.25 */
+  --ch-text-xs:   11px;
+  --ch-text-sm:   13px;
+  --ch-text-base: 14px;
+  --ch-text-lg:   17px;
+  --ch-text-xl:   21px;
+  --ch-text-2xl:  26px;
+  --ch-text-3xl:  33px;
+  --ch-text-4xl:  41px;
+
+  /* === ESPACIO (escala 4px) === */
+  --ch-sp-1: 4px;  --ch-sp-2: 8px;   --ch-sp-3: 12px; --ch-sp-4: 16px;
+  --ch-sp-5: 20px; --ch-sp-6: 24px;  --ch-sp-7: 32px; --ch-sp-8: 40px;
+  --ch-sp-9: 48px; --ch-sp-10: 56px; --ch-sp-11: 64px; --ch-sp-12: 80px;
+
+  /* === RADIOS === */
+  --ch-r-sm: 4px; --ch-r-md: 6px; --ch-r-lg: 8px; --ch-r-xl: 12px;
+
+  /* === SOMBRAS === */
+  --ch-sh-0: none;
+  --ch-sh-1: 0 1px 2px rgba(28,25,23,0.05), 0 1px 1px rgba(28,25,23,0.03);
+  --ch-sh-2: 0 2px 8px rgba(28,25,23,0.07), 0 1px 2px rgba(28,25,23,0.04);
+  --ch-sh-3: 0 16px 48px rgba(28,25,23,0.14), 0 4px 12px rgba(28,25,23,0.08);
+
+  /* === TRANSITIONS === */
+  --ch-t-fast: 120ms;
+  --ch-t-base: 200ms;
+  --ch-t-slow: 300ms;
+  --ch-ease:   cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* === Z-INDEX === */
+  --ch-z-base:   1;
+  --ch-z-drawer: 40;
+  --ch-z-modal:  50;
+  --ch-z-toast:  60;
+
+  /* base typography */
   font-family: var(--ch-font-sans);
-  font-size: 13px;
+  font-size: var(--ch-text-base);
   line-height: 1.5;
+  color: var(--ch-text);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.credit-hub-forge[data-persona="dealer"] {
-  --ch-persona-primary: #0f766e;
-  --ch-persona-primary-hover: #0d9488;
-  --ch-persona-primary-soft: #ccfbf1;
-  --ch-persona-sidebar-bg: #134e4a;
-  --ch-persona-sidebar-ink: #f0fdfa;
-  --ch-persona-sidebar-muted: #99f6e4;
-}
+/* Persona switching */
+.credit-hub-forge[data-persona="bank"]   { --ch-persona: var(--ch-bank-accent);   --ch-persona-soft: var(--ch-bank-accent-soft);   --ch-persona-text: var(--ch-bank-accent-text); }
+.credit-hub-forge[data-persona="dealer"] { --ch-persona: var(--ch-dealer-accent); --ch-persona-soft: var(--ch-dealer-accent-soft); --ch-persona-text: var(--ch-dealer-accent-text); }
 
-.credit-hub-forge *,
-.credit-hub-forge *::before,
-.credit-hub-forge *::after {
-  box-sizing: border-box;
-}
-
-.credit-hub-forge .ch-mono {
-  font-family: var(--ch-font-mono);
-  font-variant-numeric: tabular-nums;
-}
-
-.credit-hub-forge .ch-serif {
-  font-family: var(--ch-font-serif);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-}
-
+/* ============================================================
+   RESET / BASE (scoped)
+============================================================ */
+.credit-hub-forge *, .credit-hub-forge *::before, .credit-hub-forge *::after { box-sizing: border-box; }
+.credit-hub-forge .ch-mono { font-family: var(--ch-font-mono); font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.credit-hub-forge .ch-tnum { font-variant-numeric: tabular-nums; }
+.credit-hub-forge .ch-serif { font-family: var(--ch-font-display); font-weight: 500; letter-spacing: -0.01em; }
 .credit-hub-forge .ch-eyebrow {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ch-ink-3);
+  font-size: var(--ch-text-xs); font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--ch-text-3); white-space: nowrap;
 }
+.credit-hub-forge ::selection { background: var(--ch-accent-soft); }
+.credit-hub-forge *:focus-visible { outline: 2px solid var(--ch-persona); outline-offset: 2px; border-radius: 3px; }
 
-.credit-hub-forge *:focus-visible {
-  outline: 2px solid var(--ch-accent-mid);
-  outline-offset: 2px;
-}
+/* Scrollbars */
+.credit-hub-forge ::-webkit-scrollbar { width: 11px; height: 11px; }
+.credit-hub-forge ::-webkit-scrollbar-thumb { background: var(--ch-line-2); border-radius: 6px; border: 3px solid var(--ch-bg); background-clip: padding-box; }
+.credit-hub-forge ::-webkit-scrollbar-thumb:hover { background: var(--ch-line-strong); background-clip: padding-box; border: 3px solid var(--ch-bg); }
+.credit-hub-forge ::-webkit-scrollbar-track { background: transparent; }
 
-.credit-hub-forge .ch-skip-link {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  z-index: 100;
-  padding: 0.5rem 1rem;
-  background: var(--ch-persona-primary);
-  color: #fff;
-  border-radius: var(--ch-r);
-}
+/* ============================================================
+   PRIMITIVE CLASSES
+============================================================ */
 
-.credit-hub-forge .ch-skip-link:focus {
-  left: 1rem;
-  top: 1rem;
-}
+/* Card */
+.credit-hub-forge .ch-card { background: var(--ch-surface); border: 1px solid var(--ch-line); border-radius: var(--ch-r-lg); }
+.credit-hub-forge .ch-card-h { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ch-sp-4); padding: 14px 18px; border-bottom: 1px solid var(--ch-line); }
+.credit-hub-forge .ch-card-title { font-size: var(--ch-text-base); font-weight: 600; }
+.credit-hub-forge .ch-card-sub { font-size: var(--ch-text-sm); color: var(--ch-text-3); margin-top: 2px; }
 
-@media (prefers-reduced-motion: reduce) {
-  .credit-hub-forge *,
-  .credit-hub-forge *::before,
-  .credit-hub-forge *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-.credit-hub-forge .ch-card {
-  background: var(--ch-surface);
-  border: 1px solid var(--ch-line);
-  border-radius: var(--ch-r-lg);
-  box-shadow: var(--ch-sh-1);
-}
-
+/* Buttons */
 .credit-hub-forge .ch-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: 44px;
-  padding: 0 1rem;
-  border-radius: var(--ch-r);
-  border: 1px solid transparent;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 34px; padding: 0 14px; border-radius: var(--ch-r-md);
+  font-family: inherit; font-size: var(--ch-text-sm); font-weight: 500;
+  border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+  transition: background var(--ch-t-fast) var(--ch-ease), border-color var(--ch-t-fast) var(--ch-ease), color var(--ch-t-fast) var(--ch-ease);
 }
+.credit-hub-forge .ch-btn-sm { height: 28px; padding: 0 10px; font-size: var(--ch-text-xs); }
+.credit-hub-forge .ch-btn-lg { height: 42px; padding: 0 20px; font-size: var(--ch-text-base); }
+.credit-hub-forge .ch-btn-primary { background: var(--ch-accent-mid); color: #fff; border-color: var(--ch-accent-mid); }
+.credit-hub-forge .ch-btn-primary:hover { background: var(--ch-accent-strong); border-color: var(--ch-accent-strong); }
+.credit-hub-forge .ch-btn-persona { background: var(--ch-persona); color: #fff; border-color: var(--ch-persona); }
+.credit-hub-forge .ch-btn-persona:hover { filter: brightness(0.92); }
+.credit-hub-forge .ch-btn-secondary { background: var(--ch-surface); color: var(--ch-text); border-color: var(--ch-line-2); }
+.credit-hub-forge .ch-btn-secondary:hover { background: var(--ch-surface-2); border-color: var(--ch-line-strong); }
+.credit-hub-forge .ch-btn-ghost { background: transparent; color: var(--ch-text-2); }
+.credit-hub-forge .ch-btn-ghost:hover { background: var(--ch-surface-2); color: var(--ch-text); }
+.credit-hub-forge .ch-btn-danger { background: var(--ch-danger-soft); color: var(--ch-danger-text); border-color: #FECACA; }
+.credit-hub-forge .ch-btn-danger:hover { background: #FECACA; }
+.credit-hub-forge .ch-btn-success { background: var(--ch-success-soft); color: var(--ch-success-text); border-color: #BBF7D0; }
+.credit-hub-forge .ch-btn-success:hover { background: #BBF7D0; }
+.credit-hub-forge .ch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.credit-hub-forge .ch-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+.credit-hub-forge .ch-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--ch-r-md); background: transparent; color: var(--ch-text-3); border: 1px solid transparent; cursor: pointer; transition: background var(--ch-t-fast) var(--ch-ease); }
+.credit-hub-forge .ch-icon-btn:hover { background: var(--ch-surface-2); color: var(--ch-text); }
+
+/* Inputs */
+.credit-hub-forge .ch-input, .credit-hub-forge .ch-select {
+  height: 34px; padding: 0 11px; width: 100%;
+  border-radius: var(--ch-r-md); border: 1px solid var(--ch-line-2);
+  background: var(--ch-surface); color: var(--ch-text);
+  font-family: inherit; font-size: var(--ch-text-sm);
+  transition: border-color var(--ch-t-fast) var(--ch-ease);
 }
+.credit-hub-forge .ch-input::placeholder { color: var(--ch-text-4); }
+.credit-hub-forge .ch-input:focus, .credit-hub-forge .ch-select:focus { border-color: var(--ch-persona); outline: none; }
+.credit-hub-forge .ch-textarea { padding: 9px 11px; min-height: 64px; resize: vertical; line-height: 1.5; }
+.credit-hub-forge .ch-label { display: block; font-size: var(--ch-text-xs); font-weight: 600; color: var(--ch-text-2); margin-bottom: 6px; }
 
-.credit-hub-forge .ch-btn-primary {
-  background: var(--ch-persona-primary);
-  color: #fff;
-}
-
-.credit-hub-forge .ch-btn-secondary {
-  background: var(--ch-surface);
-  border-color: var(--ch-line-2);
-  color: var(--ch-ink);
-}
-
-.credit-hub-forge .ch-input {
-  width: 100%;
-  min-height: 44px;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid var(--ch-line-2);
-  border-radius: var(--ch-r);
-  background: var(--ch-surface);
-  color: var(--ch-ink);
-  font: inherit;
-}
-
+/* Chip / pill */
 .credit-hub-forge .ch-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--ch-line);
-  background: var(--ch-surface-2);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ch-ink-2);
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 22px; padding: 0 8px; border-radius: 999px;
+  font-size: var(--ch-text-xs); font-weight: 500; white-space: nowrap;
+  border: 1px solid var(--ch-line-2); background: var(--ch-surface-2); color: var(--ch-text-2);
 }
+.credit-hub-forge .ch-chip .ch-dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+.credit-hub-forge .ch-chip.amber   { color: var(--ch-accent-text); background: var(--ch-accent-soft); border-color: var(--ch-accent-line); }
+.credit-hub-forge .ch-chip.persona { color: var(--ch-persona-text); background: var(--ch-persona-soft); border-color: color-mix(in oklab, var(--ch-persona) 36%, transparent); }
+.credit-hub-forge .ch-chip.success { color: var(--ch-success-text); background: var(--ch-success-soft); border-color: #BBF7D0; }
+.credit-hub-forge .ch-chip.warning { color: var(--ch-warning-text); background: var(--ch-warning-soft); border-color: var(--ch-accent-line); }
+.credit-hub-forge .ch-chip.danger  { color: var(--ch-danger-text);  background: var(--ch-danger-soft);  border-color: #FECACA; }
+.credit-hub-forge .ch-chip.info    { color: var(--ch-info-text);    background: var(--ch-info-soft);    border-color: #BFDBFE; }
 
-.credit-hub-forge .ch-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 700;
+/* Pill (status) */
+.credit-hub-forge .ch-pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: var(--ch-r-md); font-size: var(--ch-text-xs); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Tables */
+.credit-hub-forge table.ch-table { width: 100%; border-collapse: collapse; }
+.credit-hub-forge table.ch-table thead th { text-align: left; font-size: var(--ch-text-xs); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ch-text-3); padding: 9px 14px; border-bottom: 1px solid var(--ch-line); white-space: nowrap; }
+.credit-hub-forge table.ch-table tbody td { padding: 11px 14px; border-bottom: 1px solid var(--ch-line); font-size: var(--ch-text-sm); }
+.credit-hub-forge table.ch-table tbody tr:last-child td { border-bottom: none; }
+.credit-hub-forge table.ch-table tbody tr.ch-click { cursor: pointer; }
+.credit-hub-forge table.ch-table tbody tr.ch-click:hover td { background: var(--ch-surface-2); }
+.credit-hub-forge table.ch-table td.ch-num, .credit-hub-forge table.ch-table th.ch-num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--ch-font-mono); }
+
+/* Skeleton — base is visible gray; shimmer is enhancement only */
+.credit-hub-forge .ch-sk { background: var(--ch-surface-3); border-radius: 4px; }
+@media (prefers-reduced-motion: no-preference) {
+  .credit-hub-forge .ch-sk { background: linear-gradient(90deg, var(--ch-surface-2) 25%, var(--ch-surface-3) 37%, var(--ch-surface-2) 63%); background-size: 400% 100%; animation: ch-shimmer 1.4s ease infinite; }
 }
+@keyframes ch-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@keyframes ch-spin { to { transform: rotate(360deg); } }
 
-.credit-hub-forge .ch-pill-low { background: var(--ch-pos-soft); color: var(--ch-pos); }
-.credit-hub-forge .ch-pill-medium { background: var(--ch-warn-soft); color: var(--ch-warn); }
-.credit-hub-forge .ch-pill-high { background: #ffedd5; color: #c2410c; }
-.credit-hub-forge .ch-pill-critical { background: var(--ch-neg-soft); color: var(--ch-neg); }
+/* Divider */
+.credit-hub-forge .ch-divider { height: 1px; background: var(--ch-line); }
 
-.credit-hub-forge .ch-skeleton {
-  background: var(--ch-surface-2);
-  border-radius: var(--ch-r);
-}
-
-.credit-hub-forge .ch-shell-layout { display: flex; min-height: 100dvh; }
-.credit-hub-forge .ch-shell-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.credit-hub-forge .ch-shell-content { flex: 1; padding: 1rem; padding-bottom: calc(var(--ch-bottom-nav-h) + 1rem); }
-
-@media (min-width: 1024px) {
-  .credit-hub-forge .ch-shell-content { padding: 1.5rem 2rem; padding-bottom: 1.5rem; }
+/* Reduced motion: kill all transitions/animations */
+@media (prefers-reduced-motion: reduce) {
+  .credit-hub-forge *, .credit-hub-forge *::before, .credit-hub-forge *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+  }
 }
