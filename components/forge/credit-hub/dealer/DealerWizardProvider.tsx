@@ -36,7 +36,10 @@ import { forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast
 import { uploadDocument } from "@/lib/credit-api";
 import type { UploadStatus } from "./DocumentUploadZone";
 
-const STORAGE_KEY = "forge-dealer-wizard-draft-v1";
+import { defaultDocumentTypeForCountry } from "@/lib/credit-hub/dealer/dealerFormat";
+
+const STORAGE_KEY = "nadakki_dealer_wizard_v1";
+const LEGACY_STORAGE_KEY = "forge-dealer-wizard-draft-v1";
 /** Session flag: show at most one subtle autosave success toast (institutional UX — silent thereafter). */
 const AUTOSAVE_FIRST_SUCCESS_TOAST_KEY = "forge-dealer-wizard-autosave-first-success-v1";
 
@@ -187,7 +190,10 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const consentApplicationIdReady = Boolean(consentApplicationId);
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
-  const defaultDocType = tenantConfig.document_types.primary_id ?? "CEDULA";
+  const defaultDocType = defaultDocumentTypeForCountry(
+    tenantConfig.country_code,
+    tenantConfig.document_types.primary_id ?? "CEDULA",
+  );
   const requiredDocumentsList = useMemo(() => effectiveRequiredDocuments(tenantConfig), [tenantConfig]);
 
   const validationConfig = useMemo(
@@ -235,7 +241,14 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (raw) {
+          localStorage.setItem(STORAGE_KEY, raw);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        }
+      }
       if (!raw) return;
       const parsed: unknown = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;

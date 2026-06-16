@@ -1,9 +1,9 @@
 "use client";
 
 import { use } from "react";
-import { DealerApplicationStatusView } from "@/components/forge/credit-hub/DealerApplicationStatusView";
+import { DealerApplicationDetailView } from "@/components/credit-hub/dealer/DealerApplicationDetailView";
 
 export default function DealerApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
-  return <DealerApplicationStatusView applicationId={applicationId} />;
+  return <DealerApplicationDetailView applicationId={applicationId} />;
 }

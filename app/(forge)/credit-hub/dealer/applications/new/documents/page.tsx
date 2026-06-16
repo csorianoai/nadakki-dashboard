@@ -1,5 +1,5 @@
-import { DealerWizardDocumentsStep } from "@/components/forge/credit-hub/dealer/DealerWizardDocumentsStep";
+import { StepDocuments } from "@/components/credit-hub/dealer/wizard/StepDocuments";
 
 export default function DealerWizardDocumentsPage() {
-  return <DealerWizardDocumentsStep />;
+  return <StepDocuments />;
 }
