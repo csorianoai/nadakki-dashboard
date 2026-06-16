@@ -20,5 +20,23 @@ describe("BankAnalyticsView", () => {
       </div>
     );
     expect(screen.getByRole("heading", { name: /Cartera ejecutiva/i })).toBeInTheDocument();
+    expect(screen.getByText("4.2")).toBeInTheDocument();
+  });
+
+  test("muestra badge extremo cuando default rate es 100%", () => {
+    render(
+      <div className="credit-hub-forge" data-persona="bank">
+        <BankAnalyticsView
+          analytics={{
+            ...analytics,
+            default_prediction: { rule: "score < 600", predicted_default_count: 500, predicted_default_rate: 1 },
+            total_applications: 500,
+          }}
+          portfolioHealth={{ score_distribution: { "740-799": 10 } }}
+        />
+      </div>
+    );
+    expect(screen.getByText("100.0")).toBeInTheDocument();
+    expect(screen.getByText("Extremo")).toHaveAttribute("title", expect.stringMatching(/Predicción extrema/i));
   });
 });

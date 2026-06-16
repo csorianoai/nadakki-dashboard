@@ -7,6 +7,7 @@ import { CohortChart, KpiCardTrend, SectionHeader } from "@/components/credit-hu
 import { PortfolioHealthGrid } from "@/components/credit-hub/bank/sections/PortfolioHealthGrid";
 import { chMoney } from "@/lib/credit-hub/ch-base";
 import type { BankAnalyticsViewProps } from "@/lib/credit-hub/types/bank-views";
+import { formatDefaultPredictionDisplay } from "@/lib/credit-hub/bank/bankFormat";
 import { BankSegment } from "@/components/credit-hub/bank/shared/bankUi";
 
 const MEDAL = ["#C9A227", "#9CA3AF", "#B07A45"];
@@ -18,6 +19,12 @@ export function BankAnalyticsView({ analytics, portfolioHealth, dealers, isLoadi
 
   if (isLoading) return <KpiStripSkeleton n={4} />;
   if (isError || !a) return <EmptyStateRich variant="error" primary={<button type="button" className="ch-btn ch-btn-secondary" onClick={onRetry}>Reintentar</button>} />;
+
+  const defaultDisplay = formatDefaultPredictionDisplay(
+    a.default_prediction.predicted_default_rate,
+    a.default_prediction.predicted_default_count,
+    a.total_applications,
+  );
 
   return (
     <div>
@@ -36,7 +43,24 @@ export function BankAnalyticsView({ analytics, portfolioHealth, dealers, isLoadi
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 26 }}>
         <KpiCardTrend label="Volumen aprobado" value={chMoney(a.portfolio_value).replace("MX$", "")} unit="MX$" trend={null} trendLabel="cartera viva" accent />
         <KpiCardTrend label="Tasa de aprobación" value={(a.approval_rate * 100).toFixed(0)} unit="%" trend={null} trendLabel="periodo seleccionado" />
-        <KpiCardTrend label="Default predicho" value={(a.default_prediction.predicted_default_rate * 100).toFixed(1)} unit="%" trend={null} trendLabel={`${a.default_prediction.predicted_default_count} casos estimados`} />
+        <div style={{ position: "relative" }}>
+          <KpiCardTrend
+            label="Default predicho"
+            value={defaultDisplay.percentLabel}
+            unit="%"
+            trend={null}
+            trendLabel={`${a.default_prediction.predicted_default_count} casos estimados`}
+          />
+          {defaultDisplay.isExtreme ? (
+            <span
+              className="ch-chip danger"
+              title={defaultDisplay.extremeTooltip}
+              style={{ position: "absolute", top: 12, right: 12, cursor: "help" }}
+            >
+              Extremo
+            </span>
+          ) : null}
+        </div>
         <KpiCardTrend label="Tiempo prom. decisión" value={a.avg_decision_time_hours ?? "—"} unit={a.avg_decision_time_hours != null ? "h" : undefined} trend={null} trendLabel="meta ≤ 6 h" />
       </div>
 

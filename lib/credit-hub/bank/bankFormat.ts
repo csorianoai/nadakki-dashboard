@@ -100,3 +100,32 @@ export function complianceHeroTitle(jurisdictionCode: string | undefined, instit
   }
   return `Perfil Regulatorio — ${institutionName}`;
 }
+
+export interface DefaultPredictionDisplay {
+  percentLabel: string;
+  isExtreme: boolean;
+  extremeTooltip: string;
+}
+
+/**
+ * Backend returns predicted_default_rate as 0–1 decimal (bank_analytics.py).
+ * Missing analysis scores are counted as 0, inflating rate toward 100%.
+ */
+export function formatDefaultPredictionDisplay(
+  predictedDefaultRate: number,
+  predictedDefaultCount: number,
+  totalApplications: number,
+): DefaultPredictionDisplay {
+  const rate = predictedDefaultRate > 1 ? predictedDefaultRate / 100 : predictedDefaultRate;
+  const percentLabel = (rate * 100).toFixed(1);
+  const isExtreme =
+    rate >= 0.95 ||
+    (totalApplications > 0 && predictedDefaultCount >= totalApplications);
+
+  return {
+    percentLabel,
+    isExtreme,
+    extremeTooltip:
+      "Predicción extrema — requiere revisión del motor (score ausente se cuenta como 0 en backend)",
+  };
+}
