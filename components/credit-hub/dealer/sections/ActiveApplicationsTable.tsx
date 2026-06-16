@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { chRelTimeDealer, dealerDetailHref, parseRequestedAmount } from "@/lib/credit-hub/dealer/dealerFormat";
-import { chMoneyExact } from "@/lib/credit-hub/ch-base";
+import { chRelTimeDealer, dealerDetailHref, formatDealerMoney } from "@/lib/credit-hub/dealer/dealerFormat";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { DealerStatusBadge } from "@/components/credit-hub/dealer/shared/dealerUi";
 
@@ -38,7 +37,7 @@ export function ActiveApplicationsTable({
                 </div>
               </td>
               <td className="ch-mono" style={{ padding: "12px 14px", fontWeight: 600 }}>
-                {chMoneyExact(parseRequestedAmount(app.requested_amount), prefix)}
+                {formatDealerMoney(app.requested_amount, currency)}
               </td>
               <td style={{ padding: "12px 14px" }}>
                 <DealerStatusBadge status={app.status} />

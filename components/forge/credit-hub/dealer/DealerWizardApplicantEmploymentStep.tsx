@@ -338,7 +338,9 @@ export function DealerWizardApplicantEmploymentStep() {
       </div>
       <div className="rounded-forge-md bg-forgeBrand-500/10 p-4 text-forge-sm text-forgeGray-700">
         Ingreso total mensual estimado:{" "}
-        <span className="font-semibold tabular-nums">{formatForgeCurrency(totalIncomeDisplay, tenantConfig.locale, tenantConfig.currency_code)}</span>
+        <span className="font-semibold tabular-nums">
+          {formatForgeCurrency(totalIncomeDisplay, tenantConfig.locale, tenantConfig.currency_code || "DOP")}
+        </span>
       </div>
     </div>
   );

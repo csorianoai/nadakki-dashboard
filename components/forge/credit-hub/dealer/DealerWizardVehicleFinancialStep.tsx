@@ -71,7 +71,7 @@ export function DealerWizardVehicleFinancialStep() {
   );
 
   const productTypeOptions = useMemo(() => {
-    const pts = tenantConfig.product_types;
+    const pts = tenantConfig.product_types ?? [];
     const base = pts.map((item) => ({ value: item, label: item }));
     if (formData.product_type && !pts.includes(formData.product_type)) {
       return [{ value: formData.product_type, label: formData.product_type }, ...base];
@@ -182,7 +182,9 @@ export function DealerWizardVehicleFinancialStep() {
       <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">
           <p className="text-forge-xs text-forgeGray-500">{t.wizard.amount_finance}</p>
-          <p className="font-semibold tabular-nums text-forgeGray-800">{formatForgeCurrency(amountToFinance, tenantConfig.locale, tenantConfig.currency_code)}</p>
+          <p className="font-semibold tabular-nums text-forgeGray-800">
+            {formatForgeCurrency(amountToFinance, tenantConfig.locale, tenantConfig.currency_code || "DOP")}
+          </p>
         </div>
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">
           <p className="text-forge-xs text-forgeGray-500">{t.wizard.ltv_label}</p>
@@ -194,7 +196,7 @@ export function DealerWizardVehicleFinancialStep() {
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">
           <p className="text-forge-xs text-forgeGray-500">{t.wizard.estimated_capacity}</p>
           <p className="font-semibold tabular-nums text-forgeGray-800">
-            {formatForgeCurrency(estimatedCapacity, tenantConfig.locale, tenantConfig.currency_code)}
+            {formatForgeCurrency(estimatedCapacity, tenantConfig.locale, tenantConfig.currency_code || "DOP")}
           </p>
         </div>
       </div>

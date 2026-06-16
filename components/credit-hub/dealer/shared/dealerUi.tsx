@@ -3,8 +3,7 @@
 import type { ReactNode } from "react";
 import { ArrowDown, ArrowUp, ArrowRight, Car, Check, FileText, Inbox, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
-import { chRelTimeDealer } from "@/lib/credit-hub/dealer/dealerFormat";
-import { chMoneyExact } from "@/lib/credit-hub/ch-base";
+import { chRelTimeDealer, formatDealerMoney } from "@/lib/credit-hub/dealer/dealerFormat";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 
 const STATUS: Record<string, { label: string; c: string; bg: string; Icon: typeof FileText }> = {
@@ -64,11 +63,7 @@ export function DealerAppCard({
   currency: string;
   href: string;
 }) {
-  const amount = app.requested_amount;
-  const displayAmount =
-    amount == null || amount === "" || amount === "0"
-      ? "—"
-      : chMoneyExact(parseFloat(String(amount)) || 0, currency === "DOP" ? "RD$" : `${currency} `);
+  const displayAmount = formatDealerMoney(app.requested_amount, currency);
 
   return (
     <Link

@@ -78,6 +78,24 @@ export function parseRequestedAmount(value: string | number | null | undefined):
   return 0;
 }
 
+export function dealerCurrencyPrefix(currencyCode: string | null | undefined): string {
+  const code = currencyCode?.trim().toUpperCase();
+  if (!code || code === "DOP") return "RD$";
+  if (code === "MXN") return "MX$";
+  return `${code} `;
+}
+
+/** Formats dealer-facing amounts; null/undefined/zero → em dash. */
+export function formatDealerMoney(
+  amount: string | number | null | undefined,
+  currencyCode: string | null | undefined,
+): string {
+  if (amount == null || amount === "") return "—";
+  const n = parseRequestedAmount(amount);
+  if (!Number.isFinite(n) || n <= 0) return "—";
+  return chMoneyExact(n, dealerCurrencyPrefix(currencyCode));
+}
+
 const READ_KEY = "nadakki_dealer_notifications_read_v1";
 
 export function getReadNotificationIds(): Set<string> {
@@ -152,6 +170,5 @@ export function volumeThisMonth(applications: CreditApplication[], currency: str
       sum += parseRequestedAmount(app.requested_amount);
     }
   }
-  const prefix = currency === "DOP" ? "RD$" : currency === "MXN" ? "MX$" : `${currency} `;
-  return chMoneyExact(sum, prefix);
+  return chMoneyExact(sum, dealerCurrencyPrefix(currency));
 }
