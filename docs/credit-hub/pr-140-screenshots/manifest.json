@@ -1,0 +1,71 @@
+{
+  "capturedAt": "2026-06-16T03:57:06.401Z",
+  "baseUrl": "http://127.0.0.1:3020",
+  "method": "Playwright msedge + init-script fetch mocks (Windows local)",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800
+    },
+    "mobile": {
+      "width": 375,
+      "height": 812
+    }
+  },
+  "routes": [
+    {
+      "name": "01-dealer-dashboard",
+      "url": "/credit-hub/dealer"
+    },
+    {
+      "name": "02-dealer-applications",
+      "url": "/credit-hub/dealer/applications"
+    },
+    {
+      "name": "03-dealer-application-detail",
+      "url": "/credit-hub/dealer/applications/APP-1847"
+    },
+    {
+      "name": "04-dealer-new-redirect",
+      "url": "/credit-hub/dealer/applications/new"
+    },
+    {
+      "name": "05-wizard-applicant",
+      "url": "/credit-hub/dealer/applications/new/applicant"
+    },
+    {
+      "name": "06-wizard-co-borrower",
+      "url": "/credit-hub/dealer/applications/new/co-borrower"
+    },
+    {
+      "name": "07-wizard-vehicle",
+      "url": "/credit-hub/dealer/applications/new/vehicle"
+    },
+    {
+      "name": "08-wizard-documents",
+      "url": "/credit-hub/dealer/applications/new/documents"
+    },
+    {
+      "name": "09-wizard-consent",
+      "url": "/credit-hub/dealer/applications/new/consent"
+    },
+    {
+      "name": "10-wizard-complete",
+      "url": "/credit-hub/dealer/applications/new/complete?id=e2e-screenshot-app"
+    },
+    {
+      "name": "11-dealer-preapproval",
+      "url": "/credit-hub/dealer/preapproval"
+    },
+    {
+      "name": "12-dealer-notifications",
+      "url": "/credit-hub/dealer/notifications"
+    },
+    {
+      "name": "13-dealer-profile",
+      "url": "/credit-hub/dealer/profile"
+    }
+  ],
+  "captured": 26,
+  "failures": []
+}

@@ -2,9 +2,9 @@
 
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
-import { DealerWizardChrome } from "./DealerWizardChrome";
-import { DealerWizardProvider } from "./DealerWizardProvider";
-import { Skeleton } from "@/components/forge";
+import { DealerWizardFrame } from "@/components/credit-hub/dealer/wizard/DealerWizardFrame";
+import { DealerWizardProvider } from "@/components/forge/credit-hub/dealer/DealerWizardProvider";
+import { DetailSkeleton } from "@/components/credit-hub/primitives";
 
 export function DealerNewApplicationLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,9 +12,9 @@ export function DealerNewApplicationLayoutClient({ children }: { children: React
     return <>{children}</>;
   }
   return (
-    <Suspense fallback={<Skeleton className="mx-auto min-h-[50vh] max-w-3xl rounded-forge-lg" />}>
+    <Suspense fallback={<DetailSkeleton />}>
       <DealerWizardProvider>
-        <DealerWizardChrome>{children}</DealerWizardChrome>
+        <DealerWizardFrame>{children}</DealerWizardFrame>
       </DealerWizardProvider>
     </Suspense>
   );

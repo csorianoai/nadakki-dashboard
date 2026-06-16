@@ -1,5 +1,5 @@
-import { DealerWizardVehicleFinancialStep } from "@/components/forge/credit-hub/dealer/DealerWizardVehicleFinancialStep";
+import { StepVehicle } from "@/components/credit-hub/dealer/wizard/StepVehicle";
 
 export default function DealerWizardVehiclePage() {
-  return <DealerWizardVehicleFinancialStep />;
+  return <StepVehicle />;
 }

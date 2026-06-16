@@ -1,5 +1,5 @@
-import { DealerWizardConsentStep } from "@/components/forge/credit-hub/dealer/DealerWizardConsentStep";
+import { StepConsent } from "@/components/credit-hub/dealer/wizard/StepConsent";
 
 export default function DealerWizardConsentPage() {
-  return <DealerWizardConsentStep />;
+  return <StepConsent />;
 }

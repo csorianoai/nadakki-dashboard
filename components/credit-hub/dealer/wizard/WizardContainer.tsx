@@ -44,7 +44,9 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
 };
 
 export function documentTypeSelectOptions(config: TenantBankingConfig): Array<[string, string]> {
-  const codes = [config.document_types.primary_id, ...config.document_types.alternative_ids];
+  const primary = config.document_types?.primary_id;
+  const alternatives = config.document_types?.alternative_ids ?? [];
+  const codes = [primary, ...alternatives].filter((code): code is string => Boolean(code));
   const seen = new Set<string>();
   return codes
     .filter((code) => {

@@ -1,5 +1,5 @@
-import { DealerWizardCoBorrowerStep } from "@/components/forge/credit-hub/dealer/DealerWizardCoBorrowerStep";
+import { StepCoBorrower } from "@/components/credit-hub/dealer/wizard/StepCoBorrower";
 
 export default function DealerWizardCoBorrowerPage() {
-  return <DealerWizardCoBorrowerStep />;
+  return <StepCoBorrower />;
 }

@@ -24,6 +24,7 @@ jest.mock("@/components/forge", () => ({
 describe("CreditHubLayoutClient bank portal isolation", () => {
   afterEach(() => {
     document.documentElement.removeAttribute("data-bank-portal-full");
+    document.documentElement.removeAttribute("data-ch-portal-full");
   });
 
   test("bank routes set data-bank-portal-full and skip ForgeCreditHubAppShell", () => {
@@ -39,7 +40,7 @@ describe("CreditHubLayoutClient bank portal isolation", () => {
     expect(screen.queryByTestId("forge-credit-hub-shell")).not.toBeInTheDocument();
   });
 
-  test("dealer routes do not set bank portal flag", () => {
+  test("dealer routes keep bank flag isolated and also skip ForgeCreditHubAppShell (unified no-nested-shell)", () => {
     pathname = "/credit-hub/dealer";
     render(
       <CreditHubLayoutClient>
@@ -47,7 +48,12 @@ describe("CreditHubLayoutClient bank portal isolation", () => {
       </CreditHubLayoutClient>,
     );
 
+    // Bank-specific flag stays bank-only.
     expect(document.documentElement.hasAttribute("data-bank-portal-full")).toBe(false);
-    expect(screen.getByTestId("forge-credit-hub-shell")).toBeInTheDocument();
+    // Dealer portal owns its own chrome (DealerChShell, PR #140), so the global
+    // ForgeCreditHubAppShell is skipped on dealer routes too — same no-nested-shell
+    // behavior as bank, now driven by the unified data-ch-portal-full flag.
+    expect(document.documentElement.getAttribute("data-ch-portal-full")).toBe("true");
+    expect(screen.queryByTestId("forge-credit-hub-shell")).not.toBeInTheDocument();
   });
 });

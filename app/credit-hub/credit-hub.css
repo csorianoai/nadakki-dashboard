@@ -224,15 +224,19 @@
   }
 }
 
-/* Bank Portal — hide Nadakki global shell (Option A) when ChAppShell owns the layout */
-html[data-bank-portal-full="true"] .forge-app > div.flex > aside[aria-label="Navegación principal"] {
+/* CH Portal (Bank + Dealer) — hide Nadakki global shell (Option A) so Package 0/1/2 owns chrome.
+   Runtime sets data-ch-portal-full="true" on /credit-hub/bank/* AND /credit-hub/dealer/*
+   (CreditHubLayoutClient), so this unified selector covers both personas. */
+html[data-ch-portal-full="true"] .forge-app > div.flex > aside[aria-label="Navegación principal"] {
   display: none !important;
 }
 
-html[data-bank-portal-full="true"] .forge-app > div.flex > div > header {
+html[data-ch-portal-full="true"] .forge-app > div.flex > div > header {
   display: none !important;
 }
 
+/* Bank Portal — full-height content region (Package 1 / #138). data-bank-portal-full
+   is still set on /credit-hub/bank/* for this bank-specific rule. */
 html[data-bank-portal-full="true"] .credit-hub-bank-portal {
   min-height: 100%;
 }
