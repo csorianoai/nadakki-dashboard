@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import "./forge-globals.css";
 import "@/app/credit-hub/credit-hub.css";
@@ -9,6 +10,16 @@ import { ForgeCreditHubAppShell } from "@/components/forge";
 export function CreditHubLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isBankPortal = pathname?.startsWith("/credit-hub/bank");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isBankPortal) {
+      root.setAttribute("data-bank-portal-full", "true");
+    } else {
+      root.removeAttribute("data-bank-portal-full");
+    }
+    return () => root.removeAttribute("data-bank-portal-full");
+  }, [isBankPortal]);
 
   return (
     <>

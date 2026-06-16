@@ -223,3 +223,16 @@
     transition-duration: 0.01ms !important; scroll-behavior: auto !important;
   }
 }
+
+/* Bank Portal — hide Nadakki global shell (Option A) when ChAppShell owns the layout */
+html[data-bank-portal-full="true"] .forge-app > div.flex > aside[aria-label="Navegación principal"] {
+  display: none !important;
+}
+
+html[data-bank-portal-full="true"] .forge-app > div.flex > div > header {
+  display: none !important;
+}
+
+html[data-bank-portal-full="true"] .credit-hub-bank-portal {
+  min-height: 100%;
+}
