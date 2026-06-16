@@ -175,6 +175,12 @@ Exports `NAV_SECTIONS` (Credit, Legal, Marketing, SIC, Workflows, Admin links), 
 
 Per-hub Tailwind token sets (`SIDEBAR_CORE_THEMES`), `getSidebarTheme(sectionId)`, and `roleAccentClasses` for the sidebar footer role chip. See also `SIDEBAR_COLOR_PALETTE.md` at repo root.
 
+## ProyectosFinanzasSidebarLinks
+
+**File:** `components/forge/layout/ProyectosFinanzasSidebarLinks.tsx`
+
+Nested "Finanzas" link group rendered inside the global sidebar for project-scoped finance routes (`/proyectos/{projectId}/finanzas/*`): Resumen, Facturas, Cotizaciones, Pagos, Deals, Eventos, Ordenes de compra, Presupuesto. Resolves the active tenant's first project via `listProyectos` (TanStack-free fetch in `lib/projects/projectsClient`) and renders nothing until a `projectId` is available. Active link state reuses `isHrefActive` from `forge-global-sidebar-nav`; accepts an optional `onNavigate` for mobile drawer close.
+
 
 <!-- PHASE8_PRIMITIVE_CATALOG_START -->
 
