@@ -26,7 +26,7 @@ export default function BankCompliancePage() {
   return (
     <BankComplianceView
       issues={issues}
-      regulator={tenantConfig.regulatory_profile?.replace(/_/g, " ") ?? "Regulatorio"}
+      jurisdictionCode={tenantConfig.country_code}
       institutionName={tenantConfig.institution_name}
       isLoading={queueQuery.isLoading}
       isError={!!queueQuery.error}

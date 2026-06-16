@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { EmptyStateRich, KpiStripSkeleton } from "@/components/credit-hub/primitives";
 import { KpiCardTrend, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
 import type { BankComplianceViewProps } from "@/lib/credit-hub/types/bank-views";
+import { complianceHeroTitle } from "@/lib/credit-hub/bank/bankFormat";
 
 const SEV: Record<string, [string, string]> = {
   alta: ["var(--ch-danger-text)", "var(--ch-danger-soft)"],
@@ -12,10 +13,11 @@ const SEV: Record<string, [string, string]> = {
   baja: ["var(--ch-text-3)", "var(--ch-surface-3)"],
 };
 
-export function BankComplianceView({ issues, regulator, institutionName, isLoading, isError, onRetry }: BankComplianceViewProps) {
+export function BankComplianceView({ issues, jurisdictionCode, institutionName, isLoading, isError, onRetry }: BankComplianceViewProps) {
   if (isLoading) return <KpiStripSkeleton n={3} />;
   if (isError) return <EmptyStateRich variant="error" primary={<button type="button" className="ch-btn ch-btn-secondary" onClick={onRetry}>Reintentar</button>} />;
 
+  const heroTitle = complianceHeroTitle(jurisdictionCode, institutionName);
   const sorted = [...issues].sort((a, b) => {
     const rank = { alta: 0, media: 1, baja: 2 } as Record<string, number>;
     return (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9);
@@ -27,7 +29,7 @@ export function BankComplianceView({ issues, regulator, institutionName, isLoadi
     <div>
       <div style={{ marginBottom: 22 }}>
         <h1 className="ch-serif" style={{ margin: 0, fontSize: 33, letterSpacing: "-0.02em" }}>
-          Perfil {regulator} — {institutionName}
+          {heroTitle}
         </h1>
         <div style={{ fontSize: 13.5, color: "var(--ch-text-3)", marginTop: 6 }}>Cumplimiento regulatorio</div>
       </div>

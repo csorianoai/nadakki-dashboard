@@ -143,7 +143,7 @@ export interface BankComplianceIssueView {
 
 export interface BankComplianceViewProps {
   issues: BankComplianceIssueView[];
-  regulator: string;
+  jurisdictionCode?: string;
   institutionName: string;
   isLoading?: boolean;
   isError?: boolean;
