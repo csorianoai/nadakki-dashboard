@@ -85,3 +85,18 @@ export function bankTrailForPath(pathname: string): string[] {
   if (pathname.includes("/compliance")) return ["Credit Hub", "Cumplimiento"];
   return ["Credit Hub", "Panel"];
 }
+
+const COMPLIANCE_HERO_BY_JURISDICTION: Record<string, string> = {
+  DO: "Perfil Ley 172-13 (República Dominicana)",
+  MX: "Perfil CNBV (México)",
+  CO: "Perfil SFC (Colombia)",
+};
+
+/** Maps tenant country_code (no `jurisdiction` field on TenantBankingConfig) to compliance hero title. */
+export function complianceHeroTitle(jurisdictionCode: string | undefined, institutionName: string): string {
+  const code = jurisdictionCode?.trim().toUpperCase();
+  if (code && COMPLIANCE_HERO_BY_JURISDICTION[code]) {
+    return COMPLIANCE_HERO_BY_JURISDICTION[code]!;
+  }
+  return `Perfil Regulatorio — ${institutionName}`;
+}
