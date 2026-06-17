@@ -42,16 +42,39 @@ export function MarketOverviewSection({
       );
     });
   }, [keyPlayers, shares, filters.tier]);
-  const growthRate = mo.growth_rate_pct ?? 0;
+  // Per-segment annual growth series from the pack (backend correlative PR).
+  // "all" → aggregate; otherwise the segment series, falling back to aggregate.
+  const segmentGrowthSeries = useMemo<number[] | null>(() => {
+    const byYear = mo.growth_rate_by_year;
+    if (!byYear) return null;
+    if (filters.segment === "all") return byYear.aggregate ?? null;
+    return byYear[filters.segment] ?? byYear.aggregate ?? null;
+  }, [mo.growth_rate_by_year, filters.segment]);
+
+  // CAGR chip is recomputed per segment: last point of the active segment series,
+  // falling back to the aggregate growth_rate_pct when no per-segment series exists.
+  const growthRate = useMemo(() => {
+    if (segmentGrowthSeries && segmentGrowthSeries.length > 0) {
+      return segmentGrowthSeries[segmentGrowthSeries.length - 1];
+    }
+    return mo.growth_rate_pct ?? 0;
+  }, [segmentGrowthSeries, mo.growth_rate_pct]);
+
   const marketSizeLocal = useMemo(
     () => scaleMarketSizeForSegment(mo.market_size_local ?? 0, filters.segment),
     [mo.market_size_local, filters.segment]
   );
 
-  const trendData = useMemo(
-    () => deriveMarketTrend(marketSizeLocal, growthRate),
-    [marketSizeLocal, growthRate]
-  );
+  const trendData = useMemo(() => {
+    const base = deriveMarketTrend(marketSizeLocal, growthRate);
+    // Override the synthetic per-year growth with the real segment series when the
+    // pack provides one (matching the 5-year 2021–2025 shape); otherwise keep the
+    // derived fallback so older packs without the field render unchanged.
+    if (segmentGrowthSeries && segmentGrowthSeries.length === base.length) {
+      return base.map((point, i) => ({ ...point, growth: segmentGrowthSeries[i] }));
+    }
+    return base;
+  }, [marketSizeLocal, growthRate, segmentGrowthSeries]);
 
   const barData = useMemo<HBarDatum[]>(
     () =>

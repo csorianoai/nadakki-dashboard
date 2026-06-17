@@ -103,6 +103,19 @@ export interface EntryStrategy {
   institution_tiers: EntryStrategyTier[];
 }
 
+/**
+ * Annual growth-rate series (%) by segment. `aggregate` is the whole auto market;
+ * segment keys mirror MeeFilters["segment"] (minus "all"). Added in the DO
+ * research_mock.yaml pack (backend correlative PR) and surfaced in the
+ * "Tamaño y crecimiento" chart so labels reflect the active segment filter.
+ */
+export interface GrowthRateByYear {
+  aggregate: number[];
+  usados?: number[];
+  nuevos?: number[];
+  comercial?: number[];
+}
+
 export interface MarketOverview {
   headline?: string;
   wedge_callout?: string;
@@ -110,6 +123,7 @@ export interface MarketOverview {
   market_size_local?: number | null;
   market_size_usd?: number | null;
   growth_rate_pct?: number | null;
+  growth_rate_by_year?: GrowthRateByYear | null;
   avg_interest_rate_pct?: number | null;
   npl_ratio_pct?: number | null;
   digital_approval_rate_pct?: number | null;
