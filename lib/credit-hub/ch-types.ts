@@ -53,8 +53,29 @@ export interface EvidenceItem {
   confidence?: "high" | "medium" | "low";
 }
 
+export interface IdentityEvidence {
+  liveness?: {
+    status: "live" | "spoof" | "needs_review" | "not_applicable" | null;
+    pad_score: number | null;
+    provider: string | null;
+    evidence_id: string | null;
+    checked_at?: string | null;
+  } | null;
+  face_match?: {
+    status: "matched" | "no_match" | "needs_review" | "not_applicable" | null;
+    score: number | null;
+    provider: string | null;
+  } | null;
+  cedula?: {
+    verified: boolean;
+    document_id: string | null;
+    extracted_name: string | null;
+  } | null;
+}
+
 export interface EvidenceGridProps {
   items?: EvidenceItem[];
+  identity?: IdentityEvidence;
   className?: string;
 }
 

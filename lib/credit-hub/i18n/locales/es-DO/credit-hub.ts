@@ -476,6 +476,36 @@ export const CREDIT_HUB_ES_DO = {
       checkbox_DATA_POLICY: "Acepto la política de tratamiento de datos de Nadakki",
     },
   },
+  evidence: {
+    cedula_verified: "Cedula validada",
+    cedula_value: (name: string | null) =>
+      name ? `Cedula coincide con ${name}` : "Cedula verificada",
+    liveness_check: "Verificacion biometrica",
+    liveness_live: (score: number | null) =>
+      score != null
+        ? `Persona viva confirmada (score: ${Math.round(score * 100)}%)`
+        : "Persona viva confirmada",
+    liveness_spoof: "Ataque de presentacion detectado",
+    liveness_review: (score: number | null) =>
+      score != null
+        ? `Requiere revision manual (score: ${Math.round(score * 100)}%)`
+        : "Requiere revision manual",
+    liveness_not_applicable: "Verificacion no aplicable",
+    face_match_label: "Coincidencia facial",
+    face_match_matched: (score: number | null) =>
+      score != null
+        ? `Coincide (score: ${Math.round(score * 100)}%)`
+        : "Coincide",
+    face_match_no_match: (score: number | null) =>
+      score != null
+        ? `No coincide (score: ${Math.round(score * 100)}%)`
+        : "No coincide",
+    face_match_review: "Requiere revision",
+    provider_label: "Proveedor",
+    evidence_id_label: "ID de evidencia",
+    identity_title: "Identidad y verificacion",
+    identity_pending: "Verificacion de identidad pendiente",
+  },
 } as const;
 
 export type CreditHubTranslations = typeof CREDIT_HUB_ES_DO;
