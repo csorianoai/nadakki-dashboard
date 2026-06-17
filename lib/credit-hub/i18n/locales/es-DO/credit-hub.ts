@@ -476,6 +476,26 @@ export const CREDIT_HUB_ES_DO = {
       checkbox_DATA_POLICY: "Acepto la política de tratamiento de datos de Nadakki",
     },
   },
+  liveness: {
+    title: "Verificacion biometrica",
+    consent_title: "Autorizacion de verificacion biometrica",
+    consent_body:
+      "De acuerdo con la Ley 172-13 de Proteccion de Datos Personales, necesitamos tu autorizacion expresa para capturar y procesar tu imagen con fines de verificacion de identidad. La imagen no sera almacenada; solo se registra el resultado y un identificador de evidencia.",
+    consent_accept: "Autorizo la verificacion biometrica",
+    skip_dev: "Omitir (solo desarrollo)",
+    capture_instruction: "Posiciona tu rostro frente a la camara y presiona el boton para capturar.",
+    capture_button: "Iniciar captura",
+    camera_blocked: "No pudimos acceder a la camara. Verifica los permisos de tu navegador.",
+    processing: "Verificando identidad...",
+    generic_error: "Ocurrio un error durante la verificacion. Intenta de nuevo.",
+    confidence: "Confianza",
+    result_live: "Verificacion biometrica completa",
+    result_needs_review: "Tu identidad sera verificada por nuestro equipo",
+    result_needs_review_detail: "La verificacion automatica no fue concluyente. Un analista revisara tu caso.",
+    result_spoof: "No se pudo verificar tu identidad",
+    result_spoof_detail: "La captura no paso la verificacion de autenticidad. Contacta soporte para asistencia.",
+    result_not_applicable: "Verificacion biometrica no disponible. Tu solicitud sera revisada manualmente.",
+  },
 } as const;
 
 export type CreditHubTranslations = typeof CREDIT_HUB_ES_DO;

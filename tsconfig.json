@@ -41,6 +41,7 @@
     "node_modules",
     "tests",
     "e2e",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "_handoff"
   ]
 }
