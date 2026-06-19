@@ -87,7 +87,7 @@ describe("Dealer frontend mobile integration", () => {
   test("Lighthouse mobile performance budget is documented as > 90", () => {
     const budget = {
       targetUrl: process.env.VERCEL_BRANCH_URL
-        ? `https://${process.env.VERCEL_BRANCH_URL}/credit/dealer/new`
+        ? `https://${process.env.VERCEL_BRANCH_URL}/credit-hub/dealer/applications/new`
         : "Vercel preview URL from the PR",
       viewport: { width: 375, height: 812 },
       categories: { performance: 0.9 },

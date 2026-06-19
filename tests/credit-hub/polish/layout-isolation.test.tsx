@@ -7,14 +7,20 @@ jest.mock("next/navigation", () => ({
   usePathname: () => pathname,
 }));
 
-jest.mock("@/components/auth/RequireAuth", () => ({
+// AppGate wraps protected content in the global Forge shell (ProtectedRoute +
+// GlobalForgeAppShell). Mock the real collaborators it uses today — the legacy
+// components/layout/DashboardLayout shell is no longer referenced by AppGate, so
+// this test no longer depends on it.
+jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <div data-testid="require-auth">{children}</div>,
+  ProtectedRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("@/components/layout/DashboardLayout", () => ({
+jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({
   __esModule: true,
-  default: ({ children }: { children: React.ReactNode }) => <div data-testid="nadakki-shell">{children}</div>,
+  GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="forge-shell">{children}</div>
+  ),
 }));
 
 jest.mock("@/components/ai/OnboardingAgent", () => ({
@@ -22,24 +28,31 @@ jest.mock("@/components/ai/OnboardingAgent", () => ({
   default: () => <div data-testid="bot-widget" />,
 }));
 
-// PWAPrompt removed — now in layout via PWAClientProvider
-
-describe("Forge layout isolation", () => {
-  test("does not render Nadakki shell for credit-hub routes", () => {
+describe("AppGate shell isolation", () => {
+  test("wraps modern credit-hub routes in the global Forge shell", () => {
     pathname = "/credit-hub/dealer";
     render(<AppGate>Forge Portal</AppGate>);
 
     expect(screen.getByText("Forge Portal")).toBeInTheDocument();
-    expect(screen.queryByTestId("nadakki-shell")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("bot-widget")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("pwa-prompt")).not.toBeInTheDocument();
+    expect(screen.getByTestId("forge-shell")).toBeInTheDocument();
+    expect(screen.getByTestId("bot-widget")).toBeInTheDocument();
   });
 
-  test("keeps Nadakki shell for legacy routes", () => {
+  test("wraps other app routes in the same global Forge shell", () => {
     pathname = "/sic";
-    render(<AppGate>Legacy SIC</AppGate>);
+    render(<AppGate>SIC Portal</AppGate>);
 
-    expect(screen.getByTestId("nadakki-shell")).toBeInTheDocument();
+    expect(screen.getByText("SIC Portal")).toBeInTheDocument();
+    expect(screen.getByTestId("forge-shell")).toBeInTheDocument();
     expect(screen.getByTestId("bot-widget")).toBeInTheDocument();
+  });
+
+  test("does not render the shell on the login route", () => {
+    pathname = "/login";
+    render(<AppGate>Login Screen</AppGate>);
+
+    expect(screen.getByText("Login Screen")).toBeInTheDocument();
+    expect(screen.queryByTestId("forge-shell")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("bot-widget")).not.toBeInTheDocument();
   });
 });

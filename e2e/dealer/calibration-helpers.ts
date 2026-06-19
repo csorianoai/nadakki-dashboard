@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-/** Drives T6.4 “Ajustes rápidos” panel on `/credit/dealer/[id]`. */
+/** Drives T6.4 “Ajustes rápidos” panel on `/credit-hub/dealer/applications/[id]`. */
 export async function fillHealthCalibration(
   page: Page,
   vals: {
