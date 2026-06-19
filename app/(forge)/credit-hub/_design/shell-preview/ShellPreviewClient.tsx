@@ -41,7 +41,15 @@ export function ShellPreviewClient() {
       </div>
 
       <div style={{ height: 720, border: "1px solid var(--ch-line)", borderRadius: "var(--ch-r-xl)", overflow: "hidden" }}>
-        <ChAppShell persona={persona} trail={["Credit Hub", persona === "bank" ? "Bandeja" : "Solicitudes"]} frame multiTenant>
+        <ChAppShell
+          persona={persona}
+          trail={["Credit Hub", persona === "bank" ? "Bandeja" : "Solicitudes"]}
+          frame
+          multiTenant
+          tenantName={persona === "bank" ? "TestBank Mexico (demo)" : "Auto Plaza · TestBank (demo)"}
+          user={persona === "bank" ? { name: "María Reyes (demo)", initials: "MR" } : { name: "Jorge Salinas (demo)", initials: "JS" }}
+          userEmail="demo@nadakki.test"
+        >
           <div className="space-y-8">
             <ChShellEmptyMain title="Package 0 — shell + primitivas" />
 

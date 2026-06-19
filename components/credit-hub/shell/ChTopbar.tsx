@@ -168,9 +168,13 @@ export function ChTopbar({
   trail = ["Credit Hub", "Panel"],
   breadcrumbs,
   multiTenant = true,
-  tenantName = "TestBank Mexico",
-  notif = 2,
-  user = { name: "María Reyes", initials: "MR" },
+  tenantName,
+  notif,
+  user,
+  userEmail,
+  notifications,
+  tenants,
+  onSelectTenant,
   onOpenSearch,
   onSearchClick,
   compact = false,
@@ -179,7 +183,10 @@ export function ChTopbar({
 }: ChTopbarProps) {
   const [menu, setMenu] = useState<"tenant" | "bell" | "avatar" | null>(null);
   const resolvedTrail = trail.length ? trail : breadcrumbs?.map((b) => b.label) ?? ["Credit Hub", "Panel"];
-  const resolvedUser = user ?? { name: "Usuario", initials: userInitials ?? "NA" };
+  const resolvedUser = user ?? { name: "Usuario", initials: userInitials ?? "—" };
+  const resolvedTenantName = tenantName?.trim() ? tenantName : "Institución no disponible";
+  const notifCount = notifications?.length ?? notif ?? 0;
+  const canSwitchTenant = !!tenants && tenants.length > 0;
   const openSearch = onOpenSearch ?? onSearchClick;
 
   return (
@@ -262,26 +269,47 @@ export function ChTopbar({
       <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: compact ? "auto" : 0, flexShrink: 0 }}>
         {multiTenant ? (
           <div style={{ position: "relative" }}>
-            <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" onClick={() => setMenu(menu === "tenant" ? null : "tenant")}>
-              <Building2 className="h-3.5 w-3.5" aria-hidden />
-              <span style={{ maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tenantName}</span>
-              <ChevronDown className="h-3.5 w-3.5" aria-hidden />
-            </button>
-            <Dropdown open={menu === "tenant"} onClose={() => setMenu(null)} width={220}>
-              <div className="ch-eyebrow" style={{ padding: "6px 10px 4px" }}>
-                Cambiar tenant
+            {canSwitchTenant ? (
+              <>
+                <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" onClick={() => setMenu(menu === "tenant" ? null : "tenant")}>
+                  <Building2 className="h-3.5 w-3.5" aria-hidden />
+                  <span style={{ maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{resolvedTenantName}</span>
+                  <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+                </button>
+                <Dropdown open={menu === "tenant"} onClose={() => setMenu(null)} width={220}>
+                  <div className="ch-eyebrow" style={{ padding: "6px 10px 4px" }}>
+                    Cambiar institución
+                  </div>
+                  {tenants!.map((t) => (
+                    <MenuItem
+                      key={t.id}
+                      icon={Building2}
+                      label={t.name}
+                      onClick={() => {
+                        onSelectTenant?.(t.id);
+                        setMenu(null);
+                      }}
+                    />
+                  ))}
+                </Dropdown>
+              </>
+            ) : (
+              <div
+                className="ch-btn ch-btn-secondary ch-btn-sm"
+                style={{ cursor: "default" }}
+                aria-label={`Institución: ${resolvedTenantName}`}
+              >
+                <Building2 className="h-3.5 w-3.5" aria-hidden />
+                <span style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{resolvedTenantName}</span>
               </div>
-              <MenuItem icon={Building2} label="TestBank Mexico" onClick={() => setMenu(null)} />
-              <MenuItem icon={Building2} label="Cooperativa del Valle" onClick={() => setMenu(null)} />
-              <MenuItem icon={Building2} label="Crédito Andino CO" onClick={() => setMenu(null)} />
-            </Dropdown>
+            )}
           </div>
         ) : null}
 
         <div style={{ position: "relative" }}>
           <button type="button" className="ch-icon-btn" aria-label="Notificaciones" onClick={() => setMenu(menu === "bell" ? null : "bell")}>
             <Bell className="h-[17px] w-[17px]" aria-hidden />
-            {notif > 0 ? (
+            {notifCount > 0 ? (
               <span
                 style={{
                   position: "absolute",
@@ -298,14 +326,18 @@ export function ChTopbar({
           </button>
           <Dropdown open={menu === "bell"} onClose={() => setMenu(null)} width={280}>
             <div className="ch-eyebrow" style={{ padding: "6px 10px 4px" }}>
-              Notificaciones · {notif}
+              Notificaciones · {notifCount}
             </div>
-            <div style={{ padding: "8px 10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-2)", borderRadius: "var(--ch-r-sm)" }}>
-              <strong style={{ fontWeight: 600 }}>Comité pendiente</strong> — 3 solicitudes esperan tu voto.
-            </div>
-            <div style={{ padding: "8px 10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-2)" }}>
-              <strong style={{ fontWeight: 600 }}>SLA en riesgo</strong> — SOL-2026-0431 lleva 18 min.
-            </div>
+            {notifications && notifications.length > 0 ? (
+              notifications.map((n, i) => (
+                <div key={n.id ?? i} style={{ padding: "8px 10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-2)", borderRadius: "var(--ch-r-sm)" }}>
+                  <strong style={{ fontWeight: 600 }}>{n.title}</strong>
+                  {n.body ? <> — {n.body}</> : null}
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: "10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-3)" }}>Sin notificaciones nuevas.</div>
+            )}
           </Dropdown>
         </div>
 
@@ -346,7 +378,7 @@ export function ChTopbar({
           <Dropdown open={menu === "avatar"} onClose={() => setMenu(null)} width={210}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--ch-line)", marginBottom: 4 }}>
               <div style={{ fontSize: "var(--ch-text-sm)", fontWeight: 600 }}>{resolvedUser.name}</div>
-              <div style={{ fontSize: 11, color: "var(--ch-text-3)" }}>maria.reyes@testbank.mx</div>
+              {userEmail ? <div style={{ fontSize: 11, color: "var(--ch-text-3)" }}>{userEmail}</div> : null}
             </div>
             <MenuItem icon={User} label="Mi perfil" onClick={() => setMenu(null)} />
             <MenuItem icon={Settings} label="Configuración" onClick={() => setMenu(null)} />

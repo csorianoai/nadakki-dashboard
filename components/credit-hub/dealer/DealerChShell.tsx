@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { ChAppShell } from "@/components/credit-hub/shell/ChAppShell";
 import { CH_NAV, ChSidebar } from "@/components/credit-hub/shell/ChSidebar";
+import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
 import {
   DEALER_MOBILE_NAV_IDS,
   DEALER_NAV_ROUTES,
@@ -71,6 +72,7 @@ export function DealerChShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
+  const identity = useChromeIdentity();
   const isMobile = useMobileShell();
   const active = pathnameToDealerNavId(pathname ?? "");
   const trail = dealerTrailForPath(pathname ?? "");
@@ -91,12 +93,15 @@ export function DealerChShell({ children }: { children: ReactNode }) {
       mode={isMobile ? "mobile" : "desktop"}
       tenantName={tenantConfig.institution_name}
       trail={trail}
+      user={{ name: identity.name, initials: identity.initials }}
+      userEmail={identity.email}
       sidebar={
         <ChSidebar
           persona="dealer"
           active={active}
           institutionName={tenantConfig.institution_name}
           logoUrl={tenantConfig.branding.logo_url ?? undefined}
+          user={{ name: identity.name, role: identity.role, initials: identity.initials }}
           onNavigate={navigate}
         />
       }

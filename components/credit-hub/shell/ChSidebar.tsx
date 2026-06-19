@@ -19,24 +19,21 @@ import {
 import { cn } from "@/lib/utils";
 import type { ChBottomNavProps, ChNavGroup, ChNavItem, ChSidebarProps, PersonaType } from "@/lib/credit-hub/ch-types";
 
-export const CH_NAV: Record<
-  PersonaType,
-  {
-    tenant: string;
-    initials: string;
-    groups: ChNavGroup[];
-    user: { name: string; role: string; initials: string };
-  }
-> = {
+/**
+ * Navigation structure only (labels + icons + ids). PR-FE-1: badge counts,
+ * user identity and tenant names were removed from here — they are demo data.
+ * Real badge counts come via the `navBadges` prop; real user via the `user`
+ * prop; real institution via `institutionName`. Absent ⇒ hidden / "Usuario" /
+ * "Institución no disponible", never demo.
+ */
+export const CH_NAV: Record<PersonaType, { groups: ChNavGroup[] }> = {
   bank: {
-    tenant: "TestBank Mexico",
-    initials: "TB",
     groups: [
       {
         label: "Operación",
         items: [
           { id: "panel", label: "Panel", icon: Grid3X3 },
-          { id: "bandeja", label: "Bandeja", icon: Inbox, badge: "47" },
+          { id: "bandeja", label: "Bandeja", icon: Inbox },
         ],
       },
       {
@@ -47,21 +44,18 @@ export const CH_NAV: Record<
         label: "Control",
         items: [
           { id: "auditoria", label: "Auditoría", icon: Clock },
-          { id: "cumplimiento", label: "Cumplimiento", icon: Scale, badge: "3" },
+          { id: "cumplimiento", label: "Cumplimiento", icon: Scale },
         ],
       },
     ],
-    user: { name: "María Reyes", role: "Analista de riesgo · L3", initials: "MR" },
   },
   dealer: {
-    tenant: "Auto Plaza · TestBank",
-    initials: "AP",
     groups: [
       {
         label: "Mostrador",
         items: [
           { id: "inicio", label: "Inicio", icon: Home },
-          { id: "solicitudes", label: "Solicitudes", icon: FileText, badge: "8" },
+          { id: "solicitudes", label: "Solicitudes", icon: FileText },
           { id: "nueva", label: "Nueva", icon: Plus },
           { id: "preaprobacion", label: "Preaprobación", icon: Zap },
         ],
@@ -69,12 +63,11 @@ export const CH_NAV: Record<
       {
         label: "Cuenta",
         items: [
-          { id: "notificaciones", label: "Notificaciones", icon: Bell, badge: "2" },
+          { id: "notificaciones", label: "Notificaciones", icon: Bell },
           { id: "perfil", label: "Perfil", icon: User },
         ],
       },
     ],
-    user: { name: "Jorge Salinas", role: "Asesor de piso", initials: "JS" },
   },
 };
 
@@ -217,6 +210,8 @@ export function ChSidebar({
   onToggleCollapse,
   institutionName,
   logoUrl,
+  user,
+  navBadges,
   className,
 }: ChSidebarProps) {
   const [cState, setCState] = useState(false);
@@ -225,6 +220,12 @@ export function ChSidebar({
   const cfg = CH_NAV[persona];
   const firstId = cfg.groups[0]?.items[0]?.id ?? "panel";
   const act = active ?? activePath ?? firstId;
+  const institutionLabel = institutionName?.trim() ? institutionName : "Institución no disponible";
+  const footerUser = {
+    name: user?.name?.trim() ? user.name : "Usuario",
+    role: user?.role?.trim() ? user.role : "",
+    initials: user?.initials?.trim() ? user.initials : "—",
+  };
 
   return (
     <aside
@@ -258,7 +259,7 @@ export function ChSidebar({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logoUrl} alt="" style={{ height: 30, width: "auto" }} aria-hidden />
         ) : (
-          <TenantMark initials={institutionName?.slice(0, 2).toUpperCase() ?? cfg.initials} />
+          <TenantMark initials={institutionName?.slice(0, 2).toUpperCase() ?? "CH"} />
         )}
         {!collapsed ? (
           <div style={{ minWidth: 0, lineHeight: 1.25 }}>
@@ -271,7 +272,7 @@ export function ChSidebar({
                 textOverflow: "ellipsis",
               }}
             >
-              {institutionName ?? cfg.tenant}
+              {institutionLabel}
             </div>
             <div className="ch-mono" style={{ fontSize: 10, color: "var(--ch-text-3)", whiteSpace: "nowrap" }}>
               CREDIT HUB · {persona === "bank" ? "BANCO" : "DEALER"}
@@ -285,15 +286,22 @@ export function ChSidebar({
           <div key={g.label} style={{ marginBottom: 8 }}>
             {!collapsed ? <div className="ch-eyebrow" style={{ padding: "10px 11px 6px" }}>{g.label}</div> : null}
             {collapsed && gi > 0 ? <div className="ch-divider" style={{ margin: "8px 10px" }} /> : null}
-            {g.items.map((it) => (
-              <NavItemButton
-                key={it.id}
-                item={it}
-                active={act === it.id || act === it.href}
-                collapsed={collapsed}
-                onClick={() => onNavigate?.(it.id)}
-              />
-            ))}
+            {g.items.map((it) => {
+              const injected = navBadges?.[it.id];
+              const item =
+                injected !== undefined && injected !== null && injected !== "" && injected !== 0
+                  ? { ...it, badge: String(injected) }
+                  : it;
+              return (
+                <NavItemButton
+                  key={it.id}
+                  item={item}
+                  active={act === it.id || act === it.href}
+                  collapsed={collapsed}
+                  onClick={() => onNavigate?.(it.id)}
+                />
+              );
+            })}
           </div>
         ))}
       </nav>
@@ -324,16 +332,18 @@ export function ChSidebar({
               flexShrink: 0,
             }}
           >
-            {cfg.user.initials}
+            {footerUser.initials}
           </div>
           {!collapsed ? (
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {cfg.user.name}
+                {footerUser.name}
               </div>
-              <div style={{ fontSize: 10.5, color: "var(--ch-text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {cfg.user.role}
-              </div>
+              {footerUser.role ? (
+                <div style={{ fontSize: 10.5, color: "var(--ch-text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {footerUser.role}
+                </div>
+              ) : null}
             </div>
           ) : null}
           {!collapsed ? (
