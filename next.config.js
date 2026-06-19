@@ -154,6 +154,42 @@ const nextConfig = {
         destination: "/credit-hub/bank/applications",
         permanent: false,
       },
+      // PR-LEGACY-1: legacy /credit/* -> modern /credit-hub/* (parity routes only).
+      // permanent:false (temporary) while legacy pages still exist; KEEP_TEMPORARILY
+      // routes (/credit/dealer/analytics, /credit/dealer/real, /credit, /credit/new,
+      // /credit/dashboard, /credit/[id]/*) are intentionally NOT redirected.
+      {
+        source: "/credit/dealer/new",
+        destination: "/credit-hub/dealer/applications/new",
+        permanent: false,
+      },
+      {
+        // Exclude KEEP_TEMPORARILY single-segment routes (analytics, real) and the
+        // explicit /new rule above so they are not swallowed by the dynamic :id match.
+        source: "/credit/dealer/:applicationId((?!analytics|real|new)[^/]+)",
+        destination: "/credit-hub/dealer/applications/:applicationId",
+        permanent: false,
+      },
+      {
+        source: "/credit/dealer",
+        destination: "/credit-hub/dealer",
+        permanent: false,
+      },
+      {
+        source: "/credit/bank/:applicationId",
+        destination: "/credit-hub/bank/applications/:applicationId",
+        permanent: false,
+      },
+      {
+        source: "/credit/bank",
+        destination: "/credit-hub/bank",
+        permanent: false,
+      },
+      {
+        source: "/credit/status/:applicationId",
+        destination: "/credit-hub/dealer/applications/:applicationId",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {
