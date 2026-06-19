@@ -24,6 +24,8 @@ export function ChAppShell({
   mode = "desktop",
   multiTenant = true,
   frame = false,
+  user,
+  userEmail,
   children,
   topbar,
   sidebar,
@@ -40,13 +42,6 @@ export function ChAppShell({
     openPalette: () => setPaletteOpen(true),
     paletteOpen,
   };
-
-  const resolvedTenant =
-    tenantName ?? (persona === "bank" ? "TestBank Mexico" : "Auto Plaza · TestBank");
-  const resolvedUser =
-    persona === "bank"
-      ? { name: "María Reyes", initials: "MR" }
-      : { name: "Jorge Salinas", initials: "JS" };
 
   return (
     <ChShellCtx.Provider value={ctx}>
@@ -86,8 +81,9 @@ export function ChAppShell({
               trail={trail}
               multiTenant={multiTenant}
               compact={isMobile}
-              tenantName={resolvedTenant}
-              user={resolvedUser}
+              tenantName={tenantName}
+              user={user}
+              userEmail={userEmail}
               onOpenSearch={() => setPaletteOpen(true)}
             />
           )}

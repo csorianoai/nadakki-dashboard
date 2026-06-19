@@ -115,6 +115,10 @@ export interface ChSidebarProps {
   onToggleCollapse?: () => void;
   institutionName?: string;
   logoUrl?: string | null;
+  /** Real signed-in user for the sidebar footer. Falls back to "Usuario" when absent. */
+  user?: { name: string; role?: string; initials: string };
+  /** Real nav counts keyed by nav id (e.g. { bandeja: 12 }). Badge is hidden when absent — never hardcoded. */
+  navBadges?: Record<string, string | number>;
   className?: string;
 }
 
@@ -126,6 +130,17 @@ export interface ChBottomNavProps {
   className?: string;
 }
 
+export interface ChNotification {
+  id?: string;
+  title: string;
+  body?: string;
+}
+
+export interface ChTenantOption {
+  id: string;
+  name: string;
+}
+
 export interface ChTopbarProps {
   persona?: PersonaType;
   trail?: string[];
@@ -134,6 +149,13 @@ export interface ChTopbarProps {
   multiTenant?: boolean;
   notif?: number;
   user?: { name: string; initials: string };
+  /** Real account email shown in the avatar menu. Hidden when absent. */
+  userEmail?: string;
+  /** Real notifications; when empty the bell shows an explicit empty state (no demo rows). */
+  notifications?: ChNotification[];
+  /** Real list of tenants the user can switch to; when absent the tenant is a static label (no demo entries). */
+  tenants?: ChTenantOption[];
+  onSelectTenant?: (tenantId: string) => void;
   onOpenSearch?: () => void;
   onSearchClick?: () => void;
   compact?: boolean;
@@ -148,6 +170,10 @@ export interface ChAppShellProps {
   mode?: "desktop" | "mobile";
   multiTenant?: boolean;
   frame?: boolean;
+  /** Real signed-in user forwarded to the default topbar. Falls back to "Usuario" when absent. */
+  user?: { name: string; initials: string };
+  /** Real account email forwarded to the default topbar avatar menu. */
+  userEmail?: string;
   children: ReactNode;
   topbar?: ReactNode;
   sidebar?: ReactNode;
