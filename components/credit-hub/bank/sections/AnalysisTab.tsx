@@ -108,31 +108,25 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
               icon: DollarSign,
               title: "Ingreso verificado",
               body: `${chMoneyExact(Number(applicant.monthly_income ?? 0))}/mes · ${String(applicant.employment ?? "—")}.`,
-              source: "SAT · recibos de nómina",
+              source: "Entidad emisora · recibos de nomina",
               conf: "alto",
             },
             {
               icon: Gauge,
-              title: "Buró de crédito",
+              title: "Buro de credito",
               body: `Score ${an.score}. Nivel ${an.risk_level}.`,
-              source: "Círculo de Crédito",
+              source: "Buro de credito",
               conf: "alto",
             },
             {
               icon: Car,
-              title: "Vehículo",
+              title: "Vehiculo",
               body: `${String(payload.vehicle?.label ?? payload.vehicle?.make ?? "—")} · valor ${chMoney(Number(payload.vehicle?.value ?? 0))}.`,
               source: "Expediente dealer",
               conf: "medio",
             },
-            {
-              icon: Fingerprint,
-              title: "Identidad y PLD",
-              body: "Validación de identidad según política del tenant.",
-              source: "INE · listas PLD",
-              conf: "alto",
-            },
           ]}
+          identity={payload.identity}
         />
       </div>
     </div>

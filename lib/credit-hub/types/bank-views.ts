@@ -62,6 +62,7 @@ export interface BankReviewPayload {
   documents?: BankDocumentPayload[];
   bank_decision?: unknown;
   audit_trail?: unknown;
+  identity?: import("@/lib/credit-hub/ch-types").IdentityEvidence;
 }
 
 export interface ScoreDistribution {
