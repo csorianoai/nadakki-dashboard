@@ -2,6 +2,7 @@ import {
   normalizeApplication,
   normalizeApplications,
   normalizeEvents,
+  normalizeOfferAcceptResult,
   normalizeStats,
 } from "./normalizers";
 import { tokenStorage } from "@/lib/auth/token-storage";
@@ -11,6 +12,7 @@ import type {
   CreditEvent,
   CreditStats,
 } from "../types/creditCore";
+import type { OfferAcceptResult } from "../types/offers";
 
 const CREDIT_CORE_BASE = "/api/v2/credit";
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -169,4 +171,29 @@ export async function getApplicationEvents(params: {
     tenantId: params.tenantId,
   });
   return normalizeEvents(raw);
+}
+
+/**
+ * Accept a specific offer for an application (dealer multi-lender flow).
+ *
+ * POST /api/v2/credit/applications/{applicationId}/offers/{offerId}/accept
+ * (offer_acceptance_router.py) — base path matches CREDIT_CORE_BASE, so this
+ * reuses creditCoreFetch. Idempotent on the backend (responds idempotent:true
+ * on retries). Typed backend errors surface via CreditCoreApiError.detail, so
+ * callers can show the real reason (e.g. offer already taken / invalid state).
+ */
+export async function acceptOffer(params: {
+  tenantId: string;
+  applicationId: string;
+  offerId: string;
+}): Promise<OfferAcceptResult> {
+  const raw = await creditCoreFetch<unknown>(
+    `/applications/${encodeURIComponent(params.applicationId)}/offers/${encodeURIComponent(params.offerId)}/accept`,
+    {
+      method: "POST",
+      tenantId: params.tenantId,
+      body: JSON.stringify({}),
+    }
+  );
+  return normalizeOfferAcceptResult(raw);
 }

@@ -1,4 +1,11 @@
 import type { CreditApplication, CreditApplicationStatus, CreditDecision, CreditEvent, CreditStats } from "../types/creditCore";
+import type {
+  AcceptedOfferDetail,
+  CreditOffer,
+  OfferAcceptResult,
+  OffersListResponse,
+  OffersPagination,
+} from "../types/offers";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -235,4 +242,71 @@ export function normalizeEvent(raw: unknown): CreditEvent {
 
 export function normalizeEvents(raw: unknown): CreditEvent[] {
   return pickArray(raw).map(normalizeEvent);
+}
+
+/**
+ * Normalize one canonical offer row (TP-005). Defensive: never assumes the
+ * backend sent every field; numeric fields stay `null` when absent/invalid
+ * rather than being coerced to 0 (so the UI can show an honest "—").
+ */
+export function normalizeOffer(raw: unknown): CreditOffer {
+  const record = isRecord(raw) ? raw : {};
+  const id = pickString(record, ["id", "offer_id", "offerId"], "");
+  return {
+    id,
+    application_id: pickString(record, ["application_id", "applicationId"], ""),
+    tenant_id: pickNullableString(record, ["tenant_id", "tenantId"]),
+    lender_code: pickString(record, ["lender_code", "lenderCode"], ""),
+    amount_approved: pickNumber(record, ["amount_approved", "amountApproved", "approved_amount"]),
+    interest_rate_apr: pickNumber(record, ["interest_rate_apr", "interestRateApr", "interest_rate"]),
+    term_months: pickNumber(record, ["term_months", "termMonths"]),
+    monthly_payment: pickNumber(record, ["monthly_payment", "monthlyPayment"]),
+    status: pickString(record, ["status"], "pending"),
+    created_at: pickDate(record, ["created_at", "createdAt", "created"]),
+    raw,
+  };
+}
+
+/** Normalize the offers list response, tolerating array or wrapped shapes. */
+export function normalizeOffers(raw: unknown): OffersListResponse {
+  const record = isRecord(raw) ? raw : {};
+  const offersArray = Array.isArray(record.offers) ? record.offers : pickArray(raw);
+  const offers = offersArray.map(normalizeOffer);
+  const paginationRecord = isRecord(record.pagination) ? (record.pagination as AnyRecord) : {};
+  const pagination: OffersPagination = {
+    limit: pickNumber(paginationRecord, ["limit"]) ?? offers.length,
+    offset: pickNumber(paginationRecord, ["offset"]) ?? 0,
+    total: pickNumber(paginationRecord, ["total"]) ?? offers.length,
+  };
+  return {
+    application_id: pickString(record, ["application_id", "applicationId"], ""),
+    tenant_id: pickNullableString(record, ["tenant_id", "tenantId"]),
+    offers,
+    pagination,
+  };
+}
+
+/** Normalize the offer-acceptance response (offer_acceptance_router). */
+export function normalizeOfferAcceptResult(raw: unknown): OfferAcceptResult {
+  const record = isRecord(raw) ? raw : {};
+  const offerRecord = isRecord(record.offer) ? (record.offer as AnyRecord) : {};
+  const offer: AcceptedOfferDetail = {
+    offer_id: pickString(offerRecord, ["offer_id", "offerId", "id"], ""),
+    application_id: pickString(offerRecord, ["application_id", "applicationId"], ""),
+    tenant_id: pickNullableString(offerRecord, ["tenant_id", "tenantId"]),
+    lender_code: pickString(offerRecord, ["lender_code", "lenderCode"], ""),
+    status: pickString(offerRecord, ["status"], ""),
+    terms: isRecord(offerRecord.terms) ? (offerRecord.terms as Record<string, unknown>) : {},
+    accepted_at: pickNullableString(offerRecord, ["accepted_at", "acceptedAt"]),
+    accepted_by: pickNullableString(offerRecord, ["accepted_by", "acceptedBy"]),
+  };
+  return {
+    ok: record.ok === true,
+    idempotent: record.idempotent === true,
+    offer,
+    application_state: pickNullableString(record, ["application_state", "applicationState"]),
+    previous_application_state: pickNullableString(record, ["previous_application_state", "previousApplicationState"]),
+    siblings_not_selected: pickNumber(record, ["siblings_not_selected", "siblingsNotSelected"]),
+    raw,
+  };
 }
