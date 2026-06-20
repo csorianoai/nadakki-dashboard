@@ -1,14 +1,20 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RemoteConsentSelector } from "@/components/credit-hub/dealer/wizard/consent/RemoteConsentSelector";
+import { CREDIT_HUB_ES_DO } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
 
 jest.mock("@/components/credit-hub/system/ForgeToaster", () => ({
   forgeToast: { success: jest.fn(), error: jest.fn() },
 }));
 
+jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
+  useTranslations: () => CREDIT_HUB_ES_DO,
+}));
+
 jest.mock("@/lib/credit-hub/hooks/useConsentApi", () => ({
   useConsentApi: () => ({
     initiate: jest.fn().mockResolvedValue({ token: "mock-token", status: "SENT" }),
+    accept: jest.fn().mockResolvedValue({ accepted_at: "2026-06-19T12:00:00Z", audit_hash: "hash" }),
     getStatus: jest.fn().mockResolvedValue({ status: "SENT", method: "WHATSAPP", accepted_at: null }),
   }),
 }));
@@ -25,7 +31,9 @@ describe("RemoteConsentSelector", () => {
         dealerOtpCode=""
         onDealerOtpCodeChange={noop}
         onSmsOtpSent={noop}
-        onSmsVerifyStub={noop}
+        consentsAccepted={["terms_accepted"]}
+        fullName="Test User"
+        onFullNameChange={noop}
       />
     );
     expect(screen.getByTestId("method-whatsapp")).toBeInTheDocument();
@@ -43,7 +51,9 @@ describe("RemoteConsentSelector", () => {
         dealerOtpCode=""
         onDealerOtpCodeChange={noop}
         onSmsOtpSent={noop}
-        onSmsVerifyStub={noop}
+        consentsAccepted={["terms_accepted"]}
+        fullName="Test User"
+        onFullNameChange={noop}
       />
     );
     expect(screen.getByTestId("method-whatsapp")).toBeInTheDocument();
@@ -62,7 +72,9 @@ describe("RemoteConsentSelector", () => {
         dealerOtpCode=""
         onDealerOtpCodeChange={noop}
         onSmsOtpSent={noop}
-        onSmsVerifyStub={noop}
+        consentsAccepted={["terms_accepted"]}
+        fullName="Test User"
+        onFullNameChange={noop}
       />
     );
     await user.click(screen.getByTestId("method-whatsapp"));

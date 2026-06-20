@@ -71,6 +71,12 @@ export function ConsentSection({
     });
   };
 
+  // Build consents_accepted list from checked checkboxes for SMS OTP accept()
+  const consentsAccepted: string[] = [];
+  if (consent_bureau_authorization) consentsAccepted.push("bureau_authorization");
+  if (consent_terms_accepted) consentsAccepted.push("terms_accepted");
+  if (consent_data_processing_authorization) consentsAccepted.push("data_processing_authorization");
+
   return (
     <section className="space-y-6" data-testid="consent-section">
       <div>
@@ -172,13 +178,9 @@ export function ConsentSection({
           dealerOtpCode={consent_dealer_otp_code}
           onDealerOtpCodeChange={(v) => onPatch({ consent_dealer_otp_code: v })}
           onSmsOtpSent={() => onPatch({ consent_sms_otp_sent: true, consent_method: "SMS_OTP" })}
-          onSmsVerifyStub={() => {
-            // Verificación final del OTP queda para 7D / endpoint público de accept
-            onPatch({
-              consent_method: "SMS_OTP",
-              consent_accepted_at: new Date().toISOString(),
-            });
-          }}
+          consentsAccepted={consentsAccepted}
+          fullName={consent_signature_full_name}
+          onFullNameChange={(v) => onPatch({ consent_signature_full_name: v })}
         />
         </>
       )}
