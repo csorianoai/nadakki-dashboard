@@ -39,6 +39,7 @@
   ],
   "exclude": [
     "node_modules",
+    "_handoff",
     "tests",
     "e2e",
     "playwright.config.ts"
