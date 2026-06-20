@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import { ArrowLeft, Car, CheckCircle, Clock, Mail, Phone, User } from "lucide-react";
 import { DetailSkeleton, EmptyStateRich, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
 import { DealerStatusBadge } from "@/components/credit-hub/dealer/shared/dealerUi";
+import { OfferConfirmModal } from "@/components/credit-hub/dealer/OfferConfirmModal";
 import { CreditCoreApiError, acceptOffer } from "@/lib/credit-hub/api/creditCoreClient";
 import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
 import { useApplicationOffers } from "@/lib/credit-hub/hooks/useApplicationOffers";
@@ -24,9 +25,8 @@ const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer
 
 /**
  * Title-case a raw lender_code for display. No authoritative lender_code → name
- * dictionary exists in the codebase (only this same prettifier in legacy
- * components/credit/OfferComparisonCards.tsx), so we surface a readable form of
- * the code itself rather than inventing bank names.
+ * dictionary exists in the codebase, so we surface a readable form of the code
+ * itself rather than inventing bank names.
  */
 function lenderLabel(code: string): string {
   if (!code.trim()) return "—";
@@ -77,6 +77,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const [acceptState, setAcceptState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [acceptError, setAcceptError] = useState<string | null>(null);
   const [acceptMessage, setAcceptMessage] = useState<string | null>(null);
+  const [confirmOffer, setConfirmOffer] = useState<CreditOffer | null>(null);
 
   const currencyPrefix =
     tenantConfig.currency_code === "DOP" ? "RD$" : tenantConfig.currency_code === "MXN" ? "MX$" : `${tenantConfig.currency_code} `;
@@ -91,6 +92,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
       try {
         const result = await acceptOffer({ tenantId, applicationId, offerId });
         setAcceptState("success");
+        setConfirmOffer(null);
         const siblings = result.siblings_not_selected;
         setAcceptMessage(
           typeof siblings === "number" && siblings > 0
@@ -291,7 +293,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                       className="ch-btn ch-btn-persona min-h-[44px]"
                       data-testid={`offer-accept-${offer.id}`}
                       disabled={acceptState === "loading"}
-                      onClick={() => void handleAcceptOffer(offer.id)}
+                      onClick={() => setConfirmOffer(offer)}
                     >
                       {isThisAccepting ? "Procesando…" : "Seleccionar esta oferta"}
                     </button>
@@ -407,6 +409,18 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
           </div>
         </div>
       </div>
+
+      <OfferConfirmModal
+        offer={confirmOffer}
+        lenderName={confirmOffer ? lenderLabel(confirmOffer.lender_code) : "—"}
+        currencyPrefix={currencyPrefix}
+        open={confirmOffer !== null}
+        onClose={() => {
+          if (acceptState !== "loading") setConfirmOffer(null);
+        }}
+        onConfirm={(offerId) => void handleAcceptOffer(offerId)}
+        isSubmitting={acceptState === "loading"}
+      />
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         <button type="button" className="ch-btn ch-btn-secondary min-h-[44px] w-full sm:w-auto" onClick={() => router.push("/credit-hub/dealer/applications")}>
