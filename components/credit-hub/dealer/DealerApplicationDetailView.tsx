@@ -6,9 +6,9 @@ import { useCallback, useState } from "react";
 import { ArrowLeft, Car, CheckCircle, Clock, Mail, Phone, User } from "lucide-react";
 import { DetailSkeleton, EmptyStateRich, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
 import { DealerStatusBadge } from "@/components/credit-hub/dealer/shared/dealerUi";
-import { CreditCoreApiError } from "@/lib/credit-hub/api/creditCoreClient";
-import { tokenStorage } from "@/lib/auth/token-storage";
+import { CreditCoreApiError, acceptOffer } from "@/lib/credit-hub/api/creditCoreClient";
 import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
+import { useApplicationOffers } from "@/lib/credit-hub/hooks/useApplicationOffers";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
@@ -16,9 +16,26 @@ import { chMoneyExact, chScoreBand } from "@/lib/credit-hub/ch-base";
 import { chRelTimeDealer, parseRequestedAmount } from "@/lib/credit-hub/dealer/dealerFormat";
 import type { DealerApplicationDetailViewProps } from "@/lib/credit-hub/types/dealer-views";
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
+import type { CreditOffer } from "@/lib/credit-hub/types/offers";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 
-type AnyRecord = Record<string, unknown>;
+/** Offer statuses the dealer can still act on (select). */
+const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
+
+/**
+ * Title-case a raw lender_code for display. No authoritative lender_code → name
+ * dictionary exists in the codebase (only this same prettifier in legacy
+ * components/credit/OfferComparisonCards.tsx), so we surface a readable form of
+ * the code itself rather than inventing bank names.
+ */
+function lenderLabel(code: string): string {
+  if (!code.trim()) return "—";
+  return code
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 
 function stageLabel(status: CreditApplicationStatus): string {
   switch (status) {
@@ -43,51 +60,59 @@ function stageLabel(status: CreditApplicationStatus): string {
   }
 }
 
-function extractPayload(raw: unknown): { terms: AnyRecord; stipulations: AnyRecord[] } {
-  const record = (raw && typeof raw === "object" ? raw : {}) as AnyRecord;
-  const payload = (record.application_payload && typeof record.application_payload === "object" ? record.application_payload : {}) as AnyRecord;
-  const bankDecision = (payload.bank_decision && typeof payload.bank_decision === "object" ? payload.bank_decision : {}) as AnyRecord;
-  const terms = (bankDecision.terms && typeof bankDecision.terms === "object" ? bankDecision.terms : {}) as AnyRecord;
-  const stipulations = Array.isArray(payload.bank_decision_stipulations) ? (payload.bank_decision_stipulations as AnyRecord[]) : [];
-  return { terms, stipulations };
-}
-
 export function DealerApplicationDetailView({ applicationId }: DealerApplicationDetailViewProps) {
   const router = useRouter();
   const t = useTranslations();
   const { tenantId } = useTenant();
   const { tenantConfig } = useTenantConfig();
   const { application: data, events, isLoading, error, refetch } = useCreditApplicationDetail(applicationId);
+  const {
+    offers,
+    isLoading: offersLoading,
+    isError: offersError,
+    error: offersErrorObj,
+    refetch: refetchOffers,
+  } = useApplicationOffers(applicationId);
+  const [acceptingOfferId, setAcceptingOfferId] = useState<string | null>(null);
   const [acceptState, setAcceptState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [acceptError, setAcceptError] = useState<string | null>(null);
+  const [acceptMessage, setAcceptMessage] = useState<string | null>(null);
 
   const currencyPrefix =
     tenantConfig.currency_code === "DOP" ? "RD$" : tenantConfig.currency_code === "MXN" ? "MX$" : `${tenantConfig.currency_code} `;
 
-  const handleAcceptOffer = useCallback(async () => {
-    if (!tenantId || acceptState === "loading") return;
-    setAcceptState("loading");
-    setAcceptError(null);
-    try {
-      const token = tokenStorage.getAccessToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json", "X-Tenant-ID": tenantId };
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`/api/v2/credit/applications/${applicationId}/accept-decision`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ notes: "Oferta aceptada por el dealer" }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(typeof body.detail === "string" ? body.detail : `HTTP ${res.status}`);
+  const handleAcceptOffer = useCallback(
+    async (offerId: string) => {
+      if (!tenantId || acceptState === "loading") return;
+      setAcceptingOfferId(offerId);
+      setAcceptState("loading");
+      setAcceptError(null);
+      setAcceptMessage(null);
+      try {
+        const result = await acceptOffer({ tenantId, applicationId, offerId });
+        setAcceptState("success");
+        const siblings = result.siblings_not_selected;
+        setAcceptMessage(
+          typeof siblings === "number" && siblings > 0
+            ? `Oferta aceptada. Otras ${siblings} oferta${siblings === 1 ? "" : "s"} quedaron descartadas.`
+            : "Oferta aceptada."
+        );
+        // Refetch the offers list (small, ≤4) for canonical accepted/not_selected
+        // statuses, plus the dossier for status badge / stage consistency.
+        await Promise.all([refetchOffers(), refetch()]);
+      } catch (err) {
+        setAcceptState("error");
+        setAcceptError(
+          err instanceof CreditCoreApiError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "Error al aceptar la oferta"
+        );
       }
-      setAcceptState("success");
-      void refetch();
-    } catch (err) {
-      setAcceptState("error");
-      setAcceptError(err instanceof Error ? err.message : "Error al aceptar la oferta");
-    }
-  }, [applicationId, tenantId, acceptState, refetch]);
+    },
+    [applicationId, tenantId, acceptState, refetchOffers, refetch]
+  );
 
   if (isLoading) return <DetailSkeleton />;
 
@@ -117,9 +142,9 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const amount = parseRequestedAmount(data.requested_amount);
   const approved = data.status === "approved" || data.status === "approved_with_stipulations" || data.decision === "approved";
   const rejected = data.status === "rejected" || data.status === "declined" || data.decision === "rejected" || data.decision === "declined";
-  const { terms, stipulations } = extractPayload(data.raw);
-  const hasOffer = approved && !!(terms.approved_amount || terms.interest_rate || terms.term_months);
   const score = data.score != null ? Number(data.score) : null;
+  const acceptedOffer = offers.find((o) => o.status === "accepted") ?? null;
+  const hasAcceptedOffer = acceptedOffer != null;
 
   return (
     <div>
@@ -172,57 +197,120 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         ) : null}
       </div>
 
-      {hasOffer ? (
-        <div className="ch-card mb-4 p-[18px]" style={{ background: "var(--ch-success-soft)", borderColor: "#BBF7D0" }}>
-          <h2 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Oferta aprobada</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {terms.approved_amount ? (
-              <div style={{ background: "var(--ch-surface)", borderRadius: 8, padding: "10px 12px" }}>
-                <div className="ch-eyebrow">Monto</div>
-                <div className="ch-mono" style={{ fontSize: 15, fontWeight: 600, marginTop: 4 }}>
-                  {chMoneyExact(Number(terms.approved_amount), currencyPrefix)}
+      {offersLoading ? (
+        <div className="ch-card mb-4 p-[18px]" data-testid="offers-loading">
+          <h2 className="ch-serif" style={{ margin: 0, fontSize: 17 }}>
+            Ofertas de bancos
+          </h2>
+          <p style={{ marginTop: 10, fontSize: 13, color: "var(--ch-text-3)" }}>Cargando ofertas…</p>
+        </div>
+      ) : offersError ? (
+        <div className="ch-card mb-4 p-[18px]" data-testid="offers-error">
+          <h2 className="ch-serif" style={{ margin: 0, fontSize: 17 }}>
+            Ofertas de bancos
+          </h2>
+          <p style={{ marginTop: 10, fontSize: 13, color: "var(--ch-danger-text)" }}>
+            {offersErrorObj instanceof Error ? offersErrorObj.message : "No se pudieron cargar las ofertas."}
+          </p>
+          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" style={{ marginTop: 10 }} onClick={() => void refetchOffers()}>
+            {t.common.retry}
+          </button>
+        </div>
+      ) : offers.length > 0 ? (
+        <div className="ch-card mb-4 p-[18px]" data-testid="offers-section">
+          <h2 className="ch-serif" style={{ margin: 0, fontSize: 17, marginBottom: 4 }}>
+            {hasAcceptedOffer ? "Oferta seleccionada" : "Ofertas de bancos"}
+          </h2>
+          <p style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginBottom: 14 }}>
+            {hasAcceptedOffer
+              ? "Ya elegiste una oferta. Las demás quedaron descartadas."
+              : `${offers.length} ${offers.length === 1 ? "banco respondió" : "bancos respondieron"}. Compara y selecciona una.`}
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {offers.map((offer) => {
+              const isAccepted = offer.status === "accepted";
+              const isNotSelected = offer.status === "not_selected" || offer.status === "declined" || (hasAcceptedOffer && !isAccepted);
+              const canSelect = !hasAcceptedOffer && SELECTABLE_OFFER_STATUSES.has(offer.status);
+              const isThisAccepting = acceptingOfferId === offer.id && acceptState === "loading";
+              return (
+                <div
+                  key={offer.id}
+                  data-testid={`offer-card-${offer.id}`}
+                  data-offer-status={offer.status}
+                  className="ch-card"
+                  style={{
+                    padding: 14,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 10,
+                    background: isAccepted ? "var(--ch-success-soft)" : "var(--ch-surface)",
+                    borderColor: isAccepted ? "#BBF7D0" : undefined,
+                    opacity: isNotSelected ? 0.6 : 1,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>{lenderLabel(offer.lender_code)}</h3>
+                    {isAccepted ? (
+                      <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--ch-success-text)" }}>
+                        <CheckCircle className="h-4 w-4" aria-hidden />
+                        Elegida
+                      </span>
+                    ) : isNotSelected ? (
+                      <span className="text-xs" style={{ color: "var(--ch-text-3)" }}>No seleccionada</span>
+                    ) : null}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="ch-eyebrow">Monto</div>
+                      <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
+                        {offer.amount_approved != null ? chMoneyExact(offer.amount_approved, currencyPrefix) : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="ch-eyebrow">Tasa (APR)</div>
+                      <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
+                        {offer.interest_rate_apr != null ? `${offer.interest_rate_apr}%` : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="ch-eyebrow">Plazo</div>
+                      <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
+                        {offer.term_months != null ? `${offer.term_months} meses` : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="ch-eyebrow">Cuota mensual</div>
+                      <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
+                        {offer.monthly_payment != null ? chMoneyExact(offer.monthly_payment, currencyPrefix) : "—"}
+                      </div>
+                    </div>
+                  </div>
+                  {canSelect ? (
+                    <button
+                      type="button"
+                      className="ch-btn ch-btn-persona min-h-[44px]"
+                      data-testid={`offer-accept-${offer.id}`}
+                      disabled={acceptState === "loading"}
+                      onClick={() => void handleAcceptOffer(offer.id)}
+                    >
+                      {isThisAccepting ? "Procesando…" : "Seleccionar esta oferta"}
+                    </button>
+                  ) : null}
                 </div>
-              </div>
-            ) : null}
-            {terms.interest_rate ? (
-              <div style={{ background: "var(--ch-surface)", borderRadius: 8, padding: "10px 12px" }}>
-                <div className="ch-eyebrow">Tasa</div>
-                <div className="ch-mono" style={{ fontSize: 15, fontWeight: 600, marginTop: 4 }}>
-                  {String(terms.interest_rate)}%
-                </div>
-              </div>
-            ) : null}
-            {terms.term_months ? (
-              <div style={{ background: "var(--ch-surface)", borderRadius: 8, padding: "10px 12px" }}>
-                <div className="ch-eyebrow">Plazo</div>
-                <div className="ch-mono" style={{ fontSize: 15, fontWeight: 600, marginTop: 4 }}>
-                  {String(terms.term_months)} meses
-                </div>
-              </div>
-            ) : null}
+              );
+            })}
           </div>
-          {stipulations.length > 0 ? (
-            <ul style={{ marginTop: 12, fontSize: 13, color: "var(--ch-text-2)" }}>
-              {stipulations.map((s, i) => (
-                <li key={i}>{String(s.description || s.code || `Estipulación ${i + 1}`)}</li>
-              ))}
-            </ul>
+          {acceptMessage && acceptState === "success" ? (
+            <p className="flex items-center gap-2 text-sm" style={{ color: "var(--ch-success-text)", marginTop: 14 }} data-testid="offers-accept-success">
+              <CheckCircle className="h-5 w-5" aria-hidden />
+              {acceptMessage}
+            </p>
           ) : null}
-          <div style={{ marginTop: 14 }}>
-            {acceptState === "success" ? (
-              <p className="flex items-center gap-2 text-sm" style={{ color: "var(--ch-success-text)" }}>
-                <CheckCircle className="h-5 w-5" aria-hidden />
-                Oferta aceptada
-              </p>
-            ) : (
-              <>
-                <button type="button" className="ch-btn ch-btn-persona min-h-[44px]" disabled={acceptState === "loading"} onClick={() => void handleAcceptOffer()}>
-                  {acceptState === "loading" ? "Procesando…" : "Aceptar oferta"}
-                </button>
-                {acceptError ? <p style={{ marginTop: 8, fontSize: 13, color: "var(--ch-danger-text)" }}>{acceptError}</p> : null}
-              </>
-            )}
-          </div>
+          {acceptError && acceptState === "error" ? (
+            <p style={{ marginTop: 14, fontSize: 13, color: "var(--ch-danger-text)" }} data-testid="offers-accept-error">
+              {acceptError}
+            </p>
+          ) : null}
         </div>
       ) : null}
 

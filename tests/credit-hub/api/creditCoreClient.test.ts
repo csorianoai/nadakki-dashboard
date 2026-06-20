@@ -1,5 +1,6 @@
 import {
   CreditCoreApiError,
+  acceptOffer,
   createApplication,
   getApplication,
   getApplicationEvents,
@@ -103,5 +104,57 @@ describe("creditCoreClient", () => {
     mockFetch({ detail: "No tenant" }, false, 400);
     await expect(getCreditStats({ tenantId })).rejects.toBeInstanceOf(CreditCoreApiError);
     await expect(getCreditStats({ tenantId })).rejects.toMatchObject({ status: 400 });
+  });
+
+  test("acceptOffer POSTs to /api/v2/credit offers accept path and normalizes the result", async () => {
+    const fetchMock = mockFetch({
+      ok: true,
+      idempotent: false,
+      offer: {
+        offer_id: "off-1",
+        application_id: "app-1",
+        tenant_id: tenantId,
+        lender_code: "banco_popular",
+        status: "accepted",
+        terms: { interest_rate_apr: 12.5 },
+        accepted_at: "2026-06-20T00:00:00Z",
+        accepted_by: "analyst-1",
+      },
+      application_state: "OFFER_SELECTED",
+      previous_application_state: "PROCESSED",
+      siblings_not_selected: 3,
+    });
+
+    const res = await acceptOffer({ tenantId, applicationId: "app-1", offerId: "off-1" });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v2/credit/applications/app-1/offers/off-1/accept",
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(res.ok).toBe(true);
+    expect(res.idempotent).toBe(false);
+    expect(res.offer.offer_id).toBe("off-1");
+    expect(res.offer.status).toBe("accepted");
+    expect(res.application_state).toBe("OFFER_SELECTED");
+    expect(res.siblings_not_selected).toBe(3);
+  });
+
+  test("acceptOffer reports idempotent=true on retries", async () => {
+    mockFetch({
+      ok: true,
+      idempotent: true,
+      offer: { offer_id: "off-1", status: "accepted" },
+      application_state: "OFFER_SELECTED",
+      siblings_not_selected: 0,
+    });
+    const res = await acceptOffer({ tenantId, applicationId: "app-1", offerId: "off-1" });
+    expect(res.idempotent).toBe(true);
+  });
+
+  test("acceptOffer surfaces typed backend error detail (offer already taken)", async () => {
+    mockFetch({ detail: "Offer already accepted by another dealer" }, false, 409);
+    await expect(
+      acceptOffer({ tenantId, applicationId: "app-1", offerId: "off-1" })
+    ).rejects.toMatchObject({ status: 409, message: "Offer already accepted by another dealer" });
   });
 });
