@@ -35,32 +35,10 @@ describe("chFetch client — browser uses same-origin (Audit #4.1)", () => {
   });
 });
 
-describe("useSelectOffer — same-origin routing (Audit #4.1)", () => {
-  const src = readSrc("hooks/useSelectOffer.ts");
-
-  test("does NOT contain BACKEND_URL constant", () => {
-    expect(src).not.toMatch(/const BACKEND_URL/);
-    expect(src).not.toContain("onrender.com");
-  });
-
-  test("does NOT reference NEXT_PUBLIC_NADAKKI_API_URL", () => {
-    expect(src).not.toContain("NEXT_PUBLIC_NADAKKI_API_URL");
-  });
-
-  test("buildUrl produces relative /api/v2/credit/ path", () => {
-    expect(src).toContain("`/api/v2/credit/applications/");
-    expect(src).toContain("/accept");
-  });
-
-  test("sends X-Tenant-ID header", () => {
-    expect(src).toContain('"X-Tenant-ID"');
-  });
-
-  test("sends Authorization Bearer header", () => {
-    expect(src).toContain("Authorization");
-    expect(src).toContain("`Bearer ${token}`");
-  });
-});
+// NOTE: the legacy `hooks/useSelectOffer.ts` same-origin guard block was removed when the
+// legacy /credit/[id]/offers flow was retired and consolidated into /credit-hub. The dealer
+// acceptance path is now `acceptOffer()` in lib/credit-hub/api/creditCoreClient.ts (covered by
+// tests/credit-hub/api/creditCoreClient.test.ts), which routes same-origin via creditCoreFetch.
 
 describe("BFF v2 catch-all exports OPTIONS handler (Audit #4.1)", () => {
   const src = readSrc("app/api/v2/[[...path]]/route.ts");
