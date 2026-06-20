@@ -179,15 +179,12 @@ function buildIdentityItems(identity: IdentityEvidence): EvidenceItem[] {
 // ── Component ──────────────────────────────────────────────────────────
 
 export function EvidenceGrid({ items, identity, className }: EvidenceGridProps) {
-  let data: EvidenceItem[];
-
-  if (items) {
-    data = items;
-  } else {
-    data = [...DEFAULT_ITEMS];
-    if (identity) {
-      data.push(...buildIdentityItems(identity));
-    }
+  // Explicit items (or defaults) form the base; real identity evidence is
+  // appended whenever a dossier `identity` is provided, so callers that pass
+  // BOTH (e.g. AnalysisTab) render their items AND the identity evidence.
+  const data: EvidenceItem[] = items ? [...items] : [...DEFAULT_ITEMS];
+  if (identity) {
+    data.push(...buildIdentityItems(identity));
   }
 
   return (

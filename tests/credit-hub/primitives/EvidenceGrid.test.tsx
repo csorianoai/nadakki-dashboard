@@ -169,7 +169,7 @@ describe("EvidenceGrid", () => {
     expect(pendingBody).toBeTruthy();
   });
 
-  it("prefers explicit items over identity when items are passed", () => {
+  it("renders explicit items AND identity-derived items when both are passed", () => {
     const identity: IdentityEvidence = {
       liveness: { status: "live", pad_score: 0.95, provider: "X", evidence_id: "e-1" },
     };
@@ -180,7 +180,15 @@ describe("EvidenceGrid", () => {
       />,
     );
     const titles = screen.getAllByTestId("evidence-title");
-    expect(titles.length).toBe(1);
-    expect(titles[0].textContent).toBe("Custom item");
+    const titleTexts = titles.map((el) => el.textContent);
+    // Explicit item is preserved...
+    expect(titleTexts).toContain("Custom item");
+    // ...and the real identity evidence is also rendered (not dropped).
+    expect(titleTexts).toContain("Verificacion biometrica");
+    expect(titles.length).toBe(2);
+
+    const bodies = screen.getAllByTestId("evidence-body");
+    const livenessBody = bodies.find((el) => el.textContent?.includes("Persona viva confirmada"));
+    expect(livenessBody?.textContent).toContain("95%");
   });
 });
