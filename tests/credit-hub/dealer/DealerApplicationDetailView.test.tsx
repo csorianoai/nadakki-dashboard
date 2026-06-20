@@ -188,6 +188,10 @@ describe("DealerApplicationDetailView", () => {
 
     renderView();
     await userEvent.click(screen.getByTestId("offer-accept-off-2"));
+    // The select button opens an explicit confirmation modal; nothing is accepted yet.
+    expect(mockAcceptOffer).not.toHaveBeenCalled();
+    await screen.findByTestId("offer-confirm-modal");
+    await userEvent.click(screen.getByTestId("confirm-modal-accept"));
 
     expect(mockAcceptOffer).toHaveBeenCalledWith({
       tenantId: "t1",
@@ -207,9 +211,29 @@ describe("DealerApplicationDetailView", () => {
 
     renderView();
     await userEvent.click(screen.getByTestId("offer-accept-off-1"));
+    await screen.findByTestId("offer-confirm-modal");
+    await userEvent.click(screen.getByTestId("confirm-modal-accept"));
 
     await waitFor(() => expect(screen.getByTestId("offers-accept-error")).toBeInTheDocument());
     expect(screen.getByText("Offer already accepted by another dealer")).toBeInTheDocument();
+  });
+
+  test("opens a confirmation modal before accepting and does not accept on cancel", async () => {
+    setOffers({ offers: [makeOffer({ id: "off-1", lender_code: "banco_popular" })] });
+    renderView();
+
+    await userEvent.click(screen.getByTestId("offer-accept-off-1"));
+    // Modal is shown with the chosen offer, and nothing has been accepted yet.
+    expect(await screen.findByTestId("offer-confirm-modal")).toBeInTheDocument();
+    expect(screen.getByTestId("confirm-modal-lender").textContent).toContain("Banco Popular");
+    expect(mockAcceptOffer).not.toHaveBeenCalled();
+
+    // Cancelling closes the modal without accepting.
+    await userEvent.click(screen.getByTestId("confirm-modal-cancel"));
+    await waitFor(() =>
+      expect(screen.queryByTestId("offer-confirm-modal")).not.toBeInTheDocument(),
+    );
+    expect(mockAcceptOffer).not.toHaveBeenCalled();
   });
 
   test("when an offer is already accepted, highlights it and marks others not selected without action buttons", () => {

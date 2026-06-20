@@ -195,5 +195,23 @@ export async function acceptOffer(params: {
       body: JSON.stringify({}),
     }
   );
-  return normalizeOfferAcceptResult(raw);
+  const result = normalizeOfferAcceptResult(raw);
+
+  // Defense against a crossed/corrupted response (ported from the retired legacy
+  // useSelectOffer): if the echoed offer identifies a different application or
+  // tenant than the one we requested, treat it as a failure rather than success.
+  const echoedApp = result.offer.application_id;
+  const echoedTenant = result.offer.tenant_id;
+  if (
+    (echoedApp && echoedApp !== params.applicationId) ||
+    (echoedTenant && echoedTenant !== params.tenantId)
+  ) {
+    throw new CreditCoreApiError(
+      "La respuesta de aceptación no corresponde a esta solicitud o institución.",
+      409,
+      result.raw
+    );
+  }
+
+  return result;
 }

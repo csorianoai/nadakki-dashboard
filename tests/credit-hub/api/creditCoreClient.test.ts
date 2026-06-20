@@ -157,4 +157,34 @@ describe("creditCoreClient", () => {
       acceptOffer({ tenantId, applicationId: "app-1", offerId: "off-1" })
     ).rejects.toMatchObject({ status: 409, message: "Offer already accepted by another dealer" });
   });
+
+  test("acceptOffer rejects a crossed response whose echoed application_id/tenant_id mismatch", async () => {
+    // Defense ported from the retired legacy useSelectOffer: a 200 OK that echoes a
+    // different application/tenant must be treated as a failure, not success.
+    mockFetch({
+      ok: true,
+      offer: {
+        offer_id: "off-1",
+        application_id: "SOME-OTHER-APP",
+        tenant_id: tenantId,
+        lender_code: "banco_popular",
+        status: "accepted",
+      },
+      application_state: "OFFER_SELECTED",
+    });
+    await expect(
+      acceptOffer({ tenantId, applicationId: "app-1", offerId: "off-1" })
+    ).rejects.toBeInstanceOf(CreditCoreApiError);
+  });
+
+  test("acceptOffer accepts a response that omits echoed application_id/tenant_id (no false rejection)", async () => {
+    mockFetch({
+      ok: true,
+      offer: { offer_id: "off-1", status: "accepted" },
+      application_state: "OFFER_SELECTED",
+      siblings_not_selected: 1,
+    });
+    const res = await acceptOffer({ tenantId, applicationId: "app-1", offerId: "off-1" });
+    expect(res.ok).toBe(true);
+  });
 });
