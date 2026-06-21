@@ -17,7 +17,9 @@ interface RemoteConsentSelectorProps {
   dealerOtpCode: string;
   onDealerOtpCodeChange: (v: string) => void;
   onSmsOtpSent: () => void;
-  onSmsVerifyStub: () => void;
+  consentsAccepted: string[];
+  fullName: string;
+  onFullNameChange: (value: string) => void;
 }
 
 export function RemoteConsentSelector({
@@ -28,7 +30,9 @@ export function RemoteConsentSelector({
   dealerOtpCode,
   onDealerOtpCodeChange,
   onSmsOtpSent,
-  onSmsVerifyStub,
+  consentsAccepted,
+  fullName,
+  onFullNameChange,
 }: RemoteConsentSelectorProps) {
   const t = useTranslations();
   const [selected, setSelected] = useState<RemoteConsentMethodKey | null>(null);
@@ -98,7 +102,10 @@ export function RemoteConsentSelector({
           onOtpSent={onSmsOtpSent}
           dealerOtpCode={dealerOtpCode}
           onDealerOtpCodeChange={onDealerOtpCodeChange}
-          onVerifyStub={onSmsVerifyStub}
+          onComplete={onRemoteComplete}
+          consentsAccepted={consentsAccepted}
+          fullName={fullName}
+          onFullNameChange={onFullNameChange}
         />
       )}
       {selected === "SELFIE" && (

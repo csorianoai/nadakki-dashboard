@@ -17,6 +17,17 @@ export interface ConsentStatusResponse {
   accepted_at: string | null;
 }
 
+export interface ConsentAcceptPayload {
+  otp_code?: string;
+  consents_accepted: string[];
+  full_name: string;
+}
+
+export interface ConsentAcceptResponse {
+  accepted_at: string;
+  audit_hash: string;
+}
+
 export interface ConsentHistoryEvent {
   id: string;
   method: string;
@@ -106,6 +117,14 @@ export class ConsentApiClient {
       method: "POST",
       body: JSON.stringify({ method, ...payload }),
       includeTenant: true,
+    });
+  }
+
+  async accept(token: string, payload: ConsentAcceptPayload): Promise<ConsentAcceptResponse> {
+    return this.fetchJson<ConsentAcceptResponse>(`/${encodeURIComponent(token)}/accept`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      includeTenant: false,
     });
   }
 
