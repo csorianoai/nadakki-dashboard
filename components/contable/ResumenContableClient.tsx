@@ -99,10 +99,10 @@ export function ResumenContableClient() {
   const currentPeriod = periodos.find((p) => p.status === "open");
 
   // Derive KPIs from balance data
-  const totalDebe = balance?.totals.total_debe ?? 0;
-  const totalHaber = balance?.totals.total_haber ?? 0;
-  const ingresoRows = balance?.rows.filter((r) => r.tipo_cuenta === "ingreso") ?? [];
-  const gastoRows = balance?.rows.filter((r) => r.tipo_cuenta === "gasto") ?? [];
+  const totalDebe = balance?.totals?.total_debe ?? 0;
+  const totalHaber = balance?.totals?.total_haber ?? 0;
+  const ingresoRows = balance?.rows?.filter((r) => r.tipo_cuenta === "ingreso") ?? [];
+  const gastoRows = balance?.rows?.filter((r) => r.tipo_cuenta === "gasto") ?? [];
   const totalIngresos = ingresoRows.reduce((s, r) => s + Math.abs(r.saldo), 0);
   const totalGastos = gastoRows.reduce((s, r) => s + Math.abs(r.saldo), 0);
   const utilidadNeta = totalIngresos - totalGastos;
