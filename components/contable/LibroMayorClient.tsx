@@ -82,14 +82,14 @@ export function LibroMayorClient() {
             <p className="mt-1 text-zinc-400">
               Saldo final:{" "}
               <span className="font-mono font-semibold text-white">
-                {report.saldo_final.toLocaleString("es-DO", { minimumFractionDigits: 2 })}
+                {(report?.saldo_final ?? 0).toLocaleString("es-DO", { minimumFractionDigits: 2 })}
               </span>
             </p>
           </div>
 
           {loading ? (
             <p className="text-sm text-zinc-500">Actualizando…</p>
-          ) : report.movimientos.length === 0 ? (
+          ) : (report?.movimientos?.length ?? 0) === 0 ? (
             <p className="text-sm text-zinc-500">Sin movimientos posteados en este periodo.</p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -105,7 +105,7 @@ export function LibroMayorClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {report.movimientos.map((m) => (
+                  {report?.movimientos?.map((m) => (
                     <tr key={m.id} className="border-b border-white/5">
                       <td className="px-4 py-2">{m.fecha}</td>
                       <td className="px-4 py-2 font-mono text-xs">{m.numero_asiento ?? m.asiento_id.slice(0, 8)}</td>

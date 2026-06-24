@@ -103,13 +103,13 @@ export function SituacionFinancieraClient() {
     ? [
         {
           name: "Activos",
-          Corriente: report.activos.corriente,
-          "No corriente": report.activos.no_corriente,
+          Corriente: report?.activos?.corriente ?? 0,
+          "No corriente": report?.activos?.no_corriente ?? 0,
         },
         {
           name: "Pasivos",
-          Corriente: report.pasivos.corriente,
-          "No corriente": report.pasivos.no_corriente,
+          Corriente: report?.pasivos?.corriente ?? 0,
+          "No corriente": report?.pasivos?.no_corriente ?? 0,
         },
       ]
     : [];
@@ -157,22 +157,22 @@ export function SituacionFinancieraClient() {
             ) : (
               <XCircle className="h-4 w-4" />
             )}
-            Ecuación contable {report.ecuacion_cuadra ? "CUADRA" : "NO CUADRA"}: Activos ({fmt(report.activos.total)}) = Pasivos ({fmt(report.pasivos.total)}) + Patrimonio ({fmt(report.patrimonio.total)})
+            Ecuación contable {report?.ecuacion_cuadra ? "CUADRA" : "NO CUADRA"}: Activos ({fmt(report?.activos?.total ?? 0)}) = Pasivos ({fmt(report?.pasivos?.total ?? 0)}) + Patrimonio ({fmt(report?.patrimonio?.total ?? 0)})
           </div>
 
           {/* 3 KPI cards */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/80">Total Activos</p>
-              <p className="mt-1 font-mono text-2xl font-bold text-emerald-100">{fmt(report.activos.total)}</p>
+              <p className="mt-1 font-mono text-2xl font-bold text-emerald-100">{fmt(report?.activos?.total ?? 0)}</p>
             </div>
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/80">Total Pasivos</p>
-              <p className="mt-1 font-mono text-2xl font-bold text-amber-100">{fmt(report.pasivos.total)}</p>
+              <p className="mt-1 font-mono text-2xl font-bold text-amber-100">{fmt(report?.pasivos?.total ?? 0)}</p>
             </div>
             <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/80">Total Patrimonio</p>
-              <p className="mt-1 font-mono text-2xl font-bold text-indigo-100">{fmt(report.patrimonio.total)}</p>
+              <p className="mt-1 font-mono text-2xl font-bold text-indigo-100">{fmt(report?.patrimonio?.total ?? 0)}</p>
             </div>
           </div>
 
@@ -199,20 +199,20 @@ export function SituacionFinancieraClient() {
           {/* Expandable sections */}
           <ExpandableSection
             title="Activos"
-            total={report.activos.total}
-            detalle={report.activos.detalle}
+            total={report?.activos?.total ?? 0}
+            detalle={report?.activos?.detalle ?? []}
             colorClass="text-emerald-200"
           />
           <ExpandableSection
             title="Pasivos"
-            total={report.pasivos.total}
-            detalle={report.pasivos.detalle}
+            total={report?.pasivos?.total ?? 0}
+            detalle={report?.pasivos?.detalle ?? []}
             colorClass="text-amber-200"
           />
           <ExpandableSection
             title="Patrimonio"
-            total={report.patrimonio.total}
-            detalle={report.patrimonio.detalle}
+            total={report?.patrimonio?.total ?? 0}
+            detalle={report?.patrimonio?.detalle ?? []}
             colorClass="text-indigo-200"
           />
         </div>

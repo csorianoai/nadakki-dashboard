@@ -72,7 +72,7 @@ export function MonitorGastosClient() {
     void load();
   }, [load]);
 
-  const chartData = report?.gastos.map((g) => ({
+  const chartData = report?.gastos?.map((g) => ({
     name: g.nombre.length > 15 ? g.nombre.slice(0, 15) + "..." : g.nombre,
     actual: g.periodo_actual,
     anterior: g.periodo_anterior,
@@ -129,9 +129,9 @@ export function MonitorGastosClient() {
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Alertas activas</p>
               <p className={cn(
                 "mt-1 font-mono text-2xl font-bold",
-                report.alertas_count > 0 ? "text-rose-300" : "text-emerald-300",
+                (report?.alertas_count ?? 0) > 0 ? "text-rose-300" : "text-emerald-300",
               )}>
-                {report.alertas_count}
+                {report?.alertas_count ?? 0}
               </p>
             </div>
           </div>
@@ -156,7 +156,7 @@ export function MonitorGastosClient() {
           )}
 
           {/* Gastos table */}
-          {report.gastos.length > 0 && (
+          {(report?.gastos?.length ?? 0) > 0 && (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="min-w-full text-sm">
                 <thead>
@@ -171,7 +171,7 @@ export function MonitorGastosClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {report.gastos.map((g) => (
+                  {report?.gastos?.map((g) => (
                     <tr key={g.cuenta_id} className="border-b border-white/5">
                       <td className="px-4 py-2 font-mono text-xs">{g.codigo}</td>
                       <td className="px-4 py-2">{g.nombre}</td>

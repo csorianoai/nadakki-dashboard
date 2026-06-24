@@ -79,7 +79,7 @@ export function EstadoResultadosClient() {
       ]
     : [];
 
-  const pieData = report?.gastos.length
+  const pieData = report?.gastos?.length
     ? report.gastos.map((g) => ({ name: g.nombre, value: Math.abs(g.total) }))
     : [];
 
@@ -188,7 +188,7 @@ export function EstadoResultadosClient() {
                 </tr>
               </thead>
               <tbody>
-                {report.ingresos.map((r) => (
+                {report?.ingresos?.map((r) => (
                   <tr key={r.codigo} className="border-b border-white/5">
                     <td className="px-4 py-2 text-emerald-200">{r.nombre}</td>
                     <td className="px-4 py-2 font-mono text-xs">{r.codigo}</td>
@@ -200,7 +200,7 @@ export function EstadoResultadosClient() {
                   <td className="px-4 py-2 text-right font-mono">{fmt(report.total_ingresos)}</td>
                 </tr>
 
-                {report.costos.map((r) => (
+                {report?.costos?.map((r) => (
                   <tr key={r.codigo} className="border-b border-white/5">
                     <td className="px-4 py-2 text-amber-200">{r.nombre}</td>
                     <td className="px-4 py-2 font-mono text-xs">{r.codigo}</td>
@@ -217,7 +217,7 @@ export function EstadoResultadosClient() {
                   <td className="px-4 py-2 text-right font-mono">{fmt(report.utilidad_bruta)}</td>
                 </tr>
 
-                {report.gastos.map((r) => (
+                {report?.gastos?.map((r) => (
                   <tr key={r.codigo} className="border-b border-white/5">
                     <td className="px-4 py-2 text-rose-200">{r.nombre}</td>
                     <td className="px-4 py-2 font-mono text-xs">{r.codigo}</td>
@@ -231,7 +231,7 @@ export function EstadoResultadosClient() {
 
                 <tr className="bg-indigo-500/10 text-lg font-bold text-indigo-100">
                   <td className="px-4 py-3" colSpan={2}>Utilidad Neta</td>
-                  <td className="px-4 py-3 text-right font-mono">{fmt(report.utilidad_neta)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{fmt(report?.utilidad_neta ?? 0)}</td>
                 </tr>
               </tbody>
             </table>

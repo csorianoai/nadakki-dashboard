@@ -66,7 +66,7 @@ export function BalanceComprobacionClient() {
         <p className="text-sm text-zinc-500">Calculando balance…</p>
       ) : report ? (
         <div className="space-y-4">
-          {report.totals.cuadra ? (
+          {report?.totals?.cuadra ? (
             <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200">
               Totales globales CUADRAN
             </p>
@@ -88,7 +88,7 @@ export function BalanceComprobacionClient() {
                 </tr>
               </thead>
               <tbody>
-                {report.rows.map((r) => (
+                {report?.rows?.map((r) => (
                   <tr key={r.cuenta_id} className="border-b border-white/5">
                     <td className="px-4 py-2 font-mono text-xs">{r.codigo}</td>
                     <td className="px-4 py-2">{r.nombre}</td>
@@ -97,10 +97,10 @@ export function BalanceComprobacionClient() {
                     <td className="px-4 py-2 text-right font-mono">{r.saldo.toFixed(2)}</td>
                   </tr>
                 ))}
-                <tr className={cn("bg-white/[0.04] font-bold", report.totals.cuadra ? "text-emerald-200" : "text-rose-200")}>
+                <tr className={cn("bg-white/[0.04] font-bold", report?.totals?.cuadra ? "text-emerald-200" : "text-rose-200")}>
                   <td className="px-4 py-3" colSpan={2}>TOTALES</td>
-                  <td className="px-4 py-3 text-right font-mono">{report.totals.total_debe.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right font-mono">{report.totals.total_haber.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{(report?.totals?.total_debe ?? 0).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{(report?.totals?.total_haber ?? 0).toFixed(2)}</td>
                   <td className="px-4 py-3 text-right font-mono">—</td>
                 </tr>
               </tbody>
