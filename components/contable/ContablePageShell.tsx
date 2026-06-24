@@ -30,7 +30,7 @@ export function ContablePageShell({
           {icon ? <div className="text-emerald-300">{icon}</div> : null}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-400/90">
-              Contable · Sub-fase 3.1
+              Contable
             </p>
             <h1 className="text-2xl font-bold text-white">{title}</h1>
             <p className="mt-2 max-w-2xl text-sm text-zinc-400">{description}</p>

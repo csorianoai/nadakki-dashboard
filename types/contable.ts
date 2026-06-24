@@ -163,6 +163,117 @@ export interface ReopenPeriodoBody {
   actor_id?: string;
 }
 
+// ── Estado de Resultados ───────────────────────────────────────────────────
+
+export interface EstadoResultadosRow {
+  codigo: string;
+  nombre: string;
+  total: number;
+}
+
+export interface EstadoResultadosReport {
+  desde: string;
+  hasta: string;
+  project_id?: string;
+  ingresos: EstadoResultadosRow[];
+  total_ingresos: number;
+  costos: EstadoResultadosRow[];
+  total_costos: number;
+  utilidad_bruta: number;
+  gastos: EstadoResultadosRow[];
+  total_gastos: number;
+  utilidad_neta: number;
+  margen_bruto_pct: number;
+  margen_neto_pct: number;
+}
+
+// ── Situación Financiera ───────────────────────────────────────────────────
+
+export interface SituacionFinancieraDetalle {
+  codigo: string;
+  nombre: string;
+  saldo: number;
+  tipo?: string;
+}
+
+export interface SituacionFinancieraReport {
+  fecha: string;
+  activos: {
+    total: number;
+    corriente: number;
+    no_corriente: number;
+    detalle: SituacionFinancieraDetalle[];
+  };
+  pasivos: {
+    total: number;
+    corriente: number;
+    no_corriente: number;
+    detalle: SituacionFinancieraDetalle[];
+  };
+  patrimonio: {
+    total: number;
+    detalle: { codigo: string; nombre: string; saldo: number }[];
+  };
+  ecuacion_cuadra: boolean;
+}
+
+// ── Monitoreo de gastos ────────────────────────────────────────────────────
+
+export interface GastoMonitor {
+  cuenta_id: string;
+  codigo: string;
+  nombre: string;
+  periodo_actual: number;
+  periodo_anterior: number;
+  variacion_pct: number;
+  tendencia: "up" | "down" | "stable";
+  alerta: boolean;
+}
+
+export interface GastosMonitorReport {
+  periodo_id: string;
+  periodo_nombre: string;
+  gastos: GastoMonitor[];
+  total_gastos: number;
+  variacion_total_pct: number;
+  alertas_count: number;
+}
+
+// ── Sugerencias del Agente IA ──────────────────────────────────────────────
+
+export interface SugerenciaFinanciera {
+  id: string;
+  tipo: "reduccion_gasto" | "aumento_ingreso" | "optimizacion" | "alerta";
+  prioridad: "alta" | "media" | "baja";
+  titulo: string;
+  descripcion: string;
+  impacto_estimado_dop?: number;
+  cuenta_relacionada?: string;
+  accion_sugerida: string;
+  generada_en: string;
+}
+
+export interface AgenteSugerenciasResponse {
+  tenant_id: string;
+  generado_en: string;
+  periodo_analizado: string;
+  sugerencias: SugerenciaFinanciera[];
+  resumen_ejecutivo: string;
+  score_salud_financiera: number;
+}
+
+// ── Auxiliares CxP / CxC ──────────────────────────────────────────────────
+
+export interface AuxiliarEntry {
+  id: string;
+  fecha: string;
+  descripcion: string;
+  debe: number;
+  haber: number;
+  saldo: number;
+  referencia?: string;
+}
+
 export const CONTABLE_TOLERANCE = 0.01;
 
 export function calcLineaBase(
