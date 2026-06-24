@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { SaasOnboardingWizard } from "@/components/admin/saas-onboarding/SaasOnboardingWizard";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   getTenantOnboardHealth,
@@ -182,10 +183,16 @@ export default function AdminOnboardingWizardPage() {
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-3xl font-bold text-white">Tenant onboarding</h1>
         <p className="text-gray-400 mt-1">
-          Build profile preview, then persist with <code className="text-gray-500">confirm</code> — aligned with{" "}
-          <code className="text-gray-500">POST /api/v1/tenants/*</code>
+          Provision institutions and dealers, or continue using the existing tenant profile workflow below.
         </p>
       </motion.div>
+
+      <SaasOnboardingWizard />
+
+      <div className="mb-5 border-t border-white/10 pt-6">
+        <h2 className="text-lg font-semibold text-white">Existing tenant profile workflow</h2>
+        <p className="mt-1 text-sm text-gray-500">The preview and persistence flow remains unchanged for compatibility.</p>
+      </div>
 
       <GlassCard className="p-4 mb-6">
         <div className="flex items-center gap-2 text-sm text-gray-400">
