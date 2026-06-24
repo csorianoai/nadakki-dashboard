@@ -6,15 +6,20 @@
 import { getAuthHeaders, resolveApiUrl } from "@/lib/api/fetch-client";
 import * as mock from "@/lib/mocks/contable-api";
 import type {
+  AgenteSugerenciasResponse,
   AsientoContable,
+  AuxiliarEntry,
   BalanceComprobacionReport,
   CreateAsientoPayload,
   CreateCuentaPayload,
   CuentaContable,
+  EstadoResultadosReport,
+  GastosMonitorReport,
   LibroMayorReport,
   PeriodoContable,
   PlanCuentasFilters,
   ReopenPeriodoBody,
+  SituacionFinancieraReport,
   UpdateAsientoPayload,
   UpdateCuentaPayload,
 } from "@/types/contable";
@@ -345,5 +350,84 @@ export async function getBalanceComprobacion(
   return contableFetch<BalanceComprobacionReport>(
     tenantId,
     `/balance-comprobacion?periodo_id=${encodeURIComponent(periodoId)}`,
+  );
+}
+
+// ── Reportes financieros ──────────────────────────────────────────────────
+
+export async function getEstadoResultados(
+  tenantId: string,
+  desde: string,
+  hasta: string,
+  projectId?: string,
+): Promise<EstadoResultadosReport> {
+  const params = new URLSearchParams({ desde, hasta });
+  if (projectId) params.set("project_id", projectId);
+  return contableFetch<EstadoResultadosReport>(
+    tenantId,
+    `/reports/estado-resultados?${params}`,
+  );
+}
+
+export async function getSituacionFinanciera(
+  tenantId: string,
+  fecha: string,
+): Promise<SituacionFinancieraReport> {
+  return contableFetch<SituacionFinancieraReport>(
+    tenantId,
+    `/reports/situacion-financiera?fecha=${encodeURIComponent(fecha)}`,
+  );
+}
+
+export async function getGastosMonitor(
+  tenantId: string,
+  periodoId: string,
+): Promise<GastosMonitorReport> {
+  return contableFetch<GastosMonitorReport>(
+    tenantId,
+    `/reports/gastos-monitor?periodo_id=${encodeURIComponent(periodoId)}`,
+  );
+}
+
+export async function getSugerenciasAgente(
+  tenantId: string,
+  periodoId: string,
+): Promise<AgenteSugerenciasResponse> {
+  return contableFetch<AgenteSugerenciasResponse>(
+    tenantId,
+    `/reports/sugerencias-ia`,
+    { method: "POST", body: JSON.stringify({ periodo_id: periodoId }) },
+  );
+}
+
+export async function getAuxiliarCxP(
+  tenantId: string,
+  vendorId?: string,
+  desde?: string,
+  hasta?: string,
+): Promise<AuxiliarEntry[]> {
+  const params = new URLSearchParams();
+  if (vendorId) params.set("vendor_id", vendorId);
+  if (desde) params.set("desde", desde);
+  if (hasta) params.set("hasta", hasta);
+  return contableFetch<AuxiliarEntry[]>(
+    tenantId,
+    `/reports/auxiliar-cxp?${params}`,
+  );
+}
+
+export async function getAuxiliarCxC(
+  tenantId: string,
+  customerId?: string,
+  desde?: string,
+  hasta?: string,
+): Promise<AuxiliarEntry[]> {
+  const params = new URLSearchParams();
+  if (customerId) params.set("customer_id", customerId);
+  if (desde) params.set("desde", desde);
+  if (hasta) params.set("hasta", hasta);
+  return contableFetch<AuxiliarEntry[]>(
+    tenantId,
+    `/reports/auxiliar-cxc?${params}`,
   );
 }
