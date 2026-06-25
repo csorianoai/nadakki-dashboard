@@ -1,8 +1,111 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { Bot, X, Send, Loader2, Minimize2, Lightbulb, RefreshCw } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
+
+type CopilotModule = "legal" | "credit" | "marketing" | "sic" | "contable" | "projects" | "general";
+
+function detectModule(pathname: string | null): CopilotModule {
+  if (!pathname) return "general";
+  if (pathname.startsWith("/legal")) return "legal";
+  if (pathname.startsWith("/credit-hub")) return "credit";
+  if (pathname.startsWith("/marketing") || pathname.startsWith("/workflows") || pathname.startsWith("/social")) return "marketing";
+  if (pathname.startsWith("/sic")) return "sic";
+  if (pathname.startsWith("/contable") || pathname.startsWith("/accounting")) return "contable";
+  if (pathname.startsWith("/projects")) return "projects";
+  return "general";
+}
+
+const MODULE_WELCOME: Record<CopilotModule, { capabilities: string[]; suggestions: string[] }> = {
+  legal: {
+    capabilities: [
+      "Expedientes y gestión de casos",
+      "Plazos procesales y prescripción (RD)",
+      "Análisis de contratos y riesgos",
+      "Los 31 agentes legales especializados",
+    ],
+    suggestions: [
+      "¿Cómo creo un expediente?",
+      "¿Qué agentes legales hay?",
+      "¿Cómo funciona el cálculo de plazos?",
+    ],
+  },
+  credit: {
+    capabilities: [
+      "Solicitudes de crédito dealer-bank",
+      "Mesa de decisiones y scoring",
+      "Preaprobación y análisis de riesgo",
+      "Gestión de concesionarios",
+    ],
+    suggestions: [
+      "¿Cómo funciona la mesa de decisiones?",
+      "¿Qué es una preaprobación?",
+      "¿Cómo veo las solicitudes pendientes?",
+    ],
+  },
+  marketing: {
+    capabilities: [
+      "Los 10 workflows de marketing",
+      "46 agentes de marketing especializados",
+      "Automatización de campañas",
+      "Analytics y reportes",
+    ],
+    suggestions: [
+      "¿Qué workflows hay?",
+      "¿Cómo ejecuto un workflow?",
+      "¿Qué es Campaign Optimization?",
+    ],
+  },
+  sic: {
+    capabilities: [
+      "Inteligencia de mercado crediticio",
+      "Análisis de statements financieros",
+      "Investigación competitiva por tier",
+      "Reportes de concentración",
+    ],
+    suggestions: [
+      "¿Qué analiza el SIC Hub?",
+      "¿Cómo funciona la inteligencia de mercado?",
+      "¿Qué son los tiers?",
+    ],
+  },
+  contable: {
+    capabilities: [
+      "Gestión contable automatizada",
+      "Reportes financieros",
+      "Conciliaciones y análisis",
+    ],
+    suggestions: [
+      "¿Qué módulos contables hay?",
+      "¿Cómo genero un reporte?",
+    ],
+  },
+  projects: {
+    capabilities: [
+      "Gestión de proyectos y finanzas",
+      "Seguimiento de inversiones",
+      "Análisis de portafolio",
+    ],
+    suggestions: [
+      "¿Cómo creo un proyecto?",
+      "¿Qué reportes hay disponibles?",
+    ],
+  },
+  general: {
+    capabilities: [
+      "Navegación de la plataforma",
+      "Legal, Credit Hub, Marketing, SIC y más",
+      "Tutoriales y guías",
+    ],
+    suggestions: [
+      "¿Qué módulos tiene NADAKKI?",
+      "¿Cómo navego la plataforma?",
+      "¿Qué puedo hacer aquí?",
+    ],
+  },
+};
 
 interface Message {
   id: string;
@@ -16,6 +119,8 @@ interface Message {
 
 export default function OnboardingAgent() {
   const { tenantId, settings } = useTenant();
+  const pathname = usePathname();
+  const currentModule = useMemo(() => detectModule(pathname), [pathname]);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -31,56 +136,23 @@ export default function OnboardingAgent() {
   useEffect(() => {
     if (!isOpen || messages.length > 0) return;
 
-    fetch("/api/ai-studio/agents")
-      .then((r) => r.json())
-      .then((d) => {
-        const total = d.data?.total ?? d.data?.agents?.length ?? 0;
-        const countText = total > 0 ? `Los ${total} agentes de IA` : "Agentes de IA";
+    const moduleInfo = MODULE_WELCOME[currentModule];
+    const caps = moduleInfo.capabilities.map((c) => `• ${c}`).join("\n");
+    const welcomeContent =
+      `¡Hola! Soy NADA, tu copiloto de IA.\n\n` +
+      `Puedo ayudarte con:\n${caps}\n\n` +
+      `¿En qué te ayudo?`;
 
-        const welcomeContent =
-          `¡Hola! Soy NADA, tu copiloto de IA.\n\n` +
-          `Puedo ayudarte con:\n` +
-          `• Workflows de marketing\n` +
-          `• ${countText}\n` +
-          `• Tutoriales y guías\n\n` +
-          `¿En qué te ayudo?`;
-
-        setMessages([
-          {
-            id: "welcome",
-            role: "assistant",
-            content: welcomeContent,
-            source: "greeting",
-            suggestions: [
-              "¿Qué es un workflow?",
-              "¿Qué workflows hay?",
-              "¿Cómo ejecuto un workflow?"
-            ]
-          }
-        ]);
-      })
-      .catch(() => {
-        setMessages([
-          {
-            id: "welcome",
-            role: "assistant",
-            content:
-              `¡Hola! Soy NADA, tu copiloto de IA.\n\n` +
-              `Puedo ayudarte con:\n` +
-              `• Workflows de marketing\n` +
-              `• Agentes de IA\n` +
-              `• Tutoriales y guías\n\n` +
-              `¿En qué te ayudo?`,
-            source: "greeting",
-            suggestions: [
-              "¿Qué es un workflow?",
-              "¿Qué workflows hay?",
-              "¿Cómo ejecuto un workflow?"
-            ]
-          }
-        ]);
-      });
-  }, [isOpen, messages.length]);
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: welcomeContent,
+        source: "greeting",
+        suggestions: moduleInfo.suggestions,
+      },
+    ]);
+  }, [isOpen, messages.length, currentModule]);
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
@@ -100,7 +172,7 @@ export default function OnboardingAgent() {
         body: JSON.stringify({
           message: content,
           sessionId,
-          context: { tenant_id: tenantId }
+          context: { tenant_id: tenantId, current_module: currentModule, pathname }
         })
       });
 

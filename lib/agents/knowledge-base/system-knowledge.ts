@@ -1,11 +1,15 @@
 // lib/agents/knowledge-base/system-knowledge.ts
 
+export type ModuleTag = "legal" | "credit" | "marketing" | "sic" | "contable" | "projects" | "general";
+
 export interface SystemDocument {
   id: string;
   title: string;
   content: string;
   category: 'workflow' | 'agent' | 'core' | 'feature' | 'faq' | 'tutorial' | 'module' | 'integration';
   tags: string[];
+  /** Which module this document belongs to — used for contextual filtering */
+  module?: ModuleTag;
   priority: number;
 }
 
@@ -14,25 +18,30 @@ const documents: SystemDocument[] = [
   {
     id: 'system-overview',
     title: 'NADAKKI AI Suite - Visión General',
-    content: `NADAKKI AI Suite es una plataforma enterprise de automatización de marketing con inteligencia artificial.
+    content: `NADAKKI AI Suite es una plataforma enterprise multi-módulo con inteligencia artificial.
 
-Características principales:
-- Agentes de IA especializados
-- 20 cores funcionales
-- 10 workflows de marketing automatizados
-- Dashboard multi-tenant
+Módulos principales:
+- Legal (31 agentes): expedientes, plazos, contratos, compliance — jurisdicción RD
+- Marketing (46 agentes): 10 workflows de automatización, campañas, analytics
+- Credit Hub: solicitudes dealer-bank, mesa de decisiones, scoring
+- SIC: inteligencia de mercado crediticio, análisis de statements
+- Contable: gestión contable y reportes financieros
+- Projects: gestión de proyectos y finanzas
+
+Características:
+- Dashboard multi-tenant con roles por módulo
+- Anti-alucinación en Legal (validación de abogado requerida)
 - Analytics en tiempo real
-- Integración con múltiples canales
+- White-label para múltiples organizaciones
 
 Tecnología:
 - Backend: Python/FastAPI en Render
-- Frontend: Next.js 14 + TypeScript
-- Base de datos: PostgreSQL
-- AI: Modelos propios + integración con LLMs externos
-
-El sistema está diseñado para ser white-label y multi-tenant, permitiendo a diferentes organizaciones usar la plataforma con su propia marca.`,
+- Frontend: Next.js + TypeScript
+- Base de datos: PostgreSQL con RLS multi-tenant
+- AI: Modelos propios + integración con LLMs externos`,
     category: 'feature',
     tags: ['sistema', 'general', 'overview', 'nadakki'],
+    module: 'general',
     priority: 100
   },
 
@@ -79,6 +88,7 @@ Casos de uso:
 - Predicción de ROI antes de invertir`,
     category: 'workflow',
     tags: ['campaign', 'optimization', 'roi', 'presupuesto', 'audiencia'],
+    module: 'marketing',
     priority: 95
   },
   {
@@ -125,6 +135,7 @@ Cómo usar:
 5. Analiza las recomendaciones de cada agente`,
     category: 'workflow',
     tags: ['acquisition', 'leads', 'funnel', 'conversion', 'clientes'],
+    module: 'marketing',
     priority: 95
   },
   {
@@ -166,6 +177,7 @@ Métricas clave:
 - Expansion Revenue`,
     category: 'workflow',
     tags: ['lifecycle', 'clv', 'churn', 'retention', 'expansion'],
+    module: 'marketing',
     priority: 95
   },
   {
@@ -204,6 +216,7 @@ Canales soportados:
 - Podcast`,
     category: 'workflow',
     tags: ['content', 'seo', 'performance', 'headlines', 'scheduling'],
+    module: 'marketing',
     priority: 90
   },
   {
@@ -238,6 +251,7 @@ Plataformas soportadas:
 - YouTube`,
     category: 'workflow',
     tags: ['social', 'media', 'redes', 'instagram', 'facebook', 'twitter'],
+    module: 'marketing',
     priority: 90
   },
   {
@@ -272,6 +286,7 @@ Tipos de campañas:
 - Transactional emails`,
     category: 'workflow',
     tags: ['email', 'automation', 'marketing', 'newsletter', 'correo'],
+    module: 'marketing',
     priority: 90
   },
   {
@@ -308,6 +323,7 @@ Modelos disponibles:
 - Data-Driven (Markov chains)`,
     category: 'workflow',
     tags: ['attribution', 'multicanal', 'conversion', 'touchpoint'],
+    module: 'marketing',
     priority: 85
   },
   {
@@ -342,6 +358,7 @@ Fuentes de datos:
 - SEC filings (public companies)`,
     category: 'workflow',
     tags: ['competitive', 'intelligence', 'competencia', 'mercado'],
+    module: 'marketing',
     priority: 85
   },
   {
@@ -380,6 +397,7 @@ Métricas:
 - Engagement metrics`,
     category: 'workflow',
     tags: ['ab', 'testing', 'experiment', 'estadistica', 'conversion'],
+    module: 'marketing',
     priority: 85
   },
   {
@@ -410,6 +428,7 @@ Métricas de evaluación:
 - Estimated media value`,
     category: 'workflow',
     tags: ['influencer', 'partnership', 'collaboration', 'creator'],
+    module: 'marketing',
     priority: 80
   },
 
@@ -441,9 +460,10 @@ Workflows para análisis estratégico.
 - Influencer & Partnership Engine (2 agentes)
 Características: Insights profundos, decisiones estratégicas.
 
-Total: 10 workflows, 43 agentes de marketing.`,
+Total: 10 workflows, 46 agentes de marketing.`,
     category: 'feature',
     tags: ['tiers', 'core', 'execution', 'intelligence', 'clasificación'],
+    module: 'marketing',
     priority: 90
   },
 
@@ -451,51 +471,42 @@ Total: 10 workflows, 43 agentes de marketing.`,
   {
     id: 'cores-overview',
     title: 'Cores Funcionales - Resumen',
-    content: `NADAKKI tiene 20 cores funcionales con agentes de IA distribuidos:
+    content: `NADAKKI tiene múltiples cores funcionales:
 
-MARKETING (35 agentes):
-- Automatización de campañas
-- Personalización de contenido
-- Optimización de canales
+MARKETING (46 agentes):
+- 10 workflows de automatización
+- Campañas, contenido, email, social media
+- Analytics y attribution multicanal
 
-LEGAL (32 agentes):
-- Análisis de contratos
-- Compliance automation
-- Document generation
+LEGAL (31 agentes):
+- Expedientes y gestión de casos
+- Plazos procesales y prescripción (jurisdicción RD)
+- Análisis de contratos y cláusulas de riesgo
+- Compliance y anti-alucinación
+- 3 políticas de confianza, 8 leyes RD verificadas
 
-LOGÍSTICA (23 agentes):
-- Route optimization
-- Inventory management
-- Demand forecasting
+CREDIT HUB:
+- Solicitudes dealer-bank
+- Mesa de decisiones con scoring
+- Preaprobación y análisis de riesgo
+- Gestión de concesionarios
 
-CONTABILIDAD (22 agentes):
-- Automated bookkeeping
-- Financial reporting
-- Tax optimization
+SIC:
+- Inteligencia de mercado crediticio
+- Análisis de statements financieros
+- Investigación competitiva por tier (T1/T2/T3)
+- Concentración de mercado
 
-RECURSOS HUMANOS (18 agentes):
-- Recruitment automation
-- Performance analysis
-- Employee engagement
+CONTABLE:
+- Gestión contable automatizada
+- Reportes financieros
 
-VENTAS (20 agentes):
-- Lead scoring
-- Pipeline management
-- Forecasting
-
-ATENCIÓN AL CLIENTE (15 agentes):
-- Ticket routing
-- Sentiment analysis
-- Auto-responses
-
-FINANZAS (16 agentes):
-- Cash flow prediction
-- Risk assessment
-- Investment analysis
-
-Otros cores: Operaciones, IT, Compras, Calidad, I+D, Estrategia, Comunicaciones, Seguridad, Facilities, Training, Analytics, BI.`,
+PROJECTS:
+- Gestión de proyectos y finanzas
+- Seguimiento de inversiones`,
     category: 'core',
     tags: ['cores', 'funcionales', 'agentes', 'departamentos'],
+    module: 'general',
     priority: 85
   },
 
@@ -538,6 +549,7 @@ Tips:
 - Revisa el historial para comparar ejecuciones`,
     category: 'tutorial',
     tags: ['ejecutar', 'workflow', 'paso', 'tutorial', 'guía'],
+    module: 'marketing',
     priority: 85
   },
   {
@@ -579,6 +591,7 @@ Tips de navegación:
 - El indicador de estado muestra conexión en tiempo real`,
     category: 'tutorial',
     tags: ['dashboard', 'navegación', 'interfaz', 'tutorial'],
+    module: 'general',
     priority: 80
   },
   {
@@ -619,6 +632,7 @@ Métricas de Copilot:
 - Intents más comunes`,
     category: 'tutorial',
     tags: ['analytics', 'reportes', 'métricas', 'datos'],
+    module: 'general',
     priority: 75
   },
 
@@ -648,6 +662,7 @@ Beneficios:
 - Escalabilidad`,
     category: 'faq',
     tags: ['workflow', 'qué es', 'definición', 'básico'],
+    module: 'general',
     priority: 90
   },
   {
@@ -669,7 +684,7 @@ Tipos de agentes:
 - Optimizadores (mejoran métricas)
 - Recomendadores (sugieren acciones)
 
-NADAKKI tiene agentes distribuidos en 20 cores.
+NADAKKI tiene agentes distribuidos en múltiples módulos (Legal: 31, Marketing: 46, y otros).
 
 Ejemplo:
 AudienceAnalyzerAI:
@@ -678,6 +693,7 @@ AudienceAnalyzerAI:
 - Output: Segmentos, personas, scores`,
     category: 'faq',
     tags: ['agente', 'ia', 'qué es', 'definición'],
+    module: 'general',
     priority: 90
   },
   {
@@ -710,6 +726,7 @@ AudienceAnalyzerAI:
    - Compara con predicciones`,
     category: 'faq',
     tags: ['después', 'ejecutar', 'acciones', 'siguiente'],
+    module: 'marketing',
     priority: 80
   },
   {
@@ -739,6 +756,7 @@ Tips para mejor rendimiento:
 - Usa filtros para reducir datos`,
     category: 'faq',
     tags: ['tiempo', 'duración', 'velocidad', 'performance'],
+    module: 'general',
     priority: 75
   },
   {
@@ -772,6 +790,7 @@ Plan Enterprise:
 Contacta a ventas para pricing específico y demos personalizadas.`,
     category: 'faq',
     tags: ['planes', 'pricing', 'precios', 'suscripción'],
+    module: 'general',
     priority: 70
   },
   {
@@ -819,6 +838,7 @@ Webhooks y API:
 - Zapier integration`,
     category: 'faq',
     tags: ['integración', 'herramientas', 'api', 'conexión'],
+    module: 'general',
     priority: 75
   },
   {
@@ -855,6 +875,7 @@ Backups:
 - Disaster recovery plan`,
     category: 'faq',
     tags: ['seguridad', 'datos', 'privacidad', 'gdpr'],
+    module: 'general',
     priority: 80
   },
 
@@ -890,6 +911,7 @@ Casos de uso:
 - SaaS white-label para partners`,
     category: 'module',
     tags: ['multi-tenant', 'organizaciones', 'white-label'],
+    module: 'general',
     priority: 85
   },
   {
@@ -934,7 +956,205 @@ API:
 - Testing sandbox`,
     category: 'module',
     tags: ['configuración', 'settings', 'personalización'],
+    module: 'general',
     priority: 80
+  },
+
+  // ==================== LEGAL ====================
+  {
+    id: 'legal-overview',
+    title: 'Legal Hub - Visión General',
+    content: `El Legal Hub de NADAKKI tiene 31 agentes especializados para la práctica legal dominicana.
+
+Capacidades principales:
+- Gestión de expedientes con actores, plazos y prescripción
+- Cálculo automático de plazos procesales (jurisdicción RD)
+- Análisis de contratos y detección de cláusulas de riesgo
+- Compliance y verificación regulatoria (AML/KYC)
+- Anti-alucinación: todas las citas legales son verificadas contra RAG
+
+Categorías de agentes (31 total):
+- Documentos: revisión de contratos, completitud documental, firma digital
+- Litigio: responder demanda, calcular plazos, preparar estrategia
+- Compliance: verificar AML/KYC, evaluar riesgo regulatorio
+- Investigación: organizar evidencia, comparar contra plantilla
+- Plazos: cálculo procesal automático con prescripción
+- Bancario: operaciones financieras reguladas
+- Inmobiliario: transacciones de bienes raíces
+- Laboral: derecho laboral dominicano
+
+Diferenciador: sistema de confianza con 3 políticas verificadas y 8 leyes
+dominicanas en el knowledge pack. Audit trail por consulta y snapshot SHA-256.
+
+IMPORTANTE: Toda respuesta legal requiere validación de un abogado licenciado.`,
+    category: 'core',
+    tags: ['legal', 'expediente', 'plazo', 'contrato', 'compliance', 'agentes', 'dominicano', 'abogado'],
+    module: 'legal',
+    priority: 95
+  },
+  {
+    id: 'legal-expedientes',
+    title: '¿Cómo crear y gestionar expedientes legales?',
+    content: `Expedientes en el Legal Hub:
+
+Crear un expediente:
+1. Ve a Legal Hub → Expedientes → Nuevo caso
+2. Completa datos del caso: título, tipo, jurisdicción
+3. Agrega actores: demandante, demandado, abogado, juez
+4. El sistema asigna número de caso automáticamente
+
+Gestión:
+- Plazos procesales calculados automáticamente según ley RD
+- Alertas de vencimiento con recordatorios
+- Prescripción: cálculo basado en tipo de acción legal
+- Documentos adjuntos con verificación de firma digital
+- Historial de audiencias con resultado (celebrada/aplazada/suspendida)
+
+Calendario judicial:
+- Vista semanal y mensual
+- Conflictos detectados por IA
+- Recordatorios de desplazamiento inter-ciudad
+- Programación de próxima audiencia post-resultado
+
+Tipos de caso soportados:
+- Civil (cobro de pesos, inmobiliario)
+- Laboral
+- Penal
+- Comercial
+- Administrativo`,
+    category: 'tutorial',
+    tags: ['expediente', 'caso', 'crear', 'gestión', 'legal'],
+    module: 'legal',
+    priority: 90
+  },
+  {
+    id: 'legal-plazos',
+    title: 'Cálculo de plazos procesales y prescripción (RD)',
+    content: `El sistema calcula plazos procesales según la legislación dominicana:
+
+Plazos procesales:
+- Contestación de demanda
+- Interposición de recursos (apelación, casación)
+- Vencimientos de notificación
+- Plazos de prescripción por tipo de acción
+
+Cómo funciona:
+1. Al crear un caso, el sistema identifica el tipo de acción
+2. Aplica los plazos según la ley dominicana correspondiente
+3. Genera alertas automáticas antes del vencimiento
+4. Calcula días hábiles excluyendo feriados RD
+
+Prescripción:
+- Acciones civiles: varía según tipo (1-20 años)
+- Acciones laborales: plazos específicos del Código de Trabajo
+- Acciones comerciales: según Código de Comercio
+- El sistema alerta cuando se acerca la prescripción
+
+Leyes verificadas en el knowledge pack:
+- 8 leyes dominicanas principales verificadas
+- Código Civil, Código de Trabajo, Código Penal
+- Ley de Sociedades, Ley de Propiedad Intelectual
+- Actualizaciones periódicas del knowledge pack`,
+    category: 'faq',
+    tags: ['plazo', 'prescripción', 'vencimiento', 'dominicano', 'procesal', 'legal'],
+    module: 'legal',
+    priority: 90
+  },
+  {
+    id: 'legal-anti-hallucination',
+    title: 'Sistema anti-alucinación legal',
+    content: `NADAKKI Legal tiene un sistema anti-alucinación para respuestas legales:
+
+Cómo funciona:
+- Todas las citas legales son verificadas contra el RAG (Retrieval-Augmented Generation)
+- Si una cita no puede ser verificada, se marca como no confirmada
+- El sistema rechaza citas fantasma (artículos o leyes que no existen)
+
+Panel de confianza:
+- Citas verificadas contra RAG: ✓ verified
+- Rechazo de citas fantasma: ✓ verified
+- Audit trail por consulta: ✓ on
+- Snapshot SHA-256 disponible: ✓ verified
+- Aislamiento por bufete (RLS): ✓ verified
+- Revisión humana obligatoria: ✓ verified
+
+IMPORTANTE: A pesar del sistema anti-alucinación, toda respuesta legal
+requiere revisión y validación por un abogado licenciado. El sistema es
+una herramienta de asistencia, no un sustituto del criterio profesional.`,
+    category: 'feature',
+    tags: ['anti-alucinación', 'confianza', 'rag', 'verificación', 'legal'],
+    module: 'legal',
+    priority: 85
+  },
+
+  // ==================== CREDIT HUB ====================
+  {
+    id: 'credit-overview',
+    title: 'Credit Hub - Visión General',
+    content: `Credit Hub es la plataforma dealer-bank para solicitudes de crédito automotriz.
+
+Componentes principales:
+- Mesa de decisiones: panel de scoring y aprobación de solicitudes
+- Portal dealer: interfaz para concesionarios
+- Portal bancario: interfaz para analistas de banca
+- Preaprobación: evaluación rápida de elegibilidad
+
+Flujo de solicitud:
+1. Dealer ingresa solicitud con datos del cliente y vehículo
+2. Sistema genera score de riesgo automático
+3. Solicitud llega a la mesa de decisiones del banco
+4. Analista revisa KPIs: monto, score, riesgo, tiempo
+5. Decisión: aprobada, condicionada, o rechazada
+
+KPIs de la mesa de decisiones:
+- Solicitudes pendientes
+- Tiempo promedio de respuesta
+- Tasa de aprobación
+- Volumen total procesado
+
+El portal dealer tiene su propio sidebar:
+- Mostrador: Inicio, Solicitudes, Nueva solicitud, Preaprobación
+- Cuenta: Notificaciones, Perfil`,
+    category: 'core',
+    tags: ['credit', 'crédito', 'dealer', 'banco', 'solicitud', 'scoring', 'preaprobación'],
+    module: 'credit',
+    priority: 90
+  },
+
+  // ==================== SIC ====================
+  {
+    id: 'sic-overview',
+    title: 'SIC Hub - Inteligencia de Mercado',
+    content: `SIC Hub es el módulo de inteligencia de mercado crediticio.
+
+Funcionalidades:
+- Análisis de statements financieros
+- Investigación competitiva por tier (T1/T2/T3)
+- Concentración de mercado (donut charts, tablas)
+- Panorama del mercado de crédito automotriz
+
+Visualizaciones:
+- Gráfica de barras: evolución del mercado 2021-2025
+- Donut chart: concentración por tier (TOP4 = 65%)
+- Tabla de instituciones: Banco Popular, etc. con volúmenes
+- Filtros: Segmento (Todos/Usados/Nuevos/Comercial), Confianza, Tier
+
+Tabs de análisis:
+- Panorama: visión general del mercado
+- Hallazgos: insights clave identificados
+- Estrategia: recomendaciones estratégicas
+- Precios: análisis de pricing
+- Fuentes: origen de los datos
+- Validación: verificación de datos
+
+Investigaciones disponibles:
+- auto_loan: crédito automotriz
+- personal_loan: préstamos personales
+- Cada investigación tiene estados de progreso`,
+    category: 'core',
+    tags: ['sic', 'inteligencia', 'mercado', 'statement', 'tier', 'crediticio', 'competitivo'],
+    module: 'sic',
+    priority: 90
   },
 
   // ==================== MARKETING ESPECÍFICO ====================
@@ -975,12 +1195,13 @@ API:
    - Mide todo lo que implementes`,
     category: 'tutorial',
     tags: ['mejores', 'prácticas', 'tips', 'estrategia'],
+    module: 'marketing',
     priority: 85
   }
 ];
 
 class KnowledgeBase {
-  search(query: string, limit: number = 5): SystemDocument[] {
+  search(query: string, limit: number = 5, currentModule?: ModuleTag): SystemDocument[] {
     const queryLower = query.toLowerCase();
     const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
 
@@ -1019,6 +1240,11 @@ class KnowledgeBase {
 
       // Priority bonus
       score += doc.priority / 10;
+
+      // Module boost: prioritize docs from the user's current module
+      if (currentModule && doc.module === currentModule) {
+        score += 40;
+      }
 
       return { doc, score };
     });
