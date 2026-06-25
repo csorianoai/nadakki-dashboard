@@ -100,30 +100,56 @@ export class LLMClient {
 En este momento no puedo conectarme con un modelo de IA externo.
 
 **Puedo ayudarte con información del sistema NADAKKI:**
-- Workflows de marketing
-- Agentes de IA y sus funciones
-- Cómo usar el dashboard
+- Legal: expedientes, plazos, contratos (31 agentes)
+- Credit Hub: solicitudes, mesa de decisiones
+- Marketing: workflows, campañas (46 agentes)
+- SIC: inteligencia de mercado crediticio
 
 ¿Te gustaría que te ayude con algo del sistema?`,
       provider: 'local-fallback'
     };
   }
 
-  private getDefaultSystemPrompt(): string {
-    return `Eres NADAKKI AI Copilot, el asistente inteligente de una plataforma de marketing automation.
+  getSystemPrompt(currentModule?: string): string {
+    const moduleContext = currentModule && currentModule !== "general"
+      ? `\n\nEl usuario está actualmente en el módulo "${currentModule}". Prioriza ayuda relacionada con ese módulo.`
+      : "";
+
+    const moduleDetails: Record<string, string> = {
+      legal: `\n\nSobre Legal: 31 agentes legales especializados en jurisdicción dominicana (RD). Incluye gestión de expedientes, cálculo de plazos procesales, prescripción, análisis de contratos, compliance, y anti-alucinación (todas las respuestas legales requieren validación de abogado). 8 leyes dominicanas verificadas en el knowledge pack.`,
+      credit: `\n\nSobre Credit Hub: plataforma dealer-bank para solicitudes de crédito automotriz. Incluye mesa de decisiones con scoring, preaprobación, gestión de concesionarios, y análisis de riesgo.`,
+      marketing: `\n\nSobre Marketing: 46 agentes de marketing, 10 workflows automatizados (Campaign Optimization, Customer Acquisition, Content Performance, etc.). Automatización de campañas, analytics, y optimización multicanal.`,
+      sic: `\n\nSobre SIC Hub: inteligencia de mercado crediticio. Análisis de statements financieros, investigación competitiva por tier (T1/T2/T3), concentración de mercado, y reportes de inteligencia.`,
+    };
+
+    return `Eres NADA, el copiloto de IA de NADAKKI — una plataforma enterprise multi-módulo.
+
+Módulos principales:
+- Legal (31 agentes): expedientes, plazos procesales, contratos, compliance — jurisdicción RD
+- Credit Hub: solicitudes dealer-bank, mesa de decisiones, scoring, preaprobación
+- Marketing (46 agentes): 10 workflows de automatización, campañas, analytics
+- SIC: inteligencia de mercado crediticio, análisis de statements, tiers
+- Contable: gestión contable, reportes financieros
+- Projects: gestión de proyectos y finanzas
 
 Tu rol es:
-1. Responder preguntas de marketing digital
-2. Dar ideas creativas para campañas
-3. Explicar conceptos de marketing y analytics
-4. Dar recomendaciones basadas en mejores prácticas
+1. Ayudar al usuario con el módulo donde está trabajando
+2. Responder preguntas sobre cualquier módulo de la plataforma
+3. Dar recomendaciones y guías prácticas
+4. Explicar funcionalidades y flujos de trabajo
 
 Reglas:
 - Responde en español
 - Sé conciso (máximo 300 palabras)
 - Usa bullet points para listas
 - Sé profesional pero amigable
-- Da ejemplos prácticos`;
+- No inventes datos ni números — si no sabes, dilo
+- Para temas legales: siempre aclarar que requiere validación de abogado${moduleContext}${moduleDetails[currentModule ?? ""] ?? ""}`;
+  }
+
+  /** @deprecated Use getSystemPrompt() instead */
+  private getDefaultSystemPrompt(): string {
+    return this.getSystemPrompt();
   }
 }
 
