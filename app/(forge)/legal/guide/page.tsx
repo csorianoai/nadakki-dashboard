@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTenant } from "@/contexts/TenantContext";
 
 import { LegalCockpitShell } from "@/components/legal-cockpit/LegalCockpitShell";
+import { LegalCockpitShell } from "@/components/legal-cockpit/LegalCockpitShell";
 import { LegalKPIRow } from "@/components/legal-cockpit/LegalKPIRow";
 import { LegalCommandCenter } from "@/components/legal-cockpit/LegalCommandCenter";
 import { LegalUrgentMatters } from "@/components/legal-cockpit/LegalUrgentMatters";
@@ -203,6 +204,6 @@ export default function LegalGuidePage() {
       <LegalAgentGrid agents={agents} onAgent={handleAgent} loading={loading} />
 
       <LegalTrustPanel items={trustItems} />
-    </LegalCockpitShell>
+    </div>
   );
 }
