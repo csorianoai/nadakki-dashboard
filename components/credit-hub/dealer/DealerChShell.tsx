@@ -37,7 +37,7 @@ function DealerMobileBottomNav({ active, onNavigate }: { active: string; onNavig
   const items = DEALER_MOBILE_NAV_IDS.map((id) => allItems.find((it) => it.id === id)).filter(Boolean) as typeof allItems;
 
   return (
-    <nav aria-label="Mobile navigation" style={{ display: "flex", borderTop: "1px solid var(--ch-line)", background: "var(--ch-surface)", height: 60, flexShrink: 0 }}>
+    <nav aria-label="Mobile navigation" style={{ display: "flex", borderTop: "1px solid var(--ch-line)", background: "var(--ch-surface)", height: 60, flexShrink: 0, paddingBottom: "env(safe-area-inset-bottom)" }}>
       {items.map((it) => {
         const on = active === it.id;
         const Icon = it.icon;

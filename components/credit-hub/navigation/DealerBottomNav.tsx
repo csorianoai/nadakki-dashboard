@@ -19,7 +19,7 @@ export function DealerBottomNav() {
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-forge-border bg-forge-surface lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-forge-border bg-forge-surface lg:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
       <div className="grid h-16 grid-cols-6">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
