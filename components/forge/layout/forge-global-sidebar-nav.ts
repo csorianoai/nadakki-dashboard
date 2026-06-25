@@ -518,6 +518,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { id: "legal-audit", label: "Auditoría", href: "/legal/audit", icon: Gavel },
       { id: "legal-config", label: "Configuración", href: "/legal/config", icon: Cog },
       { id: "legal-strategies-hist", label: "Estrategias históricas", href: "/legal/strategies/historical", icon: GitBranch },
+      { id: "legal-onboarding", label: "Onboarding", href: "/legal/onboarding", icon: Zap },
     ],
   },
   {

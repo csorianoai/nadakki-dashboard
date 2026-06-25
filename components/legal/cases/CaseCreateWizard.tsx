@@ -27,6 +27,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
   const [clientName, setClientName] = useState("");
   const [counterpartyName, setCounterpartyName] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [actorWarning, setActorWarning] = useState<string | null>(null);
 
   const mut = useMutation({
     mutationFn: () =>
@@ -60,7 +61,17 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
       }),
     onSuccess: async (c) => {
       await qc.invalidateQueries({ queryKey: ["legal_cases", tenantId] });
-      router.push(`/legal/cases/${c.case_id}`);
+      // Defensive: backend may fail silently inserting actors
+      const actors = (c as unknown as Record<string, unknown>).actors;
+      if (!actors || (Array.isArray(actors) && actors.length === 0)) {
+        setActorWarning(
+          "Expediente creado. Los actores se registrarán automáticamente — si no aparecen en 30 segundos, edítalos manualmente."
+        );
+        // Non-blocking: redirect after brief delay so user sees the warning
+        setTimeout(() => router.push(`/legal/cases/${c.case_id}`), 3000);
+      } else {
+        router.push(`/legal/cases/${c.case_id}`);
+      }
     },
   });
 
@@ -134,6 +145,12 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
       {err ? (
         <p className="mt-3 text-sm text-red-400" role="alert">
           {err}
+        </p>
+      ) : null}
+
+      {actorWarning ? (
+        <p className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-300" role="status">
+          {actorWarning}
         </p>
       ) : null}
 
