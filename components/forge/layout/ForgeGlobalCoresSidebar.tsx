@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, PanelLeftClose, PanelLeft } from "lucide-react";
 import type { UserInfo } from "@/lib/api/auth-v2";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
@@ -32,6 +32,7 @@ export type ForgeGlobalCoresSidebarProps = {
 
 const STORAGE_KEY = "forge-global-sidebar-expanded-v2";
 const STORAGE_KEY_V1 = "forge-global-sidebar-expanded-v1";
+const SIDEBAR_COLLAPSED_KEY = "nadakki-sidebar-collapsed";
 
 const KNOWN_CORE_IDS = new Set(NAV_SECTIONS.map((s) => s.id));
 
@@ -112,27 +113,30 @@ function userInitials(user: UserInfo | null): string {
   return email.slice(0, 2).toUpperCase() || "?";
 }
 
-function SidebarBrand({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarBrand({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean }) {
   const { data: branding, isPending } = useTenantBranding();
   return (
-    <div className="border-b border-zinc-800 px-3 py-4">
+    <div className={cn("border-b border-zinc-800 py-4", collapsed ? "px-2" : "px-3")}>
       <Link
         href="/"
         onClick={onNavigate}
         className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+        title={collapsed ? "Nadakki AI Suite" : undefined}
       >
         {branding?.logo_url && !isPending ? (
-          <span className="inline-flex h-9 max-w-[10rem] items-center overflow-hidden">
+          <span className={cn("inline-flex items-center overflow-hidden", collapsed ? "h-8 w-full justify-center" : "h-9 max-w-[10rem]")}>
             {/* eslint-disable-next-line @next/next/no-img-element -- tenant-hosted logo */}
-            <img src={branding.logo_url} alt="" className="max-h-9 w-auto object-contain" />
+            <img src={branding.logo_url} alt="" className={cn(collapsed ? "max-h-7 w-auto" : "max-h-9 w-auto", "object-contain")} />
           </span>
         ) : isPending ? (
-          <div className="h-8 w-24 animate-pulse rounded bg-zinc-800/80" />
+          <div className={cn("animate-pulse rounded bg-zinc-800/80", collapsed ? "mx-auto h-8 w-8" : "h-8 w-24")} />
+        ) : collapsed ? (
+          <span className="flex h-8 w-full items-center justify-center text-base font-bold text-violet-400">N</span>
         ) : (
           <span className="block text-sm font-semibold tracking-tight text-zinc-100">Nadakki AI Suite</span>
         )}
       </Link>
-      <p className="mt-1.5 text-[10px] font-medium text-zinc-500">Suite operativa</p>
+      {!collapsed && <p className="mt-1.5 text-[10px] font-medium text-zinc-500">Suite operativa</p>}
     </div>
   );
 }
@@ -166,10 +170,15 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     setExpanded(loadExpanded());
     setHydrated(true);
+    try {
+      const saved = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      if (saved === "true") setCollapsed(true);
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
@@ -195,6 +204,14 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
 
   const toggle = useCallback((id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
+  const toggleCollapse = useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try { window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next)); } catch { /* ignore */ }
+      return next;
+    });
   }, []);
 
   const renderBadge = (b: NavBadge | undefined) =>
@@ -308,6 +325,52 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     return items;
   };
 
+  const renderCollapsedSection = (section: NavSection) => {
+    const theme = getSidebarTheme(section.id);
+    const HeaderIcon = theme.Icon;
+    const isActive = sectionHasActiveRoute(section, pathname ?? null);
+    // Find first leaf href in the section for navigation
+    function firstHref(items: NavItem[]): string | undefined {
+      for (const item of items) {
+        if (item.href) return item.href;
+        if (item.children) {
+          const found = firstHref(item.children);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    }
+    const href = firstHref(section.children);
+
+    const iconEl = (
+      <div
+        className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+          isActive
+            ? "bg-violet-500/15 ring-1 ring-violet-500/30"
+            : "hover:bg-zinc-800/60",
+        )}
+        title={section.label}
+      >
+        <HeaderIcon className={cn("h-[18px] w-[18px]", isActive ? "text-violet-300" : theme.iconText)} aria-hidden />
+      </div>
+    );
+
+    return (
+      <div key={section.id} className="flex justify-center py-0.5">
+        {href ? (
+          <Link href={href} onClick={onNavigate} className="rounded-lg focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/40">
+            {iconEl}
+          </Link>
+        ) : (
+          <button type="button" onClick={() => { setCollapsed(false); try { window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "false"); } catch {} toggle(section.id); }}>
+            {iconEl}
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const renderSection = (section: NavSection) => {
     const open = expanded[section.id] ?? false;
     const theme = getSidebarTheme(section.id);
@@ -371,57 +434,96 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-80 max-w-[min(100vw,20rem)] shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.45)] transition-transform motion-reduce:transition-none lg:static lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-none",
+          "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.45)] transition-[transform,width] duration-200 ease-in-out motion-reduce:transition-none lg:static lg:z-auto lg:translate-x-0 lg:shadow-none",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          collapsed
+            ? "w-80 max-w-[min(100vw,20rem)] lg:w-[68px] lg:max-w-[68px]"
+            : "w-80 max-w-[min(100vw,20rem)] lg:max-w-none",
         )}
         aria-label="Navegación principal"
+        data-collapsed={collapsed}
       >
-        <SidebarBrand onNavigate={onNavigate} />
+        <SidebarBrand onNavigate={onNavigate} collapsed={collapsed} />
 
-        <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-1 py-2 pb-2" aria-label="Navegación por módulos">
-          {visibleSections.map((section) => renderSection(section))}
+        {/* Collapse toggle — desktop only */}
+        <div className="hidden border-b border-zinc-800/60 lg:block">
+          <button
+            type="button"
+            onClick={toggleCollapse}
+            title={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+            className={cn(
+              "flex w-full items-center gap-2 py-2 text-zinc-500 transition-colors hover:text-zinc-300",
+              collapsed ? "justify-center px-2" : "justify-end px-3",
+            )}
+          >
+            {collapsed ? (
+              <PanelLeft className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+
+        <nav className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden py-2 pb-2", collapsed ? "px-1 items-center" : "px-1")} aria-label="Navegación por módulos">
+          {collapsed
+            ? visibleSections.map((section) => renderCollapsedSection(section))
+            : visibleSections.map((section) => renderSection(section))
+          }
         </nav>
 
-        <div className="mt-auto border-t border-zinc-800 bg-zinc-950/95 p-3">
+        <div className={cn("mt-auto border-t border-zinc-800 bg-zinc-950/95", collapsed ? "p-2" : "p-3")}>
           {isAuthenticated && user ? (
-            <>
-              <div className="flex items-start gap-2.5">
+            collapsed ? (
+              <div className="flex flex-col items-center gap-2">
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 text-xs font-bold text-zinc-100 ring-2 ring-zinc-800"
+                  title={user.email}
                   aria-hidden
                 >
                   {userInitials(user)}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-medium text-zinc-200">{user.email}</p>
-                  {tenant?.display_name ? (
-                    <p className="mt-0.5 truncate text-[10px] text-zinc-500">{tenant.display_name}</p>
-                  ) : null}
-                  <span
-                    className={cn(
-                      "mt-1 inline-flex max-w-full truncate rounded-md px-2 py-0.5 text-[10px] font-medium",
-                      roleAccentClasses(activeRole?.core_name),
-                    )}
-                  >
-                    {activeRole?.display_name ?? activeRole?.role_key ?? "Sin rol"}
-                  </span>
-                </div>
               </div>
-              <Link
-                href="/tenants"
-                onClick={onNavigate}
-                className="mt-2 block rounded-md py-1.5 text-center text-[11px] font-medium text-violet-400 transition-colors hover:text-violet-300"
-              >
-                Cambiar tenant
-              </Link>
-            </>
+            ) : (
+              <>
+                <div className="flex items-start gap-2.5">
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 text-xs font-bold text-zinc-100 ring-2 ring-zinc-800"
+                    aria-hidden
+                  >
+                    {userInitials(user)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium text-zinc-200">{user.email}</p>
+                    {tenant?.display_name ? (
+                      <p className="mt-0.5 truncate text-[10px] text-zinc-500">{tenant.display_name}</p>
+                    ) : null}
+                    <span
+                      className={cn(
+                        "mt-1 inline-flex max-w-full truncate rounded-md px-2 py-0.5 text-[10px] font-medium",
+                        roleAccentClasses(activeRole?.core_name),
+                      )}
+                    >
+                      {activeRole?.display_name ?? activeRole?.role_key ?? "Sin rol"}
+                    </span>
+                  </div>
+                </div>
+                <Link
+                  href="/tenants"
+                  onClick={onNavigate}
+                  className="mt-2 block rounded-md py-1.5 text-center text-[11px] font-medium text-violet-400 transition-colors hover:text-violet-300"
+                >
+                  Cambiar tenant
+                </Link>
+              </>
+            )
           ) : (
             <Link
               href="/login"
               onClick={onNavigate}
-              className="block rounded-md py-2 text-center text-sm font-medium text-violet-400 hover:text-violet-300"
+              className={cn("block rounded-md text-center font-medium text-violet-400 hover:text-violet-300", collapsed ? "py-1.5 text-xs" : "py-2 text-sm")}
+              title={collapsed ? "Iniciar sesión" : undefined}
             >
-              Iniciar sesión
+              {collapsed ? "→" : "Iniciar sesión"}
             </Link>
           )}
         </div>
