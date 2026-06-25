@@ -6,6 +6,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { getPostLoginRedirectPath } from "@/lib/auth/auth-context";
 
 export default function LoginPage() {
+  // Warmup: ping backend as soon as login page loads to prevent cold start delay
+  useEffect(() => {
+    fetch("https://nadakki-ai-suite.onrender.com/health", { method: "GET" }).catch(() => {});
+  }, []);
   const router = useRouter();
   const { login, isAuthenticated, isLoading, allRoles, activeRole } = useAuth();
 
