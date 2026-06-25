@@ -190,8 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     syncLocalStorage(result.data.tenant_info, result.data.active_role, result.data.access_token);
     scheduleProactiveRefresh();
 
-    const me = await getMeV2(result.data.access_token);
-    const roles = me.ok && me.data ? me.data.active_roles : [result.data.active_role];
+    // loginV2 ya devuelve active_role — no necesitamos un segundo /me call
+    const roles = result.data.active_role ? [result.data.active_role] : [];
     setAllRoles(roles);
     return { ok: true, redirectTo: getPostLoginRedirectPath(roles) };
   };
