@@ -6,12 +6,15 @@ import { useTenant } from "@/contexts/TenantContext";
 
 import { LegalCockpitShell } from "@/components/legal-cockpit/LegalCockpitShell";
 import { LegalKPIRow } from "@/components/legal-cockpit/LegalKPIRow";
+import { JudicialCalendarPanel } from "@/components/legal-cockpit/JudicialCalendarPanel";
 import { LegalCommandCenter } from "@/components/legal-cockpit/LegalCommandCenter";
 import { LegalUrgentMatters } from "@/components/legal-cockpit/LegalUrgentMatters";
 import { LegalGoldenPath } from "@/components/legal-cockpit/LegalGoldenPath";
 import { LegalAgentGrid } from "@/components/legal-cockpit/LegalAgentGrid";
 import { LegalTrustPanel } from "@/components/legal-cockpit/LegalTrustPanel";
 import { LegalActionFallbackPanel } from "@/components/legal-cockpit/LegalActionFallbackPanel";
+import { PerformanceMetrics } from "@/components/legal-cockpit/PerformanceMetrics";
+import { FabButton } from "@/components/legal-cockpit/FabButton";
 
 import {
   fetchLegalHealth,
@@ -21,14 +24,12 @@ import {
 import { detectIntent } from "@/lib/legal-cockpit/intent-router";
 import { agentHref, caseHref } from "@/lib/legal-cockpit/routes";
 import {
-  DEMO_KPIS,
   DEMO_URGENT_MATTERS,
   DEMO_GOLDEN_PATH,
   DEMO_AGENTS,
 } from "@/lib/legal-cockpit/demo-data";
 import type {
   LegalSystemStatus,
-  LegalKPI,
   LegalUrgentMatter,
   GoldenPathStep,
   LegalAgent,
@@ -61,7 +62,6 @@ export default function LegalGuidePage() {
     demoData: true,
   });
 
-  const [kpis] = useState<LegalKPI[]>(DEMO_KPIS);
   const [matters] = useState<LegalUrgentMatter[]>(DEMO_URGENT_MATTERS);
   const [goldenPath] = useState<GoldenPathStep[]>(DEMO_GOLDEN_PATH);
   const [agents, setAgents] = useState<LegalAgent[]>(DEMO_AGENTS);
@@ -181,7 +181,9 @@ export default function LegalGuidePage() {
 
   return (
     <LegalCockpitShell status={status}>
-      <LegalKPIRow kpis={kpis} loading={loading} />
+      <LegalKPIRow loading={loading} />
+
+      <JudicialCalendarPanel />
 
       <LegalCommandCenter onNavigate={navigate} onFallback={openFallback} />
 
@@ -203,6 +205,10 @@ export default function LegalGuidePage() {
       <LegalAgentGrid agents={agents} onAgent={handleAgent} loading={loading} />
 
       <LegalTrustPanel items={trustItems} />
+
+      <PerformanceMetrics />
+
+      <FabButton />
     </LegalCockpitShell>
   );
 }
