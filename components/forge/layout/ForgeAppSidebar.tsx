@@ -110,8 +110,6 @@ export function ForgeAppSidebar() {
           </div>
         ) : error ? (
           <p className="px-2 py-2 text-forge-xs text-forgeDanger-600">No se pudieron cargar los módulos.</p>
-        ) : items.length === 0 ? (
-          <p className="px-2 py-2 text-forge-xs text-forgeGray-500">No hay módulos habilitados para este tenant.</p>
         ) : (
           items.map((item) => {
             const Icon = item.icon;
