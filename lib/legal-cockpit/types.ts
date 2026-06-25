@@ -76,3 +76,55 @@ export type FallbackAction = {
   agentId: string;
   prompt: string;
 };
+
+// ── CALENDARIO JUDICIAL ──────────────────────────────────
+export type CalendarView = "semana" | "mes";
+
+export type EventType = "audiencia" | "plazo" | "prox" | "interno";
+
+export interface CalendarEvent {
+  id: string;
+  day: number;
+  start: number;
+  dur: number;
+  type: EventType;
+  title: string;
+  sub: string;
+  city?: string;
+  countdown?: string;
+  conflict?: boolean;
+}
+
+export interface DayColumn {
+  dow: string;
+  num: number;
+  today: boolean;
+  events: CalendarEvent[];
+}
+
+export interface ReminderItem {
+  key: string;
+  title: string;
+  sub: string;
+  on: boolean;
+}
+
+export interface AudienciaFormState {
+  casoId: string;
+  resultado: "celebrada" | "aplazada" | "suspendida" | "";
+  notas: string;
+  programarNext: boolean;
+  fecha: string;
+  hora: string;
+  juzgado: string;
+  ciudad: string;
+}
+
+export interface KpiCard {
+  label: string;
+  value: string | number;
+  badge: string;
+  sub: string;
+  accentColor: string;
+  sparkPoints: string;
+}

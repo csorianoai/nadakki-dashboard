@@ -159,6 +159,9 @@ module.exports = {
         'quantum-pulse': 'quantum-pulse 4s ease-in-out infinite',
         'glow': 'glow 2s ease-in-out infinite',
         'float': 'float 6s ease-in-out infinite',
+        'growBar': 'growBar 1.2s ease-out forwards',
+        'fabGlow': 'fabGlow 3s ease-in-out infinite',
+        'critGlow': 'critGlow 2s ease-in-out infinite',
       },
       keyframes: {
         'forge-shimmer': {
@@ -180,6 +183,17 @@ module.exports = {
         'float': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' },
+        },
+        'growBar': {
+          from: { width: '0' },
+        },
+        'fabGlow': {
+          '0%, 100%': { boxShadow: '0 0 20px rgba(139,92,246,0.4), 0 0 40px rgba(139,92,246,0.15)' },
+          '50%': { boxShadow: '0 0 28px rgba(139,92,246,0.55), 0 0 56px rgba(139,92,246,0.25)' },
+        },
+        'critGlow': {
+          '0%, 100%': { boxShadow: '0 0 8px rgba(244,63,94,0.3)' },
+          '50%': { boxShadow: '0 0 16px rgba(244,63,94,0.5)' },
         },
       },
       backdropBlur: {
