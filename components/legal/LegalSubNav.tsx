@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Home, Search, FileText, ScrollText, Settings, Briefcase } from "lucide-react";
+import { Home, Search, FileText, ScrollText, Settings, Briefcase, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavLink = {
@@ -13,6 +13,7 @@ type NavLink = {
 };
 
 const links: NavLink[] = [
+  { href: "/legal/guide", label: "Cockpit", icon: LayoutDashboard },
   { href: "/legal", label: "Inicio", icon: Home },
   { href: "/legal/cases", label: "Expedientes", icon: Briefcase },
   { href: "/legal/research", label: "Investigación", icon: Search },
