@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface TenantModule {
   slug: string;
@@ -73,7 +74,9 @@ async function fetchTenantModules(tenantId: string): Promise<TenantModulesRespon
 
 export function useTenantModules() {
   const { tenantId } = useTenant();
+  const { activeRole } = useAuth();
   const tid = tenantId?.trim() ?? "";
+  const isSuperadmin = activeRole?.role_key === "platform_superadmin";
 
   const query = useQuery({
     queryKey: ["tenant-modules", tid],
@@ -85,7 +88,7 @@ export function useTenantModules() {
   const modules = query.data?.modules ?? [];
   const enabledSlugs = new Set(modules.filter((m) => m.enabled).map((m) => m.slug));
 
-  const hasModule = (slug: string) => enabledSlugs.has(slug);
+  const hasModule = (slug: string) => isSuperadmin || enabledSlugs.has(slug);
 
   /** True if tenant has Credit Core (`credit` or legacy slug aliases). */
   const hasCreditHub = () =>
@@ -96,7 +99,7 @@ export function useTenantModules() {
     modules,
     hasModule,
     hasCreditHub,
-    isLoading: !tid || query.isLoading,
+    isLoading: isSuperadmin ? false : !tid || query.isLoading,
     isFetching: query.isFetching,
     error: query.error,
     refetch: query.refetch,
