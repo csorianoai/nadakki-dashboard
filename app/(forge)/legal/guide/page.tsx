@@ -21,6 +21,8 @@ import {
   fetchLegalAgents,
   normalizeAgentsResponse,
 } from "@/lib/legal-cockpit/api";
+import { fetchCasesList } from "@/lib/legal/cases/legal-cases-api";
+import { caseToUrgentMatter } from "@/lib/legal-cockpit/map-case-to-matter";
 import { detectIntent } from "@/lib/legal-cockpit/intent-router";
 import { agentHref, caseHref } from "@/lib/legal-cockpit/routes";
 import {
@@ -62,7 +64,7 @@ export default function LegalGuidePage() {
     demoData: true,
   });
 
-  const [matters] = useState<LegalUrgentMatter[]>(DEMO_URGENT_MATTERS);
+  const [matters, setMatters] = useState<LegalUrgentMatter[]>(DEMO_URGENT_MATTERS);
   const [goldenPath] = useState<GoldenPathStep[]>(DEMO_GOLDEN_PATH);
   const [agents, setAgents] = useState<LegalAgent[]>(DEMO_AGENTS);
   const [trustItems, setTrustItems] = useState<TrustItem[]>(DEFAULT_TRUST_ITEMS);
@@ -124,6 +126,19 @@ export default function LegalGuidePage() {
 
       setStatus(newStatus);
       setAgents(DEMO_AGENTS); // Keep rich demo descriptions
+
+      // Load real cases for urgent matters (fallback to demo on failure)
+      try {
+        if (tid) {
+          const { cases } = await fetchCasesList(tid, { limit: 6, sort: "priority" });
+          if (!cancelled && cases.length > 0) {
+            setMatters(cases.map(caseToUrgentMatter));
+          }
+        }
+      } catch {
+        // keep DEMO_URGENT_MATTERS as fallback
+      }
+
       setLoading(false);
     }
 
