@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp, ShieldCheck } from "lucide-react";
+import { ChevronDown, ChevronUp, ShieldCheck } from "lucide-react";
 import { useKnowledgePackInfo } from "@/hooks/useLegal";
 
 const DISMISS_KEY = "nadakki_legal_demo_banner_dismissed";
@@ -27,11 +27,7 @@ export function DemoBannerStrong() {
   };
 
   if (loading) {
-    return (
-      <div className="border-b border-slate-200 bg-slate-50 px-4 py-1.5 text-xs text-slate-500 max-w-6xl mx-auto">
-        Cargando estado del knowledge pack…
-      </div>
-    );
+    return null;
   }
 
   if (verified) {
@@ -55,16 +51,5 @@ export function DemoBannerStrong() {
     );
   }
 
-  return (
-    <div className="border-b border-amber-200 bg-amber-50 px-3 py-2 text-amber-950">
-      <div className="flex items-start gap-2 max-w-6xl mx-auto">
-        <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
-        <div className="flex-1 text-sm">
-          <strong>Validación pendiente — entorno restrictivo.</strong>{" "}
-          Las respuestas no constituyen consejo legal.
-          <strong> No usar para decisiones jurídicas definitivas.</strong>
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }

@@ -204,3 +204,9 @@
 .legal-surface [class*="hover\:border-violet"]:hover {
   border-color: var(--legal-accent-strong) !important;
 }
+
+/* ── Faint secondary text → WCAG-AA legible ── */
+.legal-surface [class*="text-zinc-500/"] { color: #b4bdce !important; }
+.legal-surface .text-slate-500,
+.legal-surface .text-slate-400 { color: #b4bdce !important; }
+.legal-surface .text-slate-600 { color: #9aa4b8 !important; }
