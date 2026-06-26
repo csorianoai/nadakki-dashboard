@@ -165,3 +165,42 @@
 .legal-surface .text-violet-200 {
   color: var(--legal-accent) !important;
 }
+
+/* ── Tarjetas con GRADIENTE: acceso directo y hero usan bg-gradient-to-br
+      from-zinc-900... — the gradient ignores bg-* overrides.
+      Force solid surface color and kill the gradient. ── */
+.legal-surface [class*="bg-gradient-to-"] {
+  background-image: none !important;
+  background-color: var(--legal-surface-1) !important;
+}
+
+/* ── zinc con OPACIDAD (bg-zinc-950/50, bg-zinc-900/40, etc.):
+      Tailwind generates distinct class names — capture by attribute. ── */
+.legal-surface [class*="bg-zinc-950/"] {
+  background-color: var(--legal-bg) !important;
+}
+.legal-surface [class*="bg-zinc-900/"] {
+  background-color: var(--legal-surface-1) !important;
+}
+.legal-surface [class*="bg-zinc-800/"] {
+  background-color: var(--legal-surface-2) !important;
+}
+
+/* ── Bordes con opacidad (border-zinc-800/50, border-zinc-700/50) ── */
+.legal-surface [class*="border-zinc-800/"],
+.legal-surface [class*="border-zinc-700/"] {
+  border-color: var(--legal-border) !important;
+}
+
+/* ── Icon accents not covered by violet: indigo and amber → gold
+      for coherence (Briefcase uses indigo-400, ScrollText amber-400) ── */
+.legal-surface .text-indigo-400,
+.legal-surface .text-amber-400,
+.legal-surface [class*="text-amber-400/"] {
+  color: var(--legal-accent) !important;
+}
+
+/* ── Hover tarjetas: any violet border hover variant → gold ── */
+.legal-surface [class*="hover\:border-violet"]:hover {
+  border-color: var(--legal-accent-strong) !important;
+}
