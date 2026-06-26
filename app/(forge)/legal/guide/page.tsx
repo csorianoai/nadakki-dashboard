@@ -44,8 +44,8 @@ const DEFAULT_TRUST_ITEMS: TrustItem[] = [
   { key: "halluc", label: "Rechazo de citas fantasma", status: "pending" },
   { key: "audit", label: "Audit trail por consulta", status: "pending" },
   { key: "sha", label: "Snapshot SHA-256 disponible", status: "pending" },
-  { key: "isolation", label: "Aislamiento por bufete (RLS)", status: "pending" },
-  { key: "human", label: "Revisión humana obligatoria", status: "pending" },
+  { key: "isolation", label: "Aislamiento por bufete (RLS)", status: "demo" },
+  { key: "human", label: "Revisión humana obligatoria", status: "demo" },
 ];
 
 export default function LegalGuidePage() {
@@ -54,6 +54,7 @@ export default function LegalGuidePage() {
 
   const [loading, setLoading] = useState(true);
   const [fallback, setFallback] = useState<FallbackAction | null>(null);
+  const [casesApiError, setCasesApiError] = useState(false);
 
   const [status, setStatus] = useState<LegalSystemStatus>({
     agentsCount: DEMO_AGENTS.length,
@@ -134,9 +135,11 @@ export default function LegalGuidePage() {
           if (!cancelled && cases.length > 0) {
             setMatters(cases.map(caseToUrgentMatter));
           }
+          if (!cancelled) setCasesApiError(false);
         }
       } catch {
         // keep DEMO_URGENT_MATTERS as fallback
+        if (!cancelled) setCasesApiError(true);
       }
 
       setLoading(false);
@@ -207,6 +210,11 @@ export default function LegalGuidePage() {
         onAction={handleMatterAction}
         loading={loading}
       />
+      {casesApiError && (
+        <p className="text-xs text-amber-400/80 mt-1">
+          No se pudieron cargar casos reales &middot; mostrando datos de ejemplo
+        </p>
+      )}
 
       <LegalGoldenPath steps={goldenPath} onStep={navigate} />
 
