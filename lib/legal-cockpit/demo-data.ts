@@ -103,7 +103,7 @@ export const DEMO_GOLDEN_PATH: GoldenPathStep[] = [
   { step: 3, key: "detect", label: "Detectar riesgos", status: "active", action: "/legal/research?agent=analizador_riesgo_clausulas" },
   { step: 4, key: "calculate", label: "Calcular plazos", status: "pending", action: "/legal/research?agent=calculador_plazos_procesales" },
   { step: 5, key: "strategy", label: "Generar estrategia", status: "pending", action: "/legal/research?agent=agente_estrategia_litigiosa" },
-  { step: 6, key: "validate", label: "Validar citas", status: "pending", action: "/legal/research?agent=validador_citas_legales" },
+  { step: 6, key: "validate", label: "Validar citas", status: "pending", action: "/legal/research?agent=analizador_jurisprudencia" },
   { step: 7, key: "snapshot", label: "Snapshot SHA-256", status: "pending", action: "/legal/cases" },
 ];
 

@@ -44,8 +44,8 @@ const DEFAULT_TRUST_ITEMS: TrustItem[] = [
   { key: "halluc", label: "Rechazo de citas fantasma", status: "pending" },
   { key: "audit", label: "Audit trail por consulta", status: "pending" },
   { key: "sha", label: "Snapshot SHA-256 disponible", status: "pending" },
-  { key: "isolation", label: "Aislamiento por bufete (RLS)", status: "verified" },
-  { key: "human", label: "Revisión humana obligatoria", status: "verified" },
+  { key: "isolation", label: "Aislamiento por bufete (RLS)", status: "pending" },
+  { key: "human", label: "Revisión humana obligatoria", status: "pending" },
 ];
 
 export default function LegalGuidePage() {
