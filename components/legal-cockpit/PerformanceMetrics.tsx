@@ -1,11 +1,52 @@
 "use client";
 
+import { Clock, TrendingUp, CalendarDays, ArrowUp, ArrowDown } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { HEAT_BANDS, HEAT_ALPHA } from "@/lib/legal-cockpit/calendar-data";
 
-const METRICS = [
-  { label: "TIEMPO PROM. RESOLUCIÓN", value: "2.4", unit: "días", spark: "0,20 16,18 32,22 48,16 64,14 80,10 100,8", color: "139,92,246" },
-  { label: "TASA DE ÉXITO", value: "87", unit: "%", spark: "0,22 16,20 32,18 48,15 64,12 80,10 100,6", color: "16,185,129" },
-  { label: "CASOS MES", value: "23", unit: "/30", spark: "0,26 16,22 32,20 48,18 64,14 80,12 100,8", color: "59,130,246" },
+type MetricCard = {
+  label: string;
+  value: string;
+  unit: string;
+  spark: string;
+  color: string;
+  icon: LucideIcon;
+  delta?: { text: string; dir: "up" | "down" };
+  badge?: string;
+  context: string;
+};
+
+const METRICS: MetricCard[] = [
+  {
+    label: "TIEMPO PROM. RESOLUCIÓN",
+    value: "2.4",
+    unit: "días",
+    spark: "0,20 16,18 32,22 48,16 64,14 80,10 100,8",
+    color: "139,92,246",
+    icon: Clock,
+    delta: { text: "0.3", dir: "down" },
+    context: "vs 2.7 días el mes anterior",
+  },
+  {
+    label: "TASA DE ÉXITO",
+    value: "87",
+    unit: "%",
+    spark: "0,22 16,20 32,18 48,15 64,12 80,10 100,6",
+    color: "16,185,129",
+    icon: TrendingUp,
+    delta: { text: "4 pts", dir: "up" },
+    context: "142 casos resueltos · 12 meses",
+  },
+  {
+    label: "CASOS ESTE MES",
+    value: "23",
+    unit: "/30",
+    spark: "0,26 16,22 32,20 48,18 64,14 80,12 100,8",
+    color: "59,130,246",
+    icon: CalendarDays,
+    badge: "77% meta",
+    context: "meta mensual: 30 casos",
+  },
 ];
 
 const DOW = ["L", "M", "X", "J", "V", "S", "D"];
@@ -15,57 +56,110 @@ export function PerformanceMetrics() {
     <div className="space-y-4">
       <div>
         <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-          Métricas de rendimiento
+          RENDIMIENTO
         </p>
-        <h2 className="text-lg font-semibold text-zinc-100 mt-0.5">Performance</h2>
+        <h2 className="text-lg font-semibold text-zinc-100 mt-0.5">Métricas del bufete</h2>
       </div>
 
       {/* Metric cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {METRICS.map((m) => (
-          <div
-            key={m.label}
-            className="rounded-xl p-4 relative overflow-hidden"
-            style={{
-              background: `linear-gradient(135deg, rgba(${m.color},0.10), rgba(${m.color},0.02))`,
-              border: `1px solid rgba(${m.color},0.20)`,
-            }}
-          >
-            <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
-              {m.label}
-            </p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold text-white">{m.value}</span>
-              <span className="text-sm text-zinc-400">{m.unit}</span>
-            </div>
-            {/* Progress bar */}
-            <div className="mt-3 h-1.5 rounded-full bg-zinc-800/60 overflow-hidden">
-              <div
-                className="h-full rounded-full animate-[growBar_1.2s_ease-out_forwards]"
-                style={{
-                  width: m.unit === "%" ? `${m.value}%` : m.unit === "/30" ? `${(parseInt(m.value) / 30) * 100}%` : "60%",
-                  background: `rgb(${m.color})`,
-                }}
-              />
-            </div>
-            {/* Sparkline */}
-            <svg
-              viewBox="0 0 100 28"
-              className="absolute bottom-2 right-3 opacity-20"
-              style={{ width: 64, height: 20 }}
-              preserveAspectRatio="none"
+        {METRICS.map((m) => {
+          const Icon = m.icon;
+          return (
+            <div
+              key={m.label}
+              className="rounded-xl p-4 relative overflow-hidden"
+              style={{
+                background: `linear-gradient(135deg, rgba(${m.color},0.10), rgba(${m.color},0.02))`,
+                border: `1px solid rgba(${m.color},0.20)`,
+              }}
             >
-              <polyline
-                points={m.spark}
-                fill="none"
-                stroke={`rgb(${m.color})`}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        ))}
+              {/* Icon chip — top right */}
+              <div
+                className="absolute top-3 right-3 flex items-center justify-center"
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 9,
+                  background: `rgba(${m.color},0.12)`,
+                }}
+              >
+                <Icon
+                  className="h-3.5 w-3.5"
+                  style={{ color: `rgb(${m.color})` }}
+                  aria-hidden
+                />
+              </div>
+
+              <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-2">
+                {m.label}
+              </p>
+
+              {/* Value + delta/badge */}
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-white">{m.value}</span>
+                <span className="text-sm text-zinc-400">{m.unit}</span>
+
+                {m.delta && (
+                  <span
+                    className="inline-flex items-center gap-0.5 text-[11px] font-semibold"
+                    style={{ color: `rgb(${m.color})` }}
+                  >
+                    {m.delta.dir === "up" ? (
+                      <ArrowUp className="h-3 w-3" />
+                    ) : (
+                      <ArrowDown className="h-3 w-3" />
+                    )}
+                    {m.delta.text}
+                  </span>
+                )}
+
+                {m.badge && (
+                  <span
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                    style={{
+                      background: `rgba(${m.color},0.15)`,
+                      color: `rgb(${m.color})`,
+                    }}
+                  >
+                    {m.badge}
+                  </span>
+                )}
+              </div>
+
+              {/* Progress bar */}
+              <div className="mt-3 h-1.5 rounded-full bg-zinc-800/60 overflow-hidden">
+                <div
+                  className="h-full rounded-full animate-[growBar_1.2s_ease-out_forwards]"
+                  style={{
+                    width: m.unit === "%" ? `${m.value}%` : m.unit === "/30" ? `${(parseInt(m.value) / 30) * 100}%` : "60%",
+                    background: `rgb(${m.color})`,
+                  }}
+                />
+              </div>
+
+              {/* Sparkline */}
+              <svg
+                viewBox="0 0 100 28"
+                className="absolute bottom-8 right-3 opacity-20"
+                style={{ width: 64, height: 20 }}
+                preserveAspectRatio="none"
+              >
+                <polyline
+                  points={m.spark}
+                  fill="none"
+                  stroke={`rgb(${m.color})`}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+
+              {/* Context line */}
+              <p className="text-[11px] text-zinc-500 mt-2">{m.context}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Heatmap */}
@@ -73,7 +167,7 @@ export function PerformanceMetrics() {
         className="rounded-xl border border-zinc-800/60 bg-zinc-950/80 p-4"
       >
         <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-3">
-          Carga semanal
+          Actividad de consultas · última semana
         </p>
         {/* DOW header */}
         <div className="grid gap-1" style={{ gridTemplateColumns: "48px repeat(7, 1fr)" }}>
