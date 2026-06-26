@@ -47,9 +47,12 @@ export function LegalGoldenPath({ steps, onStep }: Props) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-violet-500 text-sm">&#x2B21;</span>
-          <span className="text-sm font-medium text-white">
-            Golden Path del expediente
-          </span>
+          <div>
+            <span className="text-sm font-medium text-white">
+              Golden Path del expediente
+            </span>
+            <p className="text-xs text-zinc-500">Ejemplo de flujo</p>
+          </div>
         </div>
         <span className="text-[11px] text-zinc-500 font-mono">
           {done}/{steps.length} completados

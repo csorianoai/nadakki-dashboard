@@ -31,6 +31,9 @@ export function JudicialCalendarPanel() {
     <div className="grid grid-cols-1 lg:grid-cols-[1.85fr_1fr] gap-4">
       {/* Left — Calendar */}
       <div>
+        <p className="text-xs text-amber-400/80 mb-2">
+          Datos demo &middot; Pendiente integraci&oacute;n con audiencias reales
+        </p>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div>
             <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">

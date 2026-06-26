@@ -23,7 +23,7 @@ function Sparkline({ points, color }: { points: string; color: string }) {
   );
 }
 
-export function LegalKPIRow({ loading }: { loading?: boolean }) {
+export function LegalKPIRow({ loading, demoData }: { loading?: boolean; demoData?: boolean }) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -35,7 +35,18 @@ export function LegalKPIRow({ loading }: { loading?: boolean }) {
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="space-y-2">
+      {demoData && (
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-950/50 text-amber-400 border border-amber-800/30"
+            title="Datos de ejemplo, no datos reales"
+          >
+            DEMO
+          </span>
+        </div>
+      )}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {KPI_CARDS.map((card: KpiCard) => (
         <div
           key={card.label}
@@ -64,6 +75,7 @@ export function LegalKPIRow({ loading }: { loading?: boolean }) {
           <Sparkline points={card.sparkPoints} color={card.accentColor} />
         </div>
       ))}
+    </div>
     </div>
   );
 }
