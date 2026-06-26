@@ -71,7 +71,51 @@
       "title_required": "El título es obligatorio",
       "client_required": "Debes agregar al menos un cliente",
       "case_type_required": "Selecciona un tipo de caso"
-    }
+    },
+    "client_section": "Cliente principal",
+    "other_parties": "Otras partes",
+    "add_party": "+ Agregar parte",
+    "remove_party": "Eliminar parte",
+    "max_parties": "Máximo 10 partes",
+    "party_label": "Parte #{n}",
+    "field_full_name": "Nombre completo",
+    "field_email": "Correo electrónico",
+    "field_phone": "Teléfono",
+    "actor_kind": {
+      "label": "Tipo de persona",
+      "persona_fisica": "Persona física",
+      "persona_juridica": "Persona jurídica",
+      "institucion": "Institución"
+    },
+    "identification": {
+      "type_label": "Tipo de identificación",
+      "number_label": "Número de identificación",
+      "types": {
+        "cedula": "Cédula",
+        "pasaporte": "Pasaporte",
+        "rnc": "RNC",
+        "other": "Otro"
+      }
+    },
+    "roles": {
+      "label": "Rol",
+      "cliente": "Cliente",
+      "contraparte": "Contraparte",
+      "demandante": "Demandante",
+      "demandado": "Demandado",
+      "imputado": "Imputado",
+      "victima": "Víctima",
+      "querellante": "Querellante",
+      "testigo": "Testigo",
+      "perito": "Perito",
+      "abogado_contrario": "Abogado contrario",
+      "juez": "Juez",
+      "fiscal": "Fiscal",
+      "notario": "Notario",
+      "garante": "Garante",
+      "tercero_interviniente": "Tercero interviniente"
+    },
+    "summary_additional_parties": "{count} parte(s) adicional(es)"
   },
   "actions": {
     "menu_title": "Acciones disponibles",
