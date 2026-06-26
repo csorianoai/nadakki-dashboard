@@ -11,7 +11,7 @@ export function PracticeAreaConfig({ activeAreas }: Props) {
     <div className="space-y-4">
       <header>
         <h3 className="text-sm font-medium">Áreas legales activas</h3>
-        <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+        <p className="mt-1 text-xs text-zinc-400">
           Configurado para tu institución. Los agentes solo procesarán documentos dentro de estas áreas.
         </p>
       </header>
@@ -25,19 +25,19 @@ export function PracticeAreaConfig({ activeAreas }: Props) {
               className={[
                 "flex items-center justify-between rounded border px-3 py-2",
                 isActive
-                  ? "border-[var(--color-border-subtle)] bg-[var(--color-surface-1)]"
-                  : "border-[var(--color-border-subtle)] bg-transparent opacity-50",
+                  ? "border-zinc-700 bg-zinc-900"
+                  : "border-zinc-700 bg-transparent opacity-60",
               ].join(" ")}
               title={area.description_es}
             >
               <span className="text-sm">{area.display_es}</span>
-              {isActive && <span className="text-xs text-[var(--color-success-strong)]">●</span>}
+              {isActive && <span className="text-xs text-emerald-400">●</span>}
             </div>
           );
         })}
       </div>
 
-      <p className="text-xs text-[var(--color-text-tertiary)]">
+      <p className="text-xs text-zinc-500">
         Para modificar las áreas activas, contacta al administrador del tenant.
       </p>
     </div>
