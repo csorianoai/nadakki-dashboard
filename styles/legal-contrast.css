@@ -1,0 +1,167 @@
+/*
+ * Legal Module — WCAG-AA Dark Contrast + Gold Accent
+ *
+ * Principles (NVIDIA-style hierarchy):
+ *   1. Cards separate from background (surface-1 > bg)
+ *   2. Borders are visible objects, not invisible lines
+ *   3. Secondary text is readable (~7:1 contrast ratio)
+ *   4. Gold accent only on interactive elements (icons, actions, borders)
+ *
+ * Scoped to .legal-surface — zero impact on other modules.
+ * Token --legal-accent: tenants can override via CSS custom property.
+ */
+
+/* ── Tokens ── */
+.legal-surface {
+  --legal-accent: #e0b53a;           /* gold — text/icons on dark surface     */
+  --legal-accent-strong: #d4a418;    /* gold strong — borders, accent bars    */
+  --legal-bg: #0d1320;              /* base background                       */
+  --legal-surface-1: #181f31;       /* card                                  */
+  --legal-surface-2: #1d2538;       /* elevated card / hover                 */
+  --legal-border: #2a3450;          /* visible border (>=3:1 on surface-1)   */
+  --legal-text: #e9ecf6;           /* primary text (~14:1 on bg)            */
+  --legal-text-secondary: #a6b0c4; /* secondary text (~7:1 WCAG-AA)         */
+
+  background-color: var(--legal-bg);
+}
+
+/* ── Surfaces: cards separate from background ── */
+.legal-surface .bg-zinc-950,
+.legal-surface .bg-zinc-950\/50,
+.legal-surface .bg-zinc-950\/80 {
+  background-color: var(--legal-bg) !important;
+}
+.legal-surface .bg-black {
+  background-color: var(--legal-bg) !important;
+}
+.legal-surface .bg-zinc-900,
+.legal-surface .bg-zinc-900\/90,
+.legal-surface .bg-zinc-900\/60 {
+  background-color: var(--legal-surface-1) !important;
+}
+.legal-surface .bg-zinc-800 {
+  background-color: var(--legal-surface-2) !important;
+}
+
+/* Hover states */
+.legal-surface .hover\:bg-zinc-800:hover,
+.legal-surface .hover\:bg-zinc-900:hover,
+.legal-surface .hover\:bg-zinc-800\/50:hover {
+  background-color: var(--legal-surface-2) !important;
+}
+
+/* Gradient "from" overrides — cards with from-zinc-900 */
+.legal-surface [class*="from-zinc-900"] {
+  --tw-gradient-from: var(--legal-surface-1) !important;
+}
+.legal-surface [class*="to-zinc-950"],
+.legal-surface [class*="to-zinc-900"] {
+  --tw-gradient-to: var(--legal-bg) !important;
+}
+
+/* ── Borders: every card is a crisp object ── */
+.legal-surface .border-zinc-800,
+.legal-surface .border-zinc-800\/50,
+.legal-surface .border-zinc-700,
+.legal-surface .border-zinc-700\/50 {
+  border-color: var(--legal-border) !important;
+}
+
+/* Hover border lift */
+.legal-surface .hover\:border-violet-500\/30:hover,
+.legal-surface .hover\:border-violet-500\/35:hover,
+.legal-surface .hover\:border-violet-500\/25:hover {
+  border-color: var(--legal-accent) !important;
+}
+
+/* ── Text hierarchy: secondary text readable (WCAG-AA) ── */
+.legal-surface .text-zinc-500 {
+  color: var(--legal-text-secondary) !important;
+}
+.legal-surface .text-zinc-600 {
+  color: #8c97a6 !important;
+}
+.legal-surface .text-zinc-400 {
+  color: #c2cbd6 !important;
+}
+.legal-surface .text-zinc-300 {
+  color: var(--legal-text) !important;
+}
+.legal-surface .text-zinc-100 {
+  color: var(--legal-text) !important;
+}
+.legal-surface .placeholder\:text-zinc-600::placeholder {
+  color: #8c97a6 !important;
+}
+
+/* ── Gold accent: interactive elements only ── */
+
+/* Icons and action text */
+.legal-surface .text-violet-400,
+.legal-surface .text-violet-500,
+.legal-surface .text-purple-400 {
+  color: var(--legal-accent) !important;
+}
+
+/* Hover text accent */
+.legal-surface .hover\:text-violet-300:hover {
+  color: var(--legal-accent) !important;
+}
+
+/* Accent borders (left borders on action cards, checked states) */
+.legal-surface .border-violet-500,
+.legal-surface .border-l-violet-500,
+.legal-surface .border-violet-500\/50 {
+  border-color: var(--legal-accent-strong) !important;
+}
+
+/* Focus rings → gold */
+.legal-surface .focus\:border-violet-500\/40:focus,
+.legal-surface .focus\:ring-violet-500\/30:focus {
+  border-color: var(--legal-accent) !important;
+  --tw-ring-color: rgba(224, 181, 58, 0.3) !important;
+}
+
+/* Checked/selected states */
+.legal-surface .has-\[\:checked\]\:border-violet-500\/50:has(:checked) {
+  border-color: var(--legal-accent-strong) !important;
+}
+.legal-surface .has-\[\:checked\]\:bg-violet-950\/20:has(:checked) {
+  background-color: rgba(224, 181, 58, 0.08) !important;
+}
+
+/* Checkbox accent */
+.legal-surface .text-violet-500[type="checkbox"],
+.legal-surface input.text-violet-500 {
+  accent-color: var(--legal-accent-strong) !important;
+}
+
+/* Focus outline → gold */
+.legal-surface .focus-visible\:outline-violet-500:focus-visible {
+  outline-color: var(--legal-accent) !important;
+}
+
+/* Hover shadow → gold tint (subtle) */
+.legal-surface .hover\:shadow-violet-950\/10:hover,
+.legal-surface .hover\:shadow-violet-950\/20:hover {
+  --tw-shadow-color: rgba(224, 181, 58, 0.06) !important;
+}
+
+/* Hover ring → gold */
+.legal-surface .hover\:ring-violet-500\/20:hover {
+  --tw-ring-color: rgba(224, 181, 58, 0.2) !important;
+}
+
+/* Glow blobs (decorative, keep subtle gold) */
+.legal-surface .bg-violet-600\/5,
+.legal-surface .bg-violet-600\/10 {
+  background-color: rgba(224, 181, 58, 0.04) !important;
+}
+
+/* Badge: violet on dark (LegalAgentCard) → gold variant */
+.legal-surface .bg-violet-950 {
+  background-color: rgba(224, 181, 58, 0.12) !important;
+}
+.legal-surface .text-violet-200 {
+  color: var(--legal-accent) !important;
+}

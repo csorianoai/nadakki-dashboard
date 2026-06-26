@@ -15,6 +15,7 @@ import { ForgeToaster } from "@/components/forge/ui/Toast";
 import { ModuleGate } from "@/lib/feature-gating/ModuleGate";
 import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
 import "../credit-hub/forge-globals.css";
+import "@/styles/legal-contrast.css";
 
 export function LegalLayoutClient({ children }: { children: ReactNode }) {
   const { tenantSlug } = useCreditHubTenant();
@@ -24,7 +25,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
     <>
       <CreditHubI18nBootstrap />
       <div
-        className={`flex min-h-0 flex-1 flex-col ${GeistSans.className}`}
+        className={`legal-surface flex min-h-0 flex-1 flex-col ${GeistSans.className}`}
         data-portal="legal"
         data-tenant={tenantAttr}
       >
