@@ -4,10 +4,18 @@ Real-time hearings calendar + KPIs UI for the legal module of the Nadakki dashbo
 
 ## Route
 
-- `app/(forge)/legal/hearings/page.tsx` → `/legal/hearings`
+- `app/(forge)/legal/audiencias/page.tsx` → `/legal/audiencias`
 - Lives under the existing `(forge)` route group next to `cases`, `contracts`, etc.
   (NOT under `app/legal/` and NOT under `/admin/`).
 - Nav entry: a single "Audiencias" link added to `components/legal/LegalSubNav.tsx`.
+
+### Route-collision note
+
+The URL `/legal/hearings` is already served in production by the generic agent
+runner `app/[core]/[agentId]/page.tsx` ("hearings - Agente de IA", `legal` core +
+`hearings` agentId). To avoid shadowing it, this screen lives at `/legal/audiencias`.
+The old runner is left untouched. (Backend API paths remain `/api/legal/hearings*`;
+only the page URL is `/legal/audiencias`.)
 
 ## Endpoints consumed (via the legal proxy)
 

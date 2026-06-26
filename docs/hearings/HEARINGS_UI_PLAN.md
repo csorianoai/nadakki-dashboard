@@ -48,7 +48,8 @@ Planning record for the hearings calendar + KPIs frontend. Companion to
 ## File map (additive-only)
 
 ```
-app/(forge)/legal/hearings/page.tsx
+app/(forge)/legal/audiencias/page.tsx   # URL /legal/audiencias (avoids collision with the
+                                         # generic runner app/[core]/[agentId] at /legal/hearings)
 components/legal/hearings/HearingsDashboard.tsx
 components/legal/hearings/HearingsKpiCards.tsx
 components/legal/hearings/HearingFilters.tsx

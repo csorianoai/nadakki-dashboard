@@ -16,7 +16,7 @@ const links: NavLink[] = [
   { href: "/legal/guide", label: "Cockpit", icon: LayoutDashboard },
   { href: "/legal", label: "Inicio", icon: Home },
   { href: "/legal/cases", label: "Expedientes", icon: Briefcase },
-  { href: "/legal/hearings", label: "Audiencias", icon: Gavel },
+  { href: "/legal/audiencias", label: "Audiencias", icon: Gavel },
   { href: "/legal/research", label: "Investigación", icon: Search },
   { href: "/legal/contracts", label: "Contratos", icon: FileText },
   { href: "/legal/audit", label: "Auditoría", icon: ScrollText },
