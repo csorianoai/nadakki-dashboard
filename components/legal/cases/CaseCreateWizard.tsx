@@ -8,12 +8,52 @@ import type { CasePriority, CaseType } from "@/lib/legal/cases/case-types";
 import { createCase } from "@/lib/legal/cases/legal-cases-api";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { CaseTypeSelector } from "@/components/legal/cases/CaseTypeSelector";
+import { ActorFormCard, type ActorFormData } from "@/components/legal/cases/ActorFormCard";
 import { cn } from "@/lib/utils";
 
 type Mode = "evaluacion" | "ingesta";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/30";
+
+const ROLE_OPTIONS = [
+  "cliente",
+  "contraparte",
+  "demandante",
+  "demandado",
+  "imputado",
+  "victima",
+  "querellante",
+  "testigo",
+  "perito",
+  "abogado_contrario",
+  "juez",
+  "fiscal",
+  "notario",
+  "garante",
+  "tercero_interviniente",
+] as const;
+
+const MAX_PARTIES = 10;
+
+function emptyActor(overrides?: Partial<ActorFormData>): ActorFormData {
+  return {
+    role: "contraparte",
+    actor_kind: "persona_fisica",
+    full_name: "",
+    is_primary: false,
+    ...overrides,
+  };
+}
+
+function isActorEmpty(a: ActorFormData): boolean {
+  return (
+    !a.full_name.trim() &&
+    !a.email?.trim() &&
+    !a.phone?.trim() &&
+    !a.identification_number?.trim()
+  );
+}
 
 export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
   const m = useLegalCasesMessages();
@@ -24,41 +64,53 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
   const [caseType, setCaseType] = useState<CaseType>("defensa_civil_cobro_pesos");
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<CasePriority>("normal");
-  const [clientName, setClientName] = useState("");
-  const [counterpartyName, setCounterpartyName] = useState("");
+  const [actors, setActors] = useState<ActorFormData[]>([
+    {
+      role: "cliente",
+      actor_kind: "persona_fisica",
+      full_name: "",
+      is_primary: true,
+    },
+  ]);
   const [err, setErr] = useState<string | null>(null);
   const [actorWarning, setActorWarning] = useState<string | null>(null);
 
+  const updateActor = (index: number, updated: ActorFormData) => {
+    setActors((prev) => prev.map((a, i) => (i === index ? updated : a)));
+  };
+
+  const addParty = () => {
+    if (actors.length >= MAX_PARTIES) return;
+    setActors((prev) => [...prev, emptyActor()]);
+  };
+
+  const removeParty = (index: number) => {
+    if (index === 0) return; // can't remove primary
+    setActors((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const mut = useMutation({
-    mutationFn: () =>
-      createCase(tenantId, {
+    mutationFn: () => {
+      const validActors = actors.filter((a, i) => i === 0 || !isActorEmpty(a));
+      return createCase(tenantId, {
         case_type: caseType,
         title: title.trim(),
         priority,
         initial_state: mode === "evaluacion" ? "EVALUACION_INICIAL" : "INGESTION",
-        initial_actors: [
-          {
-            role: "cliente",
-            is_primary: true,
-            actor_kind: "persona_fisica",
-            full_name: clientName.trim(),
-            conflict_check_done: false,
-            conflict_detected: false,
-          },
-          ...(counterpartyName.trim()
-            ? [
-                {
-                  role: "contraparte",
-                  is_primary: false,
-                  actor_kind: "persona_juridica" as const,
-                  full_name: counterpartyName.trim(),
-                  conflict_check_done: false,
-                  conflict_detected: false,
-                },
-              ]
-            : []),
-        ],
-      }),
+        initial_actors: validActors.map((a) => ({
+          role: a.role,
+          is_primary: a.is_primary,
+          actor_kind: a.actor_kind,
+          full_name: a.full_name.trim(),
+          identification_type: a.identification_type || undefined,
+          identification_number: a.identification_number || undefined,
+          email: a.email || undefined,
+          phone: a.phone || undefined,
+          conflict_check_done: false,
+          conflict_detected: false,
+        })),
+      });
+    },
     onSuccess: async (c) => {
       await qc.invalidateQueries({ queryKey: ["legal_cases", tenantId] });
       // Defensive: backend may fail silently inserting actors
@@ -81,9 +133,19 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
       setErr(m.wizard.errors.title_required);
       return;
     }
-    if (step === 2 && !clientName.trim()) {
-      setErr(m.wizard.errors.client_required);
-      return;
+    if (step === 2) {
+      if (!actors[0].full_name.trim()) {
+        setErr(m.wizard.errors.client_required);
+        return;
+      }
+      // Validate additional actors: if any field is filled, full_name is required
+      for (let i = 1; i < actors.length; i++) {
+        const a = actors[i];
+        if (!isActorEmpty(a) && !a.full_name.trim()) {
+          setErr(m.wizard.errors.client_required);
+          return;
+        }
+      }
     }
     setStep((s) => Math.min(3, s + 1));
   };
@@ -91,6 +153,8 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
   const back = () => setStep((s) => Math.max(1, s - 1));
 
   const steps = [1, 2, 3] as const;
+
+  const additionalPartyCount = actors.slice(1).filter((a) => !isActorEmpty(a)).length;
 
   return (
     <div className="mx-auto max-w-2xl rounded-2xl border border-zinc-800/50 bg-gradient-to-br from-zinc-900/90 to-zinc-950 p-6 shadow-xl md:p-8">
@@ -186,20 +250,58 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 space-y-4"
+          className="mt-6 space-y-5"
         >
-          <label className="block text-sm font-medium text-zinc-300">
-            Nombre del cliente
-            <input value={clientName} onChange={(e) => setClientName(e.target.value)} className={inputClass} />
-          </label>
-          <label className="block text-sm font-medium text-zinc-300">
-            Contraparte (opcional)
-            <input
-              value={counterpartyName}
-              onChange={(e) => setCounterpartyName(e.target.value)}
-              className={inputClass}
+          {/* Client (primary actor) */}
+          <div>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+              {m.wizard.client_section}
+            </h2>
+            <ActorFormCard
+              actor={actors[0]}
+              onChange={(a) => updateActor(0, a)}
+              label={m.wizard.client_section}
+              roleOptions={["cliente"]}
+              messages={m}
             />
-          </label>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-zinc-800/40" />
+
+          {/* Additional parties */}
+          <div>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-400">
+              {m.wizard.other_parties}
+            </h2>
+
+            <div className="space-y-3">
+              {actors.slice(1).map((actor, idx) => (
+                <ActorFormCard
+                  key={idx}
+                  actor={actor}
+                  onChange={(a) => updateActor(idx + 1, a)}
+                  onRemove={() => removeParty(idx + 1)}
+                  collapsed
+                  label={m.wizard.party_label.replace("{n}", String(idx + 2))}
+                  roleOptions={[...ROLE_OPTIONS]}
+                  messages={m}
+                />
+              ))}
+            </div>
+
+            {actors.length < MAX_PARTIES ? (
+              <button
+                type="button"
+                className="mt-3 rounded-lg px-3 py-2 text-sm text-violet-400 ring-1 ring-violet-500/30 transition-colors hover:bg-violet-950/30"
+                onClick={addParty}
+              >
+                {m.wizard.add_party}
+              </button>
+            ) : (
+              <p className="mt-3 text-xs text-zinc-500">{m.wizard.max_parties}</p>
+            )}
+          </div>
         </motion.div>
       ) : null}
 
@@ -215,8 +317,13 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
               {m.case_types[caseType]} — {title}
             </li>
             <li>
-              Cliente: {clientName || "—"}
+              Cliente: {actors[0].full_name || "—"} ({(m.wizard.actor_kind as Record<string, string>)[actors[0].actor_kind]})
             </li>
+            {additionalPartyCount > 0 ? (
+              <li>
+                {m.wizard.summary_additional_parties.replace("{count}", String(additionalPartyCount))}
+              </li>
+            ) : null}
           </ul>
         </motion.div>
       ) : null}
