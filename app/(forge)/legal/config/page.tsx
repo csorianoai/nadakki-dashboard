@@ -14,56 +14,56 @@ export default function LegalForgeConfigPage() {
     <div className="space-y-4">
       <h2 className="text-2xl font-medium">Configuración Legal Core</h2>
 
-      <div className="bg-white rounded-lg shadow border p-5">
+      <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
         <PracticeAreaConfig activeAreas={info.practice_areas_covered ?? []} />
       </div>
 
-      <div className="bg-white rounded-lg shadow border p-5">
+      <div className="bg-zinc-900 rounded-lg border border-zinc-800 p-5">
         <h3 className="font-medium mb-3">Knowledge Pack — Jurisdicción {(info.jurisdiction ?? 'do').toUpperCase()}</h3>
 
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-slate-500">Versión</dt>
+            <dt className="text-zinc-400">Versión</dt>
             <dd className="font-mono">{(info.version ?? 'N/A')}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Estado</dt>
+            <dt className="text-zinc-400">Estado</dt>
             <dd>
               {(info.verification_status ?? info.status) === "verified" ? (
-                <span className="text-green-700 font-medium">✓ Verified</span>
+                <span className="text-emerald-400 font-medium">✓ Verified</span>
               ) : (
-                <span className="text-amber-700 font-medium">⚠️ {info.verification_status ?? info.status ?? 'unknown'}</span>
+                <span className="text-amber-400 font-medium">⚠️ {info.verification_status ?? info.status ?? 'unknown'}</span>
               )}
             </dd>
           </div>
           {info.verified_by && (
             <div>
-              <dt className="text-slate-500">Verificado por</dt>
+              <dt className="text-zinc-400">Verificado por</dt>
               <dd>{info.verified_by}</dd>
             </div>
           )}
           {info.verified_at && (
             <div>
-              <dt className="text-slate-500">Fecha verificación</dt>
+              <dt className="text-zinc-400">Fecha verificación</dt>
               <dd>{new Date(info.verified_at).toLocaleDateString()}</dd>
             </div>
           )}
           <div>
-            <dt className="text-slate-500">Hash SHA-256</dt>
+            <dt className="text-zinc-400">Hash SHA-256</dt>
             <dd className="font-mono text-xs">
               {(info.sha256_hash ?? info.pack_hash) && (info.sha256_hash ?? info.pack_hash).length > 32 ? `${(info.sha256_hash ?? info.pack_hash).slice(0, 32)}…` : ((info.sha256_hash ?? info.pack_hash) ?? "—")}
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Leyes codificadas</dt>
+            <dt className="text-zinc-400">Leyes codificadas</dt>
             <dd className="font-medium">{(info.leyes_codificadas_count ?? info.leyes_cargadas ?? 0)}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Artículos codificados</dt>
+            <dt className="text-zinc-400">Artículos codificados</dt>
             <dd className="font-medium">{(info.articulos_codificados_count ?? info.articulos_cargados ?? 0)}</dd>
           </div>
           <div className="md:col-span-2">
-            <dt className="text-slate-500">Áreas de práctica</dt>
+            <dt className="text-zinc-400">Áreas de práctica</dt>
             <dd className="mt-1">
               <PracticeAreaChipGroup tags={info.practice_areas_covered ?? []} maxVisible={12} size="sm" />
             </dd>
