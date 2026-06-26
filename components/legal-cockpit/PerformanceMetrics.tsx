@@ -58,7 +58,10 @@ export function PerformanceMetrics() {
         <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
           RENDIMIENTO
         </p>
-        <h2 className="text-lg font-semibold text-zinc-100 mt-0.5">Métricas del bufete</h2>
+        <h2 className="text-lg font-semibold text-zinc-100 mt-0.5">
+          Métricas del bufete{" "}
+          <span className="text-[10px] text-amber-400/80 font-normal">(datos de ejemplo)</span>
+        </h2>
       </div>
 
       {/* Metric cards */}

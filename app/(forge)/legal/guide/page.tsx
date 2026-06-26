@@ -196,7 +196,7 @@ export default function LegalGuidePage() {
 
   return (
     <LegalCockpitShell status={status}>
-      <LegalKPIRow loading={loading} />
+      <LegalKPIRow loading={loading} demoData={status.demoData} />
 
       <JudicialCalendarPanel />
 
