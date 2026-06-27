@@ -5,6 +5,8 @@ import type { BankBulkRule } from "@/lib/credit-hub/types/bankDecision";
 import { useBulkActions } from "@/lib/credit-hub/hooks/useBulkActions";
 import { BankBulkActionConfirm } from "./BankBulkActionConfirm";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { tokenStorage } from "@/lib/auth/token-storage";
+import { decodeJWT } from "@/lib/auth/jwt-decode";
 
 export function BankBulkActionsBar({ selectedIds, onDone }: { selectedIds: string[]; onDone?: () => void }) {
   const t = useTranslations();
@@ -13,10 +15,12 @@ export function BankBulkActionsBar({ selectedIds, onDone }: { selectedIds: strin
   const mutation = useBulkActions();
 
   const confirm = async () => {
+    const token = tokenStorage.getAccessToken();
+    const analystId = token ? (decodeJWT(token)?.sub ?? "unknown") : "unknown";
     await mutation.mutateAsync({
       applicationIds: selectedIds,
       rule,
-      analystId: "bank-analyst-demo",
+      analystId,
       justification,
     });
     setJustification("");
