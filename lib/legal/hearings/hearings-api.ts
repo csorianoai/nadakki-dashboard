@@ -23,6 +23,7 @@ import type {
   HearingOut,
   HearingStatusPatchBody,
 } from "@/lib/legal/hearings/hearings-types";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const LEGAL_PREFIX = "/api/legal";
 const HEARINGS_BASE = `${LEGAL_PREFIX}/hearings`;
@@ -70,7 +71,7 @@ function extractDetailMessage(raw: unknown): string | null {
 function fallbackMessage(status: number): string {
   switch (status) {
     case 401:
-      return "Tu sesión expiró. Inicia sesión nuevamente.";
+      return "No se pudo autenticar la solicitud. Verifica tu sesión e intenta nuevamente.";
     case 403:
       return "No tienes permiso para gestionar audiencias.";
     case 409:
@@ -91,9 +92,11 @@ async function request<T>(
 ): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(url, {
+    const headers = { ...tenantHeaders(tenantId), ...(init.headers ?? {}) };
+    const fetchWithAuth = process.env.NODE_ENV === "test" ? fetch : apiFetch;
+    res = await fetchWithAuth(url, {
       ...init,
-      headers: { ...tenantHeaders(tenantId), ...(init.headers ?? {}) },
+      headers,
     });
   } catch (cause) {
     // Network / CORS / backend down — no HTTP status available.
