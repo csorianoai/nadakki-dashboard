@@ -20,6 +20,14 @@ export type CaseType =
   | "caso_penal_victima_querellante"
   | "caso_penal_evaluacion_general";
 
+export type MatterArea =
+  | "civil" | "penal" | "laboral" | "inmobiliario" | "familia"
+  | "comercial" | "administrativo" | "tributario" | "bancario"
+  | "cumplimiento" | "unknown";
+
+export type ProceduralStage =
+  | "first_instance" | "appeal" | "cassation" | "enforcement" | "unknown";
+
 export type DocumentLifecycleStatus =
   | "draft"
   | "reviewed_by_agent"
@@ -193,7 +201,7 @@ export interface ListCasesResponse {
 }
 
 export interface CreateCasePayload {
-  case_type: CaseType;
+  case_type: string;
   title: string;
   description?: string;
   territorial_jurisdiction?: string;
@@ -202,6 +210,9 @@ export interface CreateCasePayload {
   client_roles?: string[];
   priority?: CasePriority;
   initial_state?: "EVALUACION_INICIAL" | "INGESTION";
+  matter_area?: MatterArea;
+  case_subtype?: string;
+  procedural_stage_at_intake?: ProceduralStage;
   initial_actors: Array<
     Omit<CaseActor, "conflict_check_done" | "conflict_detected"> & {
       conflict_check_done?: boolean;

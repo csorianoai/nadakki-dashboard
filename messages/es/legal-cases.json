@@ -70,7 +70,20 @@
     "errors": {
       "title_required": "El título es obligatorio",
       "client_required": "Debes agregar al menos un cliente",
-      "case_type_required": "Selecciona un tipo de caso"
+      "case_type_required": "Selecciona un tipo de caso",
+      "matter_required": "Seleccione una materia legal"
+    },
+    "matter_area_label": "Materia legal",
+    "case_subtype_label": "Sub-materia",
+    "custom_subtype_placeholder": "Especifique la sub-materia",
+    "procedural_stage_label": "Etapa procesal al ingreso",
+    "procedural_stage_note": "Etapa en que llega el caso. No altera plazos hasta validación del abogado.",
+    "procedural_stages": {
+      "first_instance": "Primera instancia",
+      "appeal": "Apelación",
+      "cassation": "Casación",
+      "enforcement": "Ejecución",
+      "unknown": "Desconocida"
     },
     "client_section": "Cliente principal",
     "other_parties": "Otras partes",

@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import type { CasePriority, CaseType } from "@/lib/legal/cases/case-types";
+import type { CasePriority, MatterArea, ProceduralStage } from "@/lib/legal/cases/case-types";
 import { createCase } from "@/lib/legal/cases/legal-cases-api";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
-import { CaseTypeSelector } from "@/components/legal/cases/CaseTypeSelector";
+import { MATERIAS, COVERAGE_BADGE, deriveCaseType } from "@/lib/legal/cases/matter-catalog";
 import { ActorFormCard, type ActorFormData } from "@/components/legal/cases/ActorFormCard";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +61,10 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
   const qc = useQueryClient();
   const [step, setStep] = useState(1);
   const [mode, setMode] = useState<Mode>("ingesta");
-  const [caseType, setCaseType] = useState<CaseType>("defensa_civil_cobro_pesos");
+  const [matterArea, setMatterArea] = useState<MatterArea | "">("");
+  const [caseSubtype, setCaseSubtype] = useState("");
+  const [customSubtype, setCustomSubtype] = useState("");
+  const [proceduralStage, setProceduralStage] = useState<ProceduralStage | "">("");
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<CasePriority>("normal");
   const [actors, setActors] = useState<ActorFormData[]>([
@@ -89,13 +92,20 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
     setActors((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const selectedMateria = MATERIAS.find((m) => m.key === matterArea);
+
   const mut = useMutation({
     mutationFn: () => {
       const validActors = actors.filter((a, i) => i === 0 || !isActorEmpty(a));
+      const effectiveSubtype = caseSubtype === "otro" ? customSubtype.trim() : caseSubtype;
+      const derivedCaseType = matterArea ? deriveCaseType(matterArea as MatterArea, caseSubtype) : null;
       return createCase(tenantId, {
-        case_type: caseType,
+        case_type: derivedCaseType ?? (matterArea || "unknown"),
         title: title.trim(),
         priority,
+        matter_area: (matterArea as MatterArea) || undefined,
+        case_subtype: effectiveSubtype || undefined,
+        procedural_stage_at_intake: (proceduralStage as ProceduralStage) || undefined,
         initial_state: mode === "evaluacion" ? "EVALUACION_INICIAL" : "INGESTION",
         initial_actors: validActors.map((a) => ({
           role: a.role,
@@ -129,9 +139,15 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
 
   const next = () => {
     setErr(null);
-    if (step === 1 && !title.trim()) {
-      setErr(m.wizard.errors.title_required);
-      return;
+    if (step === 1) {
+      if (!matterArea) {
+        setErr((m.wizard.errors as Record<string, string>).matter_required);
+        return;
+      }
+      if (!title.trim()) {
+        setErr(m.wizard.errors.title_required);
+        return;
+      }
     }
     if (step === 2) {
       if (!actors[0].full_name.trim()) {
@@ -224,11 +240,98 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
           animate={{ opacity: 1, y: 0 }}
           className="mt-6 space-y-4"
         >
-          <CaseTypeSelector value={caseType} onChange={setCaseType} />
+          {/* Materia */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-300">
+              {(m.wizard as Record<string, unknown>).matter_area_label as string}
+              <select
+                value={matterArea}
+                onChange={(e) => {
+                  setMatterArea(e.target.value as MatterArea | "");
+                  setCaseSubtype("");
+                  setCustomSubtype("");
+                }}
+                className={inputClass}
+              >
+                <option value="">— Seleccione —</option>
+                {MATERIAS.map((mat) => (
+                  <option key={mat.key} value={mat.key}>
+                    {mat.label_es}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {selectedMateria ? (
+              <span
+                className={cn(
+                  "mt-2 inline-block rounded-md border px-2 py-0.5 text-xs",
+                  COVERAGE_BADGE[selectedMateria.coverage].className,
+                )}
+              >
+                {COVERAGE_BADGE[selectedMateria.coverage].label}
+              </span>
+            ) : null}
+          </div>
+
+          {/* Sub-materia */}
+          {selectedMateria ? (
+            <div>
+              <label className="block text-sm font-medium text-zinc-300">
+                {(m.wizard as Record<string, unknown>).case_subtype_label as string}
+                <select
+                  value={caseSubtype}
+                  onChange={(e) => {
+                    setCaseSubtype(e.target.value);
+                    if (e.target.value !== "otro") setCustomSubtype("");
+                  }}
+                  className={inputClass}
+                >
+                  <option value="">— Seleccione —</option>
+                  {selectedMateria.subtypes.map((st) => (
+                    <option key={st.value} value={st.value}>
+                      {st.label_es}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {caseSubtype === "otro" ? (
+                <input
+                  value={customSubtype}
+                  onChange={(e) => setCustomSubtype(e.target.value)}
+                  placeholder={(m.wizard as Record<string, unknown>).custom_subtype_placeholder as string}
+                  className={cn(inputClass, "mt-2")}
+                />
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Etapa procesal */}
+          <label className="block text-sm font-medium text-zinc-300">
+            {(m.wizard as Record<string, unknown>).procedural_stage_label as string}
+            <select
+              value={proceduralStage}
+              onChange={(e) => setProceduralStage(e.target.value as ProceduralStage | "")}
+              className={inputClass}
+            >
+              <option value="">— Seleccione —</option>
+              {(["first_instance", "appeal", "cassation", "enforcement", "unknown"] as const).map((ps) => (
+                <option key={ps} value={ps}>
+                  {((m.wizard as Record<string, unknown>).procedural_stages as Record<string, string>)[ps]}
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs text-zinc-500">
+              {(m.wizard as Record<string, unknown>).procedural_stage_note as string}
+            </span>
+          </label>
+
+          {/* Título */}
           <label className="block text-sm font-medium text-zinc-300">
             Título del expediente
             <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
           </label>
+
+          {/* Prioridad */}
           <label className="block text-sm font-medium text-zinc-300">
             Prioridad
             <select
@@ -314,7 +417,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
           <p>{m.wizard.steps["3"]}: puedes adjuntar documentos después desde el detalle del expediente.</p>
           <ul className="list-inside list-disc text-zinc-400">
             <li>
-              {m.case_types[caseType]} — {title}
+              {selectedMateria?.label_es ?? "—"}{caseSubtype && caseSubtype !== "otro" ? ` — ${selectedMateria?.subtypes.find((s) => s.value === caseSubtype)?.label_es ?? caseSubtype}` : caseSubtype === "otro" && customSubtype.trim() ? ` — ${customSubtype.trim()}` : ""} — {title}
             </li>
             <li>
               Cliente: {actors[0].full_name || "—"} ({(m.wizard.actor_kind as Record<string, string>)[actors[0].actor_kind]})
