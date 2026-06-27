@@ -53,7 +53,7 @@ describe("hearings-api", () => {
     jest.resetAllMocks();
   });
 
-  it("listHearings hits /api/legal/hearings with exact query params + X-Tenant-ID", async () => {
+  it("listHearings hits /api/v1/legal/hearings with exact query params + X-Tenant-ID", async () => {
     (global.fetch as jest.Mock).mockResolvedValue(
       okResponse({ hearings: [fakeHearing()], total: 1 }),
     );
@@ -68,7 +68,7 @@ describe("hearings-api", () => {
     expect(res.hearings).toHaveLength(1);
 
     const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
-    expect(url).toContain("/api/legal/hearings?");
+    expect(url).toContain("/api/v1/legal/hearings?");
     expect(url).toContain("from=2026-07-01");
     expect(url).toContain("to=2026-07-31");
     expect(url).toContain("status=SCHEDULED");
@@ -108,16 +108,16 @@ describe("hearings-api", () => {
     await getHearingConfig(TENANT);
     await getHearingKpis(TENANT);
     const calls = (global.fetch as jest.Mock).mock.calls;
-    expect(calls[0][0]).toBe("/api/legal/hearings/config");
-    expect(calls[1][0]).toBe("/api/legal/hearings/kpis");
+    expect(calls[0][0]).toBe("/api/v1/legal/hearings/config");
+    expect(calls[1][0]).toBe("/api/v1/legal/hearings/kpis");
   });
 
-  it("createHearing POSTs to /api/legal/hearings and does NOT include tenant_id in the body", async () => {
+  it("createHearing POSTs to /api/v1/legal/hearings and does NOT include tenant_id in the body", async () => {
     (global.fetch as jest.Mock).mockResolvedValue(okResponse(fakeHearing()));
     await createHearing(TENANT, { title: "Nueva", hearing_date: "2026-07-01T14:00:00Z" });
 
     const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
-    expect(url).toBe("/api/legal/hearings");
+    expect(url).toBe("/api/v1/legal/hearings");
     expect(init.method).toBe("POST");
     const body = JSON.parse(init.body as string);
     expect(body).not.toHaveProperty("tenant_id");
@@ -130,7 +130,7 @@ describe("hearings-api", () => {
     await patchHearingStatus(TENANT, "h-1", { status: "CONFIRMED", reason: "ok" });
 
     const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
-    expect(url).toBe("/api/legal/hearings/h-1/status");
+    expect(url).toBe("/api/v1/legal/hearings/h-1/status");
     expect(init.method).toBe("PATCH");
     const body = JSON.parse(init.body as string);
     expect(body.status).toBe("CONFIRMED");
