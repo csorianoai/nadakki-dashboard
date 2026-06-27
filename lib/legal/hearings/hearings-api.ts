@@ -1,9 +1,10 @@
 /**
  * Hearings API client.
  *
- * Uses the EXISTING legal convention of the dashboard: a same-origin Next.js
- * rewrite proxy `/api/legal/*` (next.config.js → `${backendUrl}/api/v1/legal/*`)
- * with the `X-Tenant-ID` header. This mirrors lib/legal/cases/legal-cases-api.ts.
+ * Uses `/api/v1/legal/*` directly so `apiFetch` (which resolves to an absolute
+ * backend URL via NEXT_PUBLIC_API_BASE_URL) hits the correct backend path.
+ * Unlike the cases client (native `fetch` + Next.js rewrite), this client uses
+ * `apiFetch` for Bearer injection, so the path must include `/v1/`.
  *
  * SECURITY NOTE (inherited, not introduced here): X-Tenant-ID is the de-facto
  * tenant mechanism at runtime today because the backend runs with RLS bypass.
@@ -25,7 +26,7 @@ import type {
 } from "@/lib/legal/hearings/hearings-types";
 import { apiFetch } from "@/lib/api/fetch-client";
 
-const LEGAL_PREFIX = "/api/legal";
+const LEGAL_PREFIX = "/api/v1/legal";
 const HEARINGS_BASE = `${LEGAL_PREFIX}/hearings`;
 
 /** Typed error so the UI can map HTTP status → user-facing message. */
