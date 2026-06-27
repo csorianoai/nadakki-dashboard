@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import type { LegalCase } from "@/lib/legal/cases/case-types";
+import { MATERIAS } from "@/lib/legal/cases/matter-catalog";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { CaseStateIndicator } from "@/components/legal/cases/CaseStateIndicator";
 import { CasePriorityBadge } from "@/components/legal/cases/CasePriorityBadge";
@@ -34,7 +35,29 @@ export function CaseDetailHeader({
   }, []);
 
   const base = `/legal/cases/${legalCase.case_id}`;
-  const typeLabel = m.case_types[legalCase.case_type] ?? legalCase.case_type;
+
+  // Prefer the real matter (matter_area) saved in the DB over the legacy fallback
+  // case_type derived by the wizard. matter_area / case_subtype are returned by the
+  // backend on the case detail but are not declared on the read model type.
+  const { matter_area, case_subtype } = legalCase as LegalCase & {
+    matter_area?: string | null;
+    case_subtype?: string | null;
+  };
+  const legacyTypeLabel = m.case_types[legalCase.case_type] ?? legalCase.case_type;
+  const matterEntry =
+    matter_area && matter_area !== "unknown"
+      ? MATERIAS.find((x) => x.key === matter_area)
+      : undefined;
+  // Skip the generic "otro" subtype so we don't render "… — Otro (especificar)".
+  const subtypeLabel =
+    matterEntry && case_subtype && case_subtype !== "otro"
+      ? matterEntry.subtypes.find((s) => s.value === case_subtype)?.label_es
+      : undefined;
+  const typeLabel = matterEntry
+    ? subtypeLabel
+      ? `${matterEntry.label_es} — ${subtypeLabel}`
+      : matterEntry.label_es
+    : legacyTypeLabel;
 
   const navItems = useMemo(
     () =>
