@@ -287,6 +287,12 @@ const nextConfig = {
         source: "/api/legal/:path*",
         destination: `${backendUrl}/api/v1/legal/:path*`,
       },
+      // Cap 11 routers (offers_router, dashboard_router) mount at /credit/*
+      // without the /api/v2 prefix — proxy these to the backend.
+      {
+        source: "/credit/:path*",
+        destination: `${backendUrl}/credit/:path*`,
+      },
     ];
   },
 };
