@@ -38,5 +38,7 @@ describe("BankAnalyticsView", () => {
     );
     expect(screen.getByText("100.0")).toBeInTheDocument();
     expect(screen.getByText("Extremo")).toHaveAttribute("title", expect.stringMatching(/Predicción extrema/i));
+    expect(screen.getByText("Demo")).toBeInTheDocument();
+    expect(screen.getByText(/Artefacto demo/i)).toBeInTheDocument();
   });
 });
