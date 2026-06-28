@@ -192,20 +192,54 @@ export function normalizeApplications(raw: unknown): CreditApplication[] {
   return pickArray(raw).map(normalizeApplication);
 }
 
+/**
+ * Sum numeric values from the backend `states` object for the given state keys.
+ * e.g. stateSum(states, "DRAFT") or stateSum(states, "SUBMITTED", "BANK_SUBMITTED")
+ */
+function stateSum(states: AnyRecord, ...keys: string[]): number {
+  let sum = 0;
+  for (const k of keys) {
+    const v = states[k];
+    if (typeof v === "number" && Number.isFinite(v)) sum += v;
+  }
+  return sum;
+}
+
 export function normalizeStats(raw: unknown): CreditStats {
   const record = isRecord(raw) ? raw : {};
   const applications = normalizeApplications(raw);
   const sourceApps = applications.length > 0 ? applications : [];
+
+  // The /stats endpoint returns a `states` object with backend state keys
+  // (e.g. {DRAFT: 182, COMPLETED: 758, SUBMITTED: 5, ...}).
+  // Map these to the frontend category counts.
+  const states = isRecord(record.states) ? (record.states as AnyRecord) : {};
+
   const total = pickNumber(record, ["total_applications", "totalApplications", "total", "count"]) ?? sourceApps.length;
-  const draft = pickNumber(record, ["draft_applications", "draftApplications", "drafts"]) ?? countStatus(sourceApps, ["draft"]);
-  const submitted =
-    pickNumber(record, ["submitted_applications", "submittedApplications", "submitted", "processed_applications", "processedApplications"]) ??
-    countStatus(sourceApps, ["submitted", "processed"]);
-  const processing = pickNumber(record, ["processing_applications", "processingApplications", "processing"]) ?? countStatus(sourceApps, ["processing"]);
-  const approved = pickNumber(record, ["approved_applications", "approvedApplications", "approved"]) ?? countStatus(sourceApps, ["approved"]);
-  const rejected =
-    pickNumber(record, ["rejected_applications", "rejectedApplications", "rejected", "declined_applications", "declinedApplications"]) ??
-    countStatus(sourceApps, ["rejected", "declined"]);
+  const draft = pickNumber(record, ["draft_applications", "draftApplications", "drafts"])
+    ?? (stateSum(states, "DRAFT") || countStatus(sourceApps, ["draft"]));
+  const submitted = pickNumber(record, ["submitted_applications", "submittedApplications", "submitted"])
+    ?? (stateSum(states, "SUBMITTED", "BANK_SUBMITTED", "COMPLETED", "BANK_COMPLETE", "PROCESSED")
+    || countStatus(sourceApps, ["submitted", "processed"]));
+  const processing = pickNumber(record, ["processing_applications", "processingApplications", "processing"])
+    ?? (stateSum(states, "PROCESSING", "HYBRID_IN_PROGRESS")
+    || countStatus(sourceApps, ["processing"]));
+  const approved = pickNumber(record, ["approved_applications", "approvedApplications", "approved"])
+    ?? (stateSum(states, "APPROVED", "APPROVED_WITH_STIPULATIONS", "OFFER_SELECTED")
+    || countStatus(sourceApps, ["approved"]));
+  const rejected = pickNumber(record, ["rejected_applications", "rejectedApplications", "rejected", "declined_applications", "declinedApplications"])
+    ?? (stateSum(states, "REJECTED", "DECLINED")
+    || countStatus(sourceApps, ["rejected", "declined"]));
+
+  // approval_rate: prefer backend value, but if 0 or null and we have
+  // state-derived approved/rejected counts, compute from states.
+  let approvalRate = pickNumber(record, ["approval_rate", "approvalRate"]);
+  if ((approvalRate === null || approvalRate === 0) && total > 0) {
+    const decided = approved + rejected;
+    if (decided > 0) {
+      approvalRate = Math.round((approved / decided) * 10000) / 10000;
+    }
+  }
 
   return {
     total_applications: total,
@@ -216,7 +250,7 @@ export function normalizeStats(raw: unknown): CreditStats {
     rejected_applications: rejected,
     applications_this_week: pickNumber(record, ["applications_this_week", "applicationsThisWeek", "this_week", "thisWeek"]) ?? 0,
     average_score: pickNumber(record, ["average_score", "averageScore", "avg_score", "avgScore"]),
-    approval_rate: pickNumber(record, ["approval_rate", "approvalRate"]),
+    approval_rate: approvalRate,
     raw,
   };
 }
