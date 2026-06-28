@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { EmptyStateRich, KpiStripSkeleton, TableSkeleton } from "@/components/credit-hub/primitives";
-import { AreaChart, KpiCardTrend, QueueTable, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
+import { AreaChart, QueueTable, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
 import { BankGoals } from "@/components/credit-hub/bank/sections/BankGoals";
 import { AuctionIntel } from "@/components/credit-hub/bank/sections/AuctionIntel";
 import { RiskCreditPanel } from "@/components/credit-hub/bank/sections/RiskCreditPanel";
+import { BankWorkbenchKpi } from "@/components/credit-hub/bank/workbench/BankWorkbenchChrome";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import type { BankDashboardViewProps } from "@/lib/credit-hub/types/bank-views";
 import { PRIORITY_RANK, pendingQueueCount } from "@/lib/credit-hub/bank/bankFormat";
 import { chMoney } from "@/lib/credit-hub/ch-base";
@@ -52,9 +54,15 @@ export function BankDashboardView({
   }
 
   return (
-    <div>
+    <div data-testid="bank-intelligence-workbench">
       <div style={{ marginBottom: 22 }}>
-        <h1 className="ch-serif" style={{ margin: 0, fontSize: 33, letterSpacing: "-0.02em", lineHeight: 1.05 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span className="ch-eyebrow" style={{ color: "var(--ch-bank-accent-text)" }}>
+            Bank Intelligence Workbench
+          </span>
+          <DataTruthBadge level="REAL" />
+        </div>
+        <h1 className="ch-serif" style={{ margin: 0, fontSize: "clamp(26px, 4vw, 33px)", letterSpacing: "-0.02em", lineHeight: 1.05 }}>
           Mesa de decisiones — {institutionName}
         </h1>
         <div style={{ fontSize: 13.5, color: "var(--ch-text-3)", marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
@@ -71,25 +79,27 @@ export function BankDashboardView({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 26 }}>
-        <KpiCardTrend label="Solicitudes pendientes" value={pending} trend={null} trendLabel="en cola activa" onClick={() => router.push("/credit-hub/bank/applications")} />
-        <KpiCardTrend
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 26 }}>
+        <BankWorkbenchKpi label="Solicitudes pendientes" value={pending} trend={null} trendLabel="en cola activa" onClick={() => router.push("/credit-hub/bank/applications")} truth="REAL" />
+        <BankWorkbenchKpi
           label="Tiempo prom. de decisión"
           value={analytics?.avg_decision_time_hours ?? "—"}
           unit={analytics?.avg_decision_time_hours != null ? "h" : undefined}
           trend={null}
-          trendLabel="meta interna ≤ 6 h"
+          trendLabel="endpoint devuelve null hoy"
           onClick={() => router.push("/credit-hub/bank/analytics")}
+          truth="ROADMAP"
         />
-        <KpiCardTrend
+        <BankWorkbenchKpi
           label="Tasa de aprobación"
           value={analytics ? (analytics.approval_rate * 100).toFixed(0) : "—"}
           unit={analytics ? "%" : undefined}
           trend={null}
           trendLabel="últimos 30 días"
           onClick={() => router.push("/credit-hub/bank/analytics")}
+          truth="REAL"
         />
-        <KpiCardTrend
+        <BankWorkbenchKpi
           label="Volumen del mes"
           value={analytics ? chMoney(analytics.portfolio_value).replace("MX$", "") : "—"}
           unit={analytics ? "MX$" : undefined}
@@ -97,6 +107,7 @@ export function BankDashboardView({
           trendLabel="cartera viva"
           accent
           onClick={() => router.push("/credit-hub/bank/analytics")}
+          truth="REAL"
         />
       </div>
 
