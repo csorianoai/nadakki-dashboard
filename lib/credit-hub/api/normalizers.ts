@@ -282,20 +282,49 @@ export function normalizeEvents(raw: unknown): CreditEvent[] {
  * Normalize one canonical offer row (TP-005). Defensive: never assumes the
  * backend sent every field; numeric fields stay `null` when absent/invalid
  * rather than being coerced to 0 (so the UI can show an honest "—").
+ *
+ * The live backend sends `lender_name` (not `lender_code`), `apr_annual`
+ * (not `interest_rate_apr`), and a nested `terms` object with rich fields
+ * (total_cost, currency, stipulations, lender_display_name). We extract
+ * from both top-level and terms.
  */
 export function normalizeOffer(raw: unknown): CreditOffer {
   const record = isRecord(raw) ? raw : {};
+  const terms = isRecord(record.terms) ? (record.terms as AnyRecord) : {};
   const id = pickString(record, ["id", "offer_id", "offerId"], "");
+
+  // Status normalization: backend sends localized (APROBADO) — lowercase for consistent matching
+  const rawStatus = pickString(record, ["status"], "pending");
+  const statusMap: Record<string, string> = {
+    APROBADO: "approved", RECHAZADO: "declined", CONTRA_OFERTA: "counter_offer",
+    ACEPTADO: "accepted", NO_SELECCIONADO: "not_selected",
+  };
+  const status = statusMap[rawStatus] ?? rawStatus.toLowerCase();
+
+  // Stipulations: array of strings from terms
+  const rawStips = terms.stipulations;
+  const stipulations: string[] = Array.isArray(rawStips) ? rawStips.filter((s): s is string => typeof s === "string") : [];
+
   return {
     id,
     application_id: pickString(record, ["application_id", "applicationId"], ""),
     tenant_id: pickNullableString(record, ["tenant_id", "tenantId"]),
-    lender_code: pickString(record, ["lender_code", "lenderCode"], ""),
-    amount_approved: pickNumber(record, ["amount_approved", "amountApproved", "approved_amount"]),
-    interest_rate_apr: pickNumber(record, ["interest_rate_apr", "interestRateApr", "interest_rate"]),
-    term_months: pickNumber(record, ["term_months", "termMonths"]),
-    monthly_payment: pickNumber(record, ["monthly_payment", "monthlyPayment"]),
-    status: pickString(record, ["status"], "pending"),
+    lender_code: pickString(record, ["lender_code", "lenderCode", "lender_name", "lenderName"], ""),
+    lender_display_name: pickNullableString(terms, ["lender_display_name", "lenderDisplayName"])
+      || pickNullableString(record, ["lender_display_name"]),
+    amount_approved: pickNumber(record, ["amount_approved", "amountApproved", "approved_amount"])
+      ?? pickNumber(terms, ["amount_approved", "loan_amount"]),
+    interest_rate_apr: pickNumber(record, ["interest_rate_apr", "interestRateApr", "interest_rate", "apr_annual"])
+      ?? pickNumber(terms, ["interest_rate_apr", "interest_rate"]),
+    term_months: pickNumber(record, ["term_months", "termMonths"])
+      ?? pickNumber(terms, ["term_months"]),
+    monthly_payment: pickNumber(record, ["monthly_payment", "monthlyPayment"])
+      ?? pickNumber(terms, ["monthly_payment"]),
+    total_cost: pickNumber(record, ["total_cost", "totalCost"])
+      ?? pickNumber(terms, ["total_cost"]),
+    currency: pickNullableString(record, ["currency"]) || pickNullableString(terms, ["currency"]),
+    stipulations,
+    status: status as CreditOffer["status"],
     created_at: pickDate(record, ["created_at", "createdAt", "created"]),
     raw,
   };

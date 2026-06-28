@@ -27,10 +27,18 @@ export interface CreditOffer {
   application_id: string;
   tenant_id: string | null;
   lender_code: string;
+  /** Human-readable bank name from terms.lender_display_name or title-cased lender_code. */
+  lender_display_name: string | null;
   amount_approved: number | null;
   interest_rate_apr: number | null;
   term_months: number | null;
   monthly_payment: number | null;
+  /** Total cost over the life of the loan (principal + interest). */
+  total_cost: number | null;
+  /** Currency code (e.g. DOP, MXN). */
+  currency: string | null;
+  /** Stipulations required by the lender (e.g. insurance). */
+  stipulations: string[];
   status: CreditOfferStatus;
   created_at: string;
   raw: unknown;
