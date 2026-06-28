@@ -5,6 +5,7 @@ import { BankDashboardView } from "@/components/credit-hub/bank/BankDashboardVie
 import { useBankAnalytics } from "@/lib/credit-hub/hooks/useBankAnalytics";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { WelcomeGuide } from "@/components/credit-hub/onboarding/WelcomeGuide";
 
 export default function BankDashboardPage() {
   const { tenantConfig } = useTenantConfig();
@@ -20,17 +21,20 @@ export default function BankDashboardPage() {
   }, [queue]);
 
   return (
-    <BankDashboardView
-      queue={queue}
-      analytics={analyticsQuery.data}
-      institutionName={tenantConfig.institution_name}
-      complianceSummary={complianceSummary}
-      isLoading={queueQuery.isLoading || analyticsQuery.isLoading}
-      isError={!!queueQuery.error || !!analyticsQuery.error}
-      onRetry={() => {
-        void queueQuery.refetch();
-        void analyticsQuery.refetch();
-      }}
-    />
+    <>
+      <WelcomeGuide persona="bank" institutionName={tenantConfig.institution_name} />
+      <BankDashboardView
+        queue={queue}
+        analytics={analyticsQuery.data}
+        institutionName={tenantConfig.institution_name}
+        complianceSummary={complianceSummary}
+        isLoading={queueQuery.isLoading || analyticsQuery.isLoading}
+        isError={!!queueQuery.error || !!analyticsQuery.error}
+        onRetry={() => {
+          void queueQuery.refetch();
+          void analyticsQuery.refetch();
+        }}
+      />
+    </>
   );
 }
