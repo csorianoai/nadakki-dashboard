@@ -101,10 +101,17 @@ export function complianceHeroTitle(jurisdictionCode: string | undefined, instit
   return `Perfil Regulatorio — ${institutionName}`;
 }
 
+import type { DataTruthLevel } from "@/lib/credit-hub/honesty/data-truth";
+
 export interface DefaultPredictionDisplay {
   percentLabel: string;
   isExtreme: boolean;
   extremeTooltip: string;
+}
+
+export interface DefaultPredictionTrust {
+  level: DataTruthLevel;
+  contextNote: string;
 }
 
 /**
@@ -127,5 +134,34 @@ export function formatDefaultPredictionDisplay(
     isExtreme,
     extremeTooltip:
       "Predicción extrema — requiere revisión del motor (score ausente se cuenta como 0 en backend)",
+  };
+}
+
+/**
+ * Default prediction hits a REAL analytics endpoint, but `score < 600` treats
+ * missing scores as 0 — on nadakki-demo / E2E payloads without analysis.score
+ * the rate inflates to ~100% (same class of artifact as inflated approval rates).
+ */
+export function classifyDefaultPredictionTrust(
+  display: DefaultPredictionDisplay,
+  predictedDefaultCount: number,
+  totalApplications: number,
+): DefaultPredictionTrust {
+  if (display.isExtreme) {
+    return {
+      level: "DEMO",
+      contextNote:
+        "Artefacto demo: sin score en payload todo cuenta como riesgo — no usar para decisiones.",
+    };
+  }
+  if (totalApplications > 0 && predictedDefaultCount / totalApplications >= 0.5) {
+    return {
+      level: "DEMO",
+      contextNote: "Tasa elevada sobre cartera demo — validar scores antes de confiar en el KPI.",
+    };
+  }
+  return {
+    level: "REAL",
+    contextNote: "Regla heurística score < 600 sobre muestra del dashboard (máx. 500 apps).",
   };
 }
