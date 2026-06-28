@@ -148,6 +148,17 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const acceptedOffer = offers.find((o) => o.status === "accepted") ?? null;
   const hasAcceptedOffer = acceptedOffer != null;
 
+  // D1: find "MEJOR" offer — lowest APR among selectable (approved/pending/counter_offer) offers
+  const bestOfferId: string | null = (() => {
+    if (hasAcceptedOffer) return null; // already chosen, no badge needed
+    const candidates = offers.filter(
+      (o) => o.interest_rate_apr != null && SELECTABLE_OFFER_STATUSES.has(o.status),
+    );
+    if (candidates.length < 2) return null; // badge only meaningful with ≥2 options
+    candidates.sort((a, b) => (a.interest_rate_apr ?? Infinity) - (b.interest_rate_apr ?? Infinity));
+    return candidates[0].id;
+  })();
+
   return (
     <div>
       <button type="button" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ marginLeft: -9, marginBottom: 8, minHeight: 44 }} onClick={() => router.push("/credit-hub/dealer/applications")}>
@@ -251,19 +262,38 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                    <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>{lenderLabel(offer.lender_code)}</h3>
-                    {isAccepted ? (
-                      <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--ch-success-text)" }}>
-                        <CheckCircle className="h-4 w-4" aria-hidden />
-                        Elegida
-                      </span>
-                    ) : isNotSelected ? (
-                      <span className="text-xs" style={{ color: "var(--ch-text-3)" }}>No seleccionada</span>
-                    ) : null}
+                    <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>
+                      {offer.lender_display_name || lenderLabel(offer.lender_code)}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {offer.id === bestOfferId ? (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            letterSpacing: "0.04em",
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            background: "var(--ch-persona)",
+                            color: "#fff",
+                          }}
+                        >
+                          MEJOR
+                        </span>
+                      ) : null}
+                      {isAccepted ? (
+                        <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--ch-success-text)" }}>
+                          <CheckCircle className="h-4 w-4" aria-hidden />
+                          Elegida
+                        </span>
+                      ) : isNotSelected ? (
+                        <span className="text-xs" style={{ color: "var(--ch-text-3)" }}>No seleccionada</span>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <div className="ch-eyebrow">Monto</div>
+                      <div className="ch-eyebrow">Monto aprobado</div>
                       <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
                         {offer.amount_approved != null ? chMoneyExact(offer.amount_approved, currencyPrefix) : "—"}
                       </div>
@@ -271,7 +301,9 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                     <div>
                       <div className="ch-eyebrow">Tasa (APR)</div>
                       <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
-                        {offer.interest_rate_apr != null ? `${offer.interest_rate_apr}%` : "—"}
+                        {offer.interest_rate_apr != null
+                          ? `${(offer.interest_rate_apr < 1 ? offer.interest_rate_apr * 100 : offer.interest_rate_apr).toFixed(2)}%`
+                          : "—"}
                       </div>
                     </div>
                     <div>
@@ -286,7 +318,26 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                         {offer.monthly_payment != null ? chMoneyExact(offer.monthly_payment, currencyPrefix) : "—"}
                       </div>
                     </div>
+                    {offer.total_cost != null ? (
+                      <div className="col-span-2">
+                        <div className="ch-eyebrow">Costo total del crédito</div>
+                        <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
+                          {chMoneyExact(offer.total_cost, currencyPrefix)}
+                          {offer.currency ? ` ${offer.currency}` : ""}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
+                  {offer.stipulations.length > 0 ? (
+                    <div style={{ fontSize: 12, color: "var(--ch-text-2)", marginTop: 2 }}>
+                      <div className="ch-eyebrow" style={{ marginBottom: 4 }}>Condiciones</div>
+                      <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        {offer.stipulations.map((s) => (
+                          <li key={s}>{s.replace(/_/g, " ")}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                   {canSelect ? (
                     <button
                       type="button"
