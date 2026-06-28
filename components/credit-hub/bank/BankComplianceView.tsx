@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { EmptyStateRich, KpiStripSkeleton } from "@/components/credit-hub/primitives";
 import { KpiCardTrend, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import type { BankComplianceViewProps } from "@/lib/credit-hub/types/bank-views";
 import { complianceHeroTitle } from "@/lib/credit-hub/bank/bankFormat";
 
@@ -26,8 +27,12 @@ export function BankComplianceView({ issues, jurisdictionCode, institutionName, 
   const altaCount = issues.filter((i) => i.severity === "alta" || i.severity === "ALTA").length;
 
   return (
-    <div>
+    <div data-testid="bank-compliance-trust">
       <div style={{ marginBottom: 22 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span className="ch-eyebrow">Compliance & Trust Layer</span>
+          <DataTruthBadge level="REAL" />
+        </div>
         <h1 className="ch-serif" style={{ margin: 0, fontSize: 33, letterSpacing: "-0.02em" }}>
           {heroTitle}
         </h1>

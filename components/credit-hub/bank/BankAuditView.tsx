@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { EmptyStateRich, TableSkeleton } from "@/components/credit-hub/primitives";
 import { SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import type { BankAuditEventView, BankAuditViewProps } from "@/lib/credit-hub/types/bank-views";
 
 const A_LABEL: Record<string, string> = {
@@ -50,7 +51,11 @@ export function BankAuditView({ events, isLoading, isError, onRetry }: BankAudit
   if (isError) return <EmptyStateRich variant="error" primary={<button type="button" className="ch-btn ch-btn-secondary" onClick={onRetry}>Reintentar</button>} />;
 
   return (
-    <div>
+    <div data-testid="bank-audit-trust">
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <span className="ch-eyebrow">Compliance & Trust Layer</span>
+        <DataTruthBadge level="REAL" />
+      </div>
       <SectionHeader
         eyebrow="Bank · Auditoría"
         title="Visor de auditoría"
