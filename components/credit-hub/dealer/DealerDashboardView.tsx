@@ -13,6 +13,7 @@ import {
 import { ActiveApplicationsTable } from "@/components/credit-hub/dealer/sections/ActiveApplicationsTable";
 import { PipelineFunnel } from "@/components/credit-hub/dealer/sections/PipelineFunnel";
 import { DealerGoals } from "@/components/credit-hub/dealer/sections/DealerGoals";
+import { BankRanking } from "@/components/credit-hub/dealer/sections/BankRanking";
 import type { DealerDashboardViewProps } from "@/lib/credit-hub/types/dealer-views";
 import {
   dealerDetailHref,
@@ -133,6 +134,8 @@ export function DealerDashboardView({
       )}
 
       <PipelineFunnel stats={stats} />
+
+      <BankRanking />
 
       <DealerGoals stats={stats} applications={applications} currency={currency} />
 
