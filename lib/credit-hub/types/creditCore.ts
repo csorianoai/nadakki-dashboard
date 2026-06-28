@@ -91,6 +91,7 @@ export interface CreditStats {
   processing_applications: number;
   approved_applications: number;
   rejected_applications: number;
+  completed_applications?: number;
   applications_this_week: number;
   average_score: number | null;
   approval_rate: number | null;

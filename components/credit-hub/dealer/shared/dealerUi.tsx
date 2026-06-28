@@ -3,7 +3,9 @@
 import type { ReactNode } from "react";
 import { ArrowDown, ArrowUp, ArrowRight, Car, Check, FileText, Inbox, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
-import { chRelTimeDealer, formatDealerMoney } from "@/lib/credit-hub/dealer/dealerFormat";
+import { chRelTimeDealer } from "@/lib/credit-hub/dealer/dealerFormat";
+import { humanizeApplicant } from "@/lib/credit-hub/honesty/humanize-applicant";
+import { DisplayStatusPill } from "@/components/credit-hub/honesty/DisplayStatusPill";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 
 const STATUS: Record<string, { label: string; c: string; bg: string; Icon: typeof FileText }> = {
@@ -63,7 +65,7 @@ export function DealerAppCard({
   currency: string;
   href: string;
 }) {
-  const displayAmount = formatDealerMoney(app.requested_amount, currency);
+  const h = humanizeApplicant(app, currency);
 
   return (
     <Link
@@ -82,19 +84,17 @@ export function DealerAppCard({
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {app.applicant_name || "—"}
+            {h.primaryLabel}
           </div>
           <div className="ch-mono" style={{ fontSize: 11, color: "var(--ch-text-3)", marginTop: 2 }}>
-            {app.application_id}
+            {h.secondaryLabel}
           </div>
         </div>
-        <DealerStatusBadge status={app.status} />
+        <DisplayStatusPill status={app.status} />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ch-text-2)" }}>
         <Car className="h-4 w-4 shrink-0" style={{ color: "var(--ch-text-3)" }} aria-hidden />
-        <span className="truncate">
-          {[app.vehicle_make, app.vehicle_model].filter(Boolean).join(" ") || "—"}
-        </span>
+        <span className="truncate">{h.vehicleLabel}</span>
       </div>
       <div
         style={{
@@ -106,7 +106,7 @@ export function DealerAppCard({
         }}
       >
         <span className="ch-mono" style={{ fontSize: 16, fontWeight: 600 }}>
-          {displayAmount}
+          {h.amountLabel}
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {app.score != null ? (

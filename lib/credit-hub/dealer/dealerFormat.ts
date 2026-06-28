@@ -156,7 +156,9 @@ export function dealerDetailHref(applicationId: string): string {
 }
 
 export function isActivePipelineStatus(status: string): boolean {
-  return !["draft", "rejected", "declined", "cancelled"].includes(status);
+  return !["draft", "rejected", "declined", "cancelled", "processed", "completed"].includes(
+    status.toLowerCase(),
+  );
 }
 
 export function volumeThisMonth(applications: CreditApplication[], currency: string): string {
