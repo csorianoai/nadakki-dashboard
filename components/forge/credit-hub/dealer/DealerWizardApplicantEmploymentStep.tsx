@@ -14,6 +14,7 @@ import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { formatForgeCurrency } from "@/utils/forge-locale";
 import { cleanDecimalInput, useDealerWizard } from "./DealerWizardProvider";
+import { stepIsValid, type WizardStepValidationConfig } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 
 function contractLabelToFormValue(label: string): string {
   const map: Record<string, string> = {
@@ -37,6 +38,27 @@ function numeric(value: string | number | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function SectionStatus({ complete, label }: { complete: boolean; label: string }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        fontSize: 12,
+        fontWeight: 500,
+        color: complete ? "var(--ch-success-text, #16a34a)" : "var(--ch-warning-text, #d97706)",
+        background: complete ? "var(--ch-success-bg, #f0fdf4)" : "var(--ch-warning-bg, #fffbeb)",
+        borderRadius: 6,
+        padding: "2px 8px",
+      }}
+      aria-label={`${label}: ${complete ? "completo" : "incompleto"}`}
+    >
+      {complete ? "\u2713" : "\u25CB"} {label} {complete ? "completo" : "incompleto"}
+    </span>
+  );
+}
+
 export function DealerWizardApplicantEmploymentStep() {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
@@ -49,6 +71,7 @@ export function DealerWizardApplicantEmploymentStep() {
     addOtherIncomeRow,
     removeOtherIncomeRow,
     setHasOtherIncome,
+    validationConfig,
   } = useDealerWizard();
 
   const applicantDoc = formData.applicant_document_type || tenantConfig.document_types.primary_id;
@@ -123,9 +146,37 @@ export function DealerWizardApplicantEmploymentStep() {
     [tenantConfig]
   );
 
+  const applicantComplete = useMemo(() => stepIsValid(0, formData, validationConfig, t), [formData, validationConfig, t]);
+  const employmentComplete = useMemo(() => stepIsValid(1, formData, validationConfig, t), [formData, validationConfig, t]);
+
   return (
     <div className="space-y-8">
-      <div>
+      {/* Section-level completion summary (both sections required to advance) */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          padding: "10px 14px",
+          borderRadius: 8,
+          background: applicantComplete && employmentComplete
+            ? "var(--ch-success-bg, #f0fdf4)"
+            : "var(--ch-warning-bg, #fffbeb)",
+          border: `1px solid ${applicantComplete && employmentComplete ? "var(--ch-success-line, #bbf7d0)" : "var(--ch-warning-line, #fde68a)"}`,
+        }}
+        data-testid="wizard-step1-section-status"
+      >
+        <SectionStatus complete={applicantComplete} label="Solicitante" />
+        <span style={{ color: "var(--ch-text-3)", fontSize: 12, lineHeight: "20px" }}>&middot;</span>
+        <SectionStatus complete={employmentComplete} label="Empleo" />
+        {!applicantComplete || !employmentComplete ? (
+          <span style={{ fontSize: 12, color: "var(--ch-text-3)", marginLeft: "auto", lineHeight: "20px" }}>
+            Completa ambas secciones para continuar
+          </span>
+        ) : null}
+      </div>
+
+      <div id="section-applicant">
         <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.applicant_title}</h2>
         <p className="mt-1 text-forge-sm text-forgeGray-500">{t.wizard.sections.applicant_sub}</p>
       </div>
@@ -207,7 +258,7 @@ export function DealerWizardApplicantEmploymentStep() {
         />
       </div>
 
-      <div>
+      <div id="section-employment">
         <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.employment_title}</h2>
         <p className="mt-1 text-forge-sm text-forgeGray-500">{t.wizard.sections.employment_sub}</p>
       </div>

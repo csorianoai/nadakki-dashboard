@@ -11,10 +11,13 @@ export function DealerNewApplicationLayoutClient({ children }: { children: React
   if (pathname?.includes("/applications/new/complete")) {
     return <>{children}</>;
   }
+  // Key on the last path segment forces React to re-mount the page component
+  // when the URL changes between wizard steps (fixes soft-navigation stale view).
+  const stepSlug = pathname?.split("/").filter(Boolean).pop() ?? "applicant";
   return (
     <Suspense fallback={<DetailSkeleton />}>
       <DealerWizardProvider>
-        <DealerWizardFrame>{children}</DealerWizardFrame>
+        <DealerWizardFrame key={stepSlug}>{children}</DealerWizardFrame>
       </DealerWizardProvider>
     </Suspense>
   );
