@@ -7,6 +7,7 @@ import { ArrowRight, ShieldCheck } from "lucide-react";
 import { EmptyStateRich, KpiStripSkeleton, TableSkeleton } from "@/components/credit-hub/primitives";
 import { AreaChart, KpiCardTrend, QueueTable, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
 import { BankGoals } from "@/components/credit-hub/bank/sections/BankGoals";
+import { AuctionIntel } from "@/components/credit-hub/bank/sections/AuctionIntel";
 import type { BankDashboardViewProps } from "@/lib/credit-hub/types/bank-views";
 import { PRIORITY_RANK, pendingQueueCount } from "@/lib/credit-hub/bank/bankFormat";
 import { chMoney } from "@/lib/credit-hub/ch-base";
@@ -126,6 +127,8 @@ export function BankDashboardView({
           </div>
         </div>
       )}
+
+      <AuctionIntel />
 
       <BankGoals analytics={analytics} queueCount={pending} />
 
