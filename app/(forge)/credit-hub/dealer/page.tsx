@@ -5,6 +5,7 @@ import { DealerDashboardView } from "@/components/credit-hub/dealer/DealerDashbo
 import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { useCreditStats } from "@/lib/credit-hub/hooks/useCreditStats";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { WelcomeGuide } from "@/components/credit-hub/onboarding/WelcomeGuide";
 
 export default function DealerDashboardPage() {
   const { tenantName } = useAuth();
@@ -13,6 +14,12 @@ export default function DealerDashboardPage() {
   const statsQuery = useCreditStats();
 
   return (
+    <>
+    <WelcomeGuide
+      persona="dealer"
+      userName={tenantName !== "—" ? tenantName : undefined}
+      institutionName={tenantConfig.institution_name}
+    />
     <DealerDashboardView
       applications={applicationsQuery.data ?? []}
       stats={statsQuery.data}
@@ -27,5 +34,6 @@ export default function DealerDashboardPage() {
         void statsQuery.refetch();
       }}
     />
+    </>
   );
 }
