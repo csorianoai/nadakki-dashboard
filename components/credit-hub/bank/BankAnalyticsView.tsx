@@ -9,6 +9,7 @@ import { chMoney } from "@/lib/credit-hub/ch-base";
 import type { BankAnalyticsViewProps } from "@/lib/credit-hub/types/bank-views";
 import { formatDefaultPredictionDisplay } from "@/lib/credit-hub/bank/bankFormat";
 import { BankSegment } from "@/components/credit-hub/bank/shared/bankUi";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 const MEDAL = ["#C9A227", "#9CA3AF", "#B07A45"];
 
@@ -27,9 +28,13 @@ export function BankAnalyticsView({ analytics, portfolioHealth, dealers, isLoadi
   );
 
   return (
-    <div>
+    <div data-testid="bank-analytics-executive">
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 22, gap: 16, flexWrap: "wrap" }}>
         <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span className="ch-eyebrow">Analytics & Intelligence Executive</span>
+            <DataTruthBadge level="REAL" />
+          </div>
           <h1 className="ch-serif" style={{ margin: 0, fontSize: 33, letterSpacing: "-0.02em" }}>
             Cartera ejecutiva
           </h1>

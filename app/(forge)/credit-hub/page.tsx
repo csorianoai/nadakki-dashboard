@@ -33,11 +33,11 @@ export default function CreditHubHome() {
         available: false,
       },
       {
-        href: "#",
+        href: "/credit-hub/admin",
         icon: Shield,
         title: t.portals.admin_title,
         description: t.portals.admin_desc,
-        available: false,
+        available: true,
       },
     ],
     [t]

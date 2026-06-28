@@ -2,6 +2,7 @@
 
 import { EmptyStateRich } from "@/components/credit-hub/primitives";
 import { SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { SCORE_BANDS } from "@/lib/credit-hub/bank/bankFormat";
 import type { ScoreDistribution } from "@/lib/credit-hub/types/bank-views";
 import { Info } from "lucide-react";
@@ -13,7 +14,10 @@ export function PortfolioHealthGrid({ distribution }: { distribution?: ScoreDist
   if (!distribution || Object.keys(distribution).length === 0) {
     return (
       <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <SectionHeader eyebrow="Salud de cartera" title="Distribución por score" />
+        <DataTruthBadge level="REAL" />
+      </div>
         <EmptyStateRich variant="placeholder" title="Sin distribución" body="El endpoint portfolio-health aún no expone score_distribution para este tenant." />
       </div>
     );
@@ -21,7 +25,10 @@ export function PortfolioHealthGrid({ distribution }: { distribution?: ScoreDist
 
   return (
     <div>
-      <SectionHeader eyebrow="Salud de cartera" title="Distribución por score" />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <SectionHeader eyebrow="Salud de cartera" title="Distribución por score" />
+        <DataTruthBadge level="REAL" />
+      </div>
       <div className="ch-card" style={{ padding: 18 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {SCORE_BANDS.map((b) => {
