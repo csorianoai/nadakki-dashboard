@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { StepperWizard } from "@/components/credit-hub/primitives";
 import { useDealerWizard } from "@/components/forge/credit-hub/dealer/DealerWizardProvider";
 import { dealerWizardStepHref, DEALER_WIZARD_STEP_PATHS } from "@/components/forge/credit-hub/dealer/dealerWizardPaths";
@@ -12,6 +12,7 @@ import { formatToastApplicationId, forgeToastLangFromLocale, forgeWizardToasts }
 import { toast } from "@/components/forge";
 import { WizardCompletenessBar } from "@/components/credit-hub/dealer/wizard/WizardCompletenessBar";
 import { computeWizardCompleteness, missingFieldsHint } from "@/lib/credit-hub/dealer/wizard-completeness";
+import { stepIsValid } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 const STEP_LABELS = ["Solicitante", "Co-firmante", "Vehículo", "Documentos", "Consentimiento"];
@@ -31,6 +32,24 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
     () => missingFieldsHint(formData, validationConfig, t),
     [formData, validationConfig, t],
   );
+
+  /** On step 0, tell the user exactly which section(s) block advancement. */
+  const step0BlockReason = useMemo(() => {
+    if (stepIndex !== 0 || canAdvance) return null;
+    const applicantOk = stepIsValid(0, formData, validationConfig, t);
+    const employmentOk = stepIsValid(1, formData, validationConfig, t);
+    if (!applicantOk && !employmentOk) return "Completa las secciones Solicitante y Empleo";
+    if (!applicantOk) return "Completa la secci\u00f3n Solicitante";
+    if (!employmentOk) return "Completa la secci\u00f3n Empleo (despl\u00e1zate hacia abajo)";
+    return null;
+  }, [stepIndex, canAdvance, formData, validationConfig, t]);
+
+  const scrollToFirstIncomplete = useCallback(() => {
+    if (stepIndex !== 0) return;
+    const applicantOk = stepIsValid(0, formData, validationConfig, t);
+    const target = !applicantOk ? "section-applicant" : "section-employment";
+    document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [stepIndex, formData, validationConfig, t]);
 
   const handlePrimary = async () => {
     if (stepIndex < 4) {
@@ -101,6 +120,30 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
         }}
       >
+        {step0BlockReason ? (
+          <button
+            type="button"
+            onClick={scrollToFirstIncomplete}
+            style={{
+              display: "block",
+              width: "100%",
+              maxWidth: 720,
+              margin: "0 auto 6px",
+              padding: "4px 8px",
+              fontSize: 12,
+              color: "var(--ch-warning-text, #d97706)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "center",
+              textDecoration: "underline",
+              textUnderlineOffset: 2,
+            }}
+            data-testid="wizard-scroll-to-missing"
+          >
+            {step0BlockReason}
+          </button>
+        ) : null}
         <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 8, alignItems: "stretch" }}>
           <button type="button" className="ch-btn ch-btn-secondary flex-1 min-h-[48px]" onClick={goPrev} disabled={stepIndex === 0}>
             Anterior
