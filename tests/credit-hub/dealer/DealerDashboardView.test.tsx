@@ -14,6 +14,8 @@ describe("DealerDashboardView", () => {
       </div>,
     );
     expect(screen.getByRole("heading", { name: /Auto Plaza/i })).toBeInTheDocument();
+    expect(screen.getByTestId("dealer-command-center")).toBeInTheDocument();
+    expect(screen.getByText(/Dealer Command Center/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Nueva solicitud de crédito/i })).toBeInTheDocument();
   });
 

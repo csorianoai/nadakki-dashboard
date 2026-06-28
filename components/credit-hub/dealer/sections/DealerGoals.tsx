@@ -2,6 +2,7 @@
 
 import type { CreditApplication, CreditStats } from "@/lib/credit-hub/types/creditCore";
 import { DealerSectionHeader } from "@/components/credit-hub/dealer/shared/dealerUi";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { formatDealerMoney, volumeThisMonth } from "@/lib/credit-hub/dealer/dealerFormat";
 
 interface DealerGoalsProps {
@@ -57,10 +58,13 @@ export function DealerGoals({ stats, applications, currency }: DealerGoalsProps)
 
   return (
     <div style={{ marginBottom: 26 }}>
-      <DealerSectionHeader title="Metas del mes" sub="objetivos ilustrativos" />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        <DealerSectionHeader title="Metas del mes" sub="valores actuales reales · objetivos ilustrativos" />
+        <DataTruthBadge level="DEMO" />
+      </div>
       <div className="ch-card" style={{ padding: "16px 20px" }}>
         <p style={{ fontSize: 11, color: "var(--ch-accent-text)", background: "var(--ch-accent-soft)", border: "1px solid var(--ch-accent-line)", borderRadius: 4, padding: "4px 8px", margin: "0 0 12px" }}>
-          DEMO — metas ilustrativas. No existe endpoint de objetivos aún.
+          Objetivos (50 envíos, 30 aprobaciones, etc.) son ilustrativos — no existe endpoint `/goals` aún.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
           {goals.map((g) => {

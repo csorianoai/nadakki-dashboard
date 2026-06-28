@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { chRelTimeDealer, dealerDetailHref, formatDealerMoney } from "@/lib/credit-hub/dealer/dealerFormat";
+import { chRelTimeDealer, dealerDetailHref } from "@/lib/credit-hub/dealer/dealerFormat";
+import { humanizeApplicant } from "@/lib/credit-hub/honesty/humanize-applicant";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
-import { DealerStatusBadge } from "@/components/credit-hub/dealer/shared/dealerUi";
+import { DisplayStatusPill } from "@/components/credit-hub/honesty/DisplayStatusPill";
 
 export function ActiveApplicationsTable({
   apps,
@@ -13,8 +14,6 @@ export function ActiveApplicationsTable({
   apps: CreditApplication[];
   currency: string;
 }) {
-  const prefix = currency === "DOP" ? "RD$" : currency === "MXN" ? "MX$" : `${currency} `;
-
   return (
     <div className="ch-card" style={{ overflow: "hidden" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -28,19 +27,21 @@ export function ActiveApplicationsTable({
           </tr>
         </thead>
         <tbody>
-          {apps.map((app) => (
+          {apps.map((app) => {
+            const h = humanizeApplicant(app, currency);
+            return (
             <tr key={app.application_id} style={{ borderBottom: "1px solid var(--ch-line)" }}>
               <td style={{ padding: "12px 14px" }}>
-                <div style={{ fontWeight: 600 }}>{app.applicant_name || "—"}</div>
+                <div style={{ fontWeight: 600 }}>{h.primaryLabel}</div>
                 <div className="ch-mono" style={{ fontSize: 11, color: "var(--ch-text-3)" }}>
-                  {app.application_id}
+                  {h.secondaryLabel}
                 </div>
               </td>
               <td className="ch-mono" style={{ padding: "12px 14px", fontWeight: 600 }}>
-                {formatDealerMoney(app.requested_amount, currency)}
+                {h.amountLabel}
               </td>
               <td style={{ padding: "12px 14px" }}>
-                <DealerStatusBadge status={app.status} />
+                <DisplayStatusPill status={app.status} />
               </td>
               <td style={{ padding: "12px 14px", color: "var(--ch-text-3)", fontSize: 12 }}>
                 {chRelTimeDealer(app.updated_at)}
@@ -56,7 +57,8 @@ export function ActiveApplicationsTable({
                 </Link>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

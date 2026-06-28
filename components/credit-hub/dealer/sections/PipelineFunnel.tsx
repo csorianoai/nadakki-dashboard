@@ -1,7 +1,7 @@
 "use client";
 
 import type { CreditStats } from "@/lib/credit-hub/types/creditCore";
-import { DealerSectionHeader } from "@/components/credit-hub/dealer/shared/dealerUi";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 interface PipelineStage {
   key: string;
@@ -25,7 +25,17 @@ export function PipelineFunnel({ stats }: { stats?: CreditStats }) {
 
   return (
     <div style={{ marginBottom: 26 }}>
-      <DealerSectionHeader title="Pipeline de solicitudes" sub="distribución por etapa" />
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <h2 className="ch-serif" style={{ margin: 0, fontSize: 19 }}>
+            Pipeline de solicitudes
+          </h2>
+          <DataTruthBadge level="REAL" />
+        </div>
+        <div style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginTop: 4 }}>
+          Distribución por etapa (stats reales)
+        </div>
+      </div>
       <div className="ch-card" style={{ padding: "16px 20px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {stages.map((stage) => {

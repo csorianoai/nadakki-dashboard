@@ -218,12 +218,15 @@ export function normalizeStats(raw: unknown): CreditStats {
   const total = pickNumber(record, ["total_applications", "totalApplications", "total", "count"]) ?? sourceApps.length;
   const draft = pickNumber(record, ["draft_applications", "draftApplications", "drafts"])
     ?? (stateSum(states, "DRAFT") || countStatus(sourceApps, ["draft"]));
+  // In-flight submitted — COMPLETED/BANK_COMPLETE are terminal, not "activas"
   const submitted = pickNumber(record, ["submitted_applications", "submittedApplications", "submitted"])
-    ?? (stateSum(states, "SUBMITTED", "BANK_SUBMITTED", "COMPLETED", "BANK_COMPLETE", "PROCESSED")
-    || countStatus(sourceApps, ["submitted", "processed"]));
+    ?? (stateSum(states, "SUBMITTED", "BANK_SUBMITTED", "RECEIVED", "AI_ANALYSIS", "AI_COMPLETE")
+    || countStatus(sourceApps, ["submitted"]));
   const processing = pickNumber(record, ["processing_applications", "processingApplications", "processing"])
-    ?? (stateSum(states, "PROCESSING", "HYBRID_IN_PROGRESS")
-    || countStatus(sourceApps, ["processing"]));
+    ?? (stateSum(states, "PROCESSING", "HYBRID_IN_PROGRESS", "OFFER_SELECTED")
+    || countStatus(sourceApps, ["processing", "offered", "counter_offer"]));
+  const completed = pickNumber(record, ["completed_applications", "completedApplications", "completed"])
+    ?? stateSum(states, "COMPLETED", "BANK_COMPLETE", "PROCESSED");
   const approved = pickNumber(record, ["approved_applications", "approvedApplications", "approved"])
     ?? (stateSum(states, "APPROVED", "APPROVED_WITH_STIPULATIONS", "OFFER_SELECTED")
     || countStatus(sourceApps, ["approved"]));
@@ -248,6 +251,7 @@ export function normalizeStats(raw: unknown): CreditStats {
     processing_applications: processing,
     approved_applications: approved,
     rejected_applications: rejected,
+    completed_applications: completed,
     applications_this_week: pickNumber(record, ["applications_this_week", "applicationsThisWeek", "this_week", "thisWeek"]) ?? 0,
     average_score: pickNumber(record, ["average_score", "averageScore", "avg_score", "avgScore"]),
     approval_rate: approvalRate,

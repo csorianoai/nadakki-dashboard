@@ -1,6 +1,7 @@
 "use client";
 
 import { DealerSectionHeader } from "@/components/credit-hub/dealer/shared/dealerUi";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 /**
  * D2 — Bank Ranking "¿A Quién Enviar?" (dealer dashboard).
@@ -40,7 +41,10 @@ export function BankRanking() {
 
   return (
     <div className="mb-[26px]">
-      <DealerSectionHeader title="Ranking de bancos — ¿A quién enviar?" sub="comparativa por desempeño" />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+        <DealerSectionHeader title="Ranking de bancos — ¿A quién enviar?" sub="comparativa por desempeño" />
+        <DataTruthBadge level="DEMO" />
+      </div>
 
       <div
         style={{
@@ -53,7 +57,7 @@ export function BankRanking() {
           border: "1px dashed var(--ch-border)",
         }}
       >
-        DEMO — Datos ilustrativos. [NEEDS-HUMAN: falta endpoint per-bank analytics]
+        Sin endpoint `/analytics/banks-ranking` aún — datos ilustrativos hasta que el backend lo entregue.
       </div>
 
       <div className="ch-card" style={{ overflowX: "auto" }}>
