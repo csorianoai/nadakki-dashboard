@@ -208,6 +208,12 @@ export interface CreateCreditApplicationPayload {
   };
   source: "forge_dealer_portal";
   version: "full_credit_application_v1";
+  /** Optional LATAM segment metadata (additive; backend may ignore until segmented-report). */
+  segment?: {
+    zone?: string;
+    vehicle_type?: string;
+    employment_type?: string;
+  };
 }
 
 export interface ApiErrorShape {

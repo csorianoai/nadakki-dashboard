@@ -15,6 +15,7 @@ import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { formatForgeCurrency } from "@/utils/forge-locale";
 import { cleanDecimalInput, useDealerWizard } from "./DealerWizardProvider";
+import { WizardSegmentPanel } from "@/components/credit-hub/dealer/wizard/WizardSegmentPanel";
 
 function numeric(value: string | number | null | undefined): number {
   const parsed = Number(String(value ?? "0").replace(/,/g, ""));
@@ -201,6 +202,7 @@ export function DealerWizardVehicleFinancialStep() {
         </div>
       </div>
       {preApproval ? <PreApprovalBadge result={preApproval} /> : null}
+      <WizardSegmentPanel />
     </div>
   );
 }

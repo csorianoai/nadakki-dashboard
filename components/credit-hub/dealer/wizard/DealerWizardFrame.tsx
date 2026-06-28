@@ -2,21 +2,35 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { StepperWizard } from "@/components/credit-hub/primitives";
 import { useDealerWizard } from "@/components/forge/credit-hub/dealer/DealerWizardProvider";
 import { dealerWizardStepHref, DEALER_WIZARD_STEP_PATHS } from "@/components/forge/credit-hub/dealer/dealerWizardPaths";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { formatToastApplicationId, forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast-copy";
 import { toast } from "@/components/forge";
+import { WizardCompletenessBar } from "@/components/credit-hub/dealer/wizard/WizardCompletenessBar";
+import { computeWizardCompleteness, missingFieldsHint } from "@/lib/credit-hub/dealer/wizard-completeness";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 const STEP_LABELS = ["Solicitante", "Co-firmante", "Vehículo", "Documentos", "Consentimiento"];
 
 export function DealerWizardFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
-  const { stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError } = useDealerWizard();
+  const t = useTranslations();
+  const { stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig } = useDealerWizard();
   const [exitOpen, setExitOpen] = useState(false);
+
+  const completeness = useMemo(
+    () => computeWizardCompleteness(formData, validationConfig, t),
+    [formData, validationConfig, t],
+  );
+  const missing = useMemo(
+    () => missingFieldsHint(formData, validationConfig, t),
+    [formData, validationConfig, t],
+  );
 
   const handlePrimary = async () => {
     if (stepIndex < 4) {
@@ -35,8 +49,14 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 120px)", paddingBottom: 88 }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 120px)", paddingBottom: 88 }} data-testid="dealer-wizard-frame">
       <header style={{ borderBottom: "1px solid var(--ch-line)", padding: "12px 0 16px", marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <span className="ch-eyebrow" style={{ color: "var(--ch-dealer-accent-text)" }}>
+            Motor de solicitud guiado
+          </span>
+          <DataTruthBadge level="REAL" />
+        </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 14 }}>
           <button type="button" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ minHeight: 44 }} onClick={() => setExitOpen(true)}>
             ← Volver al panel
@@ -53,6 +73,13 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           }}
         />
       </header>
+
+      <WizardCompletenessBar percent={completeness} />
+      {missing.length > 0 && completeness < 100 ? (
+        <p style={{ fontSize: 12, color: "var(--ch-text-3)", margin: "0 0 12px", lineHeight: 1.4 }}>
+          Pendiente: {missing.join(" · ")}
+        </p>
+      ) : null}
 
       <main style={{ flex: 1, maxWidth: 720, width: "100%", margin: "0 auto" }}>{children}</main>
 

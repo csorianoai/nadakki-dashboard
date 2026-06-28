@@ -191,6 +191,9 @@ export interface ApplicationFormData {
   consent_accepted_at: string;
   consent_sms_otp_sent: boolean;
   consent_dealer_otp_code: string;
+  /** Optional LATAM segment (ROADMAP analytics) */
+  segment_zone: string;
+  segment_vehicle_type: string;
 }
 
 export const initialApplicationFormData: ApplicationFormData = {
@@ -270,6 +273,8 @@ export const initialApplicationFormData: ApplicationFormData = {
   consent_accepted_at: "",
   consent_sms_otp_sent: false,
   consent_dealer_otp_code: "",
+  segment_zone: "",
+  segment_vehicle_type: "",
 };
 
 function cleanDecimalInput(value: string): string {
@@ -388,6 +393,15 @@ export function buildCreateApplicationPayload(
     },
     source: "forge_dealer_portal",
     version: "full_credit_application_v1",
+    ...(formData.segment_zone || formData.segment_vehicle_type
+      ? {
+          segment: {
+            zone: formData.segment_zone || undefined,
+            vehicle_type: formData.segment_vehicle_type || undefined,
+            employment_type: formData.employment_type || undefined,
+          },
+        }
+      : {}),
   };
 }
 
