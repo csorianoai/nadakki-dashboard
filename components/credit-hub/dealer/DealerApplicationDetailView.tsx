@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { ArrowLeft, Car, CheckCircle, Clock, Mail, Phone, User } from "lucide-react";
 import { DetailSkeleton, EmptyStateRich, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { DealerStatusBadge } from "@/components/credit-hub/dealer/shared/dealerUi";
 import { OfferConfirmModal } from "@/components/credit-hub/dealer/OfferConfirmModal";
 import { CreditCoreApiError, acceptOffer } from "@/lib/credit-hub/api/creditCoreClient";
@@ -231,9 +232,12 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         </div>
       ) : offers.length > 0 ? (
         <div className="ch-card mb-4 p-[18px]" data-testid="offers-section">
-          <h2 className="ch-serif" style={{ margin: 0, fontSize: 17, marginBottom: 4 }}>
-            {hasAcceptedOffer ? "Oferta seleccionada" : "Ofertas de bancos"}
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+            <h2 className="ch-serif" style={{ margin: 0, fontSize: 17 }}>
+              {hasAcceptedOffer ? "Oferta seleccionada" : "Exchange multi-banco"}
+            </h2>
+            <DataTruthBadge level="REAL" />
+          </div>
           <p style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginBottom: 14 }}>
             {hasAcceptedOffer
               ? "Ya elegiste una oferta. Las demás quedaron descartadas."
