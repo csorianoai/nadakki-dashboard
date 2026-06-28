@@ -11,6 +11,8 @@ import {
   DealerSectionHeader,
 } from "@/components/credit-hub/dealer/shared/dealerUi";
 import { ActiveApplicationsTable } from "@/components/credit-hub/dealer/sections/ActiveApplicationsTable";
+import { PipelineFunnel } from "@/components/credit-hub/dealer/sections/PipelineFunnel";
+import { DealerGoals } from "@/components/credit-hub/dealer/sections/DealerGoals";
 import type { DealerDashboardViewProps } from "@/lib/credit-hub/types/dealer-views";
 import {
   dealerDetailHref,
@@ -129,6 +131,10 @@ export function DealerDashboardView({
           </div>
         </>
       )}
+
+      <PipelineFunnel stats={stats} />
+
+      <DealerGoals stats={stats} applications={applications} currency={currency} />
 
       <DealerSectionHeader title="Acciones rápidas" />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
