@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { EmptyStateRich, KpiStripSkeleton, TableSkeleton } from "@/components/credit-hub/primitives";
+import { KpiStripSkeleton, TableSkeleton } from "@/components/credit-hub/primitives";
 import { BankGoals } from "@/components/credit-hub/bank/sections/BankGoals";
 import { AuctionIntel } from "@/components/credit-hub/bank/sections/AuctionIntel";
 import { RiskCreditPanel } from "@/components/credit-hub/bank/sections/RiskCreditPanel";
@@ -12,6 +12,8 @@ import { BankKpiStrip } from "@/components/credit-hub/bank/elite/BankKpiStrip";
 import { BankDecisionQueueSpotlight } from "@/components/credit-hub/bank/elite/BankDecisionQueueSpotlight";
 import { BankOperationsHub } from "@/components/credit-hub/bank/elite/BankOperationsHub";
 import { BankAnalystProductivity } from "@/components/credit-hub/bank/elite/BankAnalystProductivity";
+import { CHPanelBoundary } from "@/components/credit-hub/system/CHPanelBoundary";
+import { CHPanelState } from "@/components/credit-hub/system/CHPanelState";
 import type { BankDashboardViewProps } from "@/lib/credit-hub/types/bank-views";
 import { PRIORITY_RANK, pendingQueueCount } from "@/lib/credit-hub/bank/bankFormat";
 
@@ -41,28 +43,6 @@ export function BankDashboardView({
   const showDemoBanner =
     institutionName.toLowerCase().includes("demo") || institutionName.toLowerCase().includes("nadakki");
 
-  if (isLoading) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <KpiStripSkeleton n={7} />
-        <TableSkeleton rows={5} />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <EmptyStateRich
-        variant="error"
-        primary={
-          <button type="button" className="ch-btn ch-btn-secondary" onClick={onRetry}>
-            Reintentar
-          </button>
-        }
-      />
-    );
-  }
-
   return (
     <div data-testid="bank-decision-desk" className="min-w-0 pb-8">
       <BankCockpitHeader
@@ -74,48 +54,75 @@ export function BankDashboardView({
         lastSyncedLabel="Sincronizado hace unos minutos"
       />
 
-      <BankKpiStrip
-        analytics={analytics}
-        queue={queue}
-        pending={pending}
-        topQueueCount={topQueue.length}
-        onQueueClick={() => router.push("/credit-hub/bank/applications")}
-      />
+      <CHPanelState
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={onRetry}
+        errorTitle="KPIs de mesa no disponibles"
+        loadingFallback={
+          <>
+            <KpiStripSkeleton n={7} />
+            <TableSkeleton rows={5} />
+          </>
+        }
+      >
+        <BankKpiStrip
+          analytics={analytics}
+          queue={queue}
+          pending={pending}
+          topQueueCount={topQueue.length}
+          onQueueClick={() => router.push("/credit-hub/bank/applications")}
+        />
+      </CHPanelState>
 
       <hr className="ch-section-break" aria-hidden />
 
-      <BankGoals analytics={analytics} queueCount={pending} />
+      <CHPanelBoundary label="Metas de mesa">
+        <BankGoals analytics={analytics} queueCount={pending} />
+      </CHPanelBoundary>
 
       <hr className="ch-section-break" aria-hidden />
 
-      <BankDecisionQueueSpotlight
-        items={topQueue}
-        pending={pending}
-        counterOffers={counterOffers}
-        onViewAll={() => router.push("/credit-hub/bank/applications")}
-      />
+      <CHPanelBoundary label="Cola de decisión">
+        <CHPanelState isLoading={isLoading} loadingFallback={<TableSkeleton rows={4} />}>
+          <BankDecisionQueueSpotlight
+            items={topQueue}
+            pending={pending}
+            counterOffers={counterOffers}
+            onViewAll={() => router.push("/credit-hub/bank/applications")}
+          />
+        </CHPanelState>
+      </CHPanelBoundary>
 
       <hr className="ch-section-break" aria-hidden />
 
-      <BankOperationsHub
-        analytics={analytics}
-        queue={queue}
-        pending={pending}
-        counterOffers={counterOffers}
-        stipulationsCount={stipulationsCount}
-      />
+      <CHPanelBoundary label="Operaciones">
+        <BankOperationsHub
+          analytics={analytics}
+          queue={queue}
+          pending={pending}
+          counterOffers={counterOffers}
+          stipulationsCount={stipulationsCount}
+        />
+      </CHPanelBoundary>
 
       <hr className="ch-section-break" aria-hidden />
 
-      <BankAnalystProductivity analytics={analytics} />
+      <CHPanelBoundary label="Productividad analista">
+        <BankAnalystProductivity analytics={analytics} />
+      </CHPanelBoundary>
 
       <hr className="ch-section-break" aria-hidden />
 
-      <RiskCreditPanel />
+      <CHPanelBoundary label="Riesgo y cartera">
+        <RiskCreditPanel />
+      </CHPanelBoundary>
 
       <hr className="ch-section-break" aria-hidden />
 
-      <AuctionIntel analytics={analytics} />
+      <CHPanelBoundary label="Inteligencia de subasta">
+        <AuctionIntel analytics={analytics} />
+      </CHPanelBoundary>
 
       <ComplianceFooter variant="bank" />
     </div>
