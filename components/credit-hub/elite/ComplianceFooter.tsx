@@ -39,7 +39,7 @@ export const ComplianceFooter = memo(function ComplianceFooter({ variant }: { va
             letterSpacing: "0.02em",
           }}
         >
-          build {process.env.NEXT_PUBLIC_CH_BUILD_SHA ?? "local"} · v2-elite
+          build {process.env.NEXT_PUBLIC_CH_BUILD_SHA ?? "local"}
         </p>
       </div>
     </footer>
