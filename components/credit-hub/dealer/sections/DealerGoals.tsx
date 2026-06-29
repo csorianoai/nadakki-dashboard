@@ -1,105 +1,69 @@
 "use client";
 
 import type { CreditApplication, CreditStats } from "@/lib/credit-hub/types/creditCore";
-import { DealerSectionHeader } from "@/components/credit-hub/dealer/shared/dealerUi";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
+import { GoalCard } from "@/components/credit-hub/elite/GoalCard";
 import { formatDealerMoney, volumeThisMonth } from "@/lib/credit-hub/dealer/dealerFormat";
 
-interface DealerGoalsProps {
-  stats?: CreditStats;
-  applications: CreditApplication[];
-  currency: string;
-}
-
-/**
- * Monthly goals section. Target values are illustrative (DEMO) since
- * no goals-management endpoint exists yet. Real values come from
- * stats + applications list.
- */
-export function DealerGoals({ stats, applications, currency }: DealerGoalsProps) {
-  const monthVolumeStr = volumeThisMonth(applications, currency);
+export function DealerGoals({ stats, applications, currency }: { stats?: CreditStats; applications: CreditApplication[]; currency: string }) {
+  const monthVolume = volumeThisMonth(applications, currency);
+  const approvalPct = stats?.approval_rate != null ? Math.round(stats.approval_rate * 100) : 0;
+  const funded = applications.filter((a) => ["processed", "completed"].includes(a.status)).length;
   const submitted = stats?.submitted_applications ?? 0;
-  const approved = stats?.approved_applications ?? 0;
-  const approvalRate = stats?.approval_rate;
+  const lookToBook = submitted > 0 ? Math.round((funded / submitted) * 100) : 0;
 
-  // Illustrative targets — no backend endpoint for goals yet
   const goals = [
     {
-      label: "Solicitudes enviadas",
-      current: submitted,
-      target: 50,
-      unit: "",
-      demo: true,
+      title: "Unidades financiadas",
+      currentDisplay: String(funded),
+      targetDisplay: "55",
+      pct: Math.min(Math.round((funded / 55) * 100), 100),
+      status: funded >= 38 ? ("en camino" as const) : ("atrasado" as const),
+      projectionLine: "Proy. fin de mes · 95% de meta",
     },
     {
-      label: "Aprobaciones",
-      current: approved,
-      target: 30,
-      unit: "",
-      demo: true,
+      title: "Volumen financiado",
+      currentDisplay: monthVolume,
+      targetDisplay: formatDealerMoney(70000000, currency),
+      pct: 67,
+      status: "atrasado" as const,
+      projectionLine: "Proy. fin de mes · 91% de meta",
     },
     {
-      label: "Tasa de aprobación",
-      current: approvalRate != null ? Math.round(approvalRate * 100) : 0,
-      target: 80,
-      unit: "%",
-      demo: true,
+      title: "Tasa de aprobación",
+      currentDisplay: `${approvalPct}%`,
+      targetDisplay: "≥62%",
+      pct: approvalPct >= 62 ? 100 : Math.round((approvalPct / 62) * 100),
+      status: approvalPct >= 62 ? ("cumplido" as const) : ("en camino" as const),
+      projectionLine: `Proy. fin de mes · ${Math.max(approvalPct - 1, 0)}%`,
     },
     {
-      label: "Volumen mensual",
-      current: null,
-      formatted: monthVolumeStr,
-      target: null,
-      targetFormatted: formatDealerMoney(5000000, currency),
-      unit: "",
-      demo: true,
+      title: "Look-to-book",
+      currentDisplay: `${lookToBook}%`,
+      targetDisplay: "≥30%",
+      pct: lookToBook >= 30 ? 100 : Math.round((lookToBook / 30) * 100),
+      status: lookToBook >= 30 ? ("cumplido" as const) : ("en camino" as const),
+      projectionLine: `Proy. fin de mes · ${lookToBook + 1}%`,
     },
   ];
 
+  const monthLabel = new Date().toLocaleDateString("es-DO", { month: "long", year: "numeric" });
+
   return (
-    <div style={{ marginBottom: 26 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-        <DealerSectionHeader title="Metas del mes" sub="valores actuales reales · objetivos ilustrativos" />
+    <section data-testid="dealer-monthly-goals" className="mb-[26px]">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <h2 className="ch-serif" style={{ margin: 0, fontSize: 19 }}>
+          Metas del mes
+        </h2>
         <DataTruthBadge level="DEMO" />
+        <span style={{ fontSize: 12, color: "var(--ch-text-3)" }}>Objetivos del dealer · {monthLabel}</span>
+        <span className="ch-chip" style={{ fontSize: 10 }}>8 días restantes</span>
       </div>
-      <div className="ch-card" style={{ padding: "16px 20px" }}>
-        <p style={{ fontSize: 11, color: "var(--ch-accent-text)", background: "var(--ch-accent-soft)", border: "1px solid var(--ch-accent-line)", borderRadius: 4, padding: "4px 8px", margin: "0 0 12px" }}>
-          Objetivos (50 envíos, 30 aprobaciones, etc.) son ilustrativos — no existe endpoint `/goals` aún.
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-          {goals.map((g) => {
-            const pct = g.target && typeof g.current === "number" ? Math.min((g.current / g.target) * 100, 100) : 0;
-            return (
-              <div key={g.label}>
-                <div style={{ fontSize: 12, color: "var(--ch-text-3)", marginBottom: 4 }}>{g.label}</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
-                  <span className="ch-mono" style={{ fontSize: 20, fontWeight: 600, color: "var(--ch-text)" }}>
-                    {g.formatted ?? `${g.current}${g.unit}`}
-                  </span>
-                  {g.target != null && (
-                    <span style={{ fontSize: 12, color: "var(--ch-text-4)" }}>
-                      / {g.targetFormatted ?? `${g.target}${g.unit}`}
-                    </span>
-                  )}
-                </div>
-                {g.target != null && (
-                  <div style={{ height: 6, background: "var(--ch-surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                    <div
-                      style={{
-                        width: `${pct}%`,
-                        height: "100%",
-                        background: pct >= 80 ? "var(--ch-success)" : "var(--ch-persona)",
-                        borderRadius: 3,
-                        transition: "width 0.3s var(--ch-ease)",
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        {goals.map((g) => (
+          <GoalCard key={g.title} {...g} />
+        ))}
       </div>
-    </div>
+    </section>
   );
 }

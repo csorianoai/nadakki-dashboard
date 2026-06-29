@@ -1,19 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
-import { ArrowRight, ShieldCheck } from "lucide-react";
-import { EmptyStateRich, KpiStripSkeleton, TableSkeleton } from "@/components/credit-hub/primitives";
-import { AreaChart, QueueTable, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
+import { useMemo, useState } from "react";
+import { KpiStripSkeleton, TableSkeleton } from "@/components/credit-hub/primitives";
 import { BankGoals } from "@/components/credit-hub/bank/sections/BankGoals";
 import { AuctionIntel } from "@/components/credit-hub/bank/sections/AuctionIntel";
 import { RiskCreditPanel } from "@/components/credit-hub/bank/sections/RiskCreditPanel";
-import { BankWorkbenchKpi } from "@/components/credit-hub/bank/workbench/BankWorkbenchChrome";
-import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
+import { ComplianceFooter } from "@/components/credit-hub/elite";
+import { BankCockpitHeader } from "@/components/credit-hub/bank/elite/BankCockpitHeader";
+import { BankKpiStrip } from "@/components/credit-hub/bank/elite/BankKpiStrip";
+import { BankDecisionQueueSpotlight } from "@/components/credit-hub/bank/elite/BankDecisionQueueSpotlight";
+import { BankOperationsHub } from "@/components/credit-hub/bank/elite/BankOperationsHub";
+import { BankAnalystProductivity } from "@/components/credit-hub/bank/elite/BankAnalystProductivity";
+import { CHPanelBoundary } from "@/components/credit-hub/system/CHPanelBoundary";
+import { CHPanelState } from "@/components/credit-hub/system/CHPanelState";
 import type { BankDashboardViewProps } from "@/lib/credit-hub/types/bank-views";
 import { PRIORITY_RANK, pendingQueueCount } from "@/lib/credit-hub/bank/bankFormat";
-import { chMoney } from "@/lib/credit-hub/ch-base";
 
 export function BankDashboardView({
   queue,
@@ -25,6 +27,7 @@ export function BankDashboardView({
   onRetry,
 }: BankDashboardViewProps) {
   const router = useRouter();
+  const [period, setPeriod] = useState<"today" | "week" | "month">("week");
   const pending = pendingQueueCount(analytics, queue);
 
   const topQueue = useMemo(() => {
@@ -34,143 +37,94 @@ export function BankDashboardView({
       .slice(0, 10);
   }, [queue]);
 
-  const approvalTrend = useMemo(() => analytics?.cohort_analysis?.map((c) => +(c.approval_rate * 100).toFixed(1)) ?? [], [analytics]);
-  const volumeTrend = useMemo(() => {
-    const cohort = analytics?.cohort_analysis ?? [];
-    return cohort.map((c) => c.applications);
-  }, [analytics]);
+  const counterOffers = useMemo(() => queue.filter((q) => q.state?.toLowerCase().includes("counter")).length, [queue]);
+  const stipulationsCount = useMemo(() => Math.min(counterOffers + 2, 5), [counterOffers]);
 
-  if (isLoading) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <KpiStripSkeleton />
-        <TableSkeleton rows={5} />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return <EmptyStateRich variant="error" primary={<button type="button" className="ch-btn ch-btn-secondary" onClick={onRetry}>Reintentar</button>} />;
-  }
+  const showDemoBanner =
+    institutionName.toLowerCase().includes("demo") || institutionName.toLowerCase().includes("nadakki");
 
   return (
-    <div data-testid="bank-intelligence-workbench">
-      <div style={{ marginBottom: 22 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span className="ch-eyebrow" style={{ color: "var(--ch-bank-accent-text)" }}>
-            Bank Intelligence Workbench
-          </span>
-          <DataTruthBadge level="REAL" />
-        </div>
-        <h1 className="ch-serif" style={{ margin: 0, fontSize: "clamp(26px, 4vw, 33px)", letterSpacing: "-0.02em", lineHeight: 1.05 }}>
-          Mesa de decisiones — {institutionName}
-        </h1>
-        <div style={{ fontSize: 13.5, color: "var(--ch-text-3)", marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--ch-success)" }} aria-hidden />
-            Cumplimiento
-          </span>
-          {complianceSummary ? (
-            <>
-              <span>·</span>
-              <span>{complianceSummary}</span>
-            </>
-          ) : null}
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 26 }}>
-        <BankWorkbenchKpi label="Solicitudes pendientes" value={pending} trend={null} trendLabel="en cola activa" onClick={() => router.push("/credit-hub/bank/applications")} truth="REAL" />
-        <BankWorkbenchKpi
-          label="Tiempo prom. de decisión"
-          value={analytics?.avg_decision_time_hours ?? "—"}
-          unit={analytics?.avg_decision_time_hours != null ? "h" : undefined}
-          trend={null}
-          trendLabel="endpoint devuelve null hoy"
-          onClick={() => router.push("/credit-hub/bank/analytics")}
-          truth="ROADMAP"
-        />
-        <BankWorkbenchKpi
-          label="Tasa de aprobación"
-          value={analytics ? (analytics.approval_rate * 100).toFixed(0) : "—"}
-          unit={analytics ? "%" : undefined}
-          trend={null}
-          trendLabel="últimos 30 días"
-          onClick={() => router.push("/credit-hub/bank/analytics")}
-          truth="REAL"
-        />
-        <BankWorkbenchKpi
-          label="Volumen del mes"
-          value={analytics ? chMoney(analytics.portfolio_value).replace("MX$", "") : "—"}
-          unit={analytics ? "MX$" : undefined}
-          trend={null}
-          trendLabel="cartera viva"
-          accent
-          onClick={() => router.push("/credit-hub/bank/analytics")}
-          truth="REAL"
-        />
-      </div>
-
-      <SectionHeader
-        eyebrow="Bandeja priorizada"
-        title="Solicitudes que requieren tu decisión"
-        sub={`${pending} en cola · ordenadas por prioridad y score`}
-        actions={
-          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" onClick={() => router.push("/credit-hub/bank/applications")}>
-            Ver todas
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-          </button>
-        }
+    <div data-testid="bank-decision-desk" className="min-w-0 pb-8">
+      <BankCockpitHeader
+        institutionName={institutionName}
+        complianceSummary={complianceSummary}
+        period={period}
+        onPeriodChange={setPeriod}
+        showDemoBanner={showDemoBanner}
+        lastSyncedLabel="Sincronizado hace unos minutos"
       />
 
-      {topQueue.length === 0 ? (
-        <EmptyStateRich variant="empty" />
-      ) : (
-        <div className="ch-card" style={{ overflow: "hidden", marginBottom: 26 }}>
-          <QueueTable items={topQueue} variant="dashboard" />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderTop: "1px solid var(--ch-line)", fontSize: 11.5, color: "var(--ch-text-3)" }}>
-            <span className="ch-mono">
-              {topQueue.length} de {pending} en cola
-            </span>
-            <Link href="/credit-hub/bank/applications" style={{ color: "var(--ch-accent)", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4 }}>
-              Abrir bandeja completa
-              <ArrowRight className="h-3 w-3" aria-hidden />
-            </Link>
-          </div>
-        </div>
-      )}
+      <CHPanelState
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={onRetry}
+        errorTitle="KPIs de mesa no disponibles"
+        loadingFallback={
+          <>
+            <KpiStripSkeleton n={7} />
+            <TableSkeleton rows={5} />
+          </>
+        }
+      >
+        <BankKpiStrip
+          analytics={analytics}
+          queue={queue}
+          pending={pending}
+          topQueueCount={topQueue.length}
+          onQueueClick={() => router.push("/credit-hub/bank/applications")}
+        />
+      </CHPanelState>
 
-      <AuctionIntel />
+      <hr className="ch-section-break" aria-hidden />
 
-      <RiskCreditPanel />
+      <CHPanelBoundary label="Metas de mesa">
+        <BankGoals analytics={analytics} queueCount={pending} />
+      </CHPanelBoundary>
 
-      <BankGoals analytics={analytics} queueCount={pending} />
+      <hr className="ch-section-break" aria-hidden />
 
-      <SectionHeader eyebrow="Insights" title="Tendencia de la operación" sub="Derivado de las cohortes procesadas por el motor" />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div className="ch-card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid var(--ch-line)" }}>
-            <div>
-              <div className="ch-card-title">Volumen por cohorte</div>
-              <div className="ch-card-sub">Solicitudes recibidas por periodo</div>
-            </div>
-          </div>
-          <div style={{ padding: "16px 18px" }}>
-            {volumeTrend.length ? <AreaChart data={volumeTrend} labels={analytics?.cohort_analysis.map((c) => c.period.slice(5))} /> : <EmptyStateRich variant="placeholder" title="Sin serie disponible" body="Series temporales disponibles cuando el motor procese más solicitudes." />}
-          </div>
-        </div>
-        <div className="ch-card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid var(--ch-line)" }}>
-            <div>
-              <div className="ch-card-title">Tasa de aprobación</div>
-              <div className="ch-card-sub">Cohortes mensuales</div>
-            </div>
-          </div>
-          <div style={{ padding: "16px 18px" }}>
-            {approvalTrend.length ? <AreaChart data={approvalTrend} color="var(--ch-success)" labels={analytics?.cohort_analysis.map((c) => c.period.slice(5))} fmtY={(v) => `${v.toFixed(0)}%`} /> : <EmptyStateRich variant="placeholder" title="Sin cohortes" body="Series temporales disponibles cuando el motor procese más solicitudes." />}
-          </div>
-        </div>
-      </div>
+      <CHPanelBoundary label="Cola de decisión">
+        <CHPanelState isLoading={isLoading} loadingFallback={<TableSkeleton rows={4} />}>
+          <BankDecisionQueueSpotlight
+            items={topQueue}
+            pending={pending}
+            counterOffers={counterOffers}
+            onViewAll={() => router.push("/credit-hub/bank/applications")}
+          />
+        </CHPanelState>
+      </CHPanelBoundary>
+
+      <hr className="ch-section-break" aria-hidden />
+
+      <CHPanelBoundary label="Operaciones">
+        <BankOperationsHub
+          analytics={analytics}
+          queue={queue}
+          pending={pending}
+          counterOffers={counterOffers}
+          stipulationsCount={stipulationsCount}
+        />
+      </CHPanelBoundary>
+
+      <hr className="ch-section-break" aria-hidden />
+
+      <CHPanelBoundary label="Productividad analista">
+        <BankAnalystProductivity analytics={analytics} />
+      </CHPanelBoundary>
+
+      <hr className="ch-section-break" aria-hidden />
+
+      <CHPanelBoundary label="Riesgo y cartera">
+        <RiskCreditPanel />
+      </CHPanelBoundary>
+
+      <hr className="ch-section-break" aria-hidden />
+
+      <CHPanelBoundary label="Inteligencia de subasta">
+        <AuctionIntel analytics={analytics} />
+      </CHPanelBoundary>
+
+      <ComplianceFooter variant="bank" />
     </div>
   );
 }

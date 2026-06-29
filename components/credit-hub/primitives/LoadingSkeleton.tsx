@@ -2,7 +2,7 @@
 
 export function SkKpiStrip({ n = 4 }: { n?: number }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${n}, 1fr)`, gap: 12 }}>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3" data-testid="kpi-strip-skeleton">
       {Array.from({ length: n }).map((_, i) => (
         <div key={i} className="ch-card" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="ch-sk" style={{ height: 10, width: "55%" }} />

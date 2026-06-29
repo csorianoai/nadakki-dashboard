@@ -13,6 +13,7 @@
   --ch-surface-2: #F6F6F5;   /* elevación 2 / inset */
   --ch-surface-3: #F1F0EE;
   --ch-line:      #E7E5E4;   /* bordes sutiles */
+  --ch-line-subtle: rgba(28, 25, 23, 0.06); /* divisorias intra-card */
   --ch-line-2:    #D6D3D1;   /* bordes visibles, affordance */
   --ch-line-strong:#A8A29E;
   --ch-text:      #1C1917;   /* principal */
@@ -132,9 +133,30 @@
    PRIMITIVE CLASSES
 ============================================================ */
 
-/* Card */
-.credit-hub-forge .ch-card { background: var(--ch-surface); border: 1px solid var(--ch-line); border-radius: var(--ch-r-lg); }
-.credit-hub-forge .ch-card-h { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ch-sp-4); padding: 14px 18px; border-bottom: 1px solid var(--ch-line); }
+/* Card — premium elevation (light theme, Stripe/Linear-style depth) */
+.credit-hub-forge .ch-card {
+  background: var(--ch-surface);
+  border: 1px solid rgba(28, 25, 23, 0.08);
+  border-radius: var(--ch-r-lg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 150ms var(--ch-ease), transform 150ms var(--ch-ease), border-color 150ms var(--ch-ease);
+}
+.credit-hub-forge .ch-card-interactive { cursor: pointer; }
+.credit-hub-forge .ch-card-interactive:hover,
+.credit-hub-forge .ch-card-interactive:focus-visible {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 8px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+.credit-hub-forge .ch-card-spotlight {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.09);
+  border-color: rgba(28, 25, 23, 0.1);
+}
+.credit-hub-forge .ch-card-spotlight.ch-card-interactive:hover,
+.credit-hub-forge .ch-card-spotlight.ch-card-interactive:focus-visible {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.11);
+}
+.credit-hub-forge .ch-card-flat { box-shadow: none; }
+.credit-hub-forge .ch-card-h { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ch-sp-4); padding: 14px 18px; border-bottom: 1px solid var(--ch-line-subtle); }
 .credit-hub-forge .ch-card-title { font-size: var(--ch-text-base); font-weight: 600; }
 .credit-hub-forge .ch-card-sub { font-size: var(--ch-text-sm); color: var(--ch-text-3); margin-top: 2px; }
 
@@ -198,8 +220,8 @@
 
 /* Tables */
 .credit-hub-forge table.ch-table { width: 100%; border-collapse: collapse; }
-.credit-hub-forge table.ch-table thead th { text-align: left; font-size: var(--ch-text-xs); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ch-text-3); padding: 9px 14px; border-bottom: 1px solid var(--ch-line); white-space: nowrap; }
-.credit-hub-forge table.ch-table tbody td { padding: 11px 14px; border-bottom: 1px solid var(--ch-line); font-size: var(--ch-text-sm); }
+.credit-hub-forge table.ch-table thead th { text-align: left; font-size: var(--ch-text-xs); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ch-text-3); padding: 9px 14px; border-bottom: 1px solid var(--ch-line-subtle); white-space: nowrap; }
+.credit-hub-forge table.ch-table tbody td { padding: 11px 14px; border-bottom: 1px solid var(--ch-line-subtle); font-size: var(--ch-text-sm); }
 .credit-hub-forge table.ch-table tbody tr:last-child td { border-bottom: none; }
 .credit-hub-forge table.ch-table tbody tr.ch-click { cursor: pointer; }
 .credit-hub-forge table.ch-table tbody tr.ch-click:hover td { background: var(--ch-surface-2); }
@@ -214,7 +236,16 @@
 @keyframes ch-spin { to { transform: rotate(360deg); } }
 
 /* Divider */
-.credit-hub-forge .ch-divider { height: 1px; background: var(--ch-line); }
+.credit-hub-forge .ch-divider { height: 1px; background: var(--ch-line-subtle); }
+.credit-hub-forge .ch-field-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 9px 0; border-bottom: 1px solid var(--ch-line-subtle); font-size: var(--ch-text-sm);
+}
+.credit-hub-forge .ch-field-row:first-child { padding-top: 0; }
+.credit-hub-forge .ch-field-row:last-child { border-bottom: none; padding-bottom: 0; }
+.credit-hub-forge .ch-section-break {
+  margin: 28px 0; border: none; border-top: 1px solid var(--ch-line-subtle); height: 0;
+}
 
 /* Reduced motion: kill all transitions/animations */
 @media (prefers-reduced-motion: reduce) {

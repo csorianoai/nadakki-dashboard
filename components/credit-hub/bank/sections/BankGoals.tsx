@@ -1,65 +1,69 @@
 "use client";
 
-import { SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
+import { GoalCard } from "@/components/credit-hub/elite/GoalCard";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import type { BankDashboardAnalytics } from "@/lib/credit-hub/types/bankDecision";
+import { chMoney } from "@/lib/credit-hub/ch-base";
 
-interface BankGoalsProps {
-  analytics?: BankDashboardAnalytics;
-  queueCount: number;
-}
-
-/**
- * Monthly bank goals with pacing bars. Goal targets are DEMO
- * (no goals endpoint exists). Current values come from real analytics.
- */
-export function BankGoals({ analytics, queueCount }: BankGoalsProps) {
+export function BankGoals({ analytics, queueCount }: { analytics?: BankDashboardAnalytics; queueCount: number }) {
   const approvalPct = analytics ? Math.round(analytics.approval_rate * 100) : 0;
   const avgHours = analytics?.avg_decision_time_hours ?? null;
+  const placed = analytics?.portfolio_value ?? 0;
+  const approvedCount = analytics ? Math.round(analytics.total_applications * analytics.approval_rate) : 0;
 
   const goals = [
-    { label: "Cola resuelta", current: queueCount === 0 ? 100 : Math.max(0, 100 - queueCount * 2), target: 100, unit: "%", good: queueCount === 0 },
-    { label: "Tasa de aprobación", current: approvalPct, target: 75, unit: "%", good: approvalPct >= 75 },
-    { label: "Tiempo decisión", current: avgHours != null ? Math.round(avgHours) : 0, target: 6, unit: "h", good: avgHours != null && avgHours <= 6, inverted: true },
-    { label: "Solicitudes procesadas", current: analytics?.total_applications ?? 0, target: 100, unit: "", good: (analytics?.total_applications ?? 0) >= 100 },
+    {
+      title: "Monto colocado",
+      currentDisplay: placed ? chMoney(placed) : "—",
+      targetDisplay: chMoney(120_000_000),
+      pct: placed ? Math.min(Math.round((placed / 120_000_000) * 100), 100) : 0,
+      status: placed >= 90_000_000 ? ("en camino" as const) : ("atrasado" as const),
+      projectionLine: "Proy. fin de mes · 91% de meta",
+    },
+    {
+      title: "Créditos aprobados",
+      currentDisplay: String(approvedCount),
+      targetDisplay: "120",
+      pct: Math.min(Math.round((approvedCount / 120) * 100), 100),
+      status: approvedCount >= 90 ? ("en camino" as const) : ("atrasado" as const),
+      projectionLine: "Proy. fin de mes · 88% de meta",
+    },
+    {
+      title: "Tasa de aprobación",
+      currentDisplay: `${approvalPct}%`,
+      targetDisplay: "≥75%",
+      pct: approvalPct >= 75 ? 100 : Math.round((approvalPct / 75) * 100),
+      status: approvalPct >= 75 ? ("cumplido" as const) : ("en camino" as const),
+      projectionLine: `Proy. fin de mes · ${Math.max(approvalPct - 2, 0)}%`,
+    },
+    {
+      title: "Tiempo de respuesta",
+      currentDisplay: avgHours != null ? `${Math.round(avgHours)}h` : "—",
+      targetDisplay: "≤6h",
+      pct: avgHours != null && avgHours <= 6 ? 100 : avgHours != null ? Math.max(0, 100 - Math.round((avgHours - 6) * 10)) : 0,
+      status: avgHours != null && avgHours <= 6 ? ("cumplido" as const) : ("atrasado" as const),
+      projectionLine: queueCount === 0 ? "Cola vacía · holgado" : "Proy. fin de mes · revisar SLA",
+    },
   ];
 
   return (
-    <div style={{ marginBottom: 26 }}>
-      <SectionHeader eyebrow="Rendimiento" title="Metas operativas del mes" sub="Pacing vs. objetivos" />
-      <div className="ch-card" style={{ padding: "16px 20px" }}>
-        <p style={{ fontSize: 11, color: "var(--ch-accent-text)", background: "var(--ch-accent-soft)", border: "1px solid var(--ch-accent-line)", borderRadius: 4, padding: "4px 8px", margin: "0 0 12px" }}>
-          DEMO — objetivos ilustrativos. No existe endpoint de metas aún.
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-          {goals.map((g) => {
-            const pct = g.inverted
-              ? (g.target > 0 ? Math.min(Math.max((1 - (g.current / g.target - 1)) * 100, 0), 100) : 0)
-              : (g.target > 0 ? Math.min((g.current / g.target) * 100, 100) : 0);
-            return (
-              <div key={g.label}>
-                <div style={{ fontSize: 12, color: "var(--ch-text-3)", marginBottom: 4 }}>{g.label}</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
-                  <span className="ch-mono" style={{ fontSize: 20, fontWeight: 600, color: "var(--ch-text)" }}>
-                    {g.current}{g.unit}
-                  </span>
-                  <span style={{ fontSize: 12, color: "var(--ch-text-4)" }}>/ {g.target}{g.unit}</span>
-                </div>
-                <div style={{ height: 6, background: "var(--ch-surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                  <div
-                    style={{
-                      width: `${pct}%`,
-                      height: "100%",
-                      background: g.good ? "var(--ch-success)" : "var(--ch-persona)",
-                      borderRadius: 3,
-                      transition: "width 0.3s var(--ch-ease)",
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+    <section data-testid="bank-monthly-goals" className="mb-[26px]">
+      <div className="flex flex-wrap items-center gap-2 mb-1">
+        <span className="ch-eyebrow">Metas</span>
+        <h2 className="ch-serif" style={{ margin: 0, fontSize: 19 }}>
+          Metas operativas del mes
+        </h2>
+        <DataTruthBadge level="DEMO" />
+        <span className="ch-chip" style={{ fontSize: 10 }}>8 días restantes</span>
       </div>
-    </div>
+      <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--ch-text-3)" }}>
+        Pacing vs. objetivos institucionales · valores actuales REAL desde analytics
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        {goals.map((g) => (
+          <GoalCard key={g.title} {...g} />
+        ))}
+      </div>
+    </section>
   );
 }

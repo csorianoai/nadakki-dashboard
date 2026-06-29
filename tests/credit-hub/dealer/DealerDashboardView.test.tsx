@@ -6,6 +6,19 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
+jest.mock("@/lib/credit-hub/hooks/useDashboardSummary", () => ({
+  useDashboardSummary: () => ({ data: null, isFetching: false, isError: false }),
+}));
+
+jest.mock("@/lib/credit-hub/hooks/useBanksRanking", () => ({
+  useBanksRanking: () => ({ data: null, isError: true, isLoading: false }),
+}));
+
+jest.mock("@/lib/credit-hub/hooks/useApplicationOffers", () => ({
+  useApplicationOffers: () => ({ offers: [], isLoading: false, isError: false }),
+  offersRefetchInterval: () => false,
+}));
+
 describe("DealerDashboardView", () => {
   test("renders greeting and institution", () => {
     render(
@@ -13,10 +26,10 @@ describe("DealerDashboardView", () => {
         <DealerDashboardView applications={[]} institutionName="Auto Plaza" locale="es-DO" currency="DOP" />
       </div>,
     );
-    expect(screen.getByRole("heading", { name: /Auto Plaza/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Cockpit del Dealer/i })).toBeInTheDocument();
     expect(screen.getByTestId("dealer-command-center")).toBeInTheDocument();
-    expect(screen.getByText(/Dealer Command Center/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Nueva solicitud de crédito/i })).toBeInTheDocument();
+    expect(screen.getByTestId("dealer-kpi-strip")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Nueva solicitud/i })).toBeInTheDocument();
   });
 
   test("does not render undefined currency prefix when amount or currency is missing", () => {
