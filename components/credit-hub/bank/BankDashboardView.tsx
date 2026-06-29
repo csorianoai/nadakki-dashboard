@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { EmptyStateRich, KpiStripSkeleton, TableSkeleton } from "@/components/credit-hub/primitives";
 import { AreaChart, QueueTable, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
 import { BankGoals } from "@/components/credit-hub/bank/sections/BankGoals";
 import { AuctionIntel } from "@/components/credit-hub/bank/sections/AuctionIntel";
 import { RiskCreditPanel } from "@/components/credit-hub/bank/sections/RiskCreditPanel";
-import { BankWorkbenchKpi } from "@/components/credit-hub/bank/workbench/BankWorkbenchChrome";
-import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
+import {
+  ComplianceFooter,
+  MetricCard,
+} from "@/components/credit-hub/elite";
+import { BankCockpitHeader } from "@/components/credit-hub/bank/elite/BankCockpitHeader";
 import type { BankDashboardViewProps } from "@/lib/credit-hub/types/bank-views";
 import { PRIORITY_RANK, pendingQueueCount } from "@/lib/credit-hub/bank/bankFormat";
 import { chMoney } from "@/lib/credit-hub/ch-base";
@@ -25,6 +28,7 @@ export function BankDashboardView({
   onRetry,
 }: BankDashboardViewProps) {
   const router = useRouter();
+  const [period, setPeriod] = useState<"today" | "week" | "month">("week");
   const pending = pendingQueueCount(analytics, queue);
 
   const topQueue = useMemo(() => {
@@ -35,10 +39,9 @@ export function BankDashboardView({
   }, [queue]);
 
   const approvalTrend = useMemo(() => analytics?.cohort_analysis?.map((c) => +(c.approval_rate * 100).toFixed(1)) ?? [], [analytics]);
-  const volumeTrend = useMemo(() => {
-    const cohort = analytics?.cohort_analysis ?? [];
-    return cohort.map((c) => c.applications);
-  }, [analytics]);
+  const volumeTrend = useMemo(() => analytics?.cohort_analysis?.map((c) => c.applications) ?? [], [analytics]);
+
+  const counterOffers = useMemo(() => queue.filter((q) => q.state?.toLowerCase().includes("counter")).length, [queue]);
 
   if (isLoading) {
     return (
@@ -54,66 +57,46 @@ export function BankDashboardView({
   }
 
   return (
-    <div data-testid="bank-intelligence-workbench">
-      <div style={{ marginBottom: 22 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span className="ch-eyebrow" style={{ color: "var(--ch-bank-accent-text)" }}>
-            Bank Intelligence Workbench
-          </span>
-          <DataTruthBadge level="REAL" />
-        </div>
-        <h1 className="ch-serif" style={{ margin: 0, fontSize: "clamp(26px, 4vw, 33px)", letterSpacing: "-0.02em", lineHeight: 1.05 }}>
-          Mesa de decisiones — {institutionName}
-        </h1>
-        <div style={{ fontSize: 13.5, color: "var(--ch-text-3)", marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--ch-success)" }} aria-hidden />
-            Cumplimiento
-          </span>
-          {complianceSummary ? (
-            <>
-              <span>·</span>
-              <span>{complianceSummary}</span>
-            </>
-          ) : null}
-        </div>
-      </div>
+    <div data-testid="bank-decision-desk" className="min-w-0 pb-8">
+      <BankCockpitHeader
+        institutionName={institutionName}
+        complianceSummary={complianceSummary}
+        period={period}
+        onPeriodChange={setPeriod}
+      />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 26 }}>
-        <BankWorkbenchKpi label="Solicitudes pendientes" value={pending} trend={null} trendLabel="en cola activa" onClick={() => router.push("/credit-hub/bank/applications")} truth="REAL" />
-        <BankWorkbenchKpi
-          label="Tiempo prom. de decisión"
-          value={analytics?.avg_decision_time_hours ?? "—"}
-          unit={analytics?.avg_decision_time_hours != null ? "h" : undefined}
-          trend={null}
-          trendLabel="endpoint devuelve null hoy"
-          onClick={() => router.push("/credit-hub/bank/analytics")}
-          truth="ROADMAP"
-        />
-        <BankWorkbenchKpi
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 mb-[26px]">
+        <MetricCard label="En cola" value={pending} truth="REAL" footnote="Solicitudes pendientes" onClick={() => router.push("/credit-hub/bank/applications")} />
+        <MetricCard label="Decisiones pendientes" value={topQueue.length} truth="REAL" footnote="Priorizadas en bandeja" />
+        <MetricCard label="Contraofertas activas" value={counterOffers || "—"} truth={counterOffers ? "REAL" : "ROADMAP"} footnote="Estimado desde cola" />
+        <MetricCard
           label="Tasa de aprobación"
           value={analytics ? (analytics.approval_rate * 100).toFixed(0) : "—"}
           unit={analytics ? "%" : undefined}
-          trend={null}
-          trendLabel="últimos 30 días"
-          onClick={() => router.push("/credit-hub/bank/analytics")}
           truth="REAL"
+          footnote="Últimos 30 días"
+          accent
         />
-        <BankWorkbenchKpi
-          label="Volumen del mes"
+        <MetricCard
+          label="Tiempo prom. decisión"
+          value={analytics?.avg_decision_time_hours ?? "—"}
+          unit={analytics?.avg_decision_time_hours != null ? "h" : undefined}
+          truth="ROADMAP"
+          footnote="Endpoint devuelve null hoy"
+        />
+        <MetricCard
+          label="Volumen cartera"
           value={analytics ? chMoney(analytics.portfolio_value).replace("MX$", "") : "—"}
           unit={analytics ? "MX$" : undefined}
-          trend={null}
-          trendLabel="cartera viva"
-          accent
-          onClick={() => router.push("/credit-hub/bank/analytics")}
           truth="REAL"
+          footnote="Cartera viva"
         />
+        <MetricCard label="SLA compliance" value="—" truth="ROADMAP" footnote="Meta ≤ 6 h · sin serie aún" />
       </div>
 
       <SectionHeader
-        eyebrow="Bandeja priorizada"
-        title="Solicitudes que requieren tu decisión"
+        eyebrow="Cola de decisión"
+        title="Solicitudes que requieren revisión humana"
         sub={`${pending} en cola · ordenadas por prioridad y score`}
         actions={
           <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" onClick={() => router.push("/credit-hub/bank/applications")}>
@@ -124,53 +107,62 @@ export function BankDashboardView({
       />
 
       {topQueue.length === 0 ? (
-        <EmptyStateRich variant="empty" />
+        <EmptyStateRich variant="empty" title="Cola vacía" description="No hay solicitudes pendientes de decisión." />
       ) : (
-        <div className="ch-card" style={{ overflow: "hidden", marginBottom: 26 }}>
+        <div className="ch-card overflow-x-auto mb-[26px]" data-testid="bank-decision-queue">
           <QueueTable items={topQueue} variant="dashboard" />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderTop: "1px solid var(--ch-line)", fontSize: 11.5, color: "var(--ch-text-3)" }}>
-            <span className="ch-mono">
-              {topQueue.length} de {pending} en cola
-            </span>
-            <Link href="/credit-hub/bank/applications" style={{ color: "var(--ch-accent)", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4 }}>
-              Abrir bandeja completa
-              <ArrowRight className="h-3 w-3" aria-hidden />
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid var(--ch-line)", fontSize: 11.5, color: "var(--ch-text-3)" }}>
+            <span className="ch-mono">{topQueue.length} de {pending}</span>
+            <Link href="/credit-hub/bank/applications" style={{ color: "var(--ch-accent)", fontWeight: 500 }}>
+              Abrir bandeja completa →
             </Link>
           </div>
         </div>
       )}
 
-      <AuctionIntel />
-
-      <RiskCreditPanel />
-
-      <BankGoals analytics={analytics} queueCount={pending} />
-
-      <SectionHeader eyebrow="Insights" title="Tendencia de la operación" sub="Derivado de las cohortes procesadas por el motor" />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div className="ch-card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid var(--ch-line)" }}>
-            <div>
-              <div className="ch-card-title">Volumen por cohorte</div>
-              <div className="ch-card-sub">Solicitudes recibidas por periodo</div>
-            </div>
-          </div>
-          <div style={{ padding: "16px 18px" }}>
-            {volumeTrend.length ? <AreaChart data={volumeTrend} labels={analytics?.cohort_analysis.map((c) => c.period.slice(5))} /> : <EmptyStateRich variant="placeholder" title="Sin serie disponible" body="Series temporales disponibles cuando el motor procese más solicitudes." />}
-          </div>
+      <div className="ch-card mb-[26px] p-4">
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <h2 className="ch-serif" style={{ margin: 0, fontSize: 17 }}>
+            Panel de decisión
+          </h2>
+          <span className="ch-chip" style={{ fontSize: 10 }}>ROADMAP inline</span>
         </div>
-        <div className="ch-card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: "1px solid var(--ch-line)" }}>
-            <div>
-              <div className="ch-card-title">Tasa de aprobación</div>
-              <div className="ch-card-sub">Cohortes mensuales</div>
-            </div>
-          </div>
-          <div style={{ padding: "16px 18px" }}>
-            {approvalTrend.length ? <AreaChart data={approvalTrend} color="var(--ch-success)" labels={analytics?.cohort_analysis.map((c) => c.period.slice(5))} fmtY={(v) => `${v.toFixed(0)}%`} /> : <EmptyStateRich variant="placeholder" title="Sin cohortes" body="Series temporales disponibles cuando el motor procese más solicitudes." />}
-          </div>
+        <p style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginBottom: 12 }}>
+          Aprobar, rechazar, contraofertar y stipulations desde el expediente de cada solicitud.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="ch-btn ch-btn-persona ch-btn-sm" disabled title="Abrir expediente desde la cola">
+            Aprobar
+          </button>
+          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" disabled>
+            Rechazar
+          </button>
+          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" disabled>
+            Contraofertar
+          </button>
+          <span className="ch-chip" style={{ fontSize: 10 }}>
+            ROADMAP acciones inline — usar expediente
+          </span>
         </div>
       </div>
+
+      <AuctionIntel />
+      <RiskCreditPanel />
+      <BankGoals analytics={analytics} queueCount={pending} />
+
+      <SectionHeader eyebrow="Tendencias" title="Operación por cohortes" sub="Derivado del motor — solo tu institución" />
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 mb-[26px]">
+        <div className="ch-card p-4 overflow-hidden">
+          <div className="ch-card-title mb-2">Volumen</div>
+          {volumeTrend.length ? <AreaChart data={volumeTrend} labels={analytics?.cohort_analysis.map((c) => c.period.slice(5))} /> : <EmptyStateRich variant="placeholder" title="Sin serie" body="Más solicitudes generarán cohortes." />}
+        </div>
+        <div className="ch-card p-4 overflow-hidden">
+          <div className="ch-card-title mb-2">Tasa de aprobación</div>
+          {approvalTrend.length ? <AreaChart data={approvalTrend} color="var(--ch-success)" labels={analytics?.cohort_analysis.map((c) => c.period.slice(5))} fmtY={(v) => `${v.toFixed(0)}%`} /> : <EmptyStateRich variant="placeholder" title="Sin cohortes" body="Más solicitudes generarán cohortes." />}
+        </div>
+      </div>
+
+      <ComplianceFooter variant="bank" />
     </div>
   );
 }

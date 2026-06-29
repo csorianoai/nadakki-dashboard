@@ -1,100 +1,46 @@
 "use client";
 
 import { SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
-
-/**
- * B1 — Auction Intelligence (bank dashboard).
- *
- * STATUS: **DEMO** — No auction analytics endpoint exists.
- * [NEEDS-HUMAN: POST endpoint `/analytics/auction-intel` returning win-rate
- *  by score/dealer/amount, lost deals analysis, time-to-offer vs target,
- *  look-to-book ratio.]
- */
-
-interface AuctionMetric {
-  label: string;
-  value: string;
-  sub: string;
-}
-
-const DEMO_METRICS: AuctionMetric[] = [
-  { label: "Win Rate", value: "34%", sub: "ofertas aceptadas / total enviadas" },
-  { label: "Look-to-Book", value: "2.9x", sub: "solicitudes vistas / préstamos cerrados" },
-  { label: "Tiempo prom. a oferta", value: "4.2h", sub: "meta: ≤ 3h" },
-  { label: "Deals perdidos (30d)", value: "18", sub: "dealer eligió otra entidad" },
-];
-
-interface LostDeal {
-  reason: string;
-  count: number;
-  pct: number;
-}
-
-const DEMO_LOST: LostDeal[] = [
-  { reason: "Tasa más baja en competidor", count: 8, pct: 44 },
-  { reason: "Respuesta más rápida", count: 5, pct: 28 },
-  { reason: "Mejor plazo ofrecido", count: 3, pct: 17 },
-  { reason: "Relación comercial existente", count: 2, pct: 11 },
-];
+import { MetricCard } from "@/components/credit-hub/elite/MetricCard";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
+import { useAuctionIntel } from "@/lib/credit-hub/hooks/useAuctionIntel";
 
 export function AuctionIntel() {
+  const query = useAuctionIntel();
+  const data = query.data;
+  const truth = data && !query.isError ? "REAL" : "DEMO";
+
+  const winRate = data?.win_rate != null ? `${(data.win_rate * 100).toFixed(0)}%` : "—";
+  const lookToBook = data?.look_to_book != null ? `${data.look_to_book.toFixed(1)}x` : "—";
+  const tto = data?.avg_time_to_offer_hours != null ? `${data.avg_time_to_offer_hours}h` : "—";
+  const lost = data?.lost_deals_count ?? "—";
+
   return (
-    <div style={{ marginBottom: 26 }}>
+    <div style={{ marginBottom: 26 }} data-testid="auction-intel-panel">
       <SectionHeader
-        eyebrow="Inteligencia competitiva"
-        title="Subasta — ¿Cómo compites?"
-        sub="Visibilidad de tu desempeño vs. otros bancos en la plataforma"
+        eyebrow="Inteligencia operativa"
+        title="Subasta — desempeño de tu institución"
+        sub="Ofertas competidoras ocultas por diseño — solo métricas propias"
       />
-
-      <div
-        style={{
-          fontSize: 11,
-          color: "var(--ch-text-3)",
-          background: "var(--ch-surface-alt, var(--ch-surface))",
-          padding: "6px 10px",
-          borderRadius: 6,
-          marginBottom: 10,
-          border: "1px dashed var(--ch-border)",
-        }}
-      >
-        DEMO — Datos ilustrativos. [NEEDS-HUMAN: falta endpoint auction-intel]
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <DataTruthBadge level={truth} />
+        {query.isError ? (
+          <span style={{ fontSize: 11, color: "var(--ch-text-3)" }}>Endpoint no disponible</span>
+        ) : null}
       </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 14 }}>
-        {DEMO_METRICS.map((m) => (
-          <div key={m.label} className="ch-card" style={{ padding: 14 }}>
-            <div className="ch-eyebrow">{m.label}</div>
-            <div className="ch-mono" style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
-              {m.value}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--ch-text-3)", marginTop: 4 }}>{m.sub}</div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-3">
+        <MetricCard label="Win rate" value={winRate} truth={truth} footnote="Ofertas aceptadas / decididas" />
+        <MetricCard label="Look-to-book" value={lookToBook} truth={truth} footnote="Solicitudes con oferta / total" />
+        <MetricCard label="Tiempo a oferta" value={tto} truth={truth} footnote="Meta ≤ 3 h" />
+        <MetricCard label="Deals perdidos" value={lost} truth={truth} footnote="Sin detalle de competidor" />
       </div>
-
-      <div className="ch-card" style={{ padding: 0 }}>
-        <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--ch-line)" }}>
-          <div className="ch-card-title">Análisis de deals perdidos</div>
-          <div className="ch-card-sub">Razones por las que el dealer eligió otro banco</div>
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--ch-border)" }}>
-              <th style={{ textAlign: "left", padding: "8px 16px", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ch-text-3)" }}>Razón</th>
-              <th style={{ textAlign: "right", padding: "8px 16px", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ch-text-3)" }}>Cant.</th>
-              <th style={{ textAlign: "right", padding: "8px 16px", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ch-text-3)" }}>%</th>
-            </tr>
-          </thead>
-          <tbody>
-            {DEMO_LOST.map((d) => (
-              <tr key={d.reason} style={{ borderBottom: "1px solid var(--ch-border)" }}>
-                <td style={{ padding: "8px 16px" }}>{d.reason}</td>
-                <td className="ch-mono" style={{ textAlign: "right", padding: "8px 16px" }}>{d.count}</td>
-                <td className="ch-mono" style={{ textAlign: "right", padding: "8px 16px" }}>{d.pct}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="ch-card p-4">
+        <div className="ch-card-title">Deals perdidos — agregado</div>
+        <p style={{ fontSize: 12, color: "var(--ch-text-3)", marginTop: 6 }}>
+          {data?.lost_deals_count
+            ? `${data.lost_deals_count} solicitudes donde otra entidad fue elegida. No mostramos tasas ni nombres de competidores (aislamiento activo).`
+            : "Sin deals perdidos registrados en el periodo."}
+        </p>
       </div>
     </div>
   );
