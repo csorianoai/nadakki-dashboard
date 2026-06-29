@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, Maximize2, Minimize2, Scale, Send, Sparkles } from "lucide-react";
+import { AlertTriangle, Loader2, Maximize2, Minimize2, Scale, Send, Sparkles } from "lucide-react";
 import { useLegalEffectiveTenantId, useLegalAgentRun } from "@/hooks/useLegal";
+import { formatLegalAgentRunError } from "@/lib/api/legal";
 import { trackEvent } from "@/lib/legal/telemetry";
 import type { AgentMonitor, AgentRunResponse, Citation, RagMetadata } from "@/types/legal";
 import { CitationCard } from "@/components/legal/CitationCard";
@@ -153,10 +154,7 @@ export default function LegalResearchClient() {
         error_type: "run_error",
         http_status: http,
       });
-      let msg = err.message || "Error";
-      if (http === 429) msg = "Límite de tasa excedido. Espere unos segundos.";
-      else if (http === 504) msg = "Tiempo de espera agotado. Pruebe una consulta más específica.";
-      else if (http >= 500) msg = `Error interno (${http}). Si persiste, reporte al equipo.`;
+      const msg = formatLegalAgentRunError(e);
       setMessages((m) => [...m, { role: "assistant", content: `**Error**\n${msg}` }]);
     }
   }, [agentId, effectiveTenantId, input, messages, runHook]);
@@ -331,8 +329,13 @@ export default function LegalResearchClient() {
             )}
             {runHook.loading && (
               <div className="flex justify-start">
-                <div className="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-slate-500 dark:bg-slate-800">
-                  Analizando con base normativa…
+                <div className="flex max-w-[85%] items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-300">
+                  <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-blue-600 dark:text-blue-400" aria-hidden />
+                  <p>
+                    {agentId === CHAT_AGENT
+                      ? "Generando análisis legal… (puede tardar hasta 2 minutos)"
+                      : "Analizando con base normativa…"}
+                  </p>
                 </div>
               </div>
             )}

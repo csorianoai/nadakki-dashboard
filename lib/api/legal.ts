@@ -10,6 +10,30 @@ import type { LegalTask } from "@/lib/legal/task-types";
 
 const API_BASE = "/api/legal";
 
+/** Default timeout for health, audit, tasks, etc. */
+export const LEGAL_DEFAULT_FETCH_TIMEOUT_MS = 35_000;
+
+/** chat_asesor_legal: RAG + LLM senior prompt can take 60–120s. */
+export const LEGAL_CHAT_AGENT_ID = "chat_asesor_legal";
+export const LEGAL_CHAT_AGENT_TIMEOUT_MS = 120_000;
+
+export function formatLegalAgentRunError(err: unknown): string {
+  const e = err as LegalApiError & { name?: string };
+  const http = e.status ?? 0;
+  const raw = e.message ?? "";
+  if (
+    http === 408 ||
+    e.name === "AbortError" ||
+    /signal is aborted|aborted without reason|operation was aborted/i.test(raw)
+  ) {
+    return "La consulta legal tardó demasiado (más de 2 minutos). Intente de nuevo o acorte la pregunta.";
+  }
+  if (http === 429) return "Límite de tasa excedido. Espere unos segundos.";
+  if (http === 504) return "Tiempo de espera agotado en el servidor. Pruebe una consulta más específica.";
+  if (http >= 500) return `Error interno (${http}). Si persiste, reporte al equipo.`;
+  return raw || "Error al procesar la consulta.";
+}
+
 async function parseJsonSafe(res: Response): Promise<unknown> {
   const text = await res.text();
   if (!text) return null;
@@ -24,10 +48,11 @@ class LegalApiClient {
   private async fetch<T>(
     path: string,
     options: RequestInit = {},
-    tenantId?: string | null
+    tenantId?: string | null,
+    timeoutMs: number = LEGAL_DEFAULT_FETCH_TIMEOUT_MS,
   ): Promise<T> {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 35_000);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -62,6 +87,15 @@ class LegalApiClient {
       }
 
       return (await res.json()) as T;
+    } catch (e: unknown) {
+      if (controller.signal.aborted) {
+        const err: LegalApiError = {
+          status: 408,
+          message: formatLegalAgentRunError({ status: 408 }),
+        };
+        throw err;
+      }
+      throw e;
     } finally {
       clearTimeout(timeout);
     }
@@ -83,13 +117,16 @@ class LegalApiClient {
   }
 
   async runAgent(tenantId: string, agentId: string, inputs: Record<string, unknown>): Promise<AgentRunResponse> {
+    const timeoutMs =
+      agentId === LEGAL_CHAT_AGENT_ID ? LEGAL_CHAT_AGENT_TIMEOUT_MS : LEGAL_DEFAULT_FETCH_TIMEOUT_MS;
     return this.fetch<AgentRunResponse>(
       `/agents/${encodeURIComponent(agentId)}/run`,
       {
         method: "POST",
         body: JSON.stringify({ ...inputs, tenant_id: tenantId }),
       },
-      tenantId
+      tenantId,
+      timeoutMs,
     );
   }
 
