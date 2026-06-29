@@ -3,20 +3,17 @@
 import { useMemo } from "react";
 import {
   Activity,
-  AlertTriangle,
   Banknote,
+  CheckCircle2,
   Clock,
-  FileCheck,
   Gavel,
   Percent,
-  Scale,
+  TrendingUp,
 } from "lucide-react";
 import { MetricCard } from "@/components/credit-hub/elite/MetricCard";
 import type { BankDashboardAnalytics } from "@/lib/credit-hub/types/bankDecision";
-import {
-  classifyDefaultPredictionTrust,
-  formatDefaultPredictionDisplay,
-} from "@/lib/credit-hub/bank/bankFormat";
+import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
+import { useAuctionIntel } from "@/lib/credit-hub/hooks/useAuctionIntel";
 
 function formatCompactMoney(amount: number): string {
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M`;
@@ -24,39 +21,41 @@ function formatCompactMoney(amount: number): string {
   return String(Math.round(amount));
 }
 
+function decidedTodayCount(queue: BankQueueItem[]): number {
+  const today = new Date().toDateString();
+  return queue.filter((q) => {
+    const decided = q.bank_decision || q.state === "decided" || q.state === "DECIDED";
+    if (!decided || !q.created_at) return false;
+    return new Date(q.created_at).toDateString() === today;
+  }).length;
+}
+
 export function BankKpiStrip({
   analytics,
+  queue,
   pending,
   topQueueCount,
-  counterOffers,
   onQueueClick,
 }: {
   analytics?: BankDashboardAnalytics;
+  queue: BankQueueItem[];
   pending: number;
   topQueueCount: number;
-  counterOffers: number;
   onQueueClick?: () => void;
 }) {
+  const auctionQuery = useAuctionIntel();
   const cohort = analytics?.cohort_analysis ?? [];
   const volumeTrend = cohort.map((c) => c.applications);
   const approvalTrend = cohort.map((c) => +(c.approval_rate * 100).toFixed(1));
-  const demoTrend = [3, 4, 5, 6, 7, 8];
 
-  const defaultDisplay = analytics
-    ? formatDefaultPredictionDisplay(
-        analytics.default_prediction.predicted_default_rate,
-        analytics.default_prediction.predicted_default_count,
-        analytics.total_applications,
-      )
-    : null;
-  const defaultTrust =
-    analytics && defaultDisplay
-      ? classifyDefaultPredictionTrust(
-          defaultDisplay,
-          analytics.default_prediction.predicted_default_count,
-          analytics.total_applications,
-        )
-      : null;
+  const evaluatedAmount = useMemo(
+    () => queue.filter((q) => !q.bank_decision).reduce((s, q) => s + q.requested_amount, 0),
+    [queue],
+  );
+
+  const decidedToday = decidedTodayCount(queue);
+  const lookToBook = auctionQuery.data?.look_to_book;
+  const conversionPct = lookToBook != null ? Math.round(lookToBook * 100) : null;
 
   const cards = useMemo(
     () => [
@@ -64,7 +63,7 @@ export function BankKpiStrip({
         label: "En cola",
         value: pending,
         truth: "REAL" as const,
-        delta: { direction: "flat" as const, label: `${topQueueCount} priorizadas` },
+        delta: { direction: "flat" as const, label: `${topQueueCount} en spotlight` },
         icon: Activity,
         trendValues: volumeTrend.length ? volumeTrend : undefined,
         trendDemo: !volumeTrend.length,
@@ -72,22 +71,22 @@ export function BankKpiStrip({
         onClick: onQueueClick,
       },
       {
-        label: "Decisiones pendientes",
+        label: "Pendientes de decisión",
         value: topQueueCount,
         truth: "REAL" as const,
-        delta: pending > topQueueCount ? { direction: "up" as const, label: `${pending - topQueueCount} en bandeja` } : undefined,
+        delta: { direction: "up" as const, label: "priorizadas" },
         icon: Gavel,
         trendDemo: true,
         trendColor: "var(--ch-warning)",
       },
       {
-        label: "Contraofertas activas",
-        value: counterOffers || "—",
-        truth: counterOffers ? ("REAL" as const) : ("ROADMAP" as const),
-        delta: counterOffers ? { direction: "up" as const, label: "desde cola" } : undefined,
-        icon: Scale,
-        trendDemo: !counterOffers,
-        trendColor: "var(--ch-info)",
+        label: "Decididas hoy",
+        value: decidedToday,
+        truth: "REAL" as const,
+        delta: decidedToday ? { direction: "up" as const, label: "hoy" } : { direction: "flat" as const, label: "sin cierres hoy" },
+        icon: CheckCircle2,
+        trendDemo: true,
+        trendColor: "var(--ch-success)",
       },
       {
         label: "Tasa de aprobación",
@@ -105,53 +104,43 @@ export function BankKpiStrip({
         label: "Tiempo prom. decisión",
         value: analytics?.avg_decision_time_hours ?? "—",
         unit: analytics?.avg_decision_time_hours != null ? "h" : undefined,
-        truth: "ROADMAP" as const,
+        truth: analytics?.avg_decision_time_hours != null ? ("REAL" as const) : ("ROADMAP" as const),
         delta: { direction: "down" as const, label: "meta ≤ 6 h" },
         icon: Clock,
-        trendDemo: true,
+        trendDemo: analytics?.avg_decision_time_hours == null,
         trendColor: "var(--ch-bank-accent, var(--ch-info))",
       },
       {
-        label: "Volumen cartera",
-        value: analytics ? formatCompactMoney(analytics.portfolio_value) : "—",
-        unit: analytics ? "MX$" : undefined,
+        label: "Monto evaluado",
+        value: evaluatedAmount ? formatCompactMoney(evaluatedAmount) : "—",
+        unit: evaluatedAmount ? "MX$" : undefined,
         truth: "REAL" as const,
-        delta: analytics ? { direction: "up" as const, label: "cartera viva" } : undefined,
+        delta: { direction: "up" as const, label: "en cola activa" },
         icon: Banknote,
-        trendValues: volumeTrend.length ? volumeTrend : undefined,
-        trendDemo: !volumeTrend.length,
+        trendDemo: !evaluatedAmount,
         trendColor: "var(--ch-warning)",
       },
       {
-        label: "Solicitudes totales",
-        value: analytics?.total_applications ?? "—",
-        truth: "REAL" as const,
-        delta: analytics ? { direction: "up" as const, label: "periodo dashboard" } : undefined,
-        icon: FileCheck,
-        trendValues: volumeTrend.length ? volumeTrend : undefined,
-        trendDemo: !volumeTrend.length,
-        trendColor: "var(--ch-text-3)",
-      },
-      {
-        label: "Default predicho",
-        value: defaultDisplay?.percentLabel ?? "—",
-        unit: defaultDisplay ? "%" : undefined,
-        truth: defaultTrust?.level ?? ("ROADMAP" as const),
-        delta: defaultTrust ? { direction: "flat" as const, label: defaultTrust.contextNote.slice(0, 42) + (defaultTrust.contextNote.length > 42 ? "…" : "") } : undefined,
-        icon: AlertTriangle,
-        trendDemo: !analytics,
-        trendColor: "var(--ch-danger)",
+        label: "Conversión oferta→aceptada",
+        value: conversionPct ?? "—",
+        unit: conversionPct != null ? "%" : undefined,
+        truth: conversionPct != null && !auctionQuery.isError ? ("REAL" as const) : ("DEMO" as const),
+        delta: { direction: "up" as const, label: "look-to-book subasta" },
+        icon: TrendingUp,
+        trendDemo: conversionPct == null,
+        trendColor: "var(--ch-info)",
       },
     ],
     [
       pending,
       topQueueCount,
-      counterOffers,
+      decidedToday,
       analytics,
       volumeTrend,
       approvalTrend,
-      defaultDisplay,
-      defaultTrust,
+      evaluatedAmount,
+      conversionPct,
+      auctionQuery.isError,
       onQueueClick,
     ],
   );

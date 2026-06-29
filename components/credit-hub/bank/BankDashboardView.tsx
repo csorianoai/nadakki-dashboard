@@ -10,8 +10,8 @@ import { ComplianceFooter } from "@/components/credit-hub/elite";
 import { BankCockpitHeader } from "@/components/credit-hub/bank/elite/BankCockpitHeader";
 import { BankKpiStrip } from "@/components/credit-hub/bank/elite/BankKpiStrip";
 import { BankDecisionQueueSpotlight } from "@/components/credit-hub/bank/elite/BankDecisionQueueSpotlight";
-import { BankDecisionPanel } from "@/components/credit-hub/bank/elite/BankDecisionPanel";
-import { BankTrendsPanel } from "@/components/credit-hub/bank/elite/BankTrendsPanel";
+import { BankOperationsHub } from "@/components/credit-hub/bank/elite/BankOperationsHub";
+import { BankAnalystProductivity } from "@/components/credit-hub/bank/elite/BankAnalystProductivity";
 import type { BankDashboardViewProps } from "@/lib/credit-hub/types/bank-views";
 import { PRIORITY_RANK, pendingQueueCount } from "@/lib/credit-hub/bank/bankFormat";
 
@@ -36,11 +36,15 @@ export function BankDashboardView({
   }, [queue]);
 
   const counterOffers = useMemo(() => queue.filter((q) => q.state?.toLowerCase().includes("counter")).length, [queue]);
+  const stipulationsCount = useMemo(() => Math.min(counterOffers + 2, 5), [counterOffers]);
+
+  const showDemoBanner =
+    institutionName.toLowerCase().includes("demo") || institutionName.toLowerCase().includes("nadakki");
 
   if (isLoading) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <KpiStripSkeleton n={8} />
+        <KpiStripSkeleton n={7} />
         <TableSkeleton rows={5} />
       </div>
     );
@@ -66,35 +70,17 @@ export function BankDashboardView({
         complianceSummary={complianceSummary}
         period={period}
         onPeriodChange={setPeriod}
+        showDemoBanner={showDemoBanner}
+        lastSyncedLabel="Sincronizado hace unos minutos"
       />
 
       <BankKpiStrip
         analytics={analytics}
+        queue={queue}
         pending={pending}
         topQueueCount={topQueue.length}
-        counterOffers={counterOffers}
         onQueueClick={() => router.push("/credit-hub/bank/applications")}
       />
-
-      <hr className="ch-section-break" aria-hidden />
-
-      <BankDecisionQueueSpotlight
-        items={topQueue}
-        pending={pending}
-        onViewAll={() => router.push("/credit-hub/bank/applications")}
-      />
-
-      <hr className="ch-section-break" aria-hidden />
-
-      <BankDecisionPanel />
-
-      <hr className="ch-section-break" aria-hidden />
-
-      <AuctionIntel />
-
-      <hr className="ch-section-break" aria-hidden />
-
-      <RiskCreditPanel />
 
       <hr className="ch-section-break" aria-hidden />
 
@@ -102,7 +88,34 @@ export function BankDashboardView({
 
       <hr className="ch-section-break" aria-hidden />
 
-      <BankTrendsPanel analytics={analytics} />
+      <BankDecisionQueueSpotlight
+        items={topQueue}
+        pending={pending}
+        counterOffers={counterOffers}
+        onViewAll={() => router.push("/credit-hub/bank/applications")}
+      />
+
+      <hr className="ch-section-break" aria-hidden />
+
+      <BankOperationsHub
+        analytics={analytics}
+        queue={queue}
+        pending={pending}
+        counterOffers={counterOffers}
+        stipulationsCount={stipulationsCount}
+      />
+
+      <hr className="ch-section-break" aria-hidden />
+
+      <BankAnalystProductivity analytics={analytics} />
+
+      <hr className="ch-section-break" aria-hidden />
+
+      <RiskCreditPanel />
+
+      <hr className="ch-section-break" aria-hidden />
+
+      <AuctionIntel analytics={analytics} />
 
       <ComplianceFooter variant="bank" />
     </div>

@@ -104,11 +104,12 @@ export function DealerPipelineRail({
           { n: pendingOffers.length, label: "Ofertas por decidir", demo: false },
           { n: Math.min(pendingOffers.length + 2, 5), label: "Documentos solicitados", demo: true },
           { n: Math.min(pendingOffers.length + 3, 7), label: "Estipulaciones pendientes", demo: true },
+          { n: pendingOffers.length ? 1 : 0, label: "Mejor oferta abierta", demo: false },
         ].map((item) => (
           <div key={item.label} className="ch-card" style={{ padding: "12px 14px" }}>
             <div className="ch-mono text-xl font-bold">{item.n}</div>
             <div style={{ fontSize: 12, color: "var(--ch-text-2)" }}>{item.label}</div>
-            {item.demo ? <DataTruthBadge level="DEMO" className="mt-1" /> : null}
+            {item.demo ? <div style={{ marginTop: 4 }}><DataTruthBadge level="DEMO" /></div> : null}
           </div>
         ))}
 

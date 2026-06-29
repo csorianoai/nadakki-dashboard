@@ -44,6 +44,7 @@ export interface RiskPortfolioPanelProps {
   rejections: RejectionReasonRow[];
   truth: DataTruthLevel;
   loading?: boolean;
+  compact?: boolean;
 }
 
 export const RiskPortfolioPanel = memo(function RiskPortfolioPanel({
@@ -52,6 +53,7 @@ export const RiskPortfolioPanel = memo(function RiskPortfolioPanel({
   rejections,
   truth,
   loading,
+  compact,
 }: RiskPortfolioPanelProps) {
   if (loading) {
     return <div className="ch-card p-4 animate-pulse" style={{ height: 120 }} aria-busy="true" />;
@@ -59,13 +61,16 @@ export const RiskPortfolioPanel = memo(function RiskPortfolioPanel({
 
   return (
     <div data-testid="risk-portfolio-panel">
+      {compact ? null : (
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <DataTruthBadge level={truth} />
       </div>
+      )}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 mb-3">
         <HorizontalBar buckets={pti} title="Distribución PTI" />
         <HorizontalBar buckets={ltv} title="Distribución LTV" />
       </div>
+      {compact ? null : (
       <div className="ch-card overflow-hidden">
         <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--ch-line-subtle)" }}>
           <div className="ch-card-title">Razones de rechazo</div>
@@ -90,6 +95,7 @@ export const RiskPortfolioPanel = memo(function RiskPortfolioPanel({
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 });

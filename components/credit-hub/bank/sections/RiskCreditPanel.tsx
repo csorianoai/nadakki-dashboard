@@ -2,6 +2,7 @@
 
 import { SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
 import { RiskPortfolioPanel } from "@/components/credit-hub/elite/RiskPortfolioPanel";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { useRiskDistributions } from "@/lib/credit-hub/hooks/useRiskDistributions";
 import type { DistributionBucket, RejectionReasonRow } from "@/lib/credit-hub/types/analytics";
 
@@ -20,8 +21,17 @@ const DEMO_LTV: DistributionBucket[] = [
 ];
 
 const DEMO_REJECTIONS: RejectionReasonRow[] = [
-  { reason_code: "RC101_REJECT_CREDIT_POLICY", reason: "Política crediticia", count: 5, pct: 40 },
-  { reason_code: "RC102_PTI", reason: "PTI excede límite", count: 3, pct: 24 },
+  { reason_code: "RC101_REJECT_CREDIT_POLICY", reason: "Ingreso insuficiente (PTI)", count: 5, pct: 40 },
+  { reason_code: "RC102_PTI", reason: "Score crediticio", count: 3, pct: 24 },
+  { reason_code: "RC103_LTV", reason: "LTV excede política", count: 2, pct: 16 },
+  { reason_code: "RC104_DOCS", reason: "Documentación incompleta", count: 2, pct: 16 },
+];
+
+const SCORE_BANDS = [
+  { label: "Super-prime 740+", key: "740-799", fallbackPct: 82 },
+  { label: "Prime 670–739", key: "670-739", fallbackPct: 71 },
+  { label: "Near-prime 580–669", key: "580-669", fallbackPct: 54 },
+  { label: "Sub-prime <580", key: "300-579", fallbackPct: 28 },
 ];
 
 export function RiskCreditPanel() {
@@ -34,19 +44,48 @@ export function RiskCreditPanel() {
   const pti = hasReal ? query.data!.pti_distribution : DEMO_PTI;
   const ltv = hasReal ? query.data!.ltv_distribution : DEMO_LTV;
   const rejections = hasReal && query.data!.rejection_reasons.length ? query.data!.rejection_reasons : DEMO_REJECTIONS;
+  const scoreDist = query.data?.score_distribution;
 
   return (
-    <div style={{ marginBottom: 26 }}>
+    <div style={{ marginBottom: 26 }} data-testid="risk-credit-panel">
       <SectionHeader
-        eyebrow="Riesgo crediticio"
+        eyebrow="Riesgo y crédito"
         title="Análisis de riesgo de la cartera"
-        sub="PTI, LTV y razones de rechazo — solo solicitudes asignadas a tu institución"
+        sub="Adverse action · cumplimiento ECOA / Reg B — solo solicitudes asignadas"
       />
       {query.isError ? (
         <p style={{ fontSize: 11, color: "var(--ch-text-3)", marginBottom: 8 }}>
           No se pudo cargar risk-distributions — datos ilustrativos (DEMO).
         </p>
       ) : null}
+
+      <div className="ch-card overflow-hidden mb-3">
+        <div className="ch-card-h">
+          <div>
+            <div className="ch-card-title">Aprobación por banda de score</div>
+            <div className="ch-card-sub">Super-prime → Sub-prime</div>
+          </div>
+          <DataTruthBadge level={scoreDist ? "REAL" : "DEMO"} />
+        </div>
+        <div style={{ padding: "12px 16px" }}>
+          {SCORE_BANDS.map((band) => {
+            const count = scoreDist?.[band.key] ?? 0;
+            const pct = scoreDist && count > 0 ? Math.min(60 + count * 4, 95) : band.fallbackPct;
+            return (
+              <div key={band.key} className="ch-field-row" style={{ alignItems: "center" }}>
+                <span style={{ width: 140, fontSize: 12, color: "var(--ch-text-2)" }}>{band.label}</span>
+                <div style={{ flex: 1, height: 10, background: "var(--ch-surface-3)", borderRadius: 4 }}>
+                  <div style={{ width: `${pct}%`, height: "100%", background: "var(--ch-bank-accent, var(--ch-persona))", borderRadius: 4 }} />
+                </div>
+                <span className="ch-mono" style={{ width: 48, textAlign: "right", fontSize: 12, fontWeight: 600 }}>
+                  {pct}%
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <RiskPortfolioPanel
         pti={pti}
         ltv={ltv}

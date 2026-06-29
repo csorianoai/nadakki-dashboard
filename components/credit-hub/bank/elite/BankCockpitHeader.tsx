@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Building2 } from "lucide-react";
+import Link from "next/link";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 function initials(name: string): string {
@@ -15,11 +15,15 @@ export function BankCockpitHeader({
   complianceSummary,
   period,
   onPeriodChange,
+  showDemoBanner,
+  lastSyncedLabel,
 }: {
   institutionName: string;
   complianceSummary?: string;
   period: "today" | "week" | "month";
   onPeriodChange: (p: "today" | "week" | "month") => void;
+  showDemoBanner?: boolean;
+  lastSyncedLabel?: string;
 }) {
   return (
     <header data-testid="bank-cockpit-header" style={{ marginBottom: 22 }}>
@@ -44,15 +48,15 @@ export function BankCockpitHeader({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h1 className="ch-serif" style={{ margin: 0, fontSize: "clamp(22px, 4vw, 28px)", letterSpacing: "-0.02em" }}>
-                Cockpit del Banco
+                Mesa de Decisión
               </h1>
               <span className="ch-chip" style={{ fontSize: 9, letterSpacing: "0.08em" }}>
-                MESA DE DECISIÓN
+                CRÉDITO AUTO
               </span>
               <DataTruthBadge level="REAL" />
             </div>
             <p style={{ margin: 0, fontSize: 13.5, color: "var(--ch-text-2)" }}>
-              {institutionName} · Dealer → Banco · Revisión humana requerida
+              {institutionName} · Originación automotriz · Dealer → Banco
             </p>
             {complianceSummary ? (
               <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--ch-text-3)" }}>{complianceSummary}</p>
@@ -61,7 +65,7 @@ export function BankCockpitHeader({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="ch-chip success" style={{ fontSize: 10 }}>
-            Aislamiento activo
+            Aislamiento activo · solo tu institución
           </span>
           {(["today", "week", "month"] as const).map((p) => (
             <button
@@ -96,6 +100,28 @@ export function BankCockpitHeader({
           </div>
         </div>
       </div>
+
+      {showDemoBanner ? (
+        <div
+          style={{
+            marginTop: 14,
+            padding: "10px 12px",
+            borderRadius: 8,
+            border: "1px dashed var(--ch-accent-line)",
+            background: "var(--ch-accent-soft)",
+            fontSize: 12,
+            color: "var(--ch-accent-text)",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <DataTruthBadge level="DEMO" />
+          {lastSyncedLabel ?? "Sincronizado recientemente"} · subasta inversa (ofertas de competidores ocultas)
+        </div>
+      ) : null}
+
       <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "var(--ch-text-3)" }}>
         <span style={{ color: "var(--ch-success)" }}>●</span> Ofertas competidoras ocultas por diseño · solo tu cartera asignada
       </p>

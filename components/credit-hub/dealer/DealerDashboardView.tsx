@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo } from "react";
 import { EmptyStateRich, KpiStripSkeleton } from "@/components/credit-hub/primitives";
 import { BankRanking } from "@/components/credit-hub/dealer/sections/BankRanking";
@@ -21,10 +20,6 @@ import {
 } from "@/lib/credit-hub/dealer/dealer-pipeline-metrics";
 import { formatDealerMoney } from "@/lib/credit-hub/dealer/dealerFormat";
 
-/**
- * Dealer Command Center — layout alineado al prototipo Cockpit del Dealer (tema claro).
- * Ruta REAL: app/(forge)/credit-hub/dealer/page.tsx
- */
 export function DealerDashboardView({
   applications,
   stats,
@@ -94,15 +89,27 @@ export function DealerDashboardView({
         banks={banksQuery.data?.banks}
       />
 
+      <hr className="ch-section-break" aria-hidden />
+
       <DealerGoals stats={stats} applications={applications} currency={currency} />
+
+      <hr className="ch-section-break" aria-hidden />
 
       <OfferComparatorSpotlight applications={applications} currency={currency} />
 
+      <hr className="ch-section-break" aria-hidden />
+
       <DealerPipelineRail summary={summary} applications={applications} currency={currency} />
+
+      <hr className="ch-section-break" aria-hidden />
 
       <BankRanking />
 
+      <hr className="ch-section-break" aria-hidden />
+
       <RecentApplicationsTable apps={applications.length ? applications : activeApps} currency={currency} />
+
+      <hr className="ch-section-break" aria-hidden />
 
       <DealerTrendsAlerts
         applications={applications}
