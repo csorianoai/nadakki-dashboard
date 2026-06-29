@@ -11,13 +11,15 @@ export function DealerNewApplicationLayoutClient({ children }: { children: React
   if (pathname?.includes("/applications/new/complete")) {
     return <>{children}</>;
   }
-  // Key on the last path segment forces React to re-mount the page component
-  // when the URL changes between wizard steps (fixes soft-navigation stale view).
+  // Key on the page outlet (not the chrome frame) so Next.js soft navigation
+  // swaps the step segment component when the URL changes (#214 follow-up).
   const stepSlug = pathname?.split("/").filter(Boolean).pop() ?? "applicant";
   return (
     <Suspense fallback={<DetailSkeleton />}>
       <DealerWizardProvider>
-        <DealerWizardFrame key={stepSlug}>{children}</DealerWizardFrame>
+        <DealerWizardFrame>
+          <div key={stepSlug}>{children}</div>
+        </DealerWizardFrame>
       </DealerWizardProvider>
     </Suspense>
   );

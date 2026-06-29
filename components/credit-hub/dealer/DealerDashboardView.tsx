@@ -14,6 +14,7 @@ import { ComplianceFooter } from "@/components/credit-hub/elite";
 import { CHPanelBoundary } from "@/components/credit-hub/system/CHPanelBoundary";
 import { CHPanelState } from "@/components/credit-hub/system/CHPanelState";
 import { useDashboardSummary } from "@/lib/credit-hub/hooks/useDashboardSummary";
+import { isAnalyticsUnavailable } from "@/lib/credit-hub/hooks/analyticsQueryOptions";
 import { useBanksRanking } from "@/lib/credit-hub/hooks/useBanksRanking";
 import type { DealerDashboardViewProps } from "@/lib/credit-hub/types/dealer-views";
 import {
@@ -36,6 +37,8 @@ export function DealerDashboardView({
   const summaryQuery = useDashboardSummary();
   const banksQuery = useBanksRanking();
   const summary = summaryQuery.data?.summary;
+  const summaryUnavailable = isAnalyticsUnavailable(summaryQuery.error);
+  const summarySlowLoading = summaryQuery.isLoading && summaryQuery.isFetching;
 
   const activeApps = useMemo(
     () =>
@@ -94,11 +97,17 @@ export function DealerDashboardView({
 
       <CHPanelBoundary label="Pipeline">
         <CHPanelState
-          isLoading={summaryQuery.isLoading}
-          isError={summaryQuery.isError}
-          onRetry={() => void summaryQuery.refetch()}
-          errorTitle="Resumen de pipeline no disponible"
+          isLoading={summarySlowLoading}
+          isUnavailable={summaryUnavailable}
+          unavailableTitle="Resumen de pipeline no conectado"
+          unavailableDescription="El endpoint /credit/dashboard/summary no está disponible en este entorno. Las métricas de pipeline usan datos locales o DEMO."
+          loadingLabel="Cargando resumen de pipeline… (el servicio puede estar despertando)"
         >
+          {summaryQuery.isError && !summaryUnavailable ? (
+            <p style={{ fontSize: 11, color: "var(--ch-text-3)", marginBottom: 8 }}>
+              Resumen agregado no disponible — mostrando pipeline con datos locales (DEMO).
+            </p>
+          ) : null}
           <DealerPipelineRail summary={summary} applications={applications} currency={currency} />
         </CHPanelState>
       </CHPanelBoundary>

@@ -16,6 +16,7 @@ import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { chMoneyExact, chScoreBand } from "@/lib/credit-hub/ch-base";
 import { chRelTimeDealer, parseRequestedAmount } from "@/lib/credit-hub/dealer/dealerFormat";
+import { offerHasCompleteTerms } from "@/lib/credit-hub/offers/offer-terms";
 import type { DealerApplicationDetailViewProps } from "@/lib/credit-hub/types/dealer-views";
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
 import type { CreditOffer } from "@/lib/credit-hub/types/offers";
@@ -247,7 +248,10 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
             {offers.map((offer) => {
               const isAccepted = offer.status === "accepted";
               const isNotSelected = offer.status === "not_selected" || offer.status === "declined" || (hasAcceptedOffer && !isAccepted);
-              const canSelect = !hasAcceptedOffer && SELECTABLE_OFFER_STATUSES.has(offer.status);
+              const canSelect =
+                !hasAcceptedOffer &&
+                SELECTABLE_OFFER_STATUSES.has(offer.status) &&
+                offerHasCompleteTerms(offer);
               const isThisAccepting = acceptingOfferId === offer.id && acceptState === "loading";
               return (
                 <div
@@ -332,15 +336,23 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                       </div>
                     ) : null}
                   </div>
-                  {offer.stipulations.length > 0 ? (
+                  {(offer.stipulations?.length ?? 0) > 0 ? (
                     <div style={{ fontSize: 12, color: "var(--ch-text-2)", marginTop: 2 }}>
                       <div className="ch-eyebrow" style={{ marginBottom: 4 }}>Condiciones</div>
                       <ul style={{ margin: 0, paddingLeft: 18 }}>
-                        {offer.stipulations.map((s) => (
+                        {(offer.stipulations ?? []).map((s) => (
                           <li key={s}>{s.replace(/_/g, " ")}</li>
                         ))}
                       </ul>
                     </div>
+                  ) : null}
+                  {!canSelect &&
+                  !hasAcceptedOffer &&
+                  SELECTABLE_OFFER_STATUSES.has(offer.status) &&
+                  !offerHasCompleteTerms(offer) ? (
+                    <p style={{ fontSize: 12, color: "var(--ch-text-3)", margin: 0 }}>
+                      Faltan términos financieros completos para aceptar esta oferta.
+                    </p>
                   ) : null}
                   {canSelect ? (
                     <button

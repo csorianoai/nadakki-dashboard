@@ -1,7 +1,9 @@
 "use client";
 
 import { BankRankingTable } from "@/components/credit-hub/elite/BankRankingTable";
+import { CHPanelState } from "@/components/credit-hub/system/CHPanelState";
 import { useBanksRanking } from "@/lib/credit-hub/hooks/useBanksRanking";
+import { isAnalyticsUnavailable } from "@/lib/credit-hub/hooks/analyticsQueryOptions";
 import type { BankRankingRow } from "@/lib/credit-hub/types/analytics";
 import type { DataTruthLevel } from "@/lib/credit-hub/honesty/data-truth";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
@@ -15,9 +17,10 @@ const DEMO_BANKS: BankRankingRow[] = [
 
 export function BankRanking() {
   const query = useBanksRanking();
+  const unavailable = isAnalyticsUnavailable(query.error);
   const hasReal = !!query.data?.banks?.length && !query.isError;
-  const truth: DataTruthLevel = hasReal ? "REAL" : "DEMO";
-  const rows = hasReal ? query.data!.banks : DEMO_BANKS;
+  const truth: DataTruthLevel = hasReal ? "REAL" : unavailable ? "ROADMAP" : "DEMO";
+  const rows = hasReal ? query.data!.banks : unavailable ? [] : DEMO_BANKS;
   const sorted = [...rows].sort((a, b) => (b.approval_rate ?? 0) - (a.approval_rate ?? 0));
   const leader = sorted[0]?.lender_code;
 
@@ -35,12 +38,21 @@ export function BankRanking() {
         </div>
         <p style={{ fontSize: 12, color: "var(--ch-text-3)", marginTop: 4 }}>Tasa, velocidad, APR y volumen de ofertas</p>
       </div>
-      {query.isError && !hasReal ? (
-        <p style={{ fontSize: 11, color: "var(--ch-text-3)", marginBottom: 8 }}>
-          Fallback ilustrativo — conecta banks-ranking en producción.
-        </p>
-      ) : null}
-      <BankRankingTable rows={sorted} truth={truth} leaderCode={leader} showRank />
+
+      <CHPanelState
+        isLoading={query.isLoading && query.isFetching}
+        isUnavailable={unavailable}
+        unavailableTitle="Ranking por banco no conectado"
+        unavailableDescription="El endpoint banks-ranking aún no está disponible. No mostramos datos ilustrativos como si fueran reales."
+        loadingLabel="Cargando ranking de bancos…"
+      >
+        {query.isError && !hasReal && !unavailable ? (
+          <p style={{ fontSize: 11, color: "var(--ch-text-3)", marginBottom: 8 }}>
+            Fallback ilustrativo — el servicio no respondió tras reintentos.
+          </p>
+        ) : null}
+        <BankRankingTable rows={sorted} truth={truth} leaderCode={leader} showRank />
+      </CHPanelState>
     </div>
   );
 }

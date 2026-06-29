@@ -8,6 +8,8 @@ import type {
   RiskDistributionsResponse,
 } from "../types/analytics";
 
+const ANALYTICS_TIMEOUT_MS = 60_000;
+
 function mapBuckets(raw: unknown): DistributionBucket[] {
   if (!Array.isArray(raw)) return [];
   return raw.map((item) => {
@@ -39,6 +41,7 @@ export function getBanksRanking(params: { tenantId: string }): Promise<BanksRank
   return chFetch<BanksRankingResponse>("/api/v2/credit/analytics/banks-ranking", {
     tenantId: params.tenantId,
     actorRole: "dealer",
+    timeoutMs: ANALYTICS_TIMEOUT_MS,
   });
 }
 
@@ -46,12 +49,21 @@ export async function getRiskDistributions(params: { tenantId: string }): Promis
   const raw = await chFetch<Record<string, unknown>>("/api/v2/credit/analytics/risk-distributions", {
     tenantId: params.tenantId,
     actorRole: "bank_admin",
+    timeoutMs: ANALYTICS_TIMEOUT_MS,
   });
+  const scoreRaw = raw.score_distribution;
+  const score_distribution =
+    scoreRaw && typeof scoreRaw === "object" && !Array.isArray(scoreRaw)
+      ? Object.fromEntries(
+          Object.entries(scoreRaw as Record<string, unknown>).map(([k, v]) => [k, Number(v) || 0]),
+        )
+      : undefined;
   return {
     tenant_id: String(raw.tenant_id ?? ""),
     pti_distribution: mapBuckets(raw.pti_distribution),
     ltv_distribution: mapBuckets(raw.ltv_distribution),
     rejection_reasons: mapRejections(raw.rejection_reasons),
+    score_distribution,
     generated_at: String(raw.generated_at ?? ""),
   };
 }
@@ -64,6 +76,7 @@ export function getAuctionIntel(params: {
   return chFetch<AuctionIntelResponse>(`/api/v2/credit/analytics/auction-intel${q}`, {
     tenantId: params.tenantId,
     actorRole: "bank_admin",
+    timeoutMs: ANALYTICS_TIMEOUT_MS,
   });
 }
 
@@ -72,5 +85,6 @@ export function getDashboardSummary(params: { tenantId: string }): Promise<Dashb
   return chFetch<DashboardSummaryResponse>("/credit/dashboard/summary", {
     tenantId: params.tenantId,
     actorRole: "dealer",
+    timeoutMs: ANALYTICS_TIMEOUT_MS,
   });
 }

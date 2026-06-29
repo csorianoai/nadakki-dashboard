@@ -44,6 +44,26 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
     return null;
   }, [stepIndex, canAdvance, formData, validationConfig, t]);
 
+  const handleSaveDraft = useCallback(() => {
+    const ok = saveDraftToStorage();
+    const lang = forgeToastLangFromLocale(tenantConfig.locale);
+    const copy = forgeWizardToasts(lang);
+    if (ok) {
+      toast.success(copy.draftSaved, { duration: 2000 });
+      return;
+    }
+    toast.warning(copy.draftSaveFailed, {
+      id: "forge-dealer-manual-save-error",
+      duration: 8000,
+      action: {
+        label: copy.retry,
+        onClick: () => {
+          if (saveDraftToStorage()) toast.success(copy.draftSaved, { duration: 2000 });
+        },
+      },
+    });
+  }, [saveDraftToStorage, tenantConfig.locale]);
+
   const scrollToFirstIncomplete = useCallback(() => {
     if (stepIndex !== 0) return;
     const applicantOk = stepIsValid(0, formData, validationConfig, t);
@@ -148,7 +168,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           <button type="button" className="ch-btn ch-btn-secondary flex-1 min-h-[48px]" onClick={goPrev} disabled={stepIndex === 0}>
             Anterior
           </button>
-          <button type="button" className="ch-btn ch-btn-ghost min-h-[48px] shrink-0 px-3 text-xs" onClick={saveDraftToStorage}>
+          <button type="button" className="ch-btn ch-btn-ghost min-h-[48px] shrink-0 px-3 text-xs" onClick={handleSaveDraft}>
             Guardar
           </button>
           {stepIndex < 4 ? (

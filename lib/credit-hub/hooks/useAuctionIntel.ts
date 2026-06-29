@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getAuctionIntel } from "../api/analyticsClient";
+import { ANALYTICS_QUERY_OPTIONS } from "./analyticsQueryOptions";
 import { chKeys } from "./queryKeys";
 import { useTenant } from "./useTenant";
 
@@ -15,7 +16,7 @@ export function useAuctionIntel(lenderCode?: string | null) {
         lenderCode: lenderCode ?? undefined,
       }),
     enabled: !!tenantId,
-    retry: 1,
     staleTime: 60_000,
+    ...ANALYTICS_QUERY_OPTIONS,
   });
 }

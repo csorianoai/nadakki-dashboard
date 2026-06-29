@@ -31,6 +31,8 @@ export interface CHRequestInit extends Omit<RequestInit, "headers"> {
   tenantId: string;
   actorRole: CHActorRole;
   idempotencyKey?: string;
+  /** Override default 30s abort (analytics cold-start on Render). */
+  timeoutMs?: number;
   headers?: Record<string, string>;
 }
 
@@ -140,7 +142,8 @@ export async function chFetch<T>(path: string, init: CHRequestInit): Promise<T> 
 
   const isRetry = headers["X-CH-Retry"] === "1";
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+  const timeoutMs = init.timeoutMs ?? 30_000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const url = resolveCreditHubFetchUrl(path);
@@ -173,6 +176,12 @@ export async function chFetch<T>(path: string, init: CHRequestInit): Promise<T> 
     }
 
     return body as T;
+  } catch (error) {
+    if (error instanceof CHApiError) throw error;
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new CHApiError("Credit Hub request timed out", 408);
+    }
+    throw error;
   } finally {
     clearTimeout(timeoutId);
   }
