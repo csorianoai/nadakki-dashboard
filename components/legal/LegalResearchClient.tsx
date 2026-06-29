@@ -11,6 +11,8 @@ import { LegalErrorState } from "@/components/legal/LegalErrorState";
 import { LegalLoadingSkeleton } from "@/components/legal/LegalLoadingSkeleton";
 import { LegalDisclaimer } from "@/components/legal/LegalDisclaimer";
 import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
+import { buildChatHistorialFromMessages } from "@/lib/legal/build-chat-historial";
+import type { LegalChatHistorialTurn } from "@/lib/legal/build-chat-historial";
 
 const CHAT_AGENT = "chat_asesor_legal";
 const MAX_CHARS = 4000;
@@ -33,10 +35,18 @@ function sessionKey(tenantId: string) {
   return `legal_research_session_${tenantId}`;
 }
 
-function buildInputs(agentId: string, message: string): Record<string, unknown> {
+function buildInputs(
+  agentId: string,
+  message: string,
+  historial?: LegalChatHistorialTurn[],
+): Record<string, unknown> {
   switch (agentId) {
     case CHAT_AGENT:
-      return { mensaje: message, consulta: message };
+      return {
+        mensaje: message,
+        consulta: message,
+        ...(historial && historial.length > 0 ? { historial } : {}),
+      };
     case "analizador_riesgo_contractual":
       return { contrato: message, tipo_analisis: "riesgo_contractual" };
     case "validador_amlkyc":
@@ -120,11 +130,12 @@ export default function LegalResearchClient() {
     if (!text || !effectiveTenantId) return;
     if (text.length > MAX_CHARS) return;
     setInput("");
+    const historial = agentId === CHAT_AGENT ? buildChatHistorialFromMessages(messages) : undefined;
     setMessages((m) => [...m, { role: "user", content: text }]);
     trackEvent("legal_agent_run_started", { agent_id: agentId, tenant_id: effectiveTenantId });
     const t0 = Date.now();
     try {
-      const run = await runHook.run(agentId, buildInputs(agentId, text));
+      const run = await runHook.run(agentId, buildInputs(agentId, text, historial));
       setMessages((m) => [...m, { role: "assistant", content: run.respuesta || "", run }]);
       trackEvent("legal_agent_run_completed", {
         agent_id: agentId,
@@ -148,7 +159,7 @@ export default function LegalResearchClient() {
       else if (http >= 500) msg = `Error interno (${http}). Si persiste, reporte al equipo.`;
       setMessages((m) => [...m, { role: "assistant", content: `**Error**\n${msg}` }]);
     }
-  }, [agentId, effectiveTenantId, input, runHook]);
+  }, [agentId, effectiveTenantId, input, messages, runHook]);
 
   const newChat = () => {
     setMessages([]);
@@ -197,7 +208,7 @@ export default function LegalResearchClient() {
           </label>
           <select
             id="legal-agent-select"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
           >
@@ -343,7 +354,7 @@ export default function LegalResearchClient() {
               <textarea
                 id="legal-research-input"
                 aria-label="Consulta legal"
-                className="min-h-[48px] flex-1 resize-y rounded-lg border border-slate-300 bg-white p-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                className="min-h-[48px] flex-1 resize-y rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-500 caret-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
                 rows={2}
                 maxLength={MAX_CHARS}
                 value={input}

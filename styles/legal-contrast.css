@@ -210,3 +210,76 @@
 .legal-surface .text-slate-500,
 .legal-surface .text-slate-400 { color: #b4bdce !important; }
 .legal-surface .text-slate-600 { color: #9aa4b8 !important; }
+
+/* ── Form controls on LIGHT surfaces inside the dark legal shell ──
+   Parent layout sets text-zinc-100; inputs with bg-white (or inside white
+   cards) inherit light text → illegible. Force dark text + legible placeholder. */
+.legal-surface input.bg-white,
+.legal-surface textarea.bg-white,
+.legal-surface select.bg-white,
+.legal-surface input[class*="bg-white"],
+.legal-surface textarea[class*="bg-white"],
+.legal-surface select[class*="bg-white"],
+.legal-surface .bg-white input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.legal-surface .bg-white textarea,
+.legal-surface .bg-white select,
+.legal-surface .bg-slate-50 input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.legal-surface .bg-slate-50 textarea,
+.legal-surface .bg-slate-50 select {
+  color: #0f172a !important; /* slate-900 — ≥7:1 on white (WCAG AA) */
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.legal-surface input.bg-white::placeholder,
+.legal-surface textarea.bg-white::placeholder,
+.legal-surface input[class*="bg-white"]::placeholder,
+.legal-surface textarea[class*="bg-white"]::placeholder,
+.legal-surface .bg-white input::placeholder,
+.legal-surface .bg-white textarea::placeholder {
+  color: #64748b !important; /* slate-500 placeholder */
+  opacity: 1;
+}
+
+/* Forge card modals/dialogs (expedientes, tasks) — light surface, dark text */
+.legal-surface .bg-forgeSurface-card input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.legal-surface .bg-forgeSurface-card textarea,
+.legal-surface .bg-forgeSurface-card select,
+.legal-surface input[class*="border-forgeGray"],
+.legal-surface textarea[class*="border-forgeGray"],
+.legal-surface select[class*="border-forgeGray"] {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+.legal-surface input[class*="border-forgeGray"]::placeholder,
+.legal-surface textarea[class*="border-forgeGray"]::placeholder {
+  color: #6b7280 !important;
+  opacity: 1;
+}
+
+/* Strategy comparator and legacy gray-border inputs */
+.legal-surface input[class*="border-gray-300"],
+.legal-surface textarea[class*="border-gray-300"],
+.legal-surface select[class*="border-gray-300"] {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+
+.legal-surface input[class*="border-gray-300"]::placeholder,
+.legal-surface textarea[class*="border-gray-300"]::placeholder {
+  color: #6b7280 !important;
+  opacity: 1;
+}
+
+/* Audit / home filters: inputs with slate border but no explicit bg on white panels */
+.legal-surface .bg-white input[class*="border-slate-300"],
+.legal-surface .bg-white textarea[class*="border-slate-300"],
+.legal-surface .bg-white select[class*="border-slate-300"],
+.legal-surface input[class*="border-slate-300"]:not([class*="bg-zinc"]):not([class*="text-zinc"]),
+.legal-surface textarea[class*="border-slate-300"]:not([class*="bg-zinc"]):not([class*="text-zinc"]),
+.legal-surface select[class*="border-slate-300"]:not([class*="bg-zinc"]):not([class*="text-zinc"]) {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
