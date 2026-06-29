@@ -28,6 +28,19 @@ export const ComplianceFooter = memo(function ComplianceFooter({ variant }: { va
             ? "Tu institución solo visualiza solicitudes asignadas. Las ofertas, tasas y decisiones de bancos competidores permanecen ocultas por diseño."
             : "Ves únicamente TUS solicitudes y las ofertas de los bancos a los que enviaste. Las solicitudes y la actividad de otros dealers permanecen ocultas por diseño."}
         </p>
+        <p
+          data-testid="ch-build-marker"
+          className="ch-build-marker"
+          style={{
+            margin: "8px 0 0",
+            fontSize: 10,
+            color: "var(--ch-text-4)",
+            fontFamily: "var(--ch-font-mono)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          build {process.env.NEXT_PUBLIC_CH_BUILD_SHA ?? "local"} · v2-elite
+        </p>
       </div>
     </footer>
   );
