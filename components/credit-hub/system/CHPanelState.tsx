@@ -6,9 +6,13 @@ import { EmptyStateRich } from "@/components/credit-hub/primitives";
 export interface CHPanelStateProps {
   isLoading?: boolean;
   isError?: boolean;
+  isUnavailable?: boolean;
   onRetry?: () => void;
   loadingFallback?: ReactNode;
   errorTitle?: string;
+  unavailableTitle?: string;
+  unavailableDescription?: string;
+  loadingLabel?: string;
   children: ReactNode;
 }
 
@@ -16,12 +20,35 @@ export interface CHPanelStateProps {
 export function CHPanelState({
   isLoading,
   isError,
+  isUnavailable,
   onRetry,
   loadingFallback = null,
   errorTitle,
+  unavailableTitle = "No disponible",
+  unavailableDescription = "Este módulo aún no está conectado en este entorno. El resto del cockpit sigue operativo.",
+  loadingLabel,
   children,
 }: CHPanelStateProps) {
-  if (isLoading) return <>{loadingFallback}</>;
+  if (isLoading) {
+    if (loadingFallback) return <>{loadingFallback}</>;
+    if (loadingLabel) {
+      return (
+        <p style={{ fontSize: 13, color: "var(--ch-text-3)", margin: "8px 0 16px" }} role="status">
+          {loadingLabel}
+        </p>
+      );
+    }
+    return null;
+  }
+  if (isUnavailable) {
+    return (
+      <EmptyStateRich
+        variant="placeholder"
+        title={unavailableTitle}
+        description={unavailableDescription}
+      />
+    );
+  }
   if (isError) {
     return (
       <EmptyStateRich

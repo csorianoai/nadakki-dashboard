@@ -9,6 +9,8 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { listOffers } from "../api/offersClient";
+import { enrichNadakkiDemoOffer } from "../demo/enrich-nadakki-demo-offers";
+import { isNadakkiDemoTenant } from "../utils/nadakki-demo-tenant";
 import { chKeys } from "./queryKeys";
 import { useTenant } from "./useTenant";
 import type { CreditOffer, OffersListResponse } from "../types/offers";
@@ -33,7 +35,14 @@ export function useApplicationOffers(applicationId: string | null | undefined) {
 
   const offersQuery = useQuery<OffersListResponse>({
     queryKey: chKeys.creditCoreOffers(tenantId ?? "", applicationId ?? ""),
-    queryFn: () => listOffers({ tenantId: tenantId!, applicationId: applicationId! }),
+    queryFn: async () => {
+      const response = await listOffers({ tenantId: tenantId!, applicationId: applicationId! });
+      if (!isNadakkiDemoTenant(tenantId)) return response;
+      return {
+        ...response,
+        offers: response.offers.map((offer, index) => enrichNadakkiDemoOffer(offer, index)),
+      };
+    },
     enabled: !!tenantId && !!applicationId,
     retry: 1,
     staleTime: 15_000,
