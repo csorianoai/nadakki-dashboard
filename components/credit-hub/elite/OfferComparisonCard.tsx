@@ -38,17 +38,20 @@ export const OfferComparisonCard = memo(function OfferComparisonCard({
   const terms = (offer.raw as { terms?: Record<string, unknown> })?.terms ?? {};
   const downPct = typeof terms.down_payment_pct === "number" ? terms.down_payment_pct : null;
 
+  const cardClass = ["ch-card ch-card-interactive flex flex-col", isBest ? "ch-card-spotlight" : ""]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <article
-      className="ch-card flex flex-col"
+      className={cardClass}
       data-testid={`offer-comparison-${offer.id}`}
       style={{
         padding: 16,
         position: "relative",
         borderWidth: isBest ? 2 : 1,
-        borderColor: isBest ? "var(--ch-warning, var(--ch-persona))" : "var(--ch-line)",
+        borderColor: isBest ? "var(--ch-warning, var(--ch-persona))" : undefined,
         background: isAccepted ? "var(--ch-success-soft)" : "var(--ch-surface)",
-        boxShadow: isBest ? "0 4px 14px rgba(0,0,0,0.06)" : undefined,
       }}
     >
       {isBest ? (
@@ -95,21 +98,21 @@ export const OfferComparisonCard = memo(function OfferComparisonCard({
         ) : null}
       </div>
 
-      <div className="space-y-2 text-sm" style={{ borderTop: "1px solid var(--ch-line)", paddingTop: 10 }}>
+      <div style={{ borderTop: "1px solid var(--ch-line-subtle)", paddingTop: 10, marginTop: 4 }}>
         {[
           ["Plazo", offer.term_months != null ? `${offer.term_months} meses` : "—"],
           ["Cuota mensual", offer.monthly_payment != null ? chMoneyExact(offer.monthly_payment, currencyPrefix) : "—"],
           ["Monto financiado", offer.amount_approved != null ? chMoneyExact(offer.amount_approved, currencyPrefix) : "—"],
           ["Anticipo", downPct != null ? `${downPct}%` : "—"],
         ].map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-2">
+          <div key={k} className="ch-field-row">
             <span style={{ color: "var(--ch-text-3)", fontSize: 12 }}>{k}</span>
             <span className="ch-mono font-semibold">{v}</span>
           </div>
         ))}
       </div>
 
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 12, borderTop: "1px solid var(--ch-line-subtle)", paddingTop: 12 }}>
         <div className="ch-eyebrow" style={{ marginBottom: 6 }}>
           Estipulaciones
         </div>

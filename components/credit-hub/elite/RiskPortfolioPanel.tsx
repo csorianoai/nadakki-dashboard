@@ -67,7 +67,7 @@ export const RiskPortfolioPanel = memo(function RiskPortfolioPanel({
         <HorizontalBar buckets={ltv} title="Distribución LTV" />
       </div>
       <div className="ch-card overflow-hidden">
-        <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--ch-line)" }}>
+        <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--ch-line-subtle)" }}>
           <div className="ch-card-title">Razones de rechazo</div>
           <div className="ch-card-sub">Reg B / ECOA — solo tu cartera asignada</div>
         </div>

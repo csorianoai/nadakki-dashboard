@@ -20,8 +20,9 @@ describe("BankDashboardView", () => {
         <BankDashboardView queue={[]} institutionName="TestBank Mexico" />
       </div>
     );
-    expect(screen.getByRole("heading", { name: /Mesa de decisiones/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Cockpit del Banco/i })).toBeInTheDocument();
     expect(screen.getByText(/Revisión humana requerida/i)).toBeInTheDocument();
+    expect(screen.getByTestId("bank-kpi-strip")).toBeInTheDocument();
     expect(screen.getByTestId("compliance-footer")).toBeInTheDocument();
   });
 

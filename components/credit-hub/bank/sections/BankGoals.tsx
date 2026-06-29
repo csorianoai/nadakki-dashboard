@@ -30,13 +30,19 @@ export function BankGoals({ analytics, queueCount }: BankGoalsProps) {
         <p style={{ fontSize: 11, color: "var(--ch-accent-text)", background: "var(--ch-accent-soft)", border: "1px solid var(--ch-accent-line)", borderRadius: 4, padding: "4px 8px", margin: "0 0 12px" }}>
           DEMO — objetivos ilustrativos. No existe endpoint de metas aún.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-          {goals.map((g) => {
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
+          {goals.map((g, index) => {
             const pct = g.inverted
               ? (g.target > 0 ? Math.min(Math.max((1 - (g.current / g.target - 1)) * 100, 0), 100) : 0)
               : (g.target > 0 ? Math.min((g.current / g.target) * 100, 100) : 0);
             return (
-              <div key={g.label}>
+              <div
+                key={g.label}
+                style={{
+                  padding: "14px 16px",
+                  borderBottom: index < goals.length - 1 ? "1px solid var(--ch-line-subtle)" : undefined,
+                }}
+              >
                 <div style={{ fontSize: 12, color: "var(--ch-text-3)", marginBottom: 4 }}>{g.label}</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 6 }}>
                   <span className="ch-mono" style={{ fontSize: 20, fontWeight: 600, color: "var(--ch-text)" }}>

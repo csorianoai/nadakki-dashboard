@@ -44,18 +44,25 @@ export const MetricCard = memo(function MetricCard({
         : "var(--ch-text-3)";
   const sparkColor = trendColor ?? (accent ? "var(--ch-dealer-accent)" : "var(--ch-text-3)");
 
+  const cardClass = [
+    "ch-card flex flex-col",
+    onClick ? "ch-card-interactive" : "",
+    accent ? "ch-card-spotlight" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
-      className="ch-card flex flex-col"
+      className={cardClass}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
       style={{
         padding: "12px 14px 10px",
         position: "relative",
-        cursor: onClick ? "pointer" : undefined,
         minHeight: 118,
-        borderColor: accent ? "var(--ch-warning-line, var(--ch-persona-soft))" : undefined,
+        borderColor: accent ? "color-mix(in oklab, var(--ch-persona) 28%, var(--ch-line))" : undefined,
       }}
     >
       <div style={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
