@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { GeistSans } from "geist/font/sans";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
@@ -20,6 +21,30 @@ import "@/styles/legal-contrast.css";
 export function LegalLayoutClient({ children }: { children: ReactNode }) {
   const { tenantSlug } = useCreditHubTenant();
   const tenantAttr = tenantSlug ?? undefined;
+  const pathname = usePathname();
+  const isResearchFullscreen = pathname?.startsWith("/legal/research");
+
+  if (isResearchFullscreen) {
+    return (
+      <>
+        <CreditHubI18nBootstrap />
+        <div
+          className={`legal-surface flex min-h-0 flex-1 flex-col ${GeistSans.className}`}
+          data-portal="legal"
+          data-tenant={tenantAttr}
+        >
+          <CHTenantGuard>
+            <ModuleGate module="legal">
+              <DisasterModeProvider>
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+              </DisasterModeProvider>
+            </ModuleGate>
+          </CHTenantGuard>
+          <ForgeToaster />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

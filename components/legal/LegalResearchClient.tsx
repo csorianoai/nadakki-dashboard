@@ -1,35 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Send } from "lucide-react";
 import { useLegalEffectiveTenantId, useLegalAgentRun } from "@/hooks/useLegal";
 import { formatLegalAgentRunError } from "@/lib/api/legal";
 import { trackEvent } from "@/lib/legal/telemetry";
 import type { AgentRunResponse } from "@/types/legal";
 import { LegalErrorState } from "@/components/legal/LegalErrorState";
 import { LegalLoadingSkeleton } from "@/components/legal/LegalLoadingSkeleton";
-import { LegalDisclaimer } from "@/components/legal/LegalDisclaimer";
 import { buildChatHistorialFromMessages } from "@/lib/legal/build-chat-historial";
 import type { LegalChatHistorialTurn } from "@/lib/legal/build-chat-historial";
-import { findLastAssistantIndex } from "@/lib/legal/research/citation-utils";
-import { AssistantResponseBlock } from "@/components/legal/research/AssistantResponseBlock";
-import { EmptyWelcome } from "@/components/legal/research/EmptyWelcome";
-import { FollowUpChips } from "@/components/legal/research/FollowUpChips";
+import { countStoredUserTurns } from "@/lib/legal/research/citation-utils";
 import { LoadingStages } from "@/components/legal/research/LoadingStages";
-import { TraceabilityPanel, type TraceabilityTab } from "@/components/legal/research/TraceabilityPanel";
+import { ResearchPapelFonts } from "@/components/legal/research/papel-blanco/ResearchPapelFonts";
+import { ResearchSidebar } from "@/components/legal/research/papel-blanco/ResearchSidebar";
+import { ResearchTopBar } from "@/components/legal/research/papel-blanco/ResearchTopBar";
+import { ResearchEmptyState } from "@/components/legal/research/papel-blanco/ResearchEmptyState";
+import { ResearchComposer } from "@/components/legal/research/papel-blanco/ResearchComposer";
+import { ResearchDictamenView } from "@/components/legal/research/papel-blanco/ResearchDictamenView";
+import { ResearchRecentDrawer } from "@/components/legal/research/papel-blanco/ResearchRecentDrawer";
+import "@/styles/legal-research-papel-blanco.css";
 
 const CHAT_AGENT = "chat_asesor_legal";
 const MAX_CHARS = 4000;
 
-const STATIC_FALLBACK_CHIPS = [
-  "¿Cuál es el capital mínimo para una entidad de intermediación financiera?",
-  "¿Qué obligaciones AML tiene un banco según Ley 155-17?",
-  "¿Es válida una cláusula penal del 50% en contrato de préstamo?",
-];
-
 type ChatMessage =
-  | { role: "user"; content: string }
+  | { role: "user"; content: string; sentAt?: string }
   | {
       role: "assistant";
       content: string;
@@ -67,6 +63,16 @@ function buildInputs(
   }
 }
 
+function readStoredSession(tenantId: string): { messages: ChatMessage[]; agent_id_active?: string } | null {
+  try {
+    const raw = sessionStorage.getItem(sessionKey(tenantId));
+    if (!raw) return null;
+    return JSON.parse(raw) as { messages: ChatMessage[]; agent_id_active?: string };
+  } catch {
+    return null;
+  }
+}
+
 export default function LegalResearchClient() {
   const searchParams = useSearchParams();
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
@@ -74,9 +80,11 @@ export default function LegalResearchClient() {
   const [agentId, setAgentId] = useState(initialAgent);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [tab, setTab] = useState<TraceabilityTab>("citations");
-  const [activeAssistantIndex, setActiveAssistantIndex] = useState<number | null>(null);
   const [highlightSourceId, setHighlightSourceId] = useState<string | null>(null);
+  const [recentOpen, setRecentOpen] = useState(false);
+  const [storedTurnCount, setStoredTurnCount] = useState(0);
+  const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const runHook = useLegalAgentRun(effectiveTenantId);
 
   useEffect(() => {
@@ -87,21 +95,14 @@ export default function LegalResearchClient() {
   useEffect(() => {
     if (!effectiveTenantId) return;
     const raw = sessionStorage.getItem(sessionKey(effectiveTenantId));
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw) as { messages?: ChatMessage[]; agent_id_active?: string };
-      if (Array.isArray(parsed.messages)) setMessages(parsed.messages);
-      if (parsed.agent_id_active) setAgentId(parsed.agent_id_active);
-    } catch {
-      /* ignore */
-    }
-  }, [effectiveTenantId]);
+    setStoredTurnCount(countStoredUserTurns(raw));
+  }, [effectiveTenantId, messages]);
 
   useEffect(() => {
     if (!effectiveTenantId || messages.length === 0) return;
     sessionStorage.setItem(
       sessionKey(effectiveTenantId),
-      JSON.stringify({ messages, agent_id_active: agentId, session_started_at: new Date().toISOString() })
+      JSON.stringify({ messages, agent_id_active: agentId, session_started_at: new Date().toISOString() }),
     );
   }, [effectiveTenantId, messages, agentId]);
 
@@ -111,64 +112,110 @@ export default function LegalResearchClient() {
     }
   }, [effectiveTenantId, agentId]);
 
-  useEffect(() => {
-    const idx = findLastAssistantIndex(messages);
-    if (idx != null) setActiveAssistantIndex(idx);
-  }, [messages]);
+  const sendText = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || !effectiveTenantId) return;
+      if (trimmed.length > MAX_CHARS) return;
 
-  const activeAssistant = useMemo(() => {
-    if (activeAssistantIndex != null) {
-      const m = messages[activeAssistantIndex];
-      if (m?.role === "assistant") return m;
-    }
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m = messages[i];
-      if (m.role === "assistant" && m.run) return m;
-    }
-    return null;
-  }, [messages, activeAssistantIndex]);
+      const historial = agentId === CHAT_AGENT ? buildChatHistorialFromMessages(messages) : undefined;
+      const sentAt = new Date().toLocaleString("es-DO", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      setMessages((m) => [...m, { role: "user", content: trimmed, sentAt }]);
+      trackEvent("legal_agent_run_started", { agent_id: agentId, tenant_id: effectiveTenantId });
+      const t0 = Date.now();
+
+      try {
+        const run = await runHook.run(agentId, buildInputs(agentId, trimmed, historial));
+        setMessages((m) => [...m, { role: "assistant", content: run.respuesta || "", run }]);
+        trackEvent("legal_agent_run_completed", {
+          agent_id: agentId,
+          tenant_id: effectiveTenantId,
+          status: run.status,
+          latency_ms: run.latency_ms ?? Date.now() - t0,
+          citations_count: run.citations?.length ?? 0,
+        });
+      } catch (e: unknown) {
+        const err = e as { status?: number; message?: string };
+        trackEvent("legal_agent_run_failed", {
+          agent_id: agentId,
+          tenant_id: effectiveTenantId,
+          error_type: "run_error",
+          http_status: err.status ?? 0,
+        });
+        const msg = formatLegalAgentRunError(e);
+        setMessages((m) => [...m, { role: "assistant", content: `**Error**\n${msg}` }]);
+      }
+    },
+    [agentId, effectiveTenantId, messages, runHook],
+  );
 
   const send = useCallback(async () => {
     const text = input.trim();
-    if (!text || !effectiveTenantId) return;
-    if (text.length > MAX_CHARS) return;
+    if (!text) return;
     setInput("");
-    const historial = agentId === CHAT_AGENT ? buildChatHistorialFromMessages(messages) : undefined;
-    setMessages((m) => [...m, { role: "user", content: text }]);
-    trackEvent("legal_agent_run_started", { agent_id: agentId, tenant_id: effectiveTenantId });
-    const t0 = Date.now();
-    try {
-      const run = await runHook.run(agentId, buildInputs(agentId, text, historial));
-      setMessages((m) => [...m, { role: "assistant", content: run.respuesta || "", run }]);
-      trackEvent("legal_agent_run_completed", {
-        agent_id: agentId,
-        tenant_id: effectiveTenantId,
-        status: run.status,
-        latency_ms: run.latency_ms ?? Date.now() - t0,
-        citations_count: run.citations?.length ?? 0,
-      });
-    } catch (e: unknown) {
-      const err = e as { status?: number; message?: string };
-      const http = err.status ?? 0;
-      trackEvent("legal_agent_run_failed", {
-        agent_id: agentId,
-        tenant_id: effectiveTenantId,
-        error_type: "run_error",
-        http_status: http,
-      });
-      const msg = formatLegalAgentRunError(e);
-      setMessages((m) => [...m, { role: "assistant", content: `**Error**\n${msg}` }]);
-    }
-  }, [agentId, effectiveTenantId, input, messages, runHook]);
+    await sendText(text);
+  }, [input, sendText]);
 
   const newChat = () => {
     setMessages([]);
-    setActiveAssistantIndex(null);
     setHighlightSourceId(null);
-    if (effectiveTenantId) sessionStorage.removeItem(sessionKey(effectiveTenantId));
+    setInput("");
   };
 
-  const mockLlm = process.env.NEXT_PUBLIC_LEGAL_MOCK_LLM === "true";
+  const restoreStoredSession = () => {
+    if (!effectiveTenantId) return;
+    const stored = readStoredSession(effectiveTenantId);
+    if (stored?.messages?.length) {
+      setMessages(stored.messages);
+      if (stored.agent_id_active) setAgentId(stored.agent_id_active);
+    }
+    setRecentOpen(false);
+  };
+
+  const recentPreviews = useMemo(() => {
+    if (!effectiveTenantId) return [];
+    const stored = readStoredSession(effectiveTenantId);
+    if (!stored?.messages?.length) return [];
+    const firstUser = stored.messages.find((m) => m.role === "user");
+    const label =
+      firstUser && firstUser.role === "user"
+        ? firstUser.content.slice(0, 80) + (firstUser.content.length > 80 ? "…" : "")
+        : "Sesión guardada";
+    return [{ label, messages: stored.messages }];
+  }, [effectiveTenantId, storedTurnCount, recentOpen]);
+
+  const dictamenTurns = useMemo(() => {
+    const turns: { userQuery: string; queryDate?: string; assistantIndex: number }[] = [];
+    for (let i = 0; i < messages.length; i++) {
+      const m = messages[i];
+      if (m.role === "assistant") {
+        let userQuery = "";
+        let queryDate: string | undefined;
+        for (let j = i - 1; j >= 0; j--) {
+          const prev = messages[j];
+          if (prev.role === "user") {
+            userQuery = prev.content;
+            queryDate = prev.sentAt;
+            break;
+          }
+        }
+        turns.push({ userQuery, queryDate, assistantIndex: i });
+      }
+    }
+    return turns;
+  }, [messages]);
+
+  const viewEmpty = messages.length === 0 && !runHook.loading;
+  const recentCount = Math.max(storedTurnCount, recentPreviews.length > 0 ? countStoredUserTurns(
+    effectiveTenantId ? sessionStorage.getItem(sessionKey(effectiveTenantId)) : null,
+  ) : 0);
 
   if (!tenantHydrated) {
     return <LegalLoadingSkeleton variant="chat-bubble" />;
@@ -177,140 +224,77 @@ export default function LegalResearchClient() {
     return <LegalErrorState message={tenantError || "Tenant no disponible"} />;
   }
 
-  const dynamicChips = activeAssistant?.run?.follow_up_suggestions;
-  const prompts =
-    agentId !== CHAT_AGENT
-      ? [
-          "Contrato de préstamo con interés elevado y cláusula penal 50%",
-          "Cláusula de mora en hipoteca — riesgo reputacional",
-        ]
-      : dynamicChips && dynamicChips.length > 0
-        ? dynamicChips
-        : STATIC_FALLBACK_CHIPS;
-
   return (
-    <div className="mx-auto max-w-5xl space-y-5 pb-8">
-      <header className="border-b border-[var(--legal-border)] pb-4">
-        <p className="mb-3 rounded-md border border-[var(--legal-accent-strong)]/25 bg-[var(--legal-accent-strong)]/10 px-3 py-2 text-xs text-[var(--legal-text-secondary)]">
-          <strong className="text-[var(--legal-accent)]">Piloto controlado:</strong> respuestas con trazabilidad;
-          exportaciones futuras pueden incluir watermark de auditoría.
-        </p>
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-100">Consulta legal</h1>
-            <p className="text-sm text-[var(--legal-text-secondary)]">
-              Investigación · asistente con fuentes normativas verificadas
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="text-xs text-[var(--legal-text-secondary)]" htmlFor="legal-agent-select">
-              Agente
-            </label>
-            <select
-              id="legal-agent-select"
-              className="rounded-lg border border-[var(--legal-border)] bg-[var(--legal-surface-1)] px-3 py-2 text-sm text-zinc-100"
-              value={agentId}
-              onChange={(e) => setAgentId(e.target.value)}
-            >
-              <option value={CHAT_AGENT}>{CHAT_AGENT}</option>
-              <option value="analizador_riesgo_contractual">analizador_riesgo_contractual</option>
-              <option value="validador_amlkyc">validador_amlkyc</option>
-              <option value="calculador_plazos_procesales">calculador_plazos_procesales</option>
-              <option value="validador_citas_legales">validador_citas_legales</option>
-              <option value="verificador_prescripcion">verificador_prescripcion</option>
-            </select>
-            <span
-              className={`rounded-full px-2 py-1 text-xs font-medium ${
-                mockLlm ? "bg-amber-900/50 text-amber-100" : "bg-emerald-900/40 text-emerald-100"
-              }`}
-            >
-              {mockLlm ? "LLM mock" : "LLM live"}
-            </span>
-          </div>
-        </div>
-        <p className="mt-2 text-xs text-zinc-500">
-          Filtro por área legal:{" "}
-          <span className="rounded border border-zinc-700 px-1.5 py-0.5 text-zinc-400">Próximamente</span>{" "}
-          (el backend aún no envía etiquetas en citas)
-        </p>
-      </header>
+    <ResearchPapelFonts>
+      <ResearchSidebar tenantLabel={effectiveTenantId} />
 
-      <div className="space-y-4">
-        {messages.length === 0 && !runHook.loading ? (
-          <EmptyWelcome onPickPrompt={setInput} />
-        ) : null}
+      <div className="lr-main">
+        <ResearchTopBar
+          agentId={agentId}
+          onAgentChange={setAgentId}
+          recentCount={recentCount}
+          onOpenRecent={() => setRecentOpen(true)}
+        />
 
-        {messages.map((m, i) =>
-          m.role === "user" ? (
-            <div key={i} className="flex justify-end">
-              <div className="max-w-[85%] rounded-2xl rounded-br-md border border-[var(--legal-border)] bg-[var(--legal-surface-2)] px-4 py-3 text-sm text-zinc-100">
-                <p className="whitespace-pre-wrap">{m.content}</p>
-              </div>
-            </div>
-          ) : (
-            <AssistantResponseBlock
-              key={i}
-              content={m.content}
-              run={m.run}
-              selected={activeAssistantIndex === i}
-              highlightSourceId={highlightSourceId}
-              onSelect={() => setActiveAssistantIndex(i)}
-              onHighlightSourceId={setHighlightSourceId}
-              onNewChat={newChat}
+        <div
+          ref={(el) => {
+            scrollRef.current = el;
+            setScrollEl(el);
+          }}
+          className="lr-canvas"
+          id="legal-research-scroll"
+        >
+          {viewEmpty ? (
+            <ResearchEmptyState
+              onPickQuestion={(q) => void sendText(q)}
+              onOpenRecent={() => setRecentOpen(true)}
+              recentCount={recentCount}
             />
-          ),
-        )}
+          ) : null}
 
-        {runHook.loading ? <LoadingStages isChatAgent={agentId === CHAT_AGENT} /> : null}
+          {dictamenTurns.map(({ userQuery, queryDate, assistantIndex }) => {
+            const m = messages[assistantIndex];
+            if (m.role !== "assistant") return null;
+            return (
+              <ResearchDictamenView
+                key={assistantIndex}
+                userQuery={userQuery}
+                queryDate={queryDate}
+                content={m.content}
+                run={m.run}
+                highlightSourceId={highlightSourceId}
+                scrollContainer={scrollEl}
+                onHighlightSourceId={setHighlightSourceId}
+                onNewConsult={newChat}
+                onFollowUp={(text) => void sendText(text)}
+              />
+            );
+          })}
+
+          {runHook.loading ? (
+            <div className="lr-content">
+              <LoadingStages isChatAgent={agentId === CHAT_AGENT} />
+            </div>
+          ) : null}
+        </div>
+
+        {viewEmpty ? (
+          <ResearchComposer
+            value={input}
+            onChange={setInput}
+            onSubmit={() => void send()}
+            disabled={runHook.loading}
+            maxChars={MAX_CHARS}
+          />
+        ) : null}
       </div>
 
-      {activeAssistant?.run ? (
-        <TraceabilityPanel
-          run={activeAssistant.run}
-          tenantId={effectiveTenantId}
-          tab={tab}
-          onTabChange={setTab}
-          highlightSourceId={highlightSourceId}
-          onHighlightSourceId={setHighlightSourceId}
-        />
-      ) : null}
-
-      <footer className="sticky bottom-0 z-10 rounded-xl border border-[var(--legal-border)] bg-[var(--legal-bg)]/95 p-4 backdrop-blur-md">
-        <FollowUpChips prompts={prompts} onSelect={setInput} disabled={runHook.loading} />
-        <div className="mt-3 flex gap-2">
-          <textarea
-            id="legal-research-input"
-            aria-label="Consulta legal"
-            className="min-h-[52px] flex-1 resize-y rounded-lg border border-[var(--legal-border)] bg-[var(--legal-surface-1)] p-3 text-sm text-zinc-100 placeholder:text-zinc-500"
-            rows={2}
-            maxLength={MAX_CHARS}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                e.preventDefault();
-                void send();
-              }
-              if (e.key === "Escape") setInput("");
-            }}
-            disabled={runHook.loading}
-          />
-          <button
-            type="button"
-            aria-label="Enviar consulta"
-            disabled={runHook.loading || !input.trim()}
-            onClick={() => void send()}
-            className="self-end rounded-lg bg-[var(--legal-accent-strong)] px-4 py-3 text-zinc-950 hover:brightness-110 disabled:opacity-50"
-          >
-            <Send className="h-5 w-5" />
-          </button>
-        </div>
-        <p className="mt-1 text-right text-xs text-zinc-500">
-          {input.length}/{MAX_CHARS}
-        </p>
-      </footer>
-
-      <LegalDisclaimer variant="compact" />
-    </div>
+      <ResearchRecentDrawer
+        open={recentOpen}
+        onClose={() => setRecentOpen(false)}
+        previews={recentPreviews}
+        onRestore={() => restoreStoredSession()}
+      />
+    </ResearchPapelFonts>
   );
 }

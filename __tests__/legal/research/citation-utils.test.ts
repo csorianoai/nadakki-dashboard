@@ -9,6 +9,7 @@ describe("citation-utils", () => {
 
   it("citationDomId sanitizes source id", () => {
     expect(citationDomId("ley:80/foo")).toBe("cite-ley_80_foo");
+    expect(citationDomId("CT-RD-0080", "req-abc")).toBe("cite-req-abc-CT-RD-0080");
   });
 
   it("buildCopyPayload includes citations and request_id", () => {
