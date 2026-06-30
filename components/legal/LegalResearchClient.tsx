@@ -2,18 +2,22 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AlertTriangle, Loader2, Maximize2, Minimize2, Scale, Send, Sparkles } from "lucide-react";
+import { Send } from "lucide-react";
 import { useLegalEffectiveTenantId, useLegalAgentRun } from "@/hooks/useLegal";
 import { formatLegalAgentRunError } from "@/lib/api/legal";
 import { trackEvent } from "@/lib/legal/telemetry";
-import type { AgentMonitor, AgentRunResponse, Citation, RagMetadata } from "@/types/legal";
-import { CitationCard } from "@/components/legal/CitationCard";
+import type { AgentRunResponse } from "@/types/legal";
 import { LegalErrorState } from "@/components/legal/LegalErrorState";
 import { LegalLoadingSkeleton } from "@/components/legal/LegalLoadingSkeleton";
 import { LegalDisclaimer } from "@/components/legal/LegalDisclaimer";
-import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
 import { buildChatHistorialFromMessages } from "@/lib/legal/build-chat-historial";
 import type { LegalChatHistorialTurn } from "@/lib/legal/build-chat-historial";
+import { findLastAssistantIndex } from "@/lib/legal/research/citation-utils";
+import { AssistantResponseBlock } from "@/components/legal/research/AssistantResponseBlock";
+import { EmptyWelcome } from "@/components/legal/research/EmptyWelcome";
+import { FollowUpChips } from "@/components/legal/research/FollowUpChips";
+import { LoadingStages } from "@/components/legal/research/LoadingStages";
+import { TraceabilityPanel, type TraceabilityTab } from "@/components/legal/research/TraceabilityPanel";
 
 const CHAT_AGENT = "chat_asesor_legal";
 const MAX_CHARS = 4000;
@@ -70,10 +74,9 @@ export default function LegalResearchClient() {
   const [agentId, setAgentId] = useState(initialAgent);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [tab, setTab] = useState<"citations" | "rag" | "monitor" | "audit">("citations");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
-  const [practiceAreaFilter, setPracticeAreaFilter] = useState<string[]>([]);
+  const [tab, setTab] = useState<TraceabilityTab>("citations");
+  const [activeAssistantIndex, setActiveAssistantIndex] = useState<number | null>(null);
+  const [highlightSourceId, setHighlightSourceId] = useState<string | null>(null);
   const runHook = useLegalAgentRun(effectiveTenantId);
 
   useEffect(() => {
@@ -108,23 +111,22 @@ export default function LegalResearchClient() {
     }
   }, [effectiveTenantId, agentId]);
 
-  const lastAssistant = useMemo(() => {
+  useEffect(() => {
+    const idx = findLastAssistantIndex(messages);
+    if (idx != null) setActiveAssistantIndex(idx);
+  }, [messages]);
+
+  const activeAssistant = useMemo(() => {
+    if (activeAssistantIndex != null) {
+      const m = messages[activeAssistantIndex];
+      if (m?.role === "assistant") return m;
+    }
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
       if (m.role === "assistant" && m.run) return m;
     }
     return null;
-  }, [messages]);
-
-  const filteredCitations = useMemo(() => {
-    const list = lastAssistant?.run?.citations ?? [];
-    if (practiceAreaFilter.length === 0) return list;
-    return list.filter((c) => {
-      const tags = c.practice_area_tags ?? [];
-      if (tags.length === 0) return true;
-      return tags.some((t) => practiceAreaFilter.includes(t));
-    });
-  }, [lastAssistant, practiceAreaFilter]);
+  }, [messages, activeAssistantIndex]);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -161,12 +163,9 @@ export default function LegalResearchClient() {
 
   const newChat = () => {
     setMessages([]);
+    setActiveAssistantIndex(null);
+    setHighlightSourceId(null);
     if (effectiveTenantId) sessionStorage.removeItem(sessionKey(effectiveTenantId));
-  };
-
-  const copyLastRequestId = () => {
-    const id = lastAssistant?.run.request_id;
-    if (id) void navigator.clipboard.writeText(id);
   };
 
   const mockLlm = process.env.NEXT_PUBLIC_LEGAL_MOCK_LLM === "true";
@@ -178,7 +177,7 @@ export default function LegalResearchClient() {
     return <LegalErrorState message={tenantError || "Tenant no disponible"} />;
   }
 
-  const dynamicChips = lastAssistant?.run?.follow_up_suggestions;
+  const dynamicChips = activeAssistant?.run?.follow_up_suggestions;
   const prompts =
     agentId !== CHAT_AGENT
       ? [
@@ -190,314 +189,128 @@ export default function LegalResearchClient() {
         : STATIC_FALLBACK_CHIPS;
 
   return (
-    <div className="space-y-4">
-      <p className="rounded-md border border-blue-100 bg-blue-50/90 px-3 py-2 text-xs text-slate-700 dark:border-blue-900 dark:bg-blue-950/50 dark:text-slate-200">
-        <strong>Piloto controlado:</strong> respuestas con trazabilidad; copias y exportaciones pueden incluir{" "}
-        <span className="font-medium">watermark</span> de auditoría para compliance bancario.
-      </p>
-      <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 dark:border-slate-800 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Research</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">Asistente legal con trazabilidad y fuentes.</p>
+    <div className="mx-auto max-w-5xl space-y-5 pb-8">
+      <header className="border-b border-[var(--legal-border)] pb-4">
+        <p className="mb-3 rounded-md border border-[var(--legal-accent-strong)]/25 bg-[var(--legal-accent-strong)]/10 px-3 py-2 text-xs text-[var(--legal-text-secondary)]">
+          <strong className="text-[var(--legal-accent)]">Piloto controlado:</strong> respuestas con trazabilidad;
+          exportaciones futuras pueden incluir watermark de auditoría.
+        </p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-100">Consulta legal</h1>
+            <p className="text-sm text-[var(--legal-text-secondary)]">
+              Investigación · asistente con fuentes normativas verificadas
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-xs text-[var(--legal-text-secondary)]" htmlFor="legal-agent-select">
+              Agente
+            </label>
+            <select
+              id="legal-agent-select"
+              className="rounded-lg border border-[var(--legal-border)] bg-[var(--legal-surface-1)] px-3 py-2 text-sm text-zinc-100"
+              value={agentId}
+              onChange={(e) => setAgentId(e.target.value)}
+            >
+              <option value={CHAT_AGENT}>{CHAT_AGENT}</option>
+              <option value="analizador_riesgo_contractual">analizador_riesgo_contractual</option>
+              <option value="validador_amlkyc">validador_amlkyc</option>
+              <option value="calculador_plazos_procesales">calculador_plazos_procesales</option>
+              <option value="validador_citas_legales">validador_citas_legales</option>
+              <option value="verificador_prescripcion">verificador_prescripcion</option>
+            </select>
+            <span
+              className={`rounded-full px-2 py-1 text-xs font-medium ${
+                mockLlm ? "bg-amber-900/50 text-amber-100" : "bg-emerald-900/40 text-emerald-100"
+              }`}
+            >
+              {mockLlm ? "LLM mock" : "LLM live"}
+            </span>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="text-xs font-medium text-slate-500 dark:text-slate-400" htmlFor="legal-agent-select">
-            Agente
-          </label>
-          <select
-            id="legal-agent-select"
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            value={agentId}
-            onChange={(e) => setAgentId(e.target.value)}
-          >
-            <option value={CHAT_AGENT}>{CHAT_AGENT}</option>
-            <option value="analizador_riesgo_contractual">analizador_riesgo_contractual</option>
-            <option value="validador_amlkyc">validador_amlkyc</option>
-            <option value="calculador_plazos_procesales">calculador_plazos_procesales</option>
-            <option value="validador_citas_legales">validador_citas_legales</option>
-            <option value="verificador_prescripcion">verificador_prescripcion</option>
-          </select>
-          <span
-            className={`rounded-full px-2 py-1 text-xs font-medium ${mockLlm ? "bg-amber-100 text-amber-900 dark:bg-amber-950" : "bg-emerald-100 text-emerald-900 dark:bg-emerald-950"}`}
-          >
-            {mockLlm ? "LLM mock (env)" : "LLM live"}
-          </span>
-          <button
-            type="button"
-            onClick={newChat}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-700"
-            aria-label="Nueva conversación"
-          >
-            Nueva conversación
-          </button>
-          <button
-            type="button"
-            onClick={() => setFullscreen(!fullscreen)}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 inline-flex items-center gap-1.5"
-            aria-label={fullscreen ? "Comprimir" : "Expandir a pantalla completa"}
-            title={fullscreen ? "Comprimir" : "Expandir a pantalla completa"}
-          >
-            {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            <span className="hidden sm:inline">{fullscreen ? "Comprimir" : "Expandir"}</span>
-          </button>
-          <button
-            type="button"
-            onClick={copyLastRequestId}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm dark:border-slate-700"
-            aria-label="Copiar último Request ID"
-          >
-            Copiar Request ID
-          </button>
-        </div>
-      </div>
+        <p className="mt-2 text-xs text-zinc-500">
+          Filtro por área legal:{" "}
+          <span className="rounded border border-zinc-700 px-1.5 py-0.5 text-zinc-400">Próximamente</span>{" "}
+          (el backend aún no envía etiquetas en citas)
+        </p>
+      </header>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-        <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">Filtrar resultados de citas por área (cuando el backend envíe etiquetas)</p>
-        <PracticeAreaFilter selected={practiceAreaFilter} onChange={setPracticeAreaFilter} />
-      </div>
+      <div className="space-y-4">
+        {messages.length === 0 && !runHook.loading ? (
+          <EmptyWelcome onPickPrompt={setInput} />
+        ) : null}
 
-      <div className={`flex flex-col gap-4 ${fullscreen ? "" : "lg:flex-row"}`}>
-        <div className={`min-h-[420px] flex-1 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 ${fullscreen ? "w-full" : "lg:max-w-[60%]"}`}>
-          <div className={`space-y-4 overflow-y-auto p-4 ${fullscreen ? "max-h-[calc(100vh-200px)]" : "max-h-[calc(100vh-280px)]"}`}>
-            {messages.length === 0 && (
-              <div className="flex flex-col items-center gap-4 py-6">
-                <div className="rounded-full bg-blue-50 p-3 dark:bg-blue-950/50">
-                  <Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="text-center">
-                  <p className="font-medium text-slate-800 dark:text-slate-100">Consulta legal con IA</p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Seleccione un tema o escriba su consulta.</p>
-                </div>
-                <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
-                  {([
-                    ["Penal", "Plazos de prescripcion para delitos financieros en RD"],
-                    ["Civil", "Requisitos para demanda en responsabilidad civil extracontractual"],
-                    ["Laboral", "Calculo de prestaciones laborales por desahucio del empleador"],
-                    ["Comercial", "Requisitos de constitucion de una SRL segun Ley 479-08"],
-                    ["Contratos", "Validez de clausula penal del 50% en contrato de prestamo"],
-                    ["Inmobiliario", "Proceso de saneamiento de titulo de propiedad inmobiliaria"],
-                    ["Compliance", "Obligaciones AML/KYC para entidades financieras segun Ley 155-17"],
-                    ["Tributario", "Regimen de facturacion electronica y deberes del contribuyente"],
-                  ] as const).map(([area, prompt]) => (
-                    <button
-                      key={area}
-                      type="button"
-                      className="group rounded-lg border border-slate-200 bg-white p-3 text-left transition-colors hover:border-blue-400 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-600 dark:hover:bg-blue-950/30"
-                      onClick={() => {
-                        setInput(prompt);
-                        document.getElementById("legal-research-input")?.focus();
-                      }}
-                    >
-                      <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{area}</span>
-                      <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">{prompt}</p>
-                    </button>
-                  ))}
-                </div>
+        {messages.map((m, i) =>
+          m.role === "user" ? (
+            <div key={i} className="flex justify-end">
+              <div className="max-w-[85%] rounded-2xl rounded-br-md border border-[var(--legal-border)] bg-[var(--legal-surface-2)] px-4 py-3 text-sm text-zinc-100">
+                <p className="whitespace-pre-wrap">{m.content}</p>
               </div>
-            )}
-            {messages.map((m, i) =>
-              m.role === "user" ? (
-                <div key={i} className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-blue-50 px-4 py-2 text-sm dark:bg-blue-950/60">
-                    <p className="whitespace-pre-wrap text-slate-900 dark:text-slate-100">{m.content}</p>
-                  </div>
-                </div>
-              ) : (
-                <div key={i} className="flex justify-start">
-                  <div className="max-w-[85%] space-y-2 rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-950/50">
-                    <div className="flex items-center gap-2 text-slate-500">
-                      <Scale className="h-4 w-4" aria-hidden />
-                      <span>Asistente</span>
-                    </div>
-                    <div className="whitespace-pre-wrap text-slate-900 dark:text-slate-100">{m.content}</div>
-                    {"run" in m && m.run?.monitor?.alertas && m.run.monitor.alertas.length > 0 && (
-                      <div className="rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-950 dark:border-amber-800 dark:bg-amber-950/50">
-                        <strong>Alertas:</strong> {m.run!.monitor!.alertas!.join(", ")}
-                      </div>
-                    )}
-                    {"run" in m && m.run?.requiere_revision_abogado && (
-                      <p className="text-xs text-amber-800 dark:text-amber-200">
-                        {m.run!.disclaimer_legal?.es || "Revisión por abogado autorizado requerida."}
-                      </p>
-                    )}
-                    {"run" in m && m.run?.request_id && (
-                      <p className="font-mono text-[10px] text-slate-500">request_id: {m.run!.request_id}</p>
-                    )}
-                  </div>
-                </div>
-              )
-            )}
-            {runHook.loading && (
-              <div className="flex justify-start">
-                <div className="flex max-w-[85%] items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-950/50 dark:text-slate-300">
-                  <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-blue-600 dark:text-blue-400" aria-hidden />
-                  <p>
-                    {agentId === CHAT_AGENT
-                      ? "Generando análisis legal… (puede tardar hasta 2 minutos)"
-                      : "Analizando con base normativa…"}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="border-t border-slate-200 p-3 dark:border-slate-800">
-            <div className="mb-2 flex flex-wrap gap-2">
-            {prompts.map((p, idx) => (
-              <button
-                key={idx}
-                  type="button"
-                  className="rounded-full border border-blue-200 bg-blue-50/80 px-3 py-1.5 text-left text-xs text-blue-800 transition-colors hover:border-blue-400 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200 dark:hover:bg-blue-900/60"
-                  onClick={() => setInput(p)}
-                >
-                  {p.length > 60 ? `${p.slice(0, 60)}…` : p}
-                </button>
-              ))}
             </div>
-            <div className="flex gap-2">
-              <textarea
-                id="legal-research-input"
-                aria-label="Consulta legal"
-                className="min-h-[48px] flex-1 resize-y rounded-lg border border-slate-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-500 caret-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-400"
-                rows={2}
-                maxLength={MAX_CHARS}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                    e.preventDefault();
-                    void send();
-                  }
-                  if (e.key === "Escape") setInput("");
-                }}
-                disabled={runHook.loading}
-              />
-              <button
-                type="button"
-                aria-label="Enviar consulta"
-                disabled={runHook.loading || !input.trim()}
-                onClick={() => void send()}
-                className="self-end rounded-lg bg-blue-600 p-3 text-white hover:bg-blue-700 disabled:opacity-50"
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="mt-1 text-right text-xs text-slate-400">{input.length}/{MAX_CHARS}</p>
-          </div>
-        </div>
-
-        <aside
-          className={`w-full flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${fullscreen ? "" : "lg:max-w-[40%]"} ${sidebarOpen ? "" : "hidden lg:block"}`}
-        >
-          <div className="mb-3 flex gap-2 border-b border-slate-200 pb-2 dark:border-slate-800">
-            {(
-              [
-                ["citations", "Citas"],
-                ["rag", "RAG"],
-                ["monitor", "Monitor"],
-                ["audit", "Audit"],
-              ] as const
-            ).map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                className={`rounded px-2 py-1 text-xs font-medium ${tab === k ? "bg-blue-600 text-white" : "text-slate-600 dark:text-slate-400"}`}
-                onClick={() => setTab(k)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {!lastAssistant?.run ? (
-            <p className="text-sm text-slate-500">Ejecute una consulta para ver fuentes y metadatos.</p>
-          ) : tab === "citations" ? (
-            <div className="space-y-3">
-              {(lastAssistant.run.citations ?? []).length === 0 ? (
-                <p className="text-sm text-slate-500">Sin citas en la última respuesta.</p>
-              ) : filteredCitations.length === 0 ? (
-                <p className="text-sm text-slate-500">Ninguna cita coincide con el filtro de áreas.</p>
-              ) : (
-                filteredCitations.map((c: Citation, idx: number) => (
-                  <CitationCard key={`${c.source_id}-${idx}`} citation={c} />
-                ))
-              )}
-            </div>
-          ) : tab === "rag" ? (
-            <RagPanel meta={lastAssistant.run.rag_metadata} />
-          ) : tab === "monitor" ? (
-            <MonitorPanel mon={lastAssistant.run.monitor} />
           ) : (
-            <AuditMini run={lastAssistant.run} tenantId={effectiveTenantId} />
-          )}
-        </aside>
+            <AssistantResponseBlock
+              key={i}
+              content={m.content}
+              run={m.run}
+              selected={activeAssistantIndex === i}
+              highlightSourceId={highlightSourceId}
+              onSelect={() => setActiveAssistantIndex(i)}
+              onHighlightSourceId={setHighlightSourceId}
+              onNewChat={newChat}
+            />
+          ),
+        )}
+
+        {runHook.loading ? <LoadingStages isChatAgent={agentId === CHAT_AGENT} /> : null}
       </div>
 
-      <button
-        type="button"
-        className="lg:hidden rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-700"
-        onClick={() => setSidebarOpen((s) => !s)}
-        aria-label="Alternar panel lateral"
-      >
-        Fuentes / análisis
-      </button>
+      {activeAssistant?.run ? (
+        <TraceabilityPanel
+          run={activeAssistant.run}
+          tenantId={effectiveTenantId}
+          tab={tab}
+          onTabChange={setTab}
+          highlightSourceId={highlightSourceId}
+          onHighlightSourceId={setHighlightSourceId}
+        />
+      ) : null}
+
+      <footer className="sticky bottom-0 z-10 rounded-xl border border-[var(--legal-border)] bg-[var(--legal-bg)]/95 p-4 backdrop-blur-md">
+        <FollowUpChips prompts={prompts} onSelect={setInput} disabled={runHook.loading} />
+        <div className="mt-3 flex gap-2">
+          <textarea
+            id="legal-research-input"
+            aria-label="Consulta legal"
+            className="min-h-[52px] flex-1 resize-y rounded-lg border border-[var(--legal-border)] bg-[var(--legal-surface-1)] p-3 text-sm text-zinc-100 placeholder:text-zinc-500"
+            rows={2}
+            maxLength={MAX_CHARS}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                void send();
+              }
+              if (e.key === "Escape") setInput("");
+            }}
+            disabled={runHook.loading}
+          />
+          <button
+            type="button"
+            aria-label="Enviar consulta"
+            disabled={runHook.loading || !input.trim()}
+            onClick={() => void send()}
+            className="self-end rounded-lg bg-[var(--legal-accent-strong)] px-4 py-3 text-zinc-950 hover:brightness-110 disabled:opacity-50"
+          >
+            <Send className="h-5 w-5" />
+          </button>
+        </div>
+        <p className="mt-1 text-right text-xs text-zinc-500">
+          {input.length}/{MAX_CHARS}
+        </p>
+      </footer>
 
       <LegalDisclaimer variant="compact" />
-    </div>
-  );
-}
-
-function RagPanel({ meta }: { meta?: RagMetadata }) {
-  if (!meta) return <p className="text-sm text-slate-500">Sin metadatos RAG en la respuesta.</p>;
-  return (
-    <dl className="space-y-2 text-sm">
-      <Row k="Pack hash" v={meta.pack_hash || "—"} mono />
-      <Row k="Capa 1" v={String(meta.fuentes_capa_1_count ?? "—")} />
-      <Row k="Capa 2" v={String(meta.fuentes_capa_2_count ?? "—")} />
-      <Row k="Domain filter" v={meta.domain_filter_applied ? "sí" : "no"} />
-      <Row k="Domain" v={meta.domain || "—"} />
-      <Row k="RAG latency" v={meta.latency_ms != null ? `${meta.latency_ms} ms` : "—"} />
-      <Row k="Query hash" v={meta.query_hash || "—"} mono />
-    </dl>
-  );
-}
-
-function MonitorPanel({ mon }: { mon?: AgentMonitor }) {
-  if (!mon) return <p className="text-sm text-slate-500">Sin monitor en la respuesta.</p>;
-  return (
-    <div className="space-y-2 text-sm">
-      <p>
-        Riesgo: <strong>{mon.riesgo_evaluado || "—"}</strong>
-      </p>
-      {mon.alertas && mon.alertas.length > 0 ? (
-        <ul className="list-disc pl-4">
-          {mon.alertas.map((a) => (
-            <li key={a}>{a}</li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-emerald-700 dark:text-emerald-300">Sin alertas del evaluador.</p>
-      )}
-      <p>Latency monitor: {mon.latency_ms != null ? `${mon.latency_ms} ms` : "—"}</p>
-    </div>
-  );
-}
-
-function AuditMini({ run, tenantId }: { run: AgentRunResponse; tenantId: string }) {
-  return (
-    <div className="space-y-2 text-sm">
-      <p className="font-mono text-xs break-all">request_id: {run.request_id}</p>
-      <p className="font-mono text-xs">tenant: {run.tenant_id || tenantId}</p>
-      <a className="text-blue-600 underline dark:text-blue-400" href={`/legal/audit?request_id=${encodeURIComponent(run.request_id)}`}>
-        Ver en /legal/audit
-      </a>
-    </div>
-  );
-}
-
-function Row({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
-  return (
-    <div className="flex justify-between gap-2">
-      <dt className="text-slate-500">{k}</dt>
-      <dd className={`text-right ${mono ? "font-mono text-xs break-all" : ""}`}>{v}</dd>
     </div>
   );
 }

@@ -283,3 +283,9 @@
   background-color: #ffffff !important;
   -webkit-text-fill-color: #0f172a !important;
 }
+
+/* Research: citation scroll highlight */
+.legal-surface .legal-cite-glow {
+  box-shadow: 0 0 0 2px var(--legal-accent-strong), 0 0 24px rgba(224, 181, 58, 0.35);
+  transition: box-shadow 0.3s ease;
+}
