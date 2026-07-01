@@ -1,0 +1,188 @@
+/*
+ * M6a — Configuración de cobro layout · var(--fm-*) only
+ */
+
+.forge-monetizacion .fm-config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.forge-monetizacion .fm-config-title {
+  margin: 0;
+  font-family: var(--fm-font-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-config-lead {
+  margin: 6px 0 0;
+  max-width: 520px;
+  font-size: 12px;
+  color: var(--fm-ink-soft);
+  line-height: 1.45;
+}
+
+.forge-monetizacion .fm-config-tabs {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--fm-line);
+  background: var(--fm-panel2);
+}
+
+.forge-monetizacion .fm-config-tab {
+  padding: 7px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fm-sub);
+  cursor: pointer;
+}
+
+.forge-monetizacion .fm-config-tab--active {
+  background: var(--fm-panel);
+  color: var(--fm-ink);
+  box-shadow: 0 0 0 1px var(--fm-line);
+}
+
+.forge-monetizacion .fm-config-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.forge-monetizacion .fm-config-section-label {
+  margin: 0 0 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-config-model-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.forge-monetizacion .fm-config-rate-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--fm-line);
+  font-size: 12px;
+}
+
+.forge-monetizacion .fm-config-rate-note {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-config-rate-value {
+  font-family: var(--fm-font-mono);
+  font-size: 12px;
+  color: var(--fm-ink);
+  white-space: nowrap;
+}
+
+.forge-monetizacion .fm-config-cores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.forge-monetizacion .fm-config-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.forge-monetizacion .fm-config-card-title {
+  margin: 0;
+  font-family: var(--fm-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-config-version-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.forge-monetizacion .fm-config-version-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--fm-line);
+  font-size: 10px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-config-contract {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.forge-monetizacion .fm-config-contract-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--fm-blue) 12%, transparent);
+  color: var(--fm-blue);
+  font-size: 16px;
+}
+
+.forge-monetizacion .fm-config-dealer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.forge-monetizacion .fm-config-dealer-card {
+  padding: 16px;
+}
+
+.forge-monetizacion .fm-config-dealer-card--anchor {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fm-green) 8%, var(--fm-panel)), var(--fm-panel));
+  border-color: color-mix(in srgb, var(--fm-green) 30%, transparent);
+}
+
+.forge-monetizacion .fm-config-dealer-price {
+  font-family: var(--fm-font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--fm-green);
+  margin: 8px 0;
+}
+
+.forge-monetizacion .fm-config-dealer-feature {
+  font-size: 11.5px;
+  color: var(--fm-ink-soft);
+  padding: 3px 0;
+}
+
+@media (max-width: 1000px) {
+  .forge-monetizacion .fm-config-grid,
+  .forge-monetizacion .fm-config-dealer-grid {
+    grid-template-columns: 1fr;
+  }
+}
