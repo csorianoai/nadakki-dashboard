@@ -37,7 +37,7 @@ type Props = {
 };
 
 export function MonetizacionShell({ pageTitle, children }: Props) {
-  const [tenantId, setTenantId] = useState<string>(DEMO_TENANTS[0].id);
+  const [tenantId, setTenantId] = useState<string>("nadakki-operador");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerPayload, setDrawerPayload] = useState<TraceDrawerPayload>(null);
