@@ -1,9 +1,9 @@
 "use client";
 
 import { formatRd, formatRdCompact } from "@/lib/credit-hub/monetizacion/format";
-import type { DealerMetrics } from "@/lib/credit-hub/monetizacion/types";
-import { DEMO_TENANTS, useMonetizacionShell } from "@/components/credit-hub/monetizacion/shell";
-import { FunnelStep, MonetizacionScreenEmpty, StatCard } from "@/components/credit-hub/monetizacion/ui";
+import type { DealerMetrics, DrilldownKey, DrilldownMap } from "@/lib/credit-hub/monetizacion/types";
+import { DEMO_TENANTS, useMonetizacionShell, type TraceDrawerPayload } from "@/components/credit-hub/monetizacion/shell";
+import { FunnelStep, KpiCard, MonetizacionScreenEmpty, StatCard } from "@/components/credit-hub/monetizacion/ui";
 import type { FmAccent } from "@/components/credit-hub/monetizacion/ui";
 import { tenantInitialClass } from "@/components/credit-hub/monetizacion/ui/types";
 import "./metricas-dealer-screen.css";
@@ -17,12 +17,25 @@ function mixAccent(color: string): FmAccent {
 
 type Props = {
   metrics: DealerMetrics | null;
+  drilldowns: DrilldownMap;
 };
 
-export function MonetizacionMetricasDealerClient({ metrics: dealerMetrics }: Props) {
-  const { tenantId } = useMonetizacionShell();
+export function MonetizacionMetricasDealerClient({ metrics: dealerMetrics, drilldowns }: Props) {
+  const { tenantId, openTrace } = useMonetizacionShell();
   const tenant = DEMO_TENANTS.find((t) => t.id === tenantId) ?? DEMO_TENANTS[2];
   const metrics = dealerMetrics && dealerMetrics.tenant_id === tenantId ? dealerMetrics : null;
+
+  const openDrilldown = (key: DrilldownKey, aggFormatted: string) => {
+    const drilldown = drilldowns[key];
+    if (!drilldown) return;
+    openTrace({
+      kicker: "TRAZABILIDAD · EVENTOS DE ORIGEN",
+      title: drilldown.title,
+      sub: drilldown.sub,
+      drilldown,
+      aggFormatted,
+    } as TraceDrawerPayload);
+  };
 
   if (!metrics) {
     return (
@@ -31,6 +44,7 @@ export function MonetizacionMetricasDealerClient({ metrics: dealerMetrics }: Pro
   }
 
   const fees = metrics.dealer_fees;
+  const volumeFormatted = formatRdCompact(metrics.kpis.volume);
 
   return (
     <div>
@@ -65,8 +79,23 @@ export function MonetizacionMetricasDealerClient({ metrics: dealerMetrics }: Pro
             ))}
           </div>
         </section>
-        <section className="fm-ui-card fm-dealer-l2b">
-          <div style={{ fontSize: 11, color: "var(--fm-sub)", marginBottom: 6 }}>Look-to-book</div>
+        <section
+          className="fm-ui-card fm-dealer-l2b fm-dealer-l2b--clickable"
+          role="button"
+          tabIndex={0}
+          aria-label={`Look-to-book, ${metrics.look_to_book.pct}%. Ver origen de la cifra`}
+          onClick={() => openDrilldown("takerate", `${metrics.look_to_book.pct}%`)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openDrilldown("takerate", `${metrics.look_to_book.pct}%`);
+            }
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 11, color: "var(--fm-sub)", marginBottom: 6 }}>Look-to-book</div>
+            <span className="fm-ui-drill-chip">ver origen ↗</span>
+          </div>
           <div className="fm-dealer-l2b-value">{metrics.look_to_book.pct}%</div>
           <div style={{ fontSize: 12, color: "var(--fm-ink-soft)", marginTop: 6 }}>solicitudes → deals cerrados</div>
           <div style={{ fontSize: 11, color: "var(--fm-green)", marginTop: 8 }}>{metrics.look_to_book.delta}</div>
@@ -93,17 +122,40 @@ export function MonetizacionMetricasDealerClient({ metrics: dealerMetrics }: Pro
 
         <section className="fm-ui-card">
           <div className="fm-dealer-kpi-grid">
-            <StatCard label="Volumen financiado" value={formatRdCompact(metrics.kpis.volume)} />
+            <KpiCard
+              label="Volumen financiado"
+              value={volumeFormatted}
+              onDrill={() => openDrilldown("gmv", volumeFormatted)}
+            />
             <StatCard label="APR promedio obtenido" value={`${metrics.kpis.apr_pct}%`} />
             <StatCard label="Tiempo a 1ª oferta" value={metrics.kpis.time_to_offer} />
-            <StatCard label="Seats activos" value={String(metrics.kpis.seats)} />
+            <KpiCard
+              label="Seats activos"
+              value={String(metrics.kpis.seats)}
+              onDrill={() => openDrilldown("seats", String(metrics.kpis.seats))}
+            />
           </div>
-          <div className="fm-ui-card" style={{ padding: 12, marginTop: 4 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div
+            className="fm-ui-card fm-dealer-fees-card"
+            role="button"
+            tabIndex={0}
+            aria-label={`Fees del dealer, ${formatRd(fees.base, 0)}. Ver origen de la cifra`}
+            onClick={() => openDrilldown("base", formatRd(fees.base, 0))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openDrilldown("base", formatRd(fees.base, 0));
+              }
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--fm-ink)" }}>
                 Fees del dealer · plan {metrics.plan}
               </span>
-              <span className="fm-dealer-fees-chip">{fees.limit_pct}% del límite</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span className="fm-dealer-fees-chip">{fees.limit_pct}% del límite</span>
+                <span className="fm-ui-drill-chip">ver origen ↗</span>
+              </div>
             </div>
             <div className="fm-mono" style={{ fontSize: 20, fontWeight: 600, color: "var(--fm-ink)" }}>
               {formatRd(fees.base, 0)}
