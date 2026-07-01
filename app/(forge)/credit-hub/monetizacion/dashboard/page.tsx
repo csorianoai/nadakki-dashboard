@@ -1,5 +1,7 @@
-import { MonetizacionScreenPlaceholder } from "../_shared/MonetizacionScreenPlaceholder";
+import { fetchDashboardKpis, fetchDrilldowns } from "@/lib/credit-hub/monetizacion/adapter";
+import { MonetizacionDashboardClient } from "./MonetizacionDashboardClient";
 
-export default function MonetizacionDashboardPage() {
-  return <MonetizacionScreenPlaceholder screen="P1 · Dashboard god-view" />;
+export default async function MonetizacionDashboardPage() {
+  const [initialKpis, drilldowns] = await Promise.all([fetchDashboardKpis(), fetchDrilldowns()]);
+  return <MonetizacionDashboardClient initialKpis={initialKpis} drilldowns={drilldowns} />;
 }
