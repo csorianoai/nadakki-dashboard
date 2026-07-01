@@ -1,12 +1,21 @@
 /**
- * Phase 0.5 — diff §1 HANDOFF hex vs tokens.css custom properties.
+ * Phase 0.5 — Monetización design token + layout color audit.
+ *
+ * Pass 1: §1 HANDOFF hex vs tokens.css custom properties.
+ * Pass 2: layout CSS must not contain raw #rrggbb or rgba( — only var(--fm-*).
+ *
  * Usage: node tools/monetizacion/audit-tokens.mjs [path/to/tokens.css]
  */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
+const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const tokensPath = resolve(process.argv[2] ?? "components/credit-hub/monetizacion/shell/tokens.css");
 const css = readFileSync(tokensPath, "utf8");
+
+const MONETIZACION_CSS_ROOT = join(repoRoot, "components/credit-hub/monetizacion");
+const TOKENS_BASENAME = "tokens.css";
 
 /** HANDOFF §1 canonical map (--fm-* scoped names). */
 const EXPECTED = {
@@ -40,6 +49,76 @@ const DEMO_RULES = [
     test: (s) => /--fm-amber-strong:\s*#f7cd7a/i.test(s) || /\.fm-demo-banner[\s\S]*#f7cd7a/i.test(s),
   },
 ];
+
+const HEX_RE = /#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b/g;
+const RGBA_RE = /rgba\s*\(/gi;
+
+function collectCssFiles(dir, acc = []) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      collectCssFiles(full, acc);
+      continue;
+    }
+    if (entry.isFile() && entry.name.endsWith(".css") && entry.name !== TOKENS_BASENAME) {
+      acc.push(full);
+    }
+  }
+  return acc;
+}
+
+function auditLayoutCss() {
+  let violations = 0;
+  let scanned = 0;
+
+  console.log("\n=== Layout CSS raw color audit (no #hex, no rgba) ===");
+
+  if (!statSync(MONETIZACION_CSS_ROOT, { throwIfNoEntry: false })?.isDirectory()) {
+    console.log("SKIP     monetizacion CSS root not found");
+    return 0;
+  }
+
+  const layoutFiles = collectCssFiles(MONETIZACION_CSS_ROOT).sort();
+
+  if (layoutFiles.length === 0) {
+    console.log("OK       no layout CSS files found (tokens-only)");
+    return 0;
+  }
+
+  for (const file of layoutFiles) {
+    scanned++;
+    const rel = relative(repoRoot, file).replace(/\\/g, "/");
+    const content = readFileSync(file, "utf8");
+    const lines = content.split("\n");
+
+    const hexHits = [];
+    const rgbaHits = [];
+
+    lines.forEach((line, idx) => {
+      for (const match of line.matchAll(HEX_RE)) {
+        hexHits.push({ line: idx + 1, value: match[0], text: line.trim() });
+      }
+      for (const match of line.matchAll(RGBA_RE)) {
+        rgbaHits.push({ line: idx + 1, value: match[0], text: line.trim() });
+      }
+    });
+
+    if (hexHits.length === 0 && rgbaHits.length === 0) {
+      console.log(`OK       ${rel}`);
+      continue;
+    }
+
+    console.log(`DRIFT    ${rel}`);
+    for (const hit of [...hexHits, ...rgbaHits]) {
+      console.log(`         L${hit.line}: ${hit.text}`);
+      violations++;
+    }
+  }
+
+  console.log(`\nLayout files scanned: ${scanned}`);
+  console.log(`Layout raw color violations: ${violations}`);
+  return violations;
+}
 
 const varRe = /(--fm-[a-z0-9-]+)\s*:\s*([^;]+);/gi;
 const found = new Map();
@@ -76,5 +155,9 @@ for (const rule of DEMO_RULES) {
   if (!ok) diffs++;
 }
 
-console.log(`\nTotal diffs: ${diffs}`);
-process.exit(diffs === 0 ? 0 : 1);
+const layoutViolations = auditLayoutCss();
+
+console.log(`\n§1 token diffs: ${diffs}`);
+console.log(`Layout raw color violations: ${layoutViolations}`);
+console.log(`Total failures: ${diffs + layoutViolations}`);
+process.exit(diffs + layoutViolations === 0 ? 0 : 1);
