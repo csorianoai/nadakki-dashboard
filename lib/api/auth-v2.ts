@@ -91,6 +91,9 @@ const BASE_URL = (
 /** Per-request ceiling for session init (/refresh + /me). */
 export const AUTH_FETCH_TIMEOUT_MS = 5_000;
 
+/** Login POST can exceed 5s on Render even when /health is warm (~10s observed). */
+export const AUTH_LOGIN_TIMEOUT_MS = 30_000;
+
 async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit,
@@ -129,14 +132,18 @@ export async function loginV2(
   password: string,
   tenantSlug?: string
 ): Promise<ApiResult<LoginResponseV2>> {
-  return fetchApi<LoginResponseV2>("/api/v2/auth/login", {
-    method: "POST",
-    body: JSON.stringify({
-      email,
-      password,
-      tenant_slug: tenantSlug,
-    }),
-  });
+  return fetchApi<LoginResponseV2>(
+    "/api/v2/auth/login",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        password,
+        tenant_slug: tenantSlug,
+      }),
+    },
+    AUTH_LOGIN_TIMEOUT_MS,
+  );
 }
 
 export async function refreshTokenV2(refreshToken: string): Promise<ApiResult<RefreshResponse>> {
