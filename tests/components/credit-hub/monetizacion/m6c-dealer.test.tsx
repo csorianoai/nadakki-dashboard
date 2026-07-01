@@ -75,4 +75,16 @@ describe("Monetización M6c-P6 Métricas dealer", () => {
       }),
     );
   });
+
+  test("look-to-book drawer uses Look-to-book label per HANDOFF §368", async () => {
+    wrap();
+    await userEvent.click(screen.getByRole("button", { name: /Look-to-book, 38%/ }));
+    expect(mockOpenTrace).toHaveBeenCalledWith(
+      expect.objectContaining({
+        aggFormatted: "38%",
+        drilldown: expect.objectContaining({ agg_label: "Look-to-book" }),
+        title: "Look-to-book · solicitudes → deals cerrados",
+      }),
+    );
+  });
 });

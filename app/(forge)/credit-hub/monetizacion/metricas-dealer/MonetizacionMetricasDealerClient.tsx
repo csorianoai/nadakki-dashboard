@@ -1,7 +1,7 @@
 "use client";
 
 import { formatRd, formatRdCompact } from "@/lib/credit-hub/monetizacion/format";
-import type { DealerMetrics, DrilldownKey, DrilldownMap } from "@/lib/credit-hub/monetizacion/types";
+import type { DealerMetrics, Drilldown, DrilldownKey, DrilldownMap } from "@/lib/credit-hub/monetizacion/types";
 import { DEMO_TENANTS, useMonetizacionShell, type TraceDrawerPayload } from "@/components/credit-hub/monetizacion/shell";
 import { FunnelStep, KpiCard, MonetizacionScreenEmpty, StatCard } from "@/components/credit-hub/monetizacion/ui";
 import type { FmAccent } from "@/components/credit-hub/monetizacion/ui";
@@ -25,14 +25,14 @@ export function MonetizacionMetricasDealerClient({ metrics: dealerMetrics, drill
   const tenant = DEMO_TENANTS.find((t) => t.id === tenantId) ?? DEMO_TENANTS[2];
   const metrics = dealerMetrics && dealerMetrics.tenant_id === tenantId ? dealerMetrics : null;
 
-  const openDrilldown = (key: DrilldownKey, aggFormatted: string) => {
+  const openDrilldown = (key: DrilldownKey, aggFormatted: string, overrides?: Partial<Drilldown>) => {
     const drilldown = drilldowns[key];
     if (!drilldown) return;
     openTrace({
       kicker: "TRAZABILIDAD · EVENTOS DE ORIGEN",
-      title: drilldown.title,
-      sub: drilldown.sub,
-      drilldown,
+      title: overrides?.title ?? drilldown.title,
+      sub: overrides?.sub ?? drilldown.sub,
+      drilldown: overrides ? { ...drilldown, ...overrides } : drilldown,
       aggFormatted,
     } as TraceDrawerPayload);
   };
@@ -84,11 +84,20 @@ export function MonetizacionMetricasDealerClient({ metrics: dealerMetrics, drill
           role="button"
           tabIndex={0}
           aria-label={`Look-to-book, ${metrics.look_to_book.pct}%. Ver origen de la cifra`}
-          onClick={() => openDrilldown("takerate", `${metrics.look_to_book.pct}%`)}
+          onClick={() =>
+            openDrilldown("takerate", `${metrics.look_to_book.pct}%`, {
+              // HANDOFF §368: métrica dealer es Look-to-book, no take rate de plataforma (§287).
+              title: "Look-to-book · solicitudes → deals cerrados",
+              agg_label: "Look-to-book",
+            })
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              openDrilldown("takerate", `${metrics.look_to_book.pct}%`);
+              openDrilldown("takerate", `${metrics.look_to_book.pct}%`, {
+                title: "Look-to-book · solicitudes → deals cerrados",
+                agg_label: "Look-to-book",
+              });
             }
           }}
         >
