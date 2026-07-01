@@ -20,7 +20,13 @@ describe("session init timeout (M7)", () => {
 
   test("auth-v2 aborts hung auth fetches", () => {
     expect(authV2).toContain("AUTH_FETCH_TIMEOUT_MS");
+    expect(authV2).toContain("AUTH_LOGIN_TIMEOUT_MS");
     expect(authV2).toContain("AbortController");
     expect(authV2).toContain("AbortError");
+  });
+
+  test("login uses longer timeout than session init", () => {
+    expect(authV2).toMatch(/loginV2[\s\S]*AUTH_LOGIN_TIMEOUT_MS/);
+    expect(authV2).toMatch(/AUTH_LOGIN_TIMEOUT_MS\s*=\s*30_000/);
   });
 });
