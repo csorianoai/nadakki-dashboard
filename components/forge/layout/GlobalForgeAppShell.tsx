@@ -29,6 +29,9 @@ const fontDisplay = Source_Serif_4({
 /**
  * Root Forge chrome for authenticated app surfaces: cores sidebar, unified top bar,
  * and main slot for route layouts (Credit Hub, Legal, dashboard pages, etc.).
+ *
+ * Full-bleed Credit Hub portals (bank/dealer/monetización flag ON) hide this chrome via
+ * `html[data-ch-portal-full]` — set in {@link CreditHubLayoutClient}, not here.
  */
 export function GlobalForgeAppShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);

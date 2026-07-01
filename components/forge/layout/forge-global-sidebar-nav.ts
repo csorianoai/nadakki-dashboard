@@ -46,6 +46,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { RoleInfo } from "@/lib/api/auth-v2";
+import { isForgeMonetizacionEnabled } from "@/lib/env/feature-forge-monetizacion";
 
 export type NavBadge = "NEW" | "BETA" | "POPULAR";
 
@@ -60,6 +61,8 @@ export type NavItem = {
   children?: NavItem[];
   /** Hidden unless the user has `platform_superadmin`. */
   superAdminOnly?: boolean;
+  /** Hidden unless matching env feature flag is ON (build-time NEXT_PUBLIC_*). */
+  featureFlag?: "forge-monetizacion";
 };
 
 export type NavSection = {
@@ -162,9 +165,17 @@ export function isHrefActive(href: string, pathname: string | null): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function isNavItemFeatureEnabled(item: NavItem): boolean {
+  if (item.featureFlag === "forge-monetizacion") {
+    return isForgeMonetizacionEnabled();
+  }
+  return true;
+}
+
 function filterNavItems(items: NavItem[], isSuperAdmin: boolean): NavItem[] {
   return items
     .filter((i) => !i.superAdminOnly || isSuperAdmin)
+    .filter((i) => isNavItemFeatureEnabled(i))
     .map((i) => ({
       ...i,
       children: i.children ? filterNavItems(i.children, isSuperAdmin) : undefined,
@@ -186,6 +197,7 @@ function filterNavItemsForCoreAccess(
 
   return items
     .filter((i) => !i.superAdminOnly || isSuperAdmin)
+    .filter((i) => isNavItemFeatureEnabled(i))
     .map((i) => ({
       ...i,
       children: i.children
@@ -468,6 +480,21 @@ export const NAV_SECTIONS: NavSection[] = [
           { id: "credit-audit-ch", label: "Auditoría (hub)", href: "/credit-hub/bank/audit" },
           { id: "credit-compliance-root", label: "Compliance (root)", href: "/compliance" },
           { id: "credit-bank-analytics", label: "Bank analytics (root)", href: "/bank/analytics" },
+        ],
+      },
+      {
+        id: "credit-monetizacion-group",
+        groupLabel: "Monetización",
+        label: "Monetización",
+        icon: Banknote,
+        children: [
+          {
+            id: "credit-monetizacion",
+            label: "Métricas y facturación",
+            href: "/credit-hub/monetizacion/dashboard",
+            badge: "BETA",
+            featureFlag: "forge-monetizacion",
+          },
         ],
       },
       {

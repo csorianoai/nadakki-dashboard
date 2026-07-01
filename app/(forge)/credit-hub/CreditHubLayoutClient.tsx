@@ -6,12 +6,16 @@ import "./forge-globals.css";
 import "@/app/credit-hub/credit-hub.css";
 import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
 import { ForgeCreditHubAppShell } from "@/components/forge";
+import { isMonetizacionPath } from "@/lib/credit-hub/monetizacion/routes";
+import { isForgeMonetizacionEnabled } from "@/lib/env/feature-forge-monetizacion";
 
 export function CreditHubLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isBankPortal = pathname?.startsWith("/credit-hub/bank");
   const isDealerPortal = pathname?.startsWith("/credit-hub/dealer");
-  const isChPortal = isBankPortal || isDealerPortal;
+  const monetizacionActive =
+    isMonetizacionPath(pathname) && isForgeMonetizacionEnabled();
+  const isChPortal = isBankPortal || isDealerPortal || monetizacionActive;
 
   useEffect(() => {
     const root = document.documentElement;
