@@ -67,6 +67,10 @@ function collectCssFiles(dir, acc = []) {
   return acc;
 }
 
+function stripCssComments(css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
 function auditLayoutCss() {
   let violations = 0;
   let scanned = 0;
@@ -88,7 +92,7 @@ function auditLayoutCss() {
   for (const file of layoutFiles) {
     scanned++;
     const rel = relative(repoRoot, file).replace(/\\/g, "/");
-    const content = readFileSync(file, "utf8");
+    const content = stripCssComments(readFileSync(file, "utf8"));
     const lines = content.split("\n");
 
     const hexHits = [];
