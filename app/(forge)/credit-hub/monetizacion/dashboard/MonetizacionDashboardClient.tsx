@@ -5,9 +5,14 @@ import { formatRd, formatRdCompact } from "@/lib/credit-hub/monetizacion/format"
 import type { DashboardKPIs, DrilldownKey, DrilldownMap } from "@/lib/credit-hub/monetizacion/types";
 import { useMonetizacionShell, type TraceDrawerPayload } from "@/components/credit-hub/monetizacion/shell";
 import {
+  isMonetizacionOperadorView,
+  MONETIZACION_OPERADOR_EMPTY_MESSAGE,
+} from "@/lib/credit-hub/monetizacion/operador-gate";
+import {
   AlertChip,
   EventTapeRow,
   KpiCard,
+  MonetizacionScreenEmpty,
   RevenueBar,
   StatCard,
   TenantRow,
@@ -66,7 +71,7 @@ type Props = {
 };
 
 export function MonetizacionDashboardClient({ initialKpis, drilldowns }: Props) {
-  const { openTrace } = useMonetizacionShell();
+  const { tenantId, openTrace } = useMonetizacionShell();
   const [kpis] = useState(initialKpis);
 
   const revenueTotal = useMemo(
@@ -85,6 +90,10 @@ export function MonetizacionDashboardClient({ initialKpis, drilldowns }: Props) 
       aggFormatted,
     } as TraceDrawerPayload);
   };
+
+  if (!isMonetizacionOperadorView(tenantId)) {
+    return <MonetizacionScreenEmpty message={MONETIZACION_OPERADOR_EMPTY_MESSAGE} />;
+  }
 
   return (
     <div className="fm-dash">

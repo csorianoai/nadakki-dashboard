@@ -1,6 +1,6 @@
 /** HANDOFF §7 — Monetización data contract (mock-first). */
 
-export type TenantKind = "banco" | "dealer";
+export type TenantKind = "banco" | "dealer" | "operador";
 
 export type BaseModel = "B1" | "B2" | "B3" | "B4";
 

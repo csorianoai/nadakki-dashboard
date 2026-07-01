@@ -5,6 +5,13 @@ import type { CSSProperties } from "react";
 
 export const DEMO_TENANTS = [
   {
+    id: "nadakki-operador",
+    label: "Nadakki Operador",
+    subtitle: "Operador · god-view",
+    initials: "N",
+    accent: "#8b9dab",
+  },
+  {
     id: "banco-cibao",
     label: "Banco del Cibao",
     subtitle: "Banco · Híbrido (B2)",

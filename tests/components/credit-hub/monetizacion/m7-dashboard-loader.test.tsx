@@ -5,7 +5,7 @@ import { MonetizacionDashboardLoader } from "@/app/(forge)/credit-hub/monetizaci
 
 jest.mock("@/components/credit-hub/monetizacion/shell", () => ({
   useMonetizacionShell: () => ({
-    tenantId: "banco-cibao",
+    tenantId: "nadakki-operador",
     setTenantId: jest.fn(),
     openTrace: jest.fn(),
     closeTrace: jest.fn(),

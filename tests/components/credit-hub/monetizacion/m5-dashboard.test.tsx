@@ -7,7 +7,7 @@ const mockOpenTrace = jest.fn();
 
 jest.mock("@/components/credit-hub/monetizacion/shell", () => ({
   useMonetizacionShell: () => ({
-    tenantId: "banco-cibao",
+    tenantId: "nadakki-operador",
     setTenantId: jest.fn(),
     openTrace: mockOpenTrace,
     closeTrace: jest.fn(),
