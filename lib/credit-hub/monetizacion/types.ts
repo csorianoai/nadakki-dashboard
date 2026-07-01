@@ -213,3 +213,27 @@ export interface DealerMetrics {
     overage: number;
   };
 }
+
+/** P2 · Ingresos (admin god-view — HANDOFF §6BIS). */
+export interface RevenueAnalytics {
+  period: string;
+  total: string;
+  total_delta: string;
+  gmv: string;
+  gmv_delta: string;
+  take_rate: string;
+  ticket_medio: string;
+  active_tenants: number;
+  by_model: RevenueSlice[];
+  gmv_vs_take: { month: string; gmv_h: number; take_h: number }[];
+  by_tenant: {
+    name: string;
+    initial: string;
+    color: string;
+    gmv: number;
+    revenue: number;
+    pct: number;
+    model: string;
+    drilldown_key: DrilldownKey;
+  }[];
+}
