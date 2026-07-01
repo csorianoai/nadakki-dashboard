@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { ForgeToaster } from "@/components/forge/ui/Toast";
+import { ForgeToaster, toast } from "@/components/forge/ui/Toast";
 import { DEMO_TENANTS } from "./TenantSwitcher";
 import { DemoBanner } from "./DemoBanner";
 import { MonetizacionFonts } from "./MonetizacionFonts";
@@ -79,13 +79,7 @@ export function MonetizacionShell({ pageTitle, children }: Props) {
                 tenantId={tenantId}
                 onTenantChange={setTenantId}
                 onMobileNavToggle={() => setMobileNavOpen((o) => !o)}
-                onGenerateInvoice={() =>
-                  openTrace({
-                    kicker: "Acción",
-                    title: "Generar factura",
-                    body: "Disponible cuando el motor de facturación esté conectado (USE_API).",
-                  })
-                }
+                onGenerateInvoice={() => toast.success("Factura generada · demo")}
               />
               <div className="fm-workspace">
                 <div className="fm-content">

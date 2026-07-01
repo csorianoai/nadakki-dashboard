@@ -1,0 +1,81 @@
+/*
+ * M7 — empty / loading / error states (HANDOFF §8)
+ */
+
+.forge-monetizacion .fm-screen-state {
+  width: 100%;
+}
+
+.forge-monetizacion .fm-screen-state--centered {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 28px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--fm-line);
+  background: var(--fm-panel);
+}
+
+.forge-monetizacion .fm-screen-state-copy {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-screen-state-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--fm-green) 45%, transparent);
+  background: var(--fm-green);
+  color: #06160f;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.forge-monetizacion .fm-screen-state-btn--ghost {
+  background: transparent;
+  color: var(--fm-ink);
+  border-color: var(--fm-line);
+}
+
+.forge-monetizacion .fm-screen-skeleton-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.forge-monetizacion .fm-screen-skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--fm-panel2);
+}
+
+.forge-monetizacion .fm-screen-skeleton-line {
+  height: 10px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--fm-ink) 8%, var(--fm-panel2));
+}
+
+.forge-monetizacion .fm-screen-skeleton-line--sm {
+  width: 40%;
+}
+
+.forge-monetizacion .fm-screen-skeleton-line--md {
+  width: 55%;
+}
+
+.forge-monetizacion .fm-screen-skeleton-line--lg {
+  width: 70%;
+  height: 22px;
+}
+
+@media (max-width: 640px) {
+  .forge-monetizacion .fm-screen-skeleton-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

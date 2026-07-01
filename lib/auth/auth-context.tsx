@@ -74,8 +74,8 @@ export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
   return "/";
 }
 
-/** Max time to wait for refresh + /me during session init. */
-const SESSION_INIT_TIMEOUT_MS = 30_000;
+/** Max time to wait for refresh + /me during session init (Render cold start ~4.6s). */
+const SESSION_INIT_TIMEOUT_MS = 8_000;
 
 export interface AuthContextValue {
   user: UserInfo | null;
@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const timeout = setTimeout(() => {
       if (!cancelled) {
         cancelled = true;
-        setInitError("El servidor no respondio a tiempo. Verifica tu conexion.");
+        setInitError("El servidor no respondió a tiempo. Verifica tu conexión.");
         setIsLoading(false);
       }
     }, SESSION_INIT_TIMEOUT_MS);
@@ -152,9 +152,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Keep localStorage in sync on session restore
             syncLocalStorage(me.data.current_tenant, firstRole, result.data.access_token);
             scheduleProactiveRefresh();
+          } else if (!cancelled && me.error?.includes("Tiempo de espera")) {
+            setInitError("El servidor no respondió a tiempo. Verifica tu conexión.");
           }
         } else {
           tokenStorage.clearTokens();
+          if (!cancelled && result.error?.includes("Tiempo de espera")) {
+            setInitError("El servidor no respondió a tiempo. Verifica tu conexión.");
+          }
         }
         if (!cancelled) setIsLoading(false);
       } catch (err) {

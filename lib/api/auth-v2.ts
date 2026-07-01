@@ -88,10 +88,20 @@ const BASE_URL = (
   "https://nadakki-ai-suite.onrender.com"
 );
 
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<ApiResult<T>> {
+/** Per-request ceiling for session init (/refresh + /me). */
+export const AUTH_FETCH_TIMEOUT_MS = 5_000;
+
+async function fetchApi<T>(
+  endpoint: string,
+  options?: RequestInit,
+  timeoutMs = AUTH_FETCH_TIMEOUT_MS,
+): Promise<ApiResult<T>> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const r = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         ...(options?.headers as Record<string, string> | undefined),
@@ -102,10 +112,15 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<Api
     }
     return { ok: true, data: (await r.json()) as T };
   } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      return { ok: false, error: "Tiempo de espera agotado" };
+    }
     return {
       ok: false,
       error: e instanceof Error ? e.message : String(e),
     };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
