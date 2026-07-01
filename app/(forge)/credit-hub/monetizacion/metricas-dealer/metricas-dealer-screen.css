@@ -1,0 +1,152 @@
+/*
+ * M6c-P6 — Métricas del dealer · var(--fm-*) only
+ */
+
+.forge-monetizacion .fm-dealer-wl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  border: 1px solid var(--fm-line);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--fm-violet) 8%, transparent), var(--fm-panel));
+}
+
+.forge-monetizacion .fm-dealer-wl-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fm-green-ink);
+  background: var(--fm-violet);
+}
+
+.forge-monetizacion .fm-dealer-wl-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--fm-violet) 35%, transparent);
+  background: color-mix(in srgb, var(--fm-violet) 10%, transparent);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fm-violet);
+  white-space: nowrap;
+}
+
+.forge-monetizacion .fm-dealer-section-label {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-dealer-card-title {
+  margin: 0 0 10px;
+  font-family: var(--fm-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-dealer-top {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.forge-monetizacion .fm-dealer-funnel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--fm-panel2);
+  border: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-dealer-l2b {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fm-green) 8%, var(--fm-panel)), var(--fm-panel));
+  border-color: color-mix(in srgb, var(--fm-green) 28%, transparent);
+}
+
+.forge-monetizacion .fm-dealer-l2b-value {
+  font-family: var(--fm-font-mono);
+  font-size: 38px;
+  font-weight: 600;
+  color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-dealer-bottom {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 14px;
+}
+
+.forge-monetizacion .fm-dealer-mix-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--fm-line);
+  font-size: 12px;
+}
+
+.forge-monetizacion .fm-dealer-mix-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fm-panel2);
+  overflow: hidden;
+}
+
+.forge-monetizacion .fm-dealer-mix-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--fm-green);
+}
+
+.forge-monetizacion .fm-dealer-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.forge-monetizacion .fm-dealer-fees-chip {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fm-violet);
+  border: 1px solid color-mix(in srgb, var(--fm-violet) 35%, transparent);
+  background: color-mix(in srgb, var(--fm-violet) 10%, transparent);
+}
+
+.forge-monetizacion .fm-dealer-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--fm-sub);
+}
+
+@media (max-width: 900px) {
+  .forge-monetizacion .fm-dealer-top,
+  .forge-monetizacion .fm-dealer-bottom {
+    grid-template-columns: 1fr;
+  }
+}
