@@ -1,20 +1,28 @@
 "use client";
 
+import { fetchDrilldowns, fetchRevenueAnalytics } from "@/lib/credit-hub/monetizacion/adapter";
+import type { DrilldownMap, RevenueAnalytics } from "@/lib/credit-hub/monetizacion/types";
 import { useMonetizacionQuery } from "@/lib/credit-hub/monetizacion/useMonetizacionQuery";
 import {
   MonetizacionScreenError,
   MonetizacionScreenLoading,
 } from "@/components/credit-hub/monetizacion/ui/MonetizacionScreenState";
-import { MonetizacionScreenPlaceholder } from "../_shared/MonetizacionScreenPlaceholder";
+import { MonetizacionIngresosClient } from "./MonetizacionIngresosClient";
 
-export function MonetizacionIngresosLoader({ initialReady }: { initialReady?: boolean }) {
-  const { status, retry } = useMonetizacionQuery(
-    async () => true,
-    { initialData: initialReady },
+type Initial = { revenue: RevenueAnalytics; drilldowns: DrilldownMap };
+
+export function MonetizacionIngresosLoader({ initial }: { initial?: Initial }) {
+  const { data, status, retry } = useMonetizacionQuery(
+    async () => {
+      const [revenue, drilldowns] = await Promise.all([fetchRevenueAnalytics(), fetchDrilldowns()]);
+      return { revenue, drilldowns };
+    },
+    { initialData: initial },
   );
 
-  if (status === "loading") return <MonetizacionScreenLoading cards={4} columns={2} />;
+  if (status === "loading") return <MonetizacionScreenLoading cards={6} columns={2} />;
   if (status === "error") return <MonetizacionScreenError onRetry={retry} />;
+  if (!data) return null;
 
-  return <MonetizacionScreenPlaceholder screen="P2 · Ingresos" />;
+  return <MonetizacionIngresosClient revenue={data.revenue} drilldowns={data.drilldowns} />;
 }

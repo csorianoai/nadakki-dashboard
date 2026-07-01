@@ -10,6 +10,7 @@ import {
   DRILLDOWNS,
   INVOICE_MAY_2026,
   RECONCILIATION_MAY_2026,
+  REVENUE_ANALYTICS_MAY_2026,
 } from "./fixtures";
 import type {
   BankMetrics,
@@ -19,6 +20,7 @@ import type {
   DrilldownMap,
   Invoice,
   Reconciliation,
+  RevenueAnalytics,
   Tenant,
 } from "./types";
 
@@ -68,4 +70,9 @@ export async function fetchDealerMetrics(tenantId: string): Promise<DealerMetric
   if (USE_API) throw new Error("Monetización API not wired");
   if (tenantId !== DEALER_METRICS_MAY_2026.tenant_id) return null;
   return DEALER_METRICS_MAY_2026;
+}
+
+export async function fetchRevenueAnalytics(): Promise<RevenueAnalytics> {
+  if (USE_API) throw new Error("Monetización API not wired");
+  return REVENUE_ANALYTICS_MAY_2026;
 }

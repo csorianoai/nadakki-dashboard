@@ -1,0 +1,181 @@
+/*
+ * M8-P2 · Ingresos admin screen · var(--fm-*) only
+ */
+
+.forge-monetizacion .fm-ingresos {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.forge-monetizacion .fm-ingresos-lead {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-ingresos-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.forge-monetizacion .fm-ingresos-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.forge-monetizacion .fm-ingresos-card-title {
+  margin: 0 0 12px;
+  font-family: var(--fm-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ingresos-chart-legend {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ingresos-chart-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.forge-monetizacion .fm-ingresos-legend-gmv::before {
+  background: var(--fm-blue);
+}
+
+.forge-monetizacion .fm-ingresos-legend-take::before {
+  background: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ingresos-chart {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  min-height: 120px;
+}
+
+.forge-monetizacion .fm-ingresos-chart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.forge-monetizacion .fm-ingresos-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 100%;
+  height: 100px;
+}
+
+.forge-monetizacion .fm-ingresos-chart-gmv {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(180deg, var(--fm-blue), color-mix(in srgb, var(--fm-blue) 30%, transparent));
+  min-height: 4px;
+}
+
+.forge-monetizacion .fm-ingresos-chart-take {
+  width: 8px;
+  border-radius: 4px 4px 0 0;
+  background: var(--fm-green);
+  min-height: 4px;
+}
+
+.forge-monetizacion .fm-ingresos-chart-label {
+  font-size: 10px;
+  color: var(--fm-sub);
+  font-family: var(--fm-font-mono);
+  text-transform: lowercase;
+}
+
+.forge-monetizacion .fm-ingresos-tenant-head,
+.forge-monetizacion .fm-ingresos-tenant-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr 1.1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.forge-monetizacion .fm-ingresos-tenant-head {
+  padding: 0 12px 8px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ingresos-tenant-head span:not(:first-child) {
+  text-align: right;
+}
+
+.forge-monetizacion .fm-ingresos-tenant-row {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  text-align: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+.forge-monetizacion .fm-ingresos-tenant-row:hover {
+  background: color-mix(in srgb, var(--fm-ink) 4%, transparent);
+}
+
+.forge-monetizacion .fm-ingresos-tenant-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fm-ink-soft);
+  font-size: 13px;
+}
+
+.forge-monetizacion .fm-ingresos-tenant-row .fm-mono {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1100px) {
+  .forge-monetizacion .fm-ingresos-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .forge-monetizacion .fm-ingresos-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .forge-monetizacion .fm-ingresos-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-monetizacion .fm-ingresos-tenant-scroll {
+    overflow-x: auto;
+  }
+
+  .forge-monetizacion .fm-ingresos-tenant-head,
+  .forge-monetizacion .fm-ingresos-tenant-row {
+    min-width: 640px;
+  }
+}
