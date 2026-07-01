@@ -162,3 +162,54 @@ export interface WhatIfResult {
   delta: number;
   lines: { label: string; amount: number }[];
 }
+
+export interface FunnelStepData {
+  label: string;
+  value: number;
+  conv?: string;
+}
+
+/** P5 · Métricas del banco (ActorMetrics — aislado por tenant banco). */
+export interface BankMetrics {
+  tenant_id: string;
+  period: string;
+  model_label: string;
+  funnel: FunnelStepData[];
+  sla: {
+    p50: string;
+    p95: string;
+    within_pct: number;
+    reject_pct: number;
+  };
+  ai_usage: {
+    decisions: number;
+    documents: number;
+    tokens: string;
+    cost: number;
+  };
+  invoice_current: number;
+  invoice_projected: number;
+}
+
+/** P6 · Métricas del dealer (ActorMetrics — aislado por tenant dealer). */
+export interface DealerMetrics {
+  tenant_id: string;
+  period: string;
+  plan: string;
+  funnel: FunnelStepData[];
+  look_to_book: { pct: number; delta: string };
+  bank_mix: { name: string; initial: string; color: string; deals: number; pct: number }[];
+  kpis: {
+    volume: number;
+    apr_pct: number;
+    time_to_offer: string;
+    seats: number;
+  };
+  dealer_fees: {
+    limit_pct: number;
+    base: number;
+    requests_used: number;
+    requests_limit: number;
+    overage: number;
+  };
+}

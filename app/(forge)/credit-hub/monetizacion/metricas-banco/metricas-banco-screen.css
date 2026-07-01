@@ -1,0 +1,188 @@
+/*
+ * M6c-P5 — Métricas del banco · var(--fm-*) only
+ */
+
+.forge-monetizacion .fm-bank-wl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  border: 1px solid var(--fm-line);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--fm-green) 8%, transparent), var(--fm-panel));
+}
+
+.forge-monetizacion .fm-bank-wl-title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.forge-monetizacion .fm-bank-wl-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--fm-green-ink);
+  background: var(--fm-green);
+}
+
+.forge-monetizacion .fm-bank-wl-name {
+  margin: 0;
+  font-family: var(--fm-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-bank-wl-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-bank-wl-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--fm-green) 35%, transparent);
+  background: color-mix(in srgb, var(--fm-green) 10%, transparent);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fm-green);
+  white-space: nowrap;
+}
+
+.forge-monetizacion .fm-bank-funnel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: var(--fm-panel2);
+  border: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-bank-funnel .fm-ui-funnel-step {
+  padding: 8px 12px;
+  border-right: 1px solid var(--fm-line);
+  border-bottom: none;
+}
+
+.forge-monetizacion .fm-bank-funnel .fm-ui-funnel-step:last-child {
+  border-right: none;
+}
+
+.forge-monetizacion .fm-bank-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.forge-monetizacion .fm-bank-sla-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 12px;
+  color: var(--fm-ink-soft);
+  border-bottom: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-bank-sla-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fm-panel2);
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.forge-monetizacion .fm-bank-sla-bar-fill {
+  height: 100%;
+  background: var(--fm-green);
+  border-radius: 999px;
+}
+
+.forge-monetizacion .fm-bank-ai-card {
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+
+.forge-monetizacion .fm-bank-ai-card:hover {
+  border-color: var(--fm-violet);
+}
+
+.forge-monetizacion .fm-bank-ai-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 12px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-bank-ai-cost {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--fm-line);
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--fm-violet);
+  font-family: var(--fm-font-mono);
+}
+
+.forge-monetizacion .fm-bank-invoice-total {
+  font-family: var(--fm-font-mono);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-bank-invoice-proj {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--fm-line);
+  font-size: 12px;
+  color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-bank-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-bank-section-label {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-bank-card-title {
+  margin: 0 0 10px;
+  font-family: var(--fm-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+@media (max-width: 900px) {
+  .forge-monetizacion .fm-bank-funnel,
+  .forge-monetizacion .fm-bank-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-monetizacion .fm-bank-funnel .fm-ui-funnel-step {
+    border-right: none;
+    border-bottom: 1px solid var(--fm-line);
+  }
+}
