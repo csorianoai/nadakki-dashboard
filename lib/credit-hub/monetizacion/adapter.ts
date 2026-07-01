@@ -5,6 +5,7 @@ import {
   BANK_METRICS_MAY_2026,
   BILLING_CONFIG_DEFAULT,
   DASHBOARD_KPIS,
+  DEALER_METRICS_MAY_2026,
   DEMO_TENANTS_DATA,
   DRILLDOWNS,
   INVOICE_MAY_2026,
@@ -14,6 +15,7 @@ import type {
   BankMetrics,
   BillingConfig,
   DashboardKPIs,
+  DealerMetrics,
   DrilldownMap,
   Invoice,
   Reconciliation,
@@ -60,4 +62,10 @@ export async function fetchBankMetrics(tenantId: string): Promise<BankMetrics | 
   if (USE_API) throw new Error("Monetización API not wired");
   if (tenantId !== BANK_METRICS_MAY_2026.tenant_id) return null;
   return BANK_METRICS_MAY_2026;
+}
+
+export async function fetchDealerMetrics(tenantId: string): Promise<DealerMetrics | null> {
+  if (USE_API) throw new Error("Monetización API not wired");
+  if (tenantId !== DEALER_METRICS_MAY_2026.tenant_id) return null;
+  return DEALER_METRICS_MAY_2026;
 }

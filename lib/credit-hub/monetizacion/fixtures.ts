@@ -6,6 +6,7 @@ import type {
   BankMetrics,
   BillingConfig,
   DashboardKPIs,
+  DealerMetrics,
   Drilldown,
   DrilldownMap,
   Invoice,
@@ -403,4 +404,26 @@ export const BANK_METRICS_MAY_2026: BankMetrics = {
   ai_usage: { decisions: 12_480, documents: 3_210, tokens: "1.49M", cost: 59_400 },
   invoice_current: 462_442,
   invoice_projected: 511_800,
+};
+
+/** P6 · Auto Crédito del Cibao — HANDOFF §363–372 */
+export const DEALER_METRICS_MAY_2026: DealerMetrics = {
+  tenant_id: "auto-credito-cibao",
+  period: "mayo 2026",
+  plan: "Pro",
+  funnel: [
+    { label: "Solicitudes originadas", value: 552, conv: "100%" },
+    { label: "Enviadas a bancos", value: 538, conv: "97% ruteo" },
+    { label: "Ofertas recibidas", value: 441, conv: "82% respuesta" },
+    { label: "Deals desembolsados", value: 212, conv: "38% L2B" },
+  ],
+  look_to_book: { pct: 38, delta: "+5pp vs. abr" },
+  bank_mix: [
+    { name: "Banco del Cibao", initial: "BC", color: "#2bd073", deals: 92, pct: 43 },
+    { name: "Banco Nacional RD", initial: "BN", color: "#f4b740", deals: 66, pct: 31 },
+    { name: "Banco Atlántico", initial: "BA", color: "#54a8ec", deals: 38, pct: 18 },
+    { name: "Otros (3)", initial: "+3", color: "#74908f", deals: 16, pct: 8 },
+  ],
+  kpis: { volume: 23_400_000, apr_pct: 16.2, time_to_offer: "3.8s", seats: 4 },
+  dealer_fees: { limit_pct: 92, base: 18_000, requests_used: 552, requests_limit: 600, overage: 48 },
 };
