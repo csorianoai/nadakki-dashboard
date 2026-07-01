@@ -1,0 +1,89 @@
+/*
+ * Forge Monetización — design tokens (§1 HANDOFF)
+ * Scoped to .forge-monetizacion only — no impact on .forge-app / dashboard theme.
+ */
+
+.forge-monetizacion {
+  --fm-bg: #0c1316;
+  --fm-panel: #131d21;
+  --fm-panel2: #0f181c;
+  --fm-line: #22323a;
+  --fm-ink: #e8f0f2;
+  --fm-ink-soft: #aebcbf;
+  --fm-sub: #74908f;
+
+  --fm-green: #2bd073;
+  --fm-green-ink: #06160f;
+  --fm-amber: #f4b740;
+  --fm-amber-strong: #f7cd7a;
+  --fm-red: #f06150;
+  --fm-blue: #54a8ec;
+  --fm-violet: #a98bf0;
+
+  --fm-tenant: #2bd073;
+
+  --fm-nav-width: 222px;
+  --fm-topbar-height: 56px;
+  --fm-drawer-width: 432px;
+  --fm-demo-banner-height: 36px;
+
+  --fm-font-sans: var(--fm-font-sans-opt), "Inter", system-ui, sans-serif;
+  --fm-font-display: var(--fm-font-display-opt), "Space Grotesk", system-ui, sans-serif;
+  --fm-font-mono: var(--fm-font-mono-opt), "JetBrains Mono", ui-monospace, monospace;
+
+  --fm-cta-gradient: linear-gradient(150deg, #2bd073, #15966f);
+  --fm-cta-shadow: 0 6px 16px -8px rgba(43, 208, 115, 0.6);
+  --fm-nav-active-bg: rgba(43, 208, 115, 0.1);
+
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  background: var(--fm-bg);
+  color: var(--fm-ink);
+  font-family: var(--fm-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.forge-monetizacion *,
+.forge-monetizacion *::before,
+.forge-monetizacion *::after {
+  box-sizing: border-box;
+}
+
+.forge-monetizacion .fm-mono {
+  font-family: var(--fm-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* §1 — Banner DEMO */
+.forge-monetizacion .fm-demo-banner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--fm-demo-banner-height);
+  padding: 0 16px;
+  background: repeating-linear-gradient(135deg, rgba(244,183,64,.08) 0 11px, transparent 11px 22px);
+  border-bottom: 1px solid var(--fm-line);
+  color: var(--fm-amber);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.forge-monetizacion .fm-demo-banner strong {
+  color: var(--fm-amber-strong);
+}
+
+.forge-monetizacion .fm-demo-banner-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fm-amber);
+  box-shadow: 0 0 8px rgba(244, 183, 64, 0.55);
+}
