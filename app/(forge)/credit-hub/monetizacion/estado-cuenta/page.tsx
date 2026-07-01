@@ -1,5 +1,7 @@
-import { MonetizacionScreenPlaceholder } from "../_shared/MonetizacionScreenPlaceholder";
+import { fetchDrilldowns, fetchInvoice } from "@/lib/credit-hub/monetizacion/adapter";
+import { MonetizacionFacturaClient } from "./MonetizacionFacturaClient";
 
-export default function MonetizacionEstadoCuentaPage() {
-  return <MonetizacionScreenPlaceholder screen="P7 · Estado de cuenta" />;
+export default async function MonetizacionEstadoCuentaPage() {
+  const [invoice, drilldowns] = await Promise.all([fetchInvoice(), fetchDrilldowns()]);
+  return <MonetizacionFacturaClient invoice={invoice} drilldowns={drilldowns} />;
 }
