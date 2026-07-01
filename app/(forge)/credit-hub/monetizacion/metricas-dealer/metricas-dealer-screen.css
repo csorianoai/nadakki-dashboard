@@ -90,6 +90,16 @@
   color: var(--fm-green);
 }
 
+.forge-monetizacion .fm-dealer-l2b--clickable,
+.forge-monetizacion .fm-dealer-fees-card {
+  cursor: pointer;
+}
+
+.forge-monetizacion .fm-dealer-l2b--clickable:hover,
+.forge-monetizacion .fm-dealer-fees-card:hover {
+  border-color: color-mix(in srgb, var(--fm-violet) 35%, var(--fm-line));
+}
+
 .forge-monetizacion .fm-dealer-bottom {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
