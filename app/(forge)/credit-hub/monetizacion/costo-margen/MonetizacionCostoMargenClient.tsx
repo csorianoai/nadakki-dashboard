@@ -13,7 +13,6 @@ import {
   MarginBadge,
   MonetizacionScreenEmpty,
   RevenueBar,
-  StatCard,
   type FmAccent,
 } from "@/components/credit-hub/monetizacion/ui";
 import { tenantInitialClass } from "@/components/credit-hub/monetizacion/ui/types";
@@ -88,10 +87,11 @@ export function MonetizacionCostoMargenClient({ costMargin, drilldowns }: Props)
           sub={costMargin.costo_llm_share}
           onDrill={() => openDrilldown("ai", costMargin.costo_llm)}
         />
-        <StatCard
+        <KpiCard
           label="Tenants margen < umbral"
           value={String(costMargin.tenants_bajo_umbral)}
           delta={`umbral ${costMargin.umbral_pct}%`}
+          onDrill={() => openDrilldown("margen", String(costMargin.tenants_bajo_umbral))}
         />
       </div>
 
