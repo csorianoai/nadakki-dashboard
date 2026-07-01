@@ -1,10 +1,30 @@
 "use client";
 
+import { Shuffle } from "lucide-react";
 import type { CSSProperties } from "react";
-const DEMO_TENANTS = [
-  { id: "banco-cibao", label: "Banco del Cibao", accent: "#2bd073" },
-  { id: "credicefi", label: "CrediCefi Motors", accent: "#a78bfa" },
-  { id: "nadakki-demo", label: "Nadakki Demo", accent: "#4d9fff" },
+
+export const DEMO_TENANTS = [
+  {
+    id: "banco-cibao",
+    label: "Banco del Cibao",
+    subtitle: "Banco · Híbrido (B2)",
+    initials: "BC",
+    accent: "#2bd073",
+  },
+  {
+    id: "banco-atlantico",
+    label: "Banco Atlántico",
+    subtitle: "Banco · Comisión pura",
+    initials: "BA",
+    accent: "#54a8ec",
+  },
+  {
+    id: "auto-credito-cibao",
+    label: "Auto Crédito del Cibao",
+    subtitle: "Dealer · Pro",
+    initials: "AC",
+    accent: "#a98bf0",
+  },
 ] as const;
 
 type Props = {
@@ -14,35 +34,29 @@ type Props = {
 
 export function TenantSwitcher({ tenantId, onTenantChange }: Props) {
   const current = DEMO_TENANTS.find((t) => t.id === tenantId) ?? DEMO_TENANTS[0];
+  const currentIndex = DEMO_TENANTS.findIndex((t) => t.id === current.id);
+
+  const cycleTenant = () => {
+    const next = DEMO_TENANTS[(currentIndex + 1) % DEMO_TENANTS.length];
+    onTenantChange(next.id);
+  };
 
   return (
-    <div
+    <button
+      type="button"
       className="fm-tenant-switch"
-      style={
-        {
-          "--fm-tenant": current.accent,
-          "--fm-tenant-soft": `${current.accent}1f`,
-          "--fm-tenant-bd": `${current.accent}59`,
-        } as CSSProperties
-      }
+      style={{ "--fm-tenant": current.accent } as CSSProperties}
+      onClick={cycleTenant}
+      aria-label={`Tenant activo: ${current.label}. Click para cambiar.`}
     >
-      <span className="fm-tenant-dot" aria-hidden />
-      <label className="sr-only" htmlFor="fm-tenant-select">
-        Tenant activo
-      </label>
-      <select
-        id="fm-tenant-select"
-        value={tenantId}
-        onChange={(e) => onTenantChange(e.target.value)}
-      >
-        {DEMO_TENANTS.map((t) => (
-          <option key={t.id} value={t.id}>
-            {t.label}
-          </option>
-        ))}
-      </select>
-    </div>
+      <span className="fm-tenant-initial" aria-hidden>
+        {current.initials}
+      </span>
+      <span className="fm-tenant-copy">
+        <span className="fm-tenant-name">{current.label}</span>
+        <span className="fm-tenant-sub">{current.subtitle}</span>
+      </span>
+      <Shuffle size={14} strokeWidth={1.9} aria-hidden />
+    </button>
   );
 }
-
-export { DEMO_TENANTS };

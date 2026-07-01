@@ -16,8 +16,9 @@ export function NavRail({ mobileOpen, onNavigate }: Props) {
     <nav className={`fm-nav${mobileOpen ? " fm-nav--open" : ""}`} aria-label="Monetización">
       <div className="fm-nav-brand">
         <h2>Forge</h2>
-        <p>Monetización · métricas</p>
+        <p>Credit Hub · Nadakki</p>
       </div>
+      <p className="fm-nav-group-label">Monetización</p>
       {MONETIZACION_NAV.map(({ id, href, label, icon: Icon }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
@@ -28,7 +29,8 @@ export function NavRail({ mobileOpen, onNavigate }: Props) {
             onClick={onNavigate}
           >
             <Icon size={16} strokeWidth={1.9} aria-hidden />
-            {label}
+            <span className="fm-nav-item-label">{label}</span>
+            {active ? <span className="fm-nav-item-dot" aria-hidden /> : null}
           </Link>
         );
       })}

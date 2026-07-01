@@ -9,6 +9,7 @@ import { NavRail } from "./NavRail";
 import { TopBar } from "./TopBar";
 import { TraceDrawer, type TraceDrawerPayload } from "./TraceDrawer";
 import "./tokens.css";
+import "./shell-layout.css";
 
 type MonetizacionShellContextValue = {
   tenantId: string;
@@ -58,15 +59,7 @@ export function MonetizacionShell({ pageTitle, children }: Props) {
   return (
     <MonetizacionShellContext.Provider value={ctx}>
       <MonetizacionFonts>
-        <div
-          style={
-            {
-              "--fm-tenant": tenantAccent,
-              "--fm-tenant-soft": `${tenantAccent}1f`,
-              "--fm-tenant-bd": `${tenantAccent}59`,
-            } as CSSProperties
-          }
-        >
+        <div style={{ "--fm-tenant": tenantAccent } as CSSProperties}>
           <DemoBanner />
           <div className="fm-body">
             {mobileNavOpen ? (

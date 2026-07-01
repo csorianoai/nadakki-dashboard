@@ -1,0 +1,389 @@
+/*
+ * Forge Monetización — shell layout (M1b)
+ * Consumes §1 vars from tokens.css — do not redefine --fm-* color tokens here.
+ */
+
+/* Body row */
+.forge-monetizacion .fm-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* Nav rail 222px — panel2 per HANDOFF §2.1 */
+.forge-monetizacion .fm-nav {
+  width: var(--fm-nav-width);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  background: var(--fm-panel2);
+  border-right: 1px solid var(--fm-line);
+  overflow-y: auto;
+}
+
+.forge-monetizacion .fm-nav-brand {
+  padding: 4px 10px 18px;
+}
+
+.forge-monetizacion .fm-nav-brand h2 {
+  margin: 0;
+  font-family: var(--fm-font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-nav-brand p {
+  margin: 4px 0 0;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-nav-group-label {
+  margin: 8px 10px 6px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  color: var(--fm-ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.forge-monetizacion .fm-nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-nav-item--active {
+  background: var(--fm-nav-active-bg);
+  border-color: var(--fm-line);
+  color: var(--fm-ink);
+  font-weight: 600;
+}
+
+.forge-monetizacion .fm-nav-item svg {
+  flex-shrink: 0;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-nav-item--active svg {
+  color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-nav-item-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.forge-monetizacion .fm-nav-item-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fm-green);
+  box-shadow: 0 0 6px rgba(43, 208, 115, 0.55);
+}
+
+/* Main column */
+.forge-monetizacion .fm-main-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar — panel2 per HANDOFF §2.2 */
+.forge-monetizacion .fm-topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: var(--fm-topbar-height);
+  padding: 0 20px;
+  background: var(--fm-panel2);
+  border-bottom: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-topbar-title {
+  margin: 0;
+  font-family: var(--fm-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-topbar-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--fm-line);
+}
+
+.forge-monetizacion .fm-topbar-period {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--fm-line);
+  background: var(--fm-panel);
+  font-size: 12px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-topbar-spacer {
+  flex: 1;
+}
+
+.forge-monetizacion .fm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--fm-cta-gradient);
+  color: var(--fm-green-ink);
+  font-family: var(--fm-font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--fm-cta-shadow);
+  transition: filter 0.12s;
+}
+
+.forge-monetizacion .fm-btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+.forge-monetizacion .fm-btn-primary:focus-visible {
+  outline: 2px solid var(--fm-green);
+  outline-offset: 2px;
+}
+
+/* Tenant switcher — white-label per HANDOFF §2.2 */
+.forge-monetizacion .fm-tenant-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--fm-line);
+  background: var(--fm-panel);
+  color: var(--fm-ink-soft);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+
+.forge-monetizacion .fm-tenant-switch:hover {
+  border-color: var(--fm-tenant);
+}
+
+.forge-monetizacion .fm-tenant-initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--fm-tenant);
+  color: var(--fm-green-ink);
+  font-family: var(--fm-font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.forge-monetizacion .fm-tenant-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+}
+
+.forge-monetizacion .fm-tenant-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fm-ink);
+  line-height: 1.2;
+}
+
+.forge-monetizacion .fm-tenant-sub {
+  font-size: 10px;
+  color: var(--fm-sub);
+  line-height: 1.2;
+}
+
+.forge-monetizacion .fm-tenant-switch select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Workspace: content + drawer push */
+.forge-monetizacion .fm-workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.forge-monetizacion .fm-content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  background: var(--fm-bg);
+}
+
+.forge-monetizacion .fm-content-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 28px 40px;
+}
+
+/* Trace drawer — 432px push, panel2 per HANDOFF §2 */
+.forge-monetizacion .fm-drawer {
+  flex-shrink: 0;
+  width: 0;
+  overflow: hidden;
+  border-left: 1px solid transparent;
+  background: var(--fm-panel2);
+  transition: width 0.2s ease, border-color 0.2s ease;
+}
+
+.forge-monetizacion .fm-drawer--open {
+  width: var(--fm-drawer-width);
+  border-left-color: var(--fm-line);
+}
+
+.forge-monetizacion .fm-drawer-inner {
+  width: var(--fm-drawer-width);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  overflow-y: auto;
+}
+
+.forge-monetizacion .fm-drawer-kicker {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fm-tenant);
+}
+
+.forge-monetizacion .fm-drawer-title {
+  margin: 0 0 12px;
+  font-family: var(--fm-font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-drawer-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-drawer-close {
+  margin-left: auto;
+  padding: 4px 8px;
+  border: 1px solid var(--fm-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fm-sub);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.forge-monetizacion .fm-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--fm-line);
+}
+
+/* Mobile nav toggle */
+.forge-monetizacion .fm-mobile-nav-btn {
+  display: none;
+  padding: 6px;
+  border: 1px solid var(--fm-line);
+  border-radius: 8px;
+  background: var(--fm-panel);
+  color: var(--fm-ink-soft);
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .forge-monetizacion .fm-mobile-nav-btn {
+    display: inline-flex;
+  }
+
+  .forge-monetizacion .fm-nav {
+    position: fixed;
+    inset: var(--fm-demo-banner-height) auto 0 0;
+    z-index: 40;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: none;
+  }
+
+  .forge-monetizacion .fm-nav--open {
+    transform: translateX(0);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .forge-monetizacion .fm-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .forge-monetizacion .fm-drawer--open {
+    position: fixed;
+    inset: var(--fm-demo-banner-height) 0 0 auto;
+    z-index: 45;
+    width: min(var(--fm-drawer-width), 100vw);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forge-monetizacion .fm-drawer,
+  .forge-monetizacion .fm-nav {
+    transition: none;
+  }
+}
