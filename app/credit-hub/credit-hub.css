@@ -255,9 +255,11 @@
   }
 }
 
-/* CH Portal (Bank + Dealer) — hide Nadakki global shell (Option A) so Package 0/1/2 owns chrome.
-   Runtime sets data-ch-portal-full="true" on /credit-hub/bank/* AND /credit-hub/dealer/*
-   (CreditHubLayoutClient), so this unified selector covers both personas. */
+/* CH Portal (Bank + Dealer + Monetización flag ON) — hide Nadakki global shell (Option A)
+   so module-owned chrome replaces the Forge sidebar/topbar.
+   Runtime sets data-ch-portal-full="true" on /credit-hub/bank/*, /credit-hub/dealer/*,
+   and /credit-hub/monetizacion/* when NEXT_PUBLIC_FF_FORGE_MONETIZACION is enabled
+   (CreditHubLayoutClient). */
 html[data-ch-portal-full="true"] .forge-app > div.flex > aside[aria-label="Navegación principal"] {
   display: none !important;
 }
