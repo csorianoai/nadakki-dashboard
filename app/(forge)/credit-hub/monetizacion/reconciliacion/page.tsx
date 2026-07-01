@@ -1,5 +1,7 @@
-import { MonetizacionScreenPlaceholder } from "../_shared/MonetizacionScreenPlaceholder";
+import { fetchDrilldowns, fetchReconciliation } from "@/lib/credit-hub/monetizacion/adapter";
+import { MonetizacionReconciliacionClient } from "./MonetizacionReconciliacionClient";
 
-export default function MonetizacionReconciliacionPage() {
-  return <MonetizacionScreenPlaceholder screen="P8 · Reconciliación" />;
+export default async function MonetizacionReconciliacionPage() {
+  const [reconciliation, drilldowns] = await Promise.all([fetchReconciliation(), fetchDrilldowns()]);
+  return <MonetizacionReconciliacionClient reconciliation={reconciliation} drilldowns={drilldowns} />;
 }

@@ -235,7 +235,7 @@ export const INVOICE_MAY_2026: Invoice = {
 
 export const RECONCILIATION_MAY_2026: Reconciliation = {
   lines_count: 4,
-  events_count: 49,
+  events_count: 15_732,
   reconciled_sum: 391_900,
   discrepancy: 0,
   matches: [
@@ -262,6 +262,7 @@ export const RECONCILIATION_MAY_2026: Reconciliation = {
     mkEvent("PRÉSTAMO", "DEAL-7801", "fundeado 05 may 16:40", 15_600, "05 may 16:40", "0x1c2f…a9"),
     mkEvent("DECISIÓN IA", "SCO-44128", "scoring SOL-9920", 2.5, "16:38", "0x3e91…4c"),
     mkEvent("DOCUMENTO", "DOC-22107", "OCR cédula SOL-9917", 6, "16:33", "0x88a2…f0"),
+    mkEvent("PRÉSTAMO", "DEAL-7790", "fundeado 03 may 09:11", 6_300, "03 may 09:11", "0x4b8e…7d"),
     mkEvent("CONTRATO", "CT-2026-0142", "base mensual mayo", 85_000, "01 may 00:00", "0xc4f1…9e"),
     mkEvent("SEAT", "usr_ana.disla", "seat activo 31 may", 1_500, "31 may 18:02", "0xab10…22"),
   ],
