@@ -3,6 +3,7 @@
  * All canonical amounts live here; screens consume via adapter.
  */
 import type {
+  BankMetrics,
   BillingConfig,
   DashboardKPIs,
   Drilldown,
@@ -270,6 +271,8 @@ export const BILLING_CONFIG_DEFAULT: BillingConfig = {
   bps: 30,
   add_setup: false,
   add_ai: true,
+  // add_seats feeds whatif() seat line (§201). Config UI toggles = Setup B5 + AI only (§168–170).
+  // Seats tariff (§179, RD$1,500/analista) is a base-plan line from active analysts — not a toggleable add-on.
   add_seats: true,
   cores: { Marketing: false, "Credit / Forge": true, Legal: true, SIC: true, Projects: false },
   versions: [
@@ -383,4 +386,21 @@ export const DASHBOARD_KPIS: DashboardKPIs = {
       severity: "warn",
     },
   ],
+};
+
+/** P5 · Banco del Cibao — HANDOFF §347–359 */
+export const BANK_METRICS_MAY_2026: BankMetrics = {
+  tenant_id: "banco-cibao",
+  period: "mayo 2026",
+  model_label: "Híbrido (B2)",
+  funnel: [
+    { label: "Solicitudes recibidas", value: 1_842, conv: "100%" },
+    { label: "Ofertas emitidas", value: 1_401, conv: "76% emisión" },
+    { label: "Ofertas ganadas", value: 212, conv: "15% win rate" },
+    { label: "Préstamos fundeados", value: 34, conv: "16% cierre" },
+  ],
+  sla: { p50: "3.1s", p95: "8.7s", within_pct: 96.2, reject_pct: 12 },
+  ai_usage: { decisions: 12_480, documents: 3_210, tokens: "1.49M", cost: 59_400 },
+  invoice_current: 462_442,
+  invoice_projected: 511_800,
 };
