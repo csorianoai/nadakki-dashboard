@@ -154,13 +154,14 @@ export function MonetizacionDashboardClient({ initialKpis, drilldowns }: Props) 
         </section>
       </div>
 
-      <section className="fm-ui-card">
+      <section className="fm-ui-card fm-dash-tenant-scroll">
         <div className="fm-dash-card-head">
           <h3 className="fm-dash-card-title">Tenants · ingreso, costo y margen</h3>
         </div>
         <p className="fm-dash-tenant-note">
           margen efectivo = (ingreso − costo de servir) / ingreso
         </p>
+        <div className="fm-dash-tenant-table">
         <div className="fm-dash-tenant-head">
           <span>Tenant</span>
           <span>Tipo</span>
@@ -191,6 +192,7 @@ export function MonetizacionDashboardClient({ initialKpis, drilldowns }: Props) 
             />
           </button>
         ))}
+        </div>
       </section>
     </div>
   );

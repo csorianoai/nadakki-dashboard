@@ -1,7 +1,11 @@
 import { fetchDrilldowns, fetchInvoice } from "@/lib/credit-hub/monetizacion/adapter";
-import { MonetizacionFacturaClient } from "./MonetizacionFacturaClient";
+import { MonetizacionFacturaLoader } from "./MonetizacionFacturaLoader";
 
 export default async function MonetizacionEstadoCuentaPage() {
-  const [invoice, drilldowns] = await Promise.all([fetchInvoice(), fetchDrilldowns()]);
-  return <MonetizacionFacturaClient invoice={invoice} drilldowns={drilldowns} />;
+  try {
+    const [invoice, drilldowns] = await Promise.all([fetchInvoice(), fetchDrilldowns()]);
+    return <MonetizacionFacturaLoader initial={{ invoice, drilldowns }} />;
+  } catch {
+    return <MonetizacionFacturaLoader />;
+  }
 }

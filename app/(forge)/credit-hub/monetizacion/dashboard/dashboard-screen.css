@@ -124,3 +124,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+.forge-monetizacion .fm-dash-tenant-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.forge-monetizacion .fm-dash-tenant-table {
+  min-width: min(100%, 720px);
+}
+
+.forge-monetizacion .fm-dash-tenant-head,
+.forge-monetizacion .fm-dash-tenant-row .fm-ui-tenant-row {
+  min-width: 680px;
+}

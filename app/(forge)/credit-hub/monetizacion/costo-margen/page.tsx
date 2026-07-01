@@ -1,5 +1,5 @@
-import { MonetizacionScreenPlaceholder } from "../_shared/MonetizacionScreenPlaceholder";
+import { MonetizacionCostoMargenLoader } from "./MonetizacionCostoMargenLoader";
 
 export default function MonetizacionCostoMargenPage() {
-  return <MonetizacionScreenPlaceholder screen="P3 · Costo & margen" />;
+  return <MonetizacionCostoMargenLoader initialReady />;
 }

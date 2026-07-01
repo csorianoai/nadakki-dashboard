@@ -1,5 +1,5 @@
-import { MonetizacionScreenPlaceholder } from "../_shared/MonetizacionScreenPlaceholder";
+import { MonetizacionIngresosLoader } from "./MonetizacionIngresosLoader";
 
 export default function MonetizacionIngresosPage() {
-  return <MonetizacionScreenPlaceholder screen="P2 · Ingresos" />;
+  return <MonetizacionIngresosLoader initialReady />;
 }

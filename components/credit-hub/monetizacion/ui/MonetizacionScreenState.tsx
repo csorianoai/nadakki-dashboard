@@ -1,7 +1,5 @@
 "use client";
 
-import "./screen-states.css";
-
 type LoadingProps = {
   cards?: number;
   columns?: number;

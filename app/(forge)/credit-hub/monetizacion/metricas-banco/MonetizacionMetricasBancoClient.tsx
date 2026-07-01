@@ -4,7 +4,7 @@ import Link from "next/link";
 import { formatRd } from "@/lib/credit-hub/monetizacion/format";
 import type { BankMetrics, DrilldownMap } from "@/lib/credit-hub/monetizacion/types";
 import { DEMO_TENANTS, useMonetizacionShell, type TraceDrawerPayload } from "@/components/credit-hub/monetizacion/shell";
-import { FunnelStep } from "@/components/credit-hub/monetizacion/ui";
+import { FunnelStep, MonetizacionScreenEmpty } from "@/components/credit-hub/monetizacion/ui";
 import "./metricas-banco-screen.css";
 
 type Props = {
@@ -31,10 +31,7 @@ export function MonetizacionMetricasBancoClient({ metrics: bankMetrics, drilldow
 
   if (!metrics) {
     return (
-      <div className="fm-bank-empty">
-        Vista white-label disponible solo para tenants banco. Cambia el tenant switcher a un banco para ver sus métricas
-        aisladas.
-      </div>
+      <MonetizacionScreenEmpty message="Vista white-label disponible solo para tenants banco. Cambia el tenant switcher a un banco para ver sus métricas aisladas." />
     );
   }
 

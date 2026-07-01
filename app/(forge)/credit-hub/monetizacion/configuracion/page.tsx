@@ -1,7 +1,11 @@
 import { fetchBillingConfig } from "@/lib/credit-hub/monetizacion/adapter";
-import { MonetizacionConfigClient } from "./MonetizacionConfigClient";
+import { MonetizacionConfigLoader } from "./MonetizacionConfigLoader";
 
 export default async function MonetizacionConfiguracionPage() {
-  const initialConfig = await fetchBillingConfig();
-  return <MonetizacionConfigClient initialConfig={initialConfig} />;
+  try {
+    const initialConfig = await fetchBillingConfig();
+    return <MonetizacionConfigLoader initialConfig={initialConfig} />;
+  } catch {
+    return <MonetizacionConfigLoader />;
+  }
 }

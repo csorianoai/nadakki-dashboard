@@ -430,6 +430,15 @@
     display: inline-flex;
   }
 
+  .forge-monetizacion .fm-content-inner {
+    padding: 16px 14px 32px;
+  }
+
+  .forge-monetizacion .fm-topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
   .forge-monetizacion .fm-nav {
     position: fixed;
     inset: var(--fm-demo-banner-height) auto 0 0;

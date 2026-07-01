@@ -19,6 +19,7 @@ jest.mock("@/components/credit-hub/monetizacion/shell", () => ({
 
 jest.mock("@/app/(forge)/credit-hub/monetizacion/metricas-banco/metricas-banco-screen.css", () => ({}));
 jest.mock("@/components/credit-hub/monetizacion/ui/components-presentational.css", () => ({}));
+jest.mock("@/components/credit-hub/monetizacion/ui/screen-states.css", () => ({}));
 
 describe("Monetización M6c-P5 Métricas banco", () => {
   beforeEach(() => mockOpenTrace.mockClear());
