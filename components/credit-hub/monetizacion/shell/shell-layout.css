@@ -335,6 +335,85 @@
   border-bottom: 1px solid var(--fm-line);
 }
 
+.forge-monetizacion .fm-drawer-sub {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-drawer-agg {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-drawer-agg-label {
+  display: block;
+  font-size: 11px;
+  color: var(--fm-sub);
+  margin-bottom: 6px;
+}
+
+.forge-monetizacion .fm-drawer-agg-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.forge-monetizacion .fm-drawer-agg-value {
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-drawer-verified {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fm-green);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--fm-green) 35%, transparent);
+  background: color-mix(in srgb, var(--fm-green) 10%, transparent);
+}
+
+.forge-monetizacion .fm-drawer-count {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-drawer-events {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.forge-monetizacion .fm-drawer-event {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--fm-line);
+  background: var(--fm-panel);
+}
+
+.forge-monetizacion .fm-drawer-event-link {
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 10px;
+  color: var(--fm-blue);
+  cursor: pointer;
+}
+
+.forge-monetizacion .fm-drawer-foot {
+  margin: 14px 0 0;
+  font-size: 11px;
+  color: var(--fm-sub);
+}
+
 /* Mobile nav toggle */
 .forge-monetizacion .fm-mobile-nav-btn {
   display: none;
