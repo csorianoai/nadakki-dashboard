@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ForgeToaster, toast } from "@/components/forge/ui/Toast";
 import { DEMO_TENANTS } from "./TenantSwitcher";
 import { DemoBanner } from "./DemoBanner";
@@ -23,6 +24,16 @@ type MonetizacionShellContextValue = {
 
 const MonetizacionShellContext = createContext<MonetizacionShellContextValue | null>(null);
 
+const DEFAULT_TENANT_ID = "nadakki-operador";
+const TENANT_IDS = new Set<string>(DEMO_TENANTS.map((t) => t.id));
+let sessionTenantId: string | null = null;
+
+function resolveTenantId(param: string | null): string {
+  if (param && TENANT_IDS.has(param)) return param;
+  if (sessionTenantId && TENANT_IDS.has(sessionTenantId)) return sessionTenantId;
+  return DEFAULT_TENANT_ID;
+}
+
 export function useMonetizacionShell(): MonetizacionShellContextValue {
   const ctx = useContext(MonetizacionShellContext);
   if (!ctx) {
@@ -37,10 +48,32 @@ type Props = {
 };
 
 export function MonetizacionShell({ pageTitle, children }: Props) {
-  const [tenantId, setTenantId] = useState<string>("nadakki-operador");
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const [tenantId, setTenantIdState] = useState(() => resolveTenantId(searchParams.get("tenant")));
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerPayload, setDrawerPayload] = useState<TraceDrawerPayload>(null);
+
+  const setTenantId = useCallback(
+    (id: string) => {
+      if (!TENANT_IDS.has(id)) return;
+      sessionTenantId = id;
+      setTenantIdState(id);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tenant", id);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  useEffect(() => {
+    if (searchParams.get("tenant") === tenantId) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tenant", tenantId);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, router, searchParams, tenantId]);
 
   const tenantAccent = DEMO_TENANTS.find((t) => t.id === tenantId)?.accent ?? DEMO_TENANTS[0].accent;
 
