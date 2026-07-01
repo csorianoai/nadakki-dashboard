@@ -10,6 +10,7 @@ import { TopBar } from "./TopBar";
 import { TraceDrawer, type TraceDrawerPayload } from "./TraceDrawer";
 import "./tokens.css";
 import "./shell-layout.css";
+import "../ui/components.css";
 
 type MonetizacionShellContextValue = {
   tenantId: string;

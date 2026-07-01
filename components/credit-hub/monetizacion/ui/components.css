@@ -1,0 +1,649 @@
+/*
+ * Forge Monetización — reusable UI (§9 HANDOFF)
+ * Consumes §1 vars only — no raw #hex or rgba().
+ */
+
+.forge-monetizacion .fm-ui-card {
+  background: var(--fm-panel);
+  border: 1px solid var(--fm-line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.forge-monetizacion .fm-ui-kpi {
+  cursor: default;
+  transition: border-color 0.12s;
+}
+
+.forge-monetizacion .fm-ui-kpi--clickable {
+  cursor: pointer;
+}
+
+.forge-monetizacion .fm-ui-kpi--clickable:hover {
+  border-color: var(--fm-tenant);
+}
+
+.forge-monetizacion .fm-ui-kpi-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.forge-monetizacion .fm-ui-kpi-label {
+  font-size: 11.5px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-ui-kpi-delta {
+  font-size: 10.5px;
+}
+
+.forge-monetizacion .fm-ui-kpi-delta--up {
+  color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ui-kpi-delta--down {
+  color: var(--fm-red);
+}
+
+.forge-monetizacion .fm-ui-kpi-delta--neutral {
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-kpi-value {
+  font-family: var(--fm-font-mono);
+  font-size: 25px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-kpi-value--sm {
+  font-size: 18px;
+}
+
+.forge-monetizacion .fm-ui-kpi-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 10.5px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-drill-chip {
+  font-size: 10px;
+  color: var(--fm-tenant);
+}
+
+.forge-monetizacion .fm-ui-alert {
+  flex: 1;
+  min-width: 230px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-ui-alert--bad {
+  background: color-mix(in srgb, var(--fm-red) 7%, transparent);
+  border-color: color-mix(in srgb, var(--fm-red) 28%, transparent);
+}
+
+.forge-monetizacion .fm-ui-alert--warn {
+  background: color-mix(in srgb, var(--fm-amber) 8%, transparent);
+  border-color: color-mix(in srgb, var(--fm-amber) 28%, transparent);
+}
+
+.forge-monetizacion .fm-ui-alert-kind {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.forge-monetizacion .fm-ui-alert-kind--bad {
+  color: var(--fm-red);
+}
+
+.forge-monetizacion .fm-ui-alert-kind--warn {
+  color: var(--fm-amber);
+}
+
+.forge-monetizacion .fm-ui-alert-text {
+  font-size: 12px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-ui-revenue-bar {
+  margin-bottom: 10px;
+}
+
+.forge-monetizacion .fm-ui-revenue-bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.forge-monetizacion .fm-ui-revenue-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-ui-revenue-bar-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.forge-monetizacion .fm-ui-revenue-bar-amount {
+  font-family: var(--fm-font-mono);
+  font-size: 11px;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-revenue-bar-track {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--fm-panel2);
+  overflow: hidden;
+}
+
+.forge-monetizacion .fm-ui-revenue-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.forge-monetizacion .fm-ui-accent-green {
+  background: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ui-accent-blue {
+  background: var(--fm-blue);
+}
+
+.forge-monetizacion .fm-ui-accent-violet {
+  background: var(--fm-violet);
+}
+
+.forge-monetizacion .fm-ui-accent-amber {
+  background: var(--fm-amber);
+}
+
+.forge-monetizacion .fm-ui-accent-sub {
+  background: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-accent-red {
+  background: var(--fm-red);
+}
+
+.forge-monetizacion .fm-ui-tape-row {
+  display: grid;
+  grid-template-columns: 38px 72px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--fm-line);
+  font-size: 12px;
+}
+
+.forge-monetizacion .fm-ui-tape-time {
+  font-family: var(--fm-font-mono);
+  font-size: 11px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-tape-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-ui-tape-text {
+  color: var(--fm-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forge-monetizacion .fm-ui-tape-amount {
+  font-family: var(--fm-font-mono);
+  font-size: 11px;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-margin-badge {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--fm-line);
+  font-family: var(--fm-font-mono);
+  font-size: 12px;
+}
+
+.forge-monetizacion .fm-ui-margin-badge--ok {
+  color: var(--fm-green);
+  background: color-mix(in srgb, var(--fm-green) 10%, transparent);
+  border-color: color-mix(in srgb, var(--fm-green) 30%, transparent);
+}
+
+.forge-monetizacion .fm-ui-margin-badge--warn {
+  color: var(--fm-amber);
+  background: color-mix(in srgb, var(--fm-amber) 10%, transparent);
+  border-color: color-mix(in srgb, var(--fm-amber) 30%, transparent);
+}
+
+.forge-monetizacion .fm-ui-margin-badge--bad {
+  color: var(--fm-red);
+  background: color-mix(in srgb, var(--fm-red) 10%, transparent);
+  border-color: color-mix(in srgb, var(--fm-red) 30%, transparent);
+}
+
+.forge-monetizacion .fm-ui-tenant-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.8fr 1fr 1fr 1fr 0.9fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--fm-line);
+  font-size: 12px;
+  transition: background 0.12s;
+}
+
+.forge-monetizacion .fm-ui-tenant-row:hover {
+  background: color-mix(in srgb, var(--fm-line) 28%, transparent);
+}
+
+.forge-monetizacion .fm-ui-tenant-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-tenant-initial {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--fm-green-ink);
+}
+
+.forge-monetizacion .fm-ui-tenant-mono {
+  font-family: var(--fm-font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-ui-model-card {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--fm-line);
+  background: var(--fm-panel);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.forge-monetizacion .fm-ui-model-card--selected {
+  background: color-mix(in srgb, var(--fm-green) 8%, transparent);
+  border-color: var(--fm-green);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fm-green) 30%, transparent);
+}
+
+.forge-monetizacion .fm-ui-model-code {
+  font-family: var(--fm-font-mono);
+  font-size: 9.5px;
+  margin-bottom: 4px;
+}
+
+.forge-monetizacion .fm-ui-model-name {
+  font-family: var(--fm-font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-model-desc {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-model-flag {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--fm-green);
+  color: var(--fm-green-ink);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.forge-monetizacion .fm-ui-addon {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--fm-line);
+  cursor: pointer;
+}
+
+.forge-monetizacion .fm-ui-addon-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid var(--fm-line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--fm-green-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.forge-monetizacion .fm-ui-addon-check--on {
+  background: var(--fm-green);
+  border-color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ui-bps-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.forge-monetizacion .fm-ui-bps-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--fm-line);
+  background: var(--fm-panel2);
+  color: var(--fm-ink-soft);
+  cursor: pointer;
+}
+
+.forge-monetizacion .fm-ui-bps-value {
+  font-family: var(--fm-font-mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fm-green);
+  min-width: 72px;
+  text-align: center;
+}
+
+.forge-monetizacion .fm-ui-core-chip {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--fm-line);
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--fm-sub);
+  background: var(--fm-panel2);
+}
+
+.forge-monetizacion .fm-ui-core-chip--on {
+  color: var(--fm-ink);
+  background: color-mix(in srgb, var(--fm-green) 10%, transparent);
+  border-color: color-mix(in srgb, var(--fm-green) 34%, transparent);
+}
+
+.forge-monetizacion .fm-ui-version-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--fm-line);
+  font-size: 12px;
+}
+
+.forge-monetizacion .fm-ui-version-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-version-tariff {
+  font-family: var(--fm-font-mono);
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-version-tag {
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--fm-green);
+  color: var(--fm-green-ink);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.forge-monetizacion .fm-ui-invoice-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-bottom: 1px solid var(--fm-line);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: background 0.12s;
+}
+
+.forge-monetizacion .fm-ui-invoice-line:hover {
+  background: color-mix(in srgb, var(--fm-line) 28%, transparent);
+}
+
+.forge-monetizacion .fm-ui-invoice-line-label {
+  font-size: 13.5px;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-invoice-line-note {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-invoice-line-chip {
+  display: inline-flex;
+  margin-top: 4px;
+  margin-right: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--fm-blue);
+  border: 1px solid color-mix(in srgb, var(--fm-blue) 35%, transparent);
+}
+
+.forge-monetizacion .fm-ui-invoice-line-amount {
+  font-family: var(--fm-font-mono);
+  font-size: 14px;
+  color: var(--fm-ink);
+  white-space: nowrap;
+}
+
+.forge-monetizacion .fm-ui-invoice-totals {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-ui-invoice-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-ui-invoice-total-row--grand {
+  margin-top: 8px;
+  font-family: var(--fm-font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ui-funnel-step {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--fm-line);
+}
+
+.forge-monetizacion .fm-ui-funnel-label {
+  font-size: 12px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-ui-funnel-value {
+  font-family: var(--fm-font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-funnel-conv {
+  font-size: 11px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-stat {
+  padding: 12px;
+}
+
+.forge-monetizacion .fm-ui-stat-label {
+  font-size: 11px;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-audit-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--fm-line);
+  font-size: 11px;
+}
+
+.forge-monetizacion .fm-ui-audit-hash {
+  font-family: var(--fm-font-mono);
+  font-size: 10px;
+  color: var(--fm-violet);
+}
+
+.forge-monetizacion .fm-ui-whatif {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--fm-green) 6%, var(--fm-panel)),
+    var(--fm-panel)
+  );
+  border-color: color-mix(in srgb, var(--fm-green) 26%, transparent);
+}
+
+.forge-monetizacion .fm-ui-whatif-total {
+  font-family: var(--fm-font-mono);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ui-whatif-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.forge-monetizacion .fm-ui-whatif-delta--pos {
+  color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ui-whatif-delta--neg {
+  color: var(--fm-red);
+}
+
+.forge-monetizacion .fm-ui-sandbox-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.forge-monetizacion .fm-ui-sandbox-section h3 {
+  margin: 0 0 10px;
+  font-family: var(--fm-font-display);
+  font-size: 14px;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-ui-sandbox-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.forge-monetizacion .fm-ui-sandbox-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.forge-monetizacion .fm-ui-text-green {
+  color: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ui-text-blue {
+  color: var(--fm-blue);
+}
+
+.forge-monetizacion .fm-ui-text-violet {
+  color: var(--fm-violet);
+}
+
+.forge-monetizacion .fm-ui-text-amber {
+  color: var(--fm-amber);
+}
+
+.forge-monetizacion .fm-ui-text-red {
+  color: var(--fm-red);
+}
+
+.forge-monetizacion .fm-ui-text-sub {
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-ui-tenant-initial--green {
+  background: var(--fm-green);
+}
+
+.forge-monetizacion .fm-ui-tenant-initial--blue {
+  background: var(--fm-blue);
+}
+
+.forge-monetizacion .fm-ui-tenant-initial--violet {
+  background: var(--fm-violet);
+}
+
+.forge-monetizacion .fm-ui-tenant-initial--amber {
+  background: var(--fm-amber);
+}
