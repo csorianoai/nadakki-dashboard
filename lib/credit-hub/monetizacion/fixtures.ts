@@ -13,6 +13,7 @@ import type {
   Reconciliation,
   RevenueAnalytics,
   Tenant,
+  CostMargin,
 } from "./types";
 
 export const DEMO_TENANTS_DATA: Tenant[] = [
@@ -470,6 +471,42 @@ export const REVENUE_ANALYTICS_MAY_2026: RevenueAnalytics = {
       drilldown_key: "mrr",
     },
   ],
+};
+
+/** P3 · Costo & margen — HANDOFF §334–343 */
+export const COST_MARGIN_MAY_2026: CostMargin = {
+  period: "mayo 2026",
+  margen_bruto: "61%",
+  margen_delta: "−2pp",
+  costo_servir: "RD$ 612K",
+  costo_servir_delta: "+14%",
+  costo_llm: "RD$ 421K",
+  costo_llm_share: "69% del costo de servir",
+  tenants_bajo_umbral: 2,
+  umbral_pct: 15,
+  llm_by_core: [
+    { label: "Credit / Forge", amount: 198_000, pct: 47, color: "green" },
+    { label: "SIC", amount: 104_000, pct: 25, color: "blue" },
+    { label: "Legal", amount: 58_000, pct: 14, color: "violet" },
+    { label: "Marketing", amount: 38_000, pct: 9, color: "amber" },
+    { label: "Projects", amount: 23_000, pct: 5, color: "sub" },
+  ],
+  margin_by_tenant: DASHBOARD_KPIS.tenants.map((t) => ({
+    name: t.name,
+    initial: t.initial,
+    color: t.color,
+    revenue: t.revenue,
+    cost: t.cost,
+    margin_pct: t.margin_pct,
+    status: t.status,
+  })),
+  guardrail: {
+    tenant: "Banco Atlántico",
+    margin_pct: 9,
+    umbral_pct: 15,
+    reason:
+      "El costo LLM del core Credit creció +38%. Revisa el modelo de cobro o el passthrough de IA.",
+  },
 };
 
 /** P5 · Banco del Cibao — HANDOFF §347–359 */
