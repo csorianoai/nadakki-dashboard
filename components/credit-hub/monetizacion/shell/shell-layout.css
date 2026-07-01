@@ -68,7 +68,7 @@
 }
 
 .forge-monetizacion .fm-nav-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: color-mix(in srgb, var(--fm-ink) 4%, transparent);
   color: var(--fm-ink);
 }
 
@@ -99,7 +99,7 @@
   height: 6px;
   border-radius: 50%;
   background: var(--fm-green);
-  box-shadow: 0 0 6px rgba(43, 208, 115, 0.55);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--fm-green) 55%, transparent);
 }
 
 /* Main column */
@@ -362,14 +362,14 @@
 
   .forge-monetizacion .fm-nav--open {
     transform: translateX(0);
-    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+    box-shadow: 8px 0 32px color-mix(in srgb, var(--fm-bg) 45%, transparent);
   }
 
   .forge-monetizacion .fm-nav-backdrop {
     position: fixed;
     inset: 0;
     z-index: 35;
-    background: rgba(0, 0, 0, 0.55);
+    background: color-mix(in srgb, var(--fm-bg) 55%, transparent);
   }
 
   .forge-monetizacion .fm-drawer--open {
@@ -377,7 +377,7 @@
     inset: var(--fm-demo-banner-height) 0 0 auto;
     z-index: 45;
     width: min(var(--fm-drawer-width), 100vw);
-    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.45);
+    box-shadow: -8px 0 32px color-mix(in srgb, var(--fm-bg) 45%, transparent);
   }
 }
 
