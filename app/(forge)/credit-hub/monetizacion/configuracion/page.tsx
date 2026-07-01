@@ -1,5 +1,7 @@
-import { MonetizacionScreenPlaceholder } from "../_shared/MonetizacionScreenPlaceholder";
+import { fetchBillingConfig } from "@/lib/credit-hub/monetizacion/adapter";
+import { MonetizacionConfigClient } from "./MonetizacionConfigClient";
 
-export default function MonetizacionConfiguracionPage() {
-  return <MonetizacionScreenPlaceholder screen="P4 · Configuración de cobro" />;
+export default async function MonetizacionConfiguracionPage() {
+  const initialConfig = await fetchBillingConfig();
+  return <MonetizacionConfigClient initialConfig={initialConfig} />;
 }
