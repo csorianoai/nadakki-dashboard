@@ -237,3 +237,32 @@ export interface RevenueAnalytics {
     drilldown_key: DrilldownKey;
   }[];
 }
+
+/** P3 · Costo & margen (admin god-view — HANDOFF §6BIS). */
+export interface CostMargin {
+  period: string;
+  margen_bruto: string;
+  margen_delta: string;
+  costo_servir: string;
+  costo_servir_delta: string;
+  costo_llm: string;
+  costo_llm_share: string;
+  tenants_bajo_umbral: number;
+  umbral_pct: number;
+  llm_by_core: RevenueSlice[];
+  margin_by_tenant: {
+    name: string;
+    initial: string;
+    color: string;
+    revenue: number;
+    cost: number;
+    margin_pct: number;
+    status: "ok" | "warn" | "bad";
+  }[];
+  guardrail: {
+    tenant: string;
+    margin_pct: number;
+    umbral_pct: number;
+    reason: string;
+  };
+}

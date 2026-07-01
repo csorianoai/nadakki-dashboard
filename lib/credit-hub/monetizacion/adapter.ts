@@ -11,10 +11,12 @@ import {
   INVOICE_MAY_2026,
   RECONCILIATION_MAY_2026,
   REVENUE_ANALYTICS_MAY_2026,
+  COST_MARGIN_MAY_2026,
 } from "./fixtures";
 import type {
   BankMetrics,
   BillingConfig,
+  CostMargin,
   DashboardKPIs,
   DealerMetrics,
   DrilldownMap,
@@ -75,4 +77,9 @@ export async function fetchDealerMetrics(tenantId: string): Promise<DealerMetric
 export async function fetchRevenueAnalytics(): Promise<RevenueAnalytics> {
   if (USE_API) throw new Error("Monetización API not wired");
   return REVENUE_ANALYTICS_MAY_2026;
+}
+
+export async function fetchCostMargin(): Promise<CostMargin> {
+  if (USE_API) throw new Error("Monetización API not wired");
+  return COST_MARGIN_MAY_2026;
 }

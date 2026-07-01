@@ -1,0 +1,163 @@
+/*
+ * M8-P3 · Costo & margen admin screen · var(--fm-*) only
+ */
+
+.forge-monetizacion .fm-costo-margen {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.forge-monetizacion .fm-costo-margen-lead {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-costo-margen-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.forge-monetizacion .fm-costo-margen-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.forge-monetizacion .fm-costo-margen-card-title {
+  margin: 0 0 12px;
+  font-family: var(--fm-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-costo-margen-tenant-head,
+.forge-monetizacion .fm-costo-margen-tenant-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 0.8fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.forge-monetizacion .fm-costo-margen-tenant-head {
+  padding: 0 12px 8px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fm-sub);
+}
+
+.forge-monetizacion .fm-costo-margen-tenant-head span:not(:first-child) {
+  text-align: right;
+}
+
+.forge-monetizacion .fm-costo-margen-tenant-row {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  text-align: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+.forge-monetizacion .fm-costo-margen-tenant-row:hover {
+  background: color-mix(in srgb, var(--fm-ink) 4%, transparent);
+}
+
+.forge-monetizacion .fm-costo-margen-tenant-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fm-ink-soft);
+  font-size: 13px;
+}
+
+.forge-monetizacion .fm-costo-margen-tenant-row .fm-mono {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.forge-monetizacion .fm-costo-margen-tenant-row .fm-ui-margin-badge {
+  justify-self: end;
+}
+
+.forge-monetizacion .fm-costo-margen-guardrail {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--fm-red) 28%, transparent);
+  background: color-mix(in srgb, var(--fm-red) 7%, transparent);
+}
+
+.forge-monetizacion .fm-costo-margen-guardrail-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1.2;
+  color: var(--fm-red);
+}
+
+.forge-monetizacion .fm-costo-margen-guardrail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.forge-monetizacion .fm-costo-margen-guardrail-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fm-ink);
+}
+
+.forge-monetizacion .fm-costo-margen-guardrail-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fm-ink-soft);
+}
+
+.forge-monetizacion .fm-costo-margen-guardrail-link {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fm-red);
+  text-decoration: none;
+}
+
+.forge-monetizacion .fm-costo-margen-guardrail-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1100px) {
+  .forge-monetizacion .fm-costo-margen-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .forge-monetizacion .fm-costo-margen-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .forge-monetizacion .fm-costo-margen-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-monetizacion .fm-costo-margen-tenant-scroll {
+    overflow-x: auto;
+  }
+
+  .forge-monetizacion .fm-costo-margen-tenant-head,
+  .forge-monetizacion .fm-costo-margen-tenant-row {
+    min-width: 520px;
+  }
+}
