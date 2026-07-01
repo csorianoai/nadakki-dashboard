@@ -15,6 +15,10 @@ describe("Monetización M3a presentational UI", () => {
   test("KpiCard onDrill", async () => {
     const onDrill = jest.fn();
     wrap(<KpiCard label="GMV" value="RD$ 1" onDrill={onDrill} />);
+    expect(screen.getByRole("button")).toHaveAttribute(
+      "aria-label",
+      "GMV, RD$ 1. Ver origen de la cifra",
+    );
     await userEvent.click(screen.getByRole("button"));
     expect(onDrill).toHaveBeenCalled();
   });

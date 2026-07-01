@@ -22,6 +22,7 @@ jest.mock("@/components/credit-hub/monetizacion/shell", () => ({
 
 jest.mock("@/app/(forge)/credit-hub/monetizacion/metricas-dealer/metricas-dealer-screen.css", () => ({}));
 jest.mock("@/components/credit-hub/monetizacion/ui/components-presentational.css", () => ({}));
+jest.mock("@/components/credit-hub/monetizacion/ui/screen-states.css", () => ({}));
 
 describe("Monetización M6c-P6 Métricas dealer", () => {
   test("renders funnel and fees card", () => {

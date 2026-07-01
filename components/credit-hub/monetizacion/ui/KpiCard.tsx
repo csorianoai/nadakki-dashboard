@@ -18,11 +18,13 @@ function deltaTone(delta?: string): "up" | "down" | "neutral" {
 
 export function KpiCard({ label, value, delta, sub, onDrill, size = "lg" }: Props) {
   const clickable = Boolean(onDrill);
+  const ariaLabel = clickable ? `${label}, ${value}. Ver origen de la cifra` : undefined;
   return (
     <div
       className={`fm-ui-card fm-ui-kpi${clickable ? " fm-ui-kpi--clickable" : ""}`}
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
+      aria-label={ariaLabel}
       onClick={onDrill}
       onKeyDown={
         clickable

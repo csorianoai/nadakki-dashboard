@@ -1,11 +1,14 @@
 import { fetchBankMetrics, fetchDrilldowns } from "@/lib/credit-hub/monetizacion/adapter";
-import { MonetizacionMetricasBancoClient } from "./MonetizacionMetricasBancoClient";
+import { MonetizacionMetricasBancoLoader } from "./MonetizacionMetricasBancoLoader";
 
 export default async function MonetizacionMetricasBancoPage() {
-  const tenantId = "banco-cibao";
-  const [metrics, drilldowns] = await Promise.all([
-    fetchBankMetrics(tenantId),
-    fetchDrilldowns(),
-  ]);
-  return <MonetizacionMetricasBancoClient metrics={metrics} drilldowns={drilldowns} />;
+  try {
+    const [metrics, drilldowns] = await Promise.all([
+      fetchBankMetrics("banco-cibao"),
+      fetchDrilldowns(),
+    ]);
+    return <MonetizacionMetricasBancoLoader initial={{ metrics, drilldowns }} />;
+  } catch {
+    return <MonetizacionMetricasBancoLoader />;
+  }
 }

@@ -3,7 +3,7 @@
 import { formatRd, formatRdCompact } from "@/lib/credit-hub/monetizacion/format";
 import type { DealerMetrics } from "@/lib/credit-hub/monetizacion/types";
 import { DEMO_TENANTS, useMonetizacionShell } from "@/components/credit-hub/monetizacion/shell";
-import { FunnelStep, StatCard } from "@/components/credit-hub/monetizacion/ui";
+import { FunnelStep, MonetizacionScreenEmpty, StatCard } from "@/components/credit-hub/monetizacion/ui";
 import type { FmAccent } from "@/components/credit-hub/monetizacion/ui";
 import { tenantInitialClass } from "@/components/credit-hub/monetizacion/ui/types";
 import "./metricas-dealer-screen.css";
@@ -26,10 +26,7 @@ export function MonetizacionMetricasDealerClient({ metrics: dealerMetrics }: Pro
 
   if (!metrics) {
     return (
-      <div className="fm-dealer-empty">
-        Vista white-label disponible solo para tenants dealer. Cambia el tenant switcher a un dealer para ver sus métricas
-        aisladas.
-      </div>
+      <MonetizacionScreenEmpty message="Vista white-label disponible solo para tenants dealer. Cambia el tenant switcher a un dealer para ver sus métricas aisladas." />
     );
   }
 

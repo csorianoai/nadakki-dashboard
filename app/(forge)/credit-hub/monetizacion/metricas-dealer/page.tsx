@@ -1,7 +1,11 @@
 import { fetchDealerMetrics } from "@/lib/credit-hub/monetizacion/adapter";
-import { MonetizacionMetricasDealerClient } from "./MonetizacionMetricasDealerClient";
+import { MonetizacionMetricasDealerLoader } from "./MonetizacionMetricasDealerLoader";
 
 export default async function MonetizacionMetricasDealerPage() {
-  const metrics = await fetchDealerMetrics("auto-credito-cibao");
-  return <MonetizacionMetricasDealerClient metrics={metrics} />;
+  try {
+    const metrics = await fetchDealerMetrics("auto-credito-cibao");
+    return <MonetizacionMetricasDealerLoader initialMetrics={metrics} />;
+  } catch {
+    return <MonetizacionMetricasDealerLoader />;
+  }
 }
