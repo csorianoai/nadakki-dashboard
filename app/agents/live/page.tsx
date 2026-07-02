@@ -11,7 +11,6 @@ import {
 import { apiFetch } from "@/lib/api/fetch-client";
 
 const LIVE_TENANT_KEY = "nadakki_live_tenant";
-const DEFAULT_TENANT = "credicefi";
 const DEFAULT_AGENT_ID = "abtestingia__abtestingagentoperative";
 
 function getApiUrl(): string {
@@ -19,12 +18,11 @@ function getApiUrl(): string {
 }
 
 function getInitialTenant(): string {
-  if (typeof window === "undefined") return DEFAULT_TENANT;
+  if (typeof window === "undefined") return "";
   try {
-    const v = localStorage.getItem(LIVE_TENANT_KEY);
-    return v ?? DEFAULT_TENANT;
+    return localStorage.getItem(LIVE_TENANT_KEY) ?? localStorage.getItem("nadakki_tenant_id") ?? "";
   } catch {
-    return DEFAULT_TENANT;
+    return "";
   }
 }
 
@@ -35,7 +33,7 @@ interface AgentOption {
 }
 
 export default function LivePanelPage() {
-  const [tenantId, setTenantIdState] = useState(DEFAULT_TENANT);
+  const [tenantId, setTenantIdState] = useState("");
   const [tenants, setTenants] = useState<
     Array<{ id?: string; slug: string; name?: string; display_name?: string }>
   >([]);

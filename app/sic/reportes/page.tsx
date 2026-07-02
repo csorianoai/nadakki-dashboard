@@ -151,7 +151,8 @@ function mockVolumeTrend() {
 
 export default function SicReportesPage() {
   const { tenantId } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
+
   const [activeTab, setActiveTab] = useState<TabId>("ejecutivo");
   const [expedientes, setExpedientes] = useState<Expediente[]>([]);
   const [exportaciones, setExportaciones] = useState<Exportacion[]>([]);

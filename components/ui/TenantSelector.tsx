@@ -99,7 +99,7 @@ export default function TenantSelector() {
             backgroundColor: "rgba(15, 23, 42, 0.9)",
             color: "#94a3b8",
           }}
-          title="Introduce el tenant (ej. credicefi)"
+          title="Introduce el tenant slug"
         />
       </div>
     );

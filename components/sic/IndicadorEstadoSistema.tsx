@@ -16,10 +16,11 @@ export function IndicadorEstadoSistema() {
   const { tenantId } = useTenant();
   const { tenantId: authTenantId } = useAuth();
   const resolvedTenant =
-    (tenantId && tenantId.trim()) || (authTenantId && authTenantId.trim()) || "credicefi";
+    (tenantId && tenantId.trim()) || (authTenantId && authTenantId.trim()) || null;
   const [estado, setEstado] = useState<EstadoSistema | null>(null);
 
   useEffect(() => {
+    if (!resolvedTenant) return;
     fetchEstadoSistema(resolvedTenant)
       .then(setEstado)
       .catch(() => setEstado({ salud: "no_disponible", conectividad: false }));

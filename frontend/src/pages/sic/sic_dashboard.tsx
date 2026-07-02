@@ -17,7 +17,7 @@ export default function SicDashboard({ tenantId }: SicDashboardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
 
   const headers = useCallback(
     (overrides?: Record<string, string>) => ({

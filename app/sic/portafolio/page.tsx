@@ -9,7 +9,9 @@ import { LoadingSic, ErrorSic } from "@/components/sic/EstadosSic";
 
 export default function SicPortafolioPage() {
   const { tenantId } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
+
+  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
   const [analytics, setAnalytics] = useState<PortafolioAnalytics | null>(null);
   const [expedientes, setExpedientes] = useState<Awaited<ReturnType<typeof fetchExpedientes>>>([]);
   const [loading, setLoading] = useState(true);

@@ -23,7 +23,9 @@ const BTN_SECONDARY =
 
 export default function SicPage() {
   const { tenantId } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
+
+  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
 
   return (
     <div className="p-6">

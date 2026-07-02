@@ -24,7 +24,7 @@ test.describe("Login → Credit Hub smoke", () => {
     await page.fill('input[type="password"]', PASSWORD);
 
     // Fill tenant slug if the field exists
-    const tenantInput = page.locator('input[placeholder="credicefi"]');
+    const tenantInput = page.locator('input[placeholder="mi-tenant"]');
     if (await tenantInput.isVisible()) {
       await tenantInput.fill(TENANT);
     }

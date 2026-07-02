@@ -11,8 +11,10 @@ export async function POST(
   const { caseId } = await params;
   const tenantId =
     req.headers.get("x-resolved-tenant-id") ||
-    req.headers.get("x-tenant-id") ||
-    "credicefi";
+    req.headers.get("x-tenant-id");
+  if (!tenantId) {
+    return NextResponse.json({ error: "X-Tenant-ID header required" }, { status: 401 });
+  }
 
   try {
     const formData = await req.formData();

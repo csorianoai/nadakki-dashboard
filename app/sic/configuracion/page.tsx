@@ -39,7 +39,8 @@ async function fetchSICMultiTenantConfig(
 export default function SicConfiguracionPage() {
   const { tenantId } = useTenant();
   const { settings } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
+
   const [config, setConfig] = useState<ConfigBanco | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export default function SicConfiguracionPage() {
   const [mtLoading, setMtLoading] = useState(true);
 
   useEffect(() => {
+    if (!tenant) return;
     let alive = true;
     fetchConfigBanco(tenant)
       .then((c) => {
@@ -64,6 +66,7 @@ export default function SicConfiguracionPage() {
   }, [tenant]);
 
   useEffect(() => {
+    if (!tenant) return;
     let alive = true;
     setMtLoading(true);
     fetchSICMultiTenantConfig(tenant)

@@ -8,6 +8,7 @@ import {
   MONETIZACION_OPERADOR_EMPTY_MESSAGE,
 } from "@/lib/credit-hub/monetizacion/operador-gate";
 import { useMonetizacionShell, type TraceDrawerPayload } from "@/components/credit-hub/monetizacion/shell";
+import { useAuth } from "@/hooks/useAuth";
 import {
   KpiCard,
   MarginBadge,
@@ -41,6 +42,7 @@ type Props = {
 
 export function MonetizacionCostoMargenClient({ costMargin, drilldowns }: Props) {
   const { tenantId, openTrace } = useMonetizacionShell();
+  const { activeRole } = useAuth();
 
   const openDrilldown = (key: DrilldownKey, aggFormatted: string) => {
     const drilldown = drilldowns[key];
@@ -54,7 +56,7 @@ export function MonetizacionCostoMargenClient({ costMargin, drilldowns }: Props)
     } as TraceDrawerPayload);
   };
 
-  if (!isMonetizacionOperadorView(tenantId)) {
+  if (!isMonetizacionOperadorView(activeRole?.role_key, tenantId)) {
     return <MonetizacionScreenEmpty message={MONETIZACION_OPERADOR_EMPTY_MESSAGE} />;
   }
 

@@ -5,10 +5,10 @@ import type { CSSProperties } from "react";
 
 export const DEMO_TENANTS = [
   {
-    id: "nadakki-operador",
-    label: "Nadakki Operador",
+    id: "demo-operator",
+    label: "Demo Operador",
     subtitle: "Operador · god-view",
-    initials: "N",
+    initials: "OP",
     accent: "#8b9dab",
   },
   {

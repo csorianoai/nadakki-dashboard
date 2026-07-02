@@ -13,7 +13,7 @@ import type {
 } from "@/types/legal";
 
 const DEV_FALLBACK_TENANT =
-  process.env.NODE_ENV === "development" ? (process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || "credicefi") : undefined;
+  process.env.NODE_ENV === "development" ? (process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || undefined) : undefined;
 
 /** Fix #3: nunca llamar API sin tenant resuelto (salvo hidratación). */
 export function useLegalEffectiveTenantId(): {

@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "Authorization": auth,
-        "X-Tenant-ID": req.headers.get("x-resolved-tenant-id") ?? req.headers.get("x-tenant-id") ?? "credicefi",
+        ...(req.headers.get("x-resolved-tenant-id") || req.headers.get("x-tenant-id")
+          ? { "X-Tenant-ID": (req.headers.get("x-resolved-tenant-id") ?? req.headers.get("x-tenant-id"))! }
+          : {}),
       },
     });
     const text = await res.text().catch(() => "");

@@ -18,12 +18,12 @@ import type {
 
 export const DEMO_TENANTS_DATA: Tenant[] = [
   {
-    id: "nadakki-operador",
-    name: "Nadakki Operador",
+    id: "demo-operator",
+    name: "Demo Operador",
     kind: "operador",
     model: "god-view",
     color: "#8b9dab",
-    initial: "N",
+    initial: "OP",
   },
   {
     id: "banco-cibao",
