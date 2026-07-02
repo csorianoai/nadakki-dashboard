@@ -177,7 +177,12 @@ export default function PublicConsentPage() {
 
       <RegulatoryTextViewer consentsRequired={data.consents_required} regulatoryTexts={data.regulatory_texts} />
 
-      <ConsentCheckboxes consents={data.consents_required} accepted={accepted} onChange={setAccepted} />
+      <ConsentCheckboxes
+        consents={data.consents_required}
+        accepted={accepted}
+        onChange={setAccepted}
+        institutionName={data.institution_name}
+      />
 
       {otpRequired && (
         <OtpInputField
@@ -213,7 +218,7 @@ export default function PublicConsentPage() {
 
       <footer className="border-t border-slate-800 pt-6 text-center text-xs text-slate-500">
         <p>
-          {t.consent.public.powered_by} {t.consent.public.footer_brand}
+          {t.consent.public.powered_by} {t.consent.public.footer_brand(data.institution_name)}
         </p>
         <p className="mt-2">{t.consent.public.contact_help}</p>
       </footer>

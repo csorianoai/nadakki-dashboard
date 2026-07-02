@@ -27,7 +27,7 @@ export function AdminNetworkOsView() {
           Operador de red — {tenantConfig.institution_name}
         </h1>
         <p style={{ fontSize: 14, color: "var(--ch-text-2)", marginTop: 8, lineHeight: 1.5 }}>
-          Vista estratégica para Nadakki como operador multi-tenant. La mayoría de módulos son ROADMAP hasta que el backend publique APIs de administración.
+          Vista estratégica para el operador de red — {tenantConfig.institution_name}. La mayoría de módulos son ROADMAP hasta que el backend publique APIs de administración.
         </p>
       </header>
 

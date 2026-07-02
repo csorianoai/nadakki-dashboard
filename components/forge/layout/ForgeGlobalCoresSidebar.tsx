@@ -7,6 +7,7 @@ import { ChevronRight, PanelLeftClose, PanelLeft } from "lucide-react";
 import type { UserInfo } from "@/lib/api/auth-v2";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
+import { brandInitial, resolveVisiblePlatformTitle } from "@/lib/white-label/brand-display";
 import { cn } from "@/lib/utils";
 import {
   LARGE_CORE_LEAF_THRESHOLD,
@@ -114,14 +115,16 @@ function userInitials(user: UserInfo | null): string {
 }
 
 function SidebarBrand({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean }) {
+  const { tenant } = useAuth();
   const { data: branding, isPending } = useTenantBranding();
+  const displayName = resolveVisiblePlatformTitle(branding, tenant);
   return (
     <div className={cn("border-b border-zinc-800 py-4", collapsed ? "px-2" : "px-3")}>
       <Link
         href="/"
         onClick={onNavigate}
         className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
-        title={collapsed ? "Nadakki AI Suite" : undefined}
+        title={collapsed ? displayName : undefined}
       >
         {branding?.logo_url && !isPending ? (
           <span className={cn("inline-flex items-center overflow-hidden", collapsed ? "h-8 w-full justify-center" : "h-9 max-w-[10rem]")}>
@@ -131,9 +134,9 @@ function SidebarBrand({ onNavigate, collapsed }: { onNavigate?: () => void; coll
         ) : isPending ? (
           <div className={cn("animate-pulse rounded bg-zinc-800/80", collapsed ? "mx-auto h-8 w-8" : "h-8 w-24")} />
         ) : collapsed ? (
-          <span className="flex h-8 w-full items-center justify-center text-base font-bold text-violet-400">N</span>
+          <span className="flex h-8 w-full items-center justify-center text-base font-bold text-violet-400">{brandInitial(displayName)}</span>
         ) : (
-          <span className="block text-sm font-semibold tracking-tight text-zinc-100">Nadakki AI Suite</span>
+          <span className="block text-sm font-semibold tracking-tight text-zinc-100">{displayName}</span>
         )}
       </Link>
       {!collapsed && <p className="mt-1.5 text-[10px] font-medium text-zinc-500">Suite operativa</p>}

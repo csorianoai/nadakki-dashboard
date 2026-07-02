@@ -9,13 +9,13 @@ import AppGate from "@/components/auth/AppGate";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Nadakki Credit",
+  title: "Plataforma de crédito",
   description: "AI-Powered Credit Operations Platform",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Nadakki",
+    title: "Crédito",
   },
   icons: {
     icon: "/favicon.svg",
@@ -58,7 +58,7 @@ export default function RootLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
-        <meta name="apple-mobile-web-app-title" content="Nadakki" />
+        <meta name="apple-mobile-web-app-title" content="Crédito" />
         <link
           rel="apple-touch-startup-image"
           media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)"
@@ -68,8 +68,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <AppProviders>
           <AppGate>{children}</AppGate>
+          <PWAClientProvider />
         </AppProviders>
-        <PWAClientProvider />
       </body>
     </html>
   );

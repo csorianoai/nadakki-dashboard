@@ -99,7 +99,9 @@ export function ForgeAppSidebar() {
             />
           </div>
         ) : null}
-        <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-300">Nadakki</p>
+        <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-300">
+          {tenantConfig.institution_name}
+        </p>
         <p className="text-forge-sm font-medium text-forgeGray-50">Dashboard</p>
       </div>
       <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Primary modules">

@@ -1,4 +1,7 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { ForgeLogo } from "./ForgeLogo";
 
 interface ForgeWordmarkProps {
@@ -6,12 +9,11 @@ interface ForgeWordmarkProps {
 }
 
 export function ForgeWordmark({ className }: ForgeWordmarkProps) {
+  const { tenantConfig } = useTenantConfig();
+
   return (
     <div className={cn("inline-flex items-center gap-3", className)}>
-      <ForgeLogo size="sm" />
-      <span className="font-display text-xl font-bold tracking-tight text-forge-text">
-        Nadakki Forge
-      </span>
+      <ForgeLogo size="sm" displayName={tenantConfig.institution_name} variant="full" />
     </div>
   );
 }

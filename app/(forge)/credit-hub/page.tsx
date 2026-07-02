@@ -5,10 +5,12 @@ import { useMemo } from "react";
 import { Briefcase, Building2, Shield, User } from "lucide-react";
 import { ForgeLogo } from "@/components/credit-hub/brand/ForgeLogo";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
 export default function CreditHubHome() {
   const t = useTranslations();
+  const { tenantConfig } = useTenantConfig();
   const portals = useMemo(
     () => [
       {
@@ -47,8 +49,8 @@ export default function CreditHubHome() {
     <div data-portal="dealer" className="flex min-h-screen items-center justify-center bg-forge-bg p-4">
       <div className="w-full max-w-4xl">
         <div className="mb-12 text-center">
-          <ForgeLogo size="xl" animated className="mx-auto mb-6" />
-          <h1 className="mb-3 font-display text-4xl font-bold text-forge-text md:text-5xl">Nadakki Forge</h1>
+          <ForgeLogo size="xl" animated className="mx-auto mb-6" displayName={tenantConfig.institution_name} variant="full" />
+          <h1 className="mb-3 font-display text-4xl font-bold text-forge-text md:text-5xl">{tenantConfig.institution_name}</h1>
           <p className="text-lg text-forge-text-muted">{t.portals.tagline}</p>
         </div>
 

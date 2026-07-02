@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
+import { resolveVisiblePlatformTitle } from "@/lib/white-label/brand-display";
 import { MONETIZACION_NAV } from "./nav-routes";
 
 type Props = {
@@ -11,12 +14,15 @@ type Props = {
 
 export function NavRail({ mobileOpen, onNavigate }: Props) {
   const pathname = usePathname();
+  const { tenant } = useAuth();
+  const { data: branding } = useTenantBranding();
+  const displayName = resolveVisiblePlatformTitle(branding, tenant);
 
   return (
     <nav className={`fm-nav${mobileOpen ? " fm-nav--open" : ""}`} aria-label="Monetización">
       <div className="fm-nav-brand">
         <h2>Forge</h2>
-        <p>Credit Hub · Nadakki</p>
+        <p>Credit Hub · {displayName}</p>
       </div>
       <p className="fm-nav-group-label">Monetización</p>
       {MONETIZACION_NAV.map(({ id, href, label, icon: Icon }) => {

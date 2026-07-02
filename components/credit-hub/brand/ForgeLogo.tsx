@@ -1,10 +1,13 @@
 import { cn } from "@/lib/utils";
+import { resolveForgeWordmarkLabel } from "@/lib/white-label/brand-display";
 
 interface ForgeLogoProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   variant?: "mark" | "wordmark" | "full";
   animated?: boolean;
   className?: string;
+  /** Institution display name from tenant branding (never hardcode platform vendor). */
+  displayName?: string | null;
 }
 
 export function ForgeLogo({
@@ -12,6 +15,7 @@ export function ForgeLogo({
   variant = "mark",
   animated = false,
   className,
+  displayName,
 }: ForgeLogoProps) {
   const sizes = {
     xs: "w-5 h-5",
@@ -21,13 +25,18 @@ export function ForgeLogo({
     xl: "w-20 h-20",
   };
 
+  const wordmarkLabel =
+    variant === "full"
+      ? resolveForgeWordmarkLabel(displayName ? { display_name: displayName } : null, null)
+      : "Forge";
+
   const mark = (
     <svg
       viewBox="0 0 40 40"
       className={cn(sizes[size], animated && "transition-transform hover:scale-110", className)}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Nadakki Forge"
+      aria-label={wordmarkLabel}
       role="img"
     >
       <defs>
@@ -50,7 +59,7 @@ export function ForgeLogo({
     <span className={cn("inline-flex items-center gap-3", className)}>
       {mark}
       <span className="font-display font-bold tracking-tight text-forge-text">
-        {variant === "full" ? "Nadakki Forge" : "Forge"}
+        {wordmarkLabel}
       </span>
     </span>
   );

@@ -64,7 +64,7 @@ export function PresentConsentForm({
             onChange={(e) => onDataProcessingChange(e.target.checked)}
             className="mt-1"
           />
-          <span>{t.consent.consent_data_policy_label} *</span>
+          <span>{t.consent.consent_data_policy_label(tenantConfig.institution_name)} *</span>
         </label>
       </div>
 
