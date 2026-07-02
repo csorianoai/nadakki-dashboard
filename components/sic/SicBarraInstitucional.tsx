@@ -41,7 +41,7 @@ function TourNavButton() {
 export function SicBarraInstitucional() {
   const { isAuthenticated, role, tenantName } = useAuth();
   const { tenantId, settings } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
   const institucion = tenantName && tenantName !== "—" ? tenantName : settings.name !== "—" ? settings.name : tenant;
 
   if (!isAuthenticated) return null;

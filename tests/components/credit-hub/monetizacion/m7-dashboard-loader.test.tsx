@@ -5,10 +5,16 @@ import { MonetizacionDashboardLoader } from "@/app/(forge)/credit-hub/monetizaci
 
 jest.mock("@/components/credit-hub/monetizacion/shell", () => ({
   useMonetizacionShell: () => ({
-    tenantId: "nadakki-operador",
+    tenantId: "demo-operator",
     setTenantId: jest.fn(),
     openTrace: jest.fn(),
     closeTrace: jest.fn(),
+  }),
+}));
+
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({
+    activeRole: { role_key: "platform_superadmin", core_name: "platform", display_name: "Super Admin" },
   }),
 }));
 

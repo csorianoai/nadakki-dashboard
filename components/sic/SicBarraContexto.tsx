@@ -19,7 +19,7 @@ const MODO_BADGE: Record<string, string> = {
 export function SicBarraContexto() {
   const { isAuthenticated, role, tenantName } = useAuth();
   const { tenantId } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
   const displayTenant = tenantName && tenantName !== "—" ? tenantName : tenant;
 
   if (!isAuthenticated) return null;

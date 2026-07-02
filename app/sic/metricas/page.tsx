@@ -11,7 +11,9 @@ import { LoadingSic, ErrorSic } from "@/components/sic/EstadosSic";
 
 export default function SicMetricasPage() {
   const { tenantId } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
+
+  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
   const [metricas, setMetricas] = useState<MetricasEjecutivas | null>(null);
   const [expedientes, setExpedientes] = useState<Awaited<ReturnType<typeof fetchExpedientes>>>([]);
   const [loading, setLoading] = useState(true);

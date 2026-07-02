@@ -24,7 +24,7 @@ import {
 } from "@/types/spyfu";
 
 const DEFAULT_BASE = "https://nadakki-ai-suite.onrender.com";
-const DEFAULT_TENANT = "sf-rentals-nadaki-excursions";
+
 
 function getDetail(body: unknown): unknown {
   if (!body || typeof body !== "object") return body;
@@ -37,7 +37,7 @@ export class SpyFuClient {
 
   constructor() {
     this.baseUrl = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_BASE).replace(/\/$/, "");
-    this.tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID || DEFAULT_TENANT;
+    this.tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || "";
   }
 
   private resolveTenant(override?: string | null): string {

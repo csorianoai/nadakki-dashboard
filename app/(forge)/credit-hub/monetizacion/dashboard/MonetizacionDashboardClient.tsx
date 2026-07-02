@@ -8,6 +8,7 @@ import {
   isMonetizacionOperadorView,
   MONETIZACION_OPERADOR_EMPTY_MESSAGE,
 } from "@/lib/credit-hub/monetizacion/operador-gate";
+import { useAuth } from "@/hooks/useAuth";
 import {
   AlertChip,
   EventTapeRow,
@@ -72,6 +73,7 @@ type Props = {
 
 export function MonetizacionDashboardClient({ initialKpis, drilldowns }: Props) {
   const { tenantId, openTrace } = useMonetizacionShell();
+  const { activeRole } = useAuth();
   const [kpis] = useState(initialKpis);
 
   const revenueTotal = useMemo(
@@ -91,7 +93,7 @@ export function MonetizacionDashboardClient({ initialKpis, drilldowns }: Props) 
     } as TraceDrawerPayload);
   };
 
-  if (!isMonetizacionOperadorView(tenantId)) {
+  if (!isMonetizacionOperadorView(activeRole?.role_key, tenantId)) {
     return <MonetizacionScreenEmpty message={MONETIZACION_OPERADOR_EMPTY_MESSAGE} />;
   }
 

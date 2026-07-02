@@ -24,14 +24,13 @@ type MonetizacionShellContextValue = {
 
 const MonetizacionShellContext = createContext<MonetizacionShellContextValue | null>(null);
 
-const DEFAULT_TENANT_ID = "nadakki-operador";
 const TENANT_IDS = new Set<string>(DEMO_TENANTS.map((t) => t.id));
 let sessionTenantId: string | null = null;
 
 function resolveTenantId(param: string | null): string {
   if (param && TENANT_IDS.has(param)) return param;
   if (sessionTenantId && TENANT_IDS.has(sessionTenantId)) return sessionTenantId;
-  return DEFAULT_TENANT_ID;
+  return DEMO_TENANTS[0].id;
 }
 
 export function useMonetizacionShell(): MonetizacionShellContextValue {

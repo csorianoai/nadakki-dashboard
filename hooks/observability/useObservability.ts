@@ -41,7 +41,7 @@ export function useObservability({ apiUrl, tenantId }: UseObservabilityOptions) 
   const headers = useCallback((opts?: { sse?: boolean }) => {
     const h: Record<string, string> = {
       "Content-Type": "application/json",
-      "X-Tenant-ID": tenantId || "credicefi",
+      ...(tenantId ? { "X-Tenant-ID": tenantId } : {}),
       ...(opts?.sse ? { Accept: "text/event-stream" as const } : {}),
     };
     return h;

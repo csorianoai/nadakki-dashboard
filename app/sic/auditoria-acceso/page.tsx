@@ -8,7 +8,9 @@ import { LoadingSic, EmptySic, ErrorSic } from "@/components/sic/EstadosSic";
 
 export default function SicAuditoriaAccesoPage() {
   const { tenantId } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
+
+  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
   const [eventos, setEventos] = useState<EventoAcceso[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

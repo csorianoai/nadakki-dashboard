@@ -29,7 +29,9 @@ export default function SicComiteSesionIdPage() {
   const params = useParams();
   const { tenantId } = useTenant();
   const id = String(params?.id ?? "");
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
+
+  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
 
   const [sesion, setSesion] = useState<SesionComite | null>(null);
   const [expedientes, setExpedientes] = useState<ExpedienteEnSesion[]>([]);

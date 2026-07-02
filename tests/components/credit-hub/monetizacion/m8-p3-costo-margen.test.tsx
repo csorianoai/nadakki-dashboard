@@ -9,6 +9,10 @@ jest.mock("@/components/credit-hub/monetizacion/shell", () => ({
   useMonetizacionShell: jest.fn(),
 }));
 
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: jest.fn(),
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -23,15 +27,19 @@ jest.mock("@/components/credit-hub/monetizacion/ui/components-presentational.css
 jest.mock("@/components/credit-hub/monetizacion/ui/screen-states.css", () => ({}));
 
 const { useMonetizacionShell } = jest.requireMock("@/components/credit-hub/monetizacion/shell");
+const { useAuth } = jest.requireMock("@/hooks/useAuth");
 
 describe("Monetización M8-P3 Costo & margen", () => {
   beforeEach(() => {
     mockOpenTrace.mockClear();
     useMonetizacionShell.mockReturnValue({
-      tenantId: "nadakki-operador",
+      tenantId: "demo-operator",
       setTenantId: jest.fn(),
       openTrace: mockOpenTrace,
       closeTrace: jest.fn(),
+    });
+    useAuth.mockReturnValue({
+      activeRole: { role_key: "platform_superadmin", core_name: "platform", display_name: "Super Admin" },
     });
   });
 
@@ -42,7 +50,7 @@ describe("Monetización M8-P3 Costo & margen", () => {
       </div>,
     );
 
-  test("operador sees cost-margin KPIs and tenant margin table", () => {
+  test("platform_superadmin sees cost-margin KPIs and tenant margin table", () => {
     wrap();
     expect(screen.getByText("Margen bruto agregado")).toBeInTheDocument();
     expect(screen.getByText("Costo LLM por core")).toBeInTheDocument();
@@ -54,27 +62,21 @@ describe("Monetización M8-P3 Costo & margen", () => {
     );
   });
 
-  test("banco tenant is blocked from costo-margen", () => {
-    useMonetizacionShell.mockReturnValue({
-      tenantId: "banco-cibao",
-      setTenantId: jest.fn(),
-      openTrace: mockOpenTrace,
-      closeTrace: jest.fn(),
+  test("tenant_admin role is blocked from costo-margen", () => {
+    useAuth.mockReturnValue({
+      activeRole: { role_key: "tenant_admin", core_name: "credit", display_name: "Tenant Admin" },
     });
     wrap();
-    expect(screen.getByText(/Vista de operador · solo Nadakki ve datos cross-tenant/)).toBeInTheDocument();
+    expect(screen.getByText(/Vista de operador/)).toBeInTheDocument();
     expect(screen.queryByText("Costo LLM por core")).not.toBeInTheDocument();
   });
 
-  test("dealer tenant is blocked from costo-margen", () => {
-    useMonetizacionShell.mockReturnValue({
-      tenantId: "auto-credito-cibao",
-      setTenantId: jest.fn(),
-      openTrace: mockOpenTrace,
-      closeTrace: jest.fn(),
+  test("credit_admin role is blocked from costo-margen", () => {
+    useAuth.mockReturnValue({
+      activeRole: { role_key: "credit_admin", core_name: "credit", display_name: "Credit Admin" },
     });
     wrap();
-    expect(screen.getByText(/Vista de operador · solo Nadakki ve datos cross-tenant/)).toBeInTheDocument();
+    expect(screen.getByText(/Vista de operador/)).toBeInTheDocument();
   });
 
   test("margen KPI opens margen drilldown", async () => {

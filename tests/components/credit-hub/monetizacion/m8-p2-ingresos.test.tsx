@@ -9,20 +9,28 @@ jest.mock("@/components/credit-hub/monetizacion/shell", () => ({
   useMonetizacionShell: jest.fn(),
 }));
 
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: jest.fn(),
+}));
+
 jest.mock("@/app/(forge)/credit-hub/monetizacion/ingresos/ingresos-screen.css", () => ({}));
 jest.mock("@/components/credit-hub/monetizacion/ui/components-presentational.css", () => ({}));
 jest.mock("@/components/credit-hub/monetizacion/ui/screen-states.css", () => ({}));
 
 const { useMonetizacionShell } = jest.requireMock("@/components/credit-hub/monetizacion/shell");
+const { useAuth } = jest.requireMock("@/hooks/useAuth");
 
 describe("Monetización M8-P2 Ingresos", () => {
   beforeEach(() => {
     mockOpenTrace.mockClear();
     useMonetizacionShell.mockReturnValue({
-      tenantId: "nadakki-operador",
+      tenantId: "demo-operator",
       setTenantId: jest.fn(),
       openTrace: mockOpenTrace,
       closeTrace: jest.fn(),
+    });
+    useAuth.mockReturnValue({
+      activeRole: { role_key: "platform_superadmin", core_name: "platform", display_name: "Super Admin" },
     });
   });
 
@@ -33,34 +41,28 @@ describe("Monetización M8-P2 Ingresos", () => {
       </div>,
     );
 
-  test("operador sees revenue KPIs and tenant table", () => {
+  test("platform_superadmin sees revenue KPIs and tenant table", () => {
     wrap();
     expect(screen.getByText("Ingreso total")).toBeInTheDocument();
     expect(screen.getByText("Ingreso por tenant")).toBeInTheDocument();
     expect(screen.getByText("Banco Nacional RD")).toBeInTheDocument();
   });
 
-  test("banco tenant is blocked from ingresos", () => {
-    useMonetizacionShell.mockReturnValue({
-      tenantId: "banco-cibao",
-      setTenantId: jest.fn(),
-      openTrace: mockOpenTrace,
-      closeTrace: jest.fn(),
+  test("tenant_admin role is blocked from ingresos", () => {
+    useAuth.mockReturnValue({
+      activeRole: { role_key: "tenant_admin", core_name: "credit", display_name: "Tenant Admin" },
     });
     wrap();
-    expect(screen.getByText(/Vista de operador · solo Nadakki ve datos cross-tenant/)).toBeInTheDocument();
+    expect(screen.getByText(/Vista de operador/)).toBeInTheDocument();
     expect(screen.queryByText("Ingreso por tenant")).not.toBeInTheDocument();
   });
 
-  test("dealer tenant is blocked from ingresos", () => {
-    useMonetizacionShell.mockReturnValue({
-      tenantId: "auto-credito-cibao",
-      setTenantId: jest.fn(),
-      openTrace: mockOpenTrace,
-      closeTrace: jest.fn(),
+  test("credit_admin role is blocked from ingresos", () => {
+    useAuth.mockReturnValue({
+      activeRole: { role_key: "credit_admin", core_name: "credit", display_name: "Credit Admin" },
     });
     wrap();
-    expect(screen.getByText(/Vista de operador · solo Nadakki ve datos cross-tenant/)).toBeInTheDocument();
+    expect(screen.getByText(/Vista de operador/)).toBeInTheDocument();
   });
 
   test("GMV KPI opens gmv drilldown", async () => {

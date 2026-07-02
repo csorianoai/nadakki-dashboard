@@ -6,7 +6,7 @@ import { useTenant } from "@/contexts/TenantContext";
 
 const DEV_FALLBACK_TENANT =
   process.env.NODE_ENV === "development"
-    ? process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || "credicefi"
+    ? process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || undefined
     : undefined;
 
 export function useMarketIntelTenant(): {

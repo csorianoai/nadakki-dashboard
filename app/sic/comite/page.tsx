@@ -9,7 +9,9 @@ const MODULOS = [
 
 export default function SicComitePage() {
   const { tenantId } = useTenant();
-  const tenant = tenantId || "credicefi";
+  const tenant = tenantId;
+
+  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
 
   return (
     <div className="p-6">
