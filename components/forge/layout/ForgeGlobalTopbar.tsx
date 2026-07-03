@@ -7,7 +7,9 @@ import { TenantSwitcher } from "@/components/forge/auth/TenantSwitcher";
 import { UserMenu } from "@/components/forge/auth/UserMenu";
 import { IconButton } from "@/components/forge/ui/IconButton";
 import { Skeleton } from "@/components/forge/ui/Skeleton";
+import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
+import { resolveVisiblePlatformTitle } from "@/lib/white-label/brand-display";
 import { useForgeCommandPaletteOptional } from "./ForgeCommandPaletteContext";
 import { Topbar } from "./Topbar";
 
@@ -16,27 +18,29 @@ export interface ForgeGlobalTopbarProps {
 }
 
 function useGlobalTopbarFallbackTitle(pathname: string | null): string {
-  if (!pathname) return "NADAKKI";
+  if (!pathname) return "Inicio";
   if (pathname.startsWith("/credit-hub")) return "Credit Hub";
   if (pathname.startsWith("/legal")) return "Legal Intelligence";
   if (pathname.startsWith("/marketing")) return "Marketing";
   if (pathname.startsWith("/sic")) return "SIC";
   if (pathname.startsWith("/admin/branding")) return "Institution branding";
   if (pathname.startsWith("/admin")) return "Admin";
-  return "NADAKKI";
+  return "Inicio";
 }
 
 export function ForgeGlobalTopbar({ onMenuClick }: ForgeGlobalTopbarProps) {
   const pathname = usePathname();
   const palette = useForgeCommandPaletteOptional();
+  const { tenant } = useAuth();
   const { data: branding, isPending } = useTenantBranding();
 
   const baseTitle = useGlobalTopbarFallbackTitle(pathname ?? null);
+  const brandTitle = resolveVisiblePlatformTitle(branding, tenant);
   const title =
     pathname?.startsWith("/admin/branding")
       ? "Institution branding"
-      : branding?.display_name?.trim()
-        ? branding.display_name.trim()
+      : branding?.display_name?.trim() || tenant?.display_name?.trim()
+        ? brandTitle
         : baseTitle;
 
   const onCreditHub = pathname?.startsWith("/credit-hub") ?? false;
@@ -67,7 +71,11 @@ export function ForgeGlobalTopbar({ onMenuClick }: ForgeGlobalTopbarProps) {
         href="/credit-hub"
         className="font-display text-forge-sm font-semibold uppercase tracking-wide text-forgeBrand-600 hover:text-forgeBrand-700"
       >
-        Nadakki
+        {isPending ? (
+          <Skeleton className="inline-block h-4 w-16" label="Marca" />
+        ) : (
+          brandTitle
+        )}
       </Link>
       {logoSlot}
     </div>

@@ -417,7 +417,8 @@ export const CREDIT_HUB_ES_DO = {
     invalid_email: "Correo electrónico inválido",
     consent_ley_172_13_label: "Autorización Ley 172-13 (Protección de Datos Personales)",
     consent_buro_label: "Autorización consulta de buró de crédito",
-    consent_data_policy_label: "Política de tratamiento de datos Nadakki",
+    consent_data_policy_label: (institutionName: string) =>
+      `Política de tratamiento de datos de ${institutionName}`,
     signature_required: "Nombre completo obligatorio",
     consents_required: "Debes marcar todos los consentimientos obligatorios",
     polling_active: "Esperando respuesta del cliente...",
@@ -465,7 +466,8 @@ export const CREDIT_HUB_ES_DO = {
       success_audit: "Tu firma quedó registrada con código de auditoría:",
       success_close: "Puedes cerrar esta página.",
       powered_by: "Procesado por",
-      footer_brand: "la plataforma segura de consentimiento Nadakki",
+      footer_brand: (institutionName: string) =>
+        `la plataforma segura de consentimiento ${institutionName}`,
       privacy_policy_link: "Política de privacidad",
       contact_help: "¿Necesitas ayuda? Contacta directamente a la institución.",
       regulatory_title_LEY_172_13: "Ley 172-13 — Protección de datos personales",
@@ -473,7 +475,8 @@ export const CREDIT_HUB_ES_DO = {
       regulatory_title_DATA_POLICY: "Política de tratamiento de datos",
       checkbox_LEY_172_13: "Acepto la Ley 172-13 sobre protección de datos personales",
       checkbox_BURO: "Autorizo la consulta y reporte a buró de crédito",
-      checkbox_DATA_POLICY: "Acepto la política de tratamiento de datos de Nadakki",
+      checkbox_DATA_POLICY: (institutionName: string) =>
+        `Acepto la política de tratamiento de datos de ${institutionName}`,
     },
   },
   evidence: {

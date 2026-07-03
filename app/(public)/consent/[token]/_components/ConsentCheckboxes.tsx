@@ -3,11 +3,11 @@
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { CreditHubTranslations } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
 
-function checkboxLabel(t: CreditHubTranslations, code: string): string {
+function checkboxLabel(t: CreditHubTranslations, code: string, institutionName: string): string {
   const map: Record<string, string> = {
     LEY_172_13: t.consent.public.checkbox_LEY_172_13,
     BURO: t.consent.public.checkbox_BURO,
-    DATA_POLICY: t.consent.public.checkbox_DATA_POLICY,
+    DATA_POLICY: t.consent.public.checkbox_DATA_POLICY(institutionName),
   };
   return map[code] ?? code;
 }
@@ -16,9 +16,10 @@ interface ConsentCheckboxesProps {
   consents: string[];
   accepted: Record<string, boolean>;
   onChange: (next: Record<string, boolean>) => void;
+  institutionName: string;
 }
 
-export function ConsentCheckboxes({ consents, accepted, onChange }: ConsentCheckboxesProps) {
+export function ConsentCheckboxes({ consents, accepted, onChange, institutionName }: ConsentCheckboxesProps) {
   const t = useTranslations();
 
   return (
@@ -37,7 +38,7 @@ export function ConsentCheckboxes({ consents, accepted, onChange }: ConsentCheck
               data-testid={`consent-checkbox-${c.toLowerCase()}`}
             />
             <label htmlFor={id} className="cursor-pointer text-sm leading-snug text-slate-200">
-              {checkboxLabel(t, c)}
+              {checkboxLabel(t, c, institutionName)}
             </label>
           </div>
         );

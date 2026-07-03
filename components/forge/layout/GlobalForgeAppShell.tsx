@@ -6,6 +6,7 @@ import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-
 import { ForgeAppShell } from "./ForgeAppShell";
 import { ForgeGlobalCoresSidebar } from "./ForgeGlobalCoresSidebar";
 import { ForgeGlobalTopbar } from "./ForgeGlobalTopbar";
+import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -48,6 +49,7 @@ export function GlobalForgeAppShell({ children }: { children: ReactNode }) {
         }
         topbar={<ForgeGlobalTopbar onMenuClick={() => setMobileNav((o) => !o)} />}
       >
+        <TenantBrandedDocumentTitle />
         {children}
       </ForgeAppShell>
     </div>

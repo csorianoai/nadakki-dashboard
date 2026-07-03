@@ -1,7 +1,7 @@
 import { CHQueryProvider } from "@/components/credit-hub/system/CHQueryProvider";
 
 export const metadata = {
-  title: "Nadakki Forge",
+  title: "Credit Hub",
   description: "Where credit decisions are forged",
 };
 

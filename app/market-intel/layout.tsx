@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import "./market-intel.css";
 
 export const metadata = {
-  title: "Inteligencia de Mercado | Nadakki",
+  title: "Inteligencia de Mercado",
   description: "Market Entry Engine — investigación y validación de mercado",
 };
 

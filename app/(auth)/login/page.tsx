@@ -4,9 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getPostLoginRedirectPath } from "@/lib/auth/auth-context";
+import { usePublicTenantBrandingBySlug } from "@/lib/hooks/usePublicTenantBrandingBySlug";
+import {
+  NEUTRAL_LOGIN_FOOTER,
+  resolveVisiblePlatformTitle,
+} from "@/lib/white-label/brand-display";
+import { Skeleton } from "@/components/forge/ui/Skeleton";
 
 export default function LoginPage() {
-  // Warmup: ping backend as soon as login page loads to prevent cold start delay
   useEffect(() => {
     fetch("https://nadakki-ai-suite.onrender.com/health", { method: "GET" }).catch(() => {});
   }, []);
@@ -18,6 +23,10 @@ export default function LoginPage() {
   const [tenantSlug, setTenantSlug] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const brandingQuery = usePublicTenantBrandingBySlug(tenantSlug || undefined);
+  const platformTitle = resolveVisiblePlatformTitle(brandingQuery.data, null);
+  const showBrandingSkeleton = Boolean(tenantSlug.trim().length >= 2 && brandingQuery.isPending);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -54,12 +63,29 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[var(--forge-bg-app)] px-4">
       <div className="w-full max-w-md">
         <div className="bg-[var(--forge-bg-surface)] rounded-lg shadow-lg p-8 border border-[var(--forge-border-default)]">
-          <h1 className="text-2xl font-bold text-[var(--forge-text-default)] mb-2">
-            Nadakki AI Suite
-          </h1>
-          <p className="text-sm text-[var(--forge-text-muted)] mb-6">
-            Inicia sesión para continuar
-          </p>
+          <header className="mb-6 text-center">
+            {showBrandingSkeleton ? (
+              <div className="mx-auto mb-4 flex flex-col items-center gap-2">
+                <Skeleton className="h-12 w-12 rounded-lg" label="Logo" />
+                <Skeleton className="h-6 w-40" label="Nombre" />
+              </div>
+            ) : (
+              <>
+                {brandingQuery.data?.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- tenant-hosted logo
+                  <img
+                    src={brandingQuery.data.logo_url}
+                    alt=""
+                    className="mx-auto mb-4 h-12 w-auto max-w-[200px] object-contain"
+                  />
+                ) : null}
+                <h1 className="text-2xl font-bold text-[var(--forge-text-default)] mb-2">
+                  {platformTitle}
+                </h1>
+              </>
+            )}
+            <p className="text-sm text-[var(--forge-text-muted)]">Inicia sesión para continuar</p>
+          </header>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -73,7 +99,7 @@ export default function LoginPage() {
                 required
                 autoFocus
                 className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
-                placeholder="user@example.com"
+                placeholder="admin@credicefi.com"
               />
             </div>
 
@@ -100,7 +126,7 @@ export default function LoginPage() {
                 value={tenantSlug}
                 onChange={(e) => setTenantSlug(e.target.value)}
                 className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
-                placeholder="mi-tenant"
+                placeholder="credicefi"
               />
               <p className="text-xs text-[var(--forge-text-muted)] mt-1">
                 Dejar vacío para tenant por defecto
@@ -123,7 +149,9 @@ export default function LoginPage() {
           </form>
 
           <p className="text-xs text-[var(--forge-text-muted)] mt-6 text-center">
-            Nadakki AI Suite - Multi-tenant Platform
+            {tenantSlug.trim().length >= 2 && !showBrandingSkeleton
+              ? `${platformTitle} · ${NEUTRAL_LOGIN_FOOTER}`
+              : NEUTRAL_LOGIN_FOOTER}
           </p>
         </div>
       </div>

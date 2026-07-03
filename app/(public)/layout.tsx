@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Nadakki — Autorización",
+  title: "Autorización",
   description: "Plataforma de autorización segura",
   robots: "noindex, nofollow",
 };

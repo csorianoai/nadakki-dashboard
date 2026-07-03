@@ -1,7 +1,7 @@
 {
   "id": "/?source=pwa",
-  "name": "Nadakki Credit",
-  "short_name": "Nadakki",
+  "name": "Plataforma de crédito",
+  "short_name": "Crédito",
   "description": "AI-Powered Credit Operations Platform",
   "start_url": "/dashboard",
   "scope": "/dashboard",

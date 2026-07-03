@@ -27,7 +27,7 @@ export function CHTenantGuard({ children }: CHTenantGuardProps) {
           <Building2 className="mx-auto mb-4 h-16 w-16 text-forge-text-muted" />
           <h2 className="mb-2 font-display text-2xl font-bold text-forge-text">Selecciona tu organización</h2>
           <p className="mb-6 text-forge-text-muted">
-            Para acceder a Nadakki Forge, necesitas seleccionar el tenant con el que vas a trabajar.
+            Para acceder a Credit Hub, necesitas seleccionar la organización con la que vas a trabajar.
           </p>
           <ForgeButton variant="primary" size="lg" onClick={() => (window.location.href = "/")}>
             Ir al selector

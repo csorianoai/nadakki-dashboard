@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Download, X } from "lucide-react";
+import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
+import { useAuth } from "@/hooks/useAuth";
+import { pwaInstallTitle } from "@/lib/white-label/brand-display";
+import { Skeleton } from "@/components/forge/ui/Skeleton";
 
 const DISMISS_KEY = "nadakki_pwa_dismiss_until";
 const VISIT_KEY = "nadakki_pwa_visits";
@@ -19,6 +23,9 @@ let deferredPrompt: BeforeInstallPromptEvent | null = null;
 export function PWAInstallPrompt() {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { tenant } = useAuth();
+  const { data: branding, isPending } = useTenantBranding();
+  const installTitle = pwaInstallTitle(branding?.display_name ?? tenant?.display_name);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -85,7 +92,9 @@ export function PWAInstallPrompt() {
             <Download className="w-6 h-6 text-purple-500" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-white">Instalar Nadakki</h3>
+            <h3 className="font-semibold text-white">
+              {isPending ? <Skeleton className="inline-block h-5 w-32 bg-slate-700" label="Instalar" /> : installTitle}
+            </h3>
             <p className="text-sm text-slate-400 mt-1">
               Instala la app para acceso rapido desde tu pantalla de inicio.
             </p>
