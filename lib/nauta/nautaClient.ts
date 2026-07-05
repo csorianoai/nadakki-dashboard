@@ -156,12 +156,12 @@ export async function getEvidence(params: {
 }
 
 export interface CreateRunPayload {
-  template_id: string;
+  /** Backend expects task_name (template name), NOT template_id. */
+  task_name: string;
   employee_id?: string;
   /** Default true — simulate/dry-run until live execution is approved. */
   dry_run?: boolean;
   mode?: "simulate" | "live";
-  task_name?: string;
 }
 
 export async function createRun(params: {

@@ -17,7 +17,7 @@ export function NautaExecutePanel({
   error?: boolean;
   onRetry?: () => void;
 }) {
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedName, setSelectedName] = useState("");
   const createMutation = useNautaCreateRun();
   const [lastRunId, setLastRunId] = useState<string | null>(null);
 
@@ -44,30 +44,30 @@ export function NautaExecutePanel({
     );
   }
 
-  const effectiveId = selectedId || templates[0]?.id || "";
+  const effectiveName = selectedName || templates[0]?.name || "";
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
       <h3 className="text-sm font-medium text-zinc-100 mb-3">Nueva ejecución</h3>
       <div className="flex flex-col sm:flex-row gap-3">
         <select
-          value={effectiveId}
-          onChange={(e) => setSelectedId(e.target.value)}
+          value={effectiveName}
+          onChange={(e) => setSelectedName(e.target.value)}
           className="flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-200 focus:border-violet-500/50 focus:outline-none"
         >
           {templates.map((t) => (
-            <option key={t.id} value={t.id}>
+            <option key={t.id || t.name} value={t.name}>
               {t.name} ({t.role_id} · {t.risk_level})
             </option>
           ))}
         </select>
         <button
           type="button"
-          disabled={!effectiveId || createMutation.isPending}
+          disabled={!effectiveName || createMutation.isPending}
           onClick={() => {
             void createMutation
               .mutateAsync({
-                template_id: effectiveId,
+                task_name: effectiveName,
                 dry_run: true,
                 mode: "simulate",
               })
