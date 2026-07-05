@@ -56,12 +56,15 @@ export function normalizeEmployees(raw: unknown): NautaEmployee[] {
 export function normalizeTemplate(raw: unknown): NautaTemplate | null {
   const o = asRecord(raw);
   if (!o) return null;
-  const id = str(o.id);
+  const taskName = str(o.task_name ?? o.task_name_slug ?? o.slug);
+  const name = str(o.name) || taskName;
+  const id = str(o.id) || taskName || name;
   if (!id) return null;
   return {
     id,
     role_id: str(o.role_id),
-    name: str(o.name),
+    name,
+    task_name: taskName || name,
     risk_level: str(o.risk_level, "medium"),
     status: str(o.status, "published"),
   };

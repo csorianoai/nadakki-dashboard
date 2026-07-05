@@ -22,9 +22,17 @@ export interface NautaEmployee {
 export interface NautaTemplate {
   id: string;
   role_id: string;
+  /** Display label from API `name` when present. */
   name: string;
+  /** Backend POST /runs identifier — often `task_name` slug (e.g. platform_auditor_smoke_test). */
+  task_name: string;
   risk_level: NautaRiskLevel;
   status: string;
+}
+
+/** Value sent as POST /runs `task_name`. */
+export function resolveTemplateTaskName(t: NautaTemplate): string {
+  return t.task_name.trim() || t.name.trim() || t.id.trim();
 }
 
 export interface NautaRunSummary {
