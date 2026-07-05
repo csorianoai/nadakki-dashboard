@@ -156,12 +156,10 @@ export async function getEvidence(params: {
 }
 
 export interface CreateRunPayload {
-  template_id: string;
-  employee_id?: string;
-  /** Default true — simulate/dry-run until live execution is approved. */
-  dry_run?: boolean;
+  /** Backend expects task_name slug (e.g. platform_auditor_smoke_test), NOT template_id. */
+  task_name: string;
   mode?: "simulate" | "live";
-  task_name?: string;
+  employee_id?: string;
 }
 
 export async function createRun(params: {
@@ -169,9 +167,9 @@ export async function createRun(params: {
   body: CreateRunPayload;
 }): Promise<NautaRunDetail> {
   const payload = {
-    ...params.body,
-    dry_run: params.body.dry_run ?? true,
+    task_name: params.body.task_name,
     mode: params.body.mode ?? "simulate",
+    ...(params.body.employee_id ? { employee_id: params.body.employee_id } : {}),
   };
   const raw = await nautaFetch<unknown>("/runs", {
     tenantId: params.tenantId,
