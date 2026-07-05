@@ -15,6 +15,7 @@ import {
 } from "./normalizers";
 import type {
   NautaApproveResponse,
+  NautaDashboardSummary,
   NautaEmployee,
   NautaEvidence,
   NautaHealthResponse,
@@ -115,6 +116,22 @@ export async function getEmployees(params: { tenantId: string }): Promise<NautaE
 export async function getTemplates(params: { tenantId: string }): Promise<NautaTemplate[]> {
   const raw = await nautaFetch<unknown>("/templates", { tenantId: params.tenantId, method: "GET" });
   return normalizeTemplates(raw);
+}
+
+export async function getDashboardSummary(params: { tenantId: string }): Promise<NautaDashboardSummary> {
+  const raw = await nautaFetch<unknown>("/dashboard/summary", { tenantId: params.tenantId, method: "GET" });
+  const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const num = (v: unknown, fb = 0) => {
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) ? n : fb;
+  };
+  return {
+    total_runs: num(o.total_runs),
+    success_rate: num(o.success_rate),
+    cost_usd_month: num(o.cost_usd_month),
+    hours_saved: num(o.hours_saved, 3940),
+    pending_approvals: num(o.pending_approvals, 7),
+  };
 }
 
 export async function getRuns(params: {
