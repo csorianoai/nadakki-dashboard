@@ -1,6 +1,8 @@
 import type { NautaEnrichedEmployee, NautaExpedienteView } from "@/lib/nauta/employeeModel";
 import { DEPT_ORDER, NAUTA_BUNDLES } from "@/lib/nauta/catalogMeta";
 import { S } from "@/lib/nauta/strings";
+import { NAUTA_LIVE_DEFAULT_TASK } from "@/lib/nauta/liveConfig";
+import { NautaLiveView } from "@/lib/nauta/components/NautaLiveView";
 import { SegmentedControl, type PisoMode } from "../SegmentedControl";
 import { DepartmentSection } from "../DepartmentSection";
 import { StatusGroupedSections } from "../StatusGroupSection";
@@ -31,6 +33,18 @@ export function PisoView({
         <span className="spacer" />
         <SegmentedControl mode={mode} onChange={onModeChange} />
       </div>
+      {mode !== "planes" ? (
+        <div className="panel" style={{ marginBottom: 20 }}>
+          <div className="panel-h">
+            <h3>Ejecución live</h3>
+            <span className="sp" />
+            <span className="sub mono">{NAUTA_LIVE_DEFAULT_TASK}</span>
+          </div>
+          <div className="panel-b">
+            <NautaLiveView taskName={NAUTA_LIVE_DEFAULT_TASK} variant="panel" />
+          </div>
+        </div>
+      ) : null}
       <div className={`piso-wrap${mode === "planes" ? " solo" : ""}`}>
         <div>
           {mode === "dept" &&

@@ -92,7 +92,11 @@ export function NautaRunDetailView({ runId }: { runId: string }) {
         ) : null}
       </header>
 
-      <NautaLiveView liveUrl={run.live_url} />
+      <NautaLiveView
+        taskName={run.task_name}
+        initialRunId={run.status === "running" ? run.id : undefined}
+        variant="panel"
+      />
 
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
         <div className="border-b border-zinc-800 px-4 py-3">
