@@ -169,6 +169,15 @@ export function normalizeRunDetail(raw: unknown): NautaRunDetail | null {
     steps: stepsRaw.map(normalizeStep).filter((s): s is NautaRunStep => s != null),
     evidence: evidenceRaw ? normalizeEvidenceList(evidenceRaw) : [],
     cost: normalizeCost(costRaw),
-    live_url: runObj.live_url != null ? str(runObj.live_url) : root.live_url != null ? str(root.live_url) : null,
+    live_url:
+      runObj.live_view_url != null
+        ? str(runObj.live_view_url)
+        : runObj.live_url != null
+          ? str(runObj.live_url)
+          : root.live_view_url != null
+            ? str(root.live_view_url)
+            : root.live_url != null
+              ? str(root.live_url)
+              : null,
   };
 }
