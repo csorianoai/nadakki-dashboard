@@ -11,7 +11,7 @@ export function useNautaRuns(page = 1, limit = DEFAULT_LIMIT) {
   const { tenantId } = useTenant();
   return useQuery({
     queryKey: nautaKeys.runs(tenantId ?? "", page, limit),
-    queryFn: () => getRuns({ tenantId: tenantId!, page, limit }),
+    queryFn: () => getRuns({ page, limit }),
     enabled: !!tenantId,
     retry: 1,
     staleTime: 15_000,

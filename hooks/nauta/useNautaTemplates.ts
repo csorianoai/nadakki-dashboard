@@ -9,7 +9,7 @@ export function useNautaTemplates() {
   const { tenantId } = useTenant();
   return useQuery({
     queryKey: nautaKeys.templates(tenantId ?? ""),
-    queryFn: () => getTemplates({ tenantId: tenantId! }),
+    queryFn: () => getTemplates(),
     enabled: !!tenantId,
     retry: 1,
     staleTime: 60_000,

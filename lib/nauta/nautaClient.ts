@@ -1,6 +1,6 @@
 /**
  * Nauta API client — production backend (Render).
- * Uses apiFetch (JWT Bearer) + X-Tenant-ID — same auth pattern as Credit Hub.
+ * Uses apiFetch (JWT Bearer only) — tenant derived from JWT (same as liveRunClient).
  *
  * Bypasses Next.js /api/v1 BFF catch-all (blocks paths containing "/run").
  * Requests go to NEXT_PUBLIC_API_URL + /api/v1/nauta/*.
@@ -62,18 +62,16 @@ function responseMessage(body: unknown, fallback: string): string {
 }
 
 interface NautaRequestInit extends Omit<RequestInit, "headers"> {
-  tenantId: string;
   headers?: Record<string, string>;
 }
 
-async function nautaFetch<T>(path: string, init: NautaRequestInit): Promise<T> {
+async function nautaFetch<T>(path: string, init: NautaRequestInit = {}): Promise<T> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     const headers: Record<string, string> = {
       Accept: "application/json",
-      "X-Tenant-ID": init.tenantId,
       ...(init.body ? { "Content-Type": "application/json" } : {}),
       ...(init.headers ?? {}),
     };
@@ -102,24 +100,24 @@ async function nautaFetch<T>(path: string, init: NautaRequestInit): Promise<T> {
   }
 }
 
-export async function getHealth(params: { tenantId: string }): Promise<NautaHealthResponse> {
-  const raw = await nautaFetch<unknown>("/health", { tenantId: params.tenantId, method: "GET" });
+export async function getHealth(): Promise<NautaHealthResponse> {
+  const raw = await nautaFetch<unknown>("/health", { method: "GET" });
   const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   return { status: typeof o.status === "string" ? o.status : "ok" };
 }
 
-export async function getEmployees(params: { tenantId: string }): Promise<NautaEmployee[]> {
-  const raw = await nautaFetch<unknown>("/employees", { tenantId: params.tenantId, method: "GET" });
+export async function getEmployees(): Promise<NautaEmployee[]> {
+  const raw = await nautaFetch<unknown>("/employees", { method: "GET" });
   return normalizeEmployees(raw);
 }
 
-export async function getTemplates(params: { tenantId: string }): Promise<NautaTemplate[]> {
-  const raw = await nautaFetch<unknown>("/templates", { tenantId: params.tenantId, method: "GET" });
+export async function getTemplates(): Promise<NautaTemplate[]> {
+  const raw = await nautaFetch<unknown>("/templates", { method: "GET" });
   return normalizeTemplates(raw);
 }
 
-export async function getDashboardSummary(params: { tenantId: string }): Promise<NautaDashboardSummary> {
-  const raw = await nautaFetch<unknown>("/dashboard/summary", { tenantId: params.tenantId, method: "GET" });
+export async function getDashboardSummary(): Promise<NautaDashboardSummary> {
+  const raw = await nautaFetch<unknown>("/dashboard/summary", { method: "GET" });
   const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const num = (v: unknown, fb = 0) => {
     const n = typeof v === "number" ? v : Number(v);
@@ -134,39 +132,25 @@ export async function getDashboardSummary(params: { tenantId: string }): Promise
   };
 }
 
-export async function getRuns(params: {
-  tenantId: string;
-  page?: number;
-  limit?: number;
-}): Promise<NautaRunsListResponse> {
-  const page = params.page ?? 1;
-  const limit = params.limit ?? 20;
+export async function getRuns(params?: { page?: number; limit?: number }): Promise<NautaRunsListResponse> {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 20;
   const q = new URLSearchParams();
   q.set("page", String(page));
   q.set("limit", String(limit));
-  const raw = await nautaFetch<unknown>(`/runs?${q.toString()}`, {
-    tenantId: params.tenantId,
-    method: "GET",
-  });
+  const raw = await nautaFetch<unknown>(`/runs?${q.toString()}`, { method: "GET" });
   return normalizeRunsList(raw, page);
 }
 
-export async function getRun(params: { tenantId: string; runId: string }): Promise<NautaRunDetail> {
-  const raw = await nautaFetch<unknown>(`/runs/${encodeURIComponent(params.runId)}`, {
-    tenantId: params.tenantId,
-    method: "GET",
-  });
+export async function getRun(params: { runId: string }): Promise<NautaRunDetail> {
+  const raw = await nautaFetch<unknown>(`/runs/${encodeURIComponent(params.runId)}`, { method: "GET" });
   const detail = normalizeRunDetail(raw);
   if (!detail) throw new NautaApiError("Invalid run response", 502);
   return detail;
 }
 
-export async function getEvidence(params: {
-  tenantId: string;
-  runId: string;
-}): Promise<NautaEvidence[]> {
+export async function getEvidence(params: { runId: string }): Promise<NautaEvidence[]> {
   const raw = await nautaFetch<unknown>(`/runs/${encodeURIComponent(params.runId)}/evidence`, {
-    tenantId: params.tenantId,
     method: "GET",
   });
   return normalizeEvidenceList(raw);
@@ -179,17 +163,13 @@ export interface CreateRunPayload {
   employee_id?: string;
 }
 
-export async function createRun(params: {
-  tenantId: string;
-  body: CreateRunPayload;
-}): Promise<NautaRunDetail> {
+export async function createRun(body: CreateRunPayload): Promise<NautaRunDetail> {
   const payload = {
-    task_name: params.body.task_name,
-    mode: params.body.mode ?? "simulate",
-    ...(params.body.employee_id ? { employee_id: params.body.employee_id } : {}),
+    task_name: body.task_name,
+    mode: body.mode ?? "simulate",
+    ...(body.employee_id ? { employee_id: body.employee_id } : {}),
   };
   const raw = await nautaFetch<unknown>("/runs", {
-    tenantId: params.tenantId,
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -198,12 +178,8 @@ export async function createRun(params: {
   return detail;
 }
 
-export async function approveRun(params: {
-  tenantId: string;
-  runId: string;
-}): Promise<NautaApproveResponse> {
+export async function approveRun(params: { runId: string }): Promise<NautaApproveResponse> {
   return nautaFetch<NautaApproveResponse>(`/runs/${encodeURIComponent(params.runId)}/approve`, {
-    tenantId: params.tenantId,
     method: "POST",
     body: JSON.stringify({}),
   });

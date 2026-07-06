@@ -18,7 +18,7 @@ export function useNautaSummary() {
   const { tenantId } = useTenant();
   return useQuery({
     queryKey: nautaKeys.summary(tenantId ?? ""),
-    queryFn: () => getDashboardSummary({ tenantId: tenantId! }),
+    queryFn: () => getDashboardSummary(),
     enabled: !!tenantId,
     retry: 0,
     staleTime: 30_000,
