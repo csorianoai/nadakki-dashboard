@@ -12,7 +12,7 @@ export function resolveLiveRun403Banner(detail: string): NautaLiveBanner {
   if (d.includes("protected_tenant")) {
     return {
       kind: "protected_tenant",
-      message: "Este tenant no permite ejecución live",
+      message: "Su institución no permite ejecución live",
     };
   }
   if (d.includes("cloud_engine_requires_upgrade")) {

@@ -9,7 +9,7 @@ export function useNautaHealth() {
   const { tenantId } = useTenant();
   return useQuery({
     queryKey: nautaKeys.health(tenantId ?? ""),
-    queryFn: () => getHealth({ tenantId: tenantId! }),
+    queryFn: () => getHealth(),
     enabled: !!tenantId,
     retry: 1,
     staleTime: 60_000,

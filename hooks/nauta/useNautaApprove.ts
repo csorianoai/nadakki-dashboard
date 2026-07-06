@@ -10,7 +10,7 @@ export function useNautaApprove(runId: string | null | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => approveRun({ tenantId: tenantId!, runId: runId! }),
+    mutationFn: () => approveRun({ runId: runId! }),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["nauta", "runs", tenantId ?? ""] }),

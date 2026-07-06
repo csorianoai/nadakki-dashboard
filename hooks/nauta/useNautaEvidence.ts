@@ -9,7 +9,7 @@ export function useNautaEvidence(runId: string | null | undefined) {
   const { tenantId } = useTenant();
   return useQuery({
     queryKey: nautaKeys.evidence(tenantId ?? "", runId ?? ""),
-    queryFn: () => getEvidence({ tenantId: tenantId!, runId: runId! }),
+    queryFn: () => getEvidence({ runId: runId! }),
     enabled: !!tenantId && !!runId,
     retry: 1,
     staleTime: 15_000,

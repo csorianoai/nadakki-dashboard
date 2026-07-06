@@ -9,7 +9,7 @@ export function useNautaEmployees() {
   const { tenantId } = useTenant();
   return useQuery({
     queryKey: nautaKeys.employees(tenantId ?? ""),
-    queryFn: () => getEmployees({ tenantId: tenantId! }),
+    queryFn: () => getEmployees(),
     enabled: !!tenantId,
     retry: 1,
     staleTime: 30_000,

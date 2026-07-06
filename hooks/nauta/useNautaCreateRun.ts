@@ -10,7 +10,7 @@ export function useNautaCreateRun() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (body: CreateRunPayload) => createRun({ tenantId: tenantId!, body }),
+    mutationFn: (body: CreateRunPayload) => createRun(body),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["nauta", "runs", tenantId ?? ""] });
     },

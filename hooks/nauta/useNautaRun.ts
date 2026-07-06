@@ -9,7 +9,7 @@ export function useNautaRun(runId: string | null | undefined) {
   const { tenantId } = useTenant();
   return useQuery({
     queryKey: nautaKeys.run(tenantId ?? "", runId ?? ""),
-    queryFn: () => getRun({ tenantId: tenantId!, runId: runId! }),
+    queryFn: () => getRun({ runId: runId! }),
     enabled: !!tenantId && !!runId,
     retry: 1,
     staleTime: 15_000,
