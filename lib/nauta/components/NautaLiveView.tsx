@@ -1,12 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
-import {
-  NAUTA_LIVE_DEFAULT_TARGET_URL,
-  NAUTA_LIVE_MAX_POLL_ATTEMPTS,
-  NAUTA_LIVE_POLL_INTERVAL_MS,
-} from "@/lib/nauta/liveConfig";
+import { useAuth } from "@/hooks/useAuth";
+import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
+import { resolveVisiblePlatformTitle } from "@/lib/white-label/brand-display";
+import { NAUTA_LIVE_MAX_POLL_ATTEMPTS, NAUTA_LIVE_POLL_INTERVAL_MS } from "@/lib/nauta/liveConfig";
 import { resolveLiveRun403Banner } from "@/lib/nauta/liveErrors";
 import {
   createLiveRun,
@@ -20,7 +18,6 @@ export type NautaLiveViewStatus = "idle" | "running" | "completed" | "failed" | 
 
 export interface NautaLiveViewProps {
   taskName: string;
-  tenantSlug?: string;
   engineRequested?: NautaLiveEngineRequested;
   targetUrl?: string;
   /** Resume polling an existing run (e.g. run detail). */
@@ -73,16 +70,16 @@ function formatElapsed(seconds: number): string {
 
 export function NautaLiveView({
   taskName,
-  tenantSlug: tenantSlugProp,
   engineRequested = "auto",
-  targetUrl = NAUTA_LIVE_DEFAULT_TARGET_URL,
+  targetUrl,
   initialRunId,
   variant = "panel",
   idleHeading = "Transmisión disponible próximamente",
   idleBody = "Observe al empleado ejecutar cada paso en tiempo real, con la evidencia generándose sello a sello.",
 }: NautaLiveViewProps) {
-  const { tenantSlug: tenantFromHook } = useTenant();
-  const tenantSlug = tenantSlugProp ?? tenantFromHook ?? "";
+  const { tenant } = useAuth();
+  const { data: branding } = useTenantBranding();
+  const institutionLabel = resolveVisiblePlatformTitle(branding, tenant);
 
   const [run, setRun] = useState<RunSnapshot>(() =>
     initialRunId ? { ...IDLE, runId: initialRunId, status: "running" } : IDLE,
@@ -194,11 +191,12 @@ export function NautaLiveView({
     setRun({ ...IDLE, status: "running" });
 
     try {
+      const trimmedTarget = targetUrl?.trim();
       const data = await createLiveRun({
         task_name: taskName,
         mode: "live",
         engine_requested: engineRequested,
-        target_url: targetUrl,
+        ...(trimmedTarget ? { target_url: trimmedTarget } : {}),
         dry_run: false,
       });
 
@@ -238,9 +236,7 @@ export function NautaLiveView({
       <div className="live-view-toolbar">
         <div className="live-view-meta">
           <span className="live-view-label">Ejecución live</span>
-          {tenantSlug ? (
-            <span className="live-view-tenant mono">{tenantSlug}</span>
-          ) : null}
+          <span className="live-view-tenant">{institutionLabel}</span>
           <span className="live-view-task mono">{taskName}</span>
         </div>
         <button
