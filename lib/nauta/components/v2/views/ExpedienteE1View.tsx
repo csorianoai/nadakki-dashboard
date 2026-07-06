@@ -1,3 +1,5 @@
+import { NAUTA_LIVE_DEFAULT_TASK } from "@/lib/nauta/liveConfig";
+import { NautaLiveView } from "@/lib/nauta/components/NautaLiveView";
 import { S } from "@/lib/nauta/strings";
 import { KpiCard } from "../KpiCard";
 import { SealCard } from "../SealCard";
@@ -127,7 +129,12 @@ export function ExpedienteE1View() {
               <h3>{e.liveTitle}</h3>
             </div>
             <div className="panel-b">
-              <LiveSlot heading={e.liveHeading} body={e.liveBody} />
+              <NautaLiveView
+                taskName={NAUTA_LIVE_DEFAULT_TASK}
+                variant="slot"
+                idleHeading={e.liveHeading}
+                idleBody={e.liveBody}
+              />
             </div>
           </div>
         </div>
@@ -183,18 +190,5 @@ function TimelineE1() {
         </div>
       </div>
     </>
-  );
-}
-
-function LiveSlot({ heading, body }: { heading: string; body: string }) {
-  return (
-    <div className="live-slot">
-      <div className="ring">
-        ▷
-        <span className="pulse" aria-hidden />
-      </div>
-      <h4>{heading}</h4>
-      <p>{body}</p>
-    </div>
   );
 }
