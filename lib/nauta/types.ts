@@ -93,6 +93,15 @@ export interface NautaHealthResponse {
   status: "ok" | string;
 }
 
+/** GET /api/v1/nauta/dashboard/summary */
+export interface NautaDashboardSummary {
+  total_runs: number;
+  success_rate: number;
+  cost_usd_month: number;
+  hours_saved: number;
+  pending_approvals: number;
+}
+
 export interface NautaRunsQuery {
   page?: number;
   limit?: number;

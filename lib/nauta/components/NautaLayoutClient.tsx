@@ -1,23 +1,38 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { GeistSans } from "geist/font/sans";
+import type { CSSProperties, ReactNode } from "react";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { ModuleGate } from "@/lib/feature-gating/ModuleGate";
 import { ForgeToaster } from "@/components/forge/ui/Toast";
-import "@/app/(forge)/credit-hub/forge-globals.css";
+import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import { resolveNautaAccentVars, resolveNautaTenantSlug } from "@/lib/nauta/branding";
+import { NAUTA_MIN_WIDTH_PX } from "@/lib/nauta/config";
+import { nautaFontClassName } from "@/lib/nauta/nauta-fonts";
+import "@/lib/nauta/tokens.css";
+import "@/lib/nauta/nauta-v2.css";
 
 export function NautaLayoutClient({ children }: { children: ReactNode }) {
+  const { data: branding } = useTenantBranding();
+  const { tenantSlug } = useTenant();
+  const accentVars = resolveNautaAccentVars(branding);
+  const dataTenant = resolveNautaTenantSlug(branding, tenantSlug);
+
   return (
     <div
-      className={`nauta-surface flex min-h-0 flex-1 flex-col bg-zinc-950 text-zinc-100 ${GeistSans.className}`}
+      className={`nauta-v2 flex min-h-0 flex-1 flex-col ${nautaFontClassName}`}
       data-portal="nauta"
+      data-tenant={dataTenant}
+      style={
+        {
+          ...accentVars,
+          minWidth: NAUTA_MIN_WIDTH_PX,
+        } as CSSProperties
+      }
     >
       <CHTenantGuard>
         <ModuleGate module="nauta">
-          <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col px-4 py-5 md:px-6 md:py-6">
-            {children}
-          </div>
+          <div className="flex min-h-0 w-full flex-1 flex-col overflow-x-auto">{children}</div>
         </ModuleGate>
       </CHTenantGuard>
       <ForgeToaster />

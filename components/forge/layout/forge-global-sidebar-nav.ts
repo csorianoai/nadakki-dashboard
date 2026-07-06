@@ -554,7 +554,10 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: Bot,
     coreMatchers: ["nauta"],
     alwaysVisible: true,
-    children: [{ id: "nauta-cockpit", label: "Cockpit", href: "/nauta", icon: LayoutDashboard }],
+    children: [
+      { id: "nauta-cockpit", label: "Piso de operaciones", href: "/nauta", icon: LayoutDashboard },
+      { id: "nauta-planes", label: "Nómina y planes", href: "/nauta?mode=planes", icon: LayoutDashboard },
+    ],
   },
   {
     id: "sic-hub",

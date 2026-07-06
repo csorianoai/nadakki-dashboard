@@ -1,0 +1,84 @@
+/**
+ * Nauta v2 design tokens — DESIGN_TOKENS.md
+ * All colors consumed via var(--*) only.
+ */
+.nauta-v2 {
+  --accent: #5b86f2;
+  --accent-2: #3e63c9;
+  --accent-soft: rgba(91, 134, 242, 0.14);
+  --accent-line: rgba(91, 134, 242, 0.4);
+  --on-accent-soft: #bcd0fb;
+
+  --live: #34d399;
+  --live-soft: rgba(52, 211, 153, 0.13);
+  --on-live: #8ff0cd;
+  --on-live-soft: #7fd8b6;
+
+  --seal: #c7a253;
+  --seal-soft: rgba(199, 162, 83, 0.12);
+  --on-seal: #d3b878;
+
+  --warn: #e0a64b;
+  --risk-hi: #d98b5a;
+  --risk-crit: #e06363;
+  --on-risk-crit: #e7b0b0;
+
+  --bg-0: #0a0d13;
+  --bg-1: #0d111a;
+  --panel: #111621;
+  --card: #141a26;
+  --card-2: #171e2c;
+  --input-bg: #0f141d;
+  --badge-bg: #10151f;
+  --concept-bg: #0c1017;
+  --live-slot-bg: #0e131c;
+
+  --line: rgba(255, 255, 255, 0.065);
+  --line-2: rgba(255, 255, 255, 0.11);
+  --line-3: rgba(255, 255, 255, 0.16);
+
+  --t0: #eaeef6;
+  --t1: #a9b2c2;
+  --t2: #6e7788;
+  --t3: #525b6b;
+
+  --risk-bajo: #8aa0b5;
+  --pill-listo-bg: #12202b;
+  --pill-listo-border: rgba(120, 180, 220, 0.24);
+  --pill-listo-text: #9fc3dd;
+  --primary-btn-text: #08111f;
+
+  --serif: var(--font-nauta-serif), Georgia, serif;
+  --sans: var(--font-nauta-sans), system-ui, sans-serif;
+  --mono: var(--font-nauta-mono), ui-monospace, monospace;
+
+  --r: 10px;
+  --r-sm: 7px;
+
+  color: var(--t0);
+  background: var(--bg-0);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+.nauta-v2 *,
+.nauta-v2 *::before,
+.nauta-v2 *::after {
+  box-sizing: border-box;
+}
+
+.nauta-v2 ::selection {
+  background: var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nauta-v2 *,
+  .nauta-v2 *::before,
+  .nauta-v2 *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
