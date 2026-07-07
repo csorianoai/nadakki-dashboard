@@ -1784,9 +1784,14 @@
 }
 
 .nauta-v2 .live-view-task,
-.nauta-v2 .live-view-tenant {
+.nauta-v2 .live-view-tenant,
+.nauta-v2 .live-view-run-id {
   font-size: 11px;
   color: var(--t2);
+}
+
+.nauta-v2 .live-view-run-id {
+  color: var(--on-live-soft);
 }
 
 .nauta-v2 .live-view-running {
