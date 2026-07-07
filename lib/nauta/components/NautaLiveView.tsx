@@ -14,29 +14,20 @@ import {
   type NautaLiveEngineRequested,
   NautaLiveRunError,
 } from "@/lib/nauta/liveRunClient";
-import type { NautaRunArtifacts } from "@/lib/nauta/types";
-import { formatNumber } from "@/lib/nauta/format";
-import { S } from "@/lib/nauta/strings";
-import { NautaRunDeliverables } from "@/lib/nauta/components/NautaRunDeliverables";
+import type { NautaLiveViewStatus, NautaRunArtifacts } from "@/lib/nauta/types";
+import { NautaLiveIframeBoundary } from "@/lib/nauta/components/NautaLiveIframeBoundary";
+import { NautaRunReportPanel } from "@/lib/nauta/components/NautaRunReportPanel";
 import { NautaTaskComposer } from "@/lib/nauta/components/NautaTaskComposer";
+import { S } from "@/lib/nauta/strings";
 
-export type NautaLiveViewStatus =
-  | "idle"
-  | "running"
-  | "completed"
-  | "failed"
-  | "blocked"
-  | "pending_approval";
+export type { NautaLiveViewStatus };
 
 export interface NautaLiveViewProps {
   taskName: string;
   engineRequested?: NautaLiveEngineRequested;
   targetUrl?: string;
-  /** When true, show task composer and allow task_instruction on POST. */
   allowsFreeform?: boolean;
-  /** Resume polling an existing run (e.g. run detail). */
   initialRunId?: string;
-  /** Compact layout for expediente live-slot. */
   variant?: "panel" | "slot";
   idleHeading?: string;
   idleBody?: string;
@@ -55,6 +46,9 @@ interface RunSnapshot {
   engineUsed: string | null;
   pollAttempts: number;
   artifacts: NautaRunArtifacts | null;
+  stepCount: number | null;
+  completedAtIso: string | null;
+  apiCompletedAt: string | null;
 }
 
 const IDLE: RunSnapshot = {
@@ -69,6 +63,9 @@ const IDLE: RunSnapshot = {
   engineUsed: null,
   pollAttempts: 0,
   artifacts: null,
+  stepCount: null,
+  completedAtIso: null,
+  apiCompletedAt: null,
 };
 
 function mapPollStatus(status: string): NautaLiveViewStatus {
@@ -78,6 +75,10 @@ function mapPollStatus(status: string): NautaLiveViewStatus {
   if (status === "blocked") return "blocked";
   if (status === "pending_approval") return "pending_approval";
   return "failed";
+}
+
+function isTerminalStatus(status: NautaLiveViewStatus): boolean {
+  return status !== "running" && status !== "idle";
 }
 
 function formatElapsed(seconds: number): string {
@@ -124,15 +125,25 @@ export function NautaLiveView({
     }
   }, []);
 
+  const clearLiveIframe = useCallback(() => {
+    setRun((prev) => (prev.liveViewUrl ? { ...prev, liveViewUrl: null } : prev));
+  }, []);
+
   const applyPollData = useCallback(
     (data: Awaited<ReturnType<typeof pollLiveRun>>) => {
       const nextStatus = mapPollStatus(data.status);
+      const terminal = isTerminalStatus(nextStatus);
       const artifacts = normalizeRunArtifacts(data.artifacts) ?? null;
+      const stepCount =
+        typeof data.step_count === "number" && Number.isFinite(data.step_count)
+          ? data.step_count
+          : null;
+
       setRun((prev) => ({
         ...prev,
         runId: data.id ?? prev.runId,
         status: nextStatus,
-        liveViewUrl: data.live_view_url ?? prev.liveViewUrl,
+        liveViewUrl: terminal ? null : (data.live_view_url ?? prev.liveViewUrl),
         durationSeconds: data.duration_seconds ?? prev.durationSeconds,
         estimatedCostUsd: data.estimated_cost_usd ?? prev.estimatedCostUsd,
         estimatedTokens: data.estimated_tokens ?? prev.estimatedTokens,
@@ -140,8 +151,15 @@ export function NautaLiveView({
         failureCause: data.failure_cause ?? prev.failureCause,
         engineUsed: data.engine_used ?? prev.engineUsed,
         artifacts: artifacts ?? prev.artifacts,
+        stepCount: stepCount ?? prev.stepCount,
+        apiCompletedAt:
+          typeof data.completed_at === "string" && data.completed_at.trim()
+            ? data.completed_at
+            : prev.apiCompletedAt,
+        completedAtIso: terminal && !prev.completedAtIso ? new Date().toISOString() : prev.completedAtIso,
       }));
-      if (nextStatus !== "running") {
+
+      if (terminal) {
         stopTimers();
       }
     },
@@ -150,7 +168,13 @@ export function NautaLiveView({
 
   const failRun = useCallback(
     (message: string) => {
-      setRun((prev) => ({ ...prev, status: "failed", failureCause: message }));
+      setRun((prev) => ({
+        ...prev,
+        status: "failed",
+        failureCause: message,
+        liveViewUrl: null,
+        completedAtIso: prev.completedAtIso ?? new Date().toISOString(),
+      }));
       stopTimers();
     },
     [stopTimers],
@@ -177,7 +201,13 @@ export function NautaLiveView({
             failRun(mapped.message);
           } else {
             setBanner(resolveLiveRun403Banner(err.detail));
-            setRun((prev) => ({ ...prev, status: "blocked", failureCause: message }));
+            setRun((prev) => ({
+              ...prev,
+              status: "blocked",
+              failureCause: message,
+              liveViewUrl: null,
+              completedAtIso: prev.completedAtIso ?? new Date().toISOString(),
+            }));
             stopTimers();
           }
         } else {
@@ -204,8 +234,7 @@ export function NautaLiveView({
       const tick = async () => {
         pollAttemptsRef.current += 1;
         if (pollAttemptsRef.current > NAUTA_LIVE_MAX_POLL_ATTEMPTS) {
-          const message = "Tiempo máximo de espera alcanzado (10 minutos)";
-          failRun(message);
+          failRun("Tiempo máximo de espera alcanzado (10 minutos)");
           return;
         }
         const status = await pollOnce(runId);
@@ -277,6 +306,9 @@ export function NautaLiveView({
   };
 
   const isRunning = run.status === "running";
+  const showLiveIframe = isRunning && Boolean(run.liveViewUrl);
+  const showReportPanel =
+    (run.status === "completed" || run.status === "failed") && Boolean(run.runId) && Boolean(run.completedAtIso);
   const rootClass = variant === "slot" ? "live-view live-view--slot" : "live-view live-view--panel";
 
   return (
@@ -346,14 +378,17 @@ export function NautaLiveView({
         </p>
       ) : null}
 
-      {run.liveViewUrl ? (
-        <iframe
-          src={run.liveViewUrl}
-          title="Nauta Live Browser View"
-          className="live-view-iframe"
-          sandbox="allow-scripts allow-same-origin"
-          data-testid="nauta-live-iframe"
-        />
+      {showLiveIframe ? (
+        <NautaLiveIframeBoundary onIframeFault={clearLiveIframe}>
+          <iframe
+            key={run.runId ?? "live"}
+            src={run.liveViewUrl!}
+            title="Nauta Live Browser View"
+            className="live-view-iframe"
+            sandbox="allow-scripts allow-same-origin"
+            data-testid="nauta-live-iframe"
+          />
+        </NautaLiveIframeBoundary>
       ) : isRunning ? (
         <div className="live-slot live-view-placeholder">
           <div className="ring">
@@ -377,43 +412,23 @@ export function NautaLiveView({
         </div>
       ) : null}
 
-      {run.status === "completed" ? (
-        <div className="live-view-outcome live-view-outcome--ok" data-testid="nauta-live-completed">
-          <span className="live-outcome-badge">Completado</span>
-          <div className="live-outcome-grid">
-            <div>
-              <span className="k">Duración</span>
-              <span className="v num">{run.durationSeconds.toFixed(1)} s</span>
-            </div>
-            <div>
-              <span className="k">Costo estimado</span>
-              <span className="v num">${run.estimatedCostUsd.toFixed(4)} USD</span>
-            </div>
-            {run.estimatedTokens > 0 ? (
-              <div>
-                <span className="k">Tokens</span>
-                <span className="v num">{formatNumber(run.estimatedTokens)}</span>
-              </div>
-            ) : null}
-            {run.findingsCount > 0 ? (
-              <div>
-                <span className="k">Hallazgos</span>
-                <span className="v num">{run.findingsCount}</span>
-              </div>
-            ) : null}
-          </div>
-          {run.artifacts ? <NautaRunDeliverables artifacts={run.artifacts} /> : null}
-        </div>
-      ) : null}
-
-      {run.status === "failed" ? (
-        <div className="live-view-outcome live-view-outcome--fail" role="alert" data-testid="nauta-live-failed">
-          <span className="live-outcome-badge">Falló</span>
-          {run.failureCause ? <p className="live-failure-cause mono">{run.failureCause}</p> : null}
-          {run.artifacts ? (
-            <NautaRunDeliverables artifacts={run.artifacts} showLastStepSummary />
-          ) : null}
-        </div>
+      {showReportPanel ? (
+        <NautaRunReportPanel
+          runId={run.runId!}
+          status={run.status}
+          taskName={taskName}
+          taskInstruction={allowsFreeform ? taskInstruction : undefined}
+          durationSeconds={run.durationSeconds}
+          estimatedCostUsd={run.estimatedCostUsd}
+          estimatedTokens={run.estimatedTokens}
+          stepCount={run.stepCount}
+          failureCause={run.failureCause}
+          artifacts={run.artifacts}
+          engineUsed={run.engineUsed}
+          findingsCount={run.findingsCount}
+          completedAtIso={run.completedAtIso!}
+          apiCompletedAt={run.apiCompletedAt}
+        />
       ) : null}
 
       {run.status === "blocked" ? (
