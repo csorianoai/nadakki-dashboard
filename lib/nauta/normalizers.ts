@@ -1,6 +1,7 @@
 import type {
   NautaEmployee,
   NautaEvidence,
+  NautaRunArtifacts,
   NautaRunCost,
   NautaRunDetail,
   NautaRunStep,
@@ -41,6 +42,7 @@ export function normalizeEmployee(raw: unknown): NautaEmployee | null {
     role_name: str(o.role_name),
     department_id: str(o.department_id),
     status: str(o.status, "offline"),
+    allows_freeform: typeof o.allows_freeform === "boolean" ? o.allows_freeform : undefined,
   };
 }
 
@@ -153,6 +155,20 @@ function normalizeCost(raw: unknown): NautaRunCost {
     tokens: num(o.tokens),
     cost_usd: num(o.cost_usd ?? o.cost),
   };
+}
+
+export function normalizeRunArtifacts(raw: unknown): NautaRunArtifacts | null {
+  const o = asRecord(raw);
+  if (!o) return null;
+  const recordingRaw = o.recordingUrls ?? o.recording_urls;
+  const recordingUrls = asArray(recordingRaw)
+    .map((u) => str(u))
+    .filter((u) => u.length > 0);
+  const screenshotUrl = str(o.screenshotUrl ?? o.screenshot_url) || null;
+  const output = str(o.output) || null;
+  const lastStepSummary = str(o.lastStepSummary ?? o.last_step_summary) || null;
+  if (!recordingUrls.length && !screenshotUrl && !output && !lastStepSummary) return null;
+  return { recordingUrls, screenshotUrl, output, lastStepSummary };
 }
 
 export function normalizeRunDetail(raw: unknown): NautaRunDetail | null {

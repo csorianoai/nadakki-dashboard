@@ -7,10 +7,14 @@ export function DepartmentSection({
   deptId,
   employees,
   onOpenExpediente,
+  selectedRoleId,
+  onSelectForLive,
 }: {
   deptId: string;
   employees: NautaEnrichedEmployee[];
   onOpenExpediente?: (view: NautaExpedienteView) => void;
+  selectedRoleId?: string | null;
+  onSelectForLive?: (roleId: string) => void;
 }) {
   const count = DEPT_COUNTS[deptId] ?? employees.length;
   const deptCode = deptId.toUpperCase();
@@ -31,7 +35,13 @@ export function DepartmentSection({
       </div>
       <div className="grid">
         {employees.map((e) => (
-          <EmployeeCard key={e.role_id} employee={e} onOpenExpediente={onOpenExpediente} />
+          <EmployeeCard
+            key={e.role_id}
+            employee={e}
+            onOpenExpediente={onOpenExpediente}
+            selectedRoleId={selectedRoleId}
+            onSelectForLive={onSelectForLive}
+          />
         ))}
       </div>
     </div>

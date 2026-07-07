@@ -5,27 +5,42 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { resolveVisiblePlatformTitle } from "@/lib/white-label/brand-display";
 import { NAUTA_LIVE_MAX_POLL_ATTEMPTS, NAUTA_LIVE_POLL_INTERVAL_MS } from "@/lib/nauta/liveConfig";
+import { resolveFreeformRunError } from "@/lib/nauta/freeformErrors";
 import { resolveLiveRun403Banner } from "@/lib/nauta/liveErrors";
+import { normalizeRunArtifacts } from "@/lib/nauta/normalizers";
 import {
   createLiveRun,
   pollLiveRun,
   type NautaLiveEngineRequested,
   NautaLiveRunError,
 } from "@/lib/nauta/liveRunClient";
+import type { NautaRunArtifacts } from "@/lib/nauta/types";
 import { formatNumber } from "@/lib/nauta/format";
+import { S } from "@/lib/nauta/strings";
+import { NautaRunDeliverables } from "@/lib/nauta/components/NautaRunDeliverables";
+import { NautaTaskComposer } from "@/lib/nauta/components/NautaTaskComposer";
 
-export type NautaLiveViewStatus = "idle" | "running" | "completed" | "failed" | "blocked";
+export type NautaLiveViewStatus =
+  | "idle"
+  | "running"
+  | "completed"
+  | "failed"
+  | "blocked"
+  | "pending_approval";
 
 export interface NautaLiveViewProps {
   taskName: string;
   engineRequested?: NautaLiveEngineRequested;
   targetUrl?: string;
+  /** When true, show task composer and allow task_instruction on POST. */
+  allowsFreeform?: boolean;
   /** Resume polling an existing run (e.g. run detail). */
   initialRunId?: string;
   /** Compact layout for expediente live-slot. */
   variant?: "panel" | "slot";
   idleHeading?: string;
   idleBody?: string;
+  onOpenSupervision?: () => void;
 }
 
 interface RunSnapshot {
@@ -39,6 +54,7 @@ interface RunSnapshot {
   failureCause: string | null;
   engineUsed: string | null;
   pollAttempts: number;
+  artifacts: NautaRunArtifacts | null;
 }
 
 const IDLE: RunSnapshot = {
@@ -52,6 +68,7 @@ const IDLE: RunSnapshot = {
   failureCause: null,
   engineUsed: null,
   pollAttempts: 0,
+  artifacts: null,
 };
 
 function mapPollStatus(status: string): NautaLiveViewStatus {
@@ -59,6 +76,7 @@ function mapPollStatus(status: string): NautaLiveViewStatus {
   if (status === "completed") return "completed";
   if (status === "failed") return "failed";
   if (status === "blocked") return "blocked";
+  if (status === "pending_approval") return "pending_approval";
   return "failed";
 }
 
@@ -72,15 +90,18 @@ export function NautaLiveView({
   taskName,
   engineRequested = "auto",
   targetUrl,
+  allowsFreeform = false,
   initialRunId,
   variant = "panel",
   idleHeading = "Transmisión disponible próximamente",
   idleBody = "Observe al empleado ejecutar cada paso en tiempo real, con la evidencia generándose sello a sello.",
+  onOpenSupervision,
 }: NautaLiveViewProps) {
   const { tenant } = useAuth();
   const { data: branding } = useTenantBranding();
   const institutionLabel = resolveVisiblePlatformTitle(branding, tenant);
 
+  const [taskInstruction, setTaskInstruction] = useState("");
   const [run, setRun] = useState<RunSnapshot>(() =>
     initialRunId ? { ...IDLE, runId: initialRunId, status: "running" } : IDLE,
   );
@@ -106,6 +127,7 @@ export function NautaLiveView({
   const applyPollData = useCallback(
     (data: Awaited<ReturnType<typeof pollLiveRun>>) => {
       const nextStatus = mapPollStatus(data.status);
+      const artifacts = normalizeRunArtifacts(data.artifacts) ?? null;
       setRun((prev) => ({
         ...prev,
         runId: data.id ?? prev.runId,
@@ -117,10 +139,19 @@ export function NautaLiveView({
         findingsCount: data.findings_count ?? prev.findingsCount,
         failureCause: data.failure_cause ?? prev.failureCause,
         engineUsed: data.engine_used ?? prev.engineUsed,
+        artifacts: artifacts ?? prev.artifacts,
       }));
       if (nextStatus !== "running") {
         stopTimers();
       }
+    },
+    [stopTimers],
+  );
+
+  const failRun = useCallback(
+    (message: string) => {
+      setRun((prev) => ({ ...prev, status: "failed", failureCause: message }));
+      stopTimers();
     },
     [stopTimers],
   );
@@ -140,16 +171,22 @@ export function NautaLiveView({
               ? err.message
               : "Error de polling";
         if (err instanceof NautaLiveRunError && err.status === 403) {
-          setBanner(resolveLiveRun403Banner(err.detail));
-          setRun((prev) => ({ ...prev, status: "blocked", failureCause: message }));
+          if (err.detail.toLowerCase().includes("freeform_not_allowed")) {
+            const mapped = resolveFreeformRunError(403, err.detail);
+            setPollError(mapped.message);
+            failRun(mapped.message);
+          } else {
+            setBanner(resolveLiveRun403Banner(err.detail));
+            setRun((prev) => ({ ...prev, status: "blocked", failureCause: message }));
+            stopTimers();
+          }
         } else {
-          setRun((prev) => ({ ...prev, status: "failed", failureCause: message }));
+          failRun(message);
         }
-        stopTimers();
         return "failed" as const;
       }
     },
-    [applyPollData, stopTimers],
+    [applyPollData, failRun, stopTimers],
   );
 
   const startPolling = useCallback(
@@ -168,8 +205,7 @@ export function NautaLiveView({
         pollAttemptsRef.current += 1;
         if (pollAttemptsRef.current > NAUTA_LIVE_MAX_POLL_ATTEMPTS) {
           const message = "Tiempo máximo de espera alcanzado (10 minutos)";
-          setRun((prev) => ({ ...prev, status: "failed", failureCause: message }));
-          stopTimers();
+          failRun(message);
           return;
         }
         const status = await pollOnce(runId);
@@ -183,7 +219,7 @@ export function NautaLiveView({
         void tick();
       }, NAUTA_LIVE_POLL_INTERVAL_MS);
     },
-    [pollOnce, stopTimers],
+    [failRun, pollOnce, stopTimers],
   );
 
   useEffect(() => {
@@ -200,11 +236,13 @@ export function NautaLiveView({
 
     try {
       const trimmedTarget = targetUrl?.trim();
+      const trimmedInstruction = allowsFreeform ? taskInstruction.trim() : "";
       const data = await createLiveRun({
         task_name: taskName,
         mode: "live",
         engine_requested: engineRequested,
         ...(trimmedTarget ? { target_url: trimmedTarget } : {}),
+        ...(trimmedInstruction ? { task_instruction: trimmedInstruction } : {}),
         dry_run: false,
       });
 
@@ -218,9 +256,21 @@ export function NautaLiveView({
       startPolling(data.id);
     } catch (err) {
       setRun(IDLE);
-      if (err instanceof NautaLiveRunError && err.status === 403) {
-        setBanner(resolveLiveRun403Banner(err.detail));
-        return;
+      if (err instanceof NautaLiveRunError) {
+        if (err.status === 403 && err.detail.toLowerCase().includes("freeform_not_allowed")) {
+          const mapped = resolveFreeformRunError(403, err.detail);
+          setPollError(mapped.message);
+          return;
+        }
+        if (err.status === 403) {
+          setBanner(resolveLiveRun403Banner(err.detail));
+          return;
+        }
+        if (err.status === 422) {
+          const mapped = resolveFreeformRunError(422, err.detail);
+          setPollError(mapped.message);
+          return;
+        }
       }
       setPollError(err instanceof Error ? err.message : "No se pudo iniciar la ejecución live");
     }
@@ -239,6 +289,21 @@ export function NautaLiveView({
         >
           {banner.message}
         </div>
+      ) : null}
+
+      {run.status === "pending_approval" ? (
+        <div className="live-banner live-banner--pending" role="status" data-testid="nauta-live-pending">
+          <span>{S.live.pendingApproval}</span>
+          {onOpenSupervision ? (
+            <button type="button" className="live-banner-link" onClick={onOpenSupervision}>
+              {S.live.pendingApprovalLink}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {allowsFreeform ? (
+        <NautaTaskComposer value={taskInstruction} onChange={setTaskInstruction} disabled={isRunning} />
       ) : null}
 
       <div className="live-view-toolbar">
@@ -337,6 +402,7 @@ export function NautaLiveView({
               </div>
             ) : null}
           </div>
+          {run.artifacts ? <NautaRunDeliverables artifacts={run.artifacts} /> : null}
         </div>
       ) : null}
 
@@ -344,6 +410,9 @@ export function NautaLiveView({
         <div className="live-view-outcome live-view-outcome--fail" role="alert" data-testid="nauta-live-failed">
           <span className="live-outcome-badge">Falló</span>
           {run.failureCause ? <p className="live-failure-cause mono">{run.failureCause}</p> : null}
+          {run.artifacts ? (
+            <NautaRunDeliverables artifacts={run.artifacts} showLastStepSummary />
+          ) : null}
         </div>
       ) : null}
 

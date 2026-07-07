@@ -35,6 +35,15 @@ export function mapApiStatusToCatalog(status: string): NautaCatalogStatus | unde
   return API_STATUS_MAP[status.toLowerCase()];
 }
 
+/** Resolved allows_freeform — API overrides catalog. */
+export function resolveAllowsFreeform(
+  catalog: Pick<NautaCatalogEntry, "allows_freeform">,
+  api?: Pick<NautaEmployee, "allows_freeform">,
+): boolean {
+  if (typeof api?.allows_freeform === "boolean") return api.allows_freeform;
+  return Boolean(catalog.allows_freeform);
+}
+
 /** Merge API employees with catalog metadata — catalog is display source of truth. */
 export function enrichEmployees(apiEmployees: NautaEmployee[]): NautaEnrichedEmployee[] {
   const byRole = new Map(apiEmployees.map((e) => [e.role_id, e]));
@@ -47,6 +56,7 @@ export function enrichEmployees(apiEmployees: NautaEmployee[]): NautaEnrichedEmp
       role_name: api?.role_name?.trim() || catalog.role_name,
       department_id: api?.department_id?.trim() || catalog.department_id,
       catalog_status: mappedStatus ?? catalog.catalog_status,
+      allows_freeform: resolveAllowsFreeform(catalog, api),
       api_id: api?.id,
       api_status: api?.status,
     };
