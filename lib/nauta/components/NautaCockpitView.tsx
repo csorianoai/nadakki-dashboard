@@ -13,6 +13,7 @@ import { PisoView } from "./v2/views/PisoView";
 import { TableroView } from "./v2/views/TableroView";
 import { ExpedienteE1View } from "./v2/views/ExpedienteE1View";
 import { ExpedienteE2View } from "./v2/views/ExpedienteE2View";
+import { ExpedienteE16View } from "./v2/views/ExpedienteE16View";
 import { SupervisionView } from "./v2/views/SupervisionView";
 
 export function NautaCockpitView({
@@ -88,6 +89,7 @@ export function NautaCockpitView({
               mode={pisoMode}
               onModeChange={setPisoMode}
               onOpenExpediente={openExpediente}
+              onOpenSupervision={() => navigate("super")}
             />
           </section>
 
@@ -101,6 +103,10 @@ export function NautaCockpitView({
 
           <section className={`view${view === "expediente-e2" ? " on" : ""}`} aria-hidden={view !== "expediente-e2"}>
             <ExpedienteE2View />
+          </section>
+
+          <section className={`view${view === "expediente-e16" ? " on" : ""}`} aria-hidden={view !== "expediente-e16"}>
+            <ExpedienteE16View onOpenSupervision={() => navigate("super")} />
           </section>
 
           <section className={`view${view === "super" ? " on" : ""}`} aria-hidden={view !== "super"}>
