@@ -1,8 +1,9 @@
 /**
  * Nauta Fase C-LIVE — POST/GET /api/v1/nauta/runs via apiFetch (Bearer JWT only).
- * Contract: nadakki-ai-suite docs/NAUTA_FASE_C_LIVE_REPORTE.md
+ * Contract: nadakki-ai-suite docs/NAUTA_FASE_C_LIVE_REPORTE.md + feat/nauta-freeform-e16
  */
 import { apiFetch } from "@/lib/api/fetch-client";
+import type { NautaRunArtifacts } from "./types";
 
 const NAUTA_RUNS = "/api/v1/nauta/runs";
 
@@ -13,6 +14,7 @@ export interface NautaLiveRunCreateBody {
   mode: "live";
   engine_requested?: NautaLiveEngineRequested;
   target_url?: string;
+  task_instruction?: string;
   dry_run: false;
 }
 
@@ -28,7 +30,7 @@ export interface NautaLiveRunCreateResponse {
 
 export interface NautaLivePollResponse {
   id: string;
-  status: "running" | "completed" | "failed" | "blocked" | string;
+  status: "running" | "completed" | "failed" | "blocked" | "pending_approval" | string;
   success?: boolean | null;
   exit_code?: number | null;
   failure_cause?: string | null;
@@ -40,14 +42,29 @@ export interface NautaLivePollResponse {
   findings_count?: number;
   live_view_url?: string | null;
   evidence?: unknown[];
+  artifacts?: NautaRunArtifacts | null;
 }
 
-function parseDetail(body: unknown): string {
+function extractDetailString(body: unknown): string {
   if (typeof body === "string" && body.trim()) return body;
-  if (body && typeof body === "object") {
-    const o = body as Record<string, unknown>;
-    if (typeof o.detail === "string") return o.detail;
+  if (!body || typeof body !== "object") return "";
+  const o = body as Record<string, unknown>;
+  if (typeof o.detail === "string") return o.detail;
+  if (Array.isArray(o.detail)) {
+    const parts = o.detail
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          const row = item as Record<string, unknown>;
+          if (typeof row.msg === "string") return row.msg;
+          if (typeof row.type === "string") return row.type;
+        }
+        return "";
+      })
+      .filter(Boolean);
+    return parts.join("; ");
   }
+  if (typeof o.message === "string") return o.message;
   return "";
 }
 
@@ -67,13 +84,10 @@ export async function createLiveRun(body: NautaLiveRunCreateBody): Promise<Nauta
     method: "POST",
     body: JSON.stringify(body),
   });
-  const data = (await response.json().catch(() => ({}))) as NautaLiveRunCreateResponse & { detail?: string };
+  const data = (await response.json().catch(() => ({}))) as NautaLiveRunCreateResponse & { detail?: unknown };
   if (!response.ok) {
-    throw new NautaLiveRunError(
-      parseDetail(data) || response.statusText,
-      response.status,
-      parseDetail(data),
-    );
+    const detail = extractDetailString(data);
+    throw new NautaLiveRunError(detail || response.statusText, response.status, detail);
   }
   return data;
 }
@@ -82,13 +96,10 @@ export async function pollLiveRun(runId: string): Promise<NautaLivePollResponse>
   const response = await apiFetch(`${NAUTA_RUNS}/${encodeURIComponent(runId)}`, {
     method: "GET",
   });
-  const data = (await response.json().catch(() => ({}))) as NautaLivePollResponse & { detail?: string };
+  const data = (await response.json().catch(() => ({}))) as NautaLivePollResponse & { detail?: unknown };
   if (!response.ok) {
-    throw new NautaLiveRunError(
-      parseDetail(data) || response.statusText,
-      response.status,
-      parseDetail(data),
-    );
+    const detail = extractDetailString(data);
+    throw new NautaLiveRunError(detail || response.statusText, response.status, detail);
   }
   return data;
 }
