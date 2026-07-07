@@ -14,3 +14,8 @@ export function isNautaSupervisor(
 export function runRequiresApproval(status: string): boolean {
   return status === "pending_approval" || status === "awaiting_human_review";
 }
+
+/** Same role source as NautaRail badge: `activeRole` from useAuth. */
+export function isPlatformSuperadmin(activeRole: { role_key: string } | null): boolean {
+  return activeRole?.role_key === "platform_superadmin";
+}

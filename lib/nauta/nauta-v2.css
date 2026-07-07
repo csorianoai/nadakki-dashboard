@@ -2232,3 +2232,32 @@
   color: var(--on-live-soft);
 }
 
+.nauta-v2 .run-report-pending {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.nauta-v2 .nauta-view-error {
+  margin: 24px;
+  padding: 28px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  max-width: 520px;
+}
+
+.nauta-v2 .nauta-view-error-title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: var(--t0);
+}
+
+.nauta-v2 .nauta-view-error-body {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--t1);
+}
+
