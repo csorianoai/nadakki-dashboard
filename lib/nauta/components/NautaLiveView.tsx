@@ -133,10 +133,17 @@ export function NautaLiveView({
         setPollError(null);
         return mapPollStatus(data.status);
       } catch (err) {
+        const message =
+          err instanceof NautaLiveRunError
+            ? err.detail || err.message
+            : err instanceof Error
+              ? err.message
+              : "Error de polling";
         if (err instanceof NautaLiveRunError && err.status === 403) {
           setBanner(resolveLiveRun403Banner(err.detail));
+          setRun((prev) => ({ ...prev, status: "blocked", failureCause: message }));
         } else {
-          setPollError(err instanceof Error ? err.message : "Error de polling");
+          setRun((prev) => ({ ...prev, status: "failed", failureCause: message }));
         }
         stopTimers();
         return "failed" as const;
@@ -160,7 +167,8 @@ export function NautaLiveView({
       const tick = async () => {
         pollAttemptsRef.current += 1;
         if (pollAttemptsRef.current > NAUTA_LIVE_MAX_POLL_ATTEMPTS) {
-          setPollError("Tiempo máximo de espera alcanzado (10 minutos)");
+          const message = "Tiempo máximo de espera alcanzado (10 minutos)";
+          setRun((prev) => ({ ...prev, status: "failed", failureCause: message }));
           stopTimers();
           return;
         }
@@ -238,6 +246,11 @@ export function NautaLiveView({
           <span className="live-view-label">Ejecución live</span>
           <span className="live-view-tenant">{institutionLabel}</span>
           <span className="live-view-task mono">{taskName}</span>
+          {run.runId ? (
+            <span className="live-view-run-id mono" data-testid="nauta-live-run-id">
+              {run.runId}
+            </span>
+          ) : null}
         </div>
         <button
           type="button"
@@ -262,7 +275,7 @@ export function NautaLiveView({
         </div>
       ) : null}
 
-      {pollError ? (
+      {pollError && run.status === "idle" ? (
         <p className="live-view-error" role="alert">
           {pollError}
         </p>
