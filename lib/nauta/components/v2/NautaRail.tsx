@@ -10,7 +10,7 @@ import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { S } from "@/lib/nauta/strings";
 import type { PisoMode } from "./SegmentedControl";
 
-export type NautaViewId = "piso" | "tablero" | "expediente" | "expediente-e2" | "super";
+export type NautaViewId = "piso" | "tablero" | "expediente" | "expediente-e2" | "expediente-e16" | "super";
 
 function resolveUserDisplayName(name: string | undefined, email: string | undefined): string {
   const trimmed = name?.trim();
