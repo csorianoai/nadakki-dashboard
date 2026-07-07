@@ -40,6 +40,8 @@ export interface NautaLivePollResponse {
   estimated_tokens?: number;
   estimated_cost_usd?: number;
   findings_count?: number;
+  step_count?: number;
+  completed_at?: string;
   live_view_url?: string | null;
   evidence?: unknown[];
   artifacts?: NautaRunArtifacts | null;
