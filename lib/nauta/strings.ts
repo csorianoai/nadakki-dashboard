@@ -74,6 +74,13 @@ export const S = {
     outputMissing: "Sin output en la respuesta del servidor.",
     iframeEnded: "Sesión del navegador finalizada. Mostrando reporte del agente.",
     gapTitle: "GAP BACKEND — campos ausentes en GET /api/v1/nauta/runs/{id}:",
+    outputPending: "El reporte estará disponible en breve.",
+    retryReport: "Reintentar carga del reporte",
+  },
+  viewError: {
+    title: "Algo falló al mostrar esta vista",
+    body: "Ocurrió un error inesperado. Puede volver al Piso de operaciones e intentar de nuevo.",
+    backToPiso: "Volver al Piso",
   },
   kpi: {
     hoursSaved: "Horas ahorradas · mes",

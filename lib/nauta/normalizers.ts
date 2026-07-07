@@ -9,6 +9,7 @@ import type {
   NautaRunsListResponse,
   NautaTemplate,
 } from "./types";
+import { sanitizeRunArtifacts } from "./safeValues";
 
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
@@ -158,17 +159,7 @@ function normalizeCost(raw: unknown): NautaRunCost {
 }
 
 export function normalizeRunArtifacts(raw: unknown): NautaRunArtifacts | null {
-  const o = asRecord(raw);
-  if (!o) return null;
-  const recordingRaw = o.recordingUrls ?? o.recording_urls;
-  const recordingUrls = asArray(recordingRaw)
-    .map((u) => str(u))
-    .filter((u) => u.length > 0);
-  const screenshotUrl = str(o.screenshotUrl ?? o.screenshot_url) || null;
-  const output = str(o.output) || null;
-  const lastStepSummary = str(o.lastStepSummary ?? o.last_step_summary) || null;
-  if (!recordingUrls.length && !screenshotUrl && !output && !lastStepSummary) return null;
-  return { recordingUrls, screenshotUrl, output, lastStepSummary };
+  return sanitizeRunArtifacts(raw);
 }
 
 export function normalizeRunDetail(raw: unknown): NautaRunDetail | null {

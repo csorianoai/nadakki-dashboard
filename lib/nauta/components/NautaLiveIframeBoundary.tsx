@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { logNautaViewError } from "@/lib/nauta/safeValues";
 import { S } from "@/lib/nauta/strings";
 
 interface Props {
@@ -20,7 +21,8 @@ export class NautaLiveIframeBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(_error: Error, _info: ErrorInfo): void {
+  componentDidCatch(error: Error, info: ErrorInfo): void {
+    logNautaViewError("iframe-boundary", error, { componentStack: info.componentStack });
     this.props.onIframeFault?.();
   }
 

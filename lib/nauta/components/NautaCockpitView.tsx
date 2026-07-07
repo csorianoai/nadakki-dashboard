@@ -15,6 +15,7 @@ import { ExpedienteE1View } from "./v2/views/ExpedienteE1View";
 import { ExpedienteE2View } from "./v2/views/ExpedienteE2View";
 import { ExpedienteE16View } from "./v2/views/ExpedienteE16View";
 import { SupervisionView } from "./v2/views/SupervisionView";
+import { NautaViewErrorBoundary } from "./NautaViewErrorBoundary";
 
 export function NautaCockpitView({
   initialPisoMode,
@@ -81,37 +82,39 @@ export function NautaCockpitView({
       <div className="main">
         <NautaHeader view={view} />
         <div className="scroll" ref={scrollRef}>
-          {showKpis ? <NautaKpiHeader summary={summary} /> : null}
+          <NautaViewErrorBoundary scope="cockpit" onReset={() => navigate("piso")}>
+            {showKpis ? <NautaKpiHeader summary={summary} /> : null}
 
-          <section className={`view${view === "piso" ? " on" : ""}`} aria-hidden={view !== "piso"}>
-            <PisoView
-              employees={employees}
-              mode={pisoMode}
-              onModeChange={setPisoMode}
-              onOpenExpediente={openExpediente}
-              onOpenSupervision={() => navigate("super")}
-            />
-          </section>
+            <section className={`view${view === "piso" ? " on" : ""}`} aria-hidden={view !== "piso"}>
+              <PisoView
+                employees={employees}
+                mode={pisoMode}
+                onModeChange={setPisoMode}
+                onOpenExpediente={openExpediente}
+                onOpenSupervision={() => navigate("super")}
+              />
+            </section>
 
-          <section className={`view${view === "tablero" ? " on" : ""}`} aria-hidden={view !== "tablero"}>
-            <TableroView hoursSaved={summary.hours_saved} />
-          </section>
+            <section className={`view${view === "tablero" ? " on" : ""}`} aria-hidden={view !== "tablero"}>
+              <TableroView hoursSaved={summary.hours_saved} />
+            </section>
 
-          <section className={`view${view === "expediente" ? " on" : ""}`} aria-hidden={view !== "expediente"}>
-            <ExpedienteE1View />
-          </section>
+            <section className={`view${view === "expediente" ? " on" : ""}`} aria-hidden={view !== "expediente"}>
+              <ExpedienteE1View />
+            </section>
 
-          <section className={`view${view === "expediente-e2" ? " on" : ""}`} aria-hidden={view !== "expediente-e2"}>
-            <ExpedienteE2View />
-          </section>
+            <section className={`view${view === "expediente-e2" ? " on" : ""}`} aria-hidden={view !== "expediente-e2"}>
+              <ExpedienteE2View />
+            </section>
 
-          <section className={`view${view === "expediente-e16" ? " on" : ""}`} aria-hidden={view !== "expediente-e16"}>
-            <ExpedienteE16View onOpenSupervision={() => navigate("super")} />
-          </section>
+            <section className={`view${view === "expediente-e16" ? " on" : ""}`} aria-hidden={view !== "expediente-e16"}>
+              <ExpedienteE16View onOpenSupervision={() => navigate("super")} />
+            </section>
 
-          <section className={`view${view === "super" ? " on" : ""}`} aria-hidden={view !== "super"}>
-            <SupervisionView pendingCount={pendingCount} onPendingChange={setPendingCount} />
-          </section>
+            <section className={`view${view === "super" ? " on" : ""}`} aria-hidden={view !== "super"}>
+              <SupervisionView pendingCount={pendingCount} onPendingChange={setPendingCount} />
+            </section>
+          </NautaViewErrorBoundary>
         </div>
       </div>
     </div>
