@@ -9,6 +9,7 @@ const VIEW_TITLES: Record<NautaViewId, string> = {
   tablero: S.views.tablero,
   expediente: S.views.expedienteE1,
   "expediente-e2": S.views.expedienteE2,
+  "expediente-e16": S.views.expedienteE16,
   super: S.views.super,
 };
 
