@@ -24,18 +24,24 @@ function cardClass(status: NautaCatalogStatus, isStar: boolean, clickable: boole
 export function EmployeeCard({
   employee,
   onOpenExpediente,
+  selectedRoleId,
+  onSelectForLive,
 }: {
   employee: NautaEnrichedEmployee;
   onOpenExpediente?: (view: NautaExpedienteView) => void;
+  selectedRoleId?: string | null;
+  onSelectForLive?: (roleId: string) => void;
 }) {
-  const { role_id, role_name, department_id, catalog_status, risk_level, supervisor, live_line, is_star, expediente } =
+  const { role_id, role_name, department_id, catalog_status, risk_level, supervisor, live_line, is_star, expediente, allows_freeform } =
     employee;
   const cta = CTA[catalog_status];
   const clickable = Boolean(expediente && onOpenExpediente);
+  const isSelectedForLive = selectedRoleId === role_id;
+  const canSelectForLive = Boolean(allows_freeform && onSelectForLive);
 
   return (
     <div
-      className={cardClass(catalog_status, Boolean(is_star), clickable)}
+      className={`${cardClass(catalog_status, Boolean(is_star), clickable)}${isSelectedForLive ? " emp-live-selected" : ""}`}
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
       onClick={(ev) => {
@@ -80,8 +86,33 @@ export function EmployeeCard({
       ) : null}
       {cta ? (
         <div className="emp-cta">
+          {canSelectForLive ? (
+            <button
+              type="button"
+              className={`btn${isSelectedForLive ? " primary" : ""}`.trim()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectForLive?.(role_id);
+              }}
+            >
+              {isSelectedForLive ? S.taskComposer.selectedForLive : S.taskComposer.selectForLive}
+            </button>
+          ) : null}
           <button type="button" className={`btn ${cta.variant}`.trim()} onClick={(e) => e.stopPropagation()}>
             {cta.label}
+          </button>
+        </div>
+      ) : canSelectForLive ? (
+        <div className="emp-cta">
+          <button
+            type="button"
+            className={`btn${isSelectedForLive ? " primary" : ""}`.trim()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectForLive?.(role_id);
+            }}
+          >
+            {isSelectedForLive ? S.taskComposer.selectedForLive : S.taskComposer.selectForLive}
           </button>
         </div>
       ) : null}
