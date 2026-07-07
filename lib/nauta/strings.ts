@@ -31,7 +31,24 @@ export const S = {
     tablero: "Tablero",
     expedienteE1: "Expediente · E1 Verificador KYC",
     expedienteE2: "Expediente · E2 Analista de Listas 155-17",
+    expedienteE16: "Expediente · E16 Operador de Tareas Libres",
     super: "Centro de supervisión",
+  },
+  taskComposer: {
+    label: "Asignar tarea",
+    placeholder: "Describe la tarea en tus palabras…",
+    counter: (n: number, max: number) => `${n} / ${max}`,
+    selectForLive: "Usar en ejecución live",
+    selectedForLive: "Seleccionado para ejecución live",
+  },
+  live: {
+    pendingApproval: "Esperando aprobación del supervisor",
+    pendingApprovalLink: "Centro de supervisión",
+    deliverablesTitle: "Entregables",
+    recording: "Grabación",
+    screenshot: "Captura final",
+    output: "Resultado",
+    lastStepSummary: "Resumen del último paso",
   },
   kpi: {
     hoursSaved: "Horas ahorradas · mes",
@@ -224,6 +241,16 @@ export const S = {
       "Observe el cribado contra OFAC, ONU y listas locales en tiempo real, con cada coincidencia sellada al instante.",
     lockchip: "◈ Candado de supervisión · derivado a Lic. C. Disla",
   },
+  expedienteE16: {
+    title: "Operador de Tareas Libres",
+    code: "E16 · Departamento de Operaciones (D4)",
+    tagListo: "Listo · instrucciones libres",
+    tagSupervisor: (name: string) => `Supervisado por ${name}`,
+    profileTitle: "Perfil del rol",
+    profileBody:
+      "Recibe instrucciones en lenguaje natural y las ejecuta en el navegador con evidencia sellada. Ideal para tareas ad hoc que no encajan en una plantilla fija.",
+    liveTitle: "Ver trabajar en vivo",
+  },
   super: {
     bannerTitle: "El humano siempre tiene la última palabra",
     bannerBody:
@@ -294,6 +321,7 @@ export const ROLE_NAMES: Record<string, string> = {
   E13: "Triage de Inbox Operativo",
   E14: "Preparador de Reportería Regulatoria",
   E15: "Monitor de Reputación y Cumplimiento Publicitario",
+  E16: "Operador de Tareas Libres",
 };
 
 export const SUPERVISORS: Record<string, string> = {
