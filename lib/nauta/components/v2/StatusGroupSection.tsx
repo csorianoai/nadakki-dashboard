@@ -18,10 +18,14 @@ export function StatusGroupSection({
   status,
   employees,
   onOpenExpediente,
+  selectedRoleId,
+  onSelectForLive,
 }: {
   status: NautaCatalogStatus;
   employees: NautaEnrichedEmployee[];
   onOpenExpediente?: (view: NautaExpedienteView) => void;
+  selectedRoleId?: string | null;
+  onSelectForLive?: (roleId: string) => void;
 }) {
   if (employees.length === 0) return null;
   const meta = GROUP_META[status];
@@ -35,7 +39,13 @@ export function StatusGroupSection({
       </div>
       <div className="grid">
         {employees.map((e) => (
-          <EmployeeCard key={e.role_id} employee={e} onOpenExpediente={onOpenExpediente} />
+          <EmployeeCard
+            key={e.role_id}
+            employee={e}
+            onOpenExpediente={onOpenExpediente}
+            selectedRoleId={selectedRoleId}
+            onSelectForLive={onSelectForLive}
+          />
         ))}
       </div>
     </div>
@@ -45,9 +55,13 @@ export function StatusGroupSection({
 export function StatusGroupedSections({
   employees,
   onOpenExpediente,
+  selectedRoleId,
+  onSelectForLive,
 }: {
   employees: NautaEnrichedEmployee[];
   onOpenExpediente?: (view: NautaExpedienteView) => void;
+  selectedRoleId?: string | null;
+  onSelectForLive?: (roleId: string) => void;
 }) {
   return (
     <>
@@ -57,6 +71,8 @@ export function StatusGroupedSections({
           status={status}
           employees={employees.filter((e) => e.catalog_status === status)}
           onOpenExpediente={onOpenExpediente}
+          selectedRoleId={selectedRoleId}
+          onSelectForLive={onSelectForLive}
         />
       ))}
     </>
