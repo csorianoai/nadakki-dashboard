@@ -11,6 +11,15 @@ export type NautaRunStatus =
   | "rejected"
   | string;
 
+/** NautaLiveView UI lifecycle — includes blocked for 403 live gates. */
+export type NautaLiveViewStatus =
+  | "idle"
+  | "running"
+  | "completed"
+  | "failed"
+  | "blocked"
+  | "pending_approval";
+
 export interface NautaEmployee {
   id: string;
   role_id: string;
