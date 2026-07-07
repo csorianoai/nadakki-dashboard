@@ -6,7 +6,7 @@ import { ROLE_NAMES, SUPERVISORS } from "./strings";
 
 export type NautaCatalogStatus = "prioridad" | "listo" | "laboratorio" | "concepto";
 export type NautaRiskLevelKey = "bajo" | "medio" | "alto" | "critico";
-export type NautaExpedienteView = "expediente" | "expediente-e2";
+export type NautaExpedienteView = "expediente" | "expediente-e2" | "expediente-e16";
 
 export interface NautaCatalogEntry {
   role_id: string;
@@ -18,6 +18,8 @@ export interface NautaCatalogEntry {
   risk_level: NautaRiskLevelKey;
   /** TODO(api): employees[].supervisor_ref resolved to name */
   supervisor: string;
+  /** POST /runs may include task_instruction when true (E16). */
+  allows_freeform?: boolean;
   /** TODO(api): activity feed / status + activity_ref */
   live_line?: string;
   is_star?: boolean;
@@ -164,6 +166,18 @@ export const NAUTA_CATALOG: NautaCatalogEntry[] = [
     risk_level: "bajo",
     supervisor: SUPERVISORS.d5!,
   },
+  {
+    role_id: "E16",
+    department_id: "d4",
+    catalog_status: "listo",
+    role_name: ROLE_NAMES.E16!,
+    risk_level: "medio",
+    supervisor: SUPERVISORS.d4!,
+    allows_freeform: true,
+    live_line: "Acepta instrucciones en lenguaje natural",
+    expediente: "expediente-e16",
+    monthly_cost_dop: 12800,
+  },
 ];
 
 export const DEPT_ORDER = ["d0", "d1", "d2", "d3", "d4", "d5"] as const;
@@ -174,7 +188,7 @@ export const DEPT_COUNTS: Record<string, number> = {
   d1: 4,
   d2: 4,
   d3: 3,
-  d4: 3,
+  d4: 4,
   d5: 1,
 };
 
