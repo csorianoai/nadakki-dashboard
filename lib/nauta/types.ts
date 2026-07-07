@@ -17,6 +17,8 @@ export interface NautaEmployee {
   role_name: string;
   department_id: string;
   status: NautaEmployeeStatus;
+  /** When true, POST /runs may include task_instruction (E16). */
+  allows_freeform?: boolean;
 }
 
 export interface NautaTemplate {
@@ -73,6 +75,14 @@ export interface NautaEvidence {
 export interface NautaRunCost {
   tokens: number;
   cost_usd: number;
+}
+
+/** GET /runs/{id} artifacts — feat/nauta-freeform-e16 */
+export interface NautaRunArtifacts {
+  recordingUrls: string[];
+  screenshotUrl: string | null;
+  output: string | null;
+  lastStepSummary: string | null;
 }
 
 export interface NautaRunDetail extends NautaRunSummary {
