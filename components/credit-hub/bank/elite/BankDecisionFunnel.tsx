@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { BankDashboardAnalytics } from "@/lib/credit-hub/types/bankDecision";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
+import type { DataTruthLevel } from "@/lib/credit-hub/honesty/data-truth";
 
 function buildBankFunnel(analytics: BankDashboardAnalytics | undefined, queue: BankQueueItem[]) {
   const byStatus = analytics?.applications_by_status ?? {};
@@ -35,7 +36,7 @@ export function BankDecisionFunnel({
 }: {
   analytics?: BankDashboardAnalytics;
   queue: BankQueueItem[];
-  truth: "REAL" | "DEMO";
+  truth: DataTruthLevel;
 }) {
   const stages = useMemo(() => buildBankFunnel(analytics, queue), [analytics, queue]);
   const max = Math.max(...stages.map((s) => s.count), 1);

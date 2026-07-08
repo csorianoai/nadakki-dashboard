@@ -35,12 +35,14 @@ export function BankKpiStrip({
   queue,
   pending,
   topQueueCount,
+  analyticsUnavailable,
   onQueueClick,
 }: {
   analytics?: BankDashboardAnalytics;
   queue: BankQueueItem[];
   pending: number;
   topQueueCount: number;
+  analyticsUnavailable?: boolean;
   onQueueClick?: () => void;
 }) {
   const auctionQuery = useAuctionIntel();
@@ -90,24 +92,27 @@ export function BankKpiStrip({
       },
       {
         label: "Tasa de aprobación",
-        value: analytics ? (analytics.approval_rate * 100).toFixed(0) : "—",
-        unit: analytics ? "%" : undefined,
-        truth: "REAL" as const,
-        delta: analytics ? { direction: "up" as const, label: "meta 75%" } : undefined,
+        value: analytics && !analyticsUnavailable ? (analytics.approval_rate * 100).toFixed(0) : "—",
+        unit: analytics && !analyticsUnavailable ? "%" : undefined,
+        truth: analytics && !analyticsUnavailable ? ("REAL" as const) : ("ROADMAP" as const),
+        delta: analytics && !analyticsUnavailable ? { direction: "up" as const, label: "meta 75%" } : undefined,
         icon: Percent,
         accent: true,
-        trendValues: approvalTrend.length ? approvalTrend : undefined,
-        trendDemo: !approvalTrend.length,
+        trendValues: approvalTrend.length && !analyticsUnavailable ? approvalTrend : undefined,
+        trendDemo: !approvalTrend.length || !!analyticsUnavailable,
         trendColor: "var(--ch-success)",
       },
       {
         label: "Tiempo prom. decisión",
-        value: analytics?.avg_decision_time_hours ?? "—",
-        unit: analytics?.avg_decision_time_hours != null ? "h" : undefined,
-        truth: analytics?.avg_decision_time_hours != null ? ("REAL" as const) : ("ROADMAP" as const),
+        value: analyticsUnavailable ? "—" : (analytics?.avg_decision_time_hours ?? "—"),
+        unit: analytics?.avg_decision_time_hours != null && !analyticsUnavailable ? "h" : undefined,
+        truth:
+          analytics?.avg_decision_time_hours != null && !analyticsUnavailable
+            ? ("REAL" as const)
+            : ("ROADMAP" as const),
         delta: { direction: "down" as const, label: "meta ≤ 6 h" },
         icon: Clock,
-        trendDemo: analytics?.avg_decision_time_hours == null,
+        trendDemo: analytics?.avg_decision_time_hours == null || !!analyticsUnavailable,
         trendColor: "var(--ch-bank-accent, var(--ch-info))",
       },
       {
@@ -141,6 +146,7 @@ export function BankKpiStrip({
       evaluatedAmount,
       conversionPct,
       auctionQuery.isError,
+      analyticsUnavailable,
       onQueueClick,
     ],
   );

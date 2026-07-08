@@ -22,9 +22,12 @@ export function BankDashboardView({
   analytics,
   institutionName,
   complianceSummary,
-  isLoading,
-  isError,
-  onRetry,
+  queueLoading,
+  analyticsLoading,
+  queueError,
+  analyticsError,
+  onRetryQueue,
+  onRetryAnalytics,
 }: BankDashboardViewProps) {
   const router = useRouter();
   const [period, setPeriod] = useState<"today" | "week" | "month">("week");
@@ -55,10 +58,10 @@ export function BankDashboardView({
       />
 
       <CHPanelState
-        isLoading={isLoading}
-        isError={isError}
-        onRetry={onRetry}
-        errorTitle="KPIs de mesa no disponibles"
+        isLoading={queueLoading}
+        isError={queueError}
+        onRetry={onRetryQueue}
+        errorTitle="KPIs de cola no disponibles"
         loadingFallback={
           <>
             <KpiStripSkeleton n={7} />
@@ -66,11 +69,33 @@ export function BankDashboardView({
           </>
         }
       >
+        {analyticsError ? (
+          <div
+            role="status"
+            className="ch-card"
+            style={{
+              marginBottom: 12,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "var(--ch-warning-text)",
+              background: "var(--ch-warning-soft)",
+              border: "1px solid var(--ch-warning-line, var(--ch-line))",
+            }}
+          >
+            KPIs de analytics no disponibles — mostrando métricas de cola.{" "}
+            {onRetryAnalytics ? (
+              <button type="button" className="ch-btn ch-btn-sm ch-btn-secondary" onClick={onRetryAnalytics}>
+                Reintentar analytics
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <BankKpiStrip
           analytics={analytics}
           queue={queue}
           pending={pending}
           topQueueCount={topQueue.length}
+          analyticsUnavailable={analyticsError || (!analytics && !analyticsLoading)}
           onQueueClick={() => router.push("/credit-hub/bank/applications")}
         />
       </CHPanelState>
@@ -84,7 +109,13 @@ export function BankDashboardView({
       <hr className="ch-section-break" aria-hidden />
 
       <CHPanelBoundary label="Cola de decisión">
-        <CHPanelState isLoading={isLoading} loadingFallback={<TableSkeleton rows={4} />}>
+        <CHPanelState
+          isLoading={queueLoading}
+          isError={queueError}
+          onRetry={onRetryQueue}
+          errorTitle="Bandeja no disponible"
+          loadingFallback={<TableSkeleton rows={4} />}
+        >
           <BankDecisionQueueSpotlight
             items={topQueue}
             pending={pending}

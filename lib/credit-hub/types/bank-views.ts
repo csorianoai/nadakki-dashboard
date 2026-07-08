@@ -83,9 +83,12 @@ export interface BankDashboardViewProps {
   analytics?: BankDashboardAnalytics;
   institutionName: string;
   complianceSummary?: string;
-  isLoading?: boolean;
-  isError?: boolean;
-  onRetry?: () => void;
+  queueLoading?: boolean;
+  analyticsLoading?: boolean;
+  queueError?: boolean;
+  analyticsError?: boolean;
+  onRetryQueue?: () => void;
+  onRetryAnalytics?: () => void;
 }
 
 export interface BankApplicationsTableProps {

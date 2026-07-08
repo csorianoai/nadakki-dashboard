@@ -4,23 +4,15 @@ import { BankRankingTable } from "@/components/credit-hub/elite/BankRankingTable
 import { CHPanelState } from "@/components/credit-hub/system/CHPanelState";
 import { useBanksRanking } from "@/lib/credit-hub/hooks/useBanksRanking";
 import { isAnalyticsUnavailable } from "@/lib/credit-hub/hooks/analyticsQueryOptions";
-import type { BankRankingRow } from "@/lib/credit-hub/types/analytics";
 import type { DataTruthLevel } from "@/lib/credit-hub/honesty/data-truth";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
-
-const DEMO_BANKS: BankRankingRow[] = [
-  { lender_code: "banco_popular_dr", offer_count: 18, approval_rate: 0.52, avg_apr: 0.117, avg_response_hours: 4.2 },
-  { lender_code: "banreservas", offer_count: 41, approval_rate: 0.64, avg_apr: 0.113, avg_response_hours: 2.4 },
-  { lender_code: "scotiabank_dr", offer_count: 22, approval_rate: 0.58, avg_apr: 0.121, avg_response_hours: 3.1 },
-  { lender_code: "banco_bhd", offer_count: 34, approval_rate: 0.71, avg_apr: 0.109, avg_response_hours: 1.8 },
-];
 
 export function BankRanking() {
   const query = useBanksRanking();
   const unavailable = isAnalyticsUnavailable(query.error);
   const hasReal = !!query.data?.banks?.length && !query.isError;
-  const truth: DataTruthLevel = hasReal ? "REAL" : unavailable ? "ROADMAP" : "DEMO";
-  const rows = hasReal ? query.data!.banks : unavailable ? [] : DEMO_BANKS;
+  const truth: DataTruthLevel = hasReal ? "REAL" : "ROADMAP";
+  const rows = hasReal ? query.data!.banks : [];
   const sorted = [...rows].sort((a, b) => (b.approval_rate ?? 0) - (a.approval_rate ?? 0));
   const leader = sorted[0]?.lender_code;
 
@@ -41,17 +33,15 @@ export function BankRanking() {
 
       <CHPanelState
         isLoading={query.isLoading && query.isFetching}
-        isUnavailable={unavailable}
-        unavailableTitle="Ranking por banco no conectado"
-        unavailableDescription="El endpoint banks-ranking aún no está disponible. No mostramos datos ilustrativos como si fueran reales."
+        isError={query.isError && !hasReal && !unavailable}
+        isUnavailable={unavailable || (!hasReal && !query.isLoading && !query.isError)}
+        unavailableTitle="Ranking por banco no disponible"
+        unavailableDescription="El endpoint banks-ranking no devolvió datos. Sin números ilustrativos."
+        onRetry={() => void query.refetch()}
+        errorTitle="Error al cargar ranking de bancos"
         loadingLabel="Cargando ranking de bancos…"
       >
-        {query.isError && !hasReal && !unavailable ? (
-          <p style={{ fontSize: 11, color: "var(--ch-text-3)", marginBottom: 8 }}>
-            Fallback ilustrativo — el servicio no respondió tras reintentos.
-          </p>
-        ) : null}
-        <BankRankingTable rows={sorted} truth={truth} leaderCode={leader} showRank />
+        {hasReal ? <BankRankingTable rows={sorted} truth={truth} leaderCode={leader} showRank /> : null}
       </CHPanelState>
     </div>
   );
