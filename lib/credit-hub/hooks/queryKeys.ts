@@ -38,4 +38,6 @@ export const chKeys = {
     ["credit-hub", "analytics", "auction-intel", tenantId, lenderCode ?? null] as const,
   dashboardSummary: (tenantId: string) =>
     ["credit-hub", "dashboard-summary", tenantId] as const,
+  monthlyGoals: (tenantId: string, period: string, roleScope: string) =>
+    ["credit-hub", "goals", "monthly", tenantId, period, roleScope] as const,
 };
