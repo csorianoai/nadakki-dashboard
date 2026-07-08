@@ -5,6 +5,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { CHPortalAccessGuard } from "@/components/credit-hub/system/CHPortalAccessGuard";
 import { ChAppShell } from "@/components/credit-hub/shell/ChAppShell";
+import { ChTopbar } from "@/components/credit-hub/shell/ChTopbar";
+import { useNotifications } from "@/lib/credit-hub/hooks/useNotifications";
 import { CH_NAV, ChSidebar } from "@/components/credit-hub/shell/ChSidebar";
 import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
 import {
@@ -85,6 +87,8 @@ export function DealerChShell({ children }: { children: ReactNode }) {
     if (href) router.push(href);
   };
 
+  const notif = useNotifications();
+
   if (inWizard) {
     return <div className="credit-hub-forge" data-persona="dealer">{children}</div>;
   }
@@ -93,12 +97,23 @@ export function DealerChShell({ children }: { children: ReactNode }) {
     <CHTenantGuard>
       <CHPortalAccessGuard portal="dealer">
         <ChAppShell
-      persona="dealer"
-      mode={isMobile ? "mobile" : "desktop"}
-      tenantName={tenantConfig.institution_name}
-      trail={trail}
-      user={{ name: identity.name, initials: identity.initials }}
-      userEmail={identity.email}
+          persona="dealer"
+          mode={isMobile ? "mobile" : "desktop"}
+          tenantName={tenantConfig.institution_name}
+          trail={trail}
+          user={{ name: identity.name, initials: identity.initials }}
+          userEmail={identity.email}
+          topbar={
+            <ChTopbar
+              trail={trail}
+              tenantName={tenantConfig.institution_name}
+              user={{ name: identity.name, initials: identity.initials }}
+              userEmail={identity.email}
+              notifications={notif.items}
+              notif={notif.unreadCount}
+              showNotificationsBell={!notif.hidden}
+            />
+          }
       sidebar={
         <ChSidebar
           persona="dealer"

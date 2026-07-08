@@ -170,6 +170,7 @@ export function ChTopbar({
   multiTenant = true,
   tenantName,
   notif,
+  showNotificationsBell = true,
   user,
   userEmail,
   notifications,
@@ -185,7 +186,7 @@ export function ChTopbar({
   const resolvedTrail = trail.length ? trail : breadcrumbs?.map((b) => b.label) ?? ["Credit Hub", "Panel"];
   const resolvedUser = user ?? { name: "Usuario", initials: userInitials ?? "—" };
   const resolvedTenantName = tenantName?.trim() ? tenantName : "Institución no disponible";
-  const notifCount = notifications?.length ?? notif ?? 0;
+  const notifCount = notif ?? notifications?.length ?? 0;
   const canSwitchTenant = !!tenants && tenants.length > 0;
   const openSearch = onOpenSearch ?? onSearchClick;
 
@@ -307,38 +308,42 @@ export function ChTopbar({
         ) : null}
 
         <div style={{ position: "relative" }}>
-          <button type="button" className="ch-icon-btn" aria-label="Notificaciones" onClick={() => setMenu(menu === "bell" ? null : "bell")}>
-            <Bell className="h-[17px] w-[17px]" aria-hidden />
-            {notifCount > 0 ? (
-              <span
-                style={{
-                  position: "absolute",
-                  top: 5,
-                  right: 6,
-                  width: 7,
-                  height: 7,
-                  borderRadius: 999,
-                  background: "var(--ch-danger)",
-                  border: "1.5px solid var(--ch-surface)",
-                }}
-              />
-            ) : null}
-          </button>
-          <Dropdown open={menu === "bell"} onClose={() => setMenu(null)} width={280}>
-            <div className="ch-eyebrow" style={{ padding: "6px 10px 4px" }}>
-              Notificaciones · {notifCount}
-            </div>
-            {notifications && notifications.length > 0 ? (
-              notifications.map((n, i) => (
-                <div key={n.id ?? i} style={{ padding: "8px 10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-2)", borderRadius: "var(--ch-r-sm)" }}>
-                  <strong style={{ fontWeight: 600 }}>{n.title}</strong>
-                  {n.body ? <> — {n.body}</> : null}
+          {showNotificationsBell ? (
+            <>
+              <button type="button" className="ch-icon-btn" aria-label="Notificaciones" onClick={() => setMenu(menu === "bell" ? null : "bell")}>
+                <Bell className="h-[17px] w-[17px]" aria-hidden />
+                {notifCount > 0 ? (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 5,
+                      right: 6,
+                      width: 7,
+                      height: 7,
+                      borderRadius: 999,
+                      background: "var(--ch-danger)",
+                      border: "1.5px solid var(--ch-surface)",
+                    }}
+                  />
+                ) : null}
+              </button>
+              <Dropdown open={menu === "bell"} onClose={() => setMenu(null)} width={280}>
+                <div className="ch-eyebrow" style={{ padding: "6px 10px 4px" }}>
+                  Notificaciones · {notifCount}
                 </div>
-              ))
-            ) : (
-              <div style={{ padding: "10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-3)" }}>Sin notificaciones nuevas.</div>
-            )}
-          </Dropdown>
+                {notifications && notifications.length > 0 ? (
+                  notifications.map((n, i) => (
+                    <div key={n.id ?? i} style={{ padding: "8px 10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-2)", borderRadius: "var(--ch-r-sm)" }}>
+                      <strong style={{ fontWeight: 600 }}>{n.title}</strong>
+                      {n.body ? <> — {n.body}</> : null}
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: "10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-3)" }}>Sin notificaciones nuevas.</div>
+                )}
+              </Dropdown>
+            </>
+          ) : null}
         </div>
 
         <div style={{ width: 1, height: 20, background: "var(--ch-line)", margin: "0 6px" }} />
