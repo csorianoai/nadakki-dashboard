@@ -79,4 +79,6 @@ export interface TenantBankingConfig {
   garante_minimum_income_ratio?: number;
   /** Códigos remotos: WHATSAPP, EMAIL, SMS_OTP, SELFIE; legacy: WHATSAPP_LINK, OTP_EMAIL, OTP_SMS. */
   consent_methods_enabled: string[];
+  /** Demo tenant flag from branding/config — only source for DemoModeBanner. */
+  is_demo?: boolean;
 }
