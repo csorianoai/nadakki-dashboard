@@ -771,6 +771,120 @@
   border-color: var(--line-3);
 }
 
+.nauta-v2 .btn.secondary {
+  background: var(--card-2);
+  border-color: var(--line-3);
+  color: var(--t0);
+}
+
+.nauta-v2 .btn.secondary:hover {
+  border-color: var(--accent-line);
+  color: var(--t0);
+}
+
+.nauta-v2 .btn.danger-outline {
+  background: transparent;
+  border-color: var(--risk-crit);
+  color: var(--on-risk-crit);
+}
+
+.nauta-v2 .btn.danger-outline:hover {
+  background: color-mix(in srgb, var(--risk-crit) 12%, transparent);
+  border-color: var(--risk-crit);
+  color: var(--on-risk-crit);
+}
+
+.nauta-v2 .live-view-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nauta-v2 .live-view-breadcrumb {
+  font-size: 11px;
+  color: var(--warn);
+}
+
+.nauta-v2 .live-banner--stall {
+  background: var(--pill-listo-bg);
+  border: 1px solid var(--warn);
+  color: var(--pill-listo-text);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.nauta-v2 .live-banner-inline-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nauta-v2 .live-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--overlay-scrim);
+}
+
+.nauta-v2 .live-modal {
+  width: min(100%, 480px);
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  padding: 18px 18px 16px;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg-0) 55%, transparent);
+}
+
+.nauta-v2 .live-modal--confirm {
+  width: min(100%, 400px);
+}
+
+.nauta-v2 .live-modal-title {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: var(--t0);
+}
+
+.nauta-v2 .live-modal-body {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--t1);
+}
+
+.nauta-v2 .live-modal-error {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--on-risk-crit);
+}
+
+.nauta-v2 .live-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.nauta-v2 .run-report-lineage,
+.nauta-v2 .run-report-note {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--t1);
+  line-height: 1.55;
+}
+
+.nauta-v2 .run-report-note--partial {
+  color: var(--warn);
+}
+
 .nauta-v2 .live-col {
   position: sticky;
   top: 24px;
