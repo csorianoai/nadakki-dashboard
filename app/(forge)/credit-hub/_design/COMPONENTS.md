@@ -701,6 +701,55 @@ import { DateInput } from "@/components/forge";
 
 ---
 
+## DemoModeBanner
+
+**File:** `components/forge/ui/DemoModeBanner.tsx` · **Lines:** 43
+
+**Purpose:** Global Credit Hub demo strip — persistent amber banner **"MODO DEMO — Datos de demostración"** when the active tenant has `is_demo=true` in tenant config/branding. Renders **`null`** when `isDemo` is `false`. Not dismissible; does not block page content. Callers must pass `isDemo` only from `tenantConfig.is_demo === true` (never UUID/slug/env detection).
+
+**Primary props interface:** `DemoModeBannerProps`
+
+```ts
+/** When true, shows persistent demo strip. Must come from tenant config `is_demo` only. */
+isDemo: boolean;
+```
+
+### Variants & states (preview)
+
+Captured from [`/credit-hub/preview`](../preview) — regenerate via `npm run docs:components`.
+
+_No dedicated capture slice yet — use full preview section or add capture mapping in `generate-component-catalog.mjs`._
+
+### DO / DON'T (from Phase 5 polish)
+
+- **DO:** mount once at Credit Hub layout level (`CreditHubLayoutClient`); pass `isDemo={tenantConfig.is_demo === true}` when backend publishes the field; use Forge accent tokens (`--ch-accent-*`).
+- **DON'T:** detect demo tenants by UUID, slug, or env var; make the banner dismissible; show fabricated metrics in demo mode.
+
+### Accessibility
+
+- `role="status"` for the demo indicator (informational, non-blocking).
+- Leading icon is `aria-hidden`; label text communicates state.
+
+### Minimal example
+
+```tsx
+import { DemoModeBanner } from "@/components/forge/ui/DemoModeBanner";
+
+<DemoModeBanner isDemo={tenantConfig.is_demo === true} />
+```
+
+### Related
+
+- [`TENANT_THEMING.md`](./TENANT_THEMING.md) · [`TenantBrandingErrorBanner`](#tenantbrandingerrorbanner)
+- Wired in `app/(forge)/credit-hub/CreditHubLayoutClient.tsx`
+
+### Compose vs extend
+
+- **Compose** at layout shell level only (dealer/bank/monetización portals).
+- **Extend** the primitive only if additional demo copy or actions are required platform-wide (then update preview + this doc).
+
+---
+
 ## Drawer
 
 **File:** `components/forge/ui/Drawer.tsx` Ãƒâ€šÃ‚Â· **Lines:** 98
