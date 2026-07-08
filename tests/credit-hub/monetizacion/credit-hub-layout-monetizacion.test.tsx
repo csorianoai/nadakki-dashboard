@@ -14,6 +14,17 @@ jest.mock("@/components/credit-hub/system/CreditHubI18nBootstrap", () => ({
   CreditHubI18nBootstrap: () => null,
 }));
 
+jest.mock("@/lib/credit-hub/hooks/useTenantConfig", () => ({
+  useTenantConfig: () => ({
+    tenantConfig: { is_demo: false, institution_name: "Test" },
+    loading: false,
+  }),
+}));
+
+jest.mock("@/components/forge/ui/DemoModeBanner", () => ({
+  DemoModeBanner: () => null,
+}));
+
 jest.mock("@/components/forge", () => ({
   ForgeCreditHubAppShell: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="ch-forge-shell">{children}</div>

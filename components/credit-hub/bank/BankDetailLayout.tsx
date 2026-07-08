@@ -16,6 +16,7 @@ import type { BankDetailLayoutProps, BankDocumentPayload, BankReviewPayload } fr
 import { mapBackendRiskLevel } from "@/lib/credit-hub/types/bank-views";
 import type { BankDecisionRequest, BankDecisionTerms, BankDecisionType } from "@/lib/credit-hub/types/bankDecision";
 import { useAuth } from "@/hooks/useAuth";
+import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
 
 function defaultTerms(payload: BankReviewPayload): BankDecisionTerms {
   const analysis = payload.analysis;
@@ -38,6 +39,8 @@ function modeToDecision(mode: DecisionMode): BankDecisionType {
 
 export function BankDetailLayout({ application, compliance, audit, counterOffer }: BankDetailLayoutProps) {
   const { user } = useAuth();
+  const { can: actorCan } = useCreditHubActor();
+  const canDecide = actorCan("create_decision");
   const payload = application.application_payload as BankReviewPayload;
   const applicant = payload.applicant ?? {};
   const financial = payload.financial ?? {};
@@ -213,7 +216,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           </div>
         </div>
 
-        <DecisionPanel amount={amount} term={term} rate={rate} sticky state={panelState} onSubmit={handleSubmit} />
+        <DecisionPanel amount={amount} term={term} rate={rate} sticky state={panelState} canDecide={canDecide} onSubmit={handleSubmit} />
       </div>
     </div>
   );

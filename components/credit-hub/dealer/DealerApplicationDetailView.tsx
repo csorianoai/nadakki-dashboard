@@ -12,6 +12,7 @@ import { CreditCoreApiError, acceptOffer } from "@/lib/credit-hub/api/creditCore
 import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
 import { useApplicationOffers } from "@/lib/credit-hub/hooks/useApplicationOffers";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { chMoneyExact, chScoreBand } from "@/lib/credit-hub/ch-base";
@@ -65,7 +66,9 @@ function stageLabel(status: CreditApplicationStatus): string {
 export function DealerApplicationDetailView({ applicationId }: DealerApplicationDetailViewProps) {
   const router = useRouter();
   const t = useTranslations();
-  const { tenantId } = useTenant();
+  const { apiTenantId } = useTenant();
+  const { can: actorCan } = useCreditHubActor();
+  const canAcceptOffer = actorCan("accept_offer");
   const { tenantConfig } = useTenantConfig();
   const { application: data, events, isLoading, error, refetch } = useCreditApplicationDetail(applicationId);
   const {
@@ -86,13 +89,13 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
 
   const handleAcceptOffer = useCallback(
     async (offerId: string) => {
-      if (!tenantId || acceptState === "loading") return;
+      if (!apiTenantId || acceptState === "loading") return;
       setAcceptingOfferId(offerId);
       setAcceptState("loading");
       setAcceptError(null);
       setAcceptMessage(null);
       try {
-        const result = await acceptOffer({ tenantId, applicationId, offerId });
+        const result = await acceptOffer({ tenantId: apiTenantId, applicationId, offerId });
         setAcceptState("success");
         setConfirmOffer(null);
         const siblings = result.siblings_not_selected;
@@ -115,7 +118,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         );
       }
     },
-    [applicationId, tenantId, acceptState, refetchOffers, refetch]
+    [applicationId, apiTenantId, acceptState, refetchOffers, refetch]
   );
 
   if (isLoading) return <DetailSkeleton />;
@@ -249,6 +252,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
               const isAccepted = offer.status === "accepted";
               const isNotSelected = offer.status === "not_selected" || offer.status === "declined" || (hasAcceptedOffer && !isAccepted);
               const canSelect =
+                canAcceptOffer &&
                 !hasAcceptedOffer &&
                 SELECTABLE_OFFER_STATUSES.has(offer.status) &&
                 offerHasCompleteTerms(offer);

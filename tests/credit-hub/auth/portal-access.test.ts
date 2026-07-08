@@ -1,0 +1,25 @@
+import { roleKeyAllowsPortal, resolveCHActorRole, actorCan } from "@/lib/credit-hub/auth/portal-access";
+
+describe("portal-access", () => {
+  test("dealer portal allows credit_admin", () => {
+    expect(roleKeyAllowsPortal("credit_admin", "dealer")).toBe(true);
+  });
+
+  test("dealer portal blocks bank_analyst", () => {
+    expect(roleKeyAllowsPortal("bank_analyst", "dealer")).toBe(false);
+  });
+
+  test("bank portal allows bank_analyst", () => {
+    expect(roleKeyAllowsPortal("bank_analyst", "bank")).toBe(true);
+  });
+
+  test("bank_analyst cannot accept_offer", () => {
+    const actor = resolveCHActorRole("bank_analyst");
+    expect(actorCan(actor, "create_decision")).toBe(true);
+    expect(actorCan(actor, "accept_offer")).toBe(false);
+  });
+
+  test("credit_admin maps to dealer actor with accept_offer", () => {
+    expect(actorCan(resolveCHActorRole("credit_admin"), "accept_offer")).toBe(true);
+  });
+});

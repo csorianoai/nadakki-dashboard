@@ -23,6 +23,7 @@ export function DecisionPanel({
   state: stateProp = "idle",
   sticky = false,
   className,
+  canDecide = true,
   onSubmit,
 }: DecisionPanelProps) {
   const [mode, setMode] = useState<DecisionMode>("approve");
@@ -184,11 +185,21 @@ export function DecisionPanel({
             </div>
           ) : null}
 
+          {!canDecide ? (
+            <p
+              role="status"
+              data-testid="decision-panel-forbidden"
+              style={{ marginBottom: 12, fontSize: 12.5, color: "var(--ch-text-3)" }}
+            >
+              Tu rol no tiene permiso para registrar decisiones en esta solicitud.
+            </p>
+          ) : null}
+
           <button
             type="button"
             className={`ch-btn ${mode === "reject" ? "ch-btn-danger" : "ch-btn-primary"} ch-btn-lg`}
             style={{ width: "100%", marginTop: 14 }}
-            disabled={state === "loading" || (state !== "error" && justif.trim().length === 0)}
+            disabled={!canDecide || state === "loading" || (state !== "error" && justif.trim().length === 0)}
             onClick={submit}
           >
             {state === "loading" ? (
