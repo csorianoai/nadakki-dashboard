@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { NautaLiveViewStatus } from "@/lib/nauta/types";
+import { RunOutcomeHeader } from "@/lib/nauta/components/RunOutcomeHeader";
 import {
   buildRunReportDownloadText,
   collectBackendGaps,
@@ -11,12 +12,12 @@ import {
   type RunReportInput,
 } from "@/lib/nauta/runReportUtils";
 import { formatNumber } from "@/lib/nauta/format";
-import { resolveRunReportNotes } from "@/lib/nauta/midrunNotes";
+import { isRedirectedParentRun } from "@/lib/nauta/midrunNotes";
 import { isPlatformSuperadmin } from "@/lib/nauta/permissions";
+import { resolveRunOutcome } from "@/lib/nauta/runOutcome";
 import { nautaRunDetailHref, truncateRunId } from "@/lib/nauta/runIdDisplay";
 import {
   coerceFiniteNumber,
-  coerceOutputText,
   coerceString,
   coerceStringArray,
   logNautaViewError,
@@ -51,6 +52,7 @@ function buildSafeReportProps(props: NautaRunReportPanelProps): RunReportInput {
     stepCount: props.stepCount ?? null,
     failureCause: props.failureCause ? coerceString(props.failureCause) : null,
     artifacts: props.artifacts,
+    outcomeCategory: props.outcomeCategory ?? null,
     completedAtIso: coerceString(props.completedAtIso, new Date().toISOString()),
     apiCompletedAt: props.apiCompletedAt,
   };
@@ -93,9 +95,19 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
     logNautaViewError("run-report-panel", error, { runId, field: "collectBackendGaps" });
   }
 
-  const outputText = coerceOutputText(artifacts?.output) ?? "";
-  const lastStepText = coerceString(artifacts?.lastStepSummary).trim();
-  const showLastStep = Boolean(lastStepText);
+  const outcomeModel = useMemo(
+    () =>
+      resolveRunOutcome({
+        status,
+        outcomeCategory: outcomeCategory ?? null,
+        failureCause,
+        output: artifacts?.output,
+        lastStepSummary: artifacts?.lastStepSummary,
+      }),
+    [artifacts?.lastStepSummary, artifacts?.output, failureCause, outcomeCategory, status],
+  );
+
+  const outputText = outcomeModel.outputText ?? "";
   const recordings = coerceStringArray(artifacts?.recordingUrls);
   const screenshotUrl =
     typeof artifacts?.screenshotUrl === "string" && artifacts.screenshotUrl.trim()
@@ -105,17 +117,13 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
   const safeEngine = engineUsed ? coerceString(engineUsed) : null;
   const safeParentRunId =
     typeof parentRunId === "string" && parentRunId.trim() ? parentRunId.trim() : null;
-  const reportNotes = resolveRunReportNotes({
-    status,
-    failureCause,
-    outcomeCategory: outcomeCategory ?? null,
-    output: artifacts?.output,
-  });
+  const showRedirectedParent = isRedirectedParentRun(failureCause, outcomeCategory ?? null);
+
+  const outputToneClass =
+    outcomeModel.visualTone === "caution" ? " run-report-output--caution" : "";
 
   const handleCopy = useCallback(async () => {
-    const text =
-      outputText ||
-      buildRunReportDownloadText(safe, { includeCostMetrics: showCostMetrics });
+    const text = buildRunReportDownloadText(safe, { includeCostMetrics: showCostMetrics });
     try {
       await navigator.clipboard.writeText(text);
       setCopyState("ok");
@@ -125,7 +133,7 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
       setCopyState("fail");
       window.setTimeout(() => setCopyState("idle"), 2500);
     }
-  }, [outputText, safe, showCostMetrics, runId]);
+  }, [safe, showCostMetrics, runId]);
 
   const handleDownload = useCallback(() => {
     try {
@@ -142,11 +150,17 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
     }
   }, [safe, showCostMetrics, runId]);
 
+  const showOutputPending =
+    !outputText &&
+    outcomeModel.variant === "none" &&
+    (status === "completed" || gaps.includes("outcome_text"));
+
   return (
     <section
       className="run-report"
       data-testid="nauta-run-report-panel"
       data-show-cost-metrics={showCostMetrics ? "true" : "false"}
+      data-outcome-variant={outcomeModel.variant}
     >
       {safeParentRunId ? (
         <p className="run-report-lineage" data-testid="nauta-report-lineage">
@@ -157,23 +171,13 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
         </p>
       ) : null}
 
-      {reportNotes.showRedirectedParent ? (
+      {showRedirectedParent ? (
         <p className="run-report-note" data-testid="nauta-report-redirected">
           {S.report.redirectedParent}
         </p>
       ) : null}
 
-      {reportNotes.showPartialStop ? (
-        <p className="run-report-note run-report-note--partial" data-testid="nauta-report-partial-stop">
-          {S.report.stoppedPartial}
-        </p>
-      ) : null}
-
-      {reportNotes.showStoppedNoOutput ? (
-        <p className="run-report-note" role="alert" data-testid="nauta-report-stopped-empty">
-          {S.report.stoppedNoOutput}
-        </p>
-      ) : null}
+      <RunOutcomeHeader model={outcomeModel} />
 
       <div className="run-report-layout">
         <div className="run-report-summary">
@@ -238,11 +242,6 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
               <dd className="mono">{apiCompletedAt ?? completedAtIso}</dd>
             </div>
           </dl>
-          {failureCause ? (
-            <p className="run-report-failure mono" role="alert">
-              {failureCause}
-            </p>
-          ) : null}
         </div>
 
         <div className="run-report-agent">
@@ -272,20 +271,13 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
             </div>
           </div>
 
-          {showLastStep ? (
-            <div className="run-report-block">
-              <span className="run-report-label">{S.live.lastStepSummary}</span>
-              <p className="run-report-summary-text">{lastStepText}</p>
-            </div>
-          ) : null}
-
           <div className="run-report-block">
             <span className="run-report-label">{S.live.output}</span>
             {outputText ? (
-              <pre className="run-report-output mono" tabIndex={0}>
+              <pre className={`run-report-output mono${outputToneClass}`} tabIndex={0}>
                 {outputText}
               </pre>
-            ) : (
+            ) : showOutputPending ? (
               <div className="run-report-pending">
                 <p className="run-report-empty">{S.report.outputPending}</p>
                 {onRetryReport ? (
@@ -300,7 +292,9 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
                   </button>
                 ) : null}
               </div>
-            )}
+            ) : outcomeModel.emptyBody ? (
+              <div className={`run-report-output-empty${outputToneClass}`}>{outcomeModel.emptyBody}</div>
+            ) : null}
           </div>
 
           {recordings.length > 0 ? (
