@@ -90,7 +90,7 @@ export function DealerAppCard({
             {h.secondaryLabel}
           </div>
         </div>
-        <DisplayStatusPill status={app.status} />
+        <DisplayStatusPill status={app.status} displayStatus={app.display_status} />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ch-text-2)" }}>
         <Car className="h-4 w-4 shrink-0" style={{ color: "var(--ch-text-3)" }} aria-hidden />

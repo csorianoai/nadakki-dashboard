@@ -71,6 +71,8 @@ export interface CreditApplication {
   recommendation: string | null;
   created_at: string;
   updated_at: string;
+  /** Server display_status when backend includes it on list/detail payloads. */
+  display_status?: string | null;
   raw: unknown;
 }
 

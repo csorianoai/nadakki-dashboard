@@ -1,8 +1,7 @@
 "use client";
 
 import {
-  DISPLAY_STATUS_LABELS,
-  resolveDisplayStatus,
+  resolveDisplayStatusLabel,
   type DisplayStatus,
 } from "@/lib/credit-hub/honesty/display-status";
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
@@ -17,22 +16,30 @@ const PILL: Record<DisplayStatus, { c: string; bg: string }> = {
   LEGACY: { c: "var(--ch-text-3)", bg: "var(--ch-surface-3)" },
 };
 
+const SERVER_PILL_DEFAULT = { c: "var(--ch-info-text)", bg: "var(--ch-info-soft)" };
+
 export function DisplayStatusPill({
   status,
   backendState,
+  displayStatus,
 }: {
   status: CreditApplicationStatus;
   backendState?: string | null;
+  /** Server-authoritative display_status when present on application payload. */
+  displayStatus?: string | null;
 }) {
-  const key = resolveDisplayStatus(status, backendState);
-  const s = PILL[key];
+  const resolved = resolveDisplayStatusLabel({ displayStatus, status, backendState });
+  const bucket = resolved.source === "legacy" ? (resolved.key as DisplayStatus) : null;
+  const s = bucket && PILL[bucket] ? PILL[bucket] : SERVER_PILL_DEFAULT;
+
   return (
     <span
       className="ch-pill"
       style={{ color: s.c, background: s.bg, height: 22, fontSize: 11 }}
-      data-display-status={key}
+      data-display-status={resolved.key}
+      data-display-source={resolved.source}
     >
-      {DISPLAY_STATUS_LABELS[key]}
+      {resolved.label}
     </span>
   );
 }

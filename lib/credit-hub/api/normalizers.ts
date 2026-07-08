@@ -184,6 +184,9 @@ export function normalizeApplication(raw: unknown): CreditApplication {
     recommendation: pickNullableString(record, ["recommendation"]),
     created_at: createdAt,
     updated_at: updatedAt,
+    display_status:
+      pickNullableString(record, ["display_status", "displayStatus"]) ||
+      pickNullableString(payload, ["display_status", "displayStatus"]),
     raw,
   };
 }

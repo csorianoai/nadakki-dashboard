@@ -41,6 +41,8 @@ export interface DecisionPanelProps {
   className?: string;
   /** When false, decision actions are disabled (role guard). */
   canDecide?: boolean;
+  /** Specific backend error (e.g. OFFER_ROOM_CLOSED). */
+  errorDetail?: string | null;
   onSubmit?: (mode: DecisionMode, justification: string) => void;
 }
 
