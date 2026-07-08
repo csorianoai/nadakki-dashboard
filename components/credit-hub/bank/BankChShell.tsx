@@ -2,6 +2,8 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
+import { CHPortalAccessGuard } from "@/components/credit-hub/system/CHPortalAccessGuard";
 import { ChAppShell } from "@/components/credit-hub/shell/ChAppShell";
 import { ChSidebar } from "@/components/credit-hub/shell/ChSidebar";
 import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
@@ -17,7 +19,9 @@ export function BankChShell({ children }: { children: ReactNode }) {
   const trail = bankTrailForPath(pathname ?? "");
 
   return (
-    <ChAppShell
+    <CHTenantGuard>
+      <CHPortalAccessGuard portal="bank">
+        <ChAppShell
       persona="bank"
       tenantName={tenantConfig.institution_name}
       trail={trail}
@@ -38,5 +42,7 @@ export function BankChShell({ children }: { children: ReactNode }) {
     >
       {children}
     </ChAppShell>
+      </CHPortalAccessGuard>
+    </CHTenantGuard>
   );
 }

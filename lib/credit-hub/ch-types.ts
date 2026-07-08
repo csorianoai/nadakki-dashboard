@@ -39,6 +39,8 @@ export interface DecisionPanelProps {
   state?: DecisionState;
   sticky?: boolean;
   className?: string;
+  /** When false, decision actions are disabled (role guard). */
+  canDecide?: boolean;
   onSubmit?: (mode: DecisionMode, justification: string) => void;
 }
 

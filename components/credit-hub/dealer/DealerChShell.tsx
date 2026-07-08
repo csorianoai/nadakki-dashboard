@@ -2,6 +2,8 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
+import { CHPortalAccessGuard } from "@/components/credit-hub/system/CHPortalAccessGuard";
 import { ChAppShell } from "@/components/credit-hub/shell/ChAppShell";
 import { CH_NAV, ChSidebar } from "@/components/credit-hub/shell/ChSidebar";
 import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
@@ -88,7 +90,9 @@ export function DealerChShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ChAppShell
+    <CHTenantGuard>
+      <CHPortalAccessGuard portal="dealer">
+        <ChAppShell
       persona="dealer"
       mode={isMobile ? "mobile" : "desktop"}
       tenantName={tenantConfig.institution_name}
@@ -109,5 +113,7 @@ export function DealerChShell({ children }: { children: ReactNode }) {
     >
       {children}
     </ChAppShell>
+      </CHPortalAccessGuard>
+    </CHTenantGuard>
   );
 }

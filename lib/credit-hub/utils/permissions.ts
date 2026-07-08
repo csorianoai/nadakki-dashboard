@@ -24,6 +24,7 @@ const MATRIX: Record<CHActorRole, CHAction[] | ["*"]> = {
     "edit_application",
     "route_to_lenders",
     "reject_offer",
+    "accept_offer",
   ],
   bank: [
     "view_application",

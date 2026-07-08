@@ -14,7 +14,7 @@ describe("CHTenantGuard", () => {
   });
 
   test("shows guard when no tenant", () => {
-    mockUseTenant.mockReturnValue({ tenantId: null, tenantSlug: null, loading: false });
+    mockUseTenant.mockReturnValue({ tenantId: null, apiTenantId: null, tenantSlug: null, loading: false });
     render(
       <div data-portal="dealer">
         <CHTenantGuard>Protected</CHTenantGuard>
@@ -26,7 +26,7 @@ describe("CHTenantGuard", () => {
   });
 
   test("renders children when tenant exists", () => {
-    mockUseTenant.mockReturnValue({ tenantId: "tenant-1", tenantSlug: "tenant-1", loading: false });
+    mockUseTenant.mockReturnValue({ tenantId: "tenant-1", apiTenantId: "tenant-1", tenantSlug: "tenant-1", loading: false });
     render(<CHTenantGuard>Protected</CHTenantGuard>);
 
     expect(screen.getByText("Protected")).toBeInTheDocument();
