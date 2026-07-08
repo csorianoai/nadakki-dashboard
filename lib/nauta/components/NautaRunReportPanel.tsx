@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import type { NautaLiveViewStatus } from "@/lib/nauta/types";
@@ -10,7 +11,9 @@ import {
   type RunReportInput,
 } from "@/lib/nauta/runReportUtils";
 import { formatNumber } from "@/lib/nauta/format";
+import { resolveRunReportNotes } from "@/lib/nauta/midrunNotes";
 import { isPlatformSuperadmin } from "@/lib/nauta/permissions";
+import { nautaRunDetailHref, truncateRunId } from "@/lib/nauta/runIdDisplay";
 import {
   coerceFiniteNumber,
   coerceOutputText,
@@ -24,6 +27,8 @@ import { S } from "@/lib/nauta/strings";
 export interface NautaRunReportPanelProps extends RunReportInput {
   engineUsed: string | null;
   findingsCount: number;
+  parentRunId?: string | null;
+  outcomeCategory?: string | null;
   onRetryReport?: () => void;
   isRetryingReport?: boolean;
 }
@@ -57,6 +62,8 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
   const {
     engineUsed,
     findingsCount,
+    parentRunId,
+    outcomeCategory,
     onRetryReport,
     isRetryingReport = false,
   } = props;
@@ -96,6 +103,14 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
       : null;
   const safeFindings = coerceFiniteNumber(findingsCount, 0);
   const safeEngine = engineUsed ? coerceString(engineUsed) : null;
+  const safeParentRunId =
+    typeof parentRunId === "string" && parentRunId.trim() ? parentRunId.trim() : null;
+  const reportNotes = resolveRunReportNotes({
+    status,
+    failureCause,
+    outcomeCategory: outcomeCategory ?? null,
+    output: artifacts?.output,
+  });
 
   const handleCopy = useCallback(async () => {
     const text =
@@ -133,6 +148,33 @@ export function NautaRunReportPanel(props: NautaRunReportPanelProps) {
       data-testid="nauta-run-report-panel"
       data-show-cost-metrics={showCostMetrics ? "true" : "false"}
     >
+      {safeParentRunId ? (
+        <p className="run-report-lineage" data-testid="nauta-report-lineage">
+          {S.report.continuationOf(truncateRunId(safeParentRunId))}{" "}
+          <Link href={nautaRunDetailHref(safeParentRunId)} className="run-report-link">
+            {S.report.viewParentRun}
+          </Link>
+        </p>
+      ) : null}
+
+      {reportNotes.showRedirectedParent ? (
+        <p className="run-report-note" data-testid="nauta-report-redirected">
+          {S.report.redirectedParent}
+        </p>
+      ) : null}
+
+      {reportNotes.showPartialStop ? (
+        <p className="run-report-note run-report-note--partial" data-testid="nauta-report-partial-stop">
+          {S.report.stoppedPartial}
+        </p>
+      ) : null}
+
+      {reportNotes.showStoppedNoOutput ? (
+        <p className="run-report-note" role="alert" data-testid="nauta-report-stopped-empty">
+          {S.report.stoppedNoOutput}
+        </p>
+      ) : null}
+
       <div className="run-report-layout">
         <div className="run-report-summary">
           <h4 className="run-report-heading">{S.report.summaryTitle}</h4>
