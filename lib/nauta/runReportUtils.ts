@@ -152,6 +152,9 @@ export function sanitizeLivePollSnapshot(data: {
   findings_count?: unknown;
   step_count?: unknown;
   completed_at?: unknown;
+  stall_hint?: unknown;
+  parent_run_id?: unknown;
+  outcome_category?: unknown;
   artifacts?: unknown;
 }): {
   durationSeconds: number;
@@ -160,11 +163,24 @@ export function sanitizeLivePollSnapshot(data: {
   findingsCount: number;
   stepCount: number | null;
   apiCompletedAt: string | null;
+  stallHint: boolean;
+  parentRunId: string | null;
+  outcomeCategory: string | null;
   artifacts: NautaRunArtifacts | null;
 } {
   const apiCompletedAt =
     typeof data.completed_at === "string" && data.completed_at.trim()
       ? data.completed_at.trim()
+      : null;
+
+  const parentRunId =
+    typeof data.parent_run_id === "string" && data.parent_run_id.trim()
+      ? data.parent_run_id.trim()
+      : null;
+
+  const outcomeCategory =
+    typeof data.outcome_category === "string" && data.outcome_category.trim()
+      ? data.outcome_category.trim()
       : null;
 
   let artifacts: NautaRunArtifacts | null = null;
@@ -183,6 +199,9 @@ export function sanitizeLivePollSnapshot(data: {
     findingsCount: coerceFiniteNumber(data.findings_count, 0),
     stepCount: coerceOptionalFiniteNumber(data.step_count),
     apiCompletedAt,
+    stallHint: data.stall_hint === true,
+    parentRunId,
+    outcomeCategory,
     artifacts,
   };
 }
