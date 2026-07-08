@@ -44,6 +44,8 @@ export interface NautaLivePollResponse {
   completed_at?: string;
   stall_hint?: boolean;
   parent_run_id?: string | null;
+  outcome_text?: string | null;
+  last_step_summary?: string | null;
   live_view_url?: string | null;
   evidence?: unknown[];
   artifacts?: NautaRunArtifacts | null;
