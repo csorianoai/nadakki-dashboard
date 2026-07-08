@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getApplicationForReview, getAuditTrail, getComplianceReport, getCounterOffer, recordDecision } from "../api/bankClient";
+import { getBankApplicationDetail, getAuditTrail, getComplianceReport, getCounterOffer, recordDecision } from "../api/bankClient";
 import type { BankDecisionRequest } from "../types/bankDecision";
 import { chKeys } from "./queryKeys";
 import { useTenant } from "./useTenant";
@@ -10,7 +10,7 @@ export function useBankApplication(applicationId: string | null | undefined) {
   const { tenantId } = useTenant();
   return useQuery({
     queryKey: chKeys.bankApplication(tenantId ?? "", applicationId ?? ""),
-    queryFn: () => getApplicationForReview({ tenantId: tenantId!, applicationId: applicationId! }),
+    queryFn: () => getBankApplicationDetail({ tenantId: tenantId!, applicationId: applicationId! }),
     enabled: !!tenantId && !!applicationId,
     staleTime: 15_000,
   });
