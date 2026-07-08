@@ -1,5 +1,7 @@
 import type { NautaRunArtifacts } from "@/lib/nauta/types";
 import type { NautaLiveViewStatus } from "@/lib/nauta/types";
+import { formatRunOutcomeSection, resolveRunOutcome } from "@/lib/nauta/runOutcome";
+import { S } from "@/lib/nauta/strings";
 import {
   coerceFiniteNumber,
   coerceOptionalFiniteNumber,
@@ -22,6 +24,7 @@ export interface RunReportInput {
   stepCount: number | null;
   failureCause: string | null;
   artifacts: NautaRunArtifacts | null;
+  outcomeCategory?: string | null;
   /** ISO timestamp — client fallback when API omits completed_at. */
   completedAtIso: string;
   apiCompletedAt: string | null;
@@ -61,6 +64,28 @@ export function collectBackendGaps(input: RunReportInput): string[] {
   return gaps;
 }
 
+/** Merge root outcome_text / last_step_summary with artifacts (GET #516). */
+export function mergePollArtifacts(data: {
+  artifacts?: unknown;
+  outcome_text?: unknown;
+  last_step_summary?: unknown;
+}): NautaRunArtifacts | null {
+  const base = sanitizeRunArtifacts(data.artifacts);
+  const rootOutput = coerceOutputText(data.outcome_text);
+  const rootLastStep =
+    typeof data.last_step_summary === "string" && data.last_step_summary.trim()
+      ? data.last_step_summary.trim()
+      : null;
+
+  const output = coerceOutputText(base?.output) ?? rootOutput;
+  const lastStepSummary = base?.lastStepSummary ?? rootLastStep;
+  const recordingUrls = base?.recordingUrls ?? [];
+  const screenshotUrl = base?.screenshotUrl ?? null;
+
+  if (!output && !lastStepSummary && !recordingUrls.length && !screenshotUrl) return null;
+  return { recordingUrls, screenshotUrl, output, lastStepSummary };
+}
+
 export function buildRunReportDownloadText(
   input: RunReportInput,
   options?: { includeCostMetrics?: boolean },
@@ -93,20 +118,21 @@ export function buildRunReportDownloadText(
       lines.push(`step_count: ${input.stepCount}`);
     }
 
-    if (input.failureCause) {
-      lines.push("", "--- FALLO ---", input.failureCause);
-    }
-
     const artifacts = input.artifacts;
-    const lastStep = coerceString(artifacts?.lastStepSummary).trim();
-    if (lastStep) {
-      lines.push("", "--- LAST STEP SUMMARY ---", lastStep);
+    const outcomeModel = resolveRunOutcome({
+      status: input.status,
+      outcomeCategory: input.outcomeCategory ?? null,
+      failureCause: input.failureCause,
+      output: artifacts?.output,
+      lastStepSummary: artifacts?.lastStepSummary,
+    });
+    const outcomeLines = formatRunOutcomeSection(outcomeModel);
+    if (outcomeLines.length) {
+      lines.push("", S.outcome.evidenceSection, ...outcomeLines);
     }
 
-    const output = coerceOutputText(artifacts?.output);
-    if (output) {
-      lines.push("", "--- AGENT OUTPUT ---", output);
-    }
+    const output = outcomeModel.outputText;
+    lines.push("", S.outcome.outputSection, output ?? S.outcome.outputUnavailable);
 
     const recordings = coerceStringArray(artifacts?.recordingUrls);
     if (recordings.length) {
@@ -155,6 +181,8 @@ export function sanitizeLivePollSnapshot(data: {
   stall_hint?: unknown;
   parent_run_id?: unknown;
   outcome_category?: unknown;
+  outcome_text?: unknown;
+  last_step_summary?: unknown;
   artifacts?: unknown;
 }): {
   durationSeconds: number;
@@ -185,7 +213,7 @@ export function sanitizeLivePollSnapshot(data: {
 
   let artifacts: NautaRunArtifacts | null = null;
   try {
-    artifacts = sanitizeRunArtifacts(data.artifacts);
+    artifacts = mergePollArtifacts(data);
   } catch (error) {
     logNautaViewError("sanitizeLivePollSnapshot", error, {
       field: "artifacts",
