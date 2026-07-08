@@ -24,6 +24,7 @@ export function DecisionPanel({
   sticky = false,
   className,
   canDecide = true,
+  errorDetail,
   onSubmit,
 }: DecisionPanelProps) {
   const [mode, setMode] = useState<DecisionMode>("approve");
@@ -180,7 +181,8 @@ export function DecisionPanel({
             >
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               <div>
-                <strong>Conflicto 409.</strong> Otro analista actualizó esta solicitud.
+                <strong>{errorDetail ? "Sala de ofertas cerrada." : "Conflicto 409."}</strong>{" "}
+                {errorDetail ?? "Otro analista actualizó esta solicitud."}
               </div>
             </div>
           ) : null}

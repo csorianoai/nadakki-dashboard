@@ -54,6 +54,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const decisionMutation = useBankDecision(application.application_id);
   const [tab, setTab] = useState<"analisis" | "documentos" | "audit" | "compliance">("analisis");
   const [panelState, setPanelState] = useState<DecisionState>("idle");
+  const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
   const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
 
   const autoClaimAttempted = useRef(false);
@@ -94,11 +95,17 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
       };
       try {
         await decisionMutation.mutateAsync(body);
+        setDecisionErrorDetail(null);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "";
-        if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
-          setPanelState("error");
+        if (msg.includes("OFFER_ROOM_CLOSED") || msg.toLowerCase().includes("offer_room_closed")) {
+          setDecisionErrorDetail(
+            "La sala de ofertas está cerrada para esta solicitud. No se pueden registrar más decisiones.",
+          );
+        } else if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
+          setDecisionErrorDetail(null);
         }
+        setPanelState("error");
         throw err;
       }
     },
@@ -216,7 +223,16 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           </div>
         </div>
 
-        <DecisionPanel amount={amount} term={term} rate={rate} sticky state={panelState} canDecide={canDecide} onSubmit={handleSubmit} />
+        <DecisionPanel
+          amount={amount}
+          term={term}
+          rate={rate}
+          sticky
+          state={panelState}
+          canDecide={canDecide}
+          errorDetail={decisionErrorDetail}
+          onSubmit={handleSubmit}
+        />
       </div>
     </div>
   );
