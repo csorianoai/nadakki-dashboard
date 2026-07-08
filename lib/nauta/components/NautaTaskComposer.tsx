@@ -8,19 +8,22 @@ export function NautaTaskComposer({
   onChange,
   disabled,
   id = "nauta-task-instruction",
+  label,
 }: {
   value: string;
   onChange: (next: string) => void;
   disabled?: boolean;
   id?: string;
+  label?: string;
 }) {
   const len = value.length;
   const atLimit = len >= NAUTA_TASK_INSTRUCTION_MAX_LENGTH;
+  const labelText = label ?? S.taskComposer.label;
 
   return (
     <div className="task-composer" data-testid="nauta-task-composer">
       <label className="task-composer-label" htmlFor={id}>
-        {S.taskComposer.label}
+        {labelText}
       </label>
       <textarea
         id={id}
