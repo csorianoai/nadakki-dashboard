@@ -100,6 +100,21 @@ export const S = {
     continuationOf: (parentId: string) => `Continuación de la ejecución ${parentId}`,
     viewParentRun: "Ver ejecución anterior",
   },
+  outcome: {
+    completedPartial: "Ejecución detenida por el usuario — resultado parcial.",
+    failedPartialWarning:
+      "⚠ RESULTADO PARCIAL — la tarea no se completó. Los datos siguientes pueden estar incompletos o desactualizados; verifícalos antes de usarlos.",
+    failureCause: (cause: string) => `Causa: ${cause}`,
+    lastStepRegistered: (step: string) => `Último paso registrado: ${step}`,
+    failedNoResults: (cause: string, lastStep: string) => {
+      const base = `La tarea no produjo resultados. Causa: ${cause}.`;
+      return lastStep ? `${base} Último paso: ${lastStep}.` : base;
+    },
+    unknownCause: "desconocida",
+    evidenceSection: "--- ESTADO DEL RESULTADO ---",
+    outputSection: "--- AGENT OUTPUT ---",
+    outputUnavailable: "(sin output disponible)",
+  },
   viewError: {
     title: "Algo falló al mostrar esta vista",
     body: "Ocurrió un error inesperado. Puede volver al Piso de operaciones e intentar de nuevo.",
