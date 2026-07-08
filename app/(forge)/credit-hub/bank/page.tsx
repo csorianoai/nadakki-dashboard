@@ -28,12 +28,12 @@ export default function BankDashboardPage() {
         analytics={analyticsQuery.data}
         institutionName={tenantConfig.institution_name}
         complianceSummary={complianceSummary}
-        isLoading={queueQuery.isLoading || analyticsQuery.isLoading}
-        isError={!!queueQuery.error || !!analyticsQuery.error}
-        onRetry={() => {
-          void queueQuery.refetch();
-          void analyticsQuery.refetch();
-        }}
+        queueLoading={queueQuery.isLoading}
+        analyticsLoading={analyticsQuery.isLoading}
+        queueError={!!queueQuery.error}
+        analyticsError={!!analyticsQuery.error}
+        onRetryQueue={() => void queueQuery.refetch()}
+        onRetryAnalytics={() => void analyticsQuery.refetch()}
       />
     </>
   );

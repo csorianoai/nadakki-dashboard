@@ -6,28 +6,7 @@ import { CHPanelState } from "@/components/credit-hub/system/CHPanelState";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { useRiskDistributions } from "@/lib/credit-hub/hooks/useRiskDistributions";
 import { isAnalyticsUnavailable } from "@/lib/credit-hub/hooks/analyticsQueryOptions";
-import type { DistributionBucket, RejectionReasonRow } from "@/lib/credit-hub/types/analytics";
-
-const DEMO_PTI: DistributionBucket[] = [
-  { band: "0-20%", count: 3, pct: 35 },
-  { band: "20-30%", count: 4, pct: 40 },
-  { band: "30-40%", count: 2, pct: 18 },
-  { band: "50%+", count: 1, pct: 7 },
-];
-
-const DEMO_LTV: DistributionBucket[] = [
-  { band: "0-60%", count: 2, pct: 22 },
-  { band: "60-70%", count: 4, pct: 45 },
-  { band: "70-80%", count: 2, pct: 28 },
-  { band: "90%+", count: 1, pct: 5 },
-];
-
-const DEMO_REJECTIONS: RejectionReasonRow[] = [
-  { reason_code: "RC101_REJECT_CREDIT_POLICY", reason: "Ingreso insuficiente (PTI)", count: 5, pct: 40 },
-  { reason_code: "RC102_PTI", reason: "Score crediticio", count: 3, pct: 24 },
-  { reason_code: "RC103_LTV", reason: "LTV excede política", count: 2, pct: 16 },
-  { reason_code: "RC104_DOCS", reason: "Documentación incompleta", count: 2, pct: 16 },
-];
+import type { DistributionBucket } from "@/lib/credit-hub/types/analytics";
 
 const SCORE_BANDS = [
   { label: "Super-prime 740+", key: "740-799" },
@@ -35,6 +14,8 @@ const SCORE_BANDS = [
   { label: "Near-prime 580–669", key: "580-669" },
   { label: "Sub-prime <580", key: "300-579" },
 ];
+
+const EMPTY_BUCKETS: DistributionBucket[] = [];
 
 function hasDistributionData(buckets: DistributionBucket[] | undefined): boolean {
   return !!buckets?.some((b) => b.count > 0);
@@ -50,10 +31,10 @@ export function RiskCreditPanel() {
   const hasRealScore =
     !!scoreDist && Object.values(scoreDist).some((count) => Number(count) > 0);
 
-  const pti = hasRealPtiLtv ? query.data!.pti_distribution : DEMO_PTI;
-  const ltv = hasRealPtiLtv ? query.data!.ltv_distribution : DEMO_LTV;
+  const pti = hasRealPtiLtv ? query.data!.pti_distribution : EMPTY_BUCKETS;
+  const ltv = hasRealPtiLtv ? query.data!.ltv_distribution : EMPTY_BUCKETS;
   const rejections =
-    hasRealPtiLtv && query.data!.rejection_reasons.length ? query.data!.rejection_reasons : DEMO_REJECTIONS;
+    hasRealPtiLtv && query.data!.rejection_reasons.length ? query.data!.rejection_reasons : [];
 
   return (
     <div style={{ marginBottom: 26 }} data-testid="risk-credit-panel">
@@ -75,7 +56,7 @@ export function RiskCreditPanel() {
               <div className="ch-card-title">Aprobación por banda de score</div>
               <div className="ch-card-sub">Super-prime → Sub-prime</div>
             </div>
-            <DataTruthBadge level={hasRealScore ? "REAL" : "DEMO"} />
+            <DataTruthBadge level={hasRealScore ? "REAL" : "ROADMAP"} />
           </div>
           <div style={{ padding: "12px 16px" }}>
             {hasRealScore ? (
@@ -109,18 +90,13 @@ export function RiskCreditPanel() {
           </div>
         </div>
 
-        <RiskPortfolioPanel
-          pti={pti}
-          ltv={ltv}
-          rejections={rejections}
-          truth={hasRealPtiLtv ? "REAL" : "DEMO"}
-          loading={false}
-        />
-        {query.isError && !unavailable && !hasRealPtiLtv ? (
-          <p style={{ fontSize: 11, color: "var(--ch-text-3)", marginTop: 8 }}>
-            Datos ilustrativos (DEMO) — el servicio no respondió tras reintentos.
+        {hasRealPtiLtv ? (
+          <RiskPortfolioPanel pti={pti} ltv={ltv} rejections={rejections} truth="REAL" loading={false} />
+        ) : (
+          <p style={{ fontSize: 12, color: "var(--ch-text-3)", margin: 0 }}>
+            Distribuciones PTI/LTV y razones de rechazo pendientes de datos del servicio.
           </p>
-        ) : null}
+        )}
       </CHPanelState>
     </div>
   );

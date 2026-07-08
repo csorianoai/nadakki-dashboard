@@ -6,31 +6,31 @@ import { chKeys } from "./queryKeys";
 import { useTenant } from "./useTenant";
 
 export function useBankAnalytics(period = "30d") {
-  const { tenantId } = useTenant();
+  const { apiTenantId } = useTenant();
   return useQuery({
-    queryKey: chKeys.bankAnalytics(tenantId ?? "", period),
-    queryFn: () => getAnalytics({ tenantId: tenantId!, period }),
-    enabled: !!tenantId,
+    queryKey: chKeys.bankAnalytics(apiTenantId ?? "", period),
+    queryFn: () => getAnalytics({ tenantId: apiTenantId!, period }),
+    enabled: !!apiTenantId,
     staleTime: 30_000,
   });
 }
 
 export function useBankDealersRanking() {
-  const { tenantId } = useTenant();
+  const { apiTenantId } = useTenant();
   return useQuery({
-    queryKey: ["credit-hub", "bank", "dealers-ranking", tenantId ?? ""],
-    queryFn: () => getDealersRanking({ tenantId: tenantId! }),
-    enabled: !!tenantId,
+    queryKey: ["credit-hub", "bank", "dealers-ranking", apiTenantId ?? ""],
+    queryFn: () => getDealersRanking({ tenantId: apiTenantId! }),
+    enabled: !!apiTenantId,
     staleTime: 30_000,
   });
 }
 
 export function useBankPortfolioHealth() {
-  const { tenantId } = useTenant();
+  const { apiTenantId } = useTenant();
   return useQuery({
-    queryKey: ["credit-hub", "bank", "portfolio-health", tenantId ?? ""],
-    queryFn: () => getPortfolioHealth({ tenantId: tenantId! }),
-    enabled: !!tenantId,
+    queryKey: ["credit-hub", "bank", "portfolio-health", apiTenantId ?? ""],
+    queryFn: () => getPortfolioHealth({ tenantId: apiTenantId! }),
+    enabled: !!apiTenantId,
     staleTime: 30_000,
   });
 }
