@@ -10,7 +10,7 @@ import type {
 import type { CreditAnalysisResult } from "./creditAnalysis";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 
-export type BankDetailTab = "analisis" | "documentos" | "audit" | "compliance";
+export type BankDetailTab = "analisis" | "documentos" | "stipulaciones" | "audit" | "compliance";
 
 export type BankQueueSortKey = "priority" | "applicant_name" | "requested_amount" | "score" | "created_at";
 

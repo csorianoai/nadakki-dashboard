@@ -14,6 +14,7 @@
  */
 
 import { useMemo } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { getForgeTestTenantBankingConfig } from "@/lib/credit-hub/forge-test-tenant-override";
 import { adaptBrandingToConfigShape } from "@/lib/credit-hub/utils/adaptBrandingToConfigShape";
 import { warnOnceForCaller } from "@/lib/credit-hub/utils/warnOnceForCaller";
@@ -120,6 +121,7 @@ export function getDefaultTenantBankingConfig(tenantId: string): TenantBankingCo
  * the deprecation without spamming the console.
  */
 export function useTenantConfig(): { tenantConfig: TenantBankingConfig; loading: boolean } {
+  const { tenant } = useAuth();
   const { tenantId, tenantSlug, loading: tenantLoading } = useTenant();
   // P10-05 BUG-001 fix: pass tenantSlug (resolved by useTenant), not tenantId
   // (UUID). Backend `/api/v2/tenants/{slug}/branding` keys by slug.
@@ -138,13 +140,14 @@ export function useTenantConfig(): { tenantConfig: TenantBankingConfig; loading:
 
     const effectiveTenantId = tenantId || "tenant-no-disponible";
 
-    if (branding) {
-      return adaptBrandingToConfigShape(branding, effectiveTenantId);
-    }
+    const sessionIsDemo = tenant?.is_demo === true;
+    const base = branding
+      ? adaptBrandingToConfigShape(branding, effectiveTenantId)
+      : getDefaultTenantBankingConfig(effectiveTenantId);
 
-    // Loading or error → default. Banking policy is always default until P10-09.
-    return getDefaultTenantBankingConfig(effectiveTenantId);
-  }, [branding, tenantId]);
+    if (!sessionIsDemo) return base;
+    return { ...base, is_demo: true };
+  }, [branding, tenant?.is_demo, tenantId]);
 
   return { tenantConfig, loading: tenantLoading || isPending };
 }

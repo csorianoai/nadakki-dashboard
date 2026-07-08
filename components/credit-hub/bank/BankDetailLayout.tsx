@@ -8,6 +8,7 @@ import { AnalysisTab } from "@/components/credit-hub/bank/sections/AnalysisTab";
 import { AuditTab } from "@/components/credit-hub/bank/sections/AuditTab";
 import { ComplianceTab } from "@/components/credit-hub/bank/sections/ComplianceTab";
 import { DocumentsTab } from "@/components/credit-hub/bank/sections/DocumentsTab";
+import { StipulationsTab } from "@/components/credit-hub/bank/sections/StipulationsTab";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
 import { useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
@@ -52,7 +53,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   }, [payload.documents]);
 
   const decisionMutation = useBankDecision(application.application_id);
-  const [tab, setTab] = useState<"analisis" | "documentos" | "audit" | "compliance">("analisis");
+  const [tab, setTab] = useState<"analisis" | "documentos" | "stipulaciones" | "audit" | "compliance">("analisis");
   const [panelState, setPanelState] = useState<DecisionState>("idle");
   const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
   const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
@@ -69,9 +70,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      const keys = ["1", "2", "3", "4"];
+      const keys = ["1", "2", "3", "4", "5"];
       const i = keys.indexOf(e.key);
-      if (i >= 0) setTab((["analisis", "documentos", "audit", "compliance"] as const)[i]!);
+      if (i >= 0) setTab((["analisis", "documentos", "stipulaciones", "audit", "compliance"] as const)[i]!);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -81,6 +82,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const tabs = [
     ["analisis", "Análisis"],
     ["documentos", `Documentos · ${docs.length}`],
+    ["stipulaciones", "Estipulaciones"],
     ["audit", "Audit"],
     ["compliance", "Compliance"],
   ] as const;
@@ -218,6 +220,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             </div>
             {tab === "analisis" ? <AnalysisTab payload={payload} /> : null}
             {tab === "documentos" ? <DocumentsTab docs={docs} /> : null}
+            {tab === "stipulaciones" ? <StipulationsTab applicationId={application.application_id} /> : null}
             {tab === "audit" ? <AuditTab audit={audit} /> : null}
             {tab === "compliance" ? <ComplianceTab report={compliance} applicationId={application.application_id} /> : null}
           </div>

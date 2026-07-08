@@ -159,6 +159,8 @@ export interface ChNotification {
   id?: string;
   title: string;
   body?: string;
+  read?: boolean;
+  at?: string;
 }
 
 export interface ChTenantOption {
@@ -173,6 +175,8 @@ export interface ChTopbarProps {
   tenantName?: string;
   multiTenant?: boolean;
   notif?: number;
+  /** When false, notification bell is not rendered (404 / feature off). */
+  showNotificationsBell?: boolean;
   user?: { name: string; initials: string };
   /** Real account email shown in the avatar menu. Hidden when absent. */
   userEmail?: string;

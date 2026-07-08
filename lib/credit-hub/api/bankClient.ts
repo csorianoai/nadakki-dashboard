@@ -1,4 +1,6 @@
-import { chFetch } from "./client";
+import { CHApiError, chFetch } from "./client";
+import type { ExpedienteFullResponse } from "../types/expediente";
+import { expedienteToBankReviewApplication } from "../utils/expedienteAdapter";
 import type {
   BankActorRole,
   BankAuditTrail,
@@ -104,6 +106,32 @@ export function getApplicationForReview(params: {
     tenantId: params.tenantId,
     actorRole,
   });
+}
+
+export function getExpedienteFull(params: {
+  tenantId: string;
+  applicationId: string;
+}): Promise<ExpedienteFullResponse> {
+  return chFetch<ExpedienteFullResponse>(
+    `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/expediente/full`,
+    { tenantId: params.tenantId, actorRole },
+  );
+}
+
+/** Prefer expediente/full; fall back to canonical application GET on 403/404. */
+export async function getBankApplicationDetail(params: {
+  tenantId: string;
+  applicationId: string;
+}): Promise<BankReviewApplication> {
+  try {
+    const ex = await getExpedienteFull(params);
+    return expedienteToBankReviewApplication(ex);
+  } catch (err) {
+    if (err instanceof CHApiError && (err.status === 403 || err.status === 404)) {
+      return getApplicationForReview(params);
+    }
+    throw err;
+  }
 }
 
 /**
