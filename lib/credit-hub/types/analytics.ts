@@ -56,6 +56,9 @@ export interface AuctionIntelResponse extends AuctionIntelSummary {
   lender_breakdown?: Array<{
     lender_code: string;
     offer_count: number;
+    accepted_count?: number;
+    approved_count?: number;
+    declined_count?: number;
     win_rate: number | null;
     avg_response_hours: number | null;
   }>;

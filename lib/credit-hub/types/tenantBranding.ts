@@ -36,6 +36,8 @@ export interface TenantBranding {
   /** Web font stack name e.g. "Inter", applied as primary UI font alongside fallbacks. */
   font_family?: string | null;
   dark_mode_enabled?: boolean;
+  /** When true, tenant is a demonstration environment (backend handback P0). */
+  is_demo?: boolean;
 }
 
 /**

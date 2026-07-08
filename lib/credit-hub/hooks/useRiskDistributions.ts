@@ -7,11 +7,11 @@ import { chKeys } from "./queryKeys";
 import { useTenant } from "./useTenant";
 
 export function useRiskDistributions() {
-  const { tenantId } = useTenant();
+  const { apiTenantId } = useTenant();
   return useQuery({
-    queryKey: chKeys.riskDistributions(tenantId ?? ""),
-    queryFn: () => getRiskDistributions({ tenantId: tenantId! }),
-    enabled: !!tenantId,
+    queryKey: chKeys.riskDistributions(apiTenantId ?? ""),
+    queryFn: () => getRiskDistributions({ tenantId: apiTenantId! }),
+    enabled: !!apiTenantId,
     staleTime: 60_000,
     ...ANALYTICS_QUERY_OPTIONS,
   });

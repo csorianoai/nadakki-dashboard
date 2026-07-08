@@ -84,5 +84,6 @@ export function adaptBrandingToConfigShape(
       // TestBank pattern: accent === primary; no Forge consumer reads this.
       accent_color: branding.brand_primary,
     },
+    is_demo: branding.is_demo === true ? true : undefined,
   };
 }

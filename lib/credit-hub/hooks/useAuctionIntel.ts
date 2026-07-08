@@ -7,15 +7,15 @@ import { chKeys } from "./queryKeys";
 import { useTenant } from "./useTenant";
 
 export function useAuctionIntel(lenderCode?: string | null) {
-  const { tenantId } = useTenant();
+  const { apiTenantId } = useTenant();
   return useQuery({
-    queryKey: chKeys.auctionIntel(tenantId ?? "", lenderCode),
+    queryKey: chKeys.auctionIntel(apiTenantId ?? "", lenderCode),
     queryFn: () =>
       getAuctionIntel({
-        tenantId: tenantId!,
+        tenantId: apiTenantId!,
         lenderCode: lenderCode ?? undefined,
       }),
-    enabled: !!tenantId,
+    enabled: !!apiTenantId,
     staleTime: 60_000,
     ...ANALYTICS_QUERY_OPTIONS,
   });

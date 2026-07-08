@@ -5,9 +5,17 @@ import { usePathname } from "next/navigation";
 import "./forge-globals.css";
 import "@/app/credit-hub/credit-hub.css";
 import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
+import { DemoModeBanner } from "@/components/forge/ui/DemoModeBanner";
 import { ForgeCreditHubAppShell } from "@/components/forge";
+import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { isMonetizacionPath } from "@/lib/credit-hub/monetizacion/routes";
 import { isForgeMonetizacionEnabled } from "@/lib/env/feature-forge-monetizacion";
+
+function CreditHubDemoBannerGate({ active }: { active: boolean }) {
+  const { tenantConfig } = useTenantConfig();
+  if (!active) return null;
+  return <DemoModeBanner isDemo={tenantConfig.is_demo === true} />;
+}
 
 export function CreditHubLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -40,6 +48,7 @@ export function CreditHubLayoutClient({ children }: { children: React.ReactNode 
   return (
     <>
       <CreditHubI18nBootstrap />
+      <CreditHubDemoBannerGate active={isChPortal} />
       {isChPortal ? children : <ForgeCreditHubAppShell>{children}</ForgeCreditHubAppShell>}
     </>
   );
