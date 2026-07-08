@@ -10,6 +10,19 @@ const ST_MAP: Record<string, [string, string, string]> = {
   pendiente: ["var(--ch-warning-text)", "var(--ch-warning-soft)", "Pendiente"],
 };
 
+function documentPreviewUrl(doc: BankDocumentPayload): string | null {
+  const raw = doc as BankDocumentPayload & {
+    preview_url?: string;
+    url?: string;
+    preview?: { preview_route_template?: string };
+  };
+  if (typeof raw.preview_url === "string" && raw.preview_url.trim()) return raw.preview_url.trim();
+  if (typeof raw.url === "string" && raw.url.trim()) return raw.url.trim();
+  const tmpl = raw.preview?.preview_route_template;
+  if (typeof tmpl === "string" && tmpl.startsWith("/")) return tmpl;
+  return null;
+}
+
 export function DocumentsTab({ docs }: { docs: BankDocumentPayload[] }) {
   if (!docs.length) {
     return <div className="ch-card" style={{ padding: 24, color: "var(--ch-text-3)" }}>Sin documentos cargados.</div>;
@@ -20,6 +33,7 @@ export function DocumentsTab({ docs }: { docs: BankDocumentPayload[] }) {
       {docs.map((d) => {
         const status = d.status ?? "pendiente";
         const [c, bg, l] = ST_MAP[status] ?? ST_MAP.pendiente!;
+        const previewUrl = documentPreviewUrl(d);
         return (
           <div key={d.id ?? d.name} className="ch-card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -31,7 +45,16 @@ export function DocumentsTab({ docs }: { docs: BankDocumentPayload[] }) {
               </span>
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{d.name ?? d.label ?? "Documento"}</div>
-            <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" style={{ marginTop: "auto" }}>
+            <button
+              type="button"
+              className="ch-btn ch-btn-secondary ch-btn-sm"
+              style={{ marginTop: "auto" }}
+              disabled={!previewUrl}
+              title={previewUrl ? "Abrir vista previa del documento" : "Vista previa no disponible — el backend no publicó URL para este documento"}
+              onClick={() => {
+                if (previewUrl && typeof window !== "undefined") window.open(previewUrl, "_blank", "noopener,noreferrer");
+              }}
+            >
               <Search className="h-3.5 w-3.5" aria-hidden />
               Ver documento
             </button>
