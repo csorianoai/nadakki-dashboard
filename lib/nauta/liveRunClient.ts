@@ -42,6 +42,8 @@ export interface NautaLivePollResponse {
   findings_count?: number;
   step_count?: number;
   completed_at?: string;
+  stall_hint?: boolean;
+  parent_run_id?: string | null;
   live_view_url?: string | null;
   evidence?: unknown[];
   artifacts?: NautaRunArtifacts | null;
@@ -104,4 +106,34 @@ export async function pollLiveRun(runId: string): Promise<NautaLivePollResponse>
     throw new NautaLiveRunError(detail || response.statusText, response.status, detail);
   }
   return data;
+}
+
+async function postRunAction(
+  runId: string,
+  action: "stop" | "redirect",
+  body?: { instruction: string },
+): Promise<NautaLivePollResponse> {
+  const response = await apiFetch(`${NAUTA_RUNS}/${encodeURIComponent(runId)}/${action}`, {
+    method: "POST",
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  const data = (await response.json().catch(() => ({}))) as NautaLivePollResponse & { detail?: unknown };
+  if (!response.ok) {
+    const detail = extractDetailString(data);
+    throw new NautaLiveRunError(detail || response.statusText, response.status, detail);
+  }
+  return data;
+}
+
+/** POST /api/v1/nauta/runs/{id}/stop — supervisor mid-run stop (Fase 1B). */
+export async function stopLiveRun(runId: string): Promise<NautaLivePollResponse> {
+  return postRunAction(runId, "stop");
+}
+
+/** POST /api/v1/nauta/runs/{id}/redirect — stop parent + spawn child with inherited context. */
+export async function redirectLiveRun(
+  runId: string,
+  instruction: string,
+): Promise<NautaLivePollResponse> {
+  return postRunAction(runId, "redirect", { instruction: instruction.trim() });
 }
