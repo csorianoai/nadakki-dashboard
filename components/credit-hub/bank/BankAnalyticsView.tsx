@@ -6,6 +6,7 @@ import { EmptyStateRich, KpiStripSkeleton } from "@/components/credit-hub/primit
 import { CohortChart, KpiCardTrend, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
 import { PortfolioHealthGrid } from "@/components/credit-hub/bank/sections/PortfolioHealthGrid";
 import { chMoney } from "@/lib/credit-hub/ch-base";
+import { CH_DEFAULT_CURRENCY_SYMBOL } from "@/lib/credit-hub/utils/currency";
 import type { BankAnalyticsViewProps } from "@/lib/credit-hub/types/bank-views";
 import { formatDefaultPredictionDisplay, classifyDefaultPredictionTrust } from "@/lib/credit-hub/bank/bankFormat";
 import { BankSegment } from "@/components/credit-hub/bank/shared/bankUi";
@@ -51,7 +52,7 @@ export function BankAnalyticsView({ analytics, portfolioHealth, dealers, isLoadi
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 26 }}>
-        <KpiCardTrend label="Volumen aprobado" value={chMoney(a.portfolio_value).replace("MX$", "")} unit="MX$" trend={null} trendLabel="cartera viva" accent />
+        <KpiCardTrend label="Volumen aprobado" value={chMoney(a.portfolio_value).replace(CH_DEFAULT_CURRENCY_SYMBOL, "")} unit={CH_DEFAULT_CURRENCY_SYMBOL} trend={null} trendLabel="cartera viva" accent />
         <KpiCardTrend label="Tasa de aprobación" value={(a.approval_rate * 100).toFixed(0)} unit="%" trend={null} trendLabel="periodo seleccionado" />
         <div style={{ position: "relative" }}>
           <div style={{ position: "absolute", top: 10, right: 10, zIndex: 2, display: "flex", gap: 6, alignItems: "center" }}>

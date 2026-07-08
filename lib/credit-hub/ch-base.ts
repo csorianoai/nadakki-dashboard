@@ -23,6 +23,10 @@ import {
   XCircle,
 } from "lucide-react";
 import type { PersonaType, RiskLevel } from "./ch-types";
+import {
+  CH_DEFAULT_CURRENCY_SYMBOL,
+  CH_DEFAULT_LOCALE,
+} from "./utils/currency";
 
 export const CH_ICONS = {
   AlertTriangle,
@@ -43,20 +47,20 @@ export const CH_ICONS = {
   XCircle,
 } as const satisfies Record<string, LucideIcon>;
 
-export function chMoney(n: number | null | undefined, cur = "MX$"): string {
+export function chMoney(n: number | null | undefined, cur = CH_DEFAULT_CURRENCY_SYMBOL): string {
   if (n == null) return "—";
   const a = Math.abs(n);
   if (a >= 1e6) {
-    return `${cur}${(n / 1e6).toLocaleString("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
+    return `${cur}${(n / 1e6).toLocaleString(CH_DEFAULT_LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
   }
   if (a >= 1e3) {
-    return `${cur}${(n / 1e3).toLocaleString("es-MX", { maximumFractionDigits: 0 })}K`;
+    return `${cur}${(n / 1e3).toLocaleString(CH_DEFAULT_LOCALE, { maximumFractionDigits: 0 })}K`;
   }
-  return `${cur}${n.toLocaleString("es-MX")}`;
+  return `${cur}${n.toLocaleString(CH_DEFAULT_LOCALE)}`;
 }
 
-export function chMoneyExact(n: number | null | undefined, cur = "MX$"): string {
-  return `${cur}${(n || 0).toLocaleString("es-MX")}`;
+export function chMoneyExact(n: number | null | undefined, cur = CH_DEFAULT_CURRENCY_SYMBOL): string {
+  return `${cur}${(n || 0).toLocaleString(CH_DEFAULT_LOCALE)}`;
 }
 
 export function chFormatCurrency(value: number, locale = "es-DO", currency = "DOP"): string {

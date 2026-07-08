@@ -14,11 +14,13 @@ import { MetricCard } from "@/components/credit-hub/elite/MetricCard";
 import type { BankDashboardAnalytics } from "@/lib/credit-hub/types/bankDecision";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import { useAuctionIntel } from "@/lib/credit-hub/hooks/useAuctionIntel";
+import {
+  CH_DEFAULT_CURRENCY_SYMBOL,
+  formatCompactMoneySuffix,
+} from "@/lib/credit-hub/utils/currency";
 
 function formatCompactMoney(amount: number): string {
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M`;
-  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K`;
-  return String(Math.round(amount));
+  return formatCompactMoneySuffix(amount);
 }
 
 function decidedTodayCount(queue: BankQueueItem[]): number {
@@ -118,7 +120,7 @@ export function BankKpiStrip({
       {
         label: "Monto evaluado",
         value: evaluatedAmount ? formatCompactMoney(evaluatedAmount) : "—",
-        unit: evaluatedAmount ? "MX$" : undefined,
+        unit: evaluatedAmount ? CH_DEFAULT_CURRENCY_SYMBOL : undefined,
         truth: "REAL" as const,
         delta: { direction: "up" as const, label: "en cola activa" },
         icon: Banknote,
