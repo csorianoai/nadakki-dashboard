@@ -20,7 +20,7 @@ const A_LABEL: Record<string, string> = {
 };
 
 function dayKey(iso: string): string {
-  return new Date(iso).toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
+  return new Date(iso).toLocaleDateString("es-DO", { weekday: "long", day: "numeric", month: "long" });
 }
 
 export function BankAuditView({ events, isLoading, isError, onRetry }: BankAuditViewProps) {
@@ -110,7 +110,7 @@ export function BankAuditView({ events, isLoading, isError, onRetry }: BankAudit
                     }}
                   >
                     <span className="ch-mono" style={{ fontSize: 11, color: "var(--ch-text-3)" }}>
-                      {new Date(e.timestamp).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(e.timestamp).toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>
