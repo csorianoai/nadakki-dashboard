@@ -24,6 +24,8 @@ export interface TenantInfo {
   slug: string;
   display_name: string;
   subscribed_cores: string[];
+  /** Demo tenant flag from GET /api/v2/auth/me → current_tenant.is_demo */
+  is_demo?: boolean;
 }
 
 export interface LoginResponseV2 {
