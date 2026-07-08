@@ -38,6 +38,8 @@ export interface DealerNotificationItem {
 export interface DealerNotificationsViewProps {
   items: DealerNotificationItem[];
   isLoading?: boolean;
+  /** True when GET /api/v2/credit/notifications is not available — no synthetic fallback. */
+  sourceUnavailable?: boolean;
 }
 
 export interface DealerProfileViewProps {

@@ -103,7 +103,7 @@ export function BankDashboardView({
       <hr className="ch-section-break" aria-hidden />
 
       <CHPanelBoundary label="Metas de mesa">
-        <BankGoals analytics={analytics} queueCount={pending} />
+        <BankGoals />
       </CHPanelBoundary>
 
       <hr className="ch-section-break" aria-hidden />

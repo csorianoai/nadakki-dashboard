@@ -84,7 +84,7 @@ export function DealerDashboardView({
       <hr className="ch-section-break" aria-hidden />
 
       <CHPanelBoundary label="Metas">
-        <DealerGoals stats={stats} applications={applications} currency={currency} />
+        <DealerGoals currency={currency} />
       </CHPanelBoundary>
 
       <hr className="ch-section-break" aria-hidden />

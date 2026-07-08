@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { EmptyStateRich, TableSkeleton } from "@/components/credit-hub/primitives";
+import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { NotificationCard } from "@/components/credit-hub/dealer/sections/NotificationCard";
 import type { DealerNotificationsViewProps, DealerNotificationTab } from "@/lib/credit-hub/types/dealer-views";
 import { markNotificationRead } from "@/lib/credit-hub/dealer/dealerFormat";
@@ -15,7 +16,7 @@ const TABS: { id: DealerNotificationTab; label: string }[] = [
   { id: "system", label: "Sistema" },
 ];
 
-export function DealerNotificationsView({ items, isLoading }: DealerNotificationsViewProps) {
+export function DealerNotificationsView({ items, isLoading, sourceUnavailable }: DealerNotificationsViewProps) {
   const [tab, setTab] = useState<DealerNotificationTab>("all");
   const [readOverride, setReadOverride] = useState<Set<string>>(new Set());
 
@@ -47,8 +48,11 @@ export function DealerNotificationsView({ items, isLoading }: DealerNotification
           Notificaciones
         </h1>
         <p style={{ fontSize: 13, color: "var(--ch-text-3)", marginTop: 6 }}>
-          Actualizaciones de tus solicitudes. {/* TODO: backend read-state + push notifications */}
+          {sourceUnavailable
+            ? "El servicio de notificaciones aún no está conectado. Sin alertas sintéticas."
+            : "Actualizaciones de tus solicitudes."}
         </p>
+        {sourceUnavailable ? <DataTruthBadge level="ROADMAP" /> : null}
       </div>
 
       <div role="tablist" style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16, borderBottom: "1px solid var(--ch-line)", paddingBottom: 8 }}>
@@ -73,7 +77,15 @@ export function DealerNotificationsView({ items, isLoading }: DealerNotification
       </div>
 
       {visible.length === 0 ? (
-        <EmptyStateRich variant="empty" title="Sin alertas pendientes" description="Las notificaciones de tus solicitudes aparecerán aquí." />
+        <EmptyStateRich
+          variant="empty"
+          title={sourceUnavailable ? "Notificaciones no conectadas" : "Sin alertas pendientes"}
+          description={
+            sourceUnavailable
+              ? "Cuando el backend publique GET /api/v2/credit/notifications, las alertas aparecerán aquí."
+              : "Las notificaciones de tus solicitudes aparecerán aquí."
+          }
+        />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {visible.map((n) => (

@@ -117,7 +117,7 @@ export function markNotificationRead(id: string): void {
   sessionStorage.setItem(READ_KEY, JSON.stringify([...set]));
 }
 
-/** TODO: replace with backend read-state when notifications API ships. */
+/** @deprecated Synthetic notifications — do not use in production UI (FE-MOCK-01). */
 export function notificationsFromApplications(apps: CreditApplication[]): DealerNotificationItem[] {
   const read = getReadNotificationIds();
   return apps
