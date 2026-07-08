@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useNautaLiveRunControl } from "@/hooks/nauta/useNautaLiveRunControl";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { resolveVisiblePlatformTitle } from "@/lib/white-label/brand-display";
 import { NAUTA_LIVE_MAX_POLL_ATTEMPTS, NAUTA_LIVE_POLL_INTERVAL_MS } from "@/lib/nauta/liveConfig";
@@ -15,8 +17,12 @@ import {
 } from "@/lib/nauta/liveRunClient";
 import type { NautaLiveViewStatus, NautaRunArtifacts } from "@/lib/nauta/types";
 import { NautaLiveIframeBoundary } from "@/lib/nauta/components/NautaLiveIframeBoundary";
+import { NautaLiveRedirectModal } from "@/lib/nauta/components/NautaLiveRedirectModal";
+import { NautaLiveStallBanner } from "@/lib/nauta/components/NautaLiveStallBanner";
+import { NautaLiveStopDialog } from "@/lib/nauta/components/NautaLiveStopDialog";
 import { NautaRunReportPanel } from "@/lib/nauta/components/NautaRunReportPanel";
 import { NautaTaskComposer } from "@/lib/nauta/components/NautaTaskComposer";
+import { truncateRunId } from "@/lib/nauta/runIdDisplay";
 import { sanitizeLivePollSnapshot } from "@/lib/nauta/runReportUtils";
 import { logNautaViewError } from "@/lib/nauta/safeValues";
 import { S } from "@/lib/nauta/strings";
@@ -50,6 +56,9 @@ interface RunSnapshot {
   stepCount: number | null;
   completedAtIso: string | null;
   apiCompletedAt: string | null;
+  stallHint: boolean;
+  parentRunId: string | null;
+  outcomeCategory: string | null;
 }
 
 const IDLE: RunSnapshot = {
@@ -67,6 +76,9 @@ const IDLE: RunSnapshot = {
   stepCount: null,
   completedAtIso: null,
   apiCompletedAt: null,
+  stallHint: false,
+  parentRunId: null,
+  outcomeCategory: null,
 };
 
 function mapPollStatus(status: string): NautaLiveViewStatus {
@@ -110,6 +122,12 @@ export function NautaLiveView({
   const [pollError, setPollError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [isRetryingReport, setIsRetryingReport] = useState(false);
+  const [showStopDialog, setShowStopDialog] = useState(false);
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
+  const [redirectInstruction, setRedirectInstruction] = useState("");
+  const [redirectError, setRedirectError] = useState<string | null>(null);
+
+  const midrunControl = useNautaLiveRunControl();
 
   const startedAtRef = useRef<number | null>(null);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -180,6 +198,9 @@ export function NautaLiveView({
         artifacts: sanitized.artifacts ?? prev.artifacts,
         stepCount: sanitized.stepCount ?? prev.stepCount,
         apiCompletedAt: sanitized.apiCompletedAt ?? prev.apiCompletedAt,
+        stallHint: terminal ? false : sanitized.stallHint,
+        parentRunId: sanitized.parentRunId ?? prev.parentRunId,
+        outcomeCategory: sanitized.outcomeCategory ?? prev.outcomeCategory,
         completedAtIso:
           terminal && !prev.completedAtIso ? new Date().toISOString() : prev.completedAtIso,
       }));
@@ -312,6 +333,85 @@ export function NautaLiveView({
     }
   }, [pollOnce, run.runId]);
 
+  const refreshRunState = useCallback(
+    async (runId: string) => {
+      const generation = pollGenerationRef.current;
+      await pollOnce(runId, generation);
+    },
+    [pollOnce],
+  );
+
+  const handleControlConflict = useCallback(
+    async (runId: string) => {
+      toast.error(S.midrun.runAlreadyEnded);
+      await refreshRunState(runId);
+    },
+    [refreshRunState],
+  );
+
+  const handleStopConfirm = useCallback(async () => {
+    const runId = run.runId;
+    if (!runId) return;
+    try {
+      const data = await midrunControl.stop(runId);
+      if (!mountedRef.current) return;
+      applyPollData(data);
+      setShowStopDialog(false);
+    } catch (err) {
+      if (err instanceof NautaLiveRunError && err.status === 409) {
+        setShowStopDialog(false);
+        await handleControlConflict(runId);
+        return;
+      }
+      logNautaViewError("stop", err, { runId, field: "stopLiveRun" });
+    }
+  }, [applyPollData, handleControlConflict, midrunControl, run.runId]);
+
+  const handleRedirectSubmit = useCallback(async () => {
+    const runId = run.runId;
+    const instruction = redirectInstruction.trim();
+    if (!runId || !instruction) return;
+
+    setRedirectError(null);
+    try {
+      const data = await midrunControl.redirect(runId, instruction);
+      if (!mountedRef.current) return;
+
+      stopTimers();
+      setShowRedirectModal(false);
+      setRedirectInstruction("");
+      setRedirectError(null);
+      applyPollData(data);
+
+      const nextStatus = mapPollStatus(data.status);
+      if (nextStatus === "running" && data.id) {
+        activeRunIdRef.current = data.id;
+        startPolling(data.id);
+      }
+    } catch (err) {
+      if (err instanceof NautaLiveRunError && err.status === 409) {
+        setShowRedirectModal(false);
+        await handleControlConflict(runId);
+        return;
+      }
+      if (err instanceof NautaLiveRunError && (err.status === 422 || err.status === 403)) {
+        const mapped = resolveFreeformRunError(err.status, err.detail);
+        setRedirectError(mapped.message);
+        return;
+      }
+      logNautaViewError("redirect", err, { runId, field: "redirectLiveRun" });
+      setRedirectError(err instanceof Error ? err.message : "No se pudo corregir la instrucción");
+    }
+  }, [
+    applyPollData,
+    handleControlConflict,
+    midrunControl,
+    redirectInstruction,
+    run.runId,
+    startPolling,
+    stopTimers,
+  ]);
+
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -407,6 +507,8 @@ export function NautaLiveView({
   };
 
   const isRunning = run.status === "running";
+  const showMidrunControls = isRunning;
+  const showStallBanner = isRunning && run.stallHint;
   const showLiveIframe = isRunning && Boolean(run.liveViewUrl);
   const showReportPanel =
     (run.status === "completed" || run.status === "failed") && Boolean(run.runId);
@@ -435,6 +537,17 @@ export function NautaLiveView({
         </div>
       ) : null}
 
+      {showStallBanner ? (
+        <NautaLiveStallBanner
+          showCorrect={allowsFreeform}
+          onStop={() => setShowStopDialog(true)}
+          onCorrect={() => {
+            setRedirectError(null);
+            setShowRedirectModal(true);
+          }}
+        />
+      ) : null}
+
       {allowsFreeform ? (
         <NautaTaskComposer value={taskInstruction} onChange={setTaskInstruction} disabled={isRunning} />
       ) : null}
@@ -449,17 +562,71 @@ export function NautaLiveView({
               {run.runId}
             </span>
           ) : null}
+          {isRunning && run.parentRunId ? (
+            <span className="live-view-breadcrumb mono" data-testid="nauta-run-lineage">
+              {S.live.continuationOf(truncateRunId(run.parentRunId))}
+            </span>
+          ) : null}
         </div>
-        <button
-          type="button"
-          className="btn primary"
-          disabled={isRunning || !taskName}
-          onClick={() => void startLive()}
-          data-testid="nauta-live-run-button"
-        >
-          {isRunning ? "Ejecutando…" : "Ejecutar Live"}
-        </button>
+        <div className="live-view-toolbar-actions">
+          {showMidrunControls ? (
+            <>
+              <button
+                type="button"
+                className="btn danger-outline"
+                disabled={midrunControl.busy}
+                onClick={() => setShowStopDialog(true)}
+                data-testid="nauta-live-stop"
+              >
+                {S.midrun.stop}
+              </button>
+              {allowsFreeform ? (
+                <button
+                  type="button"
+                  className="btn secondary"
+                  disabled={midrunControl.busy}
+                  onClick={() => {
+                    setRedirectError(null);
+                    setShowRedirectModal(true);
+                  }}
+                  data-testid="nauta-live-redirect"
+                >
+                  {S.midrun.correctInstruction}
+                </button>
+              ) : null}
+            </>
+          ) : null}
+          <button
+            type="button"
+            className="btn primary"
+            disabled={isRunning || !taskName || midrunControl.busy}
+            onClick={() => void startLive()}
+            data-testid="nauta-live-run-button"
+          >
+            {isRunning ? "Ejecutando…" : "Ejecutar Live"}
+          </button>
+        </div>
       </div>
+
+      <NautaLiveStopDialog
+        open={showStopDialog}
+        busy={midrunControl.busy}
+        onCancel={() => setShowStopDialog(false)}
+        onConfirm={() => void handleStopConfirm()}
+      />
+
+      <NautaLiveRedirectModal
+        open={showRedirectModal}
+        value={redirectInstruction}
+        onChange={setRedirectInstruction}
+        busy={midrunControl.busy}
+        errorMessage={redirectError}
+        onCancel={() => {
+          setShowRedirectModal(false);
+          setRedirectError(null);
+        }}
+        onSubmit={() => void handleRedirectSubmit()}
+      />
 
       {isRunning ? (
         <div className="live-view-running" aria-live="polite">
@@ -527,6 +694,8 @@ export function NautaLiveView({
           findingsCount={run.findingsCount}
           completedAtIso={run.completedAtIso ?? new Date().toISOString()}
           apiCompletedAt={run.apiCompletedAt}
+          parentRunId={run.parentRunId}
+          outcomeCategory={run.outcomeCategory}
           onRetryReport={() => void retryReportFetch()}
           isRetryingReport={isRetryingReport}
         />
