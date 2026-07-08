@@ -2346,6 +2346,66 @@
   color: var(--on-live-soft);
 }
 
+.nauta-v2 .run-outcome-header {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+}
+
+.nauta-v2 .run-outcome-header--caution {
+  border-color: var(--warn);
+  background: var(--pill-listo-bg);
+}
+
+.nauta-v2 .run-outcome-headline {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--t0);
+}
+
+.nauta-v2 .run-outcome-header--caution .run-outcome-headline {
+  color: var(--pill-listo-text);
+}
+
+.nauta-v2 .run-outcome-subline,
+.nauta-v2 .run-outcome-empty-body {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--t1);
+}
+
+.nauta-v2 .run-outcome-subline:last-child,
+.nauta-v2 .run-outcome-empty-body:last-child {
+  margin-bottom: 0;
+}
+
+.nauta-v2 .run-report-output--caution {
+  border-color: var(--warn);
+  background: var(--pill-listo-bg);
+  color: var(--t0);
+}
+
+.nauta-v2 .run-report-output-empty {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--input-bg);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--t1);
+}
+
+.nauta-v2 .run-report-output-empty.run-report-output--caution {
+  border-color: var(--warn);
+  background: var(--pill-listo-bg);
+  color: var(--pill-listo-text);
+}
+
 .nauta-v2 .run-report-pending {
   display: flex;
   flex-direction: column;
