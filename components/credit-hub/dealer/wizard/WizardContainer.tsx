@@ -230,6 +230,11 @@ export interface ApplicationFormData {
   vehicle_decl_signature_name: string;
   vehicle_decl_signed_at: string;
   vehicle_decl_hash: string;
+  security_identity_enabled: boolean;
+  security_identity_status: "" | "VERIFIED" | "MISMATCH" | "UNVERIFIED" | "UNAVAILABLE";
+  security_identity_detail: string;
+  security_prescreen_enabled: boolean;
+  security_prescreen_status: "" | "ELIGIBLE" | "ELIGIBLE_WITH_RESERVATIONS" | "NOT_ELIGIBLE" | "UNAVAILABLE";
 }
 
 export const initialApplicationFormData: ApplicationFormData = {
@@ -318,6 +323,11 @@ export const initialApplicationFormData: ApplicationFormData = {
   segment_zone: "",
   segment_vehicle_type: "",
   ...INITIAL_VEHICLE_DECLARATION,
+  security_identity_enabled: false,
+  security_identity_status: "",
+  security_identity_detail: "",
+  security_prescreen_enabled: false,
+  security_prescreen_status: "",
 };
 
 function cleanDecimalInput(value: string): string {
