@@ -1,6 +1,7 @@
 import type { BankReviewApplication } from "../types/bankDecision";
 import type { ExpedienteFullResponse } from "../types/expediente";
 import type { CreditAnalysisResult } from "../types/creditAnalysis";
+import { extractPilotLabels, type PilotLabels } from "../labels/pilot-labels";
 
 function asAnalysis(summary: Record<string, unknown>, score?: number): CreditAnalysisResult | undefined {
   const merged = { ...summary };
@@ -30,6 +31,7 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
   const bankDecision =
     (lpr && typeof lpr === "object" && (lpr as Record<string, unknown>).bank_decision) ||
     summary.bank_decision;
+  const pilot_labels: PilotLabels = extractPilotLabels(ex);
 
   return {
     application_id: ex.application_id,
@@ -49,6 +51,7 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
         generated_at: ex.generated_at,
         completeness: ex.completeness,
       },
+      pilot_labels,
     },
   };
 }

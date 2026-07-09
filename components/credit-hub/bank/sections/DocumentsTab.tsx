@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, Search } from "lucide-react";
+import { EscalateOcrButton } from "@/components/credit-hub/bank/EscalateOcrButton";
 import type { BankDocumentPayload } from "@/lib/credit-hub/types/bank-views";
 
 const ST_MAP: Record<string, [string, string, string]> = {
@@ -23,7 +24,7 @@ function documentPreviewUrl(doc: BankDocumentPayload): string | null {
   return null;
 }
 
-export function DocumentsTab({ docs }: { docs: BankDocumentPayload[] }) {
+export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayload[]; applicationId: string }) {
   if (!docs.length) {
     return <div className="ch-card" style={{ padding: 24, color: "var(--ch-text-3)" }}>Sin documentos cargados.</div>;
   }
@@ -34,6 +35,8 @@ export function DocumentsTab({ docs }: { docs: BankDocumentPayload[] }) {
         const status = d.status ?? "pendiente";
         const [c, bg, l] = ST_MAP[status] ?? ST_MAP.pendiente!;
         const previewUrl = documentPreviewUrl(d);
+        const docId = String(d.id ?? "");
+        const label = d.name ?? d.label ?? "Documento";
         return (
           <div key={d.id ?? d.name} className="ch-card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -44,20 +47,22 @@ export function DocumentsTab({ docs }: { docs: BankDocumentPayload[] }) {
                 {l}
               </span>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{d.name ?? d.label ?? "Documento"}</div>
-            <button
-              type="button"
-              className="ch-btn ch-btn-secondary ch-btn-sm"
-              style={{ marginTop: "auto" }}
-              disabled={!previewUrl}
-              title={previewUrl ? "Abrir vista previa del documento" : "Vista previa no disponible — el backend no publicó URL para este documento"}
-              onClick={() => {
-                if (previewUrl && typeof window !== "undefined") window.open(previewUrl, "_blank", "noopener,noreferrer");
-              }}
-            >
-              <Search className="h-3.5 w-3.5" aria-hidden />
-              Ver documento
-            </button>
+            <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{label}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: "auto" }}>
+              <button
+                type="button"
+                className="ch-btn ch-btn-secondary ch-btn-sm"
+                disabled={!previewUrl}
+                title={previewUrl ? "Abrir vista previa del documento" : "Vista previa no disponible — el backend no publicó URL para este documento"}
+                onClick={() => {
+                  if (previewUrl && typeof window !== "undefined") window.open(previewUrl, "_blank", "noopener,noreferrer");
+                }}
+              >
+                <Search className="h-3.5 w-3.5" aria-hidden />
+                Ver documento
+              </button>
+              {docId ? <EscalateOcrButton applicationId={applicationId} docId={docId} docLabel={label} /> : null}
+            </div>
           </div>
         );
       })}

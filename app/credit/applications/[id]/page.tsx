@@ -1,0 +1,10 @@
+import { redirect } from "next/navigation";
+import { isBankPilotUiEnabled } from "@/lib/env/feature-bank-pilot-ui";
+
+export default async function CreditApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (!isBankPilotUiEnabled()) {
+    return <p style={{ padding: 24 }}>Expediente no disponible (NEXT_PUBLIC_BANK_PILOT_UI=off).</p>;
+  }
+  redirect(`/credit-hub/dealer/applications/${encodeURIComponent(id)}`);
+}

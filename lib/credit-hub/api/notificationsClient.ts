@@ -30,6 +30,8 @@ export async function getCreditNotifications(params: {
     body: n.body,
     read: n.read,
     at: n.created_at,
+    category: n.category,
+    application_id: n.application_id,
   }));
   const unreadCount =
     data.unread_count ?? items.filter((n) => !n.read).length;

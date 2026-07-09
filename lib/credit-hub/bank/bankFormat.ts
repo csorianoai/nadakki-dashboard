@@ -64,6 +64,7 @@ export const SCORE_BANDS = [
 export const BANK_NAV_ROUTES: Record<string, string> = {
   panel: "/credit-hub/bank",
   bandeja: "/credit-hub/bank/applications",
+  escalaciones: "/credit-hub/bank/escalations",
   analitica: "/credit-hub/bank/analytics",
   auditoria: "/credit-hub/bank/audit",
   cumplimiento: "/credit-hub/bank/compliance",
@@ -71,6 +72,7 @@ export const BANK_NAV_ROUTES: Record<string, string> = {
 
 export function pathnameToBankNavId(pathname: string): string {
   if (pathname.includes("/bank/applications")) return "bandeja";
+  if (pathname.includes("/bank/escalations")) return "escalaciones";
   if (pathname.includes("/bank/analytics")) return "analitica";
   if (pathname.includes("/bank/audit")) return "auditoria";
   if (pathname.includes("/bank/compliance")) return "cumplimiento";
