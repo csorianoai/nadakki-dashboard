@@ -1930,3 +1930,12 @@ import { TenantBrandingErrorBanner } from "@/components/forge/ui/TenantBrandingE
 <!-- PHASE8_PRIMITIVE_CATALOG_END -->
 
 
+
+## DemoModeBanner
+
+Banner visible que se muestra cuando el sistema opera con modo demo (KYC/OCR mock) o datos de prueba. Consume el campo `data_source_label` del backend en `/full` y renderiza un banner amarillo/naranja/verde según el modo.
+
+Parte del cierre v1.4 para garantizar visibilidad del estado real del sistema al usuario final. Sin lógica de derivación en cliente — todos los rótulos vienen del backend.
+
+**Ubicación:** parte superior de expedientes bancarios y dashboard dealer.
+**Introducido en:** MASTER LOOP FRONTEND v1.0 (PR #270)
