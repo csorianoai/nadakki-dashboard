@@ -7,6 +7,7 @@ import { ArrowLeft, Car, CheckCircle, Clock, Mail, Phone, User } from "lucide-re
 import { DetailSkeleton, EmptyStateRich, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { DealerStatusBadge } from "@/components/credit-hub/dealer/shared/dealerUi";
+import { DealerApplicationDocumentsSection } from "@/components/credit-hub/dealer/DealerApplicationDocumentsSection";
 import { OfferConfirmModal } from "@/components/credit-hub/dealer/OfferConfirmModal";
 import { CreditCoreApiError, acceptOffer } from "@/lib/credit-hub/api/creditCoreClient";
 import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
@@ -386,6 +387,8 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
           ) : null}
         </div>
       ) : null}
+
+      <DealerApplicationDocumentsSection tenantConfig={tenantConfig} applicationRaw={data.raw} />
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="ch-card p-4">

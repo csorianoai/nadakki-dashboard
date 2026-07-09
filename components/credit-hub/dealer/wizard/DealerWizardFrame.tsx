@@ -14,9 +14,11 @@ import { WizardCompletenessBar } from "@/components/credit-hub/dealer/wizard/Wiz
 import { computeWizardCompleteness, missingFieldsHint } from "@/lib/credit-hub/dealer/wizard-completeness";
 import { stepIsValid } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import {
-  hasIdFrontFileReady,
+  hasRequiredDocumentsFileReady,
+  missingRequiredDocumentLabels,
   personalReferencesValid,
 } from "@/lib/credit-hub/dealer/wizard-gates";
+import { tenantDocumentKey } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 const STEP_LABELS = ["Solicitante", "Co-firmante", "Vehículo", "Documentos", "Consentimiento"];
@@ -25,7 +27,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
-  const { stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig } = useDealerWizard();
+  const { stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig, requiredDocumentsList } = useDealerWizard();
   const [exitOpen, setExitOpen] = useState(false);
 
   const completeness = useMemo(
@@ -50,13 +52,16 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
 
   const step3BlockReason = useMemo(() => {
     if (stepIndex !== 3 || canAdvance) return null;
-    const idOk = hasIdFrontFileReady(formData);
+    const docsOk = hasRequiredDocumentsFileReady(formData);
     const refsOk = personalReferencesValid(formData.personal_references);
-    if (!idOk && !refsOk) return "Sube la c\u00e9dula (frente) y completa 3 referencias personales";
-    if (!idOk) return "Sube la foto de la c\u00e9dula (frente)";
+    const missingDocs = missingRequiredDocumentLabels(formData, requiredDocumentsList, tenantDocumentKey);
+    if (!docsOk && !refsOk) {
+      return `Sube ${missingDocs.join(", ")} y completa 3 referencias personales`;
+    }
+    if (!docsOk) return `Sube los documentos obligatorios: ${missingDocs.join(", ")}`;
     if (!refsOk) return "Se requieren al menos 3 referencias personales completas";
     return null;
-  }, [stepIndex, canAdvance, formData]);
+  }, [stepIndex, canAdvance, formData, requiredDocumentsList]);
 
   const blockReason = step0BlockReason ?? step3BlockReason;
 
