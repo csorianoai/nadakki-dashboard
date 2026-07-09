@@ -19,6 +19,7 @@ import {
   type OtherIncomeFormRow,
   type WizardStepValidationConfig,
   effectiveWizardDocuments,
+  tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 import { processApplication } from "@/lib/credit-hub/api/creditCoreClient";
@@ -39,6 +40,7 @@ import type { UploadStatus } from "./DocumentUploadZone";
 import { defaultDocumentTypeForCountry } from "@/lib/credit-hub/dealer/dealerFormat";
 import {
   createEmptyPersonalReference,
+  missingRequiredDocumentLabels,
   PERSONAL_REFERENCES_MAX,
   PERSONAL_REFERENCES_MIN,
   wizardDocumentsStepValid,
@@ -135,8 +137,10 @@ const DOC_KEY_TO_BACKEND_TYPE: Record<string, string> = {
   id_front: "CEDULA_FRENTE",
   id_back: "CEDULA_REVERSO",
   employment_letter: "CARTA_TRABAJO",
+  pay_stubs: "RECIBO_NOMINA",
   bank_statements: "ESTADO_CUENTA",
   income_evidence: "RECIBO_NOMINA",
+  tax_return: "OTRO",
   address_proof: "COMPROBANTE_DOMICILIO",
   vehicle_documents: "REGISTRO_VEHICULO",
   personal_references: "OTRO",
@@ -155,6 +159,7 @@ export type DealerWizardContextValue = {
   updateField: <K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => void;
   patchForm: (patch: Partial<ApplicationFormData>) => void;
   updateDocumentReceived: (key: string, checked: boolean) => void;
+  toggleDocumentSelected: (key: string, selected: boolean) => void;
   updateDocumentNote: (key: string, note: string) => void;
   addAdditionalDocumentRow: () => void;
   updateAdditionalDocumentRow: (id: string, updates: Partial<{ label: string; received: boolean }>) => void;
@@ -451,10 +456,32 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     });
     setFormData((prev) => ({
       ...prev,
-      documents_received: { ...prev.documents_received, [key]: file !== null },
+      documents_received: { ...prev.documents_received, [key]: file !== null ? true : prev.documents_received[key] },
       document_files_ready: { ...prev.document_files_ready, [key]: file !== null },
     }));
   }, []);
+
+  const toggleDocumentSelected = useCallback(
+    (key: string, selected: boolean) => {
+      if (!selected) {
+        setPendingFiles((prev) => {
+          const next = new Map(prev);
+          const old = prev.get(key);
+          if (old?.previewUrl) URL.revokeObjectURL(old.previewUrl);
+          next.delete(key);
+          return next;
+        });
+      }
+      setFormData((prev) => ({
+        ...prev,
+        documents_received: { ...prev.documents_received, [key]: selected },
+        document_files_ready: selected
+          ? prev.document_files_ready
+          : { ...prev.document_files_ready, [key]: false },
+      }));
+    },
+    [],
+  );
 
   // Clean up preview URLs on unmount
   useEffect(() => {
@@ -540,7 +567,12 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
 
   const submitApplication = useCallback(async () => {
     if (!wizardDocumentsStepValid(formData)) {
-      setSubmitError("Sube la cédula (frente) y completa al menos 3 referencias personales.");
+      const missing = missingRequiredDocumentLabels(formData, requiredDocumentsList, tenantDocumentKey);
+      setSubmitError(
+        missing.length > 0
+          ? `Sube los documentos obligatorios: ${missing.join(", ")}. También se requieren 3 referencias personales completas.`
+          : "Completa al menos 3 referencias personales.",
+      );
       throw new Error("Documentos o referencias incompletos");
     }
     if (!stepIsValid(5, formData, validationConfig, t)) {
@@ -558,7 +590,10 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       };
       const withMeta = await withConsentAuditMetadata(normalizedForm);
       const result = await createMutation.mutateAsync(
-        buildCreateApplicationPayload(withMeta, { defaultDocumentType: defaultDocType })
+        buildCreateApplicationPayload(withMeta, {
+          defaultDocumentType: defaultDocType,
+          wizardDocuments: requiredDocumentsList,
+        }),
       );
       clearDraftStorage();
       setFormData(initialApplicationFormData);
@@ -626,7 +661,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       setSubmitError(msg);
       throw err;
     }
-  }, [clearDraftStorage, defaultDocType, formData, createMutation, validationConfig, t, tenantId]);
+  }, [clearDraftStorage, defaultDocType, formData, createMutation, validationConfig, t, tenantId, requiredDocumentsList]);
 
   const value = useMemo(
     (): DealerWizardContextValue => ({
@@ -634,6 +669,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       updateField,
       patchForm,
       updateDocumentReceived,
+      toggleDocumentSelected,
       updateDocumentNote,
       addAdditionalDocumentRow,
       updateAdditionalDocumentRow,
@@ -667,6 +703,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       updateField,
       patchForm,
       updateDocumentReceived,
+      toggleDocumentSelected,
       updateDocumentNote,
       addAdditionalDocumentRow,
       updateAdditionalDocumentRow,

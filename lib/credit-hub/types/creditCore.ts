@@ -205,6 +205,8 @@ export interface CreateCreditApplicationPayload {
   };
   source: "forge_dealer_portal";
   version: "full_credit_application_v1";
+  /** Per-document upload status (additive; backend persists PENDING for uploaded: false). */
+  documentos?: Record<string, { uploaded: boolean; file_id?: string }>;
   /** Optional LATAM segment metadata (additive; backend may ignore until segmented-report). */
   segment?: {
     zone?: string;

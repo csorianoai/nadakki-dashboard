@@ -34,7 +34,8 @@ import { DO_RELATIONSHIP_TYPES } from "@/lib/credit/catalogs/do/employment-types
 import type { TenantBankingConfig, TenantRequiredDocument } from "@/lib/credit-hub/types/tenantConfig";
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
 import {
-  hasIdFrontFileReady,
+  buildDocumentosPayload,
+  hasRequiredDocumentsFileReady,
   initialPersonalReferences,
   personalReferencesValid,
   type PersonalReferenceFormRow,
@@ -95,13 +96,14 @@ export function effectiveRequiredDocuments(tenant: TenantBankingConfig): TenantR
   return DEFAULT_DO_REQUIRED_DOCUMENTS;
 }
 
-/** Forge wizard: only cédula frente required; personal_references excluded from checklist. */
+/** Forge wizard: three mandatory uploads; personal_references excluded from checklist. */
 export function effectiveWizardDocuments(tenant: TenantBankingConfig): TenantRequiredDocument[] {
+  const forcedRequired = new Set(["id_front", "id_back", "vehicle_documents"]);
   return effectiveRequiredDocuments(tenant)
     .filter((d) => tenantDocumentKey(d) !== "personal_references")
     .map((d) => ({
       ...d,
-      required: tenantDocumentKey(d) === "id_front",
+      required: forcedRequired.has(tenantDocumentKey(d)),
     }));
 }
 
@@ -280,7 +282,11 @@ export const initialApplicationFormData: ApplicationFormData = {
   co_debtor_monthly_income: "",
   co_debtor_relationship: "",
   co_debtor_employment: "",
-  documents_received: {},
+  documents_received: {
+    id_front: true,
+    id_back: true,
+    vehicle_documents: true,
+  },
   document_files_ready: {},
   document_notes: {},
   additional_document_items: [],
@@ -308,7 +314,7 @@ function cleanDecimalInput(value: string): string {
 
 export function buildCreateApplicationPayload(
   formData: ApplicationFormData,
-  options?: { defaultDocumentType?: string }
+  options?: { defaultDocumentType?: string; wizardDocuments?: TenantRequiredDocument[] },
 ): CreateCreditApplicationPayload {
   const defaultDoc = options?.defaultDocumentType ?? "CEDULA";
   const applicantBirthDate = parseDateInput(formData.applicant_date_of_birth);
@@ -423,6 +429,9 @@ export function buildCreateApplicationPayload(
     },
     source: "forge_dealer_portal",
     version: "full_credit_application_v1",
+    ...(options?.wizardDocuments?.length
+      ? { documentos: buildDocumentosPayload(formData, options.wizardDocuments, tenantDocumentKey) }
+      : {}),
     ...(formData.segment_zone || formData.segment_vehicle_type
       ? {
           segment: {
@@ -568,9 +577,9 @@ export function stepIsValid(
   }
   if (step === 4) {
     const forgeDocMode = Object.keys(data.document_files_ready ?? {}).length > 0;
-    const idOk = hasIdFrontFileReady(data);
+    const docsOk = hasRequiredDocumentsFileReady(data);
     const refsOk = forgeDocMode ? personalReferencesValid(data.personal_references) : true;
-    return idOk && refsOk;
+    return docsOk && refsOk;
   }
   if (step === 5) {
     const base =
@@ -599,7 +608,9 @@ export function stepIsValid(
 function requiredHint(step: number, data: ApplicationFormData, requiredDocs: TenantRequiredDocument[], t: CreditHubTranslations): string {
   if (step === 3) return t.wizard.hints.garante;
   if (step === 4) {
-    const missing = requiredDocs.filter((d) => d.required).filter((d) => !data.documents_received[tenantDocumentKey(d)]).length;
+    const missing = requiredDocs
+      .filter((d) => d.required)
+      .filter((d) => !data.document_files_ready?.[tenantDocumentKey(d)]).length;
     if (missing > 0) return t.validation.docs_missing(missing);
   }
   if (step === 5) return t.wizard.hints.consents;
