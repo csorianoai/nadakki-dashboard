@@ -129,10 +129,15 @@ const fullData: ApplicationFormData = {
     employment_letter: true,
     bank_statements: true,
     address_proof: true,
-    personal_references: true,
   },
+  document_files_ready: { id_front: true },
   document_notes: {},
   additional_document_items: [],
+  personal_references: [
+    { id: "r1", nombre_completo: "Juan Pérez", direccion: "Calle 1, SD", telefono: "8095551234" },
+    { id: "r2", nombre_completo: "María López", direccion: "Av. 2, SD", telefono: "8095555678" },
+    { id: "r3", nombre_completo: "Pedro Ruiz", direccion: "Calle 3, SD", telefono: "8095559012" },
+  ],
   consent_presence: "present",
   consent_bureau_authorization: true,
   consent_terms_accepted: true,
@@ -198,11 +203,6 @@ async function advanceToConsents() {
   expect(await screen.findByText("Documentos recibidos")).toBeInTheDocument();
 
   fireEvent.click(screen.getByLabelText(/Cédula \(frente\)/i));
-  fireEvent.click(screen.getByLabelText(/Cédula \(reverso\)/i));
-  fireEvent.click(screen.getByLabelText(/Carta de trabajo o constancia laboral/i));
-  fireEvent.click(screen.getByLabelText(/Últimos 3 estados de cuenta bancarios/i));
-  fireEvent.click(screen.getByLabelText(/Comprobante de domicilio/i));
-  fireEvent.click(screen.getByLabelText(/Referencias personales/i));
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByRole("heading", { name: "Consentimientos" })).toBeInTheDocument();
 }
@@ -478,21 +478,16 @@ describe("WizardContainer", () => {
     expect(screen.queryByLabelText(/^Factura/i)).not.toBeInTheDocument();
   });
 
-  it("blocks continuation when required documents are missing", async () => {
+  it("blocks continuation when id_front is missing", async () => {
     render(<WizardContainer />);
     await navigateToDocumentsStep();
     expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
   });
 
-  it("enables continuation when all required documents are checked", async () => {
+  it("enables continuation when id_front is checked", async () => {
     render(<WizardContainer />);
     await navigateToDocumentsStep();
     fireEvent.click(screen.getByLabelText(/Cédula \(frente\)/i));
-    fireEvent.click(screen.getByLabelText(/Cédula \(reverso\)/i));
-    fireEvent.click(screen.getByLabelText(/Carta de trabajo o constancia laboral/i));
-    fireEvent.click(screen.getByLabelText(/Últimos 3 estados de cuenta bancarios/i));
-    fireEvent.click(screen.getByLabelText(/Comprobante de domicilio/i));
-    fireEvent.click(screen.getByLabelText(/Referencias personales/i));
     expect(screen.getByRole("button", { name: "Siguiente" })).not.toBeDisabled();
   });
 

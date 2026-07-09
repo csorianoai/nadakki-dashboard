@@ -13,12 +13,12 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   buildCreateApplicationPayload,
-  effectiveRequiredDocuments,
   initialApplicationFormData,
   stepIsValid,
   type ApplicationFormData,
   type OtherIncomeFormRow,
   type WizardStepValidationConfig,
+  effectiveWizardDocuments,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
 import { processApplication } from "@/lib/credit-hub/api/creditCoreClient";
@@ -37,6 +37,13 @@ import { uploadDocument } from "@/lib/credit-api";
 import type { UploadStatus } from "./DocumentUploadZone";
 
 import { defaultDocumentTypeForCountry } from "@/lib/credit-hub/dealer/dealerFormat";
+import {
+  createEmptyPersonalReference,
+  PERSONAL_REFERENCES_MAX,
+  PERSONAL_REFERENCES_MIN,
+  wizardDocumentsStepValid,
+  type PersonalReferenceFormRow,
+} from "@/lib/credit-hub/dealer/wizard-gates";
 
 const STORAGE_KEY = "nadakki_dealer_wizard_v1";
 const LEGACY_STORAGE_KEY = "forge-dealer-wizard-draft-v1";
@@ -156,9 +163,12 @@ export type DealerWizardContextValue = {
   addOtherIncomeRow: () => void;
   removeOtherIncomeRow: (id: string) => void;
   setHasOtherIncome: (value: "yes" | "no") => void;
+  updatePersonalReference: (id: string, updates: Partial<PersonalReferenceFormRow>) => void;
+  addPersonalReference: () => void;
+  removePersonalReference: (id: string) => void;
   validationConfig: WizardStepValidationConfig;
   defaultDocType: string;
-  requiredDocumentsList: ReturnType<typeof effectiveRequiredDocuments>;
+  requiredDocumentsList: ReturnType<typeof effectiveWizardDocuments>;
   stepIndex: number;
   canAdvance: boolean;
   goNext: () => void;
@@ -194,7 +204,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     tenantConfig.country_code,
     tenantConfig.document_types.primary_id ?? "CEDULA",
   );
-  const requiredDocumentsList = useMemo(() => effectiveRequiredDocuments(tenantConfig), [tenantConfig]);
+  const requiredDocumentsList = useMemo(() => effectiveWizardDocuments(tenantConfig), [tenantConfig]);
 
   const validationConfig = useMemo(
     (): WizardStepValidationConfig => ({
@@ -252,7 +262,16 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       if (!raw) return;
       const parsed: unknown = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
-      setFormData((prev) => ({ ...prev, ...(parsed as Partial<ApplicationFormData>) }));
+      const partial = parsed as Partial<ApplicationFormData>;
+      setFormData((prev) => ({
+        ...prev,
+        ...partial,
+        personal_references:
+          Array.isArray(partial.personal_references) && partial.personal_references.length > 0
+            ? partial.personal_references
+            : prev.personal_references,
+        document_files_ready: partial.document_files_ready ?? prev.document_files_ready ?? {},
+      }));
     } catch {
       /* ignore */
     }
@@ -395,24 +414,47 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const updatePersonalReference = useCallback((id: string, updates: Partial<PersonalReferenceFormRow>) => {
+    setFormData((prev) => ({
+      ...prev,
+      personal_references: prev.personal_references.map((row) => (row.id === id ? { ...row, ...updates } : row)),
+    }));
+  }, []);
+
+  const addPersonalReference = useCallback(() => {
+    setFormData((prev) => {
+      if (prev.personal_references.length >= PERSONAL_REFERENCES_MAX) return prev;
+      return { ...prev, personal_references: [...prev.personal_references, createEmptyPersonalReference()] };
+    });
+  }, []);
+
+  const removePersonalReference = useCallback((id: string) => {
+    setFormData((prev) => {
+      if (prev.personal_references.length <= PERSONAL_REFERENCES_MIN) return prev;
+      return { ...prev, personal_references: prev.personal_references.filter((row) => row.id !== id) };
+    });
+  }, []);
+
   const setPendingFile = useCallback((key: string, file: File | null) => {
     setPendingFiles((prev) => {
       const next = new Map(prev);
-      // Revoke old preview URL
       const old = prev.get(key);
       if (old?.previewUrl) URL.revokeObjectURL(old.previewUrl);
 
       if (!file) {
         next.delete(key);
-        return next;
+      } else {
+        const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
+        next.set(key, { file, status: "selected", previewUrl, errorMessage: null });
       }
-      const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
-      next.set(key, { file, status: "selected", previewUrl, errorMessage: null });
       return next;
     });
-    // Auto-check "received" when file is selected; uncheck when removed
-    updateDocumentReceived(key, file !== null);
-  }, [updateDocumentReceived]);
+    setFormData((prev) => ({
+      ...prev,
+      documents_received: { ...prev.documents_received, [key]: file !== null },
+      document_files_ready: { ...prev.document_files_ready, [key]: file !== null },
+    }));
+  }, []);
 
   // Clean up preview URLs on unmount
   useEffect(() => {
@@ -497,6 +539,10 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [tenantConfig.locale, saveDraftToStorage]);
 
   const submitApplication = useCallback(async () => {
+    if (!wizardDocumentsStepValid(formData)) {
+      setSubmitError("Sube la cédula (frente) y completa al menos 3 referencias personales.");
+      throw new Error("Documentos o referencias incompletos");
+    }
     if (!stepIsValid(5, formData, validationConfig, t)) {
       setSubmitError(t.validation.consents_required);
       throw new Error(t.validation.consents_required);
@@ -596,6 +642,9 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       addOtherIncomeRow,
       removeOtherIncomeRow,
       setHasOtherIncome,
+      updatePersonalReference,
+      addPersonalReference,
+      removePersonalReference,
       validationConfig,
       defaultDocType,
       requiredDocumentsList,
@@ -626,6 +675,9 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       addOtherIncomeRow,
       removeOtherIncomeRow,
       setHasOtherIncome,
+      updatePersonalReference,
+      addPersonalReference,
+      removePersonalReference,
       validationConfig,
       defaultDocType,
       requiredDocumentsList,

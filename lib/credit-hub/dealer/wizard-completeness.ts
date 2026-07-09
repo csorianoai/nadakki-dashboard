@@ -66,7 +66,8 @@ export function missingFieldsHint(
   if (!stepIsValid(0, data, config, t)) hints.push("Datos del solicitante incompletos");
   if (!stepIsValid(1, data, config, t)) hints.push("Empleo e ingresos incompletos");
   if (!stepIsValid(2, data, config, t)) hints.push("Vehículo y términos incompletos");
-  if (!stepIsValid(3, data, config, t)) hints.push("Documentos pendientes");
-  if (!stepIsValid(4, data, config, t)) hints.push("Consentimiento pendiente");
+  if (!stepIsValid(3, data, config, t)) hints.push("Co-firmante incompleto");
+  if (!stepIsValid(4, data, config, t)) hints.push("Cédula frente o referencias incompletas");
+  if (!stepIsValid(5, data, config, t)) hints.push("Consentimiento pendiente");
   return hints;
 }
