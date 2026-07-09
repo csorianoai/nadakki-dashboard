@@ -118,6 +118,11 @@ export interface CreateCreditApplicationPayload {
     municipality?: string;
     province: string;
     country: string;
+    referencias_personales?: Array<{
+      nombre_completo: string;
+      direccion: string;
+      telefono: string;
+    }>;
   };
   employment: {
     employment_type: string;

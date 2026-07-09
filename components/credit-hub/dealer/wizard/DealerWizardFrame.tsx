@@ -13,6 +13,10 @@ import { toast } from "@/components/forge";
 import { WizardCompletenessBar } from "@/components/credit-hub/dealer/wizard/WizardCompletenessBar";
 import { computeWizardCompleteness, missingFieldsHint } from "@/lib/credit-hub/dealer/wizard-completeness";
 import { stepIsValid } from "@/components/credit-hub/dealer/wizard/WizardContainer";
+import {
+  hasIdFrontFileReady,
+  personalReferencesValid,
+} from "@/lib/credit-hub/dealer/wizard-gates";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 const STEP_LABELS = ["Solicitante", "Co-firmante", "Vehículo", "Documentos", "Consentimiento"];
@@ -43,6 +47,18 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
     if (!employmentOk) return "Completa la secci\u00f3n Empleo (despl\u00e1zate hacia abajo)";
     return null;
   }, [stepIndex, canAdvance, formData, validationConfig, t]);
+
+  const step3BlockReason = useMemo(() => {
+    if (stepIndex !== 3 || canAdvance) return null;
+    const idOk = hasIdFrontFileReady(formData);
+    const refsOk = personalReferencesValid(formData.personal_references);
+    if (!idOk && !refsOk) return "Sube la c\u00e9dula (frente) y completa 3 referencias personales";
+    if (!idOk) return "Sube la foto de la c\u00e9dula (frente)";
+    if (!refsOk) return "Se requieren al menos 3 referencias personales completas";
+    return null;
+  }, [stepIndex, canAdvance, formData]);
+
+  const blockReason = step0BlockReason ?? step3BlockReason;
 
   const handleSaveDraft = useCallback(() => {
     const ok = saveDraftToStorage();
@@ -140,7 +156,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
         }}
       >
-        {step0BlockReason ? (
+        {blockReason ? (
           <button
             type="button"
             onClick={scrollToFirstIncomplete}
@@ -161,7 +177,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
             }}
             data-testid="wizard-scroll-to-missing"
           >
-            {step0BlockReason}
+            {blockReason}
           </button>
         ) : null}
         <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 8, alignItems: "stretch" }}>

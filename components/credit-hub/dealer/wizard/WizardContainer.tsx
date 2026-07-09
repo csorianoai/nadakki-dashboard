@@ -33,6 +33,12 @@ import { useAdministrativeDivisions } from "@/lib/credit/catalogs/useAdministrat
 import { DO_RELATIONSHIP_TYPES } from "@/lib/credit/catalogs/do/employment-types";
 import type { TenantBankingConfig, TenantRequiredDocument } from "@/lib/credit-hub/types/tenantConfig";
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
+import {
+  hasIdFrontFileReady,
+  initialPersonalReferences,
+  personalReferencesValid,
+  type PersonalReferenceFormRow,
+} from "@/lib/credit-hub/dealer/wizard-gates";
 import { preapprovalParamsFromTenantFractions, simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
 import { PreApprovalBadge } from "./PreApprovalBadge";
 import { ConsentSection, type ConsentWizardPatch } from "./consent/ConsentSection";
@@ -42,6 +48,8 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   PASAPORTE: "Pasaporte",
   OTRO: "Otro",
 };
+
+export type { PersonalReferenceFormRow } from "@/lib/credit-hub/dealer/wizard-gates";
 
 export function documentTypeSelectOptions(config: TenantBankingConfig): Array<[string, string]> {
   const primary = config.document_types?.primary_id;
@@ -85,6 +93,16 @@ export function tenantDocumentKey(doc: TenantRequiredDocument): string {
 export function effectiveRequiredDocuments(tenant: TenantBankingConfig): TenantRequiredDocument[] {
   if (tenant.required_documents?.length) return tenant.required_documents;
   return DEFAULT_DO_REQUIRED_DOCUMENTS;
+}
+
+/** Forge wizard: only cédula frente required; personal_references excluded from checklist. */
+export function effectiveWizardDocuments(tenant: TenantBankingConfig): TenantRequiredDocument[] {
+  return effectiveRequiredDocuments(tenant)
+    .filter((d) => tenantDocumentKey(d) !== "personal_references")
+    .map((d) => ({
+      ...d,
+      required: tenantDocumentKey(d) === "id_front",
+    }));
 }
 
 function contractLabelToFormValue(label: string): string {
@@ -178,8 +196,11 @@ export interface ApplicationFormData {
   co_debtor_employment: string;
   /** Checklist keyed by `tenantDocumentKey` from tenant required documents. */
   documents_received: Record<string, boolean>;
+  /** True when a file was attached via upload zone (forge wizard). */
+  document_files_ready: Record<string, boolean>;
   document_notes: Record<string, string>;
   additional_document_items: Array<{ id: string; label: string; received: boolean }>;
+  personal_references: PersonalReferenceFormRow[];
   consent_presence: "present" | "remote";
   consent_bureau_authorization: boolean;
   consent_terms_accepted: boolean;
@@ -260,8 +281,10 @@ export const initialApplicationFormData: ApplicationFormData = {
   co_debtor_relationship: "",
   co_debtor_employment: "",
   documents_received: {},
+  document_files_ready: {},
   document_notes: {},
   additional_document_items: [],
+  personal_references: initialPersonalReferences(),
   consent_presence: "present",
   consent_bureau_authorization: false,
   consent_terms_accepted: false,
@@ -323,6 +346,13 @@ export function buildCreateApplicationPayload(
       municipality: formData.applicant_city.trim(),
       province: formData.applicant_province.trim(),
       country: formData.applicant_country.trim(),
+      referencias_personales: (formData.personal_references ?? [])
+        .filter((r) => r.nombre_completo.trim() && r.direccion.trim() && r.telefono.replace(/\D/g, "").length >= 10)
+        .map((r) => ({
+          nombre_completo: r.nombre_completo.trim(),
+          direccion: r.direccion.trim(),
+          telefono: r.telefono.replace(/\D/g, ""),
+        })),
     },
     employment: {
       employment_type: formData.employment_type,
@@ -537,7 +567,10 @@ export function stepIsValid(
     );
   }
   if (step === 4) {
-    return config.required_documents.filter((d) => d.required).every((d) => Boolean(data.documents_received[tenantDocumentKey(d)]));
+    const forgeDocMode = Object.keys(data.document_files_ready ?? {}).length > 0;
+    const idOk = hasIdFrontFileReady(data);
+    const refsOk = forgeDocMode ? personalReferencesValid(data.personal_references) : true;
+    return idOk && refsOk;
   }
   if (step === 5) {
     const base =
