@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Download, FileText } from "lucide-react";
 import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
+import { EscalateKycButton } from "@/components/credit-hub/bank/EscalateKycButton";
+import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
+import type { PilotLabels } from "@/lib/credit-hub/labels/pilot-labels";
 import { AnalysisTab } from "@/components/credit-hub/bank/sections/AnalysisTab";
 import { AuditTab } from "@/components/credit-hub/bank/sections/AuditTab";
 import { ComplianceTab } from "@/components/credit-hub/bank/sections/ComplianceTab";
@@ -115,6 +118,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   );
 
   const applicantName = String(applicant.name ?? applicant.full_name ?? "Cliente");
+  const pilotLabels = (payload.pilot_labels ?? {}) as PilotLabels;
   const rate = Number(financial.requested_rate ?? analysis?.metrics?.annual_rate ?? 17.5);
   const term = Number(financial.term_months ?? analysis?.metrics?.term_months ?? 48);
   const amount = Number(financial.requested_amount ?? analysis?.financed_amount ?? 0);
@@ -153,6 +157,12 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             Exportar PDF
           </button>
         </div>
+      </div>
+
+      <PilotLabelsRow labels={pilotLabels} prominent />
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <EscalateKycButton applicationId={application.application_id} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 8fr) 4fr", gap: 18, alignItems: "start" }}>
@@ -219,7 +229,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
               ))}
             </div>
             {tab === "analisis" ? <AnalysisTab payload={payload} /> : null}
-            {tab === "documentos" ? <DocumentsTab docs={docs} /> : null}
+            {tab === "documentos" ? <DocumentsTab docs={docs} applicationId={application.application_id} /> : null}
             {tab === "stipulaciones" ? <StipulationsTab applicationId={application.application_id} /> : null}
             {tab === "audit" ? <AuditTab audit={audit} /> : null}
             {tab === "compliance" ? <ComplianceTab report={compliance} applicationId={application.application_id} /> : null}

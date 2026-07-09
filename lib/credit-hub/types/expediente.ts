@@ -19,4 +19,13 @@ export interface ExpedienteFullResponse {
   audit_trail?: unknown;
   completeness?: Record<string, unknown>;
   generated_at?: string;
+  /** Pilot readiness labels (backend expediente/full; additive). */
+  data_source_label?: string | null;
+  kyc_mode?: string | null;
+  ocr_mode?: string | null;
+  pilot_labels?: {
+    data_source_label?: string | null;
+    kyc_mode?: string | null;
+    ocr_mode?: string | null;
+  };
 }

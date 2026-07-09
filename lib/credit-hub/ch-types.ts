@@ -161,6 +161,8 @@ export interface ChNotification {
   body?: string;
   read?: boolean;
   at?: string;
+  category?: string;
+  application_id?: string;
 }
 
 export interface ChTenantOption {

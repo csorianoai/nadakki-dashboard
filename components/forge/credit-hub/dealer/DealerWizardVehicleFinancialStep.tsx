@@ -14,6 +14,8 @@ import { useCatalogs } from "@/lib/credit-hub/hooks/useCatalogs";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { formatForgeCurrency } from "@/utils/forge-locale";
+import { ltvAlertCopy, ltvAlertLevel } from "@/lib/credit-hub/dealer/ltv-alert";
+import { LtvAlertBanner } from "@/components/credit-hub/dealer/wizard/LtvAlertBanner";
 import { cleanDecimalInput, useDealerWizard } from "./DealerWizardProvider";
 import { WizardSegmentPanel } from "@/components/credit-hub/dealer/wizard/WizardSegmentPanel";
 
@@ -45,6 +47,8 @@ export function DealerWizardVehicleFinancialStep() {
     0.4
   );
   const ltvPercent = calculateLTV(amountToFinance, numeric(formData.vehicle_price));
+  const ltvLevel = ltvAlertLevel(ltvPercent);
+  const ltvMessage = ltvAlertCopy(ltvLevel, ltvPercent);
 
   const preApproval = useMemo(() => {
     const baseIncome = numeric(formData.monthly_income);
@@ -194,6 +198,7 @@ export function DealerWizardVehicleFinancialStep() {
             <p className="text-forge-xs text-forgeDanger-600">{t.wizard.ltv_exceeds}</p>
           ) : null}
         </div>
+        <LtvAlertBanner level={ltvLevel} message={ltvMessage} />
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">
           <p className="text-forge-xs text-forgeGray-500">{t.wizard.estimated_capacity}</p>
           <p className="font-semibold tabular-nums text-forgeGray-800">

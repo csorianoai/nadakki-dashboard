@@ -63,6 +63,12 @@ export interface BankReviewPayload {
   bank_decision?: unknown;
   audit_trail?: unknown;
   identity?: import("@/lib/credit-hub/ch-types").IdentityEvidence;
+  pilot_labels?: {
+    data_source_label?: string | null;
+    kyc_mode?: string | null;
+    ocr_mode?: string | null;
+  };
+  expediente_meta?: Record<string, unknown>;
 }
 
 export interface ScoreDistribution {

@@ -8,6 +8,8 @@ import { DetailSkeleton, EmptyStateRich, RiskBand, ScoreVisual } from "@/compone
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { DealerStatusBadge } from "@/components/credit-hub/dealer/shared/dealerUi";
 import { DealerApplicationDocumentsSection } from "@/components/credit-hub/dealer/DealerApplicationDocumentsSection";
+import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
+import { extractPilotLabels } from "@/lib/credit-hub/labels/pilot-labels";
 import { OfferConfirmModal } from "@/components/credit-hub/dealer/OfferConfirmModal";
 import { CreditCoreApiError, acceptOffer } from "@/lib/credit-hub/api/creditCoreClient";
 import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
@@ -153,6 +155,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const score = data.score != null ? Number(data.score) : null;
   const acceptedOffer = offers.find((o) => o.status === "accepted") ?? null;
   const hasAcceptedOffer = acceptedOffer != null;
+  const pilotLabels = extractPilotLabels(data.raw);
 
   // D1: find "MEJOR" offer — lowest APR among selectable (approved/pending/counter_offer) offers
   const bestOfferId: string | null = (() => {
@@ -183,6 +186,8 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         </div>
         <DealerStatusBadge status={data.status} size="lg" />
       </div>
+
+      <PilotLabelsRow labels={pilotLabels} prominent />
 
       {score != null && Number.isFinite(score) ? (
         <div className="ch-card mb-4 flex flex-col items-center gap-4 p-[18px] sm:flex-row sm:items-center sm:gap-5">
