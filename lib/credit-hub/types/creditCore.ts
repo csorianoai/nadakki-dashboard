@@ -213,6 +213,17 @@ export interface CreateCreditApplicationPayload {
     vehicle_type?: string;
     employment_type?: string;
   };
+  /** Dealer sworn vehicle declaration (SECURITY_UI_LOOP F1). */
+  declaracion_vehiculo?: {
+    perdida_total: boolean;
+    accidentes_reportados: "yes" | "no" | "unknown";
+    gravamenes_vigentes: boolean;
+    titulo_a_nombre_vendedor: boolean;
+    kilometraje_coincide: boolean;
+    firma_dealer: string;
+    fecha_firma: string;
+    hash: string;
+  };
 }
 
 export interface ApiErrorShape {
