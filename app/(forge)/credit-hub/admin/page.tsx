@@ -1,12 +1,7 @@
 "use client";
 
-import { AdminNetworkOsView } from "@/components/credit-hub/admin/AdminNetworkOsView";
-import { CHAdminAccessGuard } from "@/components/credit-hub/system/CHAdminAccessGuard";
+import { NetworkCockpitNivel1 } from "@/lib/cockpit/nivel1/NetworkCockpitNivel1";
 
 export default function CreditHubAdminPage() {
-  return (
-    <CHAdminAccessGuard>
-      <AdminNetworkOsView />
-    </CHAdminAccessGuard>
-  );
+  return <NetworkCockpitNivel1 />;
 }
