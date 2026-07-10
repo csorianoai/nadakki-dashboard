@@ -5,6 +5,14 @@ export function isOperationalEndpointUnavailable(err: unknown): boolean {
   return err instanceof CHApiError && (err.status === 404 || err.status === 501);
 }
 
+function senderTypeForRole(actorRole?: CHActorRole): "DEALER" | "BANK" {
+  return actorRole === "dealer" ? "DEALER" : "BANK";
+}
+
+function readerTypeForRole(actorRole?: CHActorRole): "DEALER" | "BANK" {
+  return actorRole === "dealer" ? "DEALER" : "BANK";
+}
+
 // ── F1: Application edit ─────────────────────────────────────────────────────
 
 export interface EditHistoryEntry {
@@ -98,63 +106,75 @@ export async function postDocumentRequest(params: {
 
 export async function patchDocumentRequestUpload(params: {
   tenantId: string;
-  applicationId: string;
   requestId: string;
-  file_name?: string;
 }): Promise<DocumentRequestItem> {
-  return chFetch(
-    `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/document-requests/${encodeURIComponent(params.requestId)}/upload`,
-    {
-      tenantId: params.tenantId,
-      actorRole: "dealer",
-      method: "PATCH",
-      body: JSON.stringify({ file_name: params.file_name ?? "upload.pdf" }),
-    },
-  );
+  return chFetch(`/api/v2/credit/document-requests/${encodeURIComponent(params.requestId)}/upload`, {
+    tenantId: params.tenantId,
+    actorRole: "dealer",
+    method: "PATCH",
+    body: JSON.stringify({}),
+  });
 }
 
-export async function postDocumentRequestReview(params: {
+export async function patchDocumentRequestReview(params: {
   tenantId: string;
-  applicationId: string;
   requestId: string;
-  action: "accept" | "reject";
+  decision: "ACCEPTED" | "REJECTED";
   notes?: string;
-  rejection_reason?: string;
 }): Promise<DocumentRequestItem> {
-  return chFetch(
-    `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/document-requests/${encodeURIComponent(params.requestId)}/review`,
-    {
-      tenantId: params.tenantId,
-      actorRole: "bank_analyst",
-      method: "POST",
-      body: JSON.stringify({
-        action: params.action,
-        notes: params.notes,
-        rejection_reason: params.rejection_reason,
-      }),
-    },
-  );
+  return chFetch(`/api/v2/credit/document-requests/${encodeURIComponent(params.requestId)}/review`, {
+    tenantId: params.tenantId,
+    actorRole: "bank_analyst",
+    method: "PATCH",
+    body: JSON.stringify({ decision: params.decision, notes: params.notes }),
+  });
 }
 
 // ── F3: Messaging ───────────────────────────────────────────────────────────
 
 export interface ApplicationMessage {
   id: string;
-  sender_role: "dealer" | "bank" | string;
+  sender_role: "dealer" | "bank" | "DEALER" | "BANK" | string;
   message_text: string;
   created_at: string;
   read?: boolean;
+}
+
+function normalizeMessage(raw: {
+  id: string;
+  sender_type?: string;
+  message_text: string;
+  created_at: string;
+  read_at?: string | null;
+}): ApplicationMessage {
+  const role = (raw.sender_type ?? "DEALER").toUpperCase();
+  return {
+    id: raw.id,
+    sender_role: role === "BANK" ? "bank" : "dealer",
+    message_text: raw.message_text,
+    created_at: raw.created_at,
+    read: Boolean(raw.read_at),
+  };
 }
 
 export async function getApplicationMessages(params: {
   tenantId: string;
   applicationId: string;
   actorRole?: CHActorRole;
-}): Promise<{ messages?: ApplicationMessage[]; unread_count?: number }> {
-  return chFetch(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/messages`, {
+}): Promise<{ messages?: ApplicationMessage[] }> {
+  const data = await chFetch<{
+    messages?: Array<{
+      id: string;
+      sender_type?: string;
+      message_text: string;
+      created_at: string;
+      read_at?: string | null;
+    }>;
+  }>(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/messages`, {
     tenantId: params.tenantId,
     actorRole: params.actorRole ?? "dealer",
   });
+  return { messages: (data.messages ?? []).map(normalizeMessage) };
 }
 
 export async function postApplicationMessage(params: {
@@ -163,25 +183,51 @@ export async function postApplicationMessage(params: {
   message_text: string;
   actorRole?: CHActorRole;
 }): Promise<ApplicationMessage> {
-  return chFetch(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/messages`, {
+  const raw = await chFetch<{
+    id: string;
+    sender_type?: string;
+    message_text: string;
+    created_at: string;
+    read_at?: string | null;
+  }>(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/messages`, {
     tenantId: params.tenantId,
     actorRole: params.actorRole ?? "dealer",
     method: "POST",
-    body: JSON.stringify({ message_text: params.message_text }),
+    body: JSON.stringify({
+      sender_type: senderTypeForRole(params.actorRole),
+      message_text: params.message_text,
+    }),
   });
+  return normalizeMessage(raw);
 }
 
-export async function patchMarkMessagesRead(params: {
+export async function patchMarkMessageRead(params: {
   tenantId: string;
-  applicationId: string;
+  messageId: string;
   actorRole?: CHActorRole;
-}): Promise<{ ok?: boolean }> {
-  return chFetch(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/messages/read`, {
+}): Promise<{ ok?: boolean; read?: boolean }> {
+  return chFetch(`/api/v2/credit/messages/${encodeURIComponent(params.messageId)}/read`, {
     tenantId: params.tenantId,
     actorRole: params.actorRole ?? "dealer",
     method: "PATCH",
     body: JSON.stringify({}),
   });
+}
+
+export async function getMessageUnreadCount(params: {
+  tenantId: string;
+  applicationId: string;
+  actorRole?: CHActorRole;
+}): Promise<number> {
+  const readerType = readerTypeForRole(params.actorRole);
+  const data = await chFetch<{ unread_count?: number }>(
+    `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/messages/unread-count?reader_type=${readerType}`,
+    {
+      tenantId: params.tenantId,
+      actorRole: params.actorRole ?? "dealer",
+    },
+  );
+  return data.unread_count ?? 0;
 }
 
 // ── F4: Post-approval / disbursement ────────────────────────────────────────

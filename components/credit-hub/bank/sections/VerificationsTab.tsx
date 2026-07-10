@@ -3,16 +3,17 @@
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  getApplicationCompliance,
-  getPreScreen,
+  complianceMatchesFromResults,
+  complianceStatusFromResults,
+  getComplianceResults,
   getVehicleHistory,
-  getVerifyIdentity,
   isSecurityEndpointUnavailable,
 } from "@/lib/credit-hub/api/securityClient";
 import { CHApiError } from "@/lib/credit-hub/api/client";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
 import { getDeclaracionSemaforoRows, type DeclaracionVehiculoPayload } from "@/lib/credit-hub/dealer/vehicle-declaration";
+import type { PreScreenStatus } from "@/lib/credit-hub/api/securityClient";
 
 function Card({ title, children, testId }: { title: string; children: ReactNode; testId: string }) {
   return (
@@ -39,84 +40,81 @@ export function VerificationsTab({
   applicationId,
   declaracion,
   vehicleVin,
+  prescreenStatus,
+  prescreenReport,
+  identityStatus,
+  identityDetail,
 }: {
   applicationId: string;
   declaracion?: DeclaracionVehiculoPayload | null;
   vehicleVin?: string | null;
+  prescreenStatus?: PreScreenStatus | "" | null;
+  prescreenReport?: Record<string, unknown> | null;
+  identityStatus?: string | null;
+  identityDetail?: string | null;
 }) {
   const { apiTenantId } = useTenant();
   const { roleKey } = useCreditHubActor();
   const isBankAnalyst = roleKey === "bank_analyst" || roleKey === "bank_admin" || roleKey === "credit_admin";
 
-  const identityQ = useSafeQuery(["verify-identity", apiTenantId ?? "", applicationId], () =>
-    getVerifyIdentity({ tenantId: apiTenantId!, applicationId }),
-  );
-  const prescreenQ = useSafeQuery(["pre-screen", apiTenantId ?? "", applicationId], () =>
-    getPreScreen({ tenantId: apiTenantId!, applicationId }),
-  );
-  const complianceQ = useSafeQuery(["app-compliance", apiTenantId ?? "", applicationId], () =>
-    getApplicationCompliance({ tenantId: apiTenantId!, applicationId }),
+  const complianceQ = useSafeQuery(["compliance-results", apiTenantId ?? "", applicationId], () =>
+    getComplianceResults({ tenantId: apiTenantId!, applicationId }),
   );
   const vin = (vehicleVin ?? "").trim();
   const historyQ = useSafeQuery(["vehicle-history", apiTenantId ?? "", vin], () =>
     getVehicleHistory({ tenantId: apiTenantId!, vin }),
   );
 
-  const identityHidden = identityQ.error instanceof CHApiError && isSecurityEndpointUnavailable(identityQ.error);
-  const prescreenHidden = prescreenQ.error instanceof CHApiError && isSecurityEndpointUnavailable(prescreenQ.error);
   const complianceHidden = complianceQ.error instanceof CHApiError && isSecurityEndpointUnavailable(complianceQ.error);
   const historyHidden =
     !vin || (historyQ.error instanceof CHApiError && isSecurityEndpointUnavailable(historyQ.error));
 
+  const complianceStatus = complianceStatusFromResults(complianceQ.data?.results);
+  const complianceMatches = complianceMatchesFromResults(complianceQ.data?.results);
+
   return (
     <div className="space-y-3" data-testid="verifications-tab">
-      {!identityHidden ? (
-        <Card title="Identidad (KYC)" testId="verification-card-identity">
-          {identityQ.isLoading ? <p className="text-forge-sm text-forgeGray-500">Cargando…</p> : null}
-          {identityQ.data?.status === "VERIFIED" ? (
-            <p className="text-sm text-green-700">✓ Verificada por Nadakki{identityQ.data.checked_at ? ` · ${identityQ.data.checked_at}` : ""}</p>
-          ) : identityQ.data?.status === "MISMATCH" ? (
-            <p className="text-sm text-red-700">
-              ✗ Datos no coinciden{identityQ.data.detail ? ` — ${identityQ.data.detail}` : ""}
-            </p>
-          ) : identityQ.data?.status === "UNVERIFIED" ? (
-            <p className="text-sm text-amber-700">⚠ Documento adjunto, sin verificar</p>
-          ) : (
-            <p className="text-sm text-forgeGray-500">No solicitada</p>
-          )}
-        </Card>
-      ) : null}
+      <Card title="Identidad (KYC)" testId="verification-card-identity">
+        {identityStatus === "VERIFIED" ? (
+          <p className="text-sm text-green-700">
+            ✓ Verificada por Nadakki{identityDetail ? ` — ${identityDetail}` : ""}
+          </p>
+        ) : identityStatus === "MISMATCH" ? (
+          <p className="text-sm text-red-700">✗ Datos no coinciden{identityDetail ? ` — ${identityDetail}` : ""}</p>
+        ) : identityStatus === "UNVERIFIED" ? (
+          <p className="text-sm text-amber-700">⚠ Documento adjunto, sin verificar</p>
+        ) : (
+          <p className="text-sm text-forgeGray-500">No solicitada por el dealer</p>
+        )}
+      </Card>
 
-      {!prescreenHidden ? (
-        <Card title="Pre-screening buró" testId="verification-card-prescreen">
-          {prescreenQ.isLoading ? <p className="text-forge-sm text-forgeGray-500">Cargando…</p> : null}
-          {!prescreenQ.data ? (
-            <p className="text-sm text-forgeGray-500">No consultado por el dealer</p>
-          ) : prescreenQ.data.status === "ELIGIBLE" ? (
-            <p className="text-sm text-green-700">🟢 Elegible para envío</p>
-          ) : prescreenQ.data.status === "ELIGIBLE_WITH_RESERVATIONS" ? (
-            <p className="text-sm text-amber-700">🟡 Elegible con reservas</p>
-          ) : (
-            <p className="text-sm text-red-700">🔴 No elegible</p>
-          )}
-          {isBankAnalyst && prescreenQ.data?.full_report ? (
-            <pre className="mt-2 max-h-40 overflow-auto rounded bg-forgeSurface-sunken p-2 text-xs">
-              {JSON.stringify(prescreenQ.data.full_report, null, 2)}
-            </pre>
-          ) : null}
-        </Card>
-      ) : null}
+      <Card title="Pre-screening buró" testId="verification-card-prescreen">
+        {!prescreenStatus ? (
+          <p className="text-sm text-forgeGray-500">No consultado por el dealer</p>
+        ) : prescreenStatus === "ELIGIBLE" ? (
+          <p className="text-sm text-green-700">🟢 Elegible para envío</p>
+        ) : prescreenStatus === "ELIGIBLE_WITH_RESERVATIONS" ? (
+          <p className="text-sm text-amber-700">🟡 Elegible con reservas</p>
+        ) : (
+          <p className="text-sm text-red-700">🔴 No elegible</p>
+        )}
+        {isBankAnalyst && prescreenReport ? (
+          <pre className="mt-2 max-h-40 overflow-auto rounded bg-forgeSurface-sunken p-2 text-xs">
+            {JSON.stringify(prescreenReport, null, 2)}
+          </pre>
+        ) : null}
+      </Card>
 
       {!complianceHidden ? (
         <Card title="Compliance AML" testId="verification-card-compliance">
           {complianceQ.isLoading ? <p className="text-forge-sm text-forgeGray-500">Cargando…</p> : null}
-          {complianceQ.data?.status === "CLEAR" ? (
+          {complianceStatus === "CLEAR" ? (
             <p className="text-sm text-green-700">✓ Sin coincidencias en listas restrictivas</p>
-          ) : complianceQ.data?.status === "MATCH_FOUND" ? (
+          ) : complianceStatus === "MATCH_FOUND" ? (
             <div className="text-sm text-red-700">
               ✗ Coincidencia encontrada
               <ul className="mt-1 list-disc pl-5">
-                {(complianceQ.data.matches ?? []).map((m, i) => (
+                {complianceMatches.map((m, i) => (
                   <li key={i}>
                     {m.name ?? "—"}
                     {m.score != null ? ` (score ${m.score})` : ""}
@@ -124,10 +122,10 @@ export function VerificationsTab({
                 ))}
               </ul>
             </div>
-          ) : complianceQ.data?.status === "REVIEW_PENDING" ? (
+          ) : complianceStatus === "REVIEW_PENDING" ? (
             <p className="text-sm text-amber-700">🟡 En revisión por oficial de cumplimiento</p>
           ) : (
-            <p className="text-sm text-forgeGray-500">Sin resultado</p>
+            <p className="text-sm text-forgeGray-500">Sin resultado de screening</p>
           )}
         </Card>
       ) : null}

@@ -13,7 +13,7 @@ export function BankExperienceKpisPanel({ period }: { period: "today" | "week" |
 
   const q = useQuery({
     queryKey: ["bank-experience-kpis", apiTenantId, period],
-    queryFn: () => getBankExperienceKpis({ tenantId: apiTenantId!, period }),
+    queryFn: () => getBankExperienceKpis({ tenantId: apiTenantId! }),
     enabled: !!apiTenantId,
     retry: false,
   });
