@@ -1,0 +1,126 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Send } from "lucide-react";
+import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
+import { CHApiError } from "@/lib/credit-hub/api/client";
+import {
+  getApplicationMessages,
+  isOperationalEndpointUnavailable,
+  patchMarkMessagesRead,
+  postApplicationMessage,
+} from "@/lib/credit-hub/api/operationalClient";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import type { CHActorRole } from "@/lib/credit-hub/api/client";
+
+export function ApplicationMessageThread({
+  applicationId,
+  actorRole,
+}: {
+  applicationId: string;
+  actorRole: CHActorRole;
+}) {
+  const { apiTenantId } = useTenant();
+  const qc = useQueryClient();
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  const q = useQuery({
+    queryKey: ["app-messages", apiTenantId, applicationId],
+    queryFn: () => getApplicationMessages({ tenantId: apiTenantId!, applicationId, actorRole }),
+    enabled: !!apiTenantId,
+    retry: false,
+    refetchInterval: 30_000,
+  });
+
+  useEffect(() => {
+    if (!apiTenantId) return;
+    void patchMarkMessagesRead({ tenantId: apiTenantId, applicationId, actorRole }).then(() => {
+      void qc.invalidateQueries({ queryKey: ["app-messages", apiTenantId, applicationId] });
+    });
+  }, [apiTenantId, applicationId, actorRole, qc]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [q.data?.messages?.length]);
+
+  if (q.error instanceof CHApiError && isOperationalEndpointUnavailable(q.error)) return null;
+
+  const messages = q.data?.messages ?? [];
+  const isDealer = actorRole === "dealer";
+
+  const send = async () => {
+    const body = text.trim();
+    if (!apiTenantId || !body) return;
+    setSending(true);
+    try {
+      await postApplicationMessage({ tenantId: apiTenantId, applicationId, message_text: body, actorRole });
+      setText("");
+      void qc.invalidateQueries({ queryKey: ["app-messages", apiTenantId, applicationId] });
+    } catch (err) {
+      forgeToast.error(err instanceof CHApiError ? err.detail : "No se pudo enviar");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="ch-card p-4" data-testid="application-message-thread">
+      <div className="mb-3 max-h-80 space-y-2 overflow-y-auto">
+        {q.isLoading ? <p className="text-sm text-forgeGray-500">Cargando mensajes…</p> : null}
+        {messages.length === 0 && !q.isLoading ? <p className="text-sm text-forgeGray-500">Sin mensajes aún.</p> : null}
+        {messages.map((m) => {
+          const mine = (isDealer && m.sender_role === "dealer") || (!isDealer && m.sender_role !== "dealer");
+          return (
+            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+              <div
+                className="max-w-[80%] rounded-lg px-3 py-2 text-sm"
+                style={{
+                  background: mine ? "var(--ch-persona-soft)" : "var(--ch-surface-2)",
+                  color: "var(--ch-text)",
+                }}
+              >
+                {m.message_text}
+                <div className="mt-1 text-[10px] opacity-70">{new Date(m.created_at).toLocaleString("es-DO")}</div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+      <div className="flex gap-2">
+        <input
+          className="flex-1 rounded-lg border px-3 py-2 text-sm"
+          style={{ borderColor: "var(--ch-border)" }}
+          placeholder="Escribe un mensaje…"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              void send();
+            }
+          }}
+        />
+        <button type="button" className="ch-btn ch-btn-persona ch-btn-sm" disabled={sending || !text.trim()} onClick={() => void send()}>
+          <Send className="h-3.5 w-3.5" aria-hidden />
+          Enviar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function useMessageUnreadCount(applicationId: string, actorRole: CHActorRole): number | null {
+  const { apiTenantId } = useTenant();
+  const q = useQuery({
+    queryKey: ["app-messages", apiTenantId, applicationId],
+    queryFn: () => getApplicationMessages({ tenantId: apiTenantId!, applicationId, actorRole }),
+    enabled: !!apiTenantId,
+    retry: false,
+  });
+  if (q.error instanceof CHApiError && isOperationalEndpointUnavailable(q.error)) return null;
+  return q.data?.unread_count ?? 0;
+}
