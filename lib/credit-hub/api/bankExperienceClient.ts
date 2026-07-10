@@ -181,3 +181,9 @@ export async function getBankExperienceKpis(params: {
     actorRole: "bank_admin",
   });
 }
+
+// ── F5: Export PDF ────────────────────────────────────────────────────────────
+
+export function applicationSummaryPdfPath(applicationId: string): string {
+  return `/api/v2/credit/applications/${encodeURIComponent(applicationId)}/pdf/application-summary`;
+}

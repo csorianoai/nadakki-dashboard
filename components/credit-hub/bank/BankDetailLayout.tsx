@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
+import { PrintExportActions } from "@/components/credit-hub/bank/PrintExportActions";
 import { EscalateKycButton } from "@/components/credit-hub/bank/EscalateKycButton";
 import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
 import type { PilotLabels } from "@/lib/credit-hub/labels/pilot-labels";
@@ -187,14 +188,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             {applicant.city ? ` · ${applicant.city}` : ""}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" data-testid="print-btn-stub">
-            Imprimir
-          </button>
-          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" data-testid="export-pdf-btn-stub">
-            Exportar PDF
-          </button>
-        </div>
+        <PrintExportActions applicationId={application.application_id} />
       </div>
 
       <PilotLabelsRow labels={pilotLabels} prominent />
