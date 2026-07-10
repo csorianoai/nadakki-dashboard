@@ -15,7 +15,11 @@ import { ApplicationMessageThread } from "@/components/credit-hub/dealer/Applica
 import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
 import { extractPilotLabels } from "@/lib/credit-hub/labels/pilot-labels";
 import { OfferConfirmModal } from "@/components/credit-hub/dealer/OfferConfirmModal";
+import { OfferRejectModal } from "@/components/credit-hub/dealer/OfferRejectModal";
 import { CreditCoreApiError, acceptOffer } from "@/lib/credit-hub/api/creditCoreClient";
+import { CHApiError } from "@/lib/credit-hub/api/client";
+import { isBankExperienceEndpointUnavailable, postRejectOffer } from "@/lib/credit-hub/api/bankExperienceClient";
+import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
 import { useApplicationOffers } from "@/lib/credit-hub/hooks/useApplicationOffers";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -32,6 +36,7 @@ import { CancelApplicationButton, OperationalStatusBanner } from "@/components/c
 import { AmortizationTable } from "@/components/credit-hub/dealer/AmortizationTable";
 import { extractOfferValidUntil, OfferValidityBadge } from "@/components/credit-hub/dealer/OfferValidityBadge";
 import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
+import { isCounterOffer, isDealerRejectedOffer } from "@/lib/credit-hub/dealer/offer-actions";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
 
@@ -92,6 +97,10 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const [acceptError, setAcceptError] = useState<string | null>(null);
   const [acceptMessage, setAcceptMessage] = useState<string | null>(null);
   const [confirmOffer, setConfirmOffer] = useState<CreditOffer | null>(null);
+  const [rejectOffer, setRejectOffer] = useState<CreditOffer | null>(null);
+  const [rejectState, setRejectState] = useState<"idle" | "loading">("idle");
+  const [rejectEndpointUnavailable, setRejectEndpointUnavailable] = useState(false);
+  const [locallyRejectedIds, setLocallyRejectedIds] = useState<Set<string>>(new Set());
 
   const currencyPrefix =
     tenantConfig.currency_code === "DOP" ? "RD$" : tenantConfig.currency_code === "MXN" ? "MX$" : `${tenantConfig.currency_code} `;
@@ -128,6 +137,30 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
       }
     },
     [applicationId, apiTenantId, acceptState, refetchOffers, refetch]
+  );
+
+  const handleRejectOffer = useCallback(
+    async (offerId: string) => {
+      if (!apiTenantId || rejectState === "loading") return;
+      setRejectState("loading");
+      try {
+        await postRejectOffer({ tenantId: apiTenantId, applicationId, offerId, actorRole: "dealer" });
+        setRejectOffer(null);
+        setLocallyRejectedIds((prev) => new Set(prev).add(offerId));
+        forgeToast.success("Contrapropuesta rechazada");
+        await refetchOffers();
+      } catch (err) {
+        if (err instanceof CHApiError && isBankExperienceEndpointUnavailable(err)) {
+          setRejectEndpointUnavailable(true);
+          forgeToast.error("Rechazo de contrapropuesta no disponible aún");
+        } else {
+          forgeToast.error(err instanceof CHApiError ? err.detail : "No se pudo rechazar la contrapropuesta");
+        }
+      } finally {
+        setRejectState("idle");
+      }
+    },
+    [apiTenantId, applicationId, rejectState, refetchOffers],
   );
 
   if (isLoading) return <DetailSkeleton />;
@@ -273,13 +306,25 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {offers.map((offer) => {
               const isAccepted = offer.status === "accepted";
-              const isNotSelected = offer.status === "not_selected" || offer.status === "declined" || (hasAcceptedOffer && !isAccepted);
+              const dealerRejected = isDealerRejectedOffer(offer, locallyRejectedIds);
+              const isNotSelected =
+                dealerRejected ||
+                offer.status === "not_selected" ||
+                offer.status === "declined" ||
+                (hasAcceptedOffer && !isAccepted);
+              const isCounter = isCounterOffer(offer);
               const canSelect =
                 canAcceptOffer &&
                 !hasAcceptedOffer &&
+                !dealerRejected &&
                 SELECTABLE_OFFER_STATUSES.has(offer.status) &&
                 offerHasCompleteTerms(offer);
+              const canReject =
+                isCounter &&
+                !dealerRejected &&
+                !hasAcceptedOffer;
               const isThisAccepting = acceptingOfferId === offer.id && acceptState === "loading";
+              const isThisRejecting = rejectOffer?.id === offer.id && rejectState === "loading";
               return (
                 <div
                   key={offer.id}
@@ -321,6 +366,14 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                         <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--ch-success-text)" }}>
                           <CheckCircle className="h-4 w-4" aria-hidden />
                           Elegida
+                        </span>
+                      ) : dealerRejected ? (
+                        <span
+                          className="text-xs font-semibold"
+                          style={{ color: "var(--ch-text-3)" }}
+                          data-testid={`offer-rejected-badge-${offer.id}`}
+                        >
+                          Rechazada
                         </span>
                       ) : isNotSelected ? (
                         <span className="text-xs" style={{ color: "var(--ch-text-3)" }}>No seleccionada</span>
@@ -382,16 +435,32 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                       Faltan términos financieros completos para aceptar esta oferta.
                     </p>
                   ) : null}
-                  {canSelect ? (
-                    <button
-                      type="button"
-                      className="ch-btn ch-btn-persona min-h-[44px]"
-                      data-testid={`offer-accept-${offer.id}`}
-                      disabled={acceptState === "loading"}
-                      onClick={() => setConfirmOffer(offer)}
-                    >
-                      {isThisAccepting ? "Procesando…" : "Seleccionar esta oferta"}
-                    </button>
+                  {(canSelect || canReject) ? (
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      {canSelect ? (
+                        <button
+                          type="button"
+                          className="ch-btn ch-btn-persona min-h-[44px] flex-1"
+                          data-testid={`offer-accept-${offer.id}`}
+                          disabled={acceptState === "loading"}
+                          onClick={() => setConfirmOffer(offer)}
+                        >
+                          {isThisAccepting ? "Procesando…" : "Seleccionar esta oferta"}
+                        </button>
+                      ) : null}
+                      {canReject ? (
+                        <button
+                          type="button"
+                          className="ch-btn ch-btn-secondary min-h-[44px] flex-1"
+                          data-testid={`offer-reject-${offer.id}`}
+                          disabled={rejectState === "loading" || rejectEndpointUnavailable}
+                          title={rejectEndpointUnavailable ? "Rechazo no disponible en este entorno" : undefined}
+                          onClick={() => setRejectOffer(offer)}
+                        >
+                          {isThisRejecting ? "Rechazando…" : "Rechazar contrapropuesta"}
+                        </button>
+                      ) : null}
+                    </div>
                   ) : null}
                 </div>
               );
@@ -526,6 +595,17 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         }}
         onConfirm={(offerId) => void handleAcceptOffer(offerId)}
         isSubmitting={acceptState === "loading"}
+      />
+
+      <OfferRejectModal
+        offer={rejectOffer}
+        lenderName={rejectOffer ? lenderLabel(rejectOffer.lender_code) : "—"}
+        open={rejectOffer !== null}
+        onClose={() => {
+          if (rejectState !== "loading") setRejectOffer(null);
+        }}
+        onConfirm={(offerId) => void handleRejectOffer(offerId)}
+        isSubmitting={rejectState === "loading"}
       />
 
       <div className="mb-4">

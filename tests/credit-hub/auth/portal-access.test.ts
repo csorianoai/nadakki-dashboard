@@ -1,4 +1,4 @@
-import { roleKeyAllowsPortal, resolveCHActorRole, actorCan } from "@/lib/credit-hub/auth/portal-access";
+import { roleKeyAllowsPortal, roleKeyAllowsAdminNetwork, resolveCHActorRole, actorCan } from "@/lib/credit-hub/auth/portal-access";
 
 describe("portal-access", () => {
   test("dealer portal allows credit_admin", () => {
@@ -11,6 +11,20 @@ describe("portal-access", () => {
 
   test("bank portal allows bank_analyst", () => {
     expect(roleKeyAllowsPortal("bank_analyst", "bank")).toBe(true);
+  });
+
+  test("admin network allows platform_superadmin", () => {
+    expect(roleKeyAllowsAdminNetwork("platform_superadmin")).toBe(true);
+  });
+
+  test("admin network allows tenant_admin", () => {
+    expect(roleKeyAllowsAdminNetwork("tenant_admin")).toBe(true);
+  });
+
+  test("admin network blocks generic admin and dealer", () => {
+    expect(roleKeyAllowsAdminNetwork("admin")).toBe(false);
+    expect(roleKeyAllowsAdminNetwork("dealer")).toBe(false);
+    expect(roleKeyAllowsAdminNetwork("bank_analyst")).toBe(false);
   });
 
   test("bank_analyst cannot accept_offer", () => {

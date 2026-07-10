@@ -43,6 +43,15 @@ export function roleKeyAllowsPortal(roleKey: string | null | undefined, portal: 
   return allowed.has(k);
 }
 
+/** Roles allowed for /credit-hub/admin (Network OS). Most restrictive network operators only. */
+const ADMIN_NETWORK_ROLES = new Set(["platform_superadmin", "tenant_admin"]);
+
+export function roleKeyAllowsAdminNetwork(roleKey: string | null | undefined): boolean {
+  const k = (roleKey ?? "").trim().toLowerCase();
+  if (!k) return false;
+  return ADMIN_NETWORK_ROLES.has(k);
+}
+
 export function actorCan(actor: CHActorRole, action: CHAction): boolean {
   return canPerform(actor, action);
 }
