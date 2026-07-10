@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WizardContainer, buildCreateApplicationPayload, type ApplicationFormData } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
@@ -149,7 +149,36 @@ const fullData: ApplicationFormData = {
   consent_accepted_at: "2020-01-02T00:00:00.000Z",
   consent_sms_otp_sent: false,
   consent_dealer_otp_code: "",
+  vehicle_decl_perdida_total: "no",
+  vehicle_decl_accidentes: "no",
+  vehicle_decl_gravamenes: "no",
+  vehicle_decl_titulo_vendedor: "yes",
+  vehicle_decl_km_coincide: "yes",
+  vehicle_decl_signature_name: "Dealer Test SA",
+  vehicle_decl_signed_at: "2020-01-02T00:00:00.000Z",
+  vehicle_decl_hash: "test-hash",
 };
+
+async function fillVehicleDeclaration() {
+  const user = userEvent.setup();
+  await screen.findByTestId("vehicle-declaration-section");
+  for (const [testId, value] of [
+    ["vehicle-decl-perdida_total", "no"],
+    ["vehicle-decl-accidentes", "no"],
+    ["vehicle-decl-gravamenes", "no"],
+    ["vehicle-decl-titulo_vendedor", "yes"],
+    ["vehicle-decl-km_coincide", "yes"],
+  ] as const) {
+    const fieldset = screen.getByTestId(testId);
+    const input = fieldset.querySelector(`input[value="${value}"]`) as HTMLInputElement;
+    await user.click(input);
+  }
+  const section = screen.getByTestId("vehicle-declaration-section");
+  fireEvent.change(within(section).getByRole("textbox"), { target: { value: "Dealer Test SA" } });
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Siguiente" })).toBeEnabled();
+  });
+}
 
 function change(label: string | RegExp, value: string) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
@@ -168,6 +197,13 @@ async function fillApplicantAndContinue() {
   change("Municipio *", fullData.applicant_city);
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Información laboral")).toBeInTheDocument();
+}
+
+async function completeRequiredDocuments() {
+  for (const label of [/Cédula \(frente\)/i, /Cédula \(reverso\)/i, /Documentos del vehículo/i]) {
+    const el = screen.getByLabelText(label) as HTMLInputElement;
+    if (!el.checked) fireEvent.click(el);
+  }
 }
 
 async function advanceToConsents() {
@@ -196,23 +232,24 @@ async function advanceToConsents() {
   change("Precio de venta *", fullData.vehicle_price);
   change("Dealer / Suplidor *", fullData.dealer_supplier);
   change("Condición *", fullData.vehicle_condition);
+  await fillVehicleDeclaration();
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Garante o cofirmante")).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Documentos recibidos")).toBeInTheDocument();
 
-  fireEvent.click(screen.getByLabelText(/Cédula \(frente\)/i));
+  await completeRequiredDocuments();
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByRole("heading", { name: "Consentimientos" })).toBeInTheDocument();
 }
 
 async function advanceToReview() {
   await advanceToConsents();
-  fireEvent.click(screen.getByLabelText(/Ley 172-13/i));
-  fireEvent.click(screen.getByLabelText(/buró de crédito/i));
-  fireEvent.click(screen.getByLabelText(/Nadakki/i));
-  fireEvent.change(screen.getByLabelText(/firma digital/i), { target: { value: "Ana Pérez" } });
+  fireEvent.click(screen.getByText(/Autorización Ley 172-13/i));
+  fireEvent.click(screen.getByText(/Autorización consulta de buró/i));
+  fireEvent.click(screen.getByText(/Política de tratamiento de datos/i));
+  fireEvent.change(screen.getByLabelText(/Nombre completo \(firma digital\)/i), { target: { value: "Ana Pérez" } });
   fireEvent.click(screen.getByTestId("present-submit"));
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Revisión final")).toBeInTheDocument();
@@ -243,6 +280,7 @@ async function navigateToGaranteStep() {
   change("Precio de venta *", fullData.vehicle_price);
   change("Dealer / Suplidor *", fullData.dealer_supplier);
   change("Condición *", fullData.vehicle_condition);
+  await fillVehicleDeclaration();
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Garante o cofirmante")).toBeInTheDocument();
 }
@@ -335,8 +373,8 @@ describe("WizardContainer", () => {
     render(<WizardContainer />);
     await advanceToConsents();
     expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
-    await user.click(screen.getByLabelText(/Ley 172-13/i));
-    await user.click(screen.getByLabelText(/buró de crédito/i));
+    await user.click(screen.getByText(/Autorización Ley 172-13/i));
+    await user.click(screen.getByText(/Autorización consulta de buró/i));
     expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
   });
 
@@ -469,7 +507,7 @@ describe("WizardContainer", () => {
     await navigateToDocumentsStep();
     expect(screen.getByTestId("documents-checklist")).toBeInTheDocument();
     expect(screen.getByLabelText(/Cédula \(frente\)/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Carta de trabajo o constancia laboral/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Carta de empleo \/ constancia laboral/i)).toBeInTheDocument();
   });
 
   it("does not render Factura checkbox on documents step", async () => {
@@ -478,16 +516,16 @@ describe("WizardContainer", () => {
     expect(screen.queryByLabelText(/^Factura/i)).not.toBeInTheDocument();
   });
 
-  it("blocks continuation when id_front is missing", async () => {
+  it("blocks continuation when required documents are missing", async () => {
     render(<WizardContainer />);
     await navigateToDocumentsStep();
     expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
   });
 
-  it("enables continuation when id_front is checked", async () => {
+  it("enables continuation when required documents are checked", async () => {
     render(<WizardContainer />);
     await navigateToDocumentsStep();
-    fireEvent.click(screen.getByLabelText(/Cédula \(frente\)/i));
+    await completeRequiredDocuments();
     expect(screen.getByRole("button", { name: "Siguiente" })).not.toBeDisabled();
   });
 

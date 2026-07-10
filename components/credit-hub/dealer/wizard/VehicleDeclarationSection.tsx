@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Input } from "@/components/forge";
+import { ForgeInput } from "@/components/credit-hub/primitives/ForgeInput";
 import type { ApplicationFormData } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import {
   computeVehicleDeclarationHash,
@@ -159,7 +159,7 @@ export function VehicleDeclarationSection({
         cualquier declaración falsa puede tener consecuencias legales.
       </p>
 
-      <Input
+      <ForgeInput
         label="Firma digital del dealer (nombre completo) *"
         value={formData.vehicle_decl_signature_name}
         onChange={(e) => patchForm({ vehicle_decl_signature_name: e.target.value })}

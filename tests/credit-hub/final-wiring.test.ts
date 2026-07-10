@@ -51,4 +51,23 @@ describe("expedienteAdapter", () => {
     expect(app.application_payload.financial?.requested_amount).toBe(1500000);
     expect(app.application_payload.documents).toHaveLength(1);
   });
+
+  test("maps declaracion_vehiculo from credit_history summary", () => {
+    const decl = {
+      perdida_total: false,
+      accidentes_reportados: "no" as const,
+      gravamenes_vigentes: false,
+      titulo_a_nombre_vendedor: true,
+      kilometraje_coincide: true,
+      firma_dealer: "Dealer Test",
+      fecha_firma: "2026-07-09T10:30:00Z",
+      hash: "hash1",
+    };
+    const app = expedienteToBankReviewApplication({
+      application_id: "app-1",
+      tenant_id: "tenant-1",
+      credit_history: { summary: { declaracion_vehiculo: decl } },
+    });
+    expect(app.application_payload.declaracion_vehiculo).toEqual(decl);
+  });
 });

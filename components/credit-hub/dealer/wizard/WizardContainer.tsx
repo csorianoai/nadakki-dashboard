@@ -47,6 +47,7 @@ import {
 } from "@/lib/credit-hub/dealer/vehicle-declaration";
 import { preapprovalParamsFromTenantFractions, simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
 import { PreApprovalBadge } from "./PreApprovalBadge";
+import { VehicleDeclarationSection } from "./VehicleDeclarationSection";
 import { ConsentSection, type ConsentWizardPatch } from "./consent/ConsentSection";
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
@@ -300,11 +301,7 @@ export const initialApplicationFormData: ApplicationFormData = {
   co_debtor_monthly_income: "",
   co_debtor_relationship: "",
   co_debtor_employment: "",
-  documents_received: {
-    id_front: true,
-    id_back: true,
-    vehicle_documents: true,
-  },
+  documents_received: {},
   document_files_ready: {},
   document_notes: {},
   additional_document_items: [],
@@ -605,7 +602,9 @@ export function stepIsValid(
   }
   if (step === 4) {
     const forgeDocMode = Object.keys(data.document_files_ready ?? {}).length > 0;
-    const docsOk = hasRequiredDocumentsFileReady(data);
+    const requiredDocs = config.required_documents.filter((d) => d.required);
+    const checkboxOk = requiredDocs.every((d) => Boolean(data.documents_received[tenantDocumentKey(d)]));
+    const docsOk = forgeDocMode ? hasRequiredDocumentsFileReady(data) : checkboxOk;
     const refsOk = forgeDocMode ? personalReferencesValid(data.personal_references) : true;
     return docsOk && refsOk;
   }
@@ -1231,6 +1230,10 @@ export function WizardContainer() {
             <div className="rounded-xl bg-forge-surface-elevated p-3"><p className="text-xs text-forge-text-muted">{t.wizard.estimated_capacity}</p><p className="font-semibold tabular-nums text-forge-text">{formatDop(estimatedCapacity)}</p></div>
           </div>
           {preApproval && <PreApprovalBadge result={preApproval} />}
+          <VehicleDeclarationSection
+            formData={formData}
+            patchForm={(patch) => setFormData((prev) => ({ ...prev, ...patch }))}
+          />
         </div>
       );
     }
