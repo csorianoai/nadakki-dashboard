@@ -1,7 +1,5 @@
-"use client";
-
-import { NetworkCockpitNivel1 } from "@/lib/cockpit/nivel1/NetworkCockpitNivel1";
+import { redirect } from "next/navigation";
 
 export default function CreditHubAdminPage() {
-  return <NetworkCockpitNivel1 />;
+  redirect("/cockpit");
 }
