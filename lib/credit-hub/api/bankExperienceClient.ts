@@ -83,3 +83,81 @@ export async function postReassignApplication(params: {
     body: JSON.stringify({ analyst_name: params.analyst_name, notes: params.notes ?? "" }),
   });
 }
+
+// ── F2: Amortization schedule ─────────────────────────────────────────────────
+
+export interface AmortizationScheduleRow {
+  period: number;
+  due_date: string;
+  payment: number;
+  principal: number;
+  interest: number;
+  balance: number;
+}
+
+export async function getAmortizationSchedule(params: {
+  tenantId: string;
+  applicationId: string;
+  actorRole?: CHActorRole;
+}): Promise<{ schedule?: AmortizationScheduleRow[]; currency?: string }> {
+  return chFetch(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/amortization`, {
+    tenantId: params.tenantId,
+    actorRole: params.actorRole ?? "dealer",
+  });
+}
+
+// ── F2: Conditions + offer validity ─────────────────────────────────────────────
+
+export interface ApplicationCondition {
+  id: string;
+  text: string;
+  status: "pending" | "satisfied" | string;
+}
+
+export async function getApplicationConditions(params: {
+  tenantId: string;
+  applicationId: string;
+  actorRole?: CHActorRole;
+}): Promise<{ conditions?: ApplicationCondition[]; valid_until?: string | null }> {
+  return chFetch(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/conditions`, {
+    tenantId: params.tenantId,
+    actorRole: params.actorRole ?? "bank_analyst",
+  });
+}
+
+export async function patchApplicationConditions(params: {
+  tenantId: string;
+  applicationId: string;
+  conditions: ApplicationCondition[];
+}): Promise<{ conditions?: ApplicationCondition[]; valid_until?: string | null }> {
+  return chFetch(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/conditions`, {
+    tenantId: params.tenantId,
+    actorRole: "bank_analyst",
+    method: "PATCH",
+    body: JSON.stringify({ conditions: params.conditions }),
+  });
+}
+
+// ── F3: Counter-offer detail + offer compare ──────────────────────────────────
+
+export interface OfferCompareRow {
+  lender_code: string;
+  lender_display_name?: string;
+  amount?: number;
+  rate_apr?: number;
+  term_months?: number;
+  monthly_payment?: number;
+  rank?: number;
+  is_best?: boolean;
+}
+
+export async function getOfferCompare(params: {
+  tenantId: string;
+  applicationId: string;
+  actorRole?: CHActorRole;
+}): Promise<{ offers?: OfferCompareRow[]; generated_at?: string }> {
+  return chFetch(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/offers/compare`, {
+    tenantId: params.tenantId,
+    actorRole: params.actorRole ?? "bank_analyst",
+  });
+}

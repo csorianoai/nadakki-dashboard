@@ -14,6 +14,8 @@ import { AuditTab } from "@/components/credit-hub/bank/sections/AuditTab";
 import { ComplianceTab } from "@/components/credit-hub/bank/sections/ComplianceTab";
 import { DocumentsTab } from "@/components/credit-hub/bank/sections/DocumentsTab";
 import { StipulationsTab } from "@/components/credit-hub/bank/sections/StipulationsTab";
+import { ConditionsPanel } from "@/components/credit-hub/bank/sections/ConditionsPanel";
+import { AmortizationTable } from "@/components/credit-hub/dealer/AmortizationTable";
 import { VerificationsTab } from "@/components/credit-hub/bank/sections/VerificationsTab";
 import { ApplicationMessageThread, useMessageUnreadCount } from "@/components/credit-hub/dealer/ApplicationMessageThread";
 import { DisbursementPanel } from "@/components/credit-hub/bank/sections/DisbursementPanel";
@@ -285,9 +287,21 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
                 </button>
               ))}
             </div>
-            {tab === "analisis" ? <AnalysisTab payload={payload} /> : null}
+            {tab === "analisis" ? (
+              <>
+                <AnalysisTab payload={payload} />
+                <div style={{ marginTop: 16 }}>
+                  <AmortizationTable applicationId={application.application_id} actorRole="bank_analyst" />
+                </div>
+              </>
+            ) : null}
             {tab === "documentos" ? <DocumentsTab docs={docs} applicationId={application.application_id} /> : null}
-            {tab === "stipulaciones" ? <StipulationsTab applicationId={application.application_id} /> : null}
+            {tab === "stipulaciones" ? (
+              <div className="space-y-4">
+                <ConditionsPanel applicationId={application.application_id} />
+                <StipulationsTab applicationId={application.application_id} />
+              </div>
+            ) : null}
             {tab === "audit" ? <AuditTab audit={audit} /> : null}
             {tab === "compliance" ? <ComplianceTab report={compliance} applicationId={application.application_id} /> : null}
             {tab === "verificaciones" ? (
