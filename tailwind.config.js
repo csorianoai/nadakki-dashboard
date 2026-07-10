@@ -115,6 +115,17 @@ module.exports = {
           5: 'var(--forge-viz-5)',
           6: 'var(--forge-viz-6)',
         },
+        cockpit: {
+          bg: '#0a0a0f',
+          surface: '#111118',
+          border: '#1e1e2e',
+          text: '#e5e5ef',
+          muted: '#8b8b99',
+          accent: '#a78bfa',
+          ok: '#22c55e',
+          warn: '#eab308',
+          err: '#ef4444',
+        },
         // Quantum Core Colors
         'quantum': {
           void: '#000008',
@@ -151,6 +162,8 @@ module.exports = {
         quantum: ['Orbitron', 'monospace'],
         neural: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
+        cockpitSans: ['var(--font-inter)', 'Inter', 'sans-serif'],
+        cockpitMono: ['var(--font-jetbrains-mono)', 'JetBrains Mono', 'monospace'],
       },
       animation: {
         'forge-pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -220,5 +233,11 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        '.tabular-nums': { 'font-variant-numeric': 'tabular-nums' },
+      });
+    },
+  ],
 };

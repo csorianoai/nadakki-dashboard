@@ -16,6 +16,10 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  if (pathname.startsWith("/cockpit")) {
+    return <ProtectedRoute>{children}</ProtectedRoute>;
+  }
+
   return (
     <ProtectedRoute>
       <>
