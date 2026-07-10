@@ -18,7 +18,11 @@ describe("display-status server-first", () => {
   });
 
   test("DISBURSED server label", () => {
-    const r = resolveDisplayStatusLabel({ displayStatus: "DISBURSED", status: "processed" });
-    expect(r.label).toBe("Desembolsada");
+    expect(resolveDisplayStatusLabel({ displayStatus: "DISBURSED", status: "processed" }).label).toBe("Desembolsada");
+  });
+
+  test("EXPIRED and CANCELLED server labels", () => {
+    expect(resolveDisplayStatusLabel({ displayStatus: "EXPIRED" }).label).toBe("Expirada");
+    expect(resolveDisplayStatusLabel({ displayStatus: "CANCELLED" }).label).toBe("Cancelada");
   });
 });

@@ -198,7 +198,11 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
 
       <PilotLabelsRow labels={pilotLabels} prominent />
 
-      <OperationalStatusBanner displayStatus={displayStatus} disbursementReference={disbursementReference} />
+      <OperationalStatusBanner
+        displayStatus={displayStatus}
+        cancelReason={cancelReason}
+        disbursementReference={disbursementReference}
+      />
 
       {score != null && Number.isFinite(score) ? (
         <div className="ch-card mb-4 flex flex-col items-center gap-4 p-[18px] sm:flex-row sm:items-center sm:gap-5">
@@ -521,8 +525,22 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         isSubmitting={acceptState === "loading"}
       />
 
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        {apiTenantId ? (
+          <CancelApplicationButton
+            applicationId={applicationId}
+            tenantId={apiTenantId}
+            displayStatus={displayStatus}
+            onCancelled={() => void refetch()}
+          />
+        ) : null}
         <button type="button" className="ch-btn ch-btn-secondary min-h-[44px] w-full sm:w-auto" onClick={() => router.push("/credit-hub/dealer/applications")}>
           Ver todas
         </button>
-        <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyConten
+        <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+          + Nueva solicitud
+        </Link>
+      </div>
+    </div>
+  );
+}
