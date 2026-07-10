@@ -161,3 +161,23 @@ export async function getOfferCompare(params: {
     actorRole: params.actorRole ?? "bank_analyst",
   });
 }
+
+// ── F4: Bank experience KPIs ──────────────────────────────────────────────────
+
+export interface BankExperienceKpi {
+  key: string;
+  label: string;
+  value: number | string | null;
+  unit?: string;
+}
+
+export async function getBankExperienceKpis(params: {
+  tenantId: string;
+  period?: "today" | "week" | "month" | string;
+}): Promise<{ kpis?: BankExperienceKpi[]; period?: string }> {
+  const query = params.period ? `?period=${encodeURIComponent(params.period)}` : "";
+  return chFetch(`/api/v2/credit/analytics/bank-kpis${query}`, {
+    tenantId: params.tenantId,
+    actorRole: "bank_admin",
+  });
+}

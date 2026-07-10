@@ -6,6 +6,7 @@ import { KpiStripSkeleton, TableSkeleton } from "@/components/credit-hub/primiti
 import { BankGoals } from "@/components/credit-hub/bank/sections/BankGoals";
 import { AuctionIntel } from "@/components/credit-hub/bank/sections/AuctionIntel";
 import { RiskCreditPanel } from "@/components/credit-hub/bank/sections/RiskCreditPanel";
+import { BankExperienceKpisPanel } from "@/components/credit-hub/bank/sections/BankExperienceKpisPanel";
 import { ComplianceFooter } from "@/components/credit-hub/elite";
 import { BankCockpitHeader } from "@/components/credit-hub/bank/elite/BankCockpitHeader";
 import { BankKpiStrip } from "@/components/credit-hub/bank/elite/BankKpiStrip";
@@ -98,6 +99,9 @@ export function BankDashboardView({
           analyticsUnavailable={analyticsError || (!analytics && !analyticsLoading)}
           onQueueClick={() => router.push("/credit-hub/bank/applications")}
         />
+        <div style={{ marginTop: 12 }}>
+          <BankExperienceKpisPanel period={period} />
+        </div>
       </CHPanelState>
 
       <hr className="ch-section-break" aria-hidden />
