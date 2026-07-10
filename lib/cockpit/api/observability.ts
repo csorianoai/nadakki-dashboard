@@ -38,17 +38,17 @@ async function fetchOrDemo<T extends WithDataSource>(
 }
 
 export function fetchNetworkHealth() {
-  return fetchOrDemo<NetworkHealthResponse>("/observability/v1/network/health", demoNetworkHealth);
+  return fetchOrDemo<NetworkHealthResponse>("/api/v1/cockpit/network/health", demoNetworkHealth);
 }
 
 export function fetchCoresSummary() {
-  return fetchOrDemo<CoresSummaryResponse>("/observability/v1/cores/summary", demoCoresSummary);
+  return fetchOrDemo<CoresSummaryResponse>("/api/v1/cockpit/network/cores", demoCoresSummary);
 }
 
 export function fetchActivity(limit = 10) {
-  return fetchOrDemo<ActivityResponse>(`/observability/v1/activity?limit=${limit}`, demoActivity);
+  return fetchOrDemo<ActivityResponse>(`/api/v1/cockpit/network/overview?activity_limit=${limit}`, demoActivity);
 }
 
 export function fetchOpenAlerts() {
-  return fetchOrDemo<AlertsResponse>("/observability/v1/alerts?status=open", demoAlerts);
+  return fetchOrDemo<AlertsResponse>("/api/v1/cockpit/network/overview?alerts_only=true", demoAlerts);
 }

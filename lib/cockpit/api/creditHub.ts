@@ -39,22 +39,22 @@ export function buildRequestsQuery(filters: CreditRequestFilters): string {
 }
 
 export function fetchCreditDashboard() {
-  return fetchOrDemo<CreditDashboardResponse>("/credit-hub/v1/dashboard", demoCreditDashboard);
+  return fetchOrDemo<CreditDashboardResponse>("/api/v1/cockpit/credit/summary", demoCreditDashboard);
 }
 
 export function fetchCreditRequests(filters: CreditRequestFilters) {
   const qs = buildRequestsQuery(filters);
-  return fetchOrDemo<CreditRequestsResponse>(`/credit-hub/v1/requests?${qs}`, () => demoCreditRequests(filters));
+  return fetchOrDemo<CreditRequestsResponse>(`/api/v1/cockpit/credit/pipeline?${qs}`, () => demoCreditRequests(filters));
 }
 
 export function fetchCreditAml(period = "today") {
-  return fetchOrDemo<CreditAmlResponse>(`/credit-hub/v1/compliance/aml?period=${encodeURIComponent(period)}`, demoAmlPanel);
+  return fetchOrDemo<CreditAmlResponse>(`/api/v1/cockpit/credit/compliance/aml?period=${encodeURIComponent(period)}`, demoAmlPanel);
 }
 
 export function fetchDealerRanking(limit = 5) {
-  return fetchOrDemo<CreditDealerRankingResponse>(`/credit-hub/v1/dealers/ranking?limit=${limit}`, demoDealerRanking);
+  return fetchOrDemo<CreditDealerRankingResponse>(`/api/v1/cockpit/credit/by-tenant?limit=${limit}`, demoDealerRanking);
 }
 
 export function fetchCreditAudit(limit = 10) {
-  return fetchOrDemo<CreditAuditResponse>(`/credit-hub/v1/audit-trail?limit=${limit}`, demoCreditAudit);
+  return fetchOrDemo<CreditAuditResponse>(`/api/v1/cockpit/credit/recent?n=${limit}`, demoCreditAudit);
 }

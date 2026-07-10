@@ -16,7 +16,7 @@ export function CockpitTopbar() {
     setLoading(true);
     try {
       const { platformFetch } = await import("@/lib/platformApi");
-      const res = await platformFetch<{ tenants?: TenantOption[] }>("/tenant-admin/v1/tenants");
+      const res = await platformFetch<{ tenants?: TenantOption[] }>("/api/v1/cockpit/tenants");
       setTenants(
         (res.tenants ?? []).map((t) => ({
           id: String((t as TenantOption).id),
@@ -68,9 +68,9 @@ export function CockpitTopbar() {
 }
 
 const NAV = [
-  { href: "/credit-hub/admin", label: "Nivel 1 — Red", level: "network" },
-  { href: "/credit-hub/admin/credit", label: "Nivel 2 — Credit Hub", level: "credit" },
-  { href: "/credit-hub/admin/platform", label: "Nivel 3 — Plataforma", level: "platform" },
+  { href: "/credit-hub/admin", label: "Nivel 1 â€” Red", level: "network" },
+  { href: "/credit-hub/admin/credit", label: "Nivel 2 â€” Credit Hub", level: "credit" },
+  { href: "/credit-hub/admin/platform", label: "Nivel 3 â€” Plataforma", level: "platform" },
 ] as const;
 
 export function CockpitNav() {
