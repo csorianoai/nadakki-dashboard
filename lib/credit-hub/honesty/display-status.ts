@@ -15,6 +15,7 @@ export type ServerDisplayStatus =
   | "DOCUMENTS_PENDING"
   | "OFFER_SELECTED"
   | "READY_FOR_DISBURSEMENT"
+  | "DISBURSED"
   | "BANK_COMPLETE"
   | "COMPLETED"
   | "FAILED"
@@ -43,6 +44,7 @@ export const SERVER_DISPLAY_STATUS_LABELS: Record<string, string> = {
   DOCUMENTS_PENDING: "Documentos pendientes",
   OFFER_SELECTED: "Oferta seleccionada",
   READY_FOR_DISBURSEMENT: "Lista para desembolso",
+  DISBURSED: "Desembolsada",
   BANK_COMPLETE: "Banco completado",
   COMPLETED: "Completada",
   FAILED: "Fallida",
