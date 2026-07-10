@@ -17,7 +17,10 @@ import { StipulationsTab } from "@/components/credit-hub/bank/sections/Stipulati
 import { VerificationsTab } from "@/components/credit-hub/bank/sections/VerificationsTab";
 import { ApplicationMessageThread, useMessageUnreadCount } from "@/components/credit-hub/dealer/ApplicationMessageThread";
 import { DisbursementPanel } from "@/components/credit-hub/bank/sections/DisbursementPanel";
+import { InternalNotesTab, useNotesEndpointAvailable } from "@/components/credit-hub/bank/sections/InternalNotesTab";
+import { AssignedAnalystSection } from "@/components/credit-hub/bank/AssignedAnalystSection";
 import { FieldWithModifiedBadge } from "@/components/credit-hub/bank/ModifiedFieldBadge";
+import { isBankNotesRole } from "@/lib/credit-hub/bank/bankExperienceHelpers";
 import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/api/operationalClient";
 import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -53,7 +56,9 @@ function modeToDecision(mode: DecisionMode): BankDecisionType {
 export function BankDetailLayout({ application, compliance, audit, counterOffer }: BankDetailLayoutProps) {
   const { user } = useAuth();
   const { apiTenantId } = useTenant();
-  const { can: actorCan } = useCreditHubActor();
+  const { can: actorCan, roleKey } = useCreditHubActor();
+  const notesProbe = useNotesEndpointAvailable(application.application_id);
+  const showNotesTab = isBankNotesRole(roleKey) && notesProbe.available;
   const canDecide = actorCan("create_decision");
   const payload = application.application_payload as BankReviewPayload;
   const applicant = payload.applicant ?? {};
@@ -66,7 +71,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   }, [payload.documents]);
 
   const decisionMutation = useBankDecision(application.application_id);
-  const [tab, setTab] = useState<"analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones" | "mensajes">("analisis");
+  const [tab, setTab] = useState<
+    "analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones" | "mensajes" | "notas"
+  >("analisis");
   const [panelState, setPanelState] = useState<DecisionState>("idle");
   const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
   const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
@@ -101,6 +108,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
     ["compliance", "Compliance"],
     ["verificaciones", "Verificaciones"],
     ["mensajes", messageUnread != null && messageUnread > 0 ? `Mensajes (${messageUnread})` : "Mensajes"],
+    ...(showNotesTab ? ([["notas", "Notas internas"]] as const) : []),
   ] as const;
 
   const handleSubmit = useCallback(
@@ -188,6 +196,8 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
       </div>
 
       <PilotLabelsRow labels={pilotLabels} prominent />
+
+      <AssignedAnalystSection applicationId={application.application_id} roleKey={roleKey} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <EscalateKycButton applicationId={application.application_id} />
@@ -289,6 +299,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             ) : null}
             {tab === "mensajes" ? (
               <ApplicationMessageThread applicationId={application.application_id} actorRole="bank_analyst" />
+            ) : null}
+            {tab === "notas" && showNotesTab ? (
+              <InternalNotesTab applicationId={application.application_id} />
             ) : null}
           </div>
         </div>
