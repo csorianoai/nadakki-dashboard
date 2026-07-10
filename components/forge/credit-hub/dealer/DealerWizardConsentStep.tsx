@@ -4,6 +4,7 @@ import type { ApplicationFormData } from "@/components/credit-hub/dealer/wizard/
 import { tenantDocumentKey } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { ConsentSection, type ConsentWizardPatch } from "@/components/credit-hub/dealer/wizard/consent/ConsentSection";
 import { buildConsentDocumentsSummary } from "@/lib/credit-hub/dealer/wizard-gates";
+import { SecurityVerificationToggles } from "@/components/credit-hub/dealer/wizard/SecurityVerificationToggles";
 import { useDealerWizard } from "./DealerWizardProvider";
 
 export function DealerWizardConsentStep() {
@@ -35,6 +36,12 @@ export function DealerWizardConsentStep() {
           Los documentos no adjuntados quedarán como pendientes. El banco podrá solicitarlos después.
         </p>
       </section>
+
+      <SecurityVerificationToggles
+        formData={formData}
+        patchForm={patchForm}
+        applicationId={consentApplicationId}
+      />
 
       <p className="text-forge-xs text-forgeGray-500">
         Al enviar, se registra marca de tiempo ISO 8601, hash de auditoría (incluye resumen cifrado de la firma) y, cuando la red lo permite, la IP obtenida vía{" "}
