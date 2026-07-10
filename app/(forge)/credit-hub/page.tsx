@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Briefcase, Building2, Shield, User } from "lucide-react";
+import { Briefcase, Building2, User } from "lucide-react";
 import { ForgeLogo } from "@/components/credit-hub/brand/ForgeLogo";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
@@ -33,13 +33,6 @@ export default function CreditHubHome() {
         title: t.portals.customer_title,
         description: t.portals.customer_desc,
         available: false,
-      },
-      {
-        href: "/credit-hub/admin",
-        icon: Shield,
-        title: t.portals.admin_title,
-        description: t.portals.admin_desc,
-        available: true,
       },
     ],
     [t]
