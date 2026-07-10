@@ -8,6 +8,8 @@ import { DetailSkeleton, EmptyStateRich, RiskBand, ScoreVisual } from "@/compone
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { DealerStatusBadge } from "@/components/credit-hub/dealer/shared/dealerUi";
 import { DealerApplicationDocumentsSection } from "@/components/credit-hub/dealer/DealerApplicationDocumentsSection";
+import { ApplicationEditPanel } from "@/components/credit-hub/dealer/ApplicationEditPanel";
+import { EditHistorySection } from "@/components/credit-hub/dealer/EditHistorySection";
 import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
 import { extractPilotLabels } from "@/lib/credit-hub/labels/pilot-labels";
 import { OfferConfirmModal } from "@/components/credit-hub/dealer/OfferConfirmModal";
@@ -394,6 +396,9 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
       ) : null}
 
       <DealerApplicationDocumentsSection tenantConfig={tenantConfig} applicationRaw={data.raw} />
+
+      {apiTenantId ? <ApplicationEditPanel application={data} tenantId={apiTenantId} onSaved={() => void refetch()} /> : null}
+      <EditHistorySection applicationId={applicationId} />
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="ch-card p-4">

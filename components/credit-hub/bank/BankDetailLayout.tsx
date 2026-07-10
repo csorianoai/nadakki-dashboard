@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Download, FileText } from "lucide-react";
 import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
@@ -14,6 +15,9 @@ import { ComplianceTab } from "@/components/credit-hub/bank/sections/ComplianceT
 import { DocumentsTab } from "@/components/credit-hub/bank/sections/DocumentsTab";
 import { StipulationsTab } from "@/components/credit-hub/bank/sections/StipulationsTab";
 import { VerificationsTab } from "@/components/credit-hub/bank/sections/VerificationsTab";
+import { FieldWithModifiedBadge } from "@/components/credit-hub/bank/ModifiedFieldBadge";
+import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/api/operationalClient";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
 import { useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
@@ -45,6 +49,7 @@ function modeToDecision(mode: DecisionMode): BankDecisionType {
 
 export function BankDetailLayout({ application, compliance, audit, counterOffer }: BankDetailLayoutProps) {
   const { user } = useAuth();
+  const { apiTenantId } = useTenant();
   const { can: actorCan } = useCreditHubActor();
   const canDecide = actorCan("create_decision");
   const payload = application.application_payload as BankReviewPayload;
@@ -128,6 +133,17 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const term = Number(financial.term_months ?? analysis?.metrics?.term_months ?? 48);
   const amount = Number(financial.requested_amount ?? analysis?.financed_amount ?? 0);
 
+  const editHistoryQ = useQuery({
+    queryKey: ["edit-history", apiTenantId, application.application_id],
+    queryFn: () => getEditHistory({ tenantId: apiTenantId!, applicationId: application.application_id, actorRole: "bank_analyst" }),
+    enabled: !!apiTenantId,
+    retry: false,
+  });
+  const modifiedFields = useMemo(
+    () => modifiedFieldKeysFromHistory(editHistoryQ.data?.entries),
+    [editHistoryQ.data?.entries],
+  );
+
   if (!application) return <DetailSkeleton />;
 
   return (
@@ -174,21 +190,40 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
         <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
           <div className="ch-card" style={{ padding: 20, display: "grid", gridTemplateColumns: "1fr auto", gap: 20, alignItems: "center" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px 18px" }}>
-              {[
-                ["Concesionario", String(vehicle.dealer ?? "—")],
-                ["Vehículo", String(vehicle.label ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || "—"))],
-                ["Monto solicitado", chMoneyExact(amount)],
-                ["Plazo", `${term} meses`],
-                ["Tasa solicitada", `${rate}%`],
-                ["Enganche", `${chMoney(Number(financial.down_payment ?? 0))}${financial.ltv != null ? ` · ${(Number(financial.ltv) * 100).toFixed(0)}% LTV` : ""}`],
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <div className="ch-eyebrow">{k}</div>
-                  <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
-                    {v}
-                  </div>
+              <div>
+                <div className="ch-eyebrow">Concesionario</div>
+                <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+                  {String(vehicle.dealer ?? "—")}
                 </div>
-              ))}
+              </div>
+              <div>
+                <div className="ch-eyebrow">Vehículo</div>
+                <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+                  {String(vehicle.label ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || "—"))}
+                </div>
+              </div>
+              <div>
+                <div className="ch-eyebrow">Monto solicitado</div>
+                <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+                  {chMoneyExact(amount)}
+                </div>
+              </div>
+              <FieldWithModifiedBadge
+                label="Plazo"
+                value={`${term} meses`}
+                modified={modifiedFields.has("desired_term_months") || modifiedFields.has("term_months")}
+              />
+              <div>
+                <div className="ch-eyebrow">Tasa solicitada</div>
+                <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+                  {rate}%
+                </div>
+              </div>
+              <FieldWithModifiedBadge
+                label="Enganche"
+                value={`${chMoney(Number(financial.down_payment ?? 0))}${financial.ltv != null ? ` · ${(Number(financial.ltv) * 100).toFixed(0)}% LTV` : ""}`}
+                modified={modifiedFields.has("down_payment")}
+              />
             </div>
             {analysis ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, borderLeft: "1px solid var(--ch-line)", paddingLeft: 20 }}>
