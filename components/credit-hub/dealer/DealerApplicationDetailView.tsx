@@ -28,6 +28,8 @@ import { offerHasCompleteTerms } from "@/lib/credit-hub/offers/offer-terms";
 import type { DealerApplicationDetailViewProps } from "@/lib/credit-hub/types/dealer-views";
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
 import type { CreditOffer } from "@/lib/credit-hub/types/offers";
+import { CancelApplicationButton, OperationalStatusBanner } from "@/components/credit-hub/dealer/OperationalActions";
+import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
 
@@ -158,6 +160,11 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const acceptedOffer = offers.find((o) => o.status === "accepted") ?? null;
   const hasAcceptedOffer = acceptedOffer != null;
   const pilotLabels = extractPilotLabels(data.raw);
+  const displayStatus = data.display_status ?? extractDisplayStatus(data.raw);
+  const rawMeta = (data.raw && typeof data.raw === "object" ? data.raw : {}) as Record<string, unknown>;
+  const disbursementReference =
+    typeof rawMeta.disbursement_reference === "string" ? rawMeta.disbursement_reference : null;
+  const cancelReason = typeof rawMeta.cancel_reason === "string" ? rawMeta.cancel_reason : null;
 
   // D1: find "MEJOR" offer — lowest APR among selectable (approved/pending/counter_offer) offers
   const bestOfferId: string | null = (() => {
@@ -190,6 +197,8 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
       </div>
 
       <PilotLabelsRow labels={pilotLabels} prominent />
+
+      <OperationalStatusBanner displayStatus={displayStatus} disbursementReference={disbursementReference} />
 
       {score != null && Number.isFinite(score) ? (
         <div className="ch-card mb-4 flex flex-col items-center gap-4 p-[18px] sm:flex-row sm:items-center sm:gap-5">
@@ -516,10 +525,4 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         <button type="button" className="ch-btn ch-btn-secondary min-h-[44px] w-full sm:w-auto" onClick={() => router.push("/credit-hub/dealer/applications")}>
           Ver todas
         </button>
-        <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-          + Nueva solicitud
-        </Link>
-      </div>
-    </div>
-  );
-}
+        <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyConten

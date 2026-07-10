@@ -18,6 +18,13 @@ const PILL: Record<DisplayStatus, { c: string; bg: string }> = {
 
 const SERVER_PILL_DEFAULT = { c: "var(--ch-info-text)", bg: "var(--ch-info-soft)" };
 
+const SERVER_PILL_COLORS: Record<string, { c: string; bg: string }> = {
+  EXPIRED: { c: "var(--ch-text-3)", bg: "var(--ch-surface-2)" },
+  CANCELLED: { c: "var(--ch-danger-text)", bg: "var(--ch-danger-soft)" },
+  DISBURSED: { c: "var(--ch-success-text)", bg: "var(--ch-success-soft)" },
+  READY_FOR_DISBURSEMENT: { c: "var(--ch-success-text)", bg: "var(--ch-success-soft)" },
+};
+
 export function DisplayStatusPill({
   status,
   backendState,
@@ -30,7 +37,8 @@ export function DisplayStatusPill({
 }) {
   const resolved = resolveDisplayStatusLabel({ displayStatus, status, backendState });
   const bucket = resolved.source === "legacy" ? (resolved.key as DisplayStatus) : null;
-  const s = bucket && PILL[bucket] ? PILL[bucket] : SERVER_PILL_DEFAULT;
+  const serverStyle = resolved.source === "server" ? SERVER_PILL_COLORS[resolved.key] : null;
+  const s = serverStyle ?? (bucket && PILL[bucket] ? PILL[bucket] : SERVER_PILL_DEFAULT);
 
   return (
     <span

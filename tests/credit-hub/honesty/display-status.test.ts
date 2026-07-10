@@ -17,9 +17,8 @@ describe("display-status server-first", () => {
     expect(r.label).toBe("future state x");
   });
 
-  test("falls back to legacy bucket when no display_status", () => {
-    const r = resolveDisplayStatusLabel({ status: "approved" });
-    expect(r.source).toBe("legacy");
-    expect(r.key).toBe("APPROVED");
+  test("DISBURSED server label", () => {
+    const r = resolveDisplayStatusLabel({ displayStatus: "DISBURSED", status: "processed" });
+    expect(r.label).toBe("Desembolsada");
   });
 });

@@ -16,8 +16,10 @@ import { DocumentsTab } from "@/components/credit-hub/bank/sections/DocumentsTab
 import { StipulationsTab } from "@/components/credit-hub/bank/sections/StipulationsTab";
 import { VerificationsTab } from "@/components/credit-hub/bank/sections/VerificationsTab";
 import { ApplicationMessageThread, useMessageUnreadCount } from "@/components/credit-hub/dealer/ApplicationMessageThread";
+import { DisbursementPanel } from "@/components/credit-hub/bank/sections/DisbursementPanel";
 import { FieldWithModifiedBadge } from "@/components/credit-hub/bank/ModifiedFieldBadge";
 import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/api/operationalClient";
+import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
@@ -135,6 +137,8 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const rate = Number(financial.requested_rate ?? analysis?.metrics?.annual_rate ?? 17.5);
   const term = Number(financial.term_months ?? analysis?.metrics?.term_months ?? 48);
   const amount = Number(financial.requested_amount ?? analysis?.financed_amount ?? 0);
+
+  const displayStatus = extractDisplayStatus(payload.expediente_meta) ?? application.state ?? null;
 
   const editHistoryQ = useQuery({
     queryKey: ["edit-history", apiTenantId, application.application_id],
@@ -299,6 +303,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           errorDetail={decisionErrorDetail}
           onSubmit={handleSubmit}
         />
+        <DisbursementPanel applicationId={application.application_id} displayStatus={displayStatus} />
       </div>
     </div>
   );
