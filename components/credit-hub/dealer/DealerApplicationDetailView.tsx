@@ -11,6 +11,7 @@ import { DealerApplicationDocumentsSection } from "@/components/credit-hub/deale
 import { ApplicationEditPanel } from "@/components/credit-hub/dealer/ApplicationEditPanel";
 import { EditHistorySection } from "@/components/credit-hub/dealer/EditHistorySection";
 import { DocumentRequestsDealerSection } from "@/components/credit-hub/dealer/DocumentRequestsDealerSection";
+import { ApplicationMessageThread } from "@/components/credit-hub/dealer/ApplicationMessageThread";
 import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
 import { extractPilotLabels } from "@/lib/credit-hub/labels/pilot-labels";
 import { OfferConfirmModal } from "@/components/credit-hub/dealer/OfferConfirmModal";
@@ -28,8 +29,6 @@ import type { DealerApplicationDetailViewProps } from "@/lib/credit-hub/types/de
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
 import type { CreditOffer } from "@/lib/credit-hub/types/offers";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
-
-/** Offer statuses the dealer can still act on (select). */
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
 
 /**
@@ -401,6 +400,11 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
       {apiTenantId ? <ApplicationEditPanel application={data} tenantId={apiTenantId} onSaved={() => void refetch()} /> : null}
       <EditHistorySection applicationId={applicationId} />
       <DocumentRequestsDealerSection applicationId={applicationId} />
+
+      <div className="ch-card mt-4 p-4" data-testid="dealer-messages-section">
+        <h3 className="mb-3 text-sm font-semibold">Mensajes</h3>
+        {apiTenantId ? <ApplicationMessageThread applicationId={applicationId} actorRole="dealer" /> : null}
+      </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="ch-card p-4">

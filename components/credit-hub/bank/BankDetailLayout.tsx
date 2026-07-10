@@ -15,6 +15,7 @@ import { ComplianceTab } from "@/components/credit-hub/bank/sections/ComplianceT
 import { DocumentsTab } from "@/components/credit-hub/bank/sections/DocumentsTab";
 import { StipulationsTab } from "@/components/credit-hub/bank/sections/StipulationsTab";
 import { VerificationsTab } from "@/components/credit-hub/bank/sections/VerificationsTab";
+import { ApplicationMessageThread, useMessageUnreadCount } from "@/components/credit-hub/dealer/ApplicationMessageThread";
 import { FieldWithModifiedBadge } from "@/components/credit-hub/bank/ModifiedFieldBadge";
 import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/api/operationalClient";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -63,7 +64,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   }, [payload.documents]);
 
   const decisionMutation = useBankDecision(application.application_id);
-  const [tab, setTab] = useState<"analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones">("analisis");
+  const [tab, setTab] = useState<"analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones" | "mensajes">("analisis");
   const [panelState, setPanelState] = useState<DecisionState>("idle");
   const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
   const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
@@ -89,6 +90,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   }, []);
 
   const issuesOpen = compliance?.issues?.length ?? 0;
+  const messageUnread = useMessageUnreadCount(application.application_id, "bank_analyst");
   const tabs = [
     ["analisis", "Análisis"],
     ["documentos", `Documentos · ${docs.length}`],
@@ -96,6 +98,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
     ["audit", "Audit"],
     ["compliance", "Compliance"],
     ["verificaciones", "Verificaciones"],
+    ["mensajes", messageUnread != null && messageUnread > 0 ? `Mensajes (${messageUnread})` : "Mensajes"],
   ] as const;
 
   const handleSubmit = useCallback(
@@ -279,6 +282,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
                 declaracion={declaracion}
                 vehicleVin={vehicleVin}
               />
+            ) : null}
+            {tab === "mensajes" ? (
+              <ApplicationMessageThread applicationId={application.application_id} actorRole="bank_analyst" />
             ) : null}
           </div>
         </div>
