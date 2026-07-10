@@ -31,7 +31,7 @@ export function DocumentRequestsDealerSection({ applicationId }: { applicationId
   const upload = async (requestId: string) => {
     if (!apiTenantId) return;
     try {
-      await patchDocumentRequestUpload({ tenantId: apiTenantId, applicationId, requestId });
+      await patchDocumentRequestUpload({ tenantId: apiTenantId, requestId });
       forgeToast.success("Documento marcado como subido");
       void qc.invalidateQueries({ queryKey: ["document-requests", apiTenantId, applicationId] });
     } catch (err) {

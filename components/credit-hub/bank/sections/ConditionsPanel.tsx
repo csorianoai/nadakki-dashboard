@@ -5,11 +5,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { CHApiError } from "@/lib/credit-hub/api/client";
 import {
-  getApplicationConditions,
+  fulfillOfferCondition,
+  getOfferConditions,
   isBankExperienceEndpointUnavailable,
-  patchApplicationConditions,
-  type ApplicationCondition,
+  putOfferConditions,
+  type OfferCondition,
 } from "@/lib/credit-hub/api/bankExperienceClient";
+import { usePrimaryOfferId } from "@/lib/credit-hub/hooks/usePrimaryOfferId";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 
 function formatValidity(iso: string | null | undefined): string | null {
@@ -21,59 +23,72 @@ function formatValidity(iso: string | null | undefined): string | null {
   }
 }
 
+function slugKey(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 48) || `cond_${Date.now()}`;
+}
+
 export function ConditionsPanel({ applicationId }: { applicationId: string }) {
   const { apiTenantId } = useTenant();
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<ApplicationCondition[]>([]);
+  const { offerId } = usePrimaryOfferId(applicationId);
   const [newText, setNewText] = useState("");
-  const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [fulfillingIndex, setFulfillingIndex] = useState<number | null>(null);
 
   const q = useQuery({
-    queryKey: ["app-conditions", apiTenantId, applicationId],
-    queryFn: () => getApplicationConditions({ tenantId: apiTenantId!, applicationId }),
-    enabled: !!apiTenantId,
+    queryKey: ["offer-conditions", apiTenantId, applicationId, offerId],
+    queryFn: () =>
+      getOfferConditions({ tenantId: apiTenantId!, applicationId, offerId: offerId!, actorRole: "bank_analyst" }),
+    enabled: !!apiTenantId && !!offerId,
     retry: false,
   });
 
-  const conditions = useMemo(() => {
-    if (dirty) return draft;
-    return q.data?.conditions ?? [];
-  }, [dirty, draft, q.data?.conditions]);
+  const conditions = useMemo(() => q.data?.conditions ?? [], [q.data?.conditions]);
 
+  if (!offerId && !q.isLoading) return null;
   if (q.error instanceof CHApiError && isBankExperienceEndpointUnavailable(q.error)) return null;
 
-  const validLabel = formatValidity(q.data?.valid_until);
+  const validLabel = formatValidity(q.data?.valid_until ?? q.data?.expires_at);
 
-  const toggleStatus = (id: string) => {
-    const next = conditions.map((c) =>
-      c.id === id
-        ? { ...c, status: c.status === "satisfied" ? "pending" : "satisfied" }
-        : c,
-    );
-    setDraft(next);
-    setDirty(true);
+  const toggleMet = async (index: number, met: boolean) => {
+    if (!apiTenantId || !offerId) return;
+    setFulfillingIndex(index);
+    try {
+      await fulfillOfferCondition({
+        tenantId: apiTenantId,
+        applicationId,
+        offerId,
+        index,
+        met,
+      });
+      void qc.invalidateQueries({ queryKey: ["offer-conditions", apiTenantId, applicationId, offerId] });
+      forgeToast.success(met ? "Condición cumplida" : "Condición marcada pendiente");
+    } catch (err) {
+      forgeToast.error(err instanceof CHApiError ? err.detail : "No se pudo actualizar la condición");
+    } finally {
+      setFulfillingIndex(null);
+    }
   };
 
-  const addCondition = () => {
-    const text = newText.trim();
-    if (!text) return;
-    const next = [...conditions, { id: `local-${Date.now()}`, text, status: "pending" }];
-    setDraft(next);
-    setNewText("");
-    setDirty(true);
-  };
-
-  const save = async () => {
-    if (!apiTenantId) return;
+  const addCondition = async () => {
+    const label = newText.trim();
+    if (!apiTenantId || !offerId || !label) return;
     setSaving(true);
     try {
-      await patchApplicationConditions({ tenantId: apiTenantId, applicationId, conditions });
-      setDirty(false);
-      void qc.invalidateQueries({ queryKey: ["app-conditions", apiTenantId, applicationId] });
-      forgeToast.success("Condiciones actualizadas");
+      const next: OfferCondition[] = [
+        ...conditions,
+        { key: slugKey(label), label_es: label, met: false, detail: null },
+      ];
+      await putOfferConditions({ tenantId: apiTenantId, applicationId, offerId, conditions: next });
+      setNewText("");
+      void qc.invalidateQueries({ queryKey: ["offer-conditions", apiTenantId, applicationId, offerId] });
+      forgeToast.success("Condición agregada");
     } catch (err) {
-      forgeToast.error(err instanceof CHApiError ? err.detail : "No se pudieron guardar las condiciones");
+      forgeToast.error(err instanceof CHApiError ? err.detail : "No se pudo agregar la condición");
     } finally {
       setSaving(false);
     }
@@ -107,16 +122,17 @@ export function ConditionsPanel({ applicationId }: { applicationId: string }) {
       ) : null}
 
       <ul className="mb-3 space-y-2">
-        {conditions.map((c) => (
-          <li key={c.id} className="flex items-start gap-2 text-sm">
+        {conditions.map((c, index) => (
+          <li key={c.key} className="flex items-start gap-2 text-sm">
             <input
               type="checkbox"
-              checked={c.status === "satisfied"}
-              onChange={() => toggleStatus(c.id)}
-              aria-label={`Marcar condición: ${c.text}`}
-              data-testid={`condition-check-${c.id}`}
+              checked={c.met}
+              disabled={fulfillingIndex === index}
+              onChange={() => void toggleMet(index, !c.met)}
+              aria-label={`Marcar condición: ${c.label_es}`}
+              data-testid={`condition-check-${c.key}`}
             />
-            <span style={{ opacity: c.status === "satisfied" ? 0.65 : 1 }}>{c.text}</span>
+            <span style={{ opacity: c.met ? 0.65 : 1 }}>{c.label_es}</span>
           </li>
         ))}
       </ul>
@@ -129,20 +145,14 @@ export function ConditionsPanel({ applicationId }: { applicationId: string }) {
           placeholder="Nueva condición…"
           data-testid="condition-input"
         />
-        <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" onClick={addCondition}>
+        <button
+          type="button"
+          className="ch-btn ch-btn-secondary ch-btn-sm"
+          disabled={saving || !newText.trim()}
+          onClick={() => void addCondition()}
+        >
           Agregar
         </button>
-        {dirty ? (
-          <button
-            type="button"
-            className="ch-btn ch-btn-primary ch-btn-sm"
-            disabled={saving}
-            onClick={() => void save()}
-            data-testid="conditions-save-btn"
-          >
-            Guardar
-          </button>
-        ) : null}
       </div>
     </div>
   );

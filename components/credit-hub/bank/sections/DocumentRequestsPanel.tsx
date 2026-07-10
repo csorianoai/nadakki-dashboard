@@ -9,7 +9,7 @@ import {
   getDocumentRequests,
   isOperationalEndpointUnavailable,
   postDocumentRequest,
-  postDocumentRequestReview,
+  patchDocumentRequestReview,
   type DocumentRequestItem,
 } from "@/lib/credit-hub/api/operationalClient";
 import {
@@ -43,13 +43,11 @@ function ReviewModal({
     }
     setBusy(true);
     try {
-      await postDocumentRequestReview({
+      await patchDocumentRequestReview({
         tenantId: apiTenantId,
-        applicationId,
         requestId: item.id,
-        action,
-        notes: notes.trim() || undefined,
-        rejection_reason: action === "reject" ? reason.trim() : undefined,
+        decision: action === "accept" ? "ACCEPTED" : "REJECTED",
+        notes: action === "reject" ? reason.trim() : notes.trim() || undefined,
       });
       forgeToast.success(action === "accept" ? "Documento aceptado" : "Documento rechazado");
       onDone();

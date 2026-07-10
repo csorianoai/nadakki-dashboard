@@ -7,9 +7,11 @@ import {
   isBankExperienceEndpointUnavailable,
 } from "@/lib/credit-hub/api/bankExperienceClient";
 import { chMoneyExact } from "@/lib/credit-hub/ch-base";
+import { usePrimaryOfferId } from "@/lib/credit-hub/hooks/usePrimaryOfferId";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 
 function formatDate(iso: string): string {
+  if (!iso) return "—";
   try {
     return new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" }).format(new Date(iso));
   } catch {
@@ -17,21 +19,38 @@ function formatDate(iso: string): string {
   }
 }
 
-export function AmortizationTable({ applicationId, actorRole = "dealer" }: { applicationId: string; actorRole?: "dealer" | "bank_analyst" }) {
+export function AmortizationTable({
+  applicationId,
+  offerId: offerIdProp,
+  actorRole = "dealer",
+}: {
+  applicationId: string;
+  offerId?: string | null;
+  actorRole?: "dealer" | "bank_analyst";
+}) {
   const { apiTenantId } = useTenant();
+  const { offerId: resolvedOfferId, isLoading: offerLoading } = usePrimaryOfferId(applicationId);
+  const offerId = offerIdProp ?? resolvedOfferId;
 
   const q = useQuery({
-    queryKey: ["amortization", apiTenantId, applicationId],
-    queryFn: () => getAmortizationSchedule({ tenantId: apiTenantId!, applicationId, actorRole }),
-    enabled: !!apiTenantId,
+    queryKey: ["amortization", apiTenantId, applicationId, offerId],
+    queryFn: () =>
+      getAmortizationSchedule({
+        tenantId: apiTenantId!,
+        applicationId,
+        offerId: offerId!,
+        actorRole,
+      }),
+    enabled: !!apiTenantId && !!offerId,
     retry: false,
   });
 
+  if (!offerId && !offerLoading) return null;
   if (q.error instanceof CHApiError && isBankExperienceEndpointUnavailable(q.error)) return null;
 
   const rows = q.data?.schedule ?? [];
 
-  if (q.isLoading) {
+  if (q.isLoading || offerLoading) {
     return (
       <div className="ch-card p-4 text-sm text-forgeGray-500" data-testid="amortization-loading">
         Cargando tabla de amortización…

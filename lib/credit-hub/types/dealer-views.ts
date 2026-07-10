@@ -40,6 +40,8 @@ export interface DealerNotificationsViewProps {
   isLoading?: boolean;
   /** True when GET /api/v2/credit/notifications is not available — no synthetic fallback. */
   sourceUnavailable?: boolean;
+  /** When set, marks read via API instead of local-only state. */
+  onMarkRead?: (id: string) => void | Promise<void>;
 }
 
 export interface DealerProfileViewProps {

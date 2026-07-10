@@ -1,13 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { CHApiError } from "@/lib/credit-hub/api/client";
 import { getCounterOffer } from "@/lib/credit-hub/api/bankClient";
+import { getOfferCompare, postRejectOffer } from "@/lib/credit-hub/api/bankExperienceClient";
 import { chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 
 export function CounterOfferPanel({ applicationId }: { applicationId: string }) {
   const { apiTenantId } = useTenant();
+  const qc = useQueryClient();
+  const [rejecting, setRejecting] = useState(false);
+  const [showReject, setShowReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   const q = useQuery({
     queryKey: ["counter-offer-panel", apiTenantId, applicationId],
@@ -15,6 +22,19 @@ export function CounterOfferPanel({ applicationId }: { applicationId: string }) 
     enabled: !!apiTenantId,
     retry: false,
   });
+
+  const compareQ = useQuery({
+    queryKey: ["offer-compare-reject", apiTenantId, applicationId],
+    queryFn: () => getOfferCompare({ tenantId: apiTenantId!, applicationId }),
+    enabled: !!apiTenantId,
+    retry: false,
+  });
+
+  const counterOfferId = useMemo(() => {
+    const detail = compareQ.data?.offers_detail ?? [];
+    const counter = detail.find((o) => o.is_counteroffer);
+    return counter?.offer_id ?? detail[0]?.offer_id ?? null;
+  }, [compareQ.data?.offers_detail]);
 
   if (q.isLoading) {
     return (
@@ -38,6 +58,29 @@ export function CounterOfferPanel({ applicationId }: { applicationId: string }) 
 
   const orig = co.original_terms;
   const counter = co.counter_offer_terms;
+
+  const reject = async () => {
+    if (!apiTenantId || !counterOfferId || rejecting) return;
+    setRejecting(true);
+    try {
+      await postRejectOffer({
+        tenantId: apiTenantId,
+        applicationId,
+        offerId: counterOfferId,
+        reason: rejectReason.trim() || undefined,
+        actorRole: "dealer",
+      });
+      forgeToast.success("Contrapropuesta rechazada");
+      setShowReject(false);
+      setRejectReason("");
+      void qc.invalidateQueries({ queryKey: ["counter-offer-panel", apiTenantId, applicationId] });
+      void qc.invalidateQueries({ queryKey: ["offer-compare-reject", apiTenantId, applicationId] });
+    } catch (err) {
+      forgeToast.error(err instanceof CHApiError ? err.detail : "No se pudo rechazar la contrapropuesta");
+    } finally {
+      setRejecting(false);
+    }
+  };
 
   return (
     <div className="ch-card p-4" data-testid="counter-offer-panel">
@@ -64,6 +107,43 @@ export function CounterOfferPanel({ applicationId }: { applicationId: string }) 
           </ul>
         </div>
       </div>
+      {counterOfferId ? (
+        <div className="mt-3">
+          {!showReject ? (
+            <button
+              type="button"
+              className="ch-btn ch-btn-secondary ch-btn-sm"
+              data-testid="reject-counter-offer-btn"
+              onClick={() => setShowReject(true)}
+            >
+              Rechazar contrapropuesta
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <textarea
+                className="w-full rounded border p-2 text-sm"
+                placeholder="Motivo (opcional)"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="ch-btn ch-btn-secondary ch-btn-sm"
+                  disabled={rejecting}
+                  onClick={() => void reject()}
+                  data-testid="confirm-reject-counter-offer"
+                >
+                  {rejecting ? "Rechazando…" : "Confirmar rechazo"}
+                </button>
+                <button type="button" className="ch-btn ch-btn-ghost ch-btn-sm" onClick={() => setShowReject(false)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

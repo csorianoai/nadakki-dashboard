@@ -16,7 +16,7 @@ const TABS: { id: DealerNotificationTab; label: string }[] = [
   { id: "system", label: "Sistema" },
 ];
 
-export function DealerNotificationsView({ items, isLoading, sourceUnavailable }: DealerNotificationsViewProps) {
+export function DealerNotificationsView({ items, isLoading, sourceUnavailable, onMarkRead }: DealerNotificationsViewProps) {
   const [tab, setTab] = useState<DealerNotificationTab>("all");
   const [readOverride, setReadOverride] = useState<Set<string>>(new Set());
 
@@ -35,7 +35,11 @@ export function DealerNotificationsView({ items, isLoading, sourceUnavailable }:
   }, [items, tab, readOverride]);
 
   const markRead = (id: string) => {
-    markNotificationRead(id);
+    if (onMarkRead) {
+      void onMarkRead(id);
+    } else {
+      markNotificationRead(id);
+    }
     setReadOverride((prev) => new Set(prev).add(id));
   };
 
