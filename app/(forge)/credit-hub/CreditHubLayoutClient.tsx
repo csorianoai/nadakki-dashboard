@@ -21,6 +21,7 @@ export function CreditHubLayoutClient({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const isBankPortal = pathname?.startsWith("/credit-hub/bank");
   const isDealerPortal = pathname?.startsWith("/credit-hub/dealer");
+  const isAdminCockpit = pathname?.startsWith("/credit-hub/admin");
   const monetizacionActive =
     isMonetizacionPath(pathname) && isForgeMonetizacionEnabled();
   const isChPortal = isBankPortal || isDealerPortal || monetizacionActive;
@@ -49,7 +50,7 @@ export function CreditHubLayoutClient({ children }: { children: React.ReactNode 
     <>
       <CreditHubI18nBootstrap />
       <CreditHubDemoBannerGate active={isChPortal} />
-      {isChPortal ? children : <ForgeCreditHubAppShell>{children}</ForgeCreditHubAppShell>}
+      {isChPortal ? children : isAdminCockpit ? children : <ForgeCreditHubAppShell>{children}</ForgeCreditHubAppShell>}
     </>
   );
 }
