@@ -29,6 +29,8 @@ import type { DealerApplicationDetailViewProps } from "@/lib/credit-hub/types/de
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
 import type { CreditOffer } from "@/lib/credit-hub/types/offers";
 import { CancelApplicationButton, OperationalStatusBanner } from "@/components/credit-hub/dealer/OperationalActions";
+import { AmortizationTable } from "@/components/credit-hub/dealer/AmortizationTable";
+import { extractOfferValidUntil, OfferValidityBadge } from "@/components/credit-hub/dealer/OfferValidityBadge";
 import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
@@ -299,6 +301,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                       {offer.lender_display_name || lenderLabel(offer.lender_code)}
                     </h3>
                     <div className="flex items-center gap-2">
+                      <OfferValidityBadge validUntil={extractOfferValidUntil(offer)} />
                       {offer.id === bestOfferId ? (
                         <span
                           style={{
@@ -524,6 +527,10 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         onConfirm={(offerId) => void handleAcceptOffer(offerId)}
         isSubmitting={acceptState === "loading"}
       />
+
+      <div className="mb-4">
+        <AmortizationTable applicationId={applicationId} actorRole="dealer" />
+      </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         {apiTenantId ? (
