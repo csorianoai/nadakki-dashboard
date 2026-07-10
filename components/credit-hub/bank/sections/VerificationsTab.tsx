@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { CircleSlash } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   complianceMatchesFromResults,
@@ -26,6 +27,15 @@ function Card({ title, children, testId }: { title: string; children: ReactNode;
   );
 }
 
+function EmptyVerificationState({ message }: { message: string }) {
+  return (
+    <p className="flex items-center gap-2 text-sm text-forgeGray-500" data-testid="verification-empty-state">
+      <CircleSlash className="h-4 w-4 shrink-0 text-forgeGray-400" aria-hidden />
+      {message}
+    </p>
+  );
+}
+
 function useSafeQuery<T>(key: string[], fn: () => Promise<T>) {
   const { apiTenantId } = useTenant();
   return useQuery({
@@ -34,6 +44,10 @@ function useSafeQuery<T>(key: string[], fn: () => Promise<T>) {
     enabled: !!apiTenantId,
     retry: false,
   });
+}
+
+function hasIdentitySnapshot(status: string | null | undefined): boolean {
+  return Boolean(status && status.trim());
 }
 
 export function VerificationsTab({
@@ -71,26 +85,29 @@ export function VerificationsTab({
 
   const complianceStatus = complianceStatusFromResults(complianceQ.data?.results);
   const complianceMatches = complianceMatchesFromResults(complianceQ.data?.results);
+  const hasPrescreenSnapshot = Boolean(prescreenStatus && prescreenStatus.trim());
 
   return (
     <div className="space-y-3" data-testid="verifications-tab">
       <Card title="Identidad (KYC)" testId="verification-card-identity">
-        {identityStatus === "VERIFIED" ? (
+        {!hasIdentitySnapshot(identityStatus) ? (
+          <EmptyVerificationState message="No solicitada por el dealer" />
+        ) : identityStatus === "VERIFIED" ? (
           <p className="text-sm text-green-700">
             ✓ Verificada por Nadakki{identityDetail ? ` — ${identityDetail}` : ""}
           </p>
         ) : identityStatus === "MISMATCH" ? (
           <p className="text-sm text-red-700">✗ Datos no coinciden{identityDetail ? ` — ${identityDetail}` : ""}</p>
         ) : identityStatus === "UNVERIFIED" ? (
-          <p className="text-sm text-amber-700">⚠ Documento adjunto, sin verificar</p>
+          <p className="text-sm text-amber-700">⚠ Verificación solicitada — resultado pendiente o incompleto</p>
         ) : (
-          <p className="text-sm text-forgeGray-500">No solicitada por el dealer</p>
+          <EmptyVerificationState message="No solicitada por el dealer" />
         )}
       </Card>
 
       <Card title="Pre-screening buró" testId="verification-card-prescreen">
-        {!prescreenStatus ? (
-          <p className="text-sm text-forgeGray-500">No consultado por el dealer</p>
+        {!hasPrescreenSnapshot ? (
+          <EmptyVerificationState message="No consultado" />
         ) : prescreenStatus === "ELIGIBLE" ? (
           <p className="text-sm text-green-700">🟢 Elegible para envío</p>
         ) : prescreenStatus === "ELIGIBLE_WITH_RESERVATIONS" ? (
@@ -125,7 +142,7 @@ export function VerificationsTab({
           ) : complianceStatus === "REVIEW_PENDING" ? (
             <p className="text-sm text-amber-700">🟡 En revisión por oficial de cumplimiento</p>
           ) : (
-            <p className="text-sm text-forgeGray-500">Sin resultado de screening</p>
+            <EmptyVerificationState message="Sin resultado de screening" />
           )}
         </Card>
       ) : null}
@@ -134,7 +151,7 @@ export function VerificationsTab({
         <Card title="Historial del vehículo (VIN)" testId="verification-card-vin">
           {historyQ.isLoading ? <p className="text-forge-sm text-forgeGray-500">Cargando…</p> : null}
           {(historyQ.data?.events ?? []).length === 0 ? (
-            <p className="text-sm text-forgeGray-500">Sin registros previos en Nadakki</p>
+            <EmptyVerificationState message="Sin registros previos en Nadakki" />
           ) : (
             <ul className="space-y-2 text-sm">
               {(historyQ.data?.events ?? []).map((ev, i) => (
@@ -156,7 +173,7 @@ export function VerificationsTab({
 
       <Card title="Declaración del dealer" testId="verification-card-declaration">
         {!declaracion ? (
-          <p className="text-sm text-forgeGray-500">Sin declaración registrada</p>
+          <EmptyVerificationState message="Sin declaración registrada" />
         ) : (
           <ul className="space-y-1 text-sm">
             {getDeclaracionSemaforoRows(declaracion).map(({ label, isBad }) => (
