@@ -18,6 +18,7 @@ import { ltvAlertCopy, ltvAlertLevel } from "@/lib/credit-hub/dealer/ltv-alert";
 import { LtvAlertBanner } from "@/components/credit-hub/dealer/wizard/LtvAlertBanner";
 import { cleanDecimalInput, useDealerWizard } from "./DealerWizardProvider";
 import { WizardSegmentPanel } from "@/components/credit-hub/dealer/wizard/WizardSegmentPanel";
+import { VehicleDeclarationSection } from "@/components/credit-hub/dealer/wizard/VehicleDeclarationSection";
 
 function numeric(value: string | number | null | undefined): number {
   const parsed = Number(String(value ?? "0").replace(/,/g, ""));
@@ -36,7 +37,7 @@ export function DealerWizardVehicleFinancialStep() {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
   const { catalogs, loading: catalogsLoading } = useCatalogs();
-  const { formData, updateField } = useDealerWizard();
+  const { formData, updateField, patchForm } = useDealerWizard();
 
   const otherMonthlyStep = formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
   const amountToFinance = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
@@ -207,6 +208,7 @@ export function DealerWizardVehicleFinancialStep() {
         </div>
       </div>
       {preApproval ? <PreApprovalBadge result={preApproval} /> : null}
+      <VehicleDeclarationSection formData={formData} patchForm={patchForm} />
       <WizardSegmentPanel />
     </div>
   );

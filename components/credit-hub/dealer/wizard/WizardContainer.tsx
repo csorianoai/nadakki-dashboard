@@ -40,6 +40,11 @@ import {
   personalReferencesValid,
   type PersonalReferenceFormRow,
 } from "@/lib/credit-hub/dealer/wizard-gates";
+import {
+  buildDeclaracionVehiculoPayload,
+  INITIAL_VEHICLE_DECLARATION,
+  vehicleDeclarationComplete,
+} from "@/lib/credit-hub/dealer/vehicle-declaration";
 import { preapprovalParamsFromTenantFractions, simulatePreApproval } from "@/lib/credit/simulation/preapproval-base";
 import { PreApprovalBadge } from "./PreApprovalBadge";
 import { ConsentSection, type ConsentWizardPatch } from "./consent/ConsentSection";
@@ -217,6 +222,14 @@ export interface ApplicationFormData {
   /** Optional LATAM segment (ROADMAP analytics) */
   segment_zone: string;
   segment_vehicle_type: string;
+  vehicle_decl_perdida_total: "" | "yes" | "no";
+  vehicle_decl_accidentes: "" | "yes" | "no" | "unknown";
+  vehicle_decl_gravamenes: "" | "yes" | "no";
+  vehicle_decl_titulo_vendedor: "" | "yes" | "no";
+  vehicle_decl_km_coincide: "" | "yes" | "no";
+  vehicle_decl_signature_name: string;
+  vehicle_decl_signed_at: string;
+  vehicle_decl_hash: string;
 }
 
 export const initialApplicationFormData: ApplicationFormData = {
@@ -304,6 +317,7 @@ export const initialApplicationFormData: ApplicationFormData = {
   consent_dealer_otp_code: "",
   segment_zone: "",
   segment_vehicle_type: "",
+  ...INITIAL_VEHICLE_DECLARATION,
 };
 
 function cleanDecimalInput(value: string): string {
@@ -441,6 +455,9 @@ export function buildCreateApplicationPayload(
           },
         }
       : {}),
+    ...(buildDeclaracionVehiculoPayload(formData)
+      ? { declaracion_vehiculo: buildDeclaracionVehiculoPayload(formData)! }
+      : {}),
   };
 }
 
@@ -558,7 +575,8 @@ export function stepIsValid(
     });
   }
   if (step === 2) {
-    return [data.product_type, data.vehicle_make, data.vehicle_model, data.vehicle_year, data.vehicle_price, data.dealer_supplier, data.vehicle_condition].every(isFilled);
+    const base = [data.product_type, data.vehicle_make, data.vehicle_model, data.vehicle_year, data.vehicle_price, data.dealer_supplier, data.vehicle_condition].every(isFilled);
+    return base && vehicleDeclarationComplete(data);
   }
   if (step === 3) {
     if (data.co_debtor_required === "no" && !config.garante_required) return true;
