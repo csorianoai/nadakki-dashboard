@@ -1,13 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Download, Search, X } from "lucide-react";
+import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { BulkActionBar, EmptyStateRich, TableSkeleton } from "@/components/credit-hub/primitives";
 import { BankSegment, QueueTable, SectionHeader } from "@/components/credit-hub/bank/shared/bankUi";
+import { CHApiError, resolveCreditHubFetchUrl } from "@/lib/credit-hub/api/client";
+import { bankQueueExcelPath } from "@/lib/credit-hub/api/bankExperienceClient";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import { tokenStorage } from "@/lib/auth/token-storage";
 import type { BankApplicationsTableProps } from "@/lib/credit-hub/types/bank-views";
 import type { BankQueueSortKey } from "@/lib/credit-hub/types/bank-views";
 import { sortQueueItems } from "@/lib/credit-hub/bank/bankFormat";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
+
+const LEGACY_TOKEN_KEY = "nadakki_sic_token";
 
 export interface BankApplicationsTableBulkProps extends BankApplicationsTableProps {
   selected: Set<string>;
@@ -35,11 +42,13 @@ export function BankApplicationsTable({
   onClearSelection,
   onBulkApply,
 }: BankApplicationsTableBulkProps) {
+  const { apiTenantId } = useTenant();
   const [estado, setEstado] = useState("all");
   const [prio, setPrio] = useState("all");
   const [minScore, setMinScore] = useState("");
   const [sortKey, setSortKey] = useState<BankQueueSortKey>("priority");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [exporting, setExporting] = useState(false);
 
   const filtered = useMemo(() => {
     let r = items.filter((a) => {
@@ -74,12 +83,63 @@ export function BankApplicationsTable({
     }
   };
 
+  const exportExcel = async () => {
+    if (!apiTenantId || exporting) return;
+    setExporting(true);
+    try {
+      const token =
+        tokenStorage.getAccessToken() ??
+        (typeof window !== "undefined" ? window.localStorage.getItem(LEGACY_TOKEN_KEY) : null);
+      const res = await fetch(resolveCreditHubFetchUrl(bankQueueExcelPath()), {
+        headers: {
+          "X-Tenant-ID": apiTenantId,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (!res.ok) {
+        if (res.status === 404 || res.status === 501) {
+          forgeToast.error("Exportación Excel no disponible aún");
+          return;
+        }
+        throw new CHApiError(`Error ${res.status}`, res.status);
+      }
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = "cola-banco.xlsx";
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+      forgeToast.success("Excel descargado");
+    } catch (err) {
+      forgeToast.error(err instanceof CHApiError ? err.detail : "No se pudo exportar");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (isLoading) return <TableSkeleton rows={8} />;
   if (isError) return <EmptyStateRich variant="error" primary={<button type="button" className="ch-btn ch-btn-secondary" onClick={onRetry}>Reintentar</button>} />;
 
   return (
     <div style={{ paddingBottom: selected.size ? 80 : 0 }}>
-      <SectionHeader eyebrow="Bank · Solicitudes" title="Solicitudes priorizadas" sub={`${total} solicitudes en el tenant · ${filtered.length} visibles`} />
+      <SectionHeader
+        eyebrow="Bank · Solicitudes"
+        title="Solicitudes priorizadas"
+        sub={`${total} solicitudes en el tenant · ${filtered.length} visibles`}
+        actions={
+          <button
+            type="button"
+            className="ch-btn ch-btn-secondary ch-btn-sm"
+            disabled={exporting}
+            onClick={() => void exportExcel()}
+            data-testid="export-queue-excel-btn"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden />
+            {exporting ? "Exportando…" : "Exportar Excel"}
+          </button>
+        }
+      />
 
       <div className="ch-card" style={{ padding: 14, marginBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>

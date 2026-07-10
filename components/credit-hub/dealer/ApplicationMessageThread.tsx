@@ -7,8 +7,9 @@ import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { CHApiError } from "@/lib/credit-hub/api/client";
 import {
   getApplicationMessages,
+  getMessageUnreadCount,
   isOperationalEndpointUnavailable,
-  patchMarkMessagesRead,
+  patchMarkMessageRead,
   postApplicationMessage,
 } from "@/lib/credit-hub/api/operationalClient";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -36,11 +37,19 @@ export function ApplicationMessageThread({
   });
 
   useEffect(() => {
-    if (!apiTenantId) return;
-    void patchMarkMessagesRead({ tenantId: apiTenantId, applicationId, actorRole }).then(() => {
+    if (!apiTenantId || !q.data?.messages?.length) return;
+    const isDealer = actorRole === "dealer";
+    const unread = q.data.messages.filter(
+      (m) => !m.read && (isDealer ? m.sender_role === "bank" : m.sender_role === "dealer"),
+    );
+    if (unread.length === 0) return;
+    void Promise.all(
+      unread.map((m) => patchMarkMessageRead({ tenantId: apiTenantId, messageId: m.id, actorRole })),
+    ).then(() => {
       void qc.invalidateQueries({ queryKey: ["app-messages", apiTenantId, applicationId] });
+      void qc.invalidateQueries({ queryKey: ["app-messages-unread", apiTenantId, applicationId, actorRole] });
     });
-  }, [apiTenantId, applicationId, actorRole, qc]);
+  }, [apiTenantId, applicationId, actorRole, q.data?.messages, qc]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,6 +68,7 @@ export function ApplicationMessageThread({
       await postApplicationMessage({ tenantId: apiTenantId, applicationId, message_text: body, actorRole });
       setText("");
       void qc.invalidateQueries({ queryKey: ["app-messages", apiTenantId, applicationId] });
+      void qc.invalidateQueries({ queryKey: ["app-messages-unread", apiTenantId, applicationId, actorRole] });
     } catch (err) {
       forgeToast.error(err instanceof CHApiError ? err.detail : "No se pudo enviar");
     } finally {
@@ -72,7 +82,7 @@ export function ApplicationMessageThread({
         {q.isLoading ? <p className="text-sm text-forgeGray-500">Cargando mensajes…</p> : null}
         {messages.length === 0 && !q.isLoading ? <p className="text-sm text-forgeGray-500">Sin mensajes aún.</p> : null}
         {messages.map((m) => {
-          const mine = (isDealer && m.sender_role === "dealer") || (!isDealer && m.sender_role !== "dealer");
+          const mine = (isDealer && m.sender_role === "dealer") || (!isDealer && m.sender_role === "bank");
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
               <div
@@ -116,11 +126,12 @@ export function ApplicationMessageThread({
 export function useMessageUnreadCount(applicationId: string, actorRole: CHActorRole): number | null {
   const { apiTenantId } = useTenant();
   const q = useQuery({
-    queryKey: ["app-messages", apiTenantId, applicationId],
-    queryFn: () => getApplicationMessages({ tenantId: apiTenantId!, applicationId, actorRole }),
+    queryKey: ["app-messages-unread", apiTenantId, applicationId, actorRole],
+    queryFn: () => getMessageUnreadCount({ tenantId: apiTenantId!, applicationId, actorRole }),
     enabled: !!apiTenantId,
     retry: false,
+    refetchInterval: 30_000,
   });
   if (q.error instanceof CHApiError && isOperationalEndpointUnavailable(q.error)) return null;
-  return q.data?.unread_count ?? 0;
+  return q.data ?? 0;
 }

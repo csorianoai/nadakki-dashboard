@@ -100,7 +100,13 @@ export function SecurityVerificationToggles({
     }
     setLoadingIdentity(true);
     try {
-      const result = await postVerifyIdentity({ tenantId: apiTenantId!, applicationId });
+      const result = await postVerifyIdentity({
+        tenantId: apiTenantId!,
+        applicationId,
+        subject_id: formData.applicant_identification.trim(),
+        subject_name: formData.applicant_full_name.trim(),
+        date_of_birth: formData.applicant_date_of_birth || undefined,
+      });
       patchForm({
         security_identity_status: result.status,
         security_identity_detail: result.detail ?? result.checks?.map((c) => c.message).filter(Boolean).join("; "),
@@ -127,7 +133,12 @@ export function SecurityVerificationToggles({
     }
     setLoadingPrescreen(true);
     try {
-      const result = await postPreScreen({ tenantId: apiTenantId!, applicationId });
+      const result = await postPreScreen({
+        tenantId: apiTenantId!,
+        applicationId,
+        subject_id: formData.applicant_identification.trim(),
+        subject_name: formData.applicant_full_name.trim(),
+      });
       patchForm({ security_prescreen_status: result.status });
     } catch (err) {
       patchForm({
