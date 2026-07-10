@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { DeclaracionVehiculoPayload } from "@/lib/credit-hub/dealer/vehicle-declaration";
 import type {
   BankAuditTrail,
   BankDashboardAnalytics,
@@ -10,7 +11,7 @@ import type {
 import type { CreditAnalysisResult } from "./creditAnalysis";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 
-export type BankDetailTab = "analisis" | "documentos" | "stipulaciones" | "audit" | "compliance";
+export type BankDetailTab = "analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones";
 
 export type BankQueueSortKey = "priority" | "applicant_name" | "requested_amount" | "score" | "created_at";
 
@@ -68,6 +69,7 @@ export interface BankReviewPayload {
     kyc_mode?: string | null;
     ocr_mode?: string | null;
   };
+  declaracion_vehiculo?: DeclaracionVehiculoPayload;
   expediente_meta?: Record<string, unknown>;
 }
 

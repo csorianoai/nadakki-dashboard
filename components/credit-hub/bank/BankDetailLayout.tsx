@@ -7,11 +7,13 @@ import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/componen
 import { EscalateKycButton } from "@/components/credit-hub/bank/EscalateKycButton";
 import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
 import type { PilotLabels } from "@/lib/credit-hub/labels/pilot-labels";
+import type { DeclaracionVehiculoPayload } from "@/lib/credit-hub/dealer/vehicle-declaration";
 import { AnalysisTab } from "@/components/credit-hub/bank/sections/AnalysisTab";
 import { AuditTab } from "@/components/credit-hub/bank/sections/AuditTab";
 import { ComplianceTab } from "@/components/credit-hub/bank/sections/ComplianceTab";
 import { DocumentsTab } from "@/components/credit-hub/bank/sections/DocumentsTab";
 import { StipulationsTab } from "@/components/credit-hub/bank/sections/StipulationsTab";
+import { VerificationsTab } from "@/components/credit-hub/bank/sections/VerificationsTab";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
 import { useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
@@ -56,7 +58,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   }, [payload.documents]);
 
   const decisionMutation = useBankDecision(application.application_id);
-  const [tab, setTab] = useState<"analisis" | "documentos" | "stipulaciones" | "audit" | "compliance">("analisis");
+  const [tab, setTab] = useState<"analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones">("analisis");
   const [panelState, setPanelState] = useState<DecisionState>("idle");
   const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
   const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
@@ -73,9 +75,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      const keys = ["1", "2", "3", "4", "5"];
+      const keys = ["1", "2", "3", "4", "5", "6"];
       const i = keys.indexOf(e.key);
-      if (i >= 0) setTab((["analisis", "documentos", "stipulaciones", "audit", "compliance"] as const)[i]!);
+      if (i >= 0) setTab((["analisis", "documentos", "stipulaciones", "audit", "compliance", "verificaciones"] as const)[i]!);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -88,6 +90,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
     ["stipulaciones", "Estipulaciones"],
     ["audit", "Audit"],
     ["compliance", "Compliance"],
+    ["verificaciones", "Verificaciones"],
   ] as const;
 
   const handleSubmit = useCallback(
@@ -119,6 +122,8 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
 
   const applicantName = String(applicant.name ?? applicant.full_name ?? "Cliente");
   const pilotLabels = (payload.pilot_labels ?? {}) as PilotLabels;
+  const declaracion = (payload.declaracion_vehiculo ?? null) as DeclaracionVehiculoPayload | null;
+  const vehicleVin = String((vehicle as { vin?: string }).vin ?? "");
   const rate = Number(financial.requested_rate ?? analysis?.metrics?.annual_rate ?? 17.5);
   const term = Number(financial.term_months ?? analysis?.metrics?.term_months ?? 48);
   const amount = Number(financial.requested_amount ?? analysis?.financed_amount ?? 0);
@@ -233,6 +238,13 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             {tab === "stipulaciones" ? <StipulationsTab applicationId={application.application_id} /> : null}
             {tab === "audit" ? <AuditTab audit={audit} /> : null}
             {tab === "compliance" ? <ComplianceTab report={compliance} applicationId={application.application_id} /> : null}
+            {tab === "verificaciones" ? (
+              <VerificationsTab
+                applicationId={application.application_id}
+                declaracion={declaracion}
+                vehicleVin={vehicleVin}
+              />
+            ) : null}
           </div>
         </div>
 

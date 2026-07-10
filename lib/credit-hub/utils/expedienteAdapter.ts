@@ -1,6 +1,7 @@
 import type { BankReviewApplication } from "../types/bankDecision";
 import type { ExpedienteFullResponse } from "../types/expediente";
 import type { CreditAnalysisResult } from "../types/creditAnalysis";
+import type { DeclaracionVehiculoPayload } from "../dealer/vehicle-declaration";
 import { extractPilotLabels, type PilotLabels } from "../labels/pilot-labels";
 
 function asAnalysis(summary: Record<string, unknown>, score?: number): CreditAnalysisResult | undefined {
@@ -32,6 +33,11 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
     (lpr && typeof lpr === "object" && (lpr as Record<string, unknown>).bank_decision) ||
     summary.bank_decision;
   const pilot_labels: PilotLabels = extractPilotLabels(ex);
+  const declaracionRaw = summary.declaracion_vehiculo ?? (ex as { declaracion_vehiculo?: unknown }).declaracion_vehiculo;
+  const declaracion_vehiculo =
+    declaracionRaw && typeof declaracionRaw === "object"
+      ? (declaracionRaw as DeclaracionVehiculoPayload)
+      : undefined;
 
   return {
     application_id: ex.application_id,
@@ -52,6 +58,7 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
         completeness: ex.completeness,
       },
       pilot_labels,
+      declaracion_vehiculo,
     },
   };
 }

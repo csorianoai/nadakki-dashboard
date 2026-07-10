@@ -77,9 +77,28 @@ export function buildDeclaracionVehiculoPayload(data: VehicleDeclarationFields):
   };
 }
 
+/** Bank verifications tab: green ✓ when clean, red ✗ when problem answer. */
+export function getDeclaracionSemaforoRows(decl: DeclaracionVehiculoPayload): { label: string; isBad: boolean }[] {
+  return [
+    { label: "Pérdida total", isBad: decl.perdida_total },
+    { label: "Accidentes reportados", isBad: decl.accidentes_reportados === "yes" },
+    { label: "Gravámenes vigentes", isBad: decl.gravamenes_vigentes },
+    { label: "Título a nombre del vendedor", isBad: !decl.titulo_a_nombre_vendedor },
+    { label: "Kilometraje coincide", isBad: !decl.kilometraje_coincide },
+  ];
+}
+
+function utf8Bytes(text: string): Uint8Array {
+  if (typeof TextEncoder !== "undefined") return new TextEncoder().encode(text);
+  const utf8 = unescape(encodeURIComponent(text));
+  const bytes = new Uint8Array(utf8.length);
+  for (let i = 0; i < utf8.length; i++) bytes[i] = utf8.charCodeAt(i);
+  return bytes;
+}
+
 export async function sha256Hex(text: string): Promise<string> {
-  const enc = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest("SHA-256", enc);
+  const enc = utf8Bytes(text);
+  const buf = await crypto.subtle.digest("SHA-256", enc as BufferSource);
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
