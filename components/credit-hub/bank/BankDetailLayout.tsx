@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, Download, FileText } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
 import { EscalateKycButton } from "@/components/credit-hub/bank/EscalateKycButton";
 import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
@@ -15,6 +15,8 @@ import { ComplianceTab } from "@/components/credit-hub/bank/sections/ComplianceT
 import { DocumentsTab } from "@/components/credit-hub/bank/sections/DocumentsTab";
 import { StipulationsTab } from "@/components/credit-hub/bank/sections/StipulationsTab";
 import { ConditionsPanel } from "@/components/credit-hub/bank/sections/ConditionsPanel";
+import { CounterOfferPanel } from "@/components/credit-hub/bank/sections/CounterOfferPanel";
+import { OfferComparePanel } from "@/components/credit-hub/bank/sections/OfferComparePanel";
 import { AmortizationTable } from "@/components/credit-hub/dealer/AmortizationTable";
 import { VerificationsTab } from "@/components/credit-hub/bank/sections/VerificationsTab";
 import { ApplicationMessageThread, useMessageUnreadCount } from "@/components/credit-hub/dealer/ApplicationMessageThread";
@@ -186,12 +188,10 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm">
-            <FileText className="h-3.5 w-3.5" aria-hidden />
+          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" data-testid="print-btn-stub">
             Imprimir
           </button>
-          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm">
-            <Download className="h-3.5 w-3.5" aria-hidden />
+          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" data-testid="export-pdf-btn-stub">
             Exportar PDF
           </button>
         </div>
@@ -330,7 +330,11 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           errorDetail={decisionErrorDetail}
           onSubmit={handleSubmit}
         />
-        <DisbursementPanel applicationId={application.application_id} displayStatus={displayStatus} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <CounterOfferPanel applicationId={application.application_id} />
+          <OfferComparePanel applicationId={application.application_id} />
+          <DisbursementPanel applicationId={application.application_id} displayStatus={displayStatus} />
+        </div>
       </div>
     </div>
   );
