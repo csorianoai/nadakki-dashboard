@@ -2,6 +2,7 @@
 
 import { FileText, Search } from "lucide-react";
 import { EscalateOcrButton } from "@/components/credit-hub/bank/EscalateOcrButton";
+import { DocumentRequestsPanel } from "@/components/credit-hub/bank/sections/DocumentRequestsPanel";
 import type { BankDocumentPayload } from "@/lib/credit-hub/types/bank-views";
 
 const ST_MAP: Record<string, [string, string, string]> = {
@@ -30,7 +31,9 @@ export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayloa
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12 }}>
+    <div>
+      <DocumentRequestsPanel applicationId={applicationId} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12, marginTop: 12 }}>
       {docs.map((d) => {
         const status = d.status ?? "pendiente";
         const [c, bg, l] = ST_MAP[status] ?? ST_MAP.pendiente!;
@@ -66,6 +69,7 @@ export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayloa
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
