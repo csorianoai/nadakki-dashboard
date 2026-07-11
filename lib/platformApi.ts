@@ -1,5 +1,5 @@
 /**
- * Platform-scoped API fetch — Bearer JWT only, no tenant header.
+ * Platform-scoped API fetch Ã¢â‚¬â€ Bearer JWT only, no tenant header.
  * Use for: /observability/v1/*, /tenant-admin/v1/*, /auth-users/v1/*, /credit-hub/v1/*
  *
  * MUST NOT import tenant-scoped credit hub fetch module.
@@ -10,10 +10,7 @@ const LEGACY_TOKEN_KEY = "nadakki_sic_token";
 
 /** Prefixes that must only be called via platformFetch (enforced in tests). */
 export const PLATFORM_API_PREFIXES = [
-  "/observability/v1",
-  "/tenant-admin/v1",
-  "/auth-users/v1",
-  "/credit-hub/v1",
+  "/api/v1/cockpit",
 ] as const;
 
 export function isPlatformApiPath(path: string): boolean {
@@ -122,7 +119,7 @@ export async function platformFetch<T>(path: string, init: PlatformFetchInit = {
 
     if (res.status === 401) {
       redirectLogin();
-      throw new PlatformApiError(401, "Sesión expirada. Inicia sesión de nuevo.");
+      throw new PlatformApiError(401, "SesiÃƒÂ³n expirada. Inicia sesiÃƒÂ³n de nuevo.");
     }
 
     if (!res.ok) {
