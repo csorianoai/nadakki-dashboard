@@ -3,7 +3,7 @@ import * as path from "path";
 
 const ROOT = path.join(__dirname, "..", "..");
 
-const PLATFORM_PREFIXES = ["/observability/v1", "/tenant-admin/v1", "/auth-users/v1", "/credit-hub/v1"];
+const PLATFORM_PREFIXES = ["/api/v1/cockpit"];
 
 function readFile(rel: string): string {
   return fs.readFileSync(path.join(ROOT, rel), "utf8");
@@ -54,7 +54,7 @@ describe("platform vs tenant fetch separation", () => {
   test("platformApi exports prefix guard", () => {
     const { isPlatformApiPath, PLATFORM_API_PREFIXES } = require("@/lib/platformApi");
     expect(PLATFORM_API_PREFIXES.length).toBeGreaterThan(0);
-    expect(isPlatformApiPath("/observability/v1/network/health")).toBe(true);
+    expect(isPlatformApiPath("/api/v1/cockpit/network/health")).toBe(true);
     expect(isPlatformApiPath("/api/v2/credit/stats")).toBe(false);
   });
 });
