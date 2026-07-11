@@ -4,7 +4,7 @@ import type { AuthUserRecord, AuthRole } from "../types-platform";
 export async function fetchUsers(tenantId?: string): Promise<AuthUserRecord[]> {
   const q = tenantId ? `?tenant_id=${encodeURIComponent(tenantId)}` : "";
   try {
-    const res = await platformFetch<{ users: AuthUserRecord[] }>(`/auth-users/v1/users${q}`);
+    const res = await platformFetch<{ users: AuthUserRecord[] }>(`/api/v1/cockpit/users${q}`);
     return res.users ?? [];
   } catch {
     return [];
@@ -13,7 +13,7 @@ export async function fetchUsers(tenantId?: string): Promise<AuthUserRecord[]> {
 
 export async function fetchRoles(): Promise<AuthRole[]> {
   try {
-    const res = await platformFetch<{ roles: AuthRole[] }>("/auth-users/v1/roles");
+    const res = await platformFetch<{ roles: AuthRole[] }>("/api/v1/cockpit/users/roles");
     return res.roles ?? [];
   } catch {
     return [];
@@ -28,11 +28,11 @@ export async function createUser(body: {
   core_codes?: string[];
   password?: string;
 }): Promise<{ user: AuthUserRecord; reset_token?: string }> {
-  return platformFetch("/auth-users/v1/users", { method: "POST", body: JSON.stringify(body) });
+  return platformFetch("/api/v1/cockpit/users", { method: "POST", body: JSON.stringify(body) });
 }
 
 export async function resetUserPassword(userId: string): Promise<{ reset_token: string }> {
-  return platformFetch(`/auth-users/v1/users/${encodeURIComponent(userId)}/password-reset`, {
+  return platformFetch(`/api/v1/cockpit/users/${encodeURIComponent(userId)}/reset-password`, {
     method: "POST",
     body: "{}",
   });
