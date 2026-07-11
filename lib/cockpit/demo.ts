@@ -6,10 +6,29 @@ import type {
   ActivityResponse,
   AlertsResponse,
   CoresSummaryResponse,
+  CoreSummaryItem,
   NetworkHealthResponse,
 } from "./types";
+import {
+  CORE_COLOR_FALLBACK,
+  CORE_DISPLAY_FALLBACK,
+  type PlatformCoreCode,
+} from "./core-registry";
 
 export const DEMO_LABEL = "DEMO — datos de ejemplo";
+
+function demoCore(code: PlatformCoreCode): CoreSummaryItem {
+  return {
+    core_code: code,
+    display_name: CORE_DISPLAY_FALLBACK[code],
+    status: code === "credit_hub" ? "healthy" : "unknown",
+    color_hex: CORE_COLOR_FALLBACK[code],
+    semaphore: code === "credit_hub" ? "green" : "yellow",
+    metrics: [{ label: "Actividad", value: "—" }],
+    sparkline_7d: [3, 5, 4, 6, 5, 7, 6],
+    data_source: "none",
+  };
+}
 
 export function demoNetworkHealth(): NetworkHealthResponse {
   return {
@@ -23,34 +42,39 @@ export function demoNetworkHealth(): NetworkHealthResponse {
 }
 
 export function demoCoresSummary(): CoresSummaryResponse {
+  const codes: PlatformCoreCode[] = [
+    "credit_hub",
+    "legal",
+    "marketing",
+    "sic",
+    "nauta",
+    "contable",
+  ];
   return {
     data_source: "none",
-    cores: [
-      {
-        core_code: "credit_hub",
-        display_name: "Credit Hub",
-        status: "healthy",
-        color_hex: "#2563eb",
-        semaphore: "green",
-        metrics: [
-          { label: "Solicitudes hoy", value: 42 },
-          { label: "Tasa aprobación", value: "68%" },
-        ],
-        sparkline_7d: [12, 18, 15, 22, 19, 25, 28],
-        data_source: "none",
-      },
-      {
-        core_code: "legal",
-        display_name: "Legal Core",
-        status: "degraded",
-        color_hex: "#7c3aed",
-        semaphore: "yellow",
-        metrics: [{ label: "Expedientes", value: 17 }],
-        sparkline_7d: [4, 5, 4, 6, 5, 7, 6],
-        data_source: "none",
-      },
-    ],
+    cores: codes.map((code) => {
+      const base = demoCore(code);
+      if (code === "credit_hub") {
+        return {
+          ...base,
+          metrics: [
+            { label: "Solicitudes hoy", value: 42 },
+            { label: "Tasa aprobación", value: "68%" },
+          ],
+          sparkline_7d: [12, 18, 15, 22, 19, 25, 28],
+        };
+      }
+      if (code === "legal") {
+        return { ...base, status: "degraded", metrics: [{ label: "Expedientes", value: 17 }] };
+      }
+      return base;
+    }),
   };
+}
+
+/** Single core DEMO stub when merging API partial response. */
+export function demoCoreByCode(code: PlatformCoreCode): CoreSummaryItem {
+  return demoCore(code);
 }
 
 export function demoActivity(): ActivityResponse {
