@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { LineChart } from "lucide-react";
 import { useCockpit } from "@/lib/cockpit/context";
 import { fetchNetworkHealth } from "@/lib/cockpit/api/observability";
 import { fetchTenants } from "@/lib/cockpit/api/tenantAdmin";
@@ -69,6 +70,7 @@ export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: ()
             <div className="space-y-1">
               <CockpitNavLink href="/cockpit" label="Vista de Red" />
               <CockpitNavLink href="/cockpit/credit" label="Credit Hub" />
+              <CockpitNavLink href="/cockpit/finance" label="Finanzas" icon={LineChart} />
             </div>
           </div>
           <div>
