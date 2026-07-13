@@ -23,8 +23,12 @@ export function useTenant(): CreditHubTenant {
     };
   }
   const { tenantId: sessionTenantId } = useDashboardTenant();
-  const envTenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || null;
-  const apiTenantId = sessionTenantId || envTenantId;
+  // Launch readiness P0: never fall back to env tenant in production builds.
+  const envTenantId =
+    process.env.NODE_ENV === "production"
+      ? null
+      : process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || null;
+  const apiTenantId = sessionTenantId ?? envTenantId;
   const tenantSlug = apiTenantId ? resolveTenantSlug(apiTenantId) : null;
   return { tenantId: apiTenantId, apiTenantId, tenantSlug, loading: false };
 }
