@@ -1,10 +1,16 @@
 import { Suspense } from "react";
 import CockpitFinanceTenantClient from "./TenantClient";
 
-export default function CockpitFinanceTenantPage({ params }: { params: { slug: string } }) {
+export default async function CockpitFinanceTenantPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
   return (
     <Suspense fallback={<p className="text-sm text-cockpit-muted">Cargando tenant…</p>}>
-      <CockpitFinanceTenantClient slug={params.slug} />
+      <CockpitFinanceTenantClient slug={slug} />
     </Suspense>
   );
 }
