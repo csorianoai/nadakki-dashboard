@@ -135,16 +135,20 @@ describe("FC1 UsersView", () => {
     expect(screen.queryByText("Crear usuario")).not.toBeInTheDocument();
   });
 
-  test("row click shows Editar en Panel admin link", async () => {
+  test("row click shows Ver tenant en Panel admin link", async () => {
     const user = userEvent.setup();
     render(<UsersView />);
     await waitFor(() => {
       expect(screen.getByText("Ana")).toBeInTheDocument();
     });
     await user.click(screen.getByTestId("user-row-u-1"));
-    const link = await screen.findByText("Editar en Panel admin →");
-    expect(link).toHaveAttribute("href", "/admin/users?tenant=t-1&user=u-1");
+    const link = await screen.findByText("Ver tenant en Panel admin →");
+    expect(link).toHaveAttribute("href", "/admin/tenants/t-1");
     expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute(
+      "title",
+      "Abre el detalle del tenant en Panel admin; desde ahí gestiona usuarios",
+    );
   });
 });
 

@@ -2,7 +2,7 @@
 
 import type { AuthUserRecord } from "@/lib/cockpit/types-platform";
 import { AdminPanelLink } from "@/components/cockpit/AdminPanelLink";
-import { adminUserEditUrl } from "@/lib/cockpit/consolidation";
+import { adminTenantConfigUrl } from "@/lib/cockpit/consolidation";
 
 export function UserReadOnlyDrawer({
   user,
@@ -70,8 +70,11 @@ export function UserReadOnlyDrawer({
           ) : null}
         </dl>
         <footer className="border-t border-cockpit-border p-4">
-          <AdminPanelLink href={adminUserEditUrl(user.tenant_id, user.id)}>
-            Editar en Panel admin →
+          <AdminPanelLink
+            href={adminTenantConfigUrl(user.tenant_id)}
+            title="Abre el detalle del tenant en Panel admin; desde ahí gestiona usuarios"
+          >
+            Ver tenant en Panel admin →
           </AdminPanelLink>
         </footer>
       </aside>
