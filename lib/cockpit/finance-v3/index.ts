@@ -10,6 +10,16 @@ export * from "./contracts/matrix";
 export * from "./contracts/tenant";
 export { normalizePopulationSummary } from "./normalize/population";
 export {
+  normalizePopulationByCore,
+  normalizePopulationByFamily,
+  normalizePopulationByEntity,
+  normalizePopulationByCountry,
+  normalizeDigitalAgents,
+  normalizeTopTenants,
+  normalizeTopUsers,
+  nonePopulationActivityEnvelope,
+} from "./normalize/population";
+export {
   normalizeFinanceKpis,
   normalizeMrrByCore,
   normalizeTenantFinancialsList,
