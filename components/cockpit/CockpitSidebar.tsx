@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useCockpit } from "@/lib/cockpit/context";
+import { getTenantDashboardHome } from "@/lib/cockpit/tenant-home";
 import { fetchNetworkHealth } from "@/lib/cockpit/api/observability";
 import { fetchTenants } from "@/lib/cockpit/api/tenantAdmin";
 import { CockpitNavLink } from "./CockpitShellLayout";
@@ -10,6 +14,9 @@ const API_HOST = process.env.NEXT_PUBLIC_API_HOST ?? "api.nadakki.io";
 
 export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   const { isPlatformSuperadmin } = useCockpit();
+  const { tenant, allRoles } = useAuth();
+  const homePath = getTenantDashboardHome(allRoles);
+  const showExit = Boolean(tenant?.id);
   const [healthDot, setHealthDot] = useState<"green" | "yellow" | "red">("yellow");
   const [tenantCount, setTenantCount] = useState(0);
 
@@ -50,7 +57,11 @@ export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: ()
         data-testid="cockpit-sidebar"
       >
         <div className="border-b border-cockpit-border p-4">
-          <div className="flex items-center gap-3">
+          <Link
+            href={homePath}
+            className="flex cursor-pointer items-center gap-3 rounded-lg transition-opacity hover:opacity-90"
+            aria-label="Volver al dashboard tenant"
+          >
             <div
               className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-white"
               style={{ background: "linear-gradient(135deg, #a78bfa, #6366f1)" }}
@@ -61,9 +72,18 @@ export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: ()
               <p className="text-base font-semibold text-cockpit-text">Nadakki</p>
               <p className="text-xs text-cockpit-muted">Network Cockpit</p>
             </div>
-          </div>
+          </Link>
         </div>
         <nav className="flex-1 space-y-6 overflow-y-auto p-3">
+          {showExit ? (
+            <Link
+              href={homePath}
+              className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-cockpit-muted transition-colors hover:bg-cockpit-border/40 hover:text-cockpit-text"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              Dashboard tenant
+            </Link>
+          ) : null}
           <div>
             <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-cockpit-muted">Cockpit</p>
             <div className="space-y-1">
