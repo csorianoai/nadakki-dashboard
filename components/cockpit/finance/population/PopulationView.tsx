@@ -4,8 +4,13 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CockpitErrorBoundary } from "@/lib/cockpit/components/ErrorBoundary";
 import { longDateEsDO } from "@/lib/cockpit/format";
+import { PopulationActivity } from "./PopulationActivity";
 import { PopulationByCore } from "./PopulationByCore";
-import { PopulationPendingPanel, PopulationSubNav } from "./PopulationSubNav";
+import { PopulationByCountry } from "./PopulationByCountry";
+import { PopulationByEntityType } from "./PopulationByEntityType";
+import { PopulationByFamily } from "./PopulationByFamily";
+import { PopulationDigitalAgents } from "./PopulationDigitalAgents";
+import { PopulationSubNav } from "./PopulationSubNav";
 import { PopulationSummary } from "./PopulationSummary";
 
 function PopulationContent() {
@@ -14,7 +19,7 @@ function PopulationContent() {
 
   return (
     <>
-      <PopulationSubNav activeOnly={["summary", "by-core"]} />
+      <PopulationSubNav />
       {tab === "summary" ? (
         <CockpitErrorBoundary title="Resumen población">
           <PopulationSummary />
@@ -25,8 +30,30 @@ function PopulationContent() {
           <PopulationByCore />
         </CockpitErrorBoundary>
       ) : null}
-      {tab !== "summary" && tab !== "by-core" ? (
-        <PopulationPendingPanel label="Sub-vista en construcción" />
+      {tab === "by-family" ? (
+        <CockpitErrorBoundary title="Por familia">
+          <PopulationByFamily />
+        </CockpitErrorBoundary>
+      ) : null}
+      {tab === "by-entity" ? (
+        <CockpitErrorBoundary title="Por entidad">
+          <PopulationByEntityType />
+        </CockpitErrorBoundary>
+      ) : null}
+      {tab === "by-country" ? (
+        <CockpitErrorBoundary title="Por país">
+          <PopulationByCountry />
+        </CockpitErrorBoundary>
+      ) : null}
+      {tab === "digital-agents" ? (
+        <CockpitErrorBoundary title="Agentes digitales">
+          <PopulationDigitalAgents />
+        </CockpitErrorBoundary>
+      ) : null}
+      {tab === "activity" ? (
+        <CockpitErrorBoundary title="Actividad">
+          <PopulationActivity />
+        </CockpitErrorBoundary>
       ) : null}
     </>
   );
