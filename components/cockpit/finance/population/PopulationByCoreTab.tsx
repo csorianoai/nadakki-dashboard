@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { fetchPopulationByCore } from "@/lib/cockpit/api/population";
+import { onRegistryMutated } from "@/lib/cockpit/finance-v3/registry-events";
 import { POPULATION_API_CORES } from "@/lib/cockpit/population-config";
 import type { PopulationByCoreEnvelope } from "@/lib/cockpit/finance-v3/contracts/population";
 import { formatCockpitInteger } from "@/lib/cockpit/finance-v3/format";
@@ -44,6 +45,8 @@ export function PopulationByCoreTab() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => onRegistryMutated(() => void load()), [load]);
 
   if (loading) return <p className="text-sm text-cockpit-muted">Cargando por core…</p>;
 
