@@ -63,3 +63,4 @@ export const tenantFinancialsListEnvelopeSchema = cockpitEnvelopeSchema(
 export type FinanceKpisEnvelope = z.infer<typeof financeKpisEnvelopeSchema>;
 export type MrrByCoreEnvelope = z.infer<typeof mrrByCoreEnvelopeSchema>;
 export type TenantFinancialRow = z.infer<typeof tenantFinancialRowSchema>;
+export type TenantFinancialsListEnvelope = z.infer<typeof tenantFinancialsListEnvelopeSchema>;

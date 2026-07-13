@@ -24,7 +24,9 @@
 | F1-04 | Feature flags | `flags.ts` | — | CONTRACTS.md | **VERIFIED** |
 | F1-05 | Population normalizer | `normalize/population.ts` | contract test PASS | backend router shape | **VERIFIED** |
 | F2-01 | Exit UX 3 caminos | PR #310 rama `fix/cockpit-exit-nav` | — | No en main | **IMPLEMENTED_UNVERIFIED** |
-| F2-02 | Finance shell rutas | `finance-ui/f1` | — | PR #305 CLOSED | **NOT_STARTED** on main |
+| F2-01 | Finance revenue UI | `components/cockpit/finance/revenue/*` | 6 normalize tests PASS | `/cockpit/finance/revenue` | **VERIFIED** |
+| F2-02 | Finance sidebar + sub-nav | `CockpitSidebar`, `FinanceSubNav` | cockpit tests PASS | `COCKPIT_FINANCE_ENABLED` | **VERIFIED** |
+| F2-03 | API client + normalizers | `lib/cockpit/api/finance.ts` | finance-normalize.test.ts | fetchOrDemo on 404 | **VERIFIED** |
 | F3-01 | Revenue live MRR=0 | — | — | — | **NOT_STARTED** |
 | F4-01 | Population 7 sub-vistas | `finance-ui/f3-f4` | — | PRs CLOSED | **NOT_STARTED** on main |
 | F5-01 | Registry CRUD | `finance-ui/f5` + backend F5 | — | 404 prod | **NOT_STARTED** |

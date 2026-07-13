@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, LineChart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCockpit } from "@/lib/cockpit/context";
 import { getTenantDashboardHome } from "@/lib/cockpit/tenant-home";
 import { isCockpitConsolidationEnabled } from "@/lib/cockpit/consolidation";
+import { COCKPIT_FINANCE_FLAGS } from "@/lib/cockpit/finance-v3/flags";
 import { fetchNetworkHealth } from "@/lib/cockpit/api/observability";
 import { fetchTenants } from "@/lib/cockpit/api/tenantAdmin";
 import { CockpitNavLink } from "./CockpitShellLayout";
@@ -19,6 +20,7 @@ export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: ()
   const homePath = getTenantDashboardHome(allRoles);
   const showExit = Boolean(tenant?.id);
   const consolidation = isCockpitConsolidationEnabled();
+  const financeEnabled = COCKPIT_FINANCE_FLAGS.COCKPIT_FINANCE_ENABLED;
   const [healthDot, setHealthDot] = useState<"green" | "yellow" | "red">("yellow");
   const [tenantCount, setTenantCount] = useState(0);
 
@@ -91,6 +93,7 @@ export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: ()
             <div className="space-y-1">
               <CockpitNavLink href="/cockpit" label="Vista de Red" />
               <CockpitNavLink href="/cockpit/credit" label="Credit Hub" />
+              {financeEnabled ? <CockpitNavLink href="/cockpit/finance" label="Finanzas" /> : null}
             </div>
           </div>
           <div>
