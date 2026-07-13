@@ -1,3 +1,9 @@
+/** FC1 cohabitation — default ON in dev/preview; set NEXT_PUBLIC_COCKPIT_CONSOLIDATION_ENABLED=false to rollback. */
+export const COCKPIT_CONSOLIDATION_FLAGS = {
+  COCKPIT_CONSOLIDATION_ENABLED:
+    process.env.NEXT_PUBLIC_COCKPIT_CONSOLIDATION_ENABLED !== "false",
+} as const;
+
 /** Safe defaults — finance routes hidden until explicitly enabled. */
 export const COCKPIT_FINANCE_FLAGS = {
   COCKPIT_FINANCE_ENABLED:

@@ -25,6 +25,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// FC1 — Cockpit consolidation: /cockpit/plans → Panel admin billing
+const COCKPIT_CONSOLIDATION_ENABLED =
+  process.env.NEXT_PUBLIC_COCKPIT_CONSOLIDATION_ENABLED !== "false";
+
 // ── Legacy advertising redirects (migrated from proxy.ts) ────────────────────
 const ADVERTISING_REDIRECTS: Record<string, string> = {
   "/google-ads": "/advertising/google-ads",
@@ -110,7 +114,12 @@ function extractPathTenantId(pathname: string): string | null {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── 1. Legacy advertising page redirects ──────────────────────────────
+  // ── 1. FC1 cockpit plans redirect ─────────────────────────────────────
+  if (COCKPIT_CONSOLIDATION_ENABLED && pathname === "/cockpit/plans") {
+    return NextResponse.redirect(new URL("/admin/billing", request.url), 302);
+  }
+
+  // ── 2. Legacy advertising page redirects ──────────────────────────────
   for (const [oldP, newP] of Object.entries(ADVERTISING_REDIRECTS)) {
     if (pathname === oldP || pathname.startsWith(oldP + "/")) {
       const newUrl = new URL(newP + pathname.slice(oldP.length), request.url);
@@ -118,7 +127,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ── 2. Tenant isolation — only for /api/* routes ──────────────────────
+  // ── 3. Tenant isolation — only for /api/* routes ──────────────────────
   if (!pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
@@ -235,6 +244,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/cockpit/plans",
     // Tenant isolation on API routes
     "/api/:path*",
     // Legacy advertising redirects

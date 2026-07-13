@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCockpit } from "@/lib/cockpit/context";
 import { getTenantDashboardHome } from "@/lib/cockpit/tenant-home";
+import { isCockpitConsolidationEnabled } from "@/lib/cockpit/consolidation";
 import { fetchNetworkHealth } from "@/lib/cockpit/api/observability";
 import { fetchTenants } from "@/lib/cockpit/api/tenantAdmin";
 import { CockpitNavLink } from "./CockpitShellLayout";
@@ -17,6 +18,7 @@ export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: ()
   const { tenant, allRoles } = useAuth();
   const homePath = getTenantDashboardHome(allRoles);
   const showExit = Boolean(tenant?.id);
+  const consolidation = isCockpitConsolidationEnabled();
   const [healthDot, setHealthDot] = useState<"green" | "yellow" | "red">("yellow");
   const [tenantCount, setTenantCount] = useState(0);
 
@@ -98,7 +100,7 @@ export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: ()
             <div className="space-y-1">
               <CockpitNavLink href="/cockpit/tenants" label="Tenants" badge={tenantCount} />
               <CockpitNavLink href="/cockpit/users" label="Usuarios" />
-              {isPlatformSuperadmin ? (
+              {isPlatformSuperadmin && !consolidation ? (
                 <CockpitNavLink href="/cockpit/plans" label="Suscripciones y Planes" />
               ) : null}
             </div>

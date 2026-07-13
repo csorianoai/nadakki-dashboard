@@ -1,17 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { createUser, fetchRoles, fetchUsers, resetUserPassword } from "@/lib/cockpit/api/authUsers";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchRoles, fetchUsers } from "@/lib/cockpit/api/authUsers";
 import { useCockpit } from "@/lib/cockpit/context";
 import type { AuthUserRecord } from "@/lib/cockpit/types-platform";
-import { PasswordTokenModal } from "@/components/cockpit/users/PasswordTokenModal";
+import { UserReadOnlyDrawer } from "@/components/cockpit/users/UserReadOnlyDrawer";
 
 export function UsersView() {
   const { tenantFilter } = useCockpit();
   const [users, setUsers] = useState<AuthUserRecord[]>([]);
   const [roles, setRoles] = useState<Array<{ role_key: string; display_name: string }>>([]);
-  const [token, setToken] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", role_key: "", password: "" });
+  const [emailSearch, setEmailSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [selected, setSelected] = useState<AuthUserRecord | null>(null);
 
   const load = useCallback(async () => {
     const [u, r] = await Promise.all([fetchUsers(tenantFilter ?? undefined), fetchRoles()]);
@@ -23,69 +24,68 @@ export function UsersView() {
     void load();
   }, [load]);
 
+  const filtered = useMemo(() => {
+    const q = emailSearch.trim().toLowerCase();
+    return users.filter((u) => {
+      if (q && !u.email.toLowerCase().includes(q) && !u.name.toLowerCase().includes(q)) return false;
+      if (roleFilter && u.role_key !== roleFilter) return false;
+      return true;
+    });
+  }, [users, emailSearch, roleFilter]);
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Usuarios</h1>
-      <div className="grid gap-2 rounded-xl border border-cockpit-border bg-cockpit-surface p-4 sm:grid-cols-2">
-        <input className="rounded border border-cockpit-border bg-cockpit-bg px-3 py-2 text-sm" placeholder="Nombre" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
-        <input className="rounded border border-cockpit-border bg-cockpit-bg px-3 py-2 text-sm" placeholder="Email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
-        <select className="rounded border border-cockpit-border bg-cockpit-bg px-3 py-2 text-sm" value={form.role_key} onChange={(e) => setForm((p) => ({ ...p, role_key: e.target.value }))}>
-          <option value="">Rol</option>
+      <div className="flex flex-wrap gap-2">
+        <input
+          className="min-w-[12rem] flex-1 rounded border border-cockpit-border bg-cockpit-bg px-3 py-2 text-sm"
+          placeholder="Buscar por email o nombre"
+          value={emailSearch}
+          onChange={(e) => setEmailSearch(e.target.value)}
+          data-testid="users-email-search"
+        />
+        <select
+          className="rounded border border-cockpit-border bg-cockpit-bg px-3 py-2 text-sm"
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          data-testid="users-role-filter"
+        >
+          <option value="">Todos los roles</option>
           {roles.map((r) => (
-            <option key={r.role_key} value={r.role_key}>{r.display_name}</option>
+            <option key={r.role_key} value={r.role_key}>
+              {r.display_name}
+            </option>
           ))}
         </select>
-        <input className="rounded border border-cockpit-border bg-cockpit-bg px-3 py-2 text-sm" type="password" placeholder="Contraseña (opcional)" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} />
-        <button
-          type="button"
-          className="rounded bg-cockpit-accent px-4 py-2 text-sm text-cockpit-bg sm:col-span-2 sm:w-fit"
-          onClick={() =>
-            void createUser({
-              name: form.name,
-              email: form.email,
-              role_key: form.role_key,
-              tenant_id: tenantFilter ?? users[0]?.tenant_id ?? "",
-              password: form.password || undefined,
-            }).then((res) => {
-              if (res.reset_token) setToken(res.reset_token);
-              void load();
-            })
-          }
-        >
-          Crear usuario
-        </button>
       </div>
-      <table className="w-full text-sm">
-        <thead className="text-xs uppercase text-cockpit-muted">
-          <tr>
-            <th className="py-2 text-left">Nombre</th>
-            <th className="py-2 text-left">Email</th>
-            <th className="py-2 text-left">Rol</th>
-            <th className="py-2 text-left">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="border-t border-cockpit-border">
-              <td className="py-2">{u.name}</td>
-              <td className="py-2">{u.email}</td>
-              <td className="py-2">{u.role_key}</td>
-              <td className="py-2">
-                <button
-                  type="button"
-                  className="text-xs text-cockpit-accent"
-                  onClick={() =>
-                    void resetUserPassword(u.id).then((r) => setToken(r.reset_token))
-                  }
-                >
-                  Reset password
-                </button>
-              </td>
+      <div className="overflow-x-auto rounded-xl border border-cockpit-border">
+        <table className="w-full text-sm">
+          <thead className="bg-cockpit-surface text-xs uppercase text-cockpit-muted">
+            <tr>
+              <th className="px-3 py-2 text-left">Nombre</th>
+              <th className="px-3 py-2 text-left">Email</th>
+              <th className="px-3 py-2 text-left">Rol</th>
+              <th className="px-3 py-2 text-left">Tenant</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <PasswordTokenModal token={token} onClose={() => setToken(null)} />
+          </thead>
+          <tbody>
+            {filtered.map((u) => (
+              <tr
+                key={u.id}
+                className="cursor-pointer border-t border-cockpit-border transition-colors hover:bg-cockpit-border/20"
+                onClick={() => setSelected(u)}
+                data-testid={`user-row-${u.id}`}
+              >
+                <td className="px-3 py-2">{u.name}</td>
+                <td className="px-3 py-2 font-mono text-xs">{u.email}</td>
+                <td className="px-3 py-2 font-mono tabular-nums">{u.role_key}</td>
+                <td className="px-3 py-2 font-mono text-xs text-cockpit-muted">{u.tenant_id}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <UserReadOnlyDrawer user={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
