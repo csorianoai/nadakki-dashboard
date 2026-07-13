@@ -16,7 +16,11 @@
 | F0-12 | Screenshots cockpit | Playwright/manual | — | No capturados F0 | **BLOCKED_EXTERNAL** (login) |
 | F0-13 | Curl autenticado 200 | dashboard session | — | No JWT en agente | **BLOCKED_EXTERNAL** |
 | F0-14 | Hypothesis ledger H1–H15 | `HYPOTHESIS_LEDGER.md` | — | F0 rows completas | **VERIFIED** |
-| F1-01 | Contratos Zod finance | — | — | — | **NOT_STARTED** |
+| F1-01 | Contratos Zod finance-v3 | `lib/cockpit/finance-v3/` | 22/22 PASS | CONTRACTS.md | **VERIFIED** |
+| F1-02 | DataTruthBadge 5 estados | `data-truth.ts` + mapping | 10 badge tests PASS | CONTRACTS.md §mapping | **VERIFIED** |
+| F1-03 | DATA_RECONCILIATION | `reconciliation.ts` | 3 tests PASS | DATA_RECONCILIATION.md | **VERIFIED** |
+| F1-04 | Feature flags | `flags.ts` | — | CONTRACTS.md | **VERIFIED** |
+| F1-05 | Population normalizer | `normalize/population.ts` | contract test PASS | backend router shape | **VERIFIED** |
 | F2-01 | Exit UX 3 caminos | PR #310 rama `fix/cockpit-exit-nav` | — | No en main | **IMPLEMENTED_UNVERIFIED** |
 | F2-02 | Finance shell rutas | `finance-ui/f1` | — | PR #305 CLOSED | **NOT_STARTED** on main |
 | F3-01 | Revenue live MRR=0 | — | — | — | **NOT_STARTED** |
