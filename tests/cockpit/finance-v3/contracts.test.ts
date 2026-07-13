@@ -138,6 +138,7 @@ describe("finance-v3 contracts", () => {
       data_source: "live" as const,
       as_of: new Date().toISOString(),
       is_estimated: false,
+      warnings: [{ code: "STALE_CACHE" as const, severity: "info" as const, message: "ok" }],
     };
     parseContract(registryProfessionsEnvelopeSchema, payload, "registryProfessions");
     expect(() =>

@@ -53,6 +53,23 @@
 
 ---
 
+## F4 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F4 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H4-1** | Registry endpoints requieren platform_superadmin | Tests A–E backend + layout guard | **VERIFIED** | `require_platform_superadmin` |
+| **H4-2** | tenant_admin POST/PATCH/DELETE → 403 real | test_a + test_c | **VERIFIED** | No simulación frontend |
+| **H4-3** | Duplicate role_code mismo core → 409 | Router + UI error | **VERIFIED** | Sin ON CONFLICT upsert |
+| **H4-4** | Referenced profession → soft delete active=false | migration 087 function | **VERIFIED** | warning PARTIAL_DATA |
+| **H4-5** | role_code espacios → 422 | Pydantic + UI SNAKE_CASE | **VERIFIED** | |
+| **H4-6** | family vacío → 422 | Pydantic validator | **VERIFIED** | |
+| **H4-7** | Mutación invalida cache población by-core | registry-events + ByCoreTab | **VERIFIED** | CustomEvent bus |
+| **H4-8** | Audit log en DB post-mutación | cockpit_registry_audit_log | **VERIFIED** | migration 087 |
+| **H4-9** | warnings[] con severity en UI | RegistryWarningsBanner | **VERIFIED** | 6 codes contract |
+| **H4-10** | Flag registry default ON | flags.ts !== "false" | **VERIFIED** | Rollback doc F4 |
+
+---
+
 ## F1–F8 — Hipótesis pendientes (formular al abrir cada fase)
 
 | Fase | Hipótesis prioritarias |
