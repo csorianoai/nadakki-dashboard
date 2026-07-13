@@ -26,7 +26,10 @@
 | F2-01 | Exit UX 3 caminos | PR #310 rama `fix/cockpit-exit-nav` | — | No en main | **IMPLEMENTED_UNVERIFIED** |
 | F2-01 | Finance revenue UI | `components/cockpit/finance/revenue/*` | 6 normalize tests PASS | `/cockpit/finance/revenue` | **VERIFIED** |
 | F2-02 | Finance sidebar + sub-nav | `CockpitSidebar`, `FinanceSubNav` | cockpit tests PASS | `COCKPIT_FINANCE_ENABLED` | **VERIFIED** |
-| F2-03 | API client + normalizers | `lib/cockpit/api/finance.ts` | finance-normalize.test.ts | fetchOrDemo on 404 | **VERIFIED** |
+| F3-01 | Population 7 sub-tabs | `components/cockpit/finance/population/*` | 7 normalize tests PASS | `/cockpit/finance/population?tab=` | **VERIFIED** |
+| F3-02 | Promise.allSettled partial failure | SummaryTab | code review | 1 endpoint fail, others render | **VERIFIED** |
+| F3-03 | Activity tab NONE (H3-7) | PopulationActivityTab | test PASS | No /population/activity | **VERIFIED** |
+| F2H-01 | 404 tenants/financials → none | fetchOrNone + test | tenant-financials-fetch PASS | H-2-N | **VERIFIED** |
 | F3-01 | Revenue live MRR=0 | — | — | — | **NOT_STARTED** |
 | F4-01 | Population 7 sub-vistas | `finance-ui/f3-f4` | — | PRs CLOSED | **NOT_STARTED** on main |
 | F5-01 | Registry CRUD | `finance-ui/f5` + backend F5 | — | 404 prod | **NOT_STARTED** |
