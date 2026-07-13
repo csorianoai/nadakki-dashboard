@@ -1,5 +1,4 @@
 import type { CockpitDataSource, CockpitEnvelope } from "../envelope";
-import type { z } from "zod";
 import {
   rawPopulationSummarySchema,
   populationSummaryEnvelopeSchema,
@@ -7,15 +6,19 @@ import {
 } from "../contracts/population";
 import { parseContract } from "../parse";
 
+const VALID_SOURCES: readonly CockpitDataSource[] = [
+  "live",
+  "derived",
+  "partial",
+  "demo",
+  "none",
+  "stale",
+  "error",
+];
+
 function coerceDataSource(raw: string): CockpitDataSource {
-  if (
-    raw === "live" ||
-    raw === "derived" ||
-    raw === "estimated" ||
-    raw === "demo" ||
-    raw === "none"
-  ) {
-    return raw;
+  if (VALID_SOURCES.includes(raw as CockpitDataSource)) {
+    return raw as CockpitDataSource;
   }
   return "none";
 }
@@ -27,12 +30,12 @@ function envelopeMeta(
   return {
     data_source: dataSource,
     as_of: new Date().toISOString(),
-    is_estimated: dataSource === "estimated" || dataSource === "derived",
+    is_estimated: dataSource === "derived" || dataSource === "partial",
     warnings: overrides?.warnings,
   };
 }
 
-/** Maps production flat response → v3.1 envelope. */
+/** Maps production flat response → v3.5 envelope. */
 export function normalizePopulationSummary(raw: unknown): PopulationSummaryEnvelope {
   const parsed = parseContract(rawPopulationSummarySchema, raw, "rawPopulationSummary");
   const source = coerceDataSource(parsed.data_source);

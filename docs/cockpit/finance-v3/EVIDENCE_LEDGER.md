@@ -9,15 +9,17 @@
 | F0-05 | Baseline Jest global | `npm run test:run` | 1230/1320 PASS | 38 suites fail pre-existing | **VERIFIED** (deuda separada) |
 | F0-06 | Baseline build | `npm run build:webpack` | — | Exit 0, 188.7s | **VERIFIED** |
 | F0-07 | Probe population live | curl Render | — | 401 (existe) | **VERIFIED** |
-| F0-08 | Probe finance absent | curl Render | — | 404 kpis/mrr/tenant-financials | **VERIFIED** |
-| F0-09 | Probe registry absent | curl Render | — | 404 professions | **VERIFIED** |
+| F0-08 | Probe finance absent | curl Render 2026-07-13 refresh | — | **401** kpis/mrr/tenant-financials (deployed, auth required) | **VERIFIED** (updated) |
+| F0-09 | Probe registry absent | curl Render 2026-07-13 refresh | — | **401** professions (deployed, auth required) | **VERIFIED** (updated) |
 | F0-10 | Tenant home path | `lib/auth/auth-context.tsx` | — | `/` para superadmin/admin | **VERIFIED** |
 | F0-11 | Protected tenant UUIDs | grep repo | — | 3 UUIDs documentados | **VERIFIED** |
 | F0-12 | Screenshots cockpit | Playwright/manual | — | No capturados F0 | **BLOCKED_EXTERNAL** (login) |
 | F0-13 | Curl autenticado 200 | dashboard session | — | No JWT en agente | **BLOCKED_EXTERNAL** |
 | F0-14 | Hypothesis ledger H1–H15 | `HYPOTHESIS_LEDGER.md` | — | F0 rows completas | **VERIFIED** |
 | F1-01 | Contratos Zod finance-v3 | `lib/cockpit/finance-v3/` | 22/22 PASS | CONTRACTS.md | **VERIFIED** |
-| F1-02 | DataTruthBadge 5 estados | `data-truth.ts` + mapping | 10 badge tests PASS | CONTRACTS.md §mapping | **VERIFIED** |
+| F1-02 | DataTruthBadge 7 estados | `data-truth.ts` + mapping | 16 badge tests PASS | F1H enum expansion | **VERIFIED** |
+| F1H-01 | Remove estimated state | `envelope.ts` | schema test PASS | v3.5 override | **VERIFIED** |
+| F1H-02 | PARTIAL/STALE/ERROR badges | `DataTruthBadge.tsx` | retry test PASS | v3.5 override | **VERIFIED** |
 | F1-03 | DATA_RECONCILIATION | `reconciliation.ts` | 3 tests PASS | DATA_RECONCILIATION.md | **VERIFIED** |
 | F1-04 | Feature flags | `flags.ts` | — | CONTRACTS.md | **VERIFIED** |
 | F1-05 | Population normalizer | `normalize/population.ts` | contract test PASS | backend router shape | **VERIFIED** |

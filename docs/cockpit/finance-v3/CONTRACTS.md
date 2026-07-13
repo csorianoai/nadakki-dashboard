@@ -12,7 +12,7 @@ Every finance cockpit API response consumed by UI must normalize to:
 ```typescript
 {
   data: T;
-  data_source: "live" | "derived" | "estimated" | "demo" | "none";
+  data_source: "live" | "derived" | "partial" | "demo" | "none" | "stale" | "error";
   as_of: string;              // ISO-8601
   freshness_seconds?: number;
   is_estimated: boolean;
@@ -42,9 +42,11 @@ Runtime: `parseContract()` throws `ContractViolationError` on invalid payload.
 |-------------|-------------|-------|-------|
 | `live` | `REAL` | Verde | Real |
 | `derived` | `DERIVED` | Azul suave | Derivado |
-| `estimated` | `ESTIMATED` | Naranja | est. |
+| `partial` | `PARTIAL` | Naranja | parcial |
 | `demo` | `DEMO` | Amarillo | Demo |
 | `none` | `NONE` | Gris | sin data |
+| `stale` | `STALE` | Violeta | obsoleto |
+| `error` | `ERROR` | Rojo + retry | error |
 
 Implementation: `lib/cockpit/finance-v3/data-source.ts` + extended `lib/credit-hub/honesty/data-truth.ts`.
 

@@ -2,7 +2,7 @@
  * Data honesty taxonomy for Credit Hub redesign.
  * Every KPI/tile/panel must declare its truth level.
  *
- * Finance Cockpit v3.1 adds DERIVED, ESTIMATED, NONE for cockpit data_source mapping.
+ * Finance Cockpit v3.5: 7 cockpit data_source states mapped to badge levels.
  */
 export type DataTruthLevel =
   | "REAL"
@@ -10,8 +10,10 @@ export type DataTruthLevel =
   | "DEMO"
   | "ROADMAP"
   | "DERIVED"
-  | "ESTIMATED"
-  | "NONE";
+  | "PARTIAL"
+  | "NONE"
+  | "STALE"
+  | "ERROR";
 
 export const DATA_TRUTH_LABELS: Record<DataTruthLevel, string> = {
   REAL: "Real",
@@ -19,8 +21,10 @@ export const DATA_TRUTH_LABELS: Record<DataTruthLevel, string> = {
   DEMO: "Demo",
   ROADMAP: "Roadmap",
   DERIVED: "Derivado",
-  ESTIMATED: "est.",
+  PARTIAL: "parcial",
   NONE: "sin data",
+  STALE: "obsoleto",
+  ERROR: "error",
 };
 
 export const DATA_TRUTH_STYLES: Record<
@@ -38,9 +42,9 @@ export const DATA_TRUTH_STYLES: Record<
     border: "var(--ch-info)",
   },
   DEMO: {
-    bg: "var(--ch-accent-soft)",
-    color: "var(--ch-accent-text)",
-    border: "var(--ch-accent-line)",
+    bg: "rgba(234, 179, 8, 0.14)",
+    color: "#a16207",
+    border: "#eab308",
   },
   ROADMAP: {
     bg: "var(--ch-surface-3)",
@@ -52,7 +56,7 @@ export const DATA_TRUTH_STYLES: Record<
     color: "#1d4ed8",
     border: "#3b82f6",
   },
-  ESTIMATED: {
+  PARTIAL: {
     bg: "rgba(249, 115, 22, 0.14)",
     color: "#c2410c",
     border: "#f97316",
@@ -61,5 +65,15 @@ export const DATA_TRUTH_STYLES: Record<
     bg: "rgba(107, 114, 128, 0.12)",
     color: "#6b7280",
     border: "#9ca3af",
+  },
+  STALE: {
+    bg: "rgba(139, 92, 246, 0.14)",
+    color: "#6d28d9",
+    border: "#8b5cf6",
+  },
+  ERROR: {
+    bg: "rgba(239, 68, 68, 0.14)",
+    color: "#b91c1c",
+    border: "#ef4444",
   },
 };
