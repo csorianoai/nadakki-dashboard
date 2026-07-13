@@ -87,6 +87,23 @@
 
 ---
 
+## F6 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F6 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H6-1** | 1 request agregado carga tenant | `fetchTenantOverview` único en load | **VERIFIED** | Sin loops N×M |
+| **H6-2** | Resolución UUID o slug | SQL `id::text OR slug` | **VERIFIED** | Router acepta ambos |
+| **H6-3** | Finance block reconcilia Revenue F2 | `reconcileTenantFinanceWithRevenue` | **VERIFIED** | RECONCILIATION_MISMATCH |
+| **H6-4** | Core highlight desde matriz | `?highlighted_core=` ring UI | **VERIFIED** | MatrixCellView link |
+| **H6-5** | Email enmascarado en users | SQL mask `a***@domain` | **VERIFIED** | PII mínimo |
+| **H6-6** | Cores no habilitados → empty card | users_count=0, mrr=null | **VERIFIED** | "No habilitado" |
+| **H6-7** | Tenant 404 → not_found UI | fetch 404 mapping | **VERIFIED** | No demo fallback |
+| **H6-8** | Cross-tenant A–E overview | test_cockpit_finance_tenant_overview_router | **VERIFIED** | 403/401 |
+| **H6-9** | Flag tenant detail default ON | flags.ts !== "false" | **VERIFIED** | Rollback doc F6 |
+| **H6-10** | SECURITY DEFINER checklist 089 | migration REVOKE/GRANT | **VERIFIED** | search_path public |
+
+---
+
 ## F1–F8 — Hipótesis pendientes (formular al abrir cada fase)
 
 | Fase | Hipótesis prioritarias |
@@ -97,7 +114,7 @@
 | F4 | H8, H9, H13 — 7 sub-vistas, churn sin inventar |
 | F5 | H11 — RBAC mutaciones registry |
 | F6 | H10, H6 — single aggregated endpoint |
-| F7 | H7, H5 — tenant overview ≤3 calls |
+| F7 | H7, H5 — hardening + anchor reconciliation |
 | F8 | H12, H15 — pyramid completo |
 
 ---
