@@ -1,9 +1,10 @@
 import { TenantDetailView } from "@/components/cockpit/tenants/TenantDetailView";
 
-export default function CockpitTenantDetailPage({
+export default async function CockpitTenantDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <TenantDetailView tenantId={params.id} />;
+  const { id } = await params;
+  return <TenantDetailView tenantId={id} />;
 }
