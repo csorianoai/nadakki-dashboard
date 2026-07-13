@@ -20,6 +20,7 @@ import {
   Gavel,
   GitBranch,
   Globe,
+  Grid3x3,
   Home,
   Key,
   Landmark,
@@ -47,6 +48,7 @@ import {
 } from "lucide-react";
 import type { RoleInfo } from "@/lib/api/auth-v2";
 import { isForgeMonetizacionEnabled } from "@/lib/env/feature-forge-monetizacion";
+import { COCKPIT_CONSOLIDATION_FLAGS } from "@/lib/cockpit/finance-v3/flags";
 
 export type NavBadge = "NEW" | "BETA" | "POPULAR";
 
@@ -62,7 +64,7 @@ export type NavItem = {
   /** Hidden unless the user has `platform_superadmin`. */
   superAdminOnly?: boolean;
   /** Hidden unless matching env feature flag is ON (build-time NEXT_PUBLIC_*). */
-  featureFlag?: "forge-monetizacion";
+  featureFlag?: "forge-monetizacion" | "cockpit-consolidation";
 };
 
 export type NavSection = {
@@ -168,6 +170,9 @@ export function isHrefActive(href: string, pathname: string | null): boolean {
 function isNavItemFeatureEnabled(item: NavItem): boolean {
   if (item.featureFlag === "forge-monetizacion") {
     return isForgeMonetizacionEnabled();
+  }
+  if (item.featureFlag === "cockpit-consolidation") {
+    return COCKPIT_CONSOLIDATION_FLAGS.COCKPIT_CONSOLIDATION_ENABLED;
   }
   return true;
 }
@@ -759,6 +764,14 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: Building2,
         children: [
           { id: "adm-home", label: "Panel admin", href: "/admin" },
+          {
+            id: "adm-network-cockpit",
+            label: "Network Cockpit",
+            href: "/cockpit",
+            icon: Grid3x3,
+            superAdminOnly: true,
+            featureFlag: "cockpit-consolidation",
+          },
           { id: "adm-dashboard", label: "Dashboard", href: "/dashboard" },
           { id: "adm-tenants", label: "Tenants", href: "/tenants" },
           { id: "adm-activation", label: "Activación", href: "/admin/activation" },
