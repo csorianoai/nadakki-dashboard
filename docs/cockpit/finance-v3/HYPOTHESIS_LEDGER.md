@@ -47,9 +47,9 @@
 | **H3-5** | Familias backend-driven | Dropdown desde seed + API | **PENDING** | Query `?family=` |
 | **H3-6** | Digital agents placeholder → NONE | `/digital-agents` zeros | **PENDING** | NONE badge, no inventar |
 | **H3-7** | Actividad sin telemetría → NONE | No endpoint `/activity` | **VERIFIED_ABSENCE** | Tab NONE completo |
-| **H3-8** | tenant_admin recibe 403 | Backend tests population | **CODE-VERIFIED** | CHAdminAccessGuard + backend 403 |
-| **H3-9** | Deep-link `?tab=&family=` | URLSearchParams sync | **PENDING** | Router replaceState |
-| **H3-10** | 404 nunca DEMO en population | `fetchOrNone` pattern | **PENDING** | Mismo patrón H-2-N |
+| **H3-8** | tenant_admin recibe 403 | Backend tests population | **VERIFIED** | CHAdminAccessGuard + backend 403 |
+| **H3-9** | Deep-link `?tab=&family=` | URLSearchParams sync | **VERIFIED** | Router replaceState |
+| **H3-10** | 404 nunca DEMO en population | `fetchOrNone` pattern | **VERIFIED** | H-2-N pattern en finance |
 
 ---
 
