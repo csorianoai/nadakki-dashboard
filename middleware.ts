@@ -29,6 +29,10 @@ import type { NextRequest } from "next/server";
 const COCKPIT_CONSOLIDATION_ENABLED =
   process.env.NEXT_PUBLIC_COCKPIT_CONSOLIDATION_ENABLED !== "false";
 
+// F4 — Finance registry: platform_superadmin only (middleware layer 1)
+const COCKPIT_FINANCE_REGISTRY_ENABLED =
+  process.env.NEXT_PUBLIC_COCKPIT_FINANCE_REGISTRY_ENABLED !== "false";
+
 // ── Legacy advertising redirects (migrated from proxy.ts) ────────────────────
 const ADVERTISING_REDIRECTS: Record<string, string> = {
   "/google-ads": "/advertising/google-ads",
@@ -81,6 +85,20 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
+function extractJwtRole(token: string): string | null {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return null;
+  const role = payload.role ?? payload.role_key ?? payload.r;
+  return typeof role === "string" ? role : null;
+}
+
+function extractRequestJwt(request: NextRequest): string | null {
+  const authHeader = request.headers.get("authorization") || "";
+  if (authHeader.startsWith("Bearer ")) return authHeader.slice(7).trim();
+  const legacy = request.cookies.get("nadakki_sic_token")?.value;
+  return legacy ?? null;
+}
+
 /**
  * Extract all tenant-ID-like values from query parameters.
  * Checks snake_case, camelCase, and lowercase variants.
@@ -117,6 +135,20 @@ export function middleware(request: NextRequest) {
   // ── 1. FC1 cockpit plans redirect ─────────────────────────────────────
   if (COCKPIT_CONSOLIDATION_ENABLED && pathname === "/cockpit/plans") {
     return NextResponse.redirect(new URL("/admin/billing", request.url), 302);
+  }
+
+  // ── 1b. F4 finance registry — superadmin-only redirect ────────────────
+  if (pathname === "/cockpit/finance/registry" || pathname.startsWith("/cockpit/finance/registry/")) {
+    if (!COCKPIT_FINANCE_REGISTRY_ENABLED) {
+      return NextResponse.redirect(new URL("/cockpit/finance/revenue", request.url), 302);
+    }
+    const jwt = extractRequestJwt(request);
+    if (jwt) {
+      const role = extractJwtRole(jwt);
+      if (role && role !== "platform_superadmin") {
+        return NextResponse.redirect(new URL("/cockpit/finance/revenue", request.url), 302);
+      }
+    }
   }
 
   // ── 2. Legacy advertising page redirects ──────────────────────────────
@@ -245,6 +277,8 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/cockpit/plans",
+    "/cockpit/finance/registry",
+    "/cockpit/finance/registry/:path*",
     // Tenant isolation on API routes
     "/api/:path*",
     // Legacy advertising redirects

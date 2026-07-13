@@ -8,7 +8,13 @@ import { useCockpit } from "@/lib/cockpit/context";
 const TABS = [
   { href: "/cockpit/finance/revenue", label: "Ingresos" },
   { href: "/cockpit/finance/population", label: "Población" },
-  { href: "/cockpit/finance/registry", label: "Registro", superadminOnly: true },
+  { href: "/cockpit/finance/matrix", label: "Matriz", flag: "matrix" as const },
+  {
+    href: "/cockpit/finance/registry",
+    label: "Registro",
+    superadminOnly: true,
+    flag: "registry" as const,
+  },
 ] as const;
 
 export function FinanceSubNav() {
@@ -19,7 +25,15 @@ export function FinanceSubNav() {
 
   return (
     <nav className="mb-6 flex flex-wrap gap-2 border-b border-cockpit-border pb-3" data-testid="finance-subnav">
-      {TABS.filter((t) => !("superadminOnly" in t) || isPlatformSuperadmin).map((tab) => {
+      {TABS.filter((t) => {
+        if ("flag" in t && t.flag === "registry" && !COCKPIT_FINANCE_FLAGS.COCKPIT_FINANCE_REGISTRY_ENABLED) {
+          return false;
+        }
+        if ("flag" in t && t.flag === "matrix" && !COCKPIT_FINANCE_FLAGS.COCKPIT_FINANCE_MATRIX_ENABLED) {
+          return false;
+        }
+        return !("superadminOnly" in t) || isPlatformSuperadmin;
+      }).map((tab) => {
         const active = pathname === tab.href || pathname?.startsWith(`${tab.href}/`);
         return (
           <Link

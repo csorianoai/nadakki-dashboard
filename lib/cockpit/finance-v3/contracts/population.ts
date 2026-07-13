@@ -199,3 +199,9 @@ export const topUsersEnvelopeSchema = cockpitEnvelopeSchema(topUsersDataSchema);
 
 export type PopulationSummaryEnvelope = z.infer<typeof populationSummaryEnvelopeSchema>;
 export type PopulationByCoreEnvelope = z.infer<typeof populationByCoreEnvelopeSchema>;
+export type PopulationByFamilyEnvelope = z.infer<typeof populationByFamilyEnvelopeSchema>;
+export type PopulationByEntityEnvelope = z.infer<typeof populationByEntityEnvelopeSchema>;
+export type PopulationByCountryEnvelope = z.infer<typeof populationByCountryEnvelopeSchema>;
+export type DigitalAgentsEnvelope = z.infer<typeof digitalAgentsEnvelopeSchema>;
+export type TopTenantsEnvelope = z.infer<typeof topTenantsEnvelopeSchema>;
+export type TopUsersEnvelope = z.infer<typeof topUsersEnvelopeSchema>;

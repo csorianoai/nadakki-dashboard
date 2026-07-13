@@ -2,7 +2,7 @@ import { z } from "zod";
 import { cockpitCurrencySchema, cockpitEnvelopeSchema } from "../envelope";
 import { tenantFinancialRowSchema } from "./finance";
 
-/** Target contract for GET /api/v1/cockpit/finance/tenants/{id}/overview (F7 backend). */
+/** Target contract for GET /api/v1/cockpit/finance/tenants/{id}/overview (F6 backend). */
 export const tenantCoreCardSchema = z.object({
   core_code: z.string(),
   display_name: z.string(),

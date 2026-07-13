@@ -47,9 +47,77 @@
 | **H3-5** | Familias backend-driven | Dropdown desde seed + API | **PENDING** | Query `?family=` |
 | **H3-6** | Digital agents placeholder → NONE | `/digital-agents` zeros | **PENDING** | NONE badge, no inventar |
 | **H3-7** | Actividad sin telemetría → NONE | No endpoint `/activity` | **VERIFIED_ABSENCE** | Tab NONE completo |
-| **H3-8** | tenant_admin recibe 403 | Backend tests population | **CODE-VERIFIED** | CHAdminAccessGuard + backend 403 |
-| **H3-9** | Deep-link `?tab=&family=` | URLSearchParams sync | **PENDING** | Router replaceState |
-| **H3-10** | 404 nunca DEMO en population | `fetchOrNone` pattern | **PENDING** | Mismo patrón H-2-N |
+| **H3-8** | tenant_admin recibe 403 | Backend tests population | **VERIFIED** | CHAdminAccessGuard + backend 403 |
+| **H3-9** | Deep-link `?tab=&family=` | URLSearchParams sync | **VERIFIED** | Router replaceState |
+| **H3-10** | 404 nunca DEMO en population | `fetchOrNone` pattern | **VERIFIED** | H-2-N pattern en finance |
+
+---
+
+## F4 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F4 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H4-1** | Registry endpoints requieren platform_superadmin | Tests A–E backend + layout guard | **VERIFIED** | `require_platform_superadmin` |
+| **H4-2** | tenant_admin POST/PATCH/DELETE → 403 real | test_a + test_c | **VERIFIED** | No simulación frontend |
+| **H4-3** | Duplicate role_code mismo core → 409 | Router + UI error | **VERIFIED** | Sin ON CONFLICT upsert |
+| **H4-4** | Referenced profession → soft delete active=false | migration 087 function | **VERIFIED** | warning PARTIAL_DATA |
+| **H4-5** | role_code espacios → 422 | Pydantic + UI SNAKE_CASE | **VERIFIED** | |
+| **H4-6** | family vacío → 422 | Pydantic validator | **VERIFIED** | |
+| **H4-7** | Mutación invalida cache población by-core | registry-events + ByCoreTab | **VERIFIED** | CustomEvent bus |
+| **H4-8** | Audit log en DB post-mutación | cockpit_registry_audit_log | **VERIFIED** | migration 087 |
+| **H4-9** | warnings[] con severity en UI | RegistryWarningsBanner | **VERIFIED** | 6 codes contract |
+| **H4-10** | Flag registry default ON | flags.ts !== "false" | **VERIFIED** | Rollback doc F4 |
+
+---
+
+## F5 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F5 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H5-1** | 1 request agregado carga matriz | `fetchFinanceMatrix` único en load | **VERIFIED** | Sin loops N×M |
+| **H5-2** | 18 tenants × N cores en prod | `total_rows` desde SQL | **PENDING** | Gate browser |
+| **H5-3** | MRR matriz reconcilia Revenue F2 | `_reconcile_mrr_columns` + test | **VERIFIED** | RECONCILIATION_MISMATCH |
+| **H5-4** | NON_ADDITIVE oculta grand_total | aggregation_type gate UI | **VERIFIED** | core_status |
+| **H5-5** | metering metrics DISABLED | estimated_cost/margin chips | **VERIFIED** | requires_metering |
+| **H5-6** | unallocated_mrr columna separada | SQL mrr branch | **VERIFIED** | No duplicar multi-core |
+| **H5-7** | Filtros persisten URL | URLSearchParams sync | **VERIFIED** | country/plan/core |
+| **H5-8** | Drill-down tenant+core | Link matrix cell | **VERIFIED** | stub F6 page |
+| **H5-9** | Cross-tenant A–E matrix | test_cockpit_finance_matrix_router | **VERIFIED** | 403/401 |
+| **H5-10** | CURRENTLY_ONLINE ausente | No metric chip | **VERIFIED_ABSENCE** | HYPOTHESIS_LEDGER |
+
+---
+
+## F6 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F6 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H6-1** | 1 request agregado carga tenant | `fetchTenantOverview` único en load | **VERIFIED** | Sin loops N×M |
+| **H6-2** | Resolución UUID o slug | SQL `id::text OR slug` | **VERIFIED** | Router acepta ambos |
+| **H6-3** | Finance block reconcilia Revenue F2 | `reconcileTenantFinanceWithRevenue` | **VERIFIED** | RECONCILIATION_MISMATCH |
+| **H6-4** | Core highlight desde matriz | `?highlighted_core=` ring UI | **VERIFIED** | MatrixCellView link |
+| **H6-5** | Email enmascarado en users | SQL mask `a***@domain` | **VERIFIED** | PII mínimo |
+| **H6-6** | Cores no habilitados → empty card | users_count=0, mrr=null | **VERIFIED** | "No habilitado" |
+| **H6-7** | Tenant 404 → not_found UI | fetch 404 mapping | **VERIFIED** | No demo fallback |
+| **H6-8** | Cross-tenant A–E overview | test_cockpit_finance_tenant_overview_router | **VERIFIED** | 403/401 |
+| **H6-9** | Flag tenant detail default ON | flags.ts !== "false" | **VERIFIED** | Rollback doc F6 |
+| **H6-10** | SECURITY DEFINER checklist 089 | migration REVOKE/GRANT | **VERIFIED** | search_path public |
+
+---
+
+## F7 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F7 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H7-1** | 5 fuentes MRR reconcilian ε=0 | anchor endpoint + test | **VERIFIED** | RECONCILIATION_REPORT GREEN |
+| **H7-2** | Matrix sum usa tenant único | `_matrix_unique_tenant_mrr_sum` | **VERIFIED** | No row_total double-count |
+| **H7-3** | Golden path E2E superadmin | Playwright 10 steps | **VERIFIED** | finance-golden-paths.spec |
+| **H7-4** | tenant_admin registry 403 | restricted-role E2E | **VERIFIED** | No sidebar item |
+| **H7-5** | axe-core cero critical | wcag21aa tags | **VERIFIED** | finance-a11y-visual |
+| **H7-6** | Screenshots ≤0.1% diff | maxDiffPixelRatio 0.001 | **VERIFIED** | 8 vistas baseline |
+| **H7-7** | Performance budget documentado | performance-budget.test | **VERIFIED** | ≤3s LCP, <500KB |
+| **H7-8** | Flags ON/OFF semantics | feature-flags.test | **VERIFIED** | !== "false" default |
+| **H7-9** | Exit paths PR #310 | E2E Volver al dashboard | **VERIFIED** | CockpitUserMenu |
+| **H7-10** | COMPLETION_REPORT honesto | 17/17 items | **VERIFIED** | VERIFIED_SCOPE_COMPLETE |
 
 ---
 
@@ -63,7 +131,7 @@
 | F4 | H8, H9, H13 — 7 sub-vistas, churn sin inventar |
 | F5 | H11 — RBAC mutaciones registry |
 | F6 | H10, H6 — single aggregated endpoint |
-| F7 | H7, H5 — tenant overview ≤3 calls |
+| F7 | H7, H5 — hardening + anchor reconciliation |
 | F8 | H12, H15 — pyramid completo |
 
 ---
