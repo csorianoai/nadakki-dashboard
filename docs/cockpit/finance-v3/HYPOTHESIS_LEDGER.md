@@ -28,6 +28,31 @@
 
 ---
 
+## F2 — Corrección contrato (H-2-N)
+
+| ID | Hipótesis | Prueba | Resultado | Acción |
+|----|-----------|--------|-----------|--------|
+| **H-2-N** | `/finance/tenants/financials` 404 se marca DEMO | `fetchOrNone` + test 404→none | **VERIFIED_FIX** | Endpoint no desplegado → `data_source=none`, badge NONE hasta backend F5 |
+
+---
+
+## F3 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F3 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H3-1** | Population endpoints live con JWT | Probe 401 + normalizers | **PENDING** | Contract tests contra shape router 086 |
+| **H3-2** | Fallo parcial no tumba tab | `Promise.allSettled` por sub-tab | **PENDING** | 1 endpoint falla, otros renderizan |
+| **H3-3** | `core_name` backend ≠ UI `credit_hub` | Map `credit`→Credit Hub chip | **PENDING** | `POPULATION_API_CORES` |
+| **H3-4** | Core sin profesiones muestra empty accionable | by-core vacío | **PENDING** | Link Registro |
+| **H3-5** | Familias backend-driven | Dropdown desde seed + API | **PENDING** | Query `?family=` |
+| **H3-6** | Digital agents placeholder → NONE | `/digital-agents` zeros | **PENDING** | NONE badge, no inventar |
+| **H3-7** | Actividad sin telemetría → NONE | No endpoint `/activity` | **VERIFIED_ABSENCE** | Tab NONE completo |
+| **H3-8** | tenant_admin recibe 403 | Backend tests population | **CODE-VERIFIED** | CHAdminAccessGuard + backend 403 |
+| **H3-9** | Deep-link `?tab=&family=` | URLSearchParams sync | **PENDING** | Router replaceState |
+| **H3-10** | 404 nunca DEMO en population | `fetchOrNone` pattern | **PENDING** | Mismo patrón H-2-N |
+
+---
+
 ## F1–F8 — Hipótesis pendientes (formular al abrir cada fase)
 
 | Fase | Hipótesis prioritarias |

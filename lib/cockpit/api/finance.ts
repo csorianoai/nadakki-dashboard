@@ -1,8 +1,8 @@
-import { fetchOrDemo } from "@/lib/cockpit/api/fetchOrDemo";
+import { fetchOrDemo, fetchOrNone } from "@/lib/cockpit/api/fetchOrDemo";
 import {
   demoFinanceKpisRaw,
   demoMrrByCoreRaw,
-  demoTenantFinancialsListRaw,
+  noneTenantFinancialsListRaw,
 } from "@/lib/cockpit/demo-finance";
 import {
   normalizeFinanceKpis,
@@ -18,6 +18,7 @@ import type {
 export type FinancePanelResult<T> = {
   envelope: T;
   isDemo: boolean;
+  isAbsent?: boolean;
   error: string | null;
 };
 
@@ -44,9 +45,14 @@ export async function fetchTenantFinancialsPanel(
   if (params?.limit) q.set("limit", String(params.limit));
   if (params?.cursor) q.set("cursor", params.cursor);
   const suffix = q.size ? `?${q.toString()}` : "";
-  const { data, isDemo, error } = await fetchOrDemo(
+  const { data, isAbsent, error } = await fetchOrNone(
     `/api/v1/cockpit/finance/tenants/financials${suffix}`,
-    demoTenantFinancialsListRaw,
+    noneTenantFinancialsListRaw,
   );
-  return { envelope: normalizeTenantFinancialsList(data), isDemo, error };
+  return {
+    envelope: normalizeTenantFinancialsList(data),
+    isDemo: false,
+    isAbsent,
+    error,
+  };
 }

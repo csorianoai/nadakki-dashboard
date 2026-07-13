@@ -41,3 +41,22 @@ export function demoTenantFinancialsListRaw() {
     page_size: 20,
   };
 }
+
+/** 404 on tenants/financials — absent endpoint, not demo data. */
+export function noneTenantFinancialsListRaw() {
+  return {
+    data_source: "none" as const,
+    items: [] as Array<{
+      tenant_id: string;
+      tenant_name: string;
+      plan_name: string | null;
+      mrr_contribution: number;
+      subscription_status: string;
+      current_period_end: null;
+      next_renewal_at: null;
+    }>,
+    total: 0,
+    page: 1,
+    page_size: 20,
+  };
+}
