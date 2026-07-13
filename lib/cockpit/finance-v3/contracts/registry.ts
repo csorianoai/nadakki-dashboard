@@ -1,5 +1,16 @@
 import { z } from "zod";
-import { cockpitEnvelopeSchema } from "../envelope";
+import { cockpitStructuredWarningSchema } from "../warnings";
+
+/** Registry envelopes carry structured warnings for banner rendering. */
+export function registryEnvelopeSchema<T extends z.ZodTypeAny>(dataSchema: T) {
+  return z.object({
+    data: dataSchema,
+    data_source: z.enum(["live", "derived", "partial", "demo", "none", "stale", "error"]),
+    as_of: z.string(),
+    is_estimated: z.boolean(),
+    warnings: z.array(cockpitStructuredWarningSchema).optional(),
+  });
+}
 
 /** Target contract for GET/POST/PATCH /api/v1/cockpit/registry/* (F5 backend). */
 export const registryProfessionSchema = z.object({
@@ -33,8 +44,10 @@ export const registryEntityTypesListDataSchema = z.object({
   items: z.array(registryEntityTypeSchema),
 });
 
-export const registryProfessionsEnvelopeSchema = cockpitEnvelopeSchema(registryProfessionsListDataSchema);
-export const registryEntityTypesEnvelopeSchema = cockpitEnvelopeSchema(registryEntityTypesListDataSchema);
+export const registryProfessionsEnvelopeSchema = registryEnvelopeSchema(registryProfessionsListDataSchema);
+export const registryEntityTypesEnvelopeSchema = registryEnvelopeSchema(registryEntityTypesListDataSchema);
 
 export type RegistryProfession = z.infer<typeof registryProfessionSchema>;
 export type RegistryEntityType = z.infer<typeof registryEntityTypeSchema>;
+export type RegistryProfessionsEnvelope = z.infer<typeof registryProfessionsEnvelopeSchema>;
+export type RegistryEntityTypesEnvelope = z.infer<typeof registryEntityTypesEnvelopeSchema>;
