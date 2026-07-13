@@ -1,7 +1,14 @@
 import type { Page } from "@playwright/test";
 
 export const LOGIN_EMAIL = process.env.E2E_EMAIL ?? "ramon@nadakki.com";
-export const LOGIN_PWD = process.env.E2E_PASSWORD ?? "%QvPAyTLk0ERJu0x";
+/** Requires E2E_PASSWORD env — no hardcoded credential in VCS (launch-readiness P1). */
+export function getE2ePassword(): string {
+  const pwd = process.env.E2E_PASSWORD?.trim();
+  if (!pwd) {
+    throw new Error("E2E_PASSWORD env var is required for dealer E2E login");
+  }
+  return pwd;
+}
 export const TENANT_SLUG = process.env.E2E_TENANT_SLUG ?? "credicefi";
 
 /** Example VIN without I/O/Q; decode fills model year via heuristic. */
@@ -19,7 +26,7 @@ export async function loginAsDealer(page: Page): Promise<void> {
   });
   await page.goto("/login");
   await page.getByLabel(/Email/i).fill(LOGIN_EMAIL);
-  await page.getByLabel(/^Password/i).fill(LOGIN_PWD);
+  await page.getByLabel(/^Password/i).fill(getE2ePassword());
   await page.getByLabel(/Tenant/i).fill(TENANT_SLUG);
   await page.getByRole("button", { name: /Iniciar Sesión/i }).click();
   await page.waitForURL(/\/(credit-hub|dashboard)/, { timeout: 90_000 });
