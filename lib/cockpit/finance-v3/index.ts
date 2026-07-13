@@ -9,3 +9,9 @@ export * from "./contracts/registry";
 export * from "./contracts/matrix";
 export * from "./contracts/tenant";
 export { normalizePopulationSummary } from "./normalize/population";
+export {
+  normalizeFinanceKpis,
+  normalizeMrrByCore,
+  normalizeTenantFinancialsList,
+} from "./normalize/finance";
+export { formatCockpitMoney, formatCockpitInteger } from "./format";
