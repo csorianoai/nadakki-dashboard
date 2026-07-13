@@ -35,7 +35,7 @@ When `coreSum > globalMrr`:
 - Never hide the discrepancy
 
 If proportional split is introduced later:
-- Set `data_source: "derived"` or `"estimated"`
+- Set `data_source: "derived"` or `"partial"`
 - Document `calculation_method` in envelope `warnings`
 
 ---

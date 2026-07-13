@@ -1,12 +1,14 @@
 import { z } from "zod";
 
-/** Canonical v3.1 data provenance — all finance cockpit panels. */
+/** Canonical v3.5 data provenance — all finance cockpit panels (7 states). */
 export const cockpitDataSourceSchema = z.enum([
   "live",
   "derived",
-  "estimated",
+  "partial",
   "demo",
   "none",
+  "stale",
+  "error",
 ]);
 
 export type CockpitDataSource = z.infer<typeof cockpitDataSourceSchema>;
