@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { useCockpit } from "@/lib/cockpit/context";
+import { CockpitUserMenu } from "./CockpitUserMenu";
 import { fetchOpenAlerts } from "@/lib/cockpit/api/observability";
 import { fetchTenants } from "@/lib/cockpit/api/tenantAdmin";
 
@@ -10,7 +10,6 @@ type TenantOpt = { id: string; name: string };
 
 export function CockpitTopbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { tenantFilter, setTenantFilter, isTenantAdminOnly } = useCockpit();
-  const { user, activeRole } = useAuth();
   const [clock, setClock] = useState("");
   const [tenants, setTenants] = useState<TenantOpt[]>([]);
   const [alertCount, setAlertCount] = useState(0);
@@ -40,10 +39,6 @@ export function CockpitTopbar({ onMenuClick }: { onMenuClick: () => void }) {
     );
     void fetchOpenAlerts().then((r) => setAlertCount(r.data.alerts?.length ?? 0));
   }, [isTenantAdminOnly]);
-
-  const initials = (user?.email?.split("@")[0] ?? "OP").slice(0, 2).toUpperCase();
-  const displayName = user?.email?.split("@")[0] ?? "Operador";
-  const roleLabel = activeRole?.display_name ?? activeRole?.role_key ?? "—";
 
   return (
     <header
@@ -82,15 +77,7 @@ export function CockpitTopbar({ onMenuClick }: { onMenuClick: () => void }) {
             </span>
           ) : null}
         </button>
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cockpit-accent/30 text-xs font-semibold">
-            {initials}
-          </div>
-          <div className="hidden text-right sm:block">
-            <p className="text-sm font-medium">{displayName}</p>
-            <p className="text-xs text-cockpit-muted">{roleLabel}</p>
-          </div>
-        </div>
+        <CockpitUserMenu />
       </div>
     </header>
   );
