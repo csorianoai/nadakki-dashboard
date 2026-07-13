@@ -70,6 +70,23 @@
 
 ---
 
+## F5 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F5 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H5-1** | 1 request agregado carga matriz | `fetchFinanceMatrix` único en load | **VERIFIED** | Sin loops N×M |
+| **H5-2** | 18 tenants × N cores en prod | `total_rows` desde SQL | **PENDING** | Gate browser |
+| **H5-3** | MRR matriz reconcilia Revenue F2 | `_reconcile_mrr_columns` + test | **VERIFIED** | RECONCILIATION_MISMATCH |
+| **H5-4** | NON_ADDITIVE oculta grand_total | aggregation_type gate UI | **VERIFIED** | core_status |
+| **H5-5** | metering metrics DISABLED | estimated_cost/margin chips | **VERIFIED** | requires_metering |
+| **H5-6** | unallocated_mrr columna separada | SQL mrr branch | **VERIFIED** | No duplicar multi-core |
+| **H5-7** | Filtros persisten URL | URLSearchParams sync | **VERIFIED** | country/plan/core |
+| **H5-8** | Drill-down tenant+core | Link matrix cell | **VERIFIED** | stub F6 page |
+| **H5-9** | Cross-tenant A–E matrix | test_cockpit_finance_matrix_router | **VERIFIED** | 403/401 |
+| **H5-10** | CURRENTLY_ONLINE ausente | No metric chip | **VERIFIED_ABSENCE** | HYPOTHESIS_LEDGER |
+
+---
+
 ## F1–F8 — Hipótesis pendientes (formular al abrir cada fase)
 
 | Fase | Hipótesis prioritarias |

@@ -7,8 +7,8 @@ import {
   rawPopulationSummarySchema,
   populationSummaryEnvelopeSchema,
 } from "@/lib/cockpit/finance-v3/contracts/population";
+import { financeMatrixResponseSchema } from "@/lib/cockpit/finance-v3/contracts/matrix";
 import { registryProfessionsEnvelopeSchema } from "@/lib/cockpit/finance-v3/contracts/registry";
-import { tenantCoreMatrixEnvelopeSchema } from "@/lib/cockpit/finance-v3/contracts/matrix";
 import { tenantConsolidatedEnvelopeSchema } from "@/lib/cockpit/finance-v3/contracts/tenant";
 import { normalizePopulationSummary } from "@/lib/cockpit/finance-v3/normalize/population";
 import { reconcileMrr, projectArr } from "@/lib/cockpit/finance-v3/reconciliation";
@@ -152,26 +152,38 @@ describe("finance-v3 contracts", () => {
     ).toThrow(ContractViolationError);
   });
 
-  test("matrix envelope accepts nullable cells", () => {
+  test("finance matrix unified response shape", () => {
     const payload = {
-      data: {
-        metric: "active_users" as const,
-        period: "7d",
-        cores: [{ core_code: "credit_hub", display_name: "Credit Hub" }],
-        tenants: [
-          {
-            tenant_id: SYNTH_TENANT,
-            tenant_name: "Test",
-            tenant_slug: "test",
-            cells: { credit_hub: { value: 0, display: "0" } },
-          },
-        ],
-      },
-      data_source: "live" as const,
+      metric: "active_users" as const,
+      period: "7d" as const,
       as_of: new Date().toISOString(),
-      is_estimated: false,
+      data_source: "live" as const,
+      requires_metering: false,
+      aggregation_type: "UNIQUE_COUNT" as const,
+      rows: [
+        {
+          tenant_id: SYNTH_TENANT,
+          tenant_slug: "test",
+          tenant_name: "Test",
+          plan_code: "enterprise",
+          country: "DO",
+          cells: [
+            {
+              core_code: "credit",
+              value: 0,
+              display_value: "0",
+              data_source: "live" as const,
+            },
+          ],
+          row_total: { value: 0, display_value: "0" },
+        },
+      ],
+      totals_per_column: [{ core_code: "credit", value: 0, display_value: "0" }],
+      grand_total: { value: 0, display_value: "0" },
+      has_more: false,
+      total_rows: 1,
     };
-    parseContract(tenantCoreMatrixEnvelopeSchema, payload, "matrix");
+    financeMatrixResponseSchema.parse(payload);
   });
 
   test("tenant consolidated envelope validates overview shape", () => {
