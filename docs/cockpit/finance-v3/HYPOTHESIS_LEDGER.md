@@ -104,6 +104,23 @@
 
 ---
 
+## F7 — Hipótesis específicas (10)
+
+| ID | Hipótesis | Prueba F7 | Resultado | Acción |
+|----|-----------|-----------|-----------|--------|
+| **H7-1** | 5 fuentes MRR reconcilian ε=0 | anchor endpoint + test | **VERIFIED** | RECONCILIATION_REPORT GREEN |
+| **H7-2** | Matrix sum usa tenant único | `_matrix_unique_tenant_mrr_sum` | **VERIFIED** | No row_total double-count |
+| **H7-3** | Golden path E2E superadmin | Playwright 10 steps | **VERIFIED** | finance-golden-paths.spec |
+| **H7-4** | tenant_admin registry 403 | restricted-role E2E | **VERIFIED** | No sidebar item |
+| **H7-5** | axe-core cero critical | wcag21aa tags | **VERIFIED** | finance-a11y-visual |
+| **H7-6** | Screenshots ≤0.1% diff | maxDiffPixelRatio 0.001 | **VERIFIED** | 8 vistas baseline |
+| **H7-7** | Performance budget documentado | performance-budget.test | **VERIFIED** | ≤3s LCP, <500KB |
+| **H7-8** | Flags ON/OFF semantics | feature-flags.test | **VERIFIED** | !== "false" default |
+| **H7-9** | Exit paths PR #310 | E2E Volver al dashboard | **VERIFIED** | CockpitUserMenu |
+| **H7-10** | COMPLETION_REPORT honesto | 17/17 items | **VERIFIED** | VERIFIED_SCOPE_COMPLETE |
+
+---
+
 ## F1–F8 — Hipótesis pendientes (formular al abrir cada fase)
 
 | Fase | Hipótesis prioritarias |
