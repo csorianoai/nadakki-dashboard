@@ -13,12 +13,7 @@ import { toast } from "@/components/forge";
 import { WizardCompletenessBar } from "@/components/credit-hub/dealer/wizard/WizardCompletenessBar";
 import { computeWizardCompleteness, missingFieldsHint } from "@/lib/credit-hub/dealer/wizard-completeness";
 import { stepIsValid } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import {
-  hasRequiredDocumentsFileReady,
-  missingRequiredDocumentLabels,
-  personalReferencesValid,
-} from "@/lib/credit-hub/dealer/wizard-gates";
-import { tenantDocumentKey } from "@/components/credit-hub/dealer/wizard/WizardContainer";
+import { scrollToFirstWizardError } from "@/lib/credit-hub/dealer/wizard-field-errors";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 const STEP_LABELS = ["Solicitante", "Co-firmante", "Vehículo", "Documentos", "Consentimiento"];
@@ -27,7 +22,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
-  const { stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig, requiredDocumentsList } = useDealerWizard();
+  const { stepIndex, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig, attemptAdvance, blockReason, fieldErrors, showValidationErrors } = useDealerWizard();
   const [exitOpen, setExitOpen] = useState(false);
 
   const completeness = useMemo(
@@ -39,31 +34,16 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
     [formData, validationConfig, t],
   );
 
-  /** On step 0, tell the user exactly which section(s) block advancement. */
-  const step0BlockReason = useMemo(() => {
-    if (stepIndex !== 0 || canAdvance) return null;
-    const applicantOk = stepIsValid(0, formData, validationConfig, t);
-    const employmentOk = stepIsValid(1, formData, validationConfig, t);
-    if (!applicantOk && !employmentOk) return "Completa las secciones Solicitante y Empleo";
-    if (!applicantOk) return "Completa la secci\u00f3n Solicitante";
-    if (!employmentOk) return "Completa la secci\u00f3n Empleo (despl\u00e1zate hacia abajo)";
-    return null;
-  }, [stepIndex, canAdvance, formData, validationConfig, t]);
-
-  const step3BlockReason = useMemo(() => {
-    if (stepIndex !== 3 || canAdvance) return null;
-    const docsOk = hasRequiredDocumentsFileReady(formData);
-    const refsOk = personalReferencesValid(formData.personal_references);
-    const missingDocs = missingRequiredDocumentLabels(formData, requiredDocumentsList, tenantDocumentKey);
-    if (!docsOk && !refsOk) {
-      return `Sube ${missingDocs.join(", ")} y completa 3 referencias personales`;
+  const scrollToFirstIncomplete = useCallback(() => {
+    if (showValidationErrors && Object.keys(fieldErrors).length > 0) {
+      scrollToFirstWizardError(fieldErrors);
+      return;
     }
-    if (!docsOk) return `Sube los documentos obligatorios: ${missingDocs.join(", ")}`;
-    if (!refsOk) return "Se requieren al menos 3 referencias personales completas";
-    return null;
-  }, [stepIndex, canAdvance, formData, requiredDocumentsList]);
-
-  const blockReason = step0BlockReason ?? step3BlockReason;
+    if (stepIndex !== 0) return;
+    const applicantOk = stepIsValid(0, formData, validationConfig, t);
+    const target = !applicantOk ? "section-applicant" : "section-employment";
+    document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [stepIndex, formData, validationConfig, t, showValidationErrors, fieldErrors]);
 
   const handleSaveDraft = useCallback(() => {
     const ok = saveDraftToStorage();
@@ -85,16 +65,13 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
     });
   }, [saveDraftToStorage, tenantConfig.locale]);
 
-  const scrollToFirstIncomplete = useCallback(() => {
-    if (stepIndex !== 0) return;
-    const applicantOk = stepIsValid(0, formData, validationConfig, t);
-    const target = !applicantOk ? "section-applicant" : "section-employment";
-    document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [stepIndex, formData, validationConfig, t]);
-
   const handlePrimary = async () => {
     if (stepIndex < 4) {
-      goNext();
+      attemptAdvance();
+      return;
+    }
+    if (!canAdvance) {
+      attemptAdvance();
       return;
     }
     try {
@@ -107,6 +84,8 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
       /* submitError surfaced below */
     }
   };
+
+  const displayBlockReason = blockReason ?? (!canAdvance && stepIndex < 4 ? "Completa los campos obligatorios para continuar." : null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 120px)", paddingBottom: 88 }} data-testid="dealer-wizard-frame">
@@ -161,7 +140,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
         }}
       >
-        {blockReason ? (
+        {displayBlockReason ? (
           <button
             type="button"
             onClick={scrollToFirstIncomplete}
@@ -182,7 +161,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
             }}
             data-testid="wizard-scroll-to-missing"
           >
-            {blockReason}
+            {displayBlockReason}
           </button>
         ) : null}
         <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", gap: 8, alignItems: "stretch" }}>
@@ -193,11 +172,11 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
             Guardar
           </button>
           {stepIndex < 4 ? (
-            <button type="button" className="ch-btn ch-btn-persona flex-1 min-h-[48px]" onClick={goNext} disabled={!canAdvance}>
+            <button type="button" className="ch-btn ch-btn-persona flex-1 min-h-[48px]" onClick={() => attemptAdvance()}>
               Siguiente
             </button>
           ) : (
-            <button type="button" className="ch-btn ch-btn-persona flex-1 min-h-[48px]" onClick={() => void handlePrimary()} disabled={!canAdvance || isSubmitting}>
+            <button type="button" className="ch-btn ch-btn-persona flex-1 min-h-[48px]" onClick={() => void handlePrimary()} disabled={isSubmitting}>
               {isSubmitting ? "Enviando…" : "Enviar solicitud"}
             </button>
           )}

@@ -46,6 +46,13 @@ import {
   wizardDocumentsStepValid,
   type PersonalReferenceFormRow,
 } from "@/lib/credit-hub/dealer/wizard-gates";
+import {
+  getWizardSegmentValidation,
+  logPersonalReferencesDebug,
+  scrollToFirstWizardError,
+  wizardBlockReasonMessage,
+  type WizardFieldErrors,
+} from "@/lib/credit-hub/dealer/wizard-field-errors";
 
 const STORAGE_KEY = "nadakki_dealer_wizard_v1";
 const LEGACY_STORAGE_KEY = "forge-dealer-wizard-draft-v1";
@@ -187,6 +194,11 @@ export type DealerWizardContextValue = {
   consentApplicationIdReady: boolean;
   pendingFiles: Map<string, PendingFileEntry>;
   setPendingFile: (key: string, file: File | null) => void;
+  showValidationErrors: boolean;
+  fieldErrors: WizardFieldErrors;
+  blockReason: string | null;
+  getFieldError: (key: string) => string | undefined;
+  attemptAdvance: () => boolean;
 };
 
 const DealerWizardContext = createContext<DealerWizardContextValue | null>(null);
@@ -244,8 +256,13 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const presetAppliedRef = useRef(false);
   const createMutation = useCreateCreditApplication();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const stepIndex = dealerWizardStepIndexFromPathname(pathname);
+
+  useEffect(() => {
+    setShowValidationErrors(false);
+  }, [stepIndex]);
 
   const isDirty = useMemo(
     () => JSON.stringify(formData) !== JSON.stringify(initialApplicationFormData),
@@ -497,11 +514,43 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     [formData, stepIndex, validationConfig, t]
   );
 
+  const validationResult = useMemo(
+    () => getWizardSegmentValidation(stepIndex, formData, validationConfig, t),
+    [stepIndex, formData, validationConfig, t],
+  );
+
+  const fieldErrors = showValidationErrors ? validationResult.errors : {};
+  const blockReason = showValidationErrors ? wizardBlockReasonMessage(validationResult.summaries) : null;
+
+  const getFieldError = useCallback(
+    (key: string) => (showValidationErrors ? fieldErrors[key] : undefined),
+    [showValidationErrors, fieldErrors],
+  );
+
+  const attemptAdvance = useCallback(() => {
+    if (stepIndex === 3) {
+      logPersonalReferencesDebug(formData.personal_references ?? []);
+      console.info("[wizard-validation] documents step", {
+        document_files_ready: formData.document_files_ready,
+        personal_references: formData.personal_references,
+        canAdvance: segmentCanAdvance(stepIndex, formData, validationConfig, t),
+        validation: validationResult,
+      });
+    }
+    if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
+      setShowValidationErrors(false);
+      const next = Math.min(stepIndex + 1, 4);
+      router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next)));
+      return true;
+    }
+    setShowValidationErrors(true);
+    requestAnimationFrame(() => scrollToFirstWizardError(validationResult.errors));
+    return false;
+  }, [formData, router, stepIndex, validationConfig, t, validationResult]);
+
   const goNext = useCallback(() => {
-    if (!segmentCanAdvance(stepIndex, formData, validationConfig, t)) return;
-    const next = Math.min(stepIndex + 1, 4);
-    router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next)));
-  }, [formData, router, stepIndex, validationConfig, t]);
+    attemptAdvance();
+  }, [attemptAdvance]);
 
   const goPrev = useCallback(() => {
     const prev = Math.max(stepIndex - 1, 0);
@@ -697,6 +746,11 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       consentApplicationIdReady,
       pendingFiles,
       setPendingFile,
+      showValidationErrors,
+      fieldErrors,
+      blockReason,
+      getFieldError,
+      attemptAdvance,
     }),
     [
       formData,
@@ -731,6 +785,11 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       consentApplicationIdReady,
       pendingFiles,
       setPendingFile,
+      showValidationErrors,
+      fieldErrors,
+      blockReason,
+      getFieldError,
+      attemptAdvance,
     ]
   );
 

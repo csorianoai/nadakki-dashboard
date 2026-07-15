@@ -8,7 +8,7 @@ import { SecurityVerificationToggles } from "@/components/credit-hub/dealer/wiza
 import { useDealerWizard } from "./DealerWizardProvider";
 
 export function DealerWizardConsentStep() {
-  const { formData, patchForm, consentApplicationId, consentApplicationIdReady, requiredDocumentsList } = useDealerWizard();
+  const { formData, patchForm, consentApplicationId, consentApplicationIdReady, requiredDocumentsList, getFieldError, blockReason, showValidationErrors } = useDealerWizard();
   const summary = buildConsentDocumentsSummary(formData, requiredDocumentsList, tenantDocumentKey);
 
   return (
@@ -62,7 +62,11 @@ export function DealerWizardConsentStep() {
         consent_sms_otp_sent={formData.consent_sms_otp_sent}
         consent_dealer_otp_code={formData.consent_dealer_otp_code}
         onPatch={(patch: ConsentWizardPatch) => patchForm(patch as Partial<ApplicationFormData>)}
+        getFieldError={getFieldError}
       />
+      {showValidationErrors && blockReason ? (
+        <p className="text-forge-sm text-[#ef4444]" role="alert">{blockReason}</p>
+      ) : null}
     </div>
   );
 }

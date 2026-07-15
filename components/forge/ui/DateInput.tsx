@@ -12,10 +12,11 @@ export interface DateInputProps extends Omit<InputHTMLAttributes<HTMLInputElemen
   locale: string;
   hint?: string;
   error?: string;
+  fieldKey?: string;
 }
 
 export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function DateInput(
-  { label, value, onValueChange, locale, hint, error, className, id, disabled, ...props },
+  { label, value, onValueChange, locale, hint, error, fieldKey, className, id, disabled, ...props },
   ref
 ) {
   const gid = useId();
@@ -26,7 +27,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(function D
   const preview = value ? formatForgeDate(value, locale) : "";
 
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex flex-col gap-1.5", className)} data-wizard-field={fieldKey}>
       <label htmlFor={inputId} className={cn("text-forge-sm font-medium", disabled ? "text-forgeGray-400" : "text-forgeGray-700")}>
         {label}
       </label>

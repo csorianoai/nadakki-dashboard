@@ -8,6 +8,8 @@ export const WIZARD_REQUIRED_DOCUMENT_KEY = "id_front";
 
 export const PERSONAL_REFERENCES_MIN = 3;
 export const PERSONAL_REFERENCES_MAX = 5;
+/** Dominican phones are 10 digits; allow 11–12 with country code. */
+export const PERSONAL_REFERENCE_PHONE_MIN_DIGITS = 7;
 
 /** Maps wizard checklist keys to backend `documentos` payload keys. */
 export const DOCUMENT_KEY_TO_PAYLOAD_KEY: Record<string, string> = {
@@ -52,15 +54,23 @@ export function initialPersonalReferences(count = PERSONAL_REFERENCES_MIN): Pers
   return Array.from({ length: count }, () => createEmptyPersonalReference());
 }
 
-function digitsOnly(value: string): string {
+export function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
+}
+
+export function personalReferencePhoneDigitCount(telefono: string): number {
+  return digitsOnly(telefono).length;
+}
+
+export function isPersonalReferencePhoneValid(telefono: string): boolean {
+  return personalReferencePhoneDigitCount(telefono) >= PERSONAL_REFERENCE_PHONE_MIN_DIGITS;
 }
 
 export function isPersonalReferenceComplete(ref: PersonalReferenceFormRow): boolean {
   return (
     ref.nombre_completo.trim().length > 0 &&
     ref.direccion.trim().length > 0 &&
-    digitsOnly(ref.telefono).length >= 10
+    isPersonalReferencePhoneValid(ref.telefono)
   );
 }
 

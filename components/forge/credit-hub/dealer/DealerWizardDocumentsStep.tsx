@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { tenantDocumentKey } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { Button, Checkbox, Input, Textarea } from "@/components/forge";
 import {
@@ -30,6 +31,9 @@ export function DealerWizardDocumentsStep() {
     updatePersonalReference,
     addPersonalReference,
     removePersonalReference,
+    getFieldError,
+    blockReason,
+    showValidationErrors,
   } = useDealerWizard();
 
   const docList = requiredDocumentsList;
@@ -64,7 +68,14 @@ export function DealerWizardDocumentsStep() {
           const showUpload = isRequired || selected;
 
           return (
-            <div key={k} className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3">
+            <div
+              key={k}
+              className={cn(
+                "rounded-forge-md border bg-forgeSurface-sunken p-3",
+                getFieldError(`document_${k}`) ? "border-[#ef4444]" : "border-forgeGray-200",
+              )}
+              data-wizard-field={`document_${k}`}
+            >
               <div className="flex items-start gap-3">
                 <Checkbox
                   checked={isRequired ? true : selected}
@@ -88,7 +99,7 @@ export function DealerWizardDocumentsStep() {
                         file={entry?.file ?? null}
                         status={entry?.status ?? "idle"}
                         previewUrl={entry?.previewUrl}
-                        errorMessage={entry?.errorMessage}
+                        errorMessage={entry?.errorMessage ?? getFieldError(`document_${k}`)}
                         onFileSelect={setPendingFile}
                       />
                       <Textarea
@@ -112,7 +123,7 @@ export function DealerWizardDocumentsStep() {
           <div>
             <h3 className="font-display text-forge-lg font-semibold text-forgeGray-800">Referencias personales</h3>
             <p className="mt-1 text-forge-sm text-forgeGray-500">
-              Mínimo {PERSONAL_REFERENCES_MIN} referencias completas (nombre, dirección y teléfono de 10+ dígitos).
+              Mínimo {PERSONAL_REFERENCES_MIN} referencias completas (nombre, dirección y teléfono de 7+ dígitos).
             </p>
           </div>
           <Button
@@ -132,11 +143,18 @@ export function DealerWizardDocumentsStep() {
           ) : null}
         </p>
         <div className="space-y-3">
-          {formData.personal_references.map((ref, index) => (
+          {formData.personal_references.map((ref, index) => {
+            const cardKey = `personal_reference_${index}`;
+            const cardError = getFieldError(cardKey);
+            return (
             <div
               key={ref.id}
-              className="space-y-3 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-4"
+              className={cn(
+                "space-y-3 rounded-forge-md border bg-forgeSurface-sunken p-4",
+                cardError ? "border-[#ef4444]" : "border-forgeGray-200",
+              )}
               data-testid={`personal-reference-${index}`}
+              data-wizard-field={cardKey}
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-forge-sm font-semibold text-forgeGray-800">Referencia {index + 1}</p>
@@ -148,22 +166,29 @@ export function DealerWizardDocumentsStep() {
               </div>
               <Input
                 label="Nombre completo *"
+                fieldKey={`${cardKey}_nombre_completo`}
                 value={ref.nombre_completo}
                 onChange={(e) => updatePersonalReference(ref.id, { nombre_completo: e.target.value })}
+                error={getFieldError(`${cardKey}_nombre_completo`)}
               />
               <Input
                 label="Dirección *"
+                fieldKey={`${cardKey}_direccion`}
                 value={ref.direccion}
                 onChange={(e) => updatePersonalReference(ref.id, { direccion: e.target.value })}
+                error={getFieldError(`${cardKey}_direccion`)}
               />
               <Input
                 label="Teléfono *"
+                fieldKey={`${cardKey}_telefono`}
                 type="tel"
                 value={ref.telefono}
                 onChange={(e) => updatePersonalReference(ref.id, { telefono: e.target.value })}
+                error={getFieldError(`${cardKey}_telefono`)}
               />
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
 
@@ -189,8 +214,10 @@ export function DealerWizardDocumentsStep() {
       </div>
 
       {!docsReady || refsComplete < PERSONAL_REFERENCES_MIN ? (
-        <p className="text-forge-sm text-forgeGray-600" role="status">
-          {!docsReady && refsComplete < PERSONAL_REFERENCES_MIN
+        <p className="text-forge-sm text-[#ef4444]" role="alert">
+          {showValidationErrors && blockReason
+            ? blockReason
+            : !docsReady && refsComplete < PERSONAL_REFERENCES_MIN
             ? `Sube los documentos obligatorios (${missingRequired.join(", ")}) y completa al menos 3 referencias personales para continuar.`
             : !docsReady
               ? `Sube los documentos obligatorios: ${missingRequired.join(", ")}.`

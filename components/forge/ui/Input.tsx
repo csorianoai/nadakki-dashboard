@@ -8,17 +8,19 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   label?: string;
   helper?: ReactNode;
   error?: string;
+  /** Scroll target for wizard validation UX. */
+  fieldKey?: string;
   /** Content before the field (avoids clashing with HTML `prefix`). */
   prefix?: ReactNode;
   suffix?: ReactNode;
 }
 
-export function Input({ label, helper, error, prefix, suffix, className, id, disabled, ...props }: InputProps) {
+export function Input({ label, helper, error, fieldKey, prefix, suffix, className, id, disabled, ...props }: InputProps) {
   const autoId = useId();
   const inputId = id ?? props.name ?? autoId;
   const describedBy = error ? `${inputId}-err` : helper ? `${inputId}-help` : undefined;
   return (
-    <div className="flex w-full flex-col gap-1.5">
+    <div className="flex w-full flex-col gap-1.5" data-wizard-field={fieldKey}>
       {label ? (
         <label
           htmlFor={inputId}

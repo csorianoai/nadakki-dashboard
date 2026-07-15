@@ -37,6 +37,7 @@ import {
   buildDocumentosPayload,
   hasRequiredDocumentsFileReady,
   initialPersonalReferences,
+  isPersonalReferencePhoneValid,
   personalReferencesValid,
   type PersonalReferenceFormRow,
 } from "@/lib/credit-hub/dealer/wizard-gates";
@@ -374,7 +375,7 @@ export function buildCreateApplicationPayload(
       province: formData.applicant_province.trim(),
       country: formData.applicant_country.trim(),
       referencias_personales: (formData.personal_references ?? [])
-        .filter((r) => r.nombre_completo.trim() && r.direccion.trim() && r.telefono.replace(/\D/g, "").length >= 10)
+        .filter((r) => r.nombre_completo.trim() && r.direccion.trim() && isPersonalReferencePhoneValid(r.telefono))
         .map((r) => ({
           nombre_completo: r.nombre_completo.trim(),
           direccion: r.direccion.trim(),

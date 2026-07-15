@@ -18,15 +18,23 @@ function RadioRow({
   value,
   options,
   onChange,
+  error,
+  fieldKey,
 }: {
   name: string;
   label: string;
   value: string;
   options: Array<{ value: string; label: string }>;
   onChange: (v: string) => void;
+  error?: string;
+  fieldKey?: string;
 }) {
   return (
-    <fieldset className="space-y-2" data-testid={`vehicle-decl-${name}`}>
+    <fieldset
+      className={`space-y-2 rounded-forge-sm p-2 ${error ? "border border-[#ef4444]" : ""}`}
+      data-testid={`vehicle-decl-${name}`}
+      data-wizard-field={fieldKey}
+    >
       <legend className="text-forge-sm font-medium text-forgeGray-800">{label}</legend>
       <div className="flex flex-wrap gap-4">
         {options.map((opt) => (
@@ -43,6 +51,7 @@ function RadioRow({
           </label>
         ))}
       </div>
+      {error ? <p className="text-forge-xs text-[#ef4444]" role="alert">{error}</p> : null}
     </fieldset>
   );
 }
@@ -50,9 +59,11 @@ function RadioRow({
 export function VehicleDeclarationSection({
   formData,
   patchForm,
+  getFieldError,
 }: {
   formData: ApplicationFormData;
   patchForm: (patch: DeclPatch) => void;
+  getFieldError?: (key: string) => string | undefined;
 }) {
   const showAlert = vehicleDeclarationHasVisibleAlert(formData);
   const complete = vehicleDeclarationComplete(formData);
@@ -94,8 +105,10 @@ export function VehicleDeclarationSection({
 
       <RadioRow
         name="perdida_total"
+        fieldKey="vehicle_decl_perdida_total"
         label="¿Este vehículo ha sido declarado pérdida total por alguna aseguradora?"
         value={formData.vehicle_decl_perdida_total}
+        error={getFieldError?.("vehicle_decl_perdida_total")}
         options={[
           { value: "yes", label: "Sí" },
           { value: "no", label: "No" },
@@ -104,8 +117,10 @@ export function VehicleDeclarationSection({
       />
       <RadioRow
         name="accidentes"
+        fieldKey="vehicle_decl_accidentes"
         label="¿Ha tenido accidentes reportados?"
         value={formData.vehicle_decl_accidentes}
+        error={getFieldError?.("vehicle_decl_accidentes")}
         options={[
           { value: "yes", label: "Sí" },
           { value: "no", label: "No" },
@@ -115,8 +130,10 @@ export function VehicleDeclarationSection({
       />
       <RadioRow
         name="gravamenes"
+        fieldKey="vehicle_decl_gravamenes"
         label="¿Tiene gravámenes, embargos o prendas vigentes?"
         value={formData.vehicle_decl_gravamenes}
+        error={getFieldError?.("vehicle_decl_gravamenes")}
         options={[
           { value: "yes", label: "Sí" },
           { value: "no", label: "No" },
@@ -125,8 +142,10 @@ export function VehicleDeclarationSection({
       />
       <RadioRow
         name="titulo_vendedor"
+        fieldKey="vehicle_decl_titulo_vendedor"
         label="¿El título de propiedad está a nombre del vendedor actual?"
         value={formData.vehicle_decl_titulo_vendedor}
+        error={getFieldError?.("vehicle_decl_titulo_vendedor")}
         options={[
           { value: "yes", label: "Sí" },
           { value: "no", label: "No" },
@@ -135,8 +154,10 @@ export function VehicleDeclarationSection({
       />
       <RadioRow
         name="km_coincide"
+        fieldKey="vehicle_decl_km_coincide"
         label="¿El kilometraje declarado coincide con el odómetro actual del vehículo?"
         value={formData.vehicle_decl_km_coincide}
+        error={getFieldError?.("vehicle_decl_km_coincide")}
         options={[
           { value: "yes", label: "Sí" },
           { value: "no", label: "No" },
@@ -159,12 +180,15 @@ export function VehicleDeclarationSection({
         cualquier declaración falsa puede tener consecuencias legales.
       </p>
 
-      <ForgeInput
-        label="Firma digital del dealer (nombre completo) *"
-        value={formData.vehicle_decl_signature_name}
-        onChange={(e) => patchForm({ vehicle_decl_signature_name: e.target.value })}
-        placeholder="Nombre y apellido del dealer"
-      />
+      <div data-wizard-field="vehicle_decl_signature_name">
+        <ForgeInput
+          label="Firma digital del dealer (nombre completo) *"
+          value={formData.vehicle_decl_signature_name}
+          onChange={(e) => patchForm({ vehicle_decl_signature_name: e.target.value })}
+          placeholder="Nombre y apellido del dealer"
+          error={getFieldError?.("vehicle_decl_signature_name")}
+        />
+      </div>
       {formData.vehicle_decl_signed_at ? (
         <p className="text-forge-xs text-forgeGray-500">
           Fecha de firma: {new Date(formData.vehicle_decl_signed_at).toLocaleString("es-DO")}
