@@ -43,7 +43,7 @@ export default function VehicleDetailPage() {
       <div className="ndk-page p-6 text-center py-20">
         <p className="text-red-400 text-lg mb-4">Vehículo no encontrado</p>
         <Link
-          href="/autos/vehiculos"
+          href="/autos/marketplace"
           className="text-blue-400 hover:underline"
         >
           Volver al marketplace
@@ -68,7 +68,7 @@ export default function VehicleDetailPage() {
     <div className="ndk-page ndk-fade-in p-6 max-w-5xl mx-auto">
       {/* Back link */}
       <Link
-        href="/autos/vehiculos"
+        href="/autos/marketplace"
         className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Volver al marketplace
