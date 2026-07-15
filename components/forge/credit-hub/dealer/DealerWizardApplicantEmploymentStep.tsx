@@ -72,17 +72,19 @@ export function DealerWizardApplicantEmploymentStep() {
     removeOtherIncomeRow,
     setHasOtherIncome,
     validationConfig,
+    getFieldError,
   } = useDealerWizard();
 
   const applicantDoc = formData.applicant_document_type || tenantConfig.document_types.primary_id;
   const birthDate = parseDateInput(formData.applicant_date_of_birth);
   const age = birthDate ? calculateAge(birthDate) : null;
   const docError =
-    formData.applicant_identification && !documentIsValid(applicantDoc, formData.applicant_identification)
+    getFieldError("applicant_identification") ??
+    (formData.applicant_identification && !documentIsValid(applicantDoc, formData.applicant_identification)
       ? applicantDoc === "CEDULA"
         ? t.validation.invalid_cedula
         : t.validation.invalid_passport
-      : undefined;
+      : undefined);
 
   const selectedApplicantProvince = administrativeDivisions.find((item) => item.name === formData.applicant_province);
   const selectedEmployerProvince = administrativeDivisions.find((item) => item.name === formData.employer_province);
@@ -183,12 +185,15 @@ export function DealerWizardApplicantEmploymentStep() {
       <div className="grid gap-4 md:grid-cols-2">
         <Input
           label="Nombre completo *"
+          fieldKey="applicant_full_name"
           autoComplete="name"
           value={formData.applicant_full_name}
           onChange={(e) => updateField("applicant_full_name", e.target.value)}
+          error={getFieldError("applicant_full_name")}
         />
         <Select
           label="Tipo de documento *"
+          fieldKey="applicant_document_type"
           value={applicantDoc}
           onChange={(e) => updateField("applicant_document_type", e.target.value)}
           options={docTypeSelect}
@@ -196,12 +201,15 @@ export function DealerWizardApplicantEmploymentStep() {
         {applicantDoc === "OTRO" ? (
           <Input
             label="Especifique tipo *"
+            fieldKey="applicant_document_other_type"
             value={formData.applicant_document_other_type}
             onChange={(e) => updateField("applicant_document_other_type", e.target.value)}
+            error={getFieldError("applicant_document_other_type")}
           />
         ) : null}
         <Input
           label="Número de documento *"
+          fieldKey="applicant_identification"
           aria-label="Número de documento"
           value={applicantDoc === "CEDULA" ? formatDominicanCedula(formData.applicant_identification) : formData.applicant_identification}
           placeholder={applicantDoc === "CEDULA" ? "053-0003053-2" : "Pasaporte"}
@@ -212,9 +220,11 @@ export function DealerWizardApplicantEmploymentStep() {
         />
         <DateInput
           label="Fecha de nacimiento *"
+          fieldKey="applicant_date_of_birth"
           locale={tenantConfig.locale}
           value={formData.applicant_date_of_birth}
           onValueChange={(iso) => updateField("applicant_date_of_birth", iso)}
+          error={getFieldError("applicant_date_of_birth")}
         />
         <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3 md:col-span-1">
           <p className="text-forge-xs text-forgeGray-500">{t.wizard.calculated_age}</p>
@@ -228,8 +238,10 @@ export function DealerWizardApplicantEmploymentStep() {
         </div>
         <Select
           label="Estado civil *"
+          fieldKey="applicant_marital_status"
           value={formData.applicant_marital_status}
           onChange={(e) => updateField("applicant_marital_status", e.target.value)}
+          error={getFieldError("applicant_marital_status")}
           options={[
             { value: "", label: t.common.select_placeholder },
             { value: "single", label: "Soltero/a" },
@@ -239,20 +251,24 @@ export function DealerWizardApplicantEmploymentStep() {
             { value: "widowed", label: "Viudo/a" },
           ]}
         />
-        <Input label="Teléfono *" type="tel" autoComplete="tel" value={formData.applicant_phone} onChange={(e) => updateField("applicant_phone", e.target.value)} />
-        <Input label="Correo electrónico *" type="email" autoComplete="email" value={formData.applicant_email} onChange={(e) => updateField("applicant_email", e.target.value)} />
-        <Input label="País *" value={formData.applicant_country} onChange={(e) => updateField("applicant_country", e.target.value)} />
-        <Input label="Dirección *" className="md:col-span-2" value={formData.applicant_address} onChange={(e) => updateField("applicant_address", e.target.value)} />
+        <Input label="Teléfono *" fieldKey="applicant_phone" type="tel" autoComplete="tel" value={formData.applicant_phone} onChange={(e) => updateField("applicant_phone", e.target.value)} error={getFieldError("applicant_phone")} />
+        <Input label="Correo electrónico *" fieldKey="applicant_email" type="email" autoComplete="email" value={formData.applicant_email} onChange={(e) => updateField("applicant_email", e.target.value)} error={getFieldError("applicant_email")} />
+        <Input label="País *" fieldKey="applicant_country" value={formData.applicant_country} onChange={(e) => updateField("applicant_country", e.target.value)} error={getFieldError("applicant_country")} />
+        <Input label="Dirección *" fieldKey="applicant_address" className="md:col-span-2" value={formData.applicant_address} onChange={(e) => updateField("applicant_address", e.target.value)} error={getFieldError("applicant_address")} />
         <Select
           label="Provincia *"
+          fieldKey="applicant_province"
           value={formData.applicant_province}
           onChange={(e) => updateField("applicant_province", e.target.value)}
+          error={getFieldError("applicant_province")}
           options={provinceOptions}
         />
         <Select
           label="Municipio *"
+          fieldKey="applicant_city"
           value={formData.applicant_city}
           onChange={(e) => updateField("applicant_city", e.target.value)}
+          error={getFieldError("applicant_city")}
           options={applicantMunicipalityOptions}
           disabled={!selectedApplicantProvince}
         />
@@ -265,8 +281,10 @@ export function DealerWizardApplicantEmploymentStep() {
       <div className="grid gap-4 md:grid-cols-2">
         <Select
           label="Tipo de empleo *"
+          fieldKey="employment_type"
           value={formData.employment_type}
           onChange={(e) => updateField("employment_type", e.target.value)}
+          error={getFieldError("employment_type")}
           options={[
             { value: "", label: t.common.select_placeholder },
             { value: "employee", label: "Empleado privado" },
@@ -276,13 +294,15 @@ export function DealerWizardApplicantEmploymentStep() {
             { value: "retired", label: "Pensionado" },
           ]}
         />
-        <Input label="Empresa donde trabaja *" value={formData.employer_name} onChange={(e) => updateField("employer_name", e.target.value)} />
-        <Input label="Cargo *" value={formData.employment_position} onChange={(e) => updateField("employment_position", e.target.value)} />
+        <Input label="Empresa donde trabaja *" fieldKey="employer_name" value={formData.employer_name} onChange={(e) => updateField("employer_name", e.target.value)} error={getFieldError("employer_name")} />
+        <Input label="Cargo *" fieldKey="employment_position" value={formData.employment_position} onChange={(e) => updateField("employment_position", e.target.value)} error={getFieldError("employment_position")} />
         <DateInput
           label="Fecha de ingreso al empleo *"
+          fieldKey="employment_start_date"
           locale={tenantConfig.locale}
           value={formData.employment_start_date}
           onValueChange={(iso) => updateField("employment_start_date", iso)}
+          error={getFieldError("employment_start_date")}
         />
         <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-sunken p-3">
           <p className="text-forge-xs text-forgeGray-500">{t.wizard.calculated_tenure}</p>
@@ -290,30 +310,38 @@ export function DealerWizardApplicantEmploymentStep() {
         </div>
         <Input
           label="Ingreso mensual neto *"
+          fieldKey="monthly_income"
           inputMode="decimal"
           value={formData.monthly_income}
           onChange={(e) => updateField("monthly_income", cleanDecimalInput(e.target.value))}
+          error={getFieldError("monthly_income")}
         />
-        <Input label="Teléfono empresa *" type="tel" value={formData.work_phone} onChange={(e) => updateField("work_phone", e.target.value)} />
-        <Input label="Dirección de la empresa *" className="md:col-span-2" value={formData.employer_address} onChange={(e) => updateField("employer_address", e.target.value)} />
+        <Input label="Teléfono empresa *" fieldKey="work_phone" type="tel" value={formData.work_phone} onChange={(e) => updateField("work_phone", e.target.value)} error={getFieldError("work_phone")} />
+        <Input label="Dirección de la empresa *" fieldKey="employer_address" className="md:col-span-2" value={formData.employer_address} onChange={(e) => updateField("employer_address", e.target.value)} error={getFieldError("employer_address")} />
         <Select
           label="Provincia empresa *"
+          fieldKey="employer_province"
           value={formData.employer_province}
           onChange={(e) => updateField("employer_province", e.target.value)}
+          error={getFieldError("employer_province")}
           options={provinceOptions}
         />
         <Select
           label="Municipio empresa *"
+          fieldKey="employer_city"
           value={formData.employer_city}
           onChange={(e) => updateField("employer_city", e.target.value)}
+          error={getFieldError("employer_city")}
           options={employerMunicipalityOptions}
           disabled={!selectedEmployerProvince}
         />
         <Select
           label="Tipo de contrato *"
+          fieldKey="contract_type"
           value={formData.contract_type}
           onChange={(e) => updateField("contract_type", e.target.value)}
           disabled={catalogsLoading || !catalogs}
+          error={getFieldError("contract_type")}
           options={[{ value: "", label: t.common.select_placeholder }, ...contractOptions]}
         />
         <div className="md:col-span-2">
@@ -339,30 +367,38 @@ export function DealerWizardApplicantEmploymentStep() {
               <div key={row.id} className="grid gap-3 rounded-forge-sm border border-forgeGray-100 bg-forgeSurface-card p-3 md:grid-cols-2">
                 <Select
                   label="Concepto *"
+                  fieldKey={`other_income_${row.id}_concept`}
                   value={row.concept}
                   onChange={(e) => updateOtherIncomeRow(row.id, { concept: e.target.value })}
                   disabled={catalogsLoading || !catalogs}
+                  error={getFieldError(`other_income_${row.id}_concept`)}
                   options={(catalogs?.incomeConcepts ?? ["Otro"]).map((c) => ({ value: c, label: c }))}
                 />
                 <Input
                   label="Monto *"
+                  fieldKey={`other_income_${row.id}_amount`}
                   inputMode="decimal"
                   value={row.amount}
                   onChange={(e) => updateOtherIncomeRow(row.id, { amount: cleanDecimalInput(e.target.value) })}
+                  error={getFieldError(`other_income_${row.id}_amount`)}
                 />
                 <Select
                   label="Frecuencia *"
+                  fieldKey={`other_income_${row.id}_frequency`}
                   value={row.frequency}
                   onChange={(e) => updateOtherIncomeRow(row.id, { frequency: e.target.value as Frequency })}
                   disabled={catalogsLoading || !catalogs}
+                  error={getFieldError(`other_income_${row.id}_frequency`)}
                   options={(catalogs?.paymentFrequencies ?? ["MENSUAL"]).map((f) => ({ value: f, label: f }))}
                 />
                 {row.frequency === "VARIABLE" ? (
                   <Input
                     label="Promedio últimos 6 meses *"
+                    fieldKey={`other_income_${row.id}_variable_avg_6_months`}
                     inputMode="decimal"
                     value={row.variable_avg_6_months ?? ""}
                     onChange={(e) => updateOtherIncomeRow(row.id, { variable_avg_6_months: cleanDecimalInput(e.target.value) })}
+                    error={getFieldError(`other_income_${row.id}_variable_avg_6_months`)}
                   />
                 ) : null}
                 <Checkbox

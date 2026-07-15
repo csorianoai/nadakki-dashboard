@@ -14,14 +14,15 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
   label?: string;
   helper?: ReactNode;
   error?: string;
+  fieldKey?: string;
   options: SelectOption[];
 }
 
-export function Select({ label, helper, error, options, className, id, disabled, ...props }: SelectProps) {
+export function Select({ label, helper, error, fieldKey, options, className, id, disabled, ...props }: SelectProps) {
   const autoId = useId();
   const sid = id ?? props.name ?? autoId;
   return (
-    <div className="flex w-full flex-col gap-1.5">
+    <div className="flex w-full flex-col gap-1.5" data-wizard-field={fieldKey}>
       {label ? (
         <label
           htmlFor={sid}

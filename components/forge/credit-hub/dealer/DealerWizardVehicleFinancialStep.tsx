@@ -37,7 +37,7 @@ export function DealerWizardVehicleFinancialStep() {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
   const { catalogs, loading: catalogsLoading } = useCatalogs();
-  const { formData, updateField, patchForm } = useDealerWizard();
+  const { formData, updateField, patchForm, getFieldError } = useDealerWizard();
 
   const otherMonthlyStep = formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
   const amountToFinance = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
@@ -92,18 +92,22 @@ export function DealerWizardVehicleFinancialStep() {
         <p className="mt-1 text-forge-sm text-forgeGray-500">{t.wizard.sections.financial_sub}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Input label="Plazo deseado *" placeholder="Ej: 48 meses" value={formData.desired_term} onChange={(e) => updateField("desired_term", e.target.value)} />
+        <Input label="Plazo deseado *" fieldKey="desired_term" placeholder="Ej: 48 meses" value={formData.desired_term} onChange={(e) => updateField("desired_term", e.target.value)} error={getFieldError("desired_term")} />
         <Input
           label="Cuota inicial disponible *"
+          fieldKey="down_payment"
           inputMode="decimal"
           value={formData.down_payment}
           onChange={(e) => updateField("down_payment", cleanDecimalInput(e.target.value))}
+          error={getFieldError("down_payment")}
         />
         <Input
           label="Deudas mensuales actuales *"
+          fieldKey="monthly_debts"
           inputMode="decimal"
           value={formData.monthly_debts}
           onChange={(e) => updateField("monthly_debts", cleanDecimalInput(e.target.value))}
+          error={getFieldError("monthly_debts")}
         />
         <Input
           label="Gasto mensual estimado (opcional)"
@@ -113,8 +117,10 @@ export function DealerWizardVehicleFinancialStep() {
         />
         <Select
           label="¿Tiene cuenta bancaria activa? *"
+          fieldKey="has_bank_account"
           value={formData.has_bank_account}
           onChange={(e) => updateField("has_bank_account", e.target.value as "yes" | "no")}
+          error={getFieldError("has_bank_account")}
           options={[
             { value: "yes", label: "Sí" },
             { value: "no", label: "No" },
@@ -134,42 +140,52 @@ export function DealerWizardVehicleFinancialStep() {
         </div>
         <Select
           label="Tipo de producto *"
+          fieldKey="product_type"
           value={formData.product_type}
           onChange={(e) => updateField("product_type", e.target.value)}
+          error={getFieldError("product_type")}
           options={productTypeOptions}
         />
         <Select
           label="Marca *"
+          fieldKey="vehicle_make"
           value={formData.vehicle_make}
           onChange={(e) => updateField("vehicle_make", e.target.value)}
           disabled={catalogsLoading || !catalogs}
+          error={getFieldError("vehicle_make")}
           options={[
             { value: "", label: t.common.select_placeholder },
             ...((catalogs?.vehicleBrands ?? []) as string[]).map((brand) => ({ value: brand, label: brand })),
           ]}
         />
         {formData.vehicle_make === "Otros" ? (
-          <Input label="Especifique marca *" value={formData.vehicle_brand_other} onChange={(e) => updateField("vehicle_brand_other", e.target.value)} />
+          <Input label="Especifique marca *" fieldKey="vehicle_brand_other" value={formData.vehicle_brand_other} onChange={(e) => updateField("vehicle_brand_other", e.target.value)} error={getFieldError("vehicle_brand_other")} />
         ) : null}
-        <Input label="Modelo *" value={formData.vehicle_model} onChange={(e) => updateField("vehicle_model", e.target.value)} />
+        <Input label="Modelo *" fieldKey="vehicle_model" value={formData.vehicle_model} onChange={(e) => updateField("vehicle_model", e.target.value)} error={getFieldError("vehicle_model")} />
         <Input label="Sub-modelo / versión (opcional)" value={formData.vehicle_version} onChange={(e) => updateField("vehicle_version", e.target.value)} />
         <Select
           label="Año *"
+          fieldKey="vehicle_year"
           value={formData.vehicle_year}
           onChange={(e) => updateField("vehicle_year", e.target.value)}
+          error={getFieldError("vehicle_year")}
           options={[{ value: "", label: t.common.select_placeholder }, ...yearOptions]}
         />
         <Input label="Color (opcional)" value={formData.vehicle_color} onChange={(e) => updateField("vehicle_color", e.target.value)} />
         <Input
           label="Precio de venta *"
+          fieldKey="vehicle_price"
           inputMode="decimal"
           value={formData.vehicle_price}
           onChange={(e) => updateField("vehicle_price", cleanDecimalInput(e.target.value))}
+          error={getFieldError("vehicle_price")}
         />
         <Select
           label="Condición *"
+          fieldKey="vehicle_condition"
           value={formData.vehicle_condition}
           onChange={(e) => updateField("vehicle_condition", e.target.value)}
+          error={getFieldError("vehicle_condition")}
           options={[
             { value: "new", label: "Nuevo" },
             { value: "used", label: "Usado" },
@@ -183,7 +199,7 @@ export function DealerWizardVehicleFinancialStep() {
             onChange={(e) => updateField("vehicle_mileage", e.target.value)}
           />
         ) : null}
-        <Input label="Dealer / Suplidor *" value={formData.dealer_supplier} onChange={(e) => updateField("dealer_supplier", e.target.value)} />
+        <Input label="Dealer / Suplidor *" fieldKey="dealer_supplier" value={formData.dealer_supplier} onChange={(e) => updateField("dealer_supplier", e.target.value)} error={getFieldError("dealer_supplier")} />
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-forge-md bg-forgeSurface-sunken p-3">
@@ -208,7 +224,7 @@ export function DealerWizardVehicleFinancialStep() {
         </div>
       </div>
       {preApproval ? <PreApprovalBadge result={preApproval} /> : null}
-      <VehicleDeclarationSection formData={formData} patchForm={patchForm} />
+      <VehicleDeclarationSection formData={formData} patchForm={patchForm} getFieldError={getFieldError} />
       <WizardSegmentPanel />
     </div>
   );

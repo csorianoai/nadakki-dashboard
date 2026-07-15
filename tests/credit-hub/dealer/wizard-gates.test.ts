@@ -36,9 +36,11 @@ describe("wizard-gates", () => {
     expect(personalReferencesValid([...two, completeRef("C")])).toBe(true);
   });
 
-  test("reference phone needs at least 10 digits", () => {
+  test("reference phone needs at least 7 digits", () => {
     expect(isPersonalReferenceComplete(completeRef("X", "809555"))).toBe(false);
+    expect(isPersonalReferenceComplete(completeRef("X", "8095551"))).toBe(true);
     expect(isPersonalReferenceComplete(completeRef("X", "8095551234"))).toBe(true);
+    expect(isPersonalReferenceComplete(completeRef("X", "18095551234"))).toBe(true);
   });
 
   test("wizardDocumentsStepValid combines required docs and references", () => {
