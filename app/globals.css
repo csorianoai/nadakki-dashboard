@@ -656,3 +656,153 @@ body {
   50% { box-shadow: 0 0 16px rgba(244,63,94,0.5); }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   NADAKKI AUTO — Design tokens (README §5)
+   Scoped portal surface via [data-portal="autos"] so Credit Hub
+   quantum styles remain untouched outside the marketplace.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --brand: #1E40AF;
+  --brand-2: #3B82F6;
+  --brand-strong: #1E3A8A;
+  --brand-soft: #EEF3FF;
+  --on-brand: #FFFFFF;
+
+  --bg: #F5F8FC;
+  --surface: #FFFFFF;
+  --surface-2: #F1F5F9;
+  --surface-3: #E9EEF6;
+  --border: #E4EAF2;
+  --border-2: #D2DBE8;
+
+  --fg: #0D1626;
+  --fg-muted: #586A82;
+  --fg-subtle: #8A99AD;
+
+  --success: #0F9F6E;
+  --success-2: #10B981;
+  --success-soft: #E5F6EF;
+  --warning: #D97706;
+  --warning-2: #F59E0B;
+  --warning-soft: #FCF2E1;
+  --danger: #DC2626;
+  --danger-soft: #FDECEC;
+
+  --r: 16px;
+  --r-sm: 11px;
+  --r-lg: 22px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 6px 16px -4px rgba(15, 23, 42, 0.10), 0 2px 6px -2px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 24px 56px -18px rgba(15, 23, 42, 0.26), 0 8px 20px -12px rgba(15, 23, 42, 0.14);
+  --ring: 0 0 0 3px rgba(59, 130, 246, 0.35);
+}
+
+[data-theme="dark"] {
+  --brand-soft: rgba(59, 130, 246, 0.14);
+  --bg: #070C16;
+  --surface: #0F1725;
+  --surface-2: #161F30;
+  --surface-3: #1E2839;
+  --border: #1F293A;
+  --border-2: #2A374C;
+  --fg: #EAF0F8;
+  --fg-muted: #93A3B9;
+  --fg-subtle: #63748C;
+  --success-soft: rgba(16, 185, 129, 0.15);
+  --warning-soft: rgba(245, 158, 11, 0.15);
+  --danger-soft: rgba(220, 38, 38, 0.18);
+}
+
+[data-tenant="nadakki"] {
+  --brand: #1E40AF;
+  --brand-2: #3B82F6;
+  --brand-strong: #1E3A8A;
+  --brand-soft: #EEF3FF;
+}
+
+[data-tenant="credicefi"] {
+  --brand: #0E7C66;
+  --brand-2: #13B98A;
+  --brand-strong: #0B5F4E;
+  --brand-soft: #E3F6EF;
+}
+
+[data-tenant="piloto"] {
+  --brand: #6D28D9;
+  --brand-2: #8B5CF6;
+  --brand-strong: #5B21B6;
+  --brand-soft: #F0EBFE;
+}
+
+[data-theme="dark"][data-tenant="credicefi"] {
+  --brand-soft: rgba(19, 185, 138, 0.14);
+}
+
+[data-theme="dark"][data-tenant="piloto"] {
+  --brand-soft: rgba(139, 92, 246, 0.18);
+}
+
+[data-theme="dark"][data-tenant="nadakki"] {
+  --brand-soft: rgba(59, 130, 246, 0.14);
+}
+
+[data-portal="autos"] {
+  font-variant-numeric: tabular-nums;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+[data-portal="autos"] h1,
+[data-portal="autos"] h2,
+[data-portal="autos"] h3,
+[data-portal="autos"] .font-manrope {
+  font-family: var(--font-manrope), Manrope, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+[data-portal="autos"] h1 {
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+@keyframes nkShimmer {
+  0% { background-position: -460px 0; }
+  100% { background-position: 460px 0; }
+}
+
+@keyframes nkUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nkPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.32); }
+  100% { transform: scale(1); }
+}
+
+@keyframes nkWave {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes nkPulse {
+  0% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0.45); }
+  70% { box-shadow: 0 0 0 18px rgba(30, 64, 175, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0); }
+}
+
+@keyframes nkDot {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+
+@keyframes nkToast {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
