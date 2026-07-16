@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Mic, Search, Sparkles } from "lucide-react";
+import { ChevronRight, Mic, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { filterVehicles } from "@/lib/search-filters";
 import { buildSearchHref } from "@/lib/search-url";
 import { BRAND_OPTIONS, PROVINCE_OPTIONS, type FilterState } from "@/lib/search-types";
@@ -67,6 +66,18 @@ function estimateInventoryCount(partial: Pick<FilterState, "brands" | "provinces
   return Math.max(filtered.length, Math.round(INVENTORY_TOTAL * (filtered.length / VEHICLES_SEED.length)));
 }
 
+function traditionalButtonLabel(
+  brand: string,
+  model: string,
+  province: string,
+  count: number,
+): string {
+  const formatted = count.toLocaleString("en-US");
+  const brandOnly = brand !== "all" && model === "all" && province === "all";
+  if (brandOnly) return `${brand}: ${formatted} vehículos`;
+  return `${formatted} vehículos`;
+}
+
 export function DualSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -98,153 +109,149 @@ export function DualSearch() {
     [brand, model, province],
   );
 
+  const buttonLabel = useMemo(
+    () => traditionalButtonLabel(brand, model, province, traditionalCount),
+    [brand, model, province, traditionalCount],
+  );
+
   const aiSearch = (q: string) => {
     const trimmed = q.trim();
     router.push(
-      trimmed
-        ? buildSearchHref({ ...defaultPartial(), query: trimmed })
-        : "/autos/vehiculos",
+      trimmed ? buildSearchHref({ ...defaultPartial(), query: trimmed }) : "/autos/vehiculos",
     );
   };
 
   const traditionalSearch = () => {
-    const brands = brand !== "all" ? [brand] : [];
-    const provinces = province !== "all" ? [province] : [];
-    const href = buildSearchHref({
-      ...defaultPartial(),
-      brands,
-      provinces,
-      query: model !== "all" ? model : "",
-    });
-    router.push(href);
+    const params = new URLSearchParams();
+    if (brand !== "all") params.set("marca", brand);
+    if (model !== "all") params.set("modelo", model);
+    if (province !== "all") params.set("provincia", province);
+    const qs = params.toString();
+    router.push(qs ? `/autos/vehiculos?${qs}` : "/autos/vehiculos");
   };
 
   return (
-    <div className="mt-8 max-w-[820px]">
-      <Tabs defaultValue="ai" className="w-full">
-        <TabsList className="mb-3 h-auto w-full flex-wrap justify-start gap-1 p-1 sm:w-auto">
-          <TabsTrigger value="ai" className="gap-1.5 px-4">
-            <Sparkles className="h-4 w-4" aria-hidden />
-            Búsqueda con AI
-          </TabsTrigger>
-          <TabsTrigger value="traditional" className="gap-1.5 px-4">
-            <Search className="h-4 w-4" aria-hidden />
-            Búsqueda tradicional
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="ai">
-          <div className="rounded-r border border-nk-border bg-nk-surface p-2 shadow-nk-lg">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && aiSearch(query)}
-                placeholder={`Ej: "${PLACEHOLDERS[placeholderIdx]}"…`}
-                className="h-12 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:shadow-none"
-                aria-label="Búsqueda con AI"
-              />
-              <div className="flex shrink-0 items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-11 w-11 min-h-11 min-w-11"
-                  aria-label="Búsqueda por voz"
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="brand"
-                  className="h-11 min-h-11 gap-2 px-5"
-                  onClick={() => aiSearch(query)}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Buscar con AI
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {CHIPS.map((chip) => (
-              <button
-                key={chip.label}
+    <div className="mt-8 max-w-[920px] space-y-6">
+      {/* AI Search — always visible */}
+      <div>
+        <div className="rounded-r border border-nk-border bg-nk-surface p-2 shadow-nk-lg">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && aiSearch(query)}
+              placeholder={`Ej: "${PLACEHOLDERS[placeholderIdx]}"…`}
+              className="h-12 flex-1 border-0 bg-transparent text-base shadow-none focus-visible:shadow-none"
+              aria-label="Búsqueda con AI"
+            />
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
                 type="button"
-                onClick={() => aiSearch(chip.q)}
-                className={cn(
-                  "rounded-full border border-nk-border bg-nk-surface px-3 py-1.5 text-xs font-medium text-nk-fg-muted transition",
-                  "hover:border-brand hover:bg-brand hover:text-[var(--on-brand)]",
-                )}
+                variant="outline"
+                size="icon"
+                className="h-11 w-11 min-h-11 min-w-11"
+                aria-label="Búsqueda por voz"
               >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="traditional">
-          <div className="rounded-r border border-nk-border bg-nk-surface p-4 shadow-nk-lg">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Select value={brand} onValueChange={setBrand}>
-                <SelectTrigger className="h-11" aria-label="Marca">
-                  <SelectValue placeholder="Todas las marcas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las marcas</SelectItem>
-                  {BRAND_OPTIONS.map((b) => (
-                    <SelectItem key={b} value={b}>
-                      {b}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={model} onValueChange={setModel} disabled={brand === "all"}>
-                <SelectTrigger className="h-11" aria-label="Modelo">
-                  <SelectValue placeholder="Todos los modelos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los modelos</SelectItem>
-                  {models.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={province} onValueChange={setProvince}>
-                <SelectTrigger className="h-11" aria-label="Provincia">
-                  <SelectValue placeholder="Provincia" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las provincias</SelectItem>
-                  {PROVINCE_OPTIONS.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Mic className="h-5 w-5" />
+              </Button>
+              <Button
+                type="button"
+                variant="brand"
+                className="h-11 min-h-11 gap-2 px-5"
+                onClick={() => aiSearch(query)}
+              >
+                <Sparkles className="h-4 w-4" />
+                Buscar con AI
+              </Button>
             </div>
+          </div>
+        </div>
 
+        <div className="mt-4 flex flex-wrap gap-2">
+          {CHIPS.map((chip) => (
             <button
+              key={chip.label}
               type="button"
-              onClick={traditionalSearch}
+              onClick={() => aiSearch(chip.q)}
               className={cn(
-                "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-gradient-to-br from-brand to-brand-2 px-8 py-5",
-                "text-[22px] font-semibold text-[var(--on-brand)] shadow-nk-md transition",
-                "hover:brightness-105 hover:shadow-nk-lg sm:w-auto",
+                "rounded-full border border-nk-border bg-nk-surface px-3 py-1.5 text-xs font-medium text-nk-fg-muted transition",
+                "hover:border-brand hover:bg-brand hover:text-[var(--on-brand)]",
               )}
             >
-              {traditionalCount.toLocaleString("en-US")} vehículos
-              <ChevronRight className="h-6 w-6" aria-hidden />
+              {chip.label}
             </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Separator */}
+      <div className="flex items-center gap-3 py-0">
+        <hr className="flex-1 border-nk-border" />
+        <span className="shrink-0 text-[13px] text-nk-fg-muted">o busca de forma clásica</span>
+        <hr className="flex-1 border-nk-border" />
+      </div>
+
+      {/* Traditional Search — always visible */}
+      <div className="rounded-r border border-nk-border bg-nk-surface p-4 shadow-nk-lg">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="grid flex-1 gap-3 sm:grid-cols-3">
+            <Select value={brand} onValueChange={setBrand}>
+              <SelectTrigger className="h-11" aria-label="Marca">
+                <SelectValue placeholder="Todas las marcas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las marcas</SelectItem>
+                {BRAND_OPTIONS.map((b) => (
+                  <SelectItem key={b} value={b}>
+                    {b}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={model} onValueChange={setModel} disabled={brand === "all"}>
+              <SelectTrigger className="h-11" aria-label="Modelo">
+                <SelectValue placeholder="Todos los modelos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los modelos</SelectItem>
+                {models.map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={province} onValueChange={setProvince}>
+              <SelectTrigger className="h-11" aria-label="Provincia">
+                <SelectValue placeholder="Provincia" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las provincias</SelectItem>
+                {PROVINCE_OPTIONS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </TabsContent>
-      </Tabs>
+
+          <button
+            type="button"
+            onClick={traditionalSearch}
+            className={cn(
+              "inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-[14px] bg-gradient-to-br from-brand to-brand-2 px-8 py-5",
+              "text-[22px] font-semibold text-[var(--on-brand)] shadow-nk-md transition",
+              "hover:brightness-105 hover:shadow-nk-lg lg:w-auto",
+            )}
+          >
+            {buttonLabel}
+            <ChevronRight className="h-6 w-6" aria-hidden />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
