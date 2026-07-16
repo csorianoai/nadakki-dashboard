@@ -769,6 +769,20 @@ body {
   font-weight: 800;
 }
 
+[data-portal="autos"] .brands-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-2) transparent;
+}
+
+[data-portal="autos"] .brands-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+[data-portal="autos"] .brands-container::-webkit-scrollbar-thumb {
+  background: var(--border-2);
+  border-radius: 3px;
+}
+
 @keyframes nkShimmer {
   0% { background-position: -460px 0; }
   100% { background-position: 460px 0; }
