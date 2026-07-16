@@ -324,14 +324,14 @@ export const BODY_TYPE_TILES = [
 
 /** Models available per brand for traditional search dropdowns. */
 export const MODELS_BY_BRAND: Record<string, string[]> = {
-  Toyota: ["Corolla", "RAV4", "Hilux", "Yaris"],
-  Honda: ["CR-V", "Civic", "Accord", "Pilot"],
-  Hyundai: ["Tucson", "Elantra", "Santa Fe", "Creta"],
-  Kia: ["Sportage", "Seltos", "Forte", "Sorento"],
-  Ford: ["Escape", "Explorer", "Ranger", "F-150"],
-  Chevrolet: ["Blazer", "Equinox", "Spark", "Silverado"],
-  Suzuki: ["Grand Vitara", "Swift", "Jimny", "Vitara"],
-  Mitsubishi: ["Outlander", "Lancer", "Montero", "ASX"],
-  "Mercedes-Benz": ["GLC 300", "C-Class", "GLE", "A-Class"],
-  BMW: ["X3", "X5", "Serie 3", "Serie 5"],
+  Toyota: ["Corolla", "Camry", "RAV4", "Highlander", "Prado", "Yaris", "Hilux"],
+  Honda: ["Civic", "Accord", "CR-V", "HR-V", "Pilot", "Odyssey", "Ridgeline"],
+  Hyundai: ["Elantra", "Sonata", "Tucson", "Santa Fe", "Kona", "Accent", "Palisade"],
+  Kia: ["Rio", "Forte", "Sportage", "Sorento", "Telluride", "Soul", "Seltos"],
+  Ford: ["Escape", "Edge", "Explorer", "F-150", "Mustang", "Focus", "Ecosport"],
+  Chevrolet: ["Aveo", "Cruze", "Malibu", "Blazer", "Tahoe", "Silverado", "Trax"],
+  Suzuki: ["Alto", "Swift", "Grand Vitara", "Jimny", "Vitara", "S-Cross"],
+  Mitsubishi: ["Lancer", "Mirage", "Outlander", "Montero", "ASX", "L200", "Xpander"],
+  "Mercedes-Benz": ["C-Class", "E-Class", "S-Class", "GLC", "GLE", "GLA", "CLA"],
+  BMW: ["Serie 3", "Serie 5", "Serie 7", "X1", "X3", "X5", "X7"],
 };

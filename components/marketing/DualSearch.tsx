@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { filterVehicles } from "@/lib/search-filters";
 import { buildSearchHref } from "@/lib/search-url";
-import { BRAND_OPTIONS, PROVINCE_OPTIONS, type FilterState } from "@/lib/search-types";
+import { BRAND_OPTIONS, type FilterState } from "@/lib/search-types";
+import { RD_PROVINCES_ORDERED } from "@/lib/rd-geography";
 import { MODELS_BY_BRAND, VEHICLES_SEED } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
 
@@ -209,9 +210,18 @@ export function DualSearch() {
               </SelectContent>
             </Select>
 
-            <Select value={model} onValueChange={setModel} disabled={brand === "all"}>
+            <Select
+              key={`model-${brand}`}
+              value={model}
+              onValueChange={setModel}
+              disabled={brand === "all"}
+            >
               <SelectTrigger className="h-11" aria-label="Modelo">
-                <SelectValue placeholder="Todos los modelos" />
+                <SelectValue
+                  placeholder={
+                    brand === "all" ? "Selecciona una marca primero" : "Todos los modelos"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los modelos</SelectItem>
@@ -227,9 +237,9 @@ export function DualSearch() {
               <SelectTrigger className="h-11" aria-label="Provincia">
                 <SelectValue placeholder="Provincia" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[min(320px,50vh)]">
                 <SelectItem value="all">Todas las provincias</SelectItem>
-                {PROVINCE_OPTIONS.map((p) => (
+                {RD_PROVINCES_ORDERED.map((p) => (
                   <SelectItem key={p} value={p}>
                     {p}
                   </SelectItem>
