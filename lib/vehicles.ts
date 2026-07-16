@@ -254,6 +254,74 @@ export const BODY_TYPES = [
   { key: "lujo", label: "Lujo", count: 41, tipo: "Premium" },
 ] as const;
 
+/** Body type tiles with consistent imagin.studio 3/4 renders. */
+export const BODY_TYPE_TILES = [
+  {
+    label: "Yipeta / SUV",
+    slug: "suv",
+    count: 342,
+    tipo: "SUV",
+    image:
+      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=rav4&modelYear=2023&angle=25&width=400",
+  },
+  {
+    label: "Sedán",
+    slug: "sedan",
+    count: 128,
+    tipo: "Sedán",
+    image:
+      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=corolla&modelYear=2023&angle=25&width=400",
+  },
+  {
+    label: "Camioneta / Pickup",
+    slug: "pickup",
+    count: 96,
+    tipo: "SUV",
+    image:
+      "https://cdn.imagin.studio/getimage?customer=demo&make=ford&modelFamily=f150&modelYear=2023&angle=25&width=400",
+  },
+  {
+    label: "Guagua / Minivan",
+    slug: "minivan",
+    count: 54,
+    tipo: "SUV",
+    image:
+      "https://cdn.imagin.studio/getimage?customer=demo&make=honda&modelFamily=odyssey&modelYear=2023&angle=25&width=400",
+  },
+  {
+    label: "Deportivo",
+    slug: "coupe",
+    count: 23,
+    tipo: "Premium",
+    image:
+      "https://cdn.imagin.studio/getimage?customer=demo&make=ford&modelFamily=mustang&modelYear=2023&angle=25&width=400",
+  },
+  {
+    label: "Compacto",
+    slug: "hatchback",
+    count: 87,
+    tipo: "Sedán",
+    image:
+      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=yaris&modelYear=2023&angle=25&width=400",
+  },
+  {
+    label: "Convertible",
+    slug: "convertible",
+    count: 12,
+    tipo: "Premium",
+    image:
+      "https://cdn.imagin.studio/getimage?customer=demo&make=bmw&modelFamily=z4&modelYear=2023&angle=25&width=400",
+  },
+  {
+    label: "Lujo",
+    slug: "luxury",
+    count: 41,
+    tipo: "Premium",
+    image:
+      "https://cdn.imagin.studio/getimage?customer=demo&make=mercedes&modelFamily=eclass&modelYear=2023&angle=25&width=400",
+  },
+] as const;
+
 /** Models available per brand for traditional search dropdowns. */
 export const MODELS_BY_BRAND: Record<string, string[]> = {
   Toyota: ["Corolla", "RAV4", "Hilux", "Yaris"],
