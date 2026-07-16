@@ -44,6 +44,7 @@ export function filterStateFromSearchParams(params: URLSearchParams): FilterStat
   const modelo = params.get("modelo");
   const tipo = params.get("tipo");
   const ciudad = params.get("ciudad");
+  const provincia = params.get("provincia");
 
   const brands = readMultiBracket(params, "brands");
   if (marca) brands.push(marca);
@@ -53,6 +54,7 @@ export function filterStateFromSearchParams(params: URLSearchParams): FilterStat
 
   const provinces = readMultiBracket(params, "provinces");
   if (ciudad) provinces.push(ciudad);
+  if (provincia) provinces.push(provincia);
 
   let mergedQuery = parsed.query ?? query;
   if (modelo && !mergedQuery.toLowerCase().includes(modelo.toLowerCase())) {
