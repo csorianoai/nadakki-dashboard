@@ -253,3 +253,17 @@ export const BODY_TYPES = [
   { key: "convertible", label: "Convertible", count: 12, tipo: "Premium" },
   { key: "lujo", label: "Lujo", count: 41, tipo: "Premium" },
 ] as const;
+
+/** Models available per brand for traditional search dropdowns. */
+export const MODELS_BY_BRAND: Record<string, string[]> = {
+  Toyota: ["Corolla", "RAV4", "Hilux", "Yaris"],
+  Honda: ["CR-V", "Civic", "Accord", "Pilot"],
+  Hyundai: ["Tucson", "Elantra", "Santa Fe", "Creta"],
+  Kia: ["Sportage", "Seltos", "Forte", "Sorento"],
+  Ford: ["Escape", "Explorer", "Ranger", "F-150"],
+  Chevrolet: ["Blazer", "Equinox", "Spark", "Silverado"],
+  Suzuki: ["Grand Vitara", "Swift", "Jimny", "Vitara"],
+  Mitsubishi: ["Outlander", "Lancer", "Montero", "ASX"],
+  "Mercedes-Benz": ["GLC 300", "C-Class", "GLE", "A-Class"],
+  BMW: ["X3", "X5", "Serie 3", "Serie 5"],
+};
