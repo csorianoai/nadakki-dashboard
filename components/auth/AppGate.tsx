@@ -7,8 +7,9 @@ import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShe
 
 function isAutosPublicPath(pathname: string | null): boolean {
   if (!pathname) return false;
-  if (pathname === "/vehiculos" || pathname.startsWith("/vehiculos/")) return true;
-  if (pathname.startsWith("/vehiculo/")) return true;
+  if (pathname === "/autos") return true;
+  if (pathname === "/autos/vehiculos" || pathname.startsWith("/autos/vehiculos/")) return true;
+  if (pathname.startsWith("/autos/vehiculo/")) return true;
   return false;
 }
 
