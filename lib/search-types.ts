@@ -1,5 +1,7 @@
 /** Search filter types and facet constants — README §17.2 / §8.3 */
 
+import { RD_PROVINCES_ORDERED } from "@/lib/rd-geography";
+
 export type SearchView = "grid" | "list" | "map";
 
 export type SortOption = "relevance" | "price_asc" | "price_desc" | "payment_asc" | "match";
@@ -61,15 +63,7 @@ export const BRAND_OPTIONS = [
 
 export const TYPE_OPTIONS = ["Sedán", "SUV", "Premium"] as const;
 
-export const PROVINCE_OPTIONS = [
-  "Distrito Nacional",
-  "Santo Domingo",
-  "Santo Domingo Este",
-  "Santiago",
-  "La Vega",
-  "San Pedro de Macorís",
-  "Puerto Plata",
-] as const;
+export const PROVINCE_OPTIONS = RD_PROVINCES_ORDERED;
 
 export const YEAR_OPTIONS = [2023, 2022, 2021, 2020, 2019] as const;
 
