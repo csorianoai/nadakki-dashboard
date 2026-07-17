@@ -1,67 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
-import { Box, Video } from "lucide-react";
+import { Box, Camera, Video } from "lucide-react";
 import { QualityBadge } from "@/components/vehicle/QualityBadge";
 import { priceStatus } from "@/lib/finance";
-import {
-  getVehicleFallbackUrl,
-  getVehicleImaginUrl,
-} from "@/lib/vehicle-images";
 import { photoCount, type Vehicle } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
 
-type ImageStage = "imagin" | "fallback" | "gradient";
+const THUMBNAIL_FILTERS = [undefined, "hue-rotate(18deg)", "hue-rotate(36deg)", "hue-rotate(54deg)", "hue-rotate(72deg)"] as const;
 
-function GalleryImage({
-  vehicle,
-  className,
-}: {
-  vehicle: Vehicle;
-  className?: string;
-}) {
-  const [stage, setStage] = useState<ImageStage>("imagin");
-
-  if (stage === "gradient") {
-    return (
-      <div
-        className={cn("h-full w-full", className)}
-        style={{ background: vehicle.grad }}
-        aria-hidden
-      />
-    );
-  }
-
-  const src =
-    stage === "imagin" ? getVehicleImaginUrl(vehicle) : getVehicleFallbackUrl(vehicle);
-
-  if (!src) {
-    return (
-      <div
-        className={cn("h-full w-full", className)}
-        style={{ background: vehicle.grad }}
-        aria-hidden
-      />
-    );
-  }
-
-  return (
-    <Image
-      src={src}
-      alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-      fill
-      className={cn("object-cover", className)}
-      sizes="(max-width: 768px) 100vw, 60vw"
-      onError={() => {
-        if (stage === "imagin" && getVehicleFallbackUrl(vehicle)) {
-          setStage("fallback");
-        } else {
-          setStage("gradient");
-        }
-      }}
-    />
-  );
+function getVehicleGradient(vehicle: Vehicle): string {
+  return vehicle.grad;
 }
 
 export function Gallery({ vehicle }: { vehicle: Vehicle }) {
@@ -72,8 +21,16 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-r bg-nk-surface-2">
-        <GalleryImage vehicle={vehicle} />
+      <div
+        className="relative overflow-hidden rounded-r"
+        style={{
+          background: getVehicleGradient(vehicle),
+          aspectRatio: "16/10",
+          filter: THUMBNAIL_FILTERS[idx] ?? "hue-rotate(0deg)",
+        }}
+        role="img"
+        aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+      >
         <QualityBadge status={status} className="absolute left-3 top-3" />
         <div className="absolute right-3 top-3 flex gap-2">
           <button
@@ -91,7 +48,8 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
             Video AI
           </button>
         </div>
-        <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+        <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+          <Camera className="h-3 w-3" aria-hidden />
           {idx + 1}/{total}
         </span>
       </div>
@@ -112,8 +70,8 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
             <div
               className="absolute inset-0"
               style={{
-                background: vehicle.grad,
-                filter: i > 0 ? `hue-rotate(${i * 18}deg)` : undefined,
+                background: getVehicleGradient(vehicle),
+                filter: THUMBNAIL_FILTERS[i] ?? undefined,
               }}
             />
           </button>
