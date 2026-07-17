@@ -783,6 +783,62 @@ body {
   border-radius: 3px;
 }
 
+[data-portal="autos"] .filter-sidebar-scroll {
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+}
+
+@media (min-height: 900px) {
+  [data-portal="autos"] .filter-sidebar-scroll {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+[data-portal="autos"] .active-chips-bar {
+  position: sticky;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-portal="autos"] .active-chips-bar-row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+[data-portal="autos"] .active-chips-bar-row2 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--fg-muted);
+}
+
+[data-portal="autos"] .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--fg);
+}
+
+[data-portal="autos"] .chip-remove:hover {
+  background: var(--danger-soft, rgba(220, 38, 38, 0.12));
+  color: var(--danger, #dc2626);
+}
+
+[data-portal="autos"] .save-search-btn {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
 @keyframes nkShimmer {
   0% { background-position: -460px 0; }
   100% { background-position: 460px 0; }
@@ -818,5 +874,41 @@ body {
 @keyframes nkToast {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+[data-portal="autos"] a:focus-visible,
+[data-portal="autos"] button:focus-visible,
+[data-portal="autos"] input:focus-visible,
+[data-portal="autos"] select:focus-visible,
+[data-portal="autos"] textarea:focus-visible,
+[data-portal="autos"] [role="link"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--brand);
+}
+
+[data-portal="autos"] .voice-overlay {
+  animation: fadeIn 0.28s ease both;
+}
+
+[data-portal="autos"] .voice-overlay .animate-nkWave {
+  height: 8px;
+  animation: nkWave 0.9s ease-in-out infinite;
+}
+
+@media (min-width: 1280px) {
+  [data-portal="autos"] .results-grid-xl {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  [data-portal="autos"] .results-grid-xl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 

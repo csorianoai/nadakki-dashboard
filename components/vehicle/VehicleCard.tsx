@@ -1,17 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { memo, useCallback } from "react";
 import { Camera, Fuel, Gauge, Settings2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtKm, fmtRD } from "@/lib/format";
 import { cuota, priceStatus } from "@/lib/finance";
-import {
-  getVehicleFallbackUrl,
-  getVehicleImaginUrl,
-} from "@/lib/vehicle-images";
 import { photoCount, type Vehicle } from "@/lib/vehicles";
 import { QualityBadge } from "@/components/vehicle/QualityBadge";
 import { PrecioJustoBadge } from "@/components/vehicle/PrecioJustoBadge";
@@ -27,57 +22,7 @@ function dealerInitials(name: string): string {
     .toUpperCase();
 }
 
-type ImageStage = "imagin" | "fallback" | "gradient";
-
-function VehicleCardImage({ vehicle }: { vehicle: Vehicle }) {
-  const [stage, setStage] = useState<ImageStage>("imagin");
-
-  const alt = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
-
-  if (stage === "gradient") {
-    return (
-      <div
-        className="aspect-[16/10] w-full"
-        style={{ background: vehicle.grad }}
-        aria-hidden
-      />
-    );
-  }
-
-  const src =
-    stage === "imagin" ? getVehicleImaginUrl(vehicle) : getVehicleFallbackUrl(vehicle);
-
-  if (!src) {
-    return (
-      <div
-        className="aspect-[16/10] w-full"
-        style={{ background: vehicle.grad }}
-        aria-hidden
-      />
-    );
-  }
-
-  return (
-    <div className="relative aspect-[16/10] w-full overflow-hidden bg-nk-surface-2">
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        className="object-cover"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        onError={() => {
-          if (stage === "imagin" && getVehicleFallbackUrl(vehicle)) {
-            setStage("fallback");
-          } else {
-            setStage("gradient");
-          }
-        }}
-      />
-    </div>
-  );
-}
-
-export function VehicleCard({
+export const VehicleCard = memo(function VehicleCard({
   vehicle,
   saved = false,
   onSaveToggle,
@@ -96,7 +41,8 @@ export function VehicleCard({
   const href = `/autos/vehiculo/${vehicle.id}`;
   const photos = photoCount(vehicle.id);
 
-  const navigate = () => router.push(href);
+  const navigate = useCallback(() => router.push(href), [router, href]);
+  const prefetch = useCallback(() => router.prefetch(href), [router, href]);
 
   if (variant === "compact") {
     return (
@@ -105,6 +51,7 @@ export function VehicleCard({
         role="link"
         tabIndex={0}
         onClick={navigate}
+        onMouseEnter={prefetch}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -112,7 +59,7 @@ export function VehicleCard({
           }
         }}
         className={cn(
-          "flex cursor-pointer gap-3 overflow-hidden rounded-r border border-nk-border bg-nk-surface p-3 shadow-nk-sm transition hover:-translate-y-0.5 hover:shadow-nk-md",
+          "flex cursor-pointer gap-3 overflow-hidden rounded-r border border-nk-border bg-nk-surface p-3 shadow-nk-sm transition hover:-translate-y-0.5 hover:shadow-nk-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
           className,
         )}
       >
@@ -148,23 +95,26 @@ export function VehicleCard({
         role="link"
         tabIndex={0}
         onClick={navigate}
+        onMouseEnter={prefetch}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             navigate();
           }
         }}
-        className="relative cursor-pointer"
+        className="relative cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
       >
-        <VehicleCardImage vehicle={vehicle} />
+        <div
+          className="aspect-[16/10] w-full"
+          style={{ background: vehicle.grad }}
+          role="img"
+          aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+        />
         <QualityBadge status={status} className="absolute left-3 top-3" />
         <div className="absolute right-3 top-3">
-          <SaveButton
-            saved={saved}
-            onToggle={onSaveToggle ?? (() => undefined)}
-          />
+          <SaveButton saved={saved} onToggle={onSaveToggle ?? (() => undefined)} />
         </div>
-        <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+        <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--fg)_55%,transparent)] px-2 py-1 text-[10px] font-semibold text-[var(--surface)] backdrop-blur-sm">
           <Camera className="h-3 w-3" aria-hidden />
           {photos}
         </span>
@@ -181,7 +131,7 @@ export function VehicleCard({
               navigate();
             }
           }}
-          className="cursor-pointer space-y-1.5"
+          className="cursor-pointer space-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
           <h3 className="font-manrope text-lg font-bold leading-snug text-nk-fg">
             {vehicle.year} {vehicle.make} {vehicle.model}
@@ -222,12 +172,12 @@ export function VehicleCard({
             {vehicle.match}% match
           </span>
           {(vehicle.id === 3 || vehicle.id === 7) && (
-            <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
               Recién publicado
             </span>
           )}
           {vehicle.year >= 2023 && (
-            <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] font-bold text-violet-600 dark:text-violet-400">
+            <span className="rounded-full bg-nk-surface-3 px-2 py-0.5 text-[10px] font-bold text-nk-fg-muted">
               Certificado Nadakki
             </span>
           )}
@@ -250,13 +200,13 @@ export function VehicleCard({
         </div>
 
         <div className="mt-auto flex gap-2 pt-2">
-          <Button variant="brand" className="min-h-10 flex-1 hover:brightness-110" asChild>
-            <Link href={`${href}?financiar=1`} onClick={(e) => e.stopPropagation()}>
+          <Button variant="brand" className="min-h-11 flex-1 hover:brightness-110" asChild>
+            <Link href={`${href}?financiar=1`} onClick={(e) => e.stopPropagation()} prefetch>
               Aplicar financiamiento
             </Link>
           </Button>
-          <Button variant="outline" className="min-h-10 px-4" asChild>
-            <Link href={href} onClick={(e) => e.stopPropagation()}>
+          <Button variant="outline" className="min-h-11 px-4" asChild>
+            <Link href={href} onClick={(e) => e.stopPropagation()} prefetch>
               Ver
             </Link>
           </Button>
@@ -264,4 +214,4 @@ export function VehicleCard({
       </div>
     </article>
   );
-}
+});
