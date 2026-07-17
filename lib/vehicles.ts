@@ -262,7 +262,7 @@ export const BODY_TYPE_TILES = [
     count: 342,
     tipo: "SUV",
     image:
-      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=rav4&modelYear=2023&angle=25&width=400",
+      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=rav4&modelYear=2023&angle=25&width=400&paintId=pspc0004",
   },
   {
     label: "Sedán",
@@ -270,7 +270,7 @@ export const BODY_TYPE_TILES = [
     count: 128,
     tipo: "Sedán",
     image:
-      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=corolla&modelYear=2023&angle=25&width=400",
+      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=corolla&modelYear=2023&angle=25&width=400&paintId=pspc0004",
   },
   {
     label: "Camioneta / Pickup",
@@ -278,7 +278,7 @@ export const BODY_TYPE_TILES = [
     count: 96,
     tipo: "SUV",
     image:
-      "https://cdn.imagin.studio/getimage?customer=demo&make=ford&modelFamily=f150&modelYear=2023&angle=25&width=400",
+      "https://cdn.imagin.studio/getimage?customer=demo&make=ford&modelFamily=f150&modelYear=2023&angle=25&width=400&paintId=pspc0004",
   },
   {
     label: "Guagua / Minivan",
@@ -286,7 +286,7 @@ export const BODY_TYPE_TILES = [
     count: 54,
     tipo: "SUV",
     image:
-      "https://cdn.imagin.studio/getimage?customer=demo&make=honda&modelFamily=odyssey&modelYear=2023&angle=25&width=400",
+      "https://cdn.imagin.studio/getimage?customer=demo&make=honda&modelFamily=odyssey&modelYear=2023&angle=25&width=400&paintId=pspc0004",
   },
   {
     label: "Deportivo",
@@ -294,7 +294,7 @@ export const BODY_TYPE_TILES = [
     count: 23,
     tipo: "Premium",
     image:
-      "https://cdn.imagin.studio/getimage?customer=demo&make=ford&modelFamily=mustang&modelYear=2023&angle=25&width=400",
+      "https://cdn.imagin.studio/getimage?customer=demo&make=ford&modelFamily=mustang&modelYear=2023&angle=25&width=400&paintId=pspc0004",
   },
   {
     label: "Compacto",
@@ -302,7 +302,7 @@ export const BODY_TYPE_TILES = [
     count: 87,
     tipo: "Sedán",
     image:
-      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=yaris&modelYear=2023&angle=25&width=400",
+      "https://cdn.imagin.studio/getimage?customer=demo&make=toyota&modelFamily=yaris&modelYear=2023&angle=25&width=400&paintId=pspc0004",
   },
   {
     label: "Convertible",
@@ -310,7 +310,7 @@ export const BODY_TYPE_TILES = [
     count: 12,
     tipo: "Premium",
     image:
-      "https://cdn.imagin.studio/getimage?customer=demo&make=bmw&modelFamily=z4&modelYear=2023&angle=25&width=400",
+      "https://cdn.imagin.studio/getimage?customer=demo&make=bmw&modelFamily=z4&modelYear=2023&angle=25&width=400&paintId=pspc0004",
   },
   {
     label: "Lujo",
@@ -318,7 +318,7 @@ export const BODY_TYPE_TILES = [
     count: 41,
     tipo: "Premium",
     image:
-      "https://cdn.imagin.studio/getimage?customer=demo&make=mercedes&modelFamily=eclass&modelYear=2023&angle=25&width=400",
+      "https://cdn.imagin.studio/getimage?customer=demo&make=mercedes&modelFamily=eclass&modelYear=2023&angle=25&width=400&paintId=pspc0004",
   },
 ] as const;
 
