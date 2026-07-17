@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01";font-variant-numeric:tabular-nums}
+a{color:var(--brand-2);text-decoration:none}
+a:hover{color:var(--brand)}
+input,button,select,textarea{font-family:inherit}
+::selection{background:var(--brand);color:#fff}
+:root{
+ --brand:#1E40AF;--brand-2:#3B82F6;--brand-strong:#1E3A8A;--brand-soft:#EEF3FF;--on-brand:#fff;
+ --bg:#F5F8FC;--surface:#FFFFFF;--surface-2:#F1F5F9;--surface-3:#E9EEF6;
+ --border:#E4EAF2;--border-2:#D2DBE8;
+ --fg:#0D1626;--fg-muted:#586A82;--fg-subtle:#8A99AD;
+ --success:#0F9F6E;--success-2:#10B981;--success-soft:#E5F6EF;
+ --warning:#D97706;--warning-2:#F59E0B;--warning-soft:#FCF2E1;
+ --danger:#DC2626;--danger-soft:#FDECEC;
+ --shadow-sm:0 1px 2px rgba(15,23,42,.05),0 1px 3px rgba(15,23,42,.04);
+ --shadow-md:0 6px 16px -4px rgba(15,23,42,.10),0 2px 6px -2px rgba(15,23,42,.06);
+ --shadow-lg:0 24px 56px -18px rgba(15,23,42,.26),0 8px 20px -12px rgba(15,23,42,.14);
+ --ring:0 0 0 3px rgba(59,130,246,.35);
+ --r:16px;--r-sm:11px;--r-lg:22px;
+}
+[data-theme="dark"]{
+ --brand-soft:rgba(59,130,246,.14);
+ --bg:#070C16;--surface:#0F1725;--surface-2:#161F30;--surface-3:#1E2839;
+ --border:#1F293A;--border-2:#2A374C;
+ --fg:#EAF0F8;--fg-muted:#93A3B9;--fg-subtle:#63748C;
+ --success-soft:rgba(16,185,129,.15);--warning-soft:rgba(245,158,11,.15);--danger-soft:rgba(220,38,38,.18);
+ --shadow-sm:0 1px 2px rgba(0,0,0,.45);
+ --shadow-md:0 8px 22px -6px rgba(0,0,0,.55);
+ --shadow-lg:0 28px 64px -20px rgba(0,0,0,.75);
+ --ring:0 0 0 3px rgba(59,130,246,.4);
+}
+[data-tenant="credicefi"]{--brand:#0E7C66;--brand-2:#13B98A;--brand-strong:#0B5F4E;--brand-soft:#E3F6EF}
+[data-theme="dark"][data-tenant="credicefi"]{--brand-soft:rgba(19,185,138,.14)}
+[data-tenant="piloto"]{--brand:#6D28D9;--brand-2:#8B5CF6;--brand-strong:#5B21B6;--brand-soft:#F0EBFE}
+[data-theme="dark"][data-tenant="piloto"]{--brand-soft:rgba(139,92,246,.18)}
+@keyframes nkShimmer{0%{background-position:-460px 0}100%{background-position:460px 0}}
+@keyframes nkUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes nkPop{0%{transform:scale(1)}40%{transform:scale(1.32)}100%{transform:scale(1)}}
+@keyframes nkWave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@keyframes nkPulse{0%{box-shadow:0 0 0 0 rgba(59,130,246,.5)}70%{box-shadow:0 0 0 18px rgba(59,130,246,0)}100%{box-shadow:0 0 0 0 rgba(59,130,246,0)}}
+@keyframes nkSpin{to{transform:rotate(360deg)}}
+@keyframes nkDot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+@keyframes nkToast{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+
+<div data-theme="{{ theme }}" data-tenant="{{ tenant }}" style="min-height:100vh;background:var(--bg);color:var(--fg)">
+<div style="margin-inline:auto;min-height:100vh;background:var(--bg);position:relative;transition:max-width .35s ease;max-width:{{ appMaxW }};border:{{ frameBorder }};border-radius:{{ frameRadius }};box-shadow:{{ frameShadow }};overflow-x:{{ frameClip }}">
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:12.5px;font-weight:600;color:var(--fg);background:var(--surface)">
+<span>9:41</span>
+<span style="letter-spacing:2px">•••• 5G ▪▪▪</span>
+</div>
+</sc-if>
+
+<!-- ============ TOP NAV ============ -->
+<header style="position:sticky;top:0;z-index:40;background:color-mix(in srgb, var(--surface) 88%, transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)">
+<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:12px 22px;max-width:1440px;margin:0 auto">
+<button onClick="{{ goHome }}" style="display:flex;align-items:center;gap:11px;background:none;border:none;cursor:pointer;padding:0">
+<span style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:grid;place-items:center;box-shadow:var(--shadow-sm)">
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M3 15l2-6.2A3 3 0 0 1 7.9 6.6h8.2A3 3 0 0 1 19 8.8L21 15" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M3 15v3.2h3.2M21 15v3.2h-3.2M3 15h18" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.2" cy="15" r="1.5" fill="#fff"/><circle cx="16.8" cy="15" r="1.5" fill="#fff"/></svg>
+</span>
+<span style="display:flex;flex-direction:column;line-height:1;text-align:left">
+<span style="font-family:'Manrope';font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--fg)">{{ brandName }}</span>
+<span style="font-size:10px;font-weight:600;color:var(--fg-subtle);letter-spacing:.02em">{{ poweredBy }}</span>
+</span>
+</button>
+
+<nav style="display:flex;align-items:center;gap:4px;margin-left:6px">
+<button onClick="{{ goHome }}" style="{{ navInicio }}">Inicio</button>
+<button onClick="{{ goSearch }}" style="{{ navBuscar }}">Buscar</button>
+<button onClick="{{ goSearch }}" style="{{ navBtn }}">Vender</button>
+<button onClick="{{ goSearch }}" style="{{ navBtn }}">Dealers</button>
+</nav>
+
+<div style="flex:1"></div>
+
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+<div style="display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:4px 8px 4px 10px">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 21V8l7-5 7 5v13M9 21v-6h2v6" stroke="var(--fg-subtle)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21V11l4 3v7" stroke="var(--fg-subtle)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<select value="{{ tenant }}" onChange="{{ onTenant }}" style="border:none;background:none;color:var(--fg);font-size:12.5px;font-weight:600;cursor:pointer;outline:none">
+<option value="nadakki">Nadakki Auto</option>
+<option value="credicefi">Credicefi Autos</option>
+<option value="piloto">Banco Piloto</option>
+</select>
+</div>
+
+<div style="display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px">
+<button onClick="{{ setDesktop }}" title="Vista escritorio" style="{{ devDesktop }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+<button onClick="{{ setMobileView }}" title="Vista móvil" style="{{ devMobile }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="6" y="3" width="12" height="18" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M11 18h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+</div>
+<button onClick="{{ toggleTheme }}" title="Cambiar tema" style="width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);display:grid;place-items:center;cursor:pointer;color:var(--fg)">
+<sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></sc-if>
+<sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></sc-if>
+</button>
+
+<button onClick="{{ goApproval }}" style="display:flex;align-items:center;gap:7px;background:var(--brand-soft);color:var(--brand);border:1px solid transparent;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+<sc-if value="{{ showApprovalLabel }}" hint-placeholder-val="{{ true }}">Match My Approval</sc-if>
+</button>
+
+<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#334155,#0f172a);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;cursor:pointer;border:1px solid var(--border-2)">JR</div>
+</div>
+</div>
+</header>
+
+<!-- VDP STICKY HEADER -->
+<sc-if value="{{ vdpStuck }}" hint-placeholder-val="{{ false }}">
+<div style="position:sticky;top:63px;z-index:35;background:color-mix(in srgb, var(--surface) 94%, transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);animation:nkUp .22s ease">
+<div style="max-width:1440px;margin:0 auto;padding:10px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<span style="width:60px;height:60px;border-radius:12px;background:{{ sel.grad }};flex-shrink:0"></span>
+<div style="min-width:0"><div style="font-family:'Manrope';font-weight:800;font-size:17px;color:var(--fg);line-height:1.1">{{ sel.name }}</div><div style="font-size:10.5px;font-weight:600;letter-spacing:.05em;color:var(--fg-subtle);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sel.featuresLine }}</div></div>
+<div style="margin-left:6px;text-align:right"><div style="font-family:'Manrope';font-weight:800;font-size:20px;color:var(--fg)">{{ sel.priceRD }}</div></div>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:3px">
+<button onClick="{{ prevVeh }}" title="Anterior" style="width:32px;height:32px;border:none;background:none;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:var(--fg)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+<span style="font-size:12px;font-weight:600;color:var(--fg-muted);white-space:nowrap;padding:0 4px">{{ vdpIndex }} de {{ vdpTotal }}</span>
+<button onClick="{{ nextVeh }}" title="Siguiente" style="width:32px;height:32px;border:none;background:none;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:var(--fg)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+<button onClick="{{ saveSel }}" title="Guardar" style="width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);display:grid;place-items:center;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="{{ sel.heartFill }}"><path d="M12 20s-7-4.6-9.2-8.4C1.2 8.7 2.6 5.5 5.8 5.5c1.9 0 3.2 1.2 4.2 2.5 1-1.3 2.3-2.5 4.2-2.5 3.2 0 4.6 3.2 3 6.1C19 15.4 12 20 12 20z" stroke="{{ sel.heartStroke }}" stroke-width="2" stroke-linejoin="round"/></svg></button>
+<button onClick="{{ openChat }}" style="background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border:none;border-radius:10px;padding:0 18px;height:40px;font-size:13.5px;font-weight:700;cursor:pointer">Contactar vendedor</button>
+</div>
+</div>
+</sc-if>
+
+<main style="max-width:1440px;margin:0 auto">
+
+<!-- ============ SCREEN: LANDING ============ -->
+<sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+<section style="animation:nkUp .4s ease">
+<!-- HERO -->
+<div id="hero" style="position:relative;overflow:hidden;padding:clamp(48px,7vw,92px) 22px clamp(60px,7vw,88px);background:radial-gradient(120% 120% at 85% -10%, var(--brand-soft), transparent 55%)">
+<div style="max-width:940px;margin:0 auto;text-align:center">
+<div style="display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--fg-muted);box-shadow:var(--shadow-sm);margin-bottom:24px">
+<span style="width:7px;height:7px;border-radius:50%;background:var(--success-2);box-shadow:0 0 0 3px var(--success-soft)"></span>
+Aprobación bancaria integrada · {{ poweredBy }}
+</div>
+<h1 style="font-family:'Manrope';font-weight:800;font-size:clamp(34px,5.4vw,60px);line-height:1.04;letter-spacing:-.03em;margin:0 auto;max-width:14ch;color:var(--fg);text-wrap:balance">El vehículo perfecto para ti, <span style="background:linear-gradient(120deg,var(--brand),var(--brand-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">financiado en tu banco</span></h1>
+<p style="font-size:clamp(15px,1.6vw,19px);color:var(--fg-muted);max-width:52ch;margin:20px auto 0;line-height:1.5">Busca en lenguaje natural, compara cuotas reales y aplica a tu financiamiento — todo en un solo lugar. Sin vueltas.</p>
+
+<!-- UNIFIED SEARCH -->
+<div style="margin:34px auto 0;max-width:720px">
+<div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-2);border-radius:16px;padding:8px 8px 8px 18px;box-shadow:var(--shadow-lg)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><circle cx="11" cy="11" r="7" stroke="var(--fg-subtle)" stroke-width="2"/><path d="m20 20-3.2-3.2" stroke="var(--fg-subtle)" stroke-width="2" stroke-linecap="round"/></svg>
+<input value="{{ query }}" onInput="{{ onQuery }}" onKeyDown="{{ onQueryKey }}" placeholder="{{ heroPlaceholder }}" style="flex:1;border:none;background:none;outline:none;font-size:15.5px;color:var(--fg);min-width:0;padding:8px 0"/>
+<button onClick="{{ startVoice }}" title="Búsqueda por voz" style="width:44px;height:44px;border-radius:11px;border:1px solid var(--border);background:var(--surface-2);display:grid;place-items:center;cursor:pointer;color:var(--fg-muted);flex-shrink:0">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+</button>
+<button onClick="{{ runSearch }}" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border:none;border-radius:11px;padding:0 20px;height:44px;font-size:14.5px;font-weight:700;cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-sm)">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.9 4 4.1.6-3 3 .7 4.1L12 12.8 8.3 14.8l.7-4.1-3-3 4.1-.6L12 3z" stroke="#fff" stroke-width="1.7" stroke-linejoin="round" fill="rgba(255,255,255,.25)"/></svg>
+Buscar con AI
+</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px">
+<sc-for list="{{ chips }}" as="c" hint-placeholder-count="4">
+<button onClick="{{ c.go }}" style="background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:500;color:var(--fg-muted);cursor:pointer;transition:all .15s" style-hover="background:var(--brand);border-color:var(--brand);color:#fff">{{ c.label }}</button>
+</sc-for>
+</div>
+<div style="display:flex;align-items:baseline;justify-content:center;gap:10px;margin-top:26px;flex-wrap:wrap"><span style="font-family:'Manrope';font-weight:800;font-size:clamp(30px,4vw,42px);color:var(--fg);letter-spacing:-.02em">{{ heroCounter }}</span><span style="font-size:15px;font-weight:600;color:var(--fg-muted)">vehículos disponibles</span></div>
+<div style="text-align:center;font-size:13.5px;color:var(--fg-subtle);margin-top:2px">{{ heroCounterSub }}</div>
+</div>
+</div>
+</div>
+
+<!-- EXPLORA POR TIPO -->
+<div id="tipos" style="padding:40px 22px 8px">
+<div style="max-width:1080px;margin:0 auto">
+<h2 style="font-family:'Manrope';font-weight:800;font-size:clamp(20px,2.6vw,26px);letter-spacing:-.02em;margin:0 0 4px;color:var(--fg)">Explora por tipo</h2>
+<p style="margin:0 0 18px;color:var(--fg-muted);font-size:13.5px">Nomenclatura dominicana — toca una silueta para filtrar el catálogo.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px">
+<sc-for list="{{ bodyTypes }}" as="b" hint-placeholder-count="8">
+<button onClick="{{ b.go }}" style="display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;transition:all .18s" style-hover="border-color:var(--brand);transform:translateY(-3px);box-shadow:var(--shadow-md)">
+<div style="position:relative;aspect-ratio:16/9;background:{{ b.grad }};display:grid;place-items:center"><span style="color:rgba(255,255,255,.9)" innerHTML="{{ b.icon }}"></span></div>
+<div style="padding:12px 13px"><div style="font-size:14px;font-weight:700;color:var(--fg)">{{ b.label }}</div><div style="font-size:12px;color:var(--fg-subtle);margin-top:2px">{{ b.count }} disponibles</div></div>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+
+<!-- 3 COLUMNS -->
+<div style="padding:32px 22px 8px;position:relative;z-index:2">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;max-width:1080px;margin:0 auto">
+<sc-for list="{{ paths }}" as="p" hint-placeholder-count="3">
+<button onClick="{{ p.go }}" style="text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;cursor:pointer;box-shadow:var(--shadow-md);display:flex;flex-direction:column;gap:12px;transition:transform .18s,box-shadow .18s" style-hover="transform:translateY(-4px);box-shadow:var(--shadow-lg)">
+<span style="width:44px;height:44px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center" innerHTML="{{ p.icon }}"></span>
+<span style="font-family:'Manrope';font-weight:700;font-size:17px;color:var(--fg)">{{ p.title }}</span>
+<span style="font-size:13.5px;color:var(--fg-muted);line-height:1.45">{{ p.desc }}</span>
+<span style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--brand);margin-top:2px">{{ p.cta }} <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<!-- VALUE PROPS -->
+<div style="padding:56px 22px 8px">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;max-width:1080px;margin:0 auto">
+<sc-for list="{{ values }}" as="v" hint-placeholder-count="3">
+<div style="display:flex;gap:13px;align-items:flex-start;padding:18px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)">
+<span style="width:38px;height:38px;flex-shrink:0;border-radius:10px;background:{{ v.tint }};color:{{ v.color }};display:grid;place-items:center" innerHTML="{{ v.icon }}"></span>
+<div><div style="font-weight:700;font-size:14.5px;color:var(--fg)">{{ v.title }}</div><div style="font-size:12.5px;color:var(--fg-muted);margin-top:3px;line-height:1.4">{{ v.desc }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<!-- FEATURED GRID -->
+<div style="padding:44px 22px 20px">
+<div style="max-width:1200px;margin:0 auto">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+<div><h2 style="font-family:'Manrope';font-weight:800;font-size:clamp(23px,3vw,30px);letter-spacing:-.02em;margin:0;color:var(--fg)">Vehículos destacados</h2><p style="margin:6px 0 0;color:var(--fg-muted);font-size:14px">Seleccionados por nuestro AI según demanda y Precio Justo verificado.</p></div>
+<button onClick="{{ goSearch }}" style="background:none;border:1px solid var(--border-2);border-radius:10px;padding:10px 15px;font-size:13px;font-weight:700;color:var(--fg);cursor:pointer;white-space:nowrap">Ver todo el inventario</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:18px">
+<sc-for list="{{ featured }}" as="v" hint-placeholder-count="8">
+<article onClick="{{ v.open }}" data-vehicle-id="{{ v.id }}" data-price-status="{{ v.status }}" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .2s ease,box-shadow .2s ease" style-hover="transform:translateY(-5px) scale(1.02);box-shadow:var(--shadow-lg)">
+<div style="position:relative;aspect-ratio:4/3;background:{{ v.grad }}">
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.28))"></div>
+<span style="position:absolute;top:11px;left:11px;display:inline-flex;align-items:center;gap:5px;background:{{ v.statusBg }};color:{{ v.statusColor }};font-size:11px;font-weight:700;padding:5px 9px;border-radius:8px;backdrop-filter:blur(4px)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.2 6.6H21l-5.4 4 2 6.6L12 15.4 6.4 19.2l2-6.6L3 8.6h6.8L12 2z" fill="{{ v.statusIconFill }}"/></svg>{{ v.statusLabel }}</span>
+<button onClick="{{ v.save }}" style="position:absolute;top:9px;right:9px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.92);display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(4px)">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="{{ v.heartFill }}" style="animation:{{ v.heartAnim }}"><path d="M12 20s-7-4.6-9.2-8.4C1.2 8.7 2.6 5.5 5.8 5.5c1.9 0 3.2 1.2 4.2 2.5 1-1.3 2.3-2.5 4.2-2.5 3.2 0 4.6 3.2 3 6.1C19 15.4 12 20 12 20z" stroke="{{ v.heartStroke }}" stroke-width="2" stroke-linejoin="round"/></svg>
+</button>
+<span style="position:absolute;bottom:10px;right:11px;display:flex;gap:4px">
+<span style="width:6px;height:6px;border-radius:50%;background:#fff"></span><span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5)"></span><span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5)"></span><span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5)"></span>
+</span>
+</div>
+<div style="padding:14px 15px 15px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+<h3 style="font-family:'Manrope';font-weight:700;font-size:15.5px;margin:0;color:var(--fg);line-height:1.2">{{ v.name }}</h3>
+</div>
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-subtle);margin-top:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="2"/></svg>{{ v.loc }}</div>
+<div style="font-size:11.5px;color:var(--fg-subtle);margin-top:4px">{{ v.metaLine }}</div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:12px">
+<div><div style="font-family:'Manrope';font-weight:800;font-size:18px;color:var(--fg)">{{ v.priceRD }}</div><div style="font-size:11px;color:var(--fg-subtle)">{{ v.priceUS }}</div></div>
+<div style="text-align:right"><div style="font-size:15px;font-weight:800;color:var(--brand)">{{ v.cuota }}</div><div style="font-size:10.5px;color:var(--fg-subtle)">estimado /mes</div></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:11px">
+<span style="display:inline-flex;align-items:center;gap:3px;background:var(--brand-soft);color:var(--brand);font-size:10.5px;font-weight:700;padding:4px 7px;border-radius:6px">{{ v.match }}% match</span>
+<sc-if value="{{ v.verified }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:3px;background:var(--success-soft);color:var(--success);font-size:10.5px;font-weight:700;padding:4px 7px;border-radius:6px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Dealer Verified</span></sc-if>
+<span style="display:inline-flex;align-items:center;gap:3px;background:var(--surface-2);color:var(--fg-muted);font-size:10.5px;font-weight:700;padding:4px 7px;border-radius:6px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>VIN validado</span>
+</div>
+<div style="display:flex;gap:7px;margin-top:13px">
+<button onClick="{{ v.apply }}" style="flex:1;background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;transition:filter .15s" style-hover="filter:brightness(1.1)">Aplicar financiamiento</button>
+<button onClick="{{ v.open }}" style="background:var(--surface);color:var(--fg);border:1px solid var(--border-2);border-radius:10px;padding:10px 13px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">Ver</button>
+</div>
+</div>
+</article>
+</sc-for>
+</div>
+</div>
+</div>
+
+<!-- BANCOS ALIADOS -->
+<div id="bancos" style="padding:52px 22px;margin-top:24px;background:var(--brand-soft)">
+<div style="max-width:1080px;margin:0 auto">
+<div style="text-align:center;margin-bottom:28px"><h2 style="font-family:'Manrope';font-weight:800;font-size:clamp(23px,3vw,30px);letter-spacing:-.02em;margin:0;color:var(--fg)">Aliados bancarios verificados</h2><p style="margin:8px 0 0;color:var(--fg-muted);font-size:15px">Aplica una vez, recibe ofertas de todos.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px">
+<sc-for list="{{ bancosAliados }}" as="b" hint-placeholder-count="4">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:12px;opacity:.72;transition:opacity .2s,transform .2s" style-hover="opacity:1;transform:translateY(-3px)"><span data-tenant-logo="{{ b.n }}" style="width:46px;height:46px;border-radius:12px;background:{{ b.c }};display:grid;place-items:center;color:#fff;font-family:'Manrope';font-weight:800;font-size:20px">{{ b.i }}</span><span style="font-family:'Manrope';font-weight:700;font-size:16px;color:var(--fg)">{{ b.n }}</span><span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--success)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.6-3 8.4-7 9.6C8 19.4 5 15.6 5 11V5l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 11.5 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{{ b.tag }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<!-- COMPARADOR DE APROBACIONES -->
+<div id="comparador" style="padding:56px 22px">
+<div style="max-width:1080px;margin:0 auto">
+<div style="text-align:center;margin-bottom:28px"><span style="display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;color:var(--brand);margin-bottom:14px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Exclusivo de Nadakki</span><h2 style="font-family:'Manrope';font-weight:800;font-size:clamp(23px,3vw,30px);letter-spacing:-.02em;margin:0;color:var(--fg)">Un solo formulario, múltiples ofertas</h2><p style="margin:8px 0 0;color:var(--fg-muted);font-size:15px">Aplica una vez y compara aprobaciones reales lado a lado.</p></div>
+<div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+<div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px"><span style="width:34px;height:34px;border-radius:9px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span style="font-size:13.5px;font-weight:700;color:var(--fg)">1 aplicación</span></div>
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="color:var(--fg-subtle)"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div style="display:flex;gap:8px"><span style="width:36px;height:36px;border-radius:9px;background:#0E7C66;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;font-family:'Manrope'">C</span><span style="width:36px;height:36px;border-radius:9px;background:#6D28D9;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;font-family:'Manrope'">P</span><span style="width:36px;height:36px;border-radius:9px;background:#1E40AF;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;font-family:'Manrope'">R</span></div>
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="color:var(--fg-subtle)"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div style="display:flex;align-items:center;gap:10px;background:var(--success-soft);border:1px solid transparent;border-radius:12px;padding:12px 16px"><span style="color:var(--success)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 7h11M8 12h11M8 17h11M3.5 7h.01M3.5 12h.01M3.5 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span style="font-size:13.5px;font-weight:700;color:var(--fg)">Ofertas comparadas</span></div>
+</div>
+<div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);box-shadow:var(--shadow-sm)">
+<div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;min-width:620px">
+<div style="display:contents"><div style="padding:14px 16px;font-size:12px;font-weight:700;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)">Banco</div><div style="padding:14px 16px;font-size:12px;font-weight:700;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)">Monto máx.</div><div style="padding:14px 16px;font-size:12px;font-weight:700;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)">Cuota / tasa</div><div style="padding:14px 16px;font-size:12px;font-weight:700;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)">Respuesta</div></div>
+<sc-for list="{{ comparador }}" as="c" hint-placeholder-count="3">
+<div style="display:contents">
+<div style="padding:15px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex-shrink:0;border-radius:8px;background:{{ c.c }};display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;font-family:'Manrope'">{{ c.i }}</span><span style="font-size:13.5px;font-weight:700;color:var(--fg)">{{ c.bank }}</span></div>
+<div style="padding:15px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;justify-content:center"><span style="font-family:'Manrope';font-weight:800;font-size:15px;color:var(--fg)">{{ c.monto }}</span><span style="font-size:11.5px;color:var(--fg-subtle)">{{ c.plazo }}</span></div>
+<div style="padding:15px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;justify-content:center"><span style="font-weight:800;font-size:14px;color:var(--brand)">{{ c.cuota }}/mes</span><span style="font-size:11.5px;color:var(--fg-subtle)">Tasa {{ c.tasa }}</span></div>
+<div style="padding:15px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:600;color:var(--fg)">{{ c.tiempo }}</span><sc-if value="{{ c.best }}" hint-placeholder-val="{{ false }}"><span style="background:var(--success-2);color:#fff;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px">Mejor oferta</span></sc-if></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+
+<!-- TRUST -->
+<div style="padding:48px 22px;background:var(--surface-2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<div style="max-width:1000px;margin:0 auto;text-align:center">
+<p style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-subtle);margin:0 0 22px">Bancos e instituciones que confían en Nadakki</p>
+<div style="display:flex;flex-wrap:wrap;gap:14px 34px;justify-content:center;align-items:center">
+<sc-for list="{{ banks }}" as="b" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:9px;opacity:.72"><span style="width:30px;height:30px;border-radius:8px;background:{{ b.c }};display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;font-family:'Manrope'">{{ b.i }}</span><span style="font-family:'Manrope';font-weight:700;font-size:15px;color:var(--fg)">{{ b.n }}</span></div>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:26px">
+<sc-for list="{{ certs }}" as="c" hint-placeholder-count="3">
+<span style="display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--fg-muted)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.6-3 8.4-7 9.6C8 19.4 5 15.6 5 11V5l7-3z" stroke="var(--success)" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 11.5 2 2 4-4" stroke="var(--success)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>{{ c }}</span>
+</sc-for>
+</div>
+</div>
+</div>
+
+<!-- TESTIMONIALS -->
+<div style="padding:56px 22px">
+<div style="max-width:1080px;margin:0 auto">
+<h2 style="font-family:'Manrope';font-weight:800;font-size:clamp(22px,3vw,29px);letter-spacing:-.02em;margin:0 0 24px;text-align:center;color:var(--fg)">Lo que dicen compradores y dealers</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+<sc-for list="{{ testimonials }}" as="t" hint-placeholder-count="3">
+<figure style="margin:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;box-shadow:var(--shadow-sm)">
+<div style="display:flex;gap:2px;margin-bottom:12px"><sc-for list="{{ t.stars }}" as="s" hint-placeholder-count="5"><svg width="15" height="15" viewBox="0 0 24 24" fill="var(--warning-2)"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.5 5.9 20.4l1.5-6.8L2.2 9l6.9-.7L12 2z"/></svg></sc-for></div>
+<blockquote style="margin:0;font-size:14.5px;line-height:1.55;color:var(--fg)">“{{ t.quote }}”</blockquote>
+<figcaption style="display:flex;align-items:center;gap:11px;margin-top:16px"><span style="width:40px;height:40px;border-radius:50%;background:{{ t.grad }};display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px">{{ t.i }}</span><span><span style="display:block;font-weight:700;font-size:13.5px;color:var(--fg)">{{ t.name }}</span><span style="display:block;font-size:12px;color:var(--fg-subtle)">{{ t.role }}</span></span></figcaption>
+</figure>
+</sc-for>
+</div>
+</div>
+</div>
+
+<!-- BÚSQUEDAS POPULARES -->
+<div id="populares" style="padding:12px 22px 56px">
+<div style="max-width:1080px;margin:0 auto">
+<h2 style="font-family:'Manrope';font-weight:800;font-size:clamp(20px,2.6vw,26px);letter-spacing:-.02em;margin:0 0 20px;color:var(--fg)">Búsquedas populares en RD</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px">
+<sc-for list="{{ popularCols }}" as="col" hint-placeholder-count="3">
+<div><div style="font-size:13px;font-weight:700;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">{{ col.h }}</div><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ col.chips }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.go }}" style="background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:500;color:var(--fg-muted);cursor:pointer;transition:all .15s" style-hover="background:var(--brand);border-color:var(--brand);color:#fff">{{ c.label }}</button></sc-for></div></div>
+</sc-for>
+</div>
+</div>
+</div>
+</section>
+</sc-if>
+<sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+<section id="catalogo" style="padding:20px 22px 40px;animation:nkUp .35s ease">
+<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start">
+
+<!-- FILTER PANEL -->
+<aside style="flex:1 1 270px;max-width:300px;min-width:250px;position:sticky;top:82px;display:flex;flex-direction:column;gap:14px">
+<!-- SEARCH BY PAYMENT -->
+<div style="border:1px solid var(--brand);border-radius:var(--r);padding:16px;background:var(--brand-soft)">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="6" width="19" height="12" rx="2.5" stroke="var(--brand)" stroke-width="1.8"/><path d="M2.5 10h19" stroke="var(--brand)" stroke-width="1.8"/></svg><span style="font-family:'Manrope';font-weight:800;font-size:14.5px;color:var(--brand)">Buscar por cuota</span></div>
+<p style="font-size:11.5px;color:var(--fg-muted);margin:0 0 14px">Ajusta tu presupuesto y filtramos en tiempo real.</p>
+<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--fg)"><span>Puedo pagar hasta</span><span style="color:var(--brand);font-weight:800">{{ maxMonthlyFmt }}/mes</span></div>
+<input type="range" min="12000" max="80000" step="1000" value="{{ maxMonthly }}" onInput="{{ onMaxMonthly }}" style="width:100%;accent-color:var(--brand);margin:8px 0 14px"/>
+<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--fg)"><span>Inicial disponible</span><span style="color:var(--brand);font-weight:800">{{ initialFmt }}</span></div>
+<input type="range" min="0" max="1500000" step="25000" value="{{ initial }}" onInput="{{ onInitial }}" style="width:100%;accent-color:var(--brand);margin:8px 0 12px"/>
+<button onClick="{{ togglePayment }}" style="{{ payToggleStyle }}"><span style="display:inline-flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>{{ payToggleLabel }}</span></button>
+</div>
+
+<!-- FACETS -->
+<div style="border:1px solid var(--border);border-radius:var(--r);background:var(--surface);overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)"><span style="font-family:'Manrope';font-weight:700;font-size:14px;color:var(--fg)">Filtros</span><button onClick="{{ clearFilters }}" style="background:none;border:none;font-size:12px;font-weight:600;color:var(--brand);cursor:pointer">Limpiar</button></div>
+<div style="padding:4px 16px 14px;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ facets }}" as="f" hint-placeholder-count="4">
+<div style="padding:12px 0;border-bottom:1px solid var(--border)">
+<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--fg);margin-bottom:11px"><span style="color:var(--fg-subtle)" innerHTML="{{ f.icon }}"></span>{{ f.label }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px">
+<sc-for list="{{ f.options }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.toggle }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<!-- NADAKKI AI SIGNALS -->
+<div style="border:1px solid var(--brand);border-radius:var(--r);background:var(--surface);overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--brand-soft)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 3z" stroke="var(--brand)" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="font-family:'Manrope';font-weight:800;font-size:13.5px;color:var(--brand)">Nadakki AI Signals</span></div>
+<div style="padding:4px 16px 12px">
+<sc-for list="{{ aiToggles }}" as="t" hint-placeholder-count="4">
+<div onClick="{{ t.toggle }}" style="{{ t.rowStyle }}"><span style="color:var(--brand)" innerHTML="{{ t.icon }}"></span><span style="font-size:12.5px;font-weight:600;color:var(--fg)">{{ t.label }}</span><span style="{{ t.pill }}"><span style="{{ t.knob }}"></span></span></div>
+</sc-for>
+</div>
+</div>
+
+<button onClick="{{ saveSearch }}" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--surface);border:1px dashed var(--border-2);border-radius:var(--r);padding:13px;font-size:13px;font-weight:700;color:var(--fg);cursor:pointer;width:100%"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 8v8M8 12h8M6 3h12a1 1 0 0 1 1 1v16l-7-4-7 4V4a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Crear alerta AI · guardar búsqueda</button>
+</aside>
+
+<!-- RESULTS -->
+<div style="flex:999 1 520px;min-width:0">
+<!-- top bar -->
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+<div style="flex:1;min-width:220px;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border-2);border-radius:12px;padding:10px 14px;box-shadow:var(--shadow-sm)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="var(--fg-subtle)" stroke-width="2"/><path d="m20 20-3.2-3.2" stroke="var(--fg-subtle)" stroke-width="2" stroke-linecap="round"/></svg><input value="{{ query }}" onInput="{{ onQuery }}" placeholder="Refina tu búsqueda…" style="flex:1;border:none;background:none;outline:none;font-size:14px;color:var(--fg);min-width:0"/><button onClick="{{ startVoice }}" style="background:none;border:none;cursor:pointer;color:var(--fg-subtle);display:grid;place-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+<div style="display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:3px;gap:2px">
+<button onClick="{{ viewGrid }}" title="Grid" style="{{ vGrid }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg></button>
+<button onClick="{{ viewList }}" title="Lista" style="{{ vList }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+<button onClick="{{ viewMap }}" title="Mapa" style="{{ vMap }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></svg></button>
+</div>
+<select value="{{ sort }}" onChange="{{ onSort }}" style="border:1px solid var(--border);background:var(--surface);border-radius:11px;padding:10px 12px;font-size:13px;font-weight:600;color:var(--fg);cursor:pointer;outline:none"><option value="relevance">Más relevantes</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option><option value="cuota">Cuota más baja</option><option value="match">Mejor match</option></select>
+</div>
+
+<sc-if value="{{ hasActiveChips }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px">
+<sc-for list="{{ activeChips }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.remove }}" style="display:inline-flex;align-items:center;gap:6px;background:var(--brand-soft);color:var(--brand);border:1px solid transparent;border-radius:999px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:600;cursor:pointer">{{ c.label }}<span style="width:17px;height:17px;border-radius:50%;background:rgba(0,0,0,.08);display:grid;place-items:center;font-size:11px">✕</span></button></sc-for>
+<button onClick="{{ clearFilters }}" style="background:none;border:none;color:var(--fg-muted);font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:underline">Limpiar todo</button>
+</div>
+</sc-if>
+
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px"><h1 style="font-family:'Manrope';font-weight:800;font-size:20px;margin:0;color:var(--fg)">{{ resultCount }} vehículos<sc-if value="{{ payOn }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:600;color:var(--success);margin-left:8px">· compatibles con tu presupuesto</span></sc-if></h1><span style="font-size:13px;color:var(--fg-subtle)">{{ activeFilterLabel }}</span></div>
+
+<!-- MAP -->
+<sc-if value="{{ isMapView }}" hint-placeholder-val="{{ false }}">
+<div style="position:relative;height:280px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);margin-bottom:18px;background:linear-gradient(135deg,#c9dcc9,#a8c3d4)">
+<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.35) 1px,transparent 1px);background-size:38px 38px"></div>
+<sc-for list="{{ mapPins }}" as="p" hint-placeholder-count="5"><button onClick="{{ p.open }}" style="position:absolute;top:{{ p.top }};left:{{ p.left }};transform:translate(-50%,-100%);background:var(--brand);color:#fff;border:2px solid #fff;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;cursor:pointer;box-shadow:var(--shadow-md);white-space:nowrap">{{ p.cuota }}</button></sc-for>
+<div style="position:absolute;bottom:12px;left:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--fg-muted)">Provincias con inventario · Rep. Dominicana</div>
+</div>
+</sc-if>
+
+<!-- EMPTY -->
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="text-align:center;padding:60px 20px;border:1.5px dashed var(--border-2);border-radius:var(--r);background:var(--surface)">
+<div style="width:72px;height:72px;margin:0 auto 18px;border-radius:20px;background:var(--surface-2);display:grid;place-items:center"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="var(--fg-subtle)" stroke-width="2"/><path d="m20 20-4.2-4.2M8 10.5h5" stroke="var(--fg-subtle)" stroke-width="2" stroke-linecap="round"/></svg></div>
+<h3 style="font-family:'Manrope';font-weight:700;font-size:18px;margin:0 0 6px;color:var(--fg)">No encontramos vehículos con esos criterios</h3>
+<p style="font-size:14px;color:var(--fg-muted);margin:0 0 18px">Prueba subir la cuota máxima o quita algún filtro. Nuestro Concierge también puede ayudarte.</p>
+<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button onClick="{{ clearFilters }}" style="background:var(--brand);color:#fff;border:none;border-radius:11px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer">Limpiar filtros</button><button onClick="{{ toggleChat }}" style="background:var(--surface);border:1px solid var(--border-2);border-radius:11px;padding:11px 18px;font-size:13.5px;font-weight:700;color:var(--fg);cursor:pointer">Preguntar al Concierge</button></div>
+</div>
+</sc-if>
+
+<!-- GRID -->
+<sc-if value="{{ isGridView }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px">
+<sc-for list="{{ skeletons }}" as="k" hint-placeholder-count="6">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+<div style="aspect-ratio:4/3;background:linear-gradient(100deg,var(--surface-2) 30%,var(--surface-3) 50%,var(--surface-2) 70%);background-size:460px 100%;animation:nkShimmer 1.3s infinite linear"></div>
+<div style="padding:15px;display:flex;flex-direction:column;gap:9px">
+<div style="height:15px;width:70%;border-radius:6px;background:linear-gradient(100deg,var(--surface-2) 30%,var(--surface-3) 50%,var(--surface-2) 70%);background-size:460px 100%;animation:nkShimmer 1.3s infinite linear"></div>
+<div style="height:11px;width:90%;border-radius:6px;background:var(--surface-2)"></div>
+<div style="height:20px;width:55%;border-radius:6px;background:linear-gradient(100deg,var(--surface-2) 30%,var(--surface-3) 50%,var(--surface-2) 70%);background-size:460px 100%;animation:nkShimmer 1.3s infinite linear"></div>
+<div style="height:36px;border-radius:10px;background:var(--surface-2);margin-top:6px"></div>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ notLoading }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px">
+<sc-for list="{{ results }}" as="v" hint-placeholder-count="6">
+<article onClick="{{ v.open }}" data-vehicle-id="{{ v.id }}" data-price-status="{{ v.status }}" style="cursor:pointer;background:var(--surface);border:1px solid {{ v.cardBorder }};border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .2s ease,box-shadow .2s ease;position:relative" style-hover="transform:translateY(-5px) scale(1.02);box-shadow:var(--shadow-lg)">
+<div style="position:relative;aspect-ratio:4/3;background:{{ v.grad }}">
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.28))"></div>
+<span style="position:absolute;top:11px;left:11px;display:inline-flex;align-items:center;gap:5px;background:{{ v.statusBg }};color:{{ v.statusColor }};font-size:11px;font-weight:700;padding:5px 9px;border-radius:8px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.2 6.6H21l-5.4 4 2 6.6L12 15.4 6.4 19.2l2-6.6L3 8.6h6.8L12 2z" fill="{{ v.statusIconFill }}"/></svg>{{ v.statusLabel }}</span>
+<button onClick="{{ v.save }}" style="position:absolute;top:9px;right:9px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.92);display:grid;place-items:center;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="{{ v.heartFill }}" style="animation:{{ v.heartAnim }}"><path d="M12 20s-7-4.6-9.2-8.4C1.2 8.7 2.6 5.5 5.8 5.5c1.9 0 3.2 1.2 4.2 2.5 1-1.3 2.3-2.5 4.2-2.5 3.2 0 4.6 3.2 3 6.1C19 15.4 12 20 12 20z" stroke="{{ v.heartStroke }}" stroke-width="2" stroke-linejoin="round"/></svg></button>
+<sc-if value="{{ v.eligibleBadge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:10px;left:11px;display:inline-flex;align-items:center;gap:5px;background:var(--success-2);color:#fff;font-size:11px;font-weight:700;padding:5px 9px;border-radius:8px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Compatible con tu presupuesto</span></sc-if>
+<span style="position:absolute;bottom:10px;right:11px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:4px 8px;border-radius:7px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="#fff" stroke-width="2"/><circle cx="12" cy="13" r="3" stroke="#fff" stroke-width="2"/><path d="M8 7l1.5-2h5L16 7" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>{{ v.photoCount }} fotos</span>
+</div>
+<div style="padding:14px 15px 15px">
+<h3 style="font-family:'Manrope';font-weight:700;font-size:15.5px;margin:0;color:var(--fg)">{{ v.name }}</h3>
+<div style="font-size:10.5px;font-weight:600;letter-spacing:.05em;color:var(--fg-subtle);margin-top:5px">{{ v.featuresLine }}</div>
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-subtle);margin-top:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="2"/></svg>{{ v.loc }} · {{ v.km }} km</div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:12px"><div><div style="font-family:'Manrope';font-weight:800;font-size:18px;color:var(--fg)">{{ v.priceRD }}</div><div style="font-size:10.5px;color:var(--fg-subtle)">{{ v.cuotaLine }}</div></div><div style="text-align:right"><div style="font-size:15px;font-weight:800;color:var(--brand)">{{ v.cuota }}</div><div style="font-size:10.5px;color:var(--fg-subtle)">/mes</div></div></div>
+<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:11px">
+<span style="display:inline-flex;align-items:center;gap:3px;background:var(--brand-soft);color:var(--brand);font-size:10.5px;font-weight:700;padding:4px 7px;border-radius:6px">{{ v.match }}% match</span>
+<sc-if value="{{ v.recien }}" hint-placeholder-val="{{ false }}"><span style="background:#DBEAFE;color:#1D4ED8;font-size:10.5px;font-weight:700;padding:4px 7px;border-radius:6px">Recién publicado</span></sc-if>
+<sc-if value="{{ v.certified }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:3px;background:#F3EBFE;color:#6D28D9;font-size:10.5px;font-weight:700;padding:4px 7px;border-radius:6px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Certificado Nadakki</span></sc-if>
+<sc-if value="{{ v.verified }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:3px;background:var(--success-soft);color:var(--success);font-size:10.5px;font-weight:700;padding:4px 7px;border-radius:6px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Dealer Verified</span></sc-if>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:11px;padding-top:11px;border-top:1px solid var(--border)"><span style="width:24px;height:24px;border-radius:7px;background:var(--surface-3);display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--fg-muted)">{{ v.dealerInitials }}</span><span style="font-size:12px;font-weight:600;color:var(--fg-muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.dealerName }}</span><span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--warning-2)"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.5 5.9 20.4l1.5-6.8L2.2 9l6.9-.7z"/></svg>{{ v.dealerRating }}</span>
+</div>
+<div style="display:flex;gap:7px;margin-top:12px">
+<button onClick="{{ v.apply }}" style="flex:1;background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px;font-size:12.5px;font-weight:700;cursor:pointer;transition:filter .15s" style-hover="filter:brightness(1.1)">Aplicar financiamiento</button>
+<button onClick="{{ v.open }}" style="background:var(--surface);color:var(--fg);border:1px solid var(--border-2);border-radius:10px;padding:10px 13px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">Ver</button>
+</div>
+</article>
+</sc-for>
+</div>
+</sc-if>
+</sc-if>
+
+<!-- LIST -->
+<sc-if value="{{ isListView }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ results }}" as="v" hint-placeholder-count="5">
+<article onClick="{{ v.open }}" style="cursor:pointer;display:flex;gap:16px;background:var(--surface);border:1px solid {{ v.cardBorder }};border-radius:var(--r);padding:12px;box-shadow:var(--shadow-sm);transition:box-shadow .18s" style-hover="box-shadow:var(--shadow-md)">
+<div style="position:relative;width:170px;flex-shrink:0;aspect-ratio:4/3;border-radius:12px;background:{{ v.grad }}"><span style="position:absolute;top:8px;left:8px;background:rgba(255,255,255,.92);color:#0d1626;font-size:10.5px;font-weight:700;padding:4px 8px;border-radius:7px">{{ v.badge }}</span></div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;gap:10px"><div><h3 style="font-family:'Manrope';font-weight:700;font-size:16px;margin:0;color:var(--fg)">{{ v.name }}</h3><div style="font-size:12.5px;color:var(--fg-subtle);margin-top:4px">{{ v.loc }} · {{ v.km }} km · {{ v.trans }} · {{ v.fuel }}</div></div><button onClick="{{ v.save }}" style="width:34px;height:34px;flex-shrink:0;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);display:grid;place-items:center;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="{{ v.heartFill }}"><path d="M12 20s-7-4.6-9.2-8.4C1.2 8.7 2.6 5.5 5.8 5.5c1.9 0 3.2 1.2 4.2 2.5 1-1.3 2.3-2.5 4.2-2.5 3.2 0 4.6 3.2 3 6.1C19 15.4 12 20 12 20z" stroke="{{ v.heartStroke }}" stroke-width="2" stroke-linejoin="round"/></svg></button></div>
+<div style="margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap"><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{ v.verified }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:4px;background:var(--brand-soft);color:var(--brand);font-size:11px;font-weight:700;padding:4px 8px;border-radius:7px">Dealer verificado</span></sc-if><span style="background:var(--surface-2);color:var(--fg-muted);font-size:11px;font-weight:600;padding:4px 8px;border-radius:7px">Match {{ v.match }}%</span><sc-if value="{{ v.eligibleBadge }}" hint-placeholder-val="{{ false }}"><span style="background:var(--success-soft);color:var(--success);font-size:11px;font-weight:700;padding:4px 8px;border-radius:7px">✓ Compatible</span></sc-if></div><div style="text-align:right"><div style="font-family:'Manrope';font-weight:800;font-size:18px;color:var(--fg)">{{ v.priceRD }}</div><div style="font-size:13px;font-weight:700;color:var(--brand)">{{ v.cuota }}/mes</div></div></div>
+</div>
+</article>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</div>
+</section>
+</sc-if>
+
+<!-- ============ SCREEN: VDP ============ -->
+<sc-if value="{{ isVDP }}" hint-placeholder-val="{{ false }}">
+<section id="vdp" style="padding:16px 22px 40px;animation:nkUp .35s ease">
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg-muted);margin-bottom:16px"><button onClick="{{ goSearch }}" style="background:none;border:none;color:var(--fg-muted);cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Volver a resultados</button><span style="color:var(--fg-subtle)">·</span><span>{{ sel.type }}</span><span style="color:var(--fg-subtle)">·</span><span>{{ sel.loc }}</span></div>
+
+<div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
+<!-- LEFT -->
+<div style="flex:999 1 540px;min-width:0">
+<!-- GALLERY -->
+<div style="border-radius:var(--r);overflow:hidden;position:relative;aspect-ratio:16/10;background:{{ galleryMain }};filter:{{ galleryFilter }};box-shadow:var(--shadow-md)">
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.3))"></div>
+<div style="position:absolute;top:14px;left:14px;display:flex;gap:8px"><span style="display:inline-flex;align-items:center;gap:6px;background:var(--success-2);color:#fff;font-size:12px;font-weight:700;padding:7px 12px;border-radius:9px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.2 6.6H21l-5.4 4 2 6.6L12 15.4 6.4 19.2l2-6.6L3 8.6h6.8L12 2z" fill="#fff"/></svg>{{ sel.badge }}</span></div>
+<div style="position:absolute;top:14px;right:14px;display:flex;gap:8px"><button onClick="{{ view360 }}" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.94);color:#0d1626;border:none;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 6c5 0 9 1.8 9 4s-4 4-9 4-9-1.8-9-4 4-4 9-4z" stroke="currentColor" stroke-width="1.8"/><path d="M8 12v3l4 2 4-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Ver 360°</button><button onClick="{{ viewVideo }}" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.94);color:#0d1626;border:none;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer;backdrop-filter:blur(4px)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M10 9l5 3-5 3V9z" fill="currentColor"/></svg>Video AI</button></div>
+<span style="position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:600;padding:5px 11px;border-radius:8px">{{ galleryPos }} / {{ galleryCount }}</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px">
+<sc-for list="{{ gallery }}" as="g" hint-placeholder-count="5"><button onClick="{{ g.go }}" style="aspect-ratio:4/3;border-radius:10px;background:{{ g.grad }};filter:{{ g.filterStyle }};border:2px solid {{ g.border }};cursor:pointer;padding:0"></button></sc-for>
+</div>
+
+<!-- HEADER (mobile-first, appears under gallery) -->
+<div style="margin-top:24px">
+<div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start">
+<div>
+<h1 style="font-family:'Manrope';font-weight:800;font-size:clamp(24px,3.4vw,32px);letter-spacing:-.02em;margin:0;color:var(--fg)">{{ sel.name }}</h1>
+<div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13.5px;color:var(--fg-muted);flex-wrap:wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="2"/></svg>{{ sel.loc }}<span style="color:var(--fg-subtle)">·</span>{{ sel.km }} km<span style="color:var(--fg-subtle)">·</span>{{ sel.trans }}</div>
+</div>
+<div style="text-align:right"><div style="font-family:'Manrope';font-weight:800;font-size:26px;color:var(--fg)">{{ sel.priceRD }}</div><div style="font-size:13px;color:var(--fg-subtle)">{{ sel.priceUS }}</div></div>
+</div>
+<!-- match + trust -->
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+<div style="display:flex;align-items:center;gap:10px;background:var(--brand-soft);border-radius:12px;padding:11px 14px"><div style="position:relative;width:40px;height:40px"><svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="5"/><circle cx="20" cy="20" r="16" fill="none" stroke="var(--brand)" stroke-width="5" stroke-linecap="round" stroke-dasharray="{{ sel.matchDash }}" transform="rotate(-90 20 20)"/></svg><span style="position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--brand)">{{ sel.match }}%</span></div><div><div style="font-size:13px;font-weight:800;color:var(--brand)">Match con tu perfil</div><div style="font-size:11.5px;color:var(--fg-muted)">Según tu aprobación y preferencias</div></div></div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<sc-for list="{{ vdpTrust }}" as="t" hint-placeholder-count="3"><span style="display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 11px;font-size:12px;font-weight:600;color:var(--fg-muted)"><span style="color:var(--success)" innerHTML="{{ t.icon }}"></span>{{ t.label }}</span></sc-for>
+</div>
+</div>
+
+<!-- PRICE EVALUATION (Nadakki AI) -->
+<div style="margin-top:24px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);padding:22px">
+<div style="display:flex;align-items:center;gap:9px;margin-bottom:4px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 3z" stroke="var(--brand)" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="font-family:'Manrope';font-weight:800;font-size:17px;color:var(--fg)">Análisis de precio Nadakki AI</span></div>
+<div style="display:flex;align-items:baseline;gap:10px;margin:14px 0 6px"><span style="font-size:13px;color:var(--fg-muted)">Esta oferta:</span><span style="font-family:'Manrope';font-weight:800;font-size:22px;color:var(--fg)">{{ sel.priceRD }}</span></div>
+<div style="position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,#10B981 0%,#10B981 40%,#0F9F6E 40%,#0F9F6E 70%,#F59E0B 70%,#F59E0B 100%);margin:14px 0 8px"><span style="position:absolute;top:-7px;left:{{ priceEval.pos }};transform:translateX(-50%);width:4px;height:26px;border-radius:3px;background:var(--fg);box-shadow:0 0 0 3px var(--surface)"></span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;margin-top:14px">
+<div style="display:flex;flex-direction:column;gap:3px"><span style="display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--fg)"><span style="width:9px;height:9px;border-radius:2px;background:#10B981"></span>Excelente</span><span style="color:var(--fg-subtle)">{{ priceEval.rExcelente }}</span></div>
+<div style="display:flex;flex-direction:column;gap:3px"><span style="display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--fg)"><span style="width:9px;height:9px;border-radius:2px;background:#0F9F6E"></span>Precio Justo</span><span style="color:var(--fg-subtle)">{{ priceEval.rJusto }}</span></div>
+<div style="display:flex;flex-direction:column;gap:3px"><span style="display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--fg)"><span style="width:9px;height:9px;border-radius:2px;background:#F59E0B"></span>Sobre mercado</span><span style="color:var(--fg-subtle)">{{ priceEval.rSobre }}</span></div>
+</div>
+<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)"><div style="font-size:14px;font-weight:700;color:var(--success)">{{ priceEval.note }}</div><div style="font-size:12px;color:var(--fg-muted);margin-top:4px;line-height:1.45">{{ priceEval.basis }}</div></div>
+</div>
+
+<!-- TABS -->
+<div style="margin-top:26px;border-bottom:1px solid var(--border);display:flex;gap:4px;overflow-x:auto">
+<button onClick="{{ tabSpecs }}" style="{{ tSpecs }}">Especificaciones</button>
+<button onClick="{{ tabHistory }}" style="{{ tHistory }}">Historial</button>
+<button onClick="{{ tabLocation }}" style="{{ tLocation }}">Ubicación</button>
+<button onClick="{{ tabDealer }}" style="{{ tDealer }}">Dealer</button>
+</div>
+<div style="padding-top:22px">
+<sc-if value="{{ isTabSpecs }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">
+<sc-for list="{{ specs }}" as="sp" hint-placeholder-count="8"><div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 15px"><div style="font-size:11.5px;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:.04em;font-weight:600">{{ sp.k }}</div><div style="font-size:14.5px;font-weight:700;color:var(--fg);margin-top:4px">{{ sp.v }}</div></div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ isTabHistory }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:0">
+<sc-for list="{{ history }}" as="h" hint-placeholder-count="4"><div style="display:flex;gap:14px"><div style="display:flex;flex-direction:column;align-items:center"><span style="width:30px;height:30px;border-radius:50%;background:{{ h.tint }};color:{{ h.color }};display:grid;place-items:center;flex-shrink:0" innerHTML="{{ h.icon }}"></span><span style="width:2px;flex:1;background:var(--border);margin:4px 0"></span></div><div style="padding-bottom:20px"><div style="font-size:14px;font-weight:700;color:var(--fg)">{{ h.title }}</div><div style="font-size:12.5px;color:var(--fg-muted);margin-top:2px">{{ h.desc }}</div></div></div></sc-for>
+</div>
+<div style="margin-top:6px;background:var(--brand-soft);border-radius:var(--r);padding:18px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 3z" stroke="var(--brand)" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="font-family:'Manrope';font-weight:800;font-size:14.5px;color:var(--brand)">Verificaciones Nadakki AI</span></div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ aiVerify }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--fg)"><span style="width:20px;height:20px;flex-shrink:0;border-radius:50%;background:var(--success-2);display:grid;place-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>{{ a }}</div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ isTabLocation }}" hint-placeholder-val="{{ false }}">
+<div style="position:relative;height:240px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);background:linear-gradient(135deg,#c9dcc9,#a8c3d4)"><div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.35) 1px,transparent 1px);background-size:36px 36px"></div><span style="position:absolute;top:45%;left:48%;transform:translate(-50%,-100%)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z" fill="var(--brand)" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="10" r="2.6" fill="#fff"/></svg></span><div style="position:absolute;bottom:14px;left:14px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 14px"><div style="font-size:13px;font-weight:700;color:var(--fg)">{{ sel.dealerName }}</div><div style="font-size:12px;color:var(--fg-muted);margin-top:2px">Av. John F. Kennedy, {{ sel.loc }}</div></div></div>
+</sc-if>
+<sc-if value="{{ isTabDealer }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;flex-wrap:wrap"><span style="width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:grid;place-items:center;color:#fff;font-family:'Manrope';font-weight:800;font-size:22px">{{ sel.dealerInit }}</span><div style="flex:1;min-width:180px"><div style="font-family:'Manrope';font-weight:700;font-size:17px;color:var(--fg)">{{ sel.dealerName }}</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;color:var(--fg-muted)"><span style="display:inline-flex;align-items:center;gap:3px;color:var(--warning-2);font-weight:700"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.5 5.9 20.4l1.5-6.8L2.2 9l6.9-.7L12 2z"/></svg>{{ sel.rating }}</span>· {{ sel.reviews }} reseñas · Dealer verificado</div></div><button onClick="{{ openChat }}" style="background:var(--brand);color:#fff;border:none;border-radius:11px;padding:11px 16px;font-size:13.5px;font-weight:700;cursor:pointer">Contactar</button></div>
+</sc-if>
+</div>
+
+<!-- SIMILAR -->
+<div style="margin-top:34px">
+<h2 style="font-family:'Manrope';font-weight:800;font-size:20px;margin:0 0 16px;color:var(--fg)">Vehículos similares</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
+<sc-for list="{{ similar }}" as="v" hint-placeholder-count="3"><article onClick="{{ v.open }}" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .18s" style-hover="transform:translateY(-4px);box-shadow:var(--shadow-md)"><div style="aspect-ratio:4/3;background:{{ v.grad }}"></div><div style="padding:12px 14px"><h3 style="font-family:'Manrope';font-weight:700;font-size:14.5px;margin:0;color:var(--fg)">{{ v.name }}</h3><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px"><span style="font-family:'Manrope';font-weight:800;font-size:15px;color:var(--fg)">{{ v.priceRD }}</span><span style="font-size:12.5px;font-weight:700;color:var(--brand)">{{ v.cuota }}/mes</span></div></div></article></sc-for>
+</div>
+</div>
+</div>
+
+<!-- RIGHT STICKY -->
+<aside style="flex:1 1 320px;max-width:370px;min-width:290px;position:sticky;top:82px;display:flex;flex-direction:column;gap:14px">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow-md)">
+<div style="font-size:12.5px;font-weight:700;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Calculadora de cuota</div>
+<div style="text-align:center;padding:14px 0 12px"><div style="font-size:12px;color:var(--fg-subtle)">Cuota mensual estimada</div><div style="font-family:'Manrope';font-weight:800;font-size:34px;color:var(--brand);letter-spacing:-.01em">{{ vdpCuota }}</div><div style="font-size:11.5px;color:var(--fg-subtle)">a {{ vdpTerm }} meses · {{ vdpRate }} anual</div></div>
+<div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:var(--fg);margin-top:6px"><span>Inicial ({{ vdpDown }}%)</span><span style="color:var(--brand);font-weight:800">{{ vdpDownAmount }}</span></div>
+<input type="range" min="0" max="60" step="5" value="{{ vdpDown }}" onInput="{{ onVdpDown }}" style="width:100%;accent-color:var(--brand);margin:8px 0 14px"/>
+<div style="font-size:12.5px;font-weight:600;color:var(--fg);margin-bottom:8px">Plazo</div>
+<div style="display:flex;gap:7px">
+<sc-for list="{{ termOpts }}" as="t" hint-placeholder-count="4"><button onClick="{{ t.go }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+</div>
+<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:7px;font-size:13px"><div style="display:flex;justify-content:space-between;color:var(--fg-muted)"><span>Monto a financiar</span><span style="font-weight:700;color:var(--fg)">{{ vdpFinanced }}</span></div><div style="display:flex;justify-content:space-between;color:var(--fg-muted)"><span>Precio del vehículo</span><span style="font-weight:700;color:var(--fg)">{{ sel.priceRD }}</span></div></div>
+<button onClick="{{ apply }}" style="width:100%;margin-top:16px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border:none;border-radius:12px;padding:14px;font-size:14.5px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-sm)">Aplicar financiamiento</button>
+<div style="display:flex;gap:8px;margin-top:9px"><button onClick="{{ openChat }}" style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:11px;font-size:13px;font-weight:700;color:var(--fg);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20.5l1.3-5.2A8 8 0 1 1 21 12z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Chat</button><button onClick="{{ saveSel }}" style="width:44px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;display:grid;place-items:center;cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="{{ sel.heartFill }}" style="animation:{{ sel.heartAnim }}"><path d="M12 20s-7-4.6-9.2-8.4C1.2 8.7 2.6 5.5 5.8 5.5c1.9 0 3.2 1.2 4.2 2.5 1-1.3 2.3-2.5 4.2-2.5 3.2 0 4.6 3.2 3 6.1C19 15.4 12 20 12 20z" stroke="{{ sel.heartStroke }}" stroke-width="2" stroke-linejoin="round"/></svg></button></div>
+</div>
+<div style="background:var(--success-soft);border:1px solid transparent;border-radius:var(--r);padding:15px;display:flex;gap:11px"><span style="color:var(--success);flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 3v6c0 4.6-3 8.4-7 9.6C8 19.4 5 15.6 5 11V5l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 11.5 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><div style="font-size:13px;font-weight:700;color:var(--fg)">Precio Justo verificado</div><div style="font-size:12px;color:var(--fg-muted);margin-top:2px">Reportado por 15 usuarios como precio justo. 4% bajo el promedio del mercado.</div></div></div>
+
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm)">
+<div style="font-family:'Manrope';font-weight:700;font-size:15px;color:var(--fg)">Contactar {{ sel.dealerName }}</div>
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-muted);margin-top:4px"><span style="display:inline-flex;align-items:center;gap:3px;color:var(--warning-2);font-weight:700"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.5 5.9 20.4l1.5-6.8L2.2 9l6.9-.7z"/></svg>{{ sel.rating }}</span>· responde en ~{{ avgResp }}</div>
+<div style="margin-top:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-size:13px;color:var(--fg-muted);line-height:1.4">{{ contactMsg }}</div>
+<button onClick="{{ sendMsg }}" style="width:100%;margin-top:10px;background:var(--brand);color:#fff;border:none;border-radius:11px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer">Enviar mensaje</button>
+<button onClick="{{ showPhone }}" style="width:100%;margin-top:8px;background:var(--surface);border:1px solid var(--border-2);border-radius:11px;padding:12px;font-size:13.5px;font-weight:700;color:var(--fg);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px"><span style="width:7px;height:7px;border-radius:50%;background:var(--success-2)"></span>Ver número</button>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm);display:flex;gap:12px;align-items:center">
+<span style="width:42px;height:42px;flex-shrink:0;border-radius:12px;background:var(--warning-soft);color:var(--warning);display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 8l-4 4 4 4M3 12h13M17 16l4-4-4-4M21 12H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+<div style="flex:1"><div style="font-family:'Manrope';font-weight:700;font-size:14.5px;color:var(--fg)">¿Trade-in?</div><div style="font-size:12px;color:var(--fg-muted);margin-top:2px">Evaluación instantánea de tu vehículo actual con AI.</div></div>
+</div>
+<button onClick="{{ addTradein }}" style="width:100%;margin-top:-6px;background:var(--surface);border:1px dashed var(--border-2);border-radius:11px;padding:12px;font-size:13px;font-weight:700;color:var(--fg);cursor:pointer">Añadir datos de mi vehículo</button>
+</aside>
+</div>
+</section>
+</sc-if>
+
+<!-- SCREENS-ANCHOR -->
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<sc-if value="{{ showFooter }}" hint-placeholder-val="{{ true }}">
+<footer style="background:var(--surface);border-top:1px solid var(--border);margin-top:30px">
+<div style="max-width:1200px;margin:0 auto;padding:44px 22px 26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:28px">
+<div style="grid-column:1 / -1;max-width:300px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:grid;place-items:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M3 15l2-6.2A3 3 0 0 1 7.9 6.6h8.2A3 3 0 0 1 19 8.8L21 15M3 15h18M3 15v3h3M21 15v3h-3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span style="font-family:'Manrope';font-weight:800;font-size:16px;color:var(--fg)">{{ brandName }}</span></div>
+<p style="font-size:13px;color:var(--fg-muted);line-height:1.5;margin:0">El sistema operativo del financiamiento vehicular en República Dominicana. Hecho en RD 🇩🇴.</p>
+</div>
+<sc-for list="{{ footerCols }}" as="col" hint-placeholder-count="4">
+<div><div style="font-weight:700;font-size:13px;color:var(--fg);margin-bottom:12px">{{ col.h }}</div><sc-for list="{{ col.links }}" as="l" hint-placeholder-count="4"><a href="javascript:void(0)" style="display:block;font-size:13px;color:var(--fg-muted);margin-bottom:9px">{{ l }}</a></sc-for></div>
+</sc-for>
+</div>
+<div style="border-top:1px solid var(--border);padding:18px 22px;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto">
+<span style="font-size:12px;color:var(--fg-subtle)">© 2026 Nadakki Auto SRL · RNC 1-33-XXXXX-X · Cumplimiento LOPD (Ley 172-13)</span>
+<div style="display:flex;gap:16px"><a href="javascript:void(0)" style="font-size:12px;color:var(--fg-subtle)">Privacidad</a><a href="javascript:void(0)" style="font-size:12px;color:var(--fg-subtle)">Términos</a><a href="javascript:void(0)" style="font-size:12px;color:var(--fg-subtle)">Protección de datos</a></div>
+</div>
+</footer>
+</sc-if>
+
+<!-- ============ AI CONCIERGE FLOATING BTN ============ -->
+<button onClick="{{ toggleChat }}" style="position:fixed;bottom:24px;right:24px;z-index:55;display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border:none;border-radius:999px;padding:13px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-lg);animation:nkPulse 3s infinite">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20.5l1.3-5.2A8 8 0 1 1 21 12z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><circle cx="9" cy="12" r="1" fill="#fff"/><circle cx="12" cy="12" r="1" fill="#fff"/><circle cx="15" cy="12" r="1" fill="#fff"/></svg>
+Concierge AI
+</button>
+
+<!-- MOBILE FILTERS FAB + BOTTOM SHEET -->
+<sc-if value="{{ showFilterFab }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ openFilters }}" style="position:fixed;bottom:24px;left:24px;z-index:55;display:flex;align-items:center;gap:9px;background:var(--fg);color:var(--bg);border:none;border-radius:999px;padding:13px 18px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-lg)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>{{ filterBtnLabel }}</button>
+</sc-if>
+<sc-if value="{{ filtersSheet }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeFilters }}" style="position:fixed;inset:0;z-index:64;background:rgba(8,12,22,.5)"></div>
+<div style="position:fixed;left:0;right:0;bottom:0;z-index:65;max-height:88vh;background:var(--surface);border-radius:22px 22px 0 0;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:nkUp .28s ease">
+<div onClick="{{ closeFilters }}" style="padding:10px 0 4px;display:flex;justify-content:center;cursor:pointer"><span style="width:44px;height:5px;border-radius:3px;background:var(--border-2)"></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 20px 14px;border-bottom:1px solid var(--border)"><span style="font-family:'Manrope';font-weight:800;font-size:18px;color:var(--fg)">Filtros</span><button onClick="{{ clearFilters }}" style="background:none;border:none;font-size:13px;font-weight:600;color:var(--brand);cursor:pointer">Limpiar todo</button></div>
+<div style="flex:1;overflow-y:auto;padding:16px 20px">
+<div style="border:1px solid var(--brand);border-radius:var(--r);padding:16px;background:var(--brand-soft);margin-bottom:16px">
+<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--fg)"><span>Puedo pagar hasta</span><span style="color:var(--brand);font-weight:800">{{ maxMonthlyFmt }}/mes</span></div>
+<input type="range" min="12000" max="80000" step="1000" value="{{ maxMonthly }}" onInput="{{ onMaxMonthly }}" style="width:100%;accent-color:var(--brand);margin:8px 0 12px"/>
+<button onClick="{{ togglePayment }}" style="{{ payToggleStyle }}">{{ payToggleLabel }}</button>
+</div>
+<sc-for list="{{ facets }}" as="f" hint-placeholder-count="4">
+<div style="padding:12px 0;border-bottom:1px solid var(--border)">
+<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--fg);margin-bottom:11px"><span style="color:var(--fg-subtle)" innerHTML="{{ f.icon }}"></span>{{ f.label }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px"><sc-for list="{{ f.options }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.toggle }}" style="{{ o.style }}">{{ o.label }}</button></sc-for></div>
+</div>
+</sc-for>
+<div style="padding:14px 0 4px">
+<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--brand);margin-bottom:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Nadakki AI Signals</div>
+<sc-for list="{{ aiToggles }}" as="t" hint-placeholder-count="4"><div onClick="{{ t.toggle }}" style="{{ t.rowStyle }}"><span style="color:var(--brand)" innerHTML="{{ t.icon }}"></span><span style="font-size:12.5px;font-weight:600;color:var(--fg)">{{ t.label }}</span><span style="{{ t.pill }}"><span style="{{ t.knob }}"></span></span></div></sc-for>
+</div>
+</div>
+<div style="padding:14px 20px;border-top:1px solid var(--border)"><button onClick="{{ applyFilters }}" style="width:100%;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer">{{ applyLabel }}</button></div>
+</div>
+</sc-if>
+
+<!-- ============ CHAT PANEL (SCREEN 3) ============ -->
+<sc-if value="{{ chatOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ toggleChat }}" style="position:fixed;inset:0;z-index:60;background:rgba(8,12,22,.42);backdrop-filter:blur(2px)"></div>
+<aside style="position:fixed;top:0;right:0;bottom:0;z-index:61;width:min(430px,100%);background:var(--surface);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:nkUp .28s ease">
+<div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)">
+<div style="position:relative;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:grid;place-items:center;color:#fff"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M12 3l2.2 4.6 5 .5-3.7 3.4 1 5-4.5-2.5L7.5 16.4l1-5L4.8 8l5-.5L12 3z" fill="rgba(255,255,255,.35)" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg><span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--success-2);border:2px solid var(--surface)"></span></div>
+<div style="flex:1"><div style="font-family:'Manrope';font-weight:700;font-size:15px;color:var(--fg)">Concierge Nadakki</div><div style="font-size:12px;color:var(--fg-muted);display:flex;align-items:center;gap:5px">Chat en español dominicano · en línea</div></div>
+<button onClick="{{ toggleChat }}" style="width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);display:grid;place-items:center;cursor:pointer;color:var(--fg)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+</div>
+
+<div id="nk-chatscroll" style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;background:var(--bg)">
+<sc-for list="{{ messages }}" as="m" hint-placeholder-count="3">
+<div style="{{ m.rowStyle }}">
+<div style="{{ m.bubbleStyle }}">{{ m.text }}</div>
+<sc-if value="{{ m.rec }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ m.recOpen }}" style="margin-top:8px;display:flex;gap:11px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:9px;cursor:pointer;box-shadow:var(--shadow-sm);max-width:290px">
+<span style="width:58px;height:46px;border-radius:9px;background:{{ m.rec.grad }};flex-shrink:0"></span>
+<span style="min-width:0"><span style="display:block;font-weight:700;font-size:13px;color:var(--fg)">{{ m.rec.name }}</span><span style="display:block;font-size:11.5px;color:var(--fg-subtle)">{{ m.rec.loc }}</span><span style="display:block;font-size:13px;font-weight:800;color:var(--brand);margin-top:2px">{{ m.rec.cuota }} /mes</span></span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M9 6l6 6-6 6" stroke="var(--fg-subtle)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+</sc-if>
+</div>
+</sc-for>
+<sc-if value="{{ typing }}" hint-placeholder-val="{{ false }}">
+<div style="align-self:flex-start;display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px"><span style="width:7px;height:7px;border-radius:50%;background:var(--fg-subtle);animation:nkDot 1s infinite"></span><span style="width:7px;height:7px;border-radius:50%;background:var(--fg-subtle);animation:nkDot 1s infinite .15s"></span><span style="width:7px;height:7px;border-radius:50%;background:var(--fg-subtle);animation:nkDot 1s infinite .3s"></span></div>
+</sc-if>
+</div>
+
+<div style="padding:12px 14px;border-top:1px solid var(--border);background:var(--surface)">
+<div style="display:flex;gap:7px;overflow-x:auto;padding-bottom:10px">
+<sc-for list="{{ chatActions }}" as="a" hint-placeholder-count="3"><button onClick="{{ a.go }}" style="white-space:nowrap;background:var(--brand-soft);color:var(--brand);border:none;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">{{ a.label }}</button></sc-for>
+</div>
+<div style="display:flex;gap:8px;align-items:flex-end">
+<input value="{{ chatInput }}" onInput="{{ onChatInput }}" onKeyDown="{{ onChatKey }}" placeholder="Escribe lo que buscas…" style="flex:1;border:1px solid var(--border-2);background:var(--surface-2);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--fg);outline:none"/>
+<button onClick="{{ sendChat }}" style="width:44px;height:44px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;display:grid;place-items:center;cursor:pointer;flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12l16-8-6 16-3-6-7-2z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" fill="rgba(255,255,255,.25)"/></svg></button>
+</div>
+</div>
+</aside>
+</sc-if>
+
+<!-- ============ VOICE OVERLAY ============ -->
+<sc-if value="{{ voiceOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:70;background:linear-gradient(160deg,var(--brand-strong),var(--brand));display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;animation:nkUp .3s ease">
+<button onClick="{{ closeVoice }}" style="position:absolute;top:22px;right:22px;width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
+<div style="width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;animation:nkPulse 2s infinite"><div style="width:84px;height:84px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--brand)"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div></div>
+<div style="display:flex;align-items:center;gap:4px;height:44px;margin-top:30px"><sc-for list="{{ waveBars }}" as="b" hint-placeholder-count="9"><span style="width:5px;height:38px;border-radius:3px;background:rgba(255,255,255,.85);transform-origin:center;animation:nkWave {{ b.d }} ease-in-out infinite {{ b.delay }}"></span></sc-for></div>
+<p style="color:#fff;font-size:20px;font-weight:700;font-family:'Manrope';margin:26px 0 6px">Escuchando…</p>
+<p style="color:rgba(255,255,255,.8);font-size:15px;margin:0;min-height:22px">“{{ voiceText }}”</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:26px;max-width:420px">
+<sc-for list="{{ voiceSuggest }}" as="s" hint-placeholder-count="3"><button onClick="{{ s.go }}" style="background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer">{{ s.t }}</button></sc-for>
+</div>
+<button onClick="{{ confirmVoice }}" style="margin-top:30px;background:#fff;color:var(--brand);border:none;border-radius:13px;padding:14px 26px;font-size:15px;font-weight:700;cursor:pointer">Confirmar y buscar</button>
+</div>
+</sc-if>
+
+<!-- ============ TOAST ============ -->
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:11px;background:var(--fg);color:var(--bg);border-radius:12px;padding:13px 18px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lg);animation:nkToast .25s ease">
+<span style="width:20px;height:20px;border-radius:50%;background:var(--success-2);display:grid;place-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+{{ toast }}
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'landing', tenant: 'nadakki', theme: 'light', device: 'desktop',
+    chatOpen: false, voiceOpen: false, voiceText: '', typing: false,
+    selectedId: 1, view: 'grid', tab: 'specs', galleryIdx: 0,
+    query: '', brands: [], types: [], provinces: [], years: [], fuels: [],
+    trans: [], traccion: [], condicion: [], vendedor: [], feats: [], aiSignals: [],
+    maxMonthly: 30000, initial: 300000, usePayment: false, sort: 'relevance',
+    saved: { 2: true }, vdpDown: 20, vdpTerm: 60, chatInput: '', toast: null,
+    counter: 0, phIdx: 0, vdpStuck: false, filtersSheet: false, loading: false,
+    messages: [
+      { role: 'bot', text: '¡Saludos! 👋 Soy tu Concierge Nadakki. Cuéntame qué buscas y te ayudo a encontrarlo con la cuota que te conviene.' },
+      { role: 'user', text: 'Busco una jeepeta familiar, no puedo pagar más de 28 mil al mes' },
+      { role: 'bot', text: 'Perfecto. Con esa cuota y una inicial razonable, esta Kia Sportage 2022 te queda cómoda y es de dealer verificado:', recId: 4 },
+    ],
+  };
+  RATE = 0.135; DOP = 58.5;
+  PH = ['jeepeta hasta 1.5M','Honda CR-V bajo 1.5M','algo pa Uber','carrito automático pa mi mamá','yipeta pa la playa','tengo 300 mil de inicial'];
+
+  componentDidMount(){
+    const target=1247; this._cu=setInterval(()=>this.setState(s=>{ const n=Math.min(target,s.counter+37); if(n>=target) clearInterval(this._cu); return {counter:n}; }),26);
+    this._ph=setInterval(()=>this.setState(s=>({phIdx:(s.phIdx+1)%this.PH.length})),3000);
+    this._onScroll=()=>{ const st=(window.scrollY>520)&&this.state.screen==='vdp'; if(st!==this.state.vdpStuck) this.setState({vdpStuck:st}); };
+    window.addEventListener('scroll', this._onScroll, {passive:true});
+  }
+  componentWillUnmount(){ clearInterval(this._cu); clearInterval(this._ph); clearInterval(this._v); clearTimeout(this._ld); window.removeEventListener('scroll', this._onScroll); }
+  runLoading(){ this.setState({loading:true}); clearTimeout(this._ld); this._ld=setTimeout(()=>this.setState({loading:false}),700); }
+  prevVeh(){ const i=this.vehicles.findIndex(v=>v.id===this.state.selectedId); const p=this.vehicles[(i-1+this.vehicles.length)%this.vehicles.length]; this.openVDP(p.id); }
+  nextVeh(){ const i=this.vehicles.findIndex(v=>v.id===this.state.selectedId); const n=this.vehicles[(i+1)%this.vehicles.length]; this.openVDP(n.id); }
+
+  vehicles = [
+    { id:1, make:'Toyota', model:'Corolla', year:2022, price:1180000, loc:'Distrito Nacional', type:'Sedán', km:'38,400', trans:'Automática', fuel:'Gasolina', badge:'Precio Justo', match:94, grad:'linear-gradient(135deg,#1E3A8A,#2563EB)', verified:true, rating:4.9, reviews:15 },
+    { id:2, make:'Honda', model:'CR-V', year:2021, price:1650000, loc:'Santiago', type:'SUV', km:'52,100', trans:'Automática', fuel:'Gasolina', badge:'Precio Justo', match:88, grad:'linear-gradient(135deg,#0F766E,#14B8A6)', verified:true, rating:4.8, reviews:22 },
+    { id:3, make:'Hyundai', model:'Tucson', year:2023, price:1890000, loc:'La Vega', type:'SUV', km:'19,800', trans:'Automática', fuel:'Gasolina', badge:'Bajo kilometraje', match:82, grad:'linear-gradient(135deg,#6D28D9,#A78BFA)', verified:true, rating:5.0, reviews:9 },
+    { id:4, make:'Kia', model:'Sportage', year:2022, price:1450000, loc:'Santo Domingo Este', type:'SUV', km:'41,300', trans:'Automática', fuel:'Gasolina', badge:'Excelente oportunidad', match:91, grad:'linear-gradient(135deg,#B45309,#F59E0B)', verified:true, rating:4.7, reviews:18 },
+    { id:5, make:'Suzuki', model:'Grand Vitara', year:2019, price:780000, loc:'San Pedro de Macorís', type:'SUV', km:'78,600', trans:'Automática', fuel:'Gasolina', badge:'Precio Justo', match:76, grad:'linear-gradient(135deg,#334155,#64748B)', verified:false, rating:4.5, reviews:11 },
+    { id:6, make:'Ford', model:'Escape', year:2020, price:1050000, loc:'Puerto Plata', type:'SUV', km:'61,200', trans:'Automática', fuel:'Gasolina', badge:'Precio Justo', match:79, grad:'linear-gradient(135deg,#0369A1,#38BDF8)', verified:true, rating:4.6, reviews:14 },
+    { id:7, make:'Mitsubishi', model:'Outlander', year:2023, price:1580000, loc:'Santiago', type:'SUV', km:'22,400', trans:'Automática', fuel:'Gasolina', badge:'Bajo kilometraje', match:85, grad:'linear-gradient(135deg,#9F1239,#FB7185)', verified:true, rating:4.9, reviews:7 },
+    { id:8, make:'Chevrolet', model:'Blazer', year:2021, price:1750000, loc:'Distrito Nacional', type:'SUV', km:'44,900', trans:'Automática', fuel:'Gasolina', badge:'Precio Justo', match:80, grad:'linear-gradient(135deg,#1E293B,#475569)', verified:true, rating:4.7, reviews:13 },
+    { id:9, make:'Mercedes-Benz', model:'GLC 300', year:2022, price:2890000, loc:'Santo Domingo', type:'SUV Premium', km:'28,700', trans:'Automática', fuel:'Gasolina', badge:'Certificado', match:87, grad:'linear-gradient(135deg,#052E2B,#0D9488)', verified:true, rating:5.0, reviews:6 },
+    { id:10, make:'BMW', model:'X3', year:2021, price:2450000, loc:'Santo Domingo', type:'SUV Premium', km:'35,200', trans:'Automática', fuel:'Gasolina', badge:'Certificado', match:83, grad:'linear-gradient(135deg,#0B1220,#1E40AF)', verified:true, rating:4.8, reviews:10 },
+  ];
+
+  ic(p){ return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none">'+p+'</svg>'; }
+  fmtRD(n){ return 'RD$ ' + Math.round(n).toLocaleString('en-US'); }
+  fmtUS(n){ return 'US$ ' + Math.round(n/this.DOP).toLocaleString('en-US'); }
+  cuota(price, downPct, term){ const p = price*(1-downPct/100); const r=this.RATE/12; return p*r/(1-Math.pow(1+r,-term)); }
+
+  toast(msg){ this.setState({toast:msg}); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:null}),2400); }
+  go(screen){ this.setState({screen}); window.scrollTo(0,0); if(screen==='search') this.runLoading(); }
+
+  card(v){
+    const down = Math.min(90, Math.max(5, this.state.initial / v.price * 100));
+    const c = this.cuota(v.price, down, 60);
+    const eligible = c <= this.state.maxMonthly && this.state.initial <= v.price*0.9;
+    const saved = !!this.state.saved[v.id];
+    const status = v.badge.includes('Excelente') ? 'excelente' : (v.match<80 ? 'sobre' : 'justo');
+    const stMap={ excelente:{l:'Excelente oportunidad',bg:'#0F9F6E',c:'#fff'}, justo:{l:'Precio justo',bg:'rgba(255,255,255,.94)',c:'#0D1626'}, sobre:{l:'Sobre el mercado',bg:'#F59E0B',c:'#fff'} };
+    const st=stMap[status];
+    return { ...v, name:`${v.make} ${v.model} ${v.year}`, priceRD:this.fmtRD(v.price), priceUS:this.fmtUS(v.price),
+      cuota:this.fmtRD(this.cuota(v.price,20,60)), cuotaNum:c, eligible, saved,
+      status, statusLabel:st.l, statusBg:st.bg, statusColor:st.c, statusIconFill: status==='sobre'?'#fff':'#0F9F6E',
+      metaLine:`${v.km} km · ${v.fuel} · ${v.loc}`, verifiedLabel: v.verified?'Dealer Verified':'Particular',
+      featuresLine: ({
+        1:['Automático','Cámara','Bluetooth','CarPlay'], 2:['Automático','Cuero','Cámara 360°','Sunroof'],
+        3:['Automático','Cuero','Cámara','Sensores'], 4:['Automático','Cámara','Bluetooth','Sunroof'],
+        5:['Automático','Aire','Bluetooth'], 6:['Automático','Cámara','CarPlay'],
+        7:['Automático','Cuero','Cámara 360°','7 asientos'], 8:['Automático','Cámara','Sunroof','Sensores'],
+        9:['Automático','Cuero','Cámara 360°','Sunroof','Navegación'], 10:['Automático','Cuero','Cámara 360°','Navegación']
+      }[v.id]||['Automático','Cámara','Bluetooth']).join(' · ').toUpperCase(),
+      cuotaLine: `${this.fmtRD(this.cuota(v.price,20,60))}/mes · 60 meses · 13.5% APR`,
+      photoCount: 18 + (v.id*3)%12, dealerName: v.verified ? ['AutoMundo RD','Motores del Este','Autos del Cibao','Caribe Motors'][v.id%4] : 'Nadakki Particular',
+      dealerRating: v.rating, recien: [3,7].includes(v.id), certified: v.badge.includes('Certificado')||v.year>=2023,
+      dealerInitials: (v.verified ? ['AutoMundo RD','Motores del Este','Autos del Cibao','Caribe Motors'][v.id%4] : 'Nadakki Particular').split(' ').slice(0,2).map(w=>w[0]).join(''),
+      heartFill: saved ? '#EF4444' : 'none', heartStroke: saved ? '#EF4444' : '#0d1626', heartAnim: saved ? 'nkPop .4s' : 'none',
+      open: ()=>this.openVDP(v.id), save:(e)=>{ e && e.stopPropagation(); this.toggleSave(v.id); },
+      apply:(e)=>{ e && e.stopPropagation(); this.toast('Iniciando aplicación de financiamiento…'); this.openVDP(v.id); } };
+  }
+  toggleSave(id){ const s={...this.state.saved}; if(s[id]){delete s[id]; this.toast('Quitado de guardados');} else {s[id]=true; this.toast('Guardado en tu wishlist');} this.setState({saved:s}); }
+  openVDP(id){ this.setState({selectedId:id, screen:'vdp', tab:'specs', galleryIdx:0}); if(this._scr) this._scr.scrollTo(0,0); }
+
+  onQuery=(e)=>this.setState({query:e.target.value});
+  onQueryKey=(e)=>{ if(e.key==='Enter') this.go('search'); };
+  runSearch=()=>this.go('search');
+  applyChip(q){ this.setState({query:q, screen:'search'}); }
+
+  startVoice=()=>{ this.setState({voiceOpen:true, voiceText:''}); const phrase='una yipeta automática pa la familia'; let i=0; clearInterval(this._v); this._v=setInterval(()=>{ i++; this.setState({voiceText:phrase.slice(0,i)}); if(i>=phrase.length) clearInterval(this._v); },55); };
+  closeVoice=()=>{ clearInterval(this._v); this.setState({voiceOpen:false}); };
+  confirmVoice=()=>{ clearInterval(this._v); this.setState({voiceOpen:false, query:this.state.voiceText||'yipeta automática', screen:'search'}); };
+
+  toggleChat=()=>this.setState(s=>({chatOpen:!s.chatOpen}));
+  onChatInput=(e)=>this.setState({chatInput:e.target.value});
+  onChatKey=(e)=>{ if(e.key==='Enter') this.sendChat(); };
+  sendChat=()=>{
+    const t=(this.state.chatInput||'').trim(); if(!t) return;
+    const msgs=[...this.state.messages, {role:'user', text:t}];
+    this.setState({messages:msgs, chatInput:'', typing:true});
+    clearTimeout(this._c);
+    this._c=setTimeout(()=>{
+      const low=t.toLowerCase(); let rId=null, reply='';
+      if(/uber|econ/.test(low)){ rId=1; reply='Para trabajar en apps, el Toyota Corolla 2022 es el rey: bajo consumo, repuestos baratos y excelente reventa. Mira:'; }
+      else if(/premium|bmw|merc|lujo/.test(low)){ rId=9; reply='En premium te recomiendo el Mercedes GLC 300 2022, certificado y con historial limpio:'; }
+      else if(/famil|jeep|yipet|suv/.test(low)){ rId=4; reply='Para la familia, esta Kia Sportage 2022 tiene buen espacio y cuota cómoda:'; }
+      else { rId=3; reply='Con base en lo que me dices, esta Hyundai Tucson 2023 encaja muy bien. Bajo kilometraje y dealer verificado:'; }
+      this.setState(s=>({messages:[...s.messages,{role:'bot',text:reply,recId:rId}], typing:false}));
+    },1100);
+  };
+
+  toggleFacet(key,val){ const arr=[...(this.state[key]||[])]; const i=arr.indexOf(val); if(i>=0) arr.splice(i,1); else arr.push(val); this.setState({[key]:arr}); }
+  clearFilters=()=>this.setState({brands:[],types:[],provinces:[],years:[],trans:[],traccion:[],condicion:[],vendedor:[],feats:[],aiSignals:[],fuels:[],query:'',usePayment:false});
+  filtered(){
+    const s=this.state; const q=(s.query||'').toLowerCase();
+    let list=this.vehicles.filter(v=>{
+      if(s.brands.length && !s.brands.includes(v.make)) return false;
+      if(s.types.length && !s.types.some(t=>v.type.includes(t))) return false;
+      if(s.provinces.length && !s.provinces.includes(v.loc)) return false;
+      if(s.years && s.years.length && !s.years.includes(String(v.year))) return false;
+      if(s.fuels && s.fuels.length && !s.fuels.includes(v.fuel)) return false;
+      if(s.trans && s.trans.length && !s.trans.includes(v.trans)) return false;
+      if(s.vendedor && s.vendedor.length){ const isDealer=v.verified; const want=s.vendedor.includes('Dealer verificado')&&isDealer || s.vendedor.includes('Nadakki Particular Verificado')&&!isDealer; if(!want) return false; }
+      if(s.condicion && s.condicion.length){ const isCert=v.year>=2023||v.badge.includes('Certificado'); const ok=s.condicion.includes('Certificado Nadakki')&&isCert || s.condicion.includes('Usado')&&!isCert; if(!ok) return false; }
+      if(s.aiSignals && s.aiSignals.length){
+        const status = v.badge.includes('Excelente')?'excelente':(v.match<80?'sobre':'justo');
+        if(s.aiSignals.includes('precio-justo') && status==='sobre') return false;
+        if(s.aiSignals.includes('match85') && v.match<85) return false;
+        if(s.aiSignals.includes('historial') && !v.verified) return false;
+        if(s.aiSignals.includes('sin-fraude') && !v.verified) return false;
+      }
+      return true;
+    });
+    if(q){
+      const m=q.match(/(\d+(?:\.\d+)?)\s*m/); const cap=m?parseFloat(m[1])*1000000:null;
+      if(cap) list=list.filter(v=>v.price<=cap*1.02);
+      if(/uber|econ|barat/.test(q)) list=list.filter(v=>v.type==='Sedán'||v.price<1200000);
+      if(/yipet|jeepet|suv|playa|famil/.test(q)) list=list.filter(v=>v.type.includes('SUV'));
+      if(/premium|lujo|bmw|merc/.test(q)) list=list.filter(v=>v.type.includes('Premium')||/bmw|merc/.test((v.make+v.model).toLowerCase()));
+      const words=q.replace(/hasta|bajo|\d+(\.\d+)?m?/g,'').split(/\s+/).filter(w=>w.length>2&&!/uber|econ|barat|yipet|jeepet|suv|playa|famil|premium|lujo|automat/.test(w));
+      if(words.length) list=list.filter(v=>{ const hay=(v.make+' '+v.model+' '+v.type).toLowerCase(); return words.some(w=>hay.includes(w)); }) ;
+    }
+    if(s.usePayment) list=list.filter(v=>{ const down=Math.min(90,Math.max(5,s.initial/v.price*100)); return this.cuota(v.price,down,60)<=s.maxMonthly && s.initial<=v.price*0.9; });
+    const by={ 'price-asc':(a,b)=>a.price-b.price, 'price-desc':(a,b)=>b.price-a.price, 'cuota':(a,b)=>a.price-b.price, 'match':(a,b)=>b.match-a.match, 'relevance':(a,b)=>b.match-a.match };
+    return list.sort(by[s.sort]||by.relevance);
+  }
+  segBtn=(on)=>'width:36px;height:32px;border-radius:8px;border:none;cursor:pointer;display:grid;place-items:center;background:'+(on?'var(--surface)':'transparent')+';color:'+(on?'var(--brand)':'var(--fg-subtle)')+';box-shadow:'+(on?'var(--shadow-sm)':'none');
+  facetOpt=(key,val,label)=>{ const on=(this.state[key]||[]).includes(val); return {label:label||val, style:'cursor:pointer;font-size:12px;font-weight:600;padding:6px 11px;border-radius:9px;border:1px solid '+(on?'var(--brand)':'var(--border-2)')+';background:'+(on?'var(--brand-soft)':'var(--surface)')+';color:'+(on?'var(--brand)':'var(--fg-muted)'), toggle:()=>this.toggleFacet(key,val)}; };
+
+  renderVals(){
+    const s=this.state;
+    const brandNames={nadakki:'Nadakki Auto',credicefi:'Credicefi Autos',piloto:'Banco Piloto'};
+    const poweredBy = s.tenant==='nadakki' ? 'Marketplace inteligente' : 'Powered by Nadakki';
+    const navBase='background:none;border:none;border-radius:9px;padding:9px 13px;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--fg-muted)';
+    const navOn='background:var(--surface-2);border:none;border-radius:9px;padding:9px 13px;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--fg)';
+    const isMobile = s.device==='mobile';
+
+    const messages = s.messages.map(m=>{
+      const rec = m.recId ? this.card(this.vehicles.find(v=>v.id===m.recId)) : null;
+      const isUser=m.role==='user';
+      return { ...m, rec,
+        rowStyle:`display:flex;flex-direction:column;align-items:${isUser?'flex-end':'flex-start'}`,
+        bubbleStyle:`max-width:82%;padding:11px 14px;border-radius:${isUser?'15px 15px 4px 15px':'15px 15px 15px 4px'};font-size:14px;line-height:1.5;`+(isUser?'background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff':'background:var(--surface);border:1px solid var(--border);color:var(--fg)'),
+        recOpen: rec ? ()=>{ this.setState({chatOpen:false}); this.openVDP(m.recId); } : null };
+    });
+
+    return {
+      theme:s.theme, tenant:s.tenant, brandName:brandNames[s.tenant], poweredBy,
+      isDark:s.theme==='dark', isLight:s.theme!=='dark', isMobile,
+      appMaxW: isMobile ? '430px' : 'none',
+      frameBorder: isMobile ? '1px solid var(--border-2)' : 'none',
+      frameRadius: isMobile ? '0' : '0',
+      frameShadow: isMobile ? 'var(--shadow-lg)' : 'none',
+      frameClip: isMobile ? 'hidden' : 'visible',
+      isLanding:s.screen==='landing', isSearch:s.screen==='search', isVDP:s.screen==='vdp',
+      showFooter: s.screen==='landing',
+      navInicio: s.screen==='landing'?navOn:navBase, navBuscar: s.screen==='search'?navOn:navBase, navBtn:navBase,
+      goHome:()=>this.go('landing'), goSearch:()=>this.go('search'), goApproval:()=>this.toast('Match My Approval — próximamente en este demo'),
+      toggleTheme:()=>this.setState(x=>({theme:x.theme==='dark'?'light':'dark'})),
+      setDesktop:()=>this.setState({device:'desktop'}), setMobileView:()=>this.setState({device:'mobile'}),
+      showApprovalLabel: !isMobile,
+      devDesktop:this.segBtn(s.device!=='mobile'), devMobile:this.segBtn(s.device==='mobile'),
+      onTenant:(e)=>this.setState({tenant:e.target.value}),
+      query:s.query, onQuery:this.onQuery, onQueryKey:this.onQueryKey, runSearch:this.runSearch,
+      startVoice:this.startVoice,
+      heroCounter: s.counter.toLocaleString('en-US'), heroCounterSub:'en 32 dealers verificados de RD',
+      heroPlaceholder: `Ej: “${this.PH[s.phIdx]}”…`,
+      bodyTypes: [
+        {label:'Yipeta / SUV', count:'342', grad:'linear-gradient(135deg,#334155,#64748b)', icon:this.ic('<path d="M3 13l1.5-4.2A2 2 0 0 1 6.4 7.5h5.6l3 3H21a1 1 0 0 1 1 1V16H2v-3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="7" cy="16" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="16" r="2" stroke="currentColor" stroke-width="1.5"/>'), t:'SUV'},
+        {label:'Sedán', count:'128', grad:'linear-gradient(135deg,#1e3a8a,#3b82f6)', icon:this.ic('<path d="M3 14l2-5h9l4 3h3v3H3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="7" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/>'), t:'Sedán'},
+        {label:'Camioneta / Pickup', count:'96', grad:'linear-gradient(135deg,#7c2d12,#b45309)', icon:this.ic('<path d="M2 14V8h9v6M11 11h5l4 3M2 14h20v3H2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="7" cy="17" r="1.8" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="17" r="1.8" stroke="currentColor" stroke-width="1.5"/>'), t:'SUV'},
+        {label:'Guagua / Minivan', count:'54', grad:'linear-gradient(135deg,#0f766e,#14b8a6)', icon:this.ic('<rect x="3" y="6" width="18" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M3 11h18" stroke="currentColor" stroke-width="1.5"/><circle cx="7.5" cy="17" r="1.8" stroke="currentColor" stroke-width="1.5"/><circle cx="16.5" cy="17" r="1.8" stroke="currentColor" stroke-width="1.5"/>'), t:'SUV'},
+        {label:'Deportivo', count:'23', grad:'linear-gradient(135deg,#9f1239,#e11d48)', icon:this.ic('<path d="M2 15l3-4c1-1.3 2.4-2 4-2h5l5 3 3 1v2H2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="7" cy="16" r="1.8" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="16" r="1.8" stroke="currentColor" stroke-width="1.5"/>'), t:'Premium'},
+        {label:'Compacto', count:'87', grad:'linear-gradient(135deg,#0369a1,#38bdf8)', icon:this.ic('<path d="M4 14l2-5h7l3 3 4 1v1H4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="15" r="1.8" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="15" r="1.8" stroke="currentColor" stroke-width="1.5"/>'), t:'Sedán'},
+        {label:'Convertible', count:'12', grad:'linear-gradient(135deg,#6d28d9,#a78bfa)', icon:this.ic('<path d="M3 15l2-4h6c2 0 3 1 5 2l5 1v1H3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="16" r="1.8" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="16" r="1.8" stroke="currentColor" stroke-width="1.5"/>'), t:'Premium'},
+        {label:'Lujo', count:'41', grad:'linear-gradient(135deg,#052e2b,#0d9488)', icon:this.ic('<path d="M3 14l2-5h10l4 3h2v3H3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 6l1.5 2h3L15 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="15" r="2" stroke="currentColor" stroke-width="1.5"/>'), t:'Premium'},
+      ].map(b=>({...b, go:()=>this.setState({types:[b.t], screen:'search', view:'grid'})})),
+      goType:(t)=>this.setState({types:[t], screen:'search'}),
+      popularCols:[
+        {h:'Por marca', chips:['Toyota Corolla','Honda CR-V','Hyundai Tucson','Kia Sportage','Mitsubishi Outlander','BMW X3'].map(x=>({label:x, go:()=>this.applyChip(x)}))},
+        {h:'Por ciudad', chips:[['Vehículos en Santo Domingo','Santo Domingo'],['Vehículos en Santiago','Santiago'],['Vehículos en La Vega','La Vega'],['Vehículos en San Pedro','San Pedro de Macorís'],['Vehículos en Puerto Plata','Puerto Plata']].map(([l,p])=>({label:l, go:()=>this.setState({provinces:[p],screen:'search'})}))},
+        {h:'Por presupuesto', chips:[['Vehículos bajo RD$1M','algo económico bajo 1M'],['Entre RD$1M y RD$2M','entre 1M y 2M'],['Premium sobre RD$2M','premium'],['SUV para familia','yipeta familiar'],['Ideal para Uber','algo pa Uber']].map(([l,q])=>({label:l, go:()=>this.applyChip(q)}))},
+      ],
+      bancosAliados:[
+        {n:'Credicefi', i:'C', c:'#0E7C66', tag:'Aprobación en 24h'},
+        {n:'Banco Piloto RD', i:'P', c:'#6D28D9', tag:'Aprobación en 24h'},
+        {n:'Próximamente', i:'+', c:'#94A3B8', tag:'Expansión LATAM 2026'},
+        {n:'Próximamente', i:'+', c:'#94A3B8', tag:'Expansión LATAM 2026'},
+      ],
+      comparador:[
+        {bank:'Credicefi', i:'C', c:'#0E7C66', monto:'RD$ 1,450,000', tasa:'12.9%', cuota:'RD$ 26,180', plazo:'72 meses', tiempo:'18 horas', best:true},
+        {bank:'Banco Piloto RD', i:'P', c:'#6D28D9', monto:'RD$ 1,380,000', tasa:'13.5%', cuota:'RD$ 27,340', plazo:'60 meses', tiempo:'24 horas', best:false},
+        {bank:'Banco Reservas', i:'R', c:'#1E40AF', monto:'RD$ 1,300,000', tasa:'14.2%', cuota:'RD$ 29,050', plazo:'60 meses', tiempo:'48 horas', best:false},
+      ],
+      chips:[
+        {label:'algo pa Uber',go:()=>this.applyChip('algo pa Uber')},
+        {label:'yipeta hasta 1.5M',go:()=>this.applyChip('yipeta hasta 1.5M')},
+        {label:'carrito automático pa mi mamá',go:()=>this.applyChip('carrito automático')},
+        {label:'Honda CR-V bajo 1.5',go:()=>this.applyChip('Honda CR-V')},
+      ],
+      paths:[
+        {icon:this.ic('<circle cx="8" cy="18" r="2" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="18" r="2" stroke="currentColor" stroke-width="2"/><path d="M4 12l1.5-4.5A2 2 0 0 1 7.4 6h7.2a2 2 0 0 1 1.9 1.5L18 12M4 12v4h2m10 0h2v-4M4 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'),title:'Compra con financiamiento',desc:'Encuentra tu vehículo y aplica a tu banco sin salir del portal.',cta:'Explorar inventario',go:()=>this.go('search')},
+        {icon:this.ic('<path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'),title:'Vende tu vehículo',desc:'Publica con verificación de identidad y protección Nadakki.',cta:'Publicar vehículo',go:()=>this.toast('Flujo de venta — pantalla 13')},
+        {icon:this.ic('<path d="M3 21V9l6-4 6 4v12M9 21v-5h2v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 21V13l4 2.4V21M2 21h20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'),title:'Aplicar como Dealer',desc:'Marketing con AI, CRM de leads y portal white-label propio.',cta:'Conocer planes',go:()=>this.toast('Dealer onboarding — pantalla 8')},
+      ],
+      values:[
+        {icon:this.ic('<path d="M12 3l7 3v5c0 4.5-3 8.3-7 9.6C8 19.3 5 15.5 5 11V6l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 11.5 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'),tint:'var(--success-soft)',color:'var(--success)',title:'Aprobación bancaria en 24h',desc:'Aplicaciones pre-validadas por AI para respuesta más rápida.'},
+        {icon:this.ic('<path d="M21 12a8 8 0 0 1-11.5 7.2L4 20.5l1.3-5.2A8 8 0 1 1 21 12z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/>'),tint:'var(--brand-soft)',color:'var(--brand)',title:'AI Concierge 24/7',desc:'Un asesor inteligente que responde en español dominicano.'},
+        {icon:this.ic('<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'),tint:'var(--warning-soft)',color:'var(--warning)',title:'Precio Justo verificado',desc:'Comparamos con el mercado RD para que pagues lo correcto.'},
+      ],
+      featured: this.vehicles.slice(0,8).map(v=>this.card(v)),
+      banks:[{i:'C',n:'Credicefi',c:'#0E7C66'},{i:'P',n:'Banco Piloto',c:'#6D28D9'},{i:'B',n:'BHD',c:'#D97706'},{i:'R',n:'Reservas',c:'#1E40AF'},{i:'A',n:'APAP',c:'#DC2626'}],
+      certs:['Verificación de cédula (JCE)','VIN validado','Cumplimiento LOPD 172-13','Dealers verificados'],
+      testimonials:[
+        {stars:[1,1,1,1,1],quote:'Encontré mi Corolla y el banco me aprobó en dos días. Nunca había sido tan fácil comprar un carro en el país.',name:'José Ramírez',role:'Comprador · Santo Domingo',i:'JR',grad:'linear-gradient(135deg,#1E40AF,#3B82F6)'},
+        {stars:[1,1,1,1,1],quote:'El AI me escribió las descripciones y los posts de IG. Vendo más rápido y con menos trabajo. Un antes y un después.',name:'Autos del Cibao',role:'Dealer · Santiago',i:'AC',grad:'linear-gradient(135deg,#0F766E,#14B8A6)'},
+        {stars:[1,1,1,1,1],quote:'La calculadora de cuota me dio confianza. Sabía exactamente cuánto iba a pagar antes de aplicar.',name:'María Fernández',role:'Compradora · La Vega',i:'MF',grad:'linear-gradient(135deg,#6D28D9,#A78BFA)'},
+      ],
+      footerCols:[
+        {h:'Comprar',links:['Buscar vehículos','Match My Approval','Calcular cuota','Vehículos certificados']},
+        {h:'Vender',links:['Publicar vehículo','Nadakki Particular','Planes para dealers','AI Listing Studio']},
+        {h:'Empresa',links:['Sobre Nadakki','Bancos aliados','Prensa','Trabaja con nosotros']},
+        {h:'Soporte',links:['Centro de ayuda','Contacto','WhatsApp','Estado del servicio']},
+      ],
+      chatOpen:s.chatOpen, toggleChat:this.toggleChat, messages, typing:s.typing,
+      chatInput:s.chatInput, onChatInput:this.onChatInput, onChatKey:this.onChatKey, sendChat:this.sendChat,
+      chatActions:[{label:'Agendar visita',go:()=>this.toast('Visita agendada')},{label:'Calcular cuota',go:()=>this.setState({chatOpen:false,screen:'vdp'})},{label:'Aplicar financiamiento',go:()=>this.toast('Abriendo aplicación…')}],
+      voiceOpen:s.voiceOpen, voiceText:s.voiceText||'…', closeVoice:this.closeVoice, confirmVoice:this.confirmVoice,
+      waveBars:[.7,.5,.9,.6,1,.55,.85,.6,.75].map((d,i)=>({d:(0.6+d*0.5).toFixed(2)+'s', delay:(i*0.08).toFixed(2)+'s'})),
+      voiceSuggest:[{t:'yipeta pa la playa',go:this.confirmVoice},{t:'algo pa Uber',go:this.confirmVoice},{t:'carrito automático pa mi mamá',go:this.confirmVoice}],
+      toast:s.toast,
+
+      // ---- SEARCH ----
+      maxMonthly:s.maxMonthly, initial:s.initial, maxMonthlyFmt:this.fmtRD(s.maxMonthly), initialFmt:this.fmtRD(s.initial),
+      onMaxMonthly:(e)=>this.setState({maxMonthly:+e.target.value}), onInitial:(e)=>this.setState({initial:+e.target.value}),
+      payOn:s.usePayment, togglePayment:()=>this.setState(x=>({usePayment:!x.usePayment})),
+      payToggleLabel: s.usePayment?'Filtrando por presupuesto':'Filtrar por presupuesto',
+      payToggleStyle:'width:100%;margin-top:2px;cursor:pointer;border-radius:11px;padding:11px;font-size:13px;font-weight:700;border:1px solid '+(s.usePayment?'transparent':'var(--brand)')+';background:'+(s.usePayment?'var(--brand)':'transparent')+';color:'+(s.usePayment?'#fff':'var(--brand)'),
+      clearFilters:this.clearFilters,
+      facets:[
+        {label:'Marca',icon:this.ic('<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>'),options:['Toyota','Honda','Hyundai','Kia','Suzuki','Ford','Mitsubishi','Chevrolet','Mercedes-Benz','BMW'].map(x=>this.facetOpt('brands',x))},
+        {label:'Tipo',icon:this.ic('<path d="M5 11l1.5-4A2 2 0 0 1 8.4 6h7.2a2 2 0 0 1 1.9 1L19 11M5 11h14v5H5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'),options:['Sedán','SUV','Premium'].map(x=>this.facetOpt('types',x))},
+        {label:'Provincia',icon:this.ic('<path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z" stroke="currentColor" stroke-width="2"/>'),options:['Distrito Nacional','Santo Domingo','Santo Domingo Este','Santiago','La Vega','San Pedro de Macorís','Puerto Plata'].map(x=>this.facetOpt('provinces',x))},
+        {label:'Año',icon:this.ic('<rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'),options:['2023','2022','2021','2020','2019'].map(x=>this.facetOpt('years',x))},
+        {label:'Combustible',icon:this.ic('<path d="M6 20V5a2 2 0 0 1 2-2h5a2 2 0 0 1 2 2v15M4 20h13M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-2.5-2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'),options:['Gasolina','Diésel','Híbrido','Eléctrico'].map(x=>this.facetOpt('fuels',x))},
+        {label:'Transmisión',icon:this.ic('<circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="18" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="6" r="2.5" stroke="currentColor" stroke-width="2"/><path d="M6 8.5v7M6 12h12V8.5" stroke="currentColor" stroke-width="2"/>'),options:['Automática','Manual'].map(x=>this.facetOpt('trans',x))},
+        {label:'Condición',icon:this.ic('<path d="M12 2l7 3v6c0 4.6-3 8.4-7 9.6C8 19.4 5 15.6 5 11V5l7-3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'),options:['Certificado Nadakki','Usado'].map(x=>this.facetOpt('condicion',x))},
+        {label:'Vendedor',icon:this.ic('<path d="M3 21V9l6-4 6 4v12M9 21v-5h2v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 21h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'),options:['Dealer verificado','Nadakki Particular Verificado'].map(x=>this.facetOpt('vendedor',x))},
+        {label:'Features',icon:this.ic('<path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'),options:['Cuero','Cámara 360°','Sunroof','Bluetooth','CarPlay','Navegación'].map(x=>this.facetOpt('feats',x))},
+      ],
+      aiToggles:[
+        {k:'precio-justo', label:'Solo Precio Justo verificado', icon:this.ic('<path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8L12 2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>')},
+        {k:'match85', label:'Match Score mayor a 85%', icon:this.ic('<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>')},
+        {k:'historial', label:'Historial verificado por AI', icon:this.ic('<path d="M12 2l7 3v6c0 4.6-3 8.4-7 9.6C8 19.4 5 15.6 5 11V5l7-3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9 11.5 2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>')},
+        {k:'sin-fraude', label:'Sin banderas de fraude', icon:this.ic('<path d="M12 3l7 3v5c0 4.5-3 8.3-7 9.6C8 19.3 5 15.5 5 11V6l7-3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>')},
+      ].map(t=>({...t, on:s.aiSignals.includes(t.k), toggle:()=>this.toggleFacet('aiSignals',t.k), rowStyle:'display:flex;align-items:center;gap:10px;padding:10px 0;cursor:pointer', pill:'margin-left:auto;width:38px;height:22px;border-radius:999px;padding:2px;display:flex;background:'+(s.aiSignals.includes(t.k)?'var(--brand)':'var(--border-2)')+';transition:background .15s', knob:'width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s;transform:translateX('+(s.aiSignals.includes(t.k)?'16px':'0')+')'})),
+      activeChips: (()=>{ const groups=[['brands',s.brands],['types',s.types],['provinces',s.provinces],['years',s.years],['fuels',s.fuels],['trans',s.trans],['condicion',s.condicion],['vendedor',s.vendedor],['feats',s.feats]]; const out=[]; groups.forEach(([k,arr])=>arr.forEach(v=>out.push({label:v, remove:()=>this.toggleFacet(k,v)}))); if(s.usePayment) out.push({label:'≤ '+this.fmtRD(s.maxMonthly)+'/mes', remove:()=>this.setState({usePayment:false})}); s.aiSignals.forEach(k=>{ const m={'precio-justo':'Precio Justo','match85':'Match >85%','historial':'Historial AI','sin-fraude':'Sin fraude'}; out.push({label:m[k], remove:()=>this.toggleFacet('aiSignals',k)}); }); return out; })(),
+      saveSearch:()=>this.toast('Búsqueda guardada · te avisaremos con Predictive Alerts AI'),
+      hasActiveChips: (s.brands.length+s.types.length+s.provinces.length+s.years.length+s.fuels.length+s.trans.length+s.condicion.length+s.vendedor.length+s.feats.length+s.aiSignals.length+(s.usePayment?1:0))>0,
+      vdpStuck: s.vdpStuck, loading: s.loading, notLoading: !s.loading, skeletons:[1,2,3,4,5,6],
+      filtersSheet: s.filtersSheet, openFilters:()=>this.setState({filtersSheet:true}), closeFilters:()=>this.setState({filtersSheet:false}),
+      applyFilters:()=>{ this.setState({filtersSheet:false}); this.runLoading(); },
+      filterBtnLabel:(()=>{ const n=s.brands.length+s.types.length+s.provinces.length+s.years.length+s.fuels.length+s.trans.length+s.condicion.length+s.vendedor.length+s.feats.length+s.aiSignals.length+(s.usePayment?1:0); return n?`Filtros (${n})`:'Filtros'; })(),
+      applyLabel:`Aplicar (${this.filtered().length} vehículos)`,
+      showFilterFab: s.screen==='search' && s.device==='mobile',
+      view:s.view, viewGrid:()=>this.setState({view:'grid'}), viewList:()=>this.setState({view:'list'}), viewMap:()=>this.setState({view:'map'}),
+      isGridView:s.view==='grid', isListView:s.view==='list', isMapView:s.view==='map',
+      vGrid:this.segBtn(s.view==='grid'), vList:this.segBtn(s.view==='list'), vMap:this.segBtn(s.view==='map'),
+      sort:s.sort, onSort:(e)=>this.setState({sort:e.target.value}),
+      results: this.filtered().map(v=>{ const c=this.card(v); return {...c, eligibleBadge: s.usePayment && c.eligible, cardBorder: (s.usePayment&&c.eligible)?'var(--success-2)':'var(--border)'}; }),
+      resultCount: this.filtered().length,
+      isEmpty: this.filtered().length===0,
+      activeFilterLabel: (()=>{ const n=s.brands.length+s.types.length+s.provinces.length+(s.years||[]).length+(s.fuels||[]).length; return n?`${n} filtro${n>1?'s':''} activo${n>1?'s':''}`:'Todo el inventario'; })(),
+      mapPins: this.filtered().slice(0,6).map((v,i)=>{ const c=this.card(v); const pos=[['22%','30%'],['40%','55%'],['58%','25%'],['70%','62%'],['33%','75%'],['80%','40%']][i]||['50%','50%']; return {cuota:c.cuota.replace('RD$ ','RD$'), top:pos[0], left:pos[1], open:()=>this.openVDP(v.id)}; }),
+
+      // ---- VDP ----
+      ...(()=>{ const v=this.vehicles.find(x=>x.id===s.selectedId)||this.vehicles[0]; const base=this.card(v);
+        const C=100.53; const dealerNames={true:'Autos del Cibao',false:'Vendedor particular'};
+        const sel={...base, matchDash:`${(base.match/100*C).toFixed(1)} ${C}`,
+          dealerName: v.verified?['Autos Premium RD','Motores del Este','Autos del Cibao','Caribe Motors'][v.id%4]:'Vendedor particular verificado',
+          dealerInit: v.make[0]+v.model[0] };
+        const gShades=['','brightness(.82)','brightness(1.12) saturate(1.1)','brightness(.7)','hue-rotate(12deg)'];
+        const gallery=gShades.map((f,i)=>({grad:v.grad, filterStyle:f, border: i===s.galleryIdx?'var(--brand)':'transparent', go:()=>this.setState({galleryIdx:i})}));
+        const vdpC=this.cuota(v.price,s.vdpDown,s.vdpTerm); const down=v.price*s.vdpDown/100;
+        const termStyle=(on)=>'flex:1;cursor:pointer;border-radius:9px;padding:9px 4px;font-size:12.5px;font-weight:700;border:1px solid '+(on?'var(--brand)':'var(--border-2)')+';background:'+(on?'var(--brand-soft)':'var(--surface)')+';color:'+(on?'var(--brand)':'var(--fg-muted)');
+        const tabStyle=(on)=>'background:none;border:none;border-bottom:2px solid '+(on?'var(--brand)':'transparent')+';padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;color:'+(on?'var(--brand)':'var(--fg-muted)');
+        return {
+          sel,
+          galleryMain: v.grad, galleryFilter: gShades[s.galleryIdx]||'none', galleryPos: s.galleryIdx+1, galleryCount: gallery.length, gallery,
+          view360:()=>this.toast('Vista 360° — girando el vehículo'), viewVideo:()=>this.toast('Reproduciendo video generado por AI'),
+          vdpTrust:[
+            {icon:this.ic('<path d="M12 2l7 3v6c0 4.6-3 8.4-7 9.6C8 19.4 5 15.6 5 11V5l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 11.5 2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'),label:'Dealer Verificado'},
+            {icon:this.ic('<rect x="4" y="7" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 7V5h8v2M9 12h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'),label:'VIN validado'},
+            {icon:this.ic('<path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.5 5.9 20.4l1.5-6.8L2.2 9l6.9-.7L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'),label:'15 usuarios: precio justo'},
+          ],
+          tabSpecs:()=>this.setState({tab:'specs'}), tabHistory:()=>this.setState({tab:'history'}), tabLocation:()=>this.setState({tab:'location'}), tabDealer:()=>this.setState({tab:'dealer'}),
+          isTabSpecs:s.tab==='specs', isTabHistory:s.tab==='history', isTabLocation:s.tab==='location', isTabDealer:s.tab==='dealer',
+          tSpecs:tabStyle(s.tab==='specs'), tHistory:tabStyle(s.tab==='history'), tLocation:tabStyle(s.tab==='location'), tDealer:tabStyle(s.tab==='dealer'),
+          specs:[{k:'Año',v:v.year},{k:'Kilometraje',v:v.km+' km'},{k:'Transmisión',v:v.trans},{k:'Combustible',v:v.fuel},{k:'Tipo',v:v.type},{k:'Motor',v:v.type.includes('Premium')?'2.0L Turbo':'2.0L 4 cil.'},{k:'Tracción',v:v.type.includes('SUV')?'AWD':'Delantera'},{k:'Color',v:'Gris plata'},{k:'Puertas',v:v.type==='Sedán'?'4':'5'},{k:'Pasajeros',v:'5'},{k:'Placa',v:'Al día'},{k:'Aire',v:'Climatizado'}],
+          history:[
+            {icon:this.ic('<path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'),tint:'var(--success-soft)',color:'var(--success)',title:'VIN validado sin reportes de accidente',desc:'Verificado contra base de datos de aseguradoras · Enero 2026'},
+            {icon:this.ic('<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'),tint:'var(--brand-soft)',color:'var(--brand)',title:'1 dueño anterior',desc:'Uso particular, mantenimiento en dealer autorizado'},
+            {icon:this.ic('<path d="M14 3v4a1 1 0 0 0 1 1h4M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'),tint:'var(--surface-3)',color:'var(--fg-muted)',title:'Historial de servicio completo',desc:'6 servicios registrados · último a 34,000 km'},
+            {icon:this.ic('<path d="M12 2l7 3v6c0 4.6-3 8.4-7 9.6C8 19.4 5 15.6 5 11V5l7-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'),tint:'var(--warning-soft)',color:'var(--warning)',title:'Matrícula y traspaso al día',desc:'Sin gravámenes ni multas pendientes (DGII)'},
+          ],
+          similar: this.vehicles.filter(x=>x.type===v.type && x.id!==v.id).slice(0,3).map(x=>this.card(x)),
+          vdpDown:s.vdpDown, vdpTerm:s.vdpTerm, vdpRate:'13.5%',
+          vdpCuota:this.fmtRD(vdpC), vdpDownAmount:this.fmtRD(down), vdpFinanced:this.fmtRD(v.price-down),
+          onVdpDown:(e)=>this.setState({vdpDown:+e.target.value}),
+          termOpts:[48,60,72,84].map(t=>({label:t+'m', style:termStyle(s.vdpTerm===t), go:()=>this.setState({vdpTerm:t})})),
+          apply:()=>this.toast('Iniciando aplicación de financiamiento…'),
+          openChat:()=>this.setState({chatOpen:true}),
+          saveSel:()=>this.toggleSave(v.id),
+          vdpIndex: this.vehicles.findIndex(x=>x.id===v.id)+1, vdpTotal:'400',
+          prevVeh:()=>this.prevVeh(), nextVeh:()=>this.nextVeh(),
+          // Price Evaluation (AI-08)
+          priceEval:(()=>{ const lo=Math.round(v.price*0.932/1000)*1000, mid=v.price, hi=Math.round(v.price*1.068/1000)*1000, top=Math.round(v.price*1.135/1000)*1000; const pos=((mid-lo)/(top-lo)*100).toFixed(0); return {
+            offer:this.fmtRD(v.price), pos:pos+'%',
+            rExcelente:`${this.fmtRD(lo)} – ${this.fmtRD(mid)}`, rJusto:`${this.fmtRD(mid+1)} – ${this.fmtRD(hi)}`, rSobre:`${this.fmtRD(hi+1)} – ${this.fmtRD(top)}`,
+            note:'Este precio es 5% mejor que el promedio del mercado.', basis:`Basado en 47 ${v.make} ${v.model} ${v.year} vendidos en RD en los últimos 90 días · desembolsos verificados en la red Nadakki + Credicefi.` }; })(),
+          aiVerify:[
+            'VIN validado en registros oficiales (DGII)',
+            `${18+(v.id*3)%12} fotos verificadas sin manipulación digital`,
+            `Dealer con ${v.rating} estrellas y 342 ventas previas`,
+            'Sin señales de fraude detectadas por Nadakki AI',
+          ],
+          contactMsg:`¡Hola! Este ${v.make} ${v.model} ${v.year} se ve interesante. ¿Sigue disponible?`,
+          sendMsg:()=>this.toast('Mensaje enviado al vendedor'), showPhone:()=>this.toast('809-555-01'+String(10+v.id)),
+          addTradein:()=>this.toast('Añadiendo datos de tu vehículo para evaluación AI…'),
+          avgResp:['15 min','1 hora','30 min','2 horas'][v.id%4],
+        };
+      })(),
+    };
+  }
+}
+</script>
+</body>
+</html>
