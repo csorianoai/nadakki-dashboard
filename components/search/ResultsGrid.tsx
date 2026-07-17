@@ -30,6 +30,7 @@ export function ResultsGrid({
         <VehicleCard
           key={vehicle.id}
           vehicle={vehicle}
+          variant="grid"
           saved={saved.has(vehicle.id)}
           onSaveToggle={() =>
             setSaved((prev) => {

@@ -7,9 +7,9 @@ export default function AutosVehiculosPage() {
     <Suspense
       fallback={
         <div className="mx-auto max-w-[1440px] px-[22px] py-8">
-          <div className="grid gap-4 md:grid-cols-2">
-            <VehicleCardSkeleton />
-            <VehicleCardSkeleton />
+          <div className="space-y-3">
+            <VehicleCardSkeleton variant="list" />
+            <VehicleCardSkeleton variant="list" />
           </div>
         </div>
       }

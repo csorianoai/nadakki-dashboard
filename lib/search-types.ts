@@ -86,7 +86,7 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   keyword: "",
   pageSize: 20,
   sort: "relevance",
-  view: "grid",
+  view: "list",
 };
 
 export const BRAND_OPTIONS = [
