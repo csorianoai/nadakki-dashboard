@@ -21,7 +21,7 @@ export function FeaturedVehicles() {
   };
 
   return (
-    <section id="destacados" className="px-[22px] py-10">
+    <section id="destacados" className="px-[clamp(16px,3vw,22px)] py-10">
       <div className="mx-auto max-w-[1440px]">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -40,11 +40,12 @@ export function FeaturedVehicles() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {featured.map((vehicle) => (
             <VehicleCard
               key={vehicle.id}
               vehicle={vehicle}
+              variant="compact"
               saved={saved.has(vehicle.id)}
               onSaveToggle={() => toggleSave(vehicle.id)}
             />

@@ -14,7 +14,7 @@ export function SimilarVehicles({ vehicle }: { vehicle: Vehicle }) {
   return (
     <section className="mt-8">
       <h2 className="mb-4 font-manrope text-xl font-bold text-nk-fg">Vehículos similares</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {fallback.map((v) => (
           <VehicleCard key={v.id} vehicle={v} variant="compact" />
         ))}
