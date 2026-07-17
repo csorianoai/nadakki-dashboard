@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Mic, Sparkles } from "lucide-react";
+import { ChevronRight, Sparkles } from "lucide-react";
+import { VoiceMicButton } from "@/components/voice/VoiceMicButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { filterVehicles } from "@/lib/search-filters";
 import { buildSearchHref } from "@/lib/search-url";
-import { BRAND_OPTIONS, type FilterState } from "@/lib/search-types";
+import { BRAND_OPTIONS, DEFAULT_FILTER_STATE, type FilterState } from "@/lib/search-types";
 import { RD_PROVINCES_ORDERED } from "@/lib/rd-geography";
 import { MODELS_BY_BRAND, VEHICLES_SEED } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
@@ -41,22 +42,10 @@ const INVENTORY_TOTAL = 1247;
 
 function estimateInventoryCount(partial: Pick<FilterState, "brands" | "provinces" | "query">): number {
   const filtered = filterVehicles(VEHICLES_SEED, {
+    ...DEFAULT_FILTER_STATE,
     brands: partial.brands,
     provinces: partial.provinces,
     query: partial.query,
-    types: [],
-    years: [],
-    fuels: [],
-    trans: [],
-    condicion: [],
-    vendedor: [],
-    feats: [],
-    aiSignals: [],
-    maxMonthly: 30_000,
-    initial: 300_000,
-    usePayment: false,
-    sort: "relevance",
-    view: "grid",
   });
 
   const hasFilters =
@@ -146,15 +135,7 @@ export function DualSearch() {
               aria-label="Búsqueda con AI"
             />
             <div className="flex shrink-0 items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-11 w-11 min-h-11 min-w-11"
-                aria-label="Búsqueda por voz"
-              >
-                <Mic className="h-5 w-5" />
-              </Button>
+              <VoiceMicButton />
               <Button
                 type="button"
                 variant="brand"
@@ -267,22 +248,5 @@ export function DualSearch() {
 }
 
 function defaultPartial(): FilterState {
-  return {
-    query: "",
-    brands: [],
-    types: [],
-    provinces: [],
-    years: [],
-    fuels: [],
-    trans: [],
-    condicion: [],
-    vendedor: [],
-    feats: [],
-    aiSignals: [],
-    maxMonthly: 30_000,
-    initial: 300_000,
-    usePayment: false,
-    sort: "relevance",
-    view: "grid",
-  };
+  return { ...DEFAULT_FILTER_STATE };
 }

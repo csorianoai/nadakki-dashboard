@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ActiveChipsBar } from "@/components/search/ActiveChipsBar";
+import { SearchRefineBar } from "@/components/search/SearchRefineBar";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
 import { EmptyState } from "@/components/search/EmptyState";
 import { FilterPanel } from "@/components/search/FilterPanel";
@@ -62,7 +63,7 @@ export function AutosVehiculosContent() {
 
   return (
     <AutosErrorBoundary fallbackTitle="Error al cargar resultados">
-      <div className="mx-auto max-w-[1440px] px-[22px] py-6 pb-24 md:pb-8">
+      <div className="mx-auto max-w-[1440px] overflow-x-hidden px-[clamp(16px,3vw,22px)] py-6 pb-24 md:pb-8">
         <div className="flex items-center justify-between gap-3">
           <Link href="/autos" className="text-sm text-nk-fg-muted hover:text-brand">
             ← Volver al inicio
@@ -76,6 +77,7 @@ export function AutosVehiculosContent() {
           </div>
 
           <div className="min-w-0 flex-1">
+            <SearchRefineBar state={state} onChange={(next) => applyState(next)} />
             <ActiveChipsBar
               state={state}
               count={displayCount}
