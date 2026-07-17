@@ -16,7 +16,7 @@ export function ResultsGrid({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
+      <div className="results-grid-xl grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <VehicleCardSkeleton key={i} />
         ))}
@@ -25,7 +25,7 @@ export function ResultsGrid({
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
+    <div className="results-grid-xl grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-4">
       {vehicles.map((vehicle) => (
         <VehicleCard
           key={vehicle.id}

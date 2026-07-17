@@ -184,10 +184,10 @@ export function PopularBrands() {
           </div>
         </div>
 
-        {/* Mobile / tablet — 4x4 grid */}
-        <div className="mt-5 grid grid-cols-4 gap-3 lg:hidden">
+        {/* Mobile — horizontal scroll */}
+        <div className="mt-5 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scroll-snap-type:x_mandatory] [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
           {POPULAR_BRAND_CARDS.map((brand) => (
-            <BrandCardLink key={brand.name} brand={brand} className="aspect-square" />
+            <BrandCardLink key={brand.name} brand={brand} className="h-[140px] w-[140px] snap-start" />
           ))}
         </div>
 

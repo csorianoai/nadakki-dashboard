@@ -13,7 +13,7 @@ export function AutosPortalShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div data-portal="autos" className="min-h-screen bg-nk-bg text-nk-fg font-inter antialiased">
+    <div data-portal="autos" className="min-h-screen overflow-x-hidden bg-nk-bg text-nk-fg font-inter antialiased">
       {children}
     </div>
   );
