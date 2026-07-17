@@ -17,7 +17,7 @@ export function FiltersFab({
       type="button"
       onClick={onClick}
       className={cn(
-        "fixed bottom-5 left-5 z-40 inline-flex items-center gap-2 rounded-full border border-nk-border bg-nk-surface px-4 py-3 text-sm font-semibold text-nk-fg shadow-nk-lg transition hover:-translate-y-0.5 md:hidden",
+        "fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-nk-border bg-nk-surface px-4 py-3 text-sm font-semibold text-nk-fg shadow-nk-lg transition hover:-translate-y-0.5 md:hidden",
         className,
       )}
     >

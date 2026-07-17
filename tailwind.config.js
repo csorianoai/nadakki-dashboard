@@ -204,6 +204,7 @@ module.exports = {
         'critGlow': 'critGlow 2s ease-in-out infinite',
         nkShimmer: 'nkShimmer 1.4s linear infinite',
         nkUp: 'nkUp 0.32s ease both',
+        nkSparkle: 'nkSparkle 2s ease-in-out infinite',
         nkPop: 'nkPop 0.4s ease',
         nkWave: 'nkWave 0.9s ease-in-out infinite',
         nkPulse: 'nkPulse 3s ease-out infinite',
@@ -249,6 +250,10 @@ module.exports = {
         nkUp: {
           from: { opacity: '0', transform: 'translateY(14px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        nkSparkle: {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.65', transform: 'scale(1.15)' },
         },
         nkPop: {
           '0%': { transform: 'scale(1)' },

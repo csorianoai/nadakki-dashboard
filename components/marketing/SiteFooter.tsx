@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Car } from "lucide-react";
+import { Building2, Car, Flag, Shield, FileCheck } from "lucide-react";
 
 const FOOTER_COLS = [
   {
@@ -34,6 +34,13 @@ const FOOTER_COLS = [
       { label: "Estado del servicio", href: "/autos" },
     ],
   },
+] as const;
+
+const TRUST_BADGES = [
+  { icon: Building2, label: "Registrado en Cámara de Comercio SD" },
+  { icon: Shield, label: "Cumplimiento LOPD (Ley 172-13)" },
+  { icon: FileCheck, label: "RNC verificado" },
+  { icon: Flag, label: "Hecho en RD por dominicanos" },
 ] as const;
 
 export function SiteFooter() {
@@ -78,7 +85,26 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-nk-border pt-6 text-xs text-nk-fg-subtle md:flex-row md:items-center md:justify-between">
+        <div className="mt-10 border-t border-nk-border pt-8">
+          <h3 className="text-sm font-bold text-nk-fg">Verificaciones y cumplimiento</h3>
+          <div className="mt-4 flex flex-wrap gap-3">
+            {TRUST_BADGES.map(({ icon: Icon, label }) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-2 rounded-lg border border-nk-border bg-nk-surface-2 px-3 py-2 text-xs font-medium text-nk-fg-muted"
+              >
+                <Icon className="h-4 w-4 shrink-0 text-brand" aria-hidden />
+                {label}
+              </span>
+            ))}
+          </div>
+          <p className="mt-4 max-w-3xl text-xs leading-relaxed text-nk-fg-subtle">
+            Nadakki Auto SRL · RNC 1-31-00000-0 · Regulado por Superintendencia de Bancos de la
+            República Dominicana en operaciones financieras.
+          </p>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3 border-t border-nk-border pt-6 text-xs text-nk-fg-subtle md:flex-row md:items-center md:justify-between">
           <p>© 2026 Nadakki Auto SRL · RNC 1-31-00000-0 · Cumplimiento LOPD (Ley 172-13)</p>
           <div className="flex flex-wrap gap-4">
             <Link href="/autos" className="hover:text-brand">

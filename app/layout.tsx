@@ -7,6 +7,7 @@ import { PWAClientProvider } from "@/components/pwa/PWAClientProvider";
 import AppGate from "@/components/auth/AppGate";
 import { ThemeProvider } from "@/components/system/ThemeProvider";
 import { TenantProvider } from "@/components/system/TenantProvider";
+import { ModalProvider } from "@/components/system/ModalRoot";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
@@ -18,7 +19,7 @@ const inter = Inter({
 
 const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-manrope",
   display: "swap",
 });
@@ -84,9 +85,11 @@ export default function RootLayout({
         <AppProviders>
           <ThemeProvider>
             <TenantProvider>
-              <AppGate>{children}</AppGate>
-              <Toaster />
-              <PWAClientProvider />
+              <ModalProvider>
+                <AppGate>{children}</AppGate>
+                <Toaster />
+                <PWAClientProvider />
+              </ModalProvider>
             </TenantProvider>
           </ThemeProvider>
         </AppProviders>
