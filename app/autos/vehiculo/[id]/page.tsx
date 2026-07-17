@@ -1,15 +1,75 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { getVehicleById } from "@/lib/vehicles";
-import { fmtRD, fmtUS } from "@/lib/format";
-import { cuota } from "@/lib/finance";
+import { VdpBreadcrumb } from "@/components/vdp/Breadcrumb";
+import { Gallery } from "@/components/vdp/Gallery";
+import { VehicleHeader } from "@/components/vdp/VehicleHeader";
+import { MatchScore } from "@/components/vdp/MatchScore";
+import { TrustChips } from "@/components/vdp/TrustChips";
+import { SpecTabs } from "@/components/vdp/SpecTabs";
+import { PriceEvaluation } from "@/components/vdp/PriceEvaluation";
+import { PaymentCalculator } from "@/components/vdp/PaymentCalculator";
+import { ContactSeller } from "@/components/vdp/ContactSeller";
+import { TradeIn } from "@/components/vdp/TradeIn";
+import { StickyHeader, useVdpNavigation } from "@/components/vdp/StickyHeader";
+import { SimilarVehicles } from "@/components/vdp/SimilarVehicles";
+import { DemoModeBadge } from "@/components/search/DemoModeBadge";
+import { AutosErrorBoundary } from "@/components/system/AutosErrorBoundary";
+import { VehicleCardSkeleton } from "@/components/vehicle/VehicleCardSkeleton";
+import { getVehicleConsumer } from "@/lib/api/vehicles";
+import { MIN_LOADING_MS } from "@/lib/loading";
+import type { Vehicle } from "@/lib/vehicles";
 
-/** Phase 2 stub — full VDP lands in Fase 4. */
 export default function AutosVehiculoDetailPage() {
   const params = useParams();
-  const vehicle = getVehicleById(String(params?.id ?? ""));
+  const id = String(params?.id ?? "");
+  const [vehicle, setVehicle] = useState<Vehicle | undefined>();
+  const [loading, setLoading] = useState(true);
+  const [demoMode, setDemoMode] = useState(false);
+  const [vdpStuck, setVdpStuck] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const { navIndex, navTotal, goPrev, goNext } = useVdpNavigation(
+    vehicle?.id ?? 0,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const started = Date.now();
+    setLoading(true);
+    void getVehicleConsumer(id).then((res) => {
+      if (cancelled) return;
+      const elapsed = Date.now() - started;
+      const wait = Math.max(0, MIN_LOADING_MS - elapsed);
+      window.setTimeout(() => {
+        if (!cancelled) {
+          setVehicle(res.vehicle);
+          setDemoMode(!res.fromBackend);
+          setLoading(false);
+        }
+      }, wait);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    const onScroll = () => setVdpStuck(window.scrollY > 520);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-[1440px] px-[22px] py-8">
+        <VehicleCardSkeleton />
+      </div>
+    );
+  }
 
   if (!vehicle) {
     return (
@@ -22,24 +82,49 @@ export default function AutosVehiculoDetailPage() {
     );
   }
 
-  const monthly = Math.round(cuota(vehicle.price, 20, 60));
-
   return (
-    <div className="mx-auto max-w-[1440px] px-[22px] py-8">
-      <Link href="/autos/vehiculos" className="text-sm text-nk-fg-muted hover:text-brand">
-        ← Volver a resultados
-      </Link>
-      <h1 className="mt-3 font-manrope text-[clamp(24px,3.4vw,32px)] font-extrabold">
-        {vehicle.year} {vehicle.make} {vehicle.model}
-      </h1>
-      <p className="mt-2 font-manrope text-[26px] font-extrabold tabular-nums">
-        {fmtRD(vehicle.price)}{" "}
-        <span className="text-[11px] font-medium text-nk-fg-subtle">{fmtUS(vehicle.price)}</span>
-      </p>
-      <p className="mt-1 text-sm font-semibold tabular-nums text-brand">
-        {fmtRD(monthly)} a 60 meses · 13.5% anual
-      </p>
-      <div className="mt-6 aspect-[16/10] max-w-3xl rounded-r" style={{ background: vehicle.grad }} />
-    </div>
+    <AutosErrorBoundary fallbackTitle="Error al cargar vehículo">
+      <StickyHeader
+        vehicle={vehicle}
+        stuck={vdpStuck}
+        saved={saved}
+        onSaveToggle={() => setSaved((s) => !s)}
+        onPrev={goPrev}
+        onNext={goNext}
+        navIndex={navIndex}
+        navTotal={navTotal}
+      />
+
+      <div className="mx-auto max-w-[1440px] px-[22px] py-6 pb-24">
+        <div className="flex items-center justify-between gap-3">
+          <VdpBreadcrumb tipo={vehicle.type} provincia={vehicle.loc} />
+          <DemoModeBadge visible={demoMode} />
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-8">
+          <div className="min-w-0 flex-[999_1_540px] space-y-6">
+            <Gallery vehicle={vehicle} />
+            <VehicleHeader vehicle={vehicle} />
+            <div className="flex flex-wrap items-center gap-4">
+              <MatchScore match={vehicle.match} />
+              <TrustChips />
+            </div>
+            <PriceEvaluation vehicle={vehicle} />
+            <SpecTabs vehicle={vehicle} />
+            <SimilarVehicles vehicle={vehicle} />
+          </div>
+
+          <div className="w-full min-w-[280px] flex-[1_1_320px] max-w-[370px] space-y-4">
+            <PaymentCalculator
+              vehicle={vehicle}
+              saved={saved}
+              onSaveToggle={() => setSaved((s) => !s)}
+            />
+            <ContactSeller vehicle={vehicle} />
+            <TradeIn />
+          </div>
+        </div>
+      </div>
+    </AutosErrorBoundary>
   );
 }
