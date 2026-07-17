@@ -9,6 +9,31 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Nadakki Auto consumer tokens (README §5)
+        brand: 'var(--brand)',
+        'brand-2': 'var(--brand-2)',
+        'brand-strong': 'var(--brand-strong)',
+        'brand-soft': 'var(--brand-soft)',
+        'on-brand': 'var(--on-brand)',
+        nk: {
+          bg: 'var(--bg)',
+          surface: 'var(--surface)',
+          'surface-2': 'var(--surface-2)',
+          'surface-3': 'var(--surface-3)',
+          border: 'var(--border)',
+          'border-2': 'var(--border-2)',
+          fg: 'var(--fg)',
+          'fg-muted': 'var(--fg-muted)',
+          'fg-subtle': 'var(--fg-subtle)',
+          success: 'var(--success)',
+          'success-2': 'var(--success-2)',
+          'success-soft': 'var(--success-soft)',
+          warning: 'var(--warning)',
+          'warning-2': 'var(--warning-2)',
+          'warning-soft': 'var(--warning-soft)',
+          danger: 'var(--danger)',
+          'danger-soft': 'var(--danger-soft)',
+        },
         // ─────────────────────────────────────────────────────────
         // PERMANENT LEGACY ALIASES — components/credit-hub tree consumes
         // these tokens directly. The Forge redesign (Phases 1–7) replaced
@@ -164,6 +189,8 @@ module.exports = {
         mono: ['JetBrains Mono', 'monospace'],
         cockpitSans: ['var(--font-inter)', 'Inter', 'sans-serif'],
         cockpitMono: ['var(--font-jetbrains-mono)', 'JetBrains Mono', 'monospace'],
+        manrope: ['var(--font-manrope)', 'Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        inter: ['var(--font-inter)', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       animation: {
         'forge-pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -175,6 +202,14 @@ module.exports = {
         'growBar': 'growBar 1.2s ease-out forwards',
         'fabGlow': 'fabGlow 3s ease-in-out infinite',
         'critGlow': 'critGlow 2s ease-in-out infinite',
+        nkShimmer: 'nkShimmer 1.4s linear infinite',
+        nkUp: 'nkUp 0.32s ease both',
+        nkSparkle: 'nkSparkle 2s ease-in-out infinite',
+        nkPop: 'nkPop 0.4s ease',
+        nkWave: 'nkWave 0.9s ease-in-out infinite',
+        nkPulse: 'nkPulse 3s ease-out infinite',
+        nkDot: 'nkDot 1s ease-in-out infinite',
+        nkToast: 'nkToast 0.25s ease both',
       },
       keyframes: {
         'forge-shimmer': {
@@ -208,6 +243,40 @@ module.exports = {
           '0%, 100%': { boxShadow: '0 0 8px rgba(244,63,94,0.3)' },
           '50%': { boxShadow: '0 0 16px rgba(244,63,94,0.5)' },
         },
+        nkShimmer: {
+          '0%': { backgroundPosition: '-460px 0' },
+          '100%': { backgroundPosition: '460px 0' },
+        },
+        nkUp: {
+          from: { opacity: '0', transform: 'translateY(14px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        nkSparkle: {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.65', transform: 'scale(1.15)' },
+        },
+        nkPop: {
+          '0%': { transform: 'scale(1)' },
+          '40%': { transform: 'scale(1.32)' },
+          '100%': { transform: 'scale(1)' },
+        },
+        nkWave: {
+          '0%, 100%': { transform: 'scaleY(0.35)' },
+          '50%': { transform: 'scaleY(1)' },
+        },
+        nkPulse: {
+          '0%': { boxShadow: '0 0 0 0 rgba(30, 64, 175, 0.45)' },
+          '70%': { boxShadow: '0 0 0 18px rgba(30, 64, 175, 0)' },
+          '100%': { boxShadow: '0 0 0 0 rgba(30, 64, 175, 0)' },
+        },
+        nkDot: {
+          '0%, 80%, 100%': { opacity: '0.25', transform: 'translateY(0)' },
+          '40%': { opacity: '1', transform: 'translateY(-3px)' },
+        },
+        nkToast: {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       backdropBlur: {
         quantum: '60px',
@@ -218,6 +287,9 @@ module.exports = {
         'forge-md': 'var(--forge-radius-md)',
         'forge-lg': 'var(--forge-radius-lg)',
         'forge-pill': 'var(--forge-radius-pill)',
+        r: 'var(--r)',
+        'r-sm': 'var(--r-sm)',
+        'r-lg': 'var(--r-lg)',
       },
       fontSize: {
         'forge-xs': ['var(--forge-text-xs)', { lineHeight: 'var(--forge-leading-normal)' }],
@@ -230,6 +302,10 @@ module.exports = {
         'forge-sm': 'var(--forge-shadow-sm)',
         'forge-md': 'var(--forge-shadow-md)',
         'forge-lg': 'var(--forge-shadow-lg)',
+        'nk-sm': 'var(--shadow-sm)',
+        'nk-md': 'var(--shadow-md)',
+        'nk-lg': 'var(--shadow-lg)',
+        'nk-ring': 'var(--ring)',
       },
     },
   },

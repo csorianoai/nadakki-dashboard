@@ -1,12 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import "../styles/forge-tokens-v2.css";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { PWAClientProvider } from "@/components/pwa/PWAClientProvider";
 import AppGate from "@/components/auth/AppGate";
+import { ThemeProvider } from "@/components/system/ThemeProvider";
+import { TenantProvider } from "@/components/system/TenantProvider";
+import { ModalProvider } from "@/components/system/ModalRoot";
+import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-manrope",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Plataforma de crédito",
@@ -65,10 +81,17 @@ export default function RootLayout({
           href="/icons/apple-splash-1290x2796.png"
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${manrope.variable} ${inter.className}`}>
         <AppProviders>
-          <AppGate>{children}</AppGate>
-          <PWAClientProvider />
+          <ThemeProvider>
+            <TenantProvider>
+              <ModalProvider>
+                <AppGate>{children}</AppGate>
+                <Toaster />
+                <PWAClientProvider />
+              </ModalProvider>
+            </TenantProvider>
+          </ThemeProvider>
         </AppProviders>
       </body>
     </html>
