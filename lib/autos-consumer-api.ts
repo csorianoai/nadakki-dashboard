@@ -46,7 +46,9 @@ export async function autosFetch<T>(
   init: RequestInit = {},
 ): Promise<T | null> {
   const headers = new Headers(init.headers ?? undefined);
-  headers.set("Content-Type", "application/json");
+  if (!(init.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
   headers.set("X-Tenant-ID", getTenantId());
 
   const auth = getAuthHeaders();
