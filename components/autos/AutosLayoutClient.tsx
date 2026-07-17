@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { VoiceOverlayProvider } from "@/components/voice/VoiceOverlayContext";
+import { ShopperMatchesNotification } from "@/components/shopper/ShopperMatchesNotification";
 
 const ConciergeHost = dynamic(
   () => import("@/components/concierge/ConciergeSheet").then((m) => m.ConciergeHost),
@@ -17,6 +18,7 @@ export function AutosLayoutClient({ children }: { children: React.ReactNode }) {
   return (
     <VoiceOverlayProvider>
       {children}
+      <ShopperMatchesNotification />
       <ConciergeHost />
       <VoiceOverlay />
     </VoiceOverlayProvider>
