@@ -17,7 +17,7 @@ export function ConciergeFab({
       type="button"
       onClick={onClick}
       className={cn(
-        "fixed bottom-6 right-6 z-[55] inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand to-brand-2 px-5 py-3 font-manrope text-sm font-bold text-white shadow-nk-lg animate-nkPulse",
+        "fixed bottom-6 left-6 z-[55] inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand to-brand-2 px-5 py-3 font-manrope text-sm font-bold text-white shadow-nk-lg animate-nkPulse",
       )}
       aria-label="Abrir Concierge AI"
     >

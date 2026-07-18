@@ -10,6 +10,7 @@ import { ApprovalComparator } from "@/components/marketing/ApprovalComparator";
 import { TrustBar } from "@/components/marketing/TrustBar";
 import { Testimonials } from "@/components/marketing/Testimonials";
 import { PopularSearches } from "@/components/marketing/PopularSearches";
+import { PersonalShopperSection } from "@/components/shopper/PersonalShopperSection";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 
 export default function AutosLandingPage() {
@@ -27,6 +28,7 @@ export default function AutosLandingPage() {
       <TrustBar />
       <Testimonials />
       <PopularSearches />
+      <PersonalShopperSection />
       <SiteFooter />
     </main>
   );

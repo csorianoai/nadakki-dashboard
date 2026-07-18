@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Car, Menu, Moon, Star, Sun, X } from "lucide-react";
+import { Car, Menu, Moon, Sparkles, Star, Sun, X } from "lucide-react";
 import { MatchMyApprovalModal } from "@/components/nav/MatchMyApprovalModal";
 import { HoverTooltip } from "@/components/ui/HoverTooltip";
 import { useTheme } from "@/components/system/ThemeProvider";
 import { useTenant } from "@/components/system/TenantProvider";
+import { useShopper } from "@/components/shopper/ShopperProvider";
 import { TENANT_OPTIONS, TENANTS, type TenantSlug } from "@/lib/tenants";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ export function TopNav() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { tenant, config, setTenant } = useTenant();
+  const { newMatchCount, profile } = useShopper();
   const [matchOpen, setMatchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -120,6 +122,24 @@ export function TopNav() {
               </button>
             </HoverTooltip>
 
+            <Link
+              href="/autos/mi-shopper"
+              className="relative hidden min-h-11 items-center gap-1.5 rounded-full border border-nk-border px-3 py-1.5 text-sm font-semibold text-nk-fg transition hover:bg-nk-surface-2 sm:inline-flex"
+              aria-label={
+                profile
+                  ? `Mi AI Personal Shopper${newMatchCount ? `, ${newMatchCount} nuevos` : ""}`
+                  : "Activar AI Personal Shopper"
+              }
+            >
+              <Sparkles className="h-4 w-4 shrink-0 text-brand" aria-hidden />
+              <span className="hidden lg:inline">Mi Shopper</span>
+              {newMatchCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white">
+                  {newMatchCount > 9 ? "9+" : newMatchCount}
+                </span>
+              ) : null}
+            </Link>
+
             <span
               className="hidden h-11 w-11 items-center justify-center rounded-full bg-nk-surface-3 text-xs font-bold text-nk-fg sm:inline-flex"
               aria-label="Usuario JR"
@@ -158,6 +178,21 @@ export function TopNav() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  href="/autos/mi-shopper"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex min-h-11 items-center gap-2 rounded-r-sm px-3 text-sm font-medium text-nk-fg hover:bg-nk-surface-2"
+                >
+                  <Sparkles className="h-4 w-4 text-brand" />
+                  Mi AI Shopper
+                  {newMatchCount > 0 ? (
+                    <span className="rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-white">
+                      {newMatchCount}
+                    </span>
+                  ) : null}
+                </Link>
+              </li>
             </ul>
           </nav>
         ) : null}

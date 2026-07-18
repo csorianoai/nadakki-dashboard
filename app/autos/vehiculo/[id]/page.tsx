@@ -15,6 +15,7 @@ import { ContactSeller } from "@/components/vdp/ContactSeller";
 import { TradeIn } from "@/components/vdp/TradeIn";
 import { StickyHeader, useVdpNavigation } from "@/components/vdp/StickyHeader";
 import { SimilarVehicles } from "@/components/vdp/SimilarVehicles";
+import { VehicleChatWidget } from "@/components/vdp/VehicleChatWidget";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
 import { AutosErrorBoundary } from "@/components/system/AutosErrorBoundary";
 import { VehicleCardSkeleton } from "@/components/vehicle/VehicleCardSkeleton";
@@ -125,6 +126,7 @@ export default function AutosVehiculoDetailPage() {
           </div>
         </div>
       </div>
+      <VehicleChatWidget vehicle={vehicle} />
     </AutosErrorBoundary>
   );
 }
