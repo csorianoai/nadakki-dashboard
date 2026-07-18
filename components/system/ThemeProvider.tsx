@@ -9,6 +9,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  cleanupLegacyAutosDocumentAttrs,
+  getAutosPortalElement,
+} from "@/components/system/autos-portal-scope";
 
 export type ThemeMode = "light" | "dark";
 
@@ -21,31 +25,33 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 const STORAGE_KEY = "nadakki-autos-theme";
 
-function applyTheme(theme: ThemeMode) {
+function applyThemeToPortal(theme: ThemeMode) {
   if (typeof document === "undefined") return;
-  document.documentElement.setAttribute("data-theme", theme);
+  cleanupLegacyAutosDocumentAttrs();
+  getAutosPortalElement()?.setAttribute("data-theme", theme);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("light");
 
   useEffect(() => {
+    cleanupLegacyAutosDocumentAttrs();
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === "light" || stored === "dark") {
         setThemeState(stored);
-        applyTheme(stored);
+        applyThemeToPortal(stored);
         return;
       }
     } catch {
       /* ignore */
     }
-    applyTheme("light");
+    applyThemeToPortal("light");
   }, []);
 
   const setTheme = useCallback((next: ThemeMode) => {
     setThemeState(next);
-    applyTheme(next);
+    applyThemeToPortal(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {

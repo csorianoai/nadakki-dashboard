@@ -658,11 +658,12 @@ body {
 
 /* ═══════════════════════════════════════════════════════════════════
    NADAKKI AUTO — Design tokens (README §5)
-   Scoped portal surface via [data-portal="autos"] so Credit Hub
-   quantum styles remain untouched outside the marketplace.
+   Scoped to [data-portal="autos"] (+ autos-modal for body-portaled modals).
+   Never on :root / documentElement — Credit Hub & Forge stay isolated.
    ═══════════════════════════════════════════════════════════════════ */
 
-:root {
+[data-portal="autos"],
+[data-portal="autos-modal"] {
   --brand: #1E40AF;
   --brand-2: #3B82F6;
   --brand-strong: #1E3A8A;
@@ -699,7 +700,8 @@ body {
   --ring: 0 0 0 3px rgba(59, 130, 246, 0.35);
 }
 
-[data-theme="dark"] {
+[data-portal="autos"][data-theme="dark"],
+[data-portal="autos-modal"][data-theme="dark"] {
   --brand-soft: rgba(59, 130, 246, 0.14);
   --bg: #070C16;
   --surface: #0F1725;
@@ -715,36 +717,42 @@ body {
   --danger-soft: rgba(220, 38, 38, 0.18);
 }
 
-[data-tenant="nadakki"] {
+[data-portal="autos"][data-tenant="nadakki"],
+[data-portal="autos-modal"][data-tenant="nadakki"] {
   --brand: #1E40AF;
   --brand-2: #3B82F6;
   --brand-strong: #1E3A8A;
   --brand-soft: #EEF3FF;
 }
 
-[data-tenant="credicefi"] {
+[data-portal="autos"][data-tenant="credicefi"],
+[data-portal="autos-modal"][data-tenant="credicefi"] {
   --brand: #0E7C66;
   --brand-2: #13B98A;
   --brand-strong: #0B5F4E;
   --brand-soft: #E3F6EF;
 }
 
-[data-tenant="piloto"] {
+[data-portal="autos"][data-tenant="piloto"],
+[data-portal="autos-modal"][data-tenant="piloto"] {
   --brand: #6D28D9;
   --brand-2: #8B5CF6;
   --brand-strong: #5B21B6;
   --brand-soft: #F0EBFE;
 }
 
-[data-theme="dark"][data-tenant="credicefi"] {
+[data-portal="autos"][data-theme="dark"][data-tenant="credicefi"],
+[data-portal="autos-modal"][data-theme="dark"][data-tenant="credicefi"] {
   --brand-soft: rgba(19, 185, 138, 0.14);
 }
 
-[data-theme="dark"][data-tenant="piloto"] {
+[data-portal="autos"][data-theme="dark"][data-tenant="piloto"],
+[data-portal="autos-modal"][data-theme="dark"][data-tenant="piloto"] {
   --brand-soft: rgba(139, 92, 246, 0.18);
 }
 
-[data-theme="dark"][data-tenant="nadakki"] {
+[data-portal="autos"][data-theme="dark"][data-tenant="nadakki"],
+[data-portal="autos-modal"][data-theme="dark"][data-tenant="nadakki"] {
   --brand-soft: rgba(59, 130, 246, 0.14);
 }
 

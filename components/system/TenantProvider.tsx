@@ -10,6 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import {
+  cleanupLegacyAutosDocumentAttrs,
+  getAutosPortalElement,
+} from "@/components/system/autos-portal-scope";
+import {
   isTenantSlug,
   TENANTS,
   type TenantConfig,
@@ -25,31 +29,33 @@ type TenantContextValue = {
 const TenantContext = createContext<TenantContextValue | null>(null);
 const STORAGE_KEY = "nadakki-autos-tenant";
 
-function applyTenant(slug: TenantSlug) {
+function applyTenantToPortal(slug: TenantSlug) {
   if (typeof document === "undefined") return;
-  document.documentElement.setAttribute("data-tenant", slug);
+  cleanupLegacyAutosDocumentAttrs();
+  getAutosPortalElement()?.setAttribute("data-tenant", slug);
 }
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenantState] = useState<TenantSlug>("nadakki");
 
   useEffect(() => {
+    cleanupLegacyAutosDocumentAttrs();
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (isTenantSlug(stored)) {
         setTenantState(stored);
-        applyTenant(stored);
+        applyTenantToPortal(stored);
         return;
       }
     } catch {
       /* ignore */
     }
-    applyTenant("nadakki");
+    applyTenantToPortal("nadakki");
   }, []);
 
   const setTenant = useCallback((slug: TenantSlug) => {
     setTenantState(slug);
-    applyTenant(slug);
+    applyTenantToPortal(slug);
     try {
       localStorage.setItem(STORAGE_KEY, slug);
     } catch {
