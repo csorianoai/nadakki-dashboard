@@ -5,8 +5,6 @@ import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { PWAClientProvider } from "@/components/pwa/PWAClientProvider";
 import AppGate from "@/components/auth/AppGate";
-import { ThemeProvider } from "@/components/system/ThemeProvider";
-import { TenantProvider } from "@/components/system/TenantProvider";
 import { ModalProvider } from "@/components/system/ModalRoot";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -83,15 +81,11 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${manrope.variable} ${inter.className}`}>
         <AppProviders>
-          <ThemeProvider>
-            <TenantProvider>
-              <ModalProvider>
-                <AppGate>{children}</AppGate>
-                <Toaster />
-                <PWAClientProvider />
-              </ModalProvider>
-            </TenantProvider>
-          </ThemeProvider>
+          <ModalProvider>
+            <AppGate>{children}</AppGate>
+            <Toaster />
+            <PWAClientProvider />
+          </ModalProvider>
         </AppProviders>
       </body>
     </html>

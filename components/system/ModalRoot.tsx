@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { readAutosPortalSurfaceAttrs } from "@/components/system/autos-portal-scope";
 
 type ModalContextType = {
   openModal: (modal: ReactNode) => void;
@@ -120,6 +121,8 @@ export function FixedModal({
 
   if (!open || typeof document === "undefined") return null;
 
+  const { theme: portalTheme, tenant: portalTenant } = readAutosPortalSurfaceAttrs();
+
   return createPortal(
     <>
       <div role="presentation" aria-hidden style={BACKDROP_STYLE} onClick={onClose} />
@@ -128,6 +131,9 @@ export function FixedModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        data-portal="autos-modal"
+        data-theme={portalTheme}
+        {...(portalTenant ? { "data-tenant": portalTenant } : {})}
         style={PANEL_STYLE}
         className="border border-nk-border bg-nk-surface text-nk-fg"
         onClick={(e) => e.stopPropagation()}
