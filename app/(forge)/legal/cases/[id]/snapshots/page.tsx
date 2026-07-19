@@ -52,7 +52,7 @@ export default function LegalCaseSnapshotsPage({ params }: { params: Promise<{ i
           {msg}
         </p>
       ) : null}
-      <CaseSnapshotsList caseId={id} snapshots={snapshots} />
+      <CaseSnapshotsList tenantId={effectiveTenantId} caseId={id} snapshots={snapshots} />
     </main>
   );
 }

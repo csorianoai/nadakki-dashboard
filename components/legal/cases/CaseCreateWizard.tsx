@@ -127,7 +127,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
       const actors = (c as unknown as Record<string, unknown>).actors;
       if (!actors || (Array.isArray(actors) && actors.length === 0)) {
         setActorWarning(
-          "Expediente creado. Los actores se registrarán automáticamente — si no aparecen en 30 segundos, edítalos manualmente."
+          "Expediente creado, pero el backend no persistió actores (BD-005 en BACKEND_DEFECTS_LEDGER.md). GET /actors puede devolver vacío hasta fix backend."
         );
         // Non-blocking: redirect after brief delay so user sees the warning
         setTimeout(() => router.push(`/legal/cases/${c.case_id}`), 3000);
