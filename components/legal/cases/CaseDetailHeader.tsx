@@ -116,10 +116,12 @@ export function CaseDetailHeader({
             <p className="text-xs text-zinc-500">{m.compliance.ley_91}</p>
             <div className="flex flex-wrap gap-4 pt-2 text-sm tabular-nums text-zinc-400">
               <span>
-                Docs <span className="font-medium text-zinc-200">{docCount}</span>
+                {m.overview.docs_count}{" "}
+                <span className="font-medium text-zinc-200">{docCount}</span>
               </span>
               <span>
-                Plazos activos <span className="font-medium text-zinc-200">{deadlineCount}</span>
+                {m.overview.active_deadlines}{" "}
+                <span className="font-medium text-zinc-200">{deadlineCount}</span>
               </span>
             </div>
           </div>

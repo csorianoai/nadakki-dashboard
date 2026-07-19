@@ -220,6 +220,7 @@
     "title": "Versiones del expediente",
     "create_manual": "Crear versión manual",
     "view_diff": "Ver cambios",
+    "diff_vs_previous": "Comparar con versión anterior",
     "verify_chain": "Verificar integridad",
     "chain_valid": "Cadena íntegra",
     "chain_broken": "Cadena con inconsistencias",
@@ -329,5 +330,76 @@
       "querella_penal": "Querella penal",
       "escrito_acusacion_querellante": "Escrito de acusación (querellante)"
     }
+  },
+  "overview": {
+    "docs_count": "Documentos",
+    "active_deadlines": "Plazos activos"
+  },
+  "action_labels": {
+    "add_actor": "Agregar parte",
+    "Add Actor": "Agregar parte",
+    "generate_strategies": "Generar estrategias",
+    "advance_to_intake": "Avanzar a ingesta",
+    "archive_case": "Archivar expediente"
+  },
+  "pack_status": {
+    "verified": "VERIFICADO",
+    "draft": "BORRADOR — NO CERTIFICADO",
+    "skeleton": "BORRADOR — NO CERTIFICADO",
+    "pending": "BORRADOR — NO CERTIFICADO",
+    "unknown": "DESCONOCIDO"
+  },
+  "audit": {
+    "title": "Trazabilidad de auditoría",
+    "chain_verify_button": "Verificar cadena del expediente",
+    "snapshot_verify_fallback": "Verificar cadena de versiones",
+    "chain_valid": "Cadena íntegra",
+    "chain_invalid": "Cadena con inconsistencias",
+    "chain_response_received": "Verificación completada",
+    "snapshot_chain_valid": "Cadena de versiones íntegra",
+    "snapshot_verify_detail": "Detalle de verificación de versiones",
+    "chain_unavailable": "Verificación de cadena no disponible",
+    "snapshot_unavailable": "Verificación de versiones no disponible",
+    "iso_badge": "Preparado ISO 27001",
+    "metric_queries": "Consultas (filtradas)",
+    "metric_success_rate": "Tasa de éxito",
+    "metric_avg_latency": "Latencia media",
+    "metric_avg_citations": "Citas / consulta (prom.)",
+    "filter_all_agents": "Todos los agentes",
+    "filter_status_all": "Estado (todos)",
+    "filter_risk_all": "Riesgo (todos)",
+    "col_timestamp": "Fecha y hora",
+    "col_agent": "Agente",
+    "col_status": "Estado",
+    "col_citations": "Citas",
+    "col_latency": "Latencia",
+    "col_risk": "Riesgo",
+    "col_areas": "Áreas",
+    "col_actions": "Acciones",
+    "status_values": {
+      "success": "éxito",
+      "error": "error",
+      "timeout": "tiempo agotado"
+    },
+    "risk_values": {
+      "low": "bajo",
+      "medium": "medio",
+      "high": "alto"
+    }
+  },
+  "traceability": {
+    "pack_hash": "Hash del pack",
+    "domain_filter": "Filtro de dominio",
+    "query_hash": "Hash de consulta",
+    "rag_latency": "Latencia RAG"
+  },
+  "home_dashboard": {
+    "title": "Núcleo Legal Inteligente",
+    "knowledge_pack": "Pack normativo",
+    "pack_hash": "Hash del pack"
+  },
+  "documents_page": {
+    "s3_warning": "ADVERTENCIA: persistencia de documentos no garantizada (deuda S3) — no subir documentos reales.",
+    "upload_failed": "No se pudo subir el documento"
   }
 }
