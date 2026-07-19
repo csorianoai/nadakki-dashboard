@@ -8,7 +8,6 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "../..");
 
 const REQUIRED_FILES = [
-  "app/(forge)/legal/guide/page.tsx",
   "components/legal-cockpit/LegalCockpitShell.tsx",
   "components/legal-cockpit/LegalKPIRow.tsx",
   "components/legal-cockpit/LegalCommandCenter.tsx",
@@ -82,32 +81,7 @@ if (fs.existsSync(demoFile)) {
   fail++;
 }
 
-// Check imports in guide page
-console.log("\n--- Import resolution (guide/page.tsx) ---");
-const guidePage = path.join(ROOT, "app/(forge)/legal/guide/page.tsx");
-if (fs.existsSync(guidePage)) {
-  const src = fs.readFileSync(guidePage, "utf-8");
-  const imports = [];
-  const re = /from\s+["'](@\/[^"']+)["']/g;
-  let match;
-  while ((match = re.exec(src)) !== null) imports.push(match[1]);
-  console.log(`  Imports found: ${imports.length}`);
-  let broken = 0;
-  for (const spec of imports) {
-    const base = path.join(ROOT, spec.slice(2)); // strip @/
-    const candidates = [base, base + ".ts", base + ".tsx", path.join(base, "index.ts"), path.join(base, "index.tsx")];
-    const found = candidates.some(c => fs.existsSync(c) && fs.statSync(c).isFile());
-    if (!found) {
-      console.log(`  [ERR] Unresolved: ${spec}`);
-      broken++;
-      fail++;
-    }
-  }
-  if (broken === 0) {
-    console.log(`  [OK]  All ${imports.length} imports resolve`);
-    pass++;
-  }
-}
+// /legal/guide removed (HN-02) — cockpit components retained for potential reuse, not routed.
 
 console.log(`\n${"=".repeat(40)}`);
 console.log(`RESULT: ${pass} OK, ${fail} FAIL`);
