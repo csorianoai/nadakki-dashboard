@@ -176,6 +176,9 @@ export interface LegalCase {
   open_issues_count: number;
   created_at: string;
   updated_at: string;
+  /** Live backend embeds on GET /cases/{id} (no dedicated available_actions route). */
+  available_actions?: AvailableAction[] | string[];
+  allowed_transitions?: CaseState[] | string[];
 }
 
 export interface AvailableAction {

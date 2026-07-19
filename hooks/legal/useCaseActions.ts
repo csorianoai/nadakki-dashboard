@@ -1,7 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchAvailableActions, postCaseAction } from "@/lib/legal/cases/legal-cases-api";
+import {
+  fetchAvailableActions,
+  patchCaseState,
+  postCaseAction,
+} from "@/lib/legal/cases/legal-cases-api";
 
 export function useCaseActions(tenantId: string | undefined, caseId: string | undefined) {
   const qc = useQueryClient();
@@ -23,5 +27,18 @@ export function useCaseActions(tenantId: string | undefined, caseId: string | un
       await qc.invalidateQueries({ queryKey: ["legal_case_actions", tenantId, caseId] });
     },
   });
-  return { ...q, runAction: run.mutateAsync, running: run.isPending };
+  const transition = useMutation({
+    mutationFn: async ({ newState, reason }: { newState: string; reason: string }) =>
+      patchCaseState(tenantId!, caseId!, { new_state: newState, reason }),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["legal_case", tenantId, caseId] });
+      await qc.invalidateQueries({ queryKey: ["legal_case_actions", tenantId, caseId] });
+    },
+  });
+  return {
+    ...q,
+    runAction: run.mutateAsync,
+    runTransition: transition.mutateAsync,
+    running: run.isPending || transition.isPending,
+  };
 }

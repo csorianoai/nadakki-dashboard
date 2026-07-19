@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { CaseDocument } from "@/lib/legal/cases/case-types";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { useCaseDocumentLifecycle } from "@/hooks/legal/useCaseDocumentLifecycle";
+import { LegalApiErrorPanel } from "@/components/legal/cases/LegalApiErrorPanel";
 
 export function CaseDocumentExtractedDataReview({
   doc,
@@ -19,8 +20,10 @@ export function CaseDocumentExtractedDataReview({
   const m = useLegalCasesMessages();
   const { verifyExtracted, pending } = useCaseDocumentLifecycle(tenantId, caseId);
   const [json, setJson] = useState(JSON.stringify(doc.extracted_data ?? {}, null, 2));
+  const [error, setError] = useState<unknown>(null);
 
   const confirm = async (mode: "as_is" | "corrections") => {
+    setError(null);
     try {
       if (mode === "as_is") {
         await verifyExtracted({
@@ -35,8 +38,8 @@ export function CaseDocumentExtractedDataReview({
         });
       }
       onClose();
-    } catch {
-      /* error silenciada: el padre puede mostrar toast en evoluciones futuras */
+    } catch (e) {
+      setError(e);
     }
   };
 
@@ -52,6 +55,15 @@ export function CaseDocumentExtractedDataReview({
           className="mt-4 w-full rounded-forge-sm border border-forgeGray-200 font-mono text-xs"
           aria-label="Datos extraídos"
         />
+        {error ? (
+          <div className="mt-4">
+            <LegalApiErrorPanel
+              title="Verificación de datos extraídos no disponible"
+              error={error}
+              defectId="BD-002"
+            />
+          </div>
+        ) : null}
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           <button type="button" className="rounded-forge-sm px-3 py-2 text-sm ring-1 ring-forgeGray-200" onClick={onClose}>
             {m.actions.cancel}

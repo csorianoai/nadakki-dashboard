@@ -12,6 +12,11 @@ import type {
   ListCasesResponse,
   RiskProfile,
 } from "@/lib/legal/cases/case-types";
+import {
+  normalizeAvailableActions,
+  normalizeStateTransitions,
+} from "@/lib/legal/cases/normalize-available-actions";
+import { LegalApiHttpError, readLegalJson } from "@/lib/legal/parse-api-error";
 
 const LEGAL_PREFIX = "/api/legal";
 
@@ -95,30 +100,40 @@ export async function fetchAvailableActions(
   tenantId: string,
   caseId: string
 ): Promise<AvailableActionsResponse> {
-  const res = await fetch(
-    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/available_actions`,
-    { headers: tenantHeaders(tenantId) }
-  );
-  if (!res.ok) throw new Error(`Error al cargar acciones (${res.status})`);
-  return parseJson<AvailableActionsResponse>(res);
+  const c = await fetchCaseDetail(tenantId, caseId);
+  return {
+    current_state: c.state,
+    available_actions: normalizeAvailableActions(c.available_actions),
+    transitions_available: normalizeStateTransitions(c.allowed_transitions),
+  };
 }
 
 export async function postCaseAction(
   tenantId: string,
   caseId: string,
   actionName: string,
-  payload: Record<string, unknown> = {}
+  payload: Record<string, unknown> = {},
+  actorType: "human" | "agent" | "system" = "human",
 ): Promise<unknown> {
-  const res = await fetch(
-    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/actions/${encodeURIComponent(actionName)}`,
-    {
-      method: "POST",
-      headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
-      body: JSON.stringify({ action_name: actionName, payload }),
-    }
-  );
-  if (!res.ok) throw new Error(`Error al ejecutar acción (${res.status})`);
-  return parseJson<unknown>(res);
+  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/actions`, {
+    method: "POST",
+    headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
+    body: JSON.stringify({ action: actionName, actor_type: actorType, payload }),
+  });
+  return readLegalJson<unknown>(res, "Error al ejecutar acción");
+}
+
+export async function patchCaseState(
+  tenantId: string,
+  caseId: string,
+  body: { new_state: string; reason: string; legal_basis?: string },
+): Promise<unknown> {
+  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/state`, {
+    method: "PATCH",
+    headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return readLegalJson<unknown>(res, "Error al cambiar estado");
 }
 
 export async function fetchTimeline(
@@ -225,8 +240,7 @@ export async function postVerifyExtractedData(
       body: JSON.stringify(body),
     }
   );
-  if (!res.ok) throw new Error(`Error al verificar datos (${res.status})`);
-  return parseJson<unknown>(res);
+  return readLegalJson<unknown>(res, "Error al verificar datos extraídos");
 }
 
 export async function fetchIssues(tenantId: string, caseId: string) {
@@ -282,8 +296,32 @@ export async function fetchSnapshotDetail(tenantId: string, caseId: string, snap
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots/${encodeURIComponent(snapshotId)}`,
     { headers: tenantHeaders(tenantId) }
   );
-  if (!res.ok) throw new Error(`Error al cargar versión (${res.status})`);
-  return parseJson<unknown>(res);
+  return readLegalJson<unknown>(res, "Error al cargar versión");
+}
+
+export async function fetchSnapshotVerify(tenantId: string, caseId: string) {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots/verify`,
+    { headers: tenantHeaders(tenantId) }
+  );
+  return readLegalJson<unknown>(res, "Error al verificar cadena de snapshots");
+}
+
+export async function fetchSnapshotDiff(
+  tenantId: string,
+  caseId: string,
+  snapshotIdA: string,
+  snapshotIdB: string,
+) {
+  const q = new URLSearchParams({
+    snapshot_id_a: snapshotIdA,
+    snapshot_id_b: snapshotIdB,
+  });
+  const res = await fetch(
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots/diff?${q.toString()}`,
+    { headers: tenantHeaders(tenantId) }
+  );
+  return readLegalJson<unknown>(res, "Error al calcular diff de snapshots");
 }
 
 export async function postSnapshot(tenantId: string, caseId: string, body: Record<string, unknown>) {
@@ -348,8 +386,7 @@ export async function postArchive(tenantId: string, caseId: string, body: Record
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Error al archivar (${res.status})`);
-  return parseJson<unknown>(res);
+  return readLegalJson<unknown>(res, "Error al archivar expediente");
 }
 
 export async function ingestDocument(
