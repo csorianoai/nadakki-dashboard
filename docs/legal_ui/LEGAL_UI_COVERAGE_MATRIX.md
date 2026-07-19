@@ -17,6 +17,37 @@
 | CONSUMIDO_PARCIAL | **10** |
 | HUÉRFANO | **43** |
 | ROTO (path FE ≠ OpenAPI o endpoint fantasma) | **4** |
+
+---
+
+## Reproducción ROTO en producción (2026-07-19)
+
+Tenant header: `X-Tenant-ID: d3b00111-0000-0000-0000-000000d3b001`  
+Case probe: `c3f52c77-3353-4369-96bb-eb1f88fad70d` (demo create: `01c38444-e89b-4d1a-90cd-f2ed4fcc4a3a`)
+
+| # | Endpoint FE legacy | Request real | Status | Body (resumen) | Clasificación | Acción PR-2 |
+|---|-------------------|--------------|--------|----------------|---------------|-------------|
+| 1 | `GET .../available_actions` | `GET /cases/{id}/available_actions` | **404** | `{"detail":"Not Found"}` | **FRONTEND_FIXABLE** | Leer `available_actions` desde `GET /cases/{id}` (200, campo embebido) |
+| 2 | `POST .../archive` | `POST /cases/{id}/archive` | **404** | `{"detail":"Not Found"}` | **BACKEND_DEFECT** (BD-001) | UI error honesto; ledger |
+| 3 | `POST .../verify_extracted_data` | `POST .../documents/{doc}/verify_extracted_data` | **404** | `{"detail":"Not Found"}` | **BACKEND_DEFECT** (BD-002) | UI error honesto; ledger |
+| 4a | `POST .../actions/{name}` | `POST .../actions/advance_to_intake` | **404** | `{"detail":"Not Found"}` | **FRONTEND_FIXABLE** | Usar `POST .../actions` body `{action, actor_type, payload}` |
+| 4b | (contrato vivo) | `POST .../actions` + `{action:"generate_strategies", actor_type:"human"}` | **200** | Estrategias generadas | **FRONTEND_FIXABLE** | Adaptar FE al contrato vivo (DEV-002) |
+
+**Desviaciones adicionales (no contadas en ROTO×4):**
+
+| Endpoint | Status | Clasificación | Ledger |
+|----------|--------|---------------|--------|
+| `GET .../snapshots/verify` | **500** | BACKEND_DEFECT | BD-003 |
+| `GET .../snapshots/diff` | **500** | BACKEND_DEFECT | BD-004 |
+| `POST .../actors` | **500** | BACKEND_DEFECT | BD-005 |
+| `PATCH .../state` | **200** | FRONTEND_FIXABLE | DEV-003 (transiciones UI) |
+
+Ledger completo: [`BACKEND_DEFECTS_LEDGER.md`](./BACKEND_DEFECTS_LEDGER.md)
+
+---
+
+| Métrica (cont.) | Valor |
+|-----------------|------:|
 | Rutas `/legal/*` en repo | **24 páginas** |
 | Rutas `/legal/*` en producción (`dashboard.nadakki.com`) | **200 OK** en todas las verificadas |
 
