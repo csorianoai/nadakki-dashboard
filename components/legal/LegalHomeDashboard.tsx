@@ -13,6 +13,7 @@ import {
 import { trackEvent } from "@/lib/legal/telemetry";
 import type { AuditTrailEntry } from "@/types/legal";
 import { LegalMetricCard } from "@/components/legal/LegalMetricCard";
+import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { LegalAgentCard } from "@/components/legal/LegalAgentCard";
 import { LegalEmptyState } from "@/components/legal/LegalEmptyState";
 import { LegalErrorState } from "@/components/legal/LegalErrorState";
@@ -38,6 +39,7 @@ function entry24h(e: AuditTrailEntry): boolean {
 }
 
 export default function LegalHomeDashboard() {
+  const m = useLegalCasesMessages();
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
   const health = useLegalHealth(effectiveTenantId);
   const agents = useLegalAgents(effectiveTenantId);
@@ -101,7 +103,7 @@ export default function LegalHomeDashboard() {
       <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 dark:border-slate-800 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-            Legal Intelligence Core
+            {m.home_dashboard.title}
           </h1>
           <p className="mt-1 max-w-2xl text-slate-600 dark:text-slate-400">
             Análisis legal con IA, RAG y auditoría para compliance bancario — sin datos simulados.
@@ -129,12 +131,12 @@ export default function LegalHomeDashboard() {
         <LegalMetricCard
           title="Agentes legales activos"
           value={agents.loading ? "…" : agents.agents.length}
-          subtitle="Conectados al Knowledge Pack RD"
+          subtitle="Conectados al pack normativo RD"
           icon={<Users className="h-8 w-8" />}
           loading={agents.loading}
         />
         <LegalMetricCard
-          title="Knowledge Pack"
+          title={m.home_dashboard.knowledge_pack}
           value={
             pack.loading ? (
               "…"
@@ -160,7 +162,7 @@ export default function LegalHomeDashboard() {
         <LegalMetricCard
           title="Consultas últimas 24h"
           value={audit.loading ? "…" : count24h}
-          subtitle="Basado en audit trail del core"
+          subtitle="Basado en trazabilidad de auditoría del core"
           icon={<Activity className="h-8 w-8" />}
           loading={audit.loading}
         />
@@ -270,7 +272,7 @@ export default function LegalHomeDashboard() {
         <h2 className="mb-1 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           Actividad reciente
         </h2>
-        <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">Últimas ejecuciones registradas en audit trail</p>
+        <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">Últimas ejecuciones registradas en trazabilidad de auditoría</p>
         {audit.loading ? (
           <LegalLoadingSkeleton variant="row" rows={5} />
         ) : recent.length === 0 ? (
@@ -345,7 +347,7 @@ export default function LegalHomeDashboard() {
         </p>
         {packHash && (
           <p className="mt-2 font-mono break-all">
-            Pack hash: {packHash}{" "}
+            {m.home_dashboard.pack_hash}: {packHash}{" "}
             <button
               type="button"
               className="text-blue-600 underline dark:text-blue-400"
@@ -357,7 +359,7 @@ export default function LegalHomeDashboard() {
           </p>
         )}
         <Link href="/legal/audit" className="mt-2 inline-block text-blue-600 hover:underline dark:text-blue-400">
-          Ir a audit trail →
+          Ir a trazabilidad de auditoría →
         </Link>
       </footer>
     </div>

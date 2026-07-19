@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { AvailableAction, CaseState } from "@/lib/legal/cases/case-types";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
+import { actionDisplayLabel, caseStateLabel } from "@/lib/legal/presentation-labels";
 import { useCaseActions } from "@/hooks/legal/useCaseActions";
 import { useDisasterLevel } from "@/app/providers/DisasterModeProvider";
 import { LegalApiErrorPanel } from "@/components/legal/cases/LegalApiErrorPanel";
@@ -38,7 +39,7 @@ export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId
     setErr(null);
     const reason =
       typeof window !== "undefined"
-        ? window.prompt(`Motivo para cambiar estado a ${state}:`, "Transición desde portal legal")
+        ? window.prompt(`Motivo para cambiar estado a ${caseStateLabel(m, state)}:`, "Transición desde portal legal")
         : "Transición desde portal legal";
     if (!reason?.trim()) return;
     try {
@@ -69,7 +70,7 @@ export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId
                 className="w-full rounded-forge-sm px-3 py-2 text-left text-sm text-forgeBrand-800 ring-1 ring-forgeBrand-200 hover:bg-forgeBrand-50 disabled:opacity-50"
                 onClick={() => void exec(a)}
               >
-                <span className="font-medium">{a.display_name}</span>
+                <span className="font-medium">{actionDisplayLabel(m, a)}</span>
                 {a.description ? (
                   <span className="mt-0.5 block text-xs text-forgeGray-600">{a.description}</span>
                 ) : null}
@@ -92,7 +93,7 @@ export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId
                   className="rounded-forge-sm px-3 py-1.5 text-xs font-medium ring-1 ring-forgeGray-200 hover:bg-forgeGray-50 disabled:opacity-50"
                   onClick={() => void execTransition(state)}
                 >
-                  → {state}
+                  → {caseStateLabel(m, state)}
                 </button>
               </li>
             ))}

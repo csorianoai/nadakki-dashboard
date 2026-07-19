@@ -325,8 +325,8 @@ export async function fetchSnapshotDiff(
   snapshotIdB: string,
 ) {
   const q = new URLSearchParams({
-    snapshot_id_a: snapshotIdA,
-    snapshot_id_b: snapshotIdB,
+    from_id: snapshotIdA,
+    to_id: snapshotIdB,
   });
   const res = await fetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots/diff?${q.toString()}`,
