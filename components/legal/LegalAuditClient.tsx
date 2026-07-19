@@ -12,6 +12,8 @@ import { LegalEmptyState } from "@/components/legal/LegalEmptyState";
 import { AuditRiskBadge } from "@/components/legal/AuditRiskBadge";
 import { PracticeAreaChipGroup } from "@/components/legal/PracticeAreaChipGroup";
 import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
+import { AuditChainIntegrityPanel } from "@/components/legal/audit/AuditChainIntegrityPanel";
+import { useLegalCases } from "@/hooks/legal/useLegalCases";
 
 function latencyClass(ms: number | undefined) {
   if (ms == null) return "text-slate-500";
@@ -69,7 +71,19 @@ export default function LegalAuditClient() {
   const [practiceAreaFilter, setPracticeAreaFilter] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [chainCaseId, setChainCaseId] = useState("");
   const pageSize = 20;
+  const casesQ = useLegalCases(effectiveTenantId);
+
+  useEffect(() => {
+    const cid = searchParams.get("case_id")?.trim();
+    if (cid) setChainCaseId(cid);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (chainCaseId || !casesQ.data?.cases?.length) return;
+    setChainCaseId(casesQ.data.cases[0]!.case_id);
+  }, [casesQ.data?.cases, chainCaseId]);
 
   useEffect(() => {
     const r = searchParams.get("request_id");
@@ -164,6 +178,22 @@ export default function LegalAuditClient() {
         <Metric label="Tasa éxito" value={`${metrics.successRate}%`} />
         <Metric label="Latencia media" value={`${Math.round(metrics.avgLat)} ms`} />
         <Metric label="Citas / query (avg)" value={String(metrics.avgCit)} />
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="audit-chain-case">
+          Expediente para verificación de cadena
+        </label>
+        <input
+          id="audit-chain-case"
+          className="w-full max-w-xl rounded border border-slate-300 bg-white px-3 py-2 font-mono text-sm dark:border-slate-700 dark:bg-slate-950"
+          value={chainCaseId}
+          onChange={(e) => setChainCaseId(e.target.value)}
+          placeholder="UUID del expediente"
+        />
+        {chainCaseId.trim() ? (
+          <AuditChainIntegrityPanel tenantId={effectiveTenantId} caseId={chainCaseId.trim()} />
+        ) : null}
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
