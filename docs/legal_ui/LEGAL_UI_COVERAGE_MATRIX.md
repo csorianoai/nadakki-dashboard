@@ -323,4 +323,18 @@ rg '0a91ee98|550e8400' app/\(forge\)/legal components/legal hooks/legal
 
 ---
 
-*Generado en Fase 0 — read-only. Gobierna PRs Fase 1–2. Veredicto actual: **NOT READY** — 43 HUÉRFANO + 4 ROTO + gaps honestidad/disclaimer.*
+*Generado en Fase 0 — actualizado PR-2/3/4/5 (2026-07-19).*
+
+**Veredicto builder:** `LEGAL_UI_FULL_COVERAGE_READY_FOR_FOUNDER_QA` — pending Founder QA per `GUIA_DE_PRUEBA_MANUAL.md`.
+
+### PR-3 probes (2026-07-19)
+
+| Endpoint | Status | Clasificación |
+|----------|--------|---------------|
+| `GET .../audit_chain_verification` | 404 | BACKEND_DEFECT BD-006 |
+| `GET .../snapshots` | 200 (array) | FRONTEND_FIXABLE — normalizar array en fetchSnapshots |
+| `GET .../snapshots/{id}` | 200 | CONSUMIDO_REAL PR-3 |
+| `GET .../snapshots/verify` | 500 | BACKEND_DEFECT BD-003 |
+| `GET .../snapshots/diff` | 500 | BACKEND_DEFECT BD-004 |
+| `GET /library/*` | 404 | HUÉRFANO_BACKEND_NO_MONTADO BD-007 |
+| `GET /meta/disaster-mode` | 200 NORMAL | CONSUMIDO_REAL (PR-5 verificado) |
