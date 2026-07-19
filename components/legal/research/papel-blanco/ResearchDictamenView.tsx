@@ -20,6 +20,13 @@ import {
 } from "@/components/legal/research/papel-blanco/ResearchMarkdown";
 import { ResearchActionsBlock } from "@/components/legal/research/papel-blanco/ResearchActionsBlock";
 import { Ley91Block } from "@/components/legal/research/papel-blanco/Ley91Block";
+import { LegalContentHonestyBadges } from "@/components/legal/LegalContentHonestyBadges";
+import { LegalStrictRejectionPanel } from "@/components/legal/LegalStrictRejectionPanel";
+import {
+  parseStrictModeRejection,
+  resolveLegalHonestyBadges,
+} from "@/lib/legal/content-honesty";
+import { useKnowledgePackInfo } from "@/hooks/useLegal";
 
 type Props = {
   userQuery: string;
@@ -83,11 +90,17 @@ export function ResearchDictamenView({
   onNewConsult,
   onFollowUp,
 }: Props) {
+  const { info: packInfo } = useKnowledgePackInfo("do");
   const isError = content.startsWith("**Error**");
   const sections = splitBySections(content);
   const citations = run?.citations ?? [];
   const requestId = run?.request_id ?? "unknown";
   const riskLabel = formatRiskLabel(run?.monitor?.riesgo_evaluado);
+  const honestyBadges = resolveLegalHonestyBadges(run, {
+    packVerified: packInfo?.verification_status === "verified",
+    packStatus: packInfo?.verification_status ?? packInfo?.status,
+  });
+  const strictRejection = parseStrictModeRejection(run);
 
   const handleCiteClick = (sourceId: string) => {
     scrollToCitation(sourceId, {
@@ -131,6 +144,11 @@ export function ResearchDictamenView({
 
   return (
     <article className="lr-content lr-dictamen" aria-label="Dictamen legal">
+      <div className="mb-4 space-y-3">
+        <LegalContentHonestyBadges badges={honestyBadges} />
+        <LegalStrictRejectionPanel rejection={strictRejection} />
+      </div>
+
       {/* Bloque 1 — Consulta */}
       <section className="lr-query-card">
         <div className="lr-query-header">
