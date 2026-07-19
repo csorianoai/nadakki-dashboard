@@ -19,17 +19,34 @@
 
 ## ERRORES CONOCIDOS — NO REPORTAR COMO NUEVOS
 
-Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, marque “Esperado (BD-xxx)” en la tabla final.
+### Defectos BD-001…007 — **CERRADOS** (ai-suite PR #624, verificado 2026-07-19)
 
-| ID | Pantalla / paso | Síntoma exacto en UI |
-|----|-----------------|----------------------|
-| **BD-001** | Archivar expediente | Al confirmar archivar: panel rojo HTTP **404** “Not Found”, referencia BD-001 |
-| **BD-002** | Documentos → verificar datos extraídos | Panel “Verificación de datos extraídos no disponible”, HTTP **404**, BD-002 |
-| **BD-003** | Snapshots → “Verificar cadena” o Auditoría → snapshots/verify | Panel error HTTP **500**, mensaje UUID inválido `'verify'`, BD-003 |
-| **BD-004** | Snapshots → “Diff vs anterior” | Panel error HTTP **500**, UUID inválido `'diff'`, BD-004 |
-| **BD-005** | Crear expediente (wizard) | Warning: actores no persistidos; GET actores vacío tras crear |
-| **BD-006** | Auditoría → audit_chain_verification | Panel HTTP **404** Not Found, BD-006 |
-| **BD-007** | Biblioteca `/legal/library` | Badge **DEMO** + panel 404 library no montada, BD-007 |
+Ya **no** deben aparecer paneles `BD-xxx` en UI. Si reaparecen, es regresión — reportar como **nuevo**.
+
+| ID | Estado post-#624 | Comportamiento esperado ahora |
+|----|------------------|-------------------------------|
+| BD-001 | Cerrado | `POST /archive` responde (409 si transición no permitida, no 404 fantasma) |
+| BD-002 | Cerrado | Endpoint existe; 404 solo si documento no encontrado |
+| BD-003 | Cerrado | `GET .../snapshots/verify` → 200 |
+| BD-004 | Cerrado | `GET .../snapshots/diff?from_id=&to_id=` → 200 o error de negocio honesto |
+| BD-005 | Cerrado | `POST .../actors` → 201 |
+| BD-006 | Cerrado | `GET .../audit_chain_verification` → 200 `chain_integrity: VALID` |
+| BD-007 | Cerrado | `GET /library/status` y `/library/search` → 200 |
+
+### Deuda backend / datos — sigue vigente (no es BD-xxx)
+
+| Síntoma | Pantalla | Notas |
+|---------|----------|-------|
+| Upload documento HTTP **500** | `/legal/cases/{id}/documents` | Deuda S3/storage backend — UI debe mostrar error visible (no silencioso) |
+| Pack DO = **DRAFT — NO CERTIFICADO** | `/legal/config` | **Estado correcto** hasta certificación de Ramón — no esperar VERIFIED |
+| Jurisdicción **CO comparte hash con DO** | `/legal/config` | Anomalía de datos backend pendiente — no es bug de UI |
+| Timeout sesión / expulsión a login | Deep-links `/legal/*` | HN-01 — loop backend/BFF aparte |
+
+### Rutas eliminadas (hardening HN-02)
+
+| Ruta | Esperado |
+|------|----------|
+| `/legal/guide` | **404** — ruta eliminada (dashboard mock retirado) |
 
 ---
 
@@ -59,7 +76,7 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 |---|---|
 | **URL** | `/legal/cases/new` |
 | **Acción** | Completar wizard con al menos un actor |
-| **Esperado** | 201 + redirect; **puede** aparecer warning BD-005 si actores vacíos |
+| **Esperado** | 201 + redirect; actores persistidos (BD-005 cerrado) |
 | **Anotar** | Copiar `case_id` creado |
 
 ### 4. Documentos (~7 min)
@@ -67,8 +84,8 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 | | |
 |---|---|
 | **URL** | `/legal/cases/{id}/documents` |
-| **Acción** | Ver banner S3; intentar subir PDF de prueba; abrir revisión datos extraídos si hay doc con OCR |
-| **Esperado** | Banner amarillo S3; upload puede fallar por storage; verify → BD-002 si endpoint ausente |
+| **Acción** | Ver banner S3 amarillo **sticky**; subir PDF de prueba |
+| **Esperado** | Banner visible antes de cargar expediente; upload 500 → panel error con detalle colapsable (deuda S3) |
 | **Anotar** | |
 
 ### 5. Acciones dinámicas (~5 min)
@@ -76,14 +93,14 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 | | |
 |---|---|
 | **URL** | `/legal/cases/{id}` |
-| **Acción** | Menú acciones: `generate_strategies`; probar transición de estado |
-| **Esperado** | Acciones desde GET case; POST /actions 200 o error honesto 409 |
+| **Acción** | Menú acciones; transición de estado |
+| **Esperado** | Etiquetas en español (ej. “Agregar parte”, “→ Cerrado”); POST /actions 200 o error honesto 409 |
 | **Anotar** | |
 
 ### 6. Estrategias, plazos, issues (~8 min)
 
 | Rutas | `/legal/cases/{id}/strategy`, `/deadlines`, `/issues` |
-| **Acción** | Listar; override plazo (reason + legal_basis); crear issue |
+| **Acción** | Listar; override plazo; crear issue |
 | **Esperado** | Datos reales o errores HTTP visibles |
 | **Anotar** | |
 
@@ -92,8 +109,8 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 | | |
 |---|---|
 | **URL** | `/legal/cases/{id}/snapshots` |
-| **Acción** | Crear manual; ver detalle; verificar cadena; diff |
-| **Esperado** | Lista carga (array API); verify/diff → BD-003/004 |
+| **Acción** | Verificar cadena; diff entre versiones |
+| **Esperado** | verify → 200 cadena íntegra; diff con `from_id`/`to_id` |
 | **Anotar** | |
 
 ### 8. Auditoría (~5 min)
@@ -101,8 +118,8 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 | | |
 |---|---|
 | **URL** | `/legal/audit?case_id={id}` |
-| **Acción** | audit_chain_verification + snapshots/verify fallback |
-| **Esperado** | Trail list; BD-006 y/o BD-003 en paneles |
+| **Acción** | Verificar cadena del expediente |
+| **Esperado** | Título “Trazabilidad de auditoría”; cadena VALID (sin panel BD-006) |
 | **Anotar** | |
 
 ### 9. Archivar (~3 min)
@@ -111,7 +128,7 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 |---|---|
 | **URL** | `/legal/cases/{id}/archive` |
 | **Acción** | Confirmar archivar |
-| **Esperado** | BD-001 (404) — no éxito simulado |
+| **Esperado** | Error HTTP honesto si transición no permitida (409) — sin panel BD-001 |
 | **Anotar** | |
 
 ### 10. Research (~5 min)
@@ -120,7 +137,7 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 |---|---|
 | **URL** | `/legal/research` |
 | **Acción** | Pregunta legal concreta con jurisdicción DO |
-| **Esperado** | Dictamen, citas, badges MOCK/DRAFT; rechazo strict-mode si aplica |
+| **Esperado** | Dictamen, citas, badges MOCK/DRAFT |
 | **Anotar** | |
 
 ### 11. Biblioteca + config (~5 min)
@@ -128,8 +145,8 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 | | |
 |---|---|
 | **URLs** | `/legal/library`, `/legal/config` |
-| **Acción** | Library: confirmar DEMO + BD-007; Config: packs DO verified, CO skeleton |
-| **Esperado** | Badges VERIFIED vs DRAFT — NO CERTIFICADO |
+| **Acción** | Library: status + búsqueda real; Config: packs y jurisdicciones |
+| **Esperado** | Library carga (sin DEMO/BD-007); pack DO = **DRAFT — NO CERTIFICADO**; CO puede compartir hash DO (anomalía conocida) |
 | **Anotar** | |
 
 ### 12. Audiencias + comparador (~3 min)
@@ -141,6 +158,14 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 | **Esperado** | 200 API |
 | **Anotar** | |
 
+### 13. Onboarding (~2 min)
+
+| | |
+|---|---|
+| **URL** | `/legal/onboarding` |
+| **Esperado** | Formulario funcional — **conservado** |
+| **Anotar** | |
+
 ---
 
 ## Tabla de registro (completar en QA)
@@ -148,23 +173,20 @@ Estos síntomas están documentados en `BACKEND_DEFECTS_LEDGER.md`. Si los ve, m
 | PANTALLA | PASO | ESPERADO | REAL | SEVERIDAD |
 |----------|------|----------|------|-----------|
 | | | | | |
-| | | | | |
-| | | | | |
 
-**Severidad:** `blocker` \| `major` \| `minor` \| `expected-bd` (si coincide con tabla conocida)
+**Severidad:** `blocker` | `major` | `minor` | `expected-known` (deuda S3, CO=hash, HN-01)
 
 ---
 
 ## Gate verificado por builder
 
 ```bash
-# Tenants prohibidos en JSX legal
 rg "0a91ee98|550e8400" app/(forge)/legal components/legal hooks/legal lib/legal
-
+rg "/legal/guide" components/legal app/(forge)/legal lib/legal
 npm run build
 ```
 
-**Veredicto objetivo:** `LEGAL_UI_FULL_COVERAGE_READY_FOR_FOUNDER_QA` (no `PRODUCTION_READY`).
+**Veredicto objetivo:** `LEGAL_UI_HARDENED_FRONT_CLOSED`
 
 ---
 
@@ -172,12 +194,12 @@ npm run build
 
 | Bloque | Razón |
 |--------|--------|
-| `flujos/*` (12) | Motor de flujos procesales — fuera scope vitrina MVP; requiere UX dedicada post-M1 |
-| `validation-queue/*` (7) | Cola abogado — sin pantalla hasta workflow de certificación |
+| `flujos/*` (12) | Motor de flujos procesales — fuera scope vitrina MVP |
+| `validation-queue/*` (7) | Cola abogado — sin pantalla hasta certificación |
 | `attorneys/*` (4) | Gestión perfiles abogado — admin futuro |
-| `notifications/preferences` (2) | Preferencias — sin UI de notificaciones legal |
-| `export/pdf` (global) | PDF per-documento consumido; export opinión global pendiente producto |
-| `cases/search` | Búsqueda nominal/cédula — UI usa list filters |
-| `meta/disaster-mode/actions\|force` | Ops admin — no portal usuario |
+| `notifications/preferences` (2) | Preferencias — sin UI legal |
+| `export/pdf` (global) | Export opinión global pendiente producto |
+| `cases/search` | Búsqueda nominal — UI usa list filters |
+| `meta/disaster-mode/actions\|force` | Ops admin |
 
 Matriz autoritativa: `LEGAL_UI_COVERAGE_MATRIX.md`
