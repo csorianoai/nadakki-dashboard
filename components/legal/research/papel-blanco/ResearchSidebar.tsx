@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
   Home,
   Briefcase,
   Gavel,
@@ -17,13 +16,12 @@ import {
 } from "lucide-react";
 
 const WORK_LINKS = [
-  { href: "/legal/guide", label: "Cockpit", icon: LayoutDashboard },
   { href: "/legal", label: "Inicio", icon: Home },
   { href: "/legal/cases", label: "Expedientes", icon: Briefcase },
   { href: "/legal/audiencias", label: "Audiencias", icon: Gavel },
   { href: "/legal/research", label: "Investigación", icon: Search },
   { href: "/legal/contracts", label: "Contratos", icon: FileText },
-  { href: "/legal/guide", label: "Biblioteca", icon: BookOpen },
+  { href: "/legal/library", label: "Biblioteca", icon: BookOpen },
   { href: "/legal/strategies/historical", label: "Estrategias históricas", icon: History },
 ] as const;
 
@@ -56,11 +54,9 @@ export function ResearchSidebar({ tenantLabel }: Props) {
           const active =
             label === "Investigación"
               ? pathname.startsWith("/legal/research")
-              : label === "Biblioteca"
-                ? false
-                : href === "/legal"
-                  ? pathname === "/legal"
-                  : pathname === href || pathname.startsWith(`${href}/`);
+              : href === "/legal"
+                ? pathname === "/legal"
+                : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href + label}

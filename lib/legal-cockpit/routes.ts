@@ -3,7 +3,6 @@
 
 export const LEGAL_ROUTES = {
   home: "/legal",
-  guide: "/legal/guide",
   cases: "/legal/cases",
   newCase: "/legal/cases/new",
   audit: "/legal/audit",
