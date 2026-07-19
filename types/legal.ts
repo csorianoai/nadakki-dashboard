@@ -41,6 +41,15 @@ export interface AgentMonitor {
   latency_ms?: number;
 }
 
+export interface AgentRunAuditTrail {
+  knowledge_pack_verified?: boolean;
+  knowledge_pack_hash?: string;
+  llm_mode?: string;
+  validation_status?: string;
+  strict_mode?: boolean;
+  rejection_reason?: string;
+}
+
 export interface AgentRunResponse {
   agent_id: string;
   tenant_id: string;
@@ -54,6 +63,12 @@ export interface AgentRunResponse {
   monitor?: AgentMonitor;
   latency_ms?: number;
   follow_up_suggestions?: string[];
+  /** Extended fields when backend exposes validation / mock metadata */
+  audit_trail?: AgentRunAuditTrail;
+  llm_metadata?: { provider?: string; model?: string; mode?: string; latency_ms?: number };
+  metricas?: Record<string, unknown>;
+  validation_status?: string;
+  rejection_reason?: string;
 }
 
 export interface AuditTrailEntry {

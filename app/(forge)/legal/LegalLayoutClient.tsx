@@ -9,6 +9,7 @@ import { DeadlineNotificationBanner } from "@/components/legal/DeadlineNotificat
 import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
 import { LegalCoreShell } from "@/components/legal/LegalCoreShell";
 import { LegalDisclaimerFooter } from "@/components/legal/LegalDisclaimerFooter";
+import { LegalGr14Banner } from "@/components/legal/LegalGr14Banner";
 import { LegalSubNav } from "@/components/legal/LegalSubNav";
 import { DisasterModeProvider } from "@/app/providers/DisasterModeProvider";
 
@@ -36,6 +37,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
           <CHTenantGuard>
             <ModuleGate module="legal">
               <DisasterModeProvider>
+                <LegalGr14Banner compact />
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
               </DisasterModeProvider>
             </ModuleGate>
@@ -66,6 +68,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
               <div className="flex min-h-0 flex-1">
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-zinc-950 text-zinc-100">
                   <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col px-4 py-5 md:px-6 md:py-6">
+                    <LegalGr14Banner />
                     <DemoBannerStrong />
                     <DeadlineNotificationBanner />
                     <LegalSubNav />
