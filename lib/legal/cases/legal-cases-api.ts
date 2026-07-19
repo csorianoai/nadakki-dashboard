@@ -281,14 +281,25 @@ export async function patchIssue(
   return parseJson<unknown>(res);
 }
 
+export async function fetchAuditChainVerification(tenantId: string, caseId: string) {
+  const res = await fetch(
+    `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/audit_chain_verification`,
+    { headers: tenantHeaders(tenantId) },
+  );
+  return readLegalJson<unknown>(res, "Error al verificar cadena de auditoría");
+}
+
 export async function fetchSnapshots(tenantId: string, caseId: string) {
   const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar versiones (${res.status})`);
-  const raw = await parseJson<Record<string, unknown>>(res);
-  const snapshots = Array.isArray(raw.snapshots) ? raw.snapshots : [];
-  return { snapshots };
+  const raw = await parseJson<unknown>(res);
+  if (Array.isArray(raw)) return { snapshots: raw };
+  if (raw && typeof raw === "object" && Array.isArray((raw as { snapshots?: unknown }).snapshots)) {
+    return { snapshots: (raw as { snapshots: unknown[] }).snapshots };
+  }
+  return { snapshots: [] };
 }
 
 export async function fetchSnapshotDetail(tenantId: string, caseId: string, snapshotId: string) {

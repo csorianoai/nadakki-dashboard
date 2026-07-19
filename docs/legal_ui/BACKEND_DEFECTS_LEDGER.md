@@ -148,6 +148,41 @@ Invoke-WebRequest -Method POST `
 
 ---
 
+## BD-006 — `GET .../audit_chain_verification` no existe (404)
+
+| Campo | Valor |
+|-------|--------|
+| **Endpoint** | `GET /api/v1/legal/cases/{case_id}/audit_chain_verification` |
+| **Comportamiento esperado (spec)** | Verificación de integridad de cadena de auditoría del expediente |
+| **Comportamiento real** | `404 {"detail":"Not Found"}` (también probado `audit-chain-verification`) |
+
+```powershell
+Invoke-WebRequest -Method GET `
+  -Uri "https://nadakki-ai-suite.onrender.com/api/v1/legal/cases/01c38444-e89b-4d1a-90cd-f2ed4fcc4a3a/audit_chain_verification" `
+  -Headers @{ "X-Tenant-ID" = "d3b00111-0000-0000-0000-000000d3b001" } -UseBasicParsing
+```
+
+**UI PR-3:** `/legal/audit` intenta el endpoint y muestra `LegalApiErrorPanel` BD-006; fallback `snapshots/verify` → BD-003.
+
+---
+
+## BD-007 — Library API no montada (404)
+
+| Campo | Valor |
+|-------|--------|
+| **Endpoints** | `GET /api/v1/legal/library/status`, `GET /api/v1/legal/library/search` |
+| **Comportamiento real** | `404 {"detail":"Not Found"}` |
+
+```powershell
+Invoke-WebRequest -Method GET `
+  -Uri "https://nadakki-ai-suite.onrender.com/api/v1/legal/library/status" `
+  -Headers @{ "X-Tenant-ID" = "d3b00111-0000-0000-0000-000000d3b001" } -UseBasicParsing
+```
+
+**UI PR-4:** `/legal/library` con badge **DEMO** y estado `HUÉRFANO_BACKEND_NO_MONTADO` — sin datos inventados.
+
+---
+
 ## Índice rápido
 
 | ID | Severidad | Endpoint | Fix owner |
@@ -157,6 +192,8 @@ Invoke-WebRequest -Method POST `
 | BD-003 | Alta | GET snapshots/verify | Backend (route order) |
 | BD-004 | Alta | GET snapshots/diff | Backend (route order) |
 | BD-005 | Alta | POST actors | Backend (migration) |
+| BD-006 | Alta | GET audit_chain_verification | Backend M1+ |
+| BD-007 | Media | GET library/* | Backend (no montado) |
 | DEV-001 | — | available_actions | Frontend ✅ PR-2 |
 | DEV-002 | — | POST actions | Frontend ✅ PR-2 |
 | DEV-003 | — | state transitions | Frontend ✅ PR-2 |

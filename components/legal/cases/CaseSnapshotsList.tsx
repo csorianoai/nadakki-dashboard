@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import type { CaseSnapshot } from "@/lib/legal/cases/case-types";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { fetchSnapshotDiff, fetchSnapshotVerify } from "@/lib/legal/cases/legal-cases-api";
 import { LegalApiErrorPanel } from "@/components/legal/cases/LegalApiErrorPanel";
+import { CaseSnapshotDetailPanel } from "@/components/legal/cases/CaseSnapshotDetailPanel";
 
 export function CaseSnapshotsList({
   tenantId,
@@ -22,6 +22,7 @@ export function CaseSnapshotsList({
   const [diffError, setDiffError] = useState<unknown>(null);
   const [diffPayload, setDiffPayload] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const ordered = useMemo(
     () => [...snapshots].sort((a, b) => b.created_at.localeCompare(a.created_at)),
@@ -93,12 +94,13 @@ export function CaseSnapshotsList({
               <p className="font-medium text-forgeGray-900">{s.snapshot_reason ?? "—"}</p>
               <p className="text-xs text-forgeGray-500">{new Date(s.created_at).toLocaleString("es-DO")}</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                <Link
-                  href={`/legal/cases/${caseId}/snapshots?snapshot=${s.snapshot_id}`}
+                <button
+                  type="button"
                   className="text-xs font-medium text-forgeBrand-700"
+                  onClick={() => setDetailId(s.snapshot_id)}
                 >
                   {m.snapshots.view_diff}
-                </Link>
+                </button>
                 {idx < ordered.length - 1 ? (
                   <button
                     type="button"
@@ -124,6 +126,14 @@ export function CaseSnapshotsList({
           <summary className="cursor-pointer font-medium">Diff (respuesta API)</summary>
           <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap">{JSON.stringify(diffPayload, null, 2)}</pre>
         </details>
+      ) : null}
+      {detailId ? (
+        <CaseSnapshotDetailPanel
+          tenantId={tenantId}
+          caseId={caseId}
+          snapshotId={detailId}
+          onClose={() => setDetailId(null)}
+        />
       ) : null}
     </div>
   );
