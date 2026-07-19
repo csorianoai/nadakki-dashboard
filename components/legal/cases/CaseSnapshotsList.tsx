@@ -78,11 +78,7 @@ export function CaseSnapshotsList({
       ) : null}
       {verifyError ? (
         <div className="mb-3">
-          <LegalApiErrorPanel
-            title="Verificación de cadena no disponible"
-            error={verifyError}
-            defectId="BD-003"
-          />
+          <LegalApiErrorPanel title="Verificación de cadena no disponible" error={verifyError} />
         </div>
       ) : null}
       {!ordered.length ? (
@@ -108,7 +104,7 @@ export function CaseSnapshotsList({
                     className="text-xs font-medium text-forgeBrand-700 underline disabled:opacity-50"
                     onClick={() => void viewDiff(s.snapshot_id, ordered[idx + 1]!.snapshot_id)}
                   >
-                    Diff vs anterior
+                    {m.snapshots.diff_vs_previous}
                   </button>
                 ) : null}
               </div>
@@ -118,7 +114,7 @@ export function CaseSnapshotsList({
       )}
       {diffError ? (
         <div className="mt-3">
-          <LegalApiErrorPanel title="Diff de snapshots no disponible" error={diffError} defectId="BD-004" />
+          <LegalApiErrorPanel title="Diff de snapshots no disponible" error={diffError} />
         </div>
       ) : null}
       {diffPayload ? (

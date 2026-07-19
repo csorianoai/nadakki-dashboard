@@ -76,7 +76,6 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
     },
   ]);
   const [err, setErr] = useState<string | null>(null);
-  const [actorWarning, setActorWarning] = useState<string | null>(null);
 
   const updateActor = (index: number, updated: ActorFormData) => {
     setActors((prev) => prev.map((a, i) => (i === index ? updated : a)));
@@ -123,17 +122,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
     },
     onSuccess: async (c) => {
       await qc.invalidateQueries({ queryKey: ["legal_cases", tenantId] });
-      // Defensive: backend may fail silently inserting actors
-      const actors = (c as unknown as Record<string, unknown>).actors;
-      if (!actors || (Array.isArray(actors) && actors.length === 0)) {
-        setActorWarning(
-          "Expediente creado, pero el backend no persistió actores (BD-005 en BACKEND_DEFECTS_LEDGER.md). GET /actors puede devolver vacío hasta fix backend."
-        );
-        // Non-blocking: redirect after brief delay so user sees the warning
-        setTimeout(() => router.push(`/legal/cases/${c.case_id}`), 3000);
-      } else {
-        router.push(`/legal/cases/${c.case_id}`);
-      }
+      router.push(`/legal/cases/${c.case_id}`);
     },
   });
 
@@ -225,12 +214,6 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
       {err ? (
         <p className="mt-3 text-sm text-red-400" role="alert">
           {err}
-        </p>
-      ) : null}
-
-      {actorWarning ? (
-        <p className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-300" role="status">
-          {actorWarning}
         </p>
       ) : null}
 

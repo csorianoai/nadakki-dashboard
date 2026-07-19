@@ -14,6 +14,8 @@ import { PracticeAreaChipGroup } from "@/components/legal/PracticeAreaChipGroup"
 import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
 import { AuditChainIntegrityPanel } from "@/components/legal/audit/AuditChainIntegrityPanel";
 import { useLegalCases } from "@/hooks/legal/useLegalCases";
+import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
+import { auditTrailRiskLabel, auditTrailStatusLabel } from "@/lib/legal/presentation-labels";
 
 function latencyClass(ms: number | undefined) {
   if (ms == null) return "text-slate-500";
@@ -58,6 +60,7 @@ function filterEntries(
 }
 
 export default function LegalAuditClient() {
+  const m = useLegalCasesMessages();
   const searchParams = useSearchParams();
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
   const [limit, setLimit] = useState(50);
@@ -148,14 +151,14 @@ export default function LegalAuditClient() {
     <div className="space-y-6">
       <header className="flex flex-col gap-3 border-b border-slate-200 pb-4 dark:border-slate-800 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Audit Trail</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">{m.audit.title}</h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">
             Trazabilidad para compliance bancario (hashes; sin texto completo de entrada).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs dark:border-slate-700 dark:bg-slate-800">
-            ISO 27001 ready
+            {m.audit.iso_badge}
           </span>
           <button
             type="button"
@@ -174,10 +177,10 @@ export default function LegalAuditClient() {
       {error && <LegalErrorState message={error} onRetry={() => void refetch()} />}
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Queries (filtradas)" value={String(metrics.n)} />
-        <Metric label="Tasa éxito" value={`${metrics.successRate}%`} />
-        <Metric label="Latencia media" value={`${Math.round(metrics.avgLat)} ms`} />
-        <Metric label="Citas / query (avg)" value={String(metrics.avgCit)} />
+        <Metric label={m.audit.metric_queries} value={String(metrics.n)} />
+        <Metric label={m.audit.metric_success_rate} value={`${metrics.successRate}%`} />
+        <Metric label={m.audit.metric_avg_latency} value={`${Math.round(metrics.avgLat)} ms`} />
+        <Metric label={m.audit.metric_avg_citations} value={String(metrics.avgCit)} />
       </section>
 
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
@@ -204,7 +207,7 @@ export default function LegalAuditClient() {
             onChange={(e) => setAgent(e.target.value)}
             aria-label="Filtro agente"
           >
-            <option value="all">Todos los agentes</option>
+            <option value="all">{m.audit.filter_all_agents}</option>
             {Array.from(new Set(entries.map((e) => e.agent_id))).map((id) => (
               <option key={id} value={id}>
                 {id}
@@ -217,10 +220,10 @@ export default function LegalAuditClient() {
             onChange={(e) => setStatus(e.target.value)}
             aria-label="Filtro estado"
           >
-            <option value="">Estado (todos)</option>
-            <option value="success">success</option>
-            <option value="error">error</option>
-            <option value="timeout">timeout</option>
+            <option value="">{m.audit.filter_status_all}</option>
+            <option value="success">{auditTrailStatusLabel(m, "success")}</option>
+            <option value="error">{auditTrailStatusLabel(m, "error")}</option>
+            <option value="timeout">{auditTrailStatusLabel(m, "timeout")}</option>
           </select>
           <select
             className="rounded border border-slate-300 bg-white px-2 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
@@ -228,10 +231,10 @@ export default function LegalAuditClient() {
             onChange={(e) => setRisk(e.target.value)}
             aria-label="Filtro riesgo"
           >
-            <option value="">Riesgo (todos)</option>
-            <option value="low">low</option>
-            <option value="medium">medium</option>
-            <option value="high">high</option>
+            <option value="">{m.audit.filter_risk_all}</option>
+            <option value="low">{auditTrailRiskLabel(m, "low")}</option>
+            <option value="medium">{auditTrailRiskLabel(m, "medium")}</option>
+            <option value="high">{auditTrailRiskLabel(m, "high")}</option>
           </select>
           <input
             type="date"
@@ -304,14 +307,14 @@ export default function LegalAuditClient() {
             <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
                 <tr>
-                  <th className="p-3 font-medium">Timestamp</th>
-                  <th className="p-3 font-medium">Agente</th>
-                  <th className="p-3 font-medium">Estado</th>
-                  <th className="p-3 font-medium">Citas</th>
-                  <th className="p-3 font-medium">Latencia</th>
-                  <th className="p-3 font-medium">Riesgo</th>
-                  <th className="p-3 font-medium">Áreas</th>
-                  <th className="p-3 font-medium">Acciones</th>
+                  <th className="p-3 font-medium">{m.audit.col_timestamp}</th>
+                  <th className="p-3 font-medium">{m.audit.col_agent}</th>
+                  <th className="p-3 font-medium">{m.audit.col_status}</th>
+                  <th className="p-3 font-medium">{m.audit.col_citations}</th>
+                  <th className="p-3 font-medium">{m.audit.col_latency}</th>
+                  <th className="p-3 font-medium">{m.audit.col_risk}</th>
+                  <th className="p-3 font-medium">{m.audit.col_areas}</th>
+                  <th className="p-3 font-medium">{m.audit.col_actions}</th>
                 </tr>
               </thead>
               <tbody>

@@ -60,7 +60,6 @@ export function CaseDocumentExtractedDataReview({
             <LegalApiErrorPanel
               title="Verificación de datos extraídos no disponible"
               error={error}
-              defectId="BD-002"
             />
           </div>
         ) : null}

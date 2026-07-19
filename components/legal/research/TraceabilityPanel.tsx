@@ -3,6 +3,7 @@
 import type { AgentMonitor, AgentRunResponse, Citation, RagMetadata } from "@/types/legal";
 import { ResearchCitationCard } from "@/components/legal/research/ResearchCitationCard";
 import { scrollToCitation } from "@/lib/legal/research/citation-utils";
+import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 
 type Tab = "citations" | "rag" | "monitor" | "audit";
 
@@ -25,16 +26,17 @@ function Row({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
 }
 
 function RagPanel({ meta }: { meta?: RagMetadata }) {
+  const m = useLegalCasesMessages();
   if (!meta) return <p className="text-sm text-[var(--legal-text-secondary)]">Sin metadatos RAG.</p>;
   return (
     <dl className="space-y-2">
-      <Row k="Pack hash" v={meta.pack_hash || "—"} mono />
+      <Row k={m.traceability.pack_hash} v={meta.pack_hash || "—"} mono />
       <Row k="Capa 1" v={String(meta.fuentes_capa_1_count ?? "—")} />
       <Row k="Capa 2" v={String(meta.fuentes_capa_2_count ?? "—")} />
-      <Row k="Domain filter" v={meta.domain_filter_applied ? "sí" : "no"} />
-      <Row k="Domain" v={meta.domain || "—"} />
-      <Row k="RAG latency" v={meta.latency_ms != null ? `${meta.latency_ms} ms` : "—"} />
-      <Row k="Query hash" v={meta.query_hash || "—"} mono />
+      <Row k={m.traceability.domain_filter} v={meta.domain_filter_applied ? "sí" : "no"} />
+      <Row k="Dominio" v={meta.domain || "—"} />
+      <Row k={m.traceability.rag_latency} v={meta.latency_ms != null ? `${meta.latency_ms} ms` : "—"} />
+      <Row k={m.traceability.query_hash} v={meta.query_hash || "—"} mono />
     </dl>
   );
 }
