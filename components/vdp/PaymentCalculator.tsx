@@ -9,6 +9,7 @@ import { fmtRD } from "@/lib/format";
 import { SaveButton } from "@/components/vehicle/SaveButton";
 import { FinancingLeadButton } from "@/components/autos/FinancingLeadButton";
 import type { Vehicle } from "@/lib/vehicles";
+import { useFinancingBridge } from "@/lib/autos-portal/hooks/useFinancingBridge";
 import { cn } from "@/lib/utils";
 
 const BANKS = [
