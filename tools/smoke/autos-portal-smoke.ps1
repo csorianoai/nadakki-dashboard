@@ -94,8 +94,23 @@ $searchBody = '{"page":1,"page_size":5}'
 Test-JsonEndpoint -Label "POST /api/v1/autos/vehicles/search" -Url "$Backend/api/v1/autos/vehicles/search" -Method POST -Body $searchBody -Headers @{ "X-Tenant-ID" = $TenantId }
 
 Write-Host ""
+Write-Host "4b. DNS CNAME probe"
+try {
+    $cname = Resolve-DnsName -Name "autos.nadakki.com" -Type CNAME -ErrorAction Stop
+    $target = $cname.NameHost
+    if ($target -match "vercel-dns") {
+        Write-Host "  OK CNAME -> $target" -ForegroundColor Green
+    } else {
+        Write-Host "  FAIL CNAME unexpected: $target" -ForegroundColor Red
+        [void]$failures.Add("CNAME => $target")
+    }
+} catch {
+    Write-Host "  WARN CNAME lookup failed (may be propagation)" -ForegroundColor Yellow
+}
+
+Write-Host ""
 Write-Host "4. Frontend DNS probe"
-$frontendLive = Test-HttpStatus -Label "HEAD $Frontend" -Url $Frontend
+$frontendLive = Test-HttpStatus -Label "HEAD $Frontend (307 or 200)" -Url $Frontend -Expected @(200, 307, 308)
 if (-not $frontendLive) {
     Write-Host "  INFO autos subdomain not resolving; using $FrontendFallback" -ForegroundColor Yellow
     $Frontend = $FrontendFallback
@@ -103,7 +118,7 @@ if (-not $frontendLive) {
 
 Write-Host ""
 Write-Host "5. Frontend routes"
-Test-HttpStatus -Label "HEAD /" -Url $Frontend
+Test-HttpStatus -Label "HEAD / (307 redirect on autos host)" -Url $Frontend -Expected @(307, 308) -NoRedirect
 Test-HttpStatus -Label "HEAD /autos/vehiculos" -Url "$Frontend/autos/vehiculos"
 Test-HttpStatus -Label "HEAD /autos/cart" -Url "$Frontend/autos/cart"
 Test-HttpStatus -Label "HEAD /autos/dashboard/mis-leads" -Url "$Frontend/autos/dashboard/mis-leads"
