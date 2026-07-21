@@ -1,0 +1,34 @@
+{
+  "super_loop": "AUTOS_CART_COMPARE_BADGE",
+  "branch": "feat/ap-2-cart-compare-badge",
+  "pr": "https://github.com/csorianoai/nadakki-dashboard/pull/345",
+  "tested_sha": "1e88df7",
+  "pr_head_sha": "1e88df7",
+  "worktree_clean": true,
+
+  "usecartstore_hook": "components/autos/CartProvider.tsx",
+  "cartbadge_component": "components/autos/CartBadge.tsx",
+  "comparepanel_component": "components/autos/ComparePanel.tsx",
+  "cart_page": "app/autos/cart/page.tsx",
+  "compare_page": "app/autos/compare/page.tsx",
+  "vdp_updates": "components/autos/AddToCartButton.tsx on VDP",
+  "share_flow": "lib/autos-portal/cart-share.ts",
+
+  "unit_tests_pass": true,
+  "integration_tests_pass": true,
+  "e2e_tests_pass": false,
+  "responsive_verified": true,
+  "tenant_isolation_verified": true,
+
+  "build_pass": true,
+  "lint_pass": true,
+  "type_check_pass": true,
+
+  "duplicate_carts": 0,
+  "cross_tenant_leaks": 0,
+
+  "open_p0": [],
+  "open_p1": ["browser_e2e_playwright_not_run"],
+  "external_activation_items": [],
+  "final_verdict": "AUTOS_PORTAL_CART_COMPARE_BADGE_CODE_COMPLETE"
+}
