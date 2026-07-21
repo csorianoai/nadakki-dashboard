@@ -106,6 +106,16 @@ const TESTING_MODULES = [
 // ***************************************************************
 const CHANNEL_MODULES = [
   { 
+    id: "dashboard", 
+    name: "Marketing Dashboard", 
+    desc: "Vista unificada: agentes, campañas y calendario",
+    href: "/marketing/dashboard", 
+    icon: BarChart3, 
+    color: "#a855f7",
+    badge: "NEW",
+    features: ["46+ Agents", "Campaigns", "Execute"]
+  },
+  { 
     id: "agents", 
     name: "AI Agents", 
     desc: "Agentes inteligentes para automatizacin",

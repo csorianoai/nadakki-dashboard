@@ -42,7 +42,12 @@ export function normalizeMarketingAgents(json: unknown): {
   const agents = Array.isArray(raw)
     ? raw.filter((x) => x && typeof x === "object").map((x) => x as Record<string, unknown>)
     : [];
-  const total = typeof o.total === "number" ? o.total : agents.length;
+  const pagination = o.pagination;
+  const paginationTotal =
+    pagination && typeof pagination === "object" && typeof (pagination as Record<string, unknown>).total === "number"
+      ? ((pagination as Record<string, unknown>).total as number)
+      : null;
+  const total = typeof o.total === "number" ? o.total : paginationTotal ?? agents.length;
   return { agents, total };
 }
 
@@ -398,6 +403,62 @@ export async function activateMarketingCampaign(
   } catch (e) {
     return {
       ok: false,
+      error: (e as Error)?.message ?? "Network error",
+      status: 0,
+    };
+  }
+}
+
+export type ExecuteCampaignResult = {
+  ok: boolean;
+  data: Record<string, unknown> | null;
+  error: string | null;
+  status: number;
+};
+
+/** POST /api/marketing/campaigns/{id}/execute — falls back to activate if execute route missing. */
+export async function executeMarketingCampaign(
+  tenantId: string,
+  campaignId: string,
+  body: Record<string, unknown> = {},
+): Promise<ExecuteCampaignResult> {
+  const url = MARKETING_ENDPOINTS.CAMPAIGN_EXECUTE(campaignId);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: authHeaders({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Tenant-ID": tenantId,
+      }),
+      body: JSON.stringify(body),
+    });
+    const status = res.status;
+    const json = (await res.json().catch(() => null)) as unknown;
+    if (res.ok) {
+      const data =
+        json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+      return { ok: true, data, error: null, status };
+    }
+    if (status === 404 || status === 405) {
+      const activated = await activateMarketingCampaign(tenantId, campaignId);
+      return {
+        ok: activated.ok,
+        data: activated.ok ? { activated: true, campaign_id: campaignId } : null,
+        error: activated.error,
+        status: activated.status,
+      };
+    }
+    return {
+      ok: false,
+      data: null,
+      error: formatHttpDetail(json, `HTTP ${status}`),
+      status,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      data: null,
       error: (e as Error)?.message ?? "Network error",
       status: 0,
     };
