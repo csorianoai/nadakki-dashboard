@@ -65,4 +65,13 @@ describe("autos-portal AP-5", () => {
       expect(src).toMatch(/matcher:\s*\[[\s\S]*"\/"/);
     });
   });
+
+  describe("next.config autos root redirect", () => {
+    const src = readSrc("next.config.js");
+
+    it("redirects autos.nadakki.com / to /autos/vehiculos", () => {
+      expect(src).toContain('value: "autos.nadakki.com"');
+      expect(src).toContain('destination: "/autos/vehiculos"');
+    });
+  });
 });

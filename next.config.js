@@ -174,6 +174,12 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/",
+        has: [{ type: "host", value: "autos.nadakki.com" }],
+        destination: "/autos/vehiculos",
+        permanent: false,
+      },
+      {
         source: "/legal-agents",
         destination: "/legal",
         permanent: false,
