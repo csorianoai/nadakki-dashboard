@@ -288,6 +288,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/autos/marketplace",
     "/autos/marketplace/:path*",
     "/cockpit/plans",
