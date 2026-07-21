@@ -24,6 +24,7 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { legacyMarketplaceRedirectTarget } from "@/lib/autos-portal/routes";
 
 // FC1 — Cockpit consolidation: /cockpit/plans → Panel admin billing
 const COCKPIT_CONSOLIDATION_ENABLED =
@@ -135,6 +136,12 @@ export function middleware(request: NextRequest) {
   // ── 1. FC1 cockpit plans redirect ─────────────────────────────────────
   if (COCKPIT_CONSOLIDATION_ENABLED && pathname === "/cockpit/plans") {
     return NextResponse.redirect(new URL("/admin/billing", request.url), 302);
+  }
+
+  // ── 1a. AP-5 — legacy Forge marketplace → consumer browse (301) ─────
+  if (pathname === "/autos/marketplace" || pathname.startsWith("/autos/marketplace/")) {
+    const target = legacyMarketplaceRedirectTarget(pathname);
+    return NextResponse.redirect(new URL(target, request.url), 301);
   }
 
   // ── 1b. F4 finance registry — superadmin-only redirect ────────────────
@@ -276,6 +283,8 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/autos/marketplace",
+    "/autos/marketplace/:path*",
     "/cockpit/plans",
     "/cockpit/finance/registry",
     "/cockpit/finance/registry/:path*",

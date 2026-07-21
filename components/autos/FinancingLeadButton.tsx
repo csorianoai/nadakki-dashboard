@@ -66,6 +66,7 @@ export function FinancingLeadButton({
       type="button"
       variant="brand"
       className={className}
+      data-testid="financing-apply-button"
       disabled={submitting}
       onClick={() => void handleApply()}
     >

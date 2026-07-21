@@ -1,0 +1,22 @@
+{
+  "super_loop": "AUTOS_CART_COMPARE_BADGE",
+  "repo": "nadakki-dashboard",
+  "branch": "feat/ap-2-cart-compare-badge",
+  "scope": "client_side_cart_compare_badge",
+  "storage": "sessionStorage",
+  "backend_required": false,
+  "frontend_implemented": {
+    "lib/autos-portal/cart-types.ts": true,
+    "lib/autos-portal/cart-storage.ts": true,
+    "lib/autos-portal/cart-share.ts": true,
+    "components/autos/CartProvider.tsx": true,
+    "components/autos/CartBadge.tsx": true,
+    "components/autos/ComparePanel.tsx": true,
+    "components/autos/AddToCartButton.tsx": true,
+    "app/autos/cart/page.tsx": true,
+    "app/autos/compare/page.tsx": true,
+    "components/nav/TopNav.tsx": "CartBadge wired",
+    "app/autos/vehiculo/[id]/page.tsx": "AddToCartButton"
+  },
+  "verdict": "AUTOS_PORTAL_CART_COMPARE_BADGE_CODE_COMPLETE"
+}

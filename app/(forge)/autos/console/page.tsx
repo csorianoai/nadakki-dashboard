@@ -8,7 +8,7 @@ const NAV_CARDS = [
   {
     title: "Marketplace",
     description: "Buscar y explorar vehículos disponibles",
-    href: "/autos/marketplace",
+    href: "/autos/vehiculos",
     icon: Search,
     color: "#3b82f6",
   },

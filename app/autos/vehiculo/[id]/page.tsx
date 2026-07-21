@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { VdpBreadcrumb } from "@/components/vdp/Breadcrumb";
 import { Gallery } from "@/components/vdp/Gallery";
 import { VehicleHeader } from "@/components/vdp/VehicleHeader";
+import { AddToCartButton } from "@/components/autos/AddToCartButton";
 import { MatchScore } from "@/components/vdp/MatchScore";
 import { TrustChips } from "@/components/vdp/TrustChips";
 import { SpecTabs } from "@/components/vdp/SpecTabs";
@@ -106,6 +107,7 @@ export default function AutosVehiculoDetailPage() {
           <div className="min-w-0 flex-[999_1_540px] space-y-6">
             <Gallery vehicle={vehicle} />
             <VehicleHeader vehicle={vehicle} />
+            <AddToCartButton vehicle={vehicle} vehicleRefId={id} className="mt-2" />
             <div className="flex flex-wrap items-center gap-4">
               <MatchScore match={vehicle.match} />
               <TrustChips />
@@ -118,6 +120,7 @@ export default function AutosVehiculoDetailPage() {
           <div className="w-full min-w-[280px] flex-[1_1_320px] max-w-[370px] space-y-4">
             <PaymentCalculator
               vehicle={vehicle}
+              vehicleRefId={id}
               saved={saved}
               onSaveToggle={() => setSaved((s) => !s)}
             />

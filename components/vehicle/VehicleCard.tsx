@@ -213,6 +213,7 @@ export const VehicleCard = memo(function VehicleCard({
 
   return (
     <article
+      data-testid="vehicle-card"
       data-vehicle-id={vehicle.id}
       data-price-status={status}
       className={cn(
