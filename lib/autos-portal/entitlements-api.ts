@@ -1,0 +1,121 @@
+/** Autos dealer entitlements API client — Phase 1 frontend. */
+
+import { getAuthHeaders, resolveApiUrl } from "@/lib/api/fetch-client";
+import { tokenStorage } from "@/lib/auth/token-storage";
+import { isTenantSlug, TENANTS } from "@/lib/tenants";
+import type {
+  DealerEntitlementContext,
+  EntitlementDecision,
+} from "@/types/entitlements";
+
+function getTenantId(): string {
+  if (typeof window === "undefined") {
+    return process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ?? TENANTS.nadakki.tenantId;
+  }
+
+  const stored = window.localStorage.getItem("nadakki_tenant_id");
+  if (stored) return stored;
+
+  const slug =
+    document.documentElement.getAttribute("data-tenant") ??
+    window.localStorage.getItem("nadakki-autos-tenant");
+  if (slug && isTenantSlug(slug)) return TENANTS[slug].tenantId;
+
+  return process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ?? TENANTS.nadakki.tenantId;
+}
+
+function getAuthToken(): string {
+  const v2 = tokenStorage.getAccessToken();
+  if (v2) return v2;
+  if (typeof window !== "undefined") {
+    return window.localStorage.getItem("nadakki_sic_token") ?? "";
+  }
+  return "";
+}
+
+function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-Tenant-ID": getTenantId(),
+  };
+  const token = getAuthToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  } else {
+    const legacy = getAuthHeaders();
+    if (legacy.Authorization) headers.Authorization = legacy.Authorization;
+  }
+  return headers;
+}
+
+export const entitlementsAPI = {
+  async checkAccess(
+    capability_id: string,
+    options?: { requested_units?: number; resource_id?: string },
+  ): Promise<EntitlementDecision> {
+    try {
+      const response = await fetch(resolveApiUrl("/api/v1/autos/entitlements/check"), {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          capability_id,
+          requested_units: options?.requested_units ?? 1,
+          resource_id: options?.resource_id,
+        }),
+      });
+
+      if (!response.ok) {
+        return { allowed: false, reason_code: "DEFAULT_DENY" };
+      }
+
+      return (await response.json()) as EntitlementDecision;
+    } catch (error) {
+      console.error("[Entitlements] checkAccess error:", error);
+      return { allowed: false, reason_code: "DEFAULT_DENY" };
+    }
+  },
+
+  async getContext(): Promise<DealerEntitlementContext | null> {
+    try {
+      const response = await fetch(resolveApiUrl("/api/v1/autos/entitlements/context"), {
+        headers: authHeaders(),
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      return (await response.json()) as DealerEntitlementContext;
+    } catch (error) {
+      console.error("[Entitlements] getContext error:", error);
+      return null;
+    }
+  },
+
+  async recordUsage(
+    capability_id: string,
+    units = 1,
+    idempotency_key?: string,
+  ): Promise<{ recorded: boolean; reason?: string }> {
+    try {
+      const response = await fetch(resolveApiUrl("/api/v1/autos/entitlements/usage"), {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          capability_id,
+          units,
+          idempotency_key,
+        }),
+      });
+
+      if (!response.ok) {
+        return { recorded: false, reason: "API_ERROR" };
+      }
+
+      return (await response.json()) as { recorded: boolean; reason?: string };
+    } catch (error) {
+      console.error("[Entitlements] recordUsage error:", error);
+      return { recorded: false, reason: "NETWORK_ERROR" };
+    }
+  },
+};

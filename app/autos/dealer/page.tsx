@@ -2,48 +2,77 @@
 
 import Link from "next/link";
 import { Sparkles, Upload, Users, BarChart3 } from "lucide-react";
+import { CoreNavigation } from "@/components/dealer/CoreNavigation";
+import { UsageMeter } from "@/components/dealer/UsageMeter";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
+import { useAuth } from "@/lib/auth-context";
 
 export default function DealerDashboardPage() {
+  const auth = useAuth();
+
   return (
-    <main>
-      <header className="mb-8">
-        <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Dealer Dashboard</h1>
-        <p className="mt-1 text-nk-fg-muted">Herramientas AI para vender más rápido</p>
+    <main className="space-y-8">
+      <header>
+        <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Dealer Hub</h1>
+        <p className="mt-1 text-nk-fg-muted">
+          Gestiona inventario, marketing y cores según tu plan
+          {auth.isAuthenticated ? (
+            <span className="ml-2 text-xs text-nk-fg-muted">· {auth.role}</span>
+          ) : (
+            <span className="ml-2 text-xs text-yellow-700">· Inicia sesión para capacidades completas</span>
+          )}
+        </p>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <HighlightCard
-          href="/autos/dealer/publicar-rapido"
-          icon={<Upload className="h-6 w-6" />}
-          title="Publica en 90 segundos"
-          desc="Sube 5 fotos — Nadakki AI genera listing completo con precio y descripción."
-          badge="NUEVO"
-          gradient
-        />
-        <HighlightCard
-          href="/autos/dealer/leads"
-          icon={<Users className="h-6 w-6" />}
-          title="Leads Prioritarios"
-          desc="12 leads hot clasificados por probabilidad de conversión."
-          stat="🔥 12 hot"
-        />
-        <HighlightCard
-          href="/autos/dealer/insights"
-          icon={<BarChart3 className="h-6 w-6" />}
-          title="Insights AI"
-          desc="Recomendaciones accionables en español dominicano."
-          stat="3 sin revisar"
-        />
-        <div className="rounded-r-sm border border-nk-border bg-nk-surface p-6">
-          <Sparkles className="h-6 w-6 text-brand-2" />
-          <p className="mt-3 font-manrope text-lg font-bold text-nk-fg">Modo demo activo</p>
-          <p className="mt-1 text-sm text-nk-fg-muted">
-            Backend Fase 8 en construcción. Datos de muestra realistas.
-          </p>
-          <DemoModeBadge visible />
-        </div>
+      <div className="grid gap-8 lg:grid-cols-3">
+        <section className="space-y-4 lg:col-span-2">
+          <h2 className="font-manrope text-lg font-bold text-nk-fg">Capacidades por core</h2>
+          <CoreNavigation />
+        </section>
+
+        <aside className="rounded-r-sm border border-nk-border bg-nk-surface p-6">
+          <h2 className="font-manrope text-lg font-bold text-nk-fg">Uso este mes</h2>
+          <div className="mt-4">
+            <UsageMeter />
+          </div>
+        </aside>
       </div>
+
+      <section>
+        <h2 className="mb-4 font-manrope text-lg font-bold text-nk-fg">Accesos rápidos</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <HighlightCard
+            href="/autos/dealer/publicar-rapido"
+            icon={<Upload className="h-6 w-6" />}
+            title="Publica en 90 segundos"
+            desc="Sube 5 fotos — Nadakki AI genera listing completo con precio y descripción."
+            badge="NUEVO"
+            gradient
+          />
+          <HighlightCard
+            href="/autos/dealer/leads"
+            icon={<Users className="h-6 w-6" />}
+            title="Leads Prioritarios"
+            desc="12 leads hot clasificados por probabilidad de conversión."
+            stat="🔥 12 hot"
+          />
+          <HighlightCard
+            href="/autos/dealer/insights"
+            icon={<BarChart3 className="h-6 w-6" />}
+            title="Insights AI"
+            desc="Recomendaciones accionables en español dominicano."
+            stat="3 sin revisar"
+          />
+          <div className="rounded-r-sm border border-nk-border bg-nk-surface p-6">
+            <Sparkles className="h-6 w-6 text-brand-2" />
+            <p className="mt-3 font-manrope text-lg font-bold text-nk-fg">Core access Phase 1</p>
+            <p className="mt-1 text-sm text-nk-fg-muted">
+              Navegación dinámica según entitlements del backend. Fallback DEFAULT_DENY si API no responde.
+            </p>
+            <DemoModeBadge visible={!auth.isAuthenticated} />
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
