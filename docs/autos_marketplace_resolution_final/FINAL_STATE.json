@@ -1,0 +1,19 @@
+{
+  "super_loop": "AP-5_MARKETPLACE_RESOLUTION",
+  "branch": "feat/ap-5-marketplace-resolution",
+  "decision": "OPTION_A",
+  "redirects": {
+    "/autos/marketplace": "301 → /autos/vehiculos",
+    "/autos/marketplace/*": "301 → /autos/vehiculos?ref=legacy_marketplace"
+  },
+  "canonical_routes": {
+    "browse": "/autos/vehiculos",
+    "vdp": "/autos/vehiculo/[id]",
+    "cart": "/autos/cart",
+    "compare": "/autos/compare",
+    "mis_leads": "/autos/dashboard/mis-leads",
+    "admin": "/admin/autos"
+  },
+  "stack_includes": ["AP-2 cart merge", "AP-3 mis-leads on main"],
+  "verdict": "AUTOS_PORTAL_MVP_CODE_COMPLETE"
+}

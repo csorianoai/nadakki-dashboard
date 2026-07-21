@@ -41,6 +41,7 @@ export function CartBadge({ onClick, className }: { onClick?: () => void; classN
         className,
       )}
       aria-label={label}
+      data-testid="cart-badge"
     >
       <ShoppingCart className="h-4 w-4 shrink-0 text-brand" aria-hidden />
       <span className="hidden sm:inline">Carrito ({count})</span>

@@ -120,6 +120,7 @@ export default function AutosVehiculoDetailPage() {
           <div className="w-full min-w-[280px] flex-[1_1_320px] max-w-[370px] space-y-4">
             <PaymentCalculator
               vehicle={vehicle}
+              vehicleRefId={id}
               saved={saved}
               onSaveToggle={() => setSaved((s) => !s)}
             />

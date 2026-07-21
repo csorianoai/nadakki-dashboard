@@ -132,7 +132,7 @@ export default function MisLeadsPage() {
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.lead_id} className="border-b border-nk-border last:border-b-0 hover:bg-nk-surface-2/60">
+                <tr key={lead.lead_id} data-testid="lead-row" className="border-b border-nk-border last:border-b-0 hover:bg-nk-surface-2/60">
                   <td className="p-3 font-medium text-nk-fg">{lead.vehicle_name}</td>
                   <td className="p-3 text-nk-fg-muted">
                     {new Date(lead.created_at).toLocaleDateString("es-DO")}
@@ -140,6 +140,7 @@ export default function MisLeadsPage() {
                   <td className="p-3 tabular-nums">{fmtRD(lead.requested_amount)}</td>
                   <td className="p-3">
                     <span
+                      data-testid="lead-status"
                       className={cn(
                         "inline-flex rounded-full px-2.5 py-1 text-xs font-bold",
                         statusClass(lead.status),

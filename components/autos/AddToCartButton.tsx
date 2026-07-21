@@ -55,6 +55,7 @@ export function AddToCartButton({
         type="button"
         variant={inCart ? "outline" : "brand"}
         className="w-full gap-2 sm:w-auto"
+        data-testid="add-to-cart-button"
         onClick={handleAdd}
         disabled={!tenantId}
       >

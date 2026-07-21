@@ -95,6 +95,7 @@ export function ComparePanel({
         <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
           <input
             type="checkbox"
+            data-testid="compare-toggle"
             checked={cart.cart.compare_enabled}
             onChange={() => cart.toggleCompare()}
             className="h-4 w-4 rounded border-nk-border text-brand focus:ring-brand"
@@ -116,6 +117,7 @@ export function ComparePanel({
                 <label className="flex items-center gap-2 text-xs text-nk-fg-muted">
                   <input
                     type="checkbox"
+                    data-testid="compare-checkbox"
                     checked={selected}
                     disabled={!cart.cart.compare_enabled || (!selected && atCompareLimit)}
                     onChange={() => {
@@ -132,7 +134,7 @@ export function ComparePanel({
       ) : null}
 
       {cart.cart.compare_enabled && compareVehicles.length >= 2 ? (
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 space-y-3" data-testid="comparison-table">
           <CompareTable vehicles={compareVehicles} />
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="brand" size="sm" onClick={() => void handleShare()}>

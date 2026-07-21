@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { calculateFinance } from "@/lib/api/finance";
 import { fmtRD } from "@/lib/format";
 import { SaveButton } from "@/components/vehicle/SaveButton";
+import { FinancingLeadButton } from "@/components/autos/FinancingLeadButton";
 import type { Vehicle } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
 
@@ -20,10 +21,12 @@ const TERMS = [48, 60, 72, 84] as const;
 
 export function PaymentCalculator({
   vehicle,
+  vehicleRefId,
   saved = false,
   onSaveToggle,
 }: {
   vehicle: Vehicle;
+  vehicleRefId: string;
   saved?: boolean;
   onSaveToggle?: () => void;
 }) {
@@ -35,6 +38,10 @@ export function PaymentCalculator({
   const [rate, setRate] = useState<number>(BANKS[0]!.rate);
 
   const bank = BANKS[bankIdx]!;
+  const downPayment = useMemo(
+    () => Math.round(vehicle.price * (downPct / 100)),
+    [vehicle.price, downPct],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -131,9 +138,13 @@ export function PaymentCalculator({
           </div>
         </dl>
 
-        <Button variant="brand" className="mt-5 w-full bg-gradient-to-r from-brand to-brand-2">
-          Aplicar financiamiento
-        </Button>
+        <FinancingLeadButton
+          vehicle={vehicle}
+          vehicleRefId={vehicleRefId}
+          downPayment={downPayment}
+          termMonths={term}
+          className="mt-5 w-full bg-gradient-to-r from-brand to-brand-2"
+        />
 
         <Button
           variant="outline"
