@@ -55,33 +55,20 @@ export async function autosFetch<T>(
   const onPublicAutos =
     typeof window !== "undefined" &&
     isAutosConsumerPublicPath(window.location.pathname);
-  if (typeof window !== "undefined") {
-    console.log("🔍 [autosFetch] pathname:", window.location.pathname);
-    console.log("🔍 [autosFetch] isPublic:", isAutosConsumerPublicPath(window.location.pathname));
-  }
   const auth = onPublicAutos ? {} : getAuthHeaders();
   if (auth.Authorization && !headers.has("Authorization")) {
     headers.set("Authorization", auth.Authorization);
-  }
-  if (typeof window !== "undefined") {
-    console.log("🔍 [autosFetch] auth headers:", auth);
-    console.log("🔍 [autosFetch] sending Authorization?", headers.has("Authorization"));
   }
 
   const url = resolveApiUrl(path);
   const res = await fetch(url, { ...init, headers, credentials: "include" });
 
   if (res.status === 401) {
-    if (typeof window !== "undefined") {
-      console.log("🔍 [autosFetch] Got 401");
-      console.log("🔍 [autosFetch] will redirect?", !isAutosConsumerPublicPath(window.location.pathname));
-    }
     if (typeof window !== "undefined" && isAutosConsumerPublicPath(window.location.pathname)) {
       return null;
     }
     toast("Sesión expirada. Inicia sesión de nuevo.");
     if (typeof window !== "undefined") {
-      console.log("🔍 [autosFetch] REDIRECTING TO /login from pathname:", window.location.pathname);
       window.location.href = "/login";
     }
     throw new AutosApiError("Unauthorized", 401);

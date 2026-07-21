@@ -3,6 +3,12 @@ import {
   legacyMarketplaceRedirectTarget,
 } from "@/lib/autos-portal/routes";
 import { parseVehicleId, safeDownPayment } from "@/lib/autos-portal/validation";
+import * as fs from "fs";
+import * as path from "path";
+
+function readSrc(relPath: string): string {
+  return fs.readFileSync(path.resolve(__dirname, "../..", relPath), "utf-8");
+}
 
 describe("autos-portal AP-5", () => {
   describe("legacyMarketplaceRedirectTarget", () => {
@@ -43,6 +49,20 @@ describe("autos-portal AP-5", () => {
 
     it("caps down payment to vehicle price", () => {
       expect(safeDownPayment(500_000, 400_000)).toBe(400_000);
+    });
+  });
+
+  describe("middleware autos root redirect", () => {
+    const src = readSrc("middleware.ts");
+
+    it("redirects autos.nadakki.com / to /autos/vehiculos", () => {
+      expect(src).toContain('hostHeader.includes("autos.nadakki.com")');
+      expect(src).toContain('pathname === "/"');
+      expect(src).toContain('new URL("/autos/vehiculos", request.url)');
+    });
+
+    it("matcher includes root path so middleware runs on /", () => {
+      expect(src).toMatch(/matcher:\s*\[[\s\S]*"\/"/);
     });
   });
 });

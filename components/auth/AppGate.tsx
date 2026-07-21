@@ -9,9 +9,6 @@ import { isAutosConsumerPublicPath } from "@/lib/autos-portal/routes";
 export default function AppGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  console.log("🔍 AppGate pathname:", pathname);
-  console.log("🔍 isAutosConsumerPublicPath:", isAutosConsumerPublicPath(pathname));
-
   if (pathname === "/login") {
     return <>{children}</>;
   }
