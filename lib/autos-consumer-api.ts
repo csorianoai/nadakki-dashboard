@@ -1,6 +1,7 @@
 /** Autos consumer API client — interceptors + error handling (Phase 6). */
 
 import { resolveApiUrl, getAuthHeaders } from "@/lib/api/fetch-client";
+import { isAutosConsumerPublicPath } from "@/lib/autos-portal/routes";
 
 export type ApiErrorCode = 401 | 403 | 404 | 500;
 
@@ -60,6 +61,9 @@ export async function autosFetch<T>(
   const res = await fetch(url, { ...init, headers, credentials: "include" });
 
   if (res.status === 401) {
+    if (typeof window !== "undefined" && isAutosConsumerPublicPath(window.location.pathname)) {
+      return null;
+    }
     toast("Sesión expirada. Inicia sesión de nuevo.");
     if (typeof window !== "undefined") {
       window.location.href = "/login";
