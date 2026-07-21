@@ -52,7 +52,10 @@ export async function autosFetch<T>(
   }
   headers.set("X-Tenant-ID", getTenantId());
 
-  const auth = getAuthHeaders();
+  const onPublicAutos =
+    typeof window !== "undefined" &&
+    isAutosConsumerPublicPath(window.location.pathname);
+  const auth = onPublicAutos ? {} : getAuthHeaders();
   if (auth.Authorization && !headers.has("Authorization")) {
     headers.set("Authorization", auth.Authorization);
   }
