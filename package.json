@@ -15,6 +15,7 @@
     "test:run": "jest",
     "test:e2e": "playwright test",
     "test:e2e:autos": "playwright test e2e/autos-portal",
+    "smoke:autos:gates": "node tools/smoke/verify-autos-20-gates.mjs",
     "test:e2e:cockpit": "playwright test -c playwright.config.cockpit.ts",
     "dev:stable": "next dev --webpack -p 3001",
     "frontend:check": "powershell -ExecutionPolicy Bypass -File ./tools/frontend_full_check.ps1",
