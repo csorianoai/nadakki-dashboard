@@ -4,14 +4,7 @@ import { usePathname } from "next/navigation";
 import OnboardingAgent from "@/components/ai/OnboardingAgent";
 import { ProtectedRoute } from "@/components/forge/auth/ProtectedRoute";
 import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
-
-function isAutosPublicPath(pathname: string | null): boolean {
-  if (!pathname) return false;
-  if (pathname === "/autos") return true;
-  if (pathname === "/autos/vehiculos" || pathname.startsWith("/autos/vehiculos/")) return true;
-  if (pathname.startsWith("/autos/vehiculo/")) return true;
-  return false;
-}
+import { isAutosConsumerPublicPath } from "@/lib/autos-portal/routes";
 
 export default function AppGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -25,7 +18,7 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
   }
 
   // Public Nadakki Auto marketplace (autos.nadakki.com consumer)
-  if (isAutosPublicPath(pathname)) {
+  if (isAutosConsumerPublicPath(pathname)) {
     return <>{children}</>;
   }
 

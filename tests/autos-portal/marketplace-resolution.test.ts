@@ -1,4 +1,7 @@
-import { legacyMarketplaceRedirectTarget } from "@/lib/autos-portal/routes";
+import {
+  isAutosConsumerPublicPath,
+  legacyMarketplaceRedirectTarget,
+} from "@/lib/autos-portal/routes";
 import { parseVehicleId, safeDownPayment } from "@/lib/autos-portal/validation";
 
 describe("autos-portal AP-5", () => {
@@ -11,6 +14,21 @@ describe("autos-portal AP-5", () => {
       expect(legacyMarketplaceRedirectTarget("/autos/marketplace/foo")).toBe(
         "/autos/vehiculos?ref=legacy_marketplace",
       );
+    });
+  });
+
+  describe("isAutosConsumerPublicPath", () => {
+    it("allows browse, cart, compare, and mis-leads without login", () => {
+      expect(isAutosConsumerPublicPath("/autos/vehiculos")).toBe(true);
+      expect(isAutosConsumerPublicPath("/autos/cart")).toBe(true);
+      expect(isAutosConsumerPublicPath("/autos/compare")).toBe(true);
+      expect(isAutosConsumerPublicPath("/autos/dashboard/mis-leads")).toBe(true);
+      expect(isAutosConsumerPublicPath("/autos/dashboard/mis-leads/abc")).toBe(true);
+    });
+
+    it("blocks dealer and admin paths", () => {
+      expect(isAutosConsumerPublicPath("/autos/dealer")).toBe(false);
+      expect(isAutosConsumerPublicPath("/admin/autos")).toBe(false);
     });
   });
 
