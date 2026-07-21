@@ -166,6 +166,11 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  const hostHeader = request.headers.get("host") || "";
+  if (hostHeader.includes("autos.nadakki.com") && pathname === "/") {
+    return NextResponse.redirect(new URL("/autos/vehiculos", request.url));
+  }
+
   // ── 3. Tenant isolation — only for /api/* routes ──────────────────────
   if (!pathname.startsWith("/api/")) {
     return NextResponse.next();
