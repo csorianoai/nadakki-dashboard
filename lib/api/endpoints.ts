@@ -13,6 +13,8 @@ export const MARKETING_ENDPOINTS = {
   AGENT_EXEC: (id: string) => `${marketingPath}/agents/${encodeURIComponent(id)}/execute`,
   CAMPAIGNS: `${marketingPath}/campaigns`,
   CAMPAIGN_BY_ID: (id: string) => `${marketingPath}/campaigns/${encodeURIComponent(id)}`,
+  CAMPAIGN_EXECUTE: (id: string) =>
+    `${marketingPath}/campaigns/${encodeURIComponent(id)}/execute`,
   SEGMENTS: `${marketingPath}/segments`,
   SEGMENT_BY_ID: (id: string) => `${marketingPath}/segments/${encodeURIComponent(id)}`,
   SEGMENT_DUPLICATE: (id: string) =>
