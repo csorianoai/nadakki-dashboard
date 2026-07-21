@@ -162,6 +162,52 @@ export interface LeadTransitionResult {
 }
 
 // ---------------------------------------------------------------------------
+// Consumer financing leads (mis-leads / AP-3)
+// ---------------------------------------------------------------------------
+
+export type FinancingLeadStatus = "PENDING" | "FINANCED" | "REJECTED" | "EXPIRED";
+
+export interface FinancingLead {
+  lead_id: string;
+  tenant_id: string;
+  user_id: string;
+  vehicle_id: string;
+  vehicle_name: string;
+  vehicle_price: number;
+  vehicle_image?: string | null;
+  requested_amount: number;
+  down_payment: number;
+  term_months: number;
+  status: FinancingLeadStatus;
+  credit_hub_application_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FinancingLeadCreatePayload {
+  vehicle_id: string;
+  vehicle_data: {
+    name: string;
+    price: number;
+    image?: string;
+  };
+  financing_data: {
+    requested_amount: number;
+    down_payment: number;
+    term_months: number;
+  };
+  credit_hub_application_id?: string;
+}
+
+export interface CreditHubWebhookPayload {
+  tenant_id: string;
+  lead_id: string;
+  credit_hub_application_id: string;
+  credit_hub_status: string;
+  details?: Record<string, unknown>;
+}
+
+// ---------------------------------------------------------------------------
 // Finance
 // ---------------------------------------------------------------------------
 

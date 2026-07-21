@@ -11,6 +11,8 @@ import type {
   Lead,
   LeadCreatePayload,
   LeadTransitionResult,
+  FinancingLead,
+  FinancingLeadCreatePayload,
   FinanceCalculatePayload,
   FinanceCalculateResult,
   FinanceInversePayload,
@@ -134,6 +136,51 @@ export async function transitionLead(
     },
   );
   if (!res.ok) throw new Error(`transition_lead failed: ${res.status}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Consumer financing leads (mis-leads)
+// ---------------------------------------------------------------------------
+
+const FINANCING_LEADS_BASE = "/api/v1/autos/leads";
+
+export async function createFinancingLead(
+  payload: FinancingLeadCreatePayload,
+): Promise<FinancingLead> {
+  const res = await apiFetch(FINANCING_LEADS_BASE, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`create_financing_lead failed: ${res.status}`);
+  return res.json();
+}
+
+export async function listFinancingLeads(): Promise<FinancingLead[]> {
+  const res = await apiFetch(FINANCING_LEADS_BASE);
+  if (!res.ok) throw new Error(`list_financing_leads failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getFinancingLead(leadId: string): Promise<FinancingLead> {
+  const res = await apiFetch(`${FINANCING_LEADS_BASE}/${encodeURIComponent(leadId)}`);
+  if (!res.ok) throw new Error(`get_financing_lead failed: ${res.status}`);
+  return res.json();
+}
+
+export async function updateFinancingLeadStatus(
+  leadId: string,
+  status: FinancingLead["status"],
+  details?: Record<string, unknown>,
+): Promise<FinancingLead> {
+  const res = await apiFetch(
+    `${FINANCING_LEADS_BASE}/${encodeURIComponent(leadId)}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status, details }),
+    },
+  );
+  if (!res.ok) throw new Error(`update_financing_lead_status failed: ${res.status}`);
   return res.json();
 }
 
