@@ -92,6 +92,29 @@ export const entitlementsAPI = {
     }
   },
 
+  async getEffectiveCapabilities(
+    dealerId: string,
+  ): Promise<Record<string, { allowed: boolean; source: string; limits?: unknown }> | null> {
+    try {
+      const response = await fetch(
+        resolveApiUrl(`/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/effective-capabilities`),
+        { headers: authHeaders() },
+      );
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const payload = (await response.json()) as {
+        capabilities?: Record<string, { allowed: boolean; source: string; limits?: unknown }>;
+      };
+      return payload.capabilities ?? null;
+    } catch (error) {
+      console.error("[Entitlements] getEffectiveCapabilities error:", error);
+      return null;
+    }
+  },
+
   async recordUsage(
     capability_id: string,
     units = 1,

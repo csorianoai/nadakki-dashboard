@@ -48,4 +48,22 @@ describe("Entitlements API Client", () => {
     const call = (global.fetch as jest.Mock).mock.calls[0];
     expect(String(call[1].body)).toContain("idempotency_key");
   });
+
+  test("getEffectiveCapabilities returns capability map", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        capabilities: {
+          "inventory.vehicle.publish": {
+            allowed: true,
+            source: "UNIVERSAL_AUTO_BASELINE",
+            limits: null,
+          },
+        },
+      }),
+    });
+
+    const caps = await entitlementsAPI.getEffectiveCapabilities("dealer-123");
+    expect(caps?.["inventory.vehicle.publish"]?.allowed).toBe(true);
+  });
 });

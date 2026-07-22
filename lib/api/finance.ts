@@ -1,4 +1,4 @@
-/** Finance API for autos consumer. */
+/** Finance API for autos consumer — aligned to backend FinanceCalculateRequest. */
 
 import { autosFetch } from "@/lib/autos-consumer-api";
 import { cuota, RATE } from "@/lib/finance";
@@ -43,23 +43,32 @@ export async function calculateFinance(
   term: number,
   bankSlug: string,
 ): Promise<FinanceCalculateResult> {
+  const annualRatePct = (BANK_RATES[bankSlug] ?? RATE) * 100;
+  const downPayment = price * (downPct / 100);
+
   try {
     const res = await autosFetch<{
-      monthly_payment_rd: number;
-      financed_amount_rd: number;
-      annual_rate: number;
+      monthly_payment: number;
+      principal: number;
+      annual_rate_pct: number;
       term_months: number;
     }>("/api/v1/autos/finance/calculate", {
       method: "POST",
       body: JSON.stringify({
-        price_rd: price,
-        down_payment_pct: downPct,
+        vehicle_price: price,
+        down_payment: downPayment,
+        annual_rate_pct: annualRatePct,
         term_months: term,
-        bank_slug: bankSlug,
       }),
     });
     if (!res) throw new Error("empty");
-    return { ...res, fromBackend: true };
+    return {
+      monthly_payment_rd: Math.round(res.monthly_payment),
+      financed_amount_rd: Math.round(res.principal),
+      annual_rate: res.annual_rate_pct / 100,
+      term_months: res.term_months,
+      fromBackend: true,
+    };
   } catch (error) {
     console.warn("Finance backend down, using local calc", error);
     return localCalculate(price, downPct, term, bankSlug);
