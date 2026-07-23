@@ -166,7 +166,13 @@ export async function fetchInvoice(tenantId?: string): Promise<Invoice> {
 
 export async function fetchDrilldowns(): Promise<DrilldownMap> {
   if (USE_API) {
-    return {};
+    // Backend has no drilldown endpoint yet — return empty-shaped map (not fixture data).
+    return Object.fromEntries(
+      Object.entries(DRILLDOWNS).map(([key, drill]) => [
+        key,
+        { ...drill, events: [], agg: 0, aggValue: 0, count: "0" },
+      ]),
+    ) as DrilldownMap;
   }
   return mockOnly("drilldowns", DRILLDOWNS);
 }
@@ -194,7 +200,11 @@ export async function fetchBankMetrics(tenantId: string): Promise<BankMetrics | 
       return {
         ...BANK_METRICS_MAY_2026,
         tenant_id: raw.tenant_id,
-        plan: raw.plan ?? "api",
+        model_label: raw.plan ?? "api",
+        ai_usage: {
+          ...BANK_METRICS_MAY_2026.ai_usage,
+          decisions: raw.evaluations_used ?? 0,
+        },
       };
     } catch {
       return null;
