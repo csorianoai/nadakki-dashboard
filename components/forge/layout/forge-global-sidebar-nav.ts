@@ -475,6 +475,19 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
+        id: "credit-config-group",
+        groupLabel: "Configuración",
+        label: "Configuración",
+        icon: Cog,
+        children: [
+          {
+            id: "credit-pool-filters",
+            label: "Filtros de pool",
+            href: "/credit/pool-filters",
+          },
+        ],
+      },
+      {
         id: "credit-analytics-group",
         groupLabel: "Analítica y cumplimiento",
         label: "Analítica y cumplimiento",
