@@ -131,9 +131,9 @@ export function getEmptyCoreReason(
 
 export function getEmptyCoreMessage(reason: EmptyCoreReason): string {
   if (reason === "plan") {
-    return "Módulo no disponible en tu plan. Contacta a tu administrador para upgrade.";
+    return "MÃ³dulo no disponible en tu plan. Contacta a tu administrador para upgrade.";
   }
-  return "No tienes permisos para acceder a este módulo. Contacta a tu administrador.";
+  return "No tienes permisos para acceder a este mÃ³dulo. Contacta a tu administrador.";
 }
 
 /** Count leaf links in a nav subtree (for grouped rendering threshold). */
@@ -154,7 +154,7 @@ export function isPlatformSuperAdmin(allRoles: { role_key: string }[]): boolean 
 
 /**
  * Bypass hub visibility rules (subscriptions + matcher roles) so admins can navigate every Forge core.
- * Navigation only — API authorization remains on the backend.
+ * Navigation only â€” API authorization remains on the backend.
  */
 export function userSeesAllForgeHubSections(allRoles: RoleInfo[]): boolean {
   if (isPlatformSuperAdmin(allRoles)) return true;
@@ -280,7 +280,7 @@ export function collectExpandIdsForPath(sections: NavSection[], pathname: string
   return need;
 }
 
-/** Full navigation tree — filter with `filterSectionsForUser` at runtime. */
+/** Full navigation tree â€” filter with `filterSectionsForUser` at runtime. */
 export const NAV_SECTIONS: NavSection[] = [
   {
     id: "marketing-hub",
@@ -306,14 +306,14 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         id: "m-campaigns",
-        groupLabel: "Campañas",
-        label: "Campañas",
+        groupLabel: "CampaÃ±as",
+        label: "CampaÃ±as",
         icon: Megaphone,
         children: [
           { id: "m-campaigns-list", label: "Listado", href: "/marketing/campaigns" },
-          { id: "m-campaigns-new", label: "Nueva campaña", href: "/marketing/campaigns/new" },
+          { id: "m-campaigns-new", label: "Nueva campaÃ±a", href: "/marketing/campaigns/new" },
           { id: "m-campaigns-editor", label: "Editor", href: "/marketing/campaigns/editor" },
-          { id: "m-campaigns-root", label: "Campañas (root)", href: "/campaigns" },
+          { id: "m-campaigns-root", label: "CampaÃ±as (root)", href: "/campaigns" },
           { id: "m-campaigns-active", label: "Activas (root)", href: "/campaigns/active" },
           { id: "m-campaigns-autogen", label: "Autogen (root)", href: "/campaigns/autogen" },
           { id: "m-campaigns-history", label: "Historial (root)", href: "/campaigns/history" },
@@ -372,7 +372,7 @@ export const NAV_SECTIONS: NavSection[] = [
           { id: "m-social-analytics", label: "Social analytics", href: "/social/analytics" },
           { id: "m-social-inbox", label: "Social inbox", href: "/social/inbox" },
           { id: "m-email-root", label: "Email (root)", href: "/email" },
-          { id: "m-email-campaigns", label: "Email campañas", href: "/email/campaigns" },
+          { id: "m-email-campaigns", label: "Email campaÃ±as", href: "/email/campaigns" },
           { id: "m-email-templates", label: "Email plantillas", href: "/email/templates" },
           { id: "m-booking", label: "Booking", href: "/marketing/booking" },
         ],
@@ -384,13 +384,13 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: LineChart,
         children: [
           { id: "m-analytics", label: "Analytics", href: "/marketing/analytics" },
-          { id: "m-attrib", label: "Atribución", href: "/marketing/attribution" },
+          { id: "m-attrib", label: "AtribuciÃ³n", href: "/marketing/attribution" },
           { id: "m-predict", label: "Predictive AI", href: "/marketing/predictive", badge: "BETA" },
           { id: "m-compete", label: "Competencia", href: "/marketing/competitive" },
           { id: "m-ab", label: "A/B Testing", href: "/marketing/ab-testing" },
           { id: "m-analytics-root", label: "Analytics (global)", href: "/analytics" },
           { id: "m-analytics-agents", label: "Analytics agentes", href: "/analytics/agents" },
-          { id: "m-analytics-campaigns", label: "Analytics campañas", href: "/analytics/campaigns" },
+          { id: "m-analytics-campaigns", label: "Analytics campaÃ±as", href: "/analytics/campaigns" },
           { id: "m-analytics-conversions", label: "Analytics conversiones", href: "/analytics/conversions" },
           { id: "m-analytics-reports", label: "Analytics reportes", href: "/analytics/reports" },
           { id: "m-analytics-roi", label: "Analytics ROI", href: "/analytics/roi" },
@@ -402,13 +402,13 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         id: "m-automation",
-        groupLabel: "Automatización",
-        label: "Automatización",
+        groupLabel: "AutomatizaciÃ³n",
+        label: "AutomatizaciÃ³n",
         icon: Bot,
         children: [
           { id: "m-agents-list", label: "Agentes marketing", href: "/marketing/agents" },
           { id: "m-autopilot", label: "Autopilot", href: "/autopilot", badge: "BETA" },
-          { id: "m-ame", label: "AME (autónomo)", href: "/ame", badge: "NEW" },
+          { id: "m-ame", label: "AME (autÃ³nomo)", href: "/ame", badge: "NEW" },
           { id: "m-integrations", label: "Integraciones", href: "/marketing/integrations" },
           { id: "m-automations", label: "Automations", href: "/automations" },
           { id: "m-automations-rules", label: "Automation rules", href: "/automations/rules" },
@@ -461,7 +461,7 @@ export const NAV_SECTIONS: NavSection[] = [
             href: "/credit-hub/dealer/applications/new",
             badge: "NEW",
           },
-          { id: "credit-preapproval", label: "Preaprobación", href: "/credit-hub/dealer/preapproval" },
+          { id: "credit-preapproval", label: "PreaprobaciÃ³n", href: "/credit-hub/dealer/preapproval" },
         ],
       },
       {
@@ -470,14 +470,14 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Solicitudes",
         icon: FolderKanban,
         children: [
-          { id: "credit-bank-apps", label: "Banca — listado", href: "/credit-hub/bank/applications" },
-          { id: "credit-dealer-apps", label: "Dealer — listado", href: "/credit-hub/dealer/applications" },
+          { id: "credit-bank-apps", label: "Banca â€” listado", href: "/credit-hub/bank/applications" },
+          { id: "credit-dealer-apps", label: "Dealer â€” listado", href: "/credit-hub/dealer/applications" },
         ],
       },
       {
         id: "credit-config-group",
-        groupLabel: "Configuración",
-        label: "Configuración",
+        groupLabel: "ConfiguraciÃ³n",
+        label: "ConfiguraciÃ³n",
         icon: Cog,
         children: [
           {
@@ -489,25 +489,26 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         id: "credit-analytics-group",
-        groupLabel: "Analítica y cumplimiento",
-        label: "Analítica y cumplimiento",
+        groupLabel: "AnalÃ­tica y cumplimiento",
+        label: "AnalÃ­tica y cumplimiento",
         icon: BarChart3,
         children: [
-          { id: "credit-analytics", label: "Analítica / reportes", href: "/credit-hub/bank/analytics" },
+          { id: "credit-bank-kpis", label: "KPIs de banco", href: "/credit/bank/kpis" },
+          { id: "credit-analytics", label: "AnalÃ­tica / reportes", href: "/credit-hub/bank/analytics" },
           { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank/compliance" },
-          { id: "credit-audit-ch", label: "Auditoría (hub)", href: "/credit-hub/bank/audit" },
+          { id: "credit-audit-ch", label: "AuditorÃ­a (hub)", href: "/credit-hub/bank/audit" },
           { id: "credit-compliance-root", label: "Compliance (root)", href: "/compliance" },
         ],
       },
       {
         id: "credit-monetizacion-group",
-        groupLabel: "Monetización",
-        label: "Monetización",
+        groupLabel: "MonetizaciÃ³n",
+        label: "MonetizaciÃ³n",
         icon: Banknote,
         children: [
           {
             id: "credit-monetizacion",
-            label: "Métricas y facturación",
+            label: "MÃ©tricas y facturaciÃ³n",
             href: "/credit-hub/monetizacion/dashboard",
             badge: "BETA",
             featureFlag: "forge-monetizacion",
@@ -520,12 +521,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Legacy y herramientas",
         icon: Link2,
         children: [
-          { id: "credit-legacy", label: "Crédito (legacy)", href: "/credit" },
+          { id: "credit-legacy", label: "CrÃ©dito (legacy)", href: "/credit" },
           { id: "credit-legacy-new", label: "Nuevo (legacy)", href: "/credit/new" },
           { id: "credit-decisioning", label: "Decisioning", href: "/decision" },
           { id: "credit-components", label: "Componentes UI", href: "/credit-hub/components" },
           { id: "credit-preview", label: "Preview", href: "/credit-hub/preview" },
-          { id: "credit-agents-legacy", label: "Agentes crédito", href: "/credit-agents" },
+          { id: "credit-agents-legacy", label: "Agentes crÃ©dito", href: "/credit-agents" },
         ],
       },
     ],
@@ -558,22 +559,22 @@ export const NAV_SECTIONS: NavSection[] = [
       { id: "legal-cases", label: "Expedientes", href: "/legal/cases", icon: Briefcase },
       { id: "legal-cases-new", label: "Nuevo expediente", href: "/legal/cases/new", icon: FileText },
       { id: "legal-contracts", label: "Contratos", href: "/legal/contracts", icon: ScrollText },
-      { id: "legal-research", label: "Investigación", href: "/legal/research", icon: LineChart },
-      { id: "legal-audit", label: "Auditoría", href: "/legal/audit", icon: Gavel },
-      { id: "legal-config", label: "Configuración", href: "/legal/config", icon: Cog },
-      { id: "legal-strategies-hist", label: "Estrategias históricas", href: "/legal/strategies/historical", icon: GitBranch },
+      { id: "legal-research", label: "InvestigaciÃ³n", href: "/legal/research", icon: LineChart },
+      { id: "legal-audit", label: "AuditorÃ­a", href: "/legal/audit", icon: Gavel },
+      { id: "legal-config", label: "ConfiguraciÃ³n", href: "/legal/config", icon: Cog },
+      { id: "legal-strategies-hist", label: "Estrategias histÃ³ricas", href: "/legal/strategies/historical", icon: GitBranch },
       { id: "legal-onboarding", label: "Onboarding", href: "/legal/onboarding", icon: Zap },
     ],
   },
   {
     id: "nauta-hub",
-    label: "Nauta — Empleados Digitales",
+    label: "Nauta â€” Empleados Digitales",
     icon: Bot,
     coreMatchers: ["nauta"],
     alwaysVisible: true,
     children: [
       { id: "nauta-cockpit", label: "Piso de operaciones", href: "/nauta", icon: LayoutDashboard },
-      { id: "nauta-planes", label: "Nómina y planes", href: "/nauta?mode=planes", icon: LayoutDashboard },
+      { id: "nauta-planes", label: "NÃ³mina y planes", href: "/nauta?mode=planes", icon: LayoutDashboard },
     ],
   },
   {
@@ -585,14 +586,14 @@ export const NAV_SECTIONS: NavSection[] = [
     children: [
       {
         id: "sic-ops-group",
-        groupLabel: "Operación",
-        label: "Operación",
+        groupLabel: "OperaciÃ³n",
+        label: "OperaciÃ³n",
         icon: Briefcase,
         children: [
           { id: "sic-dash", label: "Dashboard", href: "/sic" },
           { id: "sic-expedientes", label: "Expedientes", href: "/sic/expedientes" },
           { id: "sic-bandeja", label: "Bandeja", href: "/sic/bandeja" },
-          { id: "sic-nuevo", label: "Nuevo análisis", href: "/sic/nuevo-analisis" },
+          { id: "sic-nuevo", label: "Nuevo anÃ¡lisis", href: "/sic/nuevo-analisis" },
           { id: "sic-upload", label: "Carga", href: "/sic/upload" },
           { id: "sic-list", label: "Listado (legacy)", href: "/sic/list" },
         ],
@@ -604,19 +605,19 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: BarChart3,
         children: [
           { id: "sic-reportes", label: "Reportes", href: "/sic/reportes" },
-          { id: "sic-metricas", label: "Métricas", href: "/sic/metricas" },
+          { id: "sic-metricas", label: "MÃ©tricas", href: "/sic/metricas" },
           { id: "sic-portafolio", label: "Portafolio", href: "/sic/portafolio" },
           { id: "sic-export", label: "Exportaciones", href: "/sic/exportaciones" },
         ],
       },
       {
         id: "sic-comite-group",
-        groupLabel: "Comité",
-        label: "Comité",
+        groupLabel: "ComitÃ©",
+        label: "ComitÃ©",
         icon: Users,
         children: [
-          { id: "sic-comite", label: "Comité", href: "/sic/comite" },
-          { id: "sic-sesiones", label: "Sesiones comité", href: "/sic/comite/sesiones" },
+          { id: "sic-comite", label: "ComitÃ©", href: "/sic/comite" },
+          { id: "sic-sesiones", label: "Sesiones comitÃ©", href: "/sic/comite/sesiones" },
         ],
       },
       {
@@ -625,9 +626,9 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Sistema",
         icon: Cog,
         children: [
-          { id: "sic-audit", label: "Auditoría", href: "/sic/auditoria" },
-          { id: "sic-audit-acceso", label: "Auditoría de acceso", href: "/sic/auditoria-acceso" },
-          { id: "sic-config", label: "Configuración", href: "/sic/configuracion" },
+          { id: "sic-audit", label: "AuditorÃ­a", href: "/sic/auditoria" },
+          { id: "sic-audit-acceso", label: "AuditorÃ­a de acceso", href: "/sic/auditoria-acceso" },
+          { id: "sic-config", label: "ConfiguraciÃ³n", href: "/sic/configuracion" },
           { id: "sic-mt", label: "Multi-tenant config", href: "/sic/multitenant-config" },
           { id: "sic-demo", label: "Modo demo", href: "/sic/demo" },
         ],
@@ -672,18 +673,18 @@ export const NAV_SECTIONS: NavSection[] = [
         children: [
           { id: "contable-resumen", label: "Resumen", href: "/contable/resumen", icon: LayoutDashboard },
           { id: "contable-plan", label: "Plan de Cuentas", href: "/contable/plan-cuentas", icon: ListTree },
-          { id: "contable-periodos", label: "Períodos", href: "/contable/periodos", icon: Calendar },
+          { id: "contable-periodos", label: "PerÃ­odos", href: "/contable/periodos", icon: Calendar },
         ],
       },
       {
         id: "contable-operacion-group",
-        groupLabel: "Operación",
-        label: "Operación",
+        groupLabel: "OperaciÃ³n",
+        label: "OperaciÃ³n",
         icon: FilePlus,
         children: [
           { id: "contable-asiento", label: "Nuevo Asiento", href: "/contable/asientos/nuevo", icon: FilePlus, badge: "NEW" as const },
           { id: "contable-mayor", label: "Libro Mayor", href: "/contable/libro-mayor", icon: BookOpenText },
-          { id: "contable-balance", label: "Balance Comprobación", href: "/contable/balance-comprobacion", icon: Scale },
+          { id: "contable-balance", label: "Balance ComprobaciÃ³n", href: "/contable/balance-comprobacion", icon: Scale },
         ],
       },
       {
@@ -693,7 +694,7 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: BarChart3,
         children: [
           { id: "contable-estado-resultados", label: "Estado de Resultados", href: "/contable/estado-resultados", icon: TrendingUp },
-          { id: "contable-situacion", label: "Situación Financiera", href: "/contable/situacion-financiera", icon: Layers },
+          { id: "contable-situacion", label: "SituaciÃ³n Financiera", href: "/contable/situacion-financiera", icon: Layers },
           { id: "contable-monitor", label: "Monitor de Gastos", href: "/contable/monitor-gastos", icon: Activity },
           { id: "contable-ejecutivo", label: "Dashboard Ejecutivo", href: "/contable/ejecutivo", icon: LineChart, badge: "NEW" as const },
         ],
@@ -721,7 +722,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { id: "ai-generate", label: "Generar", href: "/ai-studio/generate", icon: Zap },
       { id: "ai-history", label: "Historial", href: "/ai-studio/history", icon: ScrollText },
       { id: "ai-templates", label: "Plantillas", href: "/ai-studio/templates", icon: FileText },
-      { id: "ai-settings", label: "Configuración", href: "/ai-studio/settings", icon: Cog },
+      { id: "ai-settings", label: "ConfiguraciÃ³n", href: "/ai-studio/settings", icon: Cog },
       { id: "ai-agents-global", label: "Agentes (global)", href: "/agents", icon: Bot },
       { id: "ai-execute", label: "Ejecutar", href: "/agents/execute", icon: Zap },
       { id: "ai-live", label: "Live", href: "/agents/live", icon: Activity },
@@ -764,7 +765,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     id: "admin",
-    label: "Administración",
+    label: "AdministraciÃ³n",
     icon: Settings,
     coreMatchers: [],
     alwaysVisible: true,
@@ -786,13 +787,13 @@ export const NAV_SECTIONS: NavSection[] = [
           },
           { id: "adm-dashboard", label: "Dashboard", href: "/dashboard" },
           { id: "adm-tenants", label: "Tenants", href: "/tenants" },
-          { id: "adm-activation", label: "Activación", href: "/admin/activation" },
+          { id: "adm-activation", label: "ActivaciÃ³n", href: "/admin/activation" },
           { id: "adm-gates", label: "Gates / roles", href: "/admin/gates" },
           { id: "adm-billing", label: "Billing", href: "/admin/billing" },
           { id: "adm-billing-root", label: "Billing (root)", href: "/billing" },
           { id: "adm-flags", label: "Feature flags", href: "/feature-flags", superAdminOnly: true },
           { id: "adm-logs", label: "Audit logs", href: "/admin/logs" },
-          { id: "adm-audit", label: "Auditoría", href: "/admin/audit" },
+          { id: "adm-audit", label: "AuditorÃ­a", href: "/admin/audit" },
           { id: "adm-keys", label: "API keys", href: "/admin/api-keys", superAdminOnly: true },
           { id: "adm-usage", label: "Uso", href: "/admin/usage" },
           { id: "adm-whatsapp", label: "WhatsApp admin", href: "/admin/whatsapp" },
@@ -803,8 +804,8 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         id: "adm-settings",
-        groupLabel: "Configuración",
-        label: "Configuración",
+        groupLabel: "ConfiguraciÃ³n",
+        label: "ConfiguraciÃ³n",
         icon: Wrench,
         children: [
           { id: "adm-system", label: "Sistema", href: "/admin/system", superAdminOnly: true },
@@ -838,5 +839,5 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-/** Alias for v2 documentation — same tree as {@link NAV_SECTIONS}. */
+/** Alias for v2 documentation â€” same tree as {@link NAV_SECTIONS}. */
 export const NAV_CORES = NAV_SECTIONS;
