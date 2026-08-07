@@ -119,7 +119,8 @@ export function DealerDashboard({ period, onPeriodChange }: DealerDashboardProps
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-white md:text-3xl">Analítica de conversión</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
             Embudo, tiempo de cierre, tasas por segmento y métricas. Datos desde{" "}
-            <span className="font-mono text-gray-500">/api/v2/analytics/dealer/</span>.
+            <span className="font-mono text-gray-500">/api/v2/credit/analytics/</span> y{" "}
+            <span className="font-mono text-gray-500">/credit/dashboard/summary</span>.
           </p>
           <span className="sr-only" aria-live="polite">
             {stageCue ? `Embudo seleccionado ${stageCue}` : ""}
