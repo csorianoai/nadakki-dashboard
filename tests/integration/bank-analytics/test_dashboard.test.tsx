@@ -15,7 +15,7 @@ jest.mock("@/lib/bank/analytics-api", () => ({
 
 const SAMPLE_BANK_ANALYTICS: BankAnalytics = {
   portfolioOverview: {
-    totalExposure: 890_430,
+    totalOffers: 890,
     activeApplications: 128,
     approvalRate: 62.44,
     stipulationsFrequency: 18,
@@ -123,7 +123,7 @@ describe("Bank portfolio analytics dashboard", () => {
     render(<BankPortfolioDashboard period="30d" onPeriodChange={() => undefined} />);
 
     await waitFor(() => {
-      expect(screen.getByTestId("bank-kpi-exposure")).toHaveTextContent(/890/);
+      expect(screen.getByTestId("bank-kpi-exposure")).toHaveTextContent("890");
       expect(screen.getByTestId("bank-kpi-active-apps")).toHaveTextContent("128");
     });
   });
@@ -176,16 +176,16 @@ describe("Bank portfolio analytics dashboard", () => {
     );
   });
 
-  test("period change asks API for new window", async () => {
+  test("period selector is disabled when API has no temporal filter", async () => {
     localStorage.setItem("nadakki_role", "viewer");
 
     render(<BankAnalyticsPage />);
 
-    await waitFor(() => expect(bankApi.getBankAnalytics).toHaveBeenCalledWith("30d"));
+    await waitFor(() => expect(screen.getByTestId("bank-period-unavailable")).toBeVisible());
 
-    await userEvent.click(within(screen.getByTestId("bank-period-selector")).getByRole("button", { name: /^7d$/ }));
-
-    await waitFor(() => expect(bankApi.getBankAnalytics).toHaveBeenCalledWith("7d"));
+    const periodButton = within(screen.getByTestId("bank-period-selector")).getByRole("button", { name: /^7d$/ });
+    expect(periodButton).toBeDisabled();
+    expect(bankApi.getBankAnalytics).toHaveBeenCalledTimes(1);
   });
 
   test("refresh button triggers another fetch for same period", async () => {
@@ -219,7 +219,7 @@ describe("Bank portfolio analytics dashboard", () => {
     localStorage.setItem("nadakki_role", "viewer");
     jest.mocked(bankApi.getBankAnalytics).mockResolvedValueOnce({
       portfolioOverview: {
-        totalExposure: 0,
+        totalOffers: 0,
         activeApplications: 0,
         approvalRate: 0,
         stipulationsFrequency: 0,

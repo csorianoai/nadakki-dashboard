@@ -97,16 +97,13 @@ test.describe("Dealer analytics dashboard E2E", () => {
     }
   });
 
-  test("period selector refetches credit analytics endpoints", async ({ page }) => {
-    const { fetchCount } = installDealerAnalyticsApiMocks(page);
+  test("period selector is disabled when API has no temporal filter", async ({ page }) => {
+    installDealerAnalyticsApiMocks(page);
     await page.goto("/credit/dealer/analytics");
     await skipIfAnalyticsGated(page);
 
-    await expect.poll(() => fetchCount.value >= 2, { timeout: 15_000 }).toBeTruthy();
-
-    await page.getByTestId("dealer-period-selector").getByRole("button", { name: /^90d$/ }).click();
-
-    await expect.poll(() => fetchCount.value >= 4, { timeout: 15_000 }).toBeTruthy();
+    await expect(page.getByTestId("dealer-period-unavailable")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("dealer-period-selector").getByRole("button", { name: /^7d$/ })).toBeDisabled();
   });
 
   test("charts render observable funnel and time-to-close landmarks", async ({ page }) => {

@@ -119,7 +119,7 @@ test.describe("Bank analytics dashboard E2E", () => {
     }
   });
 
-  test("period selector keeps dashboard interactive", async ({ page }) => {
+  test("period selector is disabled when API has no temporal filter", async ({ page }) => {
     installBankPortfolioAnalyticsMocks(page);
     await page.goto("/bank/analytics");
     skipUnlessBankAnalyticsShell(page);
@@ -128,8 +128,8 @@ test.describe("Bank analytics dashboard E2E", () => {
       test.skip(true, "NEXT_PUBLIC_FEATURE_BANK_ANALYTICS=false at build.");
     }
 
-    await page.getByTestId("bank-period-selector").getByRole("button", { name: /^90d$/ }).click();
-    await expect(page.getByTestId("bank-kpi-exposure")).toBeVisible({ timeout: 18_000 });
+    await expect(page.getByTestId("bank-period-unavailable")).toBeVisible({ timeout: 18_000 });
+    await expect(page.getByTestId("bank-period-selector").getByRole("button", { name: /^7d$/ })).toBeDisabled();
   });
 
   test("risk heatmap renders from credit analytics endpoints", async ({ page }) => {

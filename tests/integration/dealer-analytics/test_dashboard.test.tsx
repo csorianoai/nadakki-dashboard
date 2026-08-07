@@ -109,15 +109,14 @@ describe("Dealer analytics dashboard integration", () => {
     });
   });
 
-  test("period change triggers analytics refetch", async () => {
-    mockGetDealerAnalytics.mockResolvedValue(SAMPLE_DEALER_ANALYTICS);
-    render(<DealerAnalyticsPage />);
-    await waitFor(() => expect(mockGetDealerAnalytics).toHaveBeenCalledWith("30d"));
-
+  test("period selector is disabled when API has no temporal filter", async () => {
     mockGetDealerAnalytics.mockResolvedValueOnce(SAMPLE_DEALER_ANALYTICS);
-    await userEvent.click(within(screen.getByTestId("dealer-period-selector")).getByRole("button", { name: /^7d$/ }));
+    render(<DealerAnalyticsPage />);
+    await waitFor(() => expect(screen.getByTestId("dealer-period-unavailable")).toBeVisible());
 
-    await waitFor(() => expect(mockGetDealerAnalytics).toHaveBeenCalledWith("7d"));
+    const periodButton = within(screen.getByTestId("dealer-period-selector")).getByRole("button", { name: /^7d$/ });
+    expect(periodButton).toBeDisabled();
+    expect(mockGetDealerAnalytics).toHaveBeenCalledTimes(1);
   });
 
   test("performance KPI cards resolve to expected values after load", async () => {
