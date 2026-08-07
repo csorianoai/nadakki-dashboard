@@ -497,7 +497,6 @@ export const NAV_SECTIONS: NavSection[] = [
           { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank/compliance" },
           { id: "credit-audit-ch", label: "Auditoría (hub)", href: "/credit-hub/bank/audit" },
           { id: "credit-compliance-root", label: "Compliance (root)", href: "/compliance" },
-          { id: "credit-bank-analytics", label: "Bank analytics (root)", href: "/bank/analytics" },
         ],
       },
       {
