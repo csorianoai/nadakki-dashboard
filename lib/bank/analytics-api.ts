@@ -166,7 +166,7 @@ function mapPortfolioOverview(
       : 0;
 
   return {
-    totalExposure: summary.offers_total,
+    totalOffers: summary.offers_total,
     activeApplications,
     approvalRate: approvalFromAuction ?? Number(approvalFromDecisions.toFixed(1)),
     stipulationsFrequency: Number(stipulationsFrequency.toFixed(1)),

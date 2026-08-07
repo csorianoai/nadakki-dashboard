@@ -14,7 +14,7 @@ import type { BankAnalytics, BankAnalyticsPeriod } from "@/types/bank-analytics"
 function emptyAnalytics(): BankAnalytics {
   return {
     portfolioOverview: {
-      totalExposure: 0,
+      totalOffers: 0,
       activeApplications: 0,
       approvalRate: 0,
       stipulationsFrequency: 0,
@@ -74,7 +74,7 @@ export function BankPortfolioDashboard({ period, onPeriodChange }: BankPortfolio
 
   const noSignal =
     Boolean(data) &&
-    data!.portfolioOverview.totalExposure === 0 &&
+    data!.portfolioOverview.totalOffers === 0 &&
     data!.portfolioOverview.activeApplications === 0 &&
     data!.riskHeatmap.cells.every((cell) => cell.volume === 0) &&
     data!.stipulationsFrequency.topStipulations.length === 0 &&
@@ -123,7 +123,12 @@ export function BankPortfolioDashboard({ period, onPeriodChange }: BankPortfolio
         </div>
 
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          <BankPeriodSelector disabled={loading} value={period} onChange={onPeriodChange} />
+          <div className="flex flex-col items-stretch gap-1 sm:items-end">
+            <BankPeriodSelector disabled value={period} onChange={() => {}} />
+            <p className="text-[10px] text-gray-500" data-testid="bank-period-unavailable">
+              Periodo no disponible — snapshot del tenant (API sin filtro temporal)
+            </p>
+          </div>
           <button
             type="button"
             data-testid="bank-analytics-refresh"

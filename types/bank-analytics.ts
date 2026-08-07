@@ -3,7 +3,8 @@ export type BankAnalyticsPeriod = "7d" | "30d" | "90d" | "12m";
 
 export interface BankAnalytics {
   portfolioOverview: {
-    totalExposure: number;
+    /** Count of offers in tenant snapshot — not a monetary exposure figure. */
+    totalOffers: number;
     activeApplications: number;
     approvalRate: number;
     stipulationsFrequency: number;

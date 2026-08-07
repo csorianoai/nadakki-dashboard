@@ -127,7 +127,12 @@ export function DealerDashboard({ period, onPeriodChange }: DealerDashboardProps
           </span>
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          <PeriodSelector value={period} onChange={onPeriodChange} disabled={loading} />
+          <div className="flex flex-col items-stretch gap-1 sm:items-end">
+            <PeriodSelector value={period} onChange={() => {}} disabled />
+            <p className="text-[10px] text-gray-500" data-testid="dealer-period-unavailable">
+              Periodo no disponible — snapshot del tenant (API sin filtro temporal)
+            </p>
+          </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
