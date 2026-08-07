@@ -2,50 +2,90 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { setupBankSession } from "../bank/bank-e2e-helpers";
 
+const CREDIT_RISK_FIXTURE = {
+  tenant_id: "00000000-0000-0000-0000-000000000001",
+  pti_distribution: [
+    { bucket: "0-30", count: 11, percentage: 22 },
+    { bucket: "50-70", count: 18, percentage: 36 },
+  ],
+  ltv_distribution: [
+    { bucket: "100k-250k", count: 14, percentage: 28 },
+    { bucket: "250k-500k", count: 9, percentage: 18 },
+  ],
+  rejection_reasons: [
+    { reason_code: "Verificación de ingresos", count: 7 },
+    { reason_code: "Póliza de seguro vehicular", count: 6 },
+  ],
+  generated_at: new Date().toISOString(),
+};
+
+const CREDIT_AUCTION_FIXTURE = {
+  tenant_id: "00000000-0000-0000-0000-000000000001",
+  total_applications: 128,
+  applications_with_offers: 60,
+  look_to_book: 0.47,
+  total_offers: 72,
+  win_rate: 0.583,
+  avg_time_to_offer_hours: 18.5,
+  lost_deals_count: 0,
+  lender_breakdown: [],
+  lost_deals: [],
+  generated_at: new Date().toISOString(),
+};
+
+const CREDIT_DASHBOARD_FIXTURE = {
+  tenant_id: "00000000-0000-0000-0000-000000000001",
+  summary: {
+    applications_total: 128,
+    applications_by_status: {
+      APPROVED: 24,
+      DECLINED: 6,
+      SUBMITTED: 3,
+      WITHDRAWN: 1,
+    },
+    applications_by_display_status: {},
+    offers_total: 550,
+    offers_by_lender: { popular: 320, reservas: 230 },
+    recent_failures_24h: 0,
+  },
+  generated_at: new Date().toISOString(),
+};
+
 function installBankPortfolioAnalyticsMocks(page: Page): { periods: string[] } {
   const periods: string[] = [];
-  void page.route("**/api/v2/analytics/bank/summary*", async (route) => {
-    try {
-      const url = new URL(route.request().url());
-      periods.push(url.searchParams.get("period") ?? "");
-    } catch {
-      periods.push("?");
-    }
+
+  void page.route("**/api/v2/credit/analytics/risk-distributions**", async (route) => {
     await route.fulfill({
       status: 200,
-      body: JSON.stringify({
-        portfolioOverview: {
-          totalExposure: 550_000,
-          activeApplications: 60,
-          approvalRate: 58.3,
-          stipulationsFrequency: 11.2,
-        },
-        riskHeatmap: {
-          cells: [
-            { amountBucket: "100k–250k", riskBucket: "50–70", volume: 18, color: "" },
-            { amountBucket: "250k–500k", riskBucket: "70–85", volume: 9, color: "#d946ef" },
-          ],
-        },
-        decisionDistribution: { approved: 24, declined: 6, pending: 3, withdrawn: 1 },
-        stipulationsFrequency: {
-          topStipulations: [
-            { name: "Verificación de ingresos", count: 7, percent: 22 },
-            { name: "Póliza de seguro vehicular", count: 6, percent: 17 },
-          ],
-        },
-        anomalies: [
-          {
-            id: "e2e-anom-001",
-            type: "STRESS",
-            severity: "medium",
-            description: "Sobrecarga sintética observada sobre franja mediodía UTC",
-            detectedAt: new Date().toISOString(),
-          },
-        ],
-      }),
+      body: JSON.stringify(CREDIT_RISK_FIXTURE),
       contentType: "application/json",
     });
   });
+
+  void page.route("**/api/v2/credit/analytics/auction-intel**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify(CREDIT_AUCTION_FIXTURE),
+      contentType: "application/json",
+    });
+  });
+
+  void page.route("**/credit/dashboard/summary**", async (route) => {
+    try {
+      const referer = route.request().headers()["referer"] ?? "";
+      if (referer.includes("period=")) {
+        periods.push(new URL(referer).searchParams.get("period") ?? "");
+      }
+    } catch {
+      /* ignore */
+    }
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify(CREDIT_DASHBOARD_FIXTURE),
+      contentType: "application/json",
+    });
+  });
+
   return { periods };
 }
 
@@ -79,8 +119,8 @@ test.describe("Bank analytics dashboard E2E", () => {
     }
   });
 
-  test("period selector requests alternates on summary route", async ({ page }) => {
-    const { periods } = installBankPortfolioAnalyticsMocks(page);
+  test("period selector is disabled when API has no temporal filter", async ({ page }) => {
+    installBankPortfolioAnalyticsMocks(page);
     await page.goto("/bank/analytics");
     skipUnlessBankAnalyticsShell(page);
 
@@ -88,15 +128,11 @@ test.describe("Bank analytics dashboard E2E", () => {
       test.skip(true, "NEXT_PUBLIC_FEATURE_BANK_ANALYTICS=false at build.");
     }
 
-    await expect.poll(() => periods.length >= 1, { timeout: 22_000 }).toBeTruthy();
-    expect(periods[0]).toBe("30d");
-
-    await page.getByTestId("bank-period-selector").getByRole("button", { name: /^90d$/ }).click();
-
-    await expect.poll(() => periods.includes("90d"), { timeout: 22_000 }).toBeTruthy();
+    await expect(page.getByTestId("bank-period-unavailable")).toBeVisible({ timeout: 18_000 });
+    await expect(page.getByTestId("bank-period-selector").getByRole("button", { name: /^7d$/ })).toBeDisabled();
   });
 
-  test("risk heatmap and anomalies surfaces render landmarks", async ({ page }) => {
+  test("risk heatmap renders from credit analytics endpoints", async ({ page }) => {
     installBankPortfolioAnalyticsMocks(page);
     await page.goto("/bank/analytics");
     skipUnlessBankAnalyticsShell(page);
@@ -106,8 +142,7 @@ test.describe("Bank analytics dashboard E2E", () => {
     }
 
     await expect(page.getByTestId("risk-heatmap")).toBeVisible({ timeout: 18_000 });
-    await expect(page.getByTestId("risk-heatmap-points")).toBeVisible();
-    await expect(page.getByTestId("anomaly-e2e-anom-001")).toBeVisible({ timeout: 18_000 });
+    await expect(page.getByTestId("stipulations-frequency")).toBeVisible({ timeout: 18_000 });
   });
 
   test("375px viewport keeps grid within inner width", async ({ page }) => {

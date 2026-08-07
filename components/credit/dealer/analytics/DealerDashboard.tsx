@@ -119,14 +119,20 @@ export function DealerDashboard({ period, onPeriodChange }: DealerDashboardProps
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-white md:text-3xl">Analítica de conversión</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-400">
             Embudo, tiempo de cierre, tasas por segmento y métricas. Datos desde{" "}
-            <span className="font-mono text-gray-500">/api/v2/analytics/dealer/</span>.
+            <span className="font-mono text-gray-500">/api/v2/credit/analytics/</span> y{" "}
+            <span className="font-mono text-gray-500">/credit/dashboard/summary</span>.
           </p>
           <span className="sr-only" aria-live="polite">
             {stageCue ? `Embudo seleccionado ${stageCue}` : ""}
           </span>
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          <PeriodSelector value={period} onChange={onPeriodChange} disabled={loading} />
+          <div className="flex flex-col items-stretch gap-1 sm:items-end">
+            <PeriodSelector value={period} onChange={() => {}} disabled />
+            <p className="text-[10px] text-gray-500" data-testid="dealer-period-unavailable">
+              Periodo no disponible — snapshot del tenant (API sin filtro temporal)
+            </p>
+          </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"

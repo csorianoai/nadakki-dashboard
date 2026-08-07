@@ -2,14 +2,6 @@
 
 import type { BankAnalytics } from "@/types/bank-analytics";
 
-function fmtMoney(n: number): string {
-  return new Intl.NumberFormat("es-DO", {
-    style: "currency",
-    currency: "DOP",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
 export function PortfolioOverviewSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" data-testid="bank-portfolio-skeleton">
@@ -31,7 +23,7 @@ export function PortfolioOverviewCards({ overview, loading }: PortfolioOverviewC
   }
 
   const cards = [
-    { label: "Exposición total", value: fmtMoney(overview.totalExposure), testId: "bank-kpi-exposure" },
+    { label: "Ofertas totales", value: `${overview.totalOffers}`, testId: "bank-kpi-exposure" },
     {
       label: "Solicitudes activas",
       value: `${overview.activeApplications}`,

@@ -2,55 +2,71 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { loginAsDealer } from "../dealer/helpers";
 
-const ANALYTICS_FIXTURE_JSON = {
-  conversionFunnel: {
-    started: 90,
-    submitted: 60,
-    approved: 40,
-    closed: 32,
-    dropOffPercents: [{ stage: "Submitted", dropOff: 0.33 }],
-  },
-  timeToClose: {
-    weeklyAverages: [
-      { week: "2025-W10", avgDays: 12 },
-      { week: "2025-W11", avgDays: 10 },
-    ],
-    currentAvg: 10,
-    trend: "stable",
-  },
-  approvalRateByBucket: {
-    byAmount: [{ range: "0–250k", rate: 70, count: 5 }],
-    byTerm: [{ range: "48m", rate: 66, count: 3 }],
-    byRiskTier: [{ tier: "Premium", rate: 78, count: 2 }],
-  },
-  performanceMetrics: {
-    avgDealSize: 388_500,
-    totalVolume: 1_880_900,
-    approvalRate: 62.25,
-    npsScore: 44,
-  },
+const CREDIT_BANKS_RANKING_FIXTURE = {
+  tenant_id: "00000000-0000-0000-0000-000000000001",
+  banks: [
+    {
+      lender_code: "banco_popular",
+      offer_count: 40,
+      approved_count: 28,
+      declined_count: 12,
+      approval_rate: 0.7,
+      avg_apr: 0.135,
+      avg_response_hours: 288,
+    },
+    {
+      lender_code: "banco_reservas",
+      offer_count: 22,
+      approved_count: 14,
+      declined_count: 8,
+      approval_rate: 0.636,
+      avg_apr: 0.142,
+      avg_response_hours: 240,
+    },
+  ],
+  generated_at: new Date().toISOString(),
 };
 
-function installDealerAnalyticsApiMocks(page: Page): { periods: string[] } {
-  const periods: string[] = [];
-  void page.route("**/api/v2/analytics/dealer/summary*", async (route) => {
-    const url = new URL(route.request().url());
-    periods.push(url.searchParams.get("period") ?? "");
+const CREDIT_DASHBOARD_FIXTURE = {
+  tenant_id: "00000000-0000-0000-0000-000000000001",
+  summary: {
+    applications_total: 90,
+    applications_by_status: {
+      DRAFT: 10,
+      SUBMITTED: 60,
+      APPROVED: 40,
+      COMPLETED: 32,
+    },
+    applications_by_display_status: {},
+    offers_total: 62,
+    offers_by_lender: { banco_popular: 40, banco_reservas: 22 },
+    recent_failures_24h: 0,
+  },
+  generated_at: new Date().toISOString(),
+};
+
+function installDealerAnalyticsApiMocks(page: Page): { fetchCount: { value: number } } {
+  const fetchCount = { value: 0 };
+
+  void page.route("**/api/v2/credit/analytics/banks-ranking**", async (route) => {
+    fetchCount.value += 1;
     await route.fulfill({
       status: 200,
-      body: JSON.stringify(ANALYTICS_FIXTURE_JSON),
+      body: JSON.stringify(CREDIT_BANKS_RANKING_FIXTURE),
       contentType: "application/json",
     });
   });
-  void page.route("**/api/v2/analytics/dealer/export*", async (route) => {
+
+  void page.route("**/credit/dashboard/summary**", async (route) => {
+    fetchCount.value += 1;
     await route.fulfill({
       status: 200,
-      body: `month,applications\nJanuary,42\n`,
-      contentType: "text/csv",
-      headers: { "Content-Disposition": 'attachment; filename="analytics-export.csv"' },
+      body: JSON.stringify(CREDIT_DASHBOARD_FIXTURE),
+      contentType: "application/json",
     });
   });
-  return { periods };
+
+  return { fetchCount };
 }
 
 async function skipIfAnalyticsGated(page: Page): Promise<void> {
@@ -81,17 +97,13 @@ test.describe("Dealer analytics dashboard E2E", () => {
     }
   });
 
-  test("period selector requests alternate summary window", async ({ page }) => {
-    const { periods } = installDealerAnalyticsApiMocks(page);
+  test("period selector is disabled when API has no temporal filter", async ({ page }) => {
+    installDealerAnalyticsApiMocks(page);
     await page.goto("/credit/dealer/analytics");
     await skipIfAnalyticsGated(page);
 
-    await expect.poll(() => periods.length >= 1, { timeout: 15_000 }).toBeTruthy();
-    expect(periods[0]).toBe("30d");
-
-    await page.getByTestId("dealer-period-selector").getByRole("button", { name: /^90d$/ }).click();
-
-    await expect.poll(() => periods.includes("90d"), { timeout: 15_000 }).toBeTruthy();
+    await expect(page.getByTestId("dealer-period-unavailable")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("dealer-period-selector").getByRole("button", { name: /^7d$/ })).toBeDisabled();
   });
 
   test("charts render observable funnel and time-to-close landmarks", async ({ page }) => {
@@ -121,27 +133,17 @@ test.describe("Dealer analytics dashboard E2E", () => {
     await expect(page.getByTestId("performance-metrics-cards")).toBeVisible();
   });
 
-  test("CSV export hits dealer analytics export endpoint and may surface a download", async ({ page }) => {
+  test("CSV export synthesizes a download client-side", async ({ page }) => {
     installDealerAnalyticsApiMocks(page);
     await page.goto("/credit/dealer/analytics");
     await skipIfAnalyticsGated(page);
 
-    const respPromise = page.waitForResponse(
-      (res) =>
-        typeof res.url() === "string" &&
-        res.url().includes("/api/v2/analytics/dealer/export") &&
-        res.request().method() === "GET",
-      { timeout: 45_000 },
-    );
-
-    const dlPromise = page.waitForEvent("download", { timeout: 8_000 }).catch(() => undefined);
+    const dlPromise = page.waitForEvent("download", { timeout: 12_000 }).catch(() => undefined);
 
     await page.getByTestId("dealer-export-csv").click();
 
-    const response = await respPromise;
-    expect(response.ok()).toBeTruthy();
-
     const download = await dlPromise;
+    expect(download != null).toBeTruthy();
     if (download != null) {
       await expect(download.suggestedFilename()).toMatch(/csv$/i);
       await download.delete();
