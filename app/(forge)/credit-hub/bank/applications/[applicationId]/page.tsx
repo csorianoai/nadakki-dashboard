@@ -1,6 +1,8 @@
 "use client";
 
 import { use } from "react";
+import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
+import { BankApplicationOpsPanel } from "@/app/(forge)/credit-hub/bank/_components/BankApplicationOpsPanel";
 import { BankDetailLayout } from "@/components/credit-hub/bank/BankDetailLayout";
 import { DetailSkeleton, EmptyStateRich } from "@/components/credit-hub/primitives";
 import { useBankApplication, useBankAuditTrail, useBankCompliance, useBankCounterOffer } from "@/lib/credit-hub/hooks/useBankDecision";
@@ -27,12 +29,15 @@ export default function BankApplicationReviewPage({ params }: { params: Promise<
   }
 
   return (
-    <BankDetailLayout
-      application={appQuery.data}
-      compliance={complianceQuery.data}
-      audit={auditQuery.data}
-      counterOffer={counterOfferQuery.data}
-      isComplianceLoading={complianceQuery.isLoading}
-    />
+    <CreditTenantGate>
+      <BankDetailLayout
+        application={appQuery.data}
+        compliance={complianceQuery.data}
+        audit={auditQuery.data}
+        counterOffer={counterOfferQuery.data}
+        isComplianceLoading={complianceQuery.isLoading}
+      />
+      <BankApplicationOpsPanel applicationId={applicationId} />
+    </CreditTenantGate>
   );
 }
