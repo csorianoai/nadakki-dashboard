@@ -140,7 +140,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://nadakki-ai-suite.onrender.com https://*.sentry.io https://vitals.vercel-insights.com wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.nadakki.com wss://api.nadakki.com https://*.sentry.io https://vitals.vercel-insights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
           },
         ],
       },
@@ -245,7 +245,7 @@ const nextConfig = {
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_API_BASE_URL ||
         process.env.NEXT_PUBLIC_RENDER_API_URL ||
-        "https://nadakki-ai-suite.onrender.com",
+        "https://api.nadakki.com",
     );
     return [
       {
