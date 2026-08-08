@@ -494,6 +494,7 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: BarChart3,
         children: [
           { id: "credit-bank-kpis", label: "KPIs de banco", href: "/credit/bank/kpis" },
+          { id: "credit-vehicle-anomalies", label: "Historial de vehiculo", href: "/credit-hub/bank/vehicles" },
           { id: "credit-analytics", label: "AnalÃ­tica / reportes", href: "/credit-hub/bank/analytics" },
           { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank/compliance" },
           { id: "credit-audit-ch", label: "AuditorÃ­a (hub)", href: "/credit-hub/bank/audit" },
