@@ -96,15 +96,34 @@ export const AUTH_FETCH_TIMEOUT_MS = 5_000;
 /** Login POST can exceed 5s on Render even when /health is warm (~10s observed). */
 export const AUTH_LOGIN_TIMEOUT_MS = 30_000;
 
+function formatHttpError(
+  url: string,
+  status: number,
+  statusText: string,
+  body: string,
+): string {
+  const snippet = body.trim().slice(0, 300);
+  return `HTTP ${status}${statusText ? ` ${statusText}` : ""} — ${url}${snippet ? ` — ${snippet}` : ""}`;
+}
+
+function formatNetworkError(url: string, e: unknown): string {
+  if (e instanceof Error && e.name === "AbortError") {
+    return `Tiempo de espera agotado — ${url}`;
+  }
+  const detail = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+  return `Error de red (${detail}) — ${url}`;
+}
+
 async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit,
   timeoutMs = AUTH_FETCH_TIMEOUT_MS,
 ): Promise<ApiResult<T>> {
+  const url = `${BASE_URL}${endpoint}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const r = await fetch(`${BASE_URL}${endpoint}`, {
+    const r = await fetch(url, {
       ...options,
       signal: controller.signal,
       headers: {
@@ -113,17 +132,12 @@ async function fetchApi<T>(
       },
     });
     if (!r.ok) {
-      return { ok: false, error: await r.text() };
+      const body = await r.text();
+      return { ok: false, error: formatHttpError(url, r.status, r.statusText, body) };
     }
     return { ok: true, data: (await r.json()) as T };
   } catch (e) {
-    if (e instanceof Error && e.name === "AbortError") {
-      return { ok: false, error: "Tiempo de espera agotado" };
-    }
-    return {
-      ok: false,
-      error: e instanceof Error ? e.message : String(e),
-    };
+    return { ok: false, error: formatNetworkError(url, e) };
   } finally {
     clearTimeout(timer);
   }
@@ -156,8 +170,9 @@ export async function refreshTokenV2(refreshToken: string): Promise<ApiResult<Re
 }
 
 export async function logoutV2(accessToken: string): Promise<ApiResult<void>> {
+  const url = `${BASE_URL}/api/v2/auth/logout`;
   try {
-    const r = await fetch(`${BASE_URL}/api/v2/auth/logout`, {
+    const r = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -165,7 +180,8 @@ export async function logoutV2(accessToken: string): Promise<ApiResult<void>> {
       },
     });
     if (!r.ok) {
-      return { ok: false, error: await r.text() };
+      const body = await r.text();
+      return { ok: false, error: formatHttpError(url, r.status, r.statusText, body) };
     }
     if (r.status === 204) {
       return { ok: true };
@@ -173,10 +189,7 @@ export async function logoutV2(accessToken: string): Promise<ApiResult<void>> {
     await r.text();
     return { ok: true };
   } catch (e) {
-    return {
-      ok: false,
-      error: e instanceof Error ? e.message : String(e),
-    };
+    return { ok: false, error: formatNetworkError(url, e) };
   }
 }
 
