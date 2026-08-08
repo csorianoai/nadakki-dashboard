@@ -23,7 +23,7 @@ import {
   FeatureDisabledError as FeatureDisabledErrorClass,
 } from "@/types/spyfu";
 
-const DEFAULT_BASE = "https://nadakki-ai-suite.onrender.com";
+const DEFAULT_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com";
 
 
 function getDetail(body: unknown): unknown {

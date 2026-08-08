@@ -4,7 +4,7 @@
  *
  * Canonical env var: NEXT_PUBLIC_NADAKKI_API_URL
  * Fallback chain: NEXT_PUBLIC_NADAKKI_API_URL → NEXT_PUBLIC_API_URL
- *   → NEXT_PUBLIC_API_BASE_URL → https://nadakki-ai-suite.onrender.com
+ *   → NEXT_PUBLIC_API_BASE_URL → https://api.nadakki.com
  */
 
 import { tokenStorage } from "@/lib/auth/token-storage";
@@ -13,7 +13,7 @@ const BACKEND_URL = (
   process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://nadakki-ai-suite.onrender.com"
+  "https://api.nadakki.com"
 ).replace(/\/$/, "");
 
 const LEGACY_ACCESS_TOKEN_KEY = "nadakki_sic_token";

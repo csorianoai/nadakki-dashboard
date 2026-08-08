@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/forge/ui/Skeleton";
 
 export default function LoginPage() {
   useEffect(() => {
-    fetch("https://nadakki-ai-suite.onrender.com/health", { method: "GET" }).catch(() => {});
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com"}/health`, { method: "GET" }).catch(() => {});
   }, []);
   const router = useRouter();
   const { login, isAuthenticated, isLoading, allRoles, activeRole } = useAuth();

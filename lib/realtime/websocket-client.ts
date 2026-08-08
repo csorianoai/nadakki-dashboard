@@ -2,7 +2,7 @@ import type { RealtimeClientConfig, RealtimeConnectionState } from "@/types/real
 import { tokenStorage } from "@/lib/auth/token-storage";
 
 export const DEFAULT_REALTIME_WS_URL =
-  process.env.NEXT_PUBLIC_WS_URL ?? "wss://nadakki-ai-suite.onrender.com/ws";
+  process.env.NEXT_PUBLIC_WS_URL ?? "wss://api.nadakki.com/ws";
 
 export const HEARTBEAT_DEFAULT_MS = 30_000;
 

@@ -4,7 +4,7 @@ import { tokenStorage } from "@/lib/auth/token-storage";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
-const BACKEND_URL = "https://nadakki-ai-suite.onrender.com";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com";
 
 /** Attach JWT Authorization header if available (tenant isolation). */
 function authHeaders(extra?: Record<string, string>): Record<string, string> {

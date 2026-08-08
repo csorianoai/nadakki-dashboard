@@ -17,7 +17,7 @@ const BACKEND_URL = (
   process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://nadakki-ai-suite.onrender.com"
+  "https://api.nadakki.com"
 ).replace(/\/$/, "");
 
 async function proxyRequest(

@@ -87,7 +87,7 @@ const BASE_URL = (
   process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://nadakki-ai-suite.onrender.com"
+  "https://api.nadakki.com"
 );
 
 /** Per-request ceiling for session init (/refresh + /me). */

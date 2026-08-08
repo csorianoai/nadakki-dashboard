@@ -8,7 +8,7 @@
  */
 
 const BACKEND_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "https://nadakki-ai-suite.onrender.com"
+  process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com"
 ).replace(/\/$/, "");
 
 function tenantHeaders(tenantId: string, role?: string): Record<string, string> {
