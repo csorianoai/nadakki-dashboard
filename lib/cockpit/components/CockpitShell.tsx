@@ -68,9 +68,9 @@ export function CockpitTopbar() {
 }
 
 const NAV = [
-  { href: "/credit-hub/admin", label: "Nivel 1 â€” Red", level: "network" },
-  { href: "/credit-hub/admin/credit", label: "Nivel 2 â€” Credit Hub", level: "credit" },
-  { href: "/credit-hub/admin/platform", label: "Nivel 3 â€” Plataforma", level: "platform" },
+  { href: "/credit-hub/admin", label: "Nivel 1 — Red", level: "network" },
+  { href: "/credit-hub/admin/credit", label: "Nivel 2 — Credit Hub", level: "credit" },
+  { href: "/credit-hub/admin/platform", label: "Nivel 3 — Plataforma", level: "platform" },
 ] as const;
 
 export function CockpitNav() {
