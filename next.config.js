@@ -221,7 +221,9 @@ const nextConfig = {
         permanent: false,
       },
       {
-        source: "/credit/bank/:applicationId",
+        // Exclude KEEP_TEMPORARILY single-segment routes (kpis, queue) so they are
+        // not swallowed by the dynamic :applicationId match.
+        source: "/credit/bank/:applicationId((?!kpis|queue)[^/]+)",
         destination: "/credit-hub/bank/applications/:applicationId",
         permanent: false,
       },
