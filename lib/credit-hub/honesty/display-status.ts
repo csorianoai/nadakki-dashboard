@@ -125,6 +125,11 @@ export function isPipelineActiveDisplay(status: CreditApplicationStatus): boolea
   return d === "ACTIVE" || d === "OFFERED";
 }
 
+export function formatApplicationStateLabel(state: string | null | undefined): string {
+  if (!state?.trim()) return "Sin estado";
+  return resolveDisplayStatusLabel({ backendState: state.trim(), status: "unknown" }).label;
+}
+
 export function extractDisplayStatus(raw: unknown): string | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
