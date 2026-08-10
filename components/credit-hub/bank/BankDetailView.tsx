@@ -4,7 +4,7 @@ import { CreditAnalysisPanel } from "@/components/credit-hub/dealer/analysis/Cre
 import { ScoreVisual } from "@/components/credit-hub/dealer/analysis/ScoreVisual";
 import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import type { BankReviewApplication, ComplianceReport, BankAuditTrail } from "@/lib/credit-hub/types/bankDecision";
-import { BankAuditTimeline } from "./BankAuditTimeline";
+import { formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
 import { BankComplianceCard } from "./BankComplianceCard";
 import { BankDecisionPanel } from "./BankDecisionPanel";
 
@@ -32,7 +32,7 @@ export function BankDetailView({
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div><p className="text-xs text-forge-text-muted">Monto solicitado</p><p className="font-semibold text-forge-text">RD$ {Number(financial?.requested_amount || 0).toLocaleString("es-DO")}</p></div>
             <div><p className="text-xs text-forge-text-muted">Vehículo</p><p className="font-semibold text-forge-text">{String(vehicle?.make || "")} {String(vehicle?.model || "")}</p></div>
-            <div><p className="text-xs text-forge-text-muted">Estado</p><p className="font-semibold text-forge-text">{application.state}</p></div>
+            <div><p className="text-xs text-forge-text-muted">Estado</p><p className="font-semibold text-forge-text">{formatApplicationStateLabel(application.state)}</p></div>
           </div>
         </ForgeCard>
         {analysis && <ScoreVisual analysis={analysis} />}

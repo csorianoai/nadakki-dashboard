@@ -1,5 +1,7 @@
 "use client";
 
+import { formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
+
 const TERMINAL = new Set(["COMPLETED", "DECLINED", "CANCELLED", "REJECTED", "CLOSED"]);
 
 function tone(state: string | null | undefined): string {
@@ -17,11 +19,12 @@ function tone(state: string | null | undefined): string {
 }
 
 export function ApplicationStatusBadge({ state }: { state: string | null | undefined }) {
-  const label = state?.trim() || "Sin estado";
+  const label = formatApplicationStateLabel(state);
+  const raw = (state ?? "").toUpperCase();
   return (
     <span
-      className={`inline-flex max-w-full items-center truncate rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ring-1 ${tone(state)}`}
-      title={label}
+      className={`inline-flex max-w-full items-center truncate rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ring-1 ${tone(state)}`}
+      title={raw || undefined}
     >
       {label}
     </span>
