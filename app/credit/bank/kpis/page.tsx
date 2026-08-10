@@ -83,7 +83,9 @@ interface TrendPoint {
   approved: number;
 }
 
-type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string; unavailable?: boolean };
 
 interface PanelData {
   summary: Result<DashboardResponse>;
@@ -134,6 +136,34 @@ function resultError<T>(r: Result<T>): string | null {
 }
 function fail<T>(e: unknown): Result<T> {
   return { ok: false, error: errMsg(e) };
+}
+
+const KPI_UNAVAILABLE_LEGEND =
+  "Indicadores no disponibles temporalmente — la consulta no pudo completarse";
+
+function readKpiEnvelope(body: unknown): { available: boolean; error?: string } {
+  const root = asRecord(body);
+  if (root && root.available === false) {
+    return {
+      available: false,
+      error: typeof root.error === "string" ? root.error : undefined,
+    };
+  }
+  return { available: true };
+}
+
+function logKpiBackendError(scope: string, detail: string | undefined): void {
+  if (detail) console.warn(`[bank-kpis/${scope}]`, detail);
+}
+
+function kpiUnavailable<T>(scope: string, body: unknown): Result<T> {
+  const env = readKpiEnvelope(body);
+  logKpiBackendError(scope, env.error);
+  return { ok: false, error: "Datos no disponibles", unavailable: true };
+}
+
+function isUnavailableResult<T>(r: Result<T>): boolean {
+  return !r.ok && Boolean((r as { unavailable?: boolean }).unavailable);
 }
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -254,9 +284,13 @@ function BankKpisContent() {
       })
         .then(async (res): Promise<Result<LenderBreakdownRow[]>> => {
           const body = await readJson(res);
-          return res.ok
-            ? { ok: true, data: normalizeLenders(body) }
-            : { ok: false, error: parseApiError(res.status, body) };
+          if (!res.ok) {
+            return { ok: false, error: parseApiError(res.status, body) };
+          }
+          if (!readKpiEnvelope(body).available) {
+            return kpiUnavailable("lenders", body);
+          }
+          return { ok: true, data: normalizeLenders(body) };
         })
         .catch((e): Result<LenderBreakdownRow[]> => fail<LenderBreakdownRow[]>(e)),
 
@@ -267,9 +301,13 @@ function BankKpisContent() {
       })
         .then(async (res): Promise<Result<TrendPoint[]>> => {
           const body = await readJson(res);
-          return res.ok
-            ? { ok: true, data: normalizeTrends(body) }
-            : { ok: false, error: parseApiError(res.status, body) };
+          if (!res.ok) {
+            return { ok: false, error: parseApiError(res.status, body) };
+          }
+          if (!readKpiEnvelope(body).available) {
+            return kpiUnavailable("trends", body);
+          }
+          return { ok: true, data: normalizeTrends(body) };
         })
         .catch((e): Result<TrendPoint[]> => fail<TrendPoint[]>(e)),
     ]);
@@ -412,12 +450,19 @@ function LendersSection({
     <ForgeCard>
       <SectionTitle icon={BarChart3} title="Desglose por prestamista" />
       {!lenders.ok ? (
-        <ErrorPanel
-          title="Prestamistas no disponibles"
-          message={resultError(lenders) ?? ""}
-          onRetry={onRetry}
-          inline
-        />
+        isUnavailableResult(lenders) ? (
+          <KpiUnavailableState
+            title="Desglose por prestamista no disponible"
+            testId="bank-kpis-lenders-unavailable"
+          />
+        ) : (
+          <ErrorPanel
+            title="Prestamistas no disponibles"
+            message={resultError(lenders) ?? ""}
+            onRetry={onRetry}
+            inline
+          />
+        )
       ) : rows.length === 0 ? (
         <EmptyState message="Sin datos de prestamistas todavÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a." />
       ) : (
@@ -456,12 +501,19 @@ function TrendsSection({
     <ForgeCard>
       <SectionTitle icon={TrendingUp} title="Tendencia temporal" />
       {!trends.ok ? (
-        <ErrorPanel
-          title="Tendencia no disponible"
-          message={resultError(trends) ?? ""}
-          onRetry={onRetry}
-          inline
-        />
+        isUnavailableResult(trends) ? (
+          <KpiUnavailableState
+            title="Tendencia temporal no disponible"
+            testId="bank-kpis-trends-unavailable"
+          />
+        ) : (
+          <ErrorPanel
+            title="Tendencia no disponible"
+            message={resultError(trends) ?? ""}
+            onRetry={onRetry}
+            inline
+          />
+        )
       ) : resultData(trends)!.length === 0 ? (
         <EmptyState message="Sin tendencia disponible todavÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­a." />
       ) : (
@@ -535,6 +587,21 @@ function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex h-64 items-center justify-center text-sm text-forge-text-muted">
       {message}
+    </div>
+  );
+}
+
+/** FIX-ANALYTICS-01 pattern: muted placeholder + leyenda secundaria (sin ceros ni error crudo). */
+function KpiUnavailableState({ title, testId }: { title: string; testId: string }) {
+  return (
+    <div className="flex flex-col gap-1" data-testid={testId}>
+      <div
+        className="flex h-64 items-center justify-center rounded-xl border border-dashed border-amber-500/25 bg-amber-500/5"
+        aria-disabled="true"
+      >
+        <p className="text-sm font-medium text-forge-text-muted">{title}</p>
+      </div>
+      <p className="text-[10px] text-forge-text-muted">{KPI_UNAVAILABLE_LEGEND}</p>
     </div>
   );
 }
