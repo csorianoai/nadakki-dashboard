@@ -452,8 +452,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Acceso",
         icon: LayoutDashboard,
         children: [
-          { id: "credit-dashboard", label: "Panel", href: "/credit-hub" },
-          { id: "credit-bank", label: "Banca", href: "/credit-hub/bank" },
+          { id: "credit-bank", label: "Mesa de decisiones", href: "/credit-hub/bank" },
           { id: "credit-dealer", label: "Dealer", href: "/credit-hub/dealer" },
           {
             id: "credit-new",
@@ -470,8 +469,8 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Solicitudes",
         icon: FolderKanban,
         children: [
-          { id: "credit-bank-apps", label: "Banca â€” listado", href: "/credit-hub/bank/applications" },
-          { id: "credit-dealer-apps", label: "Dealer â€” listado", href: "/credit-hub/dealer/applications" },
+          { id: "credit-bank-apps", label: "Bandeja", href: "/credit-hub/bank/applications" },
+          { id: "credit-dealer-apps", label: "Dealer — listado", href: "/credit-hub/dealer/applications" },
         ],
       },
       {
@@ -494,7 +493,7 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: BarChart3,
         children: [
           { id: "credit-bank-kpis", label: "KPIs de banco", href: "/credit/bank/kpis" },
-          { id: "credit-vehicle-anomalies", label: "Historial de vehiculo", href: "/credit-hub/bank/vehicles" },
+          { id: "credit-vehicle-anomalies", label: "Historial de vehículos", href: "/credit-hub/bank/vehicles" },
           { id: "credit-analytics", label: "AnalÃ­tica / reportes", href: "/credit-hub/bank/analytics" },
           { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank/compliance" },
           { id: "credit-audit-ch", label: "AuditorÃ­a (hub)", href: "/credit-hub/bank/audit" },
