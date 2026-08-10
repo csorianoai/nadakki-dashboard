@@ -18,6 +18,7 @@ export interface CreditRequestRow {
   tenant_name?: string;
   dealer_name?: string;
   applicant_name?: string;
+  borrower_name_masked?: string;
   state?: string;
   requested_amount?: number;
   created_at?: string;

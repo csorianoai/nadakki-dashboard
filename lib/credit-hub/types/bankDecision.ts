@@ -36,6 +36,7 @@ export interface BankQueueItem {
   tenant_id: string;
   state: string;
   applicant_name: string | null;
+  borrower_name_masked: string | null;
   dealer_id: string | null;
   dealer_name: string | null;
   vehicle_label: string | null;

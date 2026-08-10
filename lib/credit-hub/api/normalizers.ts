@@ -101,10 +101,10 @@ export function normalizeApplication(raw: unknown): CreditApplication {
 
   const id = pickString(record, ["id", "application_id", "applicationId"], "—");
 
-  // Applicant name: top-level → payload.applicant.full_name → borrower_name_masked
-  const applicantName = pickString(record, ["applicant_name", "applicantName", "name"])
+  // Applicant name: prefer masked field (PII-QUEUE-02), then legacy fallbacks
+  const applicantName = pickString(record, ["borrower_name_masked"])
+    || pickString(record, ["applicant_name", "applicantName", "name"])
     || pickString(payloadApplicant, ["full_name", "name"])
-    || pickString(record, ["borrower_name_masked"])
     || "—";
 
   // Requested amount: top-level → payload.financial.requested_amount
