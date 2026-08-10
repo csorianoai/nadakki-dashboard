@@ -99,7 +99,7 @@ export default function LoginPage() {
                 required
                 autoFocus
                 className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
-                placeholder="admin@credicefi.com"
+                placeholder="admin@tu-institucion.com"
               />
             </div>
 
@@ -126,7 +126,7 @@ export default function LoginPage() {
                 value={tenantSlug}
                 onChange={(e) => setTenantSlug(e.target.value)}
                 className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
-                placeholder="credicefi"
+                placeholder="tu-institucion"
               />
               <p className="text-xs text-[var(--forge-text-muted)] mt-1">
                 Dejar vacío para tenant por defecto
