@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { useRouter } from "next/navigation";
 
 import { apiFetch } from "@/lib/api/fetch-client";
+import { clearWizardDraftStorage } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 
 export type UserRole = "owner" | "admin" | "editor" | "viewer";
 
@@ -127,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    clearWizardDraftStorage();
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEYS.auth);
       localStorage.removeItem(STORAGE_KEYS.tenantId);

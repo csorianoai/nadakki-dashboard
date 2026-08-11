@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, Plus, RefreshCw } from "lucide-react";
+import { Filter, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EmptyStateRichProps, EmptyStateVariant } from "@/lib/credit-hub/ch-types";
 
@@ -78,7 +78,7 @@ export function EmptyStateRich({
       <EmptyArt variant={variant} />
       <div style={{ fontSize: "var(--ch-text-lg)", fontWeight: 600, marginTop: 8 }}>{resolvedTitle}</div>
       <div style={{ fontSize: "var(--ch-text-sm)", color: "var(--ch-text-3)", maxWidth: 380, lineHeight: 1.5 }}>{resolvedBody}</div>
-      {(primary || secondary || action || variant === "empty" || variant === "filter-empty" || (variant === "error" && !primary)) && (
+      {(primary || secondary || action || variant === "filter-empty" || (variant === "error" && !primary)) && (
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
           {variant === "error" && !primary ? (
             <button type="button" className="ch-btn ch-btn-secondary">
@@ -89,11 +89,6 @@ export function EmptyStateRich({
             <button type="button" className="ch-btn ch-btn-secondary">
               <Filter className="h-3.5 w-3.5" aria-hidden />
               Limpiar filtros
-            </button>
-          ) : variant === "empty" ? (
-            <button type="button" className="ch-btn ch-btn-primary">
-              <Plus className="h-3.5 w-3.5" aria-hidden />
-              Nueva solicitud
             </button>
           ) : null}
           {primary}

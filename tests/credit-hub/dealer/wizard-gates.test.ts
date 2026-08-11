@@ -20,14 +20,10 @@ function completeRef(name: string, phone = "8095551234") {
 }
 
 describe("wizard-gates", () => {
-  test("requires all mandatory document uploads", () => {
+  test("requires vehicle document upload only", () => {
     expect(hasRequiredDocumentsFileReady({ document_files_ready: {} })).toBe(false);
-    expect(hasRequiredDocumentsFileReady({ document_files_ready: { id_front: true } })).toBe(false);
-    expect(
-      hasRequiredDocumentsFileReady({
-        document_files_ready: { id_front: true, id_back: true, vehicle_documents: true },
-      }),
-    ).toBe(true);
+    expect(hasRequiredDocumentsFileReady({ document_files_ready: { id_front: true, id_back: true } })).toBe(false);
+    expect(hasRequiredDocumentsFileReady({ document_files_ready: { vehicle_documents: true } })).toBe(true);
   });
 
   test("requires 3 complete personal references", () => {
@@ -46,13 +42,13 @@ describe("wizard-gates", () => {
   test("wizardDocumentsStepValid combines required docs and references", () => {
     const base = {
       ...initialApplicationFormData,
-      document_files_ready: { id_front: true, id_back: true, vehicle_documents: true },
+      document_files_ready: { vehicle_documents: true },
       personal_references: initialPersonalReferences().map((r, i) =>
         i < 3 ? completeRef(`Ref ${i + 1}`) : r,
       ),
     };
     expect(wizardDocumentsStepValid(base)).toBe(true);
-    expect(wizardDocumentsStepValid({ ...base, document_files_ready: { id_front: true } })).toBe(false);
+    expect(wizardDocumentsStepValid({ ...base, document_files_ready: {} })).toBe(false);
     expect(
       wizardDocumentsStepValid({
         ...base,
@@ -84,12 +80,12 @@ describe("wizard-gates", () => {
     const summary = buildConsentDocumentsSummary(
       {
         documents_received: { id_front: true, id_back: true, vehicle_documents: true },
-        document_files_ready: { id_front: true, id_back: true, vehicle_documents: true },
+        document_files_ready: { vehicle_documents: true },
       },
       DEFAULT_DO_REQUIRED_DOCUMENTS,
       tenantDocumentKey,
     );
-    expect(summary.attachedCount).toBe(3);
+    expect(summary.attachedCount).toBe(1);
     expect(summary.totalCount).toBe(DEFAULT_DO_REQUIRED_DOCUMENTS.length);
     expect(summary.items.find((item) => item.key === "bank_statements")?.attached).toBe(false);
   });
@@ -108,7 +104,7 @@ describe("wizard-gates", () => {
       applicant_city: "Santo Domingo",
       applicant_province: "Distrito Nacional",
       applicant_country: "RD",
-      document_files_ready: { id_front: true, id_back: true, vehicle_documents: true },
+      document_files_ready: { vehicle_documents: true },
       personal_references: [completeRef("Juan Pérez"), completeRef("María López"), completeRef("Pedro Ruiz")],
     };
     const payload = buildCreateApplicationPayload(form as typeof initialApplicationFormData, {

@@ -11,6 +11,7 @@ import {
   PERSONAL_REFERENCES_MAX,
   PERSONAL_REFERENCES_MIN,
 } from "@/lib/credit-hub/dealer/wizard-gates";
+import { wizardDocumentOptionalNotice } from "@/lib/credit-hub/dealer/wizard-optional-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useDealerWizard } from "./DealerWizardProvider";
 import { DocumentUploadZone } from "./DocumentUploadZone";
@@ -54,7 +55,7 @@ export function DealerWizardDocumentsStep() {
       <div>
         <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.documents_title}</h2>
         <p className="mt-1 text-forge-sm text-forgeGray-500">
-          Marca los documentos que tienes listos y sube los archivos. Los obligatorios deben adjuntarse para continuar.
+          Marca los documentos que tengas listos y sube los archivos. Solo los documentos del vehículo son obligatorios para continuar.
         </p>
       </div>
 
@@ -87,8 +88,13 @@ export function DealerWizardDocumentsStep() {
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-forge-sm font-medium text-forgeGray-800">{document.label}</p>
-                    {isRequired ? <span className="text-forge-xs text-forgeGray-500">Requerido</span> : null}
+                    {isRequired ? <span className="text-forge-xs text-forgeGray-500">Requerido</span> : (
+                      <span className="text-forge-xs text-forgeGray-500">Opcional</span>
+                    )}
                   </div>
+                  {wizardDocumentOptionalNotice(k) ? (
+                    <p className="text-forge-xs text-amber-700/90">{wizardDocumentOptionalNotice(k)}</p>
+                  ) : null}
                   {document.tooltip ? <p className="text-forge-xs text-forgeGray-500">{document.tooltip}</p> : null}
 
                   {showUpload ? (

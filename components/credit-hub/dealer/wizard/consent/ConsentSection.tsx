@@ -1,5 +1,6 @@
 "use client";
 
+import { WIZARD_OPTIONAL_BUREAU_NOTICE } from "@/lib/credit-hub/dealer/wizard-optional-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { PresentConsentForm } from "./PresentConsentForm";
@@ -156,8 +157,9 @@ export function ConsentSection({
                 onChange={(e) => onPatch({ consent_bureau_authorization: e.target.checked })}
                 className="mt-1"
               />
-              <span>{t.consent.consent_buro_label} *</span>
+              <span>{t.consent.consent_buro_label}</span>
             </label>
+            <p className="text-xs text-forge-text-muted">{WIZARD_OPTIONAL_BUREAU_NOTICE}</p>
             {getFieldError?.("consent_bureau_authorization") ? <p className="text-xs text-[#ef4444]" role="alert">{getFieldError("consent_bureau_authorization")}</p> : null}
             <label className={`flex items-start gap-3 rounded-xl border bg-forge-surface-elevated p-3 text-sm text-forge-text ${getFieldError?.("consent_data_processing_authorization") ? "border-[#ef4444]" : "border-forge-border"}`} data-wizard-field="consent_data_processing_authorization">
               <input

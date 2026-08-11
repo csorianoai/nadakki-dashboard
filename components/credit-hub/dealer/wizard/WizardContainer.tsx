@@ -103,15 +103,18 @@ export function effectiveRequiredDocuments(tenant: TenantBankingConfig): TenantR
   return DEFAULT_DO_REQUIRED_DOCUMENTS;
 }
 
-/** Forge wizard: three mandatory uploads; personal_references excluded from checklist. */
+/** Forge wizard: vehicle docs mandatory; ID and financial docs optional (no live validation). */
 export function effectiveWizardDocuments(tenant: TenantBankingConfig): TenantRequiredDocument[] {
-  const forcedRequired = new Set(["id_front", "id_back", "vehicle_documents"]);
+  const forcedRequired = new Set(["vehicle_documents"]);
+  const optionalUnvalidated = new Set(["id_front", "id_back", "bank_statements"]);
   return effectiveRequiredDocuments(tenant)
     .filter((d) => tenantDocumentKey(d) !== "personal_references")
-    .map((d) => ({
-      ...d,
-      required: forcedRequired.has(tenantDocumentKey(d)),
-    }));
+    .map((d) => {
+      const key = tenantDocumentKey(d);
+      if (forcedRequired.has(key)) return { ...d, required: true };
+      if (optionalUnvalidated.has(key)) return { ...d, required: false };
+      return d;
+    });
 }
 
 function contractLabelToFormValue(label: string): string {
@@ -610,8 +613,7 @@ export function stepIsValid(
     return docsOk && refsOk;
   }
   if (step === 5) {
-    const base =
-      data.consent_bureau_authorization && data.consent_terms_accepted && data.consent_data_processing_authorization;
+    const base = data.consent_terms_accepted && data.consent_data_processing_authorization;
     if (!base) return false;
     if (data.consent_presence === "present") {
       return data.consent_signature_full_name.trim().length >= 3 && data.consent_present_confirmed;

@@ -7,6 +7,7 @@ import type { BankReviewApplication, ComplianceReport, BankAuditTrail } from "@/
 import { formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
 import { BankComplianceCard } from "./BankComplianceCard";
 import { BankDecisionPanel } from "./BankDecisionPanel";
+import { BankAuditTimeline } from "./BankAuditTimeline";
 
 export function BankDetailView({
   application,

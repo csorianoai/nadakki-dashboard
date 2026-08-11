@@ -33,7 +33,7 @@ function partialStepRatio(step: number, data: ApplicationFormData): number {
     const docCount = Object.values(data.documents_received ?? {}).filter(Boolean).length;
     checks.push(docCount > 0);
   } else if (step === 4) {
-    checks.push(data.consent_bureau_authorization, data.consent_terms_accepted);
+    checks.push(data.consent_terms_accepted);
   }
   if (checks.length === 0) return 0;
   return checks.filter(Boolean).length / checks.length;
