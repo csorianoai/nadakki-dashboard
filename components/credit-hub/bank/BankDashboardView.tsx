@@ -42,7 +42,8 @@ export function BankDashboardView({
   }, [queue]);
 
   const counterOffers = useMemo(() => queue.filter((q) => q.state?.toLowerCase().includes("counter")).length, [queue]);
-  const stipulationsCount = useMemo(() => Math.min(counterOffers + 2, 5), [counterOffers]);
+  /** No stipulations KPI endpoint on this card yet — never invent counts (ROADMAP). */
+  const stipulationsCount = 0;
 
   const showDemoBanner =
     institutionName.toLowerCase().includes("demo") || institutionName.toLowerCase().includes("nadakki");
