@@ -7,6 +7,7 @@ import { ScoreVisual, RiskBand } from "@/components/credit-hub/primitives";
 import { chMoney } from "@/lib/credit-hub/ch-base";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import type { BankQueueSortKey } from "@/lib/credit-hub/types/bank-views";
+import { chRelTime, PRIORITY_STYLE, STATE_LABEL } from "@/lib/credit-hub/bank/bankFormat";
 import { mapBackendRiskLevel } from "@/lib/credit-hub/types/bank-views";
 import { formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
 

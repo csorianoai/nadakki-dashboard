@@ -14,6 +14,7 @@ import {
 } from "@/lib/api/auth-v2";
 import { tokenStorage } from "./token-storage";
 import { scheduleProactiveRefresh, cancelProactiveRefresh } from "./token-refresh";
+import { clearWizardDraftStorage } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 
 // ── localStorage keys that must stay in sync with JWT claims ──────────────
 const LS_KEYS = {
@@ -202,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    clearWizardDraftStorage(tenant?.id, user?.id);
     const token = tokenStorage.getAccessToken();
     if (token) await logoutV2(token);
     tokenStorage.clearTokens();
@@ -214,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const switchTenant = async (tenantId?: string, tenantSlug?: string) => {
+    clearWizardDraftStorage(tenant?.id, user?.id);
     const token = tokenStorage.getAccessToken();
     if (!token) return { ok: false, error: "Not authenticated" };
     const result = await switchTenantV2(token, tenantId, tenantSlug);

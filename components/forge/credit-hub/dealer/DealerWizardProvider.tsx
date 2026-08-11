@@ -11,6 +11,12 @@ import {
   type ReactNode,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  buildWizardDraftStorageKey,
+  purgeLegacyGlobalWizardDraftKeys,
+  WIZARD_AUTOSAVE_TOAST_SESSION_KEY,
+} from "@/lib/credit-hub/dealer/wizard-draft-storage";
 import {
   buildCreateApplicationPayload,
   initialApplicationFormData,
@@ -53,11 +59,6 @@ import {
   wizardBlockReasonMessage,
   type WizardFieldErrors,
 } from "@/lib/credit-hub/dealer/wizard-field-errors";
-
-const STORAGE_KEY = "nadakki_dealer_wizard_v1";
-const LEGACY_STORAGE_KEY = "forge-dealer-wizard-draft-v1";
-/** Session flag: show at most one subtle autosave success toast (institutional UX — silent thereafter). */
-const AUTOSAVE_FIRST_SUCCESS_TOAST_KEY = "forge-dealer-wizard-autosave-first-success-v1";
 
 function decodeWizardPreset(encoded: string): Record<string, unknown> | null {
   try {
@@ -243,11 +244,16 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   );
 
   const { tenantId } = useTenant();
+  const { user } = useAuth();
+  const storageKey = useMemo(
+    () => (tenantId && user?.id ? buildWizardDraftStorageKey(tenantId, user.id) : null),
+    [tenantId, user?.id],
+  );
 
   const [formData, setFormData] = useState<ApplicationFormData>(initialApplicationFormData);
   const formDataRef = useRef(formData);
   formDataRef.current = formData;
-  const hydratedRef = useRef(false);
+  const loadedStorageKeyRef = useRef<string | null>(null);
 
   // --- Pending document files (not serializable to localStorage) ---
   const [pendingFiles, setPendingFiles] = useState<Map<string, PendingFileEntry>>(new Map());
@@ -270,18 +276,19 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (hydratedRef.current) return;
-    hydratedRef.current = true;
+    purgeLegacyGlobalWizardDraftKeys();
+  }, []);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    if (loadedStorageKeyRef.current === storageKey) return;
+    loadedStorageKeyRef.current = storageKey;
     try {
-      let raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey);
       if (!raw) {
-        raw = localStorage.getItem(LEGACY_STORAGE_KEY);
-        if (raw) {
-          localStorage.setItem(STORAGE_KEY, raw);
-          localStorage.removeItem(LEGACY_STORAGE_KEY);
-        }
+        setFormData(initialApplicationFormData);
+        return;
       }
-      if (!raw) return;
       const parsed: unknown = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
       const partial = parsed as Partial<ApplicationFormData>;
@@ -297,7 +304,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!tenantConfig.features_enabled.garante_required) return;
@@ -558,28 +565,35 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [router, stepIndex]);
 
   const saveDraftToStorage = useCallback((): boolean => {
+    if (!storageKey) return false;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(formDataRef.current));
+      localStorage.setItem(storageKey, JSON.stringify(formDataRef.current));
       return true;
     } catch {
       return false;
     }
-  }, []);
+  }, [storageKey]);
 
   const clearDraftStorage = useCallback(() => {
+    if (!storageKey) {
+      purgeLegacyGlobalWizardDraftKeys();
+      return;
+    }
     try {
-      localStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(AUTOSAVE_FIRST_SUCCESS_TOAST_KEY);
+      localStorage.removeItem(storageKey);
+      sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
     } catch {
       /* ignore */
     }
-  }, []);
+    purgeLegacyGlobalWizardDraftKeys();
+  }, [storageKey]);
 
   useEffect(() => {
+    if (!storageKey) return;
     const id = window.setInterval(() => {
       let ok = false;
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(formDataRef.current));
+        localStorage.setItem(storageKey, JSON.stringify(formDataRef.current));
         ok = true;
       } catch {
         ok = false;
@@ -587,8 +601,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       const lang = forgeToastLangFromLocale(tenantConfig.locale);
       const copy = forgeWizardToasts(lang);
       if (ok) {
-        if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(AUTOSAVE_FIRST_SUCCESS_TOAST_KEY)) {
-          sessionStorage.setItem(AUTOSAVE_FIRST_SUCCESS_TOAST_KEY, "1");
+        if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY)) {
+          sessionStorage.setItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY, "1");
           toast.info(copy.draftSaved, {
             duration: 2000,
             className:
@@ -612,7 +626,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       }
     }, 10_000);
     return () => window.clearInterval(id);
-  }, [tenantConfig.locale, saveDraftToStorage]);
+  }, [tenantConfig.locale, saveDraftToStorage, storageKey]);
 
   const submitApplication = useCallback(async () => {
     if (!wizardDocumentsStepValid(formData)) {
