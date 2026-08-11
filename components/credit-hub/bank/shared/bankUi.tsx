@@ -8,7 +8,7 @@ import { chMoney } from "@/lib/credit-hub/ch-base";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import type { BankQueueSortKey } from "@/lib/credit-hub/types/bank-views";
 import { mapBackendRiskLevel } from "@/lib/credit-hub/types/bank-views";
-import { PRIORITY_STYLE, STATE_LABEL, chRelTime } from "@/lib/credit-hub/bank/bankFormat";
+import { formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
 
 export function SectionHeader({
   eyebrow,
@@ -62,7 +62,9 @@ export function PriorityBadge({ priority }: { priority: BankQueueItem["priority"
 
 export function StatePill({ state }: { state: string }) {
   const key = state?.toLowerCase?.() ?? state;
-  const [label, tone] = STATE_LABEL[key] ?? STATE_LABEL[state] ?? [state, "neutral"];
+  const queue = STATE_LABEL[key] ?? STATE_LABEL[state];
+  const label = queue ? queue[0] : formatApplicationStateLabel(state);
+  const tone = queue ? queue[1] : "neutral";
   const map = {
     warning: ["var(--ch-warning-text)", "var(--ch-warning-soft)"],
     info: ["var(--ch-info-text)", "var(--ch-info-soft)"],
