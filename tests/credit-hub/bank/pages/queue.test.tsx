@@ -10,6 +10,12 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useBankQueue", () => ({ useBankQueue: jest.fn() }));
+jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({
+  useTenant: () => ({ apiTenantId: "tenant-test", tenantId: "tenant-test", tenantSlug: "tenant-test", loading: false }),
+}));
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: { id: "analyst-1" } }),
+}));
 jest.mock("@/lib/credit-hub/hooks/useBulkActions", () => ({
   useBulkActions: () => ({ mutateAsync: jest.fn(), isPending: false, data: null }),
 }));
@@ -36,14 +42,16 @@ describe("Bank queue page", () => {
     (useBankQueue as jest.Mock).mockReturnValue({
       isLoading: false,
       isFetching: false,
+      isFetched: true,
+      fetchStatus: "idle",
       error: null,
       refetch: jest.fn(),
       data: { applications: [row("high", "Alta", 900), row("low", "Baja", 620)], total: 2, total_count: 2 },
     });
     render(<BankApplicationsQueuePage />);
-    expect(screen.getByText("Alta")).toBeInTheDocument();
-    expect(screen.getByText("900")).toBeInTheDocument();
-    expect(screen.getByTestId("bank-queue-pagination")).toBeInTheDocument();
+    expect(screen.getAllByText("Alta").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("900").length).toBeGreaterThan(0);
+    expect(screen.getByText(/mostrando 2 de 2/i)).toBeInTheDocument();
   });
 
   test("error state offers retry", async () => {
@@ -51,6 +59,9 @@ describe("Bank queue page", () => {
     (useBankQueue as jest.Mock).mockReturnValue({
       isLoading: false,
       isFetching: false,
+      isFetched: true,
+      isError: true,
+      fetchStatus: "idle",
       error: new Error("network"),
       refetch,
       data: undefined,
@@ -64,11 +75,13 @@ describe("Bank queue page", () => {
     (useBankQueue as jest.Mock).mockReturnValue({
       isLoading: false,
       isFetching: false,
+      isFetched: true,
+      fetchStatus: "idle",
       error: null,
       refetch: jest.fn(),
       data: { applications: [], total: 0, total_count: 0 },
     });
     render(<BankApplicationsQueuePage />);
-    expect(screen.getByText(/no hay solicitudes en la bandeja/i)).toBeInTheDocument();
+    expect(screen.getByText(/sin solicitudes en la bandeja/i)).toBeInTheDocument();
   });
 });
