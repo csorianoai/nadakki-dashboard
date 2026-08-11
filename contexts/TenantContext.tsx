@@ -101,17 +101,15 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<TenantSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
-    setTenantIdState(getStoredTenantId());
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated && authTenantId && !tenantId) {
+    if (isAuthenticated && authTenantId) {
       setTenantIdState(authTenantId);
       if (typeof window !== "undefined") {
         localStorage.setItem(TENANT_STORAGE_KEY, authTenantId);
       }
+      return;
     }
-  }, [isAuthenticated, authTenantId, tenantId]);
+    setTenantIdState(getStoredTenantId());
+  }, [isAuthenticated, authTenantId]);
 
   const setTenantId = useCallback((id: string) => {
     if (typeof window !== "undefined") {
