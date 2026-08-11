@@ -1,6 +1,6 @@
 import type { TenantRequiredDocument } from "@/lib/credit-hub/types/tenantConfig";
 
-export const WIZARD_REQUIRED_DOCUMENT_KEYS = ["id_front", "id_back", "vehicle_documents"] as const;
+export const WIZARD_REQUIRED_DOCUMENT_KEYS = ["vehicle_documents"] as const;
 export type WizardRequiredDocumentKey = (typeof WIZARD_REQUIRED_DOCUMENT_KEYS)[number];
 
 /** @deprecated Use WIZARD_REQUIRED_DOCUMENT_KEYS */
