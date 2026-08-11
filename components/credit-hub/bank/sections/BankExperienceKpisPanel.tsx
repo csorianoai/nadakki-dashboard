@@ -1,11 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { EmptyStateRich } from "@/components/credit-hub/primitives";
 import { CHApiError } from "@/lib/credit-hub/api/client";
 import {
   getBankExperienceKpis,
   isBankExperienceEndpointUnavailable,
 } from "@/lib/credit-hub/api/bankExperienceClient";
+import { isChPanelLoading } from "@/lib/credit-hub/hooks/chQueryPanel";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 
 export function BankExperienceKpisPanel({ period }: { period: "today" | "week" | "month" }) {
@@ -20,6 +22,8 @@ export function BankExperienceKpisPanel({ period }: { period: "today" | "week" |
 
   if (q.error instanceof CHApiError && isBankExperienceEndpointUnavailable(q.error)) return null;
 
+  const panelLoading = isChPanelLoading(q, !!apiTenantId);
+
   const kpis = q.data?.kpis ?? [];
   const hasActivity = kpis.some((k) => {
     const v = k.value;
@@ -28,11 +32,25 @@ export function BankExperienceKpisPanel({ period }: { period: "today" | "week" |
     return true;
   });
 
-  if (q.isLoading) {
+  if (panelLoading) {
     return (
       <div className="ch-card p-4 text-sm text-forgeGray-500" data-testid="bank-kpis-loading">
         Cargando KPIs operativos…
       </div>
+    );
+  }
+
+  if (q.isError) {
+    return (
+      <EmptyStateRich
+        variant="error"
+        title="KPIs operativos no disponibles"
+        primary={
+          <button type="button" className="ch-btn ch-btn-secondary ch-btn-sm" onClick={() => void q.refetch()}>
+            Reintentar
+          </button>
+        }
+      />
     );
   }
 

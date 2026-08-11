@@ -5,7 +5,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BankApplicationsTable } from "@/components/credit-hub/bank/BankApplicationsTable";
 import { TableSkeleton } from "@/components/credit-hub/primitives";
 import { BANK_QUEUE_PAGE_SIZE, resolveBankQueueTotal } from "@/lib/credit-hub/bank/queuePagination";
+import { isChPanelLoading } from "@/lib/credit-hub/hooks/chQueryPanel";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useBulkActions } from "@/lib/credit-hub/hooks/useBulkActions";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -14,6 +16,7 @@ function BankApplicationsPageInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { apiTenantId } = useTenant();
   const urlQ = searchParams.get("q") ?? "";
   const page = Math.max(1, Number.parseInt(searchParams.get("page") ?? "1", 10) || 1);
   const queueFilters = useMemo(() => (urlQ.trim() ? { q: urlQ.trim() } : undefined), [urlQ]);
@@ -56,7 +59,7 @@ function BankApplicationsPageInner() {
       page={page}
       pageSize={BANK_QUEUE_PAGE_SIZE}
       search={search}
-      isLoading={queueQuery.isLoading}
+      isLoading={isChPanelLoading(queueQuery, !!apiTenantId)}
       isError={!!queueQuery.error}
       onSearchChange={(q) => {
         setSearch(q);

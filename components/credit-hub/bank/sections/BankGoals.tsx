@@ -4,7 +4,9 @@ import { GoalCard } from "@/components/credit-hub/elite/GoalCard";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { CHPanelState } from "@/components/credit-hub/system/CHPanelState";
 import { currentGoalsPeriod } from "@/lib/credit-hub/api/goalsClient";
+import { isChPanelLoading } from "@/lib/credit-hub/hooks/chQueryPanel";
 import { useMonthlyGoals } from "@/lib/credit-hub/hooks/useMonthlyGoals";
+import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import {
   daysRemainingInMonth,
   formatGoalsMonthLabel,
@@ -12,9 +14,11 @@ import {
 } from "@/lib/credit-hub/utils/goalPresentation";
 
 export function BankGoals() {
+  const { apiTenantId } = useTenant();
   const period = currentGoalsPeriod();
   const query = useMonthlyGoals("bank", period);
   const goals = query.data?.goals ?? [];
+  const goalsLoading = isChPanelLoading(query, !!apiTenantId);
   const monthLabel = formatGoalsMonthLabel(query.data?.period ?? period);
   const daysLeft = daysRemainingInMonth();
 
@@ -34,12 +38,12 @@ export function BankGoals() {
         Pacing vs. objetivos institucionales · {monthLabel}
       </p>
       <CHPanelState
-        isLoading={query.isLoading}
+        isLoading={goalsLoading}
         isError={query.isError}
         onRetry={() => void query.refetch()}
         errorTitle="Metas operativas no disponibles"
         loadingLabel="Cargando metas operativas…"
-        isUnavailable={!query.isLoading && !query.isError && goals.length === 0}
+        isUnavailable={!goalsLoading && !query.isError && goals.length === 0}
         unavailableTitle="Sin metas configuradas"
         unavailableDescription="No hay metas bancarias para este periodo en el tenant activo."
       >
