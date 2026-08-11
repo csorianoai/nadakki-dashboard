@@ -80,7 +80,7 @@ export function EmptyStateRich({
       <div style={{ fontSize: "var(--ch-text-sm)", color: "var(--ch-text-3)", maxWidth: 380, lineHeight: 1.5 }}>{resolvedBody}</div>
       {(primary || secondary || action || variant === "empty" || variant === "error" || variant === "filter-empty") && (
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-          {variant === "error" ? (
+          {variant === "error" && !primary ? (
             <button type="button" className="ch-btn ch-btn-secondary">
               <RefreshCw className="h-3.5 w-3.5" aria-hidden />
               Reintentar
