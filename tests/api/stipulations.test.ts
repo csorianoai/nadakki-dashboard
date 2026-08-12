@@ -57,9 +57,9 @@ describe("lib/api/stipulations", () => {
     const row = await verifyStipulation("app-1", "1", "ok", "TENANT_ADMIN");
     expect(row?.status).toBe("verified");
     const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
-    expect(url).toContain("/stipulations/1/verify");
+    expect(url).toContain("/stipulations/1/clear");
     expect(init.method).toBe("POST");
-    expect(JSON.parse(init.body as string)).toEqual({ notes: "ok" });
+    expect(JSON.parse(init.body as string)).toEqual({ reason: "ok", manual_override: true });
   });
 
   test("rejectStipulation requires reason", async () => {

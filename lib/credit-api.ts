@@ -743,7 +743,7 @@ export async function loadDemoCase(
   return detail as DemoLoadResult;
 }
 
-/** POST .../documents/upload (multipart) */
+/** POST .../documents (JSON with base64 content) */
 export async function uploadDocument(
   tenantId: string,
   applicationId: string,
@@ -751,20 +751,13 @@ export async function uploadDocument(
   documentType: string
 ): Promise<CreditDocument> {
   const tid = requireTenant(tenantId);
-  const form = new FormData();
-  form.append("file", file);
-  form.append("document_type", documentType);
-  const token = readBearerToken();
+  const contentBase64 = await fileToBase64(file);
   const res = await fetch(
-    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/upload`,
+    `${BACKEND_URL}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents`,
     {
       method: "POST",
-      headers: {
-        Accept: "application/json",
-        "X-Tenant-ID": tid,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: form,
+      headers: { ...baseHeaders(tid, true), "Content-Type": "application/json" },
+      body: JSON.stringify({ document_type: documentType, filename: file.name, content_base64: contentBase64 }),
     }
   );
   const detail = await parseDetail(res);
@@ -859,3 +852,4 @@ export async function saveConsents(
     throw new CreditApiError(msg, res.status, detail);
   }
 }
+import { fileToBase64 } from "@/lib/customer/upload/fileToBase64";

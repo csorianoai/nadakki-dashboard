@@ -25,6 +25,12 @@ export interface BankApplicantPayload {
   monthly_income?: number;
   dependents?: number;
   city?: string;
+  current_debts?: number;
+  monthly_debt_payments?: number;
+  referencias?: Array<{ nombre_completo?: string; telefono?: string; direccion?: string }>;
+  co_borrower_name?: string;
+  co_borrower_monthly_income?: number;
+  co_borrower_cedula?: string;
 }
 
 export interface BankVehiclePayload {
@@ -32,9 +38,12 @@ export interface BankVehiclePayload {
   make?: string;
   model?: string;
   vin?: string;
+  vin_chasis?: string;
   value?: number;
   type?: string;
   dealer?: string;
+  condicion?: string;
+  condition?: string;
 }
 
 export interface BankFinancialPayload {
@@ -44,6 +53,8 @@ export interface BankFinancialPayload {
   requested_rate?: number;
   ltv?: number;
   dti?: number;
+  pti?: number;
+  down_payment_source?: string;
 }
 
 export interface BankDocumentPayload {

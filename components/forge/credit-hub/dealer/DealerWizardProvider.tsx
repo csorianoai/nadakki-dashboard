@@ -701,17 +701,40 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
         void (async () => {
           let ok = 0;
           let fail = 0;
+          const errors: Array<{ key: string; message: string }> = [];
           for (const [docKey, entry] of files) {
             const backendType = DOC_KEY_TO_BACKEND_TYPE[docKey] ?? "OTRO";
             try {
               await uploadDocument(tid, appId, entry.file, backendType);
               ok++;
-            } catch {
+              setPendingFiles((prev) => {
+                const next = new Map(prev);
+                const current = next.get(docKey);
+                if (current) {
+                  next.set(docKey, { ...current, status: "uploaded" });
+                }
+                return next;
+              });
+            } catch (err) {
               fail++;
+              const errorMessage = err instanceof Error ? err.message : "Error desconocido al subir";
+              errors.push({ key: docKey, message: errorMessage });
+              setPendingFiles((prev) => {
+                const next = new Map(prev);
+                const current = next.get(docKey);
+                if (current) {
+                  next.set(docKey, { ...current, status: "error", errorMessage });
+                }
+                return next;
+              });
             }
           }
           if (fail > 0) {
-            toast.warning(`${ok} documento(s) subido(s), ${fail} con error`, { duration: 6000 });
+            const firstError = errors[0];
+            toast.error(
+              `${ok} documento(s) subido(s), ${fail} con error. Primer error: ${firstError?.message || "desconocido"}`,
+              { duration: 8000 }
+            );
           } else if (ok > 0) {
             toast.success(`${ok} documento(s) subido(s) correctamente`, { duration: 4000 });
           }
