@@ -39,7 +39,7 @@ export function StepComplete() {
         </span>
       </p>
       <p style={{ fontSize: 13, color: "var(--ch-text-3)", marginTop: 10 }}>
-        Tiempo estimado de respuesta: <strong>3 a 5 días hábiles</strong>
+        <strong>En cola de decisión</strong> · La institución ya fue notificada
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 28 }}>
         <Link

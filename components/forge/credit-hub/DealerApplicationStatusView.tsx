@@ -219,7 +219,7 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
               Etapa actual: <span className="font-medium text-forgeGray-900">{stageLabel(status)}</span>
             </p>
             <p className="text-forgeGray-600">
-              Tiempo estimado de respuesta: <span className="font-medium">3 a 5 días hábiles</span> desde la última actualización.
+              <span className="font-medium">En cola de decisión</span> · La institución ya fue notificada.
             </p>
             <p className="text-forge-xs text-forgeGray-500">
               Si falta documentación, el banco la solicitará por los canales registrados. Revisa el historial abajo.
