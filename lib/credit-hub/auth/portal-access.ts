@@ -9,7 +9,7 @@ export function resolveCHActorRole(roleKey: string | null | undefined): CHActorR
   if (k === "platform_superadmin" || k === "tenant_admin" || k === "admin" || k === "sic_admin") return "admin";
   if (k === "bank_analyst") return "bank_analyst";
   if (k === "bank_admin") return "bank_admin";
-  if (k === "credit_admin") return "dealer";
+  if (k === "credit_admin") return "bank_admin";
   if (k.includes("compliance")) return "compliance_officer";
   if (k.includes("dealer")) return "dealer";
   if (k.includes("bank")) return "bank_analyst";
