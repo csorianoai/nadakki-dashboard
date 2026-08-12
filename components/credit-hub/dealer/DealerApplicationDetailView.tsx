@@ -266,7 +266,8 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         ) : null}
         {!approved && !rejected ? (
           <div style={{ marginTop: 12, fontSize: 13, color: "var(--ch-text-2)", lineHeight: 1.5 }}>
-            Etapa actual: <strong>{stageLabel(data.status)}</strong>. Tiempo estimado: 3 a 5 días hábiles.
+            Etapa actual: <strong>{stageLabel(data.status)}</strong>. En cola de decisión · La institución ya fue notificada.
+            {/* TODO(tenant-config): Read from tenantConfig.sla_commitment_hours when available */}
           </div>
         ) : null}
       </div>
