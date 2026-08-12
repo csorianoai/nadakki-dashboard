@@ -26,6 +26,11 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <ProtectedRoute>{children}</ProtectedRoute>;
   }
 
+  // Exclude /credit/* paths from GlobalForgeAppShell
+  if (pathname === "/credit" || pathname.startsWith("/credit/")) {
+    return <ProtectedRoute>{children}</ProtectedRoute>;
+  }
+
   return (
     <ProtectedRoute>
       <>

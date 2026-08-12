@@ -266,8 +266,8 @@ function PoolFiltersContent() {
         <p className="mt-2 text-sm text-forge-text-secondary">
           Define qué solicitudes ve tu institución en el pool abierto. Config vacía = pool completo.
         </p>
-        <p className="mt-2 font-mono text-xs text-amber-200/80">
-          lender_code: {pageState.lenderCode}
+        <p className="mt-2 text-sm text-forge-text-secondary">
+          Este módulo está configurado para la institución: {pageState.lenderCode}
         </p>
       </header>
 
