@@ -91,9 +91,15 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
             <Metric label="DTI" value={`${((m.dti ?? 0) * 100).toFixed(0)}%`} hint="política ≤ 45%" />
+            <Metric label="PTI" value={financial.pti != null ? `${(financial.pti * 100).toFixed(0)}%` : "—"} hint="payment to income" />
             <Metric label="LTV" value={`${((financial.ltv ?? 0) * 100).toFixed(0)}%`} hint={financial.down_payment ? `enganche ${chMoney(financial.down_payment)}` : undefined} />
             <Metric label="Capacidad" value={m.payment_capacity != null ? chMoneyExact(m.payment_capacity) : "—"} hint="cuota estimada" />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }}>
             <Metric label="Score buró" value={String(an.score)} hint={an.approval_band ?? undefined} />
+            <Metric label="Deudas vigentes" value={applicant.monthly_debt_payments != null ? chMoneyExact(applicant.monthly_debt_payments) : "—"} hint={applicant.current_debts != null ? `${applicant.current_debts} cuenta(s)` : undefined} />
+            <Metric label="Fuente enganche" value={financial.down_payment_source ?? "—"} />
+            <div />
           </div>
         </div>
       ) : null}
@@ -129,6 +135,98 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
           identity={payload.identity}
         />
       </div>
+
+      <div>
+        <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
+          Vehículo · Detalles completos
+        </div>
+        <div className="ch-card" style={{ padding: 18 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px 16px" }}>
+            <div>
+              <div className="ch-eyebrow">VIN / Chasis</div>
+              <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
+                {String(payload.vehicle?.vin_chasis ?? payload.vehicle?.vin ?? "—")}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Condición</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {String(payload.vehicle?.condicion ?? payload.vehicle?.condition ?? "—")}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Valuación</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {chMoneyExact(Number(payload.vehicle?.value ?? 0))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {applicant.co_borrower_name ? (
+        <div>
+          <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
+            Co-firmante / Garante
+          </div>
+          <div className="ch-card" style={{ padding: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px 16px" }}>
+              <div>
+                <div className="ch-eyebrow">Nombre</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>
+                  {String(applicant.co_borrower_name)}
+                </div>
+              </div>
+              <div>
+                <div className="ch-eyebrow">Cédula</div>
+                <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
+                  {String(applicant.co_borrower_cedula ?? "—")}
+                </div>
+              </div>
+              <div>
+                <div className="ch-eyebrow">Ingreso mensual</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>
+                  {applicant.co_borrower_monthly_income != null ? chMoneyExact(applicant.co_borrower_monthly_income) : "—"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {applicant.referencias && applicant.referencias.length > 0 ? (
+        <div>
+          <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
+            Referencias personales · {applicant.referencias.length} registrada(s)
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {applicant.referencias.slice(0, 3).map((ref, i) => (
+              <div key={i} className="ch-card" style={{ padding: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr", gap: "12px 16px" }}>
+                  <div>
+                    <div className="ch-eyebrow">Nombre</div>
+                    <div style={{ fontSize: 13, marginTop: 4 }}>
+                      {String(ref.nombre_completo ?? "—")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="ch-eyebrow">Teléfono</div>
+                    <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
+                      {String(ref.telefono ?? "—")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="ch-eyebrow">Dirección</div>
+                    <div style={{ fontSize: 13, marginTop: 4 }}>
+                      {String(ref.direccion ?? "—")}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

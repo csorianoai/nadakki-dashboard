@@ -70,4 +70,13 @@ describe("expedienteAdapter", () => {
     });
     expect(app.application_payload.declaracion_vehiculo).toEqual(decl);
   });
+
+  test("uses financed amount when expediente summary has analysis but no financial block", () => {
+    const app = expedienteToBankReviewApplication({
+      application_id: "app-analysis-amount",
+      tenant_id: "tenant-1",
+      credit_history: { summary: { analysis: { financed_amount: 700000 } } },
+    });
+    expect(app.application_payload.financial?.requested_amount).toBe(700000);
+  });
 });
