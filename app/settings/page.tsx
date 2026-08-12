@@ -21,7 +21,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
   const [saved, setSaved] = useState(false);
   const [settings, setSettings] = useState({
-    companyName: "CrediCefi",
+    companyName: "Mi Compañía",
     timezone: "America/Mexico_City",
     language: "es",
     emailNotifications: true,
