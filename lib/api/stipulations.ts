@@ -142,8 +142,11 @@ export async function verifyStipulation(
 ): Promise<CreditStipulation | null> {
   const res = await creditJson(
     applicationId,
-    `/stipulations/${encodeURIComponent(stipulationId)}/verify`,
-    { method: "POST", body: JSON.stringify({ notes: notes?.trim() || undefined }) },
+    `/stipulations/${encodeURIComponent(stipulationId)}/clear`,
+    {
+      method: "POST",
+      body: JSON.stringify({ reason: notes?.trim() || undefined, manual_override: Boolean(notes?.trim()) }),
+    },
     role,
   );
   const body = await parseJsonBody(res);
