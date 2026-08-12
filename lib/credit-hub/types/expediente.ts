@@ -7,6 +7,7 @@ export interface ExpedienteFullResponse {
   state?: string;
   applicant?: Record<string, unknown>;
   vehicle?: Record<string, unknown>;
+  financial?: Record<string, unknown>;
   documents?: unknown[];
   credit_history?: {
     score?: number;
