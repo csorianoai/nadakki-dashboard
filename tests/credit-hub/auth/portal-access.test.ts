@@ -33,7 +33,10 @@ describe("portal-access", () => {
     expect(actorCan(actor, "accept_offer")).toBe(false);
   });
 
-  test("credit_admin maps to dealer actor with accept_offer", () => {
-    expect(actorCan(resolveCHActorRole("credit_admin"), "accept_offer")).toBe(true);
+  test("credit_admin maps to bank admin actor with decision rights", () => {
+    const actor = resolveCHActorRole("credit_admin");
+    expect(actor).toBe("bank_admin");
+    expect(actorCan(actor, "create_decision")).toBe(true);
+    expect(actorCan(actor, "accept_offer")).toBe(false);
   });
 });
