@@ -38,9 +38,12 @@ export function StepComplete() {
           {applicationId || "—"}
         </span>
       </p>
-      <p style={{ fontSize: 13, color: "var(--ch-text-3)", marginTop: 10 }}>
-        Tiempo estimado de respuesta: <strong>3 a 5 días hábiles</strong>
+      <p style={{ fontSize: 13, color: "var(--ch-text-3)", marginTop: 10, lineHeight: 1.6 }}>
+        En cola de decisión · La institución ya fue notificada.
+        <br />
+        Te avisamos apenas haya respuesta.
       </p>
+      {/* TODO(tenant-config): Read from tenantConfig.sla_commitment_hours when available */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 28 }}>
         <Link
           href={applicationId ? dealerDetailHref(applicationId) : "/credit-hub/dealer/applications"}
