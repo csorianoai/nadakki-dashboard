@@ -11,23 +11,24 @@ function asAnalysis(summary: Record<string, unknown>, score?: number): CreditAna
   return merged as unknown as CreditAnalysisResult;
 }
 
-function extractFinancial(summary: Record<string, unknown>, topLevelFinancial?: Record<string, unknown>): Record<string, unknown> {
-  // Priority 1: Use top-level financial from expediente/full (Codex Phase 3 fix)
-  if (topLevelFinancial && typeof topLevelFinancial === "object" && Object.keys(topLevelFinancial).length > 0) {
-    return topLevelFinancial;
-  }
-  // Priority 2: Extract from summary.financial/financing/loan
+/** 
+ * Extract financial data from expediente summary.
+ * 
+ * Backend does NOT return `financial` at root level, it's in credit_history.summary.financial
+ * This function handles the fallback chain:
+ * 1. summary.financial
+ * 2. summary.financing
+ * 3. summary.loan
+ * 4. Individual fields at summary root (requested_amount, down_payment, etc.)
+ * 
+ * Exported for testing.
+ */
+export function extractFinancial(summary: Record<string, unknown>): Record<string, unknown> {
   const fin = summary.financial ?? summary.financing ?? summary.loan;
   if (fin && typeof fin === "object") return fin as Record<string, unknown>;
-  // Priority 3: Extract from summary root + fallback to analysis.financed_amount
-  const analysis = summary.analysis;
-  const analysisRecord = analysis && typeof analysis === "object" ? (analysis as Record<string, unknown>) : {};
   const out: Record<string, unknown> = {};
   for (const key of ["requested_amount", "down_payment", "term_months", "requested_rate", "ltv", "dti"] as const) {
     if (summary[key] != null) out[key] = summary[key];
-  }
-  if (out.requested_amount == null && analysisRecord.financed_amount != null) {
-    out.requested_amount = analysisRecord.financed_amount;
   }
   return out;
 }
@@ -57,7 +58,7 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
     application_payload: {
       applicant: ex.applicant,
       vehicle: ex.vehicle,
-      financial: extractFinancial(summary, ex.financial),
+      financial: extractFinancial(summary),
       analysis: asAnalysis(summary, history.score),
       documents: ex.documents,
       bank_decision: bankDecision as BankReviewApplication["application_payload"]["bank_decision"],
