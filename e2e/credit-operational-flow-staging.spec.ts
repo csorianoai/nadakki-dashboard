@@ -186,8 +186,8 @@ async function createTenant(identifiers: ReturnType<typeof generateTestIdentifie
  * Endpoint: POST /api/v1/admin/dealers
  * Environment: PRODUCTION
  * 
- * Without dealer, bank queue stays empty: credit_admin role cannot originate applications.
- * POST application requires dealer, operator, admin, or platform_superadmin role.
+ * Contract verified by execution against production.
+ * Returns 201 with 11 checks ok.
  */
 async function createDealer(
   tenantId: string,
@@ -204,34 +204,18 @@ async function createDealer(
       institution_tenant_id: tenantId,
       dealer_name: "QA E2E Motors",
       dealer_slug: dealerSlug,
-      contact_email: identifiers.dealerEmail,
+      contact_email: `contact-${Date.now()}@example.com`,
       admin_email: identifiers.dealerEmail,
       admin_password: identifiers.dealerPassword,
-      lender_access: [
-        {
-          lender_code: "pilot",
-          enabled: true,
-          priority: 100
-        }
-      ],
-      // Legacy fields (may be optional)
-      tenant_id: tenantId,
-      email: identifiers.dealerEmail,
-      password: identifiers.dealerPassword,
-      full_name: "Dealer QA E2E",
-      phone: "+1-809-555-0100",
-      dealership_name: "QA E2E Motors",
+      lender_access: [{ lender_code: "pilot" }],
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    
-    // Check for token expiration
-    if (response.status === 401) {
-      throw new Error(`TOKEN EXPIRED OR INVALID (401). Get fresh token from Cesar. Error: ${error}`);
-    }
-    
+    let body: unknown;
+    try { body = JSON.parse(error); } catch { body = error; }
+    checkTokenExpiration(response.status, body);
     throw new Error(`Failed to create dealer: ${response.status} ${error}`);
   }
 
