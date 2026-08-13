@@ -251,7 +251,7 @@ test.describe("API-only Operational Flow", () => {
     });
     
     const response = await fetch(
-      `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/expediente/full`,
+      `${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/expediente/full`,
       {
         headers: {
           "Authorization": `Bearer ${bankToken}`,
@@ -262,7 +262,7 @@ test.describe("API-only Operational Flow", () => {
     const body = await response.json().catch(() => ({}));
     
     console.log("GET /expediente/full:", {
-      url: `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/expediente/full`,
+      url: `${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/expediente/full`,
       status: response.status,
       hasFinancial: !!body.financial,
       requestedAmount: body.financial?.requested_amount || body.application?.application_payload?.financial?.requested_amount,
@@ -282,14 +282,18 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 9: Get offers/compare via API", async () => {
-    // Skip if TENANT_ID not available
-    if (!TENANT_ID) {
-      console.warn("TENANT_ID not available, skipping offers/compare test");
-      return;
-    }
+    // Claim the application first (offers/compare may require claimed status)
+    await fetch(`${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/claim`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${bankToken}`,
+      },
+      body: JSON.stringify({ analyst_id: bankUserId }),
+    });
     
     const response = await fetch(
-      `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/offers/compare`,
+      `${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/offers/compare`,
       {
         headers: {
           "Authorization": `Bearer ${bankToken}`,
@@ -300,10 +304,11 @@ test.describe("API-only Operational Flow", () => {
     const body = await response.json().catch(() => ({}));
     
     console.log("GET /offers/compare:", {
-      url: `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/offers/compare`,
+      url: `${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/offers/compare`,
       status: response.status,
       body,
       usingBankToken: true,
+      afterClaim: true,
     });
     
     expect(response.status).toBe(200);
