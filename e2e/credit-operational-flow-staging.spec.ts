@@ -214,13 +214,39 @@ async function createDealer(
 async function dealerLogin(page: Page, identifiers: ReturnType<typeof generateTestIdentifiers>) {
   await page.goto(`${FRONTEND}/login`);
   
-  await page.fill('input[type="email"]', identifiers.dealerEmail);
-  await page.fill('input[type="password"]', identifiers.dealerPassword);
-  await page.fill('input[placeholder*="institucion"]', identifiers.tenantSlug);
-  await page.click('button[type="submit"]');
+  // Wait for page to load
+  await page.waitForLoadState("domcontentloaded");
   
-  // Wait for redirect to dealer dashboard
-  await page.waitForURL(/credit-hub\/dealer/, { timeout: 60000 });
+  // Check if elements exist and fill
+  const emailInput = await page.locator('input[type="email"]').first();
+  await emailInput.waitFor({ state: "visible", timeout: 10000 });
+  await emailInput.fill(identifiers.dealerEmail);
+  
+  const passwordInput = await page.locator('input[type="password"]').first();
+  await passwordInput.fill(identifiers.dealerPassword);
+  
+  const tenantInput = await page.locator('input[placeholder*="institucion"], input[name="tenant"], input[id*="tenant"]').first();
+  await tenantInput.fill(identifiers.tenantSlug);
+  
+  // Screenshot before submit
+  await page.screenshot({ path: `test-results/dealer-login-before-submit-${Date.now()}.png`, fullPage: true });
+  
+  const submitButton = await page.locator('button[type="submit"]').first();
+  await submitButton.click();
+  
+  // Wait for navigation or error
+  try {
+    await page.waitForURL(/credit-hub\/dealer/, { timeout: 30000 });
+  } catch (e) {
+    // Take screenshot of error state
+    await page.screenshot({ path: `test-results/dealer-login-failed-${Date.now()}.png`, fullPage: true });
+    
+    // Check for error messages
+    const pageContent = await page.content();
+    const errorText = await page.locator('text=/error|invalid|incorrecto/i').allTextContents();
+    
+    throw new Error(`Dealer login failed to redirect. URL: ${page.url()}. Errors found: ${errorText.join(', ')}`);
+  }
 }
 
 /**
