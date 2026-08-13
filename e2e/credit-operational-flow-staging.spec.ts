@@ -51,32 +51,41 @@ function generateTestIdentifiers() {
   return {
     tenantSlug: `qa-e2e-${timestamp}`,
     tenantName: `QA E2E Test ${timestamp}`,
-    dealerEmail: `dealer-${timestamp}@qa.local`,
+    dealerEmail: `dealer-${timestamp}@example.com`,
     dealerPassword: "QADealer2026!Seguro",
-    bankEmail: `analista-${timestamp}@qa.local`,
+    bankEmail: `analista-${timestamp}@example.com`,
     bankPassword: "QABank2026!Seguro",
     // Unique cédulas to avoid 409 on credit_applications unique index
-    getCedula: (index: number) => `402${String(timestamp).slice(-7)}${String(index).padStart(2, "0")}"
+    getCedula: (index: number) => `402${String(timestamp).slice(-7)}${String(index).padStart(2, "0")}`
   };
 }
 
 /**
  * Step 1: Create tenant via API with superadmin token
+ * Endpoint: POST /api/v1/admin/tenants (NOT /api/v2/tenants)
  */
 async function createTenant(identifiers: ReturnType<typeof generateTestIdentifiers>) {
-  const response = await fetch(`${STAGING_BACKEND}/api/v2/tenants`, {
+  const response = await fetch(`${STAGING_BACKEND}/api/v1/admin/tenants`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${SUPERADMIN_TOKEN}`,
     },
     body: JSON.stringify({
+      tenant_name: identifiers.tenantName,
       slug: identifiers.tenantSlug,
-      name: identifiers.tenantName,
       institution_type: "bank",
-      country_code: "DO",
-      currency: "DOP",
-      contact_email: identifiers.bankEmail,
+      plan: "enterprise",
+      subscribed_cores: ["credit"],
+      admin_email: identifiers.bankEmail,
+      admin_password: identifiers.bankPassword,
+      lender_config: {
+        lender_code: "pilot",
+        adapter_type: "pilot",
+        priority: 100,
+        config: {},
+      },
+      external_ref: identifiers.tenantSlug,
     }),
   });
 
@@ -86,30 +95,44 @@ async function createTenant(identifiers: ReturnType<typeof generateTestIdentifie
   }
 
   const tenant = await response.json();
+  
+  // Verify lender_assignment check is "ok"
+  const lenderCheck = tenant.checks?.lender_assignment;
+  if (lenderCheck !== "ok") {
+    console.warn(`Warning: lender_assignment check is "${lenderCheck}", not "ok". pool-filters may return 403.`);
+  }
+  
   return {
     tenant_id: tenant.tenant_id,
+    admin_user_id: tenant.admin_user_id,
     slug: tenant.slug,
   };
 }
 
 /**
- * Step 2: Create dealer via API
+ * Step 2: Create dealer via API with superadmin token
+ * Endpoint: POST /api/v1/admin/dealers
+ * 
+ * Without dealer, bank queue stays empty: credit_admin role cannot originate applications.
+ * POST application requires dealer, operator, admin, or platform_superadmin role.
  */
 async function createDealer(
   tenantId: string,
   identifiers: ReturnType<typeof generateTestIdentifiers>
 ) {
-  const response = await fetch(`${STAGING_BACKEND}/api/v2/auth/signup`, {
+  const response = await fetch(`${STAGING_BACKEND}/api/v1/admin/dealers`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Tenant-ID": tenantId,
+      "Authorization": `Bearer ${SUPERADMIN_TOKEN}`,
     },
     body: JSON.stringify({
+      tenant_id: tenantId,
       email: identifiers.dealerEmail,
       password: identifiers.dealerPassword,
-      full_name: "Dealer QA Test",
-      role: "dealer",
+      full_name: "Dealer QA E2E",
+      phone: "+1-809-555-0100",
+      dealership_name: "QA E2E Motors",
     }),
   });
 
