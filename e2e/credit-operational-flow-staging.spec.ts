@@ -308,6 +308,7 @@ async function createApplicationViaAPI(
   const dealerToken = loginData.token || loginData.access_token;
   
   // Create application
+  // Backend expects application_payload at root wrapping all sections
   const appResponse = await fetch(`${BACKEND}/api/v2/credit/applications`, {
     method: "POST",
     headers: {
@@ -315,23 +316,25 @@ async function createApplicationViaAPI(
       "Authorization": `Bearer ${dealerToken}`,
     },
     body: JSON.stringify({
-      applicant: {
-        cedula: cedula,
-        nombre_completo: `Juan Pérez ${applicationIndex}`,
-        fecha_nacimiento: "1990-01-01",
-        ingreso_mensual: 50000,
-        telefono: "8095550100",
-      },
-      vehicle: {
-        marca: "Toyota",
-        modelo: "Corolla",
-        year: 2023,
-        precio_venta: 700000,
-      },
-      financial: {
-        requested_amount: 600000,
-        down_payment: 100000,
-        term_months: 48,
+      application_payload: {
+        applicant: {
+          cedula: cedula,
+          nombre_completo: `Juan Pérez ${applicationIndex}`,
+          fecha_nacimiento: "1990-01-01",
+          ingreso_mensual: 50000,
+          telefono: "8095550100",
+        },
+        vehicle: {
+          marca: "Toyota",
+          modelo: "Corolla",
+          year: 2023,
+          precio_venta: 700000,
+        },
+        financial: {
+          requested_amount: 600000,
+          down_payment: 100000,
+          term_months: 48,
+        },
       },
     }),
   });
