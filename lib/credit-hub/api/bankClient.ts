@@ -59,7 +59,7 @@ function toBankDecideRequestBody(legacy: BankDecisionRequest): Record<string, un
       amount: legacy.terms.approved_amount,
       interest_rate: legacy.terms.interest_rate,
       term_months: legacy.terms.term_months,
-      down_payment_pct: legacy.terms.down_payment_required,
+      down_payment: legacy.terms.down_payment_required,  // FIXED: was down_payment_pct, should be down_payment (amount in pesos, not %)
       no_match: legacy.decision === "EN_REVISION",
     };
   }
