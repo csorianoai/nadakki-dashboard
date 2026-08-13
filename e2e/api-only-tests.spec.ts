@@ -223,9 +223,8 @@ test.describe("API-only Operational Flow", () => {
         "Authorization": `Bearer ${bankToken}`,
       },
       body: JSON.stringify({
-        sender_type: "bank",
-        sender_id: bankUserId,
-        message: "Necesitamos verificar ingreso adicional",
+        sender_type: "BANK",
+        message_text: "Necesitamos verificar ingreso adicional",
       }),
     });
     
@@ -234,23 +233,13 @@ test.describe("API-only Operational Flow", () => {
     console.log("POST /messages:", {
       status: response.status,
       body,
+      sentBody: { sender_type: "BANK", message_text: "Necesitamos verificar ingreso adicional" },
     });
     
-    // 200 (success) or 500 (known backend issue from Phase 2)
-    if (response.status === 200) {
-      expect(body.success).toBe(true);
-    } else {
-      console.warn("POST /messages failed with known backend issue (Phase 2)");
-    }
+    expect(response.status).toBe(200);
   });
   
   test("Step 8: Get expediente/full via API", async () => {
-    // Skip if TENANT_ID not available
-    if (!TENANT_ID) {
-      console.warn("TENANT_ID not available, skipping expediente/full test");
-      return;
-    }
-    
     const response = await fetch(
       `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/expediente/full`,
       {
@@ -263,16 +252,12 @@ test.describe("API-only Operational Flow", () => {
     const body = await response.json().catch(() => ({}));
     
     console.log("GET /expediente/full:", {
+      url: `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/expediente/full`,
       status: response.status,
       hasFinancial: !!body.financial,
       requestedAmount: body.financial?.requested_amount || body.application?.application_payload?.financial?.requested_amount,
+      usingBankToken: true,
     });
-    
-    // Known backend issue: returns 404 for newly created applications
-    if (response.status === 404) {
-      console.warn("GET /expediente/full returned 404 (known backend issue - application not yet indexed)");
-      return;
-    }
     
     expect(response.status).toBe(200);
     
@@ -304,15 +289,13 @@ test.describe("API-only Operational Flow", () => {
     const body = await response.json().catch(() => ({}));
     
     console.log("GET /offers/compare:", {
+      url: `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/offers/compare`,
       status: response.status,
       body,
+      usingBankToken: true,
     });
     
-    // 200 (success) or 500 (known backend issue from Phase 2)
-    if (response.status === 200) {
-      expect(body).toBeDefined();
-    } else {
-      console.warn("GET /offers/compare failed with known backend issue (Phase 2)");
-    }
+    expect(response.status).toBe(200);
+    expect(body).toBeDefined();
   });
 });
