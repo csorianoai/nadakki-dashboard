@@ -180,12 +180,13 @@ async function createDealer(
 async function dealerLogin(page: Page, identifiers: ReturnType<typeof generateTestIdentifiers>) {
   await page.goto(`${FRONTEND}/login`);
   
-  await page.fill('input[name="email"]', identifiers.dealerEmail);
-  await page.fill('input[name="password"]', identifiers.dealerPassword);
+  await page.fill('input[type="email"]', identifiers.dealerEmail);
+  await page.fill('input[type="password"]', identifiers.dealerPassword);
+  await page.fill('input[placeholder*="institucion"]', identifiers.tenantSlug);
   await page.click('button[type="submit"]');
   
   // Wait for redirect to dealer dashboard
-  await page.waitForURL(/credit-hub\/dealer/);
+  await page.waitForURL(/credit-hub\/dealer/, { timeout: 60000 });
 }
 
 /**
@@ -327,9 +328,13 @@ test.describe("E2E Operational Flow - Production", () => {
   test("Steps 4-6: Bank views queue, verifies amounts, makes counter-offer", async ({ page }) => {
     // Bank login
     await page.goto(`${FRONTEND}/login`);
-    await page.fill('input[name="email"]', identifiers.bankEmail);
-    await page.fill('input[name="password"]', identifiers.bankPassword);
+    await page.fill('input[type="email"]', identifiers.bankEmail);
+    await page.fill('input[type="password"]', identifiers.bankPassword);
+    await page.fill('input[placeholder*="institucion"]', identifiers.tenantSlug);
     await page.click('button[type="submit"]');
+    
+    // Wait for redirect
+    await page.waitForURL(/credit-hub\/bank/, { timeout: 60000 });
     
     // Navigate to queue
     await page.goto(`${FRONTEND}/credit-hub/bank/applications`);
