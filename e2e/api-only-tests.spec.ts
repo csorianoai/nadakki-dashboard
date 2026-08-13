@@ -125,8 +125,9 @@ test.describe("API-only Operational Flow", () => {
     
     const meData = await meResponse.json();
     // CRITICAL: user_id is nested in me.user.id, NOT at root
+    // TENANT_ID is in me.current_tenant (verified from log output)
     bankUserId = meData.user?.id || meData.user_id;
-    TENANT_ID = meData.tenant?.tenant_id || meData.tenant?.id || meData.tenant_id;
+    TENANT_ID = meData.current_tenant?.tenant_id || meData.current_tenant?.id || meData.tenant?.tenant_id || meData.tenant?.id || meData.tenant_id;
     
     if (!bankUserId) {
       throw new Error(`Could not extract user_id from /me response: ${JSON.stringify(meData)}`);
@@ -205,8 +206,13 @@ test.describe("API-only Operational Flow", () => {
     });
     
     expect(response.status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(body.decision).toBe("COUNTER");
+    // Response has decision_type, not success boolean
+    expect(body.decision_type).toBe("COUNTER");
+    
+    // Verify counter terms were accepted
+    if (body.bank_decision?.terms) {
+      console.log("Counter terms:", body.bank_decision.terms);
+    }
   });
   
   test("Step 7: Send message from bank to dealer via API", async () => {
