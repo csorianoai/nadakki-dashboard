@@ -217,15 +217,19 @@ async function dealerLogin(page: Page, identifiers: ReturnType<typeof generateTe
   // Wait for page to load
   await page.waitForLoadState("domcontentloaded");
   
-  // Check if elements exist and fill
+  // Fill login form - use specific selectors to avoid ambiguity
+  // Email input: type="email", placeholder="admin@tu-institucion.com"
   const emailInput = await page.locator('input[type="email"]').first();
   await emailInput.waitFor({ state: "visible", timeout: 10000 });
   await emailInput.fill(identifiers.dealerEmail);
   
+  // Password input: type="password"
   const passwordInput = await page.locator('input[type="password"]').first();
   await passwordInput.fill(identifiers.dealerPassword);
   
-  const tenantInput = await page.locator('input[placeholder*="institucion"], input[name="tenant"], input[id*="tenant"]').first();
+  // Tenant input: type="text", placeholder="tu-institucion" (NOT containing @)
+  // CRITICAL: Don't use placeholder*="institucion" - it matches email placeholder too!
+  const tenantInput = await page.locator('input[type="text"]').first();
   await tenantInput.fill(identifiers.tenantSlug);
   
   // Screenshot before submit
