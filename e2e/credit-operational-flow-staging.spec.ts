@@ -49,6 +49,13 @@ const LOCAL_FRONTEND = "http://localhost:3000";
 const BACKEND = PRODUCTION_BACKEND;
 const FRONTEND = process.env.USE_LOCAL_FRONTEND === "true" ? LOCAL_FRONTEND : PRODUCTION_FRONTEND;
 
+// DIAGNOSTIC: Print actual URLs being used
+console.log("\n=== ENVIRONMENT DIAGNOSTIC ===");
+console.log(`BACKEND: ${BACKEND}`);
+console.log(`FRONTEND: ${FRONTEND}`);
+console.log(`Token present: ${process.env.QA_SUPERADMIN_TOKEN ? 'YES' : 'NO'}`);
+console.log("=== END DIAGNOSTIC ===\n");
+
 /**
  * Get superadmin token from environment (NOT cached)
  * Reads fresh on each call to handle token refresh during long runs
@@ -96,6 +103,29 @@ function generateTestIdentifiers() {
     // Unique cédulas to avoid 409 on credit_applications unique index
     getCedula: (index: number) => `402${String(timestamp).slice(-7)}${String(index).padStart(2, "0")}`
   };
+}
+
+/**
+ * Step 0: Verify backend version and connectivity
+ */
+async function verifyBackendVersion() {
+  const versionUrl = `${BACKEND}/api/v1/version`;
+  console.log(`\n=== BACKEND VERSION CHECK ===`);
+  console.log(`URL: ${versionUrl}`);
+  
+  try {
+    const response = await fetch(versionUrl);
+    const data = await response.json();
+    console.log(`Status: ${response.status}`);
+    console.log(`git_sha: ${data.git_sha || 'NOT FOUND'}`);
+    console.log(`version: ${data.version || 'NOT FOUND'}`);
+    console.log("=== END VERSION CHECK ===\n");
+    return data;
+  } catch (error) {
+    console.error(`FAILED to fetch version: ${error}`);
+    console.log("=== END VERSION CHECK ===\n");
+    throw error;
+  }
 }
 
 /**
@@ -362,12 +392,15 @@ test.describe("E2E Operational Flow - Production", () => {
   
   test.beforeAll(async () => {
     identifiers = generateTestIdentifiers();
-    
+
+    // Step 0: Verify backend version and URL
+    await verifyBackendVersion();
+
     // Step 1 & 2: Create tenant and dealer
     const tenant = await createTenant(identifiers);
     tenantId = tenant.tenant_id;
     adminUserId = tenant.admin_user_id;
-    
+
     const dealer = await createDealer(tenantId, identifiers);
     dealerId = dealer.dealer_id || dealer.user_id;
   });
