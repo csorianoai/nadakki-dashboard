@@ -152,9 +152,9 @@ async function createTenant(identifiers: ReturnType<typeof generateTestIdentifie
         lender_code: "pilot",
         adapter_type: "pilot",
         priority: 100,
-        config: {},
+        config: {}
       },
-      external_ref: identifiers.tenantSlug,
+      external_ref: identifiers.tenantSlug
     }),
   });
 
