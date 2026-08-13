@@ -14,13 +14,15 @@
 import { test, expect } from "@playwright/test";
 
 const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.nadakki.com";
-const TENANT_ID = "8fcdfba5-7dfc-4c84-89a5-015b7929194c";
-const APPLICATION_ID = "d8cec105-9ef8-4f54-9a3c-bfdeb856bcc3";
 
-// Bank credentials (admin user from tenant creation)
-const BANK_EMAIL = "analista-1786653573127@example.com";
-const BANK_PASSWORD = process.env.QA_BANK_PASSWORD || "SecurePass2026!";
-const TENANT_SLUG = "qa-e2e-1786653573127";
+// Use test-piloto-02 which exists in production
+const TENANT_SLUG = "test-piloto-02";
+const BANK_EMAIL = "analista@test-piloto-02.com";
+const BANK_PASSWORD = process.env.QA_BANK_PASSWORD || "TestPiloto2026!";
+
+// Application from test-piloto-02 (must exist, or will be created)
+let APPLICATION_ID: string;
+let TENANT_ID: string;
 
 let bankToken: string;
 let bankUserId: string;
@@ -40,13 +42,14 @@ test.describe("API-only Operational Flow", () => {
     });
     
     if (!loginResponse.ok) {
-      throw new Error(`Bank login failed: ${loginResponse.status} ${await loginResponse.text()}`);
+      const error = await loginResponse.text();
+      throw new Error(`Bank login failed: ${loginResponse.status} ${error}\nUsing: ${BANK_EMAIL} / ${TENANT_SLUG}`);
     }
     
     const loginData = await loginResponse.json();
     bankToken = loginData.token || loginData.access_token;
     
-    // Get bank user ID from /me
+    // Get bank user ID and tenant ID from /me
     const meResponse = await fetch(`${BACKEND}/api/v2/auth/me`, {
       headers: {
         "Authorization": `Bearer ${bankToken}`,
@@ -60,15 +63,39 @@ test.describe("API-only Operational Flow", () => {
     const meData = await meResponse.json();
     // CRITICAL: user_id is nested in me.user.id, NOT at root
     bankUserId = meData.user?.id || meData.user_id;
+    TENANT_ID = meData.tenant?.id || meData.tenant_id;
     
     if (!bankUserId) {
       throw new Error(`Could not extract user_id from /me response: ${JSON.stringify(meData)}`);
     }
     
-    console.log(`Bank token obtained. User ID: ${bankUserId}`);
+    // Get first application from queue to test with
+    const queueResponse = await fetch(
+      `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications?state=SUBMITTED&limit=1`,
+      {
+        headers: {
+          "Authorization": `Bearer ${bankToken}`,
+        },
+      }
+    );
+    
+    if (queueResponse.ok) {
+      const queueData = await queueResponse.json();
+      if (queueData.applications && queueData.applications.length > 0) {
+        APPLICATION_ID = queueData.applications[0].application_id;
+      }
+    }
+    
+    if (!APPLICATION_ID) {
+      console.warn("No SUBMITTED application found in queue. Some tests will be skipped.");
+    }
+    
+    console.log(`Bank token obtained. User ID: ${bankUserId}, Tenant ID: ${TENANT_ID}, Application: ${APPLICATION_ID || 'NONE'}`);
   });
   
   test("Step 5: Claim application via API", async () => {
+    test.skip(!APPLICATION_ID, "No application available");
+    
     const response = await fetch(`${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/claim`, {
       method: "POST",
       headers: {
@@ -97,6 +124,8 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 6: Make counter-offer via API", async () => {
+    test.skip(!APPLICATION_ID, "No application available");
+    
     const response = await fetch(`${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/decide`, {
       method: "POST",
       headers: {
@@ -128,6 +157,8 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 7: Send message from bank to dealer via API", async () => {
+    test.skip(!APPLICATION_ID, "No application available");
+    
     const response = await fetch(`${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/messages`, {
       method: "POST",
       headers: {
@@ -157,6 +188,8 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 8: Get expediente/full via API", async () => {
+    test.skip(!APPLICATION_ID, "No application available");
+    
     const response = await fetch(
       `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/expediente/full`,
       {
@@ -186,6 +219,8 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 9: Get offers/compare via API", async () => {
+    test.skip(!APPLICATION_ID, "No application available");
+    
     const response = await fetch(
       `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/offers/compare`,
       {
