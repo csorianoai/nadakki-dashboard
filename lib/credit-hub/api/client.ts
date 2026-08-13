@@ -95,12 +95,40 @@ function randomUUID(): string {
   );
 }
 
+/** Map backend error codes to user-friendly Spanish messages. */
+const ERROR_CODE_MESSAGES: Record<string, string> = {
+  insufficient_role: "No tienes permisos para realizar esta acción",
+  counter_terms_required: "Los términos de la contrapropuesta son obligatorios",
+  not_claimed: "Debes reclamar la solicitud antes de decidir",
+  already_claimed: "Esta solicitud ya fue reclamada por otro analista",
+  offer_room_closed: "La sala de ofertas está cerrada para esta solicitud",
+  invalid_state_transition: "No se puede realizar esta acción en el estado actual de la solicitud",
+  missing_required_field: "Faltan campos obligatorios",
+  invalid_decision_type: "Tipo de decisión inválido",
+  application_not_found: "Solicitud no encontrada",
+  tenant_not_found: "Institución no encontrada",
+  unauthorized: "No estás autorizado para realizar esta acción",
+  forbidden: "Acceso denegado",
+};
+
 function responseMessage(body: unknown, fallback: string): string {
   const detail =
     body && typeof body === "object" && "detail" in body
       ? (body as { detail?: unknown }).detail
       : undefined;
-  if (typeof detail === "string") return detail;
+  
+  // Check if detail is an error code we can map
+  if (typeof detail === "string") {
+    const lowerDetail = detail.toLowerCase().trim();
+    // Look for exact matches or partial matches of error codes
+    for (const [code, message] of Object.entries(ERROR_CODE_MESSAGES)) {
+      if (lowerDetail === code || lowerDetail.includes(code)) {
+        return message;
+      }
+    }
+    return detail;
+  }
+  
   if (detail && typeof detail === "object") return JSON.stringify(detail);
   return fallback;
 }
