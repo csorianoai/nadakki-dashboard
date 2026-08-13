@@ -49,10 +49,11 @@ function clearLocalStorage() {
 const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
   platform_superadmin: "/",
   tenant_admin: "/",
+  admin: "/credit-hub/bank",
   sic_admin: "/sic",
   legal_admin: "/legal-hub",
   marketing_admin: "/marketing",
-  credit_admin: "/",
+  credit_admin: "/credit-hub/bank",
   dealer: "/credit-hub/dealer",
   bank_analyst: "/credit-hub/bank",
   banker: "/credit-hub/bank",
