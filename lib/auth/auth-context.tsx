@@ -63,6 +63,7 @@ const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
 const POST_LOGIN_ROLE_PRIORITY = [
   "platform_superadmin",
   "tenant_admin",
+  "admin",
   "sic_admin",
   "legal_admin",
   "marketing_admin",
