@@ -229,6 +229,36 @@ Estos contratos costaron 3+ corridas cada uno para identificar los campos correc
 
 ---
 
+## POST /api/v2/auth/login
+
+**Status**: 200  
+**Verificado contra**: Producción (múltiples corridas)
+
+### Request Body
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePassword"
+}
+```
+
+### Response Body
+```json
+{
+  "token": "jwt-token-here",
+  "user": { ... },
+  "tenant": { ... }
+}
+```
+
+### Notas Críticas
+- **Body acepta SOLO `email` y `password`**
+- ❌ Incluir `tenant_slug` u otro campo → 401 Invalid credentials
+- El tenant sale del JWT decodificado, NO del body
+- Identificado después de 3+ corridas con 401 por incluir `tenant_slug`
+
+---
+
 ## Historial de Correcciones
 
 | Endpoint | Error Inicial | Causa | Corrida que lo detectó |

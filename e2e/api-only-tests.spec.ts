@@ -21,18 +21,86 @@ const BANK_PASSWORD = "TestPiloto2026!Seguro";
 const DEALER_EMAIL = "dealer.qa@test-piloto-02.com";
 const DEALER_PASSWORD = "DealerQA2026!Seguro";
 
-// Application and tenant IDs will be fetched dynamically
-let APPLICATION_ID: string;
+let bankToken: string;
+let dealerToken: string;
+let bankUserId: string;
 let TENANT_ID: string;
+let APPLICATION_ID: string;
 
 let bankToken: string;
+let dealerToken: string;
 let bankUserId: string;
+let TENANT_ID: string;
+let APPLICATION_ID: string;
 
 test.describe("API-only Operational Flow", () => {
   
   test.beforeAll(async () => {
-    // Bank login to get token
+    // Step 1: Dealer login to create fresh application
+    const dealerLoginResponse = await fetch(`${BACKEND}/api/v2/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: DEALER_EMAIL,
+        password: DEALER_PASSWORD,
+      }),
+    });
+    
+    if (!dealerLoginResponse.ok) {
+      const error = await dealerLoginResponse.text();
+      throw new Error(`Dealer login failed: ${dealerLoginResponse.status} ${error}`);
+    }
+    
+    const dealerLoginData = await dealerLoginResponse.json();
+    dealerToken = dealerLoginData.token || dealerLoginData.access_token;
+    
+    // Step 2: Create fresh application as dealer
+    const timestamp = Date.now();
+    const cedula = `402${String(timestamp).slice(-7)}00`;
+    
+    const createAppResponse = await fetch(`${BACKEND}/api/v2/credit/applications`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${dealerToken}`,
+      },
+      body: JSON.stringify({
+        application_payload: {
+          applicant: {
+            cedula: cedula,
+            nombre_completo: `Test API ${timestamp}`,
+            fecha_nacimiento: "1990-01-01",
+            ingreso_mensual: 50000,
+            telefono: "8095550100",
+          },
+          vehicle: {
+            marca: "Toyota",
+            modelo: "Corolla",
+            year: 2023,
+            precio_venta: 700000,
+          },
+          financial: {
+            requested_amount: 600000,
+            down_payment: 100000,
+            term_months: 48,
+          },
+        },
+      }),
+    });
+    
+    if (!createAppResponse.ok) {
+      const error = await createAppResponse.text();
+      throw new Error(`Failed to create application: ${createAppResponse.status} ${error}`);
+    }
+    
+    const appData = await createAppResponse.json();
+    APPLICATION_ID = appData.application_id || appData.id;
+    
+    console.log(`Application created: ${APPLICATION_ID}`);
+    
+    // Step 3: Bank login to get token
     // CRITICAL: Body must contain ONLY email and password (no tenant_slug)
+    // The tenant comes from JWT, not from body
     const loginResponse = await fetch(`${BACKEND}/api/v2/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -41,8 +109,6 @@ test.describe("API-only Operational Flow", () => {
         password: BANK_PASSWORD,
       }),
     });
-    
-    console.log("Login body sent:", JSON.stringify({ email: BANK_EMAIL, password: "***" }));
     
     if (!loginResponse.ok) {
       const error = await loginResponse.text();
@@ -72,33 +138,10 @@ test.describe("API-only Operational Flow", () => {
       throw new Error(`Could not extract user_id from /me response: ${JSON.stringify(meData)}`);
     }
     
-    // Get first application from queue to test with
-    const queueResponse = await fetch(
-      `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications?state=SUBMITTED&limit=1`,
-      {
-        headers: {
-          "Authorization": `Bearer ${bankToken}`,
-        },
-      }
-    );
-    
-    if (queueResponse.ok) {
-      const queueData = await queueResponse.json();
-      if (queueData.applications && queueData.applications.length > 0) {
-        APPLICATION_ID = queueData.applications[0].application_id;
-      }
-    }
-    
-    if (!APPLICATION_ID) {
-      console.warn("No SUBMITTED application found in queue. Some tests will be skipped.");
-    }
-    
-    console.log(`Bank token obtained. User ID: ${bankUserId}, Tenant ID: ${TENANT_ID}, Application: ${APPLICATION_ID || 'NONE'}`);
+    console.log(`Bank token obtained. User ID: ${bankUserId}, Tenant ID: ${TENANT_ID}, Application: ${APPLICATION_ID}`);
   });
   
   test("Step 5: Claim application via API", async () => {
-    test.skip(!APPLICATION_ID, "No application available");
-    
     const response = await fetch(`${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/claim`, {
       method: "POST",
       headers: {
@@ -127,8 +170,6 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 6: Make counter-offer via API", async () => {
-    test.skip(!APPLICATION_ID, "No application available");
-    
     const response = await fetch(`${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/decide`, {
       method: "POST",
       headers: {
@@ -160,8 +201,6 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 7: Send message from bank to dealer via API", async () => {
-    test.skip(!APPLICATION_ID, "No application available");
-    
     const response = await fetch(`${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/messages`, {
       method: "POST",
       headers: {
@@ -191,8 +230,6 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 8: Get expediente/full via API", async () => {
-    test.skip(!APPLICATION_ID, "No application available");
-    
     const response = await fetch(
       `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/expediente/full`,
       {
@@ -222,8 +259,6 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 9: Get offers/compare via API", async () => {
-    test.skip(!APPLICATION_ID, "No application available");
-    
     const response = await fetch(
       `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/offers/compare`,
       {
