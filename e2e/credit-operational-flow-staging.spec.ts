@@ -1,5 +1,9 @@
 /**
- * E2E TEST HARNESS - Complete operational flow in staging
+ * E2E TEST HARNESS - Complete operational flow in PRODUCTION
+ * 
+ * DECISION: Run against production, not staging
+ * REASON: Staging has schema divergence (tenant_subscriptions columns differ)
+ * SAFETY: No real clients or data, timestamp-based uniqueness, cleanup SQL generated
  * 
  * This script executes the full credit application lifecycle:
  * 1. Onboarding (create tenant via API with superadmin token)
@@ -13,15 +17,19 @@
  * 9. Stipulations check
  * 10. Field verification
  * 
- * STAGING ENVIRONMENT:
- * - Backend: https://nadakki-ai-suite-staging.onrender.com
- * - Frontend: http://localhost:3000 (npm run dev)
- * - Git SHA: 6ab6d524 (verified same as production)
+ * PRODUCTION ENVIRONMENT:
+ * - Backend: https://api.nadakki.com
+ * - Frontend: https://dashboard.nadakki.com (or localhost:3000 if USE_LOCAL_FRONTEND=true)
  * 
  * CREDENTIALS:
- * - Read from environment variables (NOT hardcoded)
- * - QA_SUPERADMIN_TOKEN: Platform superadmin token (30min validity)
+ * - QA_SUPERADMIN_TOKEN: Platform superadmin token for PRODUCTION (NOT staging)
  * - Created dynamically: tenant, dealer, applications
+ * 
+ * STRICT CONDITIONS (non-negotiable):
+ * - Timestamp suffix in tenant slug, admin email, applicant cédula
+ * - Complete inventory: tenants, dealers, users, applications (with UUIDs)
+ * - Cleanup SQL generated at end (FK order)
+ * - NEVER use Credicefi (0a91ee98-...) or Banco Piloto RD (550e8400-...)
  * 
  * ISOLATION:
  * - Each operation uses its OWN fresh application
@@ -33,14 +41,19 @@
 import { test, expect, type Page } from "@playwright/test";
 import { randomUUID } from "crypto";
 
-const STAGING_BACKEND = "https://nadakki-ai-suite-staging.onrender.com";
+const PRODUCTION_BACKEND = "https://api.nadakki.com";
+const PRODUCTION_FRONTEND = "https://dashboard.nadakki.com";
 const LOCAL_FRONTEND = "http://localhost:3000";
+
+// Use production for certification - staging has schema divergence
+const BACKEND = PRODUCTION_BACKEND;
+const FRONTEND = process.env.USE_LOCAL_FRONTEND === "true" ? LOCAL_FRONTEND : PRODUCTION_FRONTEND;
 
 // Read from environment
 const SUPERADMIN_TOKEN = process.env.QA_SUPERADMIN_TOKEN;
 
 if (!SUPERADMIN_TOKEN) {
-  throw new Error("QA_SUPERADMIN_TOKEN environment variable required");
+  throw new Error("QA_SUPERADMIN_TOKEN environment variable required (PRODUCTION superadmin)");
 }
 
 /**
@@ -62,10 +75,11 @@ function generateTestIdentifiers() {
 
 /**
  * Step 1: Create tenant via API with superadmin token
- * Endpoint: POST /api/v1/admin/tenants (NOT /api/v2/tenants)
+ * Endpoint: POST /api/v1/admin/tenants
+ * Environment: PRODUCTION (https://api.nadakki.com)
  */
 async function createTenant(identifiers: ReturnType<typeof generateTestIdentifiers>) {
-  const response = await fetch(`${STAGING_BACKEND}/api/v1/admin/tenants`, {
+  const response = await fetch(`${BACKEND}/api/v1/admin/tenants`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -112,6 +126,7 @@ async function createTenant(identifiers: ReturnType<typeof generateTestIdentifie
 /**
  * Step 2: Create dealer via API with superadmin token
  * Endpoint: POST /api/v1/admin/dealers
+ * Environment: PRODUCTION
  * 
  * Without dealer, bank queue stays empty: credit_admin role cannot originate applications.
  * POST application requires dealer, operator, admin, or platform_superadmin role.
@@ -120,7 +135,7 @@ async function createDealer(
   tenantId: string,
   identifiers: ReturnType<typeof generateTestIdentifiers>
 ) {
-  const response = await fetch(`${STAGING_BACKEND}/api/v1/admin/dealers`, {
+  const response = await fetch(`${BACKEND}/api/v1/admin/dealers`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -148,7 +163,7 @@ async function createDealer(
  * Step 3: Dealer login via UI
  */
 async function dealerLogin(page: Page, identifiers: ReturnType<typeof generateTestIdentifiers>) {
-  await page.goto(`${LOCAL_FRONTEND}/login`);
+  await page.goto(`${FRONTEND}/login`);
   
   await page.fill('input[name="email"]', identifiers.dealerEmail);
   await page.fill('input[name="password"]', identifiers.dealerPassword);
@@ -197,7 +212,7 @@ async function createApplicationWithDocument(
   });
   
   // Navigate to wizard
-  await page.goto(`${LOCAL_FRONTEND}/credit-hub/dealer/wizard`);
+  await page.goto(`${FRONTEND}/credit-hub/dealer/wizard`);
   
   // Fill applicant data
   const cedula = identifiers.getCedula(applicationIndex);
@@ -258,9 +273,11 @@ async function createApplicationWithDocument(
   };
 }
 
-test.describe("E2E Operational Flow - Staging", () => {
+test.describe("E2E Operational Flow - Production", () => {
   let identifiers: ReturnType<typeof generateTestIdentifiers>;
   let tenantId: string;
+  let adminUserId: string;
+  let dealerId: string;
   let applications: string[] = [];
   
   test.beforeAll(async () => {
@@ -269,8 +286,10 @@ test.describe("E2E Operational Flow - Staging", () => {
     // Step 1 & 2: Create tenant and dealer
     const tenant = await createTenant(identifiers);
     tenantId = tenant.tenant_id;
+    adminUserId = tenant.admin_user_id;
     
-    await createDealer(tenantId, identifiers);
+    const dealer = await createDealer(tenantId, identifiers);
+    dealerId = dealer.dealer_id || dealer.user_id;
   });
   
   test("Step 3: Dealer creates application with document + privacy check", async ({ page }) => {
@@ -292,13 +311,13 @@ test.describe("E2E Operational Flow - Staging", () => {
   
   test("Steps 4-6: Bank views queue, verifies amounts, makes counter-offer", async ({ page }) => {
     // Bank login
-    await page.goto(`${LOCAL_FRONTEND}/login`);
+    await page.goto(`${FRONTEND}/login`);
     await page.fill('input[name="email"]', identifiers.bankEmail);
     await page.fill('input[name="password"]', identifiers.bankPassword);
     await page.click('button[type="submit"]');
     
     // Navigate to queue
-    await page.goto(`${LOCAL_FRONTEND}/credit-hub/bank/applications`);
+    await page.goto(`${FRONTEND}/credit-hub/bank/applications`);
     
     // Find application in queue
     await page.waitForSelector(`[data-application-id="${applications[0]}"]`);
@@ -368,14 +387,36 @@ test.describe("E2E Operational Flow - Staging", () => {
     });
   });
   
-  // Similar tests for REJECT and APPROVE using fresh applications...
-  // (Space限制 - estructura similar)
-  
   test.afterAll(async () => {
     console.log("\n=== TEST RUN INVENTORY ===");
+    console.log("Environment: PRODUCTION (https://api.nadakki.com)");
     console.log("Tenant created:", identifiers.tenantSlug, tenantId);
+    console.log("Admin user:", adminUserId);
+    console.log("Dealer created:", dealerId);
     console.log("Applications created:", applications);
-    console.log("Dealer:", identifiers.dealerEmail);
-    console.log("Bank:", identifiers.bankEmail);
+    console.log("Bank user:", identifiers.bankEmail);
+    console.log("Dealer user:", identifiers.dealerEmail);
+    
+    console.log("\n=== CLEANUP SQL (execute in FK order) ===");
+    console.log("-- Step 1: Delete applications and related");
+    applications.forEach((appId) => {
+      console.log(`DELETE FROM application_events WHERE application_id = '${appId}';`);
+      console.log(`DELETE FROM credit_applications WHERE application_id = '${appId}';`);
+    });
+    
+    console.log("\n-- Step 2: Delete dealer");
+    console.log(`DELETE FROM users WHERE user_id = '${dealerId}';`);
+    
+    console.log("\n-- Step 3: Delete admin user");
+    console.log(`DELETE FROM users WHERE user_id = '${adminUserId}';`);
+    
+    console.log("\n-- Step 4: Delete tenant subscriptions and tenant");
+    console.log(`DELETE FROM tenant_subscriptions WHERE tenant_id = '${tenantId}';`);
+    console.log(`DELETE FROM tenants WHERE tenant_id = '${tenantId}';`);
+    
+    console.log("\n=== END CLEANUP SQL ===");
   });
+  
+  // Similar tests for REJECT and APPROVE using fresh applications...
+  // (Space限制 - estructura similar)
 });
