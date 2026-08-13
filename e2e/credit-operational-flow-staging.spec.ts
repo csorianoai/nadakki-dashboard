@@ -49,11 +49,36 @@ const LOCAL_FRONTEND = "http://localhost:3000";
 const BACKEND = PRODUCTION_BACKEND;
 const FRONTEND = process.env.USE_LOCAL_FRONTEND === "true" ? LOCAL_FRONTEND : PRODUCTION_FRONTEND;
 
-// Read from environment
-const SUPERADMIN_TOKEN = process.env.QA_SUPERADMIN_TOKEN;
+/**
+ * Get superadmin token from environment (NOT cached)
+ * Reads fresh on each call to handle token refresh during long runs
+ */
+function getSuperadminToken(): string {
+  const token = process.env.QA_SUPERADMIN_TOKEN;
+  if (!token) {
+    throw new Error("QA_SUPERADMIN_TOKEN environment variable required (PRODUCTION superadmin)");
+  }
+  return token;
+}
 
-if (!SUPERADMIN_TOKEN) {
-  throw new Error("QA_SUPERADMIN_TOKEN environment variable required (PRODUCTION superadmin)");
+/**
+ * Check if response is 401 token expiration
+ * If so, throw with clear message to stop execution
+ */
+function checkTokenExpiration(status: number, body: unknown): void {
+  if (status === 401) {
+    const detail = body && typeof body === "object" && "detail" in body 
+      ? (body as {detail?: unknown}).detail 
+      : null;
+    const message = typeof detail === "string" ? detail : "Token expired or invalid";
+    
+    console.error("\n❌ TOKEN EXPIRED OR INVALID");
+    console.error(`Status: 401`);
+    console.error(`Message: ${message}`);
+    console.error("\nTest execution stopped. Request fresh token and retry.\n");
+    
+    throw new Error(`TOKEN_EXPIRED: ${message}`);
+  }
 }
 
 /**
@@ -83,7 +108,7 @@ async function createTenant(identifiers: ReturnType<typeof generateTestIdentifie
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${SUPERADMIN_TOKEN}`,
+      "Authorization": `Bearer ${getSuperadminToken()}`,
     },
     body: JSON.stringify({
       tenant_name: identifiers.tenantName,
@@ -105,6 +130,9 @@ async function createTenant(identifiers: ReturnType<typeof generateTestIdentifie
 
   if (!response.ok) {
     const error = await response.text();
+    let body: unknown;
+    try { body = JSON.parse(error); } catch { body = error; }
+    checkTokenExpiration(response.status, body);
     throw new Error(`Failed to create tenant: ${response.status} ${error}`);
   }
 
@@ -140,7 +168,7 @@ async function createDealer(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${SUPERADMIN_TOKEN}`,
+      "Authorization": `Bearer ${getSuperadminToken()}`,
     },
     body: JSON.stringify({
       institution_tenant_id: tenantId,
@@ -168,6 +196,12 @@ async function createDealer(
 
   if (!response.ok) {
     const error = await response.text();
+    
+    // Check for token expiration
+    if (response.status === 401) {
+      throw new Error(`TOKEN EXPIRED OR INVALID (401). Get fresh token from Cesar. Error: ${error}`);
+    }
+    
     throw new Error(`Failed to create dealer: ${response.status} ${error}`);
   }
 
