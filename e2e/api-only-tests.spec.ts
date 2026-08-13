@@ -15,12 +15,13 @@ import { test, expect } from "@playwright/test";
 
 const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.nadakki.com";
 
-// Use test-piloto-02 which exists in production
-const TENANT_SLUG = "test-piloto-02";
+// Use test-piloto-02 credentials (verified by execution)
 const BANK_EMAIL = "analista@test-piloto-02.com";
-const BANK_PASSWORD = process.env.QA_BANK_PASSWORD || "TestPiloto2026!";
+const BANK_PASSWORD = "TestPiloto2026!Seguro";
+const DEALER_EMAIL = "dealer.qa@test-piloto-02.com";
+const DEALER_PASSWORD = "DealerQA2026!Seguro";
 
-// Application from test-piloto-02 (must exist, or will be created)
+// Application and tenant IDs will be fetched dynamically
 let APPLICATION_ID: string;
 let TENANT_ID: string;
 
@@ -31,19 +32,21 @@ test.describe("API-only Operational Flow", () => {
   
   test.beforeAll(async () => {
     // Bank login to get token
+    // CRITICAL: Body must contain ONLY email and password (no tenant_slug)
     const loginResponse = await fetch(`${BACKEND}/api/v2/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: BANK_EMAIL,
         password: BANK_PASSWORD,
-        tenant_slug: TENANT_SLUG,
       }),
     });
     
+    console.log("Login body sent:", JSON.stringify({ email: BANK_EMAIL, password: "***" }));
+    
     if (!loginResponse.ok) {
       const error = await loginResponse.text();
-      throw new Error(`Bank login failed: ${loginResponse.status} ${error}\nUsing: ${BANK_EMAIL} / ${TENANT_SLUG}`);
+      throw new Error(`Bank login failed: ${loginResponse.status} ${error}\nUsing: ${BANK_EMAIL}`);
     }
     
     const loginData = await loginResponse.json();
