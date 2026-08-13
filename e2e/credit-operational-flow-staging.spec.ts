@@ -149,12 +149,13 @@ async function createDealer(
       contact_email: identifiers.dealerEmail,
       admin_email: identifiers.dealerEmail,
       admin_password: identifiers.dealerPassword,
-      lender_access: {
-        pilot: {
+      lender_access: [
+        {
+          lender_code: "pilot",
           enabled: true,
           priority: 100
         }
-      },
+      ],
       // Legacy fields (may be optional)
       tenant_id: tenantId,
       email: identifiers.dealerEmail,
