@@ -27,12 +27,6 @@ let bankUserId: string;
 let TENANT_ID: string;
 let APPLICATION_ID: string;
 
-let bankToken: string;
-let dealerToken: string;
-let bankUserId: string;
-let TENANT_ID: string;
-let APPLICATION_ID: string;
-
 test.describe("API-only Operational Flow", () => {
   
   test.beforeAll(async () => {
