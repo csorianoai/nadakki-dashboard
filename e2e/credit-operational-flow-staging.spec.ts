@@ -135,6 +135,7 @@ async function createDealer(
   tenantId: string,
   identifiers: ReturnType<typeof generateTestIdentifiers>
 ) {
+  const dealerSlug = `dealer-${Date.now()}`;
   const response = await fetch(`${BACKEND}/api/v1/admin/dealers`, {
     method: "POST",
     headers: {
@@ -142,6 +143,19 @@ async function createDealer(
       "Authorization": `Bearer ${SUPERADMIN_TOKEN}`,
     },
     body: JSON.stringify({
+      institution_tenant_id: tenantId,
+      dealer_name: "QA E2E Motors",
+      dealer_slug: dealerSlug,
+      contact_email: identifiers.dealerEmail,
+      admin_email: identifiers.dealerEmail,
+      admin_password: identifiers.dealerPassword,
+      lender_access: {
+        pilot: {
+          enabled: true,
+          priority: 100
+        }
+      },
+      // Legacy fields (may be optional)
       tenant_id: tenantId,
       email: identifiers.dealerEmail,
       password: identifiers.dealerPassword,
