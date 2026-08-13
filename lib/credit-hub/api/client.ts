@@ -95,13 +95,101 @@ function randomUUID(): string {
   );
 }
 
+/** Map backend error codes to user-friendly Spanish messages. */
+const ERROR_CODE_MESSAGES: Record<string, string> = {
+  insufficient_role: "No tienes permisos para realizar esta acción",
+  counter_terms_required: "Los términos de la contrapropuesta son obligatorios",
+  not_claimed: "Debes reclamar la solicitud antes de decidir",
+  already_claimed: "Esta solicitud ya fue reclamada por otro analista",
+  offer_room_closed: "La sala de ofertas está cerrada para esta solicitud",
+  invalid_state_transition: "No se puede realizar esta acción en el estado actual de la solicitud",
+  missing_required_field: "Faltan campos obligatorios",
+  invalid_decision_type: "Tipo de decisión inválido",
+  application_not_found: "Solicitud no encontrada",
+  tenant_not_found: "Institución no encontrada",
+  unauthorized: "No estás autorizado para realizar esta acción",
+  forbidden: "Acceso denegado",
+  not_authenticated: "Debes iniciar sesión para continuar",
+};
+
+/**
+ * Extract user-friendly error message from backend response.
+ * Handles 4 forms of error payloads:
+ * 1. {"detail": "string"} - FastAPI simple
+ * 2. {"detail": {"error": "code", "message": "...", "trace_id": "...", "correlation_id": "..."}} - Backend structured
+ * 3. {"detail": {"message": "..."}} - Without error code
+ * 4. {"error_code": "..."} - Alternative form
+ * 
+ * Preserves trace_id and correlation_id for debugging.
+ */
 function responseMessage(body: unknown, fallback: string): string {
-  const detail =
-    body && typeof body === "object" && "detail" in body
-      ? (body as { detail?: unknown }).detail
-      : undefined;
-  if (typeof detail === "string") return detail;
-  if (detail && typeof detail === "object") return JSON.stringify(detail);
+  if (!body || typeof body !== "object") return fallback;
+  
+  const obj = body as Record<string, unknown>;
+  
+  // Extract trace_id and correlation_id for logging
+  let traceId: string | undefined;
+  let correlationId: string | undefined;
+  
+  const detail = obj.detail;
+  
+  // Form 1: {"detail": "string"}
+  if (typeof detail === "string") {
+    const lowerDetail = detail.toLowerCase().trim();
+    // Check if it's an error code we can translate
+    for (const [code, message] of Object.entries(ERROR_CODE_MESSAGES)) {
+      if (lowerDetail === code || lowerDetail.includes(code)) {
+        return message;
+      }
+    }
+    return detail;
+  }
+  
+  // Form 2 & 3: {"detail": {...}}
+  if (detail && typeof detail === "object") {
+    const detailObj = detail as Record<string, unknown>;
+    
+    // Extract trace/correlation IDs
+    if (typeof detailObj.trace_id === "string") traceId = detailObj.trace_id;
+    if (typeof detailObj.correlation_id === "string") correlationId = detailObj.correlation_id;
+    
+    // Check error code in detail.error
+    if (typeof detailObj.error === "string") {
+      const errorCode = detailObj.error.toLowerCase().trim();
+      const translatedMessage = ERROR_CODE_MESSAGES[errorCode];
+      if (translatedMessage) {
+        const debugInfo = traceId ? ` [trace: ${traceId.slice(0, 8)}]` : "";
+        return translatedMessage + debugInfo;
+      }
+      // Return original error with message if available
+      if (typeof detailObj.message === "string") {
+        return `${detailObj.error}: ${detailObj.message}`;
+      }
+      return detailObj.error;
+    }
+    
+    // Check message in detail.message
+    if (typeof detailObj.message === "string") {
+      return detailObj.message;
+    }
+    
+    // Fallback: stringify detail object
+    return JSON.stringify(detail);
+  }
+  
+  // Form 4: {"error_code": "..."} at root level
+  if (typeof obj.error_code === "string") {
+    const errorCode = obj.error_code.toLowerCase().trim();
+    const translatedMessage = ERROR_CODE_MESSAGES[errorCode];
+    if (translatedMessage) return translatedMessage;
+    return obj.error_code;
+  }
+  
+  // Check message at root level
+  if (typeof obj.message === "string") {
+    return obj.message;
+  }
+  
   return fallback;
 }
 
