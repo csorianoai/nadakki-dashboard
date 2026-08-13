@@ -240,6 +240,16 @@ test.describe("API-only Operational Flow", () => {
   });
   
   test("Step 8: Get expediente/full via API", async () => {
+    // Claim the application first (expediente/full may require claimed status)
+    await fetch(`${BACKEND}/api/v2/credit/applications/${APPLICATION_ID}/claim`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${bankToken}`,
+      },
+      body: JSON.stringify({ analyst_id: bankUserId }),
+    });
+    
     const response = await fetch(
       `${BACKEND}/api/v2/credit/bank/${TENANT_ID}/applications/${APPLICATION_ID}/expediente/full`,
       {
@@ -257,6 +267,7 @@ test.describe("API-only Operational Flow", () => {
       hasFinancial: !!body.financial,
       requestedAmount: body.financial?.requested_amount || body.application?.application_payload?.financial?.requested_amount,
       usingBankToken: true,
+      afterClaim: true,
     });
     
     expect(response.status).toBe(200);
