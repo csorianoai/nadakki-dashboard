@@ -223,7 +223,10 @@ Estos contratos costaron 3+ corridas cada uno para identificar los campos correc
 - **`decision_type`**: MAYÚSCULAS — `APPROVE`, `REJECT`, `COUNTER`
 - **`counter_terms`** requerido si `decision_type === "COUNTER"`
   - `down_payment`: monto en PESOS (NO porcentaje)
-  - `interest_rate`: decimal (ej: `0.14` para 14%)
+  - `interest_rate`: PORCENTAJE ENTERO (17.25 = 17.25%, NO 0.1725)
+    - Backend guarda lo que recibe sin interpretar
+    - Enviar 0.135 resulta en tasa del 0.135% en auditoría (defecto P1)
+    - Validar: 1 ≤ interest_rate ≤ 100
 - ❌ Frontend anterior enviaba `down_payment_pct` → causaba 422
 - Debe llamarse **DESPUÉS** de `claim`
 

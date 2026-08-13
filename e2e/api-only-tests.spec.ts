@@ -193,7 +193,7 @@ test.describe("API-only Operational Flow", () => {
           amount: 550000,
           term_months: 60,
           down_payment: 120000,
-          interest_rate: 0.135,
+          interest_rate: 17.25,
         },
       }),
     });
@@ -209,9 +209,17 @@ test.describe("API-only Operational Flow", () => {
     // Response has decision_type, not success boolean
     expect(body.decision_type).toBe("COUNTER");
     
-    // Verify counter terms were accepted
+    // Verify counter terms were accepted and stored correctly
     if (body.bank_decision?.terms) {
       console.log("Counter terms:", body.bank_decision.terms);
+      
+      // CRITICAL: interest_rate must be stored as sent (percentage integer, not decimal)
+      // If we send 17.25, backend must store 17.25 (not 0.1725)
+      expect(body.bank_decision.terms.interest_rate).toBe(17.25);
+      
+      // Validate range: interest_rate should be between 1 and 100 (percentage)
+      expect(body.bank_decision.terms.interest_rate).toBeGreaterThanOrEqual(1);
+      expect(body.bank_decision.terms.interest_rate).toBeLessThanOrEqual(100);
     }
   });
   
