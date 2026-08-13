@@ -53,6 +53,9 @@ const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
   legal_admin: "/legal-hub",
   marketing_admin: "/marketing",
   credit_admin: "/",
+  dealer: "/credit-hub/dealer",
+  bank_analyst: "/credit-hub/bank",
+  banker: "/credit-hub/bank",
 };
 
 /** First matching role wins; credit-hub is intentionally not used (feature-flag off). */
@@ -63,6 +66,9 @@ const POST_LOGIN_ROLE_PRIORITY = [
   "legal_admin",
   "marketing_admin",
   "credit_admin",
+  "dealer",
+  "bank_analyst",
+  "banker",
 ] as const;
 
 export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
