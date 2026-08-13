@@ -11,7 +11,19 @@ function asAnalysis(summary: Record<string, unknown>, score?: number): CreditAna
   return merged as unknown as CreditAnalysisResult;
 }
 
-function extractFinancial(summary: Record<string, unknown>): Record<string, unknown> {
+/** 
+ * Extract financial data from expediente summary.
+ * 
+ * Backend does NOT return `financial` at root level, it's in credit_history.summary.financial
+ * This function handles the fallback chain:
+ * 1. summary.financial
+ * 2. summary.financing
+ * 3. summary.loan
+ * 4. Individual fields at summary root (requested_amount, down_payment, etc.)
+ * 
+ * Exported for testing.
+ */
+export function extractFinancial(summary: Record<string, unknown>): Record<string, unknown> {
   const fin = summary.financial ?? summary.financing ?? summary.loan;
   if (fin && typeof fin === "object") return fin as Record<string, unknown>;
   const out: Record<string, unknown> = {};
