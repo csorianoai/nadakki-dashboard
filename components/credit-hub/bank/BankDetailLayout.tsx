@@ -61,10 +61,12 @@ function modeToDecision(mode: DecisionMode): BankDecisionType {
 export function BankDetailLayout({ application, compliance, audit, counterOffer }: BankDetailLayoutProps) {
   const { user } = useAuth();
   const { apiTenantId } = useTenant();
+  const queryClient = useQueryClient();
   const { can: actorCan, roleKey } = useCreditHubActor();
   const notesProbe = useNotesEndpointAvailable(application.application_id);
   const showNotesTab = isBankNotesRole(roleKey) && notesProbe.available;
-  const canDecide = actorCan("create_decision");
+  const hasBankDecision = Boolean(application.application_payload?.bank_decision);
+  const canDecide = actorCan("create_decision") && !hasBankDecision;
   const payload = application.application_payload as BankReviewPayload;
   const applicant = payload.applicant ?? {};
   const financial = payload.financial ?? {};
@@ -84,6 +86,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
 
   const autoClaimAttempted = useRef(false);
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (autoClaimAttempted.current || application.application_payload?.bank_decision) return;
     const analystId = user?.id;
@@ -92,11 +95,16 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
     // Solo marcar como intentado DESPUÉS de verificar que tenemos analystId válido
     autoClaimAttempted.current = true;
     
-    void claimBankApplication(application.application_id, analystId).catch((err) => {
-      // Log error en vez de tragarlo - el QA reporta "Sin asignar" porque el claim falló silenciosamente
-      console.error("[auto-claim] Failed to claim application:", application.application_id, err);
-    });
-  }, [application.application_id, application.application_payload?.bank_decision, user?.id]);
+    void claimBankApplication(application.application_id, analystId)
+      .then(() => {
+        // Invalidar la query de assignment para reflejar el nuevo analista
+        void queryClient.invalidateQueries({ queryKey: ["app-assignment", apiTenantId, application.application_id] });
+      })
+      .catch((err) => {
+        // Log error en vez de tragarlo - el QA reporta "Sin asignar" porque el claim falló silenciosamente
+        console.error("[auto-claim] Failed to claim application:", application.application_id, err);
+      });
+  }, [application.application_id, application.application_payload?.bank_decision, user?.id, apiTenantId, queryClient]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -198,9 +206,11 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             <h1 className="ch-serif" style={{ margin: 0, fontSize: 28, letterSpacing: "-0.02em" }}>
               {applicantName}
             </h1>
-            <span className="ch-pill" style={{ color: "var(--ch-info-text)", background: "var(--ch-info-soft)", height: 24 }}>
-              En revisión
-            </span>
+            {displayStatus ? (
+              <span className="ch-pill" style={{ color: "var(--ch-info-text)", background: "var(--ch-info-soft)", height: 24 }}>
+                {displayStatus}
+              </span>
+            ) : null}
           </div>
           <div className="ch-mono" style={{ fontSize: 12, color: "var(--ch-text-3)", marginTop: 6 }}>
             {application.application_id}
@@ -226,13 +236,17 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
               <div>
                 <div className="ch-eyebrow">Concesionario</div>
                 <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
-                  {String(vehicle.dealer ?? "—")}
+                  {String((vehicle as any).dealer ?? (vehicle as any).dealer_name ?? (vehicle as any).dealerName ?? "—")}
                 </div>
               </div>
               <div>
                 <div className="ch-eyebrow">Vehículo</div>
                 <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
-                  {String(vehicle.label ?? (`${vehicle.make ?? ""} ${vehicle.model ?? ""}`.trim() || "—"))}
+                  {String(
+                    (vehicle as any).label ?? 
+                    (vehicle as any).vehicle_label ?? 
+                    (`${(vehicle as any).make ?? ""} ${(vehicle as any).model ?? ""} ${(vehicle as any).year ?? ""}`.trim() || "—")
+                  )}
                 </div>
               </div>
               <div>
