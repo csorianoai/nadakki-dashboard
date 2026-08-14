@@ -23,7 +23,8 @@ function asAnalysis(summary: Record<string, unknown>, score?: number): CreditAna
  * 
  * Exported for testing.
  */
-export function extractFinancial(summary: Record<string, unknown>): Record<string, unknown> {
+export function extractFinancial(summary: Record<string, unknown>, rootFinancial?: Record<string, unknown> | null): Record<string, unknown> {
+  if (rootFinancial && typeof rootFinancial === "object") return rootFinancial as Record<string, unknown>;
   const fin = summary.financial ?? summary.financing ?? summary.loan;
   if (fin && typeof fin === "object") return fin as Record<string, unknown>;
   const out: Record<string, unknown> = {};
