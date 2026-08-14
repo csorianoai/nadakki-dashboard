@@ -588,28 +588,36 @@ test.describe.serial("E2E Operational Flow - Production", () => {
       }
     });
     
-    // Fill counter-offer form
-    await page.click('button:has-text("Contraoferta")');
-    await page.fill('input[name="amount"]', "650000");
-    await page.fill('input[name="interest_rate"]', "17.25");
-    await page.fill('input[name="term_months"]', "48");
-    await page.fill('input[name="down_payment"]', "200000");
-    await page.fill('textarea[name="notes"]', "Contraoferta ajustada");
-    await page.click('button[type="submit"]:has-text("Enviar")');
+    // Select CONTRA_OFERTA decision from dropdown
+    await page.selectOption('select', 'CONTRA_OFERTA');
+    await page.waitForTimeout(500); // Wait for conditional fields to render
     
-    // Wait for success
-    await page.waitForSelector('[data-testid="decision-success"]');
+    // Fill counter-offer terms (ForgeInputs without name attributes, use label)
+    await page.getByLabel('Monto aprobado').fill('650000');
+    await page.getByLabel('Tasa anual (%)').fill('17.25');
+    await page.getByLabel('Plazo (meses)').fill('48');
+    await page.getByLabel('Inicial requerida').fill('200000');
     
-    // ASSERTS on captured request/response
+    // Fill mandatory justification
+    await page.getByPlaceholder(/justificación/i).fill('Contraoferta ajustada según análisis de riesgo');
+    
+    // Submit decision
+    await page.click('button:has-text("Confirmar decisión")');
+    
+    // Wait for toast success (no data-testid, just wait for request to complete)
+    await page.waitForTimeout(2000);
+    
+    // ASSERTS on captured request/response (updated to match BankDecisionRequest contract)
     expect(capturedRequests.length).toBeGreaterThan(0);
     const decideRequest = capturedRequests[0];
     
-    expect(decideRequest.body.decision_type).toBe("COUNTER");
-    expect(decideRequest.body.counter_terms).toBeDefined();
-    expect(decideRequest.body.counter_terms.amount).toBe(650000);
-    expect(decideRequest.body.counter_terms.interest_rate).toBe(17.25);
-    expect(decideRequest.body.counter_terms.term_months).toBe(48);
-    expect(decideRequest.body.counter_terms.down_payment).toBe(200000);
+    expect(decideRequest.body.decision).toBe("CONTRA_OFERTA");
+    expect(decideRequest.body.terms).toBeDefined();
+    expect(decideRequest.body.terms.approved_amount).toBe(650000);
+    expect(decideRequest.body.terms.interest_rate).toBe(17.25);
+    expect(decideRequest.body.terms.term_months).toBe(48);
+    expect(decideRequest.body.terms.down_payment_required).toBe(200000);
+    expect(decideRequest.body.justification).toContain("Contraoferta ajustada");
     
     expect(decideRequest.response.terms.interest_rate).toBe(17.25);
     expect(decideRequest.response.terms.interest_rate).not.toBe(0); // NOT zero!
