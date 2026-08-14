@@ -10,11 +10,16 @@ export function StipulationsTab({ applicationId }: { applicationId: string }) {
   const { apiTenantId } = useTenant();
   const { stipulations, error, isLoading, mutate } = useStipulations(applicationId, apiTenantId);
   const rows = stipulations ?? [];
+  
+  // Si hay error Y además no hay datos, mostrar error
+  // Si no hay error PERO tampoco hay datos (200 con lista vacía), mostrar EmptyState
+  const hasError = Boolean(error);
+  const hasData = Array.isArray(stipulations);
 
   return (
     <CHPanelState
       isLoading={isLoading}
-      isError={Boolean(error)}
+      isError={hasError && !hasData}
       onRetry={() => void mutate()}
       errorTitle="Estipulaciones no disponibles"
       loadingLabel="Cargando estipulaciones…"

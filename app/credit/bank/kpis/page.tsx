@@ -117,21 +117,9 @@ function parseApiError(status: number, body: unknown): string {
     if (detail && typeof detail === "object") {
       const inner = detail as Record<string, unknown>;
       if (typeof inner.message === "string") return inner.message;
-      if (typeof inner.error === "string") {
-        if (inner.error === "Dashboard summary unavailable") {
-          console.error("Backend error detail:", inner.error);
-          return "Resumen no disponible";
-        }
-        return inner.error;
-      }
+      if (typeof inner.error === "string") return inner.error;
     }
-    if (typeof root.message === "string") {
-      if (root.message === "Dashboard summary unavailable") {
-        console.error("Backend error detail:", root.message);
-        return "Resumen no disponible";
-      }
-      return root.message;
-    }
+    if (typeof root.message === "string") return root.message;
   }
   return `Error HTTP ${status}`;
 }
