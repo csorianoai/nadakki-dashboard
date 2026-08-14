@@ -169,7 +169,7 @@ async function createTenant(identifiers: ReturnType<typeof generateTestIdentifie
   const tenant = await response.json();
   
   // Verify lender_assignment check is "ok"
-  const lenderCheck = tenant.checks?.lender_assignment;
+  const lenderCheck = tenant.checks?.lender_assignment?.status;
   if (lenderCheck !== "ok") {
     console.warn(`Warning: lender_assignment check is "${lenderCheck}", not "ok". pool-filters may return 403.`);
   }
@@ -378,7 +378,7 @@ async function createApplicationViaAPI(
   return { applicationId };
 }
 
-test.describe("E2E Operational Flow - Production", () => {
+test.describe.serial("E2E Operational Flow - Production", () => {
   let identifiers: ReturnType<typeof generateTestIdentifiers>;
   let tenantId: string;
   let adminUserId: string;
@@ -422,25 +422,73 @@ test.describe("E2E Operational Flow - Production", () => {
     await page.goto(`${FRONTEND}/login`);
     await page.fill('input[type="email"]', identifiers.bankEmail);
     await page.fill('input[type="password"]', identifiers.bankPassword);
-    await page.fill('input[placeholder*="institucion"]', identifiers.tenantSlug);
+    await page.fill('input[placeholder="tu-institucion"]', identifiers.tenantSlug);
+    
+    // Take screenshot before submit
+    await page.screenshot({ path: "test-results/bank-login-before-submit.png" });
+    
     await page.click('button[type="submit"]');
     
-    // Wait for redirect
-    await page.waitForURL(/credit-hub\/bank/, { timeout: 60000 });
+    // Wait for redirect (or timeout if login fails)
+    try {
+      await page.waitForURL(/credit-hub\/bank/, { timeout: 60000 });
+      console.log("✓ Bank login successful, redirected to:", page.url());
+      // Wait for session to stabilize
+      await page.waitForTimeout(2000);
+    } catch (e) {
+      await page.screenshot({ path: "test-results/bank-login-failed.png" });
+      console.error("✗ Bank login failed or redirect timeout. Current URL:", page.url());
+      throw e;
+    }
     
+    // WORKAROUND removed: lender_assignment fixed, navigating via queue
     // Navigate to queue
-    await page.goto(`${FRONTEND}/credit-hub/bank/applications`);
+    await page.goto(`${FRONTEND}/credit-hub/bank/applications`, { waitUntil: 'domcontentloaded' });
+    
+    // Wait for "Verificando sesion..." spinner to disappear
+    await page.waitForSelector('text=Verificando sesion', { state: 'hidden', timeout: 30000 });
+    
+    // Wait for queue to load
+    await page.waitForTimeout(3000);
     
     // Find application in queue
-    await page.waitForSelector(`[data-application-id="${applications[0]}"]`);
+    await page.waitForSelector(`[data-application-id="${applications[0]}"]`, { timeout: 30000 });
     const queueAmount = await page.textContent(`[data-application-id="${applications[0]}"] [data-field="amount"]`);
+    
+    console.log(`Found application in queue with amount: ${queueAmount}`);
+    
+    // Take screenshot before clicking
+    await page.screenshot({ path: "test-results/queue-before-click.png" });
     
     // Open detail
     await page.click(`[data-application-id="${applications[0]}"]`);
-    await page.waitForURL(new RegExp(applications[0]));
+    
+    // Give it time to start navigation
+    await page.waitForTimeout(2000);
+    console.log(`URL after click: ${page.url()}`);
+    
+    // Wait for URL to change
+    await page.waitForURL(new RegExp(applications[0]), { timeout: 30000 });
+    
+    // Wait for detail page to load
+    await page.waitForSelector('text=Verificando sesion', { state: 'hidden', timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(3000);
+    
+    // Take screenshot of detail page
+    await page.screenshot({ path: "test-results/detail-page.png" });
+    console.log(`Detail page URL: ${page.url()}`);
+    
+    // Check if data-testid exists
+    const headerExists = await page.locator('[data-testid="detail-header-amount"]').count();
+    console.log(`Header amount element count: ${headerExists}`);
+    
+    if (headerExists === 0) {
+      const bodyHTML = await page.locator('body').innerHTML();
+      console.log("Detail page body (first 1000 chars):", bodyHTML.substring(0, 1000));
+    }
     
     // Get header amount BEFORE any decision
-    const headerAmount = await page.textContent('[data-testid="detail-header-amount"]');
+    const headerAmount = await page.textContent('[data-testid="detail-header-amount"]', { timeout: 10000 });
     
     // ASSERT: Amounts match
     expect(headerAmount).toBe(queueAmount);

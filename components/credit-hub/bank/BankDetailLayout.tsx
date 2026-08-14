@@ -217,7 +217,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
               </div>
               <div>
                 <div className="ch-eyebrow">Monto solicitado</div>
-                <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+                <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }} data-testid="detail-header-amount">
                   {chMoneyExact(amount)}
                 </div>
               </div>

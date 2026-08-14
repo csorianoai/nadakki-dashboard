@@ -388,7 +388,7 @@ export function BankApplicationDetailView({ application, compliance, audit }: Ba
             </div>
             <div>
               <dt className="text-forge-xs text-forgeGray-500">Monto solicitado</dt>
-              <dd className="text-forge-sm font-medium text-forgeGray-800">{formatDop(Number(financial?.requested_amount || 0))}</dd>
+              <dd className="text-forge-sm font-medium text-forgeGray-800" data-testid="detail-header-amount">{formatDop(Number(financial?.requested_amount || 0))}</dd>
             </div>
             <div>
               <dt className="text-forge-xs text-forgeGray-500">Vehículo</dt>
