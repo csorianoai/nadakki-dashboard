@@ -88,8 +88,14 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
     if (autoClaimAttempted.current || application.application_payload?.bank_decision) return;
     const analystId = user?.id;
     if (!analystId) return;
+    
+    // Solo marcar como intentado DESPUÉS de verificar que tenemos analystId válido
     autoClaimAttempted.current = true;
-    void claimBankApplication(application.application_id, analystId).catch(() => {});
+    
+    void claimBankApplication(application.application_id, analystId).catch((err) => {
+      // Log error en vez de tragarlo - el QA reporta "Sin asignar" porque el claim falló silenciosamente
+      console.error("[auto-claim] Failed to claim application:", application.application_id, err);
+    });
   }, [application.application_id, application.application_payload?.bank_decision, user?.id]);
 
   useEffect(() => {
