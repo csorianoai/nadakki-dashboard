@@ -3,6 +3,7 @@ import {
   readBankApplicationAuthToken,
 } from "@/lib/bank-application-detail/fetch-detail";
 import { BankApplicationAuthError, BankApplicationHttpError } from "@/lib/bank-application-detail/errors";
+import { tokenStorage } from "@/lib/auth/token-storage";
 import type {
   CreditStipulation,
   StipulationAuditEntry,
@@ -90,7 +91,8 @@ async function creditJson(
   init: RequestInit,
   role: StipulationsApiRole,
 ): Promise<Response> {
-  const token = readBankApplicationAuthToken();
+  // Credit Hub auth fallback: try auth v2 (tokenStorage) first, then legacy localStorage
+  const token = tokenStorage.getAccessToken() || readBankApplicationAuthToken();
   if (!token) throw new BankApplicationAuthError();
 
   const url = `${baseUrl(applicationId)}${pathSuffix}`;
