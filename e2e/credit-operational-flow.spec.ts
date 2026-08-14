@@ -555,8 +555,17 @@ test.describe.serial("E2E Operational Flow - Production", () => {
     // Get header amount BEFORE any decision
     const headerAmount = await page.textContent('[data-testid="detail-header-amount"]', { timeout: 10000 });
     
-    // ASSERT: Amounts match
-    expect(headerAmount).toBe(queueAmount);
+    // ASSERT: Amounts match (compare numeric values, not formatted strings)
+    const parseAmount = (s: string | null): number => {
+      if (!s) return 0;
+      const hasK = /K/i.test(s);
+      const digits = Number(String(s).replace(/[^\d]/g, ""));
+      return hasK ? digits * 1000 : digits;
+    };
+    
+    const headerNumeric = parseAmount(headerAmount);
+    const queueNumeric = parseAmount(queueAmount);
+    expect(headerNumeric).toBe(queueNumeric);
     
     // Counter-offer
     const capturedRequests: any[] = [];

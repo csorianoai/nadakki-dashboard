@@ -49,18 +49,13 @@ export const CH_ICONS = {
 
 export function chMoney(n: number | null | undefined, cur = CH_DEFAULT_CURRENCY_SYMBOL): string {
   if (n == null) return "—";
-  const a = Math.abs(n);
-  if (a >= 1e6) {
-    return `${cur}${(n / 1e6).toLocaleString(CH_DEFAULT_LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}M`;
-  }
-  if (a >= 1e3) {
-    return `${cur}${(n / 1e3).toLocaleString(CH_DEFAULT_LOCALE, { maximumFractionDigits: 0 })}K`;
-  }
-  return `${cur}${n.toLocaleString(CH_DEFAULT_LOCALE)}`;
+  // Banking standard: always full format with thousands separator, never compact K/M notation
+  return `${cur}${n.toLocaleString(CH_DEFAULT_LOCALE, { maximumFractionDigits: 0 })}`;
 }
 
 export function chMoneyExact(n: number | null | undefined, cur = CH_DEFAULT_CURRENCY_SYMBOL): string {
-  return `${cur}${(n || 0).toLocaleString(CH_DEFAULT_LOCALE)}`;
+  if (n == null) return "—";
+  return `${cur}${n.toLocaleString(CH_DEFAULT_LOCALE, { maximumFractionDigits: 0 })}`;
 }
 
 export function chFormatCurrency(value: number, locale = "es-DO", currency = "DOP"): string {
