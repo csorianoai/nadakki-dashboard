@@ -14,6 +14,18 @@ const SEV: Record<string, [string, string]> = {
   MEDIA: ["var(--ch-warning-text)", "var(--ch-warning-soft)"],
 };
 
+const ISSUE_TYPE_LABEL: Record<string, string> = {
+  CONSENTIMIENTOS_INCOMPLETOS: "Consentimientos incompletos",
+  MISSING_CONSENTS: "Consentimientos faltantes",
+  MISSING_DOCUMENTS: "Documentos faltantes",
+  KYC_PENDING: "KYC pendiente",
+  AML_CHECK_PENDING: "Verificación AML pendiente",
+  IDENTITY_VERIFICATION_FAILED: "Verificación de identidad fallida",
+  CONSENT_DATA_PROCESSING: "Consentimiento de procesamiento de datos",
+  CONSENT_BUREAU_AUTHORIZATION: "Autorización de buró de crédito",
+  CONSENT_TERMS_ACCEPTED: "Aceptación de términos",
+};
+
 export function ComplianceTab({
   report,
   applicationId,
@@ -85,7 +97,7 @@ export function ComplianceTab({
                 </span>
                 <div style={{ flex: 1 }}>
                   <div className="ch-mono" style={{ fontSize: 11.5, fontWeight: 600 }}>
-                    {iss.type}
+                    {ISSUE_TYPE_LABEL[iss.type] ?? iss.type}
                   </div>
                   <div style={{ fontSize: 13, color: "var(--ch-text-2)", marginTop: 2 }}>{iss.action_required}</div>
                 </div>

@@ -3,6 +3,7 @@ import { BankApplicationAuthError, BankApplicationHttpError } from "@/lib/bank-a
 import { readBankApplicationAuthToken } from "@/lib/bank-application-detail/fetch-detail";
 import { decodeJwtTid } from "@/lib/bank-application-detail/jwt";
 import type { BankDecideRequestBody, BankDecideResponse } from "@/lib/bank-decision/types";
+import { tokenStorage } from "@/lib/auth/token-storage";
 
 function randomCorrelationId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -39,7 +40,8 @@ export async function submitBankDecision(
   actorId: string,
   init?: { idempotencyKey?: string; signal?: AbortSignal },
 ): Promise<BankDecideResponse> {
-  const token = readBankApplicationAuthToken();
+  // Credit Hub auth fallback: try auth v2 (tokenStorage) first, then legacy localStorage
+  const token = tokenStorage.getAccessToken() || readBankApplicationAuthToken();
   if (!token) throw new BankApplicationAuthError();
   const idem = init?.idempotencyKey ?? newIdempotencyKey();
   const url = `/api/v2/credit/applications/${encodeURIComponent(applicationId)}/decide`;

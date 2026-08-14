@@ -4,12 +4,32 @@ import type { BankAuditTrail } from "@/lib/credit-hub/types/bankDecision";
 import { chRelTime } from "@/lib/credit-hub/bank/bankFormat";
 
 const ACTION_LABEL: Record<string, string> = {
+  // Lowercase events (legacy)
   submitted: "Recibida",
   analyzed: "Analizada",
   claimed: "Reclamada",
   decided: "Decidida",
   compliance_checked: "Compliance verificado",
   compliance_approved: "Compliance aprobado",
+  // Uppercase events (backend constants)
+  SUBMITTED: "Recibida",
+  ANALYZED: "Analizada",
+  CLAIMED: "Reclamada",
+  DECIDED: "Decidida",
+  BANK_DECISION_MADE: "Decisión bancaria",
+  COMPLIANCE_CHECKED: "Compliance verificado",
+  COMPLIANCE_APPROVED: "Compliance aprobado",
+  APPLICATION_CREATED: "Solicitud creada",
+  APPLICATION_UPDATED: "Solicitud actualizada",
+  COUNTER_OFFER_MADE: "Contraoferta realizada",
+  COUNTER_OFFER_ACCEPTED: "Contraoferta aceptada",
+  COUNTER_OFFER_REJECTED: "Contraoferta rechazada",
+  STIPULATION_ADDED: "Estipulación agregada",
+  STIPULATION_VERIFIED: "Estipulación verificada",
+  STIPULATION_REJECTED: "Estipulación rechazada",
+  DOCUMENT_UPLOADED: "Documento cargado",
+  MESSAGE_SENT: "Mensaje enviado",
+  ASSIGNMENT_CHANGED: "Reasignación",
 };
 
 export function AuditTab({ audit }: { audit?: BankAuditTrail }) {

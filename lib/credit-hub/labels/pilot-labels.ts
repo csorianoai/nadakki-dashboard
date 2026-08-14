@@ -60,7 +60,7 @@ export function dataSourceBadgeVisual(value: string | null | undefined): BadgeVi
 
 export function kycModeBadgeVisual(value: string | null | undefined): BadgeVisual {
   const v = normalizePilotLabel(value)?.toLowerCase() ?? null;
-  if (!v) return { label: "KYC: Not Set", color: "var(--ch-text-3)", background: "var(--ch-surface-2)" };
+  if (!v) return { label: "KYC: No configurado", color: "var(--ch-text-3)", background: "var(--ch-surface-2)" };
   if (v === "mock") return { label: "KYC: DATOS SIMULADOS", color: "#c2410c", background: "#ffedd5" };
   if (v === "sandbox") return { label: "KYC: SANDBOX", color: "#92400e", background: "#fef3c7" };
   if (v === "manual") return { label: "KYC: REVISIÓN MANUAL", color: "#1d4ed8", background: "#dbeafe" };
@@ -71,7 +71,7 @@ export function kycModeBadgeVisual(value: string | null | undefined): BadgeVisua
 
 export function ocrModeBadgeVisual(value: string | null | undefined): BadgeVisual {
   const v = normalizePilotLabel(value)?.toLowerCase() ?? null;
-  if (!v) return { label: "OCR: Not Set", color: "var(--ch-text-3)", background: "var(--ch-surface-2)" };
+  if (!v) return { label: "OCR: No configurado", color: "var(--ch-text-3)", background: "var(--ch-surface-2)" };
   if (v === "mock") return { label: "OCR: DATOS SIMULADOS", color: "#c2410c", background: "#ffedd5" };
   if (v === "manual") return { label: "OCR: REVISIÓN MANUAL", color: "#1d4ed8", background: "#dbeafe" };
   if (v === "live") return { label: "OCR: PROVEEDOR EN VIVO", color: "#15803d", background: "#dcfce7" };
