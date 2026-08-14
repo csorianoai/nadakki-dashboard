@@ -118,19 +118,15 @@ function parseApiError(status: number, body: unknown): string {
       const inner = detail as Record<string, unknown>;
       if (typeof inner.message === "string") return inner.message;
       if (typeof inner.error === "string") {
-        if (inner.error === "Dashboard summary unavailable") {
-          console.error("Backend error detail:", inner.error);
-          return "Resumen no disponible";
-        }
-        return inner.error;
+        // Log technical detail to console
+        console.error("[bank-kpis] Backend error detail:", inner.error);
+        return "Resumen no disponible";
       }
     }
     if (typeof root.message === "string") {
-      if (root.message === "Dashboard summary unavailable") {
-        console.error("Backend error detail:", root.message);
-        return "Resumen no disponible";
-      }
-      return root.message;
+      // Log technical detail to console
+      console.error("[bank-kpis] Backend error message:", root.message);
+      return "Resumen no disponible";
     }
   }
   return `Error HTTP ${status}`;

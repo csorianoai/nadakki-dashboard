@@ -118,10 +118,24 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
 
   const handleSubmit = useCallback(
     async (mode: DecisionMode, justif: string) => {
+      // DIAGNOSTIC: Log actual user structure to verify analyst_id path
+      console.log("[decision] user object:", user);
+      console.log("[decision] user?.id:", user?.id);
+      
+      const analystId = user?.id || "";
+      
+      // Validación crítica: analyst_id debe ser un UUID válido
+      if (!analystId) {
+        console.error("[decision] analyst_id is empty. user:", user);
+        setPanelState("error");
+        setDecisionErrorDetail("Error de sesión: no se pudo identificar al analista. Recarga la página.");
+        return;
+      }
+      
       const body: BankDecisionRequest = {
         decision: modeToDecision(mode),
         justification: justif.trim(),
-        analyst_id: user?.id || "unknown",
+        analyst_id: analystId,
         terms: counterOffer?.counter_offer_terms ?? termsRef.current,
       };
       try {
