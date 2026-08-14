@@ -93,7 +93,12 @@ async function creditJson(
 ): Promise<Response> {
   // Credit Hub auth fallback: try auth v2 (tokenStorage) first, then legacy localStorage
   const token = tokenStorage.getAccessToken() || readBankApplicationAuthToken();
-  if (!token) throw new BankApplicationAuthError();
+  console.log("[creditJson] Token check", { hasAuthV2: Boolean(tokenStorage.getAccessToken()), hasLegacy: Boolean(readBankApplicationAuthToken()), finalToken: Boolean(token) });
+  
+  if (!token) {
+    console.log("[creditJson] THROW: BankApplicationAuthError - no token found");
+    throw new BankApplicationAuthError();
+  }
 
   const url = `${baseUrl(applicationId)}${pathSuffix}`;
   const headers: HeadersInit = {
@@ -103,12 +108,21 @@ async function creditJson(
     ...(init.headers ?? {}),
   };
 
-  return fetch(url, {
-    ...init,
-    headers,
-    credentials: "include",
-    cache: "no-store",
-  });
+  console.log("[creditJson] About to fetch", { url, role, headersCount: Object.keys(headers).length });
+  
+  try {
+    const response = await fetch(url, {
+      ...init,
+      headers,
+      credentials: "include",
+      cache: "no-store",
+    });
+    console.log("[creditJson] Fetch completed", { url, status: response.status, ok: response.ok });
+    return response;
+  } catch (error) {
+    console.log("[creditJson] Fetch exception", { url, error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
 }
 
 function assertOk(res: Response, body: unknown): void {
