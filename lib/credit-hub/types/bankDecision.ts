@@ -111,8 +111,8 @@ export interface BankAuditTrail {
   has_analysis: boolean;
   has_bank_decision: boolean;
   events: BankAuditEvent[];
-  event_count: number;
-  audited_at: string;
+  event_count?: number;
+  audited_at?: string;
 }
 
 export interface ComplianceReport {

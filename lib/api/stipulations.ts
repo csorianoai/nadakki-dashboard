@@ -126,14 +126,31 @@ export async function getStipulations(
   applicationId: string,
   role: StipulationsApiRole = resolveStipulationsApiRoleFromStorage(),
 ): Promise<CreditStipulation[]> {
+  const token = tokenStorage.getAccessToken() || readBankApplicationAuthToken();
+  const url = `${baseUrl(applicationId)}/stipulations`;
+  console.log("[getStipulations] FETCH START", { applicationId, role, url, hasToken: Boolean(token) });
+  
   const res = await creditJson(applicationId, "/stipulations", { method: "GET" }, role);
   const body = await parseJsonBody(res);
+  
+  console.log("[getStipulations] FETCH COMPLETE", {
+    url,
+    status: res.status,
+    ok: res.ok,
+    bodyType: Array.isArray(body) ? "array" : typeof body,
+    body,
+  });
+  
   if (!res.ok) {
     assertOk(res, body);
     return [];
   }
   const rows = unwrapArray(body, ["stipulations", "items", "results"]);
-  return rows.map(normalizeStipulationRow).filter((x): x is CreditStipulation => x != null);
+  console.log("[getStipulations] AFTER UNWRAP", { rowsLength: rows.length, rows });
+  
+  const result = rows.map(normalizeStipulationRow).filter((x): x is CreditStipulation => x != null);
+  console.log("[getStipulations] FINAL RESULT", { resultLength: result.length, result });
+  return result;
 }
 
 export async function verifyStipulation(

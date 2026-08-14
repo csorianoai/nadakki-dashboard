@@ -232,11 +232,24 @@ export function getComplianceReport(params: { tenantId: string; applicationId: s
   });
 }
 
-export function getAuditTrail(params: { tenantId: string; applicationId: string }): Promise<BankAuditTrail> {
-  return chFetch<BankAuditTrail>(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/audit-trail`, {
+export async function getAuditTrail(params: { tenantId: string; applicationId: string }): Promise<BankAuditTrail> {
+  const url = `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/audit-trail`;
+  console.log("[getAuditTrail] FETCH START", { url, tenantId: params.tenantId, applicationId: params.applicationId });
+  
+  const result = await chFetch<BankAuditTrail>(url, {
     tenantId: params.tenantId,
     actorRole,
   });
+  
+  console.log("[getAuditTrail] FETCH COMPLETE", {
+    url,
+    resultType: typeof result,
+    hasEvents: Array.isArray(result?.events),
+    eventsLength: result?.events?.length ?? 0,
+    result,
+  });
+  
+  return result;
 }
 
 export interface ComplianceApproval {

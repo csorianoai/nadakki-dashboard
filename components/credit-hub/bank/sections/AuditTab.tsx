@@ -34,6 +34,15 @@ const ACTION_LABEL: Record<string, string> = {
 
 export function AuditTab({ audit }: { audit?: BankAuditTrail }) {
   const events = audit?.events ?? [];
+  
+  console.log("[AuditTab] DIAGNOSTIC", {
+    audit,
+    hasAudit: Boolean(audit),
+    hasEvents: Array.isArray(audit?.events),
+    eventsLength: events.length,
+    events,
+  });
+  
   if (!events.length) {
     return <div className="ch-card" style={{ padding: 24, color: "var(--ch-text-3)" }}>Sin eventos de auditoría.</div>;
   }
