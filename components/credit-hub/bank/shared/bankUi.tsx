@@ -1,5 +1,8 @@
 "use client";
 
+"use client";
+
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArrowDown, ArrowRight, ArrowUp, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
@@ -296,6 +299,7 @@ export function QueueTable({
   onSort?: (k: BankQueueSortKey) => void;
   detailHref?: (id: string) => string;
 }) {
+  const router = useRouter();
   const isList = variant === "list";
   const allChecked = selectable && selected && items.length > 0 && items.every((i) => selected.has(i.application_id));
 
@@ -336,7 +340,7 @@ export function QueueTable({
           const sel = selectable && selected?.has(a.application_id);
           const href = detailHref?.(a.application_id) ?? `/credit-hub/bank/applications/${a.application_id}`;
           return (
-            <tr key={a.application_id} className="ch-click" style={sel ? { background: "var(--ch-accent-soft)" } : undefined}>
+            <tr key={a.application_id} className="ch-click" style={sel ? { background: "var(--ch-accent-soft)" } : undefined} data-application-id={a.application_id} onClick={() => router.push(href)}>
               {selectable ? (
                 <td onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" checked={!!sel} onChange={() => onToggle?.(a.application_id)} style={{ margin: 0, accentColor: "var(--ch-accent-mid)" }} aria-label={`Seleccionar ${a.application_id}`} />
@@ -353,7 +357,7 @@ export function QueueTable({
               </td>
               <td style={{ color: "var(--ch-text-2)" }}>{a.dealer_name ?? "—"}</td>
               <td style={{ color: "var(--ch-text-2)" }}>{a.vehicle_label ?? "—"}</td>
-              <td className="ch-num">{chMoney(a.requested_amount)}</td>
+              <td className="ch-num" data-field="amount">{chMoney(a.requested_amount)}</td>
               <td className="ch-num">
                 <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 7 }}>
                   <span style={{ fontWeight: 600 }}>{a.score}</span>

@@ -58,7 +58,7 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
     application_payload: {
       applicant: ex.applicant,
       vehicle: ex.vehicle,
-      financial: extractFinancial(summary),
+      financial: extractFinancial(summary, ex.financial),
       analysis: asAnalysis(summary, history.score),
       documents: ex.documents,
       bank_decision: bankDecision as BankReviewApplication["application_payload"]["bank_decision"],
