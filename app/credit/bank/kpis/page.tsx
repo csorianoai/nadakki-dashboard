@@ -117,9 +117,17 @@ function parseApiError(status: number, body: unknown): string {
     if (detail && typeof detail === "object") {
       const inner = detail as Record<string, unknown>;
       if (typeof inner.message === "string") return inner.message;
-      if (typeof inner.error === "string") return inner.error;
+      if (typeof inner.error === "string") {
+        // Log technical detail to console
+        console.error("[bank-kpis] Backend error detail:", inner.error);
+        return "Resumen no disponible";
+      }
     }
-    if (typeof root.message === "string") return root.message;
+    if (typeof root.message === "string") {
+      // Log technical detail to console
+      console.error("[bank-kpis] Backend error message:", root.message);
+      return "Resumen no disponible";
+    }
   }
   return `Error HTTP ${status}`;
 }
