@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
@@ -86,7 +86,6 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
 
   const autoClaimAttempted = useRef(false);
-  const queryClient = useQueryClient();
   useEffect(() => {
     if (autoClaimAttempted.current || application.application_payload?.bank_decision) return;
     const analystId = user?.id;
