@@ -145,13 +145,15 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
               </div>
             </div>
             <div>
-              <div className="ch-eyebrow">DTI (calculado)</div>
+              <div className="ch-eyebrow">Deuda / Ingreso</div>
+              <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Total de deudas sobre el ingreso</div>
               <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
                 {m?.dti != null ? `${(m.dti * 100).toFixed(1)}%` : "Sin análisis del motor"}
               </div>
             </div>
             <div>
-              <div className="ch-eyebrow">PTI (calculado)</div>
+              <div className="ch-eyebrow">Cuota / Ingreso</div>
+              <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Cuota mensual sobre el ingreso</div>
               <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
                 {financial.pti != null ? `${(financial.pti * 100).toFixed(1)}%` : "Sin análisis del motor"}
               </div>
@@ -167,9 +169,9 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
             Métricas clave · Resumen
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-            <Metric label="DTI" value={`${((m.dti ?? 0) * 100).toFixed(0)}%`} hint="política ≤ 45%" />
-            <Metric label="PTI" value={financial.pti != null ? `${(financial.pti * 100).toFixed(0)}%` : "—"} hint="payment to income" />
-            <Metric label="LTV" value={`${((financial.ltv ?? 0) * 100).toFixed(0)}%`} hint={financial.down_payment ? `enganche ${chMoney(financial.down_payment)}` : undefined} />
+            <Metric label="Deuda / Ingreso" value={`${((m.dti ?? 0) * 100).toFixed(1)}%`} hint="política ≤ 45%" />
+            <Metric label="Cuota / Ingreso" value={financial.pti != null ? `${(financial.pti * 100).toFixed(1)}%` : "—"} hint="cuota sobre ingreso" />
+            <Metric label="Préstamo / Valor" value={financial.ltv != null ? `${(financial.ltv * 100).toFixed(1)}%` : "—"} hint={financial.down_payment ? `enganche ${chMoney(financial.down_payment)}` : undefined} />
             <Metric label="Capacidad" value={m.payment_capacity != null ? chMoneyExact(m.payment_capacity) : "—"} hint="cuota estimada" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }}>
@@ -213,7 +215,8 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
               </div>
             </div>
             <div>
-              <div className="ch-eyebrow">LTV (calculado)</div>
+              <div className="ch-eyebrow">Préstamo / Valor</div>
+              <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Monto del préstamo sobre el valor del vehículo</div>
               <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
                 {financial.ltv != null ? `${(financial.ltv * 100).toFixed(1)}%` : "Sin análisis del motor"}
               </div>

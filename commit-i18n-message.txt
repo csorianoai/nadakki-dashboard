@@ -1,0 +1,23 @@
+fix(i18n): translate financial ratios from English acronyms to Spanish
+
+Changed all visible English acronyms for financial ratios to Spanish with explanations:
+
+PTI -> "Cuota / Ingreso" (Cuota mensual sobre el ingreso)
+DTI -> "Deuda / Ingreso" (Total de deudas sobre el ingreso)
+LTV -> "Prestamo / Valor" (Monto del prestamo sobre el valor del vehiculo)
+
+Updated decimal precision from 0 to 1 decimal place per user request:
+- 0.2892 -> 28.9% (was 29%)
+- 0.3359 -> 33.6% (was 34%)
+
+Files modified:
+- AnalysisTab: All 3 ratios with Spanish labels + explanatory subtitles
+- BankDetailLayout: LTV in header from 0 to 1 decimal
+- CounterOfferCalculator: "PTI proyectado" -> "Cuota / Ingreso proyectado" + 1 decimal
+- configuracion/page.tsx: SIC config labels (admin context)
+
+Field names in code unchanged (still pti, dti, ltv) - only presentation labels changed.
+
+Other acronyms audit:
+- VIN: kept (global automotive standard)
+- KYC, OCR, AML, SLA: kept for now (regulatory/technical terms, to be annotated in future)

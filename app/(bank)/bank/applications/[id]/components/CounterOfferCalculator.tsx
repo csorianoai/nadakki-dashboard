@@ -140,8 +140,8 @@ export function CounterOfferCalculator({
         className="rounded-md border border-forgeGray-200 bg-white px-3 py-2 text-forge-sm tabular-nums text-forgeGray-900 ring-1 ring-inset ring-forgeGray-100"
         aria-live="polite"
       >
-        PTI proyectado:{" "}
-        <strong className="font-forgeMono">{pti != null ? `${pti.toFixed(2)} %` : "—"}</strong>
+        Cuota / Ingreso proyectado:{" "}
+        <strong className="font-forgeMono">{pti != null ? `${pti.toFixed(1)} %` : "—"}</strong>
         {" · "}Ingreso bruto mensual referencia:{" "}
         {grossMonthlyIncome && grossMonthlyIncome > 0 ? formatMoney(grossMonthlyIncome, currency) : "—"}
       </div>
