@@ -180,7 +180,7 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
             <Metric label="Capacidad" value={m.payment_capacity != null ? chMoneyExact(m.payment_capacity) : "—"} hint="cuota estimada" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }}>
-            <Metric label="Score buró" value={String(an.score)} hint={an.approval_band ?? undefined} />
+            <Metric label="Score buró" value={an?.score != null ? String(an.score) : "—"} hint={an?.approval_band ?? undefined} />
             <Metric label="Fuente enganche" value={financial.down_payment_source ?? "—"} />
             <div />
             <div />
@@ -231,37 +231,39 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
       </div>
 
       {/* Evidencia verificada (existing, but moved after new sections) */}
-      <div>
-        <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
-          Evidencia verificada
+      {an ? (
+        <div>
+          <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
+            Evidencia verificada
+          </div>
+          <EvidenceGrid
+            items={[
+              {
+                icon: DollarSign,
+                title: "Ingreso verificado",
+                body: `${chMoneyExact(Number(applicant.monthly_income ?? 0))}/mes · ${String(applicant.employment ?? "—")}.`,
+                source: "Entidad emisora · recibos de nomina",
+                conf: "alto",
+              },
+              {
+                icon: Gauge,
+                title: "Buro de credito",
+                body: `Score ${an.score}. Nivel ${an.risk_level}.`,
+                source: "Buro de credito",
+                conf: "alto",
+              },
+              {
+                icon: Car,
+                title: "Vehiculo",
+                body: `${String(payload.vehicle?.label ?? payload.vehicle?.make ?? "—")} · valor ${chMoney(Number(payload.vehicle?.value ?? 0))}.`,
+                source: "Expediente dealer",
+                conf: "medio",
+              },
+            ]}
+            identity={payload.identity}
+          />
         </div>
-        <EvidenceGrid
-          items={[
-            {
-              icon: DollarSign,
-              title: "Ingreso verificado",
-              body: `${chMoneyExact(Number(applicant.monthly_income ?? 0))}/mes · ${String(applicant.employment ?? "—")}.`,
-              source: "Entidad emisora · recibos de nomina",
-              conf: "alto",
-            },
-            {
-              icon: Gauge,
-              title: "Buro de credito",
-              body: `Score ${an.score}. Nivel ${an.risk_level}.`,
-              source: "Buro de credito",
-              conf: "alto",
-            },
-            {
-              icon: Car,
-              title: "Vehiculo",
-              body: `${String(payload.vehicle?.label ?? payload.vehicle?.make ?? "—")} · valor ${chMoney(Number(payload.vehicle?.value ?? 0))}.`,
-              source: "Expediente dealer",
-              conf: "medio",
-            },
-          ]}
-          identity={payload.identity}
-        />
-      </div>
+      ) : null}
 
       {/* Vehículo (existing, updated to show all fields from FASE 1) */}
       <div>
