@@ -21,6 +21,7 @@ export interface BankApplicantPayload {
   rfc?: string;
   age?: number;
   employment?: string;
+  job_title?: string;
   tenure_months?: number;
   monthly_income?: number;
   dependents?: number;
@@ -36,10 +37,15 @@ export interface BankApplicantPayload {
 export interface BankVehiclePayload {
   label?: string;
   make?: string;
+  marca?: string;
   model?: string;
+  modelo?: string;
+  year?: number;
+  ano?: number;
   vin?: string;
   vin_chasis?: string;
   value?: number;
+  valuacion?: number;
   type?: string;
   dealer?: string;
   condicion?: string;

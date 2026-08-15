@@ -55,8 +55,17 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
   const positives = an.positive_factors?.length ? an.positive_factors : an.factors?.positive ?? [];
   const negatives = an.negative_factors?.length ? an.negative_factors : an.factors?.negative ?? [];
 
+  // Helper function to display "No informado" for missing data
+  const displayValue = (value: unknown, formatter?: (v: unknown) => string): string => {
+    if (value == null || value === "" || (typeof value === "number" && isNaN(value))) {
+      return "No informado";
+    }
+    return formatter ? formatter(value) : String(value);
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* Análisis del motor (existing) */}
       <div className="ch-card" style={{ padding: 18 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div className="ch-eyebrow">Análisis del motor · {an.engine}</div>
@@ -65,6 +74,7 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
         <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ch-text)" }}>{an.explanation}</p>
       </div>
 
+      {/* Factores (existing) */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div className="ch-card" style={{ padding: 18 }}>
           <div className="ch-eyebrow" style={{ color: "var(--ch-success-text)", marginBottom: 4 }}>
@@ -84,10 +94,77 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
         </div>
       </div>
 
+      {/* NEW SECTION: Capacidad de pago */}
+      <div>
+        <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
+          Capacidad de pago
+        </div>
+        <div className="ch-card" style={{ padding: 18 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px 16px" }}>
+            <div>
+              <div className="ch-eyebrow">Ingreso mensual</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'" }}>
+                {displayValue(applicant.monthly_income, (v) => chMoneyExact(Number(v)))}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Empleador</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(applicant.employment)}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Puesto</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(applicant.job_title)}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Antigüedad laboral</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(applicant.tenure_months, (v) => {
+                  const months = Number(v);
+                  const years = Math.floor(months / 12);
+                  const remainingMonths = months % 12;
+                  if (years > 0 && remainingMonths > 0) return `${years} año${years > 1 ? 's' : ''}, ${remainingMonths} mes${remainingMonths > 1 ? 'es' : ''}`;
+                  if (years > 0) return `${years} año${years > 1 ? 's' : ''}`;
+                  return `${remainingMonths} mes${remainingMonths > 1 ? 'es' : ''}`;
+                })}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Deudas vigentes</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'" }}>
+                {displayValue(applicant.current_debts, (v) => chMoneyExact(Number(v)))}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Pago mensual de deudas</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'" }}>
+                {displayValue(applicant.monthly_debt_payments, (v) => chMoneyExact(Number(v)))}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">DTI (calculado)</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
+                {m?.dti != null ? `${(m.dti * 100).toFixed(1)}%` : "Sin análisis del motor"}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">PTI (calculado)</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
+                {financial.pti != null ? `${(financial.pti * 100).toFixed(1)}%` : "Sin análisis del motor"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Métricas clave (existing, but updated to be less prominent) */}
       {m ? (
         <div>
           <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
-            Métricas clave
+            Métricas clave · Resumen
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
             <Metric label="DTI" value={`${((m.dti ?? 0) * 100).toFixed(0)}%`} hint="política ≤ 45%" />
@@ -97,13 +174,55 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }}>
             <Metric label="Score buró" value={String(an.score)} hint={an.approval_band ?? undefined} />
-            <Metric label="Deudas vigentes" value={applicant.monthly_debt_payments != null ? chMoneyExact(applicant.monthly_debt_payments) : "—"} hint={applicant.current_debts != null ? `${applicant.current_debts} cuenta(s)` : undefined} />
             <Metric label="Fuente enganche" value={financial.down_payment_source ?? "—"} />
+            <div />
             <div />
           </div>
         </div>
       ) : null}
 
+      {/* NEW SECTION: La operación */}
+      <div>
+        <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
+          La operación
+        </div>
+        <div className="ch-card" style={{ padding: 18 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px 16px" }}>
+            <div>
+              <div className="ch-eyebrow">Monto solicitado</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'" }}>
+                {displayValue(financial.requested_amount, (v) => chMoneyExact(Number(v)))}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Plazo</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(financial.term_months, (v) => `${v} meses`)}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Enganche</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'" }}>
+                {displayValue(financial.down_payment, (v) => chMoneyExact(Number(v)))}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Fuente del enganche</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(financial.down_payment_source)}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">LTV (calculado)</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
+                {financial.ltv != null ? `${(financial.ltv * 100).toFixed(1)}%` : "Sin análisis del motor"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Evidencia verificada (existing, but moved after new sections) */}
       <div>
         <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
           Evidencia verificada
@@ -136,64 +255,86 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
         />
       </div>
 
+      {/* Vehículo (existing, updated to show all fields from FASE 1) */}
       <div>
         <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
           Vehículo · Detalles completos
         </div>
         <div className="ch-card" style={{ padding: 18 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px 16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px 16px" }}>
             <div>
-              <div className="ch-eyebrow">VIN / Chasis</div>
-              <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
-                {String(payload.vehicle?.vin_chasis ?? payload.vehicle?.vin ?? "—")}
+              <div className="ch-eyebrow">Marca</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(payload.vehicle?.make ?? payload.vehicle?.marca)}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Modelo</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(payload.vehicle?.model ?? payload.vehicle?.modelo)}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Año</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(payload.vehicle?.year ?? payload.vehicle?.ano)}
               </div>
             </div>
             <div>
               <div className="ch-eyebrow">Condición</div>
-              <div style={{ fontSize: 13, marginTop: 4 }}>
-                {String(payload.vehicle?.condicion ?? payload.vehicle?.condition ?? "—")}
+              <div style={{ fontSize: 13, marginTop: 4, textTransform: "capitalize" }}>
+                {displayValue(payload.vehicle?.condition ?? payload.vehicle?.condicion)}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">VIN / Chasis</div>
+              <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(payload.vehicle?.vin_chasis ?? payload.vehicle?.vin)}
               </div>
             </div>
             <div>
               <div className="ch-eyebrow">Valuación</div>
-              <div style={{ fontSize: 13, marginTop: 4 }}>
-                {chMoneyExact(Number(payload.vehicle?.value ?? 0))}
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'" }}>
+                {displayValue(payload.vehicle?.value ?? payload.vehicle?.valuacion, (v) => chMoneyExact(Number(v)))}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {applicant.co_borrower_name ? (
-        <div>
-          <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
-            Co-firmante / Garante
-          </div>
-          <div className="ch-card" style={{ padding: 18 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px 16px" }}>
-              <div>
-                <div className="ch-eyebrow">Nombre</div>
-                <div style={{ fontSize: 13, marginTop: 4 }}>
-                  {String(applicant.co_borrower_name)}
-                </div>
+      {/* Co-firmante (existing - will show "No informado" if not present) */}
+      <div>
+        <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
+          Co-firmante / Garante
+        </div>
+        <div className="ch-card" style={{ padding: 18 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px 16px" }}>
+            <div>
+              <div className="ch-eyebrow">Nombre</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(applicant.co_borrower_name)}
               </div>
-              <div>
-                <div className="ch-eyebrow">Cédula</div>
-                <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
-                  {String(applicant.co_borrower_cedula ?? "—")}
-                </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Cédula</div>
+              <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(applicant.co_borrower_cedula)}
               </div>
-              <div>
-                <div className="ch-eyebrow">Ingreso mensual</div>
-                <div style={{ fontSize: 13, marginTop: 4 }}>
-                  {applicant.co_borrower_monthly_income != null ? chMoneyExact(applicant.co_borrower_monthly_income) : "—"}
-                </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Ingreso mensual</div>
+              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'" }}>
+                {displayValue(applicant.co_borrower_monthly_income, (v) => chMoneyExact(Number(v)))}
               </div>
             </div>
           </div>
+          <div style={{ fontSize: 11, color: "var(--ch-text-3)", marginTop: 8, fontStyle: "italic" }}>
+            Los datos de co-firmante y referencias personales aún no están disponibles en el backend.
+          </div>
         </div>
-      ) : null}
+      </div>
 
+      {/* Referencias personales (existing - will show message if not present) */}
       {applicant.referencias && applicant.referencias.length > 0 ? (
         <div>
           <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
@@ -206,19 +347,19 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
                   <div>
                     <div className="ch-eyebrow">Nombre</div>
                     <div style={{ fontSize: 13, marginTop: 4 }}>
-                      {String(ref.nombre_completo ?? "—")}
+                      {displayValue(ref.nombre_completo)}
                     </div>
                   </div>
                   <div>
                     <div className="ch-eyebrow">Teléfono</div>
                     <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
-                      {String(ref.telefono ?? "—")}
+                      {displayValue(ref.telefono)}
                     </div>
                   </div>
                   <div>
                     <div className="ch-eyebrow">Dirección</div>
                     <div style={{ fontSize: 13, marginTop: 4 }}>
-                      {String(ref.direccion ?? "—")}
+                      {displayValue(ref.direccion)}
                     </div>
                   </div>
                 </div>
