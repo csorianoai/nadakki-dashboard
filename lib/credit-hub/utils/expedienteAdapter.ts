@@ -34,6 +34,64 @@ export function extractFinancial(summary: Record<string, unknown>, rootFinancial
   return out;
 }
 
+/**
+ * Normalize applicant data from backend (Spanish field names) to frontend contract (English).
+ * Backend sends: ingreso_mensual, nombre_empleador, etc.
+ * Frontend expects: monthly_income, employment, etc.
+ */
+function normalizeApplicant(raw: Record<string, unknown> | null | undefined): Record<string, unknown> {
+  if (!raw) return {};
+  
+  const normalized: Record<string, unknown> = { ...raw };
+  
+  // Map Spanish field names to English equivalents
+  if (raw.ingreso_mensual != null) normalized.monthly_income = raw.ingreso_mensual;
+  if (raw.nombre_empleador != null) normalized.employment = raw.nombre_empleador;
+  if (raw.puesto_trabajo != null) normalized.job_title = raw.puesto_trabajo;
+  if (raw.anos_empleo != null || raw.meses_empleo != null) {
+    const years = Number(raw.anos_empleo ?? 0);
+    const months = Number(raw.meses_empleo ?? 0);
+    normalized.tenure_months = years * 12 + months;
+  }
+  if (raw.deudas_vigentes != null) normalized.current_debts = raw.deudas_vigentes;
+  if (raw.pago_mensual_deudas != null) normalized.monthly_debt_payments = raw.pago_mensual_deudas;
+  if (raw.nombre_completo != null) normalized.full_name = raw.nombre_completo;
+  
+  return normalized;
+}
+
+/**
+ * Normalize vehicle data from backend to frontend contract.
+ */
+function normalizeVehicle(raw: Record<string, unknown> | null | undefined): Record<string, unknown> {
+  if (!raw) return {};
+  
+  const normalized: Record<string, unknown> = { ...raw };
+  
+  // Ensure both Spanish and English field names are available
+  if (raw.marca != null) normalized.make = raw.marca;
+  if (raw.modelo != null) normalized.model = raw.modelo;
+  if (raw.ano != null) normalized.year = raw.ano;
+  if (raw.condicion != null) normalized.condition = raw.condicion;
+  if (raw.valuacion != null) normalized.value = raw.valuacion;
+  
+  return normalized;
+}
+
+/**
+ * Normalize financial data from backend to frontend contract.
+ */
+function normalizeFinancial(raw: Record<string, unknown>): Record<string, unknown> {
+  const normalized: Record<string, unknown> = { ...raw };
+  
+  if (raw.monto_solicitado != null) normalized.requested_amount = raw.monto_solicitado;
+  if (raw.plazo_meses != null) normalized.term_months = raw.plazo_meses;
+  if (raw.enganche != null) normalized.down_payment = raw.enganche;
+  if (raw.fuente_enganche != null) normalized.down_payment_source = raw.fuente_enganche;
+  
+  return normalized;
+}
+
 /** Map expediente/full aggregate into the shape BankDetailLayout expects. */
 export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): BankReviewApplication {
   const history = ex.credit_history ?? {};
@@ -52,14 +110,18 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
       ? (declaracionRaw as DeclaracionVehiculoPayload)
       : undefined;
 
+  // Extract and normalize financial data
+  const rawFinancial = extractFinancial(summary, ex.financial);
+  const normalizedFinancial = normalizeFinancial(rawFinancial);
+
   return {
     application_id: ex.application_id,
     tenant_id: ex.tenant_id,
     state: ex.state ?? String(summary.state ?? "BANK_SUBMITTED"),
     application_payload: {
-      applicant: ex.applicant,
-      vehicle: ex.vehicle,
-      financial: extractFinancial(summary, ex.financial),
+      applicant: normalizeApplicant(ex.applicant as Record<string, unknown> | undefined),
+      vehicle: normalizeVehicle(ex.vehicle as Record<string, unknown> | undefined),
+      financial: normalizedFinancial,
       analysis: asAnalysis(summary, history.score),
       documents: ex.documents,
       bank_decision: bankDecision as BankReviewApplication["application_payload"]["bank_decision"],
