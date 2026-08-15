@@ -161,13 +161,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Keep localStorage in sync on session restore
             syncLocalStorage(me.data.current_tenant, firstRole, result.data.access_token);
             scheduleProactiveRefresh();
-          } else if (!cancelled && me.error?.includes("Tiempo de espera")) {
-            setInitError("El servidor no respondió a tiempo. Verifica tu conexión.");
+          } else if (!cancelled) {
+            const msg = me.error?.includes("Tiempo de espera")
+              ? "El servidor no respondió a tiempo. Verifica tu conexión."
+              : "No se pudo verificar la sesión. Intenta de nuevo.";
+            console.error("[auth-init] /me failed:", me.error);
+            setInitError(msg);
           }
         } else {
           tokenStorage.clearTokens();
-          if (!cancelled && result.error?.includes("Tiempo de espera")) {
-            setInitError("El servidor no respondió a tiempo. Verifica tu conexión.");
+          if (!cancelled && result.error) {
+            const msg = result.error.includes("Tiempo de espera")
+              ? "El servidor no respondió a tiempo. Verifica tu conexión."
+              : "No se pudo verificar la sesión. Intenta de nuevo.";
+            console.error("[auth-init] refresh failed:", result.error);
+            setInitError(msg);
           }
         }
         if (!cancelled) setIsLoading(false);
