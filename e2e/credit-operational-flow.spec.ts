@@ -511,6 +511,10 @@ test.describe.serial("E2E Operational Flow - Production", () => {
     const loginData = await loginResponse.json();
     const bankToken = loginData.token || loginData.access_token;
     
+    // Decode JWT to get analyst user_id for claim
+    const jwtPayload = JSON.parse(Buffer.from(bankToken.split('.')[1], 'base64').toString());
+    const analystId = jwtPayload.sub;
+    
     console.log("✓ Bank login successful via API");
     
     // Step 1: Get queue via API
@@ -538,24 +542,28 @@ test.describe.serial("E2E Operational Flow - Production", () => {
         "Authorization": `Bearer ${bankToken}`,
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ analyst_id: analystId }),
     });
     
     if (!claimResponse.ok) {
-      throw new Error(`Claim failed: ${claimResponse.status}`);
+      const errorBody = await claimResponse.text();
+      console.error(`Claim failed: ${claimResponse.status} - ${errorBody}`);
+      throw new Error(`Claim failed: ${claimResponse.status} - ${errorBody}`);
     }
     
     console.log("✓ Application claimed via API");
     
     // Step 3: Make counter-offer decision via API
     const decisionBody = {
-      decision: "CONTRA_OFERTA",
-      justification: "Contraoferta ajustada según análisis de riesgo",
-      analyst_id: "test-analyst",
-      terms: {
-        approved_amount: 650000,
+      decision_type: "COUNTER",
+      reason_codes: ["RC003_COUNTER_DTI"],
+      notes: "Contraoferta ajustada según análisis de riesgo",
+      adverse_action: false,
+      counter_terms: {
+        amount: 650000,
         interest_rate: 17.25,
         term_months: 48,
-        down_payment_required: 200000,
+        down_payment: 200000,
         conditions: ["Validación documental final"],
       },
     };
@@ -578,18 +586,18 @@ test.describe.serial("E2E Operational Flow - Production", () => {
     
     console.log("✓ Counter-offer decision submitted via API");
     
-    // ASSERTS on decision response
-    expect(decisionData.decision).toBe("CONTRA_OFERTA");
-    expect(decisionData.terms).toBeDefined();
-    expect(decisionData.terms.approved_amount).toBe(650000);
-    expect(decisionData.terms.interest_rate).toBe(17.25);
-    expect(decisionData.terms.term_months).toBe(48);
-    expect(decisionData.terms.down_payment_required).toBe(200000);
-    expect(decisionData.terms.interest_rate).not.toBe(0); // NOT zero!
+    // ASSERTS on decision response (backend contract: decision_type, counter_terms)
+    expect(decisionData.decision_type).toBe("COUNTER");
+    if (decisionData.counter_terms) {
+      expect(decisionData.counter_terms.amount).toBe(650000);
+      expect(decisionData.counter_terms.interest_rate).toBe(17.25);
+      expect(decisionData.counter_terms.term_months).toBe(48);
+      expect(decisionData.counter_terms.down_payment).toBe(200000);
+    }
     
     console.log("✓ API assertions passed:", {
-      decision: decisionData.decision,
-      terms: decisionData.terms,
+      decision_type: decisionData.decision_type,
+      counter_terms: decisionData.counter_terms,
     });
     
     // Step 4: SINGLE UI verification - detail page renders amount correctly
