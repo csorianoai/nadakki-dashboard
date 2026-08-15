@@ -47,13 +47,10 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
   const an = payload.analysis;
   const financial = payload.financial ?? {};
   const applicant = payload.applicant ?? {};
-  if (!an) {
-    return <div className="ch-card" style={{ padding: 24, color: "var(--ch-text-3)" }}>Sin análisis del motor para esta solicitud.</div>;
-  }
 
-  const m = an.metrics;
-  const positives = an.positive_factors?.length ? an.positive_factors : an.factors?.positive ?? [];
-  const negatives = an.negative_factors?.length ? an.negative_factors : an.factors?.negative ?? [];
+  const m = an?.metrics;
+  const positives = an?.positive_factors?.length ? an.positive_factors : an?.factors?.positive ?? [];
+  const negatives = an?.negative_factors?.length ? an.negative_factors : an?.factors?.negative ?? [];
 
   // Helper function to display "No informado" for missing data
   const displayValue = (value: unknown, formatter?: (v: unknown) => string): string => {
@@ -65,34 +62,42 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* Análisis del motor (existing) */}
-      <div className="ch-card" style={{ padding: 18 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <div className="ch-eyebrow">Análisis del motor · {an.engine}</div>
-          <span className="ch-chip">Confianza {(an.confidence * 100).toFixed(0)}%</span>
-        </div>
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ch-text)" }}>{an.explanation}</p>
-      </div>
+      {/* Análisis del motor (conditional - only if analysis exists) */}
+      {an ? (
+        <>
+          <div className="ch-card" style={{ padding: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div className="ch-eyebrow">Análisis del motor · {an.engine}</div>
+              <span className="ch-chip">Confianza {(an.confidence * 100).toFixed(0)}%</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ch-text)" }}>{an.explanation}</p>
+          </div>
 
-      {/* Factores (existing) */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <div className="ch-card" style={{ padding: 18 }}>
-          <div className="ch-eyebrow" style={{ color: "var(--ch-success-text)", marginBottom: 4 }}>
-            Factores a favor
+          {/* Factores (only if analysis exists) */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div className="ch-card" style={{ padding: 18 }}>
+              <div className="ch-eyebrow" style={{ color: "var(--ch-success-text)", marginBottom: 4 }}>
+                Factores a favor
+              </div>
+              {positives.slice(0, 8).map((t) => (
+                <Factor key={t} text={t} positive />
+              ))}
+            </div>
+            <div className="ch-card" style={{ padding: 18 }}>
+              <div className="ch-eyebrow" style={{ color: "var(--ch-danger-text)", marginBottom: 4 }}>
+                Factores en contra
+              </div>
+              {negatives.slice(0, 8).map((t) => (
+                <Factor key={t} text={t} positive={false} />
+              ))}
+            </div>
           </div>
-          {positives.slice(0, 8).map((t) => (
-            <Factor key={t} text={t} positive />
-          ))}
+        </>
+      ) : (
+        <div className="ch-card" style={{ padding: 24, color: "var(--ch-text-3)" }}>
+          Sin análisis del motor para esta solicitud. Los datos del solicitante y vehículo se muestran a continuación.
         </div>
-        <div className="ch-card" style={{ padding: 18 }}>
-          <div className="ch-eyebrow" style={{ color: "var(--ch-danger-text)", marginBottom: 4 }}>
-            Factores en contra
-          </div>
-          {negatives.slice(0, 8).map((t) => (
-            <Factor key={t} text={t} positive={false} />
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* NEW SECTION: Capacidad de pago */}
       <div>
