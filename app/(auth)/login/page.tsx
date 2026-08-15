@@ -16,7 +16,7 @@ export default function LoginPage() {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com"}/health`, { method: "GET" }).catch(() => {});
   }, []);
   const router = useRouter();
-  const { login, isAuthenticated, isLoading, allRoles, activeRole } = useAuth();
+  const { login, isAuthenticated, isLoading, allRoles, activeRole, initError, retryInit } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,10 +51,35 @@ export default function LoginPage() {
     router.push(result.redirectTo ?? "/");
   };
 
-  if (isLoading) {
+  if (isLoading && !initError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--forge-bg-app)]">
-        <div className="text-[var(--forge-text-muted)]">Cargando...</div>
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--forge-accent)] border-t-transparent" />
+          <div className="text-[var(--forge-text-muted)]">Verificando sesión…</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (initError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--forge-bg-app)]">
+        <div className="flex flex-col items-center gap-4 max-w-sm text-center">
+          <div className="text-2xl">&#9888;</div>
+          <div className="text-sm font-medium text-[var(--forge-text-default)]">
+            No pudimos verificar tu sesión
+          </div>
+          <div className="text-xs text-[var(--forge-text-muted)]">
+            {initError}
+          </div>
+          <button
+            onClick={retryInit}
+            className="rounded-md bg-[var(--forge-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+          >
+            Reintentar
+          </button>
+        </div>
       </div>
     );
   }
