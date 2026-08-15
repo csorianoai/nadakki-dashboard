@@ -267,7 +267,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
               </div>
               <FieldWithModifiedBadge
                 label="Enganche"
-                value={`${chMoney(Number(financial.down_payment ?? 0))}${financial.ltv != null ? ` · ${(Number(financial.ltv) * 100).toFixed(0)}% LTV` : ""}`}
+                value={`${chMoney(Number(financial.down_payment ?? 0))}${financial.ltv != null ? ` · ${(Number(financial.ltv) * 100).toFixed(1)}%` : ""}`}
                 modified={modifiedFields.has("down_payment")}
               />
             </div>

@@ -134,11 +134,11 @@ export default function SicConfiguracionPage() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-zinc-500 text-xs">Máx. DTI</div>
+                  <div className="text-zinc-500 text-xs">Máx. Deuda / Ingreso</div>
                   <div className="text-zinc-200">{(mtConfig.max_dti_ratio * 100).toFixed(1)}%</div>
                 </div>
                 <div>
-                  <div className="text-zinc-500 text-xs">Máx. LTV</div>
+                  <div className="text-zinc-500 text-xs">Máx. Préstamo / Valor</div>
                   <div className="text-zinc-200">{(mtConfig.max_ltv_ratio * 100).toFixed(1)}%</div>
                 </div>
               </div>
