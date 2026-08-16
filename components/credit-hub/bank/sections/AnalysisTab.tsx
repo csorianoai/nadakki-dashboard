@@ -104,7 +104,11 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
           <div className="ch-card" style={{ padding: 18 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <div className="ch-eyebrow">Análisis del motor · {an.engine}</div>
-              <span className="ch-chip">Confianza {(an.confidence * 100).toFixed(0)}%</span>
+              {an.confidence != null ? (
+                <span className="ch-chip">Confianza {(an.confidence * 100).toFixed(0)}%</span>
+              ) : (
+                <span className="ch-chip" style={{ opacity: 0.6 }}>Confianza no disponible</span>
+              )}
             </div>
             <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ch-text)" }}>{an.explanation}</p>
           </div>
@@ -247,13 +251,6 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
                 title: "Ingreso verificado",
                 body: `${chMoneyExact(Number(applicant.monthly_income ?? 0))}/mes · ${String(applicant.employment ?? "—")}.`,
                 source: "Entidad emisora · recibos de nomina",
-                conf: "alto",
-              },
-              {
-                icon: Gauge,
-                title: "Buro de credito",
-                body: `Score ${an.score}. Nivel ${an.risk_level}.`,
-                source: "Buro de credito",
                 conf: "alto",
               },
               {

@@ -45,9 +45,9 @@ function defaultTerms(payload: BankReviewPayload): BankDecisionTerms {
   const financial = payload.financial ?? {};
   return {
     approved_amount: Number(financial.requested_amount ?? analysis?.financed_amount ?? 0),
-    interest_rate: Number(metrics?.annual_rate ?? financial.requested_rate ?? 18),
-    term_months: Number(metrics?.term_months ?? financial.term_months ?? 36),
-    down_payment_required: Number(metrics?.down_payment ?? financial.down_payment ?? 0),
+    interest_rate: Number(financial.requested_rate ?? metrics?.annual_rate ?? 17.5),
+    term_months: Number(financial.term_months ?? metrics?.term_months ?? 36),
+    down_payment_required: Number(financial.down_payment ?? metrics?.down_payment ?? 0),
     conditions: ["Validación documental final"],
   };
 }
