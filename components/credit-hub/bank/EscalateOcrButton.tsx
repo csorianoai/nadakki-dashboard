@@ -56,7 +56,7 @@ export function EscalateOcrButton({
       </button>
       <EscalateReviewModal
         open={open}
-        title={docLabel ? `Escalar OCR — ${docLabel}` : "Escalar revisión OCR"}
+        title={docLabel ? `Escalar OCR · Lectura automática de documentos — ${docLabel}` : "Escalar revisión OCR · Lectura automática de documentos"}
         onClose={() => !loading && setOpen(false)}
         onSubmit={handleSubmit}
         isSubmitting={loading}
