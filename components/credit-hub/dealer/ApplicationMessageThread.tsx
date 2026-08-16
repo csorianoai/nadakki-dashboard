@@ -83,8 +83,14 @@ export function ApplicationMessageThread({
         {messages.length === 0 && !q.isLoading ? <p className="text-sm text-forgeGray-500">Sin mensajes aún.</p> : null}
         {messages.map((m) => {
           const mine = (isDealer && m.sender_role === "dealer") || (!isDealer && m.sender_role === "bank");
+          const senderLabel = m.sender_role === "bank" ? "Banco" : "Concesionario";
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+            <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
+              {!mine ? (
+                <div className="text-[10px] font-medium mb-1" style={{ color: "var(--ch-text-3)" }}>
+                  {senderLabel}
+                </div>
+              ) : null}
               <div
                 className="max-w-[80%] rounded-lg px-3 py-2 text-sm"
                 style={{

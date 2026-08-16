@@ -56,6 +56,9 @@ export function DealerSectionHeader({
   );
 }
 
+import { MessageCircle } from "lucide-react";
+import { useMessageUnreadCount } from "@/components/credit-hub/dealer/ApplicationMessageThread";
+
 export function DealerAppCard({
   app,
   currency,
@@ -66,6 +69,7 @@ export function DealerAppCard({
   href: string;
 }) {
   const h = humanizeApplicant(app, currency);
+  const unreadCount = useMessageUnreadCount(app.application_id, "dealer");
 
   return (
     <Link
@@ -83,8 +87,30 @@ export function DealerAppCard({
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {h.primaryLabel}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {h.primaryLabel}
+            </div>
+            {unreadCount != null && unreadCount > 0 ? (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: 18,
+                  height: 18,
+                  padding: "0 5px",
+                  borderRadius: 999,
+                  background: "var(--ch-accent)",
+                  color: "white",
+                  fontSize: 10,
+                  fontWeight: 700,
+                }}
+                title={`${unreadCount} mensaje${unreadCount > 1 ? "s" : ""} sin leer`}
+              >
+                {unreadCount}
+              </span>
+            ) : null}
           </div>
           <div className="ch-mono" style={{ fontSize: 11, color: "var(--ch-text-3)", marginTop: 2 }}>
             {h.secondaryLabel}
