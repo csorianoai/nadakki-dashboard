@@ -42,6 +42,8 @@ export interface CreditAnalysisResult {
   estimated_payment: number;
   financed_amount: number;
   dti: number;
+  pti?: number;
+  ltv?: number;
   debt_capacity: number;
   factors: CreditAnalysisFactors;
   positive_factors: string[];

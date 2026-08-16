@@ -153,14 +153,14 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
               <div className="ch-eyebrow">Deuda / Ingreso</div>
               <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Total de deudas sobre el ingreso</div>
               <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
-                {m?.dti != null ? `${(m.dti * 100).toFixed(1)}%` : "Sin análisis del motor"}
+                {an?.dti != null ? `${(an.dti * 100).toFixed(1)}%` : "No calculado"}
               </div>
             </div>
             <div>
               <div className="ch-eyebrow">Cuota / Ingreso</div>
               <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Cuota mensual sobre el ingreso</div>
               <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
-                {financial.pti != null ? `${(financial.pti * 100).toFixed(1)}%` : "Sin análisis del motor"}
+                {an?.pti != null ? `${(an.pti * 100).toFixed(1)}%` : "No calculado"}
               </div>
             </div>
           </div>
@@ -174,9 +174,9 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
             Métricas clave · Resumen
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-            <Metric label="Deuda / Ingreso" value={`${((m.dti ?? 0) * 100).toFixed(1)}%`} hint="política ≤ 45%" />
-            <Metric label="Cuota / Ingreso" value={financial.pti != null ? `${(financial.pti * 100).toFixed(1)}%` : "—"} hint="cuota sobre ingreso" />
-            <Metric label="Préstamo / Valor" value={financial.ltv != null ? `${(financial.ltv * 100).toFixed(1)}%` : "—"} hint={financial.down_payment ? `enganche ${chMoney(financial.down_payment)}` : undefined} />
+            <Metric label="Deuda / Ingreso" value={an?.dti != null ? `${(an.dti * 100).toFixed(1)}%` : "—"} hint="política ≤ 45%" />
+            <Metric label="Cuota / Ingreso" value={an?.pti != null ? `${(an.pti * 100).toFixed(1)}%` : "—"} hint="cuota sobre ingreso" />
+            <Metric label="Préstamo / Valor" value={an?.ltv != null ? `${(an.ltv * 100).toFixed(1)}%` : "—"} hint={financial.down_payment ? `enganche ${chMoney(financial.down_payment)}` : undefined} />
             <Metric label="Capacidad" value={m.payment_capacity != null ? chMoneyExact(m.payment_capacity) : "—"} hint="cuota estimada" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }}>
@@ -223,7 +223,7 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
               <div className="ch-eyebrow">Préstamo / Valor</div>
               <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Monto del préstamo sobre el valor del vehículo</div>
               <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
-                {financial.ltv != null ? `${(financial.ltv * 100).toFixed(1)}%` : "Sin análisis del motor"}
+                {an?.ltv != null ? `${(an.ltv * 100).toFixed(1)}%` : "No calculado"}
               </div>
             </div>
           </div>
@@ -337,19 +337,33 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
                 {displayValue(applicant.co_borrower_monthly_income, (v) => chMoneyExact(Number(v)))}
               </div>
             </div>
-          </div>
-          <div style={{ fontSize: 11, color: "var(--ch-text-3)", marginTop: 8, fontStyle: "italic" }}>
-            Los datos de co-firmante y referencias personales aún no están disponibles en el backend.
+            <div>
+              <div className="ch-eyebrow">Teléfono</div>
+              <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(applicant.co_borrower_phone)}
+              </div>
+            </div>
+            <div>
+              <div className="ch-eyebrow">Relación</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                {displayValue(applicant.co_borrower_relationship)}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Referencias personales (existing - will show message if not present) */}
-      {applicant.referencias && applicant.referencias.length > 0 ? (
-        <div>
-          <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
-            Referencias personales · {applicant.referencias.length} registrada(s)
-          </div>
+      {/* Referencias personales */}
+      <div>
+        <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
+          Referencias personales
+          {applicant.referencias && applicant.referencias.length > 0 && (
+            <span style={{ marginLeft: 8, fontSize: 11, fontWeight: "normal", color: "var(--ch-text-3)" }}>
+              · {applicant.referencias.length} registrada(s)
+            </span>
+          )}
+        </div>
+        {applicant.referencias && applicant.referencias.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {applicant.referencias.slice(0, 3).map((ref, i) => (
               <div key={i} className="ch-card" style={{ padding: 16 }}>
@@ -361,23 +375,27 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
                     </div>
                   </div>
                   <div>
-                    <div className="ch-eyebrow">Teléfono</div>
-                    <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
-                      {displayValue(ref.telefono)}
+                    <div className="ch-eyebrow">Relación</div>
+                    <div style={{ fontSize: 13, marginTop: 4 }}>
+                      {displayValue(ref.relacion)}
                     </div>
                   </div>
                   <div>
-                    <div className="ch-eyebrow">Dirección</div>
-                    <div style={{ fontSize: 13, marginTop: 4 }}>
-                      {displayValue(ref.direccion)}
+                    <div className="ch-eyebrow">Teléfono</div>
+                    <div className="ch-mono" style={{ fontSize: 13, marginTop: 4 }}>
+                      {displayValue(ref.telefono)}
                     </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <div className="ch-card" style={{ padding: 18, color: "var(--ch-text-3)" }}>
+            No informado
+          </div>
+        )}
+      </div>
     </div>
   );
 }

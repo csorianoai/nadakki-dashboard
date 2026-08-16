@@ -28,10 +28,12 @@ export interface BankApplicantPayload {
   city?: string;
   current_debts?: number;
   monthly_debt_payments?: number;
-  referencias?: Array<{ nombre_completo?: string; telefono?: string; direccion?: string }>;
+  referencias?: Array<{ nombre_completo?: string; telefono?: string; relacion?: string; direccion?: string }>;
   co_borrower_name?: string;
   co_borrower_monthly_income?: number;
   co_borrower_cedula?: string;
+  co_borrower_phone?: string;
+  co_borrower_relationship?: string;
 }
 
 export interface BankVehiclePayload {

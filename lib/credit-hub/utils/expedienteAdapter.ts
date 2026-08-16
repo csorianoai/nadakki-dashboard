@@ -39,7 +39,11 @@ export function extractFinancial(summary: Record<string, unknown>, rootFinancial
  * Backend sends: ingreso_mensual, nombre_empleador, etc.
  * Frontend expects: monthly_income, employment, etc.
  */
-function normalizeApplicant(raw: Record<string, unknown> | null | undefined): Record<string, unknown> {
+function normalizeApplicant(
+  raw: Record<string, unknown> | null | undefined,
+  coFirmante?: Record<string, unknown> | null,
+  referencias?: unknown[] | null
+): Record<string, unknown> {
   if (!raw) return {};
   
   const normalized: Record<string, unknown> = { ...raw };
@@ -56,6 +60,30 @@ function normalizeApplicant(raw: Record<string, unknown> | null | undefined): Re
   if (raw.deudas_vigentes != null) normalized.current_debts = raw.deudas_vigentes;
   if (raw.pago_mensual_deudas != null) normalized.monthly_debt_payments = raw.pago_mensual_deudas;
   if (raw.nombre_completo != null) normalized.full_name = raw.nombre_completo;
+  
+  // Map co-firmante data
+  if (coFirmante && typeof coFirmante === "object") {
+    if (coFirmante.nombre_completo != null) normalized.co_borrower_name = coFirmante.nombre_completo;
+    if (coFirmante.cedula != null) normalized.co_borrower_cedula = coFirmante.cedula;
+    if (coFirmante.ingreso_mensual != null) normalized.co_borrower_monthly_income = coFirmante.ingreso_mensual;
+    if (coFirmante.telefono != null) normalized.co_borrower_phone = coFirmante.telefono;
+    if (coFirmante.relacion != null) normalized.co_borrower_relationship = coFirmante.relacion;
+  }
+  
+  // Map referencias personales
+  if (Array.isArray(referencias) && referencias.length > 0) {
+    normalized.referencias = referencias.map((ref) => {
+      if (typeof ref === "object" && ref != null) {
+        const r = ref as Record<string, unknown>;
+        return {
+          nombre_completo: r.nombre || r.nombre_completo,
+          telefono: r.telefono,
+          relacion: r.relacion,
+        };
+      }
+      return ref;
+    });
+  }
   
   return normalized;
 }
@@ -114,15 +142,22 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
   const rawFinancial = extractFinancial(summary, ex.financial);
   const normalizedFinancial = normalizeFinancial(rawFinancial);
 
+  // Use ex.analysis directly if available (contains pti, dti, ltv), fallback to summary
+  const analysisData = ex.analysis || asAnalysis(summary, history.score);
+
   return {
     application_id: ex.application_id,
     tenant_id: ex.tenant_id,
     state: ex.state ?? String(summary.state ?? "BANK_SUBMITTED"),
     application_payload: {
-      applicant: normalizeApplicant(ex.applicant as Record<string, unknown> | undefined),
+      applicant: normalizeApplicant(
+        ex.applicant as Record<string, unknown> | undefined,
+        (ex as { co_firmante?: Record<string, unknown> }).co_firmante,
+        (ex as { referencias_personales?: unknown[] }).referencias_personales
+      ),
       vehicle: normalizeVehicle(ex.vehicle as Record<string, unknown> | undefined),
       financial: normalizedFinancial,
-      analysis: asAnalysis(summary, history.score),
+      analysis: analysisData as CreditAnalysisResult | undefined,
       documents: ex.documents,
       bank_decision: bankDecision as BankReviewApplication["application_payload"]["bank_decision"],
       audit_trail: ex.audit_trail as BankReviewApplication["application_payload"]["audit_trail"],
