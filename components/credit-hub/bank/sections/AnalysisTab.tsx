@@ -62,6 +62,42 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {/* P4: RATIOS DESTACADOS - Señal de decisión al inicio */}
+      <div className="ch-card" style={{ padding: 20, background: "var(--ch-surface-2)", border: "2px solid var(--ch-accent-line)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <Gauge className="h-5 w-5" style={{ color: "var(--ch-accent)" }} aria-hidden />
+          <div className="ch-eyebrow" style={{ fontSize: 12.5, fontWeight: 600 }}>
+            Ratios de decisión
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          <div>
+            <div className="ch-eyebrow">Deuda / Ingreso</div>
+            <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Total de deudas sobre el ingreso</div>
+            <div className="ch-mono" style={{ fontSize: 24, fontWeight: 700, marginTop: 6, color: "var(--ch-accent)" }}>
+              {an?.dti != null ? `${(an.dti * 100).toFixed(1)}%` : "No calculado"}
+            </div>
+          </div>
+          <div>
+            <div className="ch-eyebrow">Cuota / Ingreso</div>
+            <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Cuota mensual sobre el ingreso</div>
+            <div className="ch-mono" style={{ fontSize: 24, fontWeight: 700, marginTop: 6, color: "var(--ch-accent)" }}>
+              {an?.pti != null ? `${(an.pti * 100).toFixed(1)}%` : "No calculado"}
+            </div>
+          </div>
+          <div>
+            <div className="ch-eyebrow">Préstamo / Valor</div>
+            <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Monto del préstamo sobre el valor del vehículo</div>
+            <div className="ch-mono" style={{ fontSize: 24, fontWeight: 700, marginTop: 6, color: "var(--ch-accent)" }}>
+              {an?.ltv != null ? `${(an.ltv * 100).toFixed(1)}%` : "No calculado"}
+            </div>
+          </div>
+        </div>
+        <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 12, fontStyle: "italic" }}>
+          Calculados por el sistema de análisis
+        </div>
+      </div>
+
       {/* Análisis del motor (conditional - only if analysis exists) */}
       {an ? (
         <>
@@ -99,10 +135,13 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
         </div>
       )}
 
-      {/* NEW SECTION: Capacidad de pago */}
+      {/* P5: CAPACIDAD DE PAGO - Marcado como declarado por solicitante */}
       <div>
-        <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
-          Capacidad de pago
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div className="ch-eyebrow">Capacidad de pago</div>
+          <span style={{ fontSize: 10, color: "var(--ch-text-3)", fontStyle: "italic" }}>
+            · Declarado por el solicitante
+          </span>
         </div>
         <div className="ch-card" style={{ padding: 18 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px 16px" }}>
@@ -149,44 +188,9 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
                 {displayValue(applicant.monthly_debt_payments, (v) => chMoneyExact(Number(v)))}
               </div>
             </div>
-            <div>
-              <div className="ch-eyebrow">Deuda / Ingreso</div>
-              <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Total de deudas sobre el ingreso</div>
-              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
-                {an?.dti != null ? `${(an.dti * 100).toFixed(1)}%` : "No calculado"}
-              </div>
-            </div>
-            <div>
-              <div className="ch-eyebrow">Cuota / Ingreso</div>
-              <div style={{ fontSize: 10, color: "var(--ch-text-3)", marginTop: 2 }}>Cuota mensual sobre el ingreso</div>
-              <div className="ch-mono" style={{ fontSize: 14, marginTop: 4, fontFeatureSettings: "'tnum'", color: "var(--ch-accent)" }}>
-                {an?.pti != null ? `${(an.pti * 100).toFixed(1)}%` : "No calculado"}
-              </div>
-            </div>
           </div>
         </div>
       </div>
-
-      {/* Métricas clave (existing, but updated to be less prominent) */}
-      {m ? (
-        <div>
-          <div className="ch-eyebrow" style={{ marginBottom: 10 }}>
-            Métricas clave · Resumen
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-            <Metric label="Deuda / Ingreso" value={an?.dti != null ? `${(an.dti * 100).toFixed(1)}%` : "—"} hint="política ≤ 45%" />
-            <Metric label="Cuota / Ingreso" value={an?.pti != null ? `${(an.pti * 100).toFixed(1)}%` : "—"} hint="cuota sobre ingreso" />
-            <Metric label="Préstamo / Valor" value={an?.ltv != null ? `${(an.ltv * 100).toFixed(1)}%` : "—"} hint={financial.down_payment ? `enganche ${chMoney(financial.down_payment)}` : undefined} />
-            <Metric label="Capacidad" value={m.payment_capacity != null ? chMoneyExact(m.payment_capacity) : "—"} hint="cuota estimada" />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 10 }}>
-            <Metric label="Score buró" value={an?.score != null ? String(an.score) : "—"} hint={an?.approval_band ?? undefined} />
-            <Metric label="Fuente enganche" value={financial.down_payment_source ?? "—"} />
-            <div />
-            <div />
-          </div>
-        </div>
-      ) : null}
 
       {/* NEW SECTION: La operación */}
       <div>

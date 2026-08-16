@@ -38,7 +38,7 @@ export function EscalateKycButton({ applicationId }: { applicationId: string }) 
       </button>
       <EscalateReviewModal
         open={open}
-        title="Escalar revisión KYC"
+        title="Escalar revisión KYC · Conoce a tu Cliente"
         onClose={() => !loading && setOpen(false)}
         onSubmit={handleSubmit}
         isSubmitting={loading}
