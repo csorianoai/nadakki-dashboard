@@ -38,7 +38,8 @@ const confMap = {
   low: ["var(--ch-text-3)", "Confianza baja"],
 } as const;
 
-function resolveConf(item: EvidenceItem): keyof typeof confMap {
+function resolveConf(item: EvidenceItem): keyof typeof confMap | null {
+  if (item.conf === null) return null;
   if (item.conf) return item.conf;
   if (item.confidence === "high") return "alto";
   if (item.confidence === "medium") return "medio";
@@ -195,19 +196,21 @@ export function EvidenceGrid({ items, identity, className }: EvidenceGridProps) 
     >
       {data.map((item, i) => {
         const confKey = resolveConf(item);
-        const [cc, cl] = confMap[confKey];
+        const [cc, cl] = confKey ? confMap[confKey] : [null, null];
         const source = item.source ?? item.sourceLabel ?? "—";
         return (
           <div key={item.id ?? i} className="ch-card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 9 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <ItemIcon icon={item.icon} />
-              <span
-                style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, fontWeight: 600, color: cc }}
-                data-testid={`evidence-conf-${confKey}`}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: 999, background: cc }} />
-                {cl}
-              </span>
+              {confKey ? (
+                <span
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10.5, fontWeight: 600, color: cc }}
+                  data-testid={`evidence-conf-${confKey}`}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: 999, background: cc }} />
+                  {cl}
+                </span>
+              ) : null}
             </div>
             <div style={{ fontSize: 13, fontWeight: 600 }} data-testid="evidence-title">{item.title}</div>
             <div style={{ fontSize: 12, color: "var(--ch-text-2)", lineHeight: 1.5, flex: 1 }} data-testid="evidence-body">{item.body}</div>

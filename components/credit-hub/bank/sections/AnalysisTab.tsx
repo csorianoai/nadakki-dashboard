@@ -254,6 +254,13 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
                 conf: "alto",
               },
               {
+                icon: Gauge,
+                title: "Buro de credito",
+                body: "No consultado",
+                source: "Este banco aun no tiene el buro conectado en la plataforma.",
+                conf: null,
+              },
+              {
                 icon: Car,
                 title: "Vehiculo",
                 body: `${String(payload.vehicle?.label ?? payload.vehicle?.make ?? "—")} · valor ${chMoney(Number(payload.vehicle?.value ?? 0))}.`,
