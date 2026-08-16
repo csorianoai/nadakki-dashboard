@@ -27,7 +27,7 @@ import { AssignedAnalystSection } from "@/components/credit-hub/bank/AssignedAna
 import { FieldWithModifiedBadge } from "@/components/credit-hub/bank/ModifiedFieldBadge";
 import { isBankNotesRole } from "@/lib/credit-hub/bank/bankExperienceHelpers";
 import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/api/operationalClient";
-import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
+import { extractDisplayStatus, formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
@@ -207,7 +207,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             </h1>
             {displayStatus ? (
               <span className="ch-pill" style={{ color: "var(--ch-info-text)", background: "var(--ch-info-soft)", height: 24 }}>
-                {displayStatus}
+                {formatApplicationStateLabel(displayStatus)}
               </span>
             ) : null}
           </div>
