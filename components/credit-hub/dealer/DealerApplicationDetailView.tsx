@@ -489,7 +489,18 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
 
       <div className="ch-card mt-4 p-4" data-testid="dealer-messages-section">
         <h3 className="mb-3 text-sm font-semibold">Mensajes</h3>
-        {apiTenantId ? <ApplicationMessageThread applicationId={applicationId} actorRole="dealer" /> : null}
+        {apiTenantId ? (
+          <ApplicationMessageThread
+            applicationId={applicationId}
+            actorRole="dealer"
+            applicationContext={{
+              applicantName: data.applicant_name,
+              vehicleLabel: [data.vehicle_year, data.vehicle_make, data.vehicle_model].filter(Boolean).join(" "),
+              requestedAmount: amount,
+              currency: currencyPrefix,
+            }}
+          />
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

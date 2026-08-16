@@ -18,9 +18,16 @@ import type { CHActorRole } from "@/lib/credit-hub/api/client";
 export function ApplicationMessageThread({
   applicationId,
   actorRole,
+  applicationContext,
 }: {
   applicationId: string;
   actorRole: CHActorRole;
+  applicationContext?: {
+    applicantName?: string;
+    vehicleLabel?: string;
+    requestedAmount?: number;
+    currency?: string;
+  };
 }) {
   const { apiTenantId } = useTenant();
   const qc = useQueryClient();
@@ -78,6 +85,26 @@ export function ApplicationMessageThread({
 
   return (
     <div className="ch-card p-4" data-testid="application-message-thread">
+      {/* P3: Contexto de la solicitud para dealer */}
+      {isDealer && applicationContext ? (
+        <div style={{ marginBottom: 12, padding: 12, background: "var(--ch-surface-2)", borderRadius: 8 }}>
+          <div className="ch-eyebrow" style={{ marginBottom: 6 }}>Sobre esta solicitud</div>
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 12px", fontSize: 13 }}>
+            <span style={{ color: "var(--ch-text-3)" }}>Solicitante:</span>
+            <span style={{ fontWeight: 600 }}>{applicationContext.applicantName || "—"}</span>
+            <span style={{ color: "var(--ch-text-3)" }}>Vehículo:</span>
+            <span>{applicationContext.vehicleLabel || "—"}</span>
+            {applicationContext.requestedAmount != null ? (
+              <>
+                <span style={{ color: "var(--ch-text-3)" }}>Monto:</span>
+                <span className="ch-mono" style={{ fontWeight: 600 }}>
+                  {applicationContext.currency || "RD$"}{applicationContext.requestedAmount.toLocaleString("es-DO", { maximumFractionDigits: 0 })}
+                </span>
+              </>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
       <div className="mb-3 max-h-80 space-y-2 overflow-y-auto">
         {q.isLoading ? <p className="text-sm text-forgeGray-500">Cargando mensajes…</p> : null}
         {messages.length === 0 && !q.isLoading ? <p className="text-sm text-forgeGray-500">Sin mensajes aún.</p> : null}
