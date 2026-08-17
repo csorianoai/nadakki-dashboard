@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ForgeInput } from "@/components/credit-hub/primitives/ForgeInput";
 import type { ApplicationFormData } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import {
@@ -65,6 +65,13 @@ export function VehicleDeclarationSection({
   patchForm: (patch: DeclPatch) => void;
   getFieldError?: (key: string) => string | undefined;
 }) {
+  // Render counter for debugging render loops
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  if (typeof window !== "undefined" && renderCount.current > 5) {
+    console.log(`[VehicleDeclarationSection] Render count: ${renderCount.current}`);
+  }
+
   const showAlert = vehicleDeclarationHasVisibleAlert(formData);
   const complete = vehicleDeclarationComplete(formData);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "@/lib/motion-stub";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Briefcase, Car, ChevronLeft, ChevronRight, ClipboardCheck, DollarSign, FileCheck, FileText, ShieldCheck, User, Users } from "lucide-react";
@@ -636,12 +636,29 @@ export function stepIsValid(
 }
 
 function requiredHint(step: number, data: ApplicationFormData, requiredDocs: TenantRequiredDocument[], t: CreditHubTranslations): string {
+  if (step === 2) {
+    const missing: string[] = [];
+    if (!isFilled(data.product_type)) missing.push("tipo de producto");
+    if (!isFilled(data.vehicle_make)) missing.push("marca del vehículo");
+    if (!isFilled(data.vehicle_model)) missing.push("modelo del vehículo");
+    if (!isFilled(data.vehicle_year)) missing.push("año del vehículo");
+    if (!isFilled(data.vehicle_price)) missing.push("precio del vehículo");
+    if (!isFilled(data.dealer_supplier)) missing.push("proveedor");
+    if (!isFilled(data.vehicle_condition)) missing.push("condición del vehículo");
+    if (!vehicleDeclarationComplete(data)) missing.push("declaración del vehículo completa");
+    
+    if (missing.length === 0) return t.wizard.hints.generic;
+    if (missing.length === 1) return `Falta completar: ${missing[0]}`;
+    if (missing.length === 2) return `Falta completar: ${missing[0]} y ${missing[1]}`;
+    const last = missing.pop();
+    return `Faltan completar: ${missing.join(", ")} y ${last}`;
+  }
   if (step === 3) return t.wizard.hints.garante;
   if (step === 4) {
-    const missing = requiredDocs
+    const missingDocs = requiredDocs
       .filter((d) => d.required)
       .filter((d) => !data.document_files_ready?.[tenantDocumentKey(d)]).length;
-    if (missing > 0) return t.validation.docs_missing(missing);
+    if (missingDocs > 0) return t.validation.docs_missing(missingDocs);
   }
   if (step === 5) return t.wizard.hints.consents;
   return t.wizard.hints.generic;
@@ -714,6 +731,11 @@ export function WizardContainer() {
   const [submitStatus, setSubmitStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const createMutation = useCreateCreditApplication();
+
+  // Stable patchForm callback to prevent re-render loops in child components
+  const patchForm = useCallback((patch: Partial<ApplicationFormData>) => {
+    setFormData((prev) => ({ ...prev, ...patch }));
+  }, []);
 
   const preApproval = useMemo(() => {
     const baseIncome = numeric(formData.monthly_income);
@@ -1235,7 +1257,7 @@ export function WizardContainer() {
           {preApproval && <PreApprovalBadge result={preApproval} />}
           <VehicleDeclarationSection
             formData={formData}
-            patchForm={(patch) => setFormData((prev) => ({ ...prev, ...patch }))}
+            patchForm={patchForm}
           />
         </div>
       );
