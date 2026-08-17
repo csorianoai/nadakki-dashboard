@@ -46,6 +46,9 @@ export interface BankQueueItem {
   priority: "ALTA" | "MEDIA" | "BAJA";
   created_at: string | null;
   bank_decision: BankDecision | null;
+  last_message_sender?: "BANK" | "DEALER" | null;
+  last_message_at?: string | null;
+  pendiente_respuesta_banco?: number;
 }
 
 export interface BankQueueResponse {
