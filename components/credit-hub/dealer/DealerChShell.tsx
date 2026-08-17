@@ -7,6 +7,8 @@ import { CHPortalAccessGuard } from "@/components/credit-hub/system/CHPortalAcce
 import { ChAppShell } from "@/components/credit-hub/shell/ChAppShell";
 import { ChTopbar } from "@/components/credit-hub/shell/ChTopbar";
 import { useNotifications } from "@/lib/credit-hub/hooks/useNotifications";
+import { useDealerTotalUnreadMessages } from "@/lib/credit-hub/hooks/useDealerTotalUnreadMessages";
+import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { CH_NAV, ChSidebar } from "@/components/credit-hub/shell/ChSidebar";
 import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
 import {
@@ -88,6 +90,24 @@ export function DealerChShell({ children }: { children: ReactNode }) {
   };
 
   const notif = useNotifications();
+  const messagesUnread = useDealerTotalUnreadMessages();
+  const applicationsQuery = useCreditApplications();
+
+  // Build message notifications for bell dropdown
+  const messageNotifications = messagesUnread.applicationCounts
+    .filter((app) => app.unread > 0)
+    .map((app) => {
+      const appData = (applicationsQuery.data ?? []).find((a) => a.application_id === app.applicationId);
+      return {
+        applicationId: app.applicationId,
+        applicantName: appData?.applicant_name || "Solicitud sin nombre",
+        unread: app.unread,
+      };
+    });
+
+  const handleMessageNotificationClick = (applicationId: string) => {
+    router.push(`/credit-hub/dealer/applications/${applicationId}`);
+  };
 
   if (inWizard) {
     return <div className="credit-hub-forge" data-persona="dealer">{children}</div>;
@@ -110,8 +130,10 @@ export function DealerChShell({ children }: { children: ReactNode }) {
               user={{ name: identity.name, initials: identity.initials }}
               userEmail={identity.email}
               notifications={notif.items}
-              notif={notif.unreadCount}
-              showNotificationsBell={!notif.hidden}
+              messageNotifications={messageNotifications}
+              onMessageNotificationClick={handleMessageNotificationClick}
+              notif={messagesUnread.totalUnread}
+              showNotificationsBell={true}
             />
           }
       sidebar={
