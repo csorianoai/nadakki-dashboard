@@ -230,6 +230,23 @@ export async function getMessageUnreadCount(params: {
   return data.unread_count ?? 0;
 }
 
+export interface MessageUnreadSummary {
+  total_unread: number;
+  by_application: Array<{ application_id: string; unread_count: number }>;
+  application_count: number;
+  reader_type: "BANK" | "DEALER";
+}
+
+export async function getMessageUnreadSummary(params: {
+  tenantId: string;
+  actorRole?: CHActorRole;
+}): Promise<MessageUnreadSummary> {
+  return chFetch<MessageUnreadSummary>("/api/v2/credit/messages/unread-summary", {
+    tenantId: params.tenantId,
+    actorRole: params.actorRole ?? "dealer",
+  });
+}
+
 // ── F4: Post-approval / disbursement ────────────────────────────────────────
 
 export async function postReadyForDisbursement(params: {
