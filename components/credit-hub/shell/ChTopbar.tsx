@@ -174,6 +174,8 @@ export function ChTopbar({
   user,
   userEmail,
   notifications,
+  messageNotifications,
+  onMessageNotificationClick,
   tenants,
   onSelectTenant,
   onOpenSearch,
@@ -189,6 +191,7 @@ export function ChTopbar({
   const notifCount = notif ?? notifications?.length ?? 0;
   const canSwitchTenant = !!tenants && tenants.length > 0;
   const openSearch = onOpenSearch ?? onSearchClick;
+  const showMessageNotifications = messageNotifications && messageNotifications.length > 0;
 
   return (
     <header
@@ -318,20 +321,89 @@ export function ChTopbar({
                       position: "absolute",
                       top: 5,
                       right: 6,
-                      width: 7,
-                      height: 7,
+                      minWidth: notifCount > 9 ? 16 : 7,
+                      height: notifCount > 9 ? 16 : 7,
                       borderRadius: 999,
                       background: "var(--ch-danger)",
                       border: "1.5px solid var(--ch-surface)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 9,
+                      fontWeight: 700,
+                      color: "white",
+                      padding: notifCount > 9 ? "0 3px" : 0,
                     }}
-                  />
+                  >
+                    {notifCount > 9 ? notifCount : null}
+                  </span>
                 ) : null}
               </button>
-              <Dropdown open={menu === "bell"} onClose={() => setMenu(null)} width={280}>
+              <Dropdown open={menu === "bell"} onClose={() => setMenu(null)} width={320}>
                 <div className="ch-eyebrow" style={{ padding: "6px 10px 4px" }}>
-                  Notificaciones · {notifCount}
+                  {showMessageNotifications ? `Mensajes sin leer · ${notifCount}` : `Notificaciones · ${notifCount}`}
                 </div>
-                {notifications && notifications.length > 0 ? (
+                {showMessageNotifications ? (
+                  <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                    {messageNotifications.filter((m) => m.unread > 0).map((m) => (
+                      <button
+                        key={m.applicationId}
+                        type="button"
+                        onClick={() => {
+                          onMessageNotificationClick?.(m.applicationId);
+                          setMenu(null);
+                        }}
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "10px 12px",
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          fontSize: "var(--ch-text-sm)",
+                          color: "var(--ch-text)",
+                          borderRadius: "var(--ch-r-sm)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "var(--ch-surface-2)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {m.applicantName}
+                          </div>
+                          <div style={{ fontSize: 11, color: "var(--ch-text-3)", marginTop: 2 }}>
+                            Solicitud de crédito
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            minWidth: 20,
+                            height: 20,
+                            padding: "0 6px",
+                            borderRadius: 999,
+                            background: "var(--ch-danger)",
+                            color: "white",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            marginLeft: 8,
+                          }}
+                        >
+                          {m.unread}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : notifications && notifications.length > 0 ? (
                   notifications.map((n, i) => (
                     <div key={n.id ?? i} style={{ padding: "8px 10px", fontSize: "var(--ch-text-sm)", color: "var(--ch-text-2)", borderRadius: "var(--ch-r-sm)" }}>
                       <strong style={{ fontWeight: 600 }}>{n.title}</strong>

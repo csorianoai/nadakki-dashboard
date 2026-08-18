@@ -184,6 +184,10 @@ export interface ChTopbarProps {
   userEmail?: string;
   /** Real notifications; when empty the bell shows an explicit empty state (no demo rows). */
   notifications?: ChNotification[];
+  /** Message notifications for dealer - applications with unread messages */
+  messageNotifications?: Array<{ applicationId: string; applicantName: string; unread: number }>;
+  /** Callback when clicking on a message notification */
+  onMessageNotificationClick?: (applicationId: string) => void;
   /** Real list of tenants the user can switch to; when absent the tenant is a static label (no demo entries). */
   tenants?: ChTenantOption[];
   onSelectTenant?: (tenantId: string) => void;
