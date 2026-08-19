@@ -199,6 +199,27 @@ const nextConfig = {
         destination: "/credit-hub/bank/applications",
         permanent: false,
       },
+      // F2-ROUTE-HYGIENE: permanent redirects for top-level legacy routes
+      {
+        source: "/credit/new",
+        destination: "/credit-hub/dealer/applications/new",
+        permanent: true,
+      },
+      {
+        source: "/credit",
+        destination: "/credit-hub",
+        permanent: true,
+      },
+      {
+        source: "/decision",
+        destination: "/credit-hub",
+        permanent: true,
+      },
+      {
+        source: "/compliance",
+        destination: "/credit-hub",
+        permanent: true,
+      },
       // PR-LEGACY-1: legacy /credit/* -> modern /credit-hub/* (parity routes only).
       // permanent:false (temporary) while legacy pages still exist; KEEP_TEMPORARILY
       // routes (/credit/dealer/analytics, /credit/dealer/real, /credit, /credit/new,

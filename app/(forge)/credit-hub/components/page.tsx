@@ -1,5 +1,6 @@
 "use client";
 
+import { notFound } from "next/navigation";
 import { ForgeLogo } from "@/components/credit-hub/brand/ForgeLogo";
 import { ForgeAIBadge } from "@/components/credit-hub/brand/ForgeAIBadge";
 import { ForgeBadge } from "@/components/credit-hub/primitives/ForgeBadge";
@@ -12,6 +13,9 @@ import { ForgeSkeleton } from "@/components/credit-hub/primitives/ForgeSkeleton"
 import { ForgePageHeader } from "@/components/credit-hub/system/ForgePageHeader";
 
 export default function ForgeComponentsDemoPage() {
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
   return (
     <div data-portal="dealer" className="min-h-screen bg-forge-bg p-4 text-forge-text md:p-8">
       <div className="mx-auto max-w-5xl space-y-6">

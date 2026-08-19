@@ -1,5 +1,6 @@
 "use client";
 
+import { notFound } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   Bell,
@@ -59,6 +60,10 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 type DemoRow = { id: string; applicant: string; channel: string };
 
 export default function ForgePreviewPage() {
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   const { toggle: openCommandPalette } = useForgeCommandPalette();
   const [tabLine, setTabLine] = useState("one");
   const [tabPills, setTabPills] = useState("a");
