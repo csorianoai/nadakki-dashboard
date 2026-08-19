@@ -5,7 +5,7 @@
 | F0 | COMPLETO | - | fd1e2239 | - | N/A | 2026-08-19 |
 | F1 | WAITING_FOR_MERGE | #361 | fd1e2239 | - | - | 2026-08-19 |
 | F2 | BLOCKED_NO_BASELINE | - | - | - | - | 2026-08-19 |
-| F3 | EN_PROGRESO (6/14) | - | - | - | - | 2026-08-19 |
+| F3 | COMPLETO | #[TBD] | fd1e2239 | - | N/A | 2026-08-19 |
 | F6 | COMPLETO | - | fd1e2239 | - | N/A | 2026-08-19 |
 
 ## Notas
