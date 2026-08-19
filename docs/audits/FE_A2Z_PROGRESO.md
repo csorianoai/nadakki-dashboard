@@ -3,9 +3,11 @@
 | Packet | Estado | PR | BASE_SHA | HEAD_SHA | Verificado Vercel | Fecha |
 |--------|--------|----|---------|---------|--------------------|-------|
 | F0 | COMPLETO | - | fd1e2239 | - | N/A | 2026-08-19 |
-| F1 | WAITING_FOR_MERGE | #361 | fd1e2239 | - | - | 2026-08-19 |
-| F2 | COMPLETO | - | fd1e2239 | d8c18b71 | N/A | 2026-08-19 |
-| F3 | COMPLETO | #362 | fd1e2239 | 3001ca75 | N/A | 2026-08-19 |
+| F1 | COMPLETO | #361✓ | fd1e2239 | 4d9af005 | Pendiente | 2026-08-19 |
+| F2 | COMPLETO | - | 679b5587 | 2266ae7b | N/A | 2026-08-19 |
+| F3 | COMPLETO | #362✓ | 679b5587 | ea3f57e6 | Pendiente | 2026-08-19 |
+| F4 | NOT_TESTED | - | - | - | - | Contratos backend |
+| F5 | NOT_TESTED | - | - | - | - | Contratos backend |
 | F6 | COMPLETO | - | fd1e2239 | - | N/A | 2026-08-19 |
 
 ## Notas
