@@ -249,7 +249,9 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
               {
                 icon: DollarSign,
                 title: "Ingreso verificado",
-                body: `${chMoneyExact(Number(applicant.monthly_income ?? 0))}/mes · ${String(applicant.employment ?? "—")}.`,
+                body: applicant.monthly_income != null 
+                  ? `${chMoneyExact(Number(applicant.monthly_income))}/mes · ${String(applicant.employment ?? "—")}.`
+                  : `No informado · ${String(applicant.employment ?? "—")}.`,
                 source: "Entidad emisora · recibos de nomina",
                 conf: "alto",
               },
@@ -263,7 +265,9 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
               {
                 icon: Car,
                 title: "Vehiculo",
-                body: `${String(payload.vehicle?.label ?? payload.vehicle?.make ?? "—")} · valor ${chMoney(Number(payload.vehicle?.value ?? 0))}.`,
+                body: payload.vehicle?.value != null
+                  ? `${String(payload.vehicle?.label ?? payload.vehicle?.make ?? "—")} · valor ${chMoney(Number(payload.vehicle.value))}.`
+                  : `${String(payload.vehicle?.label ?? payload.vehicle?.make ?? "—")} · valor no informado.`,
                 source: "Expediente dealer",
                 conf: "medio",
               },

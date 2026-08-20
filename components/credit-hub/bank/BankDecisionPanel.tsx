@@ -14,8 +14,10 @@ import { useAuth } from "@/hooks/useAuth";
 function defaultTerms(application?: BankReviewApplication): BankDecisionTerms {
   const analysis = application?.application_payload.analysis;
   const metrics = analysis?.metrics;
+  // F4: Prefer financed_amount; avoid ?? 0 fallback when data is truly absent
+  const approvedAmount = analysis?.financed_amount;
   return {
-    approved_amount: Number(analysis?.financed_amount ?? 0),
+    approved_amount: approvedAmount != null ? Number(approvedAmount) : 0,
     interest_rate: Number(metrics?.annual_rate ?? 18),
     term_months: Number(metrics?.term_months ?? 36),
     down_payment_required: Number(metrics?.down_payment ?? 0),
