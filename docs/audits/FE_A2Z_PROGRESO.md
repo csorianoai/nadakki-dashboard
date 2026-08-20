@@ -51,3 +51,19 @@
 - Formatters `chMoney`/`chMoneyExact` manejan `null` correctamente
 
 **Scope:** Solo montos. Ratios (DTI, PTI, LTV) pueden seguir bloqueados.
+
+### F5 · La campana del dealer [WAITING_FOR_MERGE]
+
+**Backend:** PR #857 entregó `/api/v2/credit/messages/unread-summary`. Hook `useDealerTotalUnreadMessages` ya implementado.
+
+**Cambios:**
+- `ChTopbar.tsx` L318-340: Badge ahora muestra número siempre (antes solo >9)
+- Badge consistente 16px para todos los contadores
+- Número visible para 1-9 mensajes (antes solo punto rojo)
+
+**Resultado:**
+- Campana muestra `total_unread` como número visible
+- Dropdown lista `by_application` en orden descendente (backend ya ordena)
+- Una sola petición O(1) al endpoint unread-summary
+
+**Scope:** Solo contador global. Badge por solicitud ya funcionaba.
