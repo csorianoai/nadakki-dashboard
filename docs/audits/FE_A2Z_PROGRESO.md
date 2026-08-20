@@ -22,21 +22,15 @@
 **Activo:**
 - `components/credit-hub/bank/BankDetailLayout.tsx`
 - Servido por: `app/(forge)/credit-hub/bank/applications/[applicationId]/page.tsx`
-- Línea 50: `<BankDetailLayout application={appQuery.data} ... />`
 
 **Inactivo/Deprecable:**
 - `components/forge/credit-hub/BankApplicationDetailView.tsx`
-- Solo usado en tests desactualizados:
-  - `tests/credit-hub/bank/compliance-approval.test.tsx`
-  - `tests/credit-hub/bank/pages/detail-review.test.tsx`
-- **Problema:** Tests mockean componente que ya no está en producción
-- **Riesgo:** Trampa para futuros cambios - modificar BankApplicationDetailView no afecta producción
+- Solo usado en tests desactualizados
 
 **Acción recomendada:**
-- Deprecar `BankApplicationDetailView.tsx` o actualizar tests para usar `BankDetailLayout`
-- Marcar con comentario deprecation en archivo hasta decisión final
+- Deprecar `BankApplicationDetailView.tsx` o actualizar tests
 
-### F4 · El cliente no inventa datos [WAITING_FOR_MERGE]
+### F4 · El cliente no inventa datos [COMPLETO]
 
 **Backend:** PRs #881, #884, #883 entregaron `Optional[float]` para `requested_amount`.
 
@@ -48,22 +42,64 @@
 
 **Resultado:**
 - Montos ausentes muestran "—" o "No informado", nunca RD$0 inventado
-- Formatters `chMoney`/`chMoneyExact` manejan `null` correctamente
 
 **Scope:** Solo montos. Ratios (DTI, PTI, LTV) pueden seguir bloqueados.
 
-### F5 · La campana del dealer [WAITING_FOR_MERGE]
+### F5 · La campana del dealer [COMPLETO]
 
-**Backend:** PR #857 entregó `/api/v2/credit/messages/unread-summary`. Hook `useDealerTotalUnreadMessages` ya implementado.
+**Backend:** PR #857 entregó `/api/v2/credit/messages/unread-summary`.
 
 **Cambios:**
 - `ChTopbar.tsx` L318-340: Badge ahora muestra número siempre (antes solo >9)
-- Badge consistente 16px para todos los contadores
-- Número visible para 1-9 mensajes (antes solo punto rojo)
 
 **Resultado:**
 - Campana muestra `total_unread` como número visible
-- Dropdown lista `by_application` en orden descendente (backend ya ordena)
-- Una sola petición O(1) al endpoint unread-summary
+- Dropdown lista `by_application` en orden descendente
 
 **Scope:** Solo contador global. Badge por solicitud ya funcionaba.
+
+### N1 · Registro público [COMPLETO]
+
+**Contrato:** `POST /api/v2/onboarding/registro` (ONBOARDING_CONTRACTS.md PR #889).
+
+**Cambios:**
+- `app/(public)/registro/page.tsx` - Ruta pública sin autenticación
+- `components/activation/RegistroPublico.tsx` - Formulario 4 campos
+- Campos: `nombre_legal`, `rnc`, `email_admin`, `telefono`, `tipo_institucion`
+- Validación RNC dominicano (9 u 11 dígitos)
+
+**Resultado:**
+- Mensaje post-registro: "Revisamos tu solicitud en 24 a 48 horas"
+- RNC duplicado: respuesta genérica (no revela existencia)
+
+### N2 · Espera de verificación [COMPLETO]
+
+**Contrato:** Estados sobre `tenants.status` (ONBOARDING_CONTRACTS.md PR #889).
+
+**Cambios:**
+- `app/(public)/activacion/page.tsx` - Pantalla de estado
+- `components/activation/PantallaEspera.tsx` - Display por estado
+- Estados: CREATED, PROFILE_INCOMPLETE, CONFIGURATION, VALIDATION, REJECTED, etc.
+- Redirección automática cuando READY_FOR_SANDBOX o superior
+
+**Resultado:**
+- Estado visible, qué se está revisando, a quién escribir
+- Si rechazado: motivo y cómo corregir
+
+### N5 · Readiness y gates [WAITING_FOR_MERGE - PARCIAL]
+
+**Contrato:** `GET /api/v2/institucion/readiness` (ONBOARDING_CONTRACTS.md PR #889).
+
+**Cambios:**
+- `app/(forge)/credit-hub/activacion/readiness/page.tsx` - Vista de readiness
+- `components/activation/ReadinessView.tsx` - 3 scores + dimensions
+- Scores: `account_created`, `production_readiness`, `ai_optimization`
+- Dimensions grid con `evidence` y `missing` items
+- Callout explicando readiness vs gates
+
+**Resultado:**
+- Barras de progreso para cada score
+- Cards de dimensiones (Identidad, Seguridad, Equipo, Lenders, etc.)
+- Placeholder para gates de producción
+
+**Scope:** Solo readiness display. Gates, configuración (N3) y credential vault (N4) esperan C1 y C2 de Codex.
