@@ -321,8 +321,8 @@ export function ChTopbar({
                       position: "absolute",
                       top: 5,
                       right: 6,
-                      minWidth: notifCount > 9 ? 16 : 7,
-                      height: notifCount > 9 ? 16 : 7,
+                      minWidth: 16,
+                      height: 16,
                       borderRadius: 999,
                       background: "var(--ch-danger)",
                       border: "1.5px solid var(--ch-surface)",
@@ -332,10 +332,10 @@ export function ChTopbar({
                       fontSize: 9,
                       fontWeight: 700,
                       color: "white",
-                      padding: notifCount > 9 ? "0 3px" : 0,
+                      padding: "0 3px",
                     }}
                   >
-                    {notifCount > 9 ? notifCount : null}
+                    {notifCount}
                   </span>
                 ) : null}
               </button>
