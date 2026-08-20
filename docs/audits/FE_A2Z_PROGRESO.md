@@ -7,8 +7,13 @@
 | F2 | COMPLETO | - | 679b5587 | 2266ae7b | N/A | 2026-08-19 |
 | F3 | COMPLETO | #362✓ | 679b5587 | ea3f57e6 | Pendiente | 2026-08-19 |
 | F4 | COMPLETO | #364✓ | aacd0dd2 | 63887bfe | Pendiente | 2026-08-19 |
-| F5 | WAITING_FOR_MERGE | #365 | 63887bfe | 3ea0bfde | Pendiente | 2026-08-19 |
+| F5 | COMPLETO | #365✓ | 63887bfe | 9a556ced | Pendiente | 2026-08-19 |
 | F6 | COMPLETO | - | fd1e2239 | - | N/A | 2026-08-19 |
+| N1 | WAITING_FOR_MERGE | #366 | 9a556ced | e107e5e6 | Pendiente | 2026-08-19 |
+| N2 | WAITING_FOR_MERGE | #367 | 9a556ced | b89e9acd | Pendiente | 2026-08-19 |
+| N3 | NOT_TESTED | - | - | - | - | Endpoints C1 C2 Codex |
+| N4 | NOT_TESTED | - | - | - | - | Endpoints C1 C2 Codex |
+| N5 | NOT_TESTED | - | - | - | - | Endpoints C1 C2 Codex |
 
 ## Notas
 
