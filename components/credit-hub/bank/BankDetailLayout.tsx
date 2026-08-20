@@ -43,8 +43,10 @@ function defaultTerms(payload: BankReviewPayload): BankDecisionTerms {
   const analysis = payload.analysis;
   const metrics = analysis?.metrics;
   const financial = payload.financial ?? {};
+  // F4: Prefer requested_amount; fallback only to financed_amount if both are meaningful
+  const approvedAmount = financial.requested_amount ?? analysis?.financed_amount;
   return {
-    approved_amount: Number(financial.requested_amount ?? analysis?.financed_amount ?? 0),
+    approved_amount: approvedAmount != null ? Number(approvedAmount) : 0,
     interest_rate: Number(financial.requested_rate ?? metrics?.annual_rate ?? 17.5),
     term_months: Number(financial.term_months ?? metrics?.term_months ?? 36),
     down_payment_required: Number(financial.down_payment ?? metrics?.down_payment ?? 0),
@@ -176,7 +178,8 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const vehicleVin = String((vehicle as { vin?: string }).vin ?? "");
   const rate = Number(financial.requested_rate ?? analysis?.metrics?.annual_rate ?? 17.5);
   const term = Number(financial.term_months ?? analysis?.metrics?.term_months ?? 48);
-  const amount = Number(financial.requested_amount ?? analysis?.financed_amount ?? 0);
+  // F4: Never invent 0 when amount is absent — let formatter handle null
+  const amount = financial.requested_amount ?? analysis?.financed_amount ?? null;
 
   const displayStatus = extractDisplayStatus(payload.expediente_meta) ?? application.state ?? null;
 
@@ -348,7 +351,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
         </div>
 
         <DecisionPanel
-          amount={amount}
+          amount={amount ?? 0}
           term={term}
           rate={rate}
           sticky
