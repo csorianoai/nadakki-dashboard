@@ -12,7 +12,7 @@
 | N1 | COMPLETO | #366✓ | 9a556ced | 6e37ddac | Pendiente | 2026-08-20 |
 | N2 | COMPLETO | #367✓ | 9a556ced | 3f793ec5 | Pendiente | 2026-08-20 |
 | N3 | WAITING_FOR_MERGE | #369 | 3de40daa | TBD | no | 2026-08-20 | ConfiguracionView, bloques guardables |
-| N4 | WAITING_FOR_MERGE | #370 | 3de40daa | TBD | no | 2026-08-20 | Credential Vault, 3 estados TEST_CONNECTION |
+| N4 | WAITING_FOR_MERGE | #370 | 3de40daa | TBD | no | 2026-08-20 | Credential Vault, 3 estados TEST_CONNECTION. BLOQUEADO por #372 (imports corruptos) |
 | N5 | WAITING_FOR_MERGE | #368 (parcial), #371 (completo) | 3de40daa | TBD | no | 2026-08-20, 2026-08-21 | Readiness + 9 production gates |
 | Z1 | DEPENDS_ON | #369, #370, #371 | - | - | - | 2026-08-21 | Certificación sobre Vercel post-merge |
 
