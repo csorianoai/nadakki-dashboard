@@ -219,7 +219,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    clearWizardDraftStorage(tenant?.id, user?.id);
+    // CRITICAL: Purge ALL wizard drafts on logout (Ley 172-13).
+    // Draft contains PII: cédula, nombre, fecha_nacimiento, teléfono, correo,
+    // dirección, ingreso_mensual. Must not survive logout in shared device.
+    const { purgeAllWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-storage");
+    purgeAllWizardDrafts();
+    
     const token = tokenStorage.getAccessToken();
     if (token) await logoutV2(token);
     tokenStorage.clearTokens();
