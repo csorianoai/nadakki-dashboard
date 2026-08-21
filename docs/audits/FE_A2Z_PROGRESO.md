@@ -14,7 +14,7 @@
 | N3 | WAITING_FOR_MERGE | #369 | 3de40daa | TBD | no | 2026-08-20 | ConfiguracionView, bloques guardables |
 | N4 | WAITING_FOR_MERGE | #370 | 3de40daa | TBD | no | 2026-08-20 | Credential Vault, 3 estados TEST_CONNECTION |
 | N5 | WAITING_FOR_MERGE | #368 (parcial), #371 (completo) | 3de40daa | TBD | no | 2026-08-20, 2026-08-21 | Readiness + 9 production gates |
-| Z1 | EN_PROGRESO | - | - | - | - | 2026-08-21 | Certificación final |
+| Z1 | DEPENDS_ON | #369, #370, #371 | - | - | - | 2026-08-21 | Certificación sobre Vercel post-merge |
 
 ## Notas
 
