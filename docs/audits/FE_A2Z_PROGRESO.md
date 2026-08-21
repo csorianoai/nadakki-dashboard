@@ -130,3 +130,30 @@ import { Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, Tes
 - Placeholder para gates de producción
 
 **Scope:** Solo readiness display. Gates, configuración (N3) y credential vault (N4) esperan C1 y C2 de Codex.
+
+### HOTFIX · /logout no limpiaba tokens [PR #373 - STOP_GLOBAL]
+
+**Problema crítico (Ley 172-13):**
+- Navegar a `/logout` renderizaba "Módulo no disponible"
+- JWT tokens (`nadakki_refresh_token_v2`, `nadakki_sic_token`) permanecían en localStorage
+- Usuario cree que salió pero no salió = exposición PII en dispositivo compartido
+
+**Fix:**
+- `app/(public)/logout/page.tsx` - página dedicada de logout
+- Ejecuta `logout()` del AuthContext
+- `clearLocalStorage()` limpia todos los tokens `nadakki_*`
+- Redirect a `/login` siempre, incluso si API falla
+- Tokens se limpian localmente sin importar respuesta del servidor
+
+**Verificación:**
+- `clearLocalStorage()` itera sobre `LS_KEYS` y remueve todos
+- `LS_KEYS` incluye `nadakki_sic_token` y `nadakki_refresh_token_v2`
+
+### DEUDA_ENCONTRADA
+
+**Dealer page idle state:**
+- La página del dealer nunca alcanza estado idle
+- Algo carga de fondo de forma permanente
+- Posible causa: polling, WebSocket, o query refetch sin stop condition
+- Impacto: consumo de recursos, batería en móviles
+- Acción: investigar en packet futuro
