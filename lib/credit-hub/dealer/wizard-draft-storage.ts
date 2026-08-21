@@ -42,3 +42,31 @@ export function clearWizardDraftStorage(tenantId?: string | null, userId?: strin
     /* ignore */
   }
 }
+
+/**
+ * Purge ALL wizard drafts from localStorage, regardless of tenant/user.
+ * Use ONLY on logout to ensure no PII survives session end.
+ * Violates Ley 172-13 if PII (cédula, nombre, dirección, ingreso) persists post-logout.
+ */
+export function purgeAllWizardDrafts(): void {
+  if (typeof window === "undefined") return;
+  purgeLegacyGlobalWizardDraftKeys();
+  
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(WIZARD_DRAFT_KEY_PREFIX)) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    for (const key of keysToRemove) {
+      localStorage.removeItem(key);
+    }
+    
+    sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
+}
