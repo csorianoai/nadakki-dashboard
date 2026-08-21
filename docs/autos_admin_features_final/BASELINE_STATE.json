@@ -1,0 +1,19 @@
+{
+  "super_loop": "AUTOS_PORTAL_ADMIN_FEATURES",
+  "repo": "nadakki-dashboard",
+  "branch": "feat/ap-4-admin-features",
+  "scope": "frontend_admin_mvp",
+  "canonical_api_base": "/api/v1/autos/admin",
+  "backend_repo_pending": [
+    "GET /tenants/{id}/vehicles/pending",
+    "GET /tenants/{id}/dealers/pending",
+    "autos_commissions table + API"
+  ],
+  "frontend_implemented": {
+    "app/admin/autos/page.tsx": true,
+    "components/autos/admin/*": true,
+    "lib/autos-portal/admin-api.ts": true,
+    "lib/autos-portal/commission-calc.ts": true
+  },
+  "verdict": "AUTOS_PORTAL_ADMIN_CODE_COMPLETE_AWAITING_EXTERNAL_ACTIVATION"
+}

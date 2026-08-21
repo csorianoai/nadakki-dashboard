@@ -6,7 +6,7 @@ import {
   Settings, Bot, FileText, Shield, Database, 
   Users, Activity, Server, ArrowRight, Cog,
   CreditCard, BarChart3, Key, Monitor,
-  Rocket, Gauge, MessageCircle, Sparkles, ClipboardList, Loader2, Search, LineChart
+  Rocket, Gauge, MessageCircle, Sparkles, ClipboardList, Loader2, Search, LineChart, Car
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
@@ -71,6 +71,14 @@ const ADMIN_MODULES_BASE = [
     desc: "Operational checks (/ops/google-ads-agent/checks)",
     href: "/admin/google-ads-agent",
     color: "#22c55e",
+  },
+  {
+    id: "autos-portal-admin",
+    name: "Autos Portal Admin",
+    icon: Car,
+    desc: "Moderación vehículos, KYC dealers, flags y comisiones",
+    href: "/admin/autos",
+    color: "#1e40af",
   },
   { id: "agents", name: "Agentes IA", icon: Bot, desc: "Activar, desactivar y configurar agentes", href: "/admin/agents", color: "#8b5cf6", badgeKey: "agents" },
   { id: "logs", name: "Logs del Sistema", icon: FileText, desc: "Historial de ejecuciones y errores", href: "/admin/logs", color: "#22c55e" },
