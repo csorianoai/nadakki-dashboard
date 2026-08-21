@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { VdpBreadcrumb } from "@/components/vdp/Breadcrumb";
 import { Gallery } from "@/components/vdp/Gallery";
 import { VehicleHeader } from "@/components/vdp/VehicleHeader";
@@ -16,6 +16,7 @@ import { ContactSeller } from "@/components/vdp/ContactSeller";
 import { TradeIn } from "@/components/vdp/TradeIn";
 import { StickyHeader, useVdpNavigation } from "@/components/vdp/StickyHeader";
 import { SimilarVehicles } from "@/components/vdp/SimilarVehicles";
+import { FinancingBridgeStatus } from "@/components/vdp/FinancingBridgeStatus";
 import { VehicleChatWidget } from "@/components/vdp/VehicleChatWidget";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
 import { AutosErrorBoundary } from "@/components/system/AutosErrorBoundary";
@@ -26,7 +27,10 @@ import type { Vehicle } from "@/lib/vehicles";
 
 export default function AutosVehiculoDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = String(params?.id ?? "");
+  const financingReturn = searchParams.get("financing_return") === "1";
+  const returnApplicationId = searchParams.get("application_id")?.trim() ?? "";
   const [vehicle, setVehicle] = useState<Vehicle | undefined>();
   const [loading, setLoading] = useState(true);
   const [demoMode, setDemoMode] = useState(false);
@@ -102,6 +106,10 @@ export default function AutosVehiculoDetailPage() {
           <VdpBreadcrumb tipo={vehicle.type} provincia={vehicle.loc} />
           <DemoModeBadge visible={demoMode} />
         </div>
+
+        {financingReturn && returnApplicationId ? (
+          <FinancingBridgeStatus applicationId={returnApplicationId} />
+        ) : null}
 
         <div className="mt-5 flex flex-wrap gap-8">
           <div className="min-w-0 flex-[999_1_540px] space-y-6">

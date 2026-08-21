@@ -1,0 +1,27 @@
+{
+  "super_loop": "AUTOS_CREDIT_HUB_FINANCING_BRIDGE_FINAL_CLOSURE",
+  "repo": "nadakki-dashboard",
+  "branch": "feat/ap-1-financing-bridge",
+  "scope": "frontend_bridge_client_and_vdp_wiring",
+  "backend_repo": "nadakki-ai-suite",
+  "probe_notes": {
+    "POST /api/v1/autos/vehicles/{id}/financing-applications": "404 in production at baseline — frontend falls back to Credit Hub wizard preset",
+    "POST /api/v1/autos/finance/applications": "404 legacy path — attempted as secondary fallback in financing-api.ts",
+    "GET /api/v1/autos/financing-applications/{id}": "404 — FinancingBridgeStatus links directly to Credit Hub"
+  },
+  "frontend_implemented": {
+    "lib/autos-portal/financing-types.ts": true,
+    "lib/autos-portal/financing-preset.ts": true,
+    "lib/autos-portal/financing-api.ts": true,
+    "lib/autos-portal/hooks/useFinancingBridge.ts": true,
+    "components/vdp/FinancingBridgeStatus.tsx": true,
+    "components/vdp/PaymentCalculator.tsx": "CTA wired with idempotency + 404 honest fallback",
+    "app/autos/vehiculo/[id]/page.tsx": "vehicleRefId + return banner"
+  },
+  "awaiting_external": [
+    "Backend financing bridge endpoints in nadakki-ai-suite",
+    "autos_financing_requests migration + RLS in ai-suite",
+    "Full API E2E against live bridge (blocked until backend mounted)"
+  ],
+  "verdict": "FINANCING_BRIDGE_CODE_COMPLETE_AWAITING_EXTERNAL_ACTIVATION"
+}
