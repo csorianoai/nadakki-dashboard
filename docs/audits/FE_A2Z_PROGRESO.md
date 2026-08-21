@@ -16,6 +16,8 @@
 | N5 | COMPLETO | #368✓ (parcial), #371✓ (completo) | 3de40daa | 35039cd5 | sí | 2026-08-20, 2026-08-21 | Readiness + 9 production gates |
 | HOTFIX | COMPLETO | #373✓ | 613df718 | 6f3ae64d | sí | 2026-08-21 | /logout page + token cleanup (STOP_GLOBAL Ley 172-13) |
 | Z1 | COMPLETO | #374 | 35039cd5 | 2ff4300a | sí | 2026-08-21 | Certificación final - 5/5 gates PASS |
+| HOTFIX-PRIVACY | WAITING_FOR_MERGE | #375 | 139d56e3 | cf562141 | no | 2026-08-21 | Purge wizard drafts on logout (Z1 FAIL encontrado por Cowork) |
+| PERF-IDLE | WAITING_FOR_MERGE | #376 | 139d56e3 | 145ae37f | no | 2026-08-21 | Reduce polling 30s→120s + pause when hidden |
 
 ## Notas
 
@@ -180,3 +182,49 @@ import { Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, Tes
 **Pendiente para usuario:**
 - Medición de idle state en navegador (DevTools Network tab)
 - Identificar endpoint que se repite y frecuencia
+
+### HOTFIX-PRIVACY · Wizard drafts sobreviven logout [PR #375 - Z1 FAIL]
+
+**Problema crítico encontrado por Cowork (Ley 172-13):**
+- `nadakki_dealer_wizard_v1_*` keys sobrevivían logout con PII en texto plano
+- Contenido: cédula, nombre completo, fecha_nacimiento, teléfono, correo, empresa, cargo, dirección, ingreso_mensual
+- Equipo compartido en concesionario = exposición PII post-logout
+- **Z1 PRIVACY_CLIENT_STORAGE marcado PASS por error** - certificado por código, no por DevTools real
+
+**Causa raíz:**
+- `clearWizardDraftStorage()` solo limpiaba UN draft (tenant+user específico)
+- NO purgaba TODOS los drafts en logout
+- Si tenant/user eran null o había múltiples drafts, PII sobrevivía
+
+**Fix:**
+- `purgeAllWizardDrafts()` itera localStorage y remueve TODAS las claves con `WIZARD_DRAFT_KEY_PREFIX`
+- Llamado en `logout()` del AuthContext
+- Criterio: borrador existe para salir y volver, pero NO para sobrevivir logout
+- Logout = usuario declara que terminó → PII debe eliminarse
+
+**Verificación pendiente:**
+- DevTools → Application → Local Storage tras logout
+- Confirmar que NO existen keys `nadakki_dealer_wizard_v1_*`
+
+### PERF-IDLE · Polling reducido [PR #376]
+
+**Problema encontrado:**
+- Página dealer nunca alcanza idle state
+- 2 hooks con `refetchInterval: 30_000` siempre activos
+- Battery/resource impact en móviles
+
+**Análisis de código:**
+1. `useDealerTotalUnreadMessages.ts` - Poll cada 30s (campana)
+2. `useNotifications.ts` - Poll cada 30s (notificaciones globales)
+3. `ApplicationMessageThread.tsx` - Poll cada 30s (solo cuando thread abierto)
+
+**Fix:**
+- Hooks 1 y 2: `30_000` → `120_000` (2 minutos)
+- Agregado `document.visibilitychange` listener
+- `refetchInterval: isVisible ? 120_000 : false` - Pause cuando tab hidden
+- Thread de mensajes: mantenido en 30s (latencia importa, solo cuando abierto)
+
+**Impacto:**
+- Antes: 2 requests cada 30s en idle (4 requests/min)
+- Después: 2 requests cada 120s cuando visible, 0 cuando hidden (1 request/min max)
+- Reducción 75% en requests idle, 100% cuando background
