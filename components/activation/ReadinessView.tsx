@@ -165,14 +165,7 @@ export function ReadinessView() {
         </div>
       </div>
 
-      {/* Note about gates */}
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-        <h3 className="font-medium mb-2">Gates de producción</h3>
-        <p className="text-sm text-slate-400">
-          Los gates de producción se mostrarán aquí cuando estén disponibles. Estos gates verifican requisitos
-          críticos como identidad verificada, MFA, políticas configuradas y certificación completa.
-        </p>
-      </div>
+      {/* Note about gates - removed, now in separate section */}
     </div>
   );
 }
