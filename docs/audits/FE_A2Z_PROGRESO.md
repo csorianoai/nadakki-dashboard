@@ -14,7 +14,7 @@
 | N3 | WAITING_FOR_MERGE | #369 | 3de40daa | TBD | no | 2026-08-20 | ConfiguracionView, bloques guardables |
 | N4 | WAITING_FOR_MERGE | #370 | 3de40daa | TBD | no | 2026-08-20 | Credential Vault, 3 estados TEST_CONNECTION. BLOQUEADO por #372 (imports corruptos) |
 | N5 | WAITING_FOR_MERGE | #368 (parcial), #371 (completo) | 3de40daa | TBD | no | 2026-08-20, 2026-08-21 | Readiness + 9 production gates |
-| Z1 | DEPENDS_ON | #369, #370, #371 | - | - | - | 2026-08-21 | Certificación sobre Vercel post-merge |
+| Z1 | DEPENDS_ON | #372, #369, #370, #371 | - | - | - | 2026-08-21 | Certificación sobre Vercel post-merge. #372 (fix imports) debe mergear primero |
 
 ## Notas
 
@@ -58,6 +58,32 @@
 - Dropdown lista `by_application` en orden descendente
 
 **Scope:** Solo contador global. Badge por solicitud ya funcionaba.
+
+### HOTFIX · Imports corruptos en CredentialVaultView [PR #372]
+
+**Problema:**
+- `CredentialVaultView.tsx` L4-5: markup de herramienta `<invoke>` interpolado en imports
+- Main no compilaba: `npm run build` fallaba
+
+**Fix:**
+```typescript
+// Antes (corrupto):
+import { useQuery, useMutation, useQueryClient } from "@tantml:invoke>
+<parameter name="Loader2, CheckCircle2, ... } from "lucide-react";
+
+// Después (correcto):
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, TestTube } from "lucide-react";
+```
+
+**Barrido completo realizado:**
+- `ProductionGatesView.tsx` ✓
+- `ConfiguracionView.tsx` ✓
+- `RegistroPublico.tsx` ✓
+- `PantallaEspera.tsx` ✓
+- `ReadinessView.tsx` ✓
+
+**Verificación:** `npm run build` compiló exitosamente en 106s.
 
 ### N1 · Registro público [COMPLETO]
 
