@@ -1,0 +1,45 @@
+{
+  "loop_version": "6.1",
+  "core_certificate": "NOT_READY",
+  "commercial_certificate": "DECISION_PENDING",
+  "scope_revision": "2026-07-22T2",
+  "universal_inventory_policy": {
+    "defined": true,
+    "implemented": true,
+    "tested": true,
+    "production_verified": false
+  },
+  "repository_revisions": {
+    "backend": "pending-commit",
+    "frontend": "pending-commit",
+    "workers": "unknown",
+    "infrastructure": "unknown"
+  },
+  "deployment_revisions": {
+    "staging_backend": "unknown",
+    "staging_frontend": "unknown",
+    "production_backend": "pre P0-001 fix",
+    "production_frontend": "autos.nadakki.com",
+    "production_workers": "unknown",
+    "database_migration": "097_autos_core_access"
+  },
+  "current_phase": "F2_P0_FIXES",
+  "current_gap_id": "P0-001",
+  "current_status": "TARGETED_TESTING",
+  "last_completed_action": "P0-001 fix, universal baseline, finance contract align, 1615 backend tests pass",
+  "last_test_command": "pytest tests/autos_portal/ --ignore=test_bridges_postgres_e2e --ignore=test_rls_real_pg",
+  "last_test_result": "1615 passed",
+  "passing_gates": [],
+  "failing_gates": ["B", "C", "D", "G", "H", "I", "K"],
+  "blocked_external": ["production_deploy"],
+  "blocked_commercial_decisions": ["plan_names", "monthly_prices", "capability_plan_mapping"],
+  "deferred_out_of_scope": ["SuperCarros", "full_accounting_launch"],
+  "next_exact_actions": [
+    "Deploy backend to production",
+    "Verify GET /api/v1/autos/vehicles/{id} != 500",
+    "Merge admin cockpit AP-4",
+    "Run E2E-01 through E2E-15 in staging",
+    "Fix frontend full Jest suite (89 failures)"
+  ],
+  "updated_at": "2026-07-22T19:00:00Z"
+}
