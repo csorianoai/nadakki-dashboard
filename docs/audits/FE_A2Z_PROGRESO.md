@@ -11,10 +11,16 @@
 | F6 | COMPLETO | - | fd1e2239 | - | N/A | 2026-08-19 |
 | N1 | COMPLETO | #366✓ | 9a556ced | 6e37ddac | Pendiente | 2026-08-20 |
 | N2 | COMPLETO | #367✓ | 9a556ced | 3f793ec5 | Pendiente | 2026-08-20 |
+<<<<<<< HEAD
 | N3 | WAITING_FOR_MERGE | #369 | 3de40daa | TBD | no | 2026-08-20 | ConfiguracionView, bloques guardables |
 | N4 | WAITING_FOR_MERGE | #370 | 3de40daa | TBD | no | 2026-08-20 | Credential Vault, 3 estados TEST_CONNECTION. BLOQUEADO por #372 (imports corruptos) |
 | N5 | WAITING_FOR_MERGE | #368 (parcial), #371 (completo) | 3de40daa | TBD | no | 2026-08-20, 2026-08-21 | Readiness + 9 production gates |
 | Z1 | DEPENDS_ON | #372, #369, #370, #371 | - | - | - | 2026-08-21 | Certificación sobre Vercel post-merge. #372 (fix imports) debe mergear primero |
+=======
+| N3 | WAITING_FOR_MERGE | #369 | 3de40daa | 22a12769 | Pendiente | 2026-08-20 |
+| N4 | WAITING_FOR_MERGE | #370 | 3de40daa | 82a320ff | Pendiente | 2026-08-20 |
+| N5 | WAITING_FOR_MERGE | #368 | 3f793ec5 | 40ee209b | Pendiente | Parcial readiness |
+>>>>>>> 1866fa7b ([N5 complete] Production gates with 9 required gates)
 
 ## Notas
 
