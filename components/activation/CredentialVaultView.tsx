@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tantml:invoke>
-<parameter name="Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, TestTube } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, TestTube } from "lucide-react";
 import { chFetch } from "@/lib/credit-hub/api/client";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { toast } from "@/components/forge";
