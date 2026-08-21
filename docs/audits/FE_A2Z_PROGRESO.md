@@ -18,6 +18,7 @@
 | Z1 | COMPLETO | #374 | 35039cd5 | 2ff4300a | sí | 2026-08-21 | Certificación final - 5/5 gates PASS |
 | HOTFIX-PRIVACY | WAITING_FOR_MERGE | #375 | 139d56e3 | cf562141 | no | 2026-08-21 | Purge wizard drafts on logout (Z1 FAIL encontrado por Cowork) |
 | PERF-IDLE | WAITING_FOR_MERGE | #376 | 139d56e3 | 145ae37f | no | 2026-08-21 | Reduce polling 30s→120s + pause when hidden |
+| FIX-CEDULA-MASK | WAITING_FOR_MERGE | #377 | a0285e68 | 11aad89d | no | 2026-08-21 | Cedula mask idempotence + tests |
 
 ## Notas
 
