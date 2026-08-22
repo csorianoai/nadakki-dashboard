@@ -304,4 +304,73 @@ import { Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, Tes
 
 ## LOOP FE-MONTO · Packet M2
 
-### M2 · El estado de la solicitud [EN PROGRESO]
+### M2 · El estado de la solicitud [PR #380 - COMPLETO]
+
+**Rama:** `fix/fe-estado-solicitud`
+
+**Problema reportado:**
+- Solicitud recién enviada (..c04ba720) muestra "ESTADO DESCONOCIDO"
+- Listado la marca "legacy completed"
+- Contador "Enviadas (0)" no la incluye
+
+**Causa raíz:**
+- CreditOrchestrator introdujo 11 estados nuevos (`RECEIVED`, `AI_ANALYSIS`, `AI_COMPLETE`, `SENT_TO_BANKS`, `DOCUMENTS_PENDING`, `FAILED`, `EXPIRED`, `CANCELLED`, `READY_FOR_DISBURSEMENT`, `DISBURSED`)
+- `mapBackendState` en `normalizers.ts` NO los reconocía
+- Caían al `default` case → `rawState.toLowerCase()` → string no tipado
+- No se contaban para filtros ni etiquetas
+
+**Arreglo aplicado:**
+```typescript
+// Antes:
+case "SUBMITTED":
+case "BANK_SUBMITTED": return "submitted";
+
+// Ahora:
+case "SUBMITTED":
+case "BANK_SUBMITTED":
+case "RECEIVED":           // M2: New orchestrator state
+case "AI_ANALYSIS":        // M2: New orchestrator state
+case "AI_COMPLETE":        // M2: New orchestrator state
+case "SENT_TO_BANKS":      // M2: New orchestrator state
+case "DOCUMENTS_PENDING":  // M2: New orchestrator state
+  return "submitted";
+```
+
+También mapeados:
+- `FAILED`, `EXPIRED`, `CANCELLED` → `rejected` (terminales negativos)
+- `READY_FOR_DISBURSEMENT`, `DISBURSED` → `processed` (funding completado)
+
+**Justificación del mapeo:**
+- Estados de tránsito (`RECEIVED`, `AI_ANALYSIS`, etc.) → `submitted`
+  - Cuentan para filtro "Enviadas"
+  - Son pipeline activo
+- Estados terminales negativos → `rejected`
+- Estados post-aprobación → `processed`
+
+**Impacto:**
+- Solicitudes recién enviadas se cuentan en "Enviadas"
+- Estados muestran etiquetas legibles ("Recibida", "Análisis IA", etc.)
+- No más "legacy completed" para solicitudes nuevas
+- Contador de "Enviadas" funciona
+
+**Verificación:**
+- `npm run build` → "Compiled successfully" (3.9min)
+- 3 archivos modificados
+- M2_MEDICION_ESTADO.md: análisis exhaustivo del flujo de estados
+
+**Pendiente verificación en Vercel:**
+- Crear nueva solicitud y enviarla
+- Confirmar estado legible (no "legacy completed")
+- Confirmar contador "Enviadas" incluye la solicitud
+
+**KYC/OCR "No configurado":**
+- No es defecto si el tenant no tiene integración habilitada
+- Verificar configuración del tenant en backend para confirmar
+
+**Veredicto M2:** `BACKEND_STATE_MAPPING_INCOMPLETE` (normalizer obsoleto)
+
+**Iteraciones usadas:** 3 de 12
+
+---
+
+## INFORME FINAL · LOOP FE-MONTO
