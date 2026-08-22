@@ -60,7 +60,13 @@ function mapBackendState(rawState: string): CreditApplicationStatus {
   switch (rawState.toUpperCase()) {
     case "DRAFT": return "draft";
     case "SUBMITTED":
-    case "BANK_SUBMITTED": return "submitted";
+    case "BANK_SUBMITTED":
+    case "RECEIVED":  // M2: New orchestrator state
+    case "AI_ANALYSIS":  // M2: New orchestrator state
+    case "AI_COMPLETE":  // M2: New orchestrator state
+    case "SENT_TO_BANKS":  // M2: New orchestrator state
+    case "DOCUMENTS_PENDING":  // M2: New orchestrator state
+      return "submitted";
     case "PROCESSING":
     case "HYBRID_IN_PROGRESS": return "processing";
     case "PROCESSED":
@@ -69,10 +75,18 @@ function mapBackendState(rawState: string): CreditApplicationStatus {
     case "APPROVED":
     case "APPROVED_WITH_STIPULATIONS": return "approved";
     case "REJECTED":
-    case "DECLINED": return "rejected";
+    case "DECLINED":
+    case "FAILED":  // M2: Failed is a rejection
+      return "rejected";
     case "OFFER_SELECTED": return "offered";
     case "CONDITIONED": return "conditioned";
     case "MANUAL_REVIEW": return "manual_review";
+    case "READY_FOR_DISBURSEMENT":
+    case "DISBURSED":
+      return "processed";  // M2: Disbursement is processed/funded
+    case "EXPIRED":
+    case "CANCELLED":
+      return "rejected";  // M2: Expired/cancelled are terminal rejections
     default: return rawState.toLowerCase() as CreditApplicationStatus;
   }
 }

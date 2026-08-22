@@ -229,3 +229,79 @@ import { Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, Tes
 - Antes: 2 requests cada 30s en idle (4 requests/min)
 - Después: 2 requests cada 120s cuando visible, 0 cuando hidden (1 request/min max)
 - Reducción 75% en requests idle, 100% cuando background
+
+---
+
+## LOOP FE-MONTO · El monto no llega al expediente
+
+### M0 · Dónde se pierde el monto [COMPLETADO]
+
+**Solicitud medida:** ramon almonte soriano · 2014 Toyota Corolla · ...c04ba720
+**Síntoma:** Listado muestra "—", expediente muestra "RD$0"
+
+**Medición completa:** Ver `M0_MEDICION_MONTO.md` (documento técnico exhaustivo)
+
+**VEREDICTO:** `NOMBRES_DISTINTOS` (defecto de normalizer, no de backend)
+
+**Defecto raíz:** `lib/credit-hub/api/normalizers.ts:113`
+```typescript
+|| "0";  // ← Convierte dato ausente en "0", viola regla F4
+```
+
+**Flujo completo verificado:**
+1. ✅ Wizard TIENE el campo `requested_amount` (línea 172, 404)
+2. ✅ Payload del submit LO MANDA en `financial.requested_amount`
+3. ✅ Backend devuelve `requested_amount` (evidencia documental: PRs #881/#884/#883, reportes E2E)
+4. ❌ Normalizer usa `"0"` como fallback cuando el campo es `null` o ausente
+5. ❌ Tipo define `requested_amount: string` en vez de `string | null`
+6. ❌ Componentes convierten `"0"` a `Number(0)` y muestran `RD$ 0`
+
+**Casos buenos encontrados:**
+- `BankDetailLayout.tsx:182`: usa `?? null` en vez de `?? 0` ✅
+- Pero el arreglo no funciona si el normalizer devuelve `"0"` en vez de `null`
+
+**Para el backend:** NADA. El backend está bien según evidencia documental.
+
+**Hipótesis secundaria a verificar en M1:**
+- Capturar respuesta real de API para solicitud `...c04ba720` en DevTools
+- Confirmar si backend devuelve `null`, `0`, o campo ausente
+- Si backend devuelve `0` literal → hay segundo defecto (no guardó el monto)
+
+### M1 · El monto visible [PR #379 - COMPLETO]
+
+**Rama:** `fix/fe-monto-display`
+**Veredicto M0:** `NOMBRES_DISTINTOS` - defecto del normalizer, no del backend
+
+**Arreglos aplicados:**
+1. `lib/credit-hub/api/normalizers.ts:113`: `|| "0"` → `|| null`
+2. Tipos actualizados: `requested_amount: string` → `string | null`
+   - `lib/credit-hub/types/creditCore.ts`
+   - `lib/credit-hub/types/bankDecision.ts` (`BankQueueItem`)
+3. Componentes modificados para mostrar "No informado" cuando `null`:
+   - `components/credit-hub/dealer/ApplicationCard.tsx` (listado dealer, 2 variants)
+   - `components/credit-hub/bank/BankApplicationCard.tsx` (tarjetas banco + formatDop)
+   - `components/credit-hub/bank/BankDetailView.tsx` (expediente banco)
+4. Sumas (pipeline, KPIs) actualizadas para skip `null`:
+   - `components/credit-hub/dealer/DealerDashboardView.tsx`
+   - `components/credit-hub/bank/elite/BankKpiStrip.tsx`
+
+**Verificación:**
+- `npm run build` → "Compiled successfully" (2.1min)
+- TypeScript: sin errores de tipo
+- 12 archivos modificados
+- M0_MEDICION_MONTO.md: análisis exhaustivo del recorrido del dato
+
+**Regla F4 aplicada:**
+- API lo envía → se muestra
+- API no lo envía → "No informado", NUNCA RD$0
+- Un cero es un dato. Si no hay dato, no se muestra un cero.
+
+**Pendiente verificación en Vercel:**
+- Solicitud ...c04ba720 debe mostrar "No informado" (no "—" ni "RD$0")
+- Capturar respuesta API para confirmar si backend devuelve `null` o `0`
+
+---
+
+## LOOP FE-MONTO · Packet M2
+
+### M2 · El estado de la solicitud [EN PROGRESO]
