@@ -761,6 +761,26 @@ export function WizardContainer() {
     setFormData((prev) => (prev.co_debtor_required === "yes" ? prev : { ...prev, co_debtor_required: "yes" }));
   }, [tenantConfig.features_enabled.garante_required]);
 
+  // Auto-calculate requested_amount when vehicle_price or down_payment change
+  // requested_amount is a derived value, not a form field - it must match what UI shows
+  useEffect(() => {
+    const price = numeric(formData.vehicle_price);
+    const down = numeric(formData.down_payment);
+    if (price <= 0) {
+      // No price yet - keep requested_amount empty
+      if (formData.requested_amount !== "") {
+        setFormData((prev) => ({ ...prev, requested_amount: "" }));
+      }
+      return;
+    }
+    const calculated = calculateAmountToFinance(price, down);
+    const calculatedStr = String(calculated);
+    // Only update if different to avoid infinite loop
+    if (formData.requested_amount !== calculatedStr) {
+      setFormData((prev) => ({ ...prev, requested_amount: calculatedStr }));
+    }
+  }, [formData.vehicle_price, formData.down_payment, formData.requested_amount]);
+
   useEffect(() => {
     if (presetAppliedRef.current) return;
     const encoded = searchParams.get("preset");
@@ -779,12 +799,7 @@ export function WizardContainer() {
       vehicle_price: raw.vehiclePrice != null ? toStr(raw.vehiclePrice) : prev.vehicle_price,
       down_payment: raw.downPayment != null ? toStr(raw.downPayment) : prev.down_payment,
       desired_term: raw.termMonths != null ? `${Math.max(1, Math.round(num(raw.termMonths)))} meses` : prev.desired_term,
-      requested_amount:
-        raw.loanAmount != null
-          ? toStr(raw.loanAmount)
-          : loanFromFields != null
-            ? toStr(loanFromFields)
-            : prev.requested_amount,
+      // requested_amount is now auto-calculated from vehicle_price - down_payment in useEffect
       applicant_age: raw.age != null ? toStr(raw.age) : prev.applicant_age,
     }));
   }, [searchParams]);
