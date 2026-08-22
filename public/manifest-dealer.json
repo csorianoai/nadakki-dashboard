@@ -1,0 +1,49 @@
+{
+  "id": "/credit-hub/dealer?source=pwa",
+  "name": "Nadakki Dealer",
+  "short_name": "Dealer",
+  "description": "Solicita y da seguimiento a creditos automotrices",
+  "start_url": "/credit-hub/dealer",
+  "scope": "/credit-hub/dealer",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "lang": "es-DO",
+  "dir": "ltr",
+  "categories": ["business", "finance"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Nueva Solicitud",
+      "short_name": "Nueva",
+      "description": "Crear una nueva solicitud de credito",
+      "url": "/credit-hub/dealer/applications/new",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Mis Solicitudes",
+      "short_name": "Solicitudes",
+      "description": "Ver solicitudes activas",
+      "url": "/credit-hub/dealer/applications",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Pre-Aprobacion",
+      "short_name": "Simulador",
+      "description": "Simulador de pre-aprobacion",
+      "url": "/credit-hub/dealer/preapproval",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    }
+  ],
+  "icons": [
+    { "src": "/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
