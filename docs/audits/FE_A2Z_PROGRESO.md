@@ -229,3 +229,148 @@ import { Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, Tes
 - Antes: 2 requests cada 30s en idle (4 requests/min)
 - Después: 2 requests cada 120s cuando visible, 0 cuando hidden (1 request/min max)
 - Reducción 75% en requests idle, 100% cuando background
+
+---
+
+## LOOP FE-MONTO · El monto no llega al expediente
+
+### M0 · Dónde se pierde el monto [COMPLETADO]
+
+**Solicitud medida:** ramon almonte soriano · 2014 Toyota Corolla · ...c04ba720
+**Síntoma:** Listado muestra "—", expediente muestra "RD$0"
+
+**Medición completa:** Ver `M0_MEDICION_MONTO.md` (documento técnico exhaustivo)
+
+**VEREDICTO:** `NOMBRES_DISTINTOS` (defecto de normalizer, no de backend)
+
+**Defecto raíz:** `lib/credit-hub/api/normalizers.ts:113`
+```typescript
+|| "0";  // ← Convierte dato ausente en "0", viola regla F4
+```
+
+**Flujo completo verificado:**
+1. ✅ Wizard TIENE el campo `requested_amount` (línea 172, 404)
+2. ✅ Payload del submit LO MANDA en `financial.requested_amount`
+3. ✅ Backend devuelve `requested_amount` (evidencia documental: PRs #881/#884/#883, reportes E2E)
+4. ❌ Normalizer usa `"0"` como fallback cuando el campo es `null` o ausente
+5. ❌ Tipo define `requested_amount: string` en vez de `string | null`
+6. ❌ Componentes convierten `"0"` a `Number(0)` y muestran `RD$ 0`
+
+**Casos buenos encontrados:**
+- `BankDetailLayout.tsx:182`: usa `?? null` en vez de `?? 0` ✅
+- Pero el arreglo no funciona si el normalizer devuelve `"0"` en vez de `null`
+
+**Para el backend:** NADA. El backend está bien según evidencia documental.
+
+**Hipótesis secundaria a verificar en M1:**
+- Capturar respuesta real de API para solicitud `...c04ba720` en DevTools
+- Confirmar si backend devuelve `null`, `0`, o campo ausente
+- Si backend devuelve `0` literal → hay segundo defecto (no guardó el monto)
+
+### M1 · El monto visible [PR #379 - COMPLETO]
+
+**Rama:** `fix/fe-monto-display`
+**Veredicto M0:** `NOMBRES_DISTINTOS` - defecto del normalizer, no del backend
+
+**Arreglos aplicados:**
+1. `lib/credit-hub/api/normalizers.ts:113`: `|| "0"` → `|| null`
+2. Tipos actualizados: `requested_amount: string` → `string | null`
+   - `lib/credit-hub/types/creditCore.ts`
+   - `lib/credit-hub/types/bankDecision.ts` (`BankQueueItem`)
+3. Componentes modificados para mostrar "No informado" cuando `null`:
+   - `components/credit-hub/dealer/ApplicationCard.tsx` (listado dealer, 2 variants)
+   - `components/credit-hub/bank/BankApplicationCard.tsx` (tarjetas banco + formatDop)
+   - `components/credit-hub/bank/BankDetailView.tsx` (expediente banco)
+4. Sumas (pipeline, KPIs) actualizadas para skip `null`:
+   - `components/credit-hub/dealer/DealerDashboardView.tsx`
+   - `components/credit-hub/bank/elite/BankKpiStrip.tsx`
+
+**Verificación:**
+- `npm run build` → "Compiled successfully" (2.1min)
+- TypeScript: sin errores de tipo
+- 12 archivos modificados
+- M0_MEDICION_MONTO.md: análisis exhaustivo del recorrido del dato
+
+**Regla F4 aplicada:**
+- API lo envía → se muestra
+- API no lo envía → "No informado", NUNCA RD$0
+- Un cero es un dato. Si no hay dato, no se muestra un cero.
+
+**Pendiente verificación en Vercel:**
+- Solicitud ...c04ba720 debe mostrar "No informado" (no "—" ni "RD$0")
+- Capturar respuesta API para confirmar si backend devuelve `null` o `0`
+
+---
+
+## LOOP FE-MONTO · Packet M2
+
+### M2 · El estado de la solicitud [PR #380 - COMPLETO]
+
+**Rama:** `fix/fe-estado-solicitud`
+
+**Problema reportado:**
+- Solicitud recién enviada (..c04ba720) muestra "ESTADO DESCONOCIDO"
+- Listado la marca "legacy completed"
+- Contador "Enviadas (0)" no la incluye
+
+**Causa raíz:**
+- CreditOrchestrator introdujo 11 estados nuevos (`RECEIVED`, `AI_ANALYSIS`, `AI_COMPLETE`, `SENT_TO_BANKS`, `DOCUMENTS_PENDING`, `FAILED`, `EXPIRED`, `CANCELLED`, `READY_FOR_DISBURSEMENT`, `DISBURSED`)
+- `mapBackendState` en `normalizers.ts` NO los reconocía
+- Caían al `default` case → `rawState.toLowerCase()` → string no tipado
+- No se contaban para filtros ni etiquetas
+
+**Arreglo aplicado:**
+```typescript
+// Antes:
+case "SUBMITTED":
+case "BANK_SUBMITTED": return "submitted";
+
+// Ahora:
+case "SUBMITTED":
+case "BANK_SUBMITTED":
+case "RECEIVED":           // M2: New orchestrator state
+case "AI_ANALYSIS":        // M2: New orchestrator state
+case "AI_COMPLETE":        // M2: New orchestrator state
+case "SENT_TO_BANKS":      // M2: New orchestrator state
+case "DOCUMENTS_PENDING":  // M2: New orchestrator state
+  return "submitted";
+```
+
+También mapeados:
+- `FAILED`, `EXPIRED`, `CANCELLED` → `rejected` (terminales negativos)
+- `READY_FOR_DISBURSEMENT`, `DISBURSED` → `processed` (funding completado)
+
+**Justificación del mapeo:**
+- Estados de tránsito (`RECEIVED`, `AI_ANALYSIS`, etc.) → `submitted`
+  - Cuentan para filtro "Enviadas"
+  - Son pipeline activo
+- Estados terminales negativos → `rejected`
+- Estados post-aprobación → `processed`
+
+**Impacto:**
+- Solicitudes recién enviadas se cuentan en "Enviadas"
+- Estados muestran etiquetas legibles ("Recibida", "Análisis IA", etc.)
+- No más "legacy completed" para solicitudes nuevas
+- Contador de "Enviadas" funciona
+
+**Verificación:**
+- `npm run build` → "Compiled successfully" (3.9min)
+- 3 archivos modificados
+- M2_MEDICION_ESTADO.md: análisis exhaustivo del flujo de estados
+
+**Pendiente verificación en Vercel:**
+- Crear nueva solicitud y enviarla
+- Confirmar estado legible (no "legacy completed")
+- Confirmar contador "Enviadas" incluye la solicitud
+
+**KYC/OCR "No configurado":**
+- No es defecto si el tenant no tiene integración habilitada
+- Verificar configuración del tenant en backend para confirmar
+
+**Veredicto M2:** `BACKEND_STATE_MAPPING_INCOMPLETE` (normalizer obsoleto)
+
+**Iteraciones usadas:** 3 de 12
+
+---
+
+## INFORME FINAL · LOOP FE-MONTO
