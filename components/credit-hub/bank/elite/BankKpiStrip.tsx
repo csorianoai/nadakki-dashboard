@@ -53,7 +53,11 @@ export function BankKpiStrip({
   const approvalTrend = cohort.map((c) => +(c.approval_rate * 100).toFixed(1));
 
   const evaluatedAmount = useMemo(
-    () => queue.filter((q) => !q.bank_decision).reduce((s, q) => s + q.requested_amount, 0),
+    () => queue.filter((q) => !q.bank_decision).reduce((s, q) => {
+      // FE-MONTO M1: Skip applications with no requested_amount in sum
+      const amount = q.requested_amount ? Number(q.requested_amount) : 0;
+      return s + amount;
+    }, 0),
     [queue],
   );
 

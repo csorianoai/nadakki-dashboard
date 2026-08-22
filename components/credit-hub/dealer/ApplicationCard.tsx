@@ -60,7 +60,8 @@ export function ApplicationCard({ application, variant = "card", className }: Ap
   const statusColor = statusBarClass(application.status);
   const vehicleInfo =
     [application.vehicle_year, application.vehicle_make, application.vehicle_model].filter(Boolean).join(" ") || "Sin vehículo";
-  const requestedAmount = Number(application.requested_amount || 0);
+  // FE-MONTO M1: Pass null to formatter when absent, don't invent 0
+  const requestedAmount = application.requested_amount ? Number(application.requested_amount) : null;
 
   const handleClick = () => {
     router.push(forgeDealerApplicationDetailHref(application.application_id));
@@ -93,7 +94,9 @@ export function ApplicationCard({ application, variant = "card", className }: Ap
           <p className="truncate text-sm text-forge-text-muted">{vehicleInfo}</p>
         </div>
         <div className="hidden text-right sm:block">
-          <p className="font-mono font-medium text-forge-text">RD$ {requestedAmount.toLocaleString("es-DO")}</p>
+          <p className="font-mono font-medium text-forge-text">
+            {requestedAmount !== null ? `RD$ ${requestedAmount.toLocaleString("es-DO")}` : "No informado"}
+          </p>
           <p className="text-xs text-forge-text-muted">{formatTimeAgo(application.created_at)}</p>
         </div>
         <ApplicationStatusBadge status={application.status} />
@@ -141,7 +144,9 @@ export function ApplicationCard({ application, variant = "card", className }: Ap
         <div className="flex items-end justify-between">
           <div>
             <p className="mb-0.5 text-xs text-forge-text-muted">Monto solicitado</p>
-            <p className="font-mono text-2xl font-bold text-forge-text">RD$ {requestedAmount.toLocaleString("es-DO")}</p>
+            <p className="font-mono text-2xl font-bold text-forge-text">
+              {requestedAmount !== null ? `RD$ ${requestedAmount.toLocaleString("es-DO")}` : "No informado"}
+            </p>
           </div>
           <div className="text-right">
             <p className="flex items-center justify-end gap-1 text-xs text-forge-text-muted">

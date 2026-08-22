@@ -8,8 +8,11 @@ import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import { BankPriorityBadge } from "./BankPriorityBadge";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 
-function formatDop(value: number) {
-  return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(value || 0);
+function formatDop(value: number | string | null) {
+  if (value == null) return "No informado";
+  const num = typeof value === "string" ? Number(value) : value;
+  if (!Number.isFinite(num)) return "No informado";
+  return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(num);
 }
 
 function getMessageStatus(application: BankQueueItem): { label: string; visible: boolean } | null {

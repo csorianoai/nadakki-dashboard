@@ -229,3 +229,40 @@ import { Loader2, CheckCircle2, XCircle, AlertTriangle, Eye, EyeOff, Trash2, Tes
 - Antes: 2 requests cada 30s en idle (4 requests/min)
 - Después: 2 requests cada 120s cuando visible, 0 cuando hidden (1 request/min max)
 - Reducción 75% en requests idle, 100% cuando background
+
+---
+
+## LOOP FE-MONTO · El monto no llega al expediente
+
+### M0 · Dónde se pierde el monto [COMPLETADO]
+
+**Solicitud medida:** ramon almonte soriano · 2014 Toyota Corolla · ...c04ba720
+**Síntoma:** Listado muestra "—", expediente muestra "RD$0"
+
+**Medición completa:** Ver `M0_MEDICION_MONTO.md` (documento técnico exhaustivo)
+
+**VEREDICTO:** `NOMBRES_DISTINTOS` (defecto de normalizer, no de backend)
+
+**Defecto raíz:** `lib/credit-hub/api/normalizers.ts:113`
+```typescript
+|| "0";  // ← Convierte dato ausente en "0", viola regla F4
+```
+
+**Flujo completo verificado:**
+1. ✅ Wizard TIENE el campo `requested_amount` (línea 172, 404)
+2. ✅ Payload del submit LO MANDA en `financial.requested_amount`
+3. ✅ Backend devuelve `requested_amount` (evidencia documental: PRs #881/#884/#883, reportes E2E)
+4. ❌ Normalizer usa `"0"` como fallback cuando el campo es `null` o ausente
+5. ❌ Tipo define `requested_amount: string` en vez de `string | null`
+6. ❌ Componentes convierten `"0"` a `Number(0)` y muestran `RD$ 0`
+
+**Casos buenos encontrados:**
+- `BankDetailLayout.tsx:182`: usa `?? null` en vez de `?? 0` ✅
+- Pero el arreglo no funciona si el normalizer devuelve `"0"` en vez de `null`
+
+**Para el backend:** NADA. El backend está bien según evidencia documental.
+
+**Hipótesis secundaria a verificar en M1:**
+- Capturar respuesta real de API para solicitud `...c04ba720` en DevTools
+- Confirmar si backend devuelve `null`, `0`, o campo ausente
+- Si backend devuelve `0` literal → hay segundo defecto (no guardó el monto)

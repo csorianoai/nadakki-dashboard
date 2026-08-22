@@ -49,8 +49,12 @@ export function DealerDashboardView({
   );
 
   const weekCount = applicationsThisWeek(applications);
+  // FE-MONTO M1: Skip applications with no requested_amount in pipeline sum
   const pipelineAmount = useMemo(
-    () => activeApps.reduce((sum, a) => sum + Number(a.requested_amount || 0), 0),
+    () => activeApps.reduce((sum, a) => {
+      const amount = a.requested_amount ? Number(a.requested_amount) : 0;
+      return sum + amount;
+    }, 0),
     [activeApps],
   );
 

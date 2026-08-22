@@ -62,7 +62,7 @@ export interface CreditApplication {
   vehicle_make: string | null;
   vehicle_model: string | null;
   vehicle_price: string | number | null;
-  requested_amount: string;
+  requested_amount: string | null;
   down_payment: string | null;
   status: CreditApplicationStatus;
   score: number | null;

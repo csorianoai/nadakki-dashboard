@@ -108,9 +108,10 @@ export function normalizeApplication(raw: unknown): CreditApplication {
     || "—";
 
   // Requested amount: top-level → payload.financial.requested_amount
+  // F4 / FE-MONTO M1: Never invent "0" when amount is absent — use null
   const requestedAmount = pickString(record, ["requested_amount", "requestedAmount", "amount"])
     || pickString(payloadFinancial, ["requested_amount", "requestedAmount", "amount"])
-    || "0";
+    || null;
 
   // Status: prefer top-level "status"; fall back to "state" with backend→frontend mapping
   let status: CreditApplication["status"];
@@ -175,7 +176,7 @@ export function normalizeApplication(raw: unknown): CreditApplication {
     vehicle_make: vehicleMake,
     vehicle_model: vehicleModel,
     vehicle_price: (record.vehicle_price ?? record.vehiclePrice ?? payloadVehicle.price ?? null) as string | number | null,
-    requested_amount: requestedAmount,
+    requested_amount: requestedAmount as string | null,
     down_payment: (record.down_payment ?? record.downPayment ?? null) as string | null,
     status,
     score,

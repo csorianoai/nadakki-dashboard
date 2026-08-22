@@ -39,7 +39,7 @@ export interface BankQueueItem {
   dealer_id: string | null;
   dealer_name: string | null;
   vehicle_label: string | null;
-  requested_amount: number;
+  requested_amount: number | null;  // FE-MONTO M1: Can be null when backend doesn't have it
   score: number;
   risk_level: string | null;
   approval_band: string | null;

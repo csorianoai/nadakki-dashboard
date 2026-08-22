@@ -31,7 +31,11 @@ export function BankDetailView({
           <h1 className="font-display text-3xl font-bold text-forge-text">{String(applicant?.full_name || "Cliente sin nombre")}</h1>
           <p className="mt-1 font-mono text-xs text-forge-text-muted">{application.application_id}</p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div><p className="text-xs text-forge-text-muted">Monto solicitado</p><p className="font-semibold text-forge-text">RD$ {Number(financial?.requested_amount || 0).toLocaleString("es-DO")}</p></div>
+            <div><p className="text-xs text-forge-text-muted">Monto solicitado</p><p className="font-semibold text-forge-text">{
+              financial?.requested_amount
+                ? `RD$ ${Number(financial.requested_amount).toLocaleString("es-DO")}`
+                : "No informado"
+            }</p></div>
             <div><p className="text-xs text-forge-text-muted">Vehículo</p><p className="font-semibold text-forge-text">{String(vehicle?.make || "")} {String(vehicle?.model || "")}</p></div>
             <div><p className="text-xs text-forge-text-muted">Estado</p><p className="font-semibold text-forge-text">{formatApplicationStateLabel(application.state)}</p></div>
           </div>
