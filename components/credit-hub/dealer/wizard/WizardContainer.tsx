@@ -775,11 +775,11 @@ export function WizardContainer() {
     }
     const calculated = calculateAmountToFinance(price, down);
     const calculatedStr = String(calculated);
-    // Only update if different to avoid infinite loop
+    // Only update if different to avoid redundant writes
     if (formData.requested_amount !== calculatedStr) {
       setFormData((prev) => ({ ...prev, requested_amount: calculatedStr }));
     }
-  }, [formData.vehicle_price, formData.down_payment, formData.requested_amount]);
+  }, [formData.vehicle_price, formData.down_payment]);  // Only react to inputs, not to output
 
   useEffect(() => {
     if (presetAppliedRef.current) return;
