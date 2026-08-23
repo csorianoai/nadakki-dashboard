@@ -4,10 +4,10 @@
  * Expected routes (tune backend to match):
  * - POST   .../applications/{applicationId}/documents/{documentId}/process
  * - POST   .../applications/{applicationId}/documents/process-all
- * - GET    .../applications/{applicationId}/documents/{documentId}/extracted-fields
+ * - GET    .../applications/{applicationId}/documents/{documentId}/extracted
  * - POST   .../applications/{applicationId}/face-match
  * - GET    .../applications/{applicationId}/fraud-signals
- * - POST   .../applications/{applicationId}/documents/{documentId}/review
+ * - PATCH  .../applications/{applicationId}/documents/{documentId}/review
  * - GET    .../applications/{applicationId}/documents/history
  */
 
@@ -123,7 +123,7 @@ export async function getExtractedFields(
 ): Promise<ExtractedFieldsPayload> {
   const tid = requireTenant(tenantId);
   const res = await fetch(
-    `${APP_PREFIX(applicationId)}/documents/${encodeURIComponent(documentId)}/extracted-fields`,
+    `${APP_PREFIX(applicationId)}/documents/${encodeURIComponent(documentId)}/extracted`,
     { headers: baseHeaders(tid, false) }
   );
   const json = await handleJson<unknown>(res);
@@ -282,7 +282,7 @@ export async function reviewDocument(
   const res = await fetch(
     `${APP_PREFIX(applicationId)}/documents/${encodeURIComponent(documentId)}/review`,
     {
-      method: "POST",
+      method: "PATCH",
       headers: baseHeaders(tid, true),
       body: JSON.stringify(payload),
     }
