@@ -292,7 +292,10 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       const parsed: unknown = JSON.parse(raw);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
       const partial = parsed as Partial<ApplicationFormData>;
-      setFormData((prev) => ({
+      
+      // Recalculate requested_amount if missing but price/down_payment exist
+      // This ensures the single source of truth even when loading from draft
+      const loadedData = {
         ...prev,
         ...partial,
         personal_references:
@@ -300,7 +303,15 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
             ? partial.personal_references
             : prev.personal_references,
         document_files_ready: partial.document_files_ready ?? prev.document_files_ready ?? {},
-      }));
+      };
+      
+      const price = Number(loadedData.vehicle_price) || 0;
+      const down = Number(loadedData.down_payment) || 0;
+      if (price > 0 && (!loadedData.requested_amount || loadedData.requested_amount === "")) {
+        loadedData.requested_amount = String(Math.max(0, price - down));
+      }
+      
+      setFormData(loadedData);
     } catch {
       /* ignore */
     }
