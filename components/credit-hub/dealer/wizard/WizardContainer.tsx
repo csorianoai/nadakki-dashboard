@@ -341,6 +341,14 @@ export function buildCreateApplicationPayload(
   formData: ApplicationFormData,
   options?: { defaultDocumentType?: string; wizardDocuments?: TenantRequiredDocument[] },
 ): CreateCreditApplicationPayload {
+  console.log("[PAYLOAD-DEBUG] Building payload with formData.requested_amount:", formData.requested_amount);
+  console.log("[PAYLOAD-DEBUG] Full financial fields:", {
+    requested_amount: formData.requested_amount,
+    vehicle_price: formData.vehicle_price,
+    down_payment: formData.down_payment,
+    desired_term: formData.desired_term,
+    monthly_debts: formData.monthly_debts,
+  });
   const defaultDoc = options?.defaultDocumentType ?? "CEDULA";
   const applicantBirthDate = parseDateInput(formData.applicant_date_of_birth);
   const applicantAge = applicantBirthDate ? calculateAge(applicantBirthDate) : "";
@@ -766,8 +774,16 @@ export function WizardContainer() {
   useEffect(() => {
     const price = numeric(formData.vehicle_price);
     const down = numeric(formData.down_payment);
+    console.log("[WIZARD-DEBUG] useEffect triggered:", {
+      vehicle_price: formData.vehicle_price,
+      down_payment: formData.down_payment,
+      price_numeric: price,
+      down_numeric: down,
+      current_requested_amount: formData.requested_amount,
+    });
     if (price <= 0) {
       // No price yet - keep requested_amount empty
+      console.log("[WIZARD-DEBUG] No price yet, clearing requested_amount");
       if (formData.requested_amount !== "") {
         setFormData((prev) => ({ ...prev, requested_amount: "" }));
       }
@@ -775,9 +791,13 @@ export function WizardContainer() {
     }
     const calculated = calculateAmountToFinance(price, down);
     const calculatedStr = String(calculated);
+    console.log("[WIZARD-DEBUG] Calculated amount:", calculated, "→", calculatedStr);
     // Only update if different to avoid redundant writes
     if (formData.requested_amount !== calculatedStr) {
+      console.log("[WIZARD-DEBUG] Updating requested_amount from", formData.requested_amount, "to", calculatedStr);
       setFormData((prev) => ({ ...prev, requested_amount: calculatedStr }));
+    } else {
+      console.log("[WIZARD-DEBUG] requested_amount already correct, skipping update");
     }
   }, [formData.vehicle_price, formData.down_payment]);  // Only react to inputs, not to output
 
@@ -906,12 +926,20 @@ export function WizardContainer() {
       setSubmitError(t.validation.consents_required);
       return;
     }
+    console.log("[SUBMIT-DEBUG] About to submit with formData.requested_amount:", formData.requested_amount);
+    console.log("[SUBMIT-DEBUG] Full formData state:", {
+      vehicle_price: formData.vehicle_price,
+      down_payment: formData.down_payment,
+      requested_amount: formData.requested_amount,
+      desired_term: formData.desired_term,
+    });
     setSubmitStatus("submitting");
     setSubmitError(null);
     try {
-      const result = await createMutation.mutateAsync(
-        buildCreateApplicationPayload(formData, { defaultDocumentType: defaultDocType })
-      );
+      const payload = buildCreateApplicationPayload(formData, { defaultDocumentType: defaultDocType });
+      console.log("[SUBMIT-DEBUG] Built payload, financial.requested_amount:", payload.financial.requested_amount);
+      const result = await createMutation.mutateAsync(payload);
+      console.log("[SUBMIT-DEBUG] Submit successful, application_id:", result.application_id);
       setSubmitStatus("success");
       celebrateSuccessRespectReduced();
       forgeToast.success(t.toasts.application_submitted);
@@ -919,7 +947,7 @@ export function WizardContainer() {
         router.push(forgeDealerApplicationDetailHref(result.application_id));
       }, 1500);
     } catch (error) {
-      console.error("Submit error");
+      console.error("[SUBMIT-DEBUG] Submit error:", error);
       setSubmitStatus("error");
       setSubmitError(error instanceof Error ? error.message : t.toasts.application_failed);
       forgeToast.error(error instanceof Error ? error.message : t.toasts.application_failed);
