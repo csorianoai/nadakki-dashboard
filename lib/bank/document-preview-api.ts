@@ -33,6 +33,11 @@ export function bankDocumentThumbnailUrl(
   return `${b}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/${encodeURIComponent(documentId)}/thumbnail?page=${page}`;
 }
 
+/**
+ * ⚠️ BROKEN: `/download` endpoint does not exist in backend (returns 404).
+ * TODO: Replace with actual working document retrieval endpoint once backend team confirms route.
+ * Used as fallback when preview.json metadata does not provide stream_path/pdf_url.
+ */
 export function bankDocumentDownloadUrl(applicationId: string, documentId: string): string {
   const b = creditApiBase();
   return `${b}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/${encodeURIComponent(documentId)}/download`;
@@ -56,7 +61,12 @@ export function buildPreviewFetchInit(
   };
 }
 
-/** Resolve usable PDF GET URL — metadata override or deterministic download endpoint. */
+/**
+ * Resolve usable PDF GET URL — metadata override or deterministic download endpoint.
+ * ⚠️ WARNING: preview.json now returns 410 (deprecated - required HMAC token not emitted).
+ * Fallback to /download also returns 404 (endpoint doesn't exist).
+ * Both paths are currently broken. Analysts cannot view documents until backend provides working route.
+ */
 export function resolvePdfSourceUrl(
   metadata: DocumentPreviewMetadata | null,
   applicationId: string,
@@ -68,6 +78,7 @@ export function resolvePdfSourceUrl(
     const base = creditApiBase();
     return `${base}${candidate.startsWith("/") ? "" : "/"}${candidate}`;
   }
+  // TODO: Replace with actual working endpoint once backend team confirms route
   return bankDocumentDownloadUrl(applicationId, documentId);
 }
 
