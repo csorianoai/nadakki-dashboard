@@ -720,7 +720,8 @@ export function WizardContainer() {
     const otherMonthly =
       formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
     const monthlyIncomeTotal = baseIncome + otherMonthly;
-    const loanAmount = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
+    // Read requested_amount from formData (single source of truth)
+    const loanAmount = numeric(formData.requested_amount);
     if (loanAmount <= 0) return null;
 
     const termParsed = /(\d+)/.exec(String(formData.desired_term ?? ""));
@@ -805,7 +806,19 @@ export function WizardContainer() {
   }, [searchParams]);
 
   const updateField = <K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [field]: value };
+      
+      // Auto-derive requested_amount when vehicle_price or down_payment change
+      // This is the SINGLE source of truth for requested_amount calculation
+      if (field === 'vehicle_price' || field === 'down_payment') {
+        const price = numeric(field === 'vehicle_price' ? value as string : next.vehicle_price);
+        const down = numeric(field === 'down_payment' ? value as string : next.down_payment);
+        next.requested_amount = price > 0 ? String(calculateAmountToFinance(price, down)) : "";
+      }
+      
+      return next;
+    });
   };
 
   const updateDocumentReceived = (key: string, checked: boolean) => {
@@ -1177,7 +1190,8 @@ export function WizardContainer() {
     if (currentStep === 2) {
       const otherMonthlyStep =
         formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
-      const amountToFinance = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
+      // Read requested_amount from formData (single source of truth)
+      const amountToFinance = numeric(formData.requested_amount);
       const estimatedCapacity = calculateWizardEstimatedCapacity(
         numeric(formData.monthly_income),
         otherMonthlyStep,
@@ -1267,7 +1281,8 @@ export function WizardContainer() {
         tenantConfig.garante_minimum_income_ratio > 0 &&
         (formData.co_debtor_required === "yes" || tenantConfig.features_enabled.garante_required)
       ) {
-        const loanAmount = calculateAmountToFinance(numeric(formData.vehicle_price), numeric(formData.down_payment));
+        // Read requested_amount from formData (single source of truth)
+        const loanAmount = numeric(formData.requested_amount);
         const termParsed = /(\d+)/.exec(String(formData.desired_term ?? ""));
         const termMonths = termParsed ? Math.max(1, parseInt(termParsed[1], 10)) : 60;
         if (loanAmount > 0) {
