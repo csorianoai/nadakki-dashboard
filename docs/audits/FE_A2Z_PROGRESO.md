@@ -374,3 +374,77 @@ También mapeados:
 ---
 
 ## INFORME FINAL · LOOP FE-MONTO
+
+**Estado:** COMPLETO
+- M0: VEREDICTO `NO_SE_PERSISTE` (wizard no calculaba requested_amount)
+- M1: PR #381 - Wizard auto-calcula requested_amount desde vehicle_price/down_payment + PR #379 - Display correcto para null
+- M2: PR #380 - Mapeo completo de estados CreditOrchestrator
+
+**PRs:**
+- #379 (display) WAITING_FOR_MERGE
+- #380 (estado) WAITING_FOR_MERGE  
+- #381 (wizard) WAITING_FOR_MERGE
+
+---
+
+## PACKET · Bank Document Contracts [D1]
+
+### D1 · Client-side contract misalignments [PR #382 - WAITING_FOR_MERGE]
+
+**Rama:** `fix/fe-document-contracts`
+
+**Problema reportado por auditoría:**
+- El analista del banco no puede ver documentos
+- `lib/bank/document-preview-api.ts:36,71` cae a `/documents/{id}/download` que no existe (404)
+- Preview devuelve 410 (deprecated - requería HMAC token que nadie emitía)
+- Ambos caminos rotos
+
+**3 contratos desalineados encontrados:**
+
+1. **POST → PATCH en `/review`**
+   - `lib/api/document-intelligence.ts:285`: usaba `method: "POST"`
+   - Backend real: `PATCH /api/v2/credit/document-requests/{id}/review`
+   - Documentado en `BACKEND_FRONTEND_COVERAGE_MATRIX.md:70`
+
+2. **`/extracted-fields` → `/extracted`**
+   - `lib/api/document-intelligence.ts:126`: pedía `/extracted-fields`
+   - Backend real: `/extracted`
+
+3. **`/download` no existe**
+   - `lib/bank/document-preview-api.ts:38`: construye URL a `/download`
+   - Usado como fallback en línea 71 cuando preview falla
+   - Backend retorna 404 (endpoint no existe)
+
+**Arreglos aplicados:**
+1. ✅ POST → PATCH corregido
+2. ✅ /extracted-fields → /extracted corregido
+3. ⚠️ /download documentado como roto con TODOs y warning comments
+
+**Comentarios agregados:**
+```typescript
+/**
+ * ⚠️ WARNING: preview.json now returns 410 (deprecated - required HMAC token not emitted).
+ * Fallback to /download also returns 404 (endpoint doesn't exist).
+ * Both paths are currently broken. Analysts cannot view documents until backend provides working route.
+ */
+```
+
+**Verificación:**
+- `npm run build` → "Compiled successfully" (3.9min)
+- 2 archivos modificados
+
+**BLOQUEADO:** No se puede arreglar completamente sin medición de red real del usuario
+- Necesito captura de DevTools Network cuando analista intenta abrir documento
+- ¿Existe alguna ruta que SÍ funcione para obtener el PDF?
+- Si no hay ruta funcional, es issue de backend
+
+**Consumidores afectados:**
+- `components/bank/DocumentPreviewPane.tsx` - Preview principal
+- `components/document-intelligence/DocumentReviewPanel.tsx` - Review de documentos
+- `e2e/bank/test_document_preview_e2e.spec.ts` - Tests E2E
+
+**BASE_SHA:** 06c7fef6 (origin/main post-#381)
+**HEAD_SHA:** 91696540
+**Estado:** WAITING_FOR_MERGE + WAITING_FOR_NETWORK_MEASUREMENT
+
+---
