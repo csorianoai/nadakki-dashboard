@@ -71,6 +71,7 @@ function mapBackendState(rawState: string): CreditApplicationStatus {
     case "HYBRID_IN_PROGRESS": return "processing";
     case "PROCESSED":
     case "BANK_COMPLETE":
+    case "BANK_FLOW_COMPLETED":  // Bank flow finished (may be empty if no banks participated)
     case "COMPLETED": return "processed";
     case "APPROVED":
     case "APPROVED_WITH_STIPULATIONS": return "approved";
@@ -87,7 +88,11 @@ function mapBackendState(rawState: string): CreditApplicationStatus {
     case "EXPIRED":
     case "CANCELLED":
       return "rejected";  // M2: Expired/cancelled are terminal rejections
-    default: return rawState.toLowerCase() as CreditApplicationStatus;
+    default:
+      // Unknown state: return raw value lowercased instead of producing invalid status
+      // This shows the actual backend state to developers instead of hiding it
+      console.warn(`[normalizers] Unknown backend state: "${rawState}" - displaying raw value`);
+      return rawState.toLowerCase() as CreditApplicationStatus;
   }
 }
 
