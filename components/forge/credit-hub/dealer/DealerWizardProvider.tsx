@@ -350,7 +350,19 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [searchParams]);
 
   const updateField = useCallback(<K extends keyof ApplicationFormData>(field: K, value: ApplicationFormData[K]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [field]: value };
+      
+      // Auto-derive requested_amount when vehicle_price or down_payment change
+      // This is the SINGLE source of truth for requested_amount calculation
+      if (field === 'vehicle_price' || field === 'down_payment') {
+        const price = Number(field === 'vehicle_price' ? value as string : next.vehicle_price) || 0;
+        const down = Number(field === 'down_payment' ? value as string : next.down_payment) || 0;
+        next.requested_amount = price > 0 ? String(Math.max(0, price - down)) : "";
+      }
+      
+      return next;
+    });
   }, []);
 
   const patchForm = useCallback((patch: Partial<ApplicationFormData>) => {
