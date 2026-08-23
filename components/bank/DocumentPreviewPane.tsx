@@ -75,13 +75,30 @@ export function DocumentPreviewPane({
             cache: "default",
           }),
         });
-        if (!res.ok) throw new Error(`PDF ${res.status}`);
+        if (!res.ok) {
+          if (res.status === 410) {
+            throw new Error("PREVIEW_DISABLED");
+          }
+          if (res.status === 404) {
+            throw new Error("ENDPOINT_NOT_FOUND");
+          }
+          throw new Error(`PDF ${res.status}`);
+        }
         const blob = await res.blob();
         if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
         setPrimaryUrl(objectUrl);
-      } catch {
-        if (!cancelled) setViewerError("No pudimos obtener el archivo PDF institucional.");
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : "";
+          if (msg === "PREVIEW_DISABLED" || msg.includes("410")) {
+            setViewerError("La visualización de documentos no está disponible actualmente. El backend no tiene habilitada esta capacidad.");
+          } else if (msg === "ENDPOINT_NOT_FOUND" || msg.includes("404")) {
+            setViewerError("La ruta de descarga de documentos no existe. Contacte al equipo de backend.");
+          } else {
+            setViewerError("No se pudo obtener el archivo PDF. Verifique su conexión o contacte a soporte.");
+          }
+        }
       }
     }
 
@@ -112,7 +129,10 @@ export function DocumentPreviewPane({
             cache: "default",
           })
         );
-        if (!res.ok) throw new Error("compare");
+        if (!res.ok) {
+          // Silent fail for comparison - same root cause as primary
+          throw new Error("compare");
+        }
         const blob = await res.blob();
         objectUrl = URL.createObjectURL(blob);
         if (!cancelled) setSecondaryUrl(objectUrl);
@@ -174,6 +194,16 @@ export function DocumentPreviewPane({
         resolved,
         buildPreviewFetchInit(tenantId, authToken, { headers: { Accept: "application/pdf,*/*" } })
       );
+      if (!res.ok) {
+        if (res.status === 410) {
+          setViewerError("La descarga de documentos no está disponible. El backend no tiene habilitada esta capacidad.");
+        } else if (res.status === 404) {
+          setViewerError("La ruta de descarga no existe. Contacte al equipo de backend.");
+        } else {
+          setViewerError(`Falló descarga: HTTP ${res.status}`);
+        }
+        return;
+      }
       const blob = await res.blob();
       const link = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
@@ -182,7 +212,7 @@ export function DocumentPreviewPane({
       anchor.click();
       window.setTimeout(() => URL.revokeObjectURL(link), 60_000);
     } catch {
-      setViewerError("Falló descarga segura desde API.");
+      setViewerError("Falló descarga desde API.");
     }
   }
 
@@ -268,7 +298,18 @@ export function DocumentPreviewPane({
                   </Document>
                 </div>
               ) : (
-                <p className="text-forge-xs text-forgeGray-500">Sin binario hasta que `/download` devuelva bytes.</p>
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-medium text-amber-900 mb-2">
+                    Visualización de documentos no disponible
+                  </p>
+                  <p className="text-xs text-amber-800">
+                    El backend no tiene habilitada la capacidad de preview de documentos. 
+                    Las rutas de descarga y visualización devuelven 410 (PREVIEW_DISABLED) o 404.
+                  </p>
+                  <p className="text-xs text-amber-700 mt-2">
+                    Contacte al equipo de backend para habilitar esta funcionalidad.
+                  </p>
+                </div>
               )}
             </div>
 

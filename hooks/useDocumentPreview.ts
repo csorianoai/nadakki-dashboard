@@ -40,6 +40,9 @@ export function useDocumentPreview(config: UseDocumentPreviewConfig) {
       );
 
       if (!response.ok) {
+        if (response.status === 410) {
+          throw new Error("PREVIEW_DISABLED: La visualización de documentos no está disponible actualmente. El backend no tiene habilitada esta capacidad.");
+        }
         throw new Error(`Preview meta falló (${response.status})`);
       }
 
