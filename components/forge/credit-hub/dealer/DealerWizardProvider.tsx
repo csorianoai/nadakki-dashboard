@@ -293,25 +293,27 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
       const partial = parsed as Partial<ApplicationFormData>;
       
-      // Recalculate requested_amount if missing (repairs old drafts from before PR #387)
-      // This handles drafts saved with empty requested_amount when vehicle_price/down_payment exist
-      let loadedData = {
-        ...prev,
-        ...partial,
-        personal_references:
-          Array.isArray(partial.personal_references) && partial.personal_references.length > 0
-            ? partial.personal_references
-            : prev.personal_references,
-        document_files_ready: partial.document_files_ready ?? prev.document_files_ready ?? {},
-      };
-      
-      const price = Number(loadedData.vehicle_price) || 0;
-      const down = Number(loadedData.down_payment) || 0;
-      if (price > 0 && (!loadedData.requested_amount || loadedData.requested_amount === "")) {
-        loadedData.requested_amount = String(Math.max(0, price - down));
-      }
-      
-      setFormData(loadedData);
+      setFormData((prev) => {
+        // Recalculate requested_amount if missing (repairs old drafts from before PR #387)
+        // This handles drafts saved with empty requested_amount when vehicle_price/down_payment exist
+        let loadedData = {
+          ...prev,
+          ...partial,
+          personal_references:
+            Array.isArray(partial.personal_references) && partial.personal_references.length > 0
+              ? partial.personal_references
+              : prev.personal_references,
+          document_files_ready: partial.document_files_ready ?? prev.document_files_ready ?? {},
+        };
+        
+        const price = Number(loadedData.vehicle_price) || 0;
+        const down = Number(loadedData.down_payment) || 0;
+        if (price > 0 && (!loadedData.requested_amount || loadedData.requested_amount === "")) {
+          loadedData.requested_amount = String(Math.max(0, price - down));
+        }
+        
+        return loadedData;
+      });
     } catch {
       /* ignore */
     }
