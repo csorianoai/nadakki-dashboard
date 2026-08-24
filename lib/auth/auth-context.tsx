@@ -17,7 +17,8 @@ import { scheduleProactiveRefresh, cancelProactiveRefresh } from "./token-refres
 import { clearWizardDraftStorage } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 
 // ── localStorage keys that must stay in sync with JWT claims ──────────────
-const LS_KEYS = {
+/** JWT claim → localStorage keys. TEST HOOK: exported for executable tests (C2). */
+export const LS_KEYS = {
   auth: "nadakki_auth",
   tenantId: "nadakki_tenant_id",
   tenantName: "nadakki_tenant_name",
@@ -27,8 +28,9 @@ const LS_KEYS = {
 } as const;
 
 /** Write tenant/role state to localStorage so legacy contexts, WebSocket
- *  client, and fetch-client all see the current JWT-derived values. */
-function syncLocalStorage(tenant: TenantInfo, role?: RoleInfo | null, accessToken?: string) {
+ *  client, and fetch-client all see the current JWT-derived values.
+ *  TEST HOOK: exported for executable tests (C2) to verify localStorage writes. */
+export function syncLocalStorage(tenant: TenantInfo, role?: RoleInfo | null, accessToken?: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem(LS_KEYS.auth, "true");
   localStorage.setItem(LS_KEYS.tenantId, tenant.id);
@@ -38,8 +40,8 @@ function syncLocalStorage(tenant: TenantInfo, role?: RoleInfo | null, accessToke
   if (accessToken) localStorage.setItem(LS_KEYS.sicToken, accessToken);
 }
 
-/** Clear all nadakki_* keys on logout. */
-function clearLocalStorage() {
+/** Clear all nadakki_* keys on logout. TEST HOOK: exported for executable tests (C2) to verify cleanup. */
+export function clearLocalStorage() {
   if (typeof window === "undefined") return;
   for (const key of Object.values(LS_KEYS)) {
     localStorage.removeItem(key);
