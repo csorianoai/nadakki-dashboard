@@ -919,6 +919,24 @@ export function WizardContainer() {
       setSubmitError(t.validation.consents_required);
       return;
     }
+    
+    // Guard: detect missing requested_amount when vehicle_price exists
+    // This protects against the bug returning through another path and measures how many old drafts exist
+    const price = Number(formData.vehicle_price) || 0;
+    const requestedAmount = formData.requested_amount;
+    if (price > 0 && (!requestedAmount || requestedAmount === "" || requestedAmount === "0")) {
+      setSubmitStatus("error");
+      const errorMsg = "No se puede enviar: el monto a financiar no fue calculado. Por favor, verifica el precio del vehículo y el inicial.";
+      setSubmitError(errorMsg);
+      forgeToast.error(errorMsg);
+      console.error("[handleSubmit] GUARD TRIGGERED: requested_amount missing with vehicle_price present", {
+        vehicle_price: formData.vehicle_price,
+        down_payment: formData.down_payment,
+        requested_amount: formData.requested_amount,
+      });
+      return;
+    }
+    
     setSubmitStatus("submitting");
     setSubmitError(null);
     try {
