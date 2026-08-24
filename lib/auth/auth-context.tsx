@@ -223,12 +223,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Draft contains PII: cédula, nombre, fecha_nacimiento, teléfono, correo,
     // dirección, ingreso_mensual. Must not survive logout in shared device.
     const { purgeAllWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-storage");
+    const { clearSessionStorage } = await import("@/lib/auth/auth-session-cleanup");
     purgeAllWizardDrafts();
     
     const token = tokenStorage.getAccessToken();
     if (token) await logoutV2(token);
     tokenStorage.clearTokens();
     clearLocalStorage();
+    clearSessionStorage(); // ← NEW: Clear PII from sessionStorage (Ley 172-13)
     cancelProactiveRefresh();
     setUser(null);
     setTenant(null);
