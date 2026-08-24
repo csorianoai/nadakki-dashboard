@@ -448,3 +448,172 @@ También mapeados:
 **Estado:** WAITING_FOR_MERGE + WAITING_FOR_NETWORK_MEASUREMENT
 
 ---
+
+## LOOP FIX-FE · Cierre de 5 puntos de auditoría
+
+### C1 · PII en sessionStorage tras el logout [PR #388 - WAITING_FOR_MERGE]
+
+**Rama:** `fix/fe-c1-pii-session-storage`
+
+**Problema reportado (18 iteraciones):**
+- PII persistía en `sessionStorage` tras logout
+- 5 áreas identificadas: credit process results, stipulation workflows, workflow audit trail, saved scenarios, wizard telemetry
+
+**Arreglo aplicado:**
+1. **Nuevo archivo:** `lib/auth/auth-session-cleanup.ts`
+   - `clearSessionStorage()`: pattern-based removal de claves PII
+   - `PII_PREFIXES`: array de prefijos conocidos
+   - `hasSessionStoragePII()` / `getSessionStoragePIIKeys()`: helpers de verificación
+
+2. **Integración en logout:** `lib/auth/auth-context.tsx`
+   - Llamada a `clearSessionStorage()` en función `logout()`
+   - Se ejecuta DESPUÉS de `clearLocalStorage()`
+
+**Test coverage:**
+- `tests/auth/logout-pii-cleanup.test.ts` (nuevo)
+- 6 tests ejecutables con `@jest-environment jsdom`
+- SMOKE test: falla si `clearSessionStorage` se comenta
+- Tests específicos por cada fuente de PII
+
+**Resultado:** 6/6 tests passed
+**BASE_SHA:** 48400ebe (origin/main post-C1)
+**Estado:** WAITING_FOR_MERGE
+
+---
+
+### C2 · Tests que pasan sin ejecutar nada [PR #389 - WAITING_FOR_MERGE]
+
+**Rama:** `fix/fe-c2-executable-tests`
+
+**Problema reportado (16 iteraciones):**
+- Tests "source-level" que buscan strings en código (`expect(src).toContain(...)`)
+- Pasan aunque el código esté comentado o roto
+- Específicamente: `tests/auth/tenant-sync.test.ts` (líneas 45-46, 84, 97) y `tests/auth/sic-token-refresh.test.ts` (líneas 132-133)
+
+**Arreglo aplicado:**
+1. **Nuevo archivo de tests:** `tests/auth/tenant-sync-executable.test.ts`
+   - Reemplaza tests source-level con tests ejecutables
+   - Llama directamente a `syncLocalStorage()`, `clearLocalStorage()`, `tokenStorage` functions
+   - SMOKE tests: fallan si el código se comenta
+
+2. **Exportaciones agregadas:** `lib/auth/auth-context.tsx`
+   - `export const LS_KEYS`
+   - `export function syncLocalStorage(...)`
+   - `export function clearLocalStorage()`
+
+3. **Inventario completo:** `docs/audits/C2_SOURCE_LEVEL_TESTS_INVENTORY.md`
+   - 80+ tests source-level catalogados
+   - Priorizados: Critical (auth/propiedad), Medium, Low
+   - Tests relacionados a auth/tokens ya reescritos
+
+**Test coverage:**
+- 14 executable tests (syncLocalStorage, clearLocalStorage, tokenStorage)
+- Todos incluyen SMOKE tests para verificar ejecución real
+- 14/14 tests passed
+
+**BASE_SHA:** 48400ebe
+**Estado:** WAITING_FOR_MERGE
+
+---
+
+### C3 · El contrato con el backend, verificado [PR #390 - WAITING_FOR_MERGE]
+
+**Rama:** `fix/fe-c3-backend-contract-verification`
+
+**Problema reportado (12 iteraciones):**
+- Verificar existencia de rutas backend: `GET /extracted` y `PATCH /review`
+- Un 401 prueba existencia, un 404 prueba no-existencia
+
+**Medición ejecutada:**
+```powershell
+# GET /extracted
+Invoke-WebRequest -Uri "https://api.nadakki.com/api/v2/credit/applications/test-id/documents/test-doc/extracted" 
+→ StatusCode: 401 ✓ (ruta existe)
+
+# PATCH /review
+Invoke-WebRequest -Uri "https://api.nadakki.com/api/v2/credit/applications/test-id/documents/test-doc/review" -Method PATCH
+→ StatusCode: 401 ✓ (ruta existe)
+```
+
+**Resultado:**
+- Ambas rutas confirmadas como existentes en `api.nadakki.com`
+- Documentado en `docs/audits/C3_BACKEND_CONTRACT_VERIFICATION.md`
+
+**BASE_SHA:** 48400ebe
+**Estado:** WAITING_FOR_MERGE
+
+---
+
+### C4 · El monto, de punta a punta [PR #391 - WAITING_FOR_MERGE]
+
+**Rama:** `fix/fe-c4-requested-amount-verification`
+
+**Problema reportado (10 iteraciones):**
+- Confirmar que `updateField` del Provider puebla `requested_amount`
+- Medir si es el único mecanismo o si el recálculo al cargar draft es crítico
+
+**Arreglo aplicado:**
+1. **Nuevo archivo de tests:** `tests/credit-hub/dealer/wizard/requested-amount-logic.test.ts`
+   - 11 unit tests que ejecutan la lógica de cálculo directamente
+   - Casos: 600000 precio + 30000 enganche → 570000 requested_amount
+   - Edge cases: price=0, negativo, down>price, strings no numéricos
+   - SMOKE test: verifica que la implementación en PR #387 es exacta
+
+2. **Documentación:** `docs/audits/C4_REQUESTED_AMOUNT_VERIFICATION.md`
+   - **Análisis del código:** `updateField` del Provider SÍ puebla el campo (líneas 358-361 de `DealerWizardProvider.tsx`)
+   - **Draft reload:** NO hay recálculo al cargar draft en `main` actual (líneas 282-307)
+   - **Conclusión:** `updateField` es el ÚNICO mecanismo poblando `requested_amount`
+   - **Implicación:** Si `updateField` falla, no hay fallback
+
+**Test coverage:**
+- 11/11 tests passed
+- Cálculo matemático verificado: `600000 - 30000 = 570000`
+- Casos edge cubiertos
+
+**BASE_SHA:** 48400ebe
+**Estado:** WAITING_FOR_MERGE
+
+---
+
+### C5 · La app móvil nunca se compiló [PR #392 - WAITING_FOR_MERGE]
+
+**Rama:** `fix/fe-c5-mobile-app-verification`
+
+**Problema reportado (12 iteraciones):**
+- Verificar proceso de build de app móvil
+- Si no ejecutable, documentar con `NO_EJECUTABLE`
+- Verificar: `capacitor.config.ts` URL, manifest icons, service worker no cachea rutas autenticadas
+
+**Verificación ejecutada:**
+
+1. **Capacitor config:** ✅ PASS
+   - URL: `https://dashboard.nadakki.com/credit-hub/dealer` (producción correcta)
+   - `cleartext: false`, `androidScheme: "https"`
+
+2. **Manifest icons:** ✅ PASS
+   - Declara 8 iconos (72, 96, 128, 144, 152, 192, 384, 512)
+   - 8/8 iconos verificados en `public/icons/`
+
+3. **Service worker:** ✅ PASS (crítico para Ley 172-13)
+   - Rutas autenticadas usan `NetworkOnly` (NO se cachean):
+     - `/api/*`, `/auth`, `/login`, `/dashboard`, `/dealer`, `/bank`, `/credit-hub`, `/applications`, `/documents`
+   - Solo assets estáticos se cachean (CSS, JS, fonts, icons)
+   - **Esto previene PII exposure** (mismo defecto que C1, distinta vía)
+
+4. **Build:** ⚠️ NO_EJECUTABLE
+   - Android SDK: ✅ FOUND at `C:\Users\ramon\AppData\Local\Android\Sdk`
+   - Java/JDK: ❌ NOT FOUND (`JAVA_HOME` not set)
+   - `npx cap sync android`: ✅ succeeded
+   - `android/gradlew.bat`: ✅ exists
+   - Build: ❌ blocked by missing Java
+
+**Resultado:**
+- **Configuración:** PASS (URL, icons, service worker security)
+- **Build:** NO_EJECUTABLE (Java/JDK requerido)
+
+**Documentación:** `docs/audits/C5_MOBILE_APP_VERIFICATION.md`
+
+**BASE_SHA:** 48400ebe
+**Estado:** WAITING_FOR_MERGE
+
+---
