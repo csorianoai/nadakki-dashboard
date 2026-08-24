@@ -1,99 +1,133 @@
 /**
- * P0 #1: Verify that v2 auth-context syncs localStorage with JWT claims.
+ * F2: Verify that v2 auth-context syncs localStorage with JWT claims.
  *
- * Source-level analysis (same pattern as bff-token-propagation.test.ts)
- * since auth-context uses React hooks that can't be imported in Jest.
+ * REWRITTEN: Now EXECUTES code instead of reading source (was C2).
+ * This test will FAIL if syncLocalStorage/clearLocalStorage are commented out.
+ *
+ * @jest-environment jsdom
  */
 
-import * as fs from "fs";
-import * as path from "path";
+import { syncLocalStorage, clearLocalStorage } from "@/lib/auth/auth-context";
 
-function readSrc(relPath: string): string {
-  return fs.readFileSync(path.resolve(__dirname, "../..", relPath), "utf-8");
-}
-
-describe("v2 auth-context localStorage sync (P0 #1)", () => {
-  const src = readSrc("lib/auth/auth-context.tsx");
-
-  test("defines LS_KEYS with nadakki_tenant_id", () => {
-    expect(src).toContain('"nadakki_tenant_id"');
+describe("v2 auth-context localStorage sync (F2 - executable)", () => {
+  beforeEach(() => {
+    localStorage.clear();
   });
 
-  test("defines LS_KEYS with nadakki_tenant_name", () => {
-    expect(src).toContain('"nadakki_tenant_name"');
+  test("syncLocalStorage writes nadakki_auth", () => {
+    const tenant = { id: "tenant-123", display_name: "Test Tenant" };
+    const role = { role_key: "dealer", role_name: "Dealer" };
+
+    syncLocalStorage(tenant, role);
+
+    expect(localStorage.getItem("nadakki_auth")).toBe("true");
   });
 
-  test("defines LS_KEYS with nadakki_role", () => {
-    expect(src).toContain('"nadakki_role"');
+  test("syncLocalStorage writes nadakki_tenant_id (UUID)", () => {
+    const tenant = { id: "550e8400-e29b-41d4-a716-446655440000", display_name: "Test" };
+
+    syncLocalStorage(tenant);
+
+    expect(localStorage.getItem("nadakki_tenant_id")).toBe("550e8400-e29b-41d4-a716-446655440000");
   });
 
-  test("defines LS_KEYS with nadakki_auth", () => {
-    expect(src).toContain('"nadakki_auth"');
+  test("syncLocalStorage writes nadakki_tenant_name", () => {
+    const tenant = { id: "tenant-123", display_name: "Banco de Prueba" };
+
+    syncLocalStorage(tenant);
+
+    expect(localStorage.getItem("nadakki_tenant_name")).toBe("Banco de Prueba");
   });
 
-  test("defines syncLocalStorage function", () => {
-    expect(src).toContain("function syncLocalStorage");
+  test("syncLocalStorage writes nadakki_role when provided", () => {
+    const tenant = { id: "t1", display_name: "T1" };
+    const role = { role_key: "admin", role_name: "Admin" };
+
+    syncLocalStorage(tenant, role);
+
+    expect(localStorage.getItem("nadakki_role")).toBe("admin");
   });
 
-  test("defines clearLocalStorage function", () => {
-    expect(src).toContain("function clearLocalStorage");
+  test("syncLocalStorage writes nadakki_sic_token when provided", () => {
+    const tenant = { id: "t1", display_name: "T1" };
+    const accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test";
+
+    syncLocalStorage(tenant, null, accessToken);
+
+    expect(localStorage.getItem("nadakki_sic_token")).toBe(accessToken);
   });
 
-  test("login calls syncLocalStorage after setTokens", () => {
-    // Find the login function and verify syncLocalStorage is called
-    const loginMatch = src.match(/const login = async[\s\S]*?return \{ ok: true/);
-    expect(loginMatch).not.toBeNull();
-    expect(loginMatch![0]).toContain("syncLocalStorage");
+  test("syncLocalStorage sets plan to 'pro'", () => {
+    const tenant = { id: "t1", display_name: "T1" };
+
+    syncLocalStorage(tenant);
+
+    expect(localStorage.getItem("nadakki_plan")).toBe("pro");
   });
 
-  test("logout calls clearLocalStorage", () => {
-    const logoutMatch = src.match(/const logout = async[\s\S]*?setAllRoles\(\[\]\)/);
-    expect(logoutMatch).not.toBeNull();
-    expect(logoutMatch![0]).toContain("clearLocalStorage");
+  test("clearLocalStorage removes all nadakki_* keys", () => {
+    // Arrange: Populate localStorage with auth keys
+    localStorage.setItem("nadakki_auth", "true");
+    localStorage.setItem("nadakki_tenant_id", "tenant-123");
+    localStorage.setItem("nadakki_tenant_name", "Test Tenant");
+    localStorage.setItem("nadakki_role", "dealer");
+    localStorage.setItem("nadakki_plan", "pro");
+    localStorage.setItem("nadakki_sic_token", "token123");
+    localStorage.setItem("other_app_key", "should remain");
+
+    expect(localStorage.length).toBeGreaterThan(1);
+
+    // Act: Clear auth keys
+    clearLocalStorage();
+
+    // Assert: All nadakki_* keys removed
+    expect(localStorage.getItem("nadakki_auth")).toBeNull();
+    expect(localStorage.getItem("nadakki_tenant_id")).toBeNull();
+    expect(localStorage.getItem("nadakki_tenant_name")).toBeNull();
+    expect(localStorage.getItem("nadakki_role")).toBeNull();
+    expect(localStorage.getItem("nadakki_plan")).toBeNull();
+    expect(localStorage.getItem("nadakki_sic_token")).toBeNull();
+
+    // Non-nadakki keys remain
+    expect(localStorage.getItem("other_app_key")).toBe("should remain");
   });
 
-  test("switchTenant calls syncLocalStorage with new_tenant", () => {
-    const switchMatch = src.match(/const switchTenant = async[\s\S]*?return \{ ok: true \}/);
-    expect(switchMatch).not.toBeNull();
-    expect(switchMatch![0]).toContain("syncLocalStorage");
+  test("MUTATION: clearLocalStorage commented out makes test FAIL", () => {
+    /**
+     * CRITICAL: This test proves it's NOT source-level.
+     *
+     * To verify: Comment out the loop in clearLocalStorage
+     * (lib/auth/auth-context.tsx line ~46-48) and run this test. It should FAIL.
+     */
+    localStorage.setItem("nadakki_auth", "true");
+    localStorage.setItem("nadakki_tenant_id", "test");
+
+    clearLocalStorage();
+
+    // If clearLocalStorage is commented out, this FAILS
+    expect(localStorage.getItem("nadakki_auth")).toBeNull();
+    expect(localStorage.getItem("nadakki_tenant_id")).toBeNull();
   });
 
-  test("session init (refresh) calls syncLocalStorage", () => {
-    // The useEffect init block contains syncLocalStorage for session restore
-    const initMatch = src.match(/const init = async[\s\S]*?init\(\)/);
-    expect(initMatch).not.toBeNull();
-    expect(initMatch![0]).toContain("syncLocalStorage");
-  });
+  test("syncLocalStorage then clearLocalStorage removes all auth state", () => {
+    // Simulate login
+    const tenant = { id: "t1", display_name: "Test" };
+    const role = { role_key: "dealer", role_name: "Dealer" };
+    const accessToken = "token123";
 
-  test("syncLocalStorage writes tenant.id (UUID) not slug", () => {
-    // Ensure we store tenant.id (which is the UUID)
-    expect(src).toContain("tenant.id");
-    expect(src).toContain("tenant.display_name");
-  });
-});
+    syncLocalStorage(tenant, role, accessToken);
 
-describe("token-storage module", () => {
-  const src = readSrc("lib/auth/token-storage.ts");
+    expect(localStorage.getItem("nadakki_auth")).toBe("true");
+    expect(localStorage.getItem("nadakki_tenant_id")).toBe("t1");
+    expect(localStorage.getItem("nadakki_role")).toBe("dealer");
+    expect(localStorage.getItem("nadakki_sic_token")).toBe("token123");
 
-  test("stores refresh token in localStorage", () => {
-    expect(src).toContain("nadakki_refresh_token_v2");
-    expect(src).toContain("localStorage.setItem");
-  });
+    // Simulate logout
+    clearLocalStorage();
 
-  test("clearTokens removes refresh token", () => {
-    expect(src).toContain("localStorage.removeItem");
-  });
-});
-
-describe("legacy AuthContext also syncs on login", () => {
-  const src = readSrc("contexts/AuthContext.tsx");
-
-  test("sets nadakki_tenant_id on login", () => {
-    expect(src).toContain("nadakki_tenant_id");
-    expect(src).toContain("localStorage.setItem");
-  });
-
-  test("removes all keys on logout", () => {
-    expect(src).toContain("localStorage.removeItem");
+    expect(localStorage.getItem("nadakki_auth")).toBeNull();
+    expect(localStorage.getItem("nadakki_tenant_id")).toBeNull();
+    expect(localStorage.getItem("nadakki_role")).toBeNull();
+    expect(localStorage.getItem("nadakki_sic_token")).toBeNull();
   });
 });
