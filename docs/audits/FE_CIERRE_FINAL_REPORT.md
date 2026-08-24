@@ -91,13 +91,18 @@
 
 ## PRs Abiertos
 
-1. **fix/fe-f2-executable-tests** ([branch](https://github.com/csorianoai/nadakki-dashboard/tree/fix/fe-f2-executable-tests))
+1. **fix/fe-f2-executable-tests** ([PR #395](https://github.com/csorianoai/nadakki-dashboard/pull/395))
    - F2: Reescribir tenant-sync test (source → executable)
    - Commit: `a72107b3`
 
-2. **fix/fe-f3-requested-amount-tests** ([branch](https://github.com/csorianoai/nadakki-dashboard/tree/fix/fe-f3-requested-amount-tests))
+2. **fix/fe-f3-requested-amount-tests** ([PR #396](https://github.com/csorianoai/nadakki-dashboard/pull/396))
    - F3: Add submit guard tests for requested_amount
    - Commit: `150226a5`
+
+3. **🆕 fix/fe-f1-pii-registry-guard** ([PR #398](https://github.com/csorianoai/nadakki-dashboard/pull/398))
+   - F1 DoD #3: PII registry guard test
+   - Commit: `86015740`
+   - **Falla intencionalmente** hasta que `autos_admin_dealers_` se registre
 
 ---
 
