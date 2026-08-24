@@ -17,17 +17,28 @@
 
 **PII tras logout:** cero  
 **Test que ejecuta:** sí  
-**Clave nueva rompe:** sí  
+**Clave nueva rompe:** sí ✅ (PR #398)  
 **Service worker:** no cachea autenticadas
 
 **Resultado:**
 - `clearSessionStorage()` integrado en logout (línea 235 de `lib/auth/auth-context.tsx`)
 - Test ejecutable: `tests/auth/logout-pii-cleanup.test.ts` (11/11 pass)
-- Service worker verifi cado: `NetworkOnly` para todas las rutas autenticadas
+- Service worker verificado: `NetworkOnly` para todas las rutas autenticadas
 - 5 superficies PII cubiertas con prefijos pattern-based
+- **🆕 Guard test:** `tests/auth/pii-registry-guard.test.ts` detecta PII nueva sin registrar
+
+**DoD Completo (3/3):**
+1. ✅ Tras logout, cero PII en stores
+2. ✅ Test ejecuta logout e inspecciona stores (no lee source)
+3. ✅ Clave nueva sin registrar hace fallar test
 
 **Verificación de mutación:**
 - Comentar `clearSessionStorage()` → test FALLA ✅
+
+**Ejemplo de detección (PR #398):**
+- `autos_admin_dealers_` identificado como PII sin registrar
+- Test FALLA hasta que se mueva a `PII_PREFIXES`
+- Previene: "llegamos a seis superficies" sin que nada avise
 
 ---
 
