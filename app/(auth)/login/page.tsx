@@ -10,10 +10,11 @@ import {
   resolveVisiblePlatformTitle,
 } from "@/lib/white-label/brand-display";
 import { Skeleton } from "@/components/forge/ui/Skeleton";
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 export default function LoginPage() {
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com"}/health`, { method: "GET" }).catch(() => {});
+    fetch(`${resolveBackendUrl()}/health`, { method: "GET" }).catch(() => {});
   }, []);
   const router = useRouter();
   const { login, isAuthenticated, isLoading, allRoles, activeRole, initError, retryInit } = useAuth();

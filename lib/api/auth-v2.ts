@@ -1,3 +1,4 @@
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 export interface LoginRequest {
   email: string;
   password: string;
@@ -83,12 +84,7 @@ export interface SwitchRoleResponse {
   active_role: RoleInfo;
 }
 
-const BASE_URL = (
-  process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://api.nadakki.com"
-);
+const BASE_URL = resolveBackendUrl();
 
 /** Per-request ceiling for session init (/refresh + /me). */
 export const AUTH_FETCH_TIMEOUT_MS = 5_000;

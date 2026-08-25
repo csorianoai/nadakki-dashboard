@@ -1,14 +1,9 @@
 // NEVER forward to /run (RLS bug on backend).
 import { NextRequest, NextResponse } from "next/server";
 import { buildBffUpstreamHeaders, resolveBffTenantId } from "@/lib/api/bff-proxy-headers";
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 
-const BACKEND_URL = (
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://api.nadakki.com"
-).replace(/\/$/, "");
+const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
 
 async function proxyRequest(
   req: NextRequest,

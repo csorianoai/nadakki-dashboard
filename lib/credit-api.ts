@@ -4,17 +4,12 @@
  *
  * Canonical env var: NEXT_PUBLIC_NADAKKI_API_URL
  * Fallback chain: NEXT_PUBLIC_NADAKKI_API_URL → NEXT_PUBLIC_API_URL
- *   → NEXT_PUBLIC_API_BASE_URL → https://api.nadakki.com
+ *   → NEXT_PUBLIC_API_BASE_URL → el host declarado (ver lib/config/backend-url.ts)
  */
 
 import { tokenStorage } from "@/lib/auth/token-storage";
 
-const BACKEND_URL = (
-  process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://api.nadakki.com"
-).replace(/\/$/, "");
+const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
 
 const LEGACY_ACCESS_TOKEN_KEY = "nadakki_sic_token";
 
@@ -853,3 +848,4 @@ export async function saveConsents(
   }
 }
 import { fileToBase64 } from "@/lib/customer/upload/fileToBase64";
+import { resolveBackendUrl } from "@/lib/config/backend-url";

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://api.nadakki.com";
+  resolveBackendUrl();
 
 export async function GET(req: NextRequest) {
   // Authorization is enforced by middleware.ts — if we reach here,
