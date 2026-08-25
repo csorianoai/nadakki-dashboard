@@ -1,9 +1,9 @@
 // NEVER forward to /run (RLS bug on backend).
 import { NextRequest, NextResponse } from "next/server";
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://api.nadakki.com";
+  resolveBackendUrl();
 
 export async function POST(
   req: NextRequest,

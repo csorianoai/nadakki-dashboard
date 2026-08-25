@@ -1,10 +1,11 @@
 import { fetchWithFallback, type FetchSource } from "@/lib/api/client";
 import { CAMPAIGNS_API, MARKETING_ENDPOINTS } from "@/lib/api/endpoints";
 import { tokenStorage } from "@/lib/auth/token-storage";
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com";
+const BACKEND_URL = resolveBackendUrl();
 
 /** Attach JWT Authorization header if available (tenant isolation). */
 function authHeaders(extra?: Record<string, string>): Record<string, string> {

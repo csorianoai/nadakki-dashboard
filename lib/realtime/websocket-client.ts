@@ -1,8 +1,9 @@
 import type { RealtimeClientConfig, RealtimeConnectionState } from "@/types/realtime";
 import { tokenStorage } from "@/lib/auth/token-storage";
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 export const DEFAULT_REALTIME_WS_URL =
-  process.env.NEXT_PUBLIC_WS_URL ?? "wss://api.nadakki.com/ws";
+  process.env.NEXT_PUBLIC_WS_URL ?? resolveBackendUrl().replace(/^http/, "ws") + "/ws";
 
 export const HEARTBEAT_DEFAULT_MS = 30_000;
 

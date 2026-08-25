@@ -261,15 +261,25 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    const backendUrl = cleanBackendUrl(
+    // Opcion C: NO se duplica la logica de lib/config/backend-url.ts -eso
+    // reintroduciria las listas divergentes que ese modulo cierra- pero
+    // tampoco se elige produccion por defecto, que era el riesgo real.
+    // Unificarlo de verdad exige pasar este fichero a .mjs con import, y eso
+    // es un packet aparte.
+    const declarado =
       process.env.BACKEND_URL ||
-        process.env.NEXT_PUBLIC_BACKEND_URL ||
-        process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        process.env.NEXT_PUBLIC_API_BASE_URL ||
-        process.env.NEXT_PUBLIC_RENDER_API_URL ||
-        "https://api.nadakki.com",
-    );
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_RENDER_API_URL;
+    if (!declarado) {
+      throw new Error(
+        "BACKEND_URL no declarado. Los rewrites necesitan un destino explicito; " +
+          "no se elige uno por defecto. Ver lib/config/backend-url.ts.",
+      );
+    }
+    const backendUrl = cleanBackendUrl(declarado);
     return [
       {
         source: "/api/marketing/campaigns/launch-pilot",

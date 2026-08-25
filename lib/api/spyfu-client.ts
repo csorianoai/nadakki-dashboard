@@ -1,3 +1,4 @@
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 import type {
   AdsResponse,
   AdHistoryData,
@@ -23,7 +24,7 @@ import {
   FeatureDisabledError as FeatureDisabledErrorClass,
 } from "@/types/spyfu";
 
-const DEFAULT_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com";
+const DEFAULT_BASE = resolveBackendUrl();
 
 
 function getDetail(body: unknown): unknown {

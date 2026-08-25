@@ -1,3 +1,4 @@
+import { resolveBackendUrl } from "@/lib/config/backend-url";
 /**
  * AME / Autopilot API client
  * Consumes backend endpoints for autonomous marketing engine operations.
@@ -7,9 +8,7 @@
  * /api/v1/scheduler/status goes through the Next.js catch-all proxy.
  */
 
-const BACKEND_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "https://api.nadakki.com"
-).replace(/\/$/, "");
+const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
 
 function tenantHeaders(tenantId: string, role?: string): Record<string, string> {
   const h: Record<string, string> = {
