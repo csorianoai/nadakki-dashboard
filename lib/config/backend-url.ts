@@ -50,21 +50,55 @@ export class BackendUrlNotConfiguredError extends Error {
  * El backend declarado, sin barra final.
  * @throws BackendUrlNotConfiguredError si ninguna variable está definida.
  */
-export function resolveBackendUrl(env: NodeJS.ProcessEnv = process.env): string {
-  for (const nombre of BACKEND_URL_ENV_VARS) {
-    const valor = (env[nombre] || "").trim();
+/**
+ * Los candidatos se leen con acceso LITERAL, no con `env[nombre]`.
+ *
+ * Next solo sustituye `process.env.NEXT_PUBLIC_X` en el bundle del cliente
+ * cuando aparece como expresion literal. Un indice calculado no se puede
+ * reemplazar en build, asi que en el navegador `process.env` llega vacio y el
+ * resolutor lanzaba: la pagina de login dejo de renderizar por completo.
+ *
+ * El build no lo detecto -EXIT=0, 298 paginas- porque server-side el acceso
+ * dinamico funciona. El fallo solo aparece al hidratar en el cliente.
+ */
+/**
+ * Los candidatos se leen con acceso LITERAL. No hay parametro `env` ni indice
+ * calculado en NINGUNA rama, a proposito.
+ *
+ * Next solo sustituye `process.env.NEXT_PUBLIC_X` en el bundle del cliente
+ * cuando aparece como expresion literal. Un indice calculado no se puede
+ * reemplazar en build, asi que en el navegador `process.env` llegaba vacio y
+ * el resolutor lanzaba: la pagina de login dejo de renderizar por completo.
+ *
+ * El build no lo detecto -EXIT=0, 298 paginas- porque server-side el acceso
+ * dinamico funciona. El fallo solo aparece al hidratar en el cliente.
+ *
+ * Y el test tampoco: le pasaba un `env` explicito, que es justo el caso que
+ * nunca falla. Por eso el parametro se elimino en vez de conservarse para
+ * comodidad de los tests: los tests ahora ejercitan el mismo camino que el
+ * navegador.
+ */
+function candidatos(): (string | undefined)[] {
+  return [
+    process.env.BACKEND_URL,
+    process.env.NEXT_PUBLIC_BACKEND_URL,
+    process.env.NEXT_PUBLIC_NADAKKI_API_URL,
+    process.env.NEXT_PUBLIC_API_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL,
+  ];
+}
+
+export function resolveBackendUrl(): string {
+  for (const bruto of candidatos()) {
+    const valor = (bruto || "").trim();
     if (valor) return valor.replace(/\/+$/, "");
   }
   throw new BackendUrlNotConfiguredError();
 }
 
-/**
- * Variante que no lanza, para superficies que deben degradar en vez de romper
- * (por ejemplo un health check). Devuelve null, NUNCA producción.
- */
-export function resolveBackendUrlOrNull(env: NodeJS.ProcessEnv = process.env): string | null {
+export function resolveBackendUrlOrNull(): string | null {
   try {
-    return resolveBackendUrl(env);
+    return resolveBackendUrl();
   } catch {
     return null;
   }
