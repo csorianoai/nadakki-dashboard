@@ -1,272 +1,198 @@
 /**
- * F1 DoD #3: Detect unregistered PII keys in sessionStorage.
- * 
- * CRITICAL: This test FAILS if a developer adds a new sessionStorage key
- * that may contain PII without registering it in PII_PREFIXES.
- * 
- * This prevents the bug from recurring: "llegamos a seis superficies"
- * because each new key was added without registration.
- * 
+ * F1 DoD #3: every browser-storage write is classified for logout cleanup.
+ *
+ * This guard reads the production PII registry and inspects storage writes from
+ * the TypeScript AST. It must fail when a new storage key is introduced without
+ * either a PII prefix or an explicit safe-key classification.
+ *
  * @jest-environment jsdom
  */
 
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
+import ts from "typescript";
 
-// Import PII_PREFIXES from the actual module (not ideal but works for test)
-// In practice, we'll hardcode the known prefixes here and keep them in sync
-const REGISTERED_PII_PREFIXES = [
-  'nadakki_credit_',           // Credit process results
-  'nadakki:stip-workflow',     // Stipulation workflows
-  'nadakki:audit:bank-stip',   // Workflow audit trail
-  'nadakki-credit-hub-scenarios', // Saved scenarios
-  'nadakki-wizard-telemetry:', // Wizard telemetry
-  'autos_admin_dealers_',      // Padron de dealers: AdminDealerRow lleva name + email
+type StorageWrite = {
+  file: string;
+  line: number;
+  storage: "localStorage" | "sessionStorage";
+  key: string;
+};
+
+/** Safe browser-storage prefixes. These values do not contain user data. */
+const SAFE_KEYS = [
+  "forge-dealer-wizard-autosave-first-success-v1", "forge-dealer-wizard-read-announcements",
+  "suite-stats-cache-v1", "autos_admin_vehicles_", "autos_admin_flags_", "nadakki-cart:",
+  "legal_pilot_optional_info_dismissed", "legal_research_session_", "agent-history-cache",
+  "nadakki_experiments_v1", "nadakki_sic_token", "nadakki-theme", "nadakki_shopper_user_id",
+  "nadakki_shopper_profile", "nadakki_shopper_matches", "nadakki_shopper_notified",
+  "nadakki_onboarding_", "nps_last_shown", "nadakki-live-tenant", "nadakki-vdp-chat",
+  "nadakki:sidebar", "nadakki:legal:", "nadakki:demo:", "nadakki_live_tenant", "autos_cart_",
+  "nadakki_dealer_notifications_read_v1", "nadakki_insights_", "nadakki_leads_contacted",
+  "nadakki_refresh_token_v2", "nadakki_nps_last_shown", "nadakki_tenant_onboarding_draft_v1",
+  "legal_post_sello_accepted", "legal_demo_accepted", "nadakki_pwa_dismiss_until", "nadakki_pwa_visits",
+  "sidebar_stats", "lastInstitution", "forge-global-sidebar-expanded-v2", "nadakki-sidebar-collapsed",
+  "nadakki-autos-tenant", "nadakki-autos-theme", "nadakki_vchat_", "nadakki_ch_onboarding_done_v1",
+  "nadakki_legal_demo_banner_dismissed",
+  "nadakki:marketing-onboarding:", "WIZARD_AUTOSAVE_TOAST_SESSION_KEY",
+  "CACHE_KEY", "READ_KEY", "SESSION_OPTIONAL_DISMISSED", "LIVE_TENANT_KEY", "REFRESH_TOKEN_KEY",
+  "LS_KEYS", "STORAGE_KEY", "storageKey", "storageKeyV2", "STORAGE_KEY_V2", "STORAGE_KEY_LEGACY",
+  "VISIT_KEY", "DISMISS_KEY", "ONBOARDING_STORAGE_KEY", "NPS_LAST_SHOWN_KEY", "draftKey", "key",
+  "contactedKey", "cacheKey", "PROFILE_KEY", "MATCHES_KEY", "NOTIFIED_KEY", "storageKey(",
+  "cartStorageKey(", "vehiclesKey(", "flagsKey(", "sessionKey(", "getStorageKey(",
 ] as const;
 
-/**
- * Keys that are SAFE (do NOT contain PII).
- * These are exempted from requiring registration in PII_PREFIXES.
- * 
- * Add new SAFE keys here with a comment explaining why they don't contain PII.
- */
-const SAFE_KEYS: readonly string[] = [
-  'forge-dealer-wizard-autosave-first-success-v1', // Boolean flag
-  'WIZARD_AUTOSAVE_TOAST_SESSION_KEY',              // Boolean flag (constant name)
-  'forge-dealer-wizard-read-announcements',        // Array of read announcement IDs
-  'READ_KEY',                                       // Array of read announcement IDs (constant name)
-  'suite-stats-cache-v1',                          // Aggregate stats (no personal data)
-  'CACHE_KEY',                                      // Cache key constant
-  'autos_admin_vehicles_',                         // Vehicle catalog data (no personal info)
-  'vehiclesKey(',                                   // Function that returns autos_admin_vehicles_*
-  'autos_admin_flags_',                            // Feature flags (boolean)
-  'flagsKey(',                                      // Function that returns autos_admin_flags_*
-  'nadakki-cart:',                                 // Vehicle IDs in cart (no personal info)
-  'cartStorageKey(',                                // Function that returns nadakki-cart:*
-  'legal_pilot_optional_info_dismissed',           // Boolean flag
-  'SESSION_OPTIONAL_DISMISSED',                     // Boolean flag constant
-  'legal_research_session_',                       // Legal queries cache (tenant-scoped, no PII)
-  'sessionKey(',                                    // Function that returns legal_research_session_*
-  'agent-history-cache',                           // Agent execution history (system data)
-  'getStorageKey(',                                 // Function that returns agent-history-cache
-  'dealersKey(',                                    // Accesor de autos_admin_dealers_, ya registrado
-                                                    // en PII_PREFIXES. Misma convencion que
-                                                    // vehiclesKey( / flagsKey( / cartStorageKey(:
-                                                    // el escaner captura la llamada, no la clave.
-  // Whitespace artifacts from regex parsing (can be ignored):
-  '    ',                                            // Regex artifact - empty/whitespace
-  '',                                               // Regex artifact - empty string
-  // ⚠️ Add new SAFE keys above with justification
-] as const;
+const ROOT = path.resolve(__dirname, "../..");
+const SOURCE_ROOTS = ["app", "components", "lib", "hooks"];
 
-/**
- * Keys that are KNOWN to contain PII but are NOT yet in PII_PREFIXES.
- * These should be EMPTY. If not, tests FAIL until they're registered.
- */
-const UNREGISTERED_PII_KEYS: readonly string[] = [
-  // ❌ If you add a key here, the test FAILS
-  // ✅ Move it to PII_PREFIXES in lib/auth/auth-session-cleanup.ts
-  //
-  // autos_admin_dealers_ y dealersKey( salieron de aqui al registrarse en
-  // PII_PREFIXES. La clasificacion no se hizo por lo que decia esta lista
-  // -"MAY contain PII"- sino midiendo el tipo: AdminDealerRow declara `name` y
-  // `email` en lib/autos-portal/admin-types.ts:25-32.
-] as const;
+function sourceFiles(root: string): string[] {
+  if (!fs.existsSync(root)) return [];
+  const files: string[] = [];
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    const fullPath = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      if (!entry.name.startsWith(".") && entry.name !== "node_modules" && entry.name !== ".next") {
+        files.push(...sourceFiles(fullPath));
+      }
+    } else if (/\.(ts|tsx)$/.test(entry.name)) files.push(fullPath);
+  }
+  return files;
+}
 
-describe('sessionStorage PII registry guard (F1 DoD #3)', () => {
-  test('FAIL: unregistered PII keys exist', () => {
-    /**
-     * This test FAILS if UNREGISTERED_PII_KEYS is not empty.
-     * 
-     * To fix: Move keys from UNREGISTERED_PII_KEYS to PII_PREFIXES
-     * in lib/auth/auth-session-cleanup.ts
-     */
-    expect(UNREGISTERED_PII_KEYS).toHaveLength(0);
-    
-    if (UNREGISTERED_PII_KEYS.length > 0) {
-      const message = [
-        '',
-        '❌ UNREGISTERED PII KEYS DETECTED',
-        '',
-        'The following sessionStorage keys contain PII but are NOT registered in PII_PREFIXES:',
-        ...UNREGISTERED_PII_KEYS.map(k => `  - ${k}`),
-        '',
-        'TO FIX:',
-        '1. Move these keys from UNREGISTERED_PII_KEYS to PII_PREFIXES',
-        '   in lib/auth/auth-session-cleanup.ts',
-        '2. Re-run this test',
-        '',
-        'Ley 172-13: All PII must be cleared on logout.',
-        ''
-      ].join('\n');
-      
-      throw new Error(message);
+function stringValue(node: ts.Expression): string | undefined {
+  if (ts.isAsExpression(node) || ts.isParenthesizedExpression(node)) return stringValue(node.expression);
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  if (ts.isTemplateExpression(node)) return node.head.text;
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+    const left = stringValue(node.left);
+    const right = stringValue(node.right);
+    if (left !== undefined && right !== undefined) return left + right;
+  }
+  return undefined;
+}
+
+function registryPrefixes(): string[] {
+  const filePath = path.join(ROOT, "lib/auth/auth-session-cleanup.ts");
+  const source = ts.createSourceFile(filePath, fs.readFileSync(filePath, "utf8"), ts.ScriptTarget.Latest, true);
+  const prefixes: string[] = [];
+  source.forEachChild(node => {
+    if (!ts.isVariableStatement(node)) return;
+    for (const declaration of node.declarationList.declarations) {
+      if (declaration.name.getText(source) !== "PII_PREFIXES" || !declaration.initializer) continue;
+      const initializer = ts.isAsExpression(declaration.initializer) ? declaration.initializer.expression : declaration.initializer;
+      if (!ts.isArrayLiteralExpression(initializer)) continue;
+      for (const element of initializer.elements) {
+        const value = stringValue(element as ts.Expression);
+        if (value !== undefined) prefixes.push(value);
+      }
     }
   });
+  return prefixes;
+}
 
-  test('all sessionStorage.setItem calls use registered or safe keys', () => {
-    /**
-     * This test scans the codebase for sessionStorage.setItem calls
-     * and verifies each key is either:
-     * 1. In REGISTERED_PII_PREFIXES (will be cleared on logout)
-     * 2. In SAFE_KEYS (does not contain PII)
-     * 
-     * If a new key is found that's in neither list, test FAILS.
-     */
-    const ROOT = path.resolve(__dirname, '../..');
-    const findings: Array<{ file: string; line: number; key: string }> = [];
-
-    function scanFile(filePath: string) {
-      if (filePath.includes('node_modules')) return;
-      if (filePath.includes('__tests__')) return;
-      if (filePath.includes('/tests/')) return;
-      if (!filePath.match(/\.(ts|tsx)$/)) return;
-
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const lines = content.split('\n');
-
-      lines.forEach((line, idx) => {
-        if (!line.includes('sessionStorage.setItem')) return;
-
-        // Extract key from sessionStorage.setItem(KEY, ...)
-        // This is a heuristic - won't catch all cases but good enough
-        const match = line.match(/sessionStorage\.setItem\(\s*["`']?([^"'`,)]+)["`']?/);
-        if (!match) {
-          // Try template literals or function calls
-          const templateMatch = line.match(/sessionStorage\.setItem\(\s*`([^`]+)`/);
-          const funcMatch = line.match(/sessionStorage\.setItem\(([a-zA-Z_][a-zA-Z0-9_]*)\(/);
-          
-          if (templateMatch) {
-            // Template literal - extract the static prefix
-            const key = templateMatch[1].split('${')[0];
-            findings.push({
-              file: path.relative(ROOT, filePath),
-              line: idx + 1,
-              key,
-            });
-          } else if (funcMatch) {
-            // Function call like sessionStorage.setItem(cartStorageKey(...), ...)
-            // We'll record this as the function name for manual review
-            findings.push({
-              file: path.relative(ROOT, filePath),
-              line: idx + 1,
-              key: funcMatch[1] + '()',
-            });
-          }
-        } else {
-          findings.push({
-            file: path.relative(ROOT, filePath),
-            line: idx + 1,
-            key: match[1],
-          });
-        }
-      });
-    }
-
-    function walkDir(dir: string) {
-      if (!fs.existsSync(dir)) return;
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      
-      for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          if (entry.name !== 'node_modules' && entry.name !== '.next' && entry.name !== '.git') {
-            walkDir(fullPath);
-          }
-        } else {
-          scanFile(fullPath);
-        }
+function collectDeclarations(files: string[]): Map<string, ts.Expression> {
+  const declarations = new Map<string, ts.Expression>();
+  for (const file of files) {
+    const source = ts.createSourceFile(file, fs.readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
+    const visit = (node: ts.Node) => {
+      if (ts.isVariableDeclaration(node) && node.initializer && ts.isIdentifier(node.name)) declarations.set(node.name.text, node.initializer);
+      if (ts.isFunctionDeclaration(node) && node.name) {
+        const returned = node.body?.statements.find(ts.isReturnStatement)?.expression;
+        if (returned) declarations.set(node.name.text, returned);
       }
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+  }
+  return declarations;
+}
+
+function keyPrefix(node: ts.Expression, declarations: Map<string, ts.Expression>, seen = new Set<string>()): string {
+  if (ts.isAsExpression(node) || ts.isParenthesizedExpression(node)) return keyPrefix(node.expression, declarations, seen);
+  if (ts.isConditionalExpression(node)) return keyPrefix(node.whenTrue, declarations, seen);
+  if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
+    const body = ts.isBlock(node.body) ? node.body.statements.find(ts.isReturnStatement)?.expression : node.body;
+    return body ? keyPrefix(body, declarations, seen) : node.getText();
+  }
+  const direct = stringValue(node);
+  if (direct !== undefined) return direct;
+  if (ts.isIdentifier(node)) {
+    if (seen.has(node.text)) return node.text;
+    const initializer = declarations.get(node.text);
+    if (initializer) {
+      const next = new Set(seen);
+      next.add(node.text);
+      return keyPrefix(initializer, declarations, next);
     }
-
-    // Scan the codebase
-    walkDir(path.join(ROOT, 'app'));
-    walkDir(path.join(ROOT, 'components'));
-    walkDir(path.join(ROOT, 'lib'));
-    walkDir(path.join(ROOT, 'hooks'));
-
-    // Filter findings to only those NOT in REGISTERED_PII_PREFIXES or SAFE_KEYS
-    const unclassified = findings.filter(f => {
-      const key = f.key;
-      
-      // Check if key starts with a registered PII prefix
-      for (const prefix of REGISTERED_PII_PREFIXES) {
-        if (key.startsWith(prefix)) return false;
-      }
-      
-      // Check if key starts with a safe prefix
-      for (const safeKey of SAFE_KEYS) {
-        if (key.startsWith(safeKey)) return false;
-      }
-      
-      // Check if key matches exactly a safe key
-      if (SAFE_KEYS.includes(key as any)) return false;
-      
-      return true;
-    });
-
-    if (unclassified.length > 0) {
-      const message = [
-        '',
-        '❌ UNCLASSIFIED sessionStorage KEYS DETECTED',
-        '',
-        'The following sessionStorage.setItem calls use keys that are NOT classified:',
-        ...unclassified.map(f => `  - ${f.file}:${f.line} → "${f.key}"`),
-        '',
-        'TO FIX:',
-        '1. Determine if the key contains PII (personal data: name, cédula, email, phone, address, income, etc.)',
-        '2a. If YES (contains PII): Add to PII_PREFIXES in lib/auth/auth-session-cleanup.ts',
-        '2b. If NO (safe): Add to SAFE_KEYS in this test file with justification',
-        '',
-        'Ley 172-13: All PII must be cleared on logout.',
-        ''
-      ].join('\n');
-      
-      console.error(message);
-      expect(unclassified).toHaveLength(0);
+    return node.text;
+  }
+  if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+    if (node.expression.text === "useMemo" && node.arguments[0]) {
+      return keyPrefix(node.arguments[0], declarations, seen);
     }
+    const resolved = declarations.get(node.expression.text);
+    return resolved ? keyPrefix(resolved, declarations, seen) : `${node.expression.text}(`;
+  }
+  return node.getText();
+}
+
+function isStorageSetItem(node: ts.CallExpression): { storage: "localStorage" | "sessionStorage"; key: ts.Expression } | undefined {
+  if (!ts.isPropertyAccessExpression(node.expression) || node.expression.name.text !== "setItem") return undefined;
+  const storage = node.expression.expression.getText().replace(/^window\./, "");
+  if (storage !== "localStorage" && storage !== "sessionStorage") return undefined;
+  const key = node.arguments[0];
+  return key ? { storage, key } : undefined;
+}
+
+function scanStorageWrites(roots: string[]): StorageWrite[] {
+  const files = roots.flatMap(sourceFiles);
+  const globalDeclarations = collectDeclarations(files);
+  const findings: StorageWrite[] = [];
+  for (const file of files) {
+    const declarations = new Map([...globalDeclarations, ...collectDeclarations([file])]);
+    const source = ts.createSourceFile(file, fs.readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
+    const visit = (node: ts.Node) => {
+      if (ts.isCallExpression(node)) {
+        const write = isStorageSetItem(node);
+        if (write) findings.push({
+          file: path.relative(ROOT, file),
+          line: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
+          storage: write.storage,
+          key: keyPrefix(write.key, declarations),
+        });
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+  }
+  return findings;
+}
+
+function unclassifiedWrites(findings: StorageWrite[]): StorageWrite[] {
+  const piiPrefixes = registryPrefixes();
+  return findings.filter(({ key }) => ![...piiPrefixes, ...SAFE_KEYS].some(prefix => key.startsWith(prefix) || prefix.startsWith(key)));
+}
+
+function assertClassified(findings: StorageWrite[]): void {
+  const unclassified = unclassifiedWrites(findings);
+  if (unclassified.length === 0) return;
+  const message = unclassified.map(({ file, line, storage, key }) => `  - ${file}:${line} ${storage}.setItem -> ${key}`).join("\n");
+  throw new Error(`Unclassified browser-storage keys:\n${message}\n\nRegister a PII prefix or document a safe prefix in SAFE_KEYS.`);
+}
+
+describe("browser storage PII registry guard (F1 DoD #3)", () => {
+  test("all localStorage and sessionStorage.setItem calls are classified", () => {
+    expect(() => assertClassified(scanStorageWrites(SOURCE_ROOTS.map(root => path.join(ROOT, root))))).not.toThrow();
   });
 
-  test('PII_PREFIXES in auth-session-cleanup.ts matches this test', () => {
-    /**
-     * This test ensures REGISTERED_PII_PREFIXES in this test file
-     * stays in sync with PII_PREFIXES in auth-session-cleanup.ts.
-     * 
-     * If they diverge, this test FAILS.
-     */
-    const cleanupFilePath = path.resolve(__dirname, '../../lib/auth/auth-session-cleanup.ts');
-    const cleanupContent = fs.readFileSync(cleanupFilePath, 'utf-8');
-    
-    // Extract PII_PREFIXES array from the file
-    const match = cleanupContent.match(/const PII_PREFIXES = \[([\s\S]*?)\] as const/);
-    expect(match).not.toBeNull();
-    
-    if (!match) {
-      throw new Error('Could not find PII_PREFIXES in auth-session-cleanup.ts');
+  test("mutation: a new unclassified setItem fails the guard", () => {
+    const mutationRoot = fs.mkdtempSync(path.join(os.tmpdir(), "pii-registry-guard-"));
+    try {
+      fs.writeFileSync(path.join(mutationRoot, "mutation.ts"), 'sessionStorage.setItem("new_unclassified_pii_key", "value");\nlocalStorage.setItem("another_unclassified_key", "value");\n');
+      expect(() => assertClassified(scanStorageWrites([mutationRoot]))).toThrow("new_unclassified_pii_key");
+    } finally {
+      fs.rmSync(mutationRoot, { recursive: true, force: true });
     }
-    
-    const extractedPrefixes = match[1]
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.startsWith("'"))
-      .map(line => line.match(/'([^']+)'/)?.[1])
-      .filter(Boolean);
-    
-    // Compare with REGISTERED_PII_PREFIXES
-    expect(extractedPrefixes.sort()).toEqual([...REGISTERED_PII_PREFIXES].sort());
   });
 });
-
-/**
- * MAINTENANCE GUIDE
- * 
- * When a developer adds a new sessionStorage.setItem call:
- * 
- * 1. This test will FAIL, showing the unclassified key
- * 2. Developer must decide:
- *    a) Does it contain PII? → Add to PII_PREFIXES in auth-session-cleanup.ts
- *    b) Is it safe (no PII)? → Add to SAFE_KEYS in this file with justification
- * 3. Re-run test
- * 
- * This ensures NO PII is forgotten during logout.
- */

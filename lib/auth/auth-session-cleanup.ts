@@ -28,6 +28,7 @@ const PII_PREFIXES = [
   // es PII de una persona, no catalogo. Se escribe en
   // lib/autos-portal/admin-session-store.ts:53 via dealersKey(tenantId).
   'autos_admin_dealers_',      // Padron de dealers: nombre y correo
+  'nadakki_dealer_wizard_v1',  // Borradores del wizard: datos de solicitud por tenant y usuario
 ] as const;
 
 /**
