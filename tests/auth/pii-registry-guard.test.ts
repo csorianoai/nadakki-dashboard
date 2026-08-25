@@ -21,6 +21,7 @@ const REGISTERED_PII_PREFIXES = [
   'nadakki:audit:bank-stip',   // Workflow audit trail
   'nadakki-credit-hub-scenarios', // Saved scenarios
   'nadakki-wizard-telemetry:', // Wizard telemetry
+  'autos_admin_dealers_',      // Padron de dealers: AdminDealerRow lleva name + email
 ] as const;
 
 /**
@@ -48,6 +49,10 @@ const SAFE_KEYS: readonly string[] = [
   'sessionKey(',                                    // Function that returns legal_research_session_*
   'agent-history-cache',                           // Agent execution history (system data)
   'getStorageKey(',                                 // Function that returns agent-history-cache
+  'dealersKey(',                                    // Accesor de autos_admin_dealers_, ya registrado
+                                                    // en PII_PREFIXES. Misma convencion que
+                                                    // vehiclesKey( / flagsKey( / cartStorageKey(:
+                                                    // el escaner captura la llamada, no la clave.
   // Whitespace artifacts from regex parsing (can be ignored):
   '    ',                                            // Regex artifact - empty/whitespace
   '',                                               // Regex artifact - empty string
@@ -61,8 +66,11 @@ const SAFE_KEYS: readonly string[] = [
 const UNREGISTERED_PII_KEYS: readonly string[] = [
   // ❌ If you add a key here, the test FAILS
   // ✅ Move it to PII_PREFIXES in lib/auth/auth-session-cleanup.ts
-  'autos_admin_dealers_',  // ⚠️ Contains dealer names/contact info (MAY contain PII)
-  'dealersKey(',            // Function that generates autos_admin_dealers_*
+  //
+  // autos_admin_dealers_ y dealersKey( salieron de aqui al registrarse en
+  // PII_PREFIXES. La clasificacion no se hizo por lo que decia esta lista
+  // -"MAY contain PII"- sino midiendo el tipo: AdminDealerRow declara `name` y
+  // `email` en lib/autos-portal/admin-types.ts:25-32.
 ] as const;
 
 describe('sessionStorage PII registry guard (F1 DoD #3)', () => {
