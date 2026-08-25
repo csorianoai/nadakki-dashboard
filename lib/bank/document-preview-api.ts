@@ -1,4 +1,15 @@
-/** URL builders + typed fetch helpers for T6.1 credit document preview endpoints. */
+/**
+ * URL builders + typed fetch helpers for T6.1 credit document preview endpoints.
+ *
+ * Runtime notes (medido 2026-08-25 @ 40b996f5, staging
+ * https://nadakki-ai-suite-staging.onrender.com /health version):
+ * - OpenAPI publica thumbnail, preview.json y /download.
+ * - GET .../download con Bearer inválido → 401 invalid_token (ya no 404).
+ * - GET .../preview.json|thumbnail con Bearer inválido → 401 (auth antes del 410).
+ * - Login banker NO_EJECUTADO: staging ENOIDENTIFIER; api.nadakki.com
+ *   "password authentication failed for user nadakki_svc". Sin JWT no se pudo
+ *   verificar el cuerpo binario de /download ni el 410 autenticado.
+ */
 
 export interface DocumentPreviewMetadata {
   pages?: number;
@@ -33,11 +44,7 @@ export function bankDocumentThumbnailUrl(
   return `${b}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/${encodeURIComponent(documentId)}/thumbnail?page=${page}`;
 }
 
-/**
- * ⚠️ BROKEN: `/download` endpoint does not exist in backend (returns 404).
- * TODO: Replace with actual working document retrieval endpoint once backend team confirms route.
- * Used as fallback when preview.json metadata does not provide stream_path/pdf_url.
- */
+/** Canonical download path (backend #1030). Fallback when metadata has no stream URL. */
 export function bankDocumentDownloadUrl(applicationId: string, documentId: string): string {
   const b = creditApiBase();
   return `${b}/api/v2/credit/applications/${encodeURIComponent(applicationId)}/documents/${encodeURIComponent(documentId)}/download`;
@@ -63,9 +70,12 @@ export function buildPreviewFetchInit(
 
 /**
  * Resolve usable PDF GET URL — metadata override or deterministic download endpoint.
- * ⚠️ WARNING: preview.json now returns 410 (deprecated - required HMAC token not emitted).
- * Fallback to /download also returns 404 (endpoint doesn't exist).
- * Both paths are currently broken. Analysts cannot view documents until backend provides working route.
+ *
+ * medido 2026-08-25 @ 40b996f5: preview.json sigue en OpenAPI con query `token`
+ * HMAC; el router desplegado responde 410 PREVIEW_DISABLED cuando
+ * NADAKKI_DOCUMENT_PREVIEW_ENABLED está off (auth JWT se evalúa antes — sin
+ * token de banker no se observó el 410 en runtime). /download ya no es 404:
+ * montado por #1030 (OpenAPI + 401 invalid_token con Bearer inválido).
  */
 export function resolvePdfSourceUrl(
   metadata: DocumentPreviewMetadata | null,
@@ -78,7 +88,6 @@ export function resolvePdfSourceUrl(
     const base = creditApiBase();
     return `${base}${candidate.startsWith("/") ? "" : "/"}${candidate}`;
   }
-  // TODO: Replace with actual working endpoint once backend team confirms route
   return bankDocumentDownloadUrl(applicationId, documentId);
 }
 
