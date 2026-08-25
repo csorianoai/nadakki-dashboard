@@ -36,6 +36,43 @@ describe("goalPresentation", () => {
 });
 
 describe("expedienteAdapter", () => {
+  test("extracts persisted bureau provenance from last_process_result", () => {
+    const provenance = {
+      data_source: "bureau",
+      provider: "datacredito",
+      environment: "LIVE",
+      retrieved_at: "2026-08-25T12:00:00Z",
+    };
+    const app = expedienteToBankReviewApplication({
+      application_id: "app-provenance",
+      tenant_id: "tenant-1",
+      decisions: [
+        { kind: "last_process_result", payload: { bank_execution: provenance } },
+      ],
+      audit_trail: [{}, {}, { payload: { bank_execution: { environment: "MOCK" } } }],
+    });
+
+    expect(app.application_payload.credit_provenance).toEqual(provenance);
+  });
+
+  test("falls back to audit trail provenance when decisions are absent", () => {
+    const raw = {
+      audit_trail: [{}, {}, { payload: { bank_execution: {
+        data_source: "bureau",
+        provider: "manual",
+        environment: "SANDBOX",
+        retrieved_at: "2026-08-25T12:01:00Z",
+      } } }],
+    };
+    const app = expedienteToBankReviewApplication({
+      application_id: "app-audit-provenance",
+      tenant_id: "tenant-1",
+      ...raw,
+    });
+
+    expect(app.application_payload.credit_provenance?.environment).toBe("SANDBOX");
+  });
+
   test("maps expediente/full into BankReviewApplication payload", () => {
     const app = expedienteToBankReviewApplication({
       application_id: "d3b05eed-0000-0000-0000-000000000001",

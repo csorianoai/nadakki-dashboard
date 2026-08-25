@@ -10,6 +10,7 @@ import type {
 } from "./bankDecision";
 import type { CreditAnalysisResult } from "./creditAnalysis";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
+import type { CreditProvenance } from "../labels/pilot-labels";
 
 export type BankDetailTab = "analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones";
 
@@ -90,6 +91,7 @@ export interface BankReviewPayload {
   };
   declaracion_vehiculo?: DeclaracionVehiculoPayload;
   expediente_meta?: Record<string, unknown>;
+  credit_provenance?: CreditProvenance | null;
 }
 
 export interface ScoreDistribution {

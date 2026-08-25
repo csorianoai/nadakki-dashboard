@@ -1,5 +1,7 @@
 /** Read model from GET /api/v2/credit/applications/{id}/expediente/full */
 
+import type { CreditProvenance } from "../labels/pilot-labels";
+
 export interface ExpedienteFullResponse {
   application_id: string;
   tenant_id: string;
@@ -29,6 +31,8 @@ export interface ExpedienteFullResponse {
     kyc_mode?: string | null;
     ocr_mode?: string | null;
   };
+  /** Persisted bureau provenance nested in process/audit payloads. */
+  credit_provenance?: CreditProvenance | null;
   /** Analysis data with ratios (backend v2 structure) */
   analysis?: {
     pti?: number;
