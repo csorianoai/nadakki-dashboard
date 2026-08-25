@@ -24,6 +24,10 @@ const PII_PREFIXES = [
   'nadakki:audit:bank-stip',   // Workflow audit trail (lib/bank/stipulations/workflow-audit.ts)
   'nadakki-credit-hub-scenarios', // Saved scenarios (lib/credit-hub/hooks/useScenarioStore.ts)
   'nadakki-wizard-telemetry:', // Wizard telemetry (hooks/useCompressedWizard.ts)
+  // AdminDealerRow lleva `name` y `email` (lib/autos-portal/admin-types.ts:25-32):
+  // es PII de una persona, no catalogo. Se escribe en
+  // lib/autos-portal/admin-session-store.ts:53 via dealersKey(tenantId).
+  'autos_admin_dealers_',      // Padron de dealers: nombre y correo
 ] as const;
 
 /**
