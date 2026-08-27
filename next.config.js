@@ -101,6 +101,23 @@ function cleanBackendUrl(value) {
   return (match ? match[1] : raw).replace(/\/$/, "");
 }
 
+// Keep the security policy on the same declared backend as the client resolver.
+function resolveConfiguredBackendUrl() {
+  const configured = [
+    process.env.BACKEND_URL,
+    process.env.NEXT_PUBLIC_BACKEND_URL,
+    process.env.NEXT_PUBLIC_NADAKKI_API_URL,
+    process.env.NEXT_PUBLIC_API_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL,
+  ].find((value) => (value || "").trim());
+  const url = cleanBackendUrl(configured);
+  if (!url) throw new Error("No backend declared for Content-Security-Policy");
+  return url;
+}
+
+const configuredBackendUrl = resolveConfiguredBackendUrl();
+const configuredBackendWsUrl = configuredBackendUrl.replace(/^http/, "ws");
+
 const nextConfig = {
   reactStrictMode: true,
   images: {
@@ -140,7 +157,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.nadakki.com wss://api.nadakki.com https://*.sentry.io https://vitals.vercel-insights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+              `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' ${configuredBackendUrl} ${configuredBackendWsUrl} https://*.sentry.io https://vitals.vercel-insights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
           },
         ],
       },

@@ -98,6 +98,7 @@ function formatHttpError(
   statusText: string,
   body: string,
 ): string {
+  if (status === 401) return "Credenciales inválidas.";
   const snippet = body.trim().slice(0, 300);
   return `HTTP ${status}${statusText ? ` ${statusText}` : ""} — ${url}${snippet ? ` — ${snippet}` : ""}`;
 }
