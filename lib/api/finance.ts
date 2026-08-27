@@ -96,6 +96,6 @@ export async function matchApproval(): Promise<{ score?: number; fromBackend: bo
     });
     return { score: res?.match_score, fromBackend: true };
   } catch {
-    return { score: 87, fromBackend: false };
+    return { score: undefined, fromBackend: false };
   }
 }
