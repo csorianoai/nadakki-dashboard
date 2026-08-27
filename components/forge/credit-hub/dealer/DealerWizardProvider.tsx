@@ -27,8 +27,8 @@ import {
   effectiveWizardDocuments,
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import { useCreateCreditApplication } from "@/lib/credit-hub/hooks/useCreateCreditApplication";
-import { processApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { createDraftApplication, processApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
@@ -99,11 +99,11 @@ function segmentCanAdvance(
   config: WizardStepValidationConfig,
   t: CreditHubTranslations
 ): boolean {
-  if (stepIndex === 0) return stepIsValid(0, data, config, t) && stepIsValid(1, data, config, t);
-  if (stepIndex === 1) return stepIsValid(3, data, config, t);
-  if (stepIndex === 2) return stepIsValid(2, data, config, t);
-  if (stepIndex === 3) return stepIsValid(4, data, config, t);
-  if (stepIndex === 4) return stepIsValid(5, data, config, t);
+  if (stepIndex === 0) return stepIsValid(5, data, config, t);
+  if (stepIndex === 1) return stepIsValid(0, data, config, t) && stepIsValid(1, data, config, t);
+  if (stepIndex === 2) return stepIsValid(3, data, config, t);
+  if (stepIndex === 3) return stepIsValid(2, data, config, t);
+  if (stepIndex === 4) return stepIsValid(4, data, config, t);
   return false;
 }
 
@@ -260,11 +260,27 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const pendingFilesRef = useRef(pendingFiles);
   pendingFilesRef.current = pendingFiles;
   const presetAppliedRef = useRef(false);
-  const createMutation = useCreateCreditApplication();
+  const draftCreationRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const stepIndex = dealerWizardStepIndexFromPathname(pathname);
+
+  useEffect(() => {
+    if (!tenantId || consentApplicationId || draftCreationRef.current) return;
+    draftCreationRef.current = true;
+    void createDraftApplication({ tenantId })
+      .then((draft) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("application_id", draft.application_id);
+        router.replace(`${pathname}?${params.toString()}`);
+      })
+      .catch((error) => {
+        draftCreationRef.current = false;
+        setSubmitError(error instanceof Error ? error.message : "No se pudo crear el borrador inicial");
+      });
+  }, [consentApplicationId, pathname, router, searchParams, tenantId]);
 
   useEffect(() => {
     setShowValidationErrors(false);
@@ -560,7 +576,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   );
 
   const attemptAdvance = useCallback(() => {
-    if (stepIndex === 3) {
+    if (stepIndex === 4) {
       logPersonalReferencesDebug(formData.personal_references ?? []);
       console.info("[wizard-validation] documents step", {
         document_files_ready: formData.document_files_ready,
@@ -572,13 +588,13 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
       setShowValidationErrors(false);
       const next = Math.min(stepIndex + 1, 4);
-      router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next)));
+      router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next), consentApplicationId));
       return true;
     }
     setShowValidationErrors(true);
     requestAnimationFrame(() => scrollToFirstWizardError(validationResult.errors));
     return false;
-  }, [formData, router, stepIndex, validationConfig, t, validationResult]);
+  }, [consentApplicationId, formData, router, stepIndex, validationConfig, t, validationResult]);
 
   const goNext = useCallback(() => {
     attemptAdvance();
@@ -586,8 +602,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
 
   const goPrev = useCallback(() => {
     const prev = Math.max(stepIndex - 1, 0);
-    router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(prev)));
-  }, [router, stepIndex]);
+    router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(prev), consentApplicationId));
+  }, [consentApplicationId, router, stepIndex]);
 
   const saveDraftToStorage = useCallback((): boolean => {
     if (!storageKey) return false;
@@ -654,6 +670,9 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [tenantConfig.locale, saveDraftToStorage, storageKey]);
 
   const submitApplication = useCallback(async () => {
+    if (!consentApplicationId || !tenantId) {
+      throw new Error("No se pudo identificar el borrador de la solicitud");
+    }
     if (!wizardDocumentsStepValid(formData)) {
       const missing = missingRequiredDocumentLabels(formData, requiredDocumentsList, tenantDocumentKey);
       setSubmitError(
@@ -677,12 +696,18 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
             : formData.co_debtor_employment,
       };
       const withMeta = await withConsentAuditMetadata(normalizedForm);
-      const result = await createMutation.mutateAsync(
-        buildCreateApplicationPayload(withMeta, {
-          defaultDocumentType: defaultDocType,
-          wizardDocuments: requiredDocumentsList,
-        }),
-      );
+      const payload = buildCreateApplicationPayload(withMeta, {
+        defaultDocumentType: defaultDocType,
+        wizardDocuments: requiredDocumentsList,
+      });
+      setIsSubmitting(true);
+      await patchApplicationFields({
+        tenantId,
+        applicationId: consentApplicationId,
+        fields: { ...payload, state: "SUBMITTED" },
+        actorRole: "dealer",
+      });
+      const result = { application_id: consentApplicationId };
       clearDraftStorage();
       setFormData(initialApplicationFormData);
 
@@ -766,13 +791,15 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
         })();
       }
 
+      setIsSubmitting(false);
       return result;
     } catch (err) {
+      setIsSubmitting(false);
       const msg = err instanceof Error ? err.message : t.toasts.application_failed;
       setSubmitError(msg);
       throw err;
     }
-  }, [clearDraftStorage, defaultDocType, formData, createMutation, validationConfig, t, tenantId, requiredDocumentsList]);
+  }, [clearDraftStorage, consentApplicationId, defaultDocType, formData, validationConfig, t, tenantId, requiredDocumentsList]);
 
   const value = useMemo(
     (): DealerWizardContextValue => ({
@@ -802,7 +829,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       saveDraftToStorage,
       clearDraftStorage,
       submitApplication,
-      isSubmitting: createMutation.isPending,
+      isSubmitting,
       submitError,
       consentApplicationId,
       consentApplicationIdReady,
@@ -841,7 +868,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       saveDraftToStorage,
       clearDraftStorage,
       submitApplication,
-      createMutation.isPending,
+      isSubmitting,
       submitError,
       consentApplicationId,
       consentApplicationIdReady,
