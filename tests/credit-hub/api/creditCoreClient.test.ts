@@ -2,6 +2,7 @@ import {
   CreditCoreApiError,
   acceptOffer,
   createApplication,
+  createDraftApplication,
   getApplication,
   getApplicationEvents,
   getCreditHealth,
@@ -86,6 +87,20 @@ describe("creditCoreClient", () => {
           initial_state: "DRAFT",
         }),
       })
+    );
+  });
+
+  test("creates an empty DRAFT for the wizard before consent", async () => {
+    const fetchMock = mockFetch({ id: "draft-1", state: "DRAFT" });
+
+    await createDraftApplication({ tenantId });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v2/credit/applications",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ application_payload: {}, initial_state: "DRAFT" }),
+      }),
     );
   });
 

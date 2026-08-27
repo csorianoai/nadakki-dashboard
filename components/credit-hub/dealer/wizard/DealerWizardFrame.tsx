@@ -16,13 +16,13 @@ import { stepIsValid } from "@/components/credit-hub/dealer/wizard/WizardContain
 import { scrollToFirstWizardError } from "@/lib/credit-hub/dealer/wizard-field-errors";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
-const STEP_LABELS = ["Solicitante", "Co-firmante", "Vehículo", "Documentos", "Consentimiento"];
+const STEP_LABELS = ["Consentimiento", "Solicitante", "Co-firmante", "Vehículo", "Documentos"];
 
 export function DealerWizardFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
-  const { stepIndex, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig, attemptAdvance, blockReason, fieldErrors, showValidationErrors } = useDealerWizard();
+  const { stepIndex, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig, attemptAdvance, blockReason, fieldErrors, showValidationErrors, consentApplicationId } = useDealerWizard();
   const [exitOpen, setExitOpen] = useState(false);
 
   const completeness = useMemo(
@@ -108,7 +108,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           steps={STEP_LABELS.map((label, i) => ({ id: DEALER_WIZARD_STEP_PATHS[i], label }))}
           currentIndex={stepIndex}
           onStep={(i) => {
-            if (i <= stepIndex) router.push(dealerWizardStepHref(DEALER_WIZARD_STEP_PATHS[i]!));
+            if (i <= stepIndex) router.push(dealerWizardStepHref(DEALER_WIZARD_STEP_PATHS[i]!, consentApplicationId));
           }}
         />
       </header>

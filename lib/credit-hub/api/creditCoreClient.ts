@@ -138,6 +138,15 @@ export async function createApplication(params: {
   return normalizeApplication(raw);
 }
 
+export async function createDraftApplication(params: { tenantId: string }): Promise<CreditApplication> {
+  const raw = await creditCoreFetch<unknown>("/applications", {
+    method: "POST",
+    tenantId: params.tenantId,
+    body: JSON.stringify({ application_payload: {}, initial_state: "DRAFT" }),
+  });
+  return normalizeApplication(raw);
+}
+
 export async function getApplication(params: {
   tenantId: string;
   applicationId: string;
