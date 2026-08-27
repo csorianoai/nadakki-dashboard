@@ -4,6 +4,13 @@ import {
   creditHubWizardUrl,
   encodeCreditHubPreset,
 } from "@/lib/autos-portal/financing-preset";
+import { useFinancingBridge } from "@/lib/autos-portal/hooks/useFinancingBridge";
+import { createApplication } from "@/lib/api/finance";
+import { renderHook } from "@testing-library/react";
+
+jest.mock("@/lib/api/finance", () => ({
+  createApplication: jest.fn(),
+}));
 
 describe("financing-preset", () => {
   describe("buildCreditHubPreset", () => {
@@ -65,6 +72,26 @@ describe("financing-preset", () => {
       expect(creditHubApplicationUrl("app/123")).toBe(
         "/credit-hub/dealer/applications/app%2F123",
       );
+    });
+  });
+
+  describe("useFinancingBridge", () => {
+    it("redirects to the wizard preset without creating an application", async () => {
+      const { result } = renderHook(() => useFinancingBridge());
+      const response = await result.current.requestFinancing(
+        "veh-123",
+        60,
+        100_000,
+        "/autos/vehiculo/veh-123?financing_return=1",
+        500_000,
+      );
+
+      expect(response.applicationId).toBeUndefined();
+      expect(response.creditHubUrl).toMatch(
+        /^\/credit-hub\/dealer\/applications\/new\/applicant\?preset=/,
+      );
+      expect(createApplication).not.toHaveBeenCalled();
+      expect(response.requestedAmount).toBe(400_000);
     });
   });
 });

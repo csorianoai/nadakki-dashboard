@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { createApplication } from "@/lib/api/finance";
-import { forgeDealerApplicationDetailHref } from "@/lib/credit-hub/dealerRoutes";
+import { buildCreditHubPreset, creditHubWizardUrl } from "@/lib/autos-portal/financing-preset";
 
 export type FinancingBridgeResult = {
   applicationId?: string;
@@ -22,32 +21,19 @@ export function useFinancingBridge() {
     ): Promise<FinancingBridgeResult> => {
       const requestedAmount = Math.max(0, vehiclePrice - downPayment);
 
-      const appResult = await createApplication({
-        vehicle_id: vehicleId,
-        term_months: termMonths,
-        down_payment: downPayment,
-        requested_amount: requestedAmount,
-        source: "autos_portal_vdp",
-        return_url: returnUrl,
+      const preset = buildCreditHubPreset({
+        vehiclePrice,
+        downPayment,
+        termMonths,
+        autosVehicleId: vehicleId,
       });
-
-      const preset = new URLSearchParams({
-        vehicle_id: vehicleId,
-        term_months: String(termMonths),
-        down_payment: String(downPayment),
-        requested_amount: String(requestedAmount),
-        return: returnUrl,
-      });
-
-      const creditHubUrl = appResult.id
-        ? forgeDealerApplicationDetailHref(appResult.id)
-        : `/credit-hub/dealer/applications/new/applicant?${preset.toString()}`;
+      const creditHubUrl = `${creditHubWizardUrl(preset)}&return=${encodeURIComponent(returnUrl)}`;
 
       return {
-        applicationId: appResult.id,
+        applicationId: undefined,
         requestedAmount,
         creditHubUrl,
-        fromBackend: appResult.fromBackend,
+        fromBackend: false,
       };
     },
     [],
