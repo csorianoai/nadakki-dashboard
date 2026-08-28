@@ -16,7 +16,7 @@ export type EmptyStateVariant = "empty" | "error" | "filter-empty" | "placeholde
 export type RiskBandSize = "sm" | "md" | "lg";
 
 export interface ScoreVisualProps {
-  score?: number;
+  score?: number | null;
   min?: number;
   max?: number;
   size?: number;

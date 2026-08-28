@@ -277,7 +277,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             {analysis ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, borderLeft: "1px solid var(--ch-line)", paddingLeft: 20 }}>
                 <ScoreVisual score={analysis.score} size={132} />
-                <RiskBand level={mapBackendRiskLevel(analysis.risk_level)} />
+                {analysis.risk_level != null ? (
+                  <RiskBand level={mapBackendRiskLevel(analysis.risk_level)} />
+                ) : null}
               </div>
             ) : null}
           </div>
