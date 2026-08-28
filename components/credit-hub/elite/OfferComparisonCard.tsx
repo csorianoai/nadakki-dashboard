@@ -3,12 +3,18 @@
 import { memo } from "react";
 import Link from "next/link";
 import type { CreditOffer } from "@/lib/credit-hub/types/offers";
+import type { DataTruthLevel } from "@/lib/credit-hub/honesty/data-truth";
 import { lenderDisplayName } from "@/lib/credit-hub/dealer/lender-display";
 import { chMoneyExact } from "@/lib/credit-hub/ch-base";
 
 function aprNumber(offer: CreditOffer): number | null {
   if (offer.interest_rate_apr == null) return null;
   return offer.interest_rate_apr < 1 ? offer.interest_rate_apr * 100 : offer.interest_rate_apr;
+}
+
+export function offerTruthLevel(offers: CreditOffer[], isLoading: boolean, isError: boolean): DataTruthLevel {
+  if (isLoading || isError || offers.length === 0) return "DEMO";
+  return offers.some((offer) => offer.simulated === true) ? "DEMO" : "REAL";
 }
 
 export interface OfferComparisonCardProps {
