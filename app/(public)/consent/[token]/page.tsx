@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import {
   PublicConsentClient,
@@ -25,7 +25,11 @@ type ViewState = "loading" | "form" | "success" | "invalid" | "already";
 
 export default function PublicConsentPage() {
   const routeParams = useParams();
-  const token = decodeURIComponent(String(routeParams?.token ?? ""));
+  const pathname = usePathname();
+  const routeToken = routeParams?.token;
+  const tokenFromParams = Array.isArray(routeToken) ? routeToken[0] : routeToken;
+  const tokenFromPath = pathname?.match(/^\/consent\/([^/]+)\/?$/)?.[1] ?? "";
+  const token = decodeURIComponent(String(tokenFromParams || tokenFromPath));
   const t = useTranslations();
 
   const [view, setView] = useState<ViewState>("loading");

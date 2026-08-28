@@ -4,6 +4,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 jest.mock("next/navigation", () => ({
   useParams: () => ({ token: "bad" }),
+  usePathname: () => "/consent/bad",
 }));
 
 jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
