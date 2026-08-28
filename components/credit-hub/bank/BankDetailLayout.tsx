@@ -88,7 +88,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
     retry: false,
   });
   const lenderOptions = useMemo(() => {
-    const compareCodes = (offerCompareQuery.data?.offers ?? [])
+    const compareCodes = (offerCompareQuery.data?.offers_detail ?? [])
       .map((offer) => offer.lender_code?.trim())
       .filter((code): code is string => Boolean(code));
     if (compareCodes.length > 0) return [...new Set(compareCodes)];

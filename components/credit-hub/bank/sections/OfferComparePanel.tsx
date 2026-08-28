@@ -8,6 +8,7 @@ import {
 } from "@/lib/credit-hub/api/bankExperienceClient";
 import { chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import { normalizeOfferCompareRows } from "@/lib/credit-hub/bank/offer-compare";
 
 export function OfferComparePanel({ applicationId }: { applicationId: string }) {
   const { apiTenantId } = useTenant();
@@ -21,7 +22,7 @@ export function OfferComparePanel({ applicationId }: { applicationId: string }) 
 
   if (q.error instanceof CHApiError && isBankExperienceEndpointUnavailable(q.error)) return null;
 
-  const rows = [...(q.data?.offers ?? [])].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
+  const rows = normalizeOfferCompareRows(q.data ?? {});
 
   if (q.isLoading) {
     return (
