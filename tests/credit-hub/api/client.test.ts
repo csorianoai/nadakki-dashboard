@@ -256,6 +256,17 @@ describe("chFetch - error handling", () => {
     );
   });
 
+  test("translates FastAPI validation arrays instead of exposing raw JSON", async () => {
+    installFetchMock().mockResolvedValue(await mockJson({
+      detail: [{ type: "missing", loc: ["body", "changes"], msg: "Field required" }],
+    }, 422));
+
+    await expect(chFetch("/test", { tenantId: "t", actorRole: "dealer" })).rejects.toMatchObject({
+      status: 422,
+      message: "No se pudo guardar la solicitud. Field required",
+    });
+  });
+
   test("retries once on 500 then throws if both fail", async () => {
     const fetchSpy = installFetchMock()
       .mockResolvedValue(await mockJson({ detail: "Internal error" }, 500));

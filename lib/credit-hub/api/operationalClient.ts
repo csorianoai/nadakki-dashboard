@@ -23,6 +23,10 @@ export interface EditHistoryEntry {
   changed_at?: string;
 }
 
+export function applicationFieldsPatchBody(fields: Record<string, unknown>): { changes: Record<string, unknown> } {
+  return { changes: fields };
+}
+
 export async function patchApplicationFields(params: {
   tenantId: string;
   applicationId: string;
@@ -33,7 +37,7 @@ export async function patchApplicationFields(params: {
     tenantId: params.tenantId,
     actorRole: params.actorRole ?? "dealer",
     method: "PATCH",
-    body: JSON.stringify({ fields: params.fields }),
+    body: JSON.stringify(applicationFieldsPatchBody(params.fields)),
   });
 }
 
