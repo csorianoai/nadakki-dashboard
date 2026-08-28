@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { listProyectos } from "@/lib/projects/projectsClient";
 import { cn } from "@/lib/utils";
 import { isHrefActive } from "./forge-global-sidebar-nav";
+import { shouldLoadProjectsSidebar } from "./proyectos-sidebar-policy";
 
 const FINANZAS_LINKS = [
   { slug: "", label: "Resumen" },
@@ -33,7 +34,7 @@ export function ProyectosFinanzasSidebarLinks({ onNavigate }: { onNavigate?: () 
   const [projectId, setProjectId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!tenant?.id || !isAuthenticated) {
+    if (!shouldLoadProjectsSidebar(pathname) || !tenant?.id || !isAuthenticated) {
       setProjectId(null);
       return;
     }
@@ -48,7 +49,7 @@ export function ProyectosFinanzasSidebarLinks({ onNavigate }: { onNavigate?: () 
     return () => {
       cancelled = true;
     };
-  }, [tenant?.id, isAuthenticated]);
+  }, [pathname, tenant?.id, isAuthenticated]);
 
   if (!projectId) return null;
 
