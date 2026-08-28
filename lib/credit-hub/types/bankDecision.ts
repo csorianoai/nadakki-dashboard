@@ -77,6 +77,7 @@ export interface BankDecisionRequest {
   justification: string;
   analyst_id: string;
   terms: BankDecisionTerms;
+  lender_code?: string;
 }
 
 export interface CounterOffer {

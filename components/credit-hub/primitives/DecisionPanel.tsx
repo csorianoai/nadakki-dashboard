@@ -25,6 +25,9 @@ export function DecisionPanel({
   className,
   canDecide = true,
   errorDetail,
+  lenderOptions = [],
+  lenderCode,
+  onLenderChange,
   onSubmit,
 }: DecisionPanelProps) {
   const [mode, setMode] = useState<DecisionMode>("approve");
@@ -54,6 +57,8 @@ export function DecisionPanel({
     }
     window.setTimeout(() => setState("success"), 1100);
   };
+
+  const lenderRequired = lenderOptions.length > 1 && !lenderCode;
 
   return (
     <div className={cn("ch-card", className)} style={{ position: sticky ? "sticky" : "static", top: 24, overflow: "hidden" }}>
@@ -97,6 +102,24 @@ export function DecisionPanel({
         </div>
       ) : (
         <div style={{ padding: 18 }}>
+          {lenderOptions.length > 0 ? (
+            <div style={{ marginBottom: 16 }}>
+              <label className="ch-label" htmlFor="decision-lender">Lender que responde</label>
+              <select
+                id="decision-lender"
+                className="ch-select"
+                value={lenderCode ?? lenderOptions[0]}
+                onChange={(e) => onLenderChange?.(e.target.value)}
+              >
+                {lenderOptions.map((code) => <option key={code} value={code}>{code}</option>)}
+              </select>
+            </div>
+          ) : null}
+          {lenderRequired ? (
+            <p role="status" style={{ marginBottom: 12, fontSize: 12.5, color: "var(--ch-warning-text)" }}>
+              Selecciona el lender que emitirá esta decisión.
+            </p>
+          ) : null}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginBottom: 16 }}>
             {modes.map((m) => (
               <button
@@ -201,7 +224,7 @@ export function DecisionPanel({
             type="button"
             className={`ch-btn ${mode === "reject" ? "ch-btn-danger" : "ch-btn-primary"} ch-btn-lg`}
             style={{ width: "100%", marginTop: 14 }}
-            disabled={!canDecide || state === "loading" || (state !== "error" && justif.trim().length === 0)}
+            disabled={!canDecide || lenderRequired || state === "loading" || (state !== "error" && justif.trim().length === 0)}
             onClick={submit}
           >
             {state === "loading" ? (

@@ -67,6 +67,23 @@ describe("bankClient", () => {
     expect(fetchSpy.mock.calls[1][1]?.method).toBe("POST");
   });
 
+  test("recordDecision sends lender_code when the analyst selected one", async () => {
+    const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({ decision: "APROBADO" }));
+    await recordDecision({
+      tenantId: "tenant-a",
+      applicationId: "app-1",
+      body: {
+        decision: "APROBADO",
+        justification: "Lender seleccionado y documentación completa.",
+        analyst_id: "analyst-1",
+        lender_code: "pilot",
+        terms: { approved_amount: 900000, interest_rate: 18, term_months: 60, down_payment_required: 300000, conditions: [] },
+      },
+    });
+    const decideBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
+    expect(decideBody.lender_code).toBe("pilot");
+  });
+
   test("bulkDecide sends rule and selected applications", async () => {
     const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({ processed: 2, skipped: 0, errors: 0, results: [] }));
     await bulkDecide({
