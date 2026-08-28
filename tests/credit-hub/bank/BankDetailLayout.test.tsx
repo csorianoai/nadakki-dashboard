@@ -1,5 +1,12 @@
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BankDetailLayout } from "@/components/credit-hub/bank/BankDetailLayout";
+
+jest.mock("next/font/google", () => ({
+  Inter: () => ({ className: "", variable: "" }),
+  JetBrains_Mono: () => ({ className: "", variable: "" }),
+  Source_Serif_4: () => ({ className: "", variable: "" }),
+}));
 
 jest.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: { id: "analyst-1" } }),
@@ -48,13 +55,34 @@ const application = {
 };
 
 describe("BankDetailLayout", () => {
-  test("renders applicant name and decision panel", () => {
+  const renderLayout = (value: typeof application) =>
     render(
-      <div className="credit-hub-forge" data-persona="bank">
-        <BankDetailLayout application={application} />
-      </div>
+      <QueryClientProvider client={new QueryClient()}>
+        <div className="credit-hub-forge" data-persona="bank">
+          <BankDetailLayout application={value} />
+        </div>
+      </QueryClientProvider>
     );
+
+  test("renders applicant name and decision panel", () => {
+    renderLayout(application);
     expect(screen.getByRole("heading", { name: /Laura Méndez/i })).toBeInTheDocument();
     expect(screen.getByText(/Decisión de crédito/i)).toBeInTheDocument();
+  });
+
+  test("does not invent score or risk when analysis values are absent", () => {
+    const absentAnalysis = {
+      ...application,
+      application_payload: {
+        ...application.application_payload,
+        analysis: { ...application.application_payload.analysis, score: null, risk_level: null },
+      },
+    };
+    renderLayout(absentAnalysis);
+
+    expect(screen.getByText("Sin score")).toBeInTheDocument();
+    expect(screen.getByText("Riesgo no disponible")).toBeInTheDocument();
+    expect(screen.queryByText("720")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Riesgo bajo/i)).not.toBeInTheDocument();
   });
 });

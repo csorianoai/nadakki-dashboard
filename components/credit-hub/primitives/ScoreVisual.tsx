@@ -8,13 +8,37 @@ const START = 135;
 const SWEEP = 270;
 
 export function ScoreVisual({
-  score = 720,
+  score,
   min = 300,
   max = 850,
   size = 168,
   thickness = 12,
   label = true,
 }: ScoreVisualProps) {
+  if (score == null || !Number.isFinite(score)) {
+    return (
+      <div
+        role="img"
+        aria-label="Score no disponible"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          width: size,
+          height: size,
+          color: "var(--ch-text-3)",
+          textAlign: "center",
+        }}
+      >
+        <div className="ch-mono" style={{ fontSize: size * 0.16, fontWeight: 600 }}>
+          Sin score
+        </div>
+        {label ? <div style={{ marginTop: 6, fontSize: 11 }}>Riesgo no disponible</div> : null}
+      </div>
+    );
+  }
+
   const band = chScoreBand(score);
   const frac = Math.max(0, Math.min(1, (score - min) / (max - min)));
   const valEnd = START + SWEEP * frac;
