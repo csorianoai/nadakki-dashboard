@@ -28,6 +28,7 @@ import {
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { createDraftApplication, executeMultiLender, getApplication, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { buildWizardStepFields } from "@/lib/credit-hub/dealer/wizard-step-fields";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -750,10 +751,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       defaultDocumentType: defaultDocType,
       wizardDocuments: requiredDocumentsList,
     }) as unknown as Record<string, unknown>;
-    if (step === 0) return { applicant: payload.applicant, employment: payload.employment };
-    if (step === 1) return { consents: payload.consents };
-    if (step === 2) return { financial: payload.financial, vehicle: payload.vehicle };
-    return { co_debtor: payload.co_debtor, documents: payload.documents, documentos: payload.documentos };
+    return buildWizardStepFields(payload, step);
   }, [defaultDocType, requiredDocumentsList]);
 
   const persistApplicationId = useCallback((applicationId: string) => {
