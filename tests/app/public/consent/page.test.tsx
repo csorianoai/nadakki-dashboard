@@ -7,6 +7,10 @@ jest.mock("next/navigation", () => ({
   useParams: () => ({ token: "valid-token" }),
 }));
 
+jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
+  useTranslations: () => require("@/lib/credit-hub/i18n/locales/es-DO/credit-hub").CREDIT_HUB_ES_DO,
+}));
+
 jest.mock("@/lib/credit-hub/api/public-consent-client", () => {
   const validData = {
     application_id: "app-1",
@@ -23,8 +27,10 @@ jest.mock("@/lib/credit-hub/api/public-consent-client", () => {
   };
 
   return {
+    isUsableStatus: (status: string) => ["INITIATED", "SENT", "VIEWED", "ACCEPTED"].includes(status),
     PublicConsentClient: jest.fn().mockImplementation(() => ({
-      getView: jest.fn().mockResolvedValue(validData),
+      getStatus: jest.fn().mockResolvedValue({ status: "SENT" }),
+      getPublicView: jest.fn().mockResolvedValue(validData),
       accept: jest.fn().mockResolvedValue({
         accepted_at: "2026-04-28T15:00:00Z",
         audit_hash: "abc123def456",
@@ -42,6 +48,29 @@ jest.mock("@/lib/credit-hub/api/public-consent-client", () => {
 import PublicConsentPage from "@/app/(public)/consent/[token]/page";
 
 describe("PublicConsentPage", () => {
+  it("checks the server status before loading a valid token", async () => {
+    render(<PublicConsentPage />);
+    await waitFor(() => expect(screen.getByTestId("consent-checkboxes")).toBeInTheDocument());
+
+    const client = (require("@/lib/credit-hub/api/public-consent-client") as {
+      PublicConsentClient: jest.Mock;
+    }).PublicConsentClient.mock.results[0].value;
+    expect(client.getStatus).toHaveBeenCalledWith("valid-token");
+  });
+
+  it("rejects a token when the server reports it expired", async () => {
+    const { PublicConsentClient } = require("@/lib/credit-hub/api/public-consent-client") as {
+      PublicConsentClient: jest.Mock;
+    };
+    PublicConsentClient.mockImplementationOnce(() => ({
+      getStatus: jest.fn().mockResolvedValue({ status: "EXPIRED" }),
+      getPublicView: jest.fn(),
+    }));
+
+    render(<PublicConsentPage />);
+    await waitFor(() => expect(screen.getByTestId("consent-invalid")).toBeInTheDocument());
+  });
+
   it("shows loading initially then form", async () => {
     render(<PublicConsentPage />);
     await waitFor(() => {

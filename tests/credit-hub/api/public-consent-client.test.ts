@@ -32,10 +32,19 @@ describe("PublicConsentClient", () => {
     Object.defineProperty(global, "fetch", { value: fetchMock, writable: true });
 
     await expect(new PublicConsentClient().getView("email-token")).resolves.toEqual(view);
+    const base = process.env.NEXT_PUBLIC_API_URL ?? "";
     expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual([
-      "/api/v2/credit/consent/email-token/status",
-      "/api/v2/credit/consent/email-token/public",
+      `${base}/api/v2/credit/consent/email-token/status`,
+      `${base}/api/v2/credit/consent/email-token/public`,
     ]);
+  });
+
+  test("does not trust an unknown server status", async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce(response({ status: "UNKNOWN" }, 200));
+    Object.defineProperty(global, "fetch", { value: fetchMock, writable: true });
+
+    await expect(new PublicConsentClient().getView("unknown-token")).rejects.toBeInstanceOf(ConsentTokenInvalidError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   test("server expiration remains invalid even when the client receives a future-looking view", async () => {

@@ -6,9 +6,15 @@ jest.mock("next/navigation", () => ({
   useParams: () => ({ token: "bad" }),
 }));
 
+jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
+  useTranslations: () => require("@/lib/credit-hub/i18n/locales/es-DO/credit-hub").CREDIT_HUB_ES_DO,
+}));
+
 jest.mock("@/lib/credit-hub/api/public-consent-client", () => ({
+  isUsableStatus: (status: string) => ["INITIATED", "SENT", "VIEWED", "ACCEPTED"].includes(status),
   PublicConsentClient: jest.fn().mockImplementation(() => ({
-    getView: jest.fn().mockRejectedValue(new Error("Token inválido")),
+    getStatus: jest.fn().mockRejectedValue(new Error("Token inválido")),
+    getPublicView: jest.fn(),
   })),
   ConsentTokenInvalidError: class extends Error {
     name = "ConsentTokenInvalidError";
