@@ -77,6 +77,16 @@ function stageLabel(status: CreditApplicationStatus): string {
   }
 }
 
+function stageMessage(status: CreditApplicationStatus, displayStatus: string | null): string {
+  const serverStatus = (displayStatus ?? "").toUpperCase();
+  if (serverStatus === "DRAFT" || status === "draft") return "Borrador guardado. Aún no se ha enviado a la institución.";
+  if (serverStatus === "SENT_TO_BANKS" || serverStatus === "BANK_SUBMITTED") return "Solicitud enviada a la institución. Te avisaremos cuando haya respuesta.";
+  if (serverStatus === "RECEIVED" || serverStatus === "AI_ANALYSIS" || serverStatus === "AI_COMPLETE" || status === "submitted" || status === "processing") {
+    return "Solicitud recibida. El análisis está en curso.";
+  }
+  return "El estado se actualizará con la información registrada en el servidor.";
+}
+
 export function DealerApplicationDetailView({ applicationId }: DealerApplicationDetailViewProps) {
   const router = useRouter();
   const t = useTranslations();
@@ -266,7 +276,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         ) : null}
         {!approved && !rejected ? (
           <div style={{ marginTop: 12, fontSize: 13, color: "var(--ch-text-2)", lineHeight: 1.5 }}>
-            Etapa actual: <strong>{stageLabel(data.status)}</strong>. En cola de decisión · La institución ya fue notificada.
+            Etapa actual: <strong>{stageLabel(data.status)}</strong>. {stageMessage(data.status, displayStatus)}
             {/* TODO(tenant-config): Read from tenantConfig.sla_commitment_hours when available */}
           </div>
         ) : null}

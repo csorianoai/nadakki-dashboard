@@ -28,6 +28,20 @@ describe("Credit Core normalizers", () => {
     expect(apps[0].application_id).toBe("a1");
   });
 
+  test("reads persisted applicant_data and vehicle_data payloads", () => {
+    const app = normalizeApplication({
+      id: "app-1",
+      state: "DRAFT",
+      application_payload: {
+        applicant_data: { nombre_completo: "Ana Pérez", cedula: "00112345678", monto_solicitado: 888888 },
+        vehicle_data: { make: "Toyota", model: "Corolla" },
+      },
+    });
+    expect(app.applicant_name).toBe("Ana Pérez");
+    expect(app.requested_amount).toBe("888888");
+    expect(app.vehicle_make).toBe("Toyota");
+  });
+
   test("normalizes stats from backend totals", () => {
     const stats = normalizeStats({
       totalApplications: 10,

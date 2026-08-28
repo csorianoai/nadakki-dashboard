@@ -112,23 +112,26 @@ export function normalizeApplication(raw: unknown): CreditApplication {
 
   // Extract nested application_payload (detail-endpoint responses)
   const payload = isRecord(record.application_payload) ? (record.application_payload as AnyRecord) : {};
-  const payloadApplicant = isRecord(payload.applicant) ? (payload.applicant as AnyRecord) : {};
+  const payloadApplicant = isRecord(payload.applicant) ? (payload.applicant as AnyRecord)
+    : isRecord(payload.applicant_data) ? (payload.applicant_data as AnyRecord) : {};
   const payloadFinancial = isRecord(payload.financial) ? (payload.financial as AnyRecord)
     : isRecord(payload.financial_info) ? (payload.financial_info as AnyRecord) : {};
-  const payloadVehicle = isRecord(payload.vehicle) ? (payload.vehicle as AnyRecord) : {};
+  const payloadVehicle = isRecord(payload.vehicle) ? (payload.vehicle as AnyRecord)
+    : isRecord(payload.vehicle_data) ? (payload.vehicle_data as AnyRecord) : {};
   const payloadBankDecision = isRecord(payload.bank_decision) ? (payload.bank_decision as AnyRecord) : {};
 
   const id = pickString(record, ["id", "application_id", "applicationId"], "—");
 
   // Applicant name: top-level → payload.applicant.full_name → borrower_name_masked
   const applicantName = pickString(record, ["applicant_name", "applicantName", "name"])
-    || pickString(payloadApplicant, ["full_name", "name"])
+    || pickString(payloadApplicant, ["full_name", "nombre_completo", "name"])
     || pickString(record, ["borrower_name_masked"])
     || "—";
 
   // Requested amount: top-level → payload.financial.requested_amount
   const requestedAmount = pickString(record, ["requested_amount", "requestedAmount", "amount"])
     || pickString(payloadFinancial, ["requested_amount", "requestedAmount", "amount"])
+    || pickString(payloadApplicant, ["monto_solicitado", "loan_amount", "loan_amount_requested"])
     || "0";
 
   // Status: prefer top-level "status"; fall back to "state" with backend→frontend mapping
