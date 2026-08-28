@@ -286,3 +286,20 @@ Los cinco van a un packet propio cuando este cierre.
 
 **Generado por IA. Todo medido contra staging el 27 y 28 de agosto de 2026, en
 navegador o en base.**
+
+---
+
+## EL ARREGLO QUE NO LLEGA AL CAMINO QUE CORRE
+
+Cuatro casos en el loop de frontend:
+
+- useParams: el arreglo estaba en el fichero que parecia, no en el que renderiza
+- el badge REAL: dos fuentes independientes, se arreglo una
+- el comparador: offers_detail se puso en dos componentes y el que se renderiza era un tercero
+- #432: el trabajo estaba local, origin/staging no lo tenia, y el PR ya se habia mergeado
+
+En los cuatro el arreglo existio y no llego al camino que se ejecuta.
+
+ANTES DE REPORTAR CERRADO:
+1. que el codigo este en ORIGIN, no solo local
+2. que sea el componente que SE RENDERIZA, medido en el navegador

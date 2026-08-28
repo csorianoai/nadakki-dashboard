@@ -41,6 +41,11 @@ import { SimulatedOfferNotice, offerTruthLevel } from "@/components/credit-hub/e
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
 
+function rawMetaValue(raw: unknown, key: string): unknown {
+  if (!raw || typeof raw !== "object") return null;
+  return (raw as Record<string, unknown>)[key] ?? null;
+}
+
 /**
  * Title-case a raw lender_code for display. No authoritative lender_code → name
  * dictionary exists in the codebase, so we surface a readable form of the code
@@ -206,8 +211,18 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const acceptedOffer = offers.find((o) => o.status === "accepted") ?? null;
   const hasAcceptedOffer = acceptedOffer != null;
   const pilotLabels = extractPilotLabels(data.raw);
-  const displayStatus = data.display_status ?? extractDisplayStatus(data.raw);
   const rawMeta = (data.raw && typeof data.raw === "object" ? data.raw : {}) as Record<string, unknown>;
+  const rawBankDecision = rawMetaValue(data.raw, "bank_decision");
+  const hasHumanDecision =
+    data.decision === "approved" ||
+    data.decision === "rejected" ||
+    data.decision === "declined" ||
+    (rawBankDecision !== null && typeof rawBankDecision === "object");
+  const serverDisplayStatus = data.display_status ?? extractDisplayStatus(data.raw);
+  const displayStatus =
+    serverDisplayStatus?.toUpperCase() === "BANK_COMPLETE" && offers.length > 0 && !hasHumanDecision
+      ? "OFFERS_RECEIVED"
+      : serverDisplayStatus;
   const disbursementReference =
     typeof rawMeta.disbursement_reference === "string" ? rawMeta.disbursement_reference : null;
   const cancelReason = typeof rawMeta.cancel_reason === "string" ? rawMeta.cancel_reason : null;
