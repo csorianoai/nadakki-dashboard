@@ -79,9 +79,14 @@ export class PublicConsentClient {
     // Validate the token with the server before loading the public view. The
     // expiry timestamp is informational; it must not be trusted by the client.
     const status = await this.getStatus(token);
-    if (["EXPIRED", "NOT_FOUND", "REJECTED", "FAILED"].includes(String(status.status))) {
+    if (!isUsableStatus(status.status)) {
       throw new ConsentTokenInvalidError("Token inválido o expirado");
     }
+    return this.getPublicView(token);
+  }
+
+  /** Fetches the public form after the caller has already checked /status. */
+  async getPublicView(token: string): Promise<PublicConsentView> {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
@@ -174,4 +179,10 @@ export class PublicConsentClient {
       window.clearTimeout(timeoutId);
     }
   }
+}
+
+const USABLE_STATUSES = new Set(["INITIATED", "SENT", "VIEWED", "ACCEPTED"]);
+
+export function isUsableStatus(status: string): boolean {
+  return USABLE_STATUSES.has(String(status).toUpperCase());
 }
