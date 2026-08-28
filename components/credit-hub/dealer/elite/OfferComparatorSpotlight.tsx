@@ -27,6 +27,15 @@ function bestOfferId(offers: { id: string; interest_rate_apr: number | null; mon
   return sorted[0]?.id ?? null;
 }
 
+export function offersTruthLevel(
+  offers: ReadonlyArray<{ simulated: boolean | null }>,
+  isLoading: boolean,
+  isError: boolean,
+): "REAL" | "DEMO" {
+  if (offers.some((offer) => offer.simulated === true)) return "DEMO";
+  return offers.length && !isError ? "REAL" : isLoading ? "REAL" : "DEMO";
+}
+
 export function OfferComparatorSpotlight({ applications, currency }: { applications: CreditApplication[]; currency: string }) {
   const candidates = useMemo(() => appsWithOffersPotential(applications), [applications]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -44,7 +53,7 @@ export function OfferComparatorSpotlight({ applications, currency }: { applicati
   const bestId = bestOfferId(offers);
   const savingsNote = computeOfferSavingsNote(offers, bestId, currencyPrefix);
   const detailHref = dealerDetailHref(target!.application_id);
-  const truth = offers.length && !isError ? "REAL" : isLoading ? "REAL" : "DEMO";
+  const truth = offersTruthLevel(offers, isLoading, isError);
 
   return (
     <section data-testid="offer-comparator-spotlight" className="mb-[26px]">

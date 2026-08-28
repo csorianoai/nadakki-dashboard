@@ -2,6 +2,7 @@
 
 import { render, screen } from "@testing-library/react";
 import { OfferComparisonCard, computeOfferSavingsNote } from "@/components/credit-hub/elite/OfferComparisonCard";
+import { offersTruthLevel } from "@/components/credit-hub/dealer/elite/OfferComparatorSpotlight";
 import type { CreditOffer } from "@/lib/credit-hub/types/offers";
 
 function offer(overrides: Partial<CreditOffer> = {}): CreditOffer {
@@ -47,5 +48,10 @@ describe("OfferComparisonCard provenance", () => {
     );
     expect(note).toMatch(/comparación simulada/i);
     expect(note).not.toMatch(/ahorras/i);
+  });
+
+  test("does not label a simulated offer collection as REAL", () => {
+    expect(offersTruthLevel([{ simulated: true }], false, false)).toBe("DEMO");
+    expect(offersTruthLevel([{ simulated: false }], false, false)).toBe("REAL");
   });
 });

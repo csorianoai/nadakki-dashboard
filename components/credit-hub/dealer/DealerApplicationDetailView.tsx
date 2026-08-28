@@ -308,7 +308,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
             <h2 className="ch-serif" style={{ margin: 0, fontSize: 17 }}>
               {hasAcceptedOffer ? "Oferta seleccionada" : "Exchange multi-banco"}
             </h2>
-            <DataTruthBadge level="REAL" />
+            <DataTruthBadge level={offers.some((offer) => offer.simulated === true) ? "DEMO" : "REAL"} />
           </div>
           <p style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginBottom: 14 }}>
             {hasAcceptedOffer
