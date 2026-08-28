@@ -22,6 +22,29 @@ export interface OfferComparisonCardProps {
   onAccept?: () => void;
 }
 
+export function SimulatedOfferNotice({ offer }: { offer: CreditOffer }) {
+  if (offer.simulated !== true) return null;
+  return (
+    <div
+      data-testid={`offer-simulated-badge-${offer.id}`}
+      role="status"
+      style={{
+        marginTop: 2,
+        padding: "7px 9px",
+        border: "1px solid var(--ch-warning-line, #F59E0B)",
+        borderRadius: 4,
+        background: "var(--ch-warning-soft, #FEF3C7)",
+        color: "var(--ch-warning-text, #92400E)",
+        fontSize: 11,
+        fontWeight: 700,
+        textAlign: "center",
+      }}
+    >
+      DECISIÓN SIMULADA · no fue otorgada por un banco
+    </div>
+  );
+}
+
 export const OfferComparisonCard = memo(function OfferComparisonCard({
   offer,
   currencyPrefix,
@@ -75,6 +98,7 @@ export const OfferComparisonCard = memo(function OfferComparisonCard({
       ) : null}
 
       <h3 style={{ margin: "8px 0 10px", fontSize: 15, fontWeight: 700, textAlign: "center" }}>{name}</h3>
+      <SimulatedOfferNotice offer={offer} />
 
       <div style={{ textAlign: "center", marginBottom: 12 }}>
         <div
@@ -166,6 +190,9 @@ export function computeOfferSavingsNote(
   if (!bestId || offers.length < 2) return null;
   const best = offers.find((o) => o.id === bestId);
   if (!best) return null;
+  if (offers.some((offer) => offer.simulated === true)) {
+    return "Comparación simulada: estos términos no representan una oferta otorgada por un banco.";
+  }
   const bestApr = aprNumber(best);
   const worstApr = Math.max(...offers.map((o) => aprNumber(o) ?? 0));
   const bestName = best.lender_display_name || lenderDisplayName(best.lender_code);

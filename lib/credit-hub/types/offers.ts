@@ -39,6 +39,10 @@ export interface CreditOffer {
   currency: string | null;
   /** Stipulations required by the lender (e.g. insurance). */
   stipulations: string[];
+  /** Execution provenance returned by the credit backend. */
+  simulated: boolean | null;
+  source_system: string | null;
+  adapter_operation_mode: string | null;
   status: CreditOfferStatus;
   created_at: string;
   raw: unknown;

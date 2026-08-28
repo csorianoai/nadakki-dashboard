@@ -3,6 +3,7 @@ import {
   normalizeApplications,
   normalizeEvent,
   normalizeStats,
+  normalizeOffer,
 } from "@/lib/credit-hub/api/normalizers";
 
 describe("Credit Core normalizers", () => {
@@ -56,6 +57,23 @@ describe("Credit Core normalizers", () => {
     expect(stats.submitted_applications).toBe(3);
     expect(stats.applications_this_week).toBe(4);
     expect(stats.average_score).toBe(710);
+  });
+
+  test("preserves simulated offer provenance from bank_execution", () => {
+    const offer = normalizeOffer({
+      id: "offer-simulated",
+      lender_code: "pilot",
+      status: "APROBADO",
+      bank_execution: {
+        simulated: true,
+        source_system: "PILOT_BANK_MOCK",
+        adapter_operation_mode: "MOCK-SANDBOX",
+      },
+    });
+
+    expect(offer.simulated).toBe(true);
+    expect(offer.source_system).toBe("PILOT_BANK_MOCK");
+    expect(offer.adapter_operation_mode).toBe("MOCK-SANDBOX");
   });
 
   test("normalizes event variations", () => {

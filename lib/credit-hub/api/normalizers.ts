@@ -320,6 +320,14 @@ export function normalizeEvents(raw: unknown): CreditEvent[] {
 export function normalizeOffer(raw: unknown): CreditOffer {
   const record = isRecord(raw) ? raw : {};
   const terms = isRecord(record.terms) ? (record.terms as AnyRecord) : {};
+  const metadata = isRecord(record.response_metadata) ? (record.response_metadata as AnyRecord) : {};
+  const bankExecution = isRecord(record.bank_execution)
+    ? (record.bank_execution as AnyRecord)
+    : isRecord(metadata.bank_execution)
+      ? (metadata.bank_execution as AnyRecord)
+      : isRecord(record.vendor_payload)
+        ? (record.vendor_payload as AnyRecord).bank_execution as AnyRecord
+        : {};
   const id = pickString(record, ["id", "offer_id", "offerId"], "");
 
   // Status normalization: backend sends localized (APROBADO) — lowercase for consistent matching
@@ -353,6 +361,12 @@ export function normalizeOffer(raw: unknown): CreditOffer {
       ?? pickNumber(terms, ["total_cost"]),
     currency: pickNullableString(record, ["currency"]) || pickNullableString(terms, ["currency"]),
     stipulations,
+    simulated: typeof bankExecution.simulated === "boolean"
+      ? bankExecution.simulated
+      : typeof record.simulated === "boolean" ? record.simulated : null,
+    source_system: pickNullableString(bankExecution, ["source_system"]) || pickNullableString(record, ["source_system"]),
+    adapter_operation_mode: pickNullableString(bankExecution, ["adapter_operation_mode"])
+      || pickNullableString(record, ["adapter_operation_mode"]),
     status: status as CreditOffer["status"],
     created_at: pickDate(record, ["created_at", "createdAt", "created"]),
     raw,
