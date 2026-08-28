@@ -164,6 +164,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             syncLocalStorage(me.data.current_tenant, firstRole, result.data.access_token);
             scheduleProactiveRefresh();
           } else if (!cancelled) {
+            if (me.status === 401) {
+              tokenStorage.clearTokens();
+              clearLocalStorage();
+              setInitError("Tu sesión expiró. Inicia sesión nuevamente.");
+              setIsLoading(false);
+              clearTimeout(timeout);
+              return;
+            }
             const msg = me.error?.includes("Tiempo de espera")
               ? "El servidor no respondió a tiempo. Verifica tu conexión."
               : "No se pudo verificar la sesión. Intenta de nuevo.";
@@ -173,7 +181,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           tokenStorage.clearTokens();
           if (!cancelled && result.error) {
-            const msg = result.error.includes("Tiempo de espera")
+            const msg = result.status === 401
+              ? "Tu sesión expiró. Inicia sesión nuevamente."
+              : result.error.includes("Tiempo de espera")
               ? "El servidor no respondió a tiempo. Verifica tu conexión."
               : "No se pudo verificar la sesión. Intenta de nuevo.";
             console.error("[auth-init] refresh failed:", result.error);

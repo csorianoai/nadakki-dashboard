@@ -76,6 +76,12 @@ export class PublicConsentClient {
   }
 
   async getView(token: string): Promise<PublicConsentView> {
+    // Validate the token with the server before loading the public view. The
+    // expiry timestamp is informational; it must not be trusted by the client.
+    const status = await this.getStatus(token);
+    if (["EXPIRED", "NOT_FOUND", "REJECTED", "FAILED"].includes(String(status.status))) {
+      throw new ConsentTokenInvalidError("Token inválido o expirado");
+    }
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
@@ -103,6 +109,30 @@ export class PublicConsentClient {
         throw new Error("Tiempo de espera agotado");
       }
       throw e instanceof Error ? e : new Error("Error al cargar");
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  async getStatus(token: string): Promise<{ status: string; accepted_at?: string | null }> {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const res = await fetch(this.url(`/${encodeURIComponent(token)}/status`), {
+        method: "GET",
+        credentials: "omit",
+        signal: controller.signal,
+      });
+      const body = await parseBody(res);
+      if (!res.ok) {
+        if (res.status === 404 || res.status === 410) throw new ConsentTokenInvalidError("Token inválido o expirado");
+        throw new Error(messageFromBody(body, res.statusText));
+      }
+      return body as { status: string; accepted_at?: string | null };
+    } catch (e) {
+      if (e instanceof ConsentTokenInvalidError) throw e;
+      if (e instanceof DOMException && e.name === "AbortError") throw new Error("Tiempo de espera agotado");
+      throw e instanceof Error ? e : new Error("Error al consultar estado");
     } finally {
       window.clearTimeout(timeoutId);
     }

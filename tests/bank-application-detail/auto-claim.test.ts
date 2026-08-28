@@ -31,11 +31,11 @@ describe("claimBankApplication — sends analyst_id in body (Audit #4.4)", () =>
   });
 });
 
-describe("BankApplicationDetailInner — auto-claim on mount (Audit #4.4)", () => {
+describe("BankApplicationDetailInner — explicit claim (Audit #4.4)", () => {
   const src = readSrc("app/(bank)/bank/applications/[id]/page.tsx");
 
-  test("imports useRef from react", () => {
-    expect(src).toMatch(/import\s*\{[^}]*useRef[^}]*\}\s*from\s*"react"/);
+  test("does not need a mount-attempt ref", () => {
+    expect(src).not.toMatch(/import\s*\{[^}]*useRef[^}]*\}\s*from\s*"react"/);
   });
 
   test("imports useAuth hook", () => {
@@ -46,38 +46,9 @@ describe("BankApplicationDetailInner — auto-claim on mount (Audit #4.4)", () =
     expect(src).toContain("const { user } = useAuth()");
   });
 
-  test("creates autoClaimAttempted ref", () => {
-    expect(src).toContain("autoClaimAttempted = useRef(false)");
-  });
-
-  test("auto-claim useEffect checks detail loaded", () => {
-    expect(src).toContain("if (!detail || autoClaimAttempted.current) return");
-  });
-
-  test("auto-claim skips if already owned", () => {
-    expect(src).toContain("detail.bank_claim?.current_user_owns === true");
-  });
-
-  test("auto-claim skips terminal states (not pending/reviewing)", () => {
-    expect(src).toContain('status !== "pending" && status !== "reviewing"');
-  });
-
-  test("auto-claim requires user.id", () => {
-    expect(src).toContain("const analystId = user?.id");
-    expect(src).toContain("if (!analystId) return");
-  });
-
-  test("sets autoClaimAttempted to prevent re-fire", () => {
-    expect(src).toContain("autoClaimAttempted.current = true");
-  });
-
-  test("calls claimBankApplication with id and analystId", () => {
-    expect(src).toContain("claimBankApplication(id, analystId)");
-  });
-
-  test("reloads detail on success or 409", () => {
-    expect(src).toContain("res.ok || res.status === 409");
-    expect(src).toContain("await load()");
+  test("does not claim while the detail mounts", () => {
+    expect(src).not.toContain("autoClaimAttempted");
+    expect(src).not.toContain("claimBankApplication(id, analystId)");
   });
 
   test("handleClaim passes user.id to claimBankApplication", () => {
@@ -86,7 +57,7 @@ describe("BankApplicationDetailInner — auto-claim on mount (Audit #4.4)", () =
   });
 });
 
-describe("BankApplicationDetailView (Forge) — auto-claim on mount (Audit #4.4)", () => {
+describe("BankApplicationDetailView (Forge) — legacy auto-claim audit", () => {
   const src = readSrc("components/forge/credit-hub/BankApplicationDetailView.tsx");
 
   test("imports useEffect and useRef", () => {

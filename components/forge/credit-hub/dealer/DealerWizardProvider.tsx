@@ -34,6 +34,7 @@ import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { CreditHubTranslations } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
 import {
+  DEALER_WIZARD_STEP_PATHS,
   dealerWizardStepHref,
   dealerWizardStepIndexFromPathname,
   dealerWizardStepSlugFromIndex,
@@ -186,11 +187,10 @@ function segmentCanAdvance(
   config: WizardStepValidationConfig,
   t: CreditHubTranslations
 ): boolean {
-  if (stepIndex === 0) return stepIsValid(5, data, config, t);
-  if (stepIndex === 1) return stepIsValid(0, data, config, t) && stepIsValid(1, data, config, t);
-  if (stepIndex === 2) return stepIsValid(3, data, config, t);
-  if (stepIndex === 3) return stepIsValid(2, data, config, t);
-  if (stepIndex === 4) return stepIsValid(4, data, config, t);
+  if (stepIndex === 0) return stepIsValid(0, data, config, t) && stepIsValid(1, data, config, t);
+  if (stepIndex === 1) return stepIsValid(5, data, config, t);
+  if (stepIndex === 2) return stepIsValid(2, data, config, t);
+  if (stepIndex === 3) return stepIsValid(3, data, config, t) && stepIsValid(4, data, config, t);
   return false;
 }
 
@@ -688,11 +688,10 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       defaultDocumentType: defaultDocType,
       wizardDocuments: requiredDocumentsList,
     }) as unknown as Record<string, unknown>;
-    if (step === 0) return { consents: payload.consents };
-    if (step === 1) return { applicant: payload.applicant, employment: payload.employment };
-    if (step === 2) return { co_debtor: payload.co_debtor };
-    if (step === 3) return { financial: payload.financial, vehicle: payload.vehicle };
-    return { documents: payload.documents, documentos: payload.documentos };
+    if (step === 0) return { applicant: payload.applicant, employment: payload.employment };
+    if (step === 1) return { consents: payload.consents };
+    if (step === 2) return { financial: payload.financial, vehicle: payload.vehicle };
+    return { co_debtor: payload.co_debtor, documents: payload.documents, documentos: payload.documentos };
   }, [defaultDocType, requiredDocumentsList]);
 
   const persistApplicationId = useCallback((applicationId: string) => {
@@ -741,7 +740,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [storageKey]);
 
   const attemptAdvance = useCallback(async (): Promise<boolean> => {
-    if (stepIndex === 4) {
+    if (stepIndex === DEALER_WIZARD_STEP_PATHS.length - 1) {
       logPersonalReferencesDebug(formData.personal_references ?? []);
       console.info("[wizard-validation] documents step", {
         document_files_ready: formData.document_files_ready,
@@ -762,7 +761,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
           actorRole: "dealer",
         });
         saveDraftToStorage();
-        const next = Math.min(stepIndex + 1, 4);
+        const next = Math.min(stepIndex + 1, DEALER_WIZARD_STEP_PATHS.length - 1);
         router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next), applicationId));
         return true;
       } catch (error) {

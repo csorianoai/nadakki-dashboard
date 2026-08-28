@@ -147,6 +147,14 @@ function responseMessage(body: unknown, fallback: string): string {
   
   // Form 2 & 3: {"detail": {...}}
   if (detail && typeof detail === "object") {
+    if (Array.isArray(detail)) {
+      const messages = detail
+        .map((item) => item && typeof item === "object" && typeof (item as Record<string, unknown>).msg === "string"
+          ? (item as Record<string, unknown>).msg as string
+          : null)
+        .filter((message): message is string => Boolean(message));
+      if (messages.length > 0) return `No se pudo guardar la solicitud. ${messages.join(" ")}`;
+    }
     const detailObj = detail as Record<string, unknown>;
     
     // Extract trace/correlation IDs
