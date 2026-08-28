@@ -61,7 +61,16 @@ export function DecisionPanel({
   const lenderRequired = lenderOptions.length > 1 && !lenderCode;
 
   return (
-    <div className={cn("ch-card", className)} style={{ position: sticky ? "sticky" : "static", top: 24, overflow: "hidden" }}>
+    <div
+      className={cn("ch-card", className)}
+      style={{
+        position: sticky ? "sticky" : "static",
+        top: 8,
+        maxHeight: sticky ? "calc(100vh - 16px)" : undefined,
+        overflowY: sticky ? "auto" : undefined,
+        overflowX: "hidden",
+      }}
+    >
       <div
         style={{
           padding: "14px 18px",
@@ -223,7 +232,14 @@ export function DecisionPanel({
           <button
             type="button"
             className={`ch-btn ${mode === "reject" ? "ch-btn-danger" : "ch-btn-primary"} ch-btn-lg`}
-            style={{ width: "100%", marginTop: 14 }}
+            style={{
+              width: "100%",
+              marginTop: 14,
+              position: sticky ? "sticky" : "static",
+              bottom: 0,
+              zIndex: 1,
+              boxShadow: sticky ? "0 -8px 12px var(--ch-surface)" : undefined,
+            }}
             disabled={!canDecide || lenderRequired || state === "loading" || (state !== "error" && justif.trim().length === 0)}
             onClick={submit}
           >

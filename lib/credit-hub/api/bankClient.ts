@@ -71,10 +71,6 @@ function toBankDecideRequestBody(legacy: BankDecisionRequest): Record<string, un
     }));
   }
 
-  if (legacy.lender_code?.trim()) {
-    body.lender_code = legacy.lender_code.trim();
-  }
-
   return body;
 }
 
