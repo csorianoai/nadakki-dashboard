@@ -38,6 +38,7 @@ import { mapBackendRiskLevel } from "@/lib/credit-hub/types/bank-views";
 import type { BankDecisionRequest, BankDecisionTerms, BankDecisionType } from "@/lib/credit-hub/types/bankDecision";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
+import { getOfferCompare } from "@/lib/credit-hub/api/bankExperienceClient";
 
 function defaultTerms(payload: BankReviewPayload): BankDecisionTerms {
   const analysis = payload.analysis;
@@ -80,6 +81,25 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   }, [payload.documents]);
 
   const decisionMutation = useBankDecision(application.application_id);
+  const offerCompareQuery = useQuery({
+    queryKey: ["offer-compare", apiTenantId, application.application_id],
+    queryFn: () => getOfferCompare({ tenantId: apiTenantId!, applicationId: application.application_id }),
+    enabled: !!apiTenantId,
+    retry: false,
+  });
+  const lenderOptions = useMemo(() => {
+    const compareCodes = (offerCompareQuery.data?.offers ?? [])
+      .map((offer) => offer.lender_code?.trim())
+      .filter((code): code is string => Boolean(code));
+    if (compareCodes.length > 0) return [...new Set(compareCodes)];
+    const claims = payload.bank_claims_by_lender;
+    return claims && typeof claims === "object" && !Array.isArray(claims) ? Object.keys(claims) : [];
+  }, [offerCompareQuery.data, payload.bank_claims_by_lender]);
+  const [selectedLenderCode, setSelectedLenderCode] = useState("");
+  useEffect(() => {
+    if (lenderOptions.length === 1) setSelectedLenderCode(lenderOptions[0]);
+    if (selectedLenderCode && !lenderOptions.includes(selectedLenderCode)) setSelectedLenderCode("");
+  }, [lenderOptions, selectedLenderCode]);
   const [tab, setTab] = useState<
     "analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones" | "mensajes" | "notas"
   >("analisis");
@@ -151,6 +171,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
         decision: modeToDecision(mode),
         justification: justif.trim(),
         analyst_id: analystId,
+        lender_code: lenderOptions.length === 1 ? lenderOptions[0] : selectedLenderCode || undefined,
         terms: counterOffer?.counter_offer_terms ?? termsRef.current,
       };
       try {
@@ -169,7 +190,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
         throw err;
       }
     },
-    [counterOffer?.counter_offer_terms, decisionMutation, user?.id]
+    [counterOffer?.counter_offer_terms, decisionMutation, lenderOptions, selectedLenderCode, user?.id]
   );
 
   const applicantName = String(applicant.name ?? applicant.full_name ?? "Cliente");
@@ -360,6 +381,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           state={panelState}
           canDecide={canDecide}
           errorDetail={decisionErrorDetail}
+          lenderOptions={lenderOptions}
+          lenderCode={selectedLenderCode}
+          onLenderChange={setSelectedLenderCode}
           onSubmit={handleSubmit}
         />
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

@@ -43,6 +43,9 @@ export interface DecisionPanelProps {
   canDecide?: boolean;
   /** Specific backend error (e.g. OFFER_ROOM_CLOSED). */
   errorDetail?: string | null;
+  lenderOptions?: string[];
+  lenderCode?: string;
+  onLenderChange?: (lenderCode: string) => void;
   onSubmit?: (mode: DecisionMode, justification: string) => void;
 }
 
