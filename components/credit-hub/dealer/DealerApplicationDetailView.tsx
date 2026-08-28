@@ -37,7 +37,7 @@ import { AmortizationTable } from "@/components/credit-hub/dealer/AmortizationTa
 import { extractOfferValidUntil, OfferValidityBadge } from "@/components/credit-hub/dealer/OfferValidityBadge";
 import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import { isCounterOffer, isDealerRejectedOffer } from "@/lib/credit-hub/dealer/offer-actions";
-import { SimulatedOfferNotice } from "@/components/credit-hub/elite/OfferComparisonCard";
+import { SimulatedOfferNotice, offerTruthLevel } from "@/components/credit-hub/elite/OfferComparisonCard";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
 
@@ -308,7 +308,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
             <h2 className="ch-serif" style={{ margin: 0, fontSize: 17 }}>
               {hasAcceptedOffer ? "Oferta seleccionada" : "Exchange multi-banco"}
             </h2>
-            <DataTruthBadge level="REAL" />
+            <DataTruthBadge level={offerTruthLevel(offers, offersLoading, offersError)} />
           </div>
           <p style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginBottom: 14 }}>
             {hasAcceptedOffer

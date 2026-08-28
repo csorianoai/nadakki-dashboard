@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 
 import { render, screen } from "@testing-library/react";
-import { OfferComparisonCard, computeOfferSavingsNote } from "@/components/credit-hub/elite/OfferComparisonCard";
+import { OfferComparisonCard, computeOfferSavingsNote, offerTruthLevel } from "@/components/credit-hub/elite/OfferComparisonCard";
 import type { CreditOffer } from "@/lib/credit-hub/types/offers";
 
 function offer(overrides: Partial<CreditOffer> = {}): CreditOffer {
@@ -29,6 +29,12 @@ function offer(overrides: Partial<CreditOffer> = {}): CreditOffer {
 }
 
 describe("OfferComparisonCard provenance", () => {
+  test("derives the collection badge from persisted offer provenance", () => {
+    expect(offerTruthLevel([offer({ simulated: true })], false, false)).toBe("DEMO");
+    expect(offerTruthLevel([offer({ simulated: false })], false, false)).toBe("REAL");
+    expect(offerTruthLevel([offer({ simulated: false })], true, false)).toBe("DEMO");
+  });
+
   test("shows a visible simulation notice", () => {
     render(<OfferComparisonCard offer={offer({ simulated: true })} currencyPrefix="RD$" />);
     expect(screen.getByTestId("offer-simulated-badge-offer-1")).toHaveTextContent(/decisión simulada/i);
