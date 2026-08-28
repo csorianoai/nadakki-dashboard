@@ -166,7 +166,10 @@ export async function recordDecision(params: {
     tenantId: params.tenantId,
     actorRole,
     method: "POST",
-    body: JSON.stringify({ analyst_id: analystId }),
+    body: JSON.stringify({
+      analyst_id: analystId,
+      ...(params.body.lender_code?.trim() ? { lender_code: params.body.lender_code.trim() } : {}),
+    }),
   });
   console.log("[claim-before-decide] claim succeeded, proceeding to decide");
 

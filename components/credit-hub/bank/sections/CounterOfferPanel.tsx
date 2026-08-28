@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 import { CHApiError } from "@/lib/credit-hub/api/client";
-import { getCounterOffer } from "@/lib/credit-hub/api/bankClient";
 import { getOfferCompare, postRejectOffer } from "@/lib/credit-hub/api/bankExperienceClient";
 import { chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -15,13 +14,6 @@ export function CounterOfferPanel({ applicationId }: { applicationId: string }) 
   const [rejecting, setRejecting] = useState(false);
   const [showReject, setShowReject] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-
-  const q = useQuery({
-    queryKey: ["counter-offer-panel", apiTenantId, applicationId],
-    queryFn: () => getCounterOffer({ tenantId: apiTenantId!, applicationId }),
-    enabled: !!apiTenantId,
-    retry: false,
-  });
 
   const compareQ = useQuery({
     queryKey: ["offer-compare-reject", apiTenantId, applicationId],
@@ -36,7 +28,7 @@ export function CounterOfferPanel({ applicationId }: { applicationId: string }) 
     return counter?.offer_id ?? detail[0]?.offer_id ?? null;
   }, [compareQ.data?.offers_detail]);
 
-  if (q.isLoading) {
+  if (compareQ.isLoading) {
     return (
       <div className="ch-card p-4 text-sm text-forgeGray-500" data-testid="counter-offer-loading">
         Cargando contrapropuesta…
@@ -44,20 +36,14 @@ export function CounterOfferPanel({ applicationId }: { applicationId: string }) 
     );
   }
 
-  if (q.error instanceof CHApiError) {
-    if (q.error.status === 404 || q.error.status === 501) return null;
-    return (
-      <div className="ch-card p-4 text-sm" style={{ color: "var(--ch-danger-text)" }} data-testid="counter-offer-error">
-        No se pudo cargar la contrapropuesta.
-      </div>
-    );
-  }
+  if (compareQ.error instanceof CHApiError) return null;
 
-  const co = q.data;
-  if (!co?.counter_offer_terms) return null;
+  const detail = compareQ.data?.offers_detail ?? [];
+  const co = detail.find((offer) => offer.is_counteroffer);
+  if (!co?.terms) return null;
 
-  const orig = co.original_terms;
-  const counter = co.counter_offer_terms;
+  const orig = (co.terms.original_terms ?? {}) as Record<string, number>;
+  const counter = (co.terms.counter_offer_terms ?? co.terms) as Record<string, number>;
 
   const reject = async () => {
     if (!apiTenantId || !counterOfferId || rejecting) return;
@@ -87,7 +73,9 @@ export function CounterOfferPanel({ applicationId }: { applicationId: string }) 
       <h3 className="ch-serif" style={{ margin: "0 0 8px", fontSize: 16 }}>
         Contrapropuesta sugerida
       </h3>
-      <p style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginBottom: 12 }}>{co.explanation}</p>
+      <p style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginBottom: 12 }}>
+        Contrapropuesta recibida de {co.lender_display_name ?? co.lender_code ?? "la institución"}.
+      </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-forgeGray-100 p-3">
           <div className="ch-eyebrow">Términos solicitados</div>
@@ -103,7 +91,7 @@ export function CounterOfferPanel({ applicationId }: { applicationId: string }) 
             <li>Monto: {chMoneyExact(counter.approved_amount)}</li>
             <li>Tasa: {counter.interest_rate}%</li>
             <li>Plazo: {counter.term_months} meses</li>
-            <li>Ajuste tasa: {co.rate_adjustment_bps} bps</li>
+            {co.terms.rate_adjustment_bps != null ? <li>Ajuste tasa: {String(co.terms.rate_adjustment_bps)} bps</li> : null}
           </ul>
         </div>
       </div>

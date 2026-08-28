@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
@@ -30,7 +30,6 @@ import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/a
 import { extractDisplayStatus, formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
-import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
 import { useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
 import type { DecisionMode, DecisionState } from "@/lib/credit-hub/ch-types";
 import type { BankDetailLayoutProps, BankDocumentPayload, BankReviewPayload } from "@/lib/credit-hub/types/bank-views";
@@ -39,6 +38,7 @@ import type { BankDecisionRequest, BankDecisionTerms, BankDecisionType } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
 import { getOfferCompare } from "@/lib/credit-hub/api/bankExperienceClient";
+import { CHApiError } from "@/lib/credit-hub/api/client";
 
 function defaultTerms(payload: BankReviewPayload): BankDecisionTerms {
   const analysis = payload.analysis;
@@ -64,7 +64,6 @@ function modeToDecision(mode: DecisionMode): BankDecisionType {
 export function BankDetailLayout({ application, compliance, audit, counterOffer }: BankDetailLayoutProps) {
   const { user } = useAuth();
   const { apiTenantId } = useTenant();
-  const queryClient = useQueryClient();
   const { can: actorCan, roleKey } = useCreditHubActor();
   const notesProbe = useNotesEndpointAvailable(application.application_id);
   const showNotesTab = isBankNotesRole(roleKey) && notesProbe.available;
@@ -106,26 +105,6 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const [panelState, setPanelState] = useState<DecisionState>("idle");
   const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
   const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
-
-  const autoClaimAttempted = useRef(false);
-  useEffect(() => {
-    if (autoClaimAttempted.current || application.application_payload?.bank_decision) return;
-    const analystId = user?.id;
-    if (!analystId) return;
-    
-    // Solo marcar como intentado DESPUÉS de verificar que tenemos analystId válido
-    autoClaimAttempted.current = true;
-    
-    void claimBankApplication(application.application_id, analystId)
-      .then(() => {
-        // Invalidar la query de assignment para reflejar el nuevo analista
-        void queryClient.invalidateQueries({ queryKey: ["app-assignment", apiTenantId, application.application_id] });
-      })
-      .catch((err) => {
-        // Log error en vez de tragarlo - el QA reporta "Sin asignar" porque el claim falló silenciosamente
-        console.error("[auto-claim] Failed to claim application:", application.application_id, err);
-      });
-  }, [application.application_id, application.application_payload?.bank_decision, user?.id, apiTenantId, queryClient]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -178,13 +157,15 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
         await decisionMutation.mutateAsync(body);
         setDecisionErrorDetail(null);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "";
+        const msg = err instanceof Error ? err.message : "Error desconocido";
         if (msg.includes("OFFER_ROOM_CLOSED") || msg.toLowerCase().includes("offer_room_closed")) {
           setDecisionErrorDetail(
             "La sala de ofertas está cerrada para esta solicitud. No se pueden registrar más decisiones.",
           );
-        } else if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
-          setDecisionErrorDetail(null);
+        } else if (err instanceof CHApiError) {
+          setDecisionErrorDetail(`Error ${err.status}: ${err.detail}`);
+        } else {
+          setDecisionErrorDetail(msg);
         }
         setPanelState("error");
         throw err;
