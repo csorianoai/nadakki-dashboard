@@ -1927,6 +1927,23 @@ import { TenantBrandingErrorBanner } from "@/components/forge/ui/TenantBrandingE
 - **Extend** the primitive only if other tenant-scoped fetches need similar persistent error UI (then generalize and update this doc).
 
 ---
+
+
+---
+
+## proyectos-sidebar-policy
+
+**File:** components/forge/layout/proyectos-sidebar-policy.ts
+
+**Purpose:** Pure route-boundary policy for Projects Core finance links. It allows the shared sidebar to load Projects Core only on /proyectos and its subroutes, keeping Credit Hub independent from that core availability.
+
+**Primary export:** shouldLoadProjectsSidebar(pathname: string | null): boolean
+
+### Related
+
+- components/forge/layout/ProyectosFinanzasSidebarLinks.tsx
+- 	ests/forge/proyectos-finanzas-sidebar-links.test.ts
+
 <!-- PHASE8_PRIMITIVE_CATALOG_END -->
 
 
@@ -1939,3 +1956,4 @@ Parte del cierre v1.4 para garantizar visibilidad del estado real del sistema al
 
 **Ubicación:** parte superior de expedientes bancarios y dashboard dealer.
 **Introducido en:** MASTER LOOP FRONTEND v1.0 (PR #270)
+\r\n\r\n---\r\n\r\n## proyectos-sidebar-policy\r\n\r\n**File:** components/forge/layout/proyectos-sidebar-policy.ts\r\n\r\n**Purpose:** Pure route-boundary policy for Projects Core finance links. It allows the shared sidebar to load Projects Core only on /proyectos and its subroutes, keeping Credit Hub independent from that core availability.\r\n\r\n**Primary export:** shouldLoadProjectsSidebar(pathname: string | null): boolean\r\n\r\n### Related\r\n\r\n- components/forge/layout/ProyectosFinanzasSidebarLinks.tsx\r\n- 	ests/forge/proyectos-finanzas-sidebar-links.test.ts\r\n
