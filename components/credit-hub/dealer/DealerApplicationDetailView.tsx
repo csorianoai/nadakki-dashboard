@@ -37,6 +37,7 @@ import { AmortizationTable } from "@/components/credit-hub/dealer/AmortizationTa
 import { extractOfferValidUntil, OfferValidityBadge } from "@/components/credit-hub/dealer/OfferValidityBadge";
 import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import { isCounterOffer, isDealerRejectedOffer } from "@/lib/credit-hub/dealer/offer-actions";
+import { SimulatedOfferNotice } from "@/components/credit-hub/elite/OfferComparisonCard";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
 
@@ -391,6 +392,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                       ) : null}
                     </div>
                   </div>
+                  <SimulatedOfferNotice offer={offer} />
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <div className="ch-eyebrow">Monto aprobado</div>
