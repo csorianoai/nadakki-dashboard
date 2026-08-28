@@ -122,12 +122,6 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
 
       <main style={{ flex: 1, maxWidth: 720, width: "100%", margin: "0 auto" }}>{children}</main>
 
-      {submitError ? (
-        <p role="alert" style={{ fontSize: 13, color: "var(--ch-danger-text)", marginTop: 8 }}>
-          {submitError}
-        </p>
-      ) : null}
-
       <div
         style={{
           position: "fixed",
@@ -140,6 +134,11 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
         }}
       >
+        {submitError ? (
+          <p role="alert" style={{ maxWidth: 720, margin: "0 auto 8px", fontSize: 13, color: "var(--ch-danger-text)" }}>
+            {submitError}
+          </p>
+        ) : null}
         {displayBlockReason ? (
           <button
             type="button"

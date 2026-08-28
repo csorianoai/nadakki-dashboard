@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { applicationFieldsPatchBody } from "@/lib/credit-hub/api/operationalClient";
 import { dealerWizardErrorMessage } from "@/lib/credit-hub/dealer/wizard-error";
+import { buildWizardStepFields } from "@/lib/credit-hub/dealer/wizard-step-fields";
 
 const providerPath = path.join(
   process.cwd(),
@@ -37,5 +39,18 @@ describe("F9 wizard persistence", () => {
     const error = Object.assign(new Error("Not found"), { status: 404 });
     expect(dealerWizardErrorMessage(error)).toMatch(/No tienes autorización/);
     expect(dealerWizardErrorMessage(new Error("network"))).toBe("network");
+  });
+
+  test("the applicant advance sends the actual step fields flat", () => {
+    const fields = buildWizardStepFields(
+      { applicant: { full_name: "Ana", identification: "001" }, employment: { employer_name: "Acme" } },
+      0,
+    );
+    expect(fields).toEqual({ full_name: "Ana", identification: "001", employer_name: "Acme" });
+    expect(fields).not.toHaveProperty("applicant");
+  });
+
+  test("mutation nesting the applicant segment is rejected by the existing guard", () => {
+    expect(() => applicationFieldsPatchBody({ applicant: { full_name: "Ana" } })).toThrow(/campos planos/);
   });
 });
