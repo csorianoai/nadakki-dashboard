@@ -9,7 +9,7 @@ function RedirectToApplicant() {
   const searchParams = useSearchParams();
   useEffect(() => {
     const query = searchParams.toString();
-    router.replace(`/credit-hub/dealer/applications/new/consent${query ? `?${query}` : ""}`);
+    router.replace(`/credit-hub/dealer/applications/new/applicant${query ? `?${query}` : ""}`);
   }, [router, searchParams]);
   return <DetailSkeleton />;
 }

@@ -34,6 +34,7 @@ import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { CreditHubTranslations } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
 import {
+  DEALER_WIZARD_STEP_PATHS,
   dealerWizardStepHref,
   dealerWizardStepIndexFromPathname,
   dealerWizardStepSlugFromIndex,
@@ -99,11 +100,10 @@ function segmentCanAdvance(
   config: WizardStepValidationConfig,
   t: CreditHubTranslations
 ): boolean {
-  if (stepIndex === 0) return stepIsValid(5, data, config, t);
-  if (stepIndex === 1) return stepIsValid(0, data, config, t) && stepIsValid(1, data, config, t);
-  if (stepIndex === 2) return stepIsValid(3, data, config, t);
-  if (stepIndex === 3) return stepIsValid(2, data, config, t);
-  if (stepIndex === 4) return stepIsValid(4, data, config, t);
+  if (stepIndex === 0) return stepIsValid(0, data, config, t) && stepIsValid(1, data, config, t);
+  if (stepIndex === 1) return stepIsValid(5, data, config, t);
+  if (stepIndex === 2) return stepIsValid(2, data, config, t);
+  if (stepIndex === 3) return stepIsValid(3, data, config, t) && stepIsValid(4, data, config, t);
   return false;
 }
 
@@ -576,7 +576,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   );
 
   const attemptAdvance = useCallback(() => {
-    if (stepIndex === 4) {
+    if (stepIndex === 3) {
       logPersonalReferencesDebug(formData.personal_references ?? []);
       console.info("[wizard-validation] documents step", {
         document_files_ready: formData.document_files_ready,
@@ -587,7 +587,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     }
     if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
       setShowValidationErrors(false);
-      const next = Math.min(stepIndex + 1, 4);
+      const next = Math.min(stepIndex + 1, DEALER_WIZARD_STEP_PATHS.length - 1);
       router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next), consentApplicationId));
       return true;
     }
