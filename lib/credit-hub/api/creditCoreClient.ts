@@ -195,6 +195,24 @@ export async function processApplication(params: {
   return normalizeApplication(raw);
 }
 
+export async function executeMultiLender(params: {
+  tenantId: string;
+  applicationId: string;
+  application: object;
+  dryRun?: boolean;
+}): Promise<{ offers?: unknown[]; status?: string; application_id?: string }> {
+  return creditCoreFetch(`/multi-lender/execute`, {
+    method: "POST",
+    tenantId: params.tenantId,
+    body: JSON.stringify({
+      application_id: params.applicationId,
+      tenant_id: params.tenantId,
+      application: params.application,
+      dry_run: params.dryRun ?? false,
+    }),
+  });
+}
+
 export async function getApplicationEvents(params: {
   tenantId: string;
   applicationId: string;
