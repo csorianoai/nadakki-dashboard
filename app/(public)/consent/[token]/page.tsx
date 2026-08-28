@@ -7,6 +7,7 @@ import {
   PublicConsentClient,
   ConsentTokenInvalidError,
   ConsentOtpInvalidError,
+  isUsableStatus,
   type PublicConsentView,
 } from "@/lib/credit-hub/api/public-consent-client";
 import { ConsentBrandingHeader } from "./_components/ConsentBrandingHeader";
@@ -52,7 +53,13 @@ export default function PublicConsentPage() {
 
     let mounted = true;
     void clientRef.current
-      .getView(token)
+      .getStatus(token)
+      .then((status) => {
+        if (!isUsableStatus(status.status)) {
+          throw new ConsentTokenInvalidError("Token inválido o expirado");
+        }
+        return clientRef.current.getPublicView(token);
+      })
       .then((d) => {
         if (!mounted) return;
         if (d.already_accepted) {
