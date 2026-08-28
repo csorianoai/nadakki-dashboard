@@ -204,8 +204,8 @@ export function DecisionPanel({
             >
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               <div>
-                <strong>{errorDetail ? "Sala de ofertas cerrada." : "Conflicto 409."}</strong>{" "}
-                {errorDetail ?? "Otro analista actualizó esta solicitud."}
+                <strong>{errorDetail ? "Error al registrar la decisión." : "Conflicto 409."}</strong>{" "}
+                {errorDetail ?? "No se pudo completar la operación."}
               </div>
             </div>
           ) : null}

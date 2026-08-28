@@ -208,15 +208,17 @@ export interface OfferCompareRow {
 export interface OfferCompareDetail {
   offer_id: string;
   lender_code?: string;
+  lender_display_name?: string;
   offer_status?: string;
   is_counteroffer?: boolean;
+  terms?: Record<string, unknown>;
 }
 
 export async function getOfferCompare(params: {
   tenantId: string;
   applicationId: string;
   actorRole?: CHActorRole;
-}): Promise<{ offers?: OfferCompareRow[]; offers_detail?: OfferCompareDetail[]; generated_at?: string }> {
+}): Promise<{ offer_count?: number; offers?: OfferCompareRow[]; offers_detail?: OfferCompareDetail[]; generated_at?: string }> {
   return chFetch(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/offers/compare`, {
     tenantId: params.tenantId,
     actorRole: params.actorRole ?? "bank_analyst",
