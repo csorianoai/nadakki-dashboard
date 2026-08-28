@@ -25,4 +25,24 @@ describe("display-status server-first", () => {
     expect(resolveDisplayStatusLabel({ displayStatus: "EXPIRED" }).label).toBe("Expirada");
     expect(resolveDisplayStatusLabel({ displayStatus: "CANCELLED" }).label).toBe("Cancelada");
   });
+
+  test("labels pending offers instead of claiming bank completion", () => {
+    const r = resolveDisplayStatusLabel({
+      displayStatus: "BANK_COMPLETE",
+      hasOffers: true,
+      hasHumanDecision: false,
+    });
+    expect(r.key).toBe("OFFERS_RECEIVED");
+    expect(r.label).toContain("pendiente");
+  });
+
+  test("keeps bank completion after a human decision", () => {
+    const r = resolveDisplayStatusLabel({
+      displayStatus: "BANK_COMPLETE",
+      hasOffers: true,
+      hasHumanDecision: true,
+    });
+    expect(r.key).toBe("BANK_COMPLETE");
+    expect(r.label).toBe("Banco completado");
+  });
 });

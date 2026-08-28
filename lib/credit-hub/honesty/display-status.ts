@@ -16,6 +16,7 @@ export type ServerDisplayStatus =
   | "OFFER_SELECTED"
   | "READY_FOR_DISBURSEMENT"
   | "DISBURSED"
+  | "OFFERS_RECEIVED"
   | "BANK_COMPLETE"
   | "COMPLETED"
   | "FAILED"
@@ -45,6 +46,7 @@ export const SERVER_DISPLAY_STATUS_LABELS: Record<string, string> = {
   OFFER_SELECTED: "Oferta seleccionada",
   READY_FOR_DISBURSEMENT: "Lista para desembolso",
   DISBURSED: "Desembolsada",
+  OFFERS_RECEIVED: "Ofertas recibidas · pendiente de revisión",
   BANK_COMPLETE: "Banco completado",
   COMPLETED: "Completada",
   FAILED: "Fallida",
@@ -87,12 +89,18 @@ export function resolveDisplayStatusLabel(input: {
   displayStatus?: string | null;
   status?: CreditApplicationStatus;
   backendState?: string | null;
+  hasOffers?: boolean;
+  hasHumanDecision?: boolean;
 }): { key: string; label: string; source: "server" | "legacy" } {
   const server = (input.displayStatus ?? "").trim().toUpperCase();
   if (server) {
+    const offersPending =
+      server === "BANK_COMPLETE" && input.hasOffers === true && input.hasHumanDecision !== true;
     return {
-      key: server,
-      label: SERVER_DISPLAY_STATUS_LABELS[server] ?? server.replace(/_/g, " ").toLowerCase(),
+      key: offersPending ? "OFFERS_RECEIVED" : server,
+      label: offersPending
+        ? SERVER_DISPLAY_STATUS_LABELS.OFFERS_RECEIVED
+        : SERVER_DISPLAY_STATUS_LABELS[server] ?? server.replace(/_/g, " ").toLowerCase(),
       source: "server",
     };
   }
