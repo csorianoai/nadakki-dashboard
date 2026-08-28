@@ -80,8 +80,10 @@ describe("bankClient", () => {
         terms: { approved_amount: 900000, interest_rate: 18, term_months: 60, down_payment_required: 300000, conditions: [] },
       },
     });
+    const claimBody = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
     const decideBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
-    expect(decideBody.lender_code).toBe("pilot");
+    expect(claimBody).toEqual({ analyst_id: "analyst-1", lender_code: "pilot" });
+    expect(decideBody).not.toHaveProperty("lender_code");
   });
 
   test("bulkDecide sends rule and selected applications", async () => {
