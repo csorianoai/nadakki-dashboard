@@ -1,4 +1,4 @@
-export const DEALER_WIZARD_STEP_PATHS = ["consent", "applicant", "co-borrower", "vehicle", "documents"] as const;
+export const DEALER_WIZARD_STEP_PATHS = ["applicant", "consent", "vehicle", "review"] as const;
 
 export type DealerWizardStepSlug = (typeof DEALER_WIZARD_STEP_PATHS)[number];
 

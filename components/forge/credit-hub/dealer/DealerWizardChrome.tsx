@@ -10,7 +10,7 @@ import { formatToastApplicationId, forgeToastLangFromLocale, forgeWizardToasts }
 import { DEALER_WIZARD_STEP_PATHS, dealerWizardStepHref } from "./dealerWizardPaths";
 import { useDealerWizard } from "./DealerWizardProvider";
 
-const STEP_LABELS = ["1 Solicitante", "2 Co-firmante", "3 Vehículo", "4 Documentos", "5 Consentimiento"] as const;
+const STEP_LABELS = ["1 Solicitante", "2 Consentimiento", "3 Vehículo", "4 Revisión y despacho"] as const;
 
 export function DealerWizardChrome({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -25,7 +25,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
   };
 
   const handlePrimary = async () => {
-    if (stepIndex < 4) {
+    if (stepIndex < DEALER_WIZARD_STEP_PATHS.length - 1) {
       goNext();
       return;
     }
@@ -94,7 +94,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
           <Button type="button" variant="ghost" className="min-h-12 shrink-0 px-2 text-forge-xs" onClick={saveDraftToStorage}>
             Guardar borrador
           </Button>
-          {stepIndex < 4 ? (
+          {stepIndex < DEALER_WIZARD_STEP_PATHS.length - 1 ? (
             <Button type="button" variant="primary" className="min-h-12 min-w-0 flex-1 shrink" onClick={goNext} disabled={!canAdvance}>
               Siguiente
             </Button>
