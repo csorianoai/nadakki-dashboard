@@ -21,11 +21,7 @@ interface Credential {
   last_tested_at?: string;
 }
 
-interface CredentialListResponse {
-  credentials: Credential[];
-}
-
-async function getCredentials(tenantId: string): Promise<CredentialListResponse> {
+async function getCredentials(tenantId: string): Promise<Credential[]> {
   return chFetch("/api/v2/institucion/credenciales", {
     tenantId,
     actorRole: "bank_admin",
@@ -366,7 +362,7 @@ export function CredentialVaultView() {
         <div>
           <h2 className="text-xl font-bold">Credential Vault</h2>
           <p className="text-sm text-slate-400 mt-1">
-            {data.credentials.length} credencial(es) configurada(s)
+            {data.length} credencial(es) configurada(s)
           </p>
         </div>
         <button
@@ -389,9 +385,9 @@ export function CredentialVaultView() {
       </div>
 
       {/* Credentials grid */}
-      {data.credentials.length > 0 ? (
+      {data.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.credentials.map((cred) => (
+          {data.map((cred) => (
             <CredentialCard
               key={cred.id}
               credential={cred}
