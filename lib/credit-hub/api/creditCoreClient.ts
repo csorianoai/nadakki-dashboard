@@ -147,6 +147,30 @@ export async function createDraftApplication(params: { tenantId: string }): Prom
   return normalizeApplication(raw);
 }
 
+export async function saveApplicantApplication(params: {
+  tenantId: string;
+  applicationId: string;
+  payload: Record<string, unknown>;
+}): Promise<unknown> {
+  return creditCoreFetch(`/applications/${encodeURIComponent(params.applicationId)}/applicant`, {
+    method: "POST",
+    tenantId: params.tenantId,
+    body: JSON.stringify(params.payload),
+  });
+}
+
+export async function saveVehicleApplication(params: {
+  tenantId: string;
+  applicationId: string;
+  payload: Record<string, unknown>;
+}): Promise<unknown> {
+  return creditCoreFetch(`/applications/${encodeURIComponent(params.applicationId)}/vehicle`, {
+    method: "POST",
+    tenantId: params.tenantId,
+    body: JSON.stringify(params.payload),
+  });
+}
+
 export async function getApplication(params: {
   tenantId: string;
   applicationId: string;

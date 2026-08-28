@@ -24,6 +24,12 @@ export interface EditHistoryEntry {
 }
 
 export function applicationFieldsPatchBody(fields: Record<string, unknown>): { changes: Record<string, unknown> } {
+  const nestedField = Object.entries(fields).find(
+    ([, value]) => value !== null && typeof value === "object" && !Array.isArray(value),
+  );
+  if (nestedField) {
+    throw new Error(`El campo ${nestedField[0]} debe enviarse como campos planos`);
+  }
   return { changes: fields };
 }
 

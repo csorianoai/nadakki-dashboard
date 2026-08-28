@@ -110,6 +110,8 @@ const ERROR_CODE_MESSAGES: Record<string, string> = {
   unauthorized: "No estás autorizado para realizar esta acción",
   forbidden: "Acceso denegado",
   not_authenticated: "Debes iniciar sesión para continuar",
+  field_unknown: "Uno de los campos de la solicitud no puede editarse en este momento",
+  field_not_editable: "Uno de los campos de la solicitud está protegido y no puede editarse",
 };
 
 /**
@@ -156,6 +158,12 @@ function responseMessage(body: unknown, fallback: string): string {
       if (messages.length > 0) return `No se pudo guardar la solicitud. ${messages.join(" ")}`;
     }
     const detailObj = detail as Record<string, unknown>;
+
+    if (typeof detailObj.code === "string") {
+      const code = detailObj.code.toLowerCase().trim();
+      const translatedMessage = ERROR_CODE_MESSAGES[code];
+      if (translatedMessage) return translatedMessage;
+    }
     
     // Extract trace/correlation IDs
     if (typeof detailObj.trace_id === "string") traceId = detailObj.trace_id;

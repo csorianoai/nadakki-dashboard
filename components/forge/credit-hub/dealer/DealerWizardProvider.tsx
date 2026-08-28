@@ -27,7 +27,7 @@ import {
   effectiveWizardDocuments,
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import { createDraftApplication, getApplication, processApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { createDraftApplication, getApplication, processApplication, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -173,6 +173,67 @@ function hydrateFormFromServer(raw: unknown): Partial<ApplicationFormData> {
     consent_accepted_at: stringValue(consents.consent_accepted_at),
   };
   return Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)) as Partial<ApplicationFormData>;
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+type WizardPayload = ReturnType<typeof buildCreateApplicationPayload>;
+
+function buildApplicantSavePayload(payload: WizardPayload): Record<string, unknown> {
+  const { applicant, employment, financial } = payload;
+  return {
+    name: applicant.full_name,
+    national_id: applicant.identification,
+    nombre_completo: applicant.full_name,
+    cedula: applicant.identification,
+    fecha_nacimiento: applicant.date_of_birth,
+    estado_civil: applicant.marital_status,
+    telefono_celular: applicant.phone,
+    email: applicant.email,
+    direccion: applicant.address,
+    municipio: applicant.municipality ?? applicant.city,
+    provincia: applicant.province,
+    tipo_empleo: employment.employment_type,
+    nombre_empleador: employment.employer_name,
+    cargo: employment.position,
+    ingreso_mensual_declarado: numberOrUndefined(employment.monthly_income),
+    monto_solicitado: numberOrUndefined(financial.requested_amount),
+    plazo_meses: numberOrUndefined(financial.desired_term),
+    inicial_disponible: numberOrUndefined(financial.down_payment),
+    referencias: applicant.referencias_personales,
+  };
+}
+
+function buildVehicleSavePayload(payload: WizardPayload): Record<string, unknown> {
+  const { vehicle, financial } = payload;
+  return {
+    make: vehicle.make,
+    model: vehicle.model,
+    year: numberOrUndefined(vehicle.year),
+    vehicle_value: numberOrUndefined(vehicle.price),
+    loan_amount_requested: numberOrUndefined(financial.requested_amount),
+  };
+}
+
+export function buildEditableFieldChanges(payload: WizardPayload): Record<string, unknown> {
+  const { applicant, employment, financial } = payload;
+  const changes: Record<string, unknown> = {
+    telefono_celular: applicant.phone,
+    email: applicant.email,
+    direccion: applicant.address,
+    municipio: applicant.municipality ?? applicant.city,
+    provincia: applicant.province,
+    nombre_empleador: employment.employer_name,
+    cargo: employment.position,
+    ingreso_mensual_declarado: numberOrUndefined(employment.monthly_income),
+    plazo_meses: numberOrUndefined(financial.desired_term),
+    inicial_disponible: numberOrUndefined(financial.down_payment),
+    referencias_personales: applicant.referencias_personales,
+  };
+  return Object.fromEntries(Object.entries(changes).filter(([, value]) => value !== undefined && value !== null));
 }
 
 async function sha256Hex(text: string): Promise<string> {
@@ -355,6 +416,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const presetAppliedRef = useRef(false);
   const draftCreationRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlightRef = useRef(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
@@ -839,7 +901,10 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [tenantConfig.locale, saveDraftToStorage, storageKey]);
 
   const submitApplication = useCallback(async () => {
+    if (submitInFlightRef.current) throw new Error("La solicitud ya se está enviando");
+    submitInFlightRef.current = true;
     if (!consentApplicationId || !tenantId) {
+      submitInFlightRef.current = false;
       throw new Error("No se pudo identificar el borrador de la solicitud");
     }
     if (!wizardDocumentsStepValid(formData)) {
@@ -849,10 +914,12 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
           ? `Sube los documentos obligatorios: ${missing.join(", ")}. También se requieren 3 referencias personales completas.`
           : "Completa al menos 3 referencias personales.",
       );
+      submitInFlightRef.current = false;
       throw new Error("Documentos o referencias incompletos");
     }
     if (!stepIsValid(5, formData, validationConfig, t)) {
       setSubmitError(t.validation.consents_required);
+      submitInFlightRef.current = false;
       throw new Error(t.validation.consents_required);
     }
     setSubmitError(null);
@@ -870,10 +937,20 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
         wizardDocuments: requiredDocumentsList,
       });
       setIsSubmitting(true);
+      await saveApplicantApplication({
+        tenantId,
+        applicationId: consentApplicationId,
+        payload: buildApplicantSavePayload(payload),
+      });
+      await saveVehicleApplication({
+        tenantId,
+        applicationId: consentApplicationId,
+        payload: buildVehicleSavePayload(payload),
+      });
       await patchApplicationFields({
         tenantId,
         applicationId: consentApplicationId,
-        fields: { ...payload, state: "SUBMITTED" },
+        fields: buildEditableFieldChanges(payload),
         actorRole: "dealer",
       });
       const result = { application_id: consentApplicationId };
@@ -964,6 +1041,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       return result;
     } catch (err) {
       setIsSubmitting(false);
+      submitInFlightRef.current = false;
       const msg = err instanceof Error ? err.message : t.toasts.application_failed;
       setSubmitError(msg);
       throw err;
