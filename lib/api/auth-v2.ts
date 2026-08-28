@@ -54,6 +54,7 @@ export interface ApiResult<T> {
   ok: boolean;
   data?: T;
   error?: string;
+  status?: number;
 }
 
 export interface MeResponse {
@@ -130,7 +131,7 @@ async function fetchApi<T>(
     });
     if (!r.ok) {
       const body = await r.text();
-      return { ok: false, error: formatHttpError(url, r.status, r.statusText, body) };
+      return { ok: false, status: r.status, error: formatHttpError(url, r.status, r.statusText, body) };
     }
     return { ok: true, data: (await r.json()) as T };
   } catch (e) {
