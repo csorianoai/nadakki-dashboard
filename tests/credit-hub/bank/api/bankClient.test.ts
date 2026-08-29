@@ -66,6 +66,12 @@ describe("bankClient", () => {
             payload: { offers_persisted: 2 },
             emitted_at: "2026-08-28T12:01:00Z",
           },
+          {
+            event_id: "evt-3",
+            event_type: "BANK_DECISION_MADE",
+            payload: { analyst_id: "analyst-42", decision: "APROBADO" },
+            emitted_at: "2026-08-28T12:02:00Z",
+          },
         ],
       }),
     );
@@ -76,8 +82,9 @@ describe("bankClient", () => {
     expect(result.events).toEqual([
       { event: "APPLICATION_CLAIMED", timestamp: "2026-08-28T12:00:00Z", by: "bank_analyst" },
       { event: "MULTI_LENDER_OFFERS_PERSISTED", timestamp: "2026-08-28T12:01:00Z", by: "Sistema" },
+      { event: "BANK_DECISION_MADE", timestamp: "2026-08-28T12:02:00Z", by: "analyst-42", decision: "APROBADO" },
     ]);
-    expect(result.event_count).toBe(2);
+    expect(result.event_count).toBe(3);
   });
 
   test("recordDecision claims then posts to decide endpoint", async () => {
