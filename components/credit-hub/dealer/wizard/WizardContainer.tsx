@@ -1105,7 +1105,6 @@ export function WizardContainer() {
               label="Tipo de contrato *"
               value={formData.contract_type}
               onChange={(event) => updateField("contract_type", event.target.value)}
-              disabled={catalogsLoading || !catalogs}
             >
               <option value="">{t.common.select_placeholder}</option>
               {contractOptions.map(([value, optionLabel]) => (
