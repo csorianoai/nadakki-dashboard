@@ -313,6 +313,14 @@ describe("WizardContainer", () => {
     expect(await screen.findByText("Datos del solicitante")).toBeInTheDocument();
   });
 
+  test("enables contract type selection when catalogs are populated", async () => {
+    render(<WizardContainer />);
+    await fillApplicantAndContinue();
+
+    expect(screen.getByLabelText("Tipo de contrato *")).not.toBeDisabled();
+    expect(screen.getByRole("option", { name: "Indefinido" })).toBeInTheDocument();
+  });
+
   test("validates required applicant fields", () => {
     render(<WizardContainer />);
     expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
