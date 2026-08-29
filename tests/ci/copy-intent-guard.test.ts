@@ -15,4 +15,23 @@ describe("copy intent guard", () => {
     expect(withDeclaration.ok).toBe(true);
     expect(withoutDeclaration.ok).toBe(false);
   });
+
+  test("fails when a non-live Forge credit copy changes without declaration", () => {
+    expect(
+      assessCopyIntent(["components/forge/credit-hub/BankApplicationDetailView.tsx"], "PR normal").ok
+    ).toBe(false);
+  });
+
+  test("mutation: removing the Forge declaration fails again", () => {
+    const withDeclaration = assessCopyIntent(
+      ["components/forge/credit-hub/BankApplicationDetailView.tsx"],
+      "COPIA_INTENCIONAL: legacy credit copy"
+    );
+    const withoutDeclaration = assessCopyIntent(
+      ["components/forge/credit-hub/BankApplicationDetailView.tsx"],
+      ""
+    );
+    expect(withDeclaration.ok).toBe(true);
+    expect(withoutDeclaration.ok).toBe(false);
+  });
 });
