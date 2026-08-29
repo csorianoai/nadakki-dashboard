@@ -16,7 +16,10 @@ function readProvider(): string {
 
 function assertServerPersistenceContract(source: string): void {
   expect(source).toMatch(/createDraftApplication\(\{ tenantId \}\)/);
+  expect(source).toMatch(/await saveApplicantApplication\(\{/);
+  expect(source).toMatch(/await saveVehicleApplication\(\{/);
   expect((source.match(/await patchApplicationFields\(\{/g) ?? []).length).toBeGreaterThanOrEqual(2);
+  expect(source).not.toMatch(/buildStepFields\(stepIndex\)/);
   expect(source).toMatch(/getApplication\(\{ tenantId, applicationId: consentApplicationId \}\)/);
   expect(source).toMatch(/hydrateFormFromServer\(application\.raw\)/);
   expect(source).toMatch(/localStorage\.setItem\(applicationIdStorageKey, applicationId\)/);
@@ -41,7 +44,10 @@ describe("F9 wizard persistence", () => {
     expect(dealerWizardErrorMessage(new Error("network"))).toBe("network");
   });
 
-  test("the applicant advance sends the actual step fields flat", () => {
+  test("the applicant advance uses the applicant endpoint instead of the fields editor", () => {
+    const source = readProvider();
+    expect(source).toMatch(/if \(stepIndex <= 2\) \{[\s\S]*await saveApplicantApplication\(\{/);
+    expect(source).toMatch(/if \(stepIndex === 2\) \{[\s\S]*await saveVehicleApplication\(\{/);
     const fields = buildWizardStepFields(
       { applicant: { full_name: "Ana", identification: "001" }, employment: { employer_name: "Acme" } },
       0,

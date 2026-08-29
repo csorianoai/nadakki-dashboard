@@ -28,7 +28,6 @@ import {
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { createDraftApplication, executeMultiLender, getApplication, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
-import { buildWizardStepFields } from "@/lib/credit-hub/dealer/wizard-step-fields";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -43,6 +42,7 @@ import {
 import { toast } from "@/components/forge";
 import { forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast-copy";
 import { uploadDocument } from "@/lib/credit-api";
+import { calculateEmploymentTenure } from "@/lib/credit/utils/employment-tenure";
 import type { UploadStatus } from "./DocumentUploadZone";
 import { dealerWizardErrorMessage } from "@/lib/credit-hub/dealer/wizard-error";
 
@@ -213,7 +213,11 @@ function buildVehicleSavePayload(payload: WizardPayload): Record<string, unknown
   return {
     make: vehicle.make,
     model: vehicle.model,
+    version: vehicle.version,
     year: numberOrUndefined(vehicle.year),
+    color: vehicle.color,
+    condicion: vehicle.condition,
+    km_odometro: numberOrUndefined(vehicle.mileage),
     vehicle_value: numberOrUndefined(vehicle.price),
     loan_amount_requested: numberOrUndefined(financial.requested_amount),
   };
@@ -221,15 +225,21 @@ function buildVehicleSavePayload(payload: WizardPayload): Record<string, unknown
 
 export function buildEditableFieldChanges(payload: WizardPayload): Record<string, unknown> {
   const { applicant, employment, financial } = payload;
+  const employmentStart = employment.employment_start_date
+    ? calculateEmploymentTenure(employment.employment_start_date).totalMonths
+    : undefined;
   const changes: Record<string, unknown> = {
     telefono_celular: applicant.phone,
+    telefono_trabajo: employment.work_phone,
     email: applicant.email,
     direccion: applicant.address,
     municipio: applicant.municipality ?? applicant.city,
     provincia: applicant.province,
     nombre_empleador: employment.employer_name,
     cargo: employment.position,
+    antiguedad_empleo_meses: employmentStart,
     ingreso_mensual_declarado: numberOrUndefined(employment.monthly_income),
+    otros_ingresos: numberOrUndefined(employment.other_income),
     plazo_meses: numberOrUndefined(financial.desired_term),
     inicial_disponible: numberOrUndefined(financial.down_payment),
     referencias_personales: applicant.referencias_personales,
@@ -746,14 +756,6 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     [showValidationErrors, fieldErrors],
   );
 
-  const buildStepFields = useCallback((step: number): Record<string, unknown> => {
-    const payload = buildCreateApplicationPayload(formDataRef.current, {
-      defaultDocumentType: defaultDocType,
-      wizardDocuments: requiredDocumentsList,
-    }) as unknown as Record<string, unknown>;
-    return buildWizardStepFields(payload, step);
-  }, [defaultDocType, requiredDocumentsList]);
-
   const persistApplicationId = useCallback((applicationId: string) => {
     if (!applicationIdStorageKey) return;
     try {
@@ -814,12 +816,32 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       try {
         const applicationId = await ensureDraftApplication();
         if (!tenantId) throw new Error("No se pudo identificar la institución");
-        await patchApplicationFields({
-          tenantId,
-          applicationId,
-          fields: buildStepFields(stepIndex),
-          actorRole: "dealer",
+        const payload = buildCreateApplicationPayload(formDataRef.current, {
+          defaultDocumentType: defaultDocType,
+          wizardDocuments: requiredDocumentsList,
         });
+        if (stepIndex <= 2) {
+          await saveApplicantApplication({
+            tenantId,
+            applicationId,
+            payload: buildApplicantSavePayload(payload),
+          });
+        }
+        if (stepIndex === 2) {
+          await saveVehicleApplication({
+            tenantId,
+            applicationId,
+            payload: buildVehicleSavePayload(payload),
+          });
+        }
+        if (stepIndex === 1 || stepIndex === 2) {
+          await patchApplicationFields({
+            tenantId,
+            applicationId,
+            fields: buildEditableFieldChanges(payload),
+            actorRole: "dealer",
+          });
+        }
         saveDraftToStorage();
         const next = Math.min(stepIndex + 1, DEALER_WIZARD_STEP_PATHS.length - 1);
         router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next), applicationId));
@@ -832,7 +854,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     setShowValidationErrors(true);
     requestAnimationFrame(() => scrollToFirstWizardError(validationResult.errors));
     return false;
-  }, [buildStepFields, consentApplicationId, ensureDraftApplication, formData, router, saveDraftToStorage, stepIndex, tenantId, validationConfig, t, validationResult]);
+  }, [consentApplicationId, defaultDocType, ensureDraftApplication, formData, requiredDocumentsList, router, saveDraftToStorage, stepIndex, tenantId, validationConfig, t, validationResult]);
 
   const goNext = useCallback(async () => {
     return attemptAdvance();
