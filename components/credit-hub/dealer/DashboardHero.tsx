@@ -72,7 +72,7 @@ export function DashboardHero({ pendingCount, userName, loading }: DashboardHero
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/credit-hub/dealer/applications/new">
+            <Link href="/credit-hub/dealer/applications/new?new=1">
               <ForgeButton variant="white" size="lg" leftIcon={<Plus className="h-5 w-5" />}>
                 Nueva Solicitud
               </ForgeButton>

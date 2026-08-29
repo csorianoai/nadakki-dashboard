@@ -31,7 +31,7 @@ export function encodeCreditHubPreset(preset: CreditHubVehiclePreset): string {
 
 export function creditHubWizardUrl(preset: CreditHubVehiclePreset): string {
   const q = encodeCreditHubPreset(preset);
-  return `/credit-hub/dealer/applications/new/applicant?preset=${q}`;
+  return `/credit-hub/dealer/applications/new/applicant?preset=${q}&new=1`;
 }
 
 export function creditHubApplicationUrl(applicationId: string): string {

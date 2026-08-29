@@ -428,7 +428,7 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
         <Button type="button" variant="secondary" onClick={() => router.push("/credit-hub/dealer/applications")}>
           Ver todas las solicitudes
         </Button>
-        <Link href="/credit-hub/dealer/applications/new/applicant" className="inline-flex min-h-10 items-center rounded-forge-sm border border-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeBrand-700 hover:bg-forgeBrand-50">
+        <Link href="/credit-hub/dealer/applications/new/applicant?new=1" className="inline-flex min-h-10 items-center rounded-forge-sm border border-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeBrand-700 hover:bg-forgeBrand-50">
           + Nueva solicitud
         </Link>
       </div>

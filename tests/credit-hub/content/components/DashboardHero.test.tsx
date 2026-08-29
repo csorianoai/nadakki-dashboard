@@ -18,7 +18,7 @@ describe("DashboardHero", () => {
 
   test("CTA buttons navigate correctly", () => {
     render(<DashboardHero pendingCount={2} />);
-    expect(screen.getByRole("link", { name: /Nueva Solicitud/ })).toHaveAttribute("href", "/credit-hub/dealer/applications/new");
+    expect(screen.getByRole("link", { name: /Nueva Solicitud/ })).toHaveAttribute("href", "/credit-hub/dealer/applications/new?new=1");
     expect(screen.getByRole("link", { name: /Ver Todas/ })).toHaveAttribute("href", "/credit-hub/dealer/applications");
   });
 });
