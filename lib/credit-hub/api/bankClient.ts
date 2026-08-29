@@ -250,7 +250,7 @@ function normalizeApplicationEvents(
 ): BankAuditTrail {
   const events = (response.events ?? []).map((event) => {
     const payload = event.payload ?? {};
-    const actor = payload.actor ?? payload.actor_id ?? payload.actor_role ?? payload.by;
+    const actor = payload.actor ?? payload.actor_id ?? payload.analyst_id ?? payload.actor_role ?? payload.by;
 
     return {
       event: event.event_type ?? "UNKNOWN_EVENT",
