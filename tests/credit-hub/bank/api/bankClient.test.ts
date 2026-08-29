@@ -119,6 +119,55 @@ describe("bankClient", () => {
     expect(decideBody).not.toHaveProperty("lender_code");
   });
 
+  test("recordDecision sends loaded approval terms and reads the persisted result", async () => {
+    const persisted = {
+      decision: "APROBADO",
+      approved_amount: 1000000,
+      interest_rate: 12,
+      term_months: 48,
+    };
+    const fetchSpy = installFetchMock()
+      .mockResolvedValueOnce(await mockJson({ status: "active" }))
+      .mockResolvedValueOnce(await mockJson(persisted));
+
+    const result = await recordDecision({
+      tenantId: "tenant-a",
+      applicationId: "app-1",
+      body: {
+        decision: "APROBADO",
+        justification: "Condiciones verificadas.",
+        analyst_id: "analyst-1",
+        terms: { approved_amount: 1000000, interest_rate: 12, term_months: 48 },
+      },
+    });
+
+    const decideBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
+    expect(decideBody).toMatchObject({ approved_amount: 1000000, interest_rate: 12, term_months: 48 });
+    expect(result).toMatchObject(persisted);
+  });
+
+  test("recordDecision omits approval terms that were not loaded", async () => {
+    const fetchSpy = installFetchMock()
+      .mockResolvedValueOnce(await mockJson({ status: "active" }))
+      .mockResolvedValueOnce(await mockJson({ decision: "APROBADO" }));
+
+    await recordDecision({
+      tenantId: "tenant-a",
+      applicationId: "app-1",
+      body: {
+        decision: "APROBADO",
+        justification: "Sin términos declarados.",
+        analyst_id: "analyst-1",
+        terms: {},
+      },
+    });
+
+    const decideBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
+    expect(decideBody).not.toHaveProperty("approved_amount");
+    expect(decideBody).not.toHaveProperty("interest_rate");
+    expect(decideBody).not.toHaveProperty("term_months");
+  });
+
   test("bulkDecide sends rule and selected applications", async () => {
     const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({ processed: 2, skipped: 0, errors: 0, results: [] }));
     await bulkDecide({

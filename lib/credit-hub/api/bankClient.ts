@@ -64,7 +64,14 @@ function toBankDecideRequestBody(legacy: BankDecisionRequest): Record<string, un
     };
   }
 
-  if (decisionType === "APPROVE" && legacy.terms.conditions.length > 0) {
+  if (decisionType === "APPROVE") {
+    for (const key of ["approved_amount", "interest_rate", "term_months"] as const) {
+      const value = legacy.terms[key];
+      if (value != null && Number.isFinite(value)) body[key] = value;
+    }
+  }
+
+  if (decisionType === "APPROVE" && legacy.terms.conditions && legacy.terms.conditions.length > 0) {
     body.stipulations = legacy.terms.conditions.map((cond, i) => ({
       code: `STIP-${i + 1}`,
       description: cond,

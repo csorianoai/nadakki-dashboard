@@ -76,7 +76,7 @@ export interface BankDecisionRequest {
   decision: BankDecisionType;
   justification: string;
   analyst_id: string;
-  terms: BankDecisionTerms;
+  terms: Partial<BankDecisionTerms>;
   lender_code?: string;
 }
 
