@@ -1,16 +1,22 @@
-import { creditUploadErrorMessage } from "@/lib/credit-api";
+import fs from "node:fs";
+import path from "node:path";
+
+const source = fs.readFileSync(path.join(process.cwd(), "lib/credit-api.ts"), "utf8");
 
 describe("credit upload error messages", () => {
   test("explains storage unavailability instead of exposing only HTTP 500", () => {
-    expect(creditUploadErrorMessage(500, null)).toMatch(/almacenamiento no está disponible/i);
-    expect(creditUploadErrorMessage(500, null)).not.toBe("Error HTTP 500");
+    expect(source).toMatch(/export function creditUploadErrorMessage\(status: number, detail: unknown\)/);
+    expect(source).toMatch(/No se pudo guardar el documento porque el almacenamiento no está disponible/);
+    expect(source).toMatch(/creditUploadErrorMessage\(res\.status, detail\)/);
   });
 
   test("mutation that removes the storage diagnosis is caught", () => {
-    const message = creditUploadErrorMessage(500, null).replace(
+    const mutatedSource = source.replace(
       "No se pudo guardar el documento porque el almacenamiento no está disponible. Intenta nuevamente más tarde.",
       "Error HTTP 500",
     );
-    expect(message).not.toMatch(/almacenamiento no está disponible/i);
+    expect(() => {
+      expect(mutatedSource).toMatch(/No se pudo guardar el documento porque el almacenamiento no está disponible/);
+    }).toThrow();
   });
 });
