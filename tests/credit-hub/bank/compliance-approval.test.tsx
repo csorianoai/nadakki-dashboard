@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BankApplicationDetailView } from "@/components/forge/credit-hub/BankApplicationDetailView";
+import { ComplianceTab } from "@/components/credit-hub/bank/sections/ComplianceTab";
 import { approveCompliance, isComplianceApproved } from "@/lib/credit-hub/api/bankClient";
 import { useBankCounterOffer, useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
 
@@ -239,5 +240,29 @@ describe("BankApplicationDetailView source — compliance gating (Sub-K2)", () =
   test("renders compliance pending card copy", () => {
     expect(src).toContain("Cumplimiento Pendiente (Ley 172-13)");
     expect(src).toContain("Aprobar Cumplimiento");
+  });
+});
+
+describe("ComplianceTab — active bank detail refresh (Sub-K2)", () => {
+  test("shows approved state after the active tab approval succeeds", async () => {
+    installFetchMock().mockResolvedValue(
+      await mockJson({
+        compliance: { status: "approved", approved_at: "2026-06-06T00:00:00Z", approved_by: "officer-1" },
+      })
+    );
+    render(
+      <ComplianceTab
+        applicationId="test-id"
+        report={{ ley_172_13_compliant: false, issues: [] } as never}
+      />
+    );
+
+    expect(screen.getByText("Pendiente de aprobación regulatoria")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Aprobar compliance" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Conforme Ley 172-13")).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: "Aprobar compliance" })).not.toBeInTheDocument();
   });
 });
