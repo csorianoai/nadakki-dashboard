@@ -1,3 +1,4 @@
+// COPIA SIN ENLACE. La viva es app/(forge)/credit-hub/**
 import type { Metadata } from "next";
 import { BankApplicationDetailErrorBoundary } from "@/components/bank-application-detail/BankApplicationDetailErrorBoundary";
 import { StipulationsAdminClient } from "./StipulationsAdminClient";

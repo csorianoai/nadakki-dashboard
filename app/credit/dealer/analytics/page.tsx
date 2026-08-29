@@ -1,3 +1,4 @@
+// COPIA SIN ENLACE. La viva es app/(forge)/credit-hub/**
 "use client";
 
 import { useState } from "react";
