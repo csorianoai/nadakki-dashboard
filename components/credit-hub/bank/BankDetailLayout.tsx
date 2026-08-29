@@ -40,17 +40,23 @@ import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
 import { getOfferCompare } from "@/lib/credit-hub/api/bankExperienceClient";
 import { CHApiError } from "@/lib/credit-hub/api/client";
 
-function defaultTerms(payload: BankReviewPayload): BankDecisionTerms {
+function defaultTerms(payload: BankReviewPayload): Partial<BankDecisionTerms> {
   const analysis = payload.analysis;
   const metrics = analysis?.metrics;
   const financial = payload.financial ?? {};
   // F4: Prefer requested_amount; fallback only to financed_amount if both are meaningful
   const approvedAmount = financial.requested_amount ?? analysis?.financed_amount;
   return {
-    approved_amount: approvedAmount != null ? Number(approvedAmount) : 0,
-    interest_rate: Number(financial.requested_rate ?? metrics?.annual_rate ?? 17.5),
-    term_months: Number(financial.term_months ?? metrics?.term_months ?? 36),
-    down_payment_required: Number(financial.down_payment ?? metrics?.down_payment ?? 0),
+    ...(approvedAmount != null ? { approved_amount: Number(approvedAmount) } : {}),
+    ...((financial.requested_rate ?? metrics?.annual_rate) != null
+      ? { interest_rate: Number(financial.requested_rate ?? metrics?.annual_rate) }
+      : {}),
+    ...((financial.term_months ?? metrics?.term_months) != null
+      ? { term_months: Number(financial.term_months ?? metrics?.term_months) }
+      : {}),
+    ...((financial.down_payment ?? metrics?.down_payment) != null
+      ? { down_payment_required: Number(financial.down_payment ?? metrics?.down_payment) }
+      : {}),
     conditions: ["Validación documental final"],
   };
 }
@@ -104,7 +110,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   >("analisis");
   const [panelState, setPanelState] = useState<DecisionState>("idle");
   const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
-  const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
+  const termsRef = useRef<Partial<BankDecisionTerms>>(defaultTerms(payload));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
