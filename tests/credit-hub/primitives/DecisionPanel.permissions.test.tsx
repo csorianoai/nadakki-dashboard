@@ -18,4 +18,33 @@ describe("DecisionPanel permissions", () => {
     await user.click(screen.getByRole("button", { name: /aprobar solicitud/i }));
     expect(onSubmit).toHaveBeenCalled();
   });
+
+  test("explains the hidden lender requirement and enables submit after selection", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <DecisionPanel
+        canDecide
+        lenderOptions={["pilot", "mock"]}
+        onLenderChange={jest.fn()}
+        onSubmit={jest.fn()}
+      />
+    );
+
+    await user.type(screen.getByPlaceholderText(/sustento de la decisión/i), "OK policy");
+    const submit = screen.getByRole("button", { name: /aprobar solicitud/i });
+    expect(submit).toBeDisabled();
+    expect(screen.getByTestId("decision-panel-lender-required")).toHaveTextContent(/Selecciona el lender/i);
+    expect(submit).toHaveAttribute("aria-describedby", "decision-lender-required");
+
+    rerender(
+      <DecisionPanel
+        canDecide
+        lenderOptions={["pilot", "mock"]}
+        lenderCode="pilot"
+        onSubmit={jest.fn()}
+      />
+    );
+    await user.type(screen.getByPlaceholderText(/sustento de la decisión/i), "OK policy");
+    expect(screen.getByRole("button", { name: /aprobar solicitud/i })).toBeEnabled();
+  });
 });
