@@ -11,6 +11,13 @@ export const DEALER_NAV_ROUTES: Record<string, string> = {
   perfil: "/credit-hub/dealer/profile",
 };
 
+/** Explicit marker for a fresh wizard; drafts resume through an application_id instead. */
+export const DEALER_NEW_APPLICATION_QUERY = "new=1";
+
+export function dealerNewApplicationHref(): string {
+  return `/credit-hub/dealer/applications/new/applicant?${DEALER_NEW_APPLICATION_QUERY}`;
+}
+
 export function pathnameToDealerNavId(pathname: string): string {
   if (pathname.includes("/dealer/applications/new")) return "nueva";
   if (pathname.includes("/dealer/applications")) return "solicitudes";

@@ -6,7 +6,7 @@ import { Plus, Search } from "lucide-react";
 import { EmptyStateRich, TableSkeleton } from "@/components/credit-hub/primitives";
 import { DealerAppCard, DealerSectionHeader } from "@/components/credit-hub/dealer/shared/dealerUi";
 import type { DealerApplicationsListViewProps } from "@/lib/credit-hub/types/dealer-views";
-import { dealerDetailHref } from "@/lib/credit-hub/dealer/dealerFormat";
+import { dealerDetailHref, dealerNewApplicationHref } from "@/lib/credit-hub/dealer/dealerFormat";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 
 const FILTERS = [
@@ -67,7 +67,7 @@ export function DealerApplicationsListView({
         title="Solicitudes"
         sub={`${filtered.length} en vista`}
         action={
-          <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona ch-btn-sm hidden sm:inline-flex" style={{ textDecoration: "none" }}>
+          <Link href={dealerNewApplicationHref()} className="ch-btn ch-btn-persona ch-btn-sm hidden sm:inline-flex" style={{ textDecoration: "none" }}>
             <Plus className="h-4 w-4" aria-hidden />
             Nueva
           </Link>
@@ -125,7 +125,7 @@ export function DealerApplicationsListView({
           title={query || filter !== "all" ? "Sin resultados" : "Sin solicitudes"}
           description="Ajusta filtros o crea una nueva solicitud."
           primary={
-            <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona">
+            <Link href={dealerNewApplicationHref()} className="ch-btn ch-btn-persona">
               Nueva solicitud
             </Link>
           }
@@ -139,7 +139,7 @@ export function DealerApplicationsListView({
       )}
 
       <Link
-        href="/credit-hub/dealer/applications/new/applicant"
+        href={dealerNewApplicationHref()}
         className="ch-btn ch-btn-persona fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full sm:hidden"
         style={{ position: "fixed", borderRadius: 999, padding: 0, minWidth: 56, minHeight: 56 }}
         aria-label="Nueva solicitud"

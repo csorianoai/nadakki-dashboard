@@ -1,3 +1,4 @@
+// COPIA SIN ENLACE. La viva es app/(forge)/credit-hub/**
 import { Suspense } from "react";
 import NewApplicationClient from "./NewApplicationClient";
 

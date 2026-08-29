@@ -1,3 +1,4 @@
+// COPIA SIN ENLACE. La viva es app/(forge)/credit-hub/**
 import { redirect } from "next/navigation";
 import { isBankPilotUiEnabled } from "@/lib/env/feature-bank-pilot-ui";
 

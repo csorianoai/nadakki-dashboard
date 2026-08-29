@@ -27,7 +27,7 @@ import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { chMoneyExact, chScoreBand } from "@/lib/credit-hub/ch-base";
-import { chRelTimeDealer, parseRequestedAmount } from "@/lib/credit-hub/dealer/dealerFormat";
+import { chRelTimeDealer, dealerNewApplicationHref, parseRequestedAmount } from "@/lib/credit-hub/dealer/dealerFormat";
 import { offerHasCompleteTerms } from "@/lib/credit-hub/offers/offer-terms";
 import type { DealerApplicationDetailViewProps } from "@/lib/credit-hub/types/dealer-views";
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
@@ -663,7 +663,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         <button type="button" className="ch-btn ch-btn-secondary min-h-[44px] w-full sm:w-auto" onClick={() => router.push("/credit-hub/dealer/applications")}>
           Ver todas
         </button>
-        <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+        <Link href={dealerNewApplicationHref()} className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
           + Nueva solicitud
         </Link>
       </div>

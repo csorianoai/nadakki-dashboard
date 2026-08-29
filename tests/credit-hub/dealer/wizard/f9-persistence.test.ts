@@ -4,6 +4,7 @@ import path from "node:path";
 import { applicationFieldsPatchBody } from "@/lib/credit-hub/api/operationalClient";
 import { dealerWizardErrorMessage } from "@/lib/credit-hub/dealer/wizard-error";
 import { buildWizardStepFields } from "@/lib/credit-hub/dealer/wizard-step-fields";
+import { dealerDetailHref, dealerNewApplicationHref } from "@/lib/credit-hub/dealer/dealerFormat";
 
 const providerPath = path.join(
   process.cwd(),
@@ -16,13 +17,37 @@ function readProvider(): string {
 
 function assertServerPersistenceContract(source: string): void {
   expect(source).toMatch(/createDraftApplication\(\{ tenantId \}\)/);
+  expect(source).toMatch(/await saveApplicantApplication\(\{/);
+  expect(source).toMatch(/await saveVehicleApplication\(\{/);
   expect((source.match(/await patchApplicationFields\(\{/g) ?? []).length).toBeGreaterThanOrEqual(2);
+  expect(source).not.toMatch(/buildStepFields\(stepIndex\)/);
   expect(source).toMatch(/getApplication\(\{ tenantId, applicationId: consentApplicationId \}\)/);
   expect(source).toMatch(/hydrateFormFromServer\(application\.raw\)/);
   expect(source).toMatch(/localStorage\.setItem\(applicationIdStorageKey, applicationId\)/);
 }
 
 describe("F9 wizard persistence", () => {
+  function assertFreshApplicationContract(source: string): void {
+    expect(source).toMatch(/const startsNewApplication = searchParams\.get\("new"\) === "1"/);
+    expect(source).toMatch(/if \(!applicationIdStorageKey \|\| consentApplicationId \|\| startsNewApplication\) return/);
+    expect(source).toMatch(/if \(startsNewApplication\) \{[\s\S]*localStorage\.removeItem\(storageKey\)[\s\S]*localStorage\.removeItem\(applicationIdStorageKey\)/);
+  }
+
+  test("new application starts clean while an application id remains a resume link", () => {
+    const source = readProvider();
+    assertFreshApplicationContract(source);
+    expect(dealerNewApplicationHref()).toBe("/credit-hub/dealer/applications/new/applicant?new=1");
+    expect(dealerDetailHref("draft-123")).toBe("/credit-hub/dealer/applications/draft-123");
+  });
+
+  test("mutation that lets the stored id re-enter a new application is rejected", () => {
+    const mutatedSource = readProvider().replace(
+      "if (!applicationIdStorageKey || consentApplicationId || startsNewApplication) return;",
+      "if (!applicationIdStorageKey || consentApplicationId) return;",
+    );
+    expect(() => assertFreshApplicationContract(mutatedSource)).toThrow();
+  });
+
   test("creates on a valid advance, patches the step, and hydrates a reopened draft from the server", () => {
     const source = readProvider();
     assertServerPersistenceContract(source);
@@ -41,7 +66,10 @@ describe("F9 wizard persistence", () => {
     expect(dealerWizardErrorMessage(new Error("network"))).toBe("network");
   });
 
-  test("the applicant advance sends the actual step fields flat", () => {
+  test("the applicant advance uses the applicant endpoint instead of the fields editor", () => {
+    const source = readProvider();
+    expect(source).toMatch(/if \(stepIndex <= 2\) \{[\s\S]*await saveApplicantApplication\(\{/);
+    expect(source).toMatch(/if \(stepIndex === 2\) \{[\s\S]*await saveVehicleApplication\(\{/);
     const fields = buildWizardStepFields(
       { applicant: { full_name: "Ana", identification: "001" }, employment: { employer_name: "Acme" } },
       0,
