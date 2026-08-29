@@ -125,7 +125,7 @@ export function DecisionPanel({
             </div>
           ) : null}
           {lenderRequired ? (
-            <p role="status" style={{ marginBottom: 12, fontSize: 12.5, color: "var(--ch-warning-text)" }}>
+            <p id="decision-lender-required" role="status" data-testid="decision-panel-lender-required" style={{ marginBottom: 12, fontSize: 12.5, color: "var(--ch-warning-text)" }}>
               Selecciona el lender que emitirá esta decisión.
             </p>
           ) : null}
@@ -240,6 +240,7 @@ export function DecisionPanel({
               zIndex: 1,
               boxShadow: sticky ? "0 -8px 12px var(--ch-surface)" : undefined,
             }}
+            aria-describedby={lenderRequired ? "decision-lender-required" : undefined}
             disabled={!canDecide || lenderRequired || state === "loading" || (state !== "error" && justif.trim().length === 0)}
             onClick={submit}
           >
