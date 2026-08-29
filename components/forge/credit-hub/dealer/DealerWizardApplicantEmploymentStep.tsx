@@ -340,7 +340,6 @@ export function DealerWizardApplicantEmploymentStep() {
           fieldKey="contract_type"
           value={formData.contract_type}
           onChange={(e) => updateField("contract_type", e.target.value)}
-          disabled={catalogsLoading || !catalogs}
           error={getFieldError("contract_type")}
           options={[{ value: "", label: t.common.select_placeholder }, ...contractOptions]}
         />
