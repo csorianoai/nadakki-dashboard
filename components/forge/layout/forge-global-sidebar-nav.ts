@@ -457,7 +457,7 @@ export const NAV_SECTIONS: NavSection[] = [
           {
             id: "credit-new",
             label: "Nueva solicitud",
-            href: "/credit-hub/dealer/applications/new",
+            href: "/credit-hub/dealer/applications/new?new=1",
             badge: "NEW",
           },
           { id: "credit-preapproval", label: "Preaprobación", href: "/credit-hub/dealer/preapproval" },

@@ -21,6 +21,7 @@ import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { cn } from "@/lib/utils";
 import { personaLabel } from "@/lib/credit-hub/design/persona";
+import { DEALER_NEW_APPLICATION_QUERY } from "@/lib/credit-hub/dealer/dealerFormat";
 
 type NavItem = { id: string; href: string; label: string; icon: typeof Home };
 
@@ -58,7 +59,7 @@ export function ForgeCreditHubSidebar({
         { id: "d-home", href: "/credit-hub/dealer", label: t.dealer.top_nav_dashboard, icon: Home },
         { id: "d-apps", href: "/credit-hub/dealer/applications", label: "Solicitudes", icon: FileText },
         { id: "d-pre", href: "/credit-hub/dealer/preapproval", label: t.simulator.nav_short, icon: Calculator },
-        { id: "d-new", href: "/credit-hub/dealer/applications/new", label: "Nueva", icon: Plus },
+        { id: "d-new", href: `/credit-hub/dealer/applications/new?${DEALER_NEW_APPLICATION_QUERY}`, label: "Nueva", icon: Plus },
       ];
     }
     return [

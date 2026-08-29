@@ -4,6 +4,7 @@ import path from "node:path";
 import { applicationFieldsPatchBody } from "@/lib/credit-hub/api/operationalClient";
 import { dealerWizardErrorMessage } from "@/lib/credit-hub/dealer/wizard-error";
 import { buildWizardStepFields } from "@/lib/credit-hub/dealer/wizard-step-fields";
+import { dealerDetailHref, dealerNewApplicationHref } from "@/lib/credit-hub/dealer/dealerFormat";
 
 const providerPath = path.join(
   process.cwd(),
@@ -26,6 +27,27 @@ function assertServerPersistenceContract(source: string): void {
 }
 
 describe("F9 wizard persistence", () => {
+  function assertFreshApplicationContract(source: string): void {
+    expect(source).toMatch(/const startsNewApplication = searchParams\.get\("new"\) === "1"/);
+    expect(source).toMatch(/if \(!applicationIdStorageKey \|\| consentApplicationId \|\| startsNewApplication\) return/);
+    expect(source).toMatch(/if \(startsNewApplication\) \{[\s\S]*localStorage\.removeItem\(storageKey\)[\s\S]*localStorage\.removeItem\(applicationIdStorageKey\)/);
+  }
+
+  test("new application starts clean while an application id remains a resume link", () => {
+    const source = readProvider();
+    assertFreshApplicationContract(source);
+    expect(dealerNewApplicationHref()).toBe("/credit-hub/dealer/applications/new/applicant?new=1");
+    expect(dealerDetailHref("draft-123")).toBe("/credit-hub/dealer/applications/draft-123");
+  });
+
+  test("mutation that lets the stored id re-enter a new application is rejected", () => {
+    const mutatedSource = readProvider().replace(
+      "if (!applicationIdStorageKey || consentApplicationId || startsNewApplication) return;",
+      "if (!applicationIdStorageKey || consentApplicationId) return;",
+    );
+    expect(() => assertFreshApplicationContract(mutatedSource)).toThrow();
+  });
+
   test("creates on a valid advance, patches the step, and hydrates a reopened draft from the server", () => {
     const source = readProvider();
     assertServerPersistenceContract(source);

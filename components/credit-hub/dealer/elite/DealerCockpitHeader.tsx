@@ -60,7 +60,7 @@ export function DealerCockpitHeader({
           <Link href="/credit-hub/dealer/applications" className="ch-btn ch-btn-secondary ch-btn-sm" style={{ textDecoration: "none" }}>
             Tus solicitudes y tus bancos
           </Link>
-          <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona" style={{ textDecoration: "none" }}>
+          <Link href="/credit-hub/dealer/applications/new/applicant?new=1" className="ch-btn ch-btn-persona" style={{ textDecoration: "none" }}>
             <Plus className="h-4 w-4" aria-hidden />
             Nueva solicitud
           </Link>

@@ -373,7 +373,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const consentApplicationId = searchParams.get("application_id")?.trim() ?? "";
+  const startsNewApplication = searchParams.get("new") === "1";
+  const consentApplicationId = startsNewApplication ? "" : searchParams.get("application_id")?.trim() ?? "";
   const consentApplicationIdReady = Boolean(consentApplicationId);
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
@@ -434,7 +435,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const stepIndex = dealerWizardStepIndexFromPathname(pathname);
 
   useEffect(() => {
-    if (!applicationIdStorageKey || consentApplicationId) return;
+    if (!applicationIdStorageKey || consentApplicationId || startsNewApplication) return;
     if (loadedApplicationIdKeyRef.current === applicationIdStorageKey) return;
     loadedApplicationIdKeyRef.current = applicationIdStorageKey;
     try {
@@ -446,7 +447,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     } catch {
       /* localStorage can be unavailable in privacy-restricted browsers */
     }
-  }, [applicationIdStorageKey, consentApplicationId, pathname, router, searchParams]);
+  }, [applicationIdStorageKey, consentApplicationId, pathname, router, searchParams, startsNewApplication]);
 
   useEffect(() => {
     setShowValidationErrors(false);
@@ -466,6 +467,13 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     if (loadedStorageKeyRef.current === storageKey) return;
     loadedStorageKeyRef.current = storageKey;
     try {
+      if (startsNewApplication) {
+        localStorage.removeItem(storageKey);
+        if (applicationIdStorageKey) localStorage.removeItem(applicationIdStorageKey);
+        sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
+        setFormData(initialApplicationFormData);
+        return;
+      }
       const raw = localStorage.getItem(storageKey);
       if (!raw) {
         setFormData(initialApplicationFormData);
@@ -499,7 +507,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
-  }, [storageKey]);
+  }, [applicationIdStorageKey, startsNewApplication, storageKey]);
 
   useEffect(() => {
     if (!tenantId || !consentApplicationId || hydratedApplicationIdRef.current === consentApplicationId) return;

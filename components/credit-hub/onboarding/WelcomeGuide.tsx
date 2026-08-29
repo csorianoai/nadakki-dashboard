@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, X } from "lucide-react";
+import { dealerNewApplicationHref } from "@/lib/credit-hub/dealer/dealerFormat";
 
 const STORAGE_KEY_PREFIX = "nadakki_ch_onboarding_done_v1";
 
@@ -21,7 +22,7 @@ const DEALER_STEPS: OnboardingStep[] = [
   {
     title: "Crea tu primera solicitud",
     description: "Captura datos del solicitante, vehículo y consentimiento. El motor evaluará automáticamente con múltiples bancos.",
-    action: { label: "Nueva solicitud", href: "/credit-hub/dealer/applications/new/applicant" },
+    action: { label: "Nueva solicitud", href: dealerNewApplicationHref() },
   },
   {
     title: "Revisa ofertas de bancos",
