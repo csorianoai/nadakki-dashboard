@@ -1,6 +1,11 @@
 const { execFileSync } = require("node:child_process");
 
-const COPY_PREFIXES = ["app/credit/", "app/bank/", "app/(bank)/"];
+const COPY_PREFIXES = [
+  "app/credit/",
+  "app/bank/",
+  "app/(bank)/",
+  "components/forge/credit-hub/",
+];
 
 function isNonLiveCopyPath(file) {
   return COPY_PREFIXES.some((prefix) => file.replaceAll("\\", "/").startsWith(prefix));
