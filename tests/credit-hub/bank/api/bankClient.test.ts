@@ -149,7 +149,12 @@ describe("bankClient", () => {
     });
 
     const decideBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
-    expect(decideBody).toMatchObject({ approved_amount: 1000000, interest_rate: 12, term_months: 48 });
+    expect(decideBody).toMatchObject({
+      approved_terms: { approved_amount: 1000000, interest_rate: 12, term_months: 48 },
+    });
+    expect(decideBody).not.toHaveProperty("approved_amount");
+    expect(decideBody).not.toHaveProperty("interest_rate");
+    expect(decideBody).not.toHaveProperty("term_months");
     expect(result).toMatchObject(persisted);
   });
 
