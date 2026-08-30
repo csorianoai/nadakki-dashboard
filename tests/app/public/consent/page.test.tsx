@@ -82,6 +82,24 @@ describe("PublicConsentPage", () => {
     expect(clients.some((client) => client.getStatus.mock.calls.some(([value]) => value === "path-token"))).toBe(true);
   });
 
+  it("reads the token from the browser URL when both navigation hooks are empty", async () => {
+    const navigation = require("next/navigation") as {
+      useParams: jest.Mock;
+      usePathname: jest.Mock;
+    };
+    navigation.useParams.mockReturnValue({});
+    navigation.usePathname.mockReturnValue("");
+    window.history.replaceState({}, "", "/consent/browser-token");
+
+    render(<PublicConsentPage />);
+    await waitFor(() => expect(screen.getByTestId("consent-checkboxes")).toBeInTheDocument());
+
+    const client = (require("@/lib/credit-hub/api/public-consent-client") as {
+      PublicConsentClient: jest.Mock;
+    }).PublicConsentClient.mock.results[0].value;
+    expect(client.getStatus).toHaveBeenCalledWith("browser-token");
+  });
+
   it("checks the server status before loading a valid token", async () => {
     render(<PublicConsentPage />);
     await waitFor(() => expect(screen.getByTestId("consent-checkboxes")).toBeInTheDocument());

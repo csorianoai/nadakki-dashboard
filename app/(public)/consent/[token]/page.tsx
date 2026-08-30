@@ -23,13 +23,19 @@ import { ConsentAlreadyAcceptedView } from "./_components/ConsentAlreadyAccepted
 
 type ViewState = "loading" | "form" | "success" | "invalid" | "already";
 
+function tokenFromConsentPath(pathname: string | null | undefined): string {
+  return pathname?.match(/^\/consent\/([^/]+)\/?$/)?.[1] ?? "";
+}
+
 export default function PublicConsentPage() {
   const routeParams = useParams();
   const pathname = usePathname();
   const routeToken = routeParams?.token;
   const tokenFromParams = Array.isArray(routeToken) ? routeToken[0] : routeToken;
-  const tokenFromPath = pathname?.match(/^\/consent\/([^/]+)\/?$/)?.[1] ?? "";
-  const token = decodeURIComponent(String(tokenFromParams || tokenFromPath));
+  // Navigation hooks can be empty during the first render of this dynamic
+  // public segment. The browser URL is the authoritative route value.
+  const tokenFromBrowserPath = typeof window !== "undefined" ? tokenFromConsentPath(window.location.pathname) : "";
+  const token = decodeURIComponent(String(tokenFromParams || tokenFromBrowserPath || tokenFromConsentPath(pathname)));
   const t = useTranslations();
 
   const [view, setView] = useState<ViewState>("loading");
