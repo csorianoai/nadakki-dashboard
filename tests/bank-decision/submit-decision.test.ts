@@ -46,6 +46,38 @@ describe("submit-decision", () => {
     expect(JSON.parse(call[1].body).decision_type).toBe("APPROVE");
   });
 
+  test("serializes the full approved contract and strips legacy fields at the HTTP boundary", async () => {
+    localStorage.setItem(BANK_APPLICATION_AUTH_TOKEN_KEY, makeBankTestJwt("t"));
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ decision_id: "d1", application_id: "a1", decision_type: "APPROVE", decided_at: "2026-01-01T12:00:00Z" }),
+    }) as unknown as typeof fetch;
+
+    await submitBankDecision(
+      "a1",
+      {
+        decision_type: "APPROVE",
+        reason_codes: [],
+        notes: "Notas del analista",
+        approved_terms: { approved_amount: 555555, interest_rate: 9.5, term_months: 60 },
+        lender_code: "pilot",
+        justification: "Campo legacy no permitido",
+      } as never,
+      "11111111-1111-4111-8111-111111111111",
+    );
+
+    const payload = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+    expect(payload).toMatchObject({
+      decision_type: "APPROVE",
+      reason_codes: ["RC001_APPROVE"],
+      approved_terms: { approved_amount: 555555, interest_rate: 9.5, term_months: 60 },
+      notes: "Notas del analista",
+    });
+    expect(payload).not.toHaveProperty("lender_code");
+    expect(payload).not.toHaveProperty("justification");
+  });
+
   test("submitBankDecision maps 409 to HttpError", async () => {
     localStorage.setItem(BANK_APPLICATION_AUTH_TOKEN_KEY, makeBankTestJwt("t"));
     global.fetch = jest.fn().mockResolvedValue({
