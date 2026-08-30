@@ -71,6 +71,23 @@ alcance revisado; no se modificaron guardas.
 | DESCARTADO | fixtures de comparacion con forma vieja | consumidores y OpenAPI usan `offers_detail` | no abrir PR |
 | DESCARTADO | estado local no purgado | logout invoca `purgeAllWizardDrafts` y limpieza de sesion | no abrir PR |
 
+## Segunda medición · 2026-08-30
+
+Se repitieron los seis barridos contra `origin/staging` (`d4242233`) sin
+modificar la rama desplegada. Se revisó nuevamente la ruta viva
+`app/(forge)/credit-hub/**`, los consumidores de `offers_detail` y
+`offer_count`, los fixtures, los mensajes y las guardas de CI.
+
+La alerta adicional de `DecisionPanel.tsx:20-22` (`285000`, `48`, `17.5`) es
+la misma clase ya registrada en F2: defaults visibles en la vista bancaria.
+No es un hallazgo nuevo ni se abrió un PR duplicado. El árbol activo confirma
+que `BankDetailLayout.tsx:363-366` usa ese componente.
+
+No se confirmaron nuevos desajustes de fixtures, copias fuera del árbol vivo,
+mensajes con diagnóstico incorrecto, fugas de estado local ni fallas propias de
+las guardas. La mutación del hallazgo vigente y las pruebas focales quedaron
+ejecutadas; el PR #450 sigue abierto contra `staging`, sin merge ni despliegue.
+
 ## Estado
 
 El unico hallazgo confirmado genero el PR de correccion. No hay cambios
