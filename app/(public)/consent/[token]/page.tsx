@@ -35,11 +35,18 @@ export default function PublicConsentPage() {
   // Navigation hooks can be empty during the first render of this dynamic
   // public segment. The browser URL is the authoritative route value.
   const tokenFromBrowserPath = typeof window !== "undefined" ? tokenFromConsentPath(window.location.pathname) : "";
-  const token = decodeURIComponent(String(tokenFromParams || tokenFromBrowserPath || tokenFromConsentPath(pathname)));
+  const token = decodeURIComponent(
+    String(tokenFromParams || tokenFromBrowserPath || tokenFromConsentPath(pathname))
+  );
+  const routeKnown = Boolean(
+    tokenFromParams || tokenFromBrowserPath || pathname?.startsWith("/consent")
+  );
   const t = useTranslations();
 
   const [view, setView] = useState<ViewState>("loading");
   const [data, setData] = useState<PublicConsentView | null>(null);
+  // A missing token during route hydration is not the same as an invalid token.
+  const [routeResolved, setRouteResolved] = useState(false);
 
   const [accepted, setAccepted] = useState<Record<string, boolean>>({});
   const [fullName, setFullName] = useState("");
@@ -56,6 +63,15 @@ export default function PublicConsentPage() {
   const clientRef = useRef(new PublicConsentClient());
 
   useEffect(() => {
+    if (routeKnown) {
+      setRouteResolved(true);
+    }
+  }, [routeKnown]);
+
+  useEffect(() => {
+    if (!routeResolved) {
+      return;
+    }
     if (!token) {
       setView("invalid");
       return;
@@ -88,7 +104,7 @@ export default function PublicConsentPage() {
     return () => {
       mounted = false;
     };
-  }, [token]);
+  }, [routeResolved, token]);
 
   const allConsentsAccepted =
     data?.consents_required?.every((c: string) => accepted[c]) ?? false;
