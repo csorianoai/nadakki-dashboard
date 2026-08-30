@@ -54,4 +54,16 @@ describe("OfferComparisonCard provenance", () => {
     expect(note).toMatch(/comparación simulada/i);
     expect(note).not.toMatch(/ahorras/i);
   });
+
+  test("does not invent a full-term savings amount when the term is absent", () => {
+    const note = computeOfferSavingsNote(
+      [offer({ term_months: null }), offer({ id: "offer-2", interest_rate_apr: 15, term_months: 48, monthly_payment: 15000 })],
+      "offer-1",
+      "RD$",
+    );
+
+    expect(note).toMatch(/mejor tasa/i);
+    expect(note).not.toMatch(/ahorras/i);
+    expect(note).not.toMatch(/60/);
+  });
 });

@@ -211,6 +211,10 @@ export function computeOfferSavingsNote(
   if (monthlyDiff <= 0) {
     return `${bestName} ofrece la mejor tasa (${bestApr.toFixed(1)}% APR) frente al resto de la subasta.`;
   }
-  const term = best.term_months ?? 60;
+  // Without a server-provided term, a full-term savings amount cannot be calculated.
+  if (best.term_months == null) {
+    return `${bestName} ofrece la mejor tasa (${bestApr.toFixed(1)}% APR) frente al resto de la subasta.`;
+  }
+  const term = best.term_months;
   return `${bestName} ofrece la mejor tasa (${bestApr.toFixed(1)}% APR) — ahorras ${chMoneyExact(monthlyDiff * term, currencyPrefix)} vs la oferta más alta en el plazo completo.`;
 }
