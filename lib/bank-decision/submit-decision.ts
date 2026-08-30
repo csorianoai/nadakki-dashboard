@@ -19,6 +19,28 @@ export function newIdempotencyKey(): string {
   return `idem-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function normalizeDecideBody(input: BankDecideRequestBody): BankDecideRequestBody {
+  const legacy = input as BankDecideRequestBody & { justification?: unknown; lender_code?: unknown };
+  const reasonCodes = input.reason_codes.length > 0
+    ? input.reason_codes
+    : input.decision_type === "REJECT"
+      ? ["RC101_REJECT_CREDIT_POLICY"]
+      : input.decision_type === "COUNTER"
+        ? ["RC201_COUNTER_AMOUNT"]
+        : ["RC001_APPROVE"];
+  const notes = input.notes ?? (typeof legacy.justification === "string" ? legacy.justification : undefined);
+
+  return {
+    decision_type: input.decision_type,
+    reason_codes: reasonCodes,
+    ...(input.stipulations ? { stipulations: input.stipulations } : {}),
+    ...(input.counter_terms ? { counter_terms: input.counter_terms } : {}),
+    ...(input.approved_terms ? { approved_terms: input.approved_terms } : {}),
+    ...(input.adverse_action !== undefined ? { adverse_action: input.adverse_action } : {}),
+    ...(notes !== undefined ? { notes } : {}),
+  };
+}
+
 export function buildDecideHeaders(token: string, actorId: string, idempotencyKey: string): Record<string, string> {
   const tid = decodeJwtTid(token);
   if (!tid) throw new BankApplicationAuthError();
@@ -48,7 +70,7 @@ export async function submitBankDecision(
   const res = await fetch(url, {
     method: "POST",
     headers: buildDecideHeaders(token, actorId, idem),
-    body: JSON.stringify(body),
+    body: JSON.stringify(normalizeDecideBody(body)),
     credentials: "include",
     cache: "no-store",
     signal: init?.signal,
