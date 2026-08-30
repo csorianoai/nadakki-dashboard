@@ -65,10 +65,12 @@ function toBankDecideRequestBody(legacy: BankDecisionRequest): Record<string, un
   }
 
   if (decisionType === "APPROVE") {
+    const approvedTerms: Record<string, number> = {};
     for (const key of ["approved_amount", "interest_rate", "term_months"] as const) {
       const value = legacy.terms[key];
-      if (value != null && Number.isFinite(value)) body[key] = value;
+      if (value != null && Number.isFinite(value)) approvedTerms[key] = value;
     }
+    if (Object.keys(approvedTerms).length > 0) body.approved_terms = approvedTerms;
   }
 
   if (decisionType === "APPROVE" && legacy.terms.conditions && legacy.terms.conditions.length > 0) {

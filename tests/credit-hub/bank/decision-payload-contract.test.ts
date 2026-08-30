@@ -74,6 +74,10 @@ describe("bankClient.ts — toBankDecideRequestBody transformer (Audit #4.2)", (
     expect(transformer![0]).toContain("description: cond");
   });
 
+  test("wraps declared approval terms under approved_terms", () => {
+    expect(src).toContain("body.approved_terms = approvedTerms");
+  });
+
   test("recordDecision calls toBankDecideRequestBody before JSON.stringify", () => {
     // The transformer is called and its result is stringified
     expect(src).toContain("const backendBody = toBankDecideRequestBody(params.body)");
