@@ -1,5 +1,38 @@
 import { render, screen } from "@testing-library/react";
+import type { ChangeEventHandler } from "react";
 import { DealerWizardApplicantEmploymentStep } from "@/components/forge/credit-hub/dealer/DealerWizardApplicantEmploymentStep";
+
+jest.mock("@/components/forge", () => ({
+  Button: ({ children, ...props }: { children: React.ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button {...props}>{children}</button>
+  ),
+  Checkbox: ({ label, checked, onChange }: { label: string; checked?: boolean; onChange?: ChangeEventHandler<HTMLInputElement> }) => (
+    <label>
+      {label}
+      <input type="checkbox" checked={checked} onChange={onChange} />
+    </label>
+  ),
+  DateInput: ({ label, value, onValueChange }: { label: string; value?: string; onValueChange?: (value: string) => void }) => (
+    <label>
+      {label}
+      <input value={value ?? ""} onChange={(event) => onValueChange?.(event.target.value)} />
+    </label>
+  ),
+  Input: ({ label, value, onChange }: { label: string; value?: string; onChange?: ChangeEventHandler<HTMLInputElement> }) => (
+    <label>
+      {label}
+      <input value={value ?? ""} onChange={onChange} />
+    </label>
+  ),
+  Select: ({ label, value, onChange, disabled, options }: { label: string; value?: string; onChange?: ChangeEventHandler<HTMLSelectElement>; disabled?: boolean; options: { value: string; label: string }[] }) => (
+    <label>
+      {label}
+      <select value={value ?? ""} onChange={onChange} disabled={disabled}>
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  ),
+}));
 
 jest.mock("next/font/google", () => ({
   Inter: () => ({ className: "", variable: "" }),
@@ -18,8 +51,8 @@ jest.mock("@/lib/credit-hub/hooks/useCatalogs", () => ({
       vehicleBrands: [],
       banks: [],
       contractTypes: ["Indefinido", "Temporal"],
-      incomeConcepts: [],
-      paymentFrequencies: [],
+      incomeConcepts: ["Salario adicional"],
+      paymentFrequencies: ["MENSUAL"],
       relationshipTypes: [],
     },
     // Reproduces the stale global loading flag with the needed catalog ready.
@@ -93,8 +126,17 @@ jest.mock("@/components/forge/credit-hub/dealer/DealerWizardProvider", () => ({
       employer_province: "",
       employer_city: "",
       contract_type: "",
-      has_other_income: "no",
-      other_incomes: [],
+      has_other_income: "yes",
+      other_incomes: [
+        {
+          id: "other-income-1",
+          concept: "",
+          amount: "",
+          frequency: "MENSUAL",
+          variable_avg_6_months: "",
+          is_documented: false,
+        },
+      ],
     },
     updateField: jest.fn(),
     updateOtherIncomeRow: jest.fn(),
@@ -113,5 +155,21 @@ describe("active applicant step — contract type", () => {
     const select = screen.getByLabelText("Tipo de contrato *");
     expect(select).not.toBeDisabled();
     expect(screen.getByRole("option", { name: "Indefinido" })).toBeInTheDocument();
+  });
+
+  test("enables other income concept once its catalog is populated", () => {
+    render(<DealerWizardApplicantEmploymentStep />);
+
+    const select = screen.getByLabelText("Concepto *");
+    expect(select).not.toBeDisabled();
+    expect(screen.getByRole("option", { name: "Salario adicional" })).toBeInTheDocument();
+  });
+
+  test("enables other income frequency once its catalog is populated", () => {
+    render(<DealerWizardApplicantEmploymentStep />);
+
+    const select = screen.getByLabelText("Frecuencia *");
+    expect(select).not.toBeDisabled();
+    expect(screen.getByRole("option", { name: "MENSUAL" })).toBeInTheDocument();
   });
 });

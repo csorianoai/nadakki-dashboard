@@ -57,7 +57,7 @@ jest.mock("@/lib/credit-hub/hooks/useCatalogs", () => ({
   useCatalogs: () => ({
     catalogs: {
       vehicleBrands: Array.from({ length: 24 }, (_, index) => `Marca ${index + 1}`),
-      banks: [],
+      banks: ["Banco Nacional"],
       contractTypes: [],
       incomeConcepts: [],
       paymentFrequencies: [],
@@ -118,7 +118,7 @@ jest.mock("@/components/forge/credit-hub/dealer/DealerWizardProvider", () => ({
       down_payment: "100000",
       monthly_debts: "0",
       estimated_monthly_expenses: "",
-      has_bank_account: "no",
+      has_bank_account: "yes",
       bank_institution: "",
       product_type: "Vehículo usado",
       vehicle_make: "",
@@ -152,5 +152,13 @@ describe("dealer wizard vehicle step - used vehicle brand", () => {
     const brandSelect = screen.getByLabelText("Marca *");
     expect(brandSelect).not.toBeDisabled();
     expect(screen.getByRole("option", { name: "Marca 24" })).toBeInTheDocument();
+  });
+
+  it("keeps the bank select enabled when banks are loaded even if the catalog loading flag is still true", () => {
+    render(<DealerWizardVehicleFinancialStep />);
+
+    const bankSelect = screen.getByLabelText("Institución bancaria (opcional)");
+    expect(bankSelect).not.toBeDisabled();
+    expect(screen.getByRole("option", { name: "Banco Nacional" })).toBeInTheDocument();
   });
 });

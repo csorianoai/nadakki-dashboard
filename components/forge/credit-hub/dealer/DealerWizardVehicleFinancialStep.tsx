@@ -36,7 +36,7 @@ function otherIncomesToParts(formData: { other_incomes: { amount: string; freque
 export function DealerWizardVehicleFinancialStep() {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
-  const { catalogs, loading: catalogsLoading } = useCatalogs();
+  const { catalogs } = useCatalogs();
   const { formData, updateField, patchForm, getFieldError } = useDealerWizard();
 
   const otherMonthlyStep = formData.has_other_income === "yes" ? calculateTotalMonthlyIncome(0, otherIncomesToParts(formData)) : 0;
@@ -139,7 +139,7 @@ export function DealerWizardVehicleFinancialStep() {
             label="Institución bancaria (opcional)"
             value={formData.bank_institution}
             onChange={(e) => updateField("bank_institution", e.target.value)}
-            disabled={catalogsLoading || !catalogs}
+            disabled={!catalogs?.banks?.length}
             options={[{ value: "", label: t.common.select_placeholder }, ...(catalogs?.banks ?? []).map((b) => ({ value: b, label: b }))]}
           />
         ) : null}
