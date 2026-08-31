@@ -6,8 +6,20 @@ import { ProtectedRoute } from "@/components/forge/auth/ProtectedRoute";
 import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
 import { isAutosConsumerPublicPath } from "@/lib/autos-portal/routes";
 
+function getEffectivePathname(pathname: string | null): string {
+  if (pathname) {
+    return pathname;
+  }
+
+  return typeof window !== "undefined" ? window.location.pathname : "";
+}
+
 export default function AppGate({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = getEffectivePathname(usePathname());
+
+  if (!pathname) {
+    return null;
+  }
 
   if (pathname === "/login") {
     return <>{children}</>;
