@@ -30,8 +30,38 @@ test("public consent route validates a token with the server before rendering", 
     });
   });
 
-  await page.goto(`/consent/${token}`);
+  await page.goto(`/consent/${token}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("consent-checkboxes")).toBeVisible();
   expect(statusRequests).toBe(1);
-  await expect(page.getByText("Institución de prueba")).toBeVisible();
+  await expect(page.getByText("Institución de prueba", { exact: true })).toBeVisible();
+});
+
+test("public consent route rejects a token only after the status check fails", async ({ page }) => {
+  const token = "invalid-route-token";
+  const statusUrl = `**/api/v2/credit/consent/${encodeURIComponent(token)}/status`;
+  const publicUrl = `**/api/v2/credit/consent/${encodeURIComponent(token)}/public`;
+  let statusRequests = 0;
+  let publicRequests = 0;
+
+  await page.route(statusUrl, async (route) => {
+    statusRequests += 1;
+    await route.fulfill({
+      status: 404,
+      contentType: "application/json",
+      body: JSON.stringify({ detail: "Token invalido" }),
+    });
+  });
+  await page.route(publicUrl, async (route) => {
+    publicRequests += 1;
+    await route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify({ detail: "public view should not be requested" }),
+    });
+  });
+
+  await page.goto(`/consent/${token}`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("consent-invalid")).toBeVisible();
+  expect(statusRequests).toBe(1);
+  expect(publicRequests).toBe(0);
 });
