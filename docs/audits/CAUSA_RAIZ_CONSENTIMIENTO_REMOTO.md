@@ -167,6 +167,56 @@ El bundle servido trae el arreglo: constructor(e=""){this.baseUrl=e}
       -204 y refresh 401-; lo que falta es que el boton del sidebar lo invoque,
       que es justo el defecto de frontend anotado en "lo que no entra".
 
+## Mapa para ejercitar los clientes desde el navegador
+
+Cowork no tiene el repo. Con esto puede medirlos sin leer codigo.
+
+    COMO SE MIDE
+      abrir la pantalla con DevTools > Network, filtro "api.nadakki.com"
+      ROTO  aparece una peticion a ese host, (blocked:csp) o failed
+            y en consola "Refused to connect ... Content Security Policy"
+      SANO  todas las peticiones van a staging-dashboard.nadakki.com
+
+    credit-api                  EL MAS GRAVE: las seis pantallas del wizard
+      /credit-hub/dealer/applications/new/applicant
+      /credit-hub/dealer/applications/new/vehicle
+      /credit-hub/dealer/applications/new/co-borrower
+      /credit-hub/dealer/applications/new/documents
+      /credit-hub/dealer/applications/new/consent
+      /credit-hub/dealer/applications/new/review
+      pide /api/v2/credit/applications
+
+    scheduler-status
+      /scheduler · /scheduler/jobs · /autopilot
+      pide /api/v1/scheduler/status
+
+    legal/telemetry
+      /legal · /legal/audit · /legal/research
+      pide /api/v1/telemetry/legal
+
+    spyfu-client
+      /competitor-research
+      pide /api/v1/spyfu/*
+
+    document-intelligence       NO EJERCITABLE POR NAVEGADOR
+      Ninguna ruta de app/ lo alcanza. Sus componentes
+      -DocumentIntelligenceWorkspace, Card, ReviewPanel, HistoryDrawer-
+      no estan referenciados desde app/: el workspace solo aparece en su
+      propia definicion. Es codigo huerfano.
+      Su defecto es real -construye base absoluta desde NEXT_PUBLIC_API_URL-
+      pero se verifica leyendo el bundle, no navegando.
+
+Son CUATRO clientes ejercitables, no cinco.
+
+Y api.nadakki.com sigue presente en el bundle servido, en
+25142-d819862371c6cb44.js y 9146-d05d2d4176441f6c.js: esa es la superficie
+que queda.
+
+CORRECCION a una afirmacion anterior de este documento: se dijo que
+legal/telemetry se usaba desde bank/applications. Es falso; el grep original
+caso la palabra "telemetry" por otra via. El recorrido de dependencias da
+/legal, /legal/audit y /legal/research.
+
 ## CAPPED_AT_EXTERNAL
 
 NEXT_PUBLIC_API_URL apunta al backend equivocado en el proyecto de Vercel de
