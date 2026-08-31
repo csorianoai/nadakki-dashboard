@@ -31,11 +31,17 @@ git remote -v
 git fetch origin --prune
 git log --oneline -1 origin/staging
 Test-Path "app"
-Test-Path "app/(public)/consent/[token]/page.tsx"
+Test-Path -LiteralPath "app/(public)/consent/[token]/page.tsx"
+git --literal-pathspecs ls-files "app/(public)/consent/"
 git branch -a | Select-String "diag|consent"
 ```
 
-**Ese ultimo comando importa: puede haber trabajo de otro agente sin empujar.**
+**`-LiteralPath` y `--literal-pathspecs` no son opcionales.** Sin ellos, `[token]`
+se interpreta como wildcard —"un caracter de entre t, o, k, e, n"— y el comando
+devuelve `False` sobre un fichero que existe. **Este loop produjo ese falso
+negativo en su primera version.**
+
+**Y el ultimo comando importa: puede haber trabajo de otro agente sin empujar.**
 
 ```text
 SI CUALQUIERA FALLA, PARAS Y LO REPORTAS
@@ -51,21 +57,34 @@ NO SIGAS · todo lo demas seria ruido
 
 # FASE 1 · ¿ESTO FUNCIONO ALGUNA VEZ?
 
-**La medicion mas barata del loop, y nadie la hizo en nueve intentos. Cambia el
-espacio de hipotesis entero.**
+**EJECUTADA el 31 de agosto. Veredicto: INDETERMINADO por git.** Se cierra en el
+baseline, no antes.
 
-```powershell
-git log --oneline --follow -- "app/(public)/consent/[token]/page.tsx" | Select-Object -First 20
-git log --oneline --diff-filter=A -- "app/(public)/consent/**"
+```text
+61d2d196  2026-04-28  CREACION · "public consent page closes end-to-end"
+92f384d0  2026-07-03  white-label · el unico toque en cuatro meses
+53dac965  2026-08-28  #430
+5b622392  2026-08-28  #424
+60ded603  2026-08-30  #452
+5637d6b5  2026-08-30  #453
 ```
 
 ```text
-si NUNCA funciono          no es una regresion: es cableado
-                           y la hipotesis del arbol de render sube
-si funciono y se rompio    hay un commit culpable · encontralo
+MEDIDO  entre la creacion y el primer intento pasaron cuatro meses
+        con UN solo commit sobre page.tsx
+MEDIDO  app/(public)/layout.tsx es identico al de la creacion
+        salvo el string del title · renderiza {children} · no hay gate
+MEDIDO  components/auth/AppGate.tsx NO EXISTIA cuando se creo la pagina
+        nace el 2026-06-11, seis semanas despues
 ```
 
-**Registra la respuesta antes de seguir.**
+**Eso deja una ventana candidata del 28-abr al 11-jun con un arbol de render mas
+simple.** Pero "funciono" es una propiedad de runtime y el repo no la registra: el
+mensaje del commit de creacion es una afirmacion de autor, no evidencia.
+
+**Contexto, no prueba:** `credit_consent_events` tenia diez filas `EMAIL/SENT` y
+cero aceptadas, sobre una ventana de siete dias de agosto. **En la ventana
+observable, ningun consentimiento remoto se completo nunca.**
 
 ---
 
@@ -181,30 +200,41 @@ corregirlo.**
 
 **Nueve iteraciones, cero instrumentos.**
 
-## YA EXISTE INSTRUMENTACION · no la rehagas sin mirarla
+## YA EXISTE INSTRUMENTACION · medida, no descrita de memoria
 
 ```text
-Codex escribio una el 31 de agosto y la dejo en una rama
-  diag/public-consent-status-request
+origin/diag/public-consent-status-request   commit 8fa4d2b1
+UN fichero · lib/credit-hub/api/public-consent-client.ts
+CUATRO lineas · sin tests en esa rama
 
-  log antes del fetch, con la URL exacta construida
-  log en el catch, con el error completo
-  sin modificar la decision del catch
+  console.debug("[public-consent] GET /status request", { url })   antes del fetch
+  console.error("[public-consent] GET /status failed", { url, error })  en el catch
 
-  4 suites, 15 tests · typecheck pasa
-  quedo LOCAL en su maquina · puede que ya este empujada
+el prefijo real es [public-consent] · NO [CONSENT_DIAG_V1]
 ```
 
-```powershell
-git fetch origin --prune
-git branch -r | Select-String "diag"
+**Tres limitaciones que hay que conocer antes de desplegarla:**
+
+```text
+1  esta en el punto MAS PROFUNDO de la cadena
+   cubre 2 de las 8 marcas de abajo
+   su unico sitio de llamada es page.tsx:82
+
+   si la pagina NO MONTA, getStatus nunca corre
+   y ninguno de los dos logs imprime
+
+   NO DISTINGUE "no monto" de "monto y el fetch fallo"
+   las dos producen silencio identico
+
+   desplegarla sola produciria silencio, que es el resultado
+   con menos informacion y el modo de fallo de los nueve intentos
+
+2  console.debug es nivel Verbose · Chrome lo oculta por defecto
+   la consola va en All levels, o el log se cambia a console.log
+
+3  extendela HACIA ARRIBA, que es donde esta el silencio
+   route_mounted, render_branch y quien la selecciono
 ```
-
-**Si la rama existe, empeza por ahi.** Si cubre lo que necesitas, usala. Si no,
-ampliala en vez de escribir otra desde cero.
-
-**Si no existe**, pedila antes de escribir la tuya — perder ese trabajo cuesta
-una vuelta entera.
 
 Prefijo unico, sin tokens ni PII:
 
