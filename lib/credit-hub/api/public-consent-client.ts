@@ -122,8 +122,10 @@ export class PublicConsentClient {
   async getStatus(token: string): Promise<{ status: string; accepted_at?: string | null }> {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const requestUrl = this.url(`/${encodeURIComponent(token)}/status`);
     try {
-      const res = await fetch(this.url(`/${encodeURIComponent(token)}/status`), {
+      console.debug("[public-consent] GET /status request", { url: requestUrl });
+      const res = await fetch(requestUrl, {
         method: "GET",
         credentials: "omit",
         signal: controller.signal,
@@ -135,6 +137,7 @@ export class PublicConsentClient {
       }
       return body as { status: string; accepted_at?: string | null };
     } catch (e) {
+      console.error("[public-consent] GET /status failed", { url: requestUrl, error: e });
       if (e instanceof ConsentTokenInvalidError) throw e;
       if (e instanceof DOMException && e.name === "AbortError") throw new Error("Tiempo de espera agotado");
       throw e instanceof Error ? e : new Error("Error al consultar estado");
