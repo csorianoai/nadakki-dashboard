@@ -85,6 +85,14 @@ export function DealerWizardVehicleFinancialStep() {
     return base;
   }, [tenantConfig.product_types, formData.product_type]);
 
+  const vehicleBrandOptions = useMemo(() => {
+    const brands = ((catalogs?.vehicleBrands ?? []) as string[]).filter((brand) => brand.trim().length > 0);
+    if (formData.vehicle_make && !brands.includes(formData.vehicle_make)) {
+      return [formData.vehicle_make, ...brands];
+    }
+    return brands;
+  }, [catalogs?.vehicleBrands, formData.vehicle_make]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -151,11 +159,11 @@ export function DealerWizardVehicleFinancialStep() {
           fieldKey="vehicle_make"
           value={formData.vehicle_make}
           onChange={(e) => updateField("vehicle_make", e.target.value)}
-          disabled={catalogsLoading || !catalogs}
+          disabled={vehicleBrandOptions.length === 0}
           error={getFieldError("vehicle_make")}
           options={[
             { value: "", label: t.common.select_placeholder },
-            ...((catalogs?.vehicleBrands ?? []) as string[]).map((brand) => ({ value: brand, label: brand })),
+            ...vehicleBrandOptions.map((brand) => ({ value: brand, label: brand })),
           ]}
         />
         {formData.vehicle_make === "Otros" ? (

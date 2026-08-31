@@ -28,6 +28,14 @@ export interface ConsentAcceptResponse {
   audit_hash: string;
 }
 
+export interface PresentConsentAcceptResponse {
+  consent_id?: string;
+  status: "ACCEPTED" | (string & {});
+  accepted_at?: string;
+  audit_hash: string;
+  consent_text_version?: string;
+}
+
 export interface ConsentHistoryEvent {
   id: string;
   method: string;
@@ -125,6 +133,14 @@ export class ConsentApiClient {
       method: "POST",
       body: JSON.stringify(payload),
       includeTenant: false,
+    });
+  }
+
+  async acceptPresent(applicationId: string, payload: ConsentAcceptPayload): Promise<PresentConsentAcceptResponse> {
+    return this.fetchJson<PresentConsentAcceptResponse>(`/${encodeURIComponent(applicationId)}/present/accept`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      includeTenant: true,
     });
   }
 

@@ -13,7 +13,9 @@ export interface PresentConsentFormProps {
   onDataProcessingChange: (v: boolean) => void;
   signatureFullName: string;
   onSignatureChange: (v: string) => void;
-  onPresentConfirmed: () => void;
+  onPresentConfirmed: () => void | Promise<void>;
+  submitting?: boolean;
+  submitError?: string | null;
   getFieldError?: (key: string) => string | undefined;
 }
 
@@ -33,6 +35,8 @@ export function PresentConsentForm({
   signatureFullName,
   onSignatureChange,
   onPresentConfirmed,
+  submitting = false,
+  submitError,
   getFieldError,
 }: PresentConsentFormProps) {
   const t = useTranslations();
@@ -118,12 +122,17 @@ export function PresentConsentForm({
       <button
         type="button"
         onClick={() => onPresentConfirmed()}
-        disabled={!canSubmit}
+        disabled={!canSubmit || submitting}
         className="rounded-lg bg-forge-primary px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-forge-surface-elevated disabled:text-forge-text-muted"
         data-testid="present-submit"
       >
-        {t.common.confirm}
+        {submitting ? t.consent.public.submitting : t.common.confirm}
       </button>
+      {submitError ? (
+        <p className="text-xs text-[#ef4444]" role="alert">
+          {submitError}
+        </p>
+      ) : null}
     </div>
   );
 }
