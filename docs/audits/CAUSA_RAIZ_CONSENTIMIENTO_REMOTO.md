@@ -144,3 +144,24 @@ staging, y ese backend ademas esta caido:
 
 Se declara y se escala. El PR #459 hace que el consentimiento publico deje de
 depender de esa variable, pero NO la corrige.
+
+---
+
+## CORRECCION · 31 agosto, tras el deploy
+
+El CAPPED_AT_EXTERNAL de arriba se escribio sobre una medicion vieja.
+
+    api.nadakki.com -> 200 · version f8b0f0c2 · ES PRODUCCION, VIVA
+    es el mismo servicio que nadakki-api-east.onrender.com
+    el 500 "password authentication failed" era de UN endpoint,
+    no del servicio
+
+El host suspendido es OTRO: nadakki-ai-suite.onrender.com
+    x-render-routing: suspend-by-user
+    ahi apunta el Nightly Smoke, que lleva cinco noches en rojo
+
+La matriz C1-C5 SI SE VERIFICO el 31 de agosto contra
+dpl_9RcGmAamVop5GwEgN5AipGDF9HmQ · las cinco PASS
+las tres regresiones de UI tambien, medidas por Cowork en pantalla
+
+VEREDICTO ACTUALIZADO: CERRADO
