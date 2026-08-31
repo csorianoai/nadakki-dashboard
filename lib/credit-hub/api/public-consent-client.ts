@@ -68,7 +68,21 @@ function messageFromBody(body: unknown, fallback: string): string {
 }
 
 export class PublicConsentClient {
-  constructor(private readonly baseUrl: string = process.env.NEXT_PUBLIC_API_URL ?? "") {}
+  /**
+   * La ruta publica SIEMPRE va same-origin, por el rewrite
+   * `/api/v2/credit/:path*` de next.config.js.
+   *
+   * Antes el default salia de `process.env.NEXT_PUBLIC_API_URL`, que Next hornea
+   * en el bundle. En staging quedo horneada como "https://api.nadakki.com": el
+   * cliente construia una URL absoluta a un host ausente del `connect-src` del
+   * CSP, el navegador cortaba el fetch antes de emitirlo y el `.catch` de la
+   * pagina lo pintaba como enlace invalido. Medido: 39 requests, cero a /api/.
+   *
+   * Same-origin no depende de ninguna variable de build y 'self' siempre esta
+   * en el CSP. El cliente del dealer -consent-client.ts- ya lo hacia asi, y por
+   * eso el consentimiento presencial nunca se rompio.
+   */
+  constructor(private readonly baseUrl: string = "") {}
 
   private url(path: string): string {
     const p = `${this.baseUrl}${PUBLIC_CONSENT_BASE}${path}`;

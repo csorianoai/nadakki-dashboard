@@ -19,9 +19,12 @@ import { SelfieCapture } from "./_components/SelfieCapture";
 import { ConsentSuccessView } from "./_components/ConsentSuccessView";
 import { ConsentInvalidView } from "./_components/ConsentInvalidView";
 import { ConsentLoadingView } from "./_components/ConsentLoadingView";
+import { ConsentErrorView } from "./_components/ConsentErrorView";
 import { ConsentAlreadyAcceptedView } from "./_components/ConsentAlreadyAcceptedView";
 
-type ViewState = "loading" | "form" | "success" | "invalid" | "already";
+// Cuatro estados, no dos: resolviendo · valido · invalido/expirado · error de
+// transporte. Fundir los dos ultimos hacia "invalid" fue el defecto de fondo.
+type ViewState = "loading" | "form" | "success" | "invalid" | "already" | "error";
 
 function tokenFromConsentPath(pathname: string | null | undefined): string {
   return pathname?.match(/^\/consent\/([^/]+)\/?$/)?.[1] ?? "";
@@ -96,9 +99,13 @@ export default function PublicConsentPage() {
         setData(d);
         setView("form");
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         if (!mounted) return;
-        setView("invalid");
+        // Solo el SERVIDOR puede declarar invalido un token. ConsentTokenInvalidError
+        // se lanza cuando el servidor respondio y dijo que no sirve. Cualquier otra
+        // cosa -CSP, red, DNS, excepcion interna- es que no pudimos preguntar, y
+        // eso no autoriza a afirmar que el enlace expiro.
+        setView(err instanceof ConsentTokenInvalidError ? "invalid" : "error");
       });
 
     return () => {
@@ -182,6 +189,7 @@ export default function PublicConsentPage() {
 
   if (view === "loading") return <ConsentLoadingView />;
   if (view === "invalid") return <ConsentInvalidView />;
+  if (view === "error") return <ConsentErrorView />;
   if (view === "already") return <ConsentAlreadyAcceptedView />;
   if (view === "success" && acceptedResult && data) {
     return (
