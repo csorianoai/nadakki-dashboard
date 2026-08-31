@@ -118,21 +118,54 @@ Los dos corregidos. El primero ahora declara las rutas LITERALES.
       tests/app/public/consent/_components/SelfieCapture.test.tsx no colecta
       verificado con git stash sobre la base limpia
 
-## VEREDICTO · ABIERTO
+## VEREDICTO · FIXED en C1-C5 · tres regresiones de UI SIN EJECUTAR
 
-El loop NO esta cerrado. La matriz C1-C5 exige deploy y no la reemplaza
-ningun test local.
+Verificado contra el deploy dpl_9RcGmAamVop5GwEgN5AipGDF9HmQ, con token
+generado DESPUES del despliegue y red capturada desde antes de navegar.
 
-    C1  el chunk que contiene el texto cambia de content-hash   PENDIENTE
-    C2  GET /status visible en Network con 200                  PENDIENTE
-    C3  con token valido, el formulario renderiza               PENDIENTE
-    C4  con token manipulado, sigue rechazando desde el server  PENDIENTE
-    C5  sin sesion, /credit-hub/dealer rebota a /login          PENDIENTE
+    C1  PASS  el chunk que contiene el texto cambio de content-hash
+              8676-d983d17a76c48eb6.js -> 8676-3d6db4993b05c503.js
+              (el hash que sobrevivio byte-identico a nueve intentos)
+              page-8556133b2f56cdec.js -> page-5d471eef932d6c43.js
+    C2  PASS  GET /api/v2/credit/consent/{token}/status visible en Network
+              HTTP 200, same-origin. Y /public HTTP 200.
+    C3  PASS  con token valido renderiza el formulario completo:
+              branding, las tres autorizaciones, checkboxes, firma y boton
+    C4  PASS  token manipulado -> consent-invalid, NO consent-error,
+              sin formulario, y el rechazo viene del SERVIDOR
+              (la peticion a /status es visible en Network)
+              La discriminacion funciona en AMBOS sentidos.
+    C5  PASS  sin sesion, /credit-hub/dealer y
+              /credit-hub/bank/applications rebotan a /login
 
-    Regresiones a correr tras el deploy: presencial -> 200 con fila
-    ACCEPTED, "Marca" en vehiculo usado, los cinco selects, logout 204,
-    rutas protegidas, y el documento del vehiculo que NO debe bloquear
-    el despacho (PR #458).
+El bundle servido trae el arreglo: constructor(e=""){this.baseUrl=e}
+
+## Regresiones
+
+    PASS   consentimiento PRESENCIAL
+             initiate PRESENT -> INITIATED, token null (correcto)
+             POST /present/accept -> HTTP 200
+             fila ACCEPTED con accepted_at y audit_hash de 64 hex
+             806e6c6237b5c77f20e14e45b09cac28829a5fd9fb4d98bae3aed73f1ac43c19
+    PASS   logout -> HTTP 204 · refresh TRAS logout -> HTTP 401
+    PASS   rutas protegidas de API sin token -> 401
+    PASS   el despacho NO exige consentimiento (flag OFF, circuito intacto)
+             POST /credit/dispatch-multi -> HTTP 200 dispatched
+             sobre una solicitud cuyo historial de consentimiento es []
+    PASS   el documento del vehiculo no bloquea el despacho (PR #458)
+             misma solicitud, sin documentos subidos, despacho 200
+             (evidencia indirecta: no se subio NINGUN documento)
+
+    SIN EJECUTAR · requieren sesion en la UI del dashboard
+      "Marca" se habilita en vehiculo usado
+      los cinco selects del wizard
+      logout desde el sidebar dispara POST /auth/logout
+
+      No las corri porque iniciar sesion exige escribir una contrasena en un
+      formulario, y eso no lo hago. NO se declaran como aprobadas: quedan sin
+      ejecutar, que no es lo mismo. El logout SI quedo verificado por API
+      -204 y refresh 401-; lo que falta es que el boton del sidebar lo invoque,
+      que es justo el defecto de frontend anotado en "lo que no entra".
 
 ## CAPPED_AT_EXTERNAL
 
