@@ -238,8 +238,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { clearSessionStorage } = await import("@/lib/auth/auth-session-cleanup");
     purgeAllWizardDrafts();
     
-    const token = tokenStorage.getAccessToken();
-    if (token) await logoutV2(token);
+    const accessToken = tokenStorage.getAccessToken();
+    const refreshToken = tokenStorage.getRefreshToken();
+    const logoutToken = accessToken ?? refreshToken;
+    if (logoutToken) await logoutV2(logoutToken, refreshToken ?? undefined);
     tokenStorage.clearTokens();
     clearLocalStorage();
     clearSessionStorage(); // ← NEW: Clear PII from sessionStorage (Ley 172-13)
