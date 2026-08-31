@@ -103,15 +103,13 @@ export function effectiveRequiredDocuments(tenant: TenantBankingConfig): TenantR
   return DEFAULT_DO_REQUIRED_DOCUMENTS;
 }
 
-/** Forge wizard: vehicle docs mandatory; ID and financial docs optional (no live validation). */
+/** Forge wizard: document uploads are optional at dispatch; references remain gated separately. */
 export function effectiveWizardDocuments(tenant: TenantBankingConfig): TenantRequiredDocument[] {
-  const forcedRequired = new Set(["vehicle_documents"]);
-  const optionalUnvalidated = new Set(["id_front", "id_back", "bank_statements"]);
+  const optionalUnvalidated = new Set(["id_front", "id_back", "bank_statements", "vehicle_documents"]);
   return effectiveRequiredDocuments(tenant)
     .filter((d) => tenantDocumentKey(d) !== "personal_references")
     .map((d) => {
       const key = tenantDocumentKey(d);
-      if (forcedRequired.has(key)) return { ...d, required: true };
       if (optionalUnvalidated.has(key)) return { ...d, required: false };
       return d;
     });
