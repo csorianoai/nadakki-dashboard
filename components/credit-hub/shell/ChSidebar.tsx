@@ -211,6 +211,7 @@ export function ChSidebar({
   institutionName,
   logoUrl,
   user,
+  onLogout,
   navBadges,
   className,
 }: ChSidebarProps) {
@@ -346,8 +347,14 @@ export function ChSidebar({
               ) : null}
             </div>
           ) : null}
-          {!collapsed ? (
-            <button type="button" className="ch-icon-btn" title="Cerrar sesión" style={{ width: 28, height: 28 }}>
+          {!collapsed && onLogout ? (
+            <button
+              type="button"
+              className="ch-icon-btn"
+              title="Cerrar sesión"
+              onClick={() => void onLogout()}
+              style={{ width: 28, height: 28 }}
+            >
               <LogOut className="h-[15px] w-[15px]" aria-hidden />
             </button>
           ) : null}

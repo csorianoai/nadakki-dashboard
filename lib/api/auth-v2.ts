@@ -167,7 +167,7 @@ export async function refreshTokenV2(refreshToken: string): Promise<ApiResult<Re
   });
 }
 
-export async function logoutV2(accessToken: string): Promise<ApiResult<void>> {
+export async function logoutV2(accessToken: string, refreshToken?: string): Promise<ApiResult<void>> {
   const url = `${BASE_URL}/api/v2/auth/logout`;
   try {
     const r = await fetch(url, {
@@ -176,6 +176,7 @@ export async function logoutV2(accessToken: string): Promise<ApiResult<void>> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
+      body: refreshToken ? JSON.stringify({ refresh_token: refreshToken }) : undefined,
     });
     if (!r.ok) {
       const body = await r.text();

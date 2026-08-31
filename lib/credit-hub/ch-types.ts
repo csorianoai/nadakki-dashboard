@@ -145,6 +145,8 @@ export interface ChSidebarProps {
   logoUrl?: string | null;
   /** Real signed-in user for the sidebar footer. Falls back to "Usuario" when absent. */
   user?: { name: string; role?: string; initials: string };
+  /** Same logout action used by the authenticated user menu. Hidden when absent. */
+  onLogout?: () => void | Promise<void>;
   /** Real nav counts keyed by nav id (e.g. { bandeja: 12 }). Badge is hidden when absent — never hardcoded. */
   navBadges?: Record<string, string | number>;
   className?: string;
