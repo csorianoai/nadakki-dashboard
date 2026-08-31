@@ -64,7 +64,16 @@ function toBankDecideRequestBody(legacy: BankDecisionRequest): Record<string, un
     };
   }
 
-  if (decisionType === "APPROVE" && legacy.terms.conditions.length > 0) {
+  if (decisionType === "APPROVE") {
+    const approvedTerms: Record<string, number> = {};
+    for (const key of ["approved_amount", "interest_rate", "term_months"] as const) {
+      const value = legacy.terms[key];
+      if (value != null && Number.isFinite(value)) approvedTerms[key] = value;
+    }
+    if (Object.keys(approvedTerms).length > 0) body.approved_terms = approvedTerms;
+  }
+
+  if (decisionType === "APPROVE" && legacy.terms.conditions && legacy.terms.conditions.length > 0) {
     body.stipulations = legacy.terms.conditions.map((cond, i) => ({
       code: `STIP-${i + 1}`,
       description: cond,
@@ -162,7 +171,10 @@ export async function recordDecision(params: {
     tenantId: params.tenantId,
     actorRole,
     method: "POST",
-    body: JSON.stringify({ analyst_id: analystId }),
+    body: JSON.stringify({
+      analyst_id: analystId,
+      ...(params.body.lender_code?.trim() ? { lender_code: params.body.lender_code.trim() } : {}),
+    }),
   });
   console.log("[claim-before-decide] claim succeeded, proceeding to decide");
 
@@ -232,11 +244,45 @@ export function getComplianceReport(params: { tenantId: string; applicationId: s
   });
 }
 
+type ApplicationEventResponse = {
+  application_id?: string;
+  events?: Array<{
+    event_type?: string;
+    emitted_at?: string;
+    payload?: Record<string, unknown>;
+  }>;
+};
+
+function normalizeApplicationEvents(
+  response: ApplicationEventResponse,
+  applicationId: string,
+): BankAuditTrail {
+  const events = (response.events ?? []).map((event) => {
+    const payload = event.payload ?? {};
+    const actor = payload.actor ?? payload.actor_id ?? payload.analyst_id ?? payload.actor_role ?? payload.by;
+
+    return {
+      event: event.event_type ?? "UNKNOWN_EVENT",
+      timestamp: event.emitted_at ?? "",
+      by: typeof actor === "string" && actor ? actor : "Sistema",
+      ...(typeof payload.decision === "string" ? { decision: payload.decision as BankAuditTrail["events"][number]["decision"] } : {}),
+    };
+  });
+
+  return {
+    application_id: response.application_id ?? applicationId,
+    has_analysis: events.some(({ event }) => event.includes("ANALYSIS")),
+    has_bank_decision: events.some(({ event }) => event === "BANK_DECISION_MADE"),
+    events,
+    event_count: events.length,
+  };
+}
+
 export async function getAuditTrail(params: { tenantId: string; applicationId: string }): Promise<BankAuditTrail> {
-  const url = `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/audit-trail`;
+  const url = `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/events`;
   console.log("[getAuditTrail] FETCH START", { url, tenantId: params.tenantId, applicationId: params.applicationId });
   
-  const result = await chFetch<BankAuditTrail>(url, {
+  const result = await chFetch<ApplicationEventResponse>(url, {
     tenantId: params.tenantId,
     actorRole,
   });
@@ -249,7 +295,7 @@ export async function getAuditTrail(params: { tenantId: string; applicationId: s
     result,
   });
   
-  return result;
+  return normalizeApplicationEvents(result, params.applicationId);
 }
 
 export interface ComplianceApproval {

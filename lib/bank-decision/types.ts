@@ -9,6 +9,12 @@ export interface CounterTermsPayload {
   no_match?: boolean;
 }
 
+export interface ApprovedTermsPayload {
+  approved_amount?: number;
+  interest_rate?: number;
+  term_months?: number;
+}
+
 export interface DecideStipulation {
   id?: string;
   description: string;
@@ -20,6 +26,7 @@ export interface BankDecideRequestBody {
   reason_codes: string[];
   stipulations?: DecideStipulation[];
   counter_terms?: CounterTermsPayload | null;
+  approved_terms?: ApprovedTermsPayload | null;
   adverse_action?: boolean;
   notes?: string;
 }

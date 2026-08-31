@@ -25,6 +25,9 @@ export function DecisionPanel({
   className,
   canDecide = true,
   errorDetail,
+  lenderOptions = [],
+  lenderCode,
+  onLenderChange,
   onSubmit,
 }: DecisionPanelProps) {
   const [mode, setMode] = useState<DecisionMode>("approve");
@@ -55,8 +58,19 @@ export function DecisionPanel({
     window.setTimeout(() => setState("success"), 1100);
   };
 
+  const lenderRequired = lenderOptions.length > 1 && !lenderCode;
+
   return (
-    <div className={cn("ch-card", className)} style={{ position: sticky ? "sticky" : "static", top: 24, overflow: "hidden" }}>
+    <div
+      className={cn("ch-card", className)}
+      style={{
+        position: sticky ? "sticky" : "static",
+        top: 8,
+        maxHeight: sticky ? "calc(100vh - 16px)" : undefined,
+        overflowY: sticky ? "auto" : undefined,
+        overflowX: "hidden",
+      }}
+    >
       <div
         style={{
           padding: "14px 18px",
@@ -97,6 +111,24 @@ export function DecisionPanel({
         </div>
       ) : (
         <div style={{ padding: 18 }}>
+          {lenderOptions.length > 0 ? (
+            <div style={{ marginBottom: 16 }}>
+              <label className="ch-label" htmlFor="decision-lender">Lender que responde</label>
+              <select
+                id="decision-lender"
+                className="ch-select"
+                value={lenderCode ?? lenderOptions[0]}
+                onChange={(e) => onLenderChange?.(e.target.value)}
+              >
+                {lenderOptions.map((code) => <option key={code} value={code}>{code}</option>)}
+              </select>
+            </div>
+          ) : null}
+          {lenderRequired ? (
+            <p id="decision-lender-required" role="status" data-testid="decision-panel-lender-required" style={{ marginBottom: 12, fontSize: 12.5, color: "var(--ch-warning-text)" }}>
+              Selecciona el lender que emitirá esta decisión.
+            </p>
+          ) : null}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginBottom: 16 }}>
             {modes.map((m) => (
               <button
@@ -181,8 +213,8 @@ export function DecisionPanel({
             >
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               <div>
-                <strong>{errorDetail ? "Sala de ofertas cerrada." : "Conflicto 409."}</strong>{" "}
-                {errorDetail ?? "Otro analista actualizó esta solicitud."}
+                <strong>{errorDetail ? "Error al registrar la decisión." : "Conflicto 409."}</strong>{" "}
+                {errorDetail ?? "No se pudo completar la operación."}
               </div>
             </div>
           ) : null}
@@ -200,8 +232,16 @@ export function DecisionPanel({
           <button
             type="button"
             className={`ch-btn ${mode === "reject" ? "ch-btn-danger" : "ch-btn-primary"} ch-btn-lg`}
-            style={{ width: "100%", marginTop: 14 }}
-            disabled={!canDecide || state === "loading" || (state !== "error" && justif.trim().length === 0)}
+            style={{
+              width: "100%",
+              marginTop: 14,
+              position: sticky ? "sticky" : "static",
+              bottom: 0,
+              zIndex: 1,
+              boxShadow: sticky ? "0 -8px 12px var(--ch-surface)" : undefined,
+            }}
+            aria-describedby={lenderRequired ? "decision-lender-required" : undefined}
+            disabled={!canDecide || lenderRequired || state === "loading" || (state !== "error" && justif.trim().length === 0)}
             onClick={submit}
           >
             {state === "loading" ? (

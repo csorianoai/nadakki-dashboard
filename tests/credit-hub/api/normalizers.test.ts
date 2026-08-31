@@ -3,6 +3,7 @@ import {
   normalizeApplications,
   normalizeEvent,
   normalizeStats,
+  normalizeOffer,
 } from "@/lib/credit-hub/api/normalizers";
 
 describe("Credit Core normalizers", () => {
@@ -28,6 +29,20 @@ describe("Credit Core normalizers", () => {
     expect(apps[0].application_id).toBe("a1");
   });
 
+  test("reads persisted applicant_data and vehicle_data payloads", () => {
+    const app = normalizeApplication({
+      id: "app-1",
+      state: "DRAFT",
+      application_payload: {
+        applicant_data: { nombre_completo: "Ana Pérez", cedula: "00112345678", monto_solicitado: 888888 },
+        vehicle_data: { make: "Toyota", model: "Corolla" },
+      },
+    });
+    expect(app.applicant_name).toBe("Ana Pérez");
+    expect(app.requested_amount).toBe("888888");
+    expect(app.vehicle_make).toBe("Toyota");
+  });
+
   test("normalizes stats from backend totals", () => {
     const stats = normalizeStats({
       totalApplications: 10,
@@ -42,6 +57,23 @@ describe("Credit Core normalizers", () => {
     expect(stats.submitted_applications).toBe(3);
     expect(stats.applications_this_week).toBe(4);
     expect(stats.average_score).toBe(710);
+  });
+
+  test("preserves simulated offer provenance from bank_execution", () => {
+    const offer = normalizeOffer({
+      id: "offer-simulated",
+      lender_code: "pilot",
+      status: "APROBADO",
+      bank_execution: {
+        simulated: true,
+        source_system: "PILOT_BANK_MOCK",
+        adapter_operation_mode: "MOCK-SANDBOX",
+      },
+    });
+
+    expect(offer.simulated).toBe(true);
+    expect(offer.source_system).toBe("PILOT_BANK_MOCK");
+    expect(offer.adapter_operation_mode).toBe("MOCK-SANDBOX");
   });
 
   test("normalizes event variations", () => {

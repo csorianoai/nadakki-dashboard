@@ -3,6 +3,7 @@ import {
   acceptOffer,
   createApplication,
   createDraftApplication,
+  executeMultiLender,
   getApplication,
   getApplicationEvents,
   getCreditHealth,
@@ -10,6 +11,7 @@ import {
   listApplications,
   processApplication,
 } from "@/lib/credit-hub/api/creditCoreClient";
+import { listOffers } from "@/lib/credit-hub/api/offersClient";
 
 const tenantId = "0a91ee98-2dbe-46d0-a43c-3fc2dbd42242";
 
@@ -113,6 +115,55 @@ describe("creditCoreClient", () => {
 
     expect(fetchMock).toHaveBeenCalledWith("/api/v2/credit/applications/app-1", expect.any(Object));
     expect(events[0].id).toBe("evt-1");
+  });
+
+  test("dispatches through canonical fan-out and reads persisted offers", async () => {
+    const fetchMock = mockFetch({
+      status: "completed",
+      application_id: "app-1",
+    });
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        clone: () => ({ json: async () => ({ status: "completed", application_id: "app-1" }) }),
+        json: async () => ({ status: "completed", application_id: "app-1" }),
+        text: async () => "",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        clone: () => ({ json: async () => ({ offers: [
+          { offer_id: "offer-1", lender_code: "lender-a" },
+          { offer_id: "offer-2", lender_code: "lender-b" },
+        ] }) }),
+        json: async () => ({ offers: [
+          { offer_id: "offer-1", lender_code: "lender-a" },
+          { offer_id: "offer-2", lender_code: "lender-b" },
+        ] }),
+        text: async () => "",
+      });
+
+    await executeMultiLender({
+      tenantId,
+      applicationId: "app-1",
+      application: { mode: "BANK_ONLY", applicant_data: { name: "Ana" } },
+      dryRun: false,
+    });
+    const persisted = await listOffers({ tenantId, applicationId: "app-1" });
+
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/v2/credit/multi-lender/execute");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      application_id: "app-1",
+      tenant_id: tenantId,
+      application: { mode: "BANK_ONLY", applicant_data: { name: "Ana" } },
+      dry_run: false,
+    });
+    expect(persisted.offers).toHaveLength(2);
+    expect(persisted.offers.map((offer) => offer.lender_code)).toEqual(["lender-a", "lender-b"]);
+    expect(fetchMock.mock.calls[1][0]).toBe("/credit/applications/app-1/offers");
   });
 
   test("normalizes backend errors", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { approveCompliance } from "@/lib/credit-hub/api/bankClient";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -36,12 +36,18 @@ export function ComplianceTab({
   const { tenantId } = useTenant();
   const [approving, setApproving] = useState(false);
   const ok = report?.ley_172_13_compliant === true;
+  const [approved, setApproved] = useState(ok);
+
+  useEffect(() => {
+    setApproved(ok);
+  }, [ok]);
 
   const handleApprove = async () => {
     if (!tenantId) return;
     setApproving(true);
     try {
-      await approveCompliance({ tenantId, applicationId });
+      const result = await approveCompliance({ tenantId, applicationId });
+      if (result.ok) setApproved(true);
     } finally {
       setApproving(false);
     }
@@ -63,18 +69,18 @@ export function ComplianceTab({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: ok ? "var(--ch-success-soft)" : "var(--ch-warning-soft)",
-              color: ok ? "var(--ch-success)" : "var(--ch-warning)",
+              background: approved ? "var(--ch-success-soft)" : "var(--ch-warning-soft)",
+              color: approved ? "var(--ch-success)" : "var(--ch-warning)",
             }}
           >
             <ShieldCheck className="h-5 w-5" aria-hidden />
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Perfil regulatorio</div>
-            <div style={{ fontSize: 12, color: "var(--ch-text-3)" }}>{ok ? "Conforme Ley 172-13" : "Pendiente de aprobación regulatoria"}</div>
+            <div style={{ fontSize: 12, color: "var(--ch-text-3)" }}>{approved ? "Conforme Ley 172-13" : "Pendiente de aprobación regulatoria"}</div>
           </div>
         </div>
-        {!ok ? (
+        {!approved ? (
           <button type="button" className="ch-btn ch-btn-primary" disabled={approving} onClick={() => void handleApprove()}>
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
             Aprobar compliance

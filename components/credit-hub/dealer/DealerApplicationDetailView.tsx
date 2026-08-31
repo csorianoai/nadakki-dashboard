@@ -27,7 +27,7 @@ import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { chMoneyExact, chScoreBand } from "@/lib/credit-hub/ch-base";
-import { chRelTimeDealer, parseRequestedAmount } from "@/lib/credit-hub/dealer/dealerFormat";
+import { chRelTimeDealer, dealerNewApplicationHref, parseRequestedAmount } from "@/lib/credit-hub/dealer/dealerFormat";
 import { offerHasCompleteTerms } from "@/lib/credit-hub/offers/offer-terms";
 import type { DealerApplicationDetailViewProps } from "@/lib/credit-hub/types/dealer-views";
 import type { CreditApplicationStatus } from "@/lib/credit-hub/types/creditCore";
@@ -37,8 +37,14 @@ import { AmortizationTable } from "@/components/credit-hub/dealer/AmortizationTa
 import { extractOfferValidUntil, OfferValidityBadge } from "@/components/credit-hub/dealer/OfferValidityBadge";
 import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import { isCounterOffer, isDealerRejectedOffer } from "@/lib/credit-hub/dealer/offer-actions";
+import { SimulatedOfferNotice, offerTruthLevel } from "@/components/credit-hub/elite/OfferComparisonCard";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
+
+function rawMetaValue(raw: unknown, key: string): unknown {
+  if (!raw || typeof raw !== "object") return null;
+  return (raw as Record<string, unknown>)[key] ?? null;
+}
 
 /**
  * Title-case a raw lender_code for display. No authoritative lender_code → name
@@ -75,6 +81,16 @@ function stageLabel(status: CreditApplicationStatus): string {
     default:
       return "En trámite";
   }
+}
+
+function stageMessage(status: CreditApplicationStatus, displayStatus: string | null): string {
+  const serverStatus = (displayStatus ?? "").toUpperCase();
+  if (serverStatus === "DRAFT" || status === "draft") return "Borrador guardado. Aún no se ha enviado a la institución.";
+  if (serverStatus === "SENT_TO_BANKS" || serverStatus === "BANK_SUBMITTED") return "Solicitud enviada a la institución. Te avisaremos cuando haya respuesta.";
+  if (serverStatus === "RECEIVED" || serverStatus === "AI_ANALYSIS" || serverStatus === "AI_COMPLETE" || status === "submitted" || status === "processing") {
+    return "Solicitud recibida. El análisis está en curso.";
+  }
+  return "El estado se actualizará con la información registrada en el servidor.";
 }
 
 export function DealerApplicationDetailView({ applicationId }: DealerApplicationDetailViewProps) {
@@ -195,8 +211,18 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const acceptedOffer = offers.find((o) => o.status === "accepted") ?? null;
   const hasAcceptedOffer = acceptedOffer != null;
   const pilotLabels = extractPilotLabels(data.raw);
-  const displayStatus = data.display_status ?? extractDisplayStatus(data.raw);
   const rawMeta = (data.raw && typeof data.raw === "object" ? data.raw : {}) as Record<string, unknown>;
+  const rawBankDecision = rawMetaValue(data.raw, "bank_decision");
+  const hasHumanDecision =
+    data.decision === "approved" ||
+    data.decision === "rejected" ||
+    data.decision === "declined" ||
+    (rawBankDecision !== null && typeof rawBankDecision === "object");
+  const serverDisplayStatus = data.display_status ?? extractDisplayStatus(data.raw);
+  const displayStatus =
+    serverDisplayStatus?.toUpperCase() === "BANK_COMPLETE" && offers.length > 0 && !hasHumanDecision
+      ? "OFFERS_RECEIVED"
+      : serverDisplayStatus;
   const disbursementReference =
     typeof rawMeta.disbursement_reference === "string" ? rawMeta.disbursement_reference : null;
   const cancelReason = typeof rawMeta.cancel_reason === "string" ? rawMeta.cancel_reason : null;
@@ -266,7 +292,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         ) : null}
         {!approved && !rejected ? (
           <div style={{ marginTop: 12, fontSize: 13, color: "var(--ch-text-2)", lineHeight: 1.5 }}>
-            Etapa actual: <strong>{stageLabel(data.status)}</strong>. En cola de decisión · La institución ya fue notificada.
+            Etapa actual: <strong>{stageLabel(data.status)}</strong>. {stageMessage(data.status, displayStatus)}
             {/* TODO(tenant-config): Read from tenantConfig.sla_commitment_hours when available */}
           </div>
         ) : null}
@@ -297,7 +323,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
             <h2 className="ch-serif" style={{ margin: 0, fontSize: 17 }}>
               {hasAcceptedOffer ? "Oferta seleccionada" : "Exchange multi-banco"}
             </h2>
-            <DataTruthBadge level="REAL" />
+            <DataTruthBadge level={offerTruthLevel(offers, offersLoading, offersError)} />
           </div>
           <p style={{ fontSize: 12.5, color: "var(--ch-text-3)", marginBottom: 14 }}>
             {hasAcceptedOffer
@@ -381,6 +407,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                       ) : null}
                     </div>
                   </div>
+                  <SimulatedOfferNotice offer={offer} />
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <div className="ch-eyebrow">Monto aprobado</div>
@@ -636,7 +663,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
         <button type="button" className="ch-btn ch-btn-secondary min-h-[44px] w-full sm:w-auto" onClick={() => router.push("/credit-hub/dealer/applications")}>
           Ver todas
         </button>
-        <Link href="/credit-hub/dealer/applications/new/applicant" className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+        <Link href={dealerNewApplicationHref()} className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
           + Nueva solicitud
         </Link>
       </div>

@@ -1,6 +1,8 @@
 import type { TenantRequiredDocument } from "@/lib/credit-hub/types/tenantConfig";
 
-export const WIZARD_REQUIRED_DOCUMENT_KEYS = ["vehicle_documents"] as const;
+// Uploads are attempted after dispatch, so a failed object-store upload must
+// not prevent the application from being sent to lenders.
+export const WIZARD_REQUIRED_DOCUMENT_KEYS = [] as const;
 export type WizardRequiredDocumentKey = (typeof WIZARD_REQUIRED_DOCUMENT_KEYS)[number];
 
 /** @deprecated Use WIZARD_REQUIRED_DOCUMENT_KEYS */

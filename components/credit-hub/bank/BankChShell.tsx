@@ -11,15 +11,22 @@ import { ChSidebar } from "@/components/credit-hub/shell/ChSidebar";
 import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
 import { BANK_NAV_ROUTES, bankTrailForPath, pathnameToBankNavId } from "@/lib/credit-hub/bank/bankFormat";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { useAuth } from "@/hooks/useAuth";
 
 export function BankChShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
+  const { logout } = useAuth();
   const identity = useChromeIdentity();
   const active = pathnameToBankNavId(pathname ?? "");
   const trail = bankTrailForPath(pathname ?? "");
   const notif = useNotifications();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
 
   return (
     <CHTenantGuard>
@@ -47,6 +54,7 @@ export function BankChShell({ children }: { children: ReactNode }) {
               active={active}
               institutionName={tenantConfig.institution_name}
               user={{ name: identity.name, role: identity.role, initials: identity.initials }}
+              onLogout={handleLogout}
               onNavigate={(id) => {
                 const href = BANK_NAV_ROUTES[id];
                 if (href) router.push(href);

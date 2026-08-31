@@ -1,8 +1,8 @@
 import { roleKeyAllowsPortal, roleKeyAllowsAdminNetwork, resolveCHActorRole, actorCan } from "@/lib/credit-hub/auth/portal-access";
 
 describe("portal-access", () => {
-  test("dealer portal allows credit_admin", () => {
-    expect(roleKeyAllowsPortal("credit_admin", "dealer")).toBe(true);
+  test("dealer portal blocks credit_admin", () => {
+    expect(roleKeyAllowsPortal("credit_admin", "dealer")).toBe(false);
   });
 
   test("dealer portal blocks bank_analyst", () => {
@@ -12,6 +12,13 @@ describe("portal-access", () => {
   test("bank portal allows bank_analyst", () => {
     expect(roleKeyAllowsPortal("bank_analyst", "bank")).toBe(true);
   });
+
+  test.each(["qa-analyst-assigned", "qa-analyst-unassigned"])(
+    "bank portal allows the real banker role for %s",
+    () => {
+      expect(roleKeyAllowsPortal("banker", "bank")).toBe(true);
+    },
+  );
 
   test("admin network allows platform_superadmin", () => {
     expect(roleKeyAllowsAdminNetwork("platform_superadmin")).toBe(true);

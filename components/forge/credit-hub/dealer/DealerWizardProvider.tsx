@@ -27,13 +27,14 @@ import {
   effectiveWizardDocuments,
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import { createDraftApplication, processApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { createDraftApplication, executeMultiLender, getApplication, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import type { CreditHubTranslations } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
 import {
+  DEALER_WIZARD_STEP_PATHS,
   dealerWizardStepHref,
   dealerWizardStepIndexFromPathname,
   dealerWizardStepSlugFromIndex,
@@ -41,7 +42,9 @@ import {
 import { toast } from "@/components/forge";
 import { forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast-copy";
 import { uploadDocument } from "@/lib/credit-api";
+import { calculateEmploymentTenure } from "@/lib/credit/utils/employment-tenure";
 import type { UploadStatus } from "./DocumentUploadZone";
+import { dealerWizardErrorMessage } from "@/lib/credit-hub/dealer/wizard-error";
 
 import { defaultDocumentTypeForCountry } from "@/lib/credit-hub/dealer/dealerFormat";
 import {
@@ -87,6 +90,163 @@ function cleanDecimalInput(value: string): string {
   return rest.length ? `${first}.${rest.join("")}` : first;
 }
 
+function hydrateFormFromServer(raw: unknown): Partial<ApplicationFormData> {
+  if (!raw || typeof raw !== "object") return {};
+  const record = raw as Record<string, unknown>;
+  const payload = (record.application_payload && typeof record.application_payload === "object"
+    ? record.application_payload
+    : {}) as Record<string, unknown>;
+  const section = (key: string) => (payload[key] && typeof payload[key] === "object" ? payload[key] : {}) as Record<string, unknown>;
+  const applicant = section("applicant");
+  const employment = section("employment");
+  const financial = section("financial");
+  const vehicle = section("vehicle");
+  const coDebtor = section("co_debtor");
+  const consents = section("consents");
+  const stringValue = (...values: unknown[]) => {
+    const value = values.find((candidate) => candidate !== null && candidate !== undefined);
+    return value === undefined ? undefined : String(value);
+  };
+  const boolValue = (...values: unknown[]) => {
+    const value = values.find((candidate) => typeof candidate === "boolean");
+    return typeof value === "boolean" ? value : undefined;
+  };
+  const patch: Partial<ApplicationFormData> = {
+    applicant_full_name: stringValue(applicant.full_name),
+    applicant_document_type: stringValue(applicant.document_type),
+    applicant_document_other_type: stringValue(applicant.document_other_type),
+    applicant_identification: stringValue(applicant.identification),
+    applicant_date_of_birth: stringValue(applicant.date_of_birth),
+    applicant_marital_status: stringValue(applicant.marital_status),
+    applicant_phone: stringValue(applicant.phone),
+    applicant_email: stringValue(applicant.email),
+    applicant_address: stringValue(applicant.address),
+    applicant_city: stringValue(applicant.city ?? applicant.municipality),
+    applicant_province: stringValue(applicant.province),
+    applicant_country: stringValue(applicant.country),
+    employment_type: stringValue(employment.employment_type),
+    employer_name: stringValue(employment.employer_name),
+    employment_position: stringValue(employment.position),
+    employment_start_date: stringValue(employment.employment_start_date),
+    employer_address: stringValue(employment.employer_address),
+    employer_province: stringValue(employment.employer_province),
+    employer_city: stringValue(employment.employer_municipality),
+    contract_type: stringValue(employment.contract_type),
+    monthly_income: stringValue(employment.monthly_income),
+    work_phone: stringValue(employment.work_phone),
+    requested_amount: stringValue(financial.requested_amount),
+    desired_term: stringValue(financial.desired_term),
+    down_payment: stringValue(financial.down_payment),
+    monthly_debts: stringValue(financial.monthly_debts),
+    estimated_monthly_expenses: stringValue(financial.estimated_monthly_expenses),
+    vehicle_make: stringValue(vehicle.make),
+    vehicle_model: stringValue(vehicle.model),
+    vehicle_version: stringValue(vehicle.version),
+    vehicle_year: stringValue(vehicle.year),
+    vehicle_color: stringValue(vehicle.color),
+    vehicle_price: stringValue(vehicle.price),
+    dealer_supplier: stringValue(vehicle.dealer_supplier),
+    vehicle_condition: stringValue(vehicle.condition),
+    vehicle_mileage: stringValue(vehicle.mileage),
+    co_debtor_required: boolValue(coDebtor.required) === true ? "yes" : boolValue(coDebtor.required) === false ? "no" : undefined,
+    co_debtor_full_name: stringValue(coDebtor.full_name),
+    co_debtor_document_type: stringValue(coDebtor.document_type),
+    co_debtor_document_other_type: stringValue(coDebtor.document_other_type),
+    co_debtor_identification: stringValue(coDebtor.identification),
+    co_debtor_date_of_birth: stringValue(coDebtor.date_of_birth),
+    co_debtor_email: stringValue(coDebtor.email),
+    co_debtor_address: stringValue(coDebtor.address),
+    co_debtor_province: stringValue(coDebtor.province),
+    co_debtor_city: stringValue(coDebtor.municipality),
+    co_debtor_phone: stringValue(coDebtor.phone),
+    co_debtor_monthly_income: stringValue(coDebtor.monthly_income),
+    co_debtor_relationship: stringValue(coDebtor.relationship),
+    co_debtor_employment: stringValue(coDebtor.employment),
+    co_debtor_employer_name: stringValue(coDebtor.employer_name),
+    co_debtor_employment_start_date: stringValue(coDebtor.employment_start_date),
+    consent_presence: stringValue(consents.presence) as ApplicationFormData["consent_presence"] | undefined,
+    consent_bureau_authorization: boolValue(consents.bureau_authorization),
+    consent_terms_accepted: boolValue(consents.terms_accepted),
+    consent_data_processing_authorization: boolValue(consents.data_processing_authorization),
+    consent_signature_full_name: stringValue(consents.signature_full_name),
+    consent_method: stringValue(consents.consent_method),
+    consent_audit_hash: stringValue(consents.consent_audit_hash),
+    consent_accepted_at: stringValue(consents.consent_accepted_at),
+  };
+  return Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)) as Partial<ApplicationFormData>;
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+type WizardPayload = ReturnType<typeof buildCreateApplicationPayload>;
+
+function buildApplicantSavePayload(payload: WizardPayload): Record<string, unknown> {
+  const { applicant, employment, financial } = payload;
+  return {
+    name: applicant.full_name,
+    national_id: applicant.identification,
+    nombre_completo: applicant.full_name,
+    cedula: applicant.identification,
+    fecha_nacimiento: applicant.date_of_birth,
+    estado_civil: applicant.marital_status,
+    telefono_celular: applicant.phone,
+    email: applicant.email,
+    direccion: applicant.address,
+    municipio: applicant.municipality ?? applicant.city,
+    provincia: applicant.province,
+    tipo_empleo: employment.employment_type,
+    nombre_empleador: employment.employer_name,
+    cargo: employment.position,
+    ingreso_mensual_declarado: numberOrUndefined(employment.monthly_income),
+    monto_solicitado: numberOrUndefined(financial.requested_amount),
+    plazo_meses: numberOrUndefined(financial.desired_term),
+    inicial_disponible: numberOrUndefined(financial.down_payment),
+    referencias: applicant.referencias_personales,
+  };
+}
+
+function buildVehicleSavePayload(payload: WizardPayload): Record<string, unknown> {
+  const { vehicle, financial } = payload;
+  return {
+    make: vehicle.make,
+    model: vehicle.model,
+    version: vehicle.version,
+    year: numberOrUndefined(vehicle.year),
+    color: vehicle.color,
+    condicion: vehicle.condition,
+    km_odometro: numberOrUndefined(vehicle.mileage),
+    vehicle_value: numberOrUndefined(vehicle.price),
+    loan_amount_requested: numberOrUndefined(financial.requested_amount),
+  };
+}
+
+export function buildEditableFieldChanges(payload: WizardPayload): Record<string, unknown> {
+  const { applicant, employment, financial } = payload;
+  const employmentStart = employment.employment_start_date
+    ? calculateEmploymentTenure(employment.employment_start_date).totalMonths
+    : undefined;
+  const changes: Record<string, unknown> = {
+    telefono_celular: applicant.phone,
+    telefono_trabajo: employment.work_phone,
+    email: applicant.email,
+    direccion: applicant.address,
+    municipio: applicant.municipality ?? applicant.city,
+    provincia: applicant.province,
+    nombre_empleador: employment.employer_name,
+    cargo: employment.position,
+    antiguedad_empleo_meses: employmentStart,
+    ingreso_mensual_declarado: numberOrUndefined(employment.monthly_income),
+    otros_ingresos: numberOrUndefined(employment.other_income),
+    plazo_meses: numberOrUndefined(financial.desired_term),
+    inicial_disponible: numberOrUndefined(financial.down_payment),
+    referencias_personales: applicant.referencias_personales,
+  };
+  return Object.fromEntries(Object.entries(changes).filter(([, value]) => value !== undefined && value !== null));
+}
+
 async function sha256Hex(text: string): Promise<string> {
   const enc = new TextEncoder().encode(text);
   const buf = await crypto.subtle.digest("SHA-256", enc);
@@ -99,11 +259,10 @@ function segmentCanAdvance(
   config: WizardStepValidationConfig,
   t: CreditHubTranslations
 ): boolean {
-  if (stepIndex === 0) return stepIsValid(5, data, config, t);
-  if (stepIndex === 1) return stepIsValid(0, data, config, t) && stepIsValid(1, data, config, t);
-  if (stepIndex === 2) return stepIsValid(3, data, config, t);
-  if (stepIndex === 3) return stepIsValid(2, data, config, t);
-  if (stepIndex === 4) return stepIsValid(4, data, config, t);
+  if (stepIndex === 0) return stepIsValid(0, data, config, t) && stepIsValid(1, data, config, t);
+  if (stepIndex === 1) return stepIsValid(5, data, config, t);
+  if (stepIndex === 2) return stepIsValid(2, data, config, t);
+  if (stepIndex === 3) return stepIsValid(3, data, config, t) && stepIsValid(4, data, config, t);
   return false;
 }
 
@@ -184,7 +343,7 @@ export type DealerWizardContextValue = {
   requiredDocumentsList: ReturnType<typeof effectiveWizardDocuments>;
   stepIndex: number;
   canAdvance: boolean;
-  goNext: () => void;
+  goNext: () => Promise<boolean>;
   goPrev: () => void;
   saveDraftToStorage: () => boolean;
   clearDraftStorage: () => void;
@@ -199,7 +358,7 @@ export type DealerWizardContextValue = {
   fieldErrors: WizardFieldErrors;
   blockReason: string | null;
   getFieldError: (key: string) => string | undefined;
-  attemptAdvance: () => boolean;
+  attemptAdvance: () => Promise<boolean>;
 };
 
 const DealerWizardContext = createContext<DealerWizardContextValue | null>(null);
@@ -214,7 +373,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const consentApplicationId = searchParams.get("application_id")?.trim() ?? "";
+  const startsNewApplication = searchParams.get("new") === "1";
+  const consentApplicationId = startsNewApplication ? "" : searchParams.get("application_id")?.trim() ?? "";
   const consentApplicationIdReady = Boolean(consentApplicationId);
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
@@ -249,11 +409,17 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     () => (tenantId && user?.id ? buildWizardDraftStorageKey(tenantId, user.id) : null),
     [tenantId, user?.id],
   );
+  const applicationIdStorageKey = useMemo(
+    () => (storageKey ? `${storageKey}:application-id` : null),
+    [storageKey],
+  );
 
   const [formData, setFormData] = useState<ApplicationFormData>(initialApplicationFormData);
   const formDataRef = useRef(formData);
   formDataRef.current = formData;
   const loadedStorageKeyRef = useRef<string | null>(null);
+  const loadedApplicationIdKeyRef = useRef<string | null>(null);
+  const hydratedApplicationIdRef = useRef<string | null>(null);
 
   // --- Pending document files (not serializable to localStorage) ---
   const [pendingFiles, setPendingFiles] = useState<Map<string, PendingFileEntry>>(new Map());
@@ -262,25 +428,26 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const presetAppliedRef = useRef(false);
   const draftCreationRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitInFlightRef = useRef(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const stepIndex = dealerWizardStepIndexFromPathname(pathname);
 
   useEffect(() => {
-    if (!tenantId || consentApplicationId || draftCreationRef.current) return;
-    draftCreationRef.current = true;
-    void createDraftApplication({ tenantId })
-      .then((draft) => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("application_id", draft.application_id);
-        router.replace(`${pathname}?${params.toString()}`);
-      })
-      .catch((error) => {
-        draftCreationRef.current = false;
-        setSubmitError(error instanceof Error ? error.message : "No se pudo crear el borrador inicial");
-      });
-  }, [consentApplicationId, pathname, router, searchParams, tenantId]);
+    if (!applicationIdStorageKey || consentApplicationId || startsNewApplication) return;
+    if (loadedApplicationIdKeyRef.current === applicationIdStorageKey) return;
+    loadedApplicationIdKeyRef.current = applicationIdStorageKey;
+    try {
+      const savedApplicationId = localStorage.getItem(applicationIdStorageKey)?.trim();
+      if (!savedApplicationId) return;
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("application_id", savedApplicationId);
+      router.replace(`${pathname}?${params.toString()}`);
+    } catch {
+      /* localStorage can be unavailable in privacy-restricted browsers */
+    }
+  }, [applicationIdStorageKey, consentApplicationId, pathname, router, searchParams, startsNewApplication]);
 
   useEffect(() => {
     setShowValidationErrors(false);
@@ -300,6 +467,13 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     if (loadedStorageKeyRef.current === storageKey) return;
     loadedStorageKeyRef.current = storageKey;
     try {
+      if (startsNewApplication) {
+        localStorage.removeItem(storageKey);
+        if (applicationIdStorageKey) localStorage.removeItem(applicationIdStorageKey);
+        sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
+        setFormData(initialApplicationFormData);
+        return;
+      }
       const raw = localStorage.getItem(storageKey);
       if (!raw) {
         setFormData(initialApplicationFormData);
@@ -333,7 +507,22 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
-  }, [storageKey]);
+  }, [applicationIdStorageKey, startsNewApplication, storageKey]);
+
+  useEffect(() => {
+    if (!tenantId || !consentApplicationId || hydratedApplicationIdRef.current === consentApplicationId) return;
+    hydratedApplicationIdRef.current = consentApplicationId;
+    void getApplication({ tenantId, applicationId: consentApplicationId })
+      .then((application) => {
+        const serverPatch = hydrateFormFromServer(application.raw);
+        if (Object.keys(serverPatch).length > 0) {
+          setFormData((previous) => ({ ...previous, ...serverPatch }));
+        }
+      })
+      .catch(() => {
+        // A server draft may be unavailable while the local draft remains usable.
+      });
+  }, [consentApplicationId, tenantId]);
 
   useEffect(() => {
     if (!tenantConfig.features_enabled.garante_required) return;
@@ -575,35 +764,40 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     [showValidationErrors, fieldErrors],
   );
 
-  const attemptAdvance = useCallback(() => {
-    if (stepIndex === 4) {
-      logPersonalReferencesDebug(formData.personal_references ?? []);
-      console.info("[wizard-validation] documents step", {
-        document_files_ready: formData.document_files_ready,
-        personal_references: formData.personal_references,
-        canAdvance: segmentCanAdvance(stepIndex, formData, validationConfig, t),
-        validation: validationResult,
-      });
+  const persistApplicationId = useCallback((applicationId: string) => {
+    if (!applicationIdStorageKey) return;
+    try {
+      localStorage.setItem(applicationIdStorageKey, applicationId);
+    } catch {
+      /* the URL remains the source of truth for the current session */
     }
-    if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
-      setShowValidationErrors(false);
-      const next = Math.min(stepIndex + 1, 4);
-      router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next), consentApplicationId));
-      return true;
+  }, [applicationIdStorageKey]);
+
+  const ensureDraftApplication = useCallback(async (): Promise<string> => {
+    if (consentApplicationId) return consentApplicationId;
+    if (!tenantId) throw new Error("No se pudo identificar la institución");
+    if (draftCreationRef.current) {
+      throw new Error("El borrador todavía se está creando");
     }
-    setShowValidationErrors(true);
-    requestAnimationFrame(() => scrollToFirstWizardError(validationResult.errors));
-    return false;
-  }, [consentApplicationId, formData, router, stepIndex, validationConfig, t, validationResult]);
+    draftCreationRef.current = true;
+    try {
+      const draft = await createDraftApplication({ tenantId });
+      persistApplicationId(draft.application_id);
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("application_id", draft.application_id);
+      router.replace(`${pathname}?${params.toString()}`);
+      return draft.application_id;
+    } finally {
+      draftCreationRef.current = false;
+    }
+  }, [consentApplicationId, pathname, persistApplicationId, router, searchParams, tenantId]);
 
-  const goNext = useCallback(() => {
-    attemptAdvance();
-  }, [attemptAdvance]);
-
-  const goPrev = useCallback(() => {
-    const prev = Math.max(stepIndex - 1, 0);
-    router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(prev), consentApplicationId));
-  }, [consentApplicationId, router, stepIndex]);
+  // Remote consent needs the application id to start its verification flow. Selecting
+  // that method is the dealer's first explicit intent, so create the draft there.
+  useEffect(() => {
+    if (stepIndex !== 0 || consentApplicationId || formData.consent_presence !== "remote") return;
+    void ensureDraftApplication().catch((error) => setSubmitError(dealerWizardErrorMessage(error)));
+  }, [consentApplicationId, ensureDraftApplication, formData.consent_presence, stepIndex]);
 
   const saveDraftToStorage = useCallback((): boolean => {
     if (!storageKey) return false;
@@ -615,6 +809,70 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     }
   }, [storageKey]);
 
+  const attemptAdvance = useCallback(async (): Promise<boolean> => {
+    if (stepIndex === DEALER_WIZARD_STEP_PATHS.length - 1) {
+      logPersonalReferencesDebug(formData.personal_references ?? []);
+      console.info("[wizard-validation] documents step", {
+        document_files_ready: formData.document_files_ready,
+        personal_references: formData.personal_references,
+        canAdvance: segmentCanAdvance(stepIndex, formData, validationConfig, t),
+        validation: validationResult,
+      });
+    }
+    if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
+      setShowValidationErrors(false);
+      try {
+        const applicationId = await ensureDraftApplication();
+        if (!tenantId) throw new Error("No se pudo identificar la institución");
+        const payload = buildCreateApplicationPayload(formDataRef.current, {
+          defaultDocumentType: defaultDocType,
+          wizardDocuments: requiredDocumentsList,
+        });
+        if (stepIndex <= 2) {
+          await saveApplicantApplication({
+            tenantId,
+            applicationId,
+            payload: buildApplicantSavePayload(payload),
+          });
+        }
+        if (stepIndex === 2) {
+          await saveVehicleApplication({
+            tenantId,
+            applicationId,
+            payload: buildVehicleSavePayload(payload),
+          });
+        }
+        if (stepIndex === 1 || stepIndex === 2) {
+          await patchApplicationFields({
+            tenantId,
+            applicationId,
+            fields: buildEditableFieldChanges(payload),
+            actorRole: "dealer",
+          });
+        }
+        saveDraftToStorage();
+        const next = Math.min(stepIndex + 1, DEALER_WIZARD_STEP_PATHS.length - 1);
+        router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next), applicationId));
+        return true;
+      } catch (error) {
+        setSubmitError(dealerWizardErrorMessage(error));
+        return false;
+      }
+    }
+    setShowValidationErrors(true);
+    requestAnimationFrame(() => scrollToFirstWizardError(validationResult.errors));
+    return false;
+  }, [consentApplicationId, defaultDocType, ensureDraftApplication, formData, requiredDocumentsList, router, saveDraftToStorage, stepIndex, tenantId, validationConfig, t, validationResult]);
+
+  const goNext = useCallback(async () => {
+    return attemptAdvance();
+  }, [attemptAdvance]);
+
+  const goPrev = useCallback(() => {
+    const prev = Math.max(stepIndex - 1, 0);
+    router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(prev), consentApplicationId));
+  }, [consentApplicationId, router, stepIndex]);
+
   const clearDraftStorage = useCallback(() => {
     if (!storageKey) {
       purgeLegacyGlobalWizardDraftKeys();
@@ -622,12 +880,13 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     }
     try {
       localStorage.removeItem(storageKey);
+      if (applicationIdStorageKey) localStorage.removeItem(applicationIdStorageKey);
       sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
     } catch {
       /* ignore */
     }
     purgeLegacyGlobalWizardDraftKeys();
-  }, [storageKey]);
+  }, [applicationIdStorageKey, storageKey]);
 
   useEffect(() => {
     if (!storageKey) return;
@@ -670,7 +929,10 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [tenantConfig.locale, saveDraftToStorage, storageKey]);
 
   const submitApplication = useCallback(async () => {
+    if (submitInFlightRef.current) throw new Error("La solicitud ya se está enviando");
+    submitInFlightRef.current = true;
     if (!consentApplicationId || !tenantId) {
+      submitInFlightRef.current = false;
       throw new Error("No se pudo identificar el borrador de la solicitud");
     }
     if (!wizardDocumentsStepValid(formData)) {
@@ -680,10 +942,12 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
           ? `Sube los documentos obligatorios: ${missing.join(", ")}. También se requieren 3 referencias personales completas.`
           : "Completa al menos 3 referencias personales.",
       );
+      submitInFlightRef.current = false;
       throw new Error("Documentos o referencias incompletos");
     }
     if (!stepIsValid(5, formData, validationConfig, t)) {
       setSubmitError(t.validation.consents_required);
+      submitInFlightRef.current = false;
       throw new Error(t.validation.consents_required);
     }
     setSubmitError(null);
@@ -701,38 +965,35 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
         wizardDocuments: requiredDocumentsList,
       });
       setIsSubmitting(true);
+      await saveApplicantApplication({
+        tenantId,
+        applicationId: consentApplicationId,
+        payload: buildApplicantSavePayload(payload),
+      });
+      await saveVehicleApplication({
+        tenantId,
+        applicationId: consentApplicationId,
+        payload: buildVehicleSavePayload(payload),
+      });
       await patchApplicationFields({
         tenantId,
         applicationId: consentApplicationId,
-        fields: { ...payload, state: "SUBMITTED" },
+        fields: buildEditableFieldChanges(payload),
         actorRole: "dealer",
       });
       const result = { application_id: consentApplicationId };
+
+      if (tenantId && result.application_id) {
+        await executeMultiLender({
+          tenantId,
+          applicationId: result.application_id,
+          application: payload,
+          dryRun: false,
+        });
+      }
+
       clearDraftStorage();
       setFormData(initialApplicationFormData);
-
-      // Trigger AI scoring in background (fire-and-forget, graceful failure)
-      // Sprint 4 P0-2: Forge wizard must call /process so bank analysts get AI scores.
-      // If this fails, the app is already created — bank-direct flow still works (Sub-O).
-      if (tenantId && result.application_id) {
-        void (async () => {
-          try {
-            await processApplication({
-              tenantId,
-              applicationId: result.application_id,
-              mode: "BANK_ONLY",
-            });
-            console.info("[forge-wizard] processApplication success", {
-              applicationId: result.application_id,
-            });
-          } catch (err) {
-            console.warn("[forge-wizard] processApplication failed — bank analyst will decide without AI score", {
-              applicationId: result.application_id,
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        })();
-      }
 
       // Upload pending document files in background (fire-and-forget)
       const files = new Map(pendingFilesRef.current);
@@ -795,6 +1056,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       return result;
     } catch (err) {
       setIsSubmitting(false);
+      submitInFlightRef.current = false;
       const msg = err instanceof Error ? err.message : t.toasts.application_failed;
       setSubmitError(msg);
       throw err;

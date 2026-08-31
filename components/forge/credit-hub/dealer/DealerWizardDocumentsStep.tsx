@@ -55,7 +55,7 @@ export function DealerWizardDocumentsStep() {
       <div>
         <h2 className="font-display text-forge-xl font-semibold text-forgeGray-800">{t.wizard.sections.documents_title}</h2>
         <p className="mt-1 text-forge-sm text-forgeGray-500">
-          Marca los documentos que tengas listos y sube los archivos. Solo los documentos del vehículo son obligatorios para continuar.
+          Marca los documentos que tengas listos y sube los archivos. Las cargas son opcionales para despachar; si una falla, podrás reintentarlo después.
         </p>
       </div>
 

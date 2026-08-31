@@ -16,7 +16,7 @@ export type EmptyStateVariant = "empty" | "error" | "filter-empty" | "placeholde
 export type RiskBandSize = "sm" | "md" | "lg";
 
 export interface ScoreVisualProps {
-  score?: number;
+  score?: number | null;
   min?: number;
   max?: number;
   size?: number;
@@ -43,6 +43,9 @@ export interface DecisionPanelProps {
   canDecide?: boolean;
   /** Specific backend error (e.g. OFFER_ROOM_CLOSED). */
   errorDetail?: string | null;
+  lenderOptions?: string[];
+  lenderCode?: string;
+  onLenderChange?: (lenderCode: string) => void;
   onSubmit?: (mode: DecisionMode, justification: string) => void;
 }
 
@@ -142,6 +145,8 @@ export interface ChSidebarProps {
   logoUrl?: string | null;
   /** Real signed-in user for the sidebar footer. Falls back to "Usuario" when absent. */
   user?: { name: string; role?: string; initials: string };
+  /** Same logout action used by the authenticated user menu. Hidden when absent. */
+  onLogout?: () => void | Promise<void>;
   /** Real nav counts keyed by nav id (e.g. { bandeja: 12 }). Badge is hidden when absent — never hardcoded. */
   navBadges?: Record<string, string | number>;
   className?: string;

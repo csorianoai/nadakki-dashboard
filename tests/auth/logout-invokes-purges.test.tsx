@@ -29,6 +29,11 @@
 
 import { render, screen, waitFor } from "@testing-library/react";
 import { useContext } from "react";
+
+jest.mock("@/lib/config/backend-url", () => ({
+  resolveBackendUrl: () => "https://backend.test",
+}));
+
 import { AuthContext, AuthProvider, LS_KEYS } from "@/lib/auth/auth-context";
 import { tokenStorage } from "@/lib/auth/token-storage";
 
@@ -69,12 +74,12 @@ function mockRefreshOK() {
         ok: true, status: 200,
         json: async () => ({
           user: { id: "u1", email: "qa@qa.test" },
-          current_tenant: { id: "t1", name: "QA" },
+          current_tenant: { id: "t1", display_name: "QA" },
           active_roles: [],
         }),
       };
     }
-    return { ok: true, status: 200, json: async () => ({}) };
+    return { ok: true, status: 204, text: async () => "", json: async () => ({}) };
   }) as unknown as typeof fetch;
 }
 
@@ -159,6 +164,62 @@ describe("#13 · logout invoca las cuatro purgas (Ley 172-13)", () => {
     screen.getByText("salir").click();
     await waitFor(() => {
       expect(tokenStorage.getAccessToken()).toBeNull();
+    });
+  });
+
+  test("logout llama POST /auth/logout con refresh antes de limpiar storage", async () => {
+    const events: string[] = [];
+    global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/v2/auth/refresh")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ access_token: "access-del-refresh", refresh_token: "refresh-nuevo" }),
+        };
+      }
+      if (url.includes("/api/v2/auth/me")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            user: { id: "u1", email: "qa@qa.test" },
+            current_tenant: { id: "t1", display_name: "QA" },
+            active_roles: [],
+          }),
+        };
+      }
+      if (url.includes("/api/v2/auth/logout")) {
+        events.push(`logout:${localStorage.getItem(REFRESH_TOKEN_KEY) ?? "missing"}`);
+        return { ok: true, status: 204, text: async () => "" };
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    }) as unknown as typeof fetch;
+
+    sembrarLosCuatroTerritorios();
+    render(
+      <AuthProvider>
+        <BotonDeSalida />
+      </AuthProvider>
+    );
+    await waitFor(() => {
+      expect(tokenStorage.getAccessToken()).toBe("access-del-refresh");
+    });
+
+    screen.getByText("salir").click();
+
+    await waitFor(() => {
+      const logoutCall = (global.fetch as jest.Mock).mock.calls.find(([input]) =>
+        String(input).includes("/api/v2/auth/logout")
+      );
+      expect(logoutCall).toBeDefined();
+      expect(logoutCall[1]?.method).toBe("POST");
+      expect(logoutCall[1]?.headers).toMatchObject({
+        Authorization: "Bearer access-del-refresh",
+      });
+      expect(logoutCall[1]?.body).toBe(JSON.stringify({ refresh_token: "refresh-nuevo" }));
+      expect(events).toEqual(["logout:refresh-nuevo"]);
+      expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
     });
   });
 

@@ -16,7 +16,7 @@ import { stepIsValid } from "@/components/credit-hub/dealer/wizard/WizardContain
 import { scrollToFirstWizardError } from "@/lib/credit-hub/dealer/wizard-field-errors";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
-const STEP_LABELS = ["Consentimiento", "Solicitante", "Co-firmante", "Vehículo", "Documentos"];
+const STEP_LABELS = ["Solicitante", "Consentimiento", "Vehículo", "Revisión y despacho"];
 
 export function DealerWizardFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -66,7 +66,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
   }, [saveDraftToStorage, tenantConfig.locale]);
 
   const handlePrimary = async () => {
-    if (stepIndex < 4) {
+    if (stepIndex < DEALER_WIZARD_STEP_PATHS.length - 1) {
       attemptAdvance();
       return;
     }
@@ -85,7 +85,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
     }
   };
 
-  const displayBlockReason = blockReason ?? (!canAdvance && stepIndex < 4 ? "Completa los campos obligatorios para continuar." : null);
+  const displayBlockReason = blockReason ?? (!canAdvance && stepIndex < DEALER_WIZARD_STEP_PATHS.length - 1 ? "Completa los campos obligatorios para continuar." : null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 120px)", paddingBottom: 88 }} data-testid="dealer-wizard-frame">
@@ -122,12 +122,6 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
 
       <main style={{ flex: 1, maxWidth: 720, width: "100%", margin: "0 auto" }}>{children}</main>
 
-      {submitError ? (
-        <p role="alert" style={{ fontSize: 13, color: "var(--ch-danger-text)", marginTop: 8 }}>
-          {submitError}
-        </p>
-      ) : null}
-
       <div
         style={{
           position: "fixed",
@@ -140,6 +134,11 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           padding: "12px 16px calc(12px + env(safe-area-inset-bottom))",
         }}
       >
+        {submitError ? (
+          <p role="alert" style={{ maxWidth: 720, margin: "0 auto 8px", fontSize: 13, color: "var(--ch-danger-text)" }}>
+            {submitError}
+          </p>
+        ) : null}
         {displayBlockReason ? (
           <button
             type="button"
@@ -171,7 +170,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           <button type="button" className="ch-btn ch-btn-ghost min-h-[48px] shrink-0 px-3 text-xs" onClick={handleSaveDraft}>
             Guardar
           </button>
-          {stepIndex < 4 ? (
+          {stepIndex < DEALER_WIZARD_STEP_PATHS.length - 1 ? (
             <button type="button" className="ch-btn ch-btn-persona flex-1 min-h-[48px]" onClick={() => attemptAdvance()}>
               Siguiente
             </button>

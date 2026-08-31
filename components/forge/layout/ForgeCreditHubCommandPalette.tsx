@@ -24,6 +24,7 @@ import { CommandPalette, type CommandPaletteAction, type CommandPaletteGroup } f
 import { Modal } from "@/components/forge/ui/Modal";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { forgePaletteCopy } from "@/utils/forge-palette-copy";
+import { dealerNewApplicationHref } from "@/lib/credit-hub/dealer/dealerFormat";
 
 const APP_ID_LIKE = /^APP-[A-Z0-9._-]+$/i;
 
@@ -184,7 +185,7 @@ export function ForgeCreditHubCommandPalette({ open, onOpenChange }: { open: boo
               label: p.dealerNew,
               keywords: ["create", "nueva"],
               icon: <Plus className="h-4 w-4" aria-hidden />,
-              onSelect: () => go("/credit-hub/dealer/applications/new/applicant"),
+              onSelect: () => go(dealerNewApplicationHref()),
             },
             {
               id: "dealer-drafts",

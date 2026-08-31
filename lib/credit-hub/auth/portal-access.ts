@@ -19,7 +19,6 @@ export function resolveCHActorRole(roleKey: string | null | undefined): CHActorR
 export type CreditHubPortal = "dealer" | "bank";
 
 const DEALER_PORTAL_ROLES = new Set([
-  "credit_admin",
   "dealer",
   "tenant_admin",
   "platform_superadmin",
@@ -27,6 +26,7 @@ const DEALER_PORTAL_ROLES = new Set([
 ]);
 
 const BANK_PORTAL_ROLES = new Set([
+  "banker",
   "bank_analyst",
   "bank_admin",
   "compliance_officer",

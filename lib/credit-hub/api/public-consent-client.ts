@@ -68,7 +68,21 @@ function messageFromBody(body: unknown, fallback: string): string {
 }
 
 export class PublicConsentClient {
-  constructor(private readonly baseUrl: string = process.env.NEXT_PUBLIC_API_URL ?? "") {}
+  /**
+   * La ruta publica SIEMPRE va same-origin, por el rewrite
+   * `/api/v2/credit/:path*` de next.config.js.
+   *
+   * Antes el default salia de `process.env.NEXT_PUBLIC_API_URL`, que Next hornea
+   * en el bundle. En staging quedo horneada como "https://api.nadakki.com": el
+   * cliente construia una URL absoluta a un host ausente del `connect-src` del
+   * CSP, el navegador cortaba el fetch antes de emitirlo y el `.catch` de la
+   * pagina lo pintaba como enlace invalido. Medido: 39 requests, cero a /api/.
+   *
+   * Same-origin no depende de ninguna variable de build y 'self' siempre esta
+   * en el CSP. El cliente del dealer -consent-client.ts- ya lo hacia asi, y por
+   * eso el consentimiento presencial nunca se rompio.
+   */
+  constructor(private readonly baseUrl: string = "") {}
 
   private url(path: string): string {
     const p = `${this.baseUrl}${PUBLIC_CONSENT_BASE}${path}`;
@@ -76,6 +90,17 @@ export class PublicConsentClient {
   }
 
   async getView(token: string): Promise<PublicConsentView> {
+    // Validate the token with the server before loading the public view. The
+    // expiry timestamp is informational; it must not be trusted by the client.
+    const status = await this.getStatus(token);
+    if (!isUsableStatus(status.status)) {
+      throw new ConsentTokenInvalidError("Token inválido o expirado");
+    }
+    return this.getPublicView(token);
+  }
+
+  /** Fetches the public form after the caller has already checked /status. */
+  async getPublicView(token: string): Promise<PublicConsentView> {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
@@ -103,6 +128,30 @@ export class PublicConsentClient {
         throw new Error("Tiempo de espera agotado");
       }
       throw e instanceof Error ? e : new Error("Error al cargar");
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  async getStatus(token: string): Promise<{ status: string; accepted_at?: string | null }> {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const res = await fetch(this.url(`/${encodeURIComponent(token)}/status`), {
+        method: "GET",
+        credentials: "omit",
+        signal: controller.signal,
+      });
+      const body = await parseBody(res);
+      if (!res.ok) {
+        if (res.status === 404 || res.status === 410) throw new ConsentTokenInvalidError("Token inválido o expirado");
+        throw new Error(messageFromBody(body, res.statusText));
+      }
+      return body as { status: string; accepted_at?: string | null };
+    } catch (e) {
+      if (e instanceof ConsentTokenInvalidError) throw e;
+      if (e instanceof DOMException && e.name === "AbortError") throw new Error("Tiempo de espera agotado");
+      throw e instanceof Error ? e : new Error("Error al consultar estado");
     } finally {
       window.clearTimeout(timeoutId);
     }
@@ -144,4 +193,10 @@ export class PublicConsentClient {
       window.clearTimeout(timeoutId);
     }
   }
+}
+
+const USABLE_STATUSES = new Set(["INITIATED", "SENT", "VIEWED", "ACCEPTED"]);
+
+export function isUsableStatus(status: string): boolean {
+  return USABLE_STATUSES.has(String(status).toUpperCase());
 }

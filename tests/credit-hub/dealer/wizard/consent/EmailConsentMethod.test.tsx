@@ -34,6 +34,8 @@ describe("EmailConsentMethod", () => {
     await user.click(screen.getByTestId("email-send"));
     await waitFor(() => {
       expect(screen.getByTestId("consent-status-poller")).toBeInTheDocument();
+      expect(screen.getByTestId("email-consent-link")).toHaveTextContent("Copiar");
+      expect(screen.getByDisplayValue(`${window.location.origin}/consent/mock-email-token`)).toBeInTheDocument();
     });
   });
 });

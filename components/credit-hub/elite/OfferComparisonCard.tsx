@@ -3,12 +3,18 @@
 import { memo } from "react";
 import Link from "next/link";
 import type { CreditOffer } from "@/lib/credit-hub/types/offers";
+import type { DataTruthLevel } from "@/lib/credit-hub/honesty/data-truth";
 import { lenderDisplayName } from "@/lib/credit-hub/dealer/lender-display";
 import { chMoneyExact } from "@/lib/credit-hub/ch-base";
 
 function aprNumber(offer: CreditOffer): number | null {
   if (offer.interest_rate_apr == null) return null;
   return offer.interest_rate_apr < 1 ? offer.interest_rate_apr * 100 : offer.interest_rate_apr;
+}
+
+export function offerTruthLevel(offers: CreditOffer[], isLoading: boolean, isError: boolean): DataTruthLevel {
+  if (isLoading || isError || offers.length === 0) return "DEMO";
+  return offers.some((offer) => offer.simulated === true) ? "DEMO" : "REAL";
 }
 
 export interface OfferComparisonCardProps {
@@ -20,6 +26,29 @@ export interface OfferComparisonCardProps {
   accepting?: boolean;
   detailHref?: string;
   onAccept?: () => void;
+}
+
+export function SimulatedOfferNotice({ offer }: { offer: CreditOffer }) {
+  if (offer.simulated !== true) return null;
+  return (
+    <div
+      data-testid={`offer-simulated-badge-${offer.id}`}
+      role="status"
+      style={{
+        marginTop: 2,
+        padding: "7px 9px",
+        border: "1px solid var(--ch-warning-line, #F59E0B)",
+        borderRadius: 4,
+        background: "var(--ch-warning-soft, #FEF3C7)",
+        color: "var(--ch-warning-text, #92400E)",
+        fontSize: 11,
+        fontWeight: 700,
+        textAlign: "center",
+      }}
+    >
+      DECISIÓN SIMULADA · no fue otorgada por un banco
+    </div>
+  );
 }
 
 export const OfferComparisonCard = memo(function OfferComparisonCard({
@@ -75,6 +104,7 @@ export const OfferComparisonCard = memo(function OfferComparisonCard({
       ) : null}
 
       <h3 style={{ margin: "8px 0 10px", fontSize: 15, fontWeight: 700, textAlign: "center" }}>{name}</h3>
+      <SimulatedOfferNotice offer={offer} />
 
       <div style={{ textAlign: "center", marginBottom: 12 }}>
         <div
@@ -166,6 +196,9 @@ export function computeOfferSavingsNote(
   if (!bestId || offers.length < 2) return null;
   const best = offers.find((o) => o.id === bestId);
   if (!best) return null;
+  if (offers.some((offer) => offer.simulated === true)) {
+    return "Comparación simulada: estos términos no representan una oferta otorgada por un banco.";
+  }
   const bestApr = aprNumber(best);
   const worstApr = Math.max(...offers.map((o) => aprNumber(o) ?? 0));
   const bestName = best.lender_display_name || lenderDisplayName(best.lender_code);
@@ -178,6 +211,10 @@ export function computeOfferSavingsNote(
   if (monthlyDiff <= 0) {
     return `${bestName} ofrece la mejor tasa (${bestApr.toFixed(1)}% APR) frente al resto de la subasta.`;
   }
-  const term = best.term_months ?? 60;
+  // Without a server-provided term, a full-term savings amount cannot be calculated.
+  if (best.term_months == null) {
+    return `${bestName} ofrece la mejor tasa (${bestApr.toFixed(1)}% APR) frente al resto de la subasta.`;
+  }
+  const term = best.term_months;
   return `${bestName} ofrece la mejor tasa (${bestApr.toFixed(1)}% APR) — ahorras ${chMoneyExact(monthlyDiff * term, currencyPrefix)} vs la oferta más alta en el plazo completo.`;
 }

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import {
   PublicConsentClient,
   ConsentTokenInvalidError,
   ConsentOtpInvalidError,
+  isUsableStatus,
   type PublicConsentView,
 } from "@/lib/credit-hub/api/public-consent-client";
 import { ConsentBrandingHeader } from "./_components/ConsentBrandingHeader";
@@ -18,17 +19,37 @@ import { SelfieCapture } from "./_components/SelfieCapture";
 import { ConsentSuccessView } from "./_components/ConsentSuccessView";
 import { ConsentInvalidView } from "./_components/ConsentInvalidView";
 import { ConsentLoadingView } from "./_components/ConsentLoadingView";
+import { ConsentErrorView } from "./_components/ConsentErrorView";
 import { ConsentAlreadyAcceptedView } from "./_components/ConsentAlreadyAcceptedView";
 
-type ViewState = "loading" | "form" | "success" | "invalid" | "already";
+// Cuatro estados, no dos: resolviendo · valido · invalido/expirado · error de
+// transporte. Fundir los dos ultimos hacia "invalid" fue el defecto de fondo.
+type ViewState = "loading" | "form" | "success" | "invalid" | "already" | "error";
+
+function tokenFromConsentPath(pathname: string | null | undefined): string {
+  return pathname?.match(/^\/consent\/([^/]+)\/?$/)?.[1] ?? "";
+}
 
 export default function PublicConsentPage() {
   const routeParams = useParams();
-  const token = decodeURIComponent(String(routeParams?.token ?? ""));
+  const pathname = usePathname();
+  const routeToken = routeParams?.token;
+  const tokenFromParams = Array.isArray(routeToken) ? routeToken[0] : routeToken;
+  // Navigation hooks can be empty during the first render of this dynamic
+  // public segment. The browser URL is the authoritative route value.
+  const tokenFromBrowserPath = typeof window !== "undefined" ? tokenFromConsentPath(window.location.pathname) : "";
+  const token = decodeURIComponent(
+    String(tokenFromParams || tokenFromBrowserPath || tokenFromConsentPath(pathname))
+  );
+  const routeKnown = Boolean(
+    tokenFromParams || tokenFromBrowserPath || pathname?.startsWith("/consent")
+  );
   const t = useTranslations();
 
   const [view, setView] = useState<ViewState>("loading");
   const [data, setData] = useState<PublicConsentView | null>(null);
+  // A missing token during route hydration is not the same as an invalid token.
+  const [routeResolved, setRouteResolved] = useState(false);
 
   const [accepted, setAccepted] = useState<Record<string, boolean>>({});
   const [fullName, setFullName] = useState("");
@@ -45,6 +66,15 @@ export default function PublicConsentPage() {
   const clientRef = useRef(new PublicConsentClient());
 
   useEffect(() => {
+    if (routeKnown) {
+      setRouteResolved(true);
+    }
+  }, [routeKnown]);
+
+  useEffect(() => {
+    if (!routeResolved) {
+      return;
+    }
     if (!token) {
       setView("invalid");
       return;
@@ -52,7 +82,13 @@ export default function PublicConsentPage() {
 
     let mounted = true;
     void clientRef.current
-      .getView(token)
+      .getStatus(token)
+      .then((status) => {
+        if (!isUsableStatus(status.status)) {
+          throw new ConsentTokenInvalidError("Token inválido o expirado");
+        }
+        return clientRef.current.getPublicView(token);
+      })
       .then((d) => {
         if (!mounted) return;
         if (d.already_accepted) {
@@ -63,15 +99,19 @@ export default function PublicConsentPage() {
         setData(d);
         setView("form");
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         if (!mounted) return;
-        setView("invalid");
+        // Solo el SERVIDOR puede declarar invalido un token. ConsentTokenInvalidError
+        // se lanza cuando el servidor respondio y dijo que no sirve. Cualquier otra
+        // cosa -CSP, red, DNS, excepcion interna- es que no pudimos preguntar, y
+        // eso no autoriza a afirmar que el enlace expiro.
+        setView(err instanceof ConsentTokenInvalidError ? "invalid" : "error");
       });
 
     return () => {
       mounted = false;
     };
-  }, [token]);
+  }, [routeResolved, token]);
 
   const allConsentsAccepted =
     data?.consents_required?.every((c: string) => accepted[c]) ?? false;
@@ -149,6 +189,7 @@ export default function PublicConsentPage() {
 
   if (view === "loading") return <ConsentLoadingView />;
   if (view === "invalid") return <ConsentInvalidView />;
+  if (view === "error") return <ConsentErrorView />;
   if (view === "already") return <ConsentAlreadyAcceptedView />;
   if (view === "success" && acceptedResult && data) {
     return (

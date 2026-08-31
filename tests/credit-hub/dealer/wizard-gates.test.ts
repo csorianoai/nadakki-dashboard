@@ -20,9 +20,9 @@ function completeRef(name: string, phone = "8095551234") {
 }
 
 describe("wizard-gates", () => {
-  test("requires vehicle document upload only", () => {
-    expect(hasRequiredDocumentsFileReady({ document_files_ready: {} })).toBe(false);
-    expect(hasRequiredDocumentsFileReady({ document_files_ready: { id_front: true, id_back: true } })).toBe(false);
+  test("does not require a vehicle document upload to dispatch", () => {
+    expect(hasRequiredDocumentsFileReady({ document_files_ready: {} })).toBe(true);
+    expect(hasRequiredDocumentsFileReady({ document_files_ready: { id_front: true, id_back: true } })).toBe(true);
     expect(hasRequiredDocumentsFileReady({ document_files_ready: { vehicle_documents: true } })).toBe(true);
   });
 
@@ -39,7 +39,7 @@ describe("wizard-gates", () => {
     expect(isPersonalReferenceComplete(completeRef("X", "18095551234"))).toBe(true);
   });
 
-  test("wizardDocumentsStepValid combines required docs and references", () => {
+  test("wizardDocumentsStepValid gates references without requiring vehicle documents", () => {
     const base = {
       ...initialApplicationFormData,
       document_files_ready: { vehicle_documents: true },
@@ -48,7 +48,7 @@ describe("wizard-gates", () => {
       ),
     };
     expect(wizardDocumentsStepValid(base)).toBe(true);
-    expect(wizardDocumentsStepValid({ ...base, document_files_ready: {} })).toBe(false);
+    expect(wizardDocumentsStepValid({ ...base, document_files_ready: {} })).toBe(true);
     expect(
       wizardDocumentsStepValid({
         ...base,
@@ -104,6 +104,7 @@ describe("wizard-gates", () => {
       applicant_city: "Santo Domingo",
       applicant_province: "Distrito Nacional",
       applicant_country: "RD",
+      documents_received: { vehicle_documents: true },
       document_files_ready: { vehicle_documents: true },
       personal_references: [completeRef("Juan Pérez"), completeRef("María López"), completeRef("Pedro Ruiz")],
     };

@@ -1,4 +1,4 @@
-import { bulkDecide, getQueue, recordDecision } from "@/lib/credit-hub/api/bankClient";
+import { bulkDecide, getAuditTrail, getQueue, recordDecision } from "@/lib/credit-hub/api/bankClient";
 
 function mockJson(body: unknown, status = 200) {
   const response = {
@@ -47,6 +47,46 @@ describe("bankClient", () => {
     );
   });
 
+  test("bank audit viewer reads canonical application events and maps their real shape", async () => {
+    const fetchSpy = installFetchMock().mockResolvedValue(
+      await mockJson({
+        trace_id: "trace-1",
+        tenant_id: "tenant-a",
+        application_id: "app-1",
+        events: [
+          {
+            event_id: "evt-1",
+            event_type: "APPLICATION_CLAIMED",
+            payload: { actor_role: "bank_analyst" },
+            emitted_at: "2026-08-28T12:00:00Z",
+          },
+          {
+            event_id: "evt-2",
+            event_type: "MULTI_LENDER_OFFERS_PERSISTED",
+            payload: { offers_persisted: 2 },
+            emitted_at: "2026-08-28T12:01:00Z",
+          },
+          {
+            event_id: "evt-3",
+            event_type: "BANK_DECISION_MADE",
+            payload: { analyst_id: "analyst-42", decision: "APROBADO" },
+            emitted_at: "2026-08-28T12:02:00Z",
+          },
+        ],
+      }),
+    );
+
+    const result = await getAuditTrail({ tenantId: "tenant-a", applicationId: "app-1" });
+
+    expect(fetchSpy.mock.calls[0][0]).toBe("/api/v2/credit/applications/app-1/events");
+    expect(result.events).toEqual([
+      { event: "APPLICATION_CLAIMED", timestamp: "2026-08-28T12:00:00Z", by: "bank_analyst" },
+      { event: "MULTI_LENDER_OFFERS_PERSISTED", timestamp: "2026-08-28T12:01:00Z", by: "Sistema" },
+      { event: "BANK_DECISION_MADE", timestamp: "2026-08-28T12:02:00Z", by: "analyst-42", decision: "APROBADO" },
+    ]);
+    expect(result.event_count).toBe(3);
+  });
+
   test("recordDecision claims then posts to decide endpoint", async () => {
     const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({ decision: "APROBADO" }));
     await recordDecision({
@@ -65,6 +105,79 @@ describe("bankClient", () => {
     expect(JSON.parse(String(fetchSpy.mock.calls[0][1]?.body))).toEqual({ analyst_id: "analyst-1" });
     expect(fetchSpy.mock.calls[1][0]).toBe("/api/v2/credit/applications/app-1/decide");
     expect(fetchSpy.mock.calls[1][1]?.method).toBe("POST");
+  });
+
+  test("recordDecision sends lender_code when the analyst selected one", async () => {
+    const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({ decision: "APROBADO" }));
+    await recordDecision({
+      tenantId: "tenant-a",
+      applicationId: "app-1",
+      body: {
+        decision: "APROBADO",
+        justification: "Lender seleccionado y documentación completa.",
+        analyst_id: "analyst-1",
+        lender_code: "pilot",
+        terms: { approved_amount: 900000, interest_rate: 18, term_months: 60, down_payment_required: 300000, conditions: [] },
+      },
+    });
+    const claimBody = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+    const decideBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
+    expect(claimBody).toEqual({ analyst_id: "analyst-1", lender_code: "pilot" });
+    expect(decideBody).not.toHaveProperty("lender_code");
+  });
+
+  test("recordDecision sends loaded approval terms and reads the persisted result", async () => {
+    const persisted = {
+      decision: "APROBADO",
+      approved_amount: 1000000,
+      interest_rate: 12,
+      term_months: 48,
+    };
+    const fetchSpy = installFetchMock()
+      .mockResolvedValueOnce(await mockJson({ status: "active" }))
+      .mockResolvedValueOnce(await mockJson(persisted));
+
+    const result = await recordDecision({
+      tenantId: "tenant-a",
+      applicationId: "app-1",
+      body: {
+        decision: "APROBADO",
+        justification: "Condiciones verificadas.",
+        analyst_id: "analyst-1",
+        terms: { approved_amount: 1000000, interest_rate: 12, term_months: 48 },
+      },
+    });
+
+    const decideBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
+    expect(decideBody).toMatchObject({
+      approved_terms: { approved_amount: 1000000, interest_rate: 12, term_months: 48 },
+    });
+    expect(decideBody).not.toHaveProperty("approved_amount");
+    expect(decideBody).not.toHaveProperty("interest_rate");
+    expect(decideBody).not.toHaveProperty("term_months");
+    expect(result).toMatchObject(persisted);
+  });
+
+  test("recordDecision omits approval terms that were not loaded", async () => {
+    const fetchSpy = installFetchMock()
+      .mockResolvedValueOnce(await mockJson({ status: "active" }))
+      .mockResolvedValueOnce(await mockJson({ decision: "APROBADO" }));
+
+    await recordDecision({
+      tenantId: "tenant-a",
+      applicationId: "app-1",
+      body: {
+        decision: "APROBADO",
+        justification: "Sin términos declarados.",
+        analyst_id: "analyst-1",
+        terms: {},
+      },
+    });
+
+    const decideBody = JSON.parse(String(fetchSpy.mock.calls[1][1]?.body));
+    expect(decideBody).not.toHaveProperty("approved_amount");
+    expect(decideBody).not.toHaveProperty("interest_rate");
+    expect(decideBody).not.toHaveProperty("term_months");
   });
 
   test("bulkDecide sends rule and selected applications", async () => {

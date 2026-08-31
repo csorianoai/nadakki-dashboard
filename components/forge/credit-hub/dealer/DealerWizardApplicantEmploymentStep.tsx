@@ -62,7 +62,7 @@ function SectionStatus({ complete, label }: { complete: boolean; label: string }
 export function DealerWizardApplicantEmploymentStep() {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
-  const { catalogs, loading: catalogsLoading } = useCatalogs();
+  const { catalogs } = useCatalogs();
   const administrativeDivisions = useAdministrativeDivisions(tenantConfig.country_code);
   const {
     formData,
@@ -340,7 +340,7 @@ export function DealerWizardApplicantEmploymentStep() {
           fieldKey="contract_type"
           value={formData.contract_type}
           onChange={(e) => updateField("contract_type", e.target.value)}
-          disabled={catalogsLoading || !catalogs}
+          disabled={!catalogs?.contractTypes?.length}
           error={getFieldError("contract_type")}
           options={[{ value: "", label: t.common.select_placeholder }, ...contractOptions]}
         />
@@ -370,7 +370,7 @@ export function DealerWizardApplicantEmploymentStep() {
                   fieldKey={`other_income_${row.id}_concept`}
                   value={row.concept}
                   onChange={(e) => updateOtherIncomeRow(row.id, { concept: e.target.value })}
-                  disabled={catalogsLoading || !catalogs}
+                  disabled={!catalogs?.incomeConcepts?.length}
                   error={getFieldError(`other_income_${row.id}_concept`)}
                   options={(catalogs?.incomeConcepts ?? ["Otro"]).map((c) => ({ value: c, label: c }))}
                 />
@@ -387,7 +387,7 @@ export function DealerWizardApplicantEmploymentStep() {
                   fieldKey={`other_income_${row.id}_frequency`}
                   value={row.frequency}
                   onChange={(e) => updateOtherIncomeRow(row.id, { frequency: e.target.value as Frequency })}
-                  disabled={catalogsLoading || !catalogs}
+                  disabled={!catalogs?.paymentFrequencies?.length}
                   error={getFieldError(`other_income_${row.id}_frequency`)}
                   options={(catalogs?.paymentFrequencies ?? ["MENSUAL"]).map((f) => ({ value: f, label: f }))}
                 />

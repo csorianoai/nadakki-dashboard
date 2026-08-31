@@ -7,7 +7,7 @@ import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { useApplicationOffers } from "@/lib/credit-hub/hooks/useApplicationOffers";
 import { humanizeApplicant, shortFolio } from "@/lib/credit-hub/honesty/humanize-applicant";
 import { dealerDetailHref } from "@/lib/credit-hub/dealer/dealerFormat";
-import { OfferComparisonCard, computeOfferSavingsNote } from "@/components/credit-hub/elite/OfferComparisonCard";
+import { OfferComparisonCard, computeOfferSavingsNote, offerTruthLevel } from "@/components/credit-hub/elite/OfferComparisonCard";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
 const OFFER_STATUSES = new Set(["offered", "counter_offer", "approved", "approved_with_stipulations", "processed"]);
@@ -44,7 +44,7 @@ export function OfferComparatorSpotlight({ applications, currency }: { applicati
   const bestId = bestOfferId(offers);
   const savingsNote = computeOfferSavingsNote(offers, bestId, currencyPrefix);
   const detailHref = dealerDetailHref(target!.application_id);
-  const truth = offers.length && !isError ? "REAL" : isLoading ? "REAL" : "DEMO";
+  const truth = offerTruthLevel(offers, isLoading, isError);
 
   return (
     <section data-testid="offer-comparator-spotlight" className="mb-[26px]">

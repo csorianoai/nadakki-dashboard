@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
@@ -30,7 +30,6 @@ import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/a
 import { extractDisplayStatus, formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
-import { claimBankApplication } from "@/lib/bank-application-detail/claim-application";
 import { useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
 import type { DecisionMode, DecisionState } from "@/lib/credit-hub/ch-types";
 import type { BankDetailLayoutProps, BankDocumentPayload, BankReviewPayload } from "@/lib/credit-hub/types/bank-views";
@@ -38,18 +37,26 @@ import { mapBackendRiskLevel } from "@/lib/credit-hub/types/bank-views";
 import type { BankDecisionRequest, BankDecisionTerms, BankDecisionType } from "@/lib/credit-hub/types/bankDecision";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
+import { getOfferCompare } from "@/lib/credit-hub/api/bankExperienceClient";
+import { CHApiError } from "@/lib/credit-hub/api/client";
 
-function defaultTerms(payload: BankReviewPayload): BankDecisionTerms {
+function defaultTerms(payload: BankReviewPayload): Partial<BankDecisionTerms> {
   const analysis = payload.analysis;
   const metrics = analysis?.metrics;
   const financial = payload.financial ?? {};
   // F4: Prefer requested_amount; fallback only to financed_amount if both are meaningful
   const approvedAmount = financial.requested_amount ?? analysis?.financed_amount;
   return {
-    approved_amount: approvedAmount != null ? Number(approvedAmount) : 0,
-    interest_rate: Number(financial.requested_rate ?? metrics?.annual_rate ?? 17.5),
-    term_months: Number(financial.term_months ?? metrics?.term_months ?? 36),
-    down_payment_required: Number(financial.down_payment ?? metrics?.down_payment ?? 0),
+    ...(approvedAmount != null ? { approved_amount: Number(approvedAmount) } : {}),
+    ...((financial.requested_rate ?? metrics?.annual_rate) != null
+      ? { interest_rate: Number(financial.requested_rate ?? metrics?.annual_rate) }
+      : {}),
+    ...((financial.term_months ?? metrics?.term_months) != null
+      ? { term_months: Number(financial.term_months ?? metrics?.term_months) }
+      : {}),
+    ...((financial.down_payment ?? metrics?.down_payment) != null
+      ? { down_payment_required: Number(financial.down_payment ?? metrics?.down_payment) }
+      : {}),
     conditions: ["Validación documental final"],
   };
 }
@@ -63,7 +70,6 @@ function modeToDecision(mode: DecisionMode): BankDecisionType {
 export function BankDetailLayout({ application, compliance, audit, counterOffer }: BankDetailLayoutProps) {
   const { user } = useAuth();
   const { apiTenantId } = useTenant();
-  const queryClient = useQueryClient();
   const { can: actorCan, roleKey } = useCreditHubActor();
   const notesProbe = useNotesEndpointAvailable(application.application_id);
   const showNotesTab = isBankNotesRole(roleKey) && notesProbe.available;
@@ -80,32 +86,31 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   }, [payload.documents]);
 
   const decisionMutation = useBankDecision(application.application_id);
+  const offerCompareQuery = useQuery({
+    queryKey: ["offer-compare", apiTenantId, application.application_id],
+    queryFn: () => getOfferCompare({ tenantId: apiTenantId!, applicationId: application.application_id }),
+    enabled: !!apiTenantId,
+    retry: false,
+  });
+  const lenderOptions = useMemo(() => {
+    const compareCodes = (offerCompareQuery.data?.offers_detail ?? [])
+      .map((offer) => offer.lender_code?.trim())
+      .filter((code): code is string => Boolean(code));
+    if (compareCodes.length > 0) return [...new Set(compareCodes)];
+    const claims = payload.bank_claims_by_lender;
+    return claims && typeof claims === "object" && !Array.isArray(claims) ? Object.keys(claims) : [];
+  }, [offerCompareQuery.data, payload.bank_claims_by_lender]);
+  const [selectedLenderCode, setSelectedLenderCode] = useState("");
+  useEffect(() => {
+    if (lenderOptions.length === 1) setSelectedLenderCode(lenderOptions[0]);
+    if (selectedLenderCode && !lenderOptions.includes(selectedLenderCode)) setSelectedLenderCode("");
+  }, [lenderOptions, selectedLenderCode]);
   const [tab, setTab] = useState<
     "analisis" | "documentos" | "stipulaciones" | "audit" | "compliance" | "verificaciones" | "mensajes" | "notas"
   >("analisis");
   const [panelState, setPanelState] = useState<DecisionState>("idle");
   const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
-  const termsRef = useRef<BankDecisionTerms>(defaultTerms(payload));
-
-  const autoClaimAttempted = useRef(false);
-  useEffect(() => {
-    if (autoClaimAttempted.current || application.application_payload?.bank_decision) return;
-    const analystId = user?.id;
-    if (!analystId) return;
-    
-    // Solo marcar como intentado DESPUÉS de verificar que tenemos analystId válido
-    autoClaimAttempted.current = true;
-    
-    void claimBankApplication(application.application_id, analystId)
-      .then(() => {
-        // Invalidar la query de assignment para reflejar el nuevo analista
-        void queryClient.invalidateQueries({ queryKey: ["app-assignment", apiTenantId, application.application_id] });
-      })
-      .catch((err) => {
-        // Log error en vez de tragarlo - el QA reporta "Sin asignar" porque el claim falló silenciosamente
-        console.error("[auto-claim] Failed to claim application:", application.application_id, err);
-      });
-  }, [application.application_id, application.application_payload?.bank_decision, user?.id, apiTenantId, queryClient]);
+  const termsRef = useRef<Partial<BankDecisionTerms>>(defaultTerms(payload));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -151,25 +156,28 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
         decision: modeToDecision(mode),
         justification: justif.trim(),
         analyst_id: analystId,
+        lender_code: lenderOptions.length === 1 ? lenderOptions[0] : selectedLenderCode || undefined,
         terms: counterOffer?.counter_offer_terms ?? termsRef.current,
       };
       try {
         await decisionMutation.mutateAsync(body);
         setDecisionErrorDetail(null);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "";
+        const msg = err instanceof Error ? err.message : "Error desconocido";
         if (msg.includes("OFFER_ROOM_CLOSED") || msg.toLowerCase().includes("offer_room_closed")) {
           setDecisionErrorDetail(
             "La sala de ofertas está cerrada para esta solicitud. No se pueden registrar más decisiones.",
           );
-        } else if (msg.includes("409") || msg.toLowerCase().includes("conflict")) {
-          setDecisionErrorDetail(null);
+        } else if (err instanceof CHApiError) {
+          setDecisionErrorDetail(`Error ${err.status}: ${err.detail}`);
+        } else {
+          setDecisionErrorDetail(msg);
         }
         setPanelState("error");
         throw err;
       }
     },
-    [counterOffer?.counter_offer_terms, decisionMutation, user?.id]
+    [counterOffer?.counter_offer_terms, decisionMutation, lenderOptions, selectedLenderCode, user?.id]
   );
 
   const applicantName = String(applicant.name ?? applicant.full_name ?? "Cliente");
@@ -277,7 +285,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             {analysis ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, borderLeft: "1px solid var(--ch-line)", paddingLeft: 20 }}>
                 <ScoreVisual score={analysis.score} size={132} />
-                <RiskBand level={mapBackendRiskLevel(analysis.risk_level)} />
+                {analysis.risk_level != null ? (
+                  <RiskBand level={mapBackendRiskLevel(analysis.risk_level)} />
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -358,6 +368,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           state={panelState}
           canDecide={canDecide}
           errorDetail={decisionErrorDetail}
+          lenderOptions={lenderOptions}
+          lenderCode={selectedLenderCode}
+          onLenderChange={setSelectedLenderCode}
           onSubmit={handleSubmit}
         />
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

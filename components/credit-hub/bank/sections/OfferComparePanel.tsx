@@ -8,6 +8,7 @@ import {
 } from "@/lib/credit-hub/api/bankExperienceClient";
 import { chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import { normalizeOfferCompareRows } from "@/lib/credit-hub/bank/offer-compare";
 
 export function OfferComparePanel({ applicationId }: { applicationId: string }) {
   const { apiTenantId } = useTenant();
@@ -21,7 +22,8 @@ export function OfferComparePanel({ applicationId }: { applicationId: string }) 
 
   if (q.error instanceof CHApiError && isBankExperienceEndpointUnavailable(q.error)) return null;
 
-  const rows = [...(q.data?.offers ?? [])].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
+  const rows = normalizeOfferCompareRows(q.data ?? {});
+  const offerCount = q.data?.offer_count ?? rows.length;
 
   if (q.isLoading) {
     return (
@@ -31,7 +33,7 @@ export function OfferComparePanel({ applicationId }: { applicationId: string }) 
     );
   }
 
-  if (rows.length === 0) {
+  if (offerCount === 0 || rows.length === 0) {
     return (
       <div className="ch-card p-4 text-sm text-forgeGray-500" data-testid="offer-compare-empty">
         Sin ofertas comparables en este expediente.
@@ -43,7 +45,7 @@ export function OfferComparePanel({ applicationId }: { applicationId: string }) 
     <div className="ch-card overflow-hidden p-0" data-testid="offer-compare-panel">
       <div className="border-b border-forgeGray-100 px-4 py-3">
         <h3 className="ch-serif" style={{ margin: 0, fontSize: 16 }}>
-          Comparador de ofertas
+          Comparador de ofertas · {offerCount}
         </h3>
         <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--ch-text-3)" }}>
           Vista lado a lado de respuestas multi-banco.

@@ -4,7 +4,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 jest.mock("next/navigation", () => ({
-  useParams: () => ({ token: "valid-token" }),
+  useParams: jest.fn(() => ({ token: "valid-token" })),
+  usePathname: jest.fn(() => "/consent/valid-token"),
+}));
+
+jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
+  useTranslations: () => require("@/lib/credit-hub/i18n/locales/es-DO/credit-hub").CREDIT_HUB_ES_DO,
 }));
 
 jest.mock("@/lib/credit-hub/api/public-consent-client", () => {
@@ -23,8 +28,10 @@ jest.mock("@/lib/credit-hub/api/public-consent-client", () => {
   };
 
   return {
+    isUsableStatus: (status: string) => ["INITIATED", "SENT", "VIEWED", "ACCEPTED"].includes(status),
     PublicConsentClient: jest.fn().mockImplementation(() => ({
-      getView: jest.fn().mockResolvedValue(validData),
+      getStatus: jest.fn().mockResolvedValue({ status: "SENT" }),
+      getPublicView: jest.fn().mockResolvedValue(validData),
       accept: jest.fn().mockResolvedValue({
         accepted_at: "2026-04-28T15:00:00Z",
         audit_hash: "abc123def456",
@@ -42,6 +49,80 @@ jest.mock("@/lib/credit-hub/api/public-consent-client", () => {
 import PublicConsentPage from "@/app/(public)/consent/[token]/page";
 
 describe("PublicConsentPage", () => {
+  beforeEach(() => {
+    const { PublicConsentClient } = require("@/lib/credit-hub/api/public-consent-client") as {
+      PublicConsentClient: jest.Mock;
+    };
+    PublicConsentClient.mockClear();
+  });
+
+  afterEach(() => {
+    const navigation = require("next/navigation") as {
+      useParams: jest.Mock;
+      usePathname: jest.Mock;
+    };
+    navigation.useParams.mockReturnValue({ token: "valid-token" });
+    navigation.usePathname.mockReturnValue("/consent/valid-token");
+  });
+
+  it("reads the token from the real consent pathname when params are empty", async () => {
+    const navigation = require("next/navigation") as {
+      useParams: jest.Mock;
+      usePathname: jest.Mock;
+    };
+    navigation.useParams.mockReturnValue({});
+    navigation.usePathname.mockReturnValue("/consent/path-token");
+
+    render(<PublicConsentPage />);
+    await waitFor(() => expect(screen.getByTestId("consent-checkboxes")).toBeInTheDocument());
+
+    const clients = (require("@/lib/credit-hub/api/public-consent-client") as {
+      PublicConsentClient: jest.Mock;
+    }).PublicConsentClient.mock.results.map((result) => result.value);
+    expect(clients.some((client) => client.getStatus.mock.calls.some(([value]) => value === "path-token"))).toBe(true);
+  });
+
+  it("reads the token from the browser URL when both navigation hooks are empty", async () => {
+    const navigation = require("next/navigation") as {
+      useParams: jest.Mock;
+      usePathname: jest.Mock;
+    };
+    navigation.useParams.mockReturnValue({});
+    navigation.usePathname.mockReturnValue("");
+    window.history.replaceState({}, "", "/consent/browser-token");
+
+    render(<PublicConsentPage />);
+    await waitFor(() => expect(screen.getByTestId("consent-checkboxes")).toBeInTheDocument());
+
+    const client = (require("@/lib/credit-hub/api/public-consent-client") as {
+      PublicConsentClient: jest.Mock;
+    }).PublicConsentClient.mock.results[0].value;
+    expect(client.getStatus).toHaveBeenCalledWith("browser-token");
+  });
+
+  it("checks the server status before loading a valid token", async () => {
+    render(<PublicConsentPage />);
+    await waitFor(() => expect(screen.getByTestId("consent-checkboxes")).toBeInTheDocument());
+
+    const client = (require("@/lib/credit-hub/api/public-consent-client") as {
+      PublicConsentClient: jest.Mock;
+    }).PublicConsentClient.mock.results[0].value;
+    expect(client.getStatus).toHaveBeenCalledWith("valid-token");
+  });
+
+  it("rejects a token when the server reports it expired", async () => {
+    const { PublicConsentClient } = require("@/lib/credit-hub/api/public-consent-client") as {
+      PublicConsentClient: jest.Mock;
+    };
+    PublicConsentClient.mockImplementationOnce(() => ({
+      getStatus: jest.fn().mockResolvedValue({ status: "EXPIRED" }),
+      getPublicView: jest.fn(),
+    }));
+
+    render(<PublicConsentPage />);
+    await waitFor(() => expect(screen.getByTestId("consent-invalid")).toBeInTheDocument());
+  });
+
   it("shows loading initially then form", async () => {
     render(<PublicConsentPage />);
     await waitFor(() => {

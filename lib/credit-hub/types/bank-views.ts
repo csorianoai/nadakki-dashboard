@@ -82,6 +82,7 @@ export interface BankReviewPayload {
   analysis?: CreditAnalysisResult;
   documents?: BankDocumentPayload[];
   bank_decision?: unknown;
+  bank_claims_by_lender?: Record<string, unknown>;
   audit_trail?: unknown;
   identity?: import("@/lib/credit-hub/ch-types").IdentityEvidence;
   pilot_labels?: {

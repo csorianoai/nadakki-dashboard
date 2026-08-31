@@ -44,6 +44,16 @@ function stageLabel(status: CreditApplicationStatus): string {
   }
 }
 
+function stageMessage(status: CreditApplicationStatus, displayStatus: string | null): string {
+  const serverStatus = (displayStatus ?? "").toUpperCase();
+  if (serverStatus === "DRAFT" || status === "draft") return "Borrador guardado. Aún no se ha enviado a la institución.";
+  if (serverStatus === "SENT_TO_BANKS" || serverStatus === "BANK_SUBMITTED") return "Solicitud enviada a la institución. Te avisaremos cuando haya respuesta.";
+  if (serverStatus === "RECEIVED" || serverStatus === "AI_ANALYSIS" || serverStatus === "AI_COMPLETE" || status === "submitted" || status === "processing") {
+    return "Solicitud recibida. El análisis está en curso.";
+  }
+  return "El estado se actualizará con la información registrada en el servidor.";
+}
+
 function rejectionCategory(decision: string | null): string {
   const d = (decision ?? "").toLowerCase();
   if (d.includes("declin") || d.includes("reject") || d.includes("rechaz")) return "Política de crédito o capacidad de pago";
@@ -219,7 +229,7 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
               Etapa actual: <span className="font-medium text-forgeGray-900">{stageLabel(status)}</span>
             </p>
             <p className="text-forgeGray-600">
-              En cola de decisión · La institución ya fue notificada. Te avisamos apenas haya respuesta.
+              {stageMessage(status, data.display_status ?? null)}
               {/* TODO(tenant-config): Read from tenantConfig.sla_commitment_hours when available */}
             </p>
             <p className="text-forge-xs text-forgeGray-500">
@@ -418,7 +428,7 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
         <Button type="button" variant="secondary" onClick={() => router.push("/credit-hub/dealer/applications")}>
           Ver todas las solicitudes
         </Button>
-        <Link href="/credit-hub/dealer/applications/new/applicant" className="inline-flex min-h-10 items-center rounded-forge-sm border border-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeBrand-700 hover:bg-forgeBrand-50">
+        <Link href="/credit-hub/dealer/applications/new/applicant?new=1" className="inline-flex min-h-10 items-center rounded-forge-sm border border-forgeBrand-500 px-4 text-forge-sm font-medium text-forgeBrand-700 hover:bg-forgeBrand-50">
           + Nueva solicitud
         </Link>
       </div>

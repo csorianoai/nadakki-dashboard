@@ -39,7 +39,7 @@ export function StepComplete() {
         </span>
       </p>
       <p style={{ fontSize: 13, color: "var(--ch-text-3)", marginTop: 10, lineHeight: 1.6 }}>
-        En cola de decisión · La institución ya fue notificada.
+        Solicitud enviada. El estado se actualizará cuando el servidor registre el procesamiento.
         <br />
         Te avisamos apenas haya respuesta.
       </p>

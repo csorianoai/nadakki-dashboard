@@ -384,6 +384,13 @@ function humanMessage(status: number, detail: unknown): string {
   return `Error HTTP ${status}`;
 }
 
+export function creditUploadErrorMessage(status: number, detail: unknown): string {
+  if (status === 500) {
+    return "No se pudo guardar el documento porque el almacenamiento no está disponible. Intenta nuevamente más tarde.";
+  }
+  return humanMessage(status, detail);
+}
+
 async function parseDetail(res: Response): Promise<unknown> {
   const text = await res.text();
   if (!text) return null;
@@ -757,7 +764,7 @@ export async function uploadDocument(
   );
   const detail = await parseDetail(res);
   if (!res.ok) {
-    const msg = humanMessage(res.status, detail);
+    const msg = creditUploadErrorMessage(res.status, detail);
     throw new CreditApiError(msg, res.status, detail);
   }
   const arr = normalizeCreditDocuments(detail);

@@ -431,6 +431,9 @@ export const CREDIT_HUB_ES_DO = {
       loading: "Cargando información...",
       invalid_link: "Este enlace no es válido o ha expirado.",
       invalid_link_help: "Solicita uno nuevo al dealer que está procesando tu solicitud.",
+      transport_error: "No pudimos verificar tu enlace.",
+      transport_error_help:
+        "Es un problema de conexión, no de tu enlace. Intenta de nuevo en unos minutos o avisa al dealer.",
       already_accepted: "Ya autorizaste esta solicitud anteriormente.",
       already_accepted_help: "Si tienes dudas, contacta a la institución.",
       read_carefully: "Por favor lee cuidadosamente cada autorización antes de aceptar.",

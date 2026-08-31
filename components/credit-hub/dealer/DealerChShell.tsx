@@ -18,6 +18,7 @@ import {
   pathnameToDealerNavId,
 } from "@/lib/credit-hub/dealer/dealerFormat";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { useAuth } from "@/hooks/useAuth";
 
 function useMobileShell(breakpoint = 640): boolean {
   const [mobile, setMobile] = useState(false);
@@ -78,6 +79,7 @@ export function DealerChShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
+  const { logout } = useAuth();
   const identity = useChromeIdentity();
   const isMobile = useMobileShell();
   const active = pathnameToDealerNavId(pathname ?? "");
@@ -107,6 +109,11 @@ export function DealerChShell({ children }: { children: ReactNode }) {
 
   const handleMessageNotificationClick = (applicationId: string) => {
     router.push(`/credit-hub/dealer/applications/${applicationId}`);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
   };
 
   if (inWizard) {
@@ -144,6 +151,7 @@ export function DealerChShell({ children }: { children: ReactNode }) {
           logoUrl={tenantConfig.branding.logo_url ?? undefined}
           user={{ name: identity.name, role: identity.role, initials: identity.initials }}
           onNavigate={navigate}
+          onLogout={handleLogout}
         />
       }
       bottomNav={<DealerMobileBottomNav active={active} onNavigate={navigate} />}

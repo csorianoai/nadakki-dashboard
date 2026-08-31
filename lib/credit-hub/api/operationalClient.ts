@@ -23,6 +23,16 @@ export interface EditHistoryEntry {
   changed_at?: string;
 }
 
+export function applicationFieldsPatchBody(fields: Record<string, unknown>): { changes: Record<string, unknown> } {
+  const nestedField = Object.entries(fields).find(
+    ([, value]) => value !== null && typeof value === "object" && !Array.isArray(value),
+  );
+  if (nestedField) {
+    throw new Error(`El campo ${nestedField[0]} debe enviarse como campos planos`);
+  }
+  return { changes: fields };
+}
+
 export async function patchApplicationFields(params: {
   tenantId: string;
   applicationId: string;
@@ -33,7 +43,7 @@ export async function patchApplicationFields(params: {
     tenantId: params.tenantId,
     actorRole: params.actorRole ?? "dealer",
     method: "PATCH",
-    body: JSON.stringify({ fields: params.fields }),
+    body: JSON.stringify(applicationFieldsPatchBody(params.fields)),
   });
 }
 

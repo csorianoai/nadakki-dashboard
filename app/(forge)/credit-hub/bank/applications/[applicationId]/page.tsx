@@ -5,14 +5,13 @@ import { CreditTenantGate } from "@/app/credit/CreditTenantGate";
 import { BankApplicationOpsPanel } from "@/app/(forge)/credit-hub/bank/_components/BankApplicationOpsPanel";
 import { BankDetailLayout } from "@/components/credit-hub/bank/BankDetailLayout";
 import { DetailSkeleton, EmptyStateRich } from "@/components/credit-hub/primitives";
-import { useBankApplication, useBankAuditTrail, useBankCompliance, useBankCounterOffer } from "@/lib/credit-hub/hooks/useBankDecision";
+import { useBankApplication, useBankAuditTrail, useBankCompliance } from "@/lib/credit-hub/hooks/useBankDecision";
 
 export default function BankApplicationReviewPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
   const appQuery = useBankApplication(applicationId);
   const complianceQuery = useBankCompliance(applicationId);
   const auditQuery = useBankAuditTrail(applicationId);
-  const counterOfferQuery = useBankCounterOffer(applicationId);
 
   console.log("[BankApplicationReviewPage] DIAGNOSTIC", {
     applicationId,
@@ -51,7 +50,6 @@ export default function BankApplicationReviewPage({ params }: { params: Promise<
         application={appQuery.data}
         compliance={complianceQuery.data}
         audit={auditQuery.data}
-        counterOffer={counterOfferQuery.data}
         isComplianceLoading={complianceQuery.isLoading}
       />
       <BankApplicationOpsPanel applicationId={applicationId} />

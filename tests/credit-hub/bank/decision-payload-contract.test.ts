@@ -74,6 +74,10 @@ describe("bankClient.ts — toBankDecideRequestBody transformer (Audit #4.2)", (
     expect(transformer![0]).toContain("description: cond");
   });
 
+  test("wraps declared approval terms under approved_terms", () => {
+    expect(src).toContain("body.approved_terms = approvedTerms");
+  });
+
   test("recordDecision calls toBankDecideRequestBody before JSON.stringify", () => {
     // The transformer is called and its result is stringified
     expect(src).toContain("const backendBody = toBankDecideRequestBody(params.body)");
@@ -163,5 +167,20 @@ describe("defaultTerms reads from analysis state (not hardcoded zeros)", () => {
     const termsFn = src.match(/function defaultTerms[\s\S]*?conditions:[\s\S]*?\n\}/);
     expect(termsFn).not.toBeNull();
     expect(termsFn![0]).toContain("metrics?.down_payment");
+  });
+});
+
+describe("BankDetailLayout — approval terms do not fabricate defaults", () => {
+  const src = readSrc("components/credit-hub/bank/BankDetailLayout.tsx");
+  const termsFn = src.match(/function defaultTerms[\s\S]*?\n\}/);
+
+  test("has a measurable defaultTerms implementation", () => {
+    expect(termsFn).not.toBeNull();
+  });
+
+  test("does not invent amount, rate, or term when source data is absent", () => {
+    expect(termsFn![0]).not.toContain(": 0");
+    expect(termsFn![0]).not.toContain("?? 17.5");
+    expect(termsFn![0]).not.toContain("?? 36");
   });
 });
