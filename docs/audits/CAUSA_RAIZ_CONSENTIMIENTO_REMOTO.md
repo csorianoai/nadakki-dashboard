@@ -118,7 +118,7 @@ Los dos corregidos. El primero ahora declara las rutas LITERALES.
       tests/app/public/consent/_components/SelfieCapture.test.tsx no colecta
       verificado con git stash sobre la base limpia
 
-## VEREDICTO · FIXED en C1-C5 · tres regresiones de UI SIN EJECUTAR
+## VEREDICTO · FIXED
 
 Verificado contra el deploy dpl_9RcGmAamVop5GwEgN5AipGDF9HmQ, con token
 generado DESPUES del despliegue y red capturada desde antes de navegar.
@@ -140,6 +140,10 @@ generado DESPUES del despliegue y red capturada desde antes de navegar.
 
 El bundle servido trae el arreglo: constructor(e=""){this.baseUrl=e}
 
+LOOP CERRADO. Lo unico del expediente que queda sin medir es si el wizard
+emite una peticion a api.nadakki.com desde credit-api. No pertenece a este
+loop: va con el packet de los clientes.
+
 ## Regresiones
 
     PASS   consentimiento PRESENCIAL
@@ -156,16 +160,40 @@ El bundle servido trae el arreglo: constructor(e=""){this.baseUrl=e}
              misma solicitud, sin documentos subidos, despacho 200
              (evidencia indirecta: no se subio NINGUN documento)
 
-    SIN EJECUTAR · requieren sesion en la UI del dashboard
-      "Marca" se habilita en vehiculo usado
-      los cinco selects del wizard
-      logout desde el sidebar dispara POST /auth/logout
+    PASS · verificadas EN PANTALLA por Cowork el 30 de agosto de 2026,
+           sobre el deploy que incluia #457. NO las corrio este agente:
+           iniciar sesion exige escribir una contrasena en un formulario.
 
-      No las corri porque iniciar sesion exige escribir una contrasena en un
-      formulario, y eso no lo hago. NO se declaran como aprobadas: quedan sin
-      ejecutar, que no es lo mismo. El logout SI quedo verificado por API
-      -204 y refresh 401-; lo que falta es que el boton del sidebar lo invoque,
-      que es justo el defecto de frontend anotado en "lo que no entra".
+      "Marca" en vehiculo usado   se habilita al elegir Vehiculo usado;
+                                  se selecciona Toyota y el paso avanza a
+                                  Revision
+      los cinco selects           los cinco funcionan
+      logout del sidebar          el boton desloguea
+                                  POST /api/v2/auth/logout -> 204
+                                  storage de 15 claves a 6
+
+      El logout, ademas, quedo verificado por API de forma independiente:
+      204 y refresh posterior 401. Queda cerrado el defecto de frontend que
+      estaba anotado como "el boton no llama al backend": si lo llama.
+
+    SOBRE LA FECHA · por que estas tres siguen valiendo tras #459
+      Se midieron ANTES de #459, asi que en rigor no prueban la conducta del
+      deploy actual. Se comprobo que las superficies son disjuntas:
+
+        #459 solo toca  app/(public)/consent/**
+                        lib/credit-hub/api/public-consent-client.ts
+                        el i18n es-DO, con DOS claves AGREGADAS y cero
+                        modificadas ni borradas (diff verificado)
+                        y tests
+
+        public-consent-client.ts no lo importa nadie fuera de la ruta
+        publica -la unica mencion en tenant-branding-client.ts es un
+        COMENTARIO, no un import- y ninguna ruta del wizard ni el sidebar
+        alcanza (public)/consent.
+
+      El wizard usa consent-client.ts y credit-api, que #459 no toca. Por eso
+      la medicion de Cowork se da por vigente. Queda declarado para que la
+      decision sea revisable, no escondido.
 
 ## Mapa para ejercitar los clientes desde el navegador
 
