@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { WIZARD_OPTIONAL_BUREAU_NOTICE } from "@/lib/credit-hub/dealer/wizard-optional-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { useConsentApi } from "@/lib/credit-hub/hooks/useConsentApi";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { PresentConsentForm } from "./PresentConsentForm";
 import { RemoteConsentSelector } from "./RemoteConsentSelector";
@@ -54,6 +56,9 @@ export function ConsentSection({
 }: ConsentSectionProps) {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
+  const consentApi = useConsentApi();
+  const [presentSubmitting, setPresentSubmitting] = useState(false);
+  const [presentSubmitError, setPresentSubmitError] = useState<string | null>(null);
 
   const enabledRemote = normalizeRemoteConsentMethods(tenantConfig?.consent_methods_enabled ?? []);
 
@@ -79,6 +84,33 @@ export function ConsentSection({
   if (consent_bureau_authorization) consentsAccepted.push("bureau_authorization");
   if (consent_terms_accepted) consentsAccepted.push("terms_accepted");
   if (consent_data_processing_authorization) consentsAccepted.push("data_processing_authorization");
+
+  const confirmPresentConsent = async () => {
+    if (!applicationIdReady || !applicationId || !consentApi) {
+      setPresentSubmitError(t.consent.application_id_required);
+      return;
+    }
+
+    setPresentSubmitting(true);
+    setPresentSubmitError(null);
+    try {
+      await consentApi.initiate(applicationId, "PRESENT", {});
+      const accepted = await consentApi.acceptPresent(applicationId, {
+        consents_accepted: consentsAccepted,
+        full_name: consent_signature_full_name.trim(),
+      });
+      onPatch({
+        consent_present_confirmed: true,
+        consent_method: "PRESENT",
+        consent_accepted_at: accepted.accepted_at ?? new Date().toISOString(),
+        consent_audit_hash: accepted.audit_hash,
+      });
+    } catch (error) {
+      setPresentSubmitError(error instanceof Error ? error.message : t.consent.public.generic_submit_error);
+    } finally {
+      setPresentSubmitting(false);
+    }
+  };
 
   return (
     <section className="space-y-6" data-testid="consent-section">
@@ -124,14 +156,9 @@ export function ConsentSection({
           onDataProcessingChange={(v) => onPatch({ consent_data_processing_authorization: v, consent_present_confirmed: false })}
           signatureFullName={consent_signature_full_name}
           onSignatureChange={(v) => onPatch({ consent_signature_full_name: v, consent_present_confirmed: false })}
-          onPresentConfirmed={() => {
-            onPatch({
-              consent_present_confirmed: true,
-              consent_method: "PRESENT",
-              consent_accepted_at: new Date().toISOString(),
-              consent_audit_hash: consent_audit_hash || "",
-            });
-          }}
+          onPresentConfirmed={confirmPresentConsent}
+          submitting={presentSubmitting}
+          submitError={presentSubmitError}
           getFieldError={getFieldError}
         />
       )}
