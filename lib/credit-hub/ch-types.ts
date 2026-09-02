@@ -46,6 +46,13 @@ export interface DecisionPanelProps {
   lenderOptions?: string[];
   lenderCode?: string;
   onLenderChange?: (lenderCode: string) => void;
+  editableTerms?: {
+    amount?: number;
+    term?: number;
+    rate?: number;
+    downPayment?: number;
+  };
+  onTermsChange?: (key: "amount" | "term" | "rate" | "downPayment", value: number) => void;
   onSubmit?: (mode: DecisionMode, justification: string) => void;
 }
 

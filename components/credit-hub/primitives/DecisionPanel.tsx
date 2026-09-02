@@ -28,6 +28,8 @@ export function DecisionPanel({
   lenderOptions = [],
   lenderCode,
   onLenderChange,
+  editableTerms,
+  onTermsChange,
   onSubmit,
 }: DecisionPanelProps) {
   const [mode, setMode] = useState<DecisionMode>("approve");
@@ -161,20 +163,44 @@ export function DecisionPanel({
           {mode !== "reject" ? (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
               <div>
-                <label className="ch-label">Monto aprobado</label>
-                <input className="ch-input ch-mono" defaultValue={chMoneyExact(amount)} readOnly />
+                <label className="ch-label" htmlFor="decision-approved-amount">Monto aprobado</label>
+                <input
+                  id="decision-approved-amount"
+                  className="ch-input ch-mono"
+                  value={editableTerms ? String(editableTerms.amount ?? amount) : chMoneyExact(amount)}
+                  readOnly={!canDecide || !editableTerms}
+                  onChange={(e) => onTermsChange?.("amount", Number(e.target.value || 0))}
+                />
               </div>
               <div>
-                <label className="ch-label">Plazo (meses)</label>
-                <input className="ch-input ch-mono" defaultValue={String(term)} readOnly />
+                <label className="ch-label" htmlFor="decision-term-months">Plazo (meses)</label>
+                <input
+                  id="decision-term-months"
+                  className="ch-input ch-mono"
+                  value={editableTerms ? String(editableTerms.term ?? term) : String(term)}
+                  readOnly={!canDecide || !editableTerms}
+                  onChange={(e) => onTermsChange?.("term", Number(e.target.value || 0))}
+                />
               </div>
               <div>
-                <label className="ch-label">Tasa anual</label>
-                <input className="ch-input ch-mono" defaultValue={`${rate}%`} readOnly />
+                <label className="ch-label" htmlFor="decision-interest-rate">Tasa anual</label>
+                <input
+                  id="decision-interest-rate"
+                  className="ch-input ch-mono"
+                  value={editableTerms ? String(editableTerms.rate ?? rate) : `${rate}%`}
+                  readOnly={!canDecide || !editableTerms}
+                  onChange={(e) => onTermsChange?.("rate", Number(e.target.value || 0))}
+                />
               </div>
               <div>
-                <label className="ch-label">Enganche</label>
-                <input className="ch-input ch-mono" defaultValue="20%" readOnly />
+                <label className="ch-label" htmlFor="decision-down-payment">Enganche</label>
+                <input
+                  id="decision-down-payment"
+                  className="ch-input ch-mono"
+                  value={editableTerms ? String(editableTerms.downPayment ?? 0) : "20%"}
+                  readOnly={!canDecide || !editableTerms}
+                  onChange={(e) => onTermsChange?.("downPayment", Number(e.target.value || 0))}
+                />
               </div>
             </div>
           ) : (

@@ -89,6 +89,23 @@ describe("expedienteAdapter", () => {
     expect(app.application_payload.documents).toHaveLength(1);
   });
 
+  test("preserves the backend bank claim for the decision view", () => {
+    const claim = {
+      analyst_id: "c1a0a001-0000-4000-a000-000000000001",
+      claimed_at: "2026-09-02T17:34:30Z",
+      lender_code: "pilot",
+      current_user_owns: true,
+    };
+    const app = expedienteToBankReviewApplication({
+      application_id: "app-claimed",
+      tenant_id: "tenant-1",
+      bank_claim: claim,
+    });
+
+    expect(app.bank_claim).toEqual(claim);
+    expect(app.application_payload.bank_claim).toEqual(claim);
+  });
+
   test("maps declaracion_vehiculo from credit_history summary", () => {
     const decl = {
       perdida_total: false,

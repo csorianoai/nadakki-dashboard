@@ -12,6 +12,7 @@ import {
 } from "@/lib/credit-hub/api/bankExperienceClient";
 import { isBankSupervisorRole } from "@/lib/credit-hub/bank/bankExperienceHelpers";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
+import type { BankApplicationClaim } from "@/lib/credit-hub/types/bankDecision";
 
 function formatDate(iso: string): string {
   try {
@@ -24,9 +25,11 @@ function formatDate(iso: string): string {
 export function AssignedAnalystSection({
   applicationId,
   roleKey,
+  claim,
 }: {
   applicationId: string;
   roleKey: string | null;
+  claim?: BankApplicationClaim | null;
 }) {
   const { apiTenantId } = useTenant();
   const qc = useQueryClient();
@@ -46,6 +49,14 @@ export function AssignedAnalystSection({
   if (q.error instanceof CHApiError && isBankExperienceEndpointUnavailable(q.error)) return null;
 
   const current = q.data?.current;
+  const claimCurrent = claim?.analyst_id
+    ? {
+        analyst_id: claim.analyst_id,
+        analyst_name: claim.analyst_name ?? claim.analyst_id,
+        assigned_at: claim.claimed_at ?? undefined,
+      }
+    : undefined;
+  const displayedCurrent = claimCurrent ?? current;
   const history = q.data?.history ?? [];
   const canReassign = isBankSupervisorRole(roleKey);
 
@@ -83,7 +94,7 @@ export function AssignedAnalystSection({
         <div>
           <div className="ch-eyebrow">Analista asignado</div>
           <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }} data-testid="assigned-analyst-name">
-            {q.isLoading ? "…" : current?.analyst_name ?? "Sin asignar"}
+            {q.isLoading && !displayedCurrent ? "…" : displayedCurrent?.analyst_name ?? "Sin asignar"}
           </div>
         </div>
       </div>

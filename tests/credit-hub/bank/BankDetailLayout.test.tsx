@@ -9,7 +9,11 @@ jest.mock("next/font/google", () => ({
 }));
 
 jest.mock("@/hooks/useAuth", () => ({
-  useAuth: () => ({ user: { id: "analyst-1" } }),
+  useAuth: () => ({ user: { id: "analyst-1" }, activeRole: { role_key: "bank_analyst" } }),
+}));
+
+jest.mock("@/lib/credit-hub/hooks/useCreditHubActor", () => ({
+  useCreditHubActor: () => ({ roleKey: "bank_analyst", can: () => true }),
 }));
 
 jest.mock("@/lib/bank-application-detail/claim-application", () => ({
@@ -28,6 +32,7 @@ const application = {
   tenant_id: "t1",
   state: "claimed",
   application_payload: {
+    bank_claim: { analyst_id: "analyst-1", current_user_owns: true, lender_code: "pilot" },
     applicant: { name: "Laura Méndez", full_name: "Laura Méndez" },
     financial: { requested_amount: 250000, term_months: 48, requested_rate: 17.5, down_payment: 50000 },
     vehicle: { label: "Nissan Versa 2024", dealer: "Test Dealer" },
@@ -84,5 +89,37 @@ describe("BankDetailLayout", () => {
     expect(screen.getByText("Riesgo no disponible")).toBeInTheDocument();
     expect(screen.queryByText("720")).not.toBeInTheDocument();
     expect(screen.queryByText(/Riesgo bajo/i)).not.toBeInTheDocument();
+  });
+
+  test("keeps decision controls blocked without an owned claim", () => {
+    renderLayout({
+      ...application,
+      application_payload: { ...application.application_payload, bank_claim: null },
+    });
+
+    expect(screen.getByTestId("decision-panel-forbidden")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /aprobar solicitud/i })).toBeDisabled();
+    expect(screen.getByLabelText("Monto aprobado")).toHaveAttribute("readonly");
+  });
+
+  test("keeps controls blocked for another analyst in the same tenant", () => {
+    renderLayout({
+      ...application,
+      tenant_id: "t1",
+      application_payload: {
+        ...application.application_payload,
+        bank_claim: { analyst_id: "analyst-2", current_user_owns: false, lender_code: "pilot" },
+      },
+    });
+
+    expect(screen.getByTestId("decision-panel-forbidden")).toBeInTheDocument();
+    expect(screen.getByLabelText("Monto aprobado")).toHaveAttribute("readonly");
+  });
+
+  test("enables decision controls for the analyst who owns the claim", () => {
+    renderLayout(application);
+
+    expect(screen.queryByTestId("decision-panel-forbidden")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Monto aprobado")).not.toHaveAttribute("readonly");
   });
 });
