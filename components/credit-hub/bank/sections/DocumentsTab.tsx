@@ -3,6 +3,9 @@
 import { FileText, Search } from "lucide-react";
 import { EscalateOcrButton } from "@/components/credit-hub/bank/EscalateOcrButton";
 import { DocumentRequestsPanel } from "@/components/credit-hub/bank/sections/DocumentRequestsPanel";
+import { readBankApplicationAuthToken, buildBankApplicationDetailHeadersWithRole } from "@/lib/bank-application-detail/fetch-detail";
+import { tokenStorage } from "@/lib/auth/token-storage";
+import { bankDocumentDownloadUrl } from "@/lib/bank/document-preview-api";
 import type { BankDocumentPayload } from "@/lib/credit-hub/types/bank-views";
 
 const ST_MAP: Record<string, [string, string, string]> = {
@@ -11,19 +14,6 @@ const ST_MAP: Record<string, [string, string, string]> = {
   en_revision: ["var(--ch-info-text)", "var(--ch-info-soft)", "En revisión"],
   pendiente: ["var(--ch-warning-text)", "var(--ch-warning-soft)", "Pendiente"],
 };
-
-function documentPreviewUrl(doc: BankDocumentPayload): string | null {
-  const raw = doc as BankDocumentPayload & {
-    preview_url?: string;
-    url?: string;
-    preview?: { preview_route_template?: string };
-  };
-  if (typeof raw.preview_url === "string" && raw.preview_url.trim()) return raw.preview_url.trim();
-  if (typeof raw.url === "string" && raw.url.trim()) return raw.url.trim();
-  const tmpl = raw.preview?.preview_route_template;
-  if (typeof tmpl === "string" && tmpl.startsWith("/")) return tmpl;
-  return null;
-}
 
 export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayload[]; applicationId: string }) {
   if (!docs.length) {
@@ -37,8 +27,8 @@ export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayloa
       {docs.map((d) => {
         const status = d.status ?? "pendiente";
         const [c, bg, l] = ST_MAP[status] ?? ST_MAP.pendiente!;
-        const previewUrl = documentPreviewUrl(d);
         const docId = String(d.id ?? "");
+        const authToken = tokenStorage.getAccessToken() || readBankApplicationAuthToken();
         const label = d.name ?? d.label ?? "Documento";
         return (
           <div key={d.id ?? d.name} className="ch-card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -55,10 +45,33 @@ export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayloa
               <button
                 type="button"
                 className="ch-btn ch-btn-secondary ch-btn-sm"
-                disabled={!previewUrl}
-                title={previewUrl ? "Abrir vista previa del documento" : "Vista previa no disponible — el backend no publicó URL para este documento"}
+                disabled={!docId || !authToken}
+                title={!authToken ? "Inicia sesión para abrir el documento" : "Abrir documento"}
                 onClick={() => {
-                  if (previewUrl && typeof window !== "undefined") window.open(previewUrl, "_blank", "noopener,noreferrer");
+                  if (!docId || !authToken || typeof window === "undefined") return;
+                  const popup = window.open("", "_blank", "noopener,noreferrer");
+                  if (!popup) return;
+                  void (async () => {
+                    const url = bankDocumentDownloadUrl(applicationId, docId);
+                    try {
+                      const res = await fetch(url, {
+                        method: "GET",
+                        headers: {
+                          Accept: "application/pdf,image/*,*/*",
+                          ...buildBankApplicationDetailHeadersWithRole(authToken, "BANK_ANALYST"),
+                        },
+                        credentials: "omit",
+                        cache: "no-store",
+                      });
+                      if (!res.ok) throw new Error(`Documento ${res.status}`);
+                      const blob = await res.blob();
+                      const objectUrl = URL.createObjectURL(blob);
+                      popup.location.href = objectUrl;
+                      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+                    } catch {
+                      popup.close();
+                    }
+                  })();
                 }}
               >
                 <Search className="h-3.5 w-3.5" aria-hidden />
