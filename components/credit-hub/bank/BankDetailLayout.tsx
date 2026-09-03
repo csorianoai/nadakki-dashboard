@@ -74,8 +74,12 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const notesProbe = useNotesEndpointAvailable(application.application_id);
   const showNotesTab = isBankNotesRole(roleKey) && notesProbe.available;
   const hasBankDecision = Boolean(application.application_payload?.bank_decision);
-  const canDecide = actorCan("create_decision") && !hasBankDecision;
   const payload = application.application_payload as BankReviewPayload;
+  const bankClaim = application.bank_claim ?? payload.bank_claim ?? null;
+  const ownsBankClaim = bankClaim?.current_user_owns === true || Boolean(
+    bankClaim?.analyst_id && user?.id && bankClaim.analyst_id === user.id,
+  );
+  const canDecide = actorCan("create_decision") && ownsBankClaim && !hasBankDecision;
   const applicant = payload.applicant ?? {};
   const financial = payload.financial ?? {};
   const vehicle = payload.vehicle ?? {};
@@ -111,6 +115,15 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const [panelState, setPanelState] = useState<DecisionState>("idle");
   const [decisionErrorDetail, setDecisionErrorDetail] = useState<string | null>(null);
   const termsRef = useRef<Partial<BankDecisionTerms>>(defaultTerms(payload));
+  const [editableTerms, setEditableTerms] = useState(() => {
+    const terms = defaultTerms(payload);
+    return {
+      amount: Number(terms.approved_amount ?? 0),
+      term: Number(terms.term_months ?? 0),
+      rate: Number(terms.interest_rate ?? 0),
+      downPayment: Number(terms.down_payment_required ?? 0),
+    };
+  });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -233,7 +246,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
 
       <PilotLabelsRow labels={pilotLabels} prominent />
 
-      <AssignedAnalystSection applicationId={application.application_id} roleKey={roleKey} />
+      <AssignedAnalystSection applicationId={application.application_id} roleKey={roleKey} claim={bankClaim} />
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <EscalateKycButton applicationId={application.application_id} />
@@ -371,6 +384,12 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           lenderOptions={lenderOptions}
           lenderCode={selectedLenderCode}
           onLenderChange={setSelectedLenderCode}
+          editableTerms={ownsBankClaim ? editableTerms : undefined}
+          onTermsChange={(key, value) => {
+            setEditableTerms((current) => ({ ...current, [key]: value }));
+            const mappedKey = key === "amount" ? "approved_amount" : key === "term" ? "term_months" : key === "rate" ? "interest_rate" : "down_payment_required";
+            termsRef.current = { ...termsRef.current, [mappedKey]: value };
+          }}
           onSubmit={handleSubmit}
         />
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

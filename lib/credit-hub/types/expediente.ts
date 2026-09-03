@@ -7,6 +7,13 @@ export interface ExpedienteFullResponse {
   tenant_id: string;
   user_role?: string;
   state?: string;
+  bank_claim?: {
+    analyst_id?: string | null;
+    analyst_name?: string | null;
+    claimed_at?: string | null;
+    lender_code?: string | null;
+    current_user_owns?: boolean;
+  } | null;
   applicant?: Record<string, unknown>;
   vehicle?: Record<string, unknown>;
   financial?: Record<string, unknown>;
