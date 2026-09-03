@@ -64,12 +64,22 @@ export interface BankReviewApplication {
   application_id: string;
   tenant_id: string;
   state: string;
+  bank_claim?: BankApplicationClaim | null;
   application_payload: {
     analysis?: CreditAnalysisResult;
     bank_decision?: BankDecision;
+    bank_claim?: BankApplicationClaim | null;
     audit_trail?: BankAuditEvent[];
     [key: string]: unknown;
   };
+}
+
+export interface BankApplicationClaim {
+  analyst_id?: string | null;
+  analyst_name?: string | null;
+  claimed_at?: string | null;
+  lender_code?: string | null;
+  current_user_owns?: boolean;
 }
 
 export interface BankDecisionRequest {

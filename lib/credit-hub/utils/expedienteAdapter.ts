@@ -31,6 +31,10 @@ export function extractFinancial(summary: Record<string, unknown>, rootFinancial
   for (const key of ["requested_amount", "down_payment", "term_months", "requested_rate", "ltv", "dti"] as const) {
     if (summary[key] != null) out[key] = summary[key];
   }
+  if (out.requested_amount == null && typeof summary.analysis === "object" && summary.analysis != null) {
+    const analysis = summary.analysis as Record<string, unknown>;
+    if (analysis.financed_amount != null) out.requested_amount = analysis.financed_amount;
+  }
   return out;
 }
 
@@ -150,6 +154,7 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
     application_id: ex.application_id,
     tenant_id: ex.tenant_id,
     state: ex.state ?? String(summary.state ?? "BANK_SUBMITTED"),
+    bank_claim: ex.bank_claim ?? null,
     application_payload: {
       applicant: normalizeApplicant(
         ex.applicant as Record<string, unknown> | undefined,
@@ -161,6 +166,7 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
       analysis: analysisData as CreditAnalysisResult | undefined,
       documents: ex.documents,
       bank_decision: bankDecision as BankReviewApplication["application_payload"]["bank_decision"],
+      bank_claim: ex.bank_claim ?? null,
       audit_trail: ex.audit_trail as BankReviewApplication["application_payload"]["audit_trail"],
       stipulations: ex.stipulations,
       offers: ex.offers,
