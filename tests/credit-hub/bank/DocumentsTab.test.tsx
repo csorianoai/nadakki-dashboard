@@ -59,7 +59,7 @@ describe("DocumentsTab", () => {
     expect(popup.opener).toBeNull();
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      "http://test.invalid/api/v2/credit/applications/app-1/documents/doc-1/download",
+      "/api/v2/credit/applications/app-1/documents/doc-1/download",
       expect.objectContaining({
         credentials: "omit",
         headers: expect.objectContaining({ Authorization: "Bearer test-token", "X-Tenant-ID": "tenant-1" }),
@@ -91,7 +91,7 @@ describe("DocumentsTab", () => {
     await user.click(screen.getByRole("button", { name: /ver documento/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      "http://test.invalid/api/v2/credit/applications/app-1/documents/doc-from-app-2/download",
+      "/api/v2/credit/applications/app-1/documents/doc-from-app-2/download",
       expect.objectContaining({ credentials: "omit" }),
     ));
     expect(popup.close).toHaveBeenCalled();

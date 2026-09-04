@@ -3,12 +3,6 @@
 import { tokenStorage } from "@/lib/auth/token-storage";
 import type { TenantBranding } from "@/lib/credit-hub/types/tenantBranding";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_NADAKKI_API_BASE ||
-  "";
-
 export type TenantBrandingPatch = Partial<
   Pick<
     TenantBranding,
@@ -31,9 +25,7 @@ export type TenantBrandingPatch = Partial<
 };
 
 function baseUrl(): string {
-  const b = API_BASE.replace(/\/$/, "");
-  if (!b) throw new Error("NEXT_PUBLIC_API_URL is not configured");
-  return b;
+  return "";
 }
 
 function bearer(): string {
