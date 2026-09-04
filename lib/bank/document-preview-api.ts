@@ -26,8 +26,7 @@ export interface DocumentPreviewMetadata {
 }
 
 export function creditApiBase(): string {
-  const raw = process.env.NEXT_PUBLIC_API_URL?.trim();
-  return (raw ?? "").replace(/\/+$/, "");
+  return "";
 }
 
 export function bankPreviewJsonUrl(applicationId: string, documentId: string): string {

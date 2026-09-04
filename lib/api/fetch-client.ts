@@ -10,24 +10,11 @@ export type ApiFetchInit = RequestInit & {
   _isRetry?: boolean;
 };
 
-/**
- * Prefix relative paths with public API base (same fallback chain as Credit Hub client).
- * Absolute http(s) URLs are unchanged.
- */
+/** Resolve browser API paths through the same-origin BFF. */
 export function resolveApiUrl(path: string): string {
   const trimmedPath = path.trim();
   if (/^https?:\/\//i.test(trimmedPath)) return trimmedPath;
-
-  const raw =
-    process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "";
-
-  const trimmedBase = raw.trim().replace(/\/+$/, "");
-  const normalizedPath = trimmedPath.startsWith("/") ? trimmedPath : `/${trimmedPath}`;
-  if (!trimmedBase) return normalizedPath;
-  return `${trimmedBase}${normalizedPath}`;
+  return trimmedPath.startsWith("/") ? trimmedPath : `/${trimmedPath}`;
 }
 
 /** Auth V2 in-memory token first; legacy `nadakki_sic_token` fallback. */
@@ -44,7 +31,7 @@ export function getAuthHeaders(): Record<string, string> {
 }
 
 /**
- * Browser fetch with backend base URL + optional Bearer (unless {@link ApiFetchInit.skipAuthHeaders}).
+ * Browser fetch through the same-origin BFF with optional Bearer (unless {@link ApiFetchInit.skipAuthHeaders}).
  * Keeps caller headers; fills Authorization only when absent.
  *
  * Audit #4 P1: On 401, attempts a single token refresh + retry.

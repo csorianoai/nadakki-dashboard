@@ -4,19 +4,6 @@ import type { TenantBranding } from "@/lib/credit-hub/types/tenantBranding";
 
 const SIC_TOKEN_KEY = "nadakki_sic_token";
 
-// P10-05 fix BUG-002: fallback chain across the env var names that already exist
-// in this repo. `_API_CONTRACT.md` documents `NEXT_PUBLIC_API_BASE_URL`, but
-// most other clients (credit-api, spyfu, document-intelligence, autopilot,
-// scheduler-status, legal/telemetry, public-consent-client) read
-// `NEXT_PUBLIC_API_URL`. A handful of legacy callsites use
-// `NEXT_PUBLIC_NADAKKI_API_BASE`. We accept all three so a stock `.env.local`
-// from any path doesn't dead-end this client.
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_NADAKKI_API_BASE ||
-  "";
-
 /**
  * Base error class for all `tenant-branding` fetch failures. Always carries
  * a `referenceId` formatted ERR-<timestamp>-<rand4> so the user sees a stable
@@ -111,18 +98,9 @@ function generateReferenceId(): string {
 export async function fetchTenantBranding(tenantId: string): Promise<TenantBranding> {
   const referenceId = generateReferenceId();
 
-  if (!API_BASE) {
-    throw new TenantBrandingNetworkError(
-      new Error(
-        "API base URL is not defined (set NEXT_PUBLIC_API_URL or NEXT_PUBLIC_API_BASE_URL)",
-      ),
-      referenceId,
-    );
-  }
-
   try {
     const response = await fetch(
-      `${API_BASE}/api/v2/tenants/${encodeURIComponent(tenantId)}/branding`,
+      `/api/v2/tenants/${encodeURIComponent(tenantId)}/branding`,
       { headers: getAuthHeaders(tenantId) },
     );
 
