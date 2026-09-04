@@ -32,7 +32,7 @@ export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayloa
     <div>
       <DocumentRequestsPanel applicationId={applicationId} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12, marginTop: 12 }}>
-      {docs.map((d) => {
+      {docs.map((d, i) => {
         const status = d.status ?? "pendiente";
         const [c, bg, l] = ST_MAP[status] ?? ST_MAP.pendiente!;
         const docId = String(d.id ?? "");
