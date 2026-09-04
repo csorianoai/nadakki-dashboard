@@ -89,6 +89,39 @@ describe("expedienteAdapter", () => {
     expect(app.application_payload.documents).toHaveLength(1);
   });
 
+  test("normalizes the /documents response shape for the bank card", () => {
+    const app = expedienteToBankReviewApplication({
+      application_id: "app-documents",
+      tenant_id: "tenant-1",
+      documents: [{
+        doc_id: "02a391f4-0000-4000-a000-000000000001",
+        filename: "matricula_vehiculo_qa.pdf",
+        extraction_status: "COMPLETED",
+        storage_key: "documents/key",
+        is_active: true,
+      }],
+    });
+
+    expect(app.application_payload.documents).toEqual([
+      expect.objectContaining({
+        id: "02a391f4-0000-4000-a000-000000000001",
+        name: "matricula_vehiculo_qa.pdf",
+        status: "COMPLETED",
+      }),
+    ]);
+  });
+
+  test("preserves documents already returned in the detail shape", () => {
+    const document = { id: "doc-detail", name: "Matrícula", status: "validado", type: "vehicle" };
+    const app = expedienteToBankReviewApplication({
+      application_id: "app-detail-documents",
+      tenant_id: "tenant-1",
+      documents: [document],
+    });
+
+    expect(app.application_payload.documents).toEqual([document]);
+  });
+
   test("preserves the backend bank claim for the decision view", () => {
     const claim = {
       analyst_id: "c1a0a001-0000-4000-a000-000000000001",

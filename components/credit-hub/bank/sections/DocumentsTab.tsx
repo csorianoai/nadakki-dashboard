@@ -11,8 +11,16 @@ import type { BankDocumentPayload } from "@/lib/credit-hub/types/bank-views";
 const ST_MAP: Record<string, [string, string, string]> = {
   validado: ["var(--ch-success-text)", "var(--ch-success-soft)", "Validado"],
   VALIDADO: ["var(--ch-success-text)", "var(--ch-success-soft)", "Validado"],
+  completed: ["var(--ch-success-text)", "var(--ch-success-soft)", "Validado"],
+  COMPLETED: ["var(--ch-success-text)", "var(--ch-success-soft)", "Validado"],
   en_revision: ["var(--ch-info-text)", "var(--ch-info-soft)", "En revisión"],
+  processing: ["var(--ch-info-text)", "var(--ch-info-soft)", "En revisión"],
+  PROCESSING: ["var(--ch-info-text)", "var(--ch-info-soft)", "En revisión"],
   pendiente: ["var(--ch-warning-text)", "var(--ch-warning-soft)", "Pendiente"],
+  pending: ["var(--ch-warning-text)", "var(--ch-warning-soft)", "Pendiente"],
+  PENDING: ["var(--ch-warning-text)", "var(--ch-warning-soft)", "Pendiente"],
+  failed: ["var(--ch-danger-text)", "var(--ch-danger-soft)", "Falló"],
+  FAILED: ["var(--ch-danger-text)", "var(--ch-danger-soft)", "Falló"],
 };
 
 export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayload[]; applicationId: string }) {
@@ -24,14 +32,14 @@ export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayloa
     <div>
       <DocumentRequestsPanel applicationId={applicationId} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 12, marginTop: 12 }}>
-      {docs.map((d) => {
+      {docs.map((d, i) => {
         const status = d.status ?? "pendiente";
         const [c, bg, l] = ST_MAP[status] ?? ST_MAP.pendiente!;
         const docId = String(d.id ?? "");
         const authToken = tokenStorage.getAccessToken() || readBankApplicationAuthToken();
         const label = d.name ?? d.label ?? "Documento";
         return (
-          <div key={d.id ?? d.name} className="ch-card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div key={d.id ?? d.doc_id ?? d.name ?? d.filename ?? `document-${i}`} className="ch-card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ width: 34, height: 34, borderRadius: 7, background: "var(--ch-surface-2)", color: "var(--ch-text-2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <FileText className="h-4 w-4" aria-hidden />
