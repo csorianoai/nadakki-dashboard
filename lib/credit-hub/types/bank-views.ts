@@ -68,11 +68,16 @@ export interface BankFinancialPayload {
 
 export interface BankDocumentPayload {
   id?: string;
+  doc_id?: string;
   name?: string;
+  filename?: string;
   label?: string;
   kind?: string;
   type?: string;
   status?: string;
+  extraction_status?: string;
+  storage_key?: string;
+  is_active?: boolean;
 }
 
 export interface BankReviewPayload {
