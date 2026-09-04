@@ -94,4 +94,11 @@ describe("DocumentsTab", () => {
     expect(popup.close).toHaveBeenCalled();
     expect(createObjectUrl).not.toHaveBeenCalled();
   });
+
+  test("does not enable a document without id or doc_id", () => {
+    render(<DocumentsTab docs={[{ filename: "sin-id.pdf" }]} applicationId="app-1" />);
+
+    expect(screen.getByText("Documento")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /ver documento/i })).toBeDisabled();
+  });
 });

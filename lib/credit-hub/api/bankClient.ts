@@ -15,6 +15,7 @@ import type {
   ComplianceReport,
   CounterOffer,
 } from "../types/bankDecision";
+import { normalizeBankDocuments } from "../utils/documentAdapter";
 
 const actorRole: BankActorRole = "bank_analyst";
 
@@ -114,7 +115,13 @@ export function getApplicationForReview(params: {
   return chFetch<BankReviewApplication>(`/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}`, {
     tenantId: params.tenantId,
     actorRole,
-  });
+  }).then((application) => ({
+    ...application,
+    application_payload: {
+      ...application.application_payload,
+      documents: normalizeBankDocuments(application.application_payload.documents),
+    },
+  }));
 }
 
 export function getExpedienteFull(params: {

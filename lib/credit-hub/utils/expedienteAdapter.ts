@@ -3,6 +3,7 @@ import type { ExpedienteFullResponse } from "../types/expediente";
 import type { CreditAnalysisResult } from "../types/creditAnalysis";
 import type { DeclaracionVehiculoPayload } from "../dealer/vehicle-declaration";
 import { extractCreditProvenance, extractPilotLabels, type PilotLabels } from "../labels/pilot-labels";
+import { normalizeBankDocuments } from "./documentAdapter";
 
 function asAnalysis(summary: Record<string, unknown>, score?: number): CreditAnalysisResult | undefined {
   const merged = { ...summary };
@@ -164,7 +165,7 @@ export function expedienteToBankReviewApplication(ex: ExpedienteFullResponse): B
       vehicle: normalizeVehicle(ex.vehicle as Record<string, unknown> | undefined),
       financial: normalizedFinancial,
       analysis: analysisData as CreditAnalysisResult | undefined,
-      documents: ex.documents,
+      documents: normalizeBankDocuments(ex.documents),
       bank_decision: bankDecision as BankReviewApplication["application_payload"]["bank_decision"],
       bank_claim: ex.bank_claim ?? null,
       audit_trail: ex.audit_trail as BankReviewApplication["application_payload"]["audit_trail"],
