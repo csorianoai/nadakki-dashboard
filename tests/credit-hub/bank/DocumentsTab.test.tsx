@@ -43,7 +43,7 @@ describe("DocumentsTab", () => {
 
   test("downloads the document with Bearer auth and opens the PDF blob", async () => {
     const user = userEvent.setup();
-    const popup = { location: { href: "" }, close: jest.fn() };
+    const popup = { location: { href: "" }, close: jest.fn(), opener: window };
     jest.spyOn(window, "open").mockReturnValue(popup as unknown as Window);
     Object.defineProperty(URL, "createObjectURL", { configurable: true, value: jest.fn(() => "blob:document") });
     Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: jest.fn() });
@@ -54,6 +54,9 @@ describe("DocumentsTab", () => {
 
     render(<DocumentsTab docs={[{ id: "doc-1", name: "Cédula", status: "uploaded" }]} applicationId="app-1" />);
     await user.click(screen.getByRole("button", { name: /ver documento/i }));
+
+    expect(window.open).toHaveBeenCalledWith("", "_blank");
+    expect(popup.opener).toBeNull();
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
       "http://test.invalid/api/v2/credit/applications/app-1/documents/doc-1/download",

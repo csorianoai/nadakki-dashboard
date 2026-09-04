@@ -57,8 +57,10 @@ export function DocumentsTab({ docs, applicationId }: { docs: BankDocumentPayloa
                 title={!authToken ? "Inicia sesión para abrir el documento" : "Abrir documento"}
                 onClick={() => {
                   if (!docId || !authToken || typeof window === "undefined") return;
-                  const popup = window.open("", "_blank", "noopener,noreferrer");
+                  // Keep the popup reference for blob navigation, then remove opener access explicitly.
+                  const popup = window.open("", "_blank");
                   if (!popup) return;
+                  popup.opener = null;
                   void (async () => {
                     const url = bankDocumentDownloadUrl(applicationId, docId);
                     try {
