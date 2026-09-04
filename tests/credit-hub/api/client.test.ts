@@ -71,9 +71,9 @@ describe("resolveCreditHubFetchUrl", () => {
     expect(resolveCreditHubFetchUrl("/api/v1/sic/credit-applications")).toBe("/api/v1/sic/credit-applications");
   });
 
-  test("prefixes NEXT_PUBLIC_API_URL and trims slashes", () => {
+  test("uses a same-origin path in the browser", () => {
     process.env.NEXT_PUBLIC_API_URL = "https://nadakki-ai-suite.onrender.com/";
-    expect(resolveCreditHubFetchUrl("/api/v1/foo")).toBe("https://nadakki-ai-suite.onrender.com/api/v1/foo");
+    expect(resolveCreditHubFetchUrl("/api/v1/foo")).toBe("/api/v1/foo");
   });
 
   test("does not double-prefix absolute http(s) URLs", () => {
@@ -176,14 +176,14 @@ describe("chFetch - auth and routing", () => {
     expect(fetchSpy.mock.calls[0][0]).toBe("/api/v1/sic/credit-applications");
   });
 
-  test("uses absolute backend URL when NEXT_PUBLIC_API_URL is set", async () => {
+  test("uses a same-origin URL when NEXT_PUBLIC_API_URL is set", async () => {
     process.env.NEXT_PUBLIC_API_URL = "https://nadakki-ai-suite.onrender.com";
     const fetchSpy = installFetchMock().mockResolvedValue(await mockJson({}));
     await chFetch("/api/v1/sic/credit-applications", {
       tenantId: "t",
       actorRole: "dealer",
     });
-    expect(fetchSpy.mock.calls[0][0]).toBe("https://nadakki-ai-suite.onrender.com/api/v1/sic/credit-applications");
+    expect(fetchSpy.mock.calls[0][0]).toBe("/api/v1/sic/credit-applications");
   });
 });
 
