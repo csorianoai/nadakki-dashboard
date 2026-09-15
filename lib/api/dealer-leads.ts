@@ -4,7 +4,7 @@ import { autosFetch } from "@/lib/autos-consumer-api";
 import { demoDelay } from "@/lib/autos-agent/demo-delay";
 import { FEATURE_LEAD_SCORING_BACKEND } from "@/lib/autos-agent/feature-flags";
 import { MOCK_DEALER_LEADS, type DealerLead } from "@/lib/dealer/leads-mock";
-import { selectedDealerIdentity } from "@/lib/dealer/access-context";
+import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 
 export type LeadFilters = {
   vehicleId?: number;
@@ -70,5 +70,7 @@ export function markLeadContacted(leadId: string): void {
 }
 
 export function getDealerId(): string | null {
-  return selectedDealerIdentity()?.dealerId ?? null;
+  const resolved = resolveDealerAccessContext();
+  if (resolved.status !== "ready") return null;
+  return resolved.context.dealerId;
 }

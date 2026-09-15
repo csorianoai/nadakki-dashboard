@@ -99,6 +99,12 @@ describe("DASH-DEALER-CONTEXT-01", () => {
     expect(resolved.reason_code).toBe("NO_ORGANIZATION_UNIT");
     expect(resolved.dealerId).toBe("dealer-alpha");
     expect(resolved.organizationUnitId).toBeNull();
+    expect(selectedDealerIdentity()).toEqual({
+      tenantId: "tenant-a",
+      dealerId: "dealer-alpha",
+      organizationUnitId: null,
+    });
+    expect(getDealerId()).toBeNull();
 
     const decision = await entitlementsAPI.checkAccess("credit.applications.create");
     expect(decision.allowed).toBe(false);
@@ -135,9 +141,19 @@ describe("DASH-DEALER-CONTEXT-01", () => {
     expect(resolved.dealerId).toBe("dealer-alpha");
     expect(resolved.tenantId).toBe("tenant-b");
 
+    expect(selectedDealerIdentity()).toBeNull();
+    expect(getDealerId()).toBeNull();
+    expect(getDealerId()).not.toBe("dealer-alpha");
+
     const decision = await entitlementsAPI.checkAccess("autos.inventory.view");
     expect(decision.allowed).toBe(false);
     expect(decision.reason_code).not.toBe("ALLOWED");
+    expect(global.fetch).not.toHaveBeenCalled();
+
+    const staleDealerId = getDealerId();
+    if (staleDealerId) {
+      await entitlementsAPI.getEffectiveCapabilities(staleDealerId);
+    }
     expect(global.fetch).not.toHaveBeenCalled();
   });
 

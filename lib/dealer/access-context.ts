@@ -252,11 +252,11 @@ export function selectedDealerIdentity(): {
       organizationUnitId: resolved.context.organizationUnitId,
     };
   }
-  if (resolved.status === "no_organization_unit" || resolved.status === "tenant_mismatch") {
+  if (resolved.status === "no_organization_unit") {
     return {
       tenantId: resolved.tenantId,
       dealerId: resolved.dealerId,
-      organizationUnitId: resolved.organizationUnitId,
+      organizationUnitId: null,
     };
   }
   return null;
