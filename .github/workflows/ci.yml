@@ -113,11 +113,18 @@ jobs:
 
           RELATED_LIST="$(mktemp)"
           npx jest --listTests --changedSince="${TEST_BASE_SHA}" > "${RELATED_LIST}"
-          RELATED_TEST_COUNT="$(wc -l < "${RELATED_LIST}" | tr -d ' ')"
+          RELATED_NONEMPTY="$(mktemp)"
+          RELATED_TEST_COUNT=0
+          while IFS= read -r line || [ -n "${line}" ]; do
+            if [ -n "${line}" ]; then
+              printf '%s\n' "${line}" >> "${RELATED_NONEMPTY}"
+              RELATED_TEST_COUNT=$((RELATED_TEST_COUNT + 1))
+            fi
+          done < "${RELATED_LIST}"
           echo "CI_RELATED_TEST_COUNT=${RELATED_TEST_COUNT}"
           echo "RELATED_TEST_COUNT=${RELATED_TEST_COUNT}"
           echo "RELATED_TESTS<<"
-          cat "${RELATED_LIST}"
+          cat "${RELATED_NONEMPTY}"
           echo ">>"
 
           if [ "${PRODUCT_OR_HARNESS_CHANGED}" = "YES" ] && [ "${RELATED_TEST_COUNT}" -eq 0 ]; then
@@ -127,7 +134,20 @@ jobs:
 
           if [ "${RELATED_TEST_COUNT}" -gt 0 ]; then
             echo "JEST_CHANGED_SINCE=RUN"
-            npm test -- --ci --changedSince="${TEST_BASE_SHA}"
+            JEST_OUT="$(mktemp)"
+            set +e
+            npm test -- --ci --changedSince="${TEST_BASE_SHA}" > "${JEST_OUT}" 2>&1
+            JEST_RC=$?
+            set -e
+            cat "${JEST_OUT}"
+            if grep -F "No tests found" "${JEST_OUT}" >/dev/null 2>&1; then
+              echo "JEST_NONEMPTY_LIST_BUT_NO_TESTS_EXECUTED"
+              exit 1
+            fi
+            if [ "${JEST_RC}" -ne 0 ]; then
+              echo "JEST_CHANGED_SINCE=FAIL"
+              exit "${JEST_RC}"
+            fi
             echo "JEST_CHANGED_SINCE=PASS"
             exit 0
           fi
@@ -135,7 +155,12 @@ jobs:
           echo "NO_RELEVANT_TESTS=NOT_APPLICABLE"
           DISCOVERED_LIST="$(mktemp)"
           npx jest --listTests > "${DISCOVERED_LIST}"
-          TOTAL_DISCOVERED_TEST_FILES="$(wc -l < "${DISCOVERED_LIST}" | tr -d ' ')"
+          TOTAL_DISCOVERED_TEST_FILES=0
+          while IFS= read -r line || [ -n "${line}" ]; do
+            if [ -n "${line}" ]; then
+              TOTAL_DISCOVERED_TEST_FILES=$((TOTAL_DISCOVERED_TEST_FILES + 1))
+            fi
+          done < "${DISCOVERED_LIST}"
           echo "TOTAL_DISCOVERED_TEST_FILES=${TOTAL_DISCOVERED_TEST_FILES}"
           if [ "${TOTAL_DISCOVERED_TEST_FILES}" -le 0 ]; then
             echo "JEST_DISCOVERY_EMPTY"
