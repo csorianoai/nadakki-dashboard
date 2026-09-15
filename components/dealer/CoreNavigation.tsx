@@ -43,14 +43,16 @@ export function CoreNavigation() {
 
   useEffect(() => {
     async function loadEntitlements() {
-      const ctx: DealerEntitlementContext | null = await entitlementsAPI.getContext();
+      const result = await entitlementsAPI.getContextResult();
+      const ctx: DealerEntitlementContext | null = result.context;
+      const missingReason = ctx ? "DEFAULT_DENY" : result.reason_code ?? "DEFAULT_DENY";
       const items: NavItem[] = [];
 
       for (const [label, capability_id] of Object.entries(CORE_CAPABILITIES)) {
         const decision =
           ctx?.capabilities[capability_id] ?? ({
             allowed: false,
-            reason_code: "DEFAULT_DENY",
+            reason_code: missingReason,
           } as EntitlementDecision);
 
         items.push({
@@ -89,6 +91,8 @@ function NavItemRenderer({ item }: { item: NavItem }) {
     return (
       <div
         className="flex cursor-not-allowed items-center justify-between rounded-r-sm border border-nk-border bg-nk-surface-2 p-3 text-nk-fg-muted"
+        data-reason-code={decision.reason_code}
+        data-allowed="false"
         title={`${label} — ${info?.description ?? decision.reason_code}`}
       >
         <span>🔒 {label}</span>
@@ -100,12 +104,19 @@ function NavItemRenderer({ item }: { item: NavItem }) {
   }
 
   if (!decision.allowed) {
-    const badge = decision.reason_code === "LIMIT_REACHED" ? "Limit Hit" : "Locked";
+    const badge =
+      decision.reason_code === "LIMIT_REACHED"
+        ? "Limit Hit"
+        : decision.reason_code === "NO_ORGANIZATION_UNIT"
+          ? "No organization unit"
+          : "Locked";
 
     return (
       <div
         className="flex cursor-not-allowed items-center justify-between rounded-r-sm border border-nk-border bg-nk-surface-2 p-3 text-nk-fg-muted"
-        title={info?.description}
+        data-reason-code={decision.reason_code}
+        data-allowed="false"
+        title={info?.description ?? decision.reason_code}
       >
         <span>
           🔒 {label}{" "}
@@ -127,6 +138,8 @@ function NavItemRenderer({ item }: { item: NavItem }) {
   return (
     <Link
       href={href}
+      data-reason-code={decision.reason_code}
+      data-allowed="true"
       className="flex items-center justify-between rounded-r-sm border border-brand-2/30 bg-brand-2/5 p-3 text-nk-fg transition hover:bg-brand-2/10"
     >
       <span>

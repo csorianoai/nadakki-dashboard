@@ -1,8 +1,13 @@
 import { entitlementsAPI, reasonCodeFromEntitlementError } from "@/lib/autos-portal/entitlements-api";
+import {
+  resetDealerAccessMemoryForTests,
+  setDealerAccessContext,
+} from "@/lib/dealer/access-context";
 
 describe("Entitlements API Client", () => {
   beforeEach(() => {
     global.fetch = jest.fn();
+    resetDealerAccessMemoryForTests();
     Object.defineProperty(window, "localStorage", {
       value: {
         getItem: jest.fn((key: string) => {
@@ -10,8 +15,15 @@ describe("Entitlements API Client", () => {
           if (key === "nadakki_tenant_id") return "tenant-123";
           return null;
         }),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
       },
       writable: true,
+    });
+    setDealerAccessContext({
+      tenantId: "tenant-123",
+      dealerId: "dealer-123",
+      organizationUnitId: "ou-123",
     });
   });
 
@@ -94,5 +106,30 @@ describe("Entitlements API Client", () => {
 
     const caps = await entitlementsAPI.getEffectiveCapabilities("dealer-123");
     expect(caps?.["inventory.vehicle.publish"]?.allowed).toBe(true);
+  });
+
+  test("checkAccess transports dealer and organization_unit on the request", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ allowed: true, reason_code: "ALLOWED" }),
+    });
+
+    await entitlementsAPI.checkAccess("autos.inventory.view");
+
+    const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
+    expect(String(url)).toContain("/api/v1/autos/entitlements/check");
+    expect(init.headers["X-Tenant-ID"]).toBe("tenant-123");
+    expect(init.headers["X-Dealer-ID"]).toBe("dealer-123");
+    expect(init.headers["X-Organization-Unit-ID"]).toBe("ou-123");
+    const body = JSON.parse(String(init.body));
+    expect(body.tenant_id).toBe("tenant-123");
+    expect(body.dealer_id).toBe("dealer-123");
+    expect(body.organization_unit_id).toBe("ou-123");
+  });
+
+  test("getEffectiveCapabilities rejects a dealer id that is not the selected context", async () => {
+    const caps = await entitlementsAPI.getEffectiveCapabilities("other-dealer");
+    expect(caps).toBeNull();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

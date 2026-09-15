@@ -21,7 +21,14 @@ export default function DealerLeadsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await getLeadsPriority(getDealerId(), {
+    const dealerId = getDealerId();
+    if (!dealerId) {
+      setLeads([]);
+      setDemoMode(false);
+      setLoading(false);
+      return;
+    }
+    const res = await getLeadsPriority(dealerId, {
       vehicleId: vehicleFilter === "all" ? undefined : vehicleFilter,
       tier: tierFilter,
       status: statusFilter,

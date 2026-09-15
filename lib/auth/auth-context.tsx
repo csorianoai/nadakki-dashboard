@@ -15,6 +15,7 @@ import {
 import { tokenStorage } from "./token-storage";
 import { scheduleProactiveRefresh, cancelProactiveRefresh } from "./token-refresh";
 import { clearWizardDraftStorage } from "@/lib/credit-hub/dealer/wizard-draft-storage";
+import { clearDealerAccessContextFully } from "@/lib/dealer/access-context";
 
 // ── localStorage keys that must stay in sync with JWT claims ──────────────
 /** JWT claim → localStorage keys. TEST HOOK: exported for executable tests (C2). */
@@ -46,6 +47,7 @@ export function clearLocalStorage() {
   for (const key of Object.values(LS_KEYS)) {
     localStorage.removeItem(key);
   }
+  clearDealerAccessContextFully();
 }
 
 const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
