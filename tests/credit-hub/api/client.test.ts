@@ -3,6 +3,7 @@ import {
   CHMutationForbiddenError,
   TenantRequiredError,
   chFetch,
+  extractCreditHubReasonCode,
   resolveCreditHubFetchUrl,
 } from "@/lib/credit-hub/api/client";
 import { FeatureDisabledError } from "@/lib/credit-hub/utils/featureDisabled";
@@ -256,6 +257,52 @@ describe("chFetch - error handling", () => {
     );
   });
 
+  test("preserves reason_code on 409 already_claimed envelope", async () => {
+    installFetchMock().mockResolvedValue(
+      await mockJson({ detail: { error: "already_claimed", message: "taken" } }, 409),
+    );
+    await expect(chFetch("/test", { tenantId: "t", actorRole: "bank_analyst", method: "POST" })).rejects.toMatchObject({
+      status: 409,
+      reasonCode: "already_claimed",
+      detail: "Esta solicitud ya fue reclamada por otro analista",
+    });
+  });
+
+  test("preserves reason_code on 403 NO_ORGANIZATION_UNIT envelope", async () => {
+    installFetchMock().mockResolvedValue(
+      await mockJson({ reason_code: "NO_ORGANIZATION_UNIT" }, 403),
+    );
+    await expect(chFetch("/test", { tenantId: "t", actorRole: "dealer" })).rejects.toMatchObject({
+      status: 403,
+      reasonCode: "NO_ORGANIZATION_UNIT",
+      detail: "Falta la unidad organizacional para completar esta acción",
+    });
+  });
+
+  test("401 uses envelope message instead of a blank Unauthorized", async () => {
+    const fetchSpy = installFetchMock().mockResolvedValue(
+      await mockJson({ detail: { error: "not_authenticated" } }, 401),
+    );
+    await expect(chFetch("/test", { tenantId: "t", actorRole: "dealer" })).rejects.toMatchObject({
+      status: 401,
+      reasonCode: "not_authenticated",
+      detail: "Debes iniciar sesión para continuar",
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not retry 501 Not Implemented", async () => {
+    const fetchSpy = installFetchMock().mockResolvedValue(
+      await mockJson({ reason_code: "TARGET_CORE_NOT_READY" }, 501),
+    );
+    await expect(chFetch("/test", { tenantId: "t", actorRole: "dealer" })).rejects.toMatchObject({
+      status: 501,
+      reasonCode: "TARGET_CORE_NOT_READY",
+      detail: "Este núcleo todavía no está disponible",
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
   test("translates FastAPI validation arrays instead of exposing raw JSON", async () => {
     installFetchMock().mockResolvedValue(await mockJson({
       detail: [{ type: "missing", loc: ["body", "changes"], msg: "Field required" }],
@@ -275,6 +322,13 @@ describe("chFetch - error handling", () => {
       CHApiError
     );
     expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  test("extractCreditHubReasonCode reads nested FastAPI envelopes", () => {
+    expect(extractCreditHubReasonCode({ detail: { reason_code: "TARGET_CORE_NOT_READY" } })).toBe(
+      "TARGET_CORE_NOT_READY",
+    );
+    expect(extractCreditHubReasonCode({ error_code: "already_claimed" })).toBe("already_claimed");
   });
 
   test("200 with body returns parsed json", async () => {

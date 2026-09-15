@@ -1,4 +1,4 @@
-import { entitlementsAPI } from "@/lib/autos-portal/entitlements-api";
+import { entitlementsAPI, reasonCodeFromEntitlementError } from "@/lib/autos-portal/entitlements-api";
 
 describe("Entitlements API Client", () => {
   beforeEach(() => {
@@ -35,6 +35,35 @@ describe("Entitlements API Client", () => {
     const decision = await entitlementsAPI.checkAccess("marketing.campaigns.create");
     expect(decision.allowed).toBe(false);
     expect(decision.reason_code).toBe("DEFAULT_DENY");
+  });
+
+  test("checkAccess keeps TARGET_CORE_NOT_READY from a 501 envelope", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 501,
+      json: async () => ({ reason_code: "TARGET_CORE_NOT_READY" }),
+    });
+
+    const decision = await entitlementsAPI.checkAccess("autos.inventory.view");
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason_code).toBe("TARGET_CORE_NOT_READY");
+  });
+
+  test("checkAccess keeps NO_ORGANIZATION_UNIT from a 403 envelope", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ detail: { error: "NO_ORGANIZATION_UNIT" } }),
+    });
+
+    const decision = await entitlementsAPI.checkAccess("credit.applications.create");
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason_code).toBe("NO_ORGANIZATION_UNIT");
+  });
+
+  test("reasonCodeFromEntitlementError maps bare 501 to TARGET_CORE_NOT_READY", () => {
+    expect(reasonCodeFromEntitlementError(null, 501)).toBe("TARGET_CORE_NOT_READY");
+    expect(reasonCodeFromEntitlementError({}, 403)).toBe("DEFAULT_DENY");
   });
 
   test("recordUsage includes idempotency key", async () => {
