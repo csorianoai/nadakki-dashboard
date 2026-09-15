@@ -15,6 +15,10 @@ describe("login HTTP errors", () => {
   test("reports invalid credentials, not a network failure", async () => {
     const { loginV2 } = require("../../lib/api/auth-v2");
     const result = await loginV2("missing@example.com", "wrong");
-    expect(result).toEqual({ ok: false, error: "Credenciales inválidas." });
+    expect(result).toEqual({
+      ok: false,
+      status: 401,
+      error: "Credenciales inválidas.",
+    });
   });
 });

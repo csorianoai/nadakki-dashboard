@@ -6,7 +6,39 @@ import { isTenantSlug, TENANTS } from "@/lib/tenants";
 import type {
   DealerEntitlementContext,
   EntitlementDecision,
+  EntitlementReasonCode,
 } from "@/types/entitlements";
+import { ENTITLEMENT_REASON_CODES } from "@/types/entitlements";
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function knownReasonCode(value: unknown): EntitlementReasonCode | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().toUpperCase();
+  return ENTITLEMENT_REASON_CODES.find((code) => code === normalized);
+}
+
+export function reasonCodeFromEntitlementError(
+  body: unknown,
+  status: number,
+): EntitlementReasonCode {
+  const root = asRecord(body);
+  const detail = asRecord(root?.detail);
+  const fromEnvelope =
+    knownReasonCode(root?.reason_code) ||
+    knownReasonCode(root?.error_code) ||
+    knownReasonCode(root?.error) ||
+    knownReasonCode(detail?.reason_code) ||
+    knownReasonCode(detail?.error_code) ||
+    knownReasonCode(detail?.error);
+  if (fromEnvelope) return fromEnvelope;
+  if (status === 501) return "TARGET_CORE_NOT_READY";
+  return "DEFAULT_DENY";
+}
 
 function getTenantId(): string {
   if (typeof window === "undefined") {
@@ -65,7 +97,16 @@ export const entitlementsAPI = {
       });
 
       if (!response.ok) {
-        return { allowed: false, reason_code: "DEFAULT_DENY" };
+        let body: unknown = null;
+        try {
+          body = await response.json();
+        } catch {
+          body = null;
+        }
+        return {
+          allowed: false,
+          reason_code: reasonCodeFromEntitlementError(body, response.status),
+        };
       }
 
       return (await response.json()) as EntitlementDecision;

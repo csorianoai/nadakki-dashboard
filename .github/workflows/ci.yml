@@ -134,20 +134,63 @@ jobs:
 
           if [ "${RELATED_TEST_COUNT}" -gt 0 ]; then
             echo "JEST_CHANGED_SINCE=RUN"
+            HEAD_JSON="$(mktemp)"
             JEST_OUT="$(mktemp)"
             set +e
-            npm test -- --ci --changedSince="${TEST_BASE_SHA}" > "${JEST_OUT}" 2>&1
-            JEST_RC=$?
+            npm test -- --ci --changedSince="${TEST_BASE_SHA}" --json --outputFile="${HEAD_JSON}" > "${JEST_OUT}" 2>&1
+            HEAD_RC=$?
             set -e
             cat "${JEST_OUT}"
             if grep -F "No tests found" "${JEST_OUT}" >/dev/null 2>&1; then
               echo "JEST_NONEMPTY_LIST_BUT_NO_TESTS_EXECUTED"
               exit 1
             fi
-            if [ "${JEST_RC}" -ne 0 ]; then
-              echo "JEST_CHANGED_SINCE=FAIL"
-              exit "${JEST_RC}"
+            if [ "${HEAD_RC}" -eq 0 ]; then
+              echo "JEST_CHANGED_SINCE=PASS"
+              exit 0
             fi
+            if [ ! -s "${HEAD_JSON}" ]; then
+              echo "JEST_CHANGED_SINCE=FAIL"
+              exit "${HEAD_RC}"
+            fi
+
+            FAILED_FILES="$(node .github/scripts/jest-regression-gate.mjs --failed-files "${HEAD_JSON}")"
+            if [ -z "${FAILED_FILES}" ]; then
+              echo "JEST_CHANGED_SINCE=FAIL"
+              exit "${HEAD_RC}"
+            fi
+            echo "HEAD_FAILED_FILES<<"
+            printf '%s\n' "${FAILED_FILES}"
+            echo ">>"
+
+            BASE_DIR="${RUNNER_TEMP}/ci-base"
+            git worktree add --detach "${BASE_DIR}" "${TEST_BASE_SHA}"
+            LOCK_CHANGED="NO"
+            if grep -Fxq "package-lock.json" "${CHANGED_FILE}"; then
+              LOCK_CHANGED="YES"
+            fi
+            if [ "${LOCK_CHANGED}" = "YES" ]; then
+              (cd "${BASE_DIR}" && npm ci)
+            else
+              ln -s "${GITHUB_WORKSPACE}/node_modules" "${BASE_DIR}/node_modules"
+            fi
+
+            BASE_JSON="$(mktemp)"
+            mapfile -t BASE_TEST_FILES <<< "${FAILED_FILES}"
+            set +e
+            (
+              cd "${BASE_DIR}"
+              NEXT_PUBLIC_BACKEND_URL=http://backend.invalid npx jest --ci --json --outputFile="${BASE_JSON}" "${BASE_TEST_FILES[@]}"
+            )
+            BASE_RC=$?
+            set -e
+            echo "BASE_JEST_EXIT=${BASE_RC}"
+            if [ ! -s "${BASE_JSON}" ]; then
+              echo "BASELINE_REPRO_UNAVAILABLE"
+              exit 1
+            fi
+
+            node .github/scripts/jest-regression-gate.mjs "${HEAD_JSON}" "${BASE_JSON}"
             echo "JEST_CHANGED_SINCE=PASS"
             exit 0
           fi

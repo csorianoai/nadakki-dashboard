@@ -1,5 +1,5 @@
 import type { EntitlementDecision } from "@/types/entitlements";
-import { REASON_CODE_INFO } from "@/types/entitlements";
+import { ENTITLEMENT_REASON_CODES, REASON_CODE_INFO } from "@/types/entitlements";
 
 describe("Entitlements Types", () => {
   test("EntitlementDecision shape", () => {
@@ -15,15 +15,7 @@ describe("Entitlements Types", () => {
   });
 
   test("All reason codes have info", () => {
-    const codes: EntitlementDecision["reason_code"][] = [
-      "ALLOWED",
-      "UPGRADE_REQUIRED",
-      "LIMIT_REACHED",
-      "TARGET_CORE_NOT_READY",
-      "PROVIDER_ACTIVATION_REQUIRED",
-      "DEFAULT_DENY",
-    ];
-    codes.forEach((code) => {
+    ENTITLEMENT_REASON_CODES.forEach((code) => {
       expect(REASON_CODE_INFO[code]).toBeDefined();
       expect(REASON_CODE_INFO[code]?.title).toBeTruthy();
     });
@@ -43,5 +35,14 @@ describe("Entitlements Types", () => {
       target_readiness: "BLOCKED",
     };
     expect(decision.target_readiness).toBe("BLOCKED");
+  });
+
+  test("NO_ORGANIZATION_UNIT is a first-class reason_code", () => {
+    const decision: EntitlementDecision = {
+      allowed: false,
+      reason_code: "NO_ORGANIZATION_UNIT",
+    };
+    expect(decision.reason_code).toBe("NO_ORGANIZATION_UNIT");
+    expect(REASON_CODE_INFO.NO_ORGANIZATION_UNIT.title).toBeTruthy();
   });
 });
