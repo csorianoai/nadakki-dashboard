@@ -216,6 +216,8 @@ export interface CapabilityAccess {
 
 export interface DealerEntitlementContext {
   tenant_id: string;
+  dealer_id?: string;
+  organization_unit_id?: string;
   plan_slug: PlanSlug;
   plan_version: number;
   subscription_status: "ACTIVE" | "PAST_DUE" | "SUSPENDED";

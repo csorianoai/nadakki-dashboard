@@ -2,7 +2,12 @@
 
 import { getAuthHeaders, resolveApiUrl } from "@/lib/api/fetch-client";
 import { tokenStorage } from "@/lib/auth/token-storage";
-import { isTenantSlug, TENANTS } from "@/lib/tenants";
+import {
+  accessContextBody,
+  accessContextHeaders,
+  resolveDealerAccessContext,
+  type DealerAccessContext,
+} from "@/lib/dealer/access-context";
 import type {
   DealerEntitlementContext,
   EntitlementDecision,
@@ -40,20 +45,20 @@ export function reasonCodeFromEntitlementError(
   return "DEFAULT_DENY";
 }
 
-function getTenantId(): string {
-  if (typeof window === "undefined") {
-    return process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ?? TENANTS.nadakki.tenantId;
-  }
+function denied(reason_code: EntitlementReasonCode): EntitlementDecision {
+  return { allowed: false, reason_code };
+}
 
-  const stored = window.localStorage.getItem("nadakki_tenant_id");
-  if (stored) return stored;
+function readyContextOrDeny(): DealerAccessContext | EntitlementDecision {
+  const resolved = resolveDealerAccessContext();
+  if (resolved.status === "ready") return resolved.context;
+  return denied(resolved.reason_code);
+}
 
-  const slug =
-    document.documentElement.getAttribute("data-tenant") ??
-    window.localStorage.getItem("nadakki-autos-tenant");
-  if (slug && isTenantSlug(slug)) return TENANTS[slug].tenantId;
-
-  return process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ?? TENANTS.nadakki.tenantId;
+function isDealerAccessContext(
+  value: DealerAccessContext | EntitlementDecision,
+): value is DealerAccessContext {
+  return "dealerId" in value && "organizationUnitId" in value;
 }
 
 function getAuthToken(): string {
@@ -65,10 +70,10 @@ function getAuthToken(): string {
   return "";
 }
 
-function authHeaders(): Record<string, string> {
+function authHeaders(context?: DealerAccessContext): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "X-Tenant-ID": getTenantId(),
+    ...(context ? accessContextHeaders(context) : {}),
   };
   const token = getAuthToken();
   if (token) {
@@ -85,15 +90,59 @@ export const entitlementsAPI = {
     capability_id: string,
     options?: { requested_units?: number; resource_id?: string },
   ): Promise<EntitlementDecision> {
+    const gate = readyContextOrDeny();
+    if (isDealerAccessContext(gate)) {
+      try {
+        const response = await fetch(resolveApiUrl("/api/v1/autos/entitlements/check"), {
+          method: "POST",
+          headers: authHeaders(gate),
+          body: JSON.stringify({
+            capability_id,
+            requested_units: options?.requested_units ?? 1,
+            resource_id: options?.resource_id,
+            ...accessContextBody(gate),
+          }),
+        });
+
+        if (!response.ok) {
+          let body: unknown = null;
+          try {
+            body = await response.json();
+          } catch {
+            body = null;
+          }
+          return {
+            allowed: false,
+            reason_code: reasonCodeFromEntitlementError(body, response.status),
+          };
+        }
+
+        return (await response.json()) as EntitlementDecision;
+      } catch (error) {
+        console.error("[Entitlements] checkAccess error:", error);
+        return { allowed: false, reason_code: "DEFAULT_DENY" };
+      }
+    }
+    return gate;
+  },
+
+  async getContext(): Promise<DealerEntitlementContext | null> {
+    const result = await entitlementsAPI.getContextResult();
+    return result.context;
+  },
+
+  async getContextResult(): Promise<{
+    context: DealerEntitlementContext | null;
+    reason_code: EntitlementReasonCode | null;
+  }> {
+    const resolved = resolveDealerAccessContext();
+    if (resolved.status !== "ready") {
+      return { context: null, reason_code: resolved.reason_code };
+    }
+
     try {
-      const response = await fetch(resolveApiUrl("/api/v1/autos/entitlements/check"), {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          capability_id,
-          requested_units: options?.requested_units ?? 1,
-          resource_id: options?.resource_id,
-        }),
+      const response = await fetch(resolveApiUrl("/api/v1/autos/entitlements/context"), {
+        headers: authHeaders(resolved.context),
       });
 
       if (!response.ok) {
@@ -104,56 +153,46 @@ export const entitlementsAPI = {
           body = null;
         }
         return {
-          allowed: false,
+          context: null,
           reason_code: reasonCodeFromEntitlementError(body, response.status),
         };
       }
 
-      return (await response.json()) as EntitlementDecision;
-    } catch (error) {
-      console.error("[Entitlements] checkAccess error:", error);
-      return { allowed: false, reason_code: "DEFAULT_DENY" };
-    }
-  },
-
-  async getContext(): Promise<DealerEntitlementContext | null> {
-    try {
-      const response = await fetch(resolveApiUrl("/api/v1/autos/entitlements/context"), {
-        headers: authHeaders(),
-      });
-
-      if (!response.ok) {
-        return null;
-      }
-
-      return (await response.json()) as DealerEntitlementContext;
+      return {
+        context: (await response.json()) as DealerEntitlementContext,
+        reason_code: null,
+      };
     } catch (error) {
       console.error("[Entitlements] getContext error:", error);
-      return null;
+      return { context: null, reason_code: "DEFAULT_DENY" };
     }
   },
 
   async getEffectiveCapabilities(
     dealerId: string,
   ): Promise<Record<string, { allowed: boolean; source: string; limits?: unknown }> | null> {
-    try {
-      const response = await fetch(
-        resolveApiUrl(`/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/effective-capabilities`),
-        { headers: authHeaders() },
-      );
+    const gate = readyContextOrDeny();
+    if (isDealerAccessContext(gate) && gate.dealerId === dealerId.trim()) {
+      try {
+        const response = await fetch(
+          resolveApiUrl(`/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/effective-capabilities`),
+          { headers: authHeaders(gate) },
+        );
 
-      if (!response.ok) {
+        if (!response.ok) {
+          return null;
+        }
+
+        const payload = (await response.json()) as {
+          capabilities?: Record<string, { allowed: boolean; source: string; limits?: unknown }>;
+        };
+        return payload.capabilities ?? null;
+      } catch (error) {
+        console.error("[Entitlements] getEffectiveCapabilities error:", error);
         return null;
       }
-
-      const payload = (await response.json()) as {
-        capabilities?: Record<string, { allowed: boolean; source: string; limits?: unknown }>;
-      };
-      return payload.capabilities ?? null;
-    } catch (error) {
-      console.error("[Entitlements] getEffectiveCapabilities error:", error);
-      return null;
     }
+    return null;
   },
 
   async recordUsage(
@@ -162,13 +201,16 @@ export const entitlementsAPI = {
     idempotency_key?: string,
   ): Promise<{ recorded: boolean; reason?: string }> {
     try {
+    const gate = readyContextOrDeny();
+    if (isDealerAccessContext(gate)) {
       const response = await fetch(resolveApiUrl("/api/v1/autos/entitlements/usage"), {
         method: "POST",
-        headers: authHeaders(),
+        headers: authHeaders(gate),
         body: JSON.stringify({
           capability_id,
           units,
           idempotency_key,
+          ...accessContextBody(gate),
         }),
       });
 
@@ -177,6 +219,8 @@ export const entitlementsAPI = {
       }
 
       return (await response.json()) as { recorded: boolean; reason?: string };
+    }
+    return { recorded: false, reason: gate.reason_code };
     } catch (error) {
       console.error("[Entitlements] recordUsage error:", error);
       return { recorded: false, reason: "NETWORK_ERROR" };
