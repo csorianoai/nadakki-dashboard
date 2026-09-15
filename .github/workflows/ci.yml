@@ -1,0 +1,144 @@
+name: Dashboard CI
+
+on:
+  pull_request:
+    branches:
+      - staging
+      - main
+
+  push:
+    branches:
+      - staging
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: typecheck and changedSince tests
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_BACKEND_URL: http://backend.invalid
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck (global)
+        run: npm run typecheck
+
+      - name: Resolve TEST_BASE_SHA
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          ZERO_SHA="0000000000000000000000000000000000000000"
+          TEST_BASE_SHA=""
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            TEST_BASE_SHA="${PR_BASE_SHA}"
+          elif [ "$EVENT_NAME" = "push" ]; then
+            TEST_BASE_SHA="${PUSH_BEFORE}"
+          fi
+          echo "event_name=${EVENT_NAME}"
+          echo "resolved_candidate=${TEST_BASE_SHA}"
+          if [ -z "${TEST_BASE_SHA}" ] || [ "${TEST_BASE_SHA}" = "${ZERO_SHA}" ]; then
+            echo "BASE_SHA_UNAVAILABLE"
+            exit 1
+          fi
+          if ! git cat-file -e "${TEST_BASE_SHA}^{commit}"; then
+            echo "BASE_SHA_UNAVAILABLE"
+            exit 1
+          fi
+          echo "TEST_BASE_SHA=${TEST_BASE_SHA}" >> "${GITHUB_ENV}"
+          echo "TEST_BASE_SHA=${TEST_BASE_SHA}"
+
+      - name: Classify paths, list related tests, run Jest gate
+        run: |
+          set -euo pipefail
+          ZERO_SHA="0000000000000000000000000000000000000000"
+          if [ -z "${TEST_BASE_SHA:-}" ] || [ "${TEST_BASE_SHA}" = "${ZERO_SHA}" ]; then
+            echo "BASE_SHA_UNAVAILABLE"
+            exit 1
+          fi
+          if ! git cat-file -e "${TEST_BASE_SHA}^{commit}"; then
+            echo "BASE_SHA_UNAVAILABLE"
+            exit 1
+          fi
+
+          CI_CHECKOUT_SHA="$(git rev-parse HEAD)"
+          echo "CI_PR_BASE_SHA=${TEST_BASE_SHA}"
+          echo "CI_CHECKOUT_SHA=${CI_CHECKOUT_SHA}"
+
+          CHANGED_FILE="$(mktemp)"
+          git diff --name-only "${TEST_BASE_SHA}...HEAD" | sed '/^$/d' > "${CHANGED_FILE}"
+          echo "CI_CHANGED_FILES<<"
+          cat "${CHANGED_FILE}"
+          echo ">>"
+
+          PRODUCT_OR_HARNESS_CHANGED="NO"
+          while IFS= read -r path || [ -n "${path}" ]; do
+            [ -z "${path}" ] && continue
+            base="$(basename "${path}")"
+            case "${path}" in
+              app/*|components/*|lib/*|hooks/*|types/*|tests/*)
+                PRODUCT_OR_HARNESS_CHANGED="YES"
+                ;;
+            esac
+            case "${base}" in
+              jest.config.js|jest.setup.tsx|package.json|package-lock.json|tsconfig.json)
+                PRODUCT_OR_HARNESS_CHANGED="YES"
+                ;;
+              tsconfig.*.json)
+                PRODUCT_OR_HARNESS_CHANGED="YES"
+                ;;
+            esac
+            case "${path}" in
+              *.ts|*.tsx|*.js|*.jsx)
+                PRODUCT_OR_HARNESS_CHANGED="YES"
+                ;;
+            esac
+          done < "${CHANGED_FILE}"
+
+          echo "PRODUCT_OR_HARNESS_CHANGED=${PRODUCT_OR_HARNESS_CHANGED}"
+
+          RELATED_LIST="$(mktemp)"
+          npx jest --listTests --changedSince="${TEST_BASE_SHA}" > "${RELATED_LIST}"
+          RELATED_TEST_COUNT="$(wc -l < "${RELATED_LIST}" | tr -d ' ')"
+          echo "CI_RELATED_TEST_COUNT=${RELATED_TEST_COUNT}"
+          echo "RELATED_TEST_COUNT=${RELATED_TEST_COUNT}"
+          echo "RELATED_TESTS<<"
+          cat "${RELATED_LIST}"
+          echo ">>"
+
+          if [ "${PRODUCT_OR_HARNESS_CHANGED}" = "YES" ] && [ "${RELATED_TEST_COUNT}" -eq 0 ]; then
+            echo "SOURCE_CHANGED_WITH_ZERO_RELATED_TESTS"
+            exit 1
+          fi
+
+          if [ "${RELATED_TEST_COUNT}" -gt 0 ]; then
+            echo "JEST_CHANGED_SINCE=RUN"
+            npm test -- --ci --changedSince="${TEST_BASE_SHA}"
+            echo "JEST_CHANGED_SINCE=PASS"
+            exit 0
+          fi
+
+          echo "NO_RELEVANT_TESTS=NOT_APPLICABLE"
+          DISCOVERED_LIST="$(mktemp)"
+          npx jest --listTests > "${DISCOVERED_LIST}"
+          TOTAL_DISCOVERED_TEST_FILES="$(wc -l < "${DISCOVERED_LIST}" | tr -d ' ')"
+          echo "TOTAL_DISCOVERED_TEST_FILES=${TOTAL_DISCOVERED_TEST_FILES}"
+          if [ "${TOTAL_DISCOVERED_TEST_FILES}" -le 0 ]; then
+            echo "JEST_DISCOVERY_EMPTY"
+            exit 1
+          fi
+          echo "CI=PASS"
