@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Sparkles, Upload, Users, BarChart3 } from "lucide-react";
 import {
@@ -8,6 +9,7 @@ import {
   DEALER_QUICK_LINK_CAPABILITIES,
   isAccessQueryFailClosed,
 } from "@/components/dealer/CoreNavigation";
+import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import { UsageMeter } from "@/components/dealer/UsageMeter";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
@@ -42,20 +44,37 @@ export default function DealerDashboardPage() {
   const auth = useAuth();
   const query = useAccessEntitlementsBatch(CORE_NAV_CAPABILITY_KEYS);
   const failClosed = isAccessQueryFailClosed(query);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   return (
     <main className="space-y-8">
-      <header>
-        <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Dealer Hub</h1>
-        <p className="mt-1 text-nk-fg-muted">
-          Gestiona inventario, marketing y cores según tu plan
-          {auth.isAuthenticated ? (
-            <span className="ml-2 text-xs text-nk-fg-muted">· {auth.role}</span>
-          ) : (
-            <span className="ml-2 text-xs text-yellow-700">· Inicia sesión para capacidades completas</span>
-          )}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Dealer Hub</h1>
+          <p className="mt-1 text-nk-fg-muted">
+            Gestiona inventario, marketing y cores según tu plan
+            {auth.isAuthenticated ? (
+              <span className="ml-2 text-xs text-nk-fg-muted">· {auth.role}</span>
+            ) : (
+              <span className="ml-2 text-xs text-yellow-700">· Inicia sesión para capacidades completas</span>
+            )}
+          </p>
+        </div>
+        <button
+          type="button"
+          data-testid="dealer-upgrade-cta"
+          onClick={() => setUpgradeOpen(true)}
+          className="rounded-full border border-brand-2/40 bg-brand-2/10 px-4 py-2 text-sm font-semibold text-nk-fg hover:bg-brand-2/20"
+        >
+          Mejora tu plan
+        </button>
       </header>
+      {upgradeOpen ? (
+        <UpgradeModal
+          decision={{ allowed: false, reason_code: "UPGRADE_REQUIRED" }}
+          onClose={() => setUpgradeOpen(false)}
+        />
+      ) : null}
 
       <div className="grid gap-8 lg:grid-cols-3">
         <section className="space-y-4 lg:col-span-2">
