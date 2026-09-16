@@ -1,10 +1,20 @@
 "use client";
 
-import {
-  CORE_NAV_CAPABILITY_KEYS,
-  isAccessQueryFailClosed,
-} from "@/components/dealer/CoreNavigation";
+import { CORE_NAV_CAPABILITY_KEYS } from "@/components/dealer/CoreNavigation";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
+
+function usageQueryFailClosed(query: {
+  isError: boolean;
+  error: unknown;
+  isPending?: boolean;
+  isLoading?: boolean;
+  data?: { results?: Record<string, unknown> } | undefined;
+}): boolean {
+  if (query.error || query.isError) return true;
+  if (query.isPending || query.isLoading) return true;
+  if (!query.data?.results || typeof query.data.results !== "object") return true;
+  return false;
+}
 
 interface UsageMetrics {
   [capability_id: string]: {
@@ -16,7 +26,7 @@ interface UsageMetrics {
 
 export function UsageMeter() {
   const query = useAccessEntitlementsBatch(CORE_NAV_CAPABILITY_KEYS);
-  const failClosed = isAccessQueryFailClosed(query);
+  const failClosed = usageQueryFailClosed(query);
 
   if (query.isPending || query.isLoading) {
     return <p className="animate-pulse text-sm text-nk-fg-muted">Cargando uso…</p>;
