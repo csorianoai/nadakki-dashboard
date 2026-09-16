@@ -3,11 +3,12 @@
  */
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { CoreNavigation, CORE_NAV_CAPABILITY_KEYS } from "@/components/dealer/CoreNavigation";
 import { ACCESS_ENDPOINTS } from "@/lib/access/client";
 import { tokenStorage } from "@/lib/auth/token-storage";
+import { ERROR_403, ERROR_501 } from "../lib/access/fixtures";
 import { refreshAccessToken } from "@/lib/auth/token-refresh";
 import {
   resetDealerAccessMemoryForTests,
@@ -96,7 +97,7 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
       }), 200));
     const { rerender } = render(<CoreNavigation />, { wrapper: wrapperFor(client) });
     await waitFor(() => expect(document.querySelector('[data-reason-code="DEALER_A"]')).toBeTruthy());
-    seedDealer("tenant-a", "dealer-b", "ou-b");
+    seedDealer("tenant-a", "dealer-b", "ou-a");
     rerender(<CoreNavigation />);
     await waitFor(() => expect(document.querySelector('[data-reason-code="DEALER_B"]')).toBeTruthy());
     expect(document.querySelector('[data-reason-code="DEALER_A"]')).toBeNull();
@@ -150,3 +151,122 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
     expect(screen.getByText(/7 \/ 10 used/)).toBeInTheDocument();
   });
 });
+
+/** REFETCH_TRIGGER=TEST_ONLY — no production invalidateQueries on access keys (hooks.ts:15-24). */
+const RETRY_DELAY_MAX_MS = 30_000;
+
+describe("T7-STATUS-CACHE-SAFETY", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetDealerAccessMemoryForTests();
+    tokenStorage.clearTokens();
+    (refreshAccessToken as jest.Mock).mockClear();
+    global.fetch = jest.fn();
+    seedDealer("tenant-a", "dealer-a", "ou-a");
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test("T1 same key: 200 allowed then 403 fail-closed", async () => {
+    const client = newClient();
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse(
+        batchOk({
+          "autos.inventory.view": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
+        }),
+        200,
+      ),
+    );
+    render(<CoreNavigation />, { wrapper: wrapperFor(client) });
+    await waitFor(() => expect(document.querySelector('[data-allowed="true"]')).toBeTruthy());
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_403, 403));
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: ["access"] });
+    });
+    await waitFor(() => {
+      expect(document.querySelector('[data-allowed="true"]')).toBeNull();
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    });
+  });
+
+  test("T2 same key: 200 allowed then 501 TARGET_CORE_NOT_READY fail-closed", async () => {
+    const client = newClient();
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse(
+        batchOk({
+          "autos.inventory.view": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
+        }),
+        200,
+      ),
+    );
+    render(<CoreNavigation />, { wrapper: wrapperFor(client) });
+    await waitFor(() => expect(document.querySelector('[data-allowed="true"]')).toBeTruthy());
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_501, 501));
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: ["access"] });
+    });
+    await waitFor(() => {
+      expect(document.querySelector('[data-allowed="true"]')).toBeNull();
+      expect(document.querySelector('[data-reason-code="TARGET_CORE_NOT_READY"]')).toBeTruthy();
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    });
+  });
+
+  test("T3 403 does not call tokenStorage.clearTokens", async () => {
+    const spy = jest.spyOn(tokenStorage, "clearTokens");
+    spy.mockClear();
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_403, 403));
+    render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
+    await waitFor(() => expect(document.querySelector('[data-allowed="false"]')).toBeTruthy());
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  test("T4a 403 exactly 1 request past retryDelay max", async () => {
+    jest.useFakeTimers();
+    (global.fetch as jest.Mock).mockReset();
+    (global.fetch as jest.Mock).mockResolvedValue(jsonResponse(ERROR_403, 403));
+    render(<CoreNavigation />, { wrapper: wrapperFor(new QueryClient()) });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(RETRY_DELAY_MAX_MS + 1_000);
+    });
+    expect((global.fetch as jest.Mock).mock.calls.length).toBe(1);
+  });
+
+  test("T4b 501 exactly 1 request past retryDelay max", async () => {
+    jest.useFakeTimers();
+    (global.fetch as jest.Mock).mockReset();
+    (global.fetch as jest.Mock).mockResolvedValue(jsonResponse(ERROR_501, 501));
+    render(<CoreNavigation />, { wrapper: wrapperFor(new QueryClient()) });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(RETRY_DELAY_MAX_MS + 1_000);
+    });
+    expect((global.fetch as jest.Mock).mock.calls.length).toBe(1);
+  });
+
+  test("T8 RACE_NOT_REACHABLE_BY_PRODUCTION_MECHANISM", () => {
+    const fs = require("fs") as typeof import("fs");
+    const path = require("path") as typeof import("path");
+    const hooksSrc = fs.readFileSync(path.join(process.cwd(), "lib/access/hooks.ts"), "utf8");
+    const navSrc = fs.readFileSync(path.join(process.cwd(), "components/dealer/CoreNavigation.tsx"), "utf8");
+    expect(hooksSrc).toMatch(/queryFn: \(\) => fetchEntitlementsBatch/);
+    expect(hooksSrc).not.toMatch(/signal/);
+    expect(hooksSrc).toMatch(/staleTime: 60_000/);
+    expect(hooksSrc).toMatch(/refetchOnWindowFocus: false/);
+    expect(hooksSrc).not.toMatch(/refetchInterval/);
+    expect(navSrc).not.toMatch(/invalidateQueries/);
+  });
+});
+

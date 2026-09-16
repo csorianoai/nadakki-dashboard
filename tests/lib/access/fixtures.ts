@@ -22,7 +22,13 @@ export const ERROR_403 = {
 /** routers/autos_core_access_router.py:276-278 */
 export const ERROR_409 = { detail: { reason_code: "SUBSCRIPTION_EXISTS" } };
 export const ERROR_422 = { detail: { reason_code: "VALIDATION_ERROR" } };
-/** routers/autos_bridges.py:136-141, 1041-1048 */
+/**
+ * DEFENSIVE_NOT_NATIVE: batch HTTP itself returns 200 with reason_code in results
+ * (autos_core_access_router.py:440-467). HTTP 501 TARGET_CORE_NOT_READY is native
+ * to entitlement guards on bridges, not the batch route.
+ * BACKEND_SHA 0fa36d53980ea34a0c104efebb1c9c2b39e0b3ee
+ * routers/autos_bridges.py:136-141, 1041-1048
+ */
 export const ERROR_501 = {
   detail: {
     reason_code: "TARGET_CORE_NOT_READY",
