@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { CoreNavigation, CORE_NAV_CAPABILITY_KEYS } from "@/components/dealer/CoreNavigation";
 import { ACCESS_ENDPOINTS } from "@/lib/access/client";
 import { tokenStorage } from "@/lib/auth/token-storage";
-import { ERROR_403, ERROR_501 } from "../lib/access/fixtures";
+import { ERROR_401, ERROR_403, ERROR_501 } from "../lib/access/fixtures";
 import { refreshAccessToken } from "@/lib/auth/token-refresh";
 import {
   resetDealerAccessMemoryForTests,
@@ -269,4 +269,103 @@ describe("T7-STATUS-CACHE-SAFETY", () => {
     expect(navSrc).not.toMatch(/invalidateQueries/);
   });
 });
+
+/**
+ * 401 AUTH_REQUIRED — autos_core_access_router.py:50 BACKEND_SHA 014c82301be44a9ce4e681eba9fcf72d89a7f03b
+ * 403 NO_ORGANIZATION_UNIT — autos_bridges.py:118-120 same SHA (batch 200 does not emit HTTP 403)
+ * 409 string detail — autos_core_access_router.py:276-278 (no reason_code field)
+ * 422 FastAPI RequestValidationError — not an explicit router branch
+ */
+const HTTP_409_NATIVE = { detail: "Tenant already has an active subscription" };
+const HTTP_422_FASTAPI = {
+  detail: [{ loc: ["query", "capabilities"], msg: "value is not a valid string", type: "type_error.str" }],
+};
+
+describe("DASH-ACCESS-ERROR-UX-01", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetDealerAccessMemoryForTests();
+    tokenStorage.clearTokens();
+    (refreshAccessToken as jest.Mock).mockClear();
+    global.fetch = jest.fn();
+    seedDealer("tenant-a", "dealer-a", "ou-a");
+  });
+
+  test("T1 401 surfaces auth failure and uses refreshAccessToken", async () => {
+    const spy = jest.spyOn(tokenStorage, "clearTokens");
+    spy.mockClear();
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_401, 401));
+    render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
+    await waitFor(() => expect(document.querySelector('[data-access-error="auth"]')).toBeTruthy());
+    expect(document.querySelector('[data-http-status="401"]')).toBeTruthy();
+    expect(screen.getByRole("alert").textContent).toMatch(/AUTH_REQUIRED/);
+    expect(refreshAccessToken).toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-allowed="true"]')).toBeNull();
+    spy.mockRestore();
+  });
+
+  test("T2 403 fail-closed without logout", async () => {
+    const spy = jest.spyOn(tokenStorage, "clearTokens");
+    spy.mockClear();
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_403, 403));
+    render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
+    await waitFor(() => expect(document.querySelector('[data-access-error="denied"]')).toBeTruthy());
+    expect(document.querySelector('[data-http-status="403"]')).toBeTruthy();
+    expect(document.querySelector('[data-reason-code="NO_ORGANIZATION_UNIT"]')).toBeTruthy();
+    expect(document.querySelector('[data-access-error="auth"]')).toBeNull();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  test("T3 409 conflict preserves parser reason_code and does not logout", async () => {
+    const spy = jest.spyOn(tokenStorage, "clearTokens");
+    spy.mockClear();
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(HTTP_409_NATIVE, 409));
+    render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
+    await waitFor(() => expect(document.querySelector('[data-access-error="conflict"]')).toBeTruthy());
+    const banner = document.querySelector('[data-access-error="conflict"]');
+    expect(banner).toHaveAttribute("data-http-status", "409");
+    expect(banner).toHaveAttribute("data-reason-code", "");
+    expect(screen.getByRole("alert").textContent).toContain("Tenant already has an active subscription");
+    expect(document.querySelector('[data-access-error="denied"]')).toBeNull();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  test("T4 422 validation is not deny or auth and does not logout", async () => {
+    const spy = jest.spyOn(tokenStorage, "clearTokens");
+    spy.mockClear();
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(HTTP_422_FASTAPI, 422));
+    render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
+    await waitFor(() => expect(document.querySelector('[data-access-error="validation"]')).toBeTruthy());
+    const banner = document.querySelector('[data-access-error="validation"]');
+    expect(banner).toHaveAttribute("data-http-status", "422");
+    expect(banner).toHaveAttribute("data-reason-code", "");
+    expect(screen.getByRole("alert").textContent).toMatch(/Validation error/);
+    expect(document.querySelector('[data-access-error="denied"]')).toBeNull();
+    expect(document.querySelector('[data-access-error="auth"]')).toBeNull();
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  test("T5 403/409/422 never set data-allowed=true", async () => {
+    const cases: Array<[unknown, number]> = [
+      [ERROR_403, 403],
+      [HTTP_409_NATIVE, 409],
+      [HTTP_422_FASTAPI, 422],
+    ];
+    for (const [body, status] of cases) {
+      (global.fetch as jest.Mock).mockReset();
+      (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(body, status));
+      const { unmount } = render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
+      await waitFor(() => expect(screen.queryByText(/Cargando capacidades/)).not.toBeInTheDocument());
+      expect(document.querySelector('[data-allowed="true"]')).toBeNull();
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+});
+
 
