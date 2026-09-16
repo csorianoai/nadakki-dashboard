@@ -40,6 +40,25 @@ function asReason(value: string | null | undefined): EntitlementReasonCode {
   return (value || "DEFAULT_DENY") as EntitlementReasonCode;
 }
 
+/** HTTP kind only — body reason_code stays on AccessApiError from lib/access/client.ts. */
+function accessErrorKind(status: number): "auth" | "denied" | "conflict" | "validation" | "error" {
+  if (status === 401) return "auth";
+  if (status === 403) return "denied";
+  if (status === 409) return "conflict";
+  if (status === 422) return "validation";
+  return "error";
+}
+
+function accessErrorCopy(error: AccessApiError): string {
+  if (typeof error.detail === "string" && error.detail.trim()) return error.detail;
+  if (error.reason_code) return error.reason_code;
+  if (error.status === 401) return "Session expired";
+  if (error.status === 422) return "Validation error";
+  if (error.status === 409) return "State conflict";
+  if (error.status === 403) return "Access denied";
+  return error.message;
+}
+
 function decisionFor(
   capabilityId: string,
   query: ReturnType<typeof useAccessEntitlementsBatch>,
@@ -84,6 +103,34 @@ export function CoreNavigation() {
 
   if (query.isLoading) {
     return <p className="animate-pulse text-sm text-nk-fg-muted">Cargando capacidades…</p>;
+  }
+
+  if (query.error instanceof AccessApiError) {
+    const kind = accessErrorKind(query.error.status);
+    return (
+      <nav
+        className="space-y-2"
+        data-testid="core-navigation"
+        data-access-scope={accessScope}
+        data-unit-scope={unitScope}
+        data-dealer-authorized="false"
+        data-allowed="false"
+        data-http-status={String(query.error.status)}
+        data-access-error={kind}
+        data-reason-code={query.error.reason_code ?? ""}
+      >
+        <div
+          className="rounded-r-sm border border-nk-border bg-nk-surface-2 p-3 text-sm text-nk-fg"
+          data-access-error={kind}
+          data-http-status={String(query.error.status)}
+          data-reason-code={query.error.reason_code ?? ""}
+          data-allowed="false"
+          role="alert"
+        >
+          {accessErrorCopy(query.error)}
+        </div>
+      </nav>
+    );
   }
 
   return (
