@@ -367,17 +367,54 @@ describe("DASH-ACCESS-ERROR-UX-01", () => {
     }
   });
 
-  test("T6 no second error parser outside lib/access", () => {
+  test("T6 semantic access-error authority (tree, not two filenames)", () => {
     const fs = require("fs") as typeof import("fs");
     const path = require("path") as typeof import("path");
-    const navSrc = fs.readFileSync(path.join(process.cwd(), "components/dealer/CoreNavigation.tsx"), "utf8");
-    const hubSrc = fs.readFileSync(path.join(process.cwd(), "app/autos/dealer/page.tsx"), "utf8");
-    for (const src of [navSrc, hubSrc]) {
-      expect(src).not.toMatch(/extractCreditHubReasonCode/);
-      expect(src).not.toMatch(/detail\?\.reason_code/);
-      expect(src).not.toMatch(/function\s+\w*[Pp]arse\w*[Rr]eason/);
+    const ROOT = process.cwd();
+    const CANONICAL = new Set(["lib/access/client.ts"]);
+    const SCOPES = [
+      "app/autos/dealer",
+      "components/dealer",
+      "lib/access",
+      "lib/autos-portal",
+      "lib/dealer",
+    ];
+    const skipDir = new Set(["node_modules", ".next", ".git", "legacy", "tests", "e2e", "coverage"]);
+
+    const files: string[] = [];
+    function walk(dir: string): void {
+      if (!fs.existsSync(dir)) return;
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+          if (skipDir.has(entry.name)) continue;
+          walk(path.join(dir, entry.name));
+          continue;
+        }
+        if (!/\.(ts|tsx)$/.test(entry.name)) continue;
+        files.push(path.join(dir, entry.name));
+      }
     }
-    expect(navSrc).toMatch(/query\.error\.reason_code/);
+    for (const scope of SCOPES) walk(path.join(ROOT, scope));
+
+    const violations: string[] = [];
+    for (const file of files) {
+      const posix = path.relative(ROOT, file).split(path.sep).join("/");
+      const text = fs.readFileSync(file, "utf8");
+      if (text.includes("reasonCodeFromEntitlementError")) {
+        violations.push(`${posix}:reasonCodeFromEntitlementError`);
+      }
+      if (CANONICAL.has(posix)) continue;
+      if (/\b(body|root|payload)\s*\??\.\s*(reason_code|error_code|error)\b/.test(text)) {
+        violations.push(`${posix}:direct-body-reason-field`);
+      }
+      if (/detail\s*\??\.\s*(reason_code|error_code|error)\b/.test(text)) {
+        violations.push(`${posix}:manual-envelope-parser`);
+      }
+      if (/status\s*===\s*501/.test(text) && /TARGET_CORE_NOT_READY/.test(text)) {
+        violations.push(`${posix}:local-501-fallback`);
+      }
+    }
+    expect(violations).toEqual([]);
   });
 });
 

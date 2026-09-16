@@ -1,4 +1,13 @@
-import { entitlementsAPI, reasonCodeFromEntitlementError } from "@/lib/autos-portal/entitlements-api";
+/**
+ * @jest-environment jsdom
+ */
+
+jest.mock("@/lib/auth/token-refresh", () => ({
+  refreshAccessToken: jest.fn(async () => false),
+  isTokenExpiringSoon: jest.fn(() => false),
+}));
+
+import { entitlementsAPI } from "@/lib/autos-portal/entitlements-api";
 import {
   resetDealerAccessMemoryForTests,
   setDealerAccessContext,
@@ -73,9 +82,15 @@ describe("Entitlements API Client", () => {
     expect(decision.reason_code).toBe("NO_ORGANIZATION_UNIT");
   });
 
-  test("reasonCodeFromEntitlementError maps bare 501 to TARGET_CORE_NOT_READY", () => {
-    expect(reasonCodeFromEntitlementError(null, 501)).toBe("TARGET_CORE_NOT_READY");
-    expect(reasonCodeFromEntitlementError({}, 403)).toBe("DEFAULT_DENY");
+  test("bare 501 without envelope reason_code is DEFAULT_DENY (no status fallback)", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 501,
+      json: async () => ({}),
+    });
+    const decision = await entitlementsAPI.checkAccess("autos.inventory.view");
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason_code).toBe("DEFAULT_DENY");
   });
 
   test("recordUsage includes idempotency key", async () => {

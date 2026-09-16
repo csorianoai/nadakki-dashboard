@@ -36,6 +36,28 @@ const CORE_HREFS: Record<string, string> = {
 
 export const CORE_NAV_CAPABILITY_KEYS = Object.values(CORE_NAV_CAPABILITIES);
 
+/** Privileged hub cards — capabilities taken from CORE_NAV, not invented. */
+export const DEALER_QUICK_LINK_CAPABILITIES = {
+  [CORE_HREFS.Inventory]: CORE_NAV_CAPABILITIES.Inventory,
+  [CORE_HREFS.Leads]: CORE_NAV_CAPABILITIES.Leads,
+  [CORE_HREFS.Commissions]: CORE_NAV_CAPABILITIES.Commissions,
+} as const;
+
+export function isAccessQueryFailClosed(query: {
+  isError: boolean;
+  error: unknown;
+  isPending?: boolean;
+  isLoading?: boolean;
+  data?: { results?: Record<string, unknown> } | undefined;
+}): boolean {
+  if (query.error || query.isError) return true;
+  if (query.isPending || query.isLoading) return true;
+  if (!query.data || query.data.results == null || typeof query.data.results !== "object") {
+    return true;
+  }
+  return false;
+}
+
 function asReason(value: string | null | undefined): EntitlementReasonCode {
   return (value || "DEFAULT_DENY") as EntitlementReasonCode;
 }
