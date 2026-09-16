@@ -1,5 +1,6 @@
 /** Autos dealer entitlements API client — Phase 1 frontend. */
 
+import { AccessApiError, accessApiErrorFromHttp } from "@/lib/access/client";
 import { getAuthHeaders, resolveApiUrl } from "@/lib/api/fetch-client";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import {
@@ -15,34 +16,9 @@ import type {
 } from "@/types/entitlements";
 import { ENTITLEMENT_REASON_CODES } from "@/types/entitlements";
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
-}
-
-function knownReasonCode(value: unknown): EntitlementReasonCode | undefined {
-  if (typeof value !== "string") return undefined;
-  const normalized = value.trim().toUpperCase();
-  return ENTITLEMENT_REASON_CODES.find((code) => code === normalized);
-}
-
-export function reasonCodeFromEntitlementError(
-  body: unknown,
-  status: number,
-): EntitlementReasonCode {
-  const root = asRecord(body);
-  const detail = asRecord(root?.detail);
-  const fromEnvelope =
-    knownReasonCode(root?.reason_code) ||
-    knownReasonCode(root?.error_code) ||
-    knownReasonCode(root?.error) ||
-    knownReasonCode(detail?.reason_code) ||
-    knownReasonCode(detail?.error_code) ||
-    knownReasonCode(detail?.error);
-  if (fromEnvelope) return fromEnvelope;
-  if (status === 501) return "TARGET_CORE_NOT_READY";
-  return "DEFAULT_DENY";
+function decisionFromAccessError(error: AccessApiError): EntitlementDecision {
+  const known = ENTITLEMENT_REASON_CODES.find((code) => code === error.reason_code);
+  return { allowed: false, reason_code: known ?? "DEFAULT_DENY" };
 }
 
 function denied(reason_code: EntitlementReasonCode): EntitlementDecision {
@@ -111,10 +87,9 @@ export const entitlementsAPI = {
           } catch {
             body = null;
           }
-          return {
-            allowed: false,
-            reason_code: reasonCodeFromEntitlementError(body, response.status),
-          };
+          return decisionFromAccessError(
+            accessApiErrorFromHttp(response.status, body, "/api/v1/autos/entitlements/check"),
+          );
         }
 
         return (await response.json()) as EntitlementDecision;
@@ -152,9 +127,14 @@ export const entitlementsAPI = {
         } catch {
           body = null;
         }
+        const error = accessApiErrorFromHttp(
+          response.status,
+          body,
+          "/api/v1/autos/entitlements/context",
+        );
         return {
           context: null,
-          reason_code: reasonCodeFromEntitlementError(body, response.status),
+          reason_code: decisionFromAccessError(error).reason_code,
         };
       }
 

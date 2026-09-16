@@ -89,6 +89,21 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+/** Sole HTTP-envelope → AccessApiError constructor. No status-to-reason fallback. */
+export function accessApiErrorFromHttp(
+  status: number,
+  body: unknown,
+  endpoint: string,
+): AccessApiError {
+  const root = asRecord(body);
+  return new AccessApiError({
+    status,
+    reason_code: extractCreditHubReasonCode(body) ?? null,
+    detail: root && "detail" in root ? root.detail : body,
+    endpoint,
+  });
+}
+
 export function getAccessClientContext(): AccessClientContext | null {
   const resolved = resolveDealerAccessContext();
   if (resolved.status === "no_tenant" || (resolved.status === "no_dealer" && !resolved.tenantId)) {
@@ -159,13 +174,7 @@ async function accessGet<T>(
     body = null;
   }
   if (!response.ok) {
-    const root = asRecord(body);
-    throw new AccessApiError({
-      status: response.status,
-      reason_code: extractCreditHubReasonCode(body) ?? null,
-      detail: root && "detail" in root ? root.detail : body,
-      endpoint,
-    });
+    throw accessApiErrorFromHttp(response.status, body, endpoint);
   }
   return body as T;
 }

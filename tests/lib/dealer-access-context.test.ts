@@ -2,6 +2,11 @@
  * @jest-environment jsdom
  */
 
+jest.mock("@/lib/auth/token-refresh", () => ({
+  refreshAccessToken: jest.fn(async () => false),
+  isTokenExpiringSoon: jest.fn(() => false),
+}));
+
 import { getDealerId } from "@/lib/api/dealer-leads";
 import {
   clearDealerAccessContext,
