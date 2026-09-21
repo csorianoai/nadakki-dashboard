@@ -12,7 +12,11 @@ export class TenantRequiredError extends Error {
 }
 
 export class CHApiError extends Error {
-  constructor(public detail: string, public status: number) {
+  constructor(
+    public detail: string,
+    public status: number,
+    public reasonCode?: string,
+  ) {
     super(detail);
     this.name = "CHApiError";
   }
@@ -112,7 +116,46 @@ const ERROR_CODE_MESSAGES: Record<string, string> = {
   not_authenticated: "Debes iniciar sesión para continuar",
   field_unknown: "Uno de los campos de la solicitud no puede editarse en este momento",
   field_not_editable: "Uno de los campos de la solicitud está protegido y no puede editarse",
+  target_core_not_ready: "Este núcleo todavía no está disponible",
+  no_organization_unit: "Falta la unidad organizacional para completar esta acción",
 };
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function readString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+/** Canonical backend reason/error code from a FastAPI or NADAKKI envelope. */
+export function extractCreditHubReasonCode(body: unknown): string | undefined {
+  const root = asRecord(body);
+  if (!root) return undefined;
+  const detail = root.detail;
+  const detailObj = asRecord(detail);
+  const candidates = [
+    root.reason_code,
+    root.error_code,
+    root.error,
+    root.code,
+    detailObj?.reason_code,
+    detailObj?.error_code,
+    detailObj?.error,
+    detailObj?.code,
+  ];
+  for (const candidate of candidates) {
+    const value = readString(candidate);
+    if (value) return value;
+  }
+  return undefined;
+}
+
+function isRetryableServerStatus(status: number): boolean {
+  return status === 500 || status === 502 || status === 503 || status === 504;
+}
 
 /**
  * Extract user-friendly error message from backend response.
@@ -164,6 +207,11 @@ function responseMessage(body: unknown, fallback: string): string {
       const translatedMessage = ERROR_CODE_MESSAGES[code];
       if (translatedMessage) return translatedMessage;
     }
+    if (typeof detailObj.reason_code === "string") {
+      const code = detailObj.reason_code.toLowerCase().trim();
+      const translatedMessage = ERROR_CODE_MESSAGES[code];
+      if (translatedMessage) return translatedMessage;
+    }
     
     // Extract trace/correlation IDs
     if (typeof detailObj.trace_id === "string") traceId = detailObj.trace_id;
@@ -193,12 +241,17 @@ function responseMessage(body: unknown, fallback: string): string {
     return JSON.stringify(detail);
   }
   
-  // Form 4: {"error_code": "..."} at root level
+  // Form 4: {"error_code": "..."} / {"reason_code": "..."} at root level
   if (typeof obj.error_code === "string") {
     const errorCode = obj.error_code.toLowerCase().trim();
     const translatedMessage = ERROR_CODE_MESSAGES[errorCode];
     if (translatedMessage) return translatedMessage;
     return obj.error_code;
+  }
+  if (typeof obj.reason_code === "string") {
+    const reasonCode = obj.reason_code.toLowerCase().trim();
+    const translatedMessage = ERROR_CODE_MESSAGES[reasonCode];
+    if (translatedMessage) return translatedMessage;
   }
   
   // Check message at root level
@@ -264,10 +317,14 @@ export async function chFetch<T>(path: string, init: CHRequestInit): Promise<T> 
 
     if (response.status === 401) {
       redirectToLogin();
-      throw new CHApiError("Unauthorized", 401);
+      throw new CHApiError(
+        responseMessage(body, "Unauthorized"),
+        401,
+        extractCreditHubReasonCode(body),
+      );
     }
 
-    if (response.status >= 500 && response.status < 600 && !isRetry) {
+    if (isRetryableServerStatus(response.status) && !isRetry) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return chFetch<T>(path, {
         ...init,
@@ -276,7 +333,11 @@ export async function chFetch<T>(path: string, init: CHRequestInit): Promise<T> 
     }
 
     if (!response.ok) {
-      throw new CHApiError(responseMessage(body, response.statusText), response.status);
+      throw new CHApiError(
+        responseMessage(body, response.statusText),
+        response.status,
+        extractCreditHubReasonCode(body),
+      );
     }
 
     return body as T;

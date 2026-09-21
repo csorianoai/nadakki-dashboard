@@ -1,8 +1,22 @@
+/**
+ * @jest-environment jsdom
+ */
+
+jest.mock("@/lib/auth/token-refresh", () => ({
+  refreshAccessToken: jest.fn(async () => false),
+  isTokenExpiringSoon: jest.fn(() => false),
+}));
+
 import { entitlementsAPI } from "@/lib/autos-portal/entitlements-api";
+import {
+  resetDealerAccessMemoryForTests,
+  setDealerAccessContext,
+} from "@/lib/dealer/access-context";
 
 describe("Entitlements API Client", () => {
   beforeEach(() => {
     global.fetch = jest.fn();
+    resetDealerAccessMemoryForTests();
     Object.defineProperty(window, "localStorage", {
       value: {
         getItem: jest.fn((key: string) => {
@@ -10,8 +24,15 @@ describe("Entitlements API Client", () => {
           if (key === "nadakki_tenant_id") return "tenant-123";
           return null;
         }),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
       },
       writable: true,
+    });
+    setDealerAccessContext({
+      tenantId: "tenant-123",
+      dealerId: "dealer-123",
+      organizationUnitId: "ou-123",
     });
   });
 
@@ -33,6 +54,41 @@ describe("Entitlements API Client", () => {
     (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("Network error"));
 
     const decision = await entitlementsAPI.checkAccess("marketing.campaigns.create");
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason_code).toBe("DEFAULT_DENY");
+  });
+
+  test("checkAccess keeps TARGET_CORE_NOT_READY from a 501 envelope", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 501,
+      json: async () => ({ reason_code: "TARGET_CORE_NOT_READY" }),
+    });
+
+    const decision = await entitlementsAPI.checkAccess("autos.inventory.view");
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason_code).toBe("TARGET_CORE_NOT_READY");
+  });
+
+  test("checkAccess keeps NO_ORGANIZATION_UNIT from a 403 envelope", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ detail: { error: "NO_ORGANIZATION_UNIT" } }),
+    });
+
+    const decision = await entitlementsAPI.checkAccess("credit.applications.create");
+    expect(decision.allowed).toBe(false);
+    expect(decision.reason_code).toBe("NO_ORGANIZATION_UNIT");
+  });
+
+  test("bare 501 without envelope reason_code is DEFAULT_DENY (no status fallback)", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      status: 501,
+      json: async () => ({}),
+    });
+    const decision = await entitlementsAPI.checkAccess("autos.inventory.view");
     expect(decision.allowed).toBe(false);
     expect(decision.reason_code).toBe("DEFAULT_DENY");
   });
@@ -65,5 +121,30 @@ describe("Entitlements API Client", () => {
 
     const caps = await entitlementsAPI.getEffectiveCapabilities("dealer-123");
     expect(caps?.["inventory.vehicle.publish"]?.allowed).toBe(true);
+  });
+
+  test("checkAccess transports dealer and organization_unit on the request", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ allowed: true, reason_code: "ALLOWED" }),
+    });
+
+    await entitlementsAPI.checkAccess("autos.inventory.view");
+
+    const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
+    expect(String(url)).toContain("/api/v1/autos/entitlements/check");
+    expect(init.headers["X-Tenant-ID"]).toBe("tenant-123");
+    expect(init.headers["X-Dealer-ID"]).toBe("dealer-123");
+    expect(init.headers["X-Organization-Unit-ID"]).toBe("ou-123");
+    const body = JSON.parse(String(init.body));
+    expect(body.tenant_id).toBe("tenant-123");
+    expect(body.dealer_id).toBe("dealer-123");
+    expect(body.organization_unit_id).toBe("ou-123");
+  });
+
+  test("getEffectiveCapabilities rejects a dealer id that is not the selected context", async () => {
+    const caps = await entitlementsAPI.getEffectiveCapabilities("other-dealer");
+    expect(caps).toBeNull();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

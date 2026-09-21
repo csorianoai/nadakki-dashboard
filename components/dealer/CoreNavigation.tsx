@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { entitlementsAPI } from "@/lib/autos-portal/entitlements-api";
-import type { DealerEntitlementContext, EntitlementDecision } from "@/types/entitlements";
+import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
+import {
+  ACCESS_SCOPE_TENANT,
+  AccessApiError,
+  UNIT_SCOPE_UNSUPPORTED,
+} from "@/lib/access/client";
+import type { EntitlementDecision, EntitlementReasonCode } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
 
-const CORE_CAPABILITIES: Record<string, string> = {
+export const CORE_NAV_CAPABILITIES: Record<string, string> = {
   Inventory: "autos.inventory.view",
   Leads: "autos.leads.view",
   Financing: "autos.financing.view",
@@ -30,6 +34,77 @@ const CORE_HREFS: Record<string, string> = {
   Accounting: "/contable",
 };
 
+export const CORE_NAV_CAPABILITY_KEYS = Object.values(CORE_NAV_CAPABILITIES);
+
+/** Privileged hub cards — capabilities taken from CORE_NAV, not invented. */
+export const DEALER_QUICK_LINK_CAPABILITIES = {
+  [CORE_HREFS.Inventory]: CORE_NAV_CAPABILITIES.Inventory,
+  [CORE_HREFS.Leads]: CORE_NAV_CAPABILITIES.Leads,
+  [CORE_HREFS.Commissions]: CORE_NAV_CAPABILITIES.Commissions,
+} as const;
+
+export function isAccessQueryFailClosed(query: {
+  isError: boolean;
+  error: unknown;
+  isPending?: boolean;
+  isLoading?: boolean;
+  data?: { results?: Record<string, unknown> } | undefined;
+}): boolean {
+  if (query.error || query.isError) return true;
+  if (query.isPending || query.isLoading) return true;
+  if (!query.data || query.data.results == null || typeof query.data.results !== "object") {
+    return true;
+  }
+  return false;
+}
+
+function asReason(value: string | null | undefined): EntitlementReasonCode {
+  return (value || "DEFAULT_DENY") as EntitlementReasonCode;
+}
+
+/** HTTP kind only — body reason_code stays on AccessApiError from lib/access/client.ts. */
+function accessErrorKind(status: number): "auth" | "denied" | "conflict" | "validation" | "error" {
+  if (status === 401) return "auth";
+  if (status === 403) return "denied";
+  if (status === 409) return "conflict";
+  if (status === 422) return "validation";
+  return "error";
+}
+
+function accessErrorCopy(error: AccessApiError): string {
+  if (typeof error.detail === "string" && error.detail.trim()) return error.detail;
+  if (error.reason_code) return error.reason_code;
+  if (error.status === 401) return "Session expired";
+  if (error.status === 422) return "Validation error";
+  if (error.status === 409) return "State conflict";
+  if (error.status === 403) return "Access denied";
+  return error.message;
+}
+
+function decisionFor(
+  capabilityId: string,
+  query: ReturnType<typeof useAccessEntitlementsBatch>,
+): EntitlementDecision {
+  if (query.error instanceof AccessApiError) {
+    return { allowed: false, reason_code: asReason(query.error.reason_code) };
+  }
+  const item = query.data?.results[capabilityId];
+  if (!item) return { allowed: false, reason_code: "DEFAULT_DENY" };
+  if (item.reason_code === "TARGET_CORE_NOT_READY") {
+    return {
+      allowed: false,
+      reason_code: "TARGET_CORE_NOT_READY",
+      target_readiness: "BLOCKED",
+    };
+  }
+  return {
+    allowed: item.allowed === true,
+    reason_code: asReason(item.reason_code ?? (item.allowed ? "ALLOWED" : "DEFAULT_DENY")),
+    limit: item.limit ?? undefined,
+    used: item.current_usage ?? undefined,
+  };
+}
+
 interface NavItem {
   label: string;
   href: string;
@@ -38,43 +113,57 @@ interface NavItem {
 }
 
 export function CoreNavigation() {
-  const [navItems, setNavItems] = useState<NavItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const query = useAccessEntitlementsBatch(CORE_NAV_CAPABILITY_KEYS);
+  const accessScope = query.data?.scope ?? ACCESS_SCOPE_TENANT;
+  const unitScope = query.data?.unitScope ?? UNIT_SCOPE_UNSUPPORTED;
+  const items: NavItem[] = Object.entries(CORE_NAV_CAPABILITIES).map(([label, capability_id]) => ({
+    label,
+    href: CORE_HREFS[label] ?? `/autos/dealer/${label.toLowerCase()}`,
+    capability_id,
+    decision: decisionFor(capability_id, query),
+  }));
 
-  useEffect(() => {
-    async function loadEntitlements() {
-      const ctx: DealerEntitlementContext | null = await entitlementsAPI.getContext();
-      const items: NavItem[] = [];
-
-      for (const [label, capability_id] of Object.entries(CORE_CAPABILITIES)) {
-        const decision =
-          ctx?.capabilities[capability_id] ?? ({
-            allowed: false,
-            reason_code: "DEFAULT_DENY",
-          } as EntitlementDecision);
-
-        items.push({
-          label,
-          href: CORE_HREFS[label] ?? `/autos/dealer/${label.toLowerCase()}`,
-          capability_id,
-          decision,
-        });
-      }
-
-      setNavItems(items);
-      setLoading(false);
-    }
-
-    void loadEntitlements();
-  }, []);
-
-  if (loading) {
+  if (query.isLoading) {
     return <p className="animate-pulse text-sm text-nk-fg-muted">Cargando capacidades…</p>;
   }
 
+  if (query.error instanceof AccessApiError) {
+    const kind = accessErrorKind(query.error.status);
+    return (
+      <nav
+        className="space-y-2"
+        data-testid="core-navigation"
+        data-access-scope={accessScope}
+        data-unit-scope={unitScope}
+        data-dealer-authorized="false"
+        data-allowed="false"
+        data-http-status={String(query.error.status)}
+        data-access-error={kind}
+        data-reason-code={query.error.reason_code ?? ""}
+      >
+        <div
+          className="rounded-r-sm border border-nk-border bg-nk-surface-2 p-3 text-sm text-nk-fg"
+          data-access-error={kind}
+          data-http-status={String(query.error.status)}
+          data-reason-code={query.error.reason_code ?? ""}
+          data-allowed="false"
+          role="alert"
+        >
+          {accessErrorCopy(query.error)}
+        </div>
+      </nav>
+    );
+  }
+
   return (
-    <nav className="space-y-2" data-testid="core-navigation">
-      {navItems.map((item) => (
+    <nav
+      className="space-y-2"
+      data-testid="core-navigation"
+      data-access-scope={accessScope}
+      data-unit-scope={unitScope}
+      data-dealer-authorized="false"
+    >
+      {items.map((item) => (
         <NavItemRenderer key={item.capability_id} item={item} />
       ))}
     </nav>
@@ -85,10 +174,12 @@ function NavItemRenderer({ item }: { item: NavItem }) {
   const { label, href, decision } = item;
   const info = REASON_CODE_INFO[decision.reason_code];
 
-  if (decision.target_readiness === "BLOCKED") {
+  if (decision.target_readiness === "BLOCKED" || decision.reason_code === "TARGET_CORE_NOT_READY") {
     return (
       <div
         className="flex cursor-not-allowed items-center justify-between rounded-r-sm border border-nk-border bg-nk-surface-2 p-3 text-nk-fg-muted"
+        data-reason-code={decision.reason_code}
+        data-allowed="false"
         title={`${label} — ${info?.description ?? decision.reason_code}`}
       >
         <span>🔒 {label}</span>
@@ -100,18 +191,23 @@ function NavItemRenderer({ item }: { item: NavItem }) {
   }
 
   if (!decision.allowed) {
-    const badge = decision.reason_code === "LIMIT_REACHED" ? "Limit Hit" : "Locked";
+    const badge =
+      decision.reason_code === "LIMIT_REACHED"
+        ? "Limit Hit"
+        : decision.reason_code === "NO_ORGANIZATION_UNIT"
+          ? "No organization unit"
+          : "Locked";
 
     return (
       <div
         className="flex cursor-not-allowed items-center justify-between rounded-r-sm border border-nk-border bg-nk-surface-2 p-3 text-nk-fg-muted"
-        title={info?.description}
+        data-reason-code={decision.reason_code}
+        data-allowed="false"
+        title={info?.description ?? decision.reason_code}
       >
         <span>
           🔒 {label}{" "}
-          {decision.reason_code === "LIMIT_REACHED" &&
-          decision.used != null &&
-          decision.limit != null ? (
+          {decision.reason_code === "LIMIT_REACHED" && decision.used != null && decision.limit != null ? (
             <span className="ml-2 text-xs text-red-600">
               ({decision.used} / {decision.limit} used)
             </span>
@@ -127,6 +223,9 @@ function NavItemRenderer({ item }: { item: NavItem }) {
   return (
     <Link
       href={href}
+      data-reason-code={decision.reason_code}
+      data-allowed="true"
+      data-dealer-authorized="false"
       className="flex items-center justify-between rounded-r-sm border border-brand-2/30 bg-brand-2/5 p-3 text-nk-fg transition hover:bg-brand-2/10"
     >
       <span>

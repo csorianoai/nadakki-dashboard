@@ -1,7 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { entitlementsAPI } from "@/lib/autos-portal/entitlements-api";
+import { CORE_NAV_CAPABILITY_KEYS } from "@/components/dealer/CoreNavigation";
+import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
+
+function usageQueryFailClosed(query: {
+  isError: boolean;
+  error: unknown;
+  isPending?: boolean;
+  isLoading?: boolean;
+  data?: { results?: Record<string, unknown> } | undefined;
+}): boolean {
+  if (query.error || query.isError) return true;
+  if (query.isPending || query.isLoading) return true;
+  if (!query.data?.results || typeof query.data.results !== "object") return true;
+  return false;
+}
 
 interface UsageMetrics {
   [capability_id: string]: {
@@ -12,42 +25,23 @@ interface UsageMetrics {
 }
 
 export function UsageMeter() {
-  const [usage, setUsage] = useState<UsageMetrics>({});
-  const [loading, setLoading] = useState(true);
+  const query = useAccessEntitlementsBatch(CORE_NAV_CAPABILITY_KEYS);
+  const failClosed = usageQueryFailClosed(query);
 
-  useEffect(() => {
-    async function loadUsage() {
-      try {
-        const context = await entitlementsAPI.getContext();
-        if (context?.usage) {
-          const metrics: UsageMetrics = {};
-
-          for (const [capId, data] of Object.entries(context.usage)) {
-            const limit = data.limit ?? null;
-            const percentage =
-              limit && limit > 0 ? Math.min(100, (data.used / limit) * 100) : 0;
-
-            metrics[capId] = {
-              used: data.used,
-              limit,
-              percentage,
-            };
-          }
-
-          setUsage(metrics);
-        }
-      } catch (error) {
-        console.error("Failed to load usage metrics:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void loadUsage();
-  }, []);
-
-  if (loading) {
+  if (query.isPending || query.isLoading) {
     return <p className="animate-pulse text-sm text-nk-fg-muted">Cargando uso…</p>;
+  }
+
+  if (failClosed) {
+    return <p className="text-sm text-nk-fg-muted">Sin datos de uso este mes.</p>;
+  }
+
+  const usage: UsageMetrics = {};
+  for (const [capId, item] of Object.entries(query.data?.results ?? {})) {
+    const limit = item.limit ?? null;
+    const used = item.current_usage ?? 0;
+    const percentage = limit && limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
+    usage[capId] = { used, limit, percentage };
   }
 
   if (Object.keys(usage).length === 0) {

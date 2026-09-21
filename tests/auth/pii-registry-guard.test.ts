@@ -34,6 +34,7 @@ const SAFE_KEYS = [
   "legal_post_sello_accepted", "legal_demo_accepted", "nadakki_pwa_dismiss_until", "nadakki_pwa_visits",
   "sidebar_stats", "lastInstitution", "forge-global-sidebar-expanded-v2", "nadakki-sidebar-collapsed",
   "nadakki-autos-tenant", "nadakki-autos-theme", "nadakki_vchat_", "nadakki_ch_onboarding_done_v1",
+  "nadakki_dealer_id", "nadakki_organization_unit_id", "nadakki_dealer_tenant_id",
   "nadakki_legal_demo_banner_dismissed",
   "nadakki:marketing-onboarding:", "WIZARD_AUTOSAVE_TOAST_SESSION_KEY",
   "CACHE_KEY", "READ_KEY", "SESSION_OPTIONAL_DISMISSED", "LIVE_TENANT_KEY", "REFRESH_TOKEN_KEY",

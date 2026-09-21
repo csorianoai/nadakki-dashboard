@@ -25,7 +25,15 @@ export default function DealerInsightsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await getDealerInsights(getDealerId());
+    const dealerId = getDealerId();
+    if (!dealerId) {
+      setPayload(null);
+      setInsights([]);
+      setDemoMode(false);
+      setLoading(false);
+      return;
+    }
+    const res = await getDealerInsights(dealerId);
     setPayload(res.data);
     setInsights(res.data.insights);
     setDemoMode(!res.fromBackend);
@@ -39,7 +47,12 @@ export default function DealerInsightsPage() {
   const handleRegenerate = async () => {
     setRegenerating(true);
     try {
-      const res = await regenerateInsights(getDealerId());
+      const dealerId = getDealerId();
+      if (!dealerId) {
+        toast.error("Seleccione un dealer para regenerar insights");
+        return;
+      }
+      const res = await regenerateInsights(dealerId);
       setPayload(res.data);
       setInsights(res.data.insights);
       setDemoMode(!res.fromBackend);

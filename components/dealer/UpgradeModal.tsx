@@ -1,42 +1,73 @@
 "use client";
 
-import type { EntitlementDecision, PlanSlug } from "@/types/entitlements";
+import { useAccessPlans } from "@/lib/access/hooks";
+import { AccessApiError } from "@/lib/access/client";
+import type { EntitlementDecision } from "@/types/entitlements";
 
 interface UpgradeModalProps {
   decision: EntitlementDecision;
   onClose: () => void;
-  onUpgrade: (plan_slug: PlanSlug) => void;
+  onUpgrade?: (plan_slug: string) => void;
 }
 
-const PLANS: Array<{
-  slug: PlanSlug;
+type AccessPlanCard = {
+  slug: string;
   name: string;
-  price: string;
-  features: string[];
-  highlight?: boolean;
-}> = [
-  {
-    slug: "conecta",
-    name: "Conecta",
-    price: "RD$4,130/mes",
-    features: ["Inventario básico", "Calculadora financiamiento", "Templates view-only"],
-  },
-  {
-    slug: "crece",
-    name: "Crece",
-    price: "RD$10,030/mes",
-    features: ["Marketing (5 camp/mes)", "Legal quick-check", "Credit bridge"],
-    highlight: true,
-  },
-  {
-    slug: "domina",
-    name: "Domina",
-    price: "RD$17,464/mes",
-    features: ["Cores completos", "Campañas ilimitadas", "Soporte prioritario"],
-  },
-];
+  price_rd: number | null;
+  billing_period: string | null;
+  capability_keys: string[];
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function readTrimmedString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function readFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  return null;
+}
+
+/** Catalog rows from fetchAccessPlans — no invented price/currency/features. */
+export function parseAccessPlan(value: unknown): AccessPlanCard | null {
+  const rec = asRecord(value);
+  if (!rec) return null;
+  const slug = readTrimmedString(rec.slug);
+  const name = readTrimmedString(rec.name);
+  if (!slug || !name) return null;
+  const version = asRecord(rec.current_version);
+  const rawCaps = version && Array.isArray(version.capabilities) ? version.capabilities : [];
+  const capability_keys: string[] = [];
+  for (const cap of rawCaps) {
+    const row = asRecord(cap);
+    if (!row || row.enabled !== true) continue;
+    const key = readTrimmedString(row.key);
+    if (key) capability_keys.push(key);
+  }
+  return {
+    slug,
+    name,
+    price_rd: readFiniteNumber(rec.price_rd),
+    billing_period: readTrimmedString(rec.billing_period),
+    capability_keys,
+  };
+}
+
+function formatPriceRd(price_rd: number, billing_period: string | null): string {
+  const amount = price_rd.toLocaleString("es-DO");
+  return billing_period ? `${amount} / ${billing_period}` : amount;
+}
 
 export function UpgradeModal({ decision, onClose, onUpgrade }: UpgradeModalProps) {
+  const plansQuery = useAccessPlans();
+
   if (decision.allowed) {
     return null;
   }
@@ -86,9 +117,20 @@ export function UpgradeModal({ decision, onClose, onUpgrade }: UpgradeModalProps
     );
   }
 
+  const catalogFailClosed =
+    Boolean(plansQuery.error) ||
+    plansQuery.isError ||
+    plansQuery.isPending ||
+    plansQuery.isLoading ||
+    !Array.isArray(plansQuery.data?.plans);
+
+  const plans = catalogFailClosed
+    ? []
+    : (plansQuery.data?.plans ?? []).map(parseAccessPlan).filter((row): row is AccessPlanCard => row != null);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-w-4xl rounded-r bg-nk-surface p-8 shadow-nk-md">
+      <div className="max-w-4xl rounded-r bg-nk-surface p-8 shadow-nk-md" data-testid="dealer-upgrade-modal">
         <h2 className="font-manrope text-2xl font-extrabold text-nk-fg">
           {decision.reason_code === "LIMIT_REACHED"
             ? "Límite mensual alcanzado"
@@ -99,19 +141,26 @@ export function UpgradeModal({ decision, onClose, onUpgrade }: UpgradeModalProps
           decision.used != null &&
           decision.limit != null
             ? `Has usado ${decision.used} de ${decision.limit} este mes. Mejora tu plan para más.`
-            : "Accede a capacidades premium de Marketing, Legal, Credit y Accounting."}
+            : "Planes publicados por el catálogo de acceso."}
         </p>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          {PLANS.map((plan) => (
-            <PlanCard
-              key={plan.slug}
-              plan={plan}
-              highlight={plan.highlight}
-              onSelect={() => onUpgrade(plan.slug)}
-            />
-          ))}
-        </div>
+        {plansQuery.isPending || plansQuery.isLoading ? (
+          <p className="mt-6 text-sm text-nk-fg-muted" data-testid="dealer-upgrade-loading">
+            Cargando planes…
+          </p>
+        ) : catalogFailClosed || plans.length === 0 ? (
+          <p className="mt-6 text-sm text-nk-fg-muted" data-testid="dealer-upgrade-fail-closed" role="alert">
+            {plansQuery.error instanceof AccessApiError
+              ? plansQuery.error.reason_code ?? plansQuery.error.message
+              : "No hay planes disponibles."}
+          </p>
+        ) : (
+          <div className="mt-6 grid gap-4 sm:grid-cols-3" data-testid="dealer-upgrade-plans">
+            {plans.map((plan) => (
+              <PlanCard key={plan.slug} plan={plan} onSelect={onUpgrade} />
+            ))}
+          </div>
+        )}
 
         <button
           type="button"
@@ -127,39 +176,37 @@ export function UpgradeModal({ decision, onClose, onUpgrade }: UpgradeModalProps
 
 function PlanCard({
   plan,
-  highlight,
   onSelect,
 }: {
-  plan: (typeof PLANS)[number];
-  highlight?: boolean;
-  onSelect: () => void;
+  plan: AccessPlanCard;
+  onSelect?: (plan_slug: string) => void;
 }) {
   return (
-    <div
-      className={`rounded-r border-2 p-4 ${
-        highlight ? "border-brand-2 bg-brand-2/5" : "border-nk-border hover:border-brand-2/40"
-      }`}
-    >
+    <div className="rounded-r border-2 border-nk-border p-4" data-testid="dealer-upgrade-plan" data-plan-slug={plan.slug}>
       <h3 className="font-manrope text-lg font-bold text-nk-fg">{plan.name}</h3>
-      <p className="mt-1 text-xl font-extrabold text-brand">{plan.price}</p>
-      <ul className="mt-4 space-y-2">
-        {plan.features.map((feature) => (
-          <li key={feature} className="text-sm text-nk-fg-muted">
-            ✓ {feature}
-          </li>
-        ))}
-      </ul>
-      <button
-        type="button"
-        onClick={onSelect}
-        className={`mt-4 w-full rounded-full px-4 py-2 text-sm font-bold transition ${
-          highlight
-            ? "bg-gradient-to-r from-brand-2 to-brand text-white"
-            : "border border-nk-border bg-nk-surface-2 text-nk-fg"
-        }`}
-      >
-        {highlight ? "Más popular" : "Seleccionar"}
-      </button>
+      {plan.price_rd != null ? (
+        <p className="mt-1 text-xl font-extrabold text-brand" data-testid="dealer-upgrade-price" data-price-field="price_rd">
+          {formatPriceRd(plan.price_rd, plan.billing_period)}
+        </p>
+      ) : null}
+      {plan.capability_keys.length > 0 ? (
+        <ul className="mt-4 space-y-2">
+          {plan.capability_keys.map((feature) => (
+            <li key={feature} className="text-sm text-nk-fg-muted">
+              {feature}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={() => onSelect(plan.slug)}
+          className="mt-4 w-full rounded-full border border-nk-border bg-nk-surface-2 px-4 py-2 text-sm font-bold text-nk-fg"
+        >
+          Seleccionar
+        </button>
+      ) : null}
     </div>
   );
 }
