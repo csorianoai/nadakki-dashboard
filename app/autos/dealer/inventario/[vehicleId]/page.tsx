@@ -2,18 +2,20 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import {
-  DMS02R_AUTHENTICATED_GET_PATHS,
+  DMS02R_ECONOMICS_PATHS,
   DMS02R_HTTP_IN_PRODUCTION_OPENAPI,
-  PUBLIC_MARKETPLACE_VEHICLE_PATH,
 } from "@/lib/dealer/dms02r-http";
+import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
+import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
 
-export const DEALER_VEHICLE_CAPABILITY = "autos.inventory.view";
+export const DEALER_VEHICLE_CAPABILITY = "autos.inventory.list";
 
 function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): EntitlementDecision {
   if (query.error instanceof AccessApiError) {
@@ -30,49 +32,91 @@ function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): Entit
   };
 }
 
-function FichaBlocked() {
+function EconomicsBlocked() {
   return (
     <section
       role="alert"
-      data-testid="dealer-vehicle-blocked-by-backend"
+      data-testid="dealer-economics-blocked"
       data-blocked-by-backend="true"
       className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
     >
-      <h2 className="font-manrope text-lg font-bold text-nk-fg">Ficha del dealer no disponible</h2>
+      <h2 className="font-manrope text-lg font-bold text-nk-fg">Costes, margen y días en inventario</h2>
       <p className="mt-2 text-sm text-nk-fg-muted">
-        BLOCKED_BY_BACKEND. El writer DMS-02R está en backend main (#1361). La superficie HTTP
-        autenticada (#1365) no está en el OpenAPI de producción. El GET público del marketplace
-        no es fuente.
+        BLOCKED_BY_BACKEND. La ficha sale del GET autenticado del dealer. La economía espera #1365.
       </p>
       {DMS02R_HTTP_IN_PRODUCTION_OPENAPI ? null : (
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-nk-fg break-words">
           <li>
-            <code>{`GET ${DMS02R_AUTHENTICATED_GET_PATHS.dealerVehicle}`}</code>
+            <code>{`GET ${DMS02R_ECONOMICS_PATHS.margin}`}</code>
           </li>
           <li>
-            <code>{`GET ${DMS02R_AUTHENTICATED_GET_PATHS.margin}`}</code>
+            <code>{`GET ${DMS02R_ECONOMICS_PATHS.days}`}</code>
           </li>
           <li>
-            <code>{`GET ${DMS02R_AUTHENTICATED_GET_PATHS.days}`}</code>
-          </li>
-          <li>
-            <code>{`GET ${DMS02R_AUTHENTICATED_GET_PATHS.costs}`}</code>
+            <code>{`GET ${DMS02R_ECONOMICS_PATHS.costs}`}</code>
           </li>
         </ul>
       )}
-      <p className="mt-3 text-xs text-nk-fg-muted break-words">
-        Fuera de fuente: <code>{`GET ${PUBLIC_MARKETPLACE_VEHICLE_PATH}`}</code>
-      </p>
     </section>
+  );
+}
+
+function VehicleFicha({ dealerId, vehicleId }: { dealerId: string; vehicleId: string }) {
+  const query = useQuery({
+    queryKey: ["dealer-vehicle", dealerId, vehicleId],
+    queryFn: () => fetchDealerVehicleStatus(dealerId, vehicleId),
+    enabled: dealerId.length > 0 && vehicleId.length > 0,
+    retry: false,
+  });
+
+  if (query.isPending || query.isLoading) {
+    return (
+      <p className="animate-pulse text-sm text-nk-fg-muted" data-testid="dealer-vehicle-loading">
+        Cargando ficha…
+      </p>
+    );
+  }
+
+  if (query.error instanceof AccessApiError) {
+    return (
+      <section
+        role="alert"
+        data-testid="dealer-vehicle-error"
+        data-reason-code={query.error.reason_code ?? ""}
+        data-http-status={String(query.error.status)}
+        className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
+      >
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer el vehículo</h2>
+        <p className="mt-1 text-sm text-nk-fg-muted">
+          reason_code: <code>{query.error.reason_code ?? `HTTP_${query.error.status}`}</code>
+        </p>
+      </section>
+    );
+  }
+
+  if (!query.data) return null;
+
+  const title = [query.data.year, query.data.make, query.data.model].filter(Boolean).join(" ") || query.data.id;
+
+  return (
+    <>
+      <section data-testid="dealer-vehicle-ready" className="rounded-r-sm border border-nk-border bg-nk-surface p-4">
+        <h2 className="font-manrope text-lg font-bold text-nk-fg break-words">{title}</h2>
+        <p className="mt-1 text-sm text-nk-fg-muted">Estado: {query.data.status ?? "no disponible"}</p>
+      </section>
+      <EconomicsBlocked />
+    </>
   );
 }
 
 export default function DealerVehicleEconomicsPage() {
   const params = useParams();
   const vehicleId = String(params?.vehicleId ?? "").trim();
-  const query = useAccessEntitlementsBatch([DEALER_VEHICLE_CAPABILITY]);
+  const resolved = resolveDealerAccessContext();
+  const dealerId = resolved.status === "ready" ? resolved.context.dealerId : "";
+  const access = useAccessEntitlementsBatch([DEALER_VEHICLE_CAPABILITY]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const decision = asDecision(query);
+  const decision = asDecision(access);
 
   return (
     <main className="max-w-full space-y-4 overflow-x-hidden">
@@ -81,7 +125,7 @@ export default function DealerVehicleEconomicsPage() {
           {vehicleId || "Vehículo"}
         </h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Ficha autenticada DMS-02R. El marketplace público no es fuente.
+          Ficha autenticada del dealer. El marketplace público no es fuente.
         </p>
       </header>
 
@@ -89,22 +133,22 @@ export default function DealerVehicleEconomicsPage() {
         <p role="alert" className="text-sm text-nk-fg-muted">
           Falta el identificador del vehículo.
         </p>
-      ) : query.isPending || query.isLoading ? (
+      ) : access.isPending || access.isLoading ? (
         <p className="animate-pulse text-sm text-nk-fg-muted" data-testid="dealer-vehicle-loading">
           Cargando acceso…
         </p>
-      ) : query.error instanceof AccessApiError ? (
+      ) : access.error instanceof AccessApiError ? (
         <section
           role="alert"
           data-testid="dealer-vehicle-error"
-          data-reason-code={query.error.reason_code ?? ""}
-          data-http-status={String(query.error.status)}
+          data-reason-code={access.error.reason_code ?? ""}
+          data-http-status={String(access.error.status)}
           data-allowed="false"
           className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
           <p className="mt-1 text-sm text-nk-fg-muted">
-            reason_code: <code>{query.error.reason_code ?? `HTTP_${query.error.status}`}</code>
+            reason_code: <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
           </p>
         </section>
       ) : !decision.allowed ? (
@@ -134,12 +178,14 @@ export default function DealerVehicleEconomicsPage() {
               Ver planes publicados
             </button>
           ) : null}
-          {upgradeOpen ? (
-            <UpgradeModal decision={decision} onClose={() => setUpgradeOpen(false)} />
-          ) : null}
+          {upgradeOpen ? <UpgradeModal decision={decision} onClose={() => setUpgradeOpen(false)} /> : null}
         </section>
+      ) : !dealerId ? (
+        <p role="alert" className="text-sm text-nk-fg-muted">
+          Falta el dealer para leer la ficha autenticada.
+        </p>
       ) : (
-        <FichaBlocked />
+        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} />
       )}
     </main>
   );
