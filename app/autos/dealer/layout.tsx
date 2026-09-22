@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   LayoutDashboard,
+  Package,
+  Share2,
   Sparkles,
   Upload,
   Users,
@@ -19,8 +21,10 @@ const NAV = [
     icon: Upload,
     badge: "NUEVO",
   },
-  { href: "/autos/dealer/leads", label: "Leads Prioritarios", icon: Users, countKey: "hot" as const },
-  { href: "/autos/dealer/insights", label: "Insights AI", icon: BarChart3, countKey: "insights" as const },
+  { href: "/autos/dealer/inventario", label: "Inventario", icon: Package },
+  { href: "/autos/dealer/conexiones", label: "Conexiones", icon: Share2 },
+  { href: "/autos/dealer/leads", label: "Leads Prioritarios", icon: Users },
+  { href: "/autos/dealer/insights", label: "Insights AI", icon: BarChart3 },
 ];
 
 export default function DealerLayout({ children }: { children: React.ReactNode }) {
@@ -57,16 +61,6 @@ export default function DealerLayout({ children }: { children: React.ReactNode }
                   {item.badge ? (
                     <span className="rounded-full bg-brand-2 px-2 py-0.5 text-[9px] font-bold text-white">
                       {item.badge}
-                    </span>
-                  ) : null}
-                  {item.countKey === "hot" ? (
-                    <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                      12
-                    </span>
-                  ) : null}
-                  {item.countKey === "insights" ? (
-                    <span className="rounded-full bg-brand-2/20 px-2 py-0.5 text-[10px] font-bold text-brand-2">
-                      3
                     </span>
                   ) : null}
                 </Link>
