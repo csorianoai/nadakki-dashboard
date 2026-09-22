@@ -1,5 +1,4 @@
-import { accessApiErrorFromHttp } from "@/lib/access/client";
-import { apiFetch } from "@/lib/api/fetch-client";
+import { DMS02R_AUTHENTICATED_GET_PATHS } from "@/lib/dealer/dms02r-http";
 
 export type DealerVehicleStatusRow = {
   id: string;
@@ -39,21 +38,5 @@ export function parseDealerVehicleStatus(value: unknown): DealerVehicleStatusRow
   };
 }
 
-export async function fetchDealerVehicleStatus(vehicleId: string): Promise<DealerVehicleStatusRow> {
-  const path = `/api/v1/autos/vehicles/${encodeURIComponent(vehicleId)}`;
-  const response = await apiFetch(path, { headers: { Accept: "application/json" } });
-  let body: unknown = null;
-  try {
-    body = await response.json();
-  } catch {
-    body = null;
-  }
-  if (!response.ok) {
-    throw accessApiErrorFromHttp(response.status, body, path);
-  }
-  const row = parseDealerVehicleStatus(body);
-  if (!row) {
-    throw accessApiErrorFromHttp(422, { reason_code: "VALIDATION_ERROR" }, path);
-  }
-  return row;
-}
+/** Authenticated dealer ficha GET — unpublished on production OpenAPI. */
+export const DEALER_VEHICLE_STATUS_GET_PATH = DMS02R_AUTHENTICATED_GET_PATHS.dealerVehicle;
