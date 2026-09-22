@@ -3,6 +3,14 @@
  * routes must exist in the spec. Runtime imports keep Jest --changedSince
  * tied to openapi.json and types/autos-portal-api.d.ts.
  */
+
+process.env.BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:9";
+
+jest.mock("@/lib/auth/token-refresh", () => ({
+  refreshAccessToken: jest.fn(async () => false),
+  isTokenExpiringSoon: jest.fn(() => false),
+}));
+
 import fs from "fs";
 import path from "path";
 import { ACCESS_ENDPOINTS } from "@/lib/access/client";

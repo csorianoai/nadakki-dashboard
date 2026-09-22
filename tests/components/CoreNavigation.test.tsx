@@ -29,7 +29,7 @@ function batchOk(overrides: Record<string, { allowed: boolean; reason_code: stri
   for (const key of CORE_NAV_CAPABILITY_KEYS) {
     results[key] = overrides[key] ?? { allowed: false, reason_code: "DEFAULT_DENY", limit: null, current_usage: null };
   }
-  return { results };
+  return { organization_unit_id: "ou-echo", evaluated_organization_unit_id: "ou-a", requested_organization_unit_id: "ou-a", results };
 }
 
 function seedDealer(tenantId: string, dealerId: string, organizationUnitId: string) {
@@ -143,11 +143,11 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
     await waitFor(() => expect(screen.getByTestId("core-navigation")).toBeInTheDocument());
     const nav = screen.getByTestId("core-navigation");
     expect(nav).toHaveAttribute("data-access-scope", "tenant");
-    expect(nav).toHaveAttribute("data-unit-scope", "UNIT_SCOPE_UNSUPPORTED");
+    expect(nav).toHaveAttribute("data-unit-scope", "included");
     expect(nav).toHaveAttribute("data-dealer-authorized", "false");
     const dump = `${(global.fetch as jest.Mock).mock.calls[0][0]} ${JSON.stringify((global.fetch as jest.Mock).mock.calls[0][1]?.headers)}`;
     expect(dump).not.toMatch(/dealer_id/);
-    expect(dump).not.toMatch(/organization_unit_id/);
+    expect(dump).toMatch(/organization_unit_id=ou-a/);
     expect(screen.getByText(/7 \/ 10 used/)).toBeInTheDocument();
   });
 });
@@ -311,6 +311,10 @@ describe("DASH-ACCESS-ERROR-UX-01", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_403, 403));
     render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(document.querySelector('[data-access-error="denied"]')).toBeTruthy());
+    expect(document.querySelector('[data-testid="core-navigation"]')).toHaveAttribute(
+      "data-unit-scope",
+      "unavailable",
+    );
     expect(document.querySelector('[data-http-status="403"]')).toBeTruthy();
     expect(document.querySelector('[data-reason-code="NO_ORGANIZATION_UNIT"]')).toBeTruthy();
     expect(document.querySelector('[data-access-error="auth"]')).toBeNull();
