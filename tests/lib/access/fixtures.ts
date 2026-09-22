@@ -1,15 +1,23 @@
 /**
  * Independent fixtures. BACKEND_SHA a38dc23d6418aec568df21d8204d883166ec5604
  */
-/** routers/autos_core_access_router.py:442-481 */
+/** routers/autos_core_access_router.py:442-481 — echo of evaluated organization_unit_id */
 export const BATCH_200 = {
+  organization_unit_id: "ou-a",
   results: {
-    "autos.inventory.view": { allowed: true, reason_code: "ALLOWED", limit: 100, current_usage: 3 },
+    "autos.inventory.view": {
+      allowed: true,
+      reason_code: "ALLOWED",
+      limit: 100,
+      current_usage: 3,
+      organization_unit_id: "ou-a",
+    },
     "credit.scoring.run": {
       allowed: false,
       reason_code: "TARGET_CORE_NOT_READY",
       limit: null,
       current_usage: null,
+      organization_unit_id: "ou-a",
     },
   },
 };

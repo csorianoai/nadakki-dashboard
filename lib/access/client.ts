@@ -60,9 +60,13 @@ export type EntitlementBatchItem = {
   reason_code: string | null;
   limit: number | null;
   current_usage: number | null;
+  organization_unit_id?: string | null;
 };
 
-export type EntitlementsBatchPayload = { results: Record<string, EntitlementBatchItem> };
+export type EntitlementsBatchPayload = {
+  organization_unit_id: string | null;
+  results: Record<string, EntitlementBatchItem>;
+};
 export type EntitlementsBatchResponse = EntitlementsBatchPayload & {
   scope: typeof ACCESS_SCOPE_TENANT;
   unitScope: typeof ACCESS_UNIT_SCOPE_INCLUDED | typeof ACCESS_UNIT_SCOPE_OMITTED;
@@ -192,21 +196,45 @@ function batchSearch(
   return params.toString() ? params : undefined;
 }
 
+/** Backend echo only (autos_core_access_router.py:470-471). Never derived from the query we sent. */
+export function organizationUnitIdFromBatchBody(body: unknown): string | null {
+  const rec = asRecord(body);
+  if (!rec) return null;
+  const raw = rec.organization_unit_id;
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  return trimmed ? trimmed : null;
+}
+
+function unitScopeFromBatchBody(body: unknown): typeof ACCESS_UNIT_SCOPE_INCLUDED | typeof ACCESS_UNIT_SCOPE_OMITTED {
+  return organizationUnitIdFromBatchBody(body)
+    ? ACCESS_UNIT_SCOPE_INCLUDED
+    : ACCESS_UNIT_SCOPE_OMITTED;
+}
+
+function asBatchResults(value: unknown): Record<string, EntitlementBatchItem> {
+  const rec = asRecord(value);
+  return rec ? (rec as Record<string, EntitlementBatchItem>) : {};
+}
+
 export async function fetchEntitlementsBatch(
   capabilityKeys: string[] = [],
   explicitContext?: AccessClientContext | null,
 ): Promise<EntitlementsBatchResponse> {
   const context = requestContext(explicitContext);
   const unit = context.organizationUnitId?.trim() || "";
-  const payload = await accessGet<EntitlementsBatchPayload>(
+  const body = await accessGet<unknown>(
     ACCESS_ENDPOINTS.batch,
     context,
     batchSearch(capabilityKeys, unit || null),
   );
+  const organization_unit_id = organizationUnitIdFromBatchBody(body);
+  const root = asRecord(body);
   return {
-    ...payload,
+    organization_unit_id,
+    results: asBatchResults(root?.results),
     scope: ACCESS_SCOPE_TENANT,
-    unitScope: unit ? ACCESS_UNIT_SCOPE_INCLUDED : ACCESS_UNIT_SCOPE_OMITTED,
+    unitScope: unitScopeFromBatchBody(body),
   };
 }
 

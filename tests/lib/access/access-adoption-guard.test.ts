@@ -52,7 +52,7 @@ describe("DASH-ACCESS-ADOPTION-01 guard", () => {
     for (const file of files) {
       const posix = rel(file);
       if (posix.startsWith("lib/access/")) continue;
-      if (posix.startsWith("types/")) continue;
+      if (posix.startsWith("types/") && posix.endsWith(".d.ts")) continue;
       if (ALLOWLIST.includes(posix)) continue;
       const text = fs.readFileSync(file, "utf8");
       for (const needle of FORBIDDEN) {

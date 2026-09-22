@@ -171,10 +171,13 @@ describe("DASH-ACCESS-CLIENT-01", () => {
     window.localStorage.clear();
     resetDealerAccessMemoryForTests();
     window.localStorage.setItem("nadakki_tenant_id", "tenant-a");
-    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(BATCH_200, 200));
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({ ...BATCH_200, organization_unit_id: null }, 200),
+    );
     const omitted = await fetchEntitlementsBatch(["autos.inventory.view"]);
     expect(fetchDump()).not.toMatch(/dealer_id/);
-    expect(fetchDump()).not.toMatch(/organization_unit_id/);
+    expect(fetchDump()).not.toMatch(/organization_unit_id=/);
+    expect(omitted.organization_unit_id).toBeNull();
     expect(omitted.unitScope).toBe(ACCESS_UNIT_SCOPE_OMITTED);
   });
 
@@ -184,7 +187,18 @@ describe("DASH-ACCESS-CLIENT-01", () => {
     expect(fetchDump()).toMatch(/organization_unit_id=ou-a/);
     expect(fetchDump()).not.toMatch(/dealer_id/);
     expect(result.scope).toBe("tenant");
+    expect(result.organization_unit_id).toBe("ou-a");
     expect(result.unitScope).toBe(ACCESS_UNIT_SCOPE_INCLUDED);
+  });
+
+  test("T11b unitScope follows backend echo, not the query we sent", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({ ...BATCH_200, organization_unit_id: null }, 200),
+    );
+    const result = await fetchEntitlementsBatch(["autos.inventory.view"]);
+    expect(fetchDump()).toMatch(/organization_unit_id=ou-a/);
+    expect(result.organization_unit_id).toBeNull();
+    expect(result.unitScope).toBe(ACCESS_UNIT_SCOPE_OMITTED);
   });
 
   test("T12 tenant cache isolation", async () => {
