@@ -12,10 +12,9 @@ import {
 } from "@/lib/dealer/dms02r-http";
 import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
+import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/vehicle-capability";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
-
-export const DEALER_VEHICLE_CAPABILITY = "autos.inventory.list";
 
 function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): EntitlementDecision {
   if (query.error instanceof AccessApiError) {
