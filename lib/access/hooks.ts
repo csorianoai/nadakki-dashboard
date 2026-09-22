@@ -11,6 +11,7 @@ import {
   getAccessClientContext,
   shouldRetryAccessQuery,
 } from "@/lib/access/client";
+import { fetchCommercialSponsorships } from "@/lib/access/sponsorship";
 
 const opts = { retry: shouldRetryAccessQuery, staleTime: 60_000, refetchOnWindowFocus: false } as const;
 
@@ -49,6 +50,16 @@ export function useAccessSubscription() {
   return useQuery({
     queryKey: accessQueryKey(ACCESS_ENDPOINTS.subscription, context),
     queryFn: () => fetchAccessSubscription(context),
+    enabled: context != null,
+    ...opts,
+  });
+}
+
+export function useCommercialSponsorships() {
+  const context = getAccessClientContext();
+  return useQuery({
+    queryKey: accessQueryKey(ACCESS_ENDPOINTS.sponsorship, context),
+    queryFn: () => fetchCommercialSponsorships(context),
     enabled: context != null,
     ...opts,
   });

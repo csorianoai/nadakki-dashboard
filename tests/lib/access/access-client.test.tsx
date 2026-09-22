@@ -14,6 +14,7 @@ import {
   AccessTenantRequiredError,
   accessQueryKey,
   fetchEntitlementsBatch,
+  fetchAccessSponsorshipPayload,
   getAccessClientContext,
   shouldRetryAccessQuery,
 } from "@/lib/access/client";
@@ -237,5 +238,16 @@ describe("DASH-ACCESS-CLIENT-01", () => {
     rerender();
     await waitFor(() => expect(result.current.data?.results.cap.reason_code).toBe("TENANT_B"));
     expect(result.current.data?.results.cap.reason_code).not.toBe("TENANT_A");
+  });
+
+  test("GET /api/v1/access/sponsorship goes through the access client", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({ sponsorships: [{ subscription_id: "sub-1", payer_name: "Banco X" }] }, 200),
+    );
+    const body = await fetchAccessSponsorshipPayload();
+    const init = (global.fetch as jest.Mock).mock.calls[0][1];
+    expect(String((global.fetch as jest.Mock).mock.calls[0][0])).toContain("/api/v1/access/sponsorship");
+    expect(new Headers(init.headers).get("X-Tenant-ID")).toBe("tenant-a");
+    expect(body).toEqual({ sponsorships: [{ subscription_id: "sub-1", payer_name: "Banco X" }] });
   });
 });
