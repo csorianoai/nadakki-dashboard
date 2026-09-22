@@ -23,7 +23,19 @@ jest.mock("@/lib/auth/token-refresh", () => ({
   isTokenExpiringSoon: jest.fn(() => false),
 }));
 
+jest.mock("@/lib/dealer/post-sale", () => ({
+  fetchPostSaleSnapshot: jest.fn(async () => ({
+    cases: [],
+    asientos: [],
+    listings: [],
+    heartbeat: {},
+  })),
+}));
+
 const PRIVILEGED_HREFS = Object.keys(DEALER_QUICK_LINK_CAPABILITIES);
+const INVENTORY_CAP = DEALER_QUICK_LINK_CAPABILITIES["/autos/dealer/publicar-rapido"];
+const LEADS_CAP = DEALER_QUICK_LINK_CAPABILITIES["/autos/dealer/leads"];
+const COMMISSIONS_CAP = DEALER_QUICK_LINK_CAPABILITIES["/autos/dealer/insights"];
 
 function jsonResponse(body: unknown, status: number) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };
@@ -117,7 +129,7 @@ describe("Dealer hub page privileged quick links", () => {
   test("missing entitlement result => corresponding privileged link absent", async () => {
     const results: Record<string, unknown> = {};
     for (const key of CORE_NAV_CAPABILITY_KEYS) {
-      if (key === "autos.inventory.list") continue;
+      if (key === INVENTORY_CAP) continue;
       results[key] = {
         allowed: true,
         reason_code: "ALLOWED",
@@ -137,9 +149,9 @@ describe("Dealer hub page privileged quick links", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchOk({
-          "autos.inventory.list": { allowed: false, reason_code: "DEFAULT_DENY" },
-          "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
-          "autos.analytics.basic": { allowed: false, reason_code: "UPGRADE_REQUIRED" },
+          [INVENTORY_CAP]: { allowed: false, reason_code: "DEFAULT_DENY" },
+          [LEADS_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [COMMISSIONS_CAP]: { allowed: false, reason_code: "UPGRADE_REQUIRED" },
         }),
         200,
       ),
@@ -156,9 +168,9 @@ describe("Dealer hub page privileged quick links", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchOk({
-          "autos.inventory.list": { allowed: true, reason_code: "ALLOWED" },
-          "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
-          "autos.analytics.basic": { allowed: true, reason_code: "ALLOWED" },
+          [INVENTORY_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [LEADS_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [COMMISSIONS_CAP]: { allowed: true, reason_code: "ALLOWED" },
         }),
         200,
       ),
@@ -176,9 +188,9 @@ describe("Dealer hub page privileged quick links", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchOk({
-          "autos.inventory.list": { allowed: true, reason_code: "ALLOWED" },
-          "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
-          "autos.analytics.basic": { allowed: true, reason_code: "ALLOWED" },
+          [INVENTORY_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [LEADS_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [COMMISSIONS_CAP]: { allowed: true, reason_code: "ALLOWED" },
         }),
         200,
       ),

@@ -19,6 +19,15 @@ jest.mock("@/lib/auth-context", () => ({
   useAuth: () => ({ isAuthenticated: true, role: "dealer" }),
 }));
 
+jest.mock("@/lib/dealer/post-sale", () => ({
+  fetchPostSaleSnapshot: jest.fn(async () => ({
+    cases: [],
+    asientos: [],
+    listings: [],
+    heartbeat: {},
+  })),
+}));
+
 jest.mock("@/lib/auth/token-refresh", () => ({
   refreshAccessToken: jest.fn(async () => false),
   isTokenExpiringSoon: jest.fn(() => false),
