@@ -2,6 +2,8 @@
  * @jest-environment jsdom
  */
 
+import fs from "fs";
+import path from "path";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -117,5 +119,56 @@ describe("Dealer vehicle economics", () => {
     expect(screen.getByTestId("dealer-vehicle-gated")).toHaveAttribute("data-reason-code", "UPGRADE_REQUIRED");
     const urls = (global.fetch as jest.Mock).mock.calls.map((c) => String(c[0]));
     expect(urls.some((u) => u.includes("/api/v1/autos/dealers/"))).toBe(false);
+  });
+
+  test("NO_FAKE_DATA: invented margin and days fail the suite", async () => {
+    const pageSrc = fs.readFileSync(
+      path.join(process.cwd(), "app/autos/dealer/inventario/[vehicleId]/page.tsx"),
+      "utf8",
+    );
+    expect(pageSrc).not.toMatch(/RD\$/);
+    expect(pageSrc).not.toMatch(/5,000/);
+    expect(pageSrc).not.toMatch(/D[ií]as en inventario:\s*37/i);
+    expect(pageSrc).not.toMatch(/Margen:\s*RD/i);
+
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/access/entitlements/batch")) {
+        return jsonResponse(
+          {
+            results: {
+              "autos.inventory.list": {
+                allowed: true,
+                reason_code: "ALLOWED",
+                limit: null,
+                current_usage: null,
+              },
+            },
+          },
+          200,
+        ) as Response;
+      }
+      if (url.includes("/api/v1/autos/dealers/dealer-a/vehicles/veh-1")) {
+        return jsonResponse(
+          {
+            id: "veh-1",
+            dealer_id: "dealer-a",
+            make: "Toyota",
+            model: "Corolla",
+            year: 2020,
+            status: "reservado",
+          },
+          200,
+        ) as Response;
+      }
+      return jsonResponse({ unexpected: true }, 500) as Response;
+    });
+    render(<DealerVehicleEconomicsPage />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    await waitFor(() => expect(screen.getByTestId("dealer-vehicle-ready")).toBeInTheDocument());
+    expect(screen.queryByText(/RD\$\s*5,000/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/D[ií]as en inventario:\s*37/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Margen:/i)).not.toBeInTheDocument();
   });
 });
