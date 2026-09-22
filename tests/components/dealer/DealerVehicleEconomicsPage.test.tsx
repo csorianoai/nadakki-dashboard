@@ -1,0 +1,58 @@
+/**
+ * @jest-environment jsdom
+ */
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import DealerVehicleEconomicsPage from "@/app/autos/dealer/inventario/[vehicleId]/page";
+import { DMS02R_ECONOMICS_PATHS, DMS02R_HTTP_IN_PRODUCTION_OPENAPI } from "@/lib/dealer/dms02r-http";
+
+jest.mock("next/navigation", () => ({
+  useParams: () => ({ vehicleId: "veh-1" }),
+}));
+
+jest.mock("@/lib/auth/token-refresh", () => ({
+  refreshAccessToken: jest.fn(async () => false),
+  isTokenExpiringSoon: jest.fn(() => false),
+}));
+
+function jsonResponse(body: unknown, status: number) {
+  return { ok: status >= 200 && status < 300, status, json: async () => body };
+}
+
+function wrapperFor(client: QueryClient) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  };
+}
+
+describe("Dealer vehicle economics", () => {
+  test("production OpenAPI flag stays false until #1365 publishes", () => {
+    expect(DMS02R_HTTP_IN_PRODUCTION_OPENAPI).toBe(false);
+    expect(DMS02R_ECONOMICS_PATHS.margin).toBe("/api/v1/autos/vehicles/{vehicle_id}/margin");
+    expect(DMS02R_ECONOMICS_PATHS.days).toBe("/api/v1/autos/vehicles/{vehicle_id}/days");
+  });
+
+  test("READY status from GET vehicle; economics stay BLOCKED_BY_BACKEND without calling margin/days", async () => {
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/autos/vehicles/veh-1") && !url.includes("/margin") && !url.includes("/days")) {
+        return jsonResponse(
+          { id: "veh-1", make: "Toyota", model: "Corolla", year: 2020, status: "disponible" },
+          200,
+        ) as Response;
+      }
+      return jsonResponse({}, 500) as Response;
+    });
+    render(<DealerVehicleEconomicsPage />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    await waitFor(() => expect(screen.getByTestId("dealer-vehicle-ready")).toBeInTheDocument());
+    expect(screen.getByText("disponible")).toBeInTheDocument();
+    expect(screen.getByTestId("dealer-economics-blocked")).toHaveAttribute("data-blocked-by-backend", "true");
+    expect(screen.getByText(/\/api\/v1\/autos\/vehicles\/\{vehicle_id\}\/margin/)).toBeInTheDocument();
+    const urls = (global.fetch as jest.Mock).mock.calls.map((c) => String(c[0]));
+    expect(urls.some((u) => u.includes("/margin") || u.includes("/days"))).toBe(false);
+  });
+});
