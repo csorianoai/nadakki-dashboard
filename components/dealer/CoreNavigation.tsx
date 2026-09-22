@@ -10,16 +10,17 @@ import {
 import type { EntitlementDecision, EntitlementReasonCode } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
 
+/** Hub batch keys: 097 catalog only. Invented *.view/*.create/*.quick_check are not billed. */
 export const CORE_NAV_CAPABILITIES: Record<string, string> = {
-  Inventory: "autos.inventory.view",
-  Leads: "autos.leads.view",
-  Financing: "autos.financing.view",
-  Offers: "autos.offers.view",
-  Commissions: "autos.commissions.view",
-  Marketing: "marketing.campaigns.create",
-  Legal: "legal.quick_check",
-  Credit: "credit.applications.create",
-  Accounting: "accounting.commissions.view",
+  Inventory: "autos.inventory.list",
+  Leads: "autos.leads.crm",
+  Financing: "autos.financing.applications",
+  Offers: "autos.search.marketplace",
+  Commissions: "autos.analytics.basic",
+  Marketing: "marketing.email.campaigns",
+  Legal: "legal.contracts.templates",
+  Credit: "credit.applications.submit",
+  Accounting: "accounting.invoices.view",
 };
 
 const CORE_HREFS: Record<string, string> = {
