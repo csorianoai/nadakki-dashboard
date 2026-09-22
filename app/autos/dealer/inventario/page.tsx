@@ -1,89 +1,42 @@
 "use client";
 
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { DealerEntitlementGate, DealerReasonPanel } from "@/components/dealer/DealerEntitlementGate";
-import { AccessApiError } from "@/lib/access/client";
-import { fetchDealerInventory } from "@/lib/dealer/inventory-search";
-import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
+import { DealerEntitlementGate } from "@/components/dealer/DealerEntitlementGate";
+import {
+  DEALER_INVENTORY_LIST_GET_IN_PRODUCTION_OPENAPI,
+  DEALER_INVENTORY_LIST_PATH,
+  PUBLIC_MARKETPLACE_SEARCH_PATH,
+} from "@/lib/dealer/inventory-search";
 
 export const DEALER_INVENTORY_CAPABILITY = "autos.inventory.view";
 
-function InventoryList() {
-  const resolved = resolveDealerAccessContext();
-  const ready = resolved.status === "ready" ? resolved.context : null;
-  const query = useQuery({
-    queryKey: ["dealer-inventory", ready?.tenantId ?? "none", ready?.dealerId ?? "none"],
-    queryFn: () => fetchDealerInventory(ready!.tenantId, ready!.dealerId),
-    enabled: ready != null,
-    retry: false,
-  });
-
-  if (!ready) {
-    const reason =
-      resolved.status === "ready" ? "DEFAULT_DENY" : resolved.reason_code;
-    return <DealerReasonPanel reason_code={reason} />;
-  }
-
-  if (query.isPending || query.isLoading) {
+function InventorySurface() {
+  if (DEALER_INVENTORY_LIST_GET_IN_PRODUCTION_OPENAPI) {
     return (
-      <p className="animate-pulse text-sm text-nk-fg-muted" data-testid="dealer-inventory-loading">
-        Cargando inventario…
-      </p>
-    );
-  }
-
-  if (query.error instanceof AccessApiError) {
-    return (
-      <DealerReasonPanel
-        reason_code={query.error.reason_code ?? `HTTP_${query.error.status}`}
-        httpStatus={query.error.status}
-      />
-    );
-  }
-
-  if (query.error) {
-    return <DealerReasonPanel reason_code="DEFAULT_DENY" />;
-  }
-
-  const rows = query.data ?? [];
-  if (rows.length === 0) {
-    return (
-      <p data-testid="dealer-inventory-empty" className="text-sm text-nk-fg-muted">
-        No hay vehículos de este dealer en la respuesta del backend.
+      <p className="text-sm text-nk-fg-muted">
+        El GET autenticado está en OpenAPI; esta rama no lo llama todavía.
       </p>
     );
   }
 
   return (
-    <ul className="grid max-w-full gap-3 overflow-x-hidden" data-testid="dealer-inventory-ready">
-      {rows.map((row) => {
-        const title = [row.year, row.make, row.model].filter(Boolean).join(" ") || row.id;
-        return (
-          <li
-            key={row.id}
-            className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
-          >
-            <p className="font-manrope text-base font-bold text-nk-fg break-words">{title}</p>
-            <p className="mt-1 text-sm text-nk-fg-muted">
-              Estado: {row.status ?? "no disponible"}
-            </p>
-            {row.mileage_km != null ? (
-              <p className="text-sm text-nk-fg-muted">Km: {row.mileage_km.toLocaleString("es-DO")}</p>
-            ) : null}
-            {row.price_rd != null ? (
-              <p className="text-sm text-nk-fg">RD$ {row.price_rd.toLocaleString("es-DO")}</p>
-            ) : null}
-            <Link
-              href={`/autos/vehiculo/${encodeURIComponent(row.id)}`}
-              className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand-2 underline"
-            >
-              Ver ficha
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+    <section
+      role="alert"
+      data-testid="dealer-inventory-blocked-by-backend"
+      data-blocked-by-backend="true"
+      className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
+    >
+      <h2 className="font-manrope text-lg font-bold text-nk-fg">Inventario no disponible</h2>
+      <p className="mt-2 text-sm text-nk-fg-muted">
+        BLOCKED_BY_BACKEND. El OpenAPI de producción no publica GET autenticado del inventario
+        del dealer (todos los estados). No se usa la vitrina pública.
+      </p>
+      <p className="mt-3 text-sm text-nk-fg break-words">
+        <code>{`GET ${DEALER_INVENTORY_LIST_PATH}`}</code>
+      </p>
+      <p className="mt-2 text-xs text-nk-fg-muted break-words">
+        Fuera de fuente: <code>{`POST ${PUBLIC_MARKETPLACE_SEARCH_PATH}`}</code>
+      </p>
+    </section>
   );
 }
 
@@ -93,11 +46,11 @@ export default function DealerInventarioPage() {
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Inventario</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Vehículos de tu dealer. Solo filas cuyo tenant y dealer coinciden con tu contexto.
+          Inventario autenticado del dealer. El marketplace público no es fuente.
         </p>
       </header>
       <DealerEntitlementGate capability={DEALER_INVENTORY_CAPABILITY}>
-        {() => <InventoryList />}
+        {() => <InventorySurface />}
       </DealerEntitlementGate>
     </main>
   );
