@@ -117,7 +117,7 @@ describe("Dealer hub page privileged quick links", () => {
   test("missing entitlement result => corresponding privileged link absent", async () => {
     const results: Record<string, unknown> = {};
     for (const key of CORE_NAV_CAPABILITY_KEYS) {
-      if (key === "autos.inventory.view") continue;
+      if (key === "autos.inventory.list") continue;
       results[key] = {
         allowed: true,
         reason_code: "ALLOWED",
@@ -137,9 +137,9 @@ describe("Dealer hub page privileged quick links", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchOk({
-          "autos.inventory.view": { allowed: false, reason_code: "DEFAULT_DENY" },
-          "autos.leads.view": { allowed: true, reason_code: "ALLOWED" },
-          "autos.commissions.view": { allowed: false, reason_code: "UPGRADE_REQUIRED" },
+          "autos.inventory.list": { allowed: false, reason_code: "DEFAULT_DENY" },
+          "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
+          "autos.analytics.basic": { allowed: false, reason_code: "UPGRADE_REQUIRED" },
         }),
         200,
       ),
@@ -156,9 +156,9 @@ describe("Dealer hub page privileged quick links", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchOk({
-          "autos.inventory.view": { allowed: true, reason_code: "ALLOWED" },
-          "autos.leads.view": { allowed: true, reason_code: "ALLOWED" },
-          "autos.commissions.view": { allowed: true, reason_code: "ALLOWED" },
+          "autos.inventory.list": { allowed: true, reason_code: "ALLOWED" },
+          "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
+          "autos.analytics.basic": { allowed: true, reason_code: "ALLOWED" },
         }),
         200,
       ),
@@ -176,9 +176,9 @@ describe("Dealer hub page privileged quick links", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchOk({
-          "autos.inventory.view": { allowed: true, reason_code: "ALLOWED" },
-          "autos.leads.view": { allowed: true, reason_code: "ALLOWED" },
-          "autos.commissions.view": { allowed: true, reason_code: "ALLOWED" },
+          "autos.inventory.list": { allowed: true, reason_code: "ALLOWED" },
+          "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
+          "autos.analytics.basic": { allowed: true, reason_code: "ALLOWED" },
         }),
         200,
       ),

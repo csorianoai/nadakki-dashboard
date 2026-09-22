@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { CoreNavigation, CORE_NAV_CAPABILITY_KEYS } from "@/components/dealer/CoreNavigation";
+import { MIGRATION_097_CAPABILITY_KEYS } from "@/lib/dealer/core-status";
 import { ACCESS_ENDPOINTS } from "@/lib/access/client";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import { ERROR_401, ERROR_403, ERROR_501 } from "../lib/access/fixtures";
@@ -57,9 +58,28 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
     seedDealer("tenant-a", "dealer-a", "ou-a");
   });
 
+  test("hub keys are 097 catalog only", () => {
+    const invented = [
+      "autos.inventory.view",
+      "autos.leads.view",
+      "autos.financing.view",
+      "autos.offers.view",
+      "autos.commissions.view",
+      "marketing.campaigns.create",
+      "legal.quick_check",
+      "credit.applications.create",
+      "accounting.commissions.view",
+    ];
+    expect(CORE_NAV_CAPABILITY_KEYS).toHaveLength(9);
+    for (const key of CORE_NAV_CAPABILITY_KEYS) {
+      expect(MIGRATION_097_CAPABILITY_KEYS.has(key)).toBe(true);
+      expect(invented).not.toContain(key);
+    }
+  });
+
   test("T1 entitlements callsite uses canonical batch client", async () => {
     (global.fetch as jest.Mock).mockResolvedValue(jsonResponse(batchOk({
-      "autos.inventory.view": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
+      "autos.inventory.list": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
     }), 200));
     render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(screen.getByTestId("core-navigation")).toBeInTheDocument());
@@ -72,10 +92,10 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
     const client = newClient();
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce(jsonResponse(batchOk({
-        "autos.inventory.view": { allowed: true, reason_code: "TENANT_A", limit: null, current_usage: null },
+        "autos.inventory.list": { allowed: true, reason_code: "TENANT_A", limit: null, current_usage: null },
       }), 200))
       .mockResolvedValueOnce(jsonResponse(batchOk({
-        "autos.inventory.view": { allowed: true, reason_code: "TENANT_B", limit: null, current_usage: null },
+        "autos.inventory.list": { allowed: true, reason_code: "TENANT_B", limit: null, current_usage: null },
       }), 200));
     const { rerender } = render(<CoreNavigation />, { wrapper: wrapperFor(client) });
     await waitFor(() => expect(document.querySelector('[data-reason-code="TENANT_A"]')).toBeTruthy());
@@ -90,10 +110,10 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
     const client = newClient();
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce(jsonResponse(batchOk({
-        "autos.inventory.view": { allowed: true, reason_code: "DEALER_A", limit: null, current_usage: null },
+        "autos.inventory.list": { allowed: true, reason_code: "DEALER_A", limit: null, current_usage: null },
       }), 200))
       .mockResolvedValueOnce(jsonResponse(batchOk({
-        "autos.inventory.view": { allowed: true, reason_code: "DEALER_B", limit: null, current_usage: null },
+        "autos.inventory.list": { allowed: true, reason_code: "DEALER_B", limit: null, current_usage: null },
       }), 200));
     const { rerender } = render(<CoreNavigation />, { wrapper: wrapperFor(client) });
     await waitFor(() => expect(document.querySelector('[data-reason-code="DEALER_A"]')).toBeTruthy());
@@ -137,7 +157,7 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
 
   test("T8 tenant batch is not presented as dealer authorization", async () => {
     (global.fetch as jest.Mock).mockResolvedValue(jsonResponse(batchOk({
-      "autos.inventory.view": { allowed: true, reason_code: "ALLOWED", limit: 10, current_usage: 7 },
+      "autos.inventory.list": { allowed: true, reason_code: "ALLOWED", limit: 10, current_usage: 7 },
     }), 200));
     render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(screen.getByTestId("core-navigation")).toBeInTheDocument());
@@ -174,7 +194,7 @@ describe("T7-STATUS-CACHE-SAFETY", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchOk({
-          "autos.inventory.view": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
+          "autos.inventory.list": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
         }),
         200,
       ),
@@ -197,7 +217,7 @@ describe("T7-STATUS-CACHE-SAFETY", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchOk({
-          "autos.inventory.view": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
+          "autos.inventory.list": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
         }),
         200,
       ),

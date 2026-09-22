@@ -57,13 +57,13 @@ describe("UsageMeter", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchUsage({
-          "marketing.campaigns.create": {
+          "marketing.email.campaigns": {
             allowed: true,
             reason_code: "ALLOWED",
             limit: 10,
             current_usage: 7,
           },
-          "legal.quick_check": {
+          "legal.contracts.templates": {
             allowed: true,
             reason_code: "ALLOWED",
             limit: 20,
@@ -77,7 +77,7 @@ describe("UsageMeter", () => {
     render(<UsageMeter />, { wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })) });
 
     await waitFor(() => {
-      expect(screen.getByText(/Marketing Campaigns Create/)).toBeInTheDocument();
+      expect(screen.getByText(/Marketing Email Campaigns/)).toBeInTheDocument();
       expect(screen.getByText("7/10")).toBeInTheDocument();
       expect(screen.getByText("5/20")).toBeInTheDocument();
     });
@@ -87,7 +87,7 @@ describe("UsageMeter", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchUsage({
-          "marketing.campaigns.create": {
+          "marketing.email.campaigns": {
             allowed: true,
             reason_code: "ALLOWED",
             limit: 10,
@@ -110,7 +110,7 @@ describe("UsageMeter", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
       jsonResponse(
         batchUsage({
-          "credit.applications.create": {
+          "credit.applications.submit": {
             allowed: true,
             reason_code: "ALLOWED",
             limit: null,
