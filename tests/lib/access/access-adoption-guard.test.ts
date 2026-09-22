@@ -1,5 +1,5 @@
 /**
- * Static adoption guard: productive code must not construct the four access URLs
+ * Static adoption guard: productive code must not construct the access URLs
  * outside lib/access/**. Tests may cite the paths.
  */
 import fs from "fs";
@@ -11,6 +11,7 @@ const FORBIDDEN = [
   "/api/v1/access/readiness",
   "/api/v1/access/plans",
   "/api/v1/access/subscription",
+  "/api/v1/access/sponsorship",
 ];
 
 /** Empty on purpose: no product exception. lib/access/** and tests/** are skipped by walk rules. */
@@ -36,6 +37,7 @@ function walk(dir: string, acc: string[]): void {
       continue;
     }
     if (!/\.(ts|tsx|js|jsx)$/.test(entry.name)) continue;
+    if (entry.name.endsWith(".d.ts")) continue;
     acc.push(path.join(dir, entry.name));
   }
 }

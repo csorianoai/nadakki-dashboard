@@ -9,6 +9,7 @@ import {
   DEALER_QUICK_LINK_CAPABILITIES,
   isAccessQueryFailClosed,
 } from "@/components/dealer/CoreNavigation";
+import { DealerSponsorshipBanner } from "@/components/dealer/DealerSponsorshipBanner";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import { UsageMeter } from "@/components/dealer/UsageMeter";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
@@ -69,6 +70,7 @@ export default function DealerDashboardPage() {
           Mejora tu plan
         </button>
       </header>
+      <DealerSponsorshipBanner />
       {upgradeOpen ? (
         <UpgradeModal
           decision={{ allowed: false, reason_code: "UPGRADE_REQUIRED" }}
