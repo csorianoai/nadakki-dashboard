@@ -1,8 +1,8 @@
 /**
  * Canonical tenant-scoped access client.
- * BACKEND_SHA a38dc23d6418aec568df21d8204d883166ec5604
- * GET /api/v1/access/entitlements/batch accepts optional organization_unit_id
- * (routers/autos_core_access_router.py:442-481). Never send dealer_id.
+ * BACKEND_SHA 379db0576b5b97359ada5732f0ccf40c04cf054b
+ * GET /api/v1/access/entitlements/batch (#1373) returns requested and
+ * evaluated organization unit ids. unitScope follows evaluated only.
  */
 
 import { apiFetch } from "@/lib/api/fetch-client";
@@ -19,6 +19,7 @@ export const ACCESS_ENDPOINTS = {
 export const ACCESS_SCOPE_TENANT = "tenant" as const;
 export const ACCESS_UNIT_SCOPE_INCLUDED = "included" as const;
 export const ACCESS_UNIT_SCOPE_OMITTED = "omitted" as const;
+export const ACCESS_UNIT_SCOPE_UNAVAILABLE = "unavailable" as const;
 
 export type AccessClientContext = {
   tenantId: string;
@@ -61,10 +62,14 @@ export type EntitlementBatchItem = {
   limit: number | null;
   current_usage: number | null;
   organization_unit_id?: string | null;
+  requested_organization_unit_id?: string | null;
+  evaluated_organization_unit_id?: string | null;
 };
 
 export type EntitlementsBatchPayload = {
   organization_unit_id: string | null;
+  requested_organization_unit_id: string | null;
+  evaluated_organization_unit_id: string | null;
   results: Record<string, EntitlementBatchItem>;
 };
 export type EntitlementsBatchResponse = EntitlementsBatchPayload & {
@@ -196,20 +201,23 @@ function batchSearch(
   return params.toString() ? params : undefined;
 }
 
-/** Backend echo only (autos_core_access_router.py:470-471). Never derived from the query we sent. */
-export function organizationUnitIdFromBatchBody(body: unknown): string | null {
-  const rec = asRecord(body);
-  if (!rec) return null;
-  const raw = rec.organization_unit_id;
-  if (typeof raw !== "string") return null;
-  const trimmed = raw.trim();
+function readOptionalId(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
   return trimmed ? trimmed : null;
 }
 
-function unitScopeFromBatchBody(body: unknown): typeof ACCESS_UNIT_SCOPE_INCLUDED | typeof ACCESS_UNIT_SCOPE_OMITTED {
-  return organizationUnitIdFromBatchBody(body)
-    ? ACCESS_UNIT_SCOPE_INCLUDED
-    : ACCESS_UNIT_SCOPE_OMITTED;
+/** Evaluated unit from #1373. Never echo (`organization_unit_id`) or requested. */
+export function evaluatedOrganizationUnitIdFromBatchBody(body: unknown): string | null {
+  const rec = asRecord(body);
+  if (!rec) return null;
+  return readOptionalId(rec.evaluated_organization_unit_id);
+}
+
+function unitScopeFromEvaluated(
+  evaluated: string | null,
+): typeof ACCESS_UNIT_SCOPE_INCLUDED | typeof ACCESS_UNIT_SCOPE_OMITTED {
+  return evaluated ? ACCESS_UNIT_SCOPE_INCLUDED : ACCESS_UNIT_SCOPE_OMITTED;
 }
 
 function asBatchResults(value: unknown): Record<string, EntitlementBatchItem> {
@@ -228,13 +236,15 @@ export async function fetchEntitlementsBatch(
     context,
     batchSearch(capabilityKeys, unit || null),
   );
-  const organization_unit_id = organizationUnitIdFromBatchBody(body);
   const root = asRecord(body);
+  const evaluated_organization_unit_id = evaluatedOrganizationUnitIdFromBatchBody(body);
   return {
-    organization_unit_id,
+    organization_unit_id: evaluated_organization_unit_id,
+    requested_organization_unit_id: readOptionalId(root?.requested_organization_unit_id),
+    evaluated_organization_unit_id,
     results: asBatchResults(root?.results),
     scope: ACCESS_SCOPE_TENANT,
-    unitScope: unitScopeFromBatchBody(body),
+    unitScope: unitScopeFromEvaluated(evaluated_organization_unit_id),
   };
 }
 

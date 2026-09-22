@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import {
   ACCESS_SCOPE_TENANT,
-  ACCESS_UNIT_SCOPE_OMITTED,
+  ACCESS_UNIT_SCOPE_UNAVAILABLE,
   AccessApiError,
 } from "@/lib/access/client";
 import type { EntitlementDecision, EntitlementReasonCode } from "@/types/entitlements";
@@ -115,7 +115,9 @@ interface NavItem {
 export function CoreNavigation() {
   const query = useAccessEntitlementsBatch(CORE_NAV_CAPABILITY_KEYS);
   const accessScope = query.data?.scope ?? ACCESS_SCOPE_TENANT;
-  const unitScope = query.data?.unitScope ?? ACCESS_UNIT_SCOPE_OMITTED;
+  const unitScope = query.error
+    ? ACCESS_UNIT_SCOPE_UNAVAILABLE
+    : (query.data?.unitScope ?? ACCESS_UNIT_SCOPE_UNAVAILABLE);
   const items: NavItem[] = Object.entries(CORE_NAV_CAPABILITIES).map(([label, capability_id]) => ({
     label,
     href: CORE_HREFS[label] ?? `/autos/dealer/${label.toLowerCase()}`,

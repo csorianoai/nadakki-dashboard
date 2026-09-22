@@ -1,23 +1,29 @@
 /**
- * Independent fixtures. BACKEND_SHA a38dc23d6418aec568df21d8204d883166ec5604
+ * Independent fixtures. BACKEND_SHA 379db0576b5b97359ada5732f0ccf40c04cf054b (#1373)
  */
-/** routers/autos_core_access_router.py:442-481 — echo of evaluated organization_unit_id */
+/** Evaluated unit is the only source of unitScope. Echo/requested are ignored. */
 export const BATCH_200 = {
-  organization_unit_id: "ou-a",
+  organization_unit_id: "ou-echo",
+  requested_organization_unit_id: "ou-requested",
+  evaluated_organization_unit_id: "ou-a",
   results: {
     "autos.inventory.view": {
       allowed: true,
       reason_code: "ALLOWED",
       limit: 100,
       current_usage: 3,
-      organization_unit_id: "ou-a",
+      organization_unit_id: "ou-echo",
+      requested_organization_unit_id: "ou-requested",
+      evaluated_organization_unit_id: "ou-a",
     },
     "credit.scoring.run": {
       allowed: false,
       reason_code: "TARGET_CORE_NOT_READY",
       limit: null,
       current_usage: null,
-      organization_unit_id: "ou-a",
+      organization_unit_id: "ou-echo",
+      requested_organization_unit_id: "ou-requested",
+      evaluated_organization_unit_id: "ou-a",
     },
   },
 };
@@ -32,9 +38,9 @@ export const ERROR_409 = { detail: { reason_code: "SUBSCRIPTION_EXISTS" } };
 export const ERROR_422 = { detail: { reason_code: "VALIDATION_ERROR" } };
 /**
  * DEFENSIVE_NOT_NATIVE: batch HTTP itself returns 200 with reason_code in results
- * (autos_core_access_router.py:442-481). HTTP 501 TARGET_CORE_NOT_READY is native
+ * (autos_core_access_router.py). HTTP 501 TARGET_CORE_NOT_READY is native
  * to entitlement guards on bridges, not the batch route.
- * BACKEND_SHA a38dc23d6418aec568df21d8204d883166ec5604
+ * BACKEND_SHA 379db0576b5b97359ada5732f0ccf40c04cf054b
  * routers/autos_bridges.py:136-141, 1041-1048
  */
 export const ERROR_501 = {

@@ -78,11 +78,15 @@ describe("DASH-ACCESS-CLIENT-01", () => {
     seedDealer("tenant-a", "dealer-a", "ou-a");
   });
 
-  test("T1 200 BATCH preserves full payload", async () => {
+  test("T1 200 BATCH unitScope follows evaluated, never echo or requested", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(BATCH_200, 200));
     const result = await fetchEntitlementsBatch(["autos.inventory.view", "credit.scoring.run"]);
     expect(result.results).toEqual(BATCH_200.results);
-    expect(result).toEqual({ ...BATCH_200, scope: ACCESS_SCOPE_TENANT, unitScope: ACCESS_UNIT_SCOPE_INCLUDED });
+    expect(result.evaluated_organization_unit_id).toBe("ou-a");
+    expect(result.organization_unit_id).toBe("ou-a");
+    expect(result.requested_organization_unit_id).toBe("ou-requested");
+    expect(result.scope).toBe(ACCESS_SCOPE_TENANT);
+    expect(result.unitScope).toBe(ACCESS_UNIT_SCOPE_INCLUDED);
   });
 
   test("T2 401 keeps status and triggers existing session refresh", async () => {
@@ -172,12 +176,21 @@ describe("DASH-ACCESS-CLIENT-01", () => {
     resetDealerAccessMemoryForTests();
     window.localStorage.setItem("nadakki_tenant_id", "tenant-a");
     (global.fetch as jest.Mock).mockResolvedValueOnce(
-      jsonResponse({ ...BATCH_200, organization_unit_id: null }, 200),
+      jsonResponse(
+        {
+          ...BATCH_200,
+          organization_unit_id: null,
+          requested_organization_unit_id: null,
+          evaluated_organization_unit_id: null,
+        },
+        200,
+      ),
     );
     const omitted = await fetchEntitlementsBatch(["autos.inventory.view"]);
     expect(fetchDump()).not.toMatch(/dealer_id/);
     expect(fetchDump()).not.toMatch(/organization_unit_id=/);
     expect(omitted.organization_unit_id).toBeNull();
+    expect(omitted.evaluated_organization_unit_id).toBeNull();
     expect(omitted.unitScope).toBe(ACCESS_UNIT_SCOPE_OMITTED);
   });
 
@@ -191,13 +204,22 @@ describe("DASH-ACCESS-CLIENT-01", () => {
     expect(result.unitScope).toBe(ACCESS_UNIT_SCOPE_INCLUDED);
   });
 
-  test("T11b unitScope follows backend echo, not the query we sent", async () => {
+  test("T11b unitScope follows evaluated_organization_unit_id, never echo or requested", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(
-      jsonResponse({ ...BATCH_200, organization_unit_id: null }, 200),
+      jsonResponse(
+        {
+          ...BATCH_200,
+          organization_unit_id: "ou-echo",
+          requested_organization_unit_id: "ou-a",
+          evaluated_organization_unit_id: null,
+        },
+        200,
+      ),
     );
     const result = await fetchEntitlementsBatch(["autos.inventory.view"]);
     expect(fetchDump()).toMatch(/organization_unit_id=ou-a/);
     expect(result.organization_unit_id).toBeNull();
+    expect(result.evaluated_organization_unit_id).toBeNull();
     expect(result.unitScope).toBe(ACCESS_UNIT_SCOPE_OMITTED);
   });
 
