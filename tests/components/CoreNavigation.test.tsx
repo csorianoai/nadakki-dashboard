@@ -152,6 +152,40 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
   });
 });
 
+describe("DASH-DEALER-BANK-LABEL-01", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetDealerAccessMemoryForTests();
+    tokenStorage.clearTokens();
+    (refreshAccessToken as jest.Mock).mockClear();
+    global.fetch = jest.fn();
+    seedDealer("tenant-a", "dealer-a", "ou-a");
+  });
+
+  test("hub shows Dealer-Bank status on existing credit batch capability", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(
+      jsonResponse(
+        batchOk({
+          "credit.applications.create": {
+            allowed: true,
+            reason_code: "ALLOWED",
+            limit: null,
+            current_usage: null,
+          },
+        }),
+        200,
+      ),
+    );
+    render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
+    const link = await screen.findByRole("link", { name: /Dealer-Bank/ });
+    expect(link).toHaveAttribute("href", "/credit-hub/dealer");
+    expect(screen.queryByRole("link", { name: /Credit/ })).not.toBeInTheDocument();
+    const url = String((global.fetch as jest.Mock).mock.calls[0][0]);
+    expect(url).toContain(ACCESS_ENDPOINTS.batch);
+    expect(url).toContain("credit.applications.create");
+  });
+});
+
 /** REFETCH_TRIGGER=TEST_ONLY — no production invalidateQueries on access keys (hooks.ts:15-24). */
 const RETRY_DELAY_MAX_MS = 30_000;
 

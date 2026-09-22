@@ -18,7 +18,7 @@ export const CORE_NAV_CAPABILITIES: Record<string, string> = {
   Commissions: "autos.commissions.view",
   Marketing: "marketing.campaigns.create",
   Legal: "legal.quick_check",
-  Credit: "credit.applications.create",
+  "Dealer-Bank": "credit.applications.create",
   Accounting: "accounting.commissions.view",
 };
 
@@ -30,7 +30,7 @@ const CORE_HREFS: Record<string, string> = {
   Commissions: "/autos/dealer/insights",
   Marketing: "/marketing/campaigns",
   Legal: "/legal/contracts",
-  Credit: "/credit-hub/dealer",
+  "Dealer-Bank": "/credit-hub/dealer",
   Accounting: "/contable",
 };
 
