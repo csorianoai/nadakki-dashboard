@@ -7,6 +7,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import DealerVehicleRegisterPage from "@/app/autos/dealer/inventario/[vehicleId]/registrar/page";
+import { DEALER_REGISTER_CAPABILITY } from "@/lib/dealer/capabilities";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import {
   resetDealerAccessMemoryForTests,
@@ -42,7 +43,7 @@ function allowCreate() {
   return jsonResponse(
     {
       results: {
-        "autos.inventory.create": {
+        [DEALER_REGISTER_CAPABILITY]: {
           allowed: true,
           reason_code: "ALLOWED",
           limit: null,
@@ -115,7 +116,7 @@ describe("vehicle economics POST forms", () => {
       jsonResponse(
         {
           results: {
-            "autos.inventory.create": {
+            [DEALER_REGISTER_CAPABILITY]: {
               allowed: false,
               reason_code: "UPGRADE_REQUIRED",
               limit: null,

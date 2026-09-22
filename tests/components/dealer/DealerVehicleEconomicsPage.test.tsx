@@ -9,7 +9,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import DealerVehicleEconomicsPage from "@/app/autos/dealer/inventario/[vehicleId]/page";
 import { DMS02R_HTTP_IN_PRODUCTION_OPENAPI } from "@/lib/dealer/dms02r-http";
-import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/vehicle-capability";
+import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import {
   resetDealerAccessMemoryForTests,
