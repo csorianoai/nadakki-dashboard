@@ -167,11 +167,16 @@ describe("Dealer Hub upgrade CTA", () => {
   test("CTA opens modal against /api/v1/access/plans", async () => {
     const user = userEvent.setup();
     (global.fetch as jest.Mock).mockImplementation((url: string) => {
-      if (String(url).includes("/api/v1/access/plans")) {
+      const path = String(url);
+      if (path.includes("/api/v1/access/plans")) {
         return Promise.resolve(
           jsonResponse({ plans: [{ slug: "domina", name: "Domina Live", price_rd: 12 }] }, 200),
         );
       }
+      if (path.includes("/api/v1/legal/cases")) return Promise.resolve(jsonResponse({ cases: [] }, 200));
+      if (path.includes("/api/v1/contable/asientos")) return Promise.resolve(jsonResponse([], 200));
+      if (path.includes("/api/marketing/scheduler/heartbeat")) return Promise.resolve(jsonResponse({}, 200));
+      if (path.includes("/api/v1/autos/dealers/")) return Promise.resolve(jsonResponse({ vehicles: [] }, 200));
       return Promise.resolve(jsonResponse(batchOk(), 200));
     });
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
