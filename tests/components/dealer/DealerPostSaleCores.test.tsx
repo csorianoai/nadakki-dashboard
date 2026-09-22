@@ -2,6 +2,8 @@
  * @jest-environment jsdom
  */
 
+import fs from "fs";
+import path from "path";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -85,5 +87,31 @@ describe("Dealer post-sale cores", () => {
     });
     expect(await screen.findByTestId("dealer-post-sale-error")).toBeInTheDocument();
     expect(screen.queryByTestId("dealer-post-sale-ready")).not.toBeInTheDocument();
+  });
+
+  test("NO_FAKE_DATA: invented Casos legales 12 / Asientos 340 / Latido 3 min fail", async () => {
+    const invented = "Casos legales: 12 · Asientos: 340 · Latido: hace 3 min";
+    const src = fs.readFileSync(path.join(process.cwd(), "components/dealer/DealerPostSaleCores.tsx"), "utf8");
+    expect(src).not.toContain(invented);
+    expect(src).not.toMatch(/Casos legales:\s*12/);
+    expect(src).not.toMatch(/Asientos:\s*340/);
+    expect(src).not.toMatch(/Latido:\s*hace 3 min/);
+
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/legal/cases")) return jsonResponse({ cases: [] }, 200);
+      if (url.includes("/api/v1/contable/asientos")) return jsonResponse([], 200);
+      if (url.includes("/api/marketing/scheduler/heartbeat")) return jsonResponse({}, 200);
+      if (url.includes("/api/v1/autos/dealers/")) return jsonResponse({ vehicles: [] }, 200);
+      return jsonResponse({ detail: "not-mocked" }, 404);
+    });
+    render(<DealerPostSaleCores />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    expect(await screen.findByTestId("dealer-post-sale-empty")).toBeInTheDocument();
+    expect(screen.queryByText(invented)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Casos legales:\s*12/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Asientos:\s*340/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Latido:\s*hace 3 min/)).not.toBeInTheDocument();
   });
 });
