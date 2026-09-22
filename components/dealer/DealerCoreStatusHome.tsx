@@ -11,12 +11,12 @@ import {
 } from "@/lib/dealer/core-status";
 import type { EntitlementDecision } from "@/types/entitlements";
 
-const CORE_KEYS = DEALER_CORE_STATUS_ROWS.map((row) => row.capability);
+const ACTION_CAPS = DEALER_CORE_STATUS_ROWS.map((row) => row.actionCapability);
 
 export function DealerCoreStatusHome() {
   const context = getAccessClientContext();
   const readiness = useAccessReadiness();
-  const batch = useAccessEntitlementsBatch([...CORE_KEYS]);
+  const batch = useAccessEntitlementsBatch([...ACTION_CAPS]);
   const [upgradeFor, setUpgradeFor] = useState<EntitlementDecision | null>(null);
 
   if (!context?.tenantId) {
@@ -81,10 +81,11 @@ export function DealerCoreStatusHome() {
   return (
     <div className="max-w-full space-y-3 overflow-x-hidden" data-testid="dealer-core-status-ready">
       {DEALER_CORE_STATUS_ROWS.map((row) => {
-        const entry = byKey.get(row.capability) ?? null;
-        const item = batch.data?.results?.[row.capability] ?? null;
+        const entry = byKey.get(row.readinessKey) ?? null;
+        const item = batch.data?.results?.[row.actionCapability] ?? null;
         const derived = deriveDealerCoreUiState({
           accessError: false,
+          readinessKey: row.readinessKey,
           entry,
           batch: item,
         });
@@ -97,10 +98,12 @@ export function DealerCoreStatusHome() {
             : null;
         return (
           <article
-            key={row.capability}
+            key={row.name}
             data-testid="dealer-core-card"
             data-core-name={row.name}
             data-core-state={derived.state}
+            data-readiness-key={row.readinessKey}
+            data-action-capability={row.actionCapability}
             data-reason-code={derived.reason_code ?? ""}
             className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
           >

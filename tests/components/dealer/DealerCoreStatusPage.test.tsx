@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import DealerCoreStatusPage from "@/app/autos/dealer/estado/page";
+import { DEALER_CORE_STATUS_ROWS } from "@/lib/dealer/core-status";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import {
   resetDealerAccessMemoryForTests,
@@ -40,7 +41,7 @@ describe("Dealer core status home", () => {
     seedDealer();
   });
 
-  test("shows READY only for usable+allowed cores and NOT_READY when pending", async () => {
+  test("state from readinessKey; CTA from actionCapability; batch omits readiness keys", async () => {
     global.fetch = jest.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("/api/v1/access/readiness")) {
@@ -48,28 +49,28 @@ describe("Dealer core status home", () => {
           {
             entries: [
               {
-                capability_key: "credit.applications.create",
+                capability_key: "credit.applications.view",
                 status: "LIVE",
                 is_usable: true,
                 version: "1",
                 notes: null,
               },
               {
-                capability_key: "legal.quick_check",
+                capability_key: "legal.cases.view",
                 status: "PENDING_EXTERNAL_ACTIVATION",
                 is_usable: false,
                 version: null,
                 notes: "Proveedor legal pendiente",
               },
               {
-                capability_key: "marketing.campaigns.create",
+                capability_key: "marketing.social.publish",
                 status: "LIVE",
                 is_usable: true,
                 version: "1",
                 notes: null,
               },
               {
-                capability_key: "accounting.commissions.view",
+                capability_key: "accounting.invoices.view",
                 status: "BLOCKED",
                 is_usable: false,
                 version: null,
@@ -86,25 +87,25 @@ describe("Dealer core status home", () => {
         return jsonResponse(
           {
             results: {
-              "credit.applications.create": {
+              "credit.applications.submit": {
                 allowed: true,
                 reason_code: "ALLOWED",
                 limit: null,
                 current_usage: null,
               },
-              "legal.quick_check": {
-                allowed: false,
-                reason_code: "TARGET_CORE_NOT_READY",
+              "legal.cases.create": {
+                allowed: true,
+                reason_code: "ALLOWED",
                 limit: null,
                 current_usage: null,
               },
-              "marketing.campaigns.create": {
+              "marketing.ads.manage": {
                 allowed: false,
                 reason_code: "UPGRADE_REQUIRED",
                 limit: null,
                 current_usage: null,
               },
-              "accounting.commissions.view": {
+              "accounting.invoices.create": {
                 allowed: false,
                 reason_code: "DEFAULT_DENY",
                 limit: null,
@@ -126,11 +127,22 @@ describe("Dealer core status home", () => {
     const cards = screen.getAllByTestId("dealer-core-card");
     const byName = Object.fromEntries(cards.map((el) => [el.getAttribute("data-core-name"), el]));
     expect(byName["Dealer-Bank"]).toHaveAttribute("data-core-state", "READY");
+    expect(byName["Dealer-Bank"]).toHaveAttribute("data-readiness-key", "credit.applications.view");
+    expect(byName["Dealer-Bank"]).toHaveAttribute("data-action-capability", "credit.applications.submit");
     expect(byName.Legal).toHaveAttribute("data-core-state", "NOT_READY");
-    expect(byName.Marketing).toHaveAttribute("data-core-state", "BLOCKED");
+    expect(byName.Marketing).toHaveAttribute("data-core-state", "READY");
     expect(byName.Contable).toHaveAttribute("data-core-state", "BLOCKED");
     expect(screen.getByRole("link", { name: /Abrir/ })).toHaveAttribute("href", "/credit-hub/dealer");
-    expect(screen.queryByRole("link", { name: /Abrir/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Ver planes publicados/ })).toBeInTheDocument();
+
+    const batchUrl = (global.fetch as jest.Mock).mock.calls
+      .map((c) => String(c[0]))
+      .find((u) => u.includes("/api/v1/access/entitlements/batch"));
+    expect(batchUrl).toBeTruthy();
+    for (const row of DEALER_CORE_STATUS_ROWS) {
+      expect(batchUrl).toContain(row.actionCapability);
+      expect(batchUrl).not.toContain(`capabilities=${row.readinessKey}`);
+      expect(batchUrl?.includes(row.readinessKey)).toBe(false);
+    }
   });
 });

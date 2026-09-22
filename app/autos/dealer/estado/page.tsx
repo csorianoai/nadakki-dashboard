@@ -8,7 +8,7 @@ export default function DealerCoreStatusPage() {
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Estado de cores</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Qué puedes operar ahora. READY solo si readiness declara usable y el batch lo permite.
+          Qué puedes operar ahora. El estado sale de readiness (is_usable). El batch solo arma el CTA.
         </p>
       </header>
       <DealerCoreStatusHome />
