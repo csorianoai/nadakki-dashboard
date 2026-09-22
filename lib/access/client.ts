@@ -1,8 +1,8 @@
 /**
  * Canonical tenant-scoped access client.
- * BACKEND_SHA 0fa36d53980ea34a0c104efebb1c9c2b39e0b3ee
- * Batch is tenant-only (ACCESS-BATCH-UNIT open):
- * routers/autos_core_access_router.py:440-467 — no organization_unit_id / dealer_id.
+ * BACKEND_SHA a38dc23d6418aec568df21d8204d883166ec5604
+ * GET /api/v1/access/entitlements/batch accepts optional organization_unit_id
+ * (routers/autos_core_access_router.py:442-481). Never send dealer_id.
  */
 
 import { apiFetch } from "@/lib/api/fetch-client";
@@ -17,7 +17,8 @@ export const ACCESS_ENDPOINTS = {
 } as const;
 
 export const ACCESS_SCOPE_TENANT = "tenant" as const;
-export const UNIT_SCOPE_UNSUPPORTED = "UNIT_SCOPE_UNSUPPORTED" as const;
+export const ACCESS_UNIT_SCOPE_INCLUDED = "included" as const;
+export const ACCESS_UNIT_SCOPE_OMITTED = "omitted" as const;
 
 export type AccessClientContext = {
   tenantId: string;
@@ -64,7 +65,7 @@ export type EntitlementBatchItem = {
 export type EntitlementsBatchPayload = { results: Record<string, EntitlementBatchItem> };
 export type EntitlementsBatchResponse = EntitlementsBatchPayload & {
   scope: typeof ACCESS_SCOPE_TENANT;
-  unitScope: typeof UNIT_SCOPE_UNSUPPORTED;
+  unitScope: typeof ACCESS_UNIT_SCOPE_INCLUDED | typeof ACCESS_UNIT_SCOPE_OMITTED;
 };
 export type AccessReadinessResponse = {
   entries: Array<{
@@ -179,12 +180,16 @@ async function accessGet<T>(
   return body as T;
 }
 
-function batchSearch(capabilityKeys: string[]): URLSearchParams | undefined {
+function batchSearch(
+  capabilityKeys: string[],
+  organizationUnitId: string | null,
+): URLSearchParams | undefined {
   const keys = capabilityKeys.map((k) => k.trim()).filter(Boolean);
-  if (keys.length === 0) return undefined;
   const params = new URLSearchParams();
-  params.set("capabilities", keys.join(","));
-  return params;
+  if (keys.length > 0) params.set("capabilities", keys.join(","));
+  const unit = organizationUnitId?.trim() || "";
+  if (unit) params.set("organization_unit_id", unit);
+  return params.toString() ? params : undefined;
 }
 
 export async function fetchEntitlementsBatch(
@@ -192,12 +197,17 @@ export async function fetchEntitlementsBatch(
   explicitContext?: AccessClientContext | null,
 ): Promise<EntitlementsBatchResponse> {
   const context = requestContext(explicitContext);
+  const unit = context.organizationUnitId?.trim() || "";
   const payload = await accessGet<EntitlementsBatchPayload>(
     ACCESS_ENDPOINTS.batch,
     context,
-    batchSearch(capabilityKeys),
+    batchSearch(capabilityKeys, unit || null),
   );
-  return { ...payload, scope: ACCESS_SCOPE_TENANT, unitScope: UNIT_SCOPE_UNSUPPORTED };
+  return {
+    ...payload,
+    scope: ACCESS_SCOPE_TENANT,
+    unitScope: unit ? ACCESS_UNIT_SCOPE_INCLUDED : ACCESS_UNIT_SCOPE_OMITTED,
+  };
 }
 
 export async function fetchAccessReadiness(explicitContext?: AccessClientContext | null) {

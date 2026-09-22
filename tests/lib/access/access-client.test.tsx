@@ -8,9 +8,10 @@ import type { ReactNode } from "react";
 import {
   ACCESS_ENDPOINTS,
   ACCESS_SCOPE_TENANT,
+  ACCESS_UNIT_SCOPE_INCLUDED,
+  ACCESS_UNIT_SCOPE_OMITTED,
   AccessApiError,
   AccessTenantRequiredError,
-  UNIT_SCOPE_UNSUPPORTED,
   accessQueryKey,
   fetchEntitlementsBatch,
   getAccessClientContext,
@@ -81,7 +82,7 @@ describe("DASH-ACCESS-CLIENT-01", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(BATCH_200, 200));
     const result = await fetchEntitlementsBatch(["autos.inventory.view", "credit.scoring.run"]);
     expect(result.results).toEqual(BATCH_200.results);
-    expect(result).toEqual({ ...BATCH_200, scope: ACCESS_SCOPE_TENANT, unitScope: UNIT_SCOPE_UNSUPPORTED });
+    expect(result).toEqual({ ...BATCH_200, scope: ACCESS_SCOPE_TENANT, unitScope: ACCESS_UNIT_SCOPE_INCLUDED });
   });
 
   test("T2 401 keeps status and triggers existing session refresh", async () => {
@@ -171,18 +172,19 @@ describe("DASH-ACCESS-CLIENT-01", () => {
     resetDealerAccessMemoryForTests();
     window.localStorage.setItem("nadakki_tenant_id", "tenant-a");
     (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(BATCH_200, 200));
-    await fetchEntitlementsBatch(["autos.inventory.view"]);
+    const omitted = await fetchEntitlementsBatch(["autos.inventory.view"]);
     expect(fetchDump()).not.toMatch(/dealer_id/);
     expect(fetchDump()).not.toMatch(/organization_unit_id/);
+    expect(omitted.unitScope).toBe(ACCESS_UNIT_SCOPE_OMITTED);
   });
 
-  test("T11 batch unit scope unsupported: no unit/dealer params", async () => {
+  test("T11 batch sends organization_unit_id from context; never dealer_id", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(BATCH_200, 200));
     const result = await fetchEntitlementsBatch(["autos.inventory.view"]);
-    expect(fetchDump()).not.toMatch(/organization_unit_id/);
+    expect(fetchDump()).toMatch(/organization_unit_id=ou-a/);
     expect(fetchDump()).not.toMatch(/dealer_id/);
     expect(result.scope).toBe("tenant");
-    expect(result.unitScope).toBe("UNIT_SCOPE_UNSUPPORTED");
+    expect(result.unitScope).toBe(ACCESS_UNIT_SCOPE_INCLUDED);
   });
 
   test("T12 tenant cache isolation", async () => {

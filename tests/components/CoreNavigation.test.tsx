@@ -143,11 +143,11 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
     await waitFor(() => expect(screen.getByTestId("core-navigation")).toBeInTheDocument());
     const nav = screen.getByTestId("core-navigation");
     expect(nav).toHaveAttribute("data-access-scope", "tenant");
-    expect(nav).toHaveAttribute("data-unit-scope", "UNIT_SCOPE_UNSUPPORTED");
+    expect(nav).toHaveAttribute("data-unit-scope", "included");
     expect(nav).toHaveAttribute("data-dealer-authorized", "false");
     const dump = `${(global.fetch as jest.Mock).mock.calls[0][0]} ${JSON.stringify((global.fetch as jest.Mock).mock.calls[0][1]?.headers)}`;
     expect(dump).not.toMatch(/dealer_id/);
-    expect(dump).not.toMatch(/organization_unit_id/);
+    expect(dump).toMatch(/organization_unit_id=ou-a/);
     expect(screen.getByText(/7 \/ 10 used/)).toBeInTheDocument();
   });
 });
