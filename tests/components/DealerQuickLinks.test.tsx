@@ -23,7 +23,19 @@ jest.mock("@/lib/auth/token-refresh", () => ({
   isTokenExpiringSoon: jest.fn(() => false),
 }));
 
+jest.mock("@/lib/dealer/post-sale", () => ({
+  fetchPostSaleSnapshot: jest.fn(async () => ({
+    cases: [],
+    asientos: [],
+    listings: [],
+    heartbeat: {},
+  })),
+}));
+
 const PRIVILEGED_HREFS = Object.keys(DEALER_QUICK_LINK_CAPABILITIES);
+const INVENTORY_CAP = DEALER_QUICK_LINK_CAPABILITIES["/autos/dealer/publicar-rapido"];
+const LEADS_CAP = DEALER_QUICK_LINK_CAPABILITIES["/autos/dealer/leads"];
+const COMMISSIONS_CAP = DEALER_QUICK_LINK_CAPABILITIES["/autos/dealer/insights"];
 
 function jsonResponse(body: unknown, status: number) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };
@@ -62,24 +74,6 @@ function newClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
 }
 
-function mockAccessFetches(batch: { body: unknown; status: number }) {
-  global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-    const url = String(input);
-    if (url.includes("/api/v1/access/entitlements/batch")) {
-      return jsonResponse(batch.body, batch.status);
-    }
-    if (url.includes("/api/v1/legal/cases")) return jsonResponse({ cases: [] }, 200);
-    if (url.includes("/api/v1/contable/asientos")) return jsonResponse([], 200);
-    if (url.includes("/api/marketing/scheduler/heartbeat")) return jsonResponse({}, 200);
-    if (url.includes("/api/v1/autos/dealers/")) return jsonResponse({ vehicles: [] }, 200);
-    if (url.includes("/api/v1/access/subscription")) {
-      return jsonResponse({ has_subscription: false, subscription: null }, 200);
-    }
-    if (url.includes("/api/v1/access/plans")) return jsonResponse({ plans: [] }, 200);
-    return jsonResponse({ detail: "not-mocked" }, 404);
-  });
-}
-
 function privilegedQuickLinks() {
   const section = screen.getByTestId("dealer-quick-links");
   return Array.from(section.querySelectorAll('[data-testid="privileged-quick-link"]'));
@@ -95,7 +89,7 @@ describe("Dealer hub page privileged quick links", () => {
   });
 
   test("T7 403 => cero quick links privilegiados", async () => {
-    mockAccessFetches({ body: ERROR_403, status: 403 });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_403, 403));
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(screen.getByTestId("dealer-quick-links")).toHaveAttribute("data-fail-closed", "true"));
     expect(privilegedQuickLinks()).toHaveLength(0);
@@ -105,27 +99,28 @@ describe("Dealer hub page privileged quick links", () => {
   });
 
   test("T8 409 => cero quick links privilegiados", async () => {
-    mockAccessFetches({
-      body: { detail: "Tenant already has an active subscription" },
-      status: 409,
-    });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse({ detail: "Tenant already has an active subscription" }, 409),
+    );
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(screen.getByTestId("dealer-quick-links")).toHaveAttribute("data-fail-closed", "true"));
     expect(privilegedQuickLinks()).toHaveLength(0);
   });
 
   test("T9 422 => cero quick links privilegiados", async () => {
-    mockAccessFetches({
-      body: { detail: [{ loc: ["query"], msg: "invalid", type: "type_error.str" }] },
-      status: 422,
-    });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse(
+        { detail: [{ loc: ["query"], msg: "invalid", type: "type_error.str" }] },
+        422,
+      ),
+    );
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(screen.getByTestId("dealer-quick-links")).toHaveAttribute("data-fail-closed", "true"));
     expect(privilegedQuickLinks()).toHaveLength(0);
   });
 
   test("T10 501 => cero quick links privilegiados", async () => {
-    mockAccessFetches({ body: ERROR_501, status: 501 });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_501, 501));
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(screen.getByTestId("dealer-quick-links")).toHaveAttribute("data-fail-closed", "true"));
     expect(privilegedQuickLinks()).toHaveLength(0);
@@ -134,7 +129,7 @@ describe("Dealer hub page privileged quick links", () => {
   test("missing entitlement result => corresponding privileged link absent", async () => {
     const results: Record<string, unknown> = {};
     for (const key of CORE_NAV_CAPABILITY_KEYS) {
-      if (key === "autos.inventory.list") continue;
+      if (key === INVENTORY_CAP) continue;
       results[key] = {
         allowed: true,
         reason_code: "ALLOWED",
@@ -142,7 +137,7 @@ describe("Dealer hub page privileged quick links", () => {
         current_usage: null,
       };
     }
-    mockAccessFetches({ body: { results }, status: 200 });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse({ results }, 200));
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(screen.getByTestId("dealer-quick-links")).toHaveAttribute("data-fail-closed", "false"));
     const section = screen.getByTestId("dealer-quick-links");
@@ -151,14 +146,16 @@ describe("Dealer hub page privileged quick links", () => {
   });
 
   test("T11 allowed=false por capability => quick link correspondiente ausente", async () => {
-    mockAccessFetches({
-      body: batchOk({
-        "autos.inventory.list": { allowed: false, reason_code: "DEFAULT_DENY" },
-        "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
-        "autos.analytics.basic": { allowed: false, reason_code: "UPGRADE_REQUIRED" },
-      }),
-      status: 200,
-    });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse(
+        batchOk({
+          [INVENTORY_CAP]: { allowed: false, reason_code: "DEFAULT_DENY" },
+          [LEADS_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [COMMISSIONS_CAP]: { allowed: false, reason_code: "UPGRADE_REQUIRED" },
+        }),
+        200,
+      ),
+    );
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(screen.getByTestId("dealer-quick-links")).toHaveAttribute("data-fail-closed", "false"));
     const section = screen.getByTestId("dealer-quick-links");
@@ -168,14 +165,16 @@ describe("Dealer hub page privileged quick links", () => {
   });
 
   test("T12 allowed=true => quick link correspondiente disponible", async () => {
-    mockAccessFetches({
-      body: batchOk({
-        "autos.inventory.list": { allowed: true, reason_code: "ALLOWED" },
-        "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
-        "autos.analytics.basic": { allowed: true, reason_code: "ALLOWED" },
-      }),
-      status: 200,
-    });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse(
+        batchOk({
+          [INVENTORY_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [LEADS_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [COMMISSIONS_CAP]: { allowed: true, reason_code: "ALLOWED" },
+        }),
+        200,
+      ),
+    );
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
     await waitFor(() => expect(privilegedQuickLinks().length).toBe(3));
     const section = screen.getByTestId("dealer-quick-links");
@@ -186,17 +185,19 @@ describe("Dealer hub page privileged quick links", () => {
 
   test("M8 no stale allowed after 403", async () => {
     const client = newClient();
-    mockAccessFetches({
-      body: batchOk({
-        "autos.inventory.list": { allowed: true, reason_code: "ALLOWED" },
-        "autos.leads.crm": { allowed: true, reason_code: "ALLOWED" },
-        "autos.analytics.basic": { allowed: true, reason_code: "ALLOWED" },
-      }),
-      status: 200,
-    });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(
+      jsonResponse(
+        batchOk({
+          [INVENTORY_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [LEADS_CAP]: { allowed: true, reason_code: "ALLOWED" },
+          [COMMISSIONS_CAP]: { allowed: true, reason_code: "ALLOWED" },
+        }),
+        200,
+      ),
+    );
     render(<DealerDashboardPage />, { wrapper: wrapperFor(client) });
     await waitFor(() => expect(privilegedQuickLinks().length).toBe(3));
-    mockAccessFetches({ body: ERROR_403, status: 403 });
+    (global.fetch as jest.Mock).mockResolvedValueOnce(jsonResponse(ERROR_403, 403));
     await act(async () => {
       await client.invalidateQueries({ queryKey: ["access"] });
     });
