@@ -10,10 +10,9 @@ import {
   postVehicleCost,
   postVehicleSale,
 } from "@/lib/dealer/vehicle-economics-write";
+import { DEALER_REGISTER_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
-
-export const DEALER_REGISTER_CAPABILITY = "autos.inventory.create";
 
 function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): EntitlementDecision {
   if (query.error instanceof AccessApiError) {
