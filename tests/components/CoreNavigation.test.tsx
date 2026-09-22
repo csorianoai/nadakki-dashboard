@@ -5,7 +5,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { CoreNavigation, CORE_NAV_CAPABILITY_KEYS } from "@/components/dealer/CoreNavigation";
+import { CoreNavigation, CORE_NAV_CAPABILITIES, CORE_NAV_CAPABILITY_KEYS } from "@/components/dealer/CoreNavigation";
 import { MIGRATION_097_CAPABILITY_KEYS } from "@/lib/dealer/core-status";
 import { ACCESS_ENDPOINTS } from "@/lib/access/client";
 import { tokenStorage } from "@/lib/auth/token-storage";
@@ -169,6 +169,44 @@ describe("DASH-ACCESS-ADOPTION-01 CoreNavigation", () => {
     expect(dump).not.toMatch(/dealer_id/);
     expect(dump).toMatch(/organization_unit_id=ou-a/);
     expect(screen.getByText(/7 \/ 10 used/)).toBeInTheDocument();
+  });
+});
+
+describe("DASH-DEALER-BANK-LABEL-01", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetDealerAccessMemoryForTests();
+    tokenStorage.clearTokens();
+    (refreshAccessToken as jest.Mock).mockClear();
+    global.fetch = jest.fn();
+    seedDealer("tenant-a", "dealer-a", "ou-a");
+  });
+
+  test("hub shows Dealer-Bank status on existing credit batch capability", async () => {
+    expect(CORE_NAV_CAPABILITIES["Dealer-Bank"]).toBe("credit.applications.submit");
+    expect(CORE_NAV_CAPABILITIES).not.toHaveProperty("Credit");
+    (global.fetch as jest.Mock).mockResolvedValue(
+      jsonResponse(
+        batchOk({
+          "credit.applications.submit": {
+            allowed: true,
+            reason_code: "ALLOWED",
+            limit: null,
+            current_usage: null,
+          },
+        }),
+        200,
+      ),
+    );
+    render(<CoreNavigation />, { wrapper: wrapperFor(newClient()) });
+    const link = await screen.findByRole("link", { name: /Dealer-Bank/ });
+    expect(link).toHaveAttribute("href", "/credit-hub/dealer");
+    expect(screen.queryByRole("link", { name: /Credit/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^✅ Credit/)).not.toBeInTheDocument();
+    const url = String((global.fetch as jest.Mock).mock.calls[0][0]);
+    expect(url).toContain(ACCESS_ENDPOINTS.batch);
+    expect(url).toContain("credit.applications.submit");
+    expect(url).not.toContain("credit.applications.create");
   });
 });
 
