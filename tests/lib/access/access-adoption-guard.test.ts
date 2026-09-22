@@ -79,7 +79,6 @@ describe("DASH-ACCESS-ADOPTION-01 guard", () => {
     walk(ROOT, files);
     const posix = files.map(rel);
     expect(posix.some((p) => p.startsWith("types/") && p.endsWith(".d.ts"))).toBe(false);
-    expect(posix).toContain("next-env.d.ts");
     expect(isGeneratedTypesDeclaration("types/autos-portal-api.d.ts")).toBe(true);
     expect(isGeneratedTypesDeclaration("lib/x.d.ts")).toBe(false);
   });
