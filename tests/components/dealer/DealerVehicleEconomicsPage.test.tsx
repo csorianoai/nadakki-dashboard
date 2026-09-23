@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import DealerVehicleEconomicsPage from "@/app/autos/dealer/inventario/[vehicleId]/page";
+import { DealerVehicleEconomicsPanel } from "@/components/dealer/DealerVehicleEconomicsPanel";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import {
@@ -193,11 +194,18 @@ describe("Dealer vehicle economics", () => {
       path.join(process.cwd(), "components/dealer/DealerVehicleEconomicsPanel.tsx"),
       "utf8",
     );
-    expect(pageSrc).not.toMatch(/RD\$/);
-    expect(pageSrc).not.toMatch(/5,000/);
-    expect(pageSrc).not.toMatch(/D[ií]as en inventario:\s*37/i);
-    expect(panelSrc).not.toMatch(/RD\$/);
-    expect(panelSrc).not.toMatch(/5,000/);
+    const invented = [
+      /RD\$/,
+      /5,000/,
+      /D[ií]as en inventario:\s*37/i,
+      /Margen:\s*RD/i,
+      /Margen:\s*5000/i,
+      /37\s*·\s*Margen/i,
+    ];
+    for (const pattern of invented) {
+      expect(pageSrc).not.toMatch(pattern);
+      expect(panelSrc).not.toMatch(pattern);
+    }
     expect(pageSrc).not.toMatch(/export const DEALER_ECONOMICS_CAPABILITY/);
     global.fetch = jest.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
@@ -223,8 +231,110 @@ describe("Dealer vehicle economics", () => {
       wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
     });
     await waitFor(() => expect(screen.getByTestId("dealer-vehicle-ready")).toBeInTheDocument());
+    expect(await screen.findByTestId("dealer-economics-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-economics-ready")).not.toBeInTheDocument();
     expect(screen.queryByText(/RD\$\s*5,000/)).not.toBeInTheDocument();
     expect(screen.queryByText(/D[ií]as en inventario:\s*37/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Margen:/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Margen:\s*5000/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/37\s*·\s*Margen/i)).not.toBeInTheDocument();
+  });
+
+  test("ERROR when margin 403 and days 200", async () => {
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/access/entitlements/batch")) return allowBatch();
+      if (url.includes("/api/v1/autos/dealers/dealer-a/vehicles/veh-1")) {
+        return jsonResponse(
+          { id: "veh-1", dealer_id: "dealer-a", make: "Toyota", model: "Corolla", year: 2020, status: "reservado" },
+          200,
+        );
+      }
+      if (url.includes("/margin")) return jsonResponse({ detail: { reason_code: "DEALER_NOT_ASSIGNED" } }, 403);
+      if (url.includes("/days")) {
+        return jsonResponse({ acquired_at: "2026-01-01T00:00:00Z", days_in_inventory: 12 }, 200);
+      }
+      return jsonResponse({ detail: "not-mocked" }, 404);
+    });
+    render(<DealerVehicleEconomicsPage />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    expect(await screen.findByTestId("dealer-economics-error")).toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-economics-ready")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Días en inventario: 12/)).not.toBeInTheDocument();
+  });
+
+  test("ERROR when days 403 and margin 200", async () => {
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/access/entitlements/batch")) return allowBatch();
+      if (url.includes("/api/v1/autos/dealers/dealer-a/vehicles/veh-1")) {
+        return jsonResponse(
+          { id: "veh-1", dealer_id: "dealer-a", make: "Toyota", model: "Corolla", year: 2020, status: "reservado" },
+          200,
+        );
+      }
+      if (url.includes("/margin")) {
+        return jsonResponse(
+          [{ currency: "DOP", sale_price_amount: "1000", total_cost: "700", margin: "300" }],
+          200,
+        );
+      }
+      if (url.includes("/days")) return jsonResponse({ detail: { reason_code: "DEALER_NOT_ASSIGNED" } }, 403);
+      return jsonResponse({ detail: "not-mocked" }, 404);
+    });
+    render(<DealerVehicleEconomicsPage />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    expect(await screen.findByTestId("dealer-economics-error")).toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-economics-ready")).not.toBeInTheDocument();
+    expect(screen.queryByText(/margen 300/)).not.toBeInTheDocument();
+  });
+});
+
+describe("DealerVehicleEconomicsPanel states", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetDealerAccessMemoryForTests();
+    tokenStorage.clearTokens();
+  });
+
+  test("LOADING while economics GETs are in flight", async () => {
+    seedDealer();
+    global.fetch = jest.fn(() => new Promise(() => undefined));
+    render(<DealerVehicleEconomicsPanel vehicleId="veh-1" />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    expect(await screen.findByTestId("dealer-economics-loading")).toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-economics-ready")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-economics-empty")).not.toBeInTheDocument();
+  });
+
+  test("EMPTY when backend returns no margin and no days", async () => {
+    seedDealer();
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/margin")) return jsonResponse([], 200);
+      if (url.includes("/days")) return jsonResponse({}, 200);
+      return jsonResponse({ detail: "not-mocked" }, 404);
+    });
+    render(<DealerVehicleEconomicsPanel vehicleId="veh-1" />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    expect(await screen.findByTestId("dealer-economics-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-economics-ready")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Días en inventario: 37/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Margen:\s*5000/i)).not.toBeInTheDocument();
+  });
+
+  test("without tenantId does not fetch economics", async () => {
+    global.fetch = jest.fn();
+    render(<DealerVehicleEconomicsPanel vehicleId="veh-1" />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    expect(screen.getByText(/Falta el tenant para leer margen y días/)).toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-economics-loading")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-economics-ready")).not.toBeInTheDocument();
+    await Promise.resolve();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
