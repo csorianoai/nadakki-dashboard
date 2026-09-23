@@ -5,11 +5,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
+import { DealerVehicleEconomicsPanel } from "@/components/dealer/DealerVehicleEconomicsPanel";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
-import {
-  DMS02R_ECONOMICS_PATHS,
-  DMS02R_HTTP_IN_PRODUCTION_OPENAPI,
-} from "@/lib/dealer/dms02r-http";
 import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
@@ -29,35 +26,6 @@ function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): Entit
     allowed: item.allowed === true,
     reason_code: (item.reason_code as EntitlementDecision["reason_code"]) || "DEFAULT_DENY",
   };
-}
-
-function EconomicsBlocked() {
-  return (
-    <section
-      role="alert"
-      data-testid="dealer-economics-blocked"
-      data-blocked-by-backend="true"
-      className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
-    >
-      <h2 className="font-manrope text-lg font-bold text-nk-fg">Costes, margen y días en inventario</h2>
-      <p className="mt-2 text-sm text-nk-fg-muted">
-        BLOCKED_BY_BACKEND. La ficha sale del GET autenticado del dealer. La economía espera #1365.
-      </p>
-      {DMS02R_HTTP_IN_PRODUCTION_OPENAPI ? null : (
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-nk-fg break-words">
-          <li>
-            <code>{`GET ${DMS02R_ECONOMICS_PATHS.margin}`}</code>
-          </li>
-          <li>
-            <code>{`GET ${DMS02R_ECONOMICS_PATHS.days}`}</code>
-          </li>
-          <li>
-            <code>{`GET ${DMS02R_ECONOMICS_PATHS.costs}`}</code>
-          </li>
-        </ul>
-      )}
-    </section>
-  );
 }
 
 function VehicleFicha({ dealerId, vehicleId }: { dealerId: string; vehicleId: string }) {
@@ -103,7 +71,7 @@ function VehicleFicha({ dealerId, vehicleId }: { dealerId: string; vehicleId: st
         <h2 className="font-manrope text-lg font-bold text-nk-fg break-words">{title}</h2>
         <p className="mt-1 text-sm text-nk-fg-muted">Estado: {query.data.status ?? "no disponible"}</p>
       </section>
-      <EconomicsBlocked />
+      <DealerVehicleEconomicsPanel vehicleId={vehicleId} />
     </>
   );
 }
@@ -124,7 +92,7 @@ export default function DealerVehicleEconomicsPage() {
           {vehicleId || "Vehículo"}
         </h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Ficha autenticada del dealer. El marketplace público no es fuente.
+          Ficha autenticada del dealer. Margen y días salen del GET autenticado. El marketplace público no es fuente.
         </p>
       </header>
 
