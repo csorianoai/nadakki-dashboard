@@ -210,3 +210,23 @@ jobs:
             exit 1
           fi
           echo "CI=PASS"
+
+  next-build:
+    name: next production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_BACKEND_URL: http://backend.invalid
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Next.js production build
+        run: npm run build
