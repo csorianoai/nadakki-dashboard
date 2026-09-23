@@ -7,6 +7,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import DealerConexionesPage from "@/app/autos/dealer/conexiones/page";
 import DealerDashboardPage from "@/app/autos/dealer/page";
+import { DealerSponsorshipBanner } from "@/components/dealer/DealerSponsorshipBanner";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import {
   resetDealerAccessMemoryForTests,
@@ -105,5 +106,36 @@ describe("Dealer sponsorship surfaces", () => {
     });
     expect(screen.queryByTestId("dealer-sponsorship-ready")).not.toBeInTheDocument();
     expect(screen.queryByText(/patrocinado por/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("DealerSponsorshipBanner guards", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetDealerAccessMemoryForTests();
+    tokenStorage.clearTokens();
+  });
+
+  test("without tenant context hides banner and does not spin LOADING", async () => {
+    global.fetch = jest.fn();
+    render(<DealerSponsorshipBanner />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    expect(screen.queryByTestId("dealer-sponsorship-loading")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-sponsorship-ready")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Cargando patrocinio/)).not.toBeInTheDocument();
+    await Promise.resolve();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test("LOADING while sponsorship GET is in flight", async () => {
+    seedDealer();
+    global.fetch = jest.fn(() => new Promise(() => undefined));
+    render(<DealerSponsorshipBanner />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+    expect(await screen.findByTestId("dealer-sponsorship-loading")).toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-sponsorship-ready")).not.toBeInTheDocument();
+    expect(screen.getByText(/Cargando patrocinio/)).toBeInTheDocument();
   });
 });
