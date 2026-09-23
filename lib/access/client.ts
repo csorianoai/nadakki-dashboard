@@ -14,6 +14,7 @@ export const ACCESS_ENDPOINTS = {
   readiness: "/api/v1/access/readiness",
   plans: "/api/v1/access/plans",
   subscription: "/api/v1/access/subscription",
+  sponsorship: "/api/v1/access/sponsorship",
 } as const;
 
 export const ACCESS_SCOPE_TENANT = "tenant" as const;
@@ -261,4 +262,8 @@ export async function fetchAccessSubscription(explicitContext?: AccessClientCont
     ACCESS_ENDPOINTS.subscription,
     requestContext(explicitContext),
   );
+}
+
+export async function fetchAccessSponsorshipPayload(explicitContext?: AccessClientContext | null) {
+  return accessGet<unknown>(ACCESS_ENDPOINTS.sponsorship, requestContext(explicitContext));
 }

@@ -10,6 +10,7 @@ import {
   isAccessQueryFailClosed,
 } from "@/components/dealer/CoreNavigation";
 import { DealerPostSaleCores } from "@/components/dealer/DealerPostSaleCores";
+import { DealerSponsorshipBanner } from "@/components/dealer/DealerSponsorshipBanner";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import { UsageMeter } from "@/components/dealer/UsageMeter";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
@@ -70,6 +71,7 @@ export default function DealerDashboardPage() {
           Mejora tu plan
         </button>
       </header>
+      <DealerSponsorshipBanner />
       <DealerPostSaleCores />
       {upgradeOpen ? (
         <UpgradeModal
