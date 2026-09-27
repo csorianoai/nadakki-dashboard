@@ -12,6 +12,10 @@ import {
 import { Skeleton } from "@/components/forge/ui/Skeleton";
 import { resolveBackendUrl } from "@/lib/config/backend-url";
 
+export function resolveDealerManagementRedirect(path: string): string {
+  return path === "/credit-hub/dealer" ? "/autos/dealer" : path;
+}
+
 export default function LoginPage() {
   useEffect(() => {
     fetch(`${resolveBackendUrl()}/health`, { method: "GET" }).catch(() => {});
@@ -32,7 +36,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       const roles = allRoles.length > 0 ? allRoles : activeRole ? [activeRole] : [];
-      router.push(getPostLoginRedirectPath(roles));
+      router.push(resolveDealerManagementRedirect(getPostLoginRedirectPath(roles)));
     }
   }, [isAuthenticated, isLoading, allRoles, activeRole, router]);
 
@@ -49,7 +53,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push(result.redirectTo ?? "/");
+    router.push(resolveDealerManagementRedirect(result.redirectTo ?? "/"));
   };
 
   if (isLoading && !initError) {
