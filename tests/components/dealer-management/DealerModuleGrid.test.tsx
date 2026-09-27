@@ -14,6 +14,7 @@ function seedDealer() {
   window.localStorage.setItem("nadakki_tenant_id", "tenant-a");
   setDealerAccessContext({ tenantId: "tenant-a", dealerId: "dealer-a", organizationUnitId: "ou-a" });
 }
+function testClient() { return new QueryClient({ defaultOptions: { queries: { retry: false } } }); }
 
 describe("DealerModuleGrid authority", () => {
   beforeEach(() => {
@@ -26,7 +27,7 @@ describe("DealerModuleGrid authority", () => {
   test("renders allowed links only from backend decisions", async () => {
     const results = Object.fromEntries(DEALER_MANAGEMENT_CAPABILITIES.map((cap) => [cap, { allowed: cap === "autos.inventory.list", reason_code: cap === "autos.inventory.list" ? "ALLOWED" : "DEFAULT_DENY" }]));
     global.fetch = jest.fn(async (input: RequestInfo | URL) => String(input).includes("/api/v1/access/entitlements/batch") ? jsonResponse({ results }) : jsonResponse({}, 404));
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const client = testClient();
     render(<DealerModuleGrid />, { wrapper: wrapper(client) });
     await waitFor(() => expect(screen.getByTestId("dealer-module-inventory")).toHaveAttribute("data-allowed", "true"));
     expect(screen.getByTestId("dealer-module-inventory")).toHaveAttribute("href", "/autos/dealer/inventario");
@@ -34,9 +35,32 @@ describe("DealerModuleGrid authority", () => {
   });
   test("fails closed when entitlement request fails", async () => {
     global.fetch = jest.fn(async (input: RequestInfo | URL) => String(input).includes("/branding") ? jsonResponse({}, 404) : jsonResponse({ detail: "denied" }, 403));
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const client = testClient();
     render(<DealerModuleGrid />, { wrapper: wrapper(client) });
     await waitFor(() => expect(screen.getByTestId("dealer-module-dealer-bank")).toHaveAttribute("data-allowed", "false"));
     expect(document.querySelector('[data-allowed="true"]')).toBeNull();
+  });
+  test("fails closed when backend omits a capability decision", async () => {
+    const results = { "autos.inventory.list": { allowed: true, reason_code: "ALLOWED" } };
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => String(input).includes("/api/v1/access/entitlements/batch") ? jsonResponse({ results }) : jsonResponse({}, 404));
+    const client = testClient();
+    render(<DealerModuleGrid />, { wrapper: wrapper(client) });
+    await waitFor(() => expect(screen.getByTestId("dealer-module-inventory")).toHaveAttribute("data-allowed", "true"));
+    expect(screen.getByTestId("dealer-module-marketing")).toHaveAttribute("data-allowed", "false");
+    expect(screen.getByTestId("dealer-module-marketing")).toHaveAttribute("data-reason-code", "DEFAULT_DENY");
+  });
+  test("restricts Legal for Argentina even when backend capability is allowed", async () => {
+    const results = Object.fromEntries(DEALER_MANAGEMENT_CAPABILITIES.map((cap) => [cap, { allowed: true, reason_code: "ALLOWED" }]));
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/access/entitlements/batch")) return jsonResponse({ results });
+      if (url.includes("/api/v2/tenants/tenant-a/branding")) return jsonResponse({ display_name: "Dealer AR", currency: "ARS", locale: "es-AR" });
+      return jsonResponse({}, 404);
+    });
+    const client = testClient();
+    render(<DealerModuleGrid />, { wrapper: wrapper(client) });
+    await waitFor(() => expect(screen.getByTestId("dealer-module-legal")).toHaveAttribute("data-reason-code", "COUNTRY_PACK_AR_GAP"));
+    expect(screen.getByTestId("dealer-module-legal")).toHaveAttribute("data-allowed", "false");
+    expect(screen.getByTestId("dealer-module-legal")).toHaveTextContent("Sin paquete jurídico Argentina");
   });
 });
