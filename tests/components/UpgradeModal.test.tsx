@@ -45,6 +45,17 @@ function batchOk() {
   return { results };
 }
 
+function batchUpgradeRequired() {
+  const batch = batchOk();
+  batch.results[CORE_NAV_CAPABILITY_KEYS[0]] = {
+    allowed: false,
+    reason_code: "UPGRADE_REQUIRED",
+    limit: null,
+    current_usage: null,
+  };
+  return batch;
+}
+
 function wrapperFor(client: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
@@ -173,7 +184,7 @@ describe("Dealer Hub upgrade CTA", () => {
     seedDealer();
   });
 
-  test("CTA opens modal against /api/v1/access/plans", async () => {
+  test("CTA appears only from UPGRADE_REQUIRED and opens live plan catalog", async () => {
     const user = userEvent.setup();
     (global.fetch as jest.Mock).mockImplementation((url: string) => {
       if (String(url).includes("/api/v1/access/plans")) {
@@ -181,13 +192,21 @@ describe("Dealer Hub upgrade CTA", () => {
           jsonResponse({ plans: [{ slug: "domina", name: "Domina Live", price_rd: 12 }] }, 200),
         );
       }
-      return Promise.resolve(jsonResponse(batchOk(), 200));
+      return Promise.resolve(jsonResponse(batchUpgradeRequired(), 200));
     });
     render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
+    await waitFor(() => expect(screen.getByTestId("dealer-upgrade-cta")).toBeInTheDocument());
     await user.click(screen.getByTestId("dealer-upgrade-cta"));
     await waitFor(() => expect(screen.getByText("Domina Live")).toBeInTheDocument());
     expect((global.fetch as jest.Mock).mock.calls.some((call) => String(call[0]).includes("/api/v1/access/plans"))).toBe(
       true,
     );
+  });
+
+  test("DEFAULT_DENY does not invent an upsell", async () => {
+    (global.fetch as jest.Mock).mockImplementation(() => Promise.resolve(jsonResponse(batchOk(), 200)));
+    render(<DealerDashboardPage />, { wrapper: wrapperFor(newClient()) });
+    await waitFor(() => expect(screen.getByTestId("dealer-quick-links")).toHaveAttribute("data-fail-closed", "false"));
+    expect(screen.queryByTestId("dealer-upgrade-cta")).toBeNull();
   });
 });
