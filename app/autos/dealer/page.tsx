@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { BarChart3, Upload, Users } from "lucide-react";
 import { CORE_NAV_CAPABILITY_KEYS, isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { DealerPostSaleCores } from "@/components/dealer/DealerPostSaleCores";
 import { DealerSponsorshipBanner } from "@/components/dealer/DealerSponsorshipBanner";
+import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import { DealerModuleGrid } from "@/components/dealer-management/DealerModuleGrid";
 import { DealerOperationsHeader } from "@/components/dealer-management/DealerOperationsHeader";
 import { UsageMeter } from "@/components/dealer/UsageMeter";
@@ -21,9 +23,29 @@ const PAGE_CAPABILITIES = Array.from(new Set([...CORE_NAV_CAPABILITY_KEYS, ...QU
 export default function DealerDashboardPage() {
   const query = useAccessEntitlementsBatch(PAGE_CAPABILITIES);
   const failClosed = isAccessQueryFailClosed(query);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const upgradeDecision = Object.values(query.data?.results ?? {}).find(
+    (decision) => decision.allowed === false && decision.reason_code === "UPGRADE_REQUIRED",
+  ) ?? null;
+
   return (
     <main className={DEALER_TOKENS.shell}>
       <DealerOperationsHeader />
+      {upgradeDecision ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            data-testid="dealer-upgrade-cta"
+            onClick={() => setUpgradeOpen(true)}
+            className="rounded-full border border-brand-2/40 bg-brand-2/10 px-4 py-2 text-sm font-semibold text-nk-fg hover:bg-brand-2/20"
+          >
+            Mejora tu plan
+          </button>
+        </div>
+      ) : null}
+      {upgradeOpen && upgradeDecision ? (
+        <UpgradeModal decision={upgradeDecision} onClose={() => setUpgradeOpen(false)} />
+      ) : null}
       <DealerSponsorshipBanner />
       <DealerModuleGrid />
       <div className="grid gap-5 lg:grid-cols-3">
