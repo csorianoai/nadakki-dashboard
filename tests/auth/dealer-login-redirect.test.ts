@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 
-import { resolveDealerManagementRedirect } from "@/app/(auth)/login/page";
+import { resolveDealerManagementRedirect } from "@/lib/dealer-management/redirect";
 
 describe("dealer management login redirect", () => {
   test("dealer landing enters Dealer Management", () => {

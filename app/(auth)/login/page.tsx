@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getPostLoginRedirectPath } from "@/lib/auth/auth-context";
+import { resolveDealerManagementRedirect } from "@/lib/dealer-management/redirect";
 import { usePublicTenantBrandingBySlug } from "@/lib/hooks/usePublicTenantBrandingBySlug";
 import {
   NEUTRAL_LOGIN_FOOTER,
@@ -11,10 +12,6 @@ import {
 } from "@/lib/white-label/brand-display";
 import { Skeleton } from "@/components/forge/ui/Skeleton";
 import { resolveBackendUrl } from "@/lib/config/backend-url";
-
-export function resolveDealerManagementRedirect(path: string): string {
-  return path === "/credit-hub/dealer" ? "/autos/dealer" : path;
-}
 
 export default function LoginPage() {
   useEffect(() => {
