@@ -24,14 +24,14 @@ export default function DealerDashboardPage() {
   const query = useAccessEntitlementsBatch(PAGE_CAPABILITIES);
   const failClosed = isAccessQueryFailClosed(query);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const upgradeDecision = Object.values(query.data?.results ?? {}).find(
+  const hasUpgradeRequired = Object.values(query.data?.results ?? {}).some(
     (decision) => decision.allowed === false && decision.reason_code === "UPGRADE_REQUIRED",
-  ) ?? null;
+  );
 
   return (
     <main className={DEALER_TOKENS.shell}>
       <DealerOperationsHeader />
-      {upgradeDecision ? (
+      {hasUpgradeRequired ? (
         <div className="flex justify-end">
           <button
             type="button"
@@ -43,8 +43,11 @@ export default function DealerDashboardPage() {
           </button>
         </div>
       ) : null}
-      {upgradeOpen && upgradeDecision ? (
-        <UpgradeModal decision={upgradeDecision} onClose={() => setUpgradeOpen(false)} />
+      {upgradeOpen && hasUpgradeRequired ? (
+        <UpgradeModal
+          decision={{ allowed: false, reason_code: "UPGRADE_REQUIRED" }}
+          onClose={() => setUpgradeOpen(false)}
+        />
       ) : null}
       <DealerSponsorshipBanner />
       <DealerModuleGrid />
