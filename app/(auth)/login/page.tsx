@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getPostLoginRedirectPath } from "@/lib/auth/auth-context";
+import { resolveDealerManagementRedirect } from "@/lib/dealer-management/redirect";
 import { usePublicTenantBrandingBySlug } from "@/lib/hooks/usePublicTenantBrandingBySlug";
 import {
   NEUTRAL_LOGIN_FOOTER,
@@ -32,7 +33,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       const roles = allRoles.length > 0 ? allRoles : activeRole ? [activeRole] : [];
-      router.push(getPostLoginRedirectPath(roles));
+      router.push(resolveDealerManagementRedirect(getPostLoginRedirectPath(roles)));
     }
   }, [isAuthenticated, isLoading, allRoles, activeRole, router]);
 
@@ -49,7 +50,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push(result.redirectTo ?? "/");
+    router.push(resolveDealerManagementRedirect(result.redirectTo ?? "/"));
   };
 
   if (isLoading && !initError) {

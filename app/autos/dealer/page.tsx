@@ -2,172 +2,72 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, Upload, Users, BarChart3 } from "lucide-react";
-import {
-  CORE_NAV_CAPABILITY_KEYS,
-  CoreNavigation,
-  DEALER_QUICK_LINK_CAPABILITIES,
-  isAccessQueryFailClosed,
-} from "@/components/dealer/CoreNavigation";
+import { BarChart3, Upload, Users } from "lucide-react";
+import { CORE_NAV_CAPABILITY_KEYS, isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { DealerPostSaleCores } from "@/components/dealer/DealerPostSaleCores";
 import { DealerSponsorshipBanner } from "@/components/dealer/DealerSponsorshipBanner";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
+import { DealerModuleGrid } from "@/components/dealer-management/DealerModuleGrid";
+import { DealerOperationsHeader } from "@/components/dealer-management/DealerOperationsHeader";
 import { UsageMeter } from "@/components/dealer/UsageMeter";
-import { DemoModeBadge } from "@/components/search/DemoModeBadge";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
-import { useAuth } from "@/lib/auth-context";
+import { DEALER_TOKENS } from "@/lib/dealer-management/tokens";
 
 const QUICK_LINK_CARDS = [
-  {
-    href: "/autos/dealer/publicar-rapido" as const,
-    icon: <Upload className="h-6 w-6" />,
-    title: "Publica en 90 segundos",
-    desc: "Sube 5 fotos — Nadakki AI genera listing completo con precio y descripción.",
-    badge: "NUEVO",
-    gradient: true,
-  },
-  {
-    href: "/autos/dealer/leads" as const,
-    icon: <Users className="h-6 w-6" />,
-    title: "Leads Prioritarios",
-    desc: "12 leads hot clasificados por probabilidad de conversión.",
-    stat: "🔥 12 hot",
-  },
-  {
-    href: "/autos/dealer/insights" as const,
-    icon: <BarChart3 className="h-6 w-6" />,
-    title: "Insights AI",
-    desc: "Recomendaciones accionables en español dominicano.",
-    stat: "3 sin revisar",
-  },
+  { href: "/autos/dealer/publicar-rapido" as const, capability: "autos.inventory.create", icon: Upload, title: "Publicar vehículo", desc: "Abre el flujo de publicación existente." },
+  { href: "/autos/dealer/leads" as const, capability: "autos.leads.crm", icon: Users, title: "Leads", desc: "Gestiona los leads disponibles para este dealer." },
+  { href: "/autos/dealer/insights" as const, capability: "autos.analytics.basic", icon: BarChart3, title: "Insights", desc: "Consulta señales operativas disponibles." },
 ];
+const PAGE_CAPABILITIES = Array.from(new Set([...CORE_NAV_CAPABILITY_KEYS, ...QUICK_LINK_CARDS.map((card) => card.capability)]));
 
 export default function DealerDashboardPage() {
-  const auth = useAuth();
-  const query = useAccessEntitlementsBatch(CORE_NAV_CAPABILITY_KEYS);
+  const query = useAccessEntitlementsBatch(PAGE_CAPABILITIES);
   const failClosed = isAccessQueryFailClosed(query);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const hasUpgradeRequired = Object.values(query.data?.results ?? {}).some(
+    (decision) => decision.allowed === false && decision.reason_code === "UPGRADE_REQUIRED",
+  );
 
   return (
-    <main className="space-y-8">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Dealer Hub</h1>
-          <p className="mt-1 text-nk-fg-muted">
-            Gestiona inventario, marketing y cores según tu plan
-            {auth.isAuthenticated ? (
-              <span className="ml-2 text-xs text-nk-fg-muted">· {auth.role}</span>
-            ) : (
-              <span className="ml-2 text-xs text-yellow-700">· Inicia sesión para capacidades completas</span>
-            )}
-          </p>
+    <main className={DEALER_TOKENS.shell}>
+      <DealerOperationsHeader />
+      {hasUpgradeRequired ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            data-testid="dealer-upgrade-cta"
+            onClick={() => setUpgradeOpen(true)}
+            className="rounded-full border border-brand-2/40 bg-brand-2/10 px-4 py-2 text-sm font-semibold text-nk-fg hover:bg-brand-2/20"
+          >
+            Mejora tu plan
+          </button>
         </div>
-        <button
-          type="button"
-          data-testid="dealer-upgrade-cta"
-          onClick={() => setUpgradeOpen(true)}
-          className="rounded-full border border-brand-2/40 bg-brand-2/10 px-4 py-2 text-sm font-semibold text-nk-fg hover:bg-brand-2/20"
-        >
-          Mejora tu plan
-        </button>
-      </header>
-      <DealerSponsorshipBanner />
-      <DealerPostSaleCores />
-      {upgradeOpen ? (
+      ) : null}
+      {upgradeOpen && hasUpgradeRequired ? (
         <UpgradeModal
           decision={{ allowed: false, reason_code: "UPGRADE_REQUIRED" }}
           onClose={() => setUpgradeOpen(false)}
         />
       ) : null}
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        <section className="space-y-4 lg:col-span-2">
-          <h2 className="font-manrope text-lg font-bold text-nk-fg">Capacidades por core</h2>
-          <CoreNavigation />
-        </section>
-
-        <aside className="rounded-r-sm border border-nk-border bg-nk-surface p-6">
-          <h2 className="font-manrope text-lg font-bold text-nk-fg">Uso este mes</h2>
-          <div className="mt-4">
-            <UsageMeter />
-          </div>
-        </aside>
+      <DealerSponsorshipBanner />
+      <DealerModuleGrid />
+      <div className="grid gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2"><DealerPostSaleCores /></div>
+        <aside className={`${DEALER_TOKENS.panel} p-5`}><h2 className="font-manrope text-base font-bold text-nk-fg">Uso del plan</h2><div className="mt-4"><UsageMeter /></div></aside>
       </div>
-
       <section data-testid="dealer-quick-links" data-fail-closed={failClosed ? "true" : "false"}>
-        <h2 className="mb-4 font-manrope text-lg font-bold text-nk-fg">Accesos rápidos</h2>
-        <div className="grid gap-4 md:grid-cols-2">
+        <h2 className="mb-3 font-manrope text-base font-bold text-nk-fg">Accesos rápidos</h2>
+        <div className="grid gap-3 md:grid-cols-3">
           {QUICK_LINK_CARDS.map((card) => {
-            const capabilityId = DEALER_QUICK_LINK_CAPABILITIES[card.href];
-            const allowed =
-              !failClosed && query.data?.results[capabilityId]?.allowed === true;
+            const allowed = !failClosed && query.data?.results[card.capability]?.allowed === true;
             if (!allowed) return null;
-            return (
-              <HighlightCard
-                key={card.href}
-                href={card.href}
-                icon={card.icon}
-                title={card.title}
-                desc={card.desc}
-                badge={"badge" in card ? card.badge : undefined}
-                stat={"stat" in card ? card.stat : undefined}
-                gradient={"gradient" in card ? card.gradient : false}
-              />
-            );
+            const Icon = card.icon;
+            return <Link key={card.href} href={card.href} data-testid="privileged-quick-link" data-capability={card.capability} data-allowed="true" className={`${DEALER_TOKENS.card} ${DEALER_TOKENS.cardAllowed}`}>
+              <Icon className="h-5 w-5 text-brand-2" aria-hidden="true" /><p className="mt-3 font-manrope text-sm font-bold text-nk-fg">{card.title}</p><p className="mt-1 text-xs text-nk-fg-muted">{card.desc}</p>
+            </Link>;
           })}
-          <div className="rounded-r-sm border border-nk-border bg-nk-surface p-6">
-            <Sparkles className="h-6 w-6 text-brand-2" />
-            <p className="mt-3 font-manrope text-lg font-bold text-nk-fg">Core access Phase 1</p>
-            <p className="mt-1 text-sm text-nk-fg-muted">
-              Navegación dinámica según entitlements del backend. Fallback DEFAULT_DENY si API no responde.
-            </p>
-            <DemoModeBadge visible={!auth.isAuthenticated} />
-          </div>
         </div>
       </section>
     </main>
-  );
-}
-
-function HighlightCard({
-  href,
-  icon,
-  title,
-  desc,
-  badge,
-  stat,
-  gradient,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  badge?: string;
-  stat?: string;
-  gradient?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      data-testid="privileged-quick-link"
-      data-allowed="true"
-      className={
-        gradient
-          ? "block rounded-r-sm border border-brand-2/30 bg-gradient-to-br from-brand-2/10 to-transparent p-6 transition hover:shadow-nk-md"
-          : "block rounded-r-sm border border-nk-border bg-nk-surface p-6 transition hover:border-brand-2/30 hover:shadow-nk-sm"
-      }
-    >
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-brand-2">{icon}</span>
-        {badge ? (
-          <span className="rounded-full bg-brand-2 px-2 py-0.5 text-[10px] font-bold text-white">
-            {badge}
-          </span>
-        ) : null}
-        {stat ? <span className="text-xs font-bold text-nk-fg-muted">{stat}</span> : null}
-      </div>
-      <h2 className="mt-3 font-manrope text-lg font-bold text-nk-fg">{title}</h2>
-      <p className="mt-1 text-sm text-nk-fg-muted">{desc}</p>
-    </Link>
   );
 }
