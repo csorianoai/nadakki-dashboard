@@ -93,6 +93,9 @@ export const AUTH_FETCH_TIMEOUT_MS = 5_000;
 /** Login POST can exceed 5s on Render even when /health is warm (~10s observed). */
 export const AUTH_LOGIN_TIMEOUT_MS = 30_000;
 
+/** Neutral error: never disclose which tenant the credentials actually resolved to. */
+export const AUTH_TENANT_CONTEXT_MISMATCH = "contexto de acceso no corresponde a este portal";
+
 function formatHttpError(
   url: string,
   status: number,
@@ -146,7 +149,7 @@ export async function loginV2(
   password: string,
   tenantSlug?: string
 ): Promise<ApiResult<LoginResponseV2>> {
-  return fetchApi<LoginResponseV2>(
+  const result = await fetchApi<LoginResponseV2>(
     "/api/v2/auth/login",
     {
       method: "POST",
@@ -158,6 +161,14 @@ export async function loginV2(
     },
     AUTH_LOGIN_TIMEOUT_MS,
   );
+
+  const expectedTenantSlug = tenantSlug?.trim().toLowerCase();
+  const actualTenantSlug = result.data?.tenant_info?.slug?.trim().toLowerCase();
+  if (result.ok && result.data && expectedTenantSlug && actualTenantSlug !== expectedTenantSlug) {
+    return { ok: false, status: 403, error: AUTH_TENANT_CONTEXT_MISMATCH };
+  }
+
+  return result;
 }
 
 export async function refreshTokenV2(refreshToken: string): Promise<ApiResult<RefreshResponse>> {
