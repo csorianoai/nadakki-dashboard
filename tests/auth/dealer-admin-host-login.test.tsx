@@ -115,6 +115,34 @@ describe("dealer admin host login", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it("purges an already-authenticated session when the host tenant differs from the authenticated tenant", async () => {
+    getPostLoginRedirectPath.mockReturnValue("/credit-hub/dealer");
+    useAuth.mockReturnValue({
+      login,
+      logout,
+      tenant: { slug: "27motors" },
+      isAuthenticated: true,
+      isLoading: false,
+      allRoles: [],
+      activeRole: "dealer",
+      initError: null,
+      retryInit: jest.fn(),
+    });
+
+    render(<LoginPage />);
+
+    expect(await screen.findByText(AUTH_TENANT_CONTEXT_MISMATCH)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(tokenStorage.clearTokens).toHaveBeenCalledTimes(1);
+      expect(clearLocalStorage).toHaveBeenCalledTimes(1);
+      expect(logout).toHaveBeenCalledTimes(1);
+    });
+
+    expect(login).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalledWith("/autos/dealer");
+  });
+
   it("preserves the universal dashboard tenant selector", async () => {
     resolveDealerAdminHost.mockReturnValue({ mode: "universal" });
     render(<LoginPage />);
