@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { getPostLoginRedirectPath } from "@/lib/auth/auth-context";
+import { clearLocalStorage, getPostLoginRedirectPath } from "@/lib/auth/auth-context";
+import { tokenStorage } from "@/lib/auth/token-storage";
+import { AUTH_TENANT_CONTEXT_MISMATCH } from "@/lib/api/auth-v2";
 import { resolveDealerManagementRedirect } from "@/lib/dealer-management/redirect";
+import {
+  resolveDealerAdminHost,
+  type DealerAdminHostResolution,
+} from "@/lib/dealer-management/admin-host";
 import { usePublicTenantBrandingBySlug } from "@/lib/hooks/usePublicTenantBrandingBySlug";
 import {
   NEUTRAL_LOGIN_FOOTER,
@@ -18,33 +24,82 @@ export default function LoginPage() {
     fetch(`${resolveBackendUrl()}/health`, { method: "GET" }).catch(() => {});
   }, []);
   const router = useRouter();
-  const { login, isAuthenticated, isLoading, allRoles, activeRole, initError, retryInit } = useAuth();
+  const {
+    login,
+    logout,
+    tenant,
+    isAuthenticated,
+    isLoading,
+    allRoles,
+    activeRole,
+    initError,
+    retryInit,
+  } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tenantSlug, setTenantSlug] = useState("");
+  const [adminHost, setAdminHost] = useState<DealerAdminHostResolution | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const brandingQuery = usePublicTenantBrandingBySlug(tenantSlug || undefined);
-  const platformTitle = resolveVisiblePlatformTitle(brandingQuery.data, null);
-  const showBrandingSkeleton = Boolean(tenantSlug.trim().length >= 2 && brandingQuery.isPending);
+  const mismatchHandled = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      const roles = allRoles.length > 0 ? allRoles : activeRole ? [activeRole] : [];
-      router.push(resolveDealerManagementRedirect(getPostLoginRedirectPath(roles)));
+    setAdminHost(resolveDealerAdminHost(window.location.hostname));
+  }, []);
+
+  const hostTenantSlug = adminHost?.mode === "dealer_subdomain" ? adminHost.tenantSlug : undefined;
+  const effectiveTenantSlug = hostTenantSlug ?? tenantSlug;
+  const brandingQuery = usePublicTenantBrandingBySlug(effectiveTenantSlug || undefined);
+  const platformTitle = resolveVisiblePlatformTitle(brandingQuery.data, null);
+  const showBrandingSkeleton = Boolean(
+    effectiveTenantSlug.trim().length >= 2 && brandingQuery.isPending,
+  );
+
+  useEffect(() => {
+    if (adminHost === null || isLoading || !isAuthenticated) return;
+
+    if (hostTenantSlug) {
+      const actualTenantSlug = tenant?.slug?.trim().toLowerCase();
+      if (!actualTenantSlug) return;
+      if (actualTenantSlug !== hostTenantSlug) {
+        if (!mismatchHandled.current) {
+          mismatchHandled.current = true;
+          tokenStorage.clearTokens();
+          clearLocalStorage();
+          setError(AUTH_TENANT_CONTEXT_MISMATCH);
+          void logout();
+        }
+        return;
+      }
     }
-  }, [isAuthenticated, isLoading, allRoles, activeRole, router]);
+
+    const roles = allRoles.length > 0 ? allRoles : activeRole ? [activeRole] : [];
+    router.push(resolveDealerManagementRedirect(getPostLoginRedirectPath(roles)));
+  }, [
+    adminHost,
+    isAuthenticated,
+    isLoading,
+    allRoles,
+    activeRole,
+    hostTenantSlug,
+    tenant?.slug,
+    logout,
+    router,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
 
-    const result = await login(email, password, tenantSlug || undefined);
+    const result = await login(email, password, effectiveTenantSlug || undefined);
 
     if (!result.ok) {
+      if (result.error === AUTH_TENANT_CONTEXT_MISMATCH) {
+        tokenStorage.clearTokens();
+        clearLocalStorage();
+      }
       setError(result.error || "Login failed");
       setSubmitting(false);
       return;
@@ -144,21 +199,32 @@ export default function LoginPage() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--forge-text-default)] mb-1">
-                Tenant (opcional)
-              </label>
-              <input
-                type="text"
-                value={tenantSlug}
-                onChange={(e) => setTenantSlug(e.target.value)}
-                className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
-                placeholder="tu-institucion"
-              />
-              <p className="text-xs text-[var(--forge-text-muted)] mt-1">
-                Dejar vacío para tenant por defecto
-              </p>
-            </div>
+            {hostTenantSlug ? (
+              <div data-testid="dealer-admin-host-context">
+                <div className="block text-sm font-medium text-[var(--forge-text-default)] mb-1">
+                  Portal
+                </div>
+                <div className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-app)] text-[var(--forge-text-muted)]">
+                  {hostTenantSlug}.nadakki.com
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-[var(--forge-text-default)] mb-1">
+                  Tenant (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={tenantSlug}
+                  onChange={(e) => setTenantSlug(e.target.value)}
+                  className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-surface)] text-[var(--forge-text-default)] focus:outline-none focus:ring-2 focus:ring-[var(--forge-accent)] focus:border-transparent"
+                  placeholder="tu-institucion"
+                />
+                <p className="text-xs text-[var(--forge-text-muted)] mt-1">
+                  Dejar vacío para tenant por defecto
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-sm">
@@ -176,7 +242,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-xs text-[var(--forge-text-muted)] mt-6 text-center">
-            {tenantSlug.trim().length >= 2 && !showBrandingSkeleton
+            {effectiveTenantSlug.trim().length >= 2 && !showBrandingSkeleton
               ? `${platformTitle} · ${NEUTRAL_LOGIN_FOOTER}`
               : NEUTRAL_LOGIN_FOOTER}
           </p>
