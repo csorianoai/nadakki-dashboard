@@ -46,6 +46,16 @@ const push = jest.fn();
 const login = jest.fn();
 const logout = jest.fn().mockResolvedValue(undefined);
 
+function getPasswordInput(): HTMLInputElement {
+  const emailInput = screen.getByPlaceholderText("admin@tu-institucion.com");
+  const loginForm = emailInput.closest("form");
+  expect(loginForm).not.toBeNull();
+
+  const passwordInput = loginForm?.querySelector<HTMLInputElement>('input[type="password"]') ?? null;
+  expect(passwordInput).not.toBeNull();
+  return passwordInput as HTMLInputElement;
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   useRouter.mockReturnValue({ push });
@@ -72,12 +82,14 @@ describe("dealer admin host login", () => {
     render(<LoginPage />);
 
     await screen.findByTestId("dealer-admin-host-context");
-    expect(screen.queryByLabelText(/Tenant \(opcional\)/i)).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("tu-institucion")).not.toBeInTheDocument();
     expect(screen.getByText("mapaal.nadakki.com")).toBeInTheDocument();
     expect(usePublicTenantBrandingBySlug).toHaveBeenCalledWith("mapaal");
 
-    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "dealer@example.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "correct-password" } });
+    fireEvent.change(screen.getByPlaceholderText("admin@tu-institucion.com"), {
+      target: { value: "dealer@example.com" },
+    });
+    fireEvent.change(getPasswordInput(), { target: { value: "correct-password" } });
     fireEvent.click(screen.getByRole("button", { name: "Iniciar Sesión" }));
 
     await waitFor(() => {
@@ -91,8 +103,10 @@ describe("dealer admin host login", () => {
     render(<LoginPage />);
 
     await screen.findByTestId("dealer-admin-host-context");
-    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "dealer@example.com" } });
-    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "correct-password" } });
+    fireEvent.change(screen.getByPlaceholderText("admin@tu-institucion.com"), {
+      target: { value: "dealer@example.com" },
+    });
+    fireEvent.change(getPasswordInput(), { target: { value: "correct-password" } });
     fireEvent.click(screen.getByRole("button", { name: "Iniciar Sesión" }));
 
     expect(await screen.findByText(AUTH_TENANT_CONTEXT_MISMATCH)).toBeInTheDocument();
@@ -105,7 +119,7 @@ describe("dealer admin host login", () => {
     resolveDealerAdminHost.mockReturnValue({ mode: "universal" });
     render(<LoginPage />);
 
-    expect(await screen.findByLabelText(/Tenant \(opcional\)/i)).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText("tu-institucion")).toBeInTheDocument();
     expect(screen.queryByTestId("dealer-admin-host-context")).not.toBeInTheDocument();
   });
 });
