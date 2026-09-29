@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
+import { esArgentina } from "@/lib/dealer-management/formato";
+import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import { DEALER_NAV_GROUPS } from "./dealer-nav";
 import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
@@ -27,6 +29,7 @@ export function DealerShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const query = useDealerShellEntitlements();
+  const branding = useDealerManagementBranding();
   const failClosed = isAccessQueryFailClosed(query);
   const loading = query.isPending || query.isLoading;
   const results = query.data?.results;
@@ -53,13 +56,24 @@ export function DealerShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  /**
+   * Argentina: el paquete contable no aplica, asi que Contabilidad y Estados
+   * financieros NO aparecen en el menu. Es la misma regla que ya aplica
+   * DealerModuleGrid al bloque Legal para AR. "Finanzas por vehiculo" si queda:
+   * sale de la economia del vehiculo, no del core contable.
+   */
+  const argentina = esArgentina(branding.data);
+
   const groups = useMemo(
     () =>
       DEALER_NAV_GROUPS.map((group) => ({
         ...group,
-        items: group.items.filter((item) => allows(item.capability)),
+        items: group.items.filter((item) => {
+          if (argentina && item.contableCore) return false;
+          return allows(item.capability);
+        }),
       })).filter((group) => group.items.length > 0),
-    [allows],
+    [allows, argentina],
   );
 
   // La paleta solo ofrece lo que el plan permite: mismo filtro que el sidebar.

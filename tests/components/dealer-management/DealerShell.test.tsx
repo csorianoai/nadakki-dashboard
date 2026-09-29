@@ -151,6 +151,59 @@ describe("DealerShell — navegación única filtrada por entitlements", () => {
     expect(askedForNavKeys).toBe(true);
   });
 
+  test("en tenants de Argentina, Contabilidad y Estados financieros no salen en el menú", async () => {
+    const permitidas = ["accounting.ledger.entries", "accounting.reports.financial", "autos.inventory.list"];
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/branding")) {
+        return jsonResponse({ display_name: "Mapaal", currency: "ARS", locale: "es-AR" });
+      }
+      if (!url.includes("/api/v1/access/entitlements/batch")) return jsonResponse({}, 404);
+      const requested = (new URL(url, "http://localhost").searchParams.get("capabilities") ?? "")
+        .split(",")
+        .filter(Boolean);
+      return jsonResponse({
+        results: Object.fromEntries(
+          requested.map((cap) => [
+            cap,
+            { allowed: permitidas.includes(cap), reason_code: permitidas.includes(cap) ? "ALLOWED" : "DEFAULT_DENY" },
+          ]),
+        ),
+      });
+    }) as unknown as typeof fetch;
+
+    render(<DealerShell>contenido</DealerShell>, { wrapper: wrapper(testClient()) });
+
+    // Inventario sí aparece: el filtro es por core contable, no por país.
+    await waitFor(() => expect(screen.getByRole("link", { name: "Inventario" })).toBeInTheDocument());
+    expect(screen.queryByRole("link", { name: "Contabilidad" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Estados financieros" })).toBeNull();
+  });
+
+  test("fuera de Argentina, Contabilidad sí sale si el plan la incluye", async () => {
+    const permitidas = ["accounting.ledger.entries"];
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/branding")) {
+        return jsonResponse({ display_name: "Dealer RD", currency: "DOP", locale: "es-DO" });
+      }
+      if (!url.includes("/api/v1/access/entitlements/batch")) return jsonResponse({}, 404);
+      const requested = (new URL(url, "http://localhost").searchParams.get("capabilities") ?? "")
+        .split(",")
+        .filter(Boolean);
+      return jsonResponse({
+        results: Object.fromEntries(
+          requested.map((cap) => [cap, { allowed: permitidas.includes(cap), reason_code: "X" }]),
+        ),
+      });
+    }) as unknown as typeof fetch;
+
+    render(<DealerShell>contenido</DealerShell>, { wrapper: wrapper(testClient()) });
+    await waitFor(() =>
+      expect(screen.getByRole("link", { name: "Contabilidad" })).toBeInTheDocument(),
+    );
+  });
+
   test("el contenedor del panel usa el scope de tokens del dealer", async () => {
     mockBatch([]);
     const { container } = render(<DealerShell>contenido</DealerShell>, {

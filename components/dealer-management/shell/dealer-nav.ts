@@ -37,6 +37,11 @@ export type DealerNavItem = {
   icon: LucideIcon;
   /** Clave del catalogo 097. `null` = siempre visible (no depende del plan). */
   capability: string | null;
+  /**
+   * Pertenece al core Contable. En tenants de Argentina no se muestra: no hay
+   * paquete contable AR (misma regla que DealerModuleGrid aplica a Legal).
+   */
+  contableCore?: boolean;
 };
 
 export type DealerNavGroup = {
@@ -61,8 +66,8 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     label: "Finanzas",
     items: [
       { href: "/autos/dealer/finanzas", label: "Finanzas por vehículo", icon: Wallet, capability: "autos.inventory.list" },
-      { href: "/contable", label: "Contabilidad", icon: ReceiptText, capability: "accounting.ledger.entries" },
-      { href: "/contable/estado-resultados", label: "Estados financieros", icon: FileText, capability: "accounting.reports.financial" },
+      { href: "/contable", label: "Contabilidad", icon: ReceiptText, capability: "accounting.ledger.entries", contableCore: true },
+      { href: "/contable/estado-resultados", label: "Estados financieros", icon: FileText, capability: "accounting.reports.financial", contableCore: true },
     ],
   },
   {

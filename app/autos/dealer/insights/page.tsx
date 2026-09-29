@@ -7,6 +7,8 @@ import { BenchmarkComparison } from "@/components/dealer/BenchmarkComparison";
 import { InsightCard } from "@/components/dealer/InsightCard";
 import { PerformanceMetricCard } from "@/components/dealer/PerformanceMetricCard";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
+import { BloqueEstadoView } from "@/components/dealer-management/inicio/BloqueEstado";
+import { BLOQUE_TIMEOUT_MS, type BloqueEstado } from "@/lib/dealer-management/bloque-estado";
 import {
   downloadWeeklyReportPdf,
   getDealerInsights,
@@ -23,21 +25,44 @@ export default function DealerInsightsPage() {
   const [regenerating, setRegenerating] = useState(false);
   const [weeklyEmail, setWeeklyEmail] = useState(false);
 
+  const [estado, setEstado] = useState<BloqueEstado>({ caso: "cargando" });
+
   const load = useCallback(async () => {
     setLoading(true);
+    setEstado({ caso: "cargando" });
     const dealerId = getDealerId();
+
+    // Sin dealer resuelto no hay nada que pedir. Antes se quedaba en
+    // "Cargando insights…" para siempre: setLoading(false) pero payload null,
+    // y el render solo miraba `loading || !payload`.
     if (!dealerId) {
       setPayload(null);
       setInsights([]);
       setDemoMode(false);
       setLoading(false);
+      setEstado({ caso: "vacio", motivo: "Selecciona un dealer para ver sus insights." });
       return;
     }
-    const res = await getDealerInsights(dealerId);
-    setPayload(res.data);
-    setInsights(res.data.insights);
-    setDemoMode(!res.fromBackend);
-    setLoading(false);
+
+    // Timeout duro de la tabla 1 de avisos: pasado el tope, "Error" + Reintentar.
+    const limite = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), BLOQUE_TIMEOUT_MS),
+    );
+
+    try {
+      const res = await Promise.race([getDealerInsights(dealerId), limite]);
+      setPayload(res.data);
+      setInsights(res.data.insights);
+      setDemoMode(!res.fromBackend);
+      setEstado({ caso: "ok" });
+    } catch {
+      setPayload(null);
+      setInsights([]);
+      setDemoMode(false);
+      setEstado({ caso: "error" });
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -73,7 +98,16 @@ export default function DealerInsightsPage() {
     : "";
 
   if (loading || !payload) {
-    return <p className="text-sm text-nk-fg-muted">Cargando insights…</p>;
+    return (
+      <main className="space-y-4">
+        <h1 className="font-dealer-display text-2xl font-extrabold text-[var(--fg)]">Insights</h1>
+        <BloqueEstadoView
+          estado={loading ? { caso: "cargando" } : estado}
+          titulo="Insights"
+          onReintentar={() => void load()}
+        />
+      </main>
+    );
   }
 
   return (
