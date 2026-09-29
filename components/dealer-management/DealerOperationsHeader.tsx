@@ -24,11 +24,11 @@ export function DealerOperationsHeader() {
           </div>
         </div>
         <nav className="flex flex-wrap gap-2" aria-label="Estado del dealer">
-          <Link href="/autos/dealer/conexiones" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-nk-border px-3 text-sm font-semibold text-nk-fg hover:bg-nk-surface-2">
+          <Link href="/autos/dealer/conexiones" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-nk-border px-3 text-sm font-semibold text-nk-fg hover:bg-nk-surface-2">
             <Cable className="h-4 w-4" aria-hidden="true" />
             Conexiones
           </Link>
-          <Link href="/autos/dealer/estado" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-nk-border px-3 text-sm font-semibold text-nk-fg hover:bg-nk-surface-2">
+          <Link href="/autos/dealer/estado" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-nk-border px-3 text-sm font-semibold text-nk-fg hover:bg-nk-surface-2">
             <Gauge className="h-4 w-4" aria-hidden="true" />
             Estado
           </Link>

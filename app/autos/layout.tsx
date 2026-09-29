@@ -1,5 +1,5 @@
 import { AutosPortalShell } from "@/components/system/AutosPortalShell";
-import { TopNav } from "@/components/nav/TopNav";
+import { AutosMarketplaceTopNav } from "@/components/autos/AutosMarketplaceTopNav";
 import { AutosLayoutClient } from "@/components/autos/AutosLayoutClient";
 import { ThemeProvider } from "@/components/system/ThemeProvider";
 import { TenantProvider } from "@/components/system/TenantProvider";
@@ -15,7 +15,7 @@ export default function AutosLayout({ children }: { children: React.ReactNode })
           <AuthProvider>
             <CartProvider>
               <ShopperProvider>
-                <TopNav />
+                <AutosMarketplaceTopNav />
                 <AutosLayoutClient>{children}</AutosLayoutClient>
               </ShopperProvider>
             </CartProvider>

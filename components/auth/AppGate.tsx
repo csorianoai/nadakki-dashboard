@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import OnboardingAgent from "@/components/ai/OnboardingAgent";
 import { ProtectedRoute } from "@/components/forge/auth/ProtectedRoute";
 import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
-import { isAutosConsumerPublicPath } from "@/lib/autos-portal/routes";
+import { isAutosConsumerPublicPath, isDealerManagementPath } from "@/lib/autos-portal/routes";
 
 function getEffectivePathname(pathname: string | null): string {
   if (pathname) {
@@ -35,6 +35,14 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
   }
 
   if (pathname.startsWith("/cockpit")) {
+    return <ProtectedRoute>{children}</ProtectedRoute>;
+  }
+
+  // Panel del dealer: autenticado, pero con chrome propio (DealerShell, F2).
+  // Sin GlobalForgeAppShell => desaparece el sidebar global "Marketing Hub",
+  // que se mostraba fijo en todos los cores. La autorizacion no cambia:
+  // sigue pasando por ProtectedRoute igual que antes.
+  if (isDealerManagementPath(pathname)) {
     return <ProtectedRoute>{children}</ProtectedRoute>;
   }
 
