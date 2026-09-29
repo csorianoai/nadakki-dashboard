@@ -50,6 +50,22 @@ export function clearLocalStorage() {
   clearDealerAccessContextFully();
 }
 
+/**
+ * Destino post-login por rol.
+ *
+ * `dealer` aterriza en `/autos/dealer`, que es su producto. Antes decia
+ * `/credit-hub/dealer` y el destino correcto se conseguia con un mapeo aparte
+ * --`lib/dealer-management/redirect.ts`-- aplicado SOLO en los dos router.push
+ * de `app/(auth)/login/page.tsx`. Medido: `lib/cockpit/tenant-home.ts:6` llama a
+ * `getPostLoginRedirectPath` SIN ese mapeo, y de ahi cuelgan `CockpitSidebar` y
+ * `CockpitUserMenu`, asi que el "inicio" de un dealer en el Cockpit apuntaba a
+ * `/credit-hub/dealer`. Arreglarlo en el mapa lo arregla en los dos caminos.
+ *
+ * El redirect se decide por ROL y no mira los cores, y eso se queda como esta:
+ * `platform_cores` no tiene fila `autos` --medido: accounting, credit, design,
+ * engineering, legal, marketing, platform, salud, sic-- asi que un gate por core
+ * dejaria al dealer sin destino. El hostname sigue sin conceder permisos.
+ */
 const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
   platform_superadmin: "/",
   tenant_admin: "/",
@@ -58,7 +74,7 @@ const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
   legal_admin: "/legal-hub",
   marketing_admin: "/marketing",
   credit_admin: "/credit-hub/bank",
-  dealer: "/credit-hub/dealer",
+  dealer: "/autos/dealer",
   bank_analyst: "/credit-hub/bank",
   banker: "/credit-hub/bank",
 };
