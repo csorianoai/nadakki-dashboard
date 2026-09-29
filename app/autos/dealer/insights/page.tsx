@@ -20,24 +20,37 @@ export default function DealerInsightsPage() {
   const [insights, setInsights] = useState<DealerInsight[]>([]);
   const [demoMode, setDemoMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [emptyReason, setEmptyReason] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [weeklyEmail, setWeeklyEmail] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setEmptyReason(null);
+    setLoadError(false);
     const dealerId = getDealerId();
     if (!dealerId) {
       setPayload(null);
       setInsights([]);
       setDemoMode(false);
+      setEmptyReason("Selecciona un dealer para ver sus insights.");
       setLoading(false);
       return;
     }
-    const res = await getDealerInsights(dealerId);
-    setPayload(res.data);
-    setInsights(res.data.insights);
-    setDemoMode(!res.fromBackend);
-    setLoading(false);
+    try {
+      const res = await getDealerInsights(dealerId);
+      setPayload(res.data);
+      setInsights(res.data.insights);
+      setDemoMode(!res.fromBackend);
+    } catch {
+      setPayload(null);
+      setInsights([]);
+      setDemoMode(false);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -72,8 +85,38 @@ export default function DealerInsightsPage() {
     ? `Actualizado: ${formatRelative(payload.updatedAt)}`
     : "";
 
-  if (loading || !payload) {
+  if (loading) {
     return <p className="text-sm text-nk-fg-muted">Cargando insights…</p>;
+  }
+
+  if (emptyReason) {
+    return (
+      <main className="space-y-3">
+        <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Insights AI</h1>
+        <p className="text-sm text-nk-fg-muted">{emptyReason}</p>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="space-y-3">
+        <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Insights AI</h1>
+        <p className="text-sm text-nk-fg-muted">No se pudieron cargar los insights.</p>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-nk-border px-4 py-2 text-sm font-semibold text-nk-fg hover:bg-nk-surface-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Reintentar
+        </button>
+      </main>
+    );
+  }
+
+  if (!payload) {
+    return <p className="text-sm text-nk-fg-muted">No hay insights disponibles.</p>;
   }
 
   return (
