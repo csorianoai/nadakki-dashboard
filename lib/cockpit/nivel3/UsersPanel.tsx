@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { createUser, fetchRoles, fetchUsers, resetUserPassword } from "../api/authUsers";
+import {
+  createUser,
+  fetchRoles,
+  fetchUsers,
+  resetUserPassword,
+  type TempPasswordResponse,
+} from "../api/authUsers";
 import { useCockpit } from "../context";
 import { PanelFrame, PanelSkeleton } from "../components/PanelFrame";
 import type { AuthUserRecord } from "../types-platform";
@@ -27,6 +33,28 @@ export function UsersPanel() {
     void load();
   }, [load]);
 
+  /**
+   * Abre el modal con la clave temporal, o AVISA si no vino.
+   *
+   * El aviso es la mitad importante. Antes se leia `res.reset_token`, un campo
+   * que el backend nunca envia; `PasswordTokenModal` hace `if (!token) return
+   * null`, asi que con `undefined` el modal simplemente no abria. La clave YA
+   * estaba rotada en la base, y el admin se quedaba sin verla: el usuario
+   * terminaba bloqueado en silencio. Si el contrato vuelve a moverse, esto tiene
+   * que gritar, no callarse.
+   */
+  const mostrarClaveTemporal = (res: TempPasswordResponse, hecho: string) => {
+    if (res.temp_password) {
+      setToken(res.temp_password);
+      return;
+    }
+    alert(
+      `${hecho}, pero el backend no devolvió la contraseña temporal. ` +
+        "No se puede mostrar y el usuario queda sin acceso: restablecela de nuevo " +
+        "o usá el procedimiento de emergencia.",
+    );
+  };
+
   const onCreate = async () => {
     if (!tenantFilter && !isPlatformSuperadmin) return;
     try {
@@ -37,7 +65,7 @@ export function UsersPanel() {
         tenant_id: tenantFilter ?? users[0]?.tenant_id ?? "",
         password: form.password || undefined,
       });
-      if (res.reset_token) setToken(res.reset_token);
+      mostrarClaveTemporal(res, "El usuario se creó");
       setForm({ name: "", email: "", role_key: "", password: "" });
       void load();
     } catch (e) {
@@ -46,10 +74,10 @@ export function UsersPanel() {
   };
 
   const onReset = async (userId: string) => {
-    if (!window.confirm("¿Generar token de restablecimiento?")) return;
+    if (!window.confirm("¿Restablecer la contraseña de este usuario?")) return;
     try {
       const res = await resetUserPassword(userId);
-      setToken(res.reset_token);
+      mostrarClaveTemporal(res, "La contraseña se restableció");
     } catch (e) {
       alert(e instanceof Error ? e.message : "Error");
     }
