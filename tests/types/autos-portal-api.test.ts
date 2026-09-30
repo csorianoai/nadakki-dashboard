@@ -187,13 +187,9 @@ function gapKey(route: string): string {
   return route.split(PLACEHOLDER).join("{id}");
 }
 
-/**
- * Known dashboard→backend gaps. List may only shrink.
- * libro-mayor is published as GET /api/v1/contable/mayor (same query: cuenta_id, periodo_id).
- */
+/** Known dashboard→backend gaps. List may only shrink. */
 const HUECOS_CONOCIDOS: Record<string, string> = {
   "/api/marketing/campaigns/{id}/execute": "DASH-MARKETING-CONSUMER",
-  "/api/v1/contable/libro-mayor": "DASH-CONTABLE-CONSUMER",
   "/api/v1/contable/reports/situacion-financiera": "DASH-CONTABLE-CONSUMER",
   "/api/v1/contable/reports/gastos-monitor": "DASH-CONTABLE-CONSUMER",
   "/api/v1/contable/reports/sugerencias-ia": "DASH-CONTABLE-CONSUMER",
