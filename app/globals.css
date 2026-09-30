@@ -920,3 +920,102 @@ body {
   }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   NADAKKI DEALER MANAGEMENT — Design tokens (F2)
+   Scoped to [data-portal="dealer"] (+ dealer-modal for body-portaled overlays).
+   Deliberadamente SEPARADO de [data-portal="autos"]: el marketplace publico
+   conserva su paleta intacta. Nunca en :root / documentElement.
+
+   Un solo tema claro: el panel del dealer no ofrece conmutador de tema.
+   El color de marca es por tenant (white-label) y se sobrescribe en runtime
+   desde el branding del backend; el valor de aqui es el de Nadakki por defecto.
+   ═══════════════════════════════════════════════════════════════════ */
+
+[data-portal="dealer"],
+[data-portal="dealer-modal"] {
+  --brand: #2E5F97;
+  --brand-2: #2E5F97;
+  --brand-strong: #244B78;
+  --brand-soft: #EAF1F9;
+  --on-brand: #FFFFFF;
+
+  /* Chrome oscuro: sidebar y superficies de navegacion */
+  --nav-bg: #111A2E;
+  --nav-bg-2: #1A2540;
+  --nav-fg: #E2E8F0;
+  --nav-fg-muted: #94A3B8;
+  --nav-border: #24314F;
+
+  --bg: #F4F5F7;
+  --surface: #FFFFFF;
+  --surface-2: #F4F5F7;
+  --surface-3: #E9EBEF;
+  --border: #E2E8F0;
+  --border-2: #CBD5E1;
+
+  --fg: #0F172A;
+  --fg-muted: #475569;
+  --fg-subtle: #64748B;
+
+  /* Semaforo — ficha 1.2 */
+  --danger: #B42318;
+  --danger-soft: #FEF3F2;
+  --warning: #B45309;
+  --warning-soft: #FFFAEB;
+  --success: #15803D;
+  --success-2: #15803D;
+  --success-soft: #ECFDF3;
+
+  --r: 12px;
+  --r-sm: 8px;
+  --r-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 6px 16px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 24px 56px -18px rgba(15, 23, 42, 0.22), 0 8px 20px -12px rgba(15, 23, 42, 0.12);
+  --ring: 0 0 0 3px rgba(46, 95, 151, 0.35);
+}
+
+/* Tipografia del panel (ficha 1.1): Sora titulos/KPIs, IBM Plex Sans texto,
+   IBM Plex Mono cifras. Cargadas con next/font en DealerFonts — nunca por
+   fonts.googleapis.com, que en la red medida responde 503. */
+[data-portal="dealer"] {
+  font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+[data-portal="dealer"] h1,
+[data-portal="dealer"] h2,
+[data-portal="dealer"] h3,
+[data-portal="dealer"] .font-dealer-display {
+  font-family: var(--font-sora), var(--font-ibm-plex-sans), ui-sans-serif, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+[data-portal="dealer"] .font-dealer-numeric {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* La barra de scroll global es un degradado cian/violeta del tema "quantum"
+   (globals.css ~71). Dentro del panel se ve como un adorno ajeno: se neutraliza
+   al gris del chrome. Solo aqui; el resto de la app no se toca. */
+[data-portal="dealer"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-portal="dealer"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-portal="dealer"] ::-webkit-scrollbar-thumb,
+[data-portal="dealer"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-2);
+  border-radius: 4px;
+}
+
+[data-portal="dealer"] aside ::-webkit-scrollbar-thumb,
+[data-portal="dealer"] aside ::-webkit-scrollbar-thumb:hover {
+  background: var(--nav-border);
+}
