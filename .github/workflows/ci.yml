@@ -5,13 +5,20 @@ on:
     branches:
       - staging
       - main
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
 
-  push:
-    branches:
-      - staging
+  # PUSH A STAGING RETIRADO. Duplicaba el run del pull_request, que ya
+  # apunta a `staging`. MEDIDO: 9 de los 69 runs de 30 dias venian de push.
+  # La puerta de PR contra `staging` y contra `main` no se toca.
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ci:
