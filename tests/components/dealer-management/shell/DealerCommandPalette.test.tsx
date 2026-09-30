@@ -12,7 +12,7 @@
  *  7. Solo ofrece lo que recibe: entitlements se filtran aguas arriba.
  */
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { Car, ReceiptText, Wallet } from "lucide-react";
 
 import { DealerCommandPalette } from "@/components/dealer-management/shell/DealerCommandPalette";
@@ -128,17 +128,27 @@ describe("DealerCommandPalette", () => {
   });
 
   it("al cerrar con Escape devuelve el foco al disparador", () => {
-    render(<FocusHarness />);
-    const trigger = screen.getByRole("button", { name: "Abrir buscador" });
-    trigger.focus();
-    expect(document.activeElement).toBe(trigger);
+    jest.useFakeTimers();
+    try {
+      render(<FocusHarness />);
+      const trigger = screen.getByRole("button", { name: "Abrir buscador" });
+      trigger.focus();
+      expect(document.activeElement).toBe(trigger);
 
-    fireEvent.click(trigger);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    fireEvent.keyDown(buscador(), { key: "Escape" });
+      fireEvent.click(trigger);
+      act(() => {
+        jest.runAllTimers();
+      });
+      const input = screen.getByRole("combobox");
+      expect(document.activeElement).toBe(input);
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(trigger);
+      fireEvent.keyDown(input, { key: "Escape" });
+
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(document.activeElement).toBe(trigger);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("solo ofrece lo que recibe: nunca un modulo fuera del plan", () => {
