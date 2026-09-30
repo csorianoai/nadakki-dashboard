@@ -337,7 +337,7 @@ export async function getLibroMayor(
 
   return contableFetch<LibroMayorReport>(
     tenantId,
-    `/libro-mayor?cuenta_id=${encodeURIComponent(cuentaId)}&periodo_id=${encodeURIComponent(periodoId)}`,
+    `/mayor?cuenta_id=${encodeURIComponent(cuentaId)}&periodo_id=${encodeURIComponent(periodoId)}`,
   );
 }
 
