@@ -19,6 +19,21 @@ export function legacyMarketplaceRedirectTarget(pathname: string): string {
   return `${base}?ref=legacy_marketplace`;
 }
 
+/** Raiz del panel privado del dealer (Nadakki Dealer Management). */
+export const DEALER_MANAGEMENT_ROOT = "/autos/dealer";
+
+/**
+ * Panel del dealer: autenticado, pero con su propio chrome (DealerShell).
+ *
+ * No es publico —sigue exigiendo ProtectedRoute— pero queda fuera del
+ * GlobalForgeAppShell y de la barra del marketplace, que son las otras dos
+ * navegaciones que se solapaban aqui antes de F2.
+ */
+export function isDealerManagementPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return pathname === DEALER_MANAGEMENT_ROOT || pathname.startsWith(`${DEALER_MANAGEMENT_ROOT}/`);
+}
+
 /** Consumer-facing Autos Portal paths that must stay public on autos.nadakki.com. */
 export function isAutosConsumerPublicPath(pathname: string | null): boolean {
   if (!pathname) return false;
