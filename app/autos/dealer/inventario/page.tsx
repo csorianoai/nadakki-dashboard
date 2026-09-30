@@ -5,6 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
+import {
+  COPY_COMPROBANDO,
+  COPY_ESTADO_MODULO,
+  estadoDeModulo,
+} from "@/lib/dealer-management/estado-modulo";
 
 const CAPABILITY = "autos.inventory.list";
 
@@ -22,11 +27,21 @@ export default function DealerInventoryPage() {
         <p className="mt-1 text-sm text-nk-fg-muted">Inventario privado del dealer autenticado. No usa la vitrina pública ni filtra autoridad en cliente.</p>
       </header>
       {!context ? (
-        <div role="alert" className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg">Inventario bloqueado: {resolved.reason_code}</div>
+        <div role="status" data-reason-code={resolved.reason_code} className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg">
+          {COPY_ESTADO_MODULO.segun_onboarding.detalle}
+        </div>
       ) : access.isLoading ? (
-        <p className="animate-pulse text-sm text-nk-fg-muted">Verificando acceso…</p>
+        <p className="animate-pulse text-sm text-nk-fg-muted">{COPY_COMPROBANDO}</p>
       ) : !allowed ? (
-        <div role="alert" className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg">Inventario bloqueado: {access.data?.results[CAPABILITY]?.reason_code ?? "DEFAULT_DENY"}</div>
+        <div
+          role="status"
+          data-reason-code={access.data?.results[CAPABILITY]?.reason_code ?? "DEFAULT_DENY"}
+          className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg"
+        >
+          {COPY_ESTADO_MODULO[
+            estadoDeModulo(access.data?.results[CAPABILITY]) as "segun_onboarding" | "fuera_del_plan" | "activo"
+          ].detalle}
+        </div>
       ) : inventory.isLoading ? (
         <p className="animate-pulse text-sm text-nk-fg-muted">Cargando inventario…</p>
       ) : inventory.error ? (
@@ -40,7 +55,7 @@ export default function DealerInventoryPage() {
             return <li key={vehicle.id} className="rounded-xl border border-nk-border bg-nk-surface p-4">
               <p className="font-manrope font-bold text-nk-fg">{title}</p>
               <p className="mt-1 text-sm text-nk-fg-muted">Estado: {vehicle.status ?? "No reportado"}</p>
-              <Link href={`/autos/dealer/inventario/${encodeURIComponent(vehicle.id)}`} className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-brand-2 underline">Ver ficha</Link>
+              <Link href={`/autos/dealer/inventario/${encodeURIComponent(vehicle.id)}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand-2 underline">Ver ficha</Link>
             </li>;
           })}
         </ul>

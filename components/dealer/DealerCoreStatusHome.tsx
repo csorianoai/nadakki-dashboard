@@ -9,6 +9,7 @@ import {
   DEALER_CORE_STATUS_ROWS,
   deriveDealerCoreUiState,
 } from "@/lib/dealer/core-status";
+import { COPY_ESTADO_MODULO, estadoDeModulo } from "@/lib/dealer-management/estado-modulo";
 import type { EntitlementDecision } from "@/types/entitlements";
 
 const ACTION_CAPS = DEALER_CORE_STATUS_ROWS.map((row) => row.actionCapability);
@@ -27,8 +28,10 @@ export function DealerCoreStatusHome() {
         data-reason-code="TENANT_NOT_FOUND"
         className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
-        <h2 className="font-manrope text-lg font-bold text-nk-fg">Sin tenant</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted">No hay contexto de tenant para leer readiness.</p>
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">Aún no podemos mostrar tus módulos</h2>
+        <p className="mt-1 text-sm text-nk-fg-muted">
+          {COPY_ESTADO_MODULO.segun_onboarding.detalle}
+        </p>
       </section>
     );
   }
@@ -67,9 +70,11 @@ export function DealerCoreStatusHome() {
         data-http-status={err ? String(err.status) : undefined}
         className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
-        <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo cargar el estado</h2>
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">
+          No pudimos cargar esta información
+        </h2>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          {err?.reason_code ?? "Error al leer readiness o entitlements."}
+          Vuelve a intentarlo en unos minutos.
         </p>
       </section>
     );
@@ -107,24 +112,32 @@ export function DealerCoreStatusHome() {
             data-reason-code={derived.reason_code ?? ""}
             className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
           >
+            {/* Vocabulario unico: Activo / Según avance del onboarding / No
+                incluido en tu plan. Los data-* conservan el detalle tecnico
+                para auditoria; en pantalla no hay jerga. */}
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="font-manrope text-base font-bold text-nk-fg">{row.name}</h2>
-              <p className="text-xs font-semibold uppercase tracking-wide text-nk-fg-muted">{derived.state}</p>
+              <p className="text-xs font-semibold text-nk-fg-muted">
+                {derived.state === "READY"
+                  ? COPY_ESTADO_MODULO.activo.etiqueta
+                  : COPY_ESTADO_MODULO[
+                      estadoDeModulo({
+                        allowed: false,
+                        reason_code: derived.reason_code,
+                      }) as "segun_onboarding" | "fuera_del_plan"
+                    ].etiqueta}
+              </p>
             </div>
-            <p className="mt-2 text-sm text-nk-fg-muted break-words">{derived.reason}</p>
-            {derived.reason_code ? (
-              <p className="mt-1 text-xs font-semibold text-nk-fg">
-                reason_code: <code>{derived.reason_code}</code>
-              </p>
-            ) : null}
-            {entry ? (
-              <p className="mt-1 text-xs text-nk-fg-muted">
-                readiness: {entry.status}
-                {entry.is_usable ? " · usable" : " · no usable"}
-              </p>
-            ) : (
-              <p className="mt-1 text-xs text-nk-fg-muted">readiness: sin entrada para esta capability</p>
-            )}
+            <p className="mt-2 text-sm text-nk-fg-muted break-words">
+              {derived.state === "READY"
+                ? COPY_ESTADO_MODULO.activo.detalle
+                : COPY_ESTADO_MODULO[
+                    estadoDeModulo({
+                      allowed: false,
+                      reason_code: derived.reason_code,
+                    }) as "segun_onboarding" | "fuera_del_plan"
+                  ].detalle}
+            </p>
             {derived.action === "open" ? (
               <Link
                 href={row.href}

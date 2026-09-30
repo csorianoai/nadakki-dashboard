@@ -4,6 +4,11 @@ import Link from "next/link";
 import { BarChart3, Cable, Car, FileText, Gauge, Landmark, Megaphone, PackagePlus, ReceiptText, Search, Users, WalletCards, type LucideIcon } from "lucide-react";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
+import {
+  COPY_COMPROBANDO,
+  COPY_ESTADO_MODULO,
+  estadoDeModulo,
+} from "@/lib/dealer-management/estado-modulo";
 import { DEALER_TOKENS } from "@/lib/dealer-management/tokens";
 
 type ModuleItem = { id: string; label: string; description: string; href: string; capability: string; icon: LucideIcon };
@@ -60,8 +65,29 @@ export function DealerModuleGrid() {
               {section.items.map((item) => {
                 const decision = query.data?.results[item.capability];
                 const forcedArLegal = item.id === "legal" && isArgentina;
-                const state = forcedArLegal || decision?.reason_code === "TARGET_CORE_NOT_READY" ? "not_ready" : !query.isLoading && !query.error && decision?.allowed === true ? "allowed" : "locked";
-                const statusText = forcedArLegal ? "Sin paquete jurídico Argentina" : state === "allowed" ? "Disponible" : state === "not_ready" ? "No listo" : query.isLoading ? "Verificando" : "Bloqueado";
+                const comprobando = query.isLoading || query.isPending;
+                const permitido = !comprobando && !query.error && decision?.allowed === true;
+                // Autoridad intacta: solo "allowed === true" abre el enlace.
+                const state = forcedArLegal || decision?.reason_code === "TARGET_CORE_NOT_READY" ? "not_ready" : permitido ? "allowed" : "locked";
+
+                // Vocabulario unico: Activo / Según avance del onboarding / No
+                // incluido en tu plan. Nunca "Bloqueado", "No listo" ni jerga.
+                const estado = forcedArLegal
+                  ? "segun_onboarding"
+                  : estadoDeModulo(decision, { comprobando: false });
+                const statusText = forcedArLegal
+                  ? "Sin paquete jurídico Argentina"
+                  : comprobando
+                    ? COPY_COMPROBANDO
+                    : permitido
+                      ? COPY_ESTADO_MODULO.activo.etiqueta
+                      : COPY_ESTADO_MODULO[estado as Exclude<typeof estado, "oculto" | "activo">].etiqueta;
+                const detalle = forcedArLegal
+                  ? "Las acciones legales quedan restringidas hasta disponer del paquete AR."
+                  : comprobando || permitido
+                    ? item.description
+                    : COPY_ESTADO_MODULO[estado as Exclude<typeof estado, "oculto" | "activo">].detalle;
+
                 const Icon = item.icon;
                 const body = <>
                   <div className="flex items-start justify-between gap-3">
@@ -69,7 +95,7 @@ export function DealerModuleGrid() {
                     <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${badgeClass(state)}`}>{statusText}</span>
                   </div>
                   <p className="mt-3 font-manrope text-sm font-bold text-nk-fg">{item.label}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-nk-fg-muted">{forcedArLegal ? "Las acciones legales quedan restringidas hasta disponer del paquete AR." : item.description}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-nk-fg-muted">{detalle}</p>
                 </>;
 
                 return state === "allowed" ? (

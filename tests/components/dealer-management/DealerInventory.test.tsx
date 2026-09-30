@@ -79,7 +79,12 @@ describe("dealer private inventory contract", () => {
     entitlement();
     render(<DealerInventoryPage />, { wrapper: wrapper(testClient()) });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Inventario bloqueado: DEFAULT_DENY");
+    // La autoridad no cambia: sin permiso no se llama al backend. Lo que cambia
+    // es el texto: el dealer lee lenguaje de negocio, no "DEFAULT_DENY".
+    const aviso = await screen.findByRole("status");
+    expect(aviso).toHaveTextContent("Se habilita según avance de tu onboarding.");
+    expect(aviso).toHaveAttribute("data-reason-code", "DEFAULT_DENY");
+    expect(aviso.textContent).not.toMatch(/DEFAULT_DENY|bloqueado/i);
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
 
@@ -87,7 +92,12 @@ describe("dealer private inventory contract", () => {
     entitlement({ allowed: false, reason_code: "DEFAULT_DENY" });
     render(<DealerInventoryPage />, { wrapper: wrapper(testClient()) });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Inventario bloqueado: DEFAULT_DENY");
+    // La autoridad no cambia: sin permiso no se llama al backend. Lo que cambia
+    // es el texto: el dealer lee lenguaje de negocio, no "DEFAULT_DENY".
+    const aviso = await screen.findByRole("status");
+    expect(aviso).toHaveTextContent("Se habilita según avance de tu onboarding.");
+    expect(aviso).toHaveAttribute("data-reason-code", "DEFAULT_DENY");
+    expect(aviso.textContent).not.toMatch(/DEFAULT_DENY|bloqueado/i);
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
 

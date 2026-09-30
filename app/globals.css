@@ -984,9 +984,14 @@ body {
   font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Sora en titulos. Se incluye .font-manrope a proposito: media docena de
+   componentes del dealer ya la llevan puesta y, al ser una clase, ganaba al
+   selector de elemento; el resultado era Sora cargada pero nunca aplicada.
+   Dentro de este scope .font-manrope resuelve a Sora; fuera no cambia nada. */
 [data-portal="dealer"] h1,
 [data-portal="dealer"] h2,
 [data-portal="dealer"] h3,
+[data-portal="dealer"] .font-manrope,
 [data-portal="dealer"] .font-dealer-display {
   font-family: var(--font-sora), var(--font-ibm-plex-sans), ui-sans-serif, sans-serif;
   letter-spacing: -0.01em;

@@ -135,7 +135,7 @@ export default function DealerVehicleRegisterPage() {
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
           <p className="mt-1 text-sm text-nk-fg-muted">
-            reason_code: <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
+            Vuelve a intentarlo en unos minutos.
           </p>
         </section>
       ) : !decision.allowed ? (
@@ -172,7 +172,7 @@ export default function DealerVehicleRegisterPage() {
         <div data-testid="dealer-register-ready" className="space-y-6">
           {formError ? (
             <p role="alert" data-testid="dealer-register-post-error" className="text-sm text-nk-fg">
-              reason_code: <code>{formError.reason_code}</code>
+              No pudimos guardar los datos. Vuelve a intentarlo.
             </p>
           ) : null}
           {ack ? (

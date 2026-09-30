@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { BarChart3, Upload, Users } from "lucide-react";
 import { CORE_NAV_CAPABILITY_KEYS, isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
-import { DealerPostSaleCores } from "@/components/dealer/DealerPostSaleCores";
 import { DealerSponsorshipBanner } from "@/components/dealer/DealerSponsorshipBanner";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import { DealerModuleGrid } from "@/components/dealer-management/DealerModuleGrid";
@@ -51,10 +50,15 @@ export default function DealerDashboardPage() {
       ) : null}
       <DealerSponsorshipBanner />
       <DealerModuleGrid />
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="lg:col-span-2"><DealerPostSaleCores /></div>
-        <aside className={`${DEALER_TOKENS.panel} p-5`}><h2 className="font-manrope text-base font-bold text-nk-fg">Uso del plan</h2><div className="mt-4"><UsageMeter /></div></aside>
-      </div>
+      {/* DealerPostSaleCores fuera del panel: disparaba GET /api/v1/legal/cases
+          (403) y GET /api/marketing/scheduler/heartbeat (404) en cada carga de
+          Inicio, y pintaba el reason_code crudo. Ni Legal ni el scheduler de
+          Marketing son superficies del dealer. El componente sigue existiendo
+          para quien lo necesite; aqui no se monta. */}
+      <aside className={`${DEALER_TOKENS.panel} p-5`}>
+        <h2 className="font-manrope text-base font-bold text-nk-fg">Uso del plan</h2>
+        <div className="mt-4"><UsageMeter /></div>
+      </aside>
       <section data-testid="dealer-quick-links" data-fail-closed={failClosed ? "true" : "false"}>
         <h2 className="mb-3 font-manrope text-base font-bold text-nk-fg">Accesos rápidos</h2>
         <div className="grid gap-3 md:grid-cols-3">

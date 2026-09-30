@@ -153,6 +153,10 @@ describe("vehicle economics POST forms", () => {
     await user.type(screen.getByLabelText("sold_at"), "2026-03-01T12:00");
     await user.click(screen.getByRole("button", { name: "Registrar venta" }));
     await waitFor(() => expect(screen.getByTestId("dealer-register-post-error")).toBeInTheDocument());
-    expect(screen.getByTestId("dealer-register-post-error")).toHaveTextContent("CONFLICT");
+    // El error se sigue detectando; lo que cambia es que el dealer lee lenguaje
+    // de negocio en vez del codigo crudo del backend.
+    const error = screen.getByTestId("dealer-register-post-error");
+    expect(error).toHaveTextContent("No pudimos guardar los datos");
+    expect(error.textContent).not.toMatch(/CONFLICT|reason_code/);
   });
 });

@@ -37,7 +37,7 @@ export function DealerPostSaleCores() {
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer el estado post-venta</h2>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          reason_code: <code>{access?.reason_code ?? "DEFAULT_DENY"}</code>
+          Vuelve a intentarlo en unos minutos.
         </p>
       </section>
     );

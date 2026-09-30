@@ -56,7 +56,7 @@ export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer la economía</h2>
         <p className="mt-1 text-sm text-nk-fg-muted break-words">
-          reason_code: <code>{access?.reason_code ?? `HTTP_${access?.status ?? "error"}`}</code>
+          Vuelve a intentarlo en unos minutos.
         </p>
       </section>
     );

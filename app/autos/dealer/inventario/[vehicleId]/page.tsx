@@ -55,7 +55,7 @@ function VehicleFicha({ dealerId, vehicleId }: { dealerId: string; vehicleId: st
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer el vehículo</h2>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          reason_code: <code>{query.error.reason_code ?? `HTTP_${query.error.status}`}</code>
+          Vuelve a intentarlo en unos minutos.
         </p>
       </section>
     );
@@ -115,7 +115,7 @@ export default function DealerVehicleEconomicsPage() {
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
           <p className="mt-1 text-sm text-nk-fg-muted">
-            reason_code: <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
+            Vuelve a intentarlo en unos minutos.
           </p>
         </section>
       ) : !decision.allowed ? (
@@ -131,9 +131,6 @@ export default function DealerVehicleEconomicsPage() {
           </h2>
           <p className="mt-1 text-sm text-nk-fg-muted">
             {REASON_CODE_INFO[decision.reason_code]?.description ?? "Esta superficie no está disponible."}
-          </p>
-          <p className="mt-2 text-xs font-semibold text-nk-fg">
-            reason_code: <code>{decision.reason_code}</code>
           </p>
           {REASON_CODE_INFO[decision.reason_code]?.action_required === "upgrade_plan" ||
           decision.reason_code === "UPGRADE_REQUIRED" ? (
