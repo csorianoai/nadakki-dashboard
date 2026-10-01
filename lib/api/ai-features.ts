@@ -3,13 +3,13 @@
 import { autosFetch } from "@/lib/autos-consumer-api";
 
 export type PriceConfidenceResult = {
-  lo: number;
-  mid: number;
-  hi: number;
-  top: number;
-  pos: number;
-  pctBetter: number;
-  sampleCount: number;
+  lo: number | null;
+  mid: number | null;
+  hi: number | null;
+  top: number | null;
+  pos: number | null;
+  pctBetter: number | null;
+  sampleCount: number | null;
   fromBackend: boolean;
 };
 
@@ -19,19 +19,9 @@ export type VehicleHistoryResult = {
   fromBackend: boolean;
 };
 
-function localPriceConfidence(price: number): PriceConfidenceResult {
-  const lo = Math.round((price * 0.932) / 1000) * 1000;
-  const mid = price;
-  const hi = Math.round((price * 1.068) / 1000) * 1000;
-  const top = Math.round((price * 1.135) / 1000) * 1000;
-  const pos = ((mid - lo) / (top - lo)) * 100;
-  const pctBetter = Math.round(((hi - mid) / hi) * 100);
-  return { lo, mid, hi, top, pos, pctBetter, sampleCount: 47, fromBackend: false };
-}
-
 export async function getPriceConfidence(
   vehicleId: number | string,
-  priceFallback?: number,
+  _priceFallback?: number,
 ): Promise<PriceConfidenceResult> {
   try {
     const res = await autosFetch<{
@@ -58,8 +48,17 @@ export async function getPriceConfidence(
       fromBackend: true,
     };
   } catch (error) {
-    console.warn("Price confidence backend down, using local", error);
-    return localPriceConfidence(priceFallback ?? 1_000_000);
+    console.warn("Price confidence backend unavailable", error);
+    return {
+      lo: null,
+      mid: null,
+      hi: null,
+      top: null,
+      pos: null,
+      pctBetter: null,
+      sampleCount: null,
+      fromBackend: false,
+    };
   }
 }
 
@@ -72,14 +71,9 @@ export async function getVehicleHistory(vehicleId: number | string): Promise<Veh
     if (!res) throw new Error("empty");
     return { ...res, fromBackend: true };
   } catch (error) {
-    console.warn("Vehicle history backend down, using local", error);
+    console.warn("Vehicle history backend unavailable", error);
     return {
-      events: [
-        { label: "VIN sin accidentes reportados", status: "ok" },
-        { label: "1 dueño previo", status: "ok" },
-        { label: "Servicio al día", status: "ok" },
-        { label: "Matrícula al día", status: "ok" },
-      ],
+      events: [],
       verifications: [],
       fromBackend: false,
     };
