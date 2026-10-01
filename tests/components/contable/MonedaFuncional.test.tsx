@@ -12,6 +12,7 @@
  * inventada.
  */
 import { render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import {
   MonedaFuncionalNota,
@@ -122,11 +123,22 @@ describe("MonedaFuncionalNota", () => {
 /**
  * Cierre contra la PANTALLA. El helper correcto no sirve de nada si el cliente
  * del mayor sigue llamando a `toFixed(2)`: ese era justo el defecto.
+ *
+ * `ContablePageShell` pasa a montar `FacturacionElectronicaAviso`, que consulta
+ * el estado fiscal con react-query, asi que el cliente del mayor ya no se puede
+ * renderizar fuera de un `QueryClientProvider`. En la aplicacion lo provee
+ * `AppProviders`; aqui hay que declararlo. El gate de regresion del CI es el que
+ * lo encontro: en local el suite no llegaba a cargar por falta de
+ * NEXT_PUBLIC_BACKEND_URL, y sin esa variable el fallo queda escondido.
  */
+function renderBajoQueryClient(nodo: React.ReactElement) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={client}>{nodo}</QueryClientProvider>);
+}
 describe("LibroMayorClient", () => {
   it("publica los importes con la moneda del tenant y su agrupacion", async () => {
     brandingPantalla = { locale: "es-AR", currency: "ARS" };
-    render(<LibroMayorClient />);
+    renderBajoQueryClient(<LibroMayorClient />);
 
     await waitFor(() =>
       expect(screen.getByTestId("contable-moneda-funcional")).toHaveTextContent("ARS"),
@@ -137,7 +149,7 @@ describe("LibroMayorClient", () => {
 
   it("sin moneda del tenant avisa y no pinta importes inventados", async () => {
     brandingPantalla = { locale: "es-AR", currency: null };
-    render(<LibroMayorClient />);
+    renderBajoQueryClient(<LibroMayorClient />);
 
     await waitFor(() => expect(screen.getByTestId("contable-sin-moneda")).toBeInTheDocument());
     expect(screen.queryByText(/1\.234\.567/)).toBeNull();
