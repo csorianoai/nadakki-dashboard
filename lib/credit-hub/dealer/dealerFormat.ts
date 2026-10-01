@@ -99,6 +99,29 @@ export function parseRequestedAmount(value: string | number | null | undefined):
  * que ya devolvia un importe ausente. Un numero sin moneda no se pinta: una
  * cifra con la moneda equivocada es peor que una cifra que falta.
  */
+/**
+ * Simbolo de la moneda del tenant, PREGUNTADO a Intl, no escrito a mano.
+ *
+ * Existen consumidores que piden un prefijo suelto --`computeOfferSavingsNote`,
+ * `OfferComparisonCard`-- y hasta ahora se les pasaba una tabla a mano cuyo caso
+ * por defecto era "MX$" (OfferComparatorSpotlight.tsx:43) o "RD$"
+ * (DealerKpiStrip.tsx:121). `formatToParts` da el simbolo que el locale usa de
+ * verdad para esa moneda: "RD$" en es-DO/DOP, "$" en es-AR/ARS.
+ *
+ * Sin moneda del tenant devuelve cadena vacia: un importe sin moneda es mejor
+ * que un importe con la moneda de otro pais. #1527 A-serie.
+ */
+export function simboloDeMoneda(currencyCode: string | null | undefined, locale = "es"): string {
+  const currency = currencyCode?.trim().toUpperCase();
+  if (!currency) return "";
+  try {
+    const partes = new Intl.NumberFormat(locale, { style: "currency", currency }).formatToParts(0);
+    return partes.find((parte) => parte.type === "currency")?.value ?? currency;
+  } catch {
+    return currency;
+  }
+}
+
 export function formatDealerMoney(
   amount: string | number | null | undefined,
   currencyCode: string | null | undefined,
