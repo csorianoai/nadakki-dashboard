@@ -9,6 +9,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { brandInitial, resolveVisiblePlatformTitle } from "@/lib/white-label/brand-display";
 import { cn } from "@/lib/utils";
+import { AccessApiError } from "@/lib/access/client";
+import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
+import { isAccessUnverified, unverifiedReasonFromBatch } from "@/lib/access/reason-codes";
 import {
   LARGE_CORE_LEAF_THRESHOLD,
   NAV_SECTIONS,
@@ -17,6 +20,8 @@ import {
   type NavSection,
   collectExpandIdsForPath,
   countNavLeaves,
+  ACCESS_UNVERIFIED_MESSAGE,
+  SUITE_ACCESS_PROBE_CAPABILITIES,
   filterSectionsForUser,
   getEmptyCoreMessage,
   getEmptyCoreReason,
@@ -165,6 +170,33 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
   const pathname = usePathname();
   const { tenant, allRoles, user, activeRole, isAuthenticated } = useAuth();
   const showAdmin = userCanAccessAdminNav(allRoles);
+
+  /**
+   * Se PREGUNTA, no se deduce.
+   *
+   * La version anterior inferia "no verificado" de que el cliente no tuviera
+   * `organizationUnitId`. Esa premisa se cae: el backend resuelve la unidad desde
+   * `user_dealer_assignments` cuando el batch no la recibe, asi que un cliente sin
+   * unidad es un caso VALIDO y no un fallo. `batchSearch` ya omite el parametro
+   * cuando no hay unidad (lib/access/client.ts:200-202), de modo que esta llamada
+   * es exactamente "batch sin organization_unit_id".
+   *
+   * La decision sale de los `reason_code` de la RESPUESTA. Llegan POR CAPABILITY
+   * dentro de un 200 (services/access/entitlements.py:330-339), no como error
+   * HTTP; el 403 se mira aparte porque ahi si viajan en el error.
+   *
+   * Mientras la sonda carga no se afirma nada: un aviso prematuro seria el mismo
+   * error de adivinar, al reves.
+   */
+  const probe = useAccessEntitlementsBatch([...SUITE_ACCESS_PROBE_CAPABILITIES]);
+  const accessReason = useMemo(() => {
+    if (probe.isPending || probe.isLoading) return null;
+    if (probe.error instanceof AccessApiError && isAccessUnverified(probe.error.reason_code)) {
+      return probe.error.reason_code;
+    }
+    return unverifiedReasonFromBatch(probe.data?.results);
+  }, [probe.error, probe.data, probe.isPending, probe.isLoading]);
+  const accesoNoVerificado = accessReason !== null;
 
   const visibleSections = useMemo(
     () => filterSectionsForUser(NAV_SECTIONS, allRoles, tenant?.subscribed_cores, showAdmin),
@@ -381,7 +413,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     const isActive = sectionHasActiveRoute(section, pathname ?? null);
     const emptyCore = section.children.length === 0;
     const emptyMessage = getEmptyCoreMessage(
-      getEmptyCoreReason(section, allRoles, tenant?.subscribed_cores, showAdmin),
+      getEmptyCoreReason(section, allRoles, tenant?.subscribed_cores, showAdmin, accessReason),
     );
 
     return (
@@ -468,6 +500,20 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
         </div>
 
         <nav className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden py-2 pb-2", collapsed ? "px-1 items-center" : "px-1")} aria-label="Navegación por módulos">
+          {accesoNoVerificado && !collapsed ? (
+            <div
+              role="alert"
+              data-testid="suite-acceso-no-verificado"
+              data-reason-code={accessReason ?? ""}
+              className="mx-2 mb-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-3"
+            >
+              <p className="text-xs font-semibold text-amber-200">{ACCESS_UNVERIFIED_MESSAGE}</p>
+              <p className="mt-1 text-[11px] leading-snug text-amber-200/80">
+                El menú está vacío porque no se pudo comprobar tu acceso, no porque no tengas módulos.
+                Reintentá o avisá a soporte.
+              </p>
+            </div>
+          ) : null}
           {collapsed
             ? visibleSections.map((section) => renderCollapsedSection(section))
             : visibleSections.map((section) => renderSection(section))
