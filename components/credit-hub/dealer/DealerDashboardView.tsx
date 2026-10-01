@@ -28,7 +28,7 @@ export function DealerDashboardView({
   stats,
   institutionName,
   userName,
-  locale: _locale,
+  locale,
   currency,
   isLoading,
   isError,
@@ -58,7 +58,7 @@ export function DealerDashboardView({
     institutionName.toLowerCase().includes("demo") ||
     institutionName.toLowerCase().includes("nadakki");
 
-  const pipelineLabel = formatDealerMoney(String(pipelineAmount), currency);
+  const pipelineLabel = formatDealerMoney(String(pipelineAmount), currency, locale);
 
   return (
     <div data-testid="dealer-command-center" className="min-w-0 pb-8">
@@ -76,6 +76,7 @@ export function DealerDashboardView({
           summary={summary}
           pipelineAmount={pipelineAmount}
           currency={currency}
+          locale={locale}
           weekCount={weekCount}
           banks={banksQuery.data?.banks}
         />
@@ -90,7 +91,7 @@ export function DealerDashboardView({
       <hr className="ch-section-break" aria-hidden />
 
       <CHPanelBoundary label="Comparador de ofertas">
-        <OfferComparatorSpotlight applications={applications} currency={currency} />
+        <OfferComparatorSpotlight applications={applications} currency={currency} locale={locale} />
       </CHPanelBoundary>
 
       <hr className="ch-section-break" aria-hidden />

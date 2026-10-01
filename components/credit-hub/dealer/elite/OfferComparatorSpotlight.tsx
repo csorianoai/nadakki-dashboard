@@ -6,7 +6,7 @@ import { Car } from "lucide-react";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import { useApplicationOffers } from "@/lib/credit-hub/hooks/useApplicationOffers";
 import { humanizeApplicant, shortFolio } from "@/lib/credit-hub/honesty/humanize-applicant";
-import { dealerDetailHref } from "@/lib/credit-hub/dealer/dealerFormat";
+import { dealerDetailHref, simboloDeMoneda } from "@/lib/credit-hub/dealer/dealerFormat";
 import { OfferComparisonCard, computeOfferSavingsNote, offerTruthLevel } from "@/components/credit-hub/elite/OfferComparisonCard";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 
@@ -27,7 +27,16 @@ function bestOfferId(offers: { id: string; interest_rate_apr: number | null; mon
   return sorted[0]?.id ?? null;
 }
 
-export function OfferComparatorSpotlight({ applications, currency }: { applications: CreditApplication[]; currency: string }) {
+export function OfferComparatorSpotlight({
+  applications,
+  currency,
+  locale = "es",
+}: {
+  applications: CreditApplication[];
+  /** Moneda del tenant. `null` cuando el branding no la trae. */
+  currency: string | null;
+  locale?: string;
+}) {
   const candidates = useMemo(() => appsWithOffersPotential(applications), [applications]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const target = useMemo(() => {
@@ -40,7 +49,9 @@ export function OfferComparatorSpotlight({ applications, currency }: { applicati
   if (!candidates.length) return null;
 
   const h = humanizeApplicant(target!, currency);
-  const currencyPrefix = currency === "DOP" ? "RD$" : "MX$";
+  // El prefijo lo da Intl desde el codigo del tenant. Antes era una tabla a
+  // mano cuyo caso por defecto era "MX$": un tenant AR veia pesos mexicanos.
+  const currencyPrefix = simboloDeMoneda(currency, locale);
   const bestId = bestOfferId(offers);
   const savingsNote = computeOfferSavingsNote(offers, bestId, currencyPrefix);
   const detailHref = dealerDetailHref(target!.application_id);

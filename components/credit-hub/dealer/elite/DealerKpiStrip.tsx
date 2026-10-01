@@ -16,12 +16,7 @@ import type { CreditStats } from "@/lib/credit-hub/types/creditCore";
 import type { DashboardSummaryPayload } from "@/lib/credit-hub/types/analytics";
 import type { BankRankingRow } from "@/lib/credit-hub/types/analytics";
 import { activePipelineCountFromStats } from "@/lib/credit-hub/dealer/dealer-pipeline-metrics";
-
-function formatCompactMoney(amount: number, currency: string): string {
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M`;
-  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K`;
-  return String(Math.round(amount));
-}
+import { formatDealerMoney } from "@/lib/credit-hub/dealer/dealerFormat";
 
 function avgAprFromBanks(banks: BankRankingRow[] | undefined): string {
   if (!banks?.length) return "—";
@@ -44,13 +39,16 @@ export function DealerKpiStrip({
   summary,
   pipelineAmount,
   currency,
+  locale = "es",
   weekCount,
   banks,
 }: {
   stats?: CreditStats;
   summary?: DashboardSummaryPayload;
   pipelineAmount: number;
-  currency: string;
+  /** Moneda del tenant. `null` cuando el branding no la trae: sin moneda, sin importe. */
+  currency: string | null;
+  locale?: string;
   weekCount: number;
   banks?: BankRankingRow[];
 }) {
@@ -117,8 +115,10 @@ export function DealerKpiStrip({
       },
       {
         label: "Monto en pipeline",
-        value: formatCompactMoney(pipelineAmount, currency),
-        unit: currency === "DOP" ? "RD$" : currency,
+        // La moneda ya va DENTRO del importe formateado por Intl; no hay `unit`
+        // con un simbolo escrito a mano. Se pierde la notacion compacta (1,2M)
+        // a cambio de que la moneda sea la del tenant.
+        value: formatDealerMoney(pipelineAmount, currency, locale),
         truth: "REAL" as const,
         delta: { direction: "up" as const, label: "en evaluación" },
         icon: Banknote,
@@ -145,7 +145,7 @@ export function DealerKpiStrip({
         trendColor: "var(--ch-info)",
       },
     ],
-    [active, submitted, offersTotal, approvalPct, banks, pipelineAmount, currency, weekCount, summary, closeRate],
+    [active, submitted, offersTotal, approvalPct, banks, pipelineAmount, currency, locale, weekCount, summary, closeRate],
   );
 
   return (
