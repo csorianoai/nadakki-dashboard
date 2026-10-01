@@ -1,3 +1,4 @@
+import { ACCESS_UNVERIFIED_MESSAGE, isAccessUnverified } from "@/lib/access/reason-codes";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -97,39 +98,71 @@ function hasCoreAccess(
   allRoles: { core_name: string }[],
   subscribed: string[] | undefined,
 ): boolean {
-  const roleHit = allRoles.some((r) => core.coreMatchers.includes(r.core_name));
-  if (roleHit) return true;
-
-  const hasSubscriptionList = subscribed && subscribed.length > 0;
-  const subHit = (subscribed ?? []).some((c) => core.coreMatchers.includes(c));
-  if (!hasSubscriptionList) return true;
-  return subHit;
+  // Fail-closed, y el ROL NO abre el core.
+  //
+  // Dos ramas permisivas, no una. La primera, `if (!hasSubscriptionList) return
+  // true`, concedia todos los hubs cuando `subscribed_cores` venia vacia; esta
+  // documentada como "permissive" en SIDEBAR_NAV_MAP.md y es la que produjo el
+  // hallazgo de cajamapaal: un usuario de caja viendo todos los cores. La
+  // segunda, `if (roleHit) return true`, dejaba que un rol que nombra un core
+  // pintara el hub aunque el tenant no lo tuviera suscrito. Quitar solo la
+  // primera deja el frontend concediendo igual, por el otro camino.
+  //
+  // La unica autoridad es el entitlement del tenant: el core tiene que estar en
+  // `subscribed_cores`. El rol restringe DENTRO de un core ya habilitado, no lo
+  // habilita. Los administradores conservan su bypass explicito en
+  // `userSeesAllForgeHubSections`, que `filterSectionsForUser` evalua ANTES de
+  // llamar aqui, asi que no dependen de esta rama.
+  //
+  // `allRoles` se conserva en la firma porque los llamadores la pasan y porque
+  // el rol volvera a usarse cuando filtre dentro del core; aqui no concede.
+  void allRoles;
+  return (subscribed ?? []).some((c) => core.coreMatchers.includes(c));
 }
 
-export type EmptyCoreReason = "plan" | "role";
+export { ACCESS_UNVERIFIED_MESSAGE, isAccessUnverified } from "@/lib/access/reason-codes";
 
-/** Why a core has no visible sub-items after RBAC filtering. */
+
+export type EmptyCoreReason = "plan" | "role" | "unverified";
+
+/**
+ * Why a core has no visible sub-items after RBAC filtering.
+ *
+ * `accessReasonCode` gana a todo lo demas: si el acceso no se pudo verificar, no
+ * se sabe si el core esta en el plan, asi que decir "no disponible en tu plan"
+ * seria una afirmacion que nadie ha medido.
+ */
 export function getEmptyCoreReason(
   section: NavSection,
   allRoles: RoleInfo[],
   subscribed: string[] | undefined,
   showAdmin: boolean,
+  accessReasonCode?: string | null,
 ): EmptyCoreReason {
+  if (isAccessUnverified(accessReasonCode)) {
+    return "unverified";
+  }
   if (section.id === "admin") {
     return "role";
   }
 
-  const roleHit = allRoles.some((r) => section.coreMatchers.includes(r.core_name));
-  const hasSubscriptionList = Boolean(subscribed && subscribed.length > 0);
   const subHit = (subscribed ?? []).some((c) => section.coreMatchers.includes(c));
 
-  if (hasSubscriptionList && !subHit && !roleHit) {
+  // Sin el core en `subscribed_cores` el motivo es el plan, tambien cuando la
+  // lista viene vacia y tambien cuando el usuario tiene el rol del core: desde
+  // que el rol ya no habilita, tener el rol y no la suscripcion sigue siendo un
+  // problema de plan. Decir "no tienes permisos" mandaria al usuario a pedir un
+  // rol que no arregla nada.
+  if (!subHit) {
     return "plan";
   }
   return "role";
 }
 
 export function getEmptyCoreMessage(reason: EmptyCoreReason): string {
+  if (reason === "unverified") {
+    return `${ACCESS_UNVERIFIED_MESSAGE}. No es que no tengas el módulo: no se pudo comprobar. Reintentá o avisá a soporte.`;
+  }
   if (reason === "plan") {
     return "Módulo no disponible en tu plan. Contacta a tu administrador para upgrade.";
   }
