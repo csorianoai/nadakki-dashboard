@@ -20,13 +20,19 @@ const FILTERS = [
 
 type FilterId = (typeof FILTERS)[number]["id"];
 
+/**
+ * `currency` no tiene valor por defecto. Antes caia a "MXN", asi que una pantalla
+ * sin moneda declarada publicaba importes en pesos mexicanos: una cifra con la
+ * moneda equivocada, que es peor que una cifra que falta. Sin moneda,
+ * `formatDealerMoney` devuelve em dash.
+ */
 export function DealerApplicationsListView({
   applications,
-  currency = "MXN",
+  currency = null,
   isLoading,
   isError,
   onRetry,
-}: DealerApplicationsListViewProps & { currency?: string }) {
+}: DealerApplicationsListViewProps & { currency?: string | null }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
 
