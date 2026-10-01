@@ -1,6 +1,6 @@
 import type { CreditApplication, CreditEvent } from "@/lib/credit-hub/types/creditCore";
 import type { DealerNotificationItem } from "@/lib/credit-hub/types/dealer-views";
-import { chMoneyExact } from "@/lib/credit-hub/ch-base";
+import { formateaMoneda } from "@/lib/dealer-management/formato";
 
 export const DEALER_NAV_ROUTES: Record<string, string> = {
   inicio: "/credit-hub/dealer",
@@ -85,22 +85,31 @@ export function parseRequestedAmount(value: string | number | null | undefined):
   return 0;
 }
 
-export function dealerCurrencyPrefix(currencyCode: string | null | undefined): string {
-  const code = currencyCode?.trim().toUpperCase();
-  if (!code || code === "DOP") return "RD$";
-  if (code === "MXN") return "MX$";
-  return `${code} `;
-}
-
-/** Formats dealer-facing amounts; null/undefined/zero → em dash. */
+/**
+ * Importes del dealer con la moneda del TENANT; sin moneda, sin importe.
+ *
+ * Antes habia una tabla de simbolos escrita a mano cuyo caso por defecto era
+ * "RD$": `dealerCurrencyPrefix(null)` devolvia RD$, y tambien lo devolvia para
+ * DOP, que es el valor con el que `getDefaultTenantBankingConfig` rellena
+ * `currency_code` mientras el branding no ha llegado. Medido en produccion con
+ * cajamapaal: el cockpit de Dealer-Bank mostraba RD$ en un tenant argentino.
+ *
+ * Ahora el simbolo lo pone `Intl` a partir del codigo ISO real, via
+ * `formateaMoneda` (#517), y la ausencia de moneda devuelve el mismo em dash
+ * que ya devolvia un importe ausente. Un numero sin moneda no se pinta: una
+ * cifra con la moneda equivocada es peor que una cifra que falta.
+ */
 export function formatDealerMoney(
   amount: string | number | null | undefined,
   currencyCode: string | null | undefined,
+  locale = "es",
 ): string {
   if (amount == null || amount === "") return "—";
   const n = parseRequestedAmount(amount);
   if (!Number.isFinite(n) || n <= 0) return "—";
-  return chMoneyExact(n, dealerCurrencyPrefix(currencyCode));
+  const currency = currencyCode?.trim().toUpperCase() || null;
+  if (!currency) return "—";
+  return formateaMoneda(n, { locale, currency });
 }
 
 const READ_KEY = "nadakki_dealer_notifications_read_v1";
@@ -168,7 +177,11 @@ export function isActivePipelineStatus(status: string): boolean {
   );
 }
 
-export function volumeThisMonth(applications: CreditApplication[], currency: string): string {
+export function volumeThisMonth(
+  applications: CreditApplication[],
+  currency: string | null | undefined,
+  locale = "es",
+): string {
   const now = new Date();
   const y = now.getFullYear();
   const m = now.getMonth();
@@ -179,5 +192,5 @@ export function volumeThisMonth(applications: CreditApplication[], currency: str
       sum += parseRequestedAmount(app.requested_amount);
     }
   }
-  return chMoneyExact(sum, dealerCurrencyPrefix(currency));
+  return formatDealerMoney(sum, currency, locale);
 }
