@@ -16,6 +16,7 @@
 
 import {
   BarChart3,
+  BookOpen,
   Building2,
   Cable,
   Car,
@@ -25,7 +26,9 @@ import {
   Landmark,
   Megaphone,
   PackagePlus,
+  ListTree,
   ReceiptText,
+  Scale,
   Users,
   Wallet,
   type LucideIcon,
@@ -62,6 +65,9 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     items: [
       { href: "/autos/dealer/finanzas", label: "Finanzas por vehículo", icon: Wallet, capability: "autos.inventory.list" },
       { href: "/contable", label: "Contabilidad", icon: ReceiptText, capability: "accounting.ledger.entries" },
+      { href: "/contable/plan-cuentas", label: "Plan de cuentas", icon: ListTree, capability: "accounting.ledger.entries" },
+      { href: "/contable/libro-mayor", label: "Libro mayor", icon: BookOpen, capability: "accounting.ledger.entries" },
+      { href: "/contable/balance-comprobacion", label: "Balance", icon: Scale, capability: "accounting.reports.financial" },
       { href: "/contable/estado-resultados", label: "Estados financieros", icon: FileText, capability: "accounting.reports.financial" },
     ],
   },
