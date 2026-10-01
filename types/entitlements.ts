@@ -13,7 +13,16 @@ export type EntitlementReasonCode =
   | "ADD_ON_REQUIRED"
   | "PROVIDER_ACTIVATION_REQUIRED"
   | "TARGET_CORE_NOT_READY"
-  | "NO_ORGANIZATION_UNIT"
+  /**
+   * Tal como los ENVIA el backend: en minusculas.
+   * `services/access/entitlements.py:65-66` los declara
+   * `NO_ORGANIZATION_UNIT = "no_organization_unit"` y
+   * `NO_BENEFICIARY_ENTITLEMENT = "no_beneficiary_entitlement"`. Estaban aqui en
+   * MAYUSCULAS, asi que `REASON_CODE_INFO[reason_code]` devolvia undefined y la UI
+   * caia a mostrar el codigo crudo.
+   */
+  | "no_organization_unit"
+  | "no_beneficiary_entitlement"
   | "FEATURE_NOT_RELEASED"
   | "ROLE_NOT_ALLOWED"
   | "DEFAULT_DENY";
@@ -29,7 +38,8 @@ export const ENTITLEMENT_REASON_CODES: EntitlementReasonCode[] = [
   "ADD_ON_REQUIRED",
   "PROVIDER_ACTIVATION_REQUIRED",
   "TARGET_CORE_NOT_READY",
-  "NO_ORGANIZATION_UNIT",
+  "no_organization_unit",
+  "no_beneficiary_entitlement",
   "FEATURE_NOT_RELEASED",
   "ROLE_NOT_ALLOWED",
   "DEFAULT_DENY",
@@ -154,11 +164,22 @@ export const REASON_CODE_INFO: Record<string, ReasonCodeInfo> = {
     user_friendly_message: "This feature is coming soon.",
     icon: "clock",
   },
-  NO_ORGANIZATION_UNIT: {
-    code: "NO_ORGANIZATION_UNIT",
-    title: "Organization Unit Required",
-    description: "This action needs an organization unit on the tenant.",
-    user_friendly_message: "Assign an organization unit before continuing.",
+  no_organization_unit: {
+    code: "no_organization_unit",
+    title: "No se pudieron verificar tus accesos",
+    description:
+      "El motor de acceso no pudo resolver la unidad organizativa, así que no llegó a evaluar tus permisos.",
+    user_friendly_message:
+      "No se pudieron verificar tus accesos. No es que te falte el módulo: no se pudo comprobar.",
+    action_required: "contact_admin",
+    icon: "alert",
+  },
+  no_beneficiary_entitlement: {
+    code: "no_beneficiary_entitlement",
+    title: "No se pudieron verificar tus accesos",
+    description: "La unidad organizativa no tiene habilitación vigente para esta capability.",
+    user_friendly_message:
+      "No se pudieron verificar tus accesos. No es que te falte el módulo: no se pudo comprobar.",
     action_required: "contact_admin",
     icon: "alert",
   },

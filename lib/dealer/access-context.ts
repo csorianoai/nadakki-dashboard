@@ -45,7 +45,7 @@ export type DealerAccessResolution =
     }
   | {
       status: "no_organization_unit";
-      reason_code: "NO_ORGANIZATION_UNIT";
+      reason_code: "no_organization_unit";
       tenantId: string;
       dealerId: string;
       organizationUnitId: null;
@@ -220,7 +220,10 @@ export function resolveDealerAccessContext(): DealerAccessResolution {
   if (!organizationUnitId) {
     return {
       status: "no_organization_unit",
-      reason_code: "NO_ORGANIZATION_UNIT",
+      // Mismo codigo que emite el backend (entitlements.py:66). Dos ortografias
+      // para una sola condicion dejaban a `REASON_CODE_INFO` sin copia en una de
+      // las dos.
+      reason_code: "no_organization_unit",
       tenantId,
       dealerId,
       organizationUnitId: null,
