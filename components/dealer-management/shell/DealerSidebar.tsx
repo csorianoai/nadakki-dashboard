@@ -5,12 +5,22 @@ import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import { cn } from "@/lib/utils";
+import {
+  ACCESS_UNVERIFIED_DETAIL,
+  ACCESS_UNVERIFIED_MESSAGE,
+} from "@/lib/access/reason-codes";
 import { isDealerNavItemActive, type DealerNavGroup, type DealerNavItem } from "./dealer-nav";
 
 export type DealerSidebarProps = {
   /** Grupos ya filtrados por entitlements en el shell. */
   groups: DealerNavGroup[];
   loading: boolean;
+  /**
+   * Reason code cuando el acceso NO se pudo verificar. Con esto el menu vacio
+   * deja de ser mudo: no es lo mismo "tu plan no incluye nada" que "no pudimos
+   * comprobarlo".
+   */
+  unverifiedReason?: string | null;
   mobileOpen: boolean;
   onClose: () => void;
 };
@@ -62,7 +72,13 @@ function NavLink({ item, onNavigate }: { item: DealerNavItem; onNavigate: () => 
  * shell y llega ya resuelto en `groups`. Fuera del plan => el modulo no aparece
  * en el menu (avisos, seccion 1).
  */
-export function DealerSidebar({ groups, loading, mobileOpen, onClose }: DealerSidebarProps) {
+export function DealerSidebar({
+  groups,
+  loading,
+  unverifiedReason = null,
+  mobileOpen,
+  onClose,
+}: DealerSidebarProps) {
   const branding = useDealerManagementBranding();
 
   // Fallback "Nadakki" mientras carga la marca (pedido BRANDING-PRELOGIN-01).
@@ -114,6 +130,19 @@ export function DealerSidebar({ groups, loading, mobileOpen, onClose }: DealerSi
             <NavSkeleton />
           ) : (
             <nav className="space-y-6 px-3 py-4" aria-label="Navegación del dealer">
+              {unverifiedReason ? (
+                <div
+                  role="alert"
+                  data-testid="dealer-acceso-no-verificado"
+                  data-reason-code={unverifiedReason}
+                  className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3"
+                >
+                  <p className="text-xs font-semibold text-amber-200">{ACCESS_UNVERIFIED_MESSAGE}</p>
+                  <p className="mt-1 text-[11px] leading-snug text-amber-200/80">
+                    {ACCESS_UNVERIFIED_DETAIL}
+                  </p>
+                </div>
+              ) : null}
               {groups.map((group) => (
                 <div key={group.id} className="space-y-1">
                   <h2 className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nav-fg-muted)]">

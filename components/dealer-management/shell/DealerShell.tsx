@@ -4,7 +4,12 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { useQuery } from "@tanstack/react-query";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
-import { ACCESS_UNVERIFIED_MESSAGE, isAccessUnverified } from "@/lib/access/reason-codes";
+import { AccessApiError } from "@/lib/access/client";
+import {
+  ACCESS_UNVERIFIED_MESSAGE,
+  isAccessUnverified,
+  unverifiedReasonFromBatch,
+} from "@/lib/access/reason-codes";
 import { syncDealerContextFromBackend } from "@/lib/dealer/dealer-context-api";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { DEALER_NAV_CAPABILITY_KEYS, DEALER_NAV_GROUPS } from "./dealer-nav";
@@ -91,6 +96,25 @@ export function DealerShell({ children }: { children: ReactNode }) {
   const failClosed = isAccessQueryFailClosed(query);
   const loading = query.isPending || query.isLoading;
   const results = query.data?.results;
+
+  /**
+   * Fail-closed sin explicacion es peor que un 404.
+   *
+   * Cuando `failClosed` entra, `allows` devuelve false para todo, `groups` queda
+   * en [] y el sidebar pintaba un <nav> vacio. Un dealer no puede distinguir eso
+   * de "tu plan no incluye nada", y hoy el caso REAL de Mapaal es el primero: el
+   * backend no recibe la unidad organizativa y el motor deniega cerrado con
+   * `no_organization_unit` (services/access/entitlements.py:330-339).
+   *
+   * El codigo llega POR CAPABILITY dentro de un 200, no como error HTTP, asi que
+   * se buscan los items. El 403 se mira aparte porque ahi si viene en el error.
+   */
+  const unverifiedReason = useMemo(() => {
+    if (query.error instanceof AccessApiError && isAccessUnverified(query.error.reason_code)) {
+      return query.error.reason_code;
+    }
+    return unverifiedReasonFromBatch(results);
+  }, [query.error, results]);
 
   /** El frontend restringe: sin permiso explicito, no se pinta. */
   const allows = useCallback(
@@ -200,6 +224,7 @@ export function DealerShell({ children }: { children: ReactNode }) {
       <DealerSidebar
         groups={groups}
         loading={loading}
+        unverifiedReason={unverifiedReason}
         mobileOpen={mobileNav}
         onClose={() => setMobileNav(false)}
       />
