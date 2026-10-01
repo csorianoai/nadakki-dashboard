@@ -1,25 +1,32 @@
 /**
- * Alta y edicion manual de vehiculos (DASH-VEHICLE-MANUAL-01).
+ * Alta manual de vehiculo (DASH-VEHICLE-MANUAL-CONTRACT-01).
  *
- * El contrato publicado solo acepta los campos de `VehicleCreateRequest` y
- * `VehiclePatchRequest`. Todo campo que la ficha pide y el contrato no expone
- * se declara aqui como PROXIMAMENTE y NO se serializa: un extra inventado no
- * crea el dato, lo pierde en silencio y deja al usuario creyendo que lo guardo.
+ * Solo ALTA. La edicion --PATCH material y transicion de `status`-- sale en su
+ * propio packet: juntarlas pasaba el limite GR-12 de 500 lineas, y son dos vias
+ * distintas del contrato.
  *
- * Precio: el contrato sigue llamando `price_rd` / `price_usd`, con la moneda
- * incrustada en el nombre. Hasta que P-B renombre a moneda funcional, los dos
- * precios se pintan deshabilitados y este modulo nunca los envia.
+ * Solo se serializa lo que acepta `VehicleCreateRequest`. Lo que la ficha pide y
+ * el backend no expone se declara PROXIMAMENTE y NO se envia: un extra inventado
+ * no crea el dato, lo pierde en silencio.
  *
- * El frontend NO concede. La capability firmada del PATCH es
- * `inventory.vehicle.update` en el backend; aqui solo se pide la clave del
- * catalogo 097 para decidir que se PINTA, y la autoridad es la respuesta HTTP.
+ * Los dos precios estan en ese grupo. Sus columnas --`price_amount`/
+ * `price_currency` para el OFICIAL, `display_price_amount`/
+ * `display_price_currency` para la referencia-- llegan con
+ * VEHICLE-PRICE-PLATE-01 (backend #1511, P-A; plantilla_spec.py:168-172); hoy el
+ * contrato aun los llama `price_rd`/`price_usd`, con la moneda en el nombre.
+ *
+ * Ninguna moneda de precio se escribe a mano: las dos entran por parametro desde
+ * `legal_entities.functional_currency` y `display_price_currency`, y si faltan la
+ * UI dice que falta el dato en vez de elegir una.
+ *
+ * El frontend NO concede: la clave 097 decide que se PINTA, la autoridad es HTTP.
  */
 
 import { accessApiErrorFromHttp } from "@/lib/access/client";
 import { apiFetch } from "@/lib/api/fetch-client";
 import type { DealerAccessContext } from "@/lib/dealer/access-context";
 
-/** Clave 097 de escritura de inventario. No existe clave 097 de solo-edicion. */
+/** Clave 097 de escritura de inventario. */
 export const VEHICLE_WRITE_CAPABILITY = "autos.inventory.create";
 
 /** Estado inicial que fija el backend al crear: no se envia, se informa. */
@@ -87,26 +94,34 @@ export const VEHICLE_PENDING_FIELDS = [
 
 export const PENDING_FIELD_NOTE = "Próximamente";
 
+export type VehiclePriceField = { name: string; label: string; ayuda: string };
+
+/** Etiqueta "(CODIGO)" solo si el backend aporto el codigo; nunca inventada. */
+function conMoneda(base: string, currency: string | null, falta: string): string {
+  const code = currency?.trim().toUpperCase();
+  return code ? `${base} (${code})` : `${base} (${falta})`;
+}
+
 /**
- * Los dos precios, con la moneda resuelta por el tenant y nunca escrita a mano.
- * `currency` llega de `localeDeTenant`; sin moneda el label dice que falta en
- * vez de inventar una.
+ * Los dos precios. `functionalCurrency` es `legal_entities.functional_currency`
+ * y `displayCurrency` es `display_price_currency`; sin codigo la etiqueta dice
+ * que falta el dato. La referencia es informativa: no entra en el payload
+ * contable ni altera el precio oficial.
  */
-export function vehiclePriceFields(currency: string | null): {
-  name: string;
-  label: string;
-  ayuda: string;
-}[] {
+export function vehiclePriceFields(
+  functionalCurrency: string | null,
+  displayCurrency: string | null,
+): VehiclePriceField[] {
   return [
     {
-      name: "price_functional",
-      label: currency ? `Precio (${currency})` : "Precio (moneda funcional del tenant)",
+      name: "price_official",
+      label: conMoneda("Precio", functionalCurrency, "moneda funcional del tenant"),
       ayuda: "Precio oficial. Obligatorio para pasar a DISPONIBLE; la contabilidad usa solo este.",
     },
     {
-      name: "price_reference_usd",
-      label: "Precio de referencia (US$)",
-      ayuda: "Solo se muestra en la publicación; la contabilidad usa el precio en pesos.",
+      name: "price_reference",
+      label: conMoneda("Precio de referencia", displayCurrency, "moneda de referencia del tenant"),
+      ayuda: "Solo se muestra en la publicación; la contabilidad usa el precio oficial.",
     },
   ];
 }
@@ -198,78 +213,6 @@ export function vehicleCreatePayload(form: VehicleManualForm): Record<string, un
   return payload;
 }
 
-/** Campos materiales que el PATCH publicado acepta. El resto no es editable. */
-export const VEHICLE_PATCHABLE_FIELDS = [
-  "description",
-  "mileage_km",
-  "province",
-  "municipality",
-] as const;
-
-export type VehiclePatchableField = (typeof VEHICLE_PATCHABLE_FIELDS)[number];
-
-/**
- * PATCH material. `status` viaja por su propia via: el contrato prohibe
- * combinarlo con campos materiales bajo una sola Idempotency-Key.
- */
-export function vehiclePatchPayload(form: VehicleManualForm): Record<string, unknown> {
-  const payload: Record<string, unknown> = {};
-  for (const name of VEHICLE_PATCHABLE_FIELDS) {
-    const value = optionalText(form[name]);
-    if (value === null) continue;
-    payload[name] = name === "mileage_km" ? Number(value) : value;
-  }
-  return payload;
-}
-
-export function vehicleStatusPayload(status: string): Record<string, unknown> {
-  return { status };
-}
-
-/**
- * DISPONIBLE exige precio oficial. Mientras P-B no renombre el precio a moneda
- * funcional el formulario no puede capturarlo, asi que esta via queda cerrada y
- * se dice por que, en vez de ofrecer un boton que el backend va a rechazar.
- */
-export function motivoBloqueoDisponible(precioOficial: number | null): string | null {
-  if (precioOficial === null) return "FALTA_PRECIO_OFICIAL";
-  if (!Number.isFinite(precioOficial) || precioOficial <= 0) return "PRECIO_NO_VALIDO";
-  return null;
-}
-
-function writeUrl(context: DealerAccessContext, vehicleId?: string): string {
-  const tenant = encodeURIComponent(context.tenantId);
-  const dealer = encodeURIComponent(context.dealerId);
-  const base = `/api/v1/autos/tenants/${tenant}/dealers/${dealer}/vehicles`;
-  return vehicleId ? `${base}/${encodeURIComponent(vehicleId)}` : base;
-}
-
-async function writeJson(
-  path: string,
-  method: "POST" | "PATCH",
-  context: DealerAccessContext,
-  body: unknown,
-  idempotencyKey?: string,
-): Promise<unknown> {
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-    "X-Tenant-ID": context.tenantId,
-    "X-Dealer-ID": context.dealerId,
-    "X-Organization-Unit-ID": context.organizationUnitId,
-  };
-  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
-  const response = await apiFetch(path, { method, headers, body: JSON.stringify(body) });
-  let parsed: unknown = null;
-  try {
-    parsed = await response.json();
-  } catch {
-    parsed = null;
-  }
-  if (!response.ok) throw accessApiErrorFromHttp(response.status, parsed, path);
-  return parsed;
-}
-
 export function vehicleIdFrom(body: unknown): string | null {
   if (!body || typeof body !== "object" || Array.isArray(body)) return null;
   const rec = body as Record<string, unknown>;
@@ -285,35 +228,28 @@ export async function createVehicleManual(
   form: VehicleManualForm,
   idempotencyKey?: string,
 ): Promise<unknown> {
-  return writeJson(writeUrl(context), "POST", context, vehicleCreatePayload(form), idempotencyKey);
-}
-
-export async function patchVehicleManual(
-  context: DealerAccessContext,
-  vehicleId: string,
-  form: VehicleManualForm,
-  idempotencyKey?: string,
-): Promise<unknown> {
-  return writeJson(
-    writeUrl(context, vehicleId),
-    "PATCH",
-    context,
-    vehiclePatchPayload(form),
-    idempotencyKey,
-  );
-}
-
-export async function patchVehicleStatus(
-  context: DealerAccessContext,
-  vehicleId: string,
-  status: string,
-  idempotencyKey?: string,
-): Promise<unknown> {
-  return writeJson(
-    writeUrl(context, vehicleId),
-    "PATCH",
-    context,
-    vehicleStatusPayload(status),
-    idempotencyKey,
-  );
+  const tenant = encodeURIComponent(context.tenantId);
+  const dealer = encodeURIComponent(context.dealerId);
+  const path = `/api/v1/autos/tenants/${tenant}/dealers/${dealer}/vehicles`;
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-Tenant-ID": context.tenantId,
+    "X-Dealer-ID": context.dealerId,
+    "X-Organization-Unit-ID": context.organizationUnitId,
+  };
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+  const response = await apiFetch(path, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(vehicleCreatePayload(form)),
+  });
+  let parsed: unknown = null;
+  try {
+    parsed = await response.json();
+  } catch {
+    parsed = null;
+  }
+  if (!response.ok) throw accessApiErrorFromHttp(response.status, parsed, path);
+  return parsed;
 }
