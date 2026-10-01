@@ -11,11 +11,18 @@ import {
 } from "@/app/hooks/contable";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
+import {
+  MonedaFuncionalNota,
+  formateaImporteContable,
+  useMonedaFuncional,
+} from "@/components/contable/monedaFuncional";
 import type { BalanceComprobacionReport, PeriodoContable } from "@/types/contable";
 import { cn } from "@/lib/utils";
 
 export function BalanceComprobacionClient() {
   const tenantId = useContableTenantId();
+  const moneda = useMonedaFuncional();
+  const importe = (valor: number | null | undefined) => formateaImporteContable(valor, moneda);
   const [periodos, setPeriodos] = useState<PeriodoContable[]>([]);
   const [periodoId, setPeriodoId] = useState("");
   const [report, setReport] = useState<BalanceComprobacionReport | null>(null);
@@ -62,6 +69,8 @@ export function BalanceComprobacionClient() {
         />
       </div>
 
+      <MonedaFuncionalNota locale={moneda} />
+
       {loading ? (
         <p className="text-sm text-zinc-500">Calculando balance…</p>
       ) : report ? (
@@ -92,15 +101,15 @@ export function BalanceComprobacionClient() {
                   <tr key={r.cuenta_id} className="border-b border-white/5">
                     <td className="px-4 py-2 font-mono text-xs">{r.codigo}</td>
                     <td className="px-4 py-2">{r.nombre}</td>
-                    <td className="px-4 py-2 text-right font-mono">{r.total_debe.toFixed(2)}</td>
-                    <td className="px-4 py-2 text-right font-mono">{r.total_haber.toFixed(2)}</td>
-                    <td className="px-4 py-2 text-right font-mono">{r.saldo.toFixed(2)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{importe(r.total_debe)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{importe(r.total_haber)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{importe(r.saldo)}</td>
                   </tr>
                 ))}
                 <tr className={cn("bg-white/[0.04] font-bold", report?.totals?.cuadra ? "text-emerald-200" : "text-rose-200")}>
                   <td className="px-4 py-3" colSpan={2}>TOTALES</td>
-                  <td className="px-4 py-3 text-right font-mono">{(report?.totals?.total_debe ?? 0).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right font-mono">{(report?.totals?.total_haber ?? 0).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{importe(report?.totals?.total_debe ?? 0)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{importe(report?.totals?.total_haber ?? 0)}</td>
                   <td className="px-4 py-3 text-right font-mono">—</td>
                 </tr>
               </tbody>
