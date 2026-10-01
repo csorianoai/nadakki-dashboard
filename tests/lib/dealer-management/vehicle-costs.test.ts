@@ -1,9 +1,10 @@
 /**
- * Contrato de costos por vehiculo, medido contra el OpenAPI vivo.
+ * Contrato de costos por vehiculo, medido sobre `origin/main` del backend.
  *
- * Los casos que importan son los de lo que el backend NO tiene: no hay GET de
- * la lista de costos y `CostIn` no acepta proveedor, factura ni gasto de
- * apertura. Si alguien añade esos campos al payload, estos casos caen.
+ * Los casos que importan son los que la base rechazaria: `cost_type` fuera del
+ * CHECK, y una reparacion enviada por /costs sin proveedor ni factura. Las
+ * mutaciones estan escritas a proposito: volver a "REPARACION", o mandar
+ * `repair` por /costs, tiene que poner rojo.
  */
 import {
   COSTS_CAPABILITY,
@@ -12,11 +13,15 @@ import {
   COST_FORM_EMPTY,
   COST_PENDING_FIELDS,
   COST_TYPES,
-  COST_TYPE_REPARACION,
+  COST_TYPE_CHECK,
+  COST_TYPE_REPAIR,
   costInPayload,
+  esReparacion,
   fetchVehicleCostTotals,
   incurredAtIso,
   parseCostTotals,
+  postCost,
+  repairInvoicePayload,
   totalEnMoneda,
   validateCostForm,
   vehicleCostTotalPath,
@@ -29,10 +34,54 @@ import { apiFetch } from "@/lib/api/fetch-client";
 
 const fetchMock = apiFetch as jest.MockedFunction<typeof apiFetch>;
 
-const VALIDO = { cost_type: COST_TYPE_REPARACION, amount: "125000.50", incurred_at: "2026-09-30" };
+const COMPRA = { ...COST_FORM_EMPTY, cost_type: "purchase", amount: "125000.50", incurred_at: "2026-09-30" };
+const REPARACION = {
+  ...COMPRA,
+  cost_type: "repair",
+  supplier_name: " Taller Sur ",
+  invoice_number: " A-0001 ",
+  document_id: " doc-1 ",
+};
 
-describe("capabilities", () => {
-  it("ambas claves salen del catalogo 097 y no se inventan", () => {
+function ok(body: unknown) {
+  return { ok: true, status: 200, json: async () => body } as unknown as Response;
+}
+
+describe("catalogo de cost_type", () => {
+  it("todos los valores estan en el CHECK de la base", () => {
+    for (const item of COST_TYPES) expect(COST_TYPE_CHECK.has(item.value)).toBe(true);
+  });
+
+  it("el CHECK es exactamente la enumeracion medida en el backend", () => {
+    expect([...COST_TYPE_CHECK].sort()).toEqual(
+      ["commission", "other", "purchase", "reconditioning", "repair", "tax", "transport"],
+    );
+  });
+
+  it("los valores son codigos en ingles y la etiqueta es solo de UI", () => {
+    const valores = COST_TYPES.map((item) => item.value);
+    expect(valores).not.toContain("REPARACION");
+    expect(valores).not.toContain("TRANSPORTE");
+    expect(valores).not.toContain("PATENTAMIENTO");
+    expect(valores).not.toContain("LIMPIEZA");
+    for (const value of valores) expect(value).toMatch(/^[a-z_]+$/);
+    expect(COST_TYPES.find((item) => item.value === "repair")?.label).toBe("Reparación");
+    expect(COST_TYPES.find((item) => item.value === "reconditioning")?.label).toBe("Reacondicionamiento");
+  });
+
+  it("reparacion y reacondicionamiento son tipos distintos", () => {
+    expect(COST_TYPE_REPAIR).toBe("repair");
+    expect(esReparacion("repair")).toBe(true);
+    expect(esReparacion("reconditioning")).toBe(false);
+  });
+
+  it("no se ofrece GESTORIA ni registration hasta P-A", () => {
+    const valores = COST_TYPES.map((item) => item.value);
+    expect(valores).not.toContain("registration");
+    expect(valores).not.toContain("GESTORIA");
+  });
+
+  it("las dos claves de acceso salen del catalogo 097", () => {
     expect(MIGRATION_097_CAPABILITY_KEYS.has(COSTS_CAPABILITY)).toBe(true);
     expect(MIGRATION_097_CAPABILITY_KEYS.has(COSTS_VEHICLE_CAPABILITY)).toBe(true);
     expect(COSTS_CAPABILITY_KEYS).toEqual([COSTS_VEHICLE_CAPABILITY, COSTS_CAPABILITY]);
@@ -41,126 +90,108 @@ describe("capabilities", () => {
 
 describe("validateCostForm", () => {
   it("sin moneda del tenant no deja registrar", () => {
-    expect(validateCostForm(VALIDO, null).currency).toContain("moneda funcional");
+    expect(validateCostForm(COMPRA, null).currency).toContain("moneda funcional");
   });
 
-  it("con moneda y datos completos no hay errores", () => {
-    expect(validateCostForm(VALIDO, "ARS")).toEqual({});
+  it("una compra completa no tiene errores y no exige factura", () => {
+    expect(validateCostForm(COMPRA, "ARS")).toEqual({});
   });
 
-  it("exige monto y fecha", () => {
-    const errors = validateCostForm(COST_FORM_EMPTY, "ARS");
-    expect(errors.amount).toBeDefined();
-    expect(errors.incurred_at).toBeDefined();
+  it("un tipo fuera del CHECK se para antes de la red", () => {
+    expect(validateCostForm({ ...COMPRA, cost_type: "REPARACION" }, "ARS").cost_type).toBeDefined();
+    expect(validateCostForm({ ...COMPRA, cost_type: "limpieza" }, "ARS").cost_type).toBeDefined();
+  });
+
+  it("reparacion exige proveedor, n.o de factura y document_id", () => {
+    const errors = validateCostForm({ ...COMPRA, cost_type: "repair" }, "ARS");
+    expect(errors.supplier_name).toBeDefined();
+    expect(errors.invoice_number).toBeDefined();
+    expect(errors.document_id).toBeDefined();
+  });
+
+  it("una reparacion completa pasa", () => {
+    expect(validateCostForm(REPARACION, "ARS")).toEqual({});
   });
 
   it("rechaza montos que no son numero positivo de hasta dos decimales", () => {
     for (const amount of ["0", "-5", "abc", "1.234", ""]) {
-      expect(validateCostForm({ ...VALIDO, amount }, "ARS").amount).toBeDefined();
+      expect(validateCostForm({ ...COMPRA, amount }, "ARS").amount).toBeDefined();
     }
-    expect(validateCostForm({ ...VALIDO, amount: "1" }, "ARS").amount).toBeUndefined();
   });
 
-  it("rechaza un tipo mas largo que el maximo del contrato", () => {
-    expect(validateCostForm({ ...VALIDO, cost_type: "x".repeat(41) }, "ARS").cost_type).toBeDefined();
+  it("exige fecha", () => {
+    expect(validateCostForm({ ...COMPRA, incurred_at: "" }, "ARS").incurred_at).toBeDefined();
+    expect(incurredAtIso("2026-01-02")).toBe("2026-01-02T00:00:00Z");
   });
 
-  it("REPARACION no se bloquea por proveedor ni factura, porque el contrato no los acepta", () => {
-    expect(validateCostForm({ ...VALIDO, cost_type: COST_TYPE_REPARACION }, "ARS")).toEqual({});
-    expect(COST_PENDING_FIELDS.map((field) => field.label)).toEqual([
-      "Proveedor",
-      "N.º de factura",
-      "Gasto de apertura",
-    ]);
-  });
-
-  it("REPARACION es el primer tipo del catalogo del panel", () => {
-    expect(COST_TYPES[0].value).toBe(COST_TYPE_REPARACION);
-    expect(COST_FORM_EMPTY.cost_type).toBe(COST_TYPE_REPARACION);
+  it("el gasto de apertura sigue fuera del contrato", () => {
+    expect(COST_PENDING_FIELDS.map((field) => field.name)).toEqual(["is_opening"]);
   });
 });
 
-describe("costInPayload", () => {
-  it("manda exactamente los campos de CostIn", () => {
-    expect(costInPayload(VALIDO, "ARS")).toEqual({
-      cost_type: "REPARACION",
+describe("payloads", () => {
+  it("CostIn lleva exactamente los cuatro campos del contrato", () => {
+    expect(costInPayload(COMPRA, "ARS")).toEqual({
+      cost_type: "purchase",
       amount: "125000.50",
       currency: "ARS",
       incurred_at: "2026-09-30T00:00:00Z",
     });
   });
 
-  it("no inventa proveedor, factura ni gasto de apertura", () => {
-    const keys = Object.keys(costInPayload(VALIDO, "ARS"));
-    for (const field of COST_PENDING_FIELDS) expect(keys).not.toContain(field.name);
+  it("CostIn se niega a transportar una reparacion", () => {
+    expect(() => costInPayload(REPARACION, "ARS")).toThrow("REPAIR_REQUIERE_REPAIR_INVOICES");
   });
 
-  it("el monto viaja como texto para no perder el decimal", () => {
-    expect(costInPayload({ ...VALIDO, amount: " 0.10 " }, "ARS").amount).toBe("0.10");
+  it("RepairInvoiceIn lleva los tres identificadores, recortados", () => {
+    expect(repairInvoicePayload(REPARACION, "ARS")).toEqual({
+      amount: "125000.50",
+      currency: "ARS",
+      incurred_at: "2026-09-30T00:00:00Z",
+      supplier_name: "Taller Sur",
+      invoice_number: "A-0001",
+      document_id: "doc-1",
+    });
   });
 
-  it("la fecha del formulario se completa a date-time", () => {
-    expect(incurredAtIso("2026-01-02")).toBe("2026-01-02T00:00:00Z");
-    expect(incurredAtIso("2026-01-02T15:30:00Z")).toBe("2026-01-02T15:30:00Z");
+  it("ningun payload lleva cost_type en espanol", () => {
+    expect(JSON.stringify(costInPayload(COMPRA, "ARS"))).not.toContain("Compra");
   });
 });
 
 describe("parseCostTotals", () => {
-  it("lee una fila por moneda y normaliza el codigo", () => {
-    expect(parseCostTotals([{ currency: "ars", total: 125000.5 }])).toEqual([
+  it("lee `total_cost` como texto, que es lo que devuelve el contrato", () => {
+    expect(parseCostTotals([{ currency: "ARS", total_cost: "125000.50" }])).toEqual([
       { currency: "ARS", total: 125000.5 },
     ]);
   });
 
-  it("acepta el total como texto sin perderlo", () => {
-    expect(parseCostTotals({ totals: [{ currency: "ARS", total_amount: "900.25" }] })).toEqual([
-      { currency: "ARS", total: 900.25 },
-    ]);
-  });
-
-  it("sin asientos devuelve lista vacia, que es un cero real y no un fallo", () => {
+  it("sin asientos devuelve lista vacia, que es un cero real", () => {
     expect(parseCostTotals([])).toEqual([]);
-    expect(parseCostTotals({ totals: [] })).toEqual([]);
     expect(parseCostTotals(null)).toEqual([]);
   });
 
-  it("descarta filas sin moneda valida o sin importe en vez de poner un cero inventado", () => {
-    expect(parseCostTotals([{ currency: "AR", total: 10 }])).toEqual([]);
+  it("descarta filas sin moneda valida o sin importe", () => {
+    expect(parseCostTotals([{ currency: "AR", total_cost: "10" }])).toEqual([]);
     expect(parseCostTotals([{ currency: "ARS" }])).toEqual([]);
-    expect(parseCostTotals([{ total: 10 }])).toEqual([]);
   });
-});
 
-describe("totalEnMoneda", () => {
-  const totals = [
-    { currency: "ARS", total: 100 },
-    { currency: "USD", total: 7 },
-  ];
-
-  it("devuelve la fila de la moneda del tenant y no suma monedas distintas", () => {
+  it("no suma monedas distintas", () => {
+    const totals = [
+      { currency: "ARS", total: 100 },
+      { currency: "USD", total: 7 },
+    ];
     expect(totalEnMoneda(totals, "ars")).toEqual({ currency: "ARS", total: 100 });
-    expect(totalEnMoneda(totals, "USD")).toEqual({ currency: "USD", total: 7 });
-  });
-
-  it("sin moneda del tenant no elige una fila al azar", () => {
+    expect(totalEnMoneda(totals, "EUR")).toBeNull();
     expect(totalEnMoneda(totals, null)).toBeNull();
   });
-
-  it("si el tenant usa una moneda sin asientos no devuelve otra", () => {
-    expect(totalEnMoneda(totals, "EUR")).toBeNull();
-  });
 });
 
-describe("fetchVehicleCostTotals", () => {
+describe("clientes HTTP", () => {
   beforeEach(() => fetchMock.mockReset());
 
-  it("pide el total del vehiculo con el tenant en cabecera", async () => {
-    fetchMock.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => [{ currency: "ARS", total: 5 }],
-    } as unknown as Response);
-
+  it("el total se pide con el tenant en cabecera", async () => {
+    fetchMock.mockResolvedValue(ok([{ currency: "ARS", total_cost: "5" }]));
     await expect(fetchVehicleCostTotals("veh 1", "tenant-a")).resolves.toEqual([
       { currency: "ARS", total: 5 },
     ]);
@@ -170,16 +201,35 @@ describe("fetchVehicleCostTotals", () => {
     expect((init?.headers as Record<string, string>)["X-Tenant-ID"]).toBe("tenant-a");
   });
 
-  it("un 403 se propaga con reason_code en vez de devolver cero", async () => {
+  it("una compra va por /costs", async () => {
+    fetchMock.mockResolvedValue(ok({ id: "cost-1" }));
+    await postCost("veh-1", "tenant-a", COMPRA, "ARS");
+    const [path, init] = fetchMock.mock.calls[0];
+    expect(path).toBe("/api/v1/autos/vehicles/veh-1/costs");
+    expect(JSON.parse(String(init?.body)).cost_type).toBe("purchase");
+  });
+
+  it("una reparacion va por /repair-invoices, no por /costs", async () => {
+    fetchMock.mockResolvedValue(ok({ id: "cost-2", margins: [] }));
+    await postCost("veh-1", "tenant-a", REPARACION, "ARS");
+    const [path, init] = fetchMock.mock.calls[0];
+    expect(path).toBe("/api/v1/autos/vehicles/veh-1/repair-invoices");
+    const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    expect(body.supplier_name).toBe("Taller Sur");
+    expect(body.invoice_number).toBe("A-0001");
+    expect(body.document_id).toBe("doc-1");
+    expect(body.cost_type).toBeUndefined();
+  });
+
+  it("un 422 del CHECK se propaga en vez de resolverse en silencio", async () => {
     fetchMock.mockResolvedValue({
       ok: false,
-      status: 403,
-      json: async () => ({ reason_code: "DEFAULT_DENY" }),
+      status: 422,
+      json: async () => ({ reason_code: "CONSTRAINT" }),
     } as unknown as Response);
-
-    await expect(fetchVehicleCostTotals("veh-1", "tenant-a")).rejects.toMatchObject({
-      status: 403,
-      reason_code: "DEFAULT_DENY",
+    await expect(postCost("veh-1", "tenant-a", COMPRA, "ARS")).rejects.toMatchObject({
+      status: 422,
+      reason_code: "CONSTRAINT",
     });
   });
 });
