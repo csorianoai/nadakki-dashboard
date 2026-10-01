@@ -6,26 +6,56 @@ import { fmtRD } from "@/lib/format";
 import { getPriceConfidence, type PriceConfidenceResult } from "@/lib/api/ai-features";
 import type { Vehicle } from "@/lib/vehicles";
 
-function calcRangesLocal(price: number): PriceConfidenceResult {
-  const lo = Math.round((price * 0.932) / 1000) * 1000;
-  const mid = price;
-  const hi = Math.round((price * 1.068) / 1000) * 1000;
-  const top = Math.round((price * 1.135) / 1000) * 1000;
-  const pos = ((mid - lo) / (top - lo)) * 100;
-  const pctBetter = Math.round(((hi - mid) / hi) * 100);
-  return { lo, mid, hi, top, pos, pctBetter, sampleCount: 47, fromBackend: false };
-}
-
 export function PriceEvaluation({ vehicle }: { vehicle: Vehicle }) {
-  const [data, setData] = useState<PriceConfidenceResult>(() =>
-    calcRangesLocal(vehicle.price),
-  );
+  const [data, setData] = useState<PriceConfidenceResult | null>(null);
 
   useEffect(() => {
-    void getPriceConfidence(vehicle.id, vehicle.price).then(setData);
-  }, [vehicle.id, vehicle.price]);
+    let active = true;
+    setData(null);
+    void getPriceConfidence(vehicle.id).then((next) => {
+      if (active) setData(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [vehicle.id]);
 
-  const { lo, mid, hi, top, pos, pctBetter } = data;
+  if (data === null) {
+    return (
+      <section className="rounded-r border border-nk-border bg-nk-surface p-5 shadow-nk-sm">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-brand" aria-hidden />
+          <h2 className="font-manrope text-lg font-bold text-nk-fg">Análisis de precio Nadakki AI</h2>
+        </div>
+        <p className="mt-3 text-sm text-nk-fg-muted">Consultando evidencia de mercado…</p>
+      </section>
+    );
+  }
+
+  const { lo, mid, hi, top, pos, pctBetter, sampleCount, fromBackend } = data;
+  const complete =
+    fromBackend &&
+    lo != null &&
+    mid != null &&
+    hi != null &&
+    top != null &&
+    pos != null &&
+    pctBetter != null &&
+    sampleCount != null;
+
+  if (!complete) {
+    return (
+      <section className="rounded-r border border-nk-border bg-nk-surface p-5 shadow-nk-sm">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-brand" aria-hidden />
+          <h2 className="font-manrope text-lg font-bold text-nk-fg">Análisis de precio Nadakki AI</h2>
+        </div>
+        <p className="mt-3 text-sm text-nk-fg-muted" role="status">
+          Evidencia de mercado no disponible. No se estimó precio, muestra ni comparación local.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-r border border-nk-border bg-nk-surface p-5 shadow-nk-sm">
@@ -63,9 +93,7 @@ export function PriceEvaluation({ vehicle }: { vehicle: Vehicle }) {
         Este precio es <strong>{pctBetter}% mejor</strong> que el promedio del mercado.
       </p>
       <p className="mt-2 text-xs leading-relaxed text-nk-fg-muted">
-        Basado en {data.sampleCount} {vehicle.make} {vehicle.model} {vehicle.year} vendidos en RD
-        últimos 90 días. Datos verificados con importaciones DGII + desembolsos Nadakki +
-        Credicefi.
+        Basado en {sampleCount} {vehicle.make} {vehicle.model} {vehicle.year} de la muestra devuelta por el backend.
       </p>
     </section>
   );
