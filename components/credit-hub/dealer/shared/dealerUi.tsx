@@ -65,7 +65,7 @@ export function DealerAppCard({
   href,
 }: {
   app: CreditApplication;
-  currency: string;
+  currency: string | null;
   href: string;
 }) {
   const h = humanizeApplicant(app, currency);

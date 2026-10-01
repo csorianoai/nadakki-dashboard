@@ -41,7 +41,8 @@ export function humanizeApplicant(
     | "vehicle_year"
     | "requested_amount"
   >,
-  currency: string,
+  /** Moneda del tenant. `null` cuando el branding no la trae: sin moneda, sin importe. */
+  currency: string | null,
 ): HumanizedApplicant {
   const folio = shortFolio(app.application_id);
   const hasClientData = !isMissingName(app.applicant_name, app.application_id);
