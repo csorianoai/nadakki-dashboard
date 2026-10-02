@@ -13,6 +13,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
+import {
+  ACCESS_UNVERIFIED_DETAIL,
+  ACCESS_UNVERIFIED_MESSAGE,
+  isAccessUnverified,
+} from "@/lib/access/reason-codes";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { localeDeTenant } from "@/lib/dealer-management/formato";
@@ -40,9 +45,23 @@ export default function DealerFinanzasPage() {
   const verVehiculos = granted(COSTS_VEHICLE_CAPABILITY);
   const verCostos = granted(COSTS_CAPABILITY);
 
+  /**
+   * El motivo que da el motor, SIN inventar ninguno. Antes caia a "DEFAULT_DENY"
+   * cuando el batch no mandaba codigo: eso es un codigo que el backend nunca
+   * emitio, pintado como si lo hubiera emitido. Un motivo inventado es peor que
+   * ninguno, porque se puede buscar en los logs y no esta.
+   */
   const denyReason = access.error instanceof AccessApiError
     ? (access.error.reason_code ?? `HTTP_${access.error.status}`)
-    : (access.data?.results[COSTS_CAPABILITY]?.reason_code ?? "DEFAULT_DENY");
+    : (access.data?.results[COSTS_CAPABILITY]?.reason_code ?? null);
+
+  /**
+   * "No pude evaluarte" no es "no tienes derecho" (#550). Cuando el motor deniega
+   * por `no_organization_unit` o `no_beneficiary_entitlement` no esta diciendo que
+   * falte la capability: esta diciendo que no llego a comprobarlo. Nombrar la
+   * capability ahi manda al usuario a pedir un permiso que quiza ya tiene.
+   */
+  const noVerificado = isAccessUnverified(denyReason);
 
   const inventory = useQuery({
     queryKey: ["dealer-private-inventory", context?.dealerId ?? "none"],
@@ -67,9 +86,30 @@ export default function DealerFinanzasPage() {
       ) : access.isLoading || access.isPending ? (
         <p className="animate-pulse text-sm text-nk-fg-muted">Verificando acceso…</p>
       ) : !verCostos || !verVehiculos ? (
-        <div role="alert" data-testid="finanzas-bloqueado" data-allowed="false" data-reason-code={denyReason} className={CARD_CLASS}>
-          Los costos y el margen de cada unidad están reservados a quien tenga la capability{" "}
-          <code>{COSTS_CAPABILITY}</code>. reason_code: <code>{denyReason}</code>
+        <div
+          role="alert"
+          data-testid="finanzas-bloqueado"
+          data-allowed="false"
+          data-no-verificado={noVerificado ? "true" : "false"}
+          {...(denyReason ? { "data-reason-code": denyReason } : {})}
+          className={CARD_CLASS}
+        >
+          {noVerificado ? (
+            <>
+              <strong>{ACCESS_UNVERIFIED_MESSAGE}.</strong> {ACCESS_UNVERIFIED_DETAIL}
+            </>
+          ) : (
+            <>
+              Los costos y el margen de cada unidad están reservados a quien tenga la capability{" "}
+              <code>{COSTS_CAPABILITY}</code>.
+            </>
+          )}
+          {denyReason ? (
+            <>
+              {" "}
+              reason_code: <code>{denyReason}</code>
+            </>
+          ) : null}
         </div>
       ) : (
         <>

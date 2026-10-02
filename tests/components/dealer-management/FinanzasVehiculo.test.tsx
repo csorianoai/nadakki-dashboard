@@ -10,6 +10,10 @@
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ACCESS_UNVERIFIED_MESSAGE } from "@/lib/access/reason-codes";
+
+/** Centinela para pedirle al helper un item SIN reason_code, distinto de "no pasé ninguno". */
+const SIN_CODIGO = "__sin_codigo__";
 
 import DealerFinanzasPage from "@/app/autos/dealer/finanzas/page";
 import { COSTS_CAPABILITY, COSTS_CAPABILITY_KEYS, COSTS_VEHICLE_CAPABILITY } from "@/lib/dealer-management/vehicle-costs";
@@ -58,7 +62,9 @@ const READY = {
 };
 
 function entry(allowed: boolean, reason?: string) {
-  return { allowed, reason_code: reason ?? (allowed ? "ALLOWED" : "DEFAULT_DENY"), limit: null, current_usage: null };
+  const reason_code =
+    reason === SIN_CODIGO ? null : (reason ?? (allowed ? "ALLOWED" : "DEFAULT_DENY"));
+  return { allowed, reason_code, limit: null, current_usage: null };
 }
 
 function batch(state: { isLoading?: boolean; error?: unknown; vehiculos?: boolean; costos?: boolean; reason?: string }) {
@@ -166,5 +172,55 @@ describe("seleccion de unidad", () => {
     await eligeVehiculo();
     expect(await screen.findByTestId("costos-total")).toBeInTheDocument();
     expect(screen.getByTestId("costo-alta-form")).toBeInTheDocument();
+  });
+});
+
+/**
+ * "No pude evaluarte" no es "no tienes derecho" (#550).
+ *
+ * El motor deniega con `no_organization_unit` o `no_beneficiary_entitlement`
+ * cuando no llego a comprobar el acceso --sin `organization_unit_id` la cadena
+ * BENEFICIARY deniega cerrado antes de consultar nada,
+ * services/access/entitlements.py:330-339--. Nombrar la capability ahi manda al
+ * usuario a pedir un permiso que quiza ya tiene.
+ *
+ * Los codigos llegan EN MINUSCULAS dentro de un 200, no como error HTTP.
+ */
+describe("acceso que no se pudo verificar", () => {
+  for (const codigo of ["no_organization_unit", "no_beneficiary_entitlement"]) {
+    it(`con ${codigo} dice que no se pudieron verificar los accesos, no que falte la capability`, () => {
+      batchMock.mockReturnValue(batch({ costos: false, reason: codigo }));
+      montar();
+      const bloqueo = screen.getByTestId("finanzas-bloqueado");
+      expect(bloqueo).toHaveAttribute("data-no-verificado", "true");
+      expect(bloqueo).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
+      expect(bloqueo.textContent).not.toContain("reservados a quien tenga la capability");
+      expect(bloqueo).toHaveAttribute("data-reason-code", codigo);
+    });
+  }
+
+  it("no distingue la caja del codigo: el motor los emite en minuscula", () => {
+    batchMock.mockReturnValue(batch({ costos: false, reason: "NO_ORGANIZATION_UNIT" }));
+    montar();
+    expect(screen.getByTestId("finanzas-bloqueado")).toHaveAttribute("data-no-verificado", "true");
+    expect(screen.getByTestId("finanzas-bloqueado")).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
+  });
+
+  it("una denegacion normal sigue nombrando la capability que falta", () => {
+    batchMock.mockReturnValue(batch({ costos: false, reason: "UPGRADE_REQUIRED" }));
+    montar();
+    const bloqueo = screen.getByTestId("finanzas-bloqueado");
+    expect(bloqueo).toHaveAttribute("data-no-verificado", "false");
+    expect(bloqueo).toHaveTextContent("reservados a quien tenga la capability");
+    expect(bloqueo.textContent).not.toContain(ACCESS_UNVERIFIED_MESSAGE);
+  });
+
+  it("sin reason_code del motor no se inventa ninguno", () => {
+    batchMock.mockReturnValue(batch({ costos: false, reason: SIN_CODIGO }));
+    montar();
+    const bloqueo = screen.getByTestId("finanzas-bloqueado");
+    expect(bloqueo).not.toHaveAttribute("data-reason-code");
+    expect(bloqueo.textContent).not.toContain("DEFAULT_DENY");
+    expect(bloqueo.textContent).not.toContain("reason_code");
   });
 });
