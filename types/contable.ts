@@ -17,7 +17,21 @@ export type PeriodoStatus = "open" | "soft_closed" | "locked";
 
 export type AsientoStatus = "draft" | "posted" | "reversed";
 
-export type ContableCurrency = "DOP" | "USD";
+/**
+ * Moneda de un asiento: codigo ISO-4217 de tres letras, el que venga del
+ * backend. NO es una lista cerrada.
+ *
+ * Era `"DOP" | "USD"`, y eso dejaba a un tenant argentino sin poder registrar un
+ * asiento en ARS: dinero incorrecto, no un detalle de tipos. El backend no cierra
+ * la lista --`services/contable/fx.py:35-39` solo exige tres letras y lanza
+ * `D4_MONEDA` si no lo son-- y la moneda funcional la resuelve
+ * `legal_entities.functional_currency` sin fallback
+ * (`services/contable/functional_currency.py:29-62`,
+ * `FUNCTIONAL_CURRENCY_NOT_CONFIGURED`).
+ *
+ * Se valida con `esIso4217` (lib/contable/moneda-asiento.ts), no con un union.
+ */
+export type ContableCurrency = string;
 
 export interface CuentaContable {
   id: string;
@@ -88,8 +102,17 @@ export interface AsientoContable {
   numero_asiento?: string;
   fecha: string;
   descripcion: string;
-  currency: ContableCurrency;
+  /** Moneda del asiento. `null` si el backend no la informa: no se inventa. */
+  currency: ContableCurrency | null;
   exchange_rate: number;
+  /**
+   * Moneda funcional con la que el backend valoro el asiento; la devuelve el
+   * contrato (`asientos_router.py:296-298`) y el frontend la tiraba. Opcional
+   * porque el mapper que la propaga llega en el packet del formulario:
+   * declararla obligatoria aqui obligaria a tocar mapper y mocks, y este packet
+   * es solo el tipo.
+   */
+  functional_currency?: ContableCurrency | null;
   status: AsientoStatus;
   lineas: AsientoLinea[];
   total_debe_base: number;
@@ -102,7 +125,13 @@ export interface CreateAsientoPayload {
   periodo_id: string;
   fecha: string;
   descripcion: string;
-  currency: ContableCurrency;
+  /**
+   * Opcional a proposito. Omitida, el backend usa la moneda funcional del tenant
+   * (`routers/contable/asientos_router.py:258-259`). Mandarla solo tiene sentido
+   * para un asiento en moneda distinta, y entonces el backend exige cotizacion
+   * oficial del dia o responde `D1_FX_QUOTE`.
+   */
+  currency?: ContableCurrency;
   exchange_rate: number;
   lineas: AsientoLineaInput[];
 }

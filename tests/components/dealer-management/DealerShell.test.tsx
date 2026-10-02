@@ -24,6 +24,8 @@
  * contrato del shell y ya lo fijan los tests de sidebar y paleta.
  */
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 
 import DealerLayout from "@/app/autos/dealer/layout";
 import { DEALER_NAV_CAPABILITY_KEYS } from "@/components/dealer-management/shell/dealer-nav";
@@ -67,17 +69,42 @@ function todoConcedido() {
   };
 }
 
+const TENANT = "tenant-mapaal";
+const DEALER = "1bc6a6cd-2592-442a-9d70-2d1b630762fc";
+
+/**
+ * El shell sincroniza el dealer de la sesion antes de pintar a sus hijos
+ * (DealerShell.tsx), asi que aqui se SIEMBRA ese resultado en la cache de
+ * react-query: estos casos miden el chrome --sidebar, topbar, paleta, foco--, y
+ * la sincronizacion de verdad la mide
+ * tests/components/dealer-management/shell/DealerShellContextSync.test.tsx
+ * contra la red. Sembrarla deja el render sincrono, que es lo que necesitan los
+ * casos con timers falsos.
+ */
+function pintarLayout(children: ReactNode) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  client.setQueryData(["dealer-context-sync", TENANT], {
+    estado: "sincronizado",
+    assignment: { dealerId: DEALER, organizationUnitId: null, dealerName: "Mapaal Autos" },
+  });
+  return render(
+    <QueryClientProvider client={client}>
+      <DealerLayout>{children}</DealerLayout>
+    </QueryClientProvider>,
+  );
+}
+
 beforeEach(() => {
   pathname = "/autos/dealer";
   batchMock.mockReset();
   batchMock.mockReturnValue(todoConcedido());
+  window.localStorage.clear();
+  window.localStorage.setItem("nadakki_tenant_id", TENANT);
 });
 
 describe("el layout del dealer monta el shell unico", () => {
   it("pinta sidebar, topbar y el contenido hijo", () => {
-    render(<DealerLayout>
-      <p>contenido de la pagina</p>
-    </DealerLayout>);
+    pintarLayout(<p>contenido de la pagina</p>);
 
     expect(screen.getByRole("navigation", { name: "Navegación del dealer" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Ruta" })).toBeInTheDocument();
@@ -85,7 +112,7 @@ describe("el layout del dealer monta el shell unico", () => {
   });
 
   it("ya no queda el menu propio del layout viejo", () => {
-    render(<DealerLayout><p>x</p></DealerLayout>);
+    pintarLayout(<p>x</p>);
 
     // El layout anterior pintaba <nav aria-label="Dealer Management">. Si
     // reaparece, hay dos navegaciones del dealer en la misma pantalla.
@@ -93,7 +120,7 @@ describe("el layout del dealer monta el shell unico", () => {
   });
 
   it("el shell pide al batch exactamente las claves del menu", () => {
-    render(<DealerLayout><p>x</p></DealerLayout>);
+    pintarLayout(<p>x</p>);
 
     expect(batchMock).toHaveBeenCalledWith(DEALER_NAV_CAPABILITY_KEYS);
   });
@@ -101,7 +128,7 @@ describe("el layout del dealer monta el shell unico", () => {
   it("el disparador del topbar abre la paleta y al cerrar devuelve el foco", () => {
     jest.useFakeTimers();
     try {
-      render(<DealerLayout><p>x</p></DealerLayout>);
+      pintarLayout(<p>x</p>);
 
       expect(screen.queryByRole("dialog")).toBeNull();
 

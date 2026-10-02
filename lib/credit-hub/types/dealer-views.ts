@@ -6,7 +6,11 @@ export interface DealerDashboardViewProps {
   institutionName: string;
   userName?: string;
   locale: string;
-  currency: string;
+  /**
+   * Moneda del tenant, ISO 4217. `null` cuando el branding no la trae: sin
+   * moneda no se pinta importe (#517), en vez de caer a una por defecto.
+   */
+  currency: string | null;
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;

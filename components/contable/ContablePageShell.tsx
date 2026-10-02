@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import GlassCard from "@/components/ui/GlassCard";
+import { FacturacionElectronicaAviso } from "@/components/contable/FacturacionElectronicaAviso";
 
 export function ContablePageShell({
   title,
@@ -38,6 +39,11 @@ export function ContablePageShell({
         </div>
         {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
       </GlassCard>
+      {/*
+        Va en el shell y no en cada pantalla: el estado fiscal del tenant es el
+        mismo en todas, y repetirlo doce veces garantiza que alguna se olvide.
+      */}
+      <FacturacionElectronicaAviso />
       {children}
     </div>
   );

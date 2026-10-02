@@ -13,6 +13,7 @@ import {
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { NaturalezaBadge, TipoCuentaBadge } from "@/components/contable/ContableBadges";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
+import { MonedaFuncionalNota, useMonedaFuncional } from "@/components/contable/monedaFuncional";
 import type { CuentaContable, NaturalezaCuenta, TipoCuenta } from "@/types/contable";
 
 const TIPOS: TipoCuenta[] = ["activo", "pasivo", "patrimonio", "ingreso", "gasto", "costo", "orden"];
@@ -74,6 +75,7 @@ function TreeRow({
 
 export function PlanCuentasClient() {
   const tenantId = useContableTenantId();
+  const moneda = useMonedaFuncional();
   const [cuentas, setCuentas] = useState<CuentaContable[]>([]);
   const [loading, setLoading] = useState(true);
   const [tipoFilter, setTipoFilter] = useState("");
@@ -167,6 +169,8 @@ export function PlanCuentasClient() {
       icon={<BookOpen className="h-10 w-10" aria-hidden />}
       actions={<Button onClick={() => { setForm({ codigo: "", nombre: "", tipo_cuenta: "activo", naturaleza: "deudora", cuenta_padre_id: "" }); setCreateOpen(true); }}>+ Nueva cuenta</Button>}
     >
+      <MonedaFuncionalNota locale={moneda} />
+
       <div className="mb-4 flex flex-wrap gap-3">
         <Select
           label="Tipo"

@@ -51,6 +51,11 @@ import type {
   PeriodoContable,
 } from "@/types/contable";
 import { cn } from "@/lib/utils";
+import {
+  MonedaFuncionalNota,
+  formateaImporteContable,
+  useMonedaFuncional,
+} from "@/components/contable/monedaFuncional";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -65,19 +70,17 @@ const COLORS = {
   chart: ["#10b981", "#6366f1", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"],
 };
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat("es-DO", {
-    style: "currency",
-    currency: "DOP",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
 
 const fmtPct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; color: string; value: number }[]; label?: string }) {
+/**
+ * Recibe `importe` como prop en vez de llamar al hook: asi sigue siendo puro y la
+ * moneda la decide la pantalla una sola vez. Recharts clona el elemento y le pasa
+ * `active`/`payload`, asi que la prop se fija en el sitio de uso.
+ */
+function CustomTooltip({ active, payload, label, importe }: { active?: boolean; payload?: { name: string; color: string; value: number }[]; label?: string; importe: (valor: number | null | undefined) => string }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-white/20 bg-zinc-900/95 p-3 text-xs shadow-xl">
@@ -86,7 +89,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         <div key={p.name} className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full" style={{ background: p.color }} />
           <span className="text-zinc-400">{p.name}:</span>
-          <span className="font-mono font-semibold text-white">{fmt(p.value)}</span>
+          <span className="font-mono font-semibold text-white">{importe(p.value)}</span>
         </div>
       ))}
     </div>
@@ -157,6 +160,9 @@ function TendenciaIcon({ tendencia }: { tendencia: "up" | "down" | "stable" }) {
 // ── Main component ──────────────────────────────────────────────────────────
 
 export function DashboardEjecutivoClient() {
+  const moneda = useMonedaFuncional();
+  /** Importe en la moneda funcional del tenant. Sin moneda, em dash: nunca una inventada. */
+  const importe = (valor: number | null | undefined) => formateaImporteContable(valor, moneda);
   const tenantId = useContableTenantId();
   const [periodos, setPeriodos] = useState<PeriodoContable[]>([]);
   const [periodoId, setPeriodoId] = useState("");
@@ -301,6 +307,8 @@ export function DashboardEjecutivoClient() {
 
   return (
     <div className="space-y-6 pb-10">
+      <MonedaFuncionalNota locale={moneda} />
+
       {/* S1 — Header */}
       <GlassCard hover={false} className="flex flex-wrap items-center justify-between gap-4 p-6">
         <div>
@@ -310,7 +318,7 @@ export function DashboardEjecutivoClient() {
             Análisis completo de rendimiento financiero
             {lastUpdated && (
               <span className="ml-2 text-zinc-600">
-                — actualizado {lastUpdated.toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}
+                — actualizado {lastUpdated.toLocaleTimeString(moneda.locale, { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
           </p>
@@ -341,7 +349,7 @@ export function DashboardEjecutivoClient() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               title="Ingresos"
-              value={fmt(er?.total_ingresos ?? 0)}
+              value={importe(er?.total_ingresos ?? 0)}
               icon={DollarSign}
               borderColor="border-emerald-500/20"
               valueColor="text-emerald-200"
@@ -349,7 +357,7 @@ export function DashboardEjecutivoClient() {
             />
             <KpiCard
               title="Gastos"
-              value={fmt(er?.total_gastos ?? 0)}
+              value={importe(er?.total_gastos ?? 0)}
               changePct={gm?.variacion_total_pct}
               icon={AlertTriangle}
               borderColor="border-amber-500/20"
@@ -357,7 +365,7 @@ export function DashboardEjecutivoClient() {
             />
             <KpiCard
               title="Utilidad Neta"
-              value={fmt(er?.utilidad_neta ?? 0)}
+              value={importe(er?.utilidad_neta ?? 0)}
               icon={TrendingUp}
               borderColor="border-indigo-500/20"
               valueColor="text-indigo-200"
@@ -379,7 +387,7 @@ export function DashboardEjecutivoClient() {
                 <AreaChart data={areaData}>
                   <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
                   <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip importe={importe} />} />
                   <Legend wrapperStyle={{ color: "#a1a1aa", fontSize: 11 }} />
                   <Area type="monotone" dataKey="Ingresos" stroke={COLORS.ingresos} fill={COLORS.ingresos} fillOpacity={0.15} strokeWidth={2} />
                   <Area type="monotone" dataKey="Gastos" stroke={COLORS.gastos} fill={COLORS.gastos} fillOpacity={0.15} strokeWidth={2} />
@@ -398,7 +406,7 @@ export function DashboardEjecutivoClient() {
                   <BarChart data={barData}>
                     <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
                     <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip importe={importe} />} />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                       {barData.map((_, i) => (
                         <Cell key={i} fill={barColors[i]} />
@@ -419,7 +427,7 @@ export function DashboardEjecutivoClient() {
                         <Cell key={i} fill={COLORS.chart[i % COLORS.chart.length]} />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip importe={importe} />} />
                     <Legend wrapperStyle={{ color: "#a1a1aa", fontSize: 11 }} />
                   </RechartsPie>
                 </ResponsiveContainer>
@@ -439,7 +447,7 @@ export function DashboardEjecutivoClient() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <GlassCard hover={false} className="p-5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/80">Total Activos</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-emerald-100">{fmt(activosTotal)}</p>
+                  <p className="mt-1 font-mono text-2xl font-bold text-emerald-100">{importe(activosTotal)}</p>
                   <div className="mt-3 h-2 w-full rounded-full bg-white/10">
                     <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${activosCorrPct}%` }} />
                   </div>
@@ -449,7 +457,7 @@ export function DashboardEjecutivoClient() {
                 </GlassCard>
                 <GlassCard hover={false} className="p-5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/80">Total Pasivos</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-amber-100">{fmt(pasivosTotal)}</p>
+                  <p className="mt-1 font-mono text-2xl font-bold text-amber-100">{importe(pasivosTotal)}</p>
                   <div className="mt-3 h-2 w-full rounded-full bg-white/10">
                     <div className="h-2 rounded-full bg-amber-500" style={{ width: `${pasivosCorrPct}%` }} />
                   </div>
@@ -459,7 +467,7 @@ export function DashboardEjecutivoClient() {
                 </GlassCard>
                 <GlassCard hover={false} className="p-5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/80">Total Patrimonio</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-indigo-100">{fmt(patrimonioTotal)}</p>
+                  <p className="mt-1 font-mono text-2xl font-bold text-indigo-100">{importe(patrimonioTotal)}</p>
                 </GlassCard>
               </div>
               <div
@@ -471,7 +479,7 @@ export function DashboardEjecutivoClient() {
                 )}
               >
                 {sf?.ecuacion_cuadra ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
-                Ecuación contable: Activos ({fmt(activosTotal)}) = Pasivos ({fmt(pasivosTotal)}) + Patrimonio ({fmt(patrimonioTotal)})
+                Ecuación contable: Activos ({importe(activosTotal)}) = Pasivos ({importe(pasivosTotal)}) + Patrimonio ({importe(patrimonioTotal)})
                 {sf?.ecuacion_cuadra ? " ✓" : " — NO CUADRA"}
               </div>
             </div>
@@ -508,8 +516,8 @@ export function DashboardEjecutivoClient() {
                           <span className="font-mono text-xs text-zinc-500 mr-2">{g.codigo}</span>
                           {g.nombre}
                         </td>
-                        <td className="px-4 py-2 text-right font-mono">{fmt(g.periodo_actual)}</td>
-                        <td className="px-4 py-2 text-right font-mono text-zinc-400">{fmt(g.periodo_anterior)}</td>
+                        <td className="px-4 py-2 text-right font-mono">{importe(g.periodo_actual)}</td>
+                        <td className="px-4 py-2 text-right font-mono text-zinc-400">{importe(g.periodo_anterior)}</td>
                         <td
                           className={cn(
                             "px-4 py-2 text-right font-mono",
@@ -582,7 +590,27 @@ export function DashboardEjecutivoClient() {
                           <p className="font-semibold text-white">{s.titulo}</p>
                           <p className="mt-0.5 text-zinc-400">{s.accion_sugerida}</p>
                           {s.impacto_estimado_dop != null && (
-                            <p className="mt-1 font-mono text-zinc-500">Impacto estimado: {fmt(s.impacto_estimado_dop)}</p>
+                            /**
+                             * `impacto_estimado_dop` lleva la moneda en el NOMBRE y el
+                             * contrato no trae campo de moneda (types/contable.ts:279).
+                             * Pintarlo con la moneda funcional de un tenant argentino
+                             * seria reetiquetar un monto dominicano como pesos
+                             * argentinos. Solo se publica cuando las dos coinciden; si
+                             * no, se dice por que falta en vez de inventar la moneda.
+                             */
+                            moneda.currency === "DOP" ? (
+                              <p className="mt-1 font-mono text-zinc-500">
+                                Impacto estimado: {importe(s.impacto_estimado_dop)}
+                              </p>
+                            ) : (
+                              <p
+                                data-testid="ejecutivo-impacto-sin-moneda"
+                                className="mt-1 text-zinc-500"
+                              >
+                                Impacto estimado no publicado: el contrato lo devuelve en
+                                DOP y la moneda funcional del tenant es otra.
+                              </p>
+                            )
                           )}
                         </div>
                       </div>

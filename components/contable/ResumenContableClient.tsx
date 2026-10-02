@@ -28,10 +28,12 @@ import { PeriodoStatusBadge } from "@/components/contable/ContableBadges";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import type { AsientoContable, BalanceComprobacionReport, PeriodoContable } from "@/types/contable";
 import { cn } from "@/lib/utils";
+import {
+  MonedaFuncionalNota,
+  formateaImporteContable,
+  useMonedaFuncional,
+} from "@/components/contable/monedaFuncional";
 
-function fmt(n: number): string {
-  return n.toLocaleString("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 const QUICK_LINKS = [
   { href: "/contable/plan-cuentas", label: "Plan de Cuentas", icon: BookOpen },
@@ -54,6 +56,9 @@ function sparklineData(value: number): { v: number }[] {
 }
 
 export function ResumenContableClient() {
+  const moneda = useMonedaFuncional();
+  /** Importe en la moneda funcional del tenant. Sin moneda, em dash: nunca una inventada. */
+  const importe = (valor: number | null | undefined) => formateaImporteContable(valor, moneda);
   const tenantId = useContableTenantId();
   const [loading, setLoading] = useState(true);
   const [periodos, setPeriodos] = useState<PeriodoContable[]>([]);
@@ -123,6 +128,8 @@ export function ResumenContableClient() {
       description="Vista general del módulo contable con KPIs y accesos rápidos."
       icon={<LayoutDashboard className="h-10 w-10" aria-hidden />}
     >
+      <MonedaFuncionalNota locale={moneda} />
+
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
@@ -149,7 +156,7 @@ export function ResumenContableClient() {
               color === "indigo" && "text-indigo-200",
               color === "amber" && "text-amber-200",
             )}>
-              {fmt(value)}
+              {importe(value)}
             </p>
             <div className="mt-2 h-8">
               <ResponsiveContainer width="100%" height="100%">
@@ -204,7 +211,7 @@ export function ResumenContableClient() {
                     </p>
                     <p className="text-xs text-zinc-400">{a.fecha} — {a.descripcion}</p>
                   </div>
-                  <p className="text-xs font-mono text-white">{fmt(a.total_debe_base)}</p>
+                  <p className="text-xs font-mono text-white">{importe(a.total_debe_base)}</p>
                 </div>
               ))}
             </div>

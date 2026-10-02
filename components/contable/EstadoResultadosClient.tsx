@@ -21,6 +21,11 @@ import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import type { EstadoResultadosReport } from "@/types/contable";
 import { cn } from "@/lib/utils";
+import {
+  MonedaFuncionalNota,
+  formateaImporteContable,
+  useMonedaFuncional,
+} from "@/components/contable/monedaFuncional";
 
 const COLORS = {
   ingresos: "#10b981",
@@ -29,9 +34,6 @@ const COLORS = {
   utilidad: "#6366f1",
 };
 
-function fmt(n: number): string {
-  return n.toLocaleString("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 function margenColor(pct: number): string {
   if (pct >= 20) return "bg-emerald-500/20 text-emerald-200 ring-emerald-400/40";
@@ -40,6 +42,9 @@ function margenColor(pct: number): string {
 }
 
 export function EstadoResultadosClient() {
+  const moneda = useMonedaFuncional();
+  /** Importe en la moneda funcional del tenant. Sin moneda, em dash: nunca una inventada. */
+  const importe = (valor: number | null | undefined) => formateaImporteContable(valor, moneda);
   const tenantId = useContableTenantId();
   const [desde, setDesde] = useState(() => {
     const d = new Date();
@@ -91,6 +96,8 @@ export function EstadoResultadosClient() {
       description="Ingresos, costos, gastos y utilidad neta del período seleccionado."
       icon={<TrendingUp className="h-10 w-10" aria-hidden />}
     >
+      <MonedaFuncionalNota locale={moneda} />
+
       <div className="mb-6 flex flex-wrap items-end gap-3">
         <Input label="Desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
         <Input label="Hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
@@ -136,7 +143,7 @@ export function EstadoResultadosClient() {
                     <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#18181b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
-                      formatter={(value: number) => [fmt(value), "Monto"]}
+                      formatter={(value: number) => [importe(value), "Monto"]}
                     />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                       {barData.map((_, i) => (
@@ -168,7 +175,7 @@ export function EstadoResultadosClient() {
                     </Pie>
                     <Tooltip
                       contentStyle={{ backgroundColor: "#18181b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
-                      formatter={(value: number) => [fmt(value), "Monto"]}
+                      formatter={(value: number) => [importe(value), "Monto"]}
                     />
                     <Legend wrapperStyle={{ color: "#a1a1aa", fontSize: 11 }} />
                   </PieChart>
@@ -192,46 +199,46 @@ export function EstadoResultadosClient() {
                   <tr key={r.codigo} className="border-b border-white/5">
                     <td className="px-4 py-2 text-emerald-200">{r.nombre}</td>
                     <td className="px-4 py-2 font-mono text-xs">{r.codigo}</td>
-                    <td className="px-4 py-2 text-right font-mono">{fmt(r.total)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{importe(r.total)}</td>
                   </tr>
                 ))}
                 <tr className="bg-emerald-500/5 font-bold text-emerald-200">
                   <td className="px-4 py-2" colSpan={2}>Total Ingresos</td>
-                  <td className="px-4 py-2 text-right font-mono">{fmt(report.total_ingresos)}</td>
+                  <td className="px-4 py-2 text-right font-mono">{importe(report.total_ingresos)}</td>
                 </tr>
 
                 {report?.costos?.map((r) => (
                   <tr key={r.codigo} className="border-b border-white/5">
                     <td className="px-4 py-2 text-amber-200">{r.nombre}</td>
                     <td className="px-4 py-2 font-mono text-xs">{r.codigo}</td>
-                    <td className="px-4 py-2 text-right font-mono">{fmt(r.total)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{importe(r.total)}</td>
                   </tr>
                 ))}
                 <tr className="bg-amber-500/5 font-bold text-amber-200">
                   <td className="px-4 py-2" colSpan={2}>Total Costos</td>
-                  <td className="px-4 py-2 text-right font-mono">{fmt(report.total_costos)}</td>
+                  <td className="px-4 py-2 text-right font-mono">{importe(report.total_costos)}</td>
                 </tr>
 
                 <tr className="bg-indigo-500/5 font-bold text-indigo-200">
                   <td className="px-4 py-2" colSpan={2}>Utilidad Bruta</td>
-                  <td className="px-4 py-2 text-right font-mono">{fmt(report.utilidad_bruta)}</td>
+                  <td className="px-4 py-2 text-right font-mono">{importe(report.utilidad_bruta)}</td>
                 </tr>
 
                 {report?.gastos?.map((r) => (
                   <tr key={r.codigo} className="border-b border-white/5">
                     <td className="px-4 py-2 text-rose-200">{r.nombre}</td>
                     <td className="px-4 py-2 font-mono text-xs">{r.codigo}</td>
-                    <td className="px-4 py-2 text-right font-mono">{fmt(r.total)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{importe(r.total)}</td>
                   </tr>
                 ))}
                 <tr className="bg-rose-500/5 font-bold text-rose-200">
                   <td className="px-4 py-2" colSpan={2}>Total Gastos</td>
-                  <td className="px-4 py-2 text-right font-mono">{fmt(report.total_gastos)}</td>
+                  <td className="px-4 py-2 text-right font-mono">{importe(report.total_gastos)}</td>
                 </tr>
 
                 <tr className="bg-indigo-500/10 text-lg font-bold text-indigo-100">
                   <td className="px-4 py-3" colSpan={2}>Utilidad Neta</td>
-                  <td className="px-4 py-3 text-right font-mono">{fmt(report?.utilidad_neta ?? 0)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{importe(report?.utilidad_neta ?? 0)}</td>
                 </tr>
               </tbody>
             </table>

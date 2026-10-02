@@ -12,10 +12,17 @@ import {
 } from "@/app/hooks/contable";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
+import {
+  MonedaFuncionalNota,
+  formateaImporteContable,
+  useMonedaFuncional,
+} from "@/components/contable/monedaFuncional";
 import type { CuentaContable, LibroMayorReport, PeriodoContable } from "@/types/contable";
 
 export function LibroMayorClient() {
   const tenantId = useContableTenantId();
+  const moneda = useMonedaFuncional();
+  const importe = (valor: number | null | undefined) => formateaImporteContable(valor, moneda);
   const [cuentas, setCuentas] = useState<CuentaContable[]>([]);
   const [periodos, setPeriodos] = useState<PeriodoContable[]>([]);
   const [cuentaId, setCuentaId] = useState("");
@@ -60,6 +67,8 @@ export function LibroMayorClient() {
       description="Movimientos y saldo acumulado por cuenta y periodo."
       icon={<BookMarked className="h-10 w-10" aria-hidden />}
     >
+      <MonedaFuncionalNota locale={moneda} />
+
       <div className="mb-4 grid gap-3 md:grid-cols-2">
         <Select
           label="Cuenta"
@@ -82,7 +91,7 @@ export function LibroMayorClient() {
             <p className="mt-1 text-zinc-400">
               Saldo final:{" "}
               <span className="font-mono font-semibold text-white">
-                {(report?.saldo_final ?? 0).toLocaleString("es-DO", { minimumFractionDigits: 2 })}
+                {importe(report?.saldo_final ?? 0)}
               </span>
             </p>
           </div>
@@ -110,9 +119,9 @@ export function LibroMayorClient() {
                       <td className="px-4 py-2">{m.fecha}</td>
                       <td className="px-4 py-2 font-mono text-xs">{m.numero_asiento ?? m.asiento_id.slice(0, 8)}</td>
                       <td className="px-4 py-2">{m.descripcion}</td>
-                      <td className="px-4 py-2 text-right font-mono">{m.debe_base ? m.debe_base.toFixed(2) : "—"}</td>
-                      <td className="px-4 py-2 text-right font-mono">{m.haber_base ? m.haber_base.toFixed(2) : "—"}</td>
-                      <td className="px-4 py-2 text-right font-mono text-emerald-200">{m.saldo_acumulado.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-right font-mono">{m.debe_base ? importe(m.debe_base) : "—"}</td>
+                      <td className="px-4 py-2 text-right font-mono">{m.haber_base ? importe(m.haber_base) : "—"}</td>
+                      <td className="px-4 py-2 text-right font-mono text-emerald-200">{importe(m.saldo_acumulado)}</td>
                     </tr>
                   ))}
                 </tbody>

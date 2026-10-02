@@ -41,6 +41,28 @@ const WIZARD_DRAFT_KEY = "nadakki_dealer_wizard_v1:t1:u1";
 const REFRESH_TOKEN_KEY = "nadakki_refresh_token_v2";
 const SESSION_PII_KEY = "nadakki_credit_tenant123_app456";
 
+/**
+ * QUINTO territorio: el binding del dealer.
+ *
+ * No son claves de `LS_KEYS` --el territorio es disjunto de las otras cuatro
+ * purgas-- y las escribe la sincronizacion del panel del dealer
+ * (lib/dealer/dealer-context-api.ts). Quien las borra es
+ * `clearDealerAccessContextFully()`, llamada DENTRO de `clearLocalStorage`
+ * (lib/auth/auth-context.tsx:50).
+ *
+ * Por que hace falta este caso: la ruta de logout del panel del dealer ya limpia
+ * el binding, pero nada lo fijaba. Medido por mutacion: quitar la llamada de
+ * auth-context.tsx:50 no ponia rojo ningun test de tests/auth. Si se cae, el
+ * siguiente que entre en ese navegador hereda el dealer del anterior y el panel
+ * le ensena inventario, finanzas y solicitudes de otro concesionario.
+ *
+ * Los UUID son los de Mapaal y viven solo en este fixture.
+ */
+const DEALER_KEY = "nadakki_dealer_id";
+const UNIDAD_KEY = "nadakki_organization_unit_id";
+const DEALER = "1bc6a6cd-2592-442a-9d70-2d1b630762fc";
+const UNIDAD = "ae4eab3a-733b-44d9-a573-1ee21dc9e631";
+
 function BotonDeSalida() {
   const ctx = useContext(AuthContext);
   return (
@@ -117,6 +139,9 @@ function sembrarLosCuatroTerritorios() {
     SESSION_PII_KEY,
     JSON.stringify({ applicant_name: "Juan Pérez", cedula: "402-1234567-8" })
   );
+  // 5 · el binding del dealer, que no esta en LS_KEYS
+  localStorage.setItem(DEALER_KEY, DEALER);
+  localStorage.setItem(UNIDAD_KEY, UNIDAD);
 }
 
 async function ejecutarLogout() {
@@ -255,7 +280,40 @@ describe("#13 · logout invoca las cuatro purgas (Ley 172-13)", () => {
     });
   });
 
-  test("control positivo: sin logout, los cuatro territorios siguen poblados", () => {
+  test("el binding del dealer no sobrevive: ni dealer ni unidad", async () => {
+    sembrarLosCuatroTerritorios();
+    await ejecutarLogout();
+    await waitFor(() => {
+      expect(localStorage.getItem(DEALER_KEY)).toBeNull();
+    });
+    expect(localStorage.getItem(UNIDAD_KEY)).toBeNull();
+  });
+
+  test("y tampoco sobrevive con la sesion restaurada por el refresh", async () => {
+    // Con refresh OK el arranque reescribe las claves de LS_KEYS (:164). El
+    // binding no lo reescribe nadie, pero el caso se declara para que la
+    // afirmacion no dependa de que el arranque haya fallado.
+    mockRefreshOK();
+    sembrarLosCuatroTerritorios();
+    render(
+      <AuthProvider>
+        <BotonDeSalida />
+      </AuthProvider>
+    );
+    await waitFor(() => {
+      expect(tokenStorage.getAccessToken()).toBe("access-del-refresh");
+    });
+    expect(localStorage.getItem(DEALER_KEY)).toBe(DEALER); // control: sembrado
+
+    screen.getByText("salir").click();
+
+    await waitFor(() => {
+      expect(localStorage.getItem(DEALER_KEY)).toBeNull();
+    });
+    expect(localStorage.getItem(UNIDAD_KEY)).toBeNull();
+  });
+
+  test("control positivo: sin logout, los cinco territorios siguen poblados", () => {
     sembrarLosCuatroTerritorios();
     // Sin este control, los cuatro tests de arriba pasarían con un logout roto
     // que no hiciera nada, siempre que el sembrado tampoco funcionara.
@@ -264,5 +322,7 @@ describe("#13 · logout invoca las cuatro purgas (Ley 172-13)", () => {
     expect(localStorage.getItem(REFRESH_TOKEN_KEY)).not.toBeNull();
     expect(localStorage.getItem(LS_KEYS.auth)).not.toBeNull();
     expect(sessionStorage.getItem(SESSION_PII_KEY)).not.toBeNull();
+    expect(localStorage.getItem(DEALER_KEY)).not.toBeNull();
+    expect(localStorage.getItem(UNIDAD_KEY)).not.toBeNull();
   });
 });

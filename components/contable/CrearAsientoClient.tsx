@@ -15,10 +15,11 @@ import {
 import { BalanceIndicator } from "@/components/contable/BalanceIndicator";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
+import { currencyParaEnviar, errorDeMoneda, esIso4217 } from "@/lib/contable/moneda-asiento";
 import {
   sumAsientoSides,
   type AsientoLineaInput,
-  type ContableCurrency,
+  type CreateAsientoPayload,
   type CuentaContable,
   type PeriodoContable,
 } from "@/types/contable";
@@ -41,12 +42,15 @@ export function CrearAsientoClient() {
     periodo_id: "",
     fecha: new Date().toISOString().slice(0, 10),
     descripcion: "",
-    currency: "DOP" as ContableCurrency,
+    /** Vacio = la del tenant. El backend resuelve la funcional si no se envia. */
+    currency: "",
     exchange_rate: "1",
   });
   const [lineas, setLineas] = useState<AsientoLineaInput[]>([emptyLine(), emptyLine()]);
 
   const exchangeRate = Number(header.exchange_rate) || 1;
+  /** Escrita pero no valida: el backend responderia D4_MONEDA. Se para antes. */
+  const monedaInvalida = header.currency.trim().length > 0 && !esIso4217(header.currency);
   const lineasPosteables = useMemo(
     () => lineas.filter((l) => l.cuenta_id && (l.debe_original > 0 || l.haber_original > 0)),
     [lineas],
@@ -82,19 +86,32 @@ export function CrearAsientoClient() {
     void loadMeta();
   }, [loadMeta]);
 
-  const payload = () => ({
-    periodo_id: header.periodo_id,
-    fecha: header.fecha,
-    descripcion: header.descripcion,
-    currency: header.currency,
-    exchange_rate: exchangeRate,
-    lineas: lineasPosteables,
-  });
+  /**
+   * `currency` se OMITE cuando el campo esta vacio, para que el backend aplique
+   * la moneda funcional del tenant (asientos_router.py:258-259). Enviar una
+   * moneda elegida a mano solo tiene sentido para un asiento en otra moneda, y
+   * entonces el backend exige cotizacion oficial del dia.
+   */
+  const payload = (): CreateAsientoPayload => {
+    const currency = currencyParaEnviar(header.currency);
+    return {
+      periodo_id: header.periodo_id,
+      fecha: header.fecha,
+      descripcion: header.descripcion,
+      ...(currency ? { currency } : {}),
+      exchange_rate: exchangeRate,
+      lineas: lineasPosteables,
+    };
+  };
 
   const saveDraft = async () => {
     if (!tenantId) return;
     if (!header.periodo_id) {
       toast.error("Selecciona un periodo abierto");
+      return;
+    }
+    if (monedaInvalida) {
+      toast.error("La moneda debe ser un codigo ISO-4217 de tres letras");
       return;
     }
     setSaving(true);
@@ -103,8 +120,9 @@ export function CrearAsientoClient() {
       setDraftId(row.id);
       toast.success("Borrador guardado");
     } catch (e) {
-      toast.error("No se pudo guardar el borrador", {
-        description: e instanceof ContableApiError ? e.message : "",
+      const moneda = e instanceof ContableApiError ? errorDeMoneda(e.message) : null;
+      toast.error(moneda ? "No se pudo guardar el borrador" : "No se pudo guardar el borrador", {
+        description: moneda ? moneda.copia : e instanceof ContableApiError ? e.message : "",
       });
     } finally {
       setSaving(false);
@@ -113,6 +131,10 @@ export function CrearAsientoClient() {
 
   const post = async () => {
     if (!tenantId || !cuadra) return;
+    if (monedaInvalida) {
+      toast.error("La moneda debe ser un codigo ISO-4217 de tres letras");
+      return;
+    }
     setPosting(true);
     try {
       let id = draftId;
@@ -125,8 +147,9 @@ export function CrearAsientoClient() {
       toast.success("Asiento posteado");
       router.push("/contable/libro-mayor");
     } catch (e) {
+      const moneda = e instanceof ContableApiError ? errorDeMoneda(e.message) : null;
       toast.error("No se pudo postear", {
-        description: e instanceof ContableApiError ? e.message : "",
+        description: moneda ? moneda.copia : e instanceof ContableApiError ? e.message : "",
       });
     } finally {
       setPosting(false);
@@ -187,11 +210,14 @@ export function CrearAsientoClient() {
           <Input label="Fecha" type="date" value={header.fecha} onChange={(e) => setHeader((h) => ({ ...h, fecha: e.target.value }))} />
           <Input label="Descripción" value={header.descripcion} onChange={(e) => setHeader((h) => ({ ...h, descripcion: e.target.value }))} />
           <div className="grid grid-cols-2 gap-3">
-            <Select
-              label="Moneda"
+            <Input
+              label="Moneda (ISO-4217)"
+              placeholder="moneda funcional del tenant"
+              maxLength={3}
               value={header.currency}
-              onChange={(e) => setHeader((h) => ({ ...h, currency: e.target.value as ContableCurrency }))}
-              options={[{ value: "DOP", label: "DOP" }, { value: "USD", label: "USD" }]}
+              onChange={(e) => setHeader((h) => ({ ...h, currency: e.target.value.toUpperCase() }))}
+              data-testid="asiento-moneda"
+              aria-describedby="asiento-moneda-ayuda"
             />
             <Input
               label="Tipo de cambio"
@@ -201,6 +227,15 @@ export function CrearAsientoClient() {
               onChange={(e) => setHeader((h) => ({ ...h, exchange_rate: e.target.value }))}
             />
           </div>
+          <p id="asiento-moneda-ayuda" className="text-xs text-zinc-400">
+            Dejala vacia para registrar en la moneda funcional del tenant: la resuelve el backend. Solo
+            completala para un asiento en otra moneda, y entonces hace falta cotizacion oficial del dia.
+          </p>
+          {monedaInvalida ? (
+            <p role="alert" data-testid="asiento-moneda-invalida" className="text-xs font-semibold text-amber-300">
+              La moneda debe ser un codigo ISO-4217 de tres letras.
+            </p>
+          ) : null}
         </div>
 
         <BalanceIndicator totalDebe={totalDebe} totalHaber={totalHaber} />
