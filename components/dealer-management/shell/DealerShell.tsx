@@ -136,14 +136,18 @@ export function DealerShell({ children }: { children: ReactNode }) {
         codigo: null,
       };
     }
-    if (salida.estado === "multiples") {
-      return {
-        estado: salida.estado,
-        titulo: "Tu usuario tiene varios dealers asignados; falta elegir uno",
-        detalle: `El backend reportó ${salida.total}. No se elige uno por defecto: sería mostrarte el inventario de otro.`,
-        codigo: null,
-      };
-    }
+    /**
+     * Varias asignaciones NO es un estado terminal del shell: pasa a los hijos.
+     *
+     * Antes el shell cortaba aqui con un aviso sin salida. Quien elige es la
+     * pagina de Inventario, con un selector que dura lo que dura la sesion y no
+     * persiste nada (decision de Cesar). El shell sigue sin elegir por su
+     * cuenta: el binding queda BORRADO --lo borra `syncDealerContextFromBackend`
+     * (lib/dealer/dealer-context-api.ts)-- asi que ninguna otra pantalla del
+     * dealer hereda un concesionario que el usuario no ha elegido; cada una
+     * muestra su propio estado de "sin dealer".
+     */
+    if (salida.estado === "multiples") return null;
     if (salida.estado === "error_http") {
       /* El reason_code REAL del backend, o la frase de "no verificado". */
       return isAccessUnverified(salida.reason_code)
