@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BarChart3, Upload, Users } from "lucide-react";
+import { BarChart3, Compass, Upload, Users } from "lucide-react";
 import { CORE_NAV_CAPABILITY_KEYS, isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
+import { PrimerosPasosInicio } from "@/components/dealer/PrimerosPasosInicio";
 import { DealerPostSaleCores } from "@/components/dealer/DealerPostSaleCores";
 import { DealerSponsorshipBanner } from "@/components/dealer/DealerSponsorshipBanner";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
@@ -13,12 +14,30 @@ import { UsageMeter } from "@/components/dealer/UsageMeter";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { DEALER_TOKENS } from "@/lib/dealer-management/tokens";
 
-const QUICK_LINK_CARDS = [
-  { href: "/autos/dealer/publicar-rapido" as const, capability: "autos.inventory.create", icon: Upload, title: "Publicar vehículo", desc: "Abre el flujo de publicación existente." },
-  { href: "/autos/dealer/leads" as const, capability: "autos.leads.crm", icon: Users, title: "Leads", desc: "Gestiona los leads disponibles para este dealer." },
-  { href: "/autos/dealer/insights" as const, capability: "autos.analytics.basic", icon: BarChart3, title: "Insights", desc: "Consulta señales operativas disponibles." },
+/**
+ * `capability: null` = siempre visible, no depende del plan. Mismo criterio que
+ * el menu (`dealer-nav.ts`): el Centro Operativo es la guia de carga y
+ * operacion, no publica ningun dato del tenant y es lo que necesita un dealer
+ * que todavia no tiene plan ni stock.
+ */
+const QUICK_LINK_CARDS: {
+  href: string;
+  capability: string | null;
+  icon: typeof Upload;
+  title: string;
+  desc: string;
+}[] = [
+  { href: "/autos/dealer/publicar-rapido", capability: "autos.inventory.create", icon: Upload, title: "Publicar vehículo", desc: "Abre el flujo de publicación existente." },
+  { href: "/autos/dealer/leads", capability: "autos.leads.crm", icon: Users, title: "Leads", desc: "Gestiona los leads disponibles para este dealer." },
+  { href: "/autos/dealer/insights", capability: "autos.analytics.basic", icon: BarChart3, title: "Insights", desc: "Consulta señales operativas disponibles." },
+  { href: "/centro-operativo", capability: null, icon: Compass, title: "Centro Operativo", desc: "La guía de carga y operación: cómo cargar el stock y qué asiento genera cada paso." },
 ];
-const PAGE_CAPABILITIES = Array.from(new Set([...CORE_NAV_CAPABILITY_KEYS, ...QUICK_LINK_CARDS.map((card) => card.capability)]));
+const PAGE_CAPABILITIES = Array.from(
+  new Set([
+    ...CORE_NAV_CAPABILITY_KEYS,
+    ...QUICK_LINK_CARDS.map((card) => card.capability).filter((key): key is string => key !== null),
+  ]),
+);
 
 export default function DealerDashboardPage() {
   const query = useAccessEntitlementsBatch(PAGE_CAPABILITIES);
@@ -31,6 +50,12 @@ export default function DealerDashboardPage() {
   return (
     <main className={DEALER_TOKENS.shell}>
       <DealerOperationsHeader />
+      {/*
+        Arriba y antes que nada: un dealer con el inventario vacio no tiene nada
+        que hacer en el resto de la pantalla hasta cargar su stock. Se pinta solo
+        cuando el inventario esta vacio DE VERDAD; el propio componente decide.
+      */}
+      <PrimerosPasosInicio />
       {hasUpgradeRequired ? (
         <div className="flex justify-end">
           <button
@@ -59,10 +84,19 @@ export default function DealerDashboardPage() {
         <h2 className="mb-3 font-manrope text-base font-bold text-nk-fg">Accesos rápidos</h2>
         <div className="grid gap-3 md:grid-cols-3">
           {QUICK_LINK_CARDS.map((card) => {
-            const allowed = !failClosed && query.data?.results[card.capability]?.allowed === true;
+            // `capability: null` no pasa por el batch: no hay nada que permitir.
+            const allowed =
+              card.capability === null
+                ? true
+                : !failClosed && query.data?.results[card.capability]?.allowed === true;
             if (!allowed) return null;
             const Icon = card.icon;
-            return <Link key={card.href} href={card.href} data-testid="privileged-quick-link" data-capability={card.capability} data-allowed="true" className={`${DEALER_TOKENS.card} ${DEALER_TOKENS.cardAllowed}`}>
+            // Solo las tarjetas con `capability` son "privileged": ese testid es
+            // el que verifica que con fail-closed NO se pinta ninguna. Una
+            // tarjeta incondicional con esa marca convertiria esa garantia en
+            // una mentira, asi que lleva la suya.
+            const testid = card.capability === null ? "open-quick-link" : "privileged-quick-link";
+            return <Link key={card.href} href={card.href} data-testid={testid} data-capability={card.capability ?? undefined} data-allowed="true" className={`${DEALER_TOKENS.card} ${DEALER_TOKENS.cardAllowed}`}>
               <Icon className="h-5 w-5 text-brand-2" aria-hidden="true" /><p className="mt-3 font-manrope text-sm font-bold text-nk-fg">{card.title}</p><p className="mt-1 text-xs text-nk-fg-muted">{card.desc}</p>
             </Link>;
           })}
