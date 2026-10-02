@@ -20,6 +20,7 @@ import {
   Building2,
   Cable,
   Car,
+  Compass,
   FileText,
   Gauge,
   LayoutDashboard,
@@ -57,6 +58,12 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
       { href: "/autos/dealer/inventario", label: "Inventario", icon: Car, capability: "autos.inventory.list" },
       { href: "/autos/dealer/publicar-rapido", label: "Publicar", icon: PackagePlus, capability: "autos.inventory.create" },
       { href: "/autos/dealer/leads", label: "Leads", icon: Users, capability: "autos.leads.crm" },
+      // El onboarding de Mapaal vive en el Centro Operativo (decision de Cesar).
+      // `capability: null` a proposito: es la guia de carga y operacion, no
+      // publica ningun dato del tenant --no hay importes ni cifras-- y es justo
+      // lo que necesita un dealer que todavia no tiene plan ni stock. Cerrarla
+      // por plan dejaria sin instrucciones a quien mas las necesita.
+      { href: "/centro-operativo", label: "Centro Operativo", icon: Compass, capability: null },
     ],
   },
   {

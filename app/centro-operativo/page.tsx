@@ -17,7 +17,15 @@ const TARJETA = "rounded-xl border border-nk-border bg-nk-surface p-4";
 
 function Bloque({ bloque }: { bloque: BloqueGuia }) {
   return (
-    <article data-testid={`centro-bloque-${bloque.id}`} className={TARJETA}>
+    <article
+      // El `id` hace enlazable cada bloque. Lo usa el boton "Empezar: cargar mi
+      // stock" del Inicio del dealer, que apunta a
+      // `/centro-operativo#primeros-pasos`. `scroll-mt-*` evita que el titulo
+      // quede pegado al borde al saltar.
+      id={bloque.id}
+      data-testid={`centro-bloque-${bloque.id}`}
+      className={`${TARJETA} scroll-mt-6`}
+    >
       <h2 className="text-lg font-bold text-nk-fg">{bloque.titulo}</h2>
 
       {bloque.parrafos?.map((parrafo) => (
