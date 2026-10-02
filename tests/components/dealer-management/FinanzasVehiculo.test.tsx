@@ -224,3 +224,41 @@ describe("acceso que no se pudo verificar", () => {
     expect(bloqueo.textContent).not.toContain("reason_code");
   });
 });
+
+/**
+ * La denegacion es POR capability y esta pantalla pide dos: costos y ver
+ * vehiculos. Mirando solo la de costos, un `no_organization_unit` en la de
+ * vehiculos se leia como "no tienes la capability".
+ */
+describe("el codigo de no verificado se busca en todo el batch", () => {
+  it("lo reconoce cuando viene en la clave de vehiculos, no en la de costos", () => {
+    batchMock.mockReturnValue({
+      isPending: false,
+      isLoading: false,
+      isError: false,
+      error: null,
+      data: {
+        results: {
+          [COSTS_VEHICLE_CAPABILITY]: {
+            allowed: false,
+            reason_code: "no_organization_unit",
+            limit: null,
+            current_usage: null,
+          },
+          [COSTS_CAPABILITY]: {
+            allowed: true,
+            reason_code: "ALLOWED",
+            limit: null,
+            current_usage: null,
+          },
+        },
+      },
+    });
+    montar();
+    const bloqueo = screen.getByTestId("finanzas-bloqueado");
+    expect(bloqueo).toHaveAttribute("data-no-verificado", "true");
+    expect(bloqueo).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
+    expect(bloqueo.textContent).not.toContain("reservados a quien tenga la capability");
+    expect(bloqueo).toHaveTextContent("no_organization_unit");
+  });
+});

@@ -17,6 +17,7 @@ import {
   ACCESS_UNVERIFIED_DETAIL,
   ACCESS_UNVERIFIED_MESSAGE,
   isAccessUnverified,
+  unverifiedReasonFromBatch,
 } from "@/lib/access/reason-codes";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
@@ -61,7 +62,19 @@ export default function DealerFinanzasPage() {
    * falte la capability: esta diciendo que no llego a comprobarlo. Nombrar la
    * capability ahi manda al usuario a pedir un permiso que quiza ya tiene.
    */
-  const noVerificado = isAccessUnverified(denyReason);
+  /**
+   * Se recorre el batch ENTERO, no solo la clave de costos. Esta pantalla pide dos
+   * capabilities --costos y ver vehiculos-- y la denegacion es POR capability: el
+   * motor puede no haber podido evaluar la de vehiculos y si la de costos. Mirando
+   * solo una, ese caso se leia como "no tienes la capability".
+   *
+   * `isAccessUnverified(denyReason)` se mantiene para el camino del error HTTP,
+   * donde no hay batch que recorrer y el codigo viene del AccessApiError.
+   */
+  const motivoNoVerificado =
+    unverifiedReasonFromBatch(access.data?.results) ??
+    (isAccessUnverified(denyReason) ? denyReason : null);
+  const noVerificado = Boolean(motivoNoVerificado);
 
   const inventory = useQuery({
     queryKey: ["dealer-private-inventory", context?.dealerId ?? "none"],
@@ -104,10 +117,10 @@ export default function DealerFinanzasPage() {
               <code>{COSTS_CAPABILITY}</code>.
             </>
           )}
-          {denyReason ? (
+          {noVerificado || denyReason ? (
             <>
               {" "}
-              reason_code: <code>{denyReason}</code>
+              reason_code: <code>{motivoNoVerificado ?? denyReason}</code>
             </>
           ) : null}
         </div>
