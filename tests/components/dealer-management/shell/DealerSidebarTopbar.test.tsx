@@ -75,7 +75,14 @@ beforeEach(() => {
 describe("DealerSidebar", () => {
   it("cargando no pinta ningun item de navegacion: skeleton, no un menu falso", () => {
     render(
-      <DealerSidebar groups={GRUPOS} loading mobileOpen={false} onClose={() => {}} />,
+      <DealerSidebar
+        groups={GRUPOS}
+        loading
+        mobileOpen={false}
+        onClose={() => {}}
+        collapsed={false}
+        onToggleCollapsed={() => {}}
+      />,
     );
     // El bloque de marca SI se pinta mientras carga; lo que no puede aparecer
     // es un solo item del menu, ni su etiqueta ni su href.
@@ -93,6 +100,8 @@ describe("DealerSidebar", () => {
         loading={false}
         mobileOpen={false}
         onClose={() => {}}
+        collapsed={false}
+        onToggleCollapsed={() => {}}
       />,
     );
     expect(screen.getByText("Operacion")).toBeInTheDocument();
@@ -110,6 +119,8 @@ describe("DealerSidebar", () => {
         loading={false}
         mobileOpen={false}
         onClose={() => {}}
+        collapsed={false}
+        onToggleCollapsed={() => {}}
       />,
     );
     expect(screen.queryByText("Contabilidad")).not.toBeInTheDocument();
@@ -127,6 +138,8 @@ describe("DealerSidebar", () => {
         loading={false}
         mobileOpen={false}
         onClose={() => {}}
+        collapsed={false}
+        onToggleCollapsed={() => {}}
       />,
     );
     expect(screen.getByRole("link", { name: /Finanzas por vehiculo/ })).toHaveAttribute(
@@ -145,6 +158,8 @@ describe("DealerSidebar", () => {
         loading={false}
         mobileOpen={false}
         onClose={() => {}}
+        collapsed={false}
+        onToggleCollapsed={() => {}}
       />,
     );
     expect(screen.getByText("Nadakki")).toBeInTheDocument();
@@ -158,6 +173,8 @@ describe("DealerSidebar", () => {
         loading={false}
         mobileOpen={false}
         onClose={() => {}}
+        collapsed={false}
+        onToggleCollapsed={() => {}}
       />,
     );
     expect(screen.getByText("Mapaal")).toBeInTheDocument();

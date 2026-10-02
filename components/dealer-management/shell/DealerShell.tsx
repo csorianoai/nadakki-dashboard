@@ -49,6 +49,22 @@ export function DealerShell({ children }: { children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   /**
+   * Barra estrecha o completa. Estado de React, y nada mas.
+   *
+   * Dura la sesion a proposito (pedido de Cesar): NO se escribe en Local
+   * Storage. Persistirlo traeria el problema que ya tiene la Suite --que lee
+   * `nadakki-sidebar-collapsed` en un efecto--: el servidor no tiene Local
+   * Storage, asi que el primer HTML sale con la barra completa y la barra salta
+   * a estrecha despues de hidratar. Mientras la preferencia viva en memoria no
+   * hay salto, porque cliente y servidor arrancan en el mismo valor.
+   *
+   * Vive en el shell y no en el sidebar porque el shell es el que sobrevive a
+   * las navegaciones --es el layout-- y es quien ya reparte el resto del estado
+   * del chrome por props: entitlements, menu de celular y paleta.
+   */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  /**
    * El dealer de la sesion se trae del BACKEND antes de pintar nada que lo lea.
    *
    * Doce ficheros leen el binding del Local Storage, y nadie lo escribia: el
@@ -227,6 +243,8 @@ export function DealerShell({ children }: { children: ReactNode }) {
         unverifiedReason={unverifiedReason}
         mobileOpen={mobileNav}
         onClose={() => setMobileNav(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed((previo) => !previo)}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
