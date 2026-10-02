@@ -11,6 +11,7 @@ import {
   listPeriodos,
 } from "@/app/hooks/contable";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
+import { ErrorConReintentar } from "@/components/contable/ErrorConReintentar";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import {
   MonedaFuncionalNota,
@@ -29,19 +30,35 @@ export function LibroMayorClient() {
   const [periodoId, setPeriodoId] = useState("");
   const [report, setReport] = useState<LibroMayorReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const [errorCatalogo, setErrorCatalogo] = useState<string | null>(null);
+  const [intentoCatalogo, setIntentoCatalogo] = useState(0);
 
+  // Cuentas y periodos. Un fallo aqui se dice en pantalla con "Reintentar": sin
+  // el `.catch` la promesa quedaba rechazada sin manejar y los dos selectores
+  // se quedaban vacios y mudos.
   useEffect(() => {
     if (!tenantId) return;
+    let cancelado = false;
+    setErrorCatalogo(null);
     void Promise.all([
       listCuentas(tenantId, { activa: true }),
       listPeriodos(tenantId, new Date().getFullYear()),
-    ]).then(([c, p]) => {
-      setCuentas(c);
-      setPeriodos(p);
-      if (c[0]) setCuentaId(c[0].id);
-      if (p[0]) setPeriodoId(p[0].id);
-    });
-  }, [tenantId]);
+    ])
+      .then(([c, p]) => {
+        if (cancelado) return;
+        setCuentas(c);
+        setPeriodos(p);
+        if (c[0]) setCuentaId(c[0].id);
+        if (p[0]) setPeriodoId(p[0].id);
+      })
+      .catch((e) => {
+        if (cancelado) return;
+        setErrorCatalogo(e instanceof ContableApiError ? e.message : "");
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [tenantId, intentoCatalogo]);
 
   const load = useCallback(async () => {
     if (!tenantId || !cuentaId || !periodoId) return;
@@ -68,6 +85,14 @@ export function LibroMayorClient() {
       icon={<BookMarked className="h-10 w-10" aria-hidden />}
     >
       <MonedaFuncionalNota locale={moneda} />
+
+      {errorCatalogo !== null ? (
+        <ErrorConReintentar
+          titulo="No se pudieron cargar las cuentas y los periodos."
+          detalle={errorCatalogo || undefined}
+          onReintentar={() => setIntentoCatalogo((n) => n + 1)}
+        />
+      ) : null}
 
       <div className="mb-4 grid gap-3 md:grid-cols-2">
         <Select

@@ -10,6 +10,7 @@ import {
   listPeriodos,
 } from "@/app/hooks/contable";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
+import { ErrorConReintentar } from "@/components/contable/ErrorConReintentar";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import {
   MonedaFuncionalNota,
@@ -27,14 +28,29 @@ export function BalanceComprobacionClient() {
   const [periodoId, setPeriodoId] = useState("");
   const [report, setReport] = useState<BalanceComprobacionReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const [errorPeriodos, setErrorPeriodos] = useState<string | null>(null);
+  const [intentoPeriodos, setIntentoPeriodos] = useState(0);
 
+  // Igual que en Libro mayor: sin `.catch` un fallo de `/periodos` dejaba el
+  // selector vacio y la pantalla sin nada que decir.
   useEffect(() => {
     if (!tenantId) return;
-    void listPeriodos(tenantId, new Date().getFullYear()).then((p) => {
-      setPeriodos(p);
-      if (p[0]) setPeriodoId(p[0].id);
-    });
-  }, [tenantId]);
+    let cancelado = false;
+    setErrorPeriodos(null);
+    void listPeriodos(tenantId, new Date().getFullYear())
+      .then((p) => {
+        if (cancelado) return;
+        setPeriodos(p);
+        if (p[0]) setPeriodoId(p[0].id);
+      })
+      .catch((e) => {
+        if (cancelado) return;
+        setErrorPeriodos(e instanceof ContableApiError ? e.message : "");
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [tenantId, intentoPeriodos]);
 
   const load = useCallback(async () => {
     if (!tenantId || !periodoId) return;
@@ -60,6 +76,14 @@ export function BalanceComprobacionClient() {
       description="Sumas de debe y haber por cuenta — totales globales deben cuadrar."
       icon={<Scale className="h-10 w-10" aria-hidden />}
     >
+      {errorPeriodos !== null ? (
+        <ErrorConReintentar
+          titulo="No se pudieron cargar los periodos."
+          detalle={errorPeriodos || undefined}
+          onReintentar={() => setIntentoPeriodos((n) => n + 1)}
+        />
+      ) : null}
+
       <div className="mb-4 max-w-xs">
         <Select
           label="Periodo"

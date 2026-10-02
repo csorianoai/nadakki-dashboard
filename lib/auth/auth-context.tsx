@@ -106,6 +106,31 @@ export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
 /** Max time to wait for refresh + /me during session init (Render cold start ~4.6s). */
 const SESSION_INIT_TIMEOUT_MS = 8_000;
 
+/**
+ * LA REGLA: solo un 401 cierra la sesion.
+ *
+ * Un timeout o un error del servidor NO borran los tokens. Medido en
+ * produccion (D8, suite#1501): Libro mayor y Balance se quedaban en
+ * "Verificando sesion...", pintaban "El servidor no respondio a tiempo" y
+ * acababan en /login. La cadena era esta:
+ *
+ *   1. Backend en frio --el comentario de arriba mide ~4.6s-- contra un
+ *      AUTH_FETCH_TIMEOUT_MS de 5s: el refresh expira.
+ *   2. El `else` del refresh llamaba a `clearTokens()` de forma incondicional,
+ *      y la comprobacion de `status === 401` venia DESPUES, cuando ya no
+ *      quedaban tokens. Un 504 se trataba igual que una sesion revocada.
+ *   3. Se pintaba el error con su boton "Reintentar".
+ *   4. Pulsar "Reintentar" reejecutaba el init, que ya no encontraba refresh
+ *      token, salia por la rama de "no hay sesion" --sin `initError`-- y
+ *      ProtectedRoute redirigia a /login.
+ *
+ * O sea: el boton "Reintentar" ERA el logout. Y cualquier remount hacia lo
+ * mismo. Por eso `clearTokens()` vive ahora en una sola rama, la del 401.
+ */
+function esTimeout(error?: string): boolean {
+  return Boolean(error && error.includes("Tiempo de espera"));
+}
+
 export interface AuthContextValue {
   user: UserInfo | null;
   tenant: TenantInfo | null;
@@ -149,6 +174,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     const timeout = setTimeout(() => {
       if (!cancelled) {
+        // `cancelled` corta el init en vuelo, pero NO toca los tokens: un
+        // servidor lento no es una sesion invalida.
         cancelled = true;
         setInitError("El servidor no respondió a tiempo. Verifica tu conexión.");
         setIsLoading(false);
@@ -190,28 +217,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               clearTimeout(timeout);
               return;
             }
-            const msg = me.error?.includes("Tiempo de espera")
+            // Ni timeout ni 5xx de /me cierran la sesion: los tokens que acaba
+            // de devolver el refresh son validos y sirven para reintentar.
+            const msg = esTimeout(me.error)
               ? "El servidor no respondió a tiempo. Verifica tu conexión."
               : "No se pudo verificar la sesión. Intenta de nuevo.";
-            console.error("[auth-init] /me failed:", me.error);
+            console.error("[auth-init] /me failed (sesion intacta):", me.status, me.error);
             setInitError(msg);
           }
-        } else {
+        } else if (result.status === 401) {
+          // El unico caso en que la sesion esta muerta de verdad.
           tokenStorage.clearTokens();
-          if (!cancelled && result.error) {
-            const msg = result.status === 401
-              ? "Tu sesión expiró. Inicia sesión nuevamente."
-              : result.error.includes("Tiempo de espera")
-              ? "El servidor no respondió a tiempo. Verifica tu conexión."
-              : "No se pudo verificar la sesión. Intenta de nuevo.";
-            console.error("[auth-init] refresh failed:", result.error);
-            setInitError(msg);
-          }
+          clearLocalStorage();
+          if (!cancelled) setInitError("Tu sesión expiró. Inicia sesión nuevamente.");
+        } else {
+          // Timeout, 5xx, red caida: la sesion sigue viva y los tokens se
+          // quedan donde estan, para que "Reintentar" tenga algo con lo que
+          // reintentar.
+          const msg = esTimeout(result.error)
+            ? "El servidor no respondió a tiempo. Verifica tu conexión."
+            : "No se pudo verificar la sesión. Intenta de nuevo.";
+          console.error("[auth-init] refresh failed (sesion intacta):", result.status, result.error);
+          if (!cancelled) setInitError(msg);
         }
         if (!cancelled) setIsLoading(false);
       } catch (err) {
+        // Excepcion de red. Los tokens se quedan: no hubo ningun 401.
         if (cancelled) return;
-        setInitError(err instanceof Error ? err.message : "Error verificando sesion");
+        console.error("[auth-init] excepcion (sesion intacta):", err);
+        setInitError(
+          err instanceof Error && err.message
+            ? err.message
+            : "No se pudo verificar la sesión. Intenta de nuevo.",
+        );
         setIsLoading(false);
       }
       clearTimeout(timeout);
