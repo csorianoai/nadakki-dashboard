@@ -32,6 +32,25 @@ export interface TipoCosto {
 }
 
 /**
+ * La plantilla oficial de carga, servida como asset estatico del panel.
+ *
+ * La RUTA vive aqui y no en la pantalla a proposito: cambiar de version es
+ * cambiar esta linea --y dejar el fichero nuevo en `public/`-- sin tocar ni una
+ * linea de codigo ni volver a desplegar el componente. La version va en el
+ * nombre del fichero para que un enlace cacheado nunca sirva la plantilla vieja.
+ */
+export interface PlantillaCarga {
+  /** Ruta servida desde `public/`. Empieza por "/" y acaba en ".xlsx". */
+  ruta: string;
+  /** Version oficial, para que la pantalla pueda decirla sin deducirla. */
+  version: string;
+  /** El texto del boton. */
+  etiqueta: string;
+  /** La linea que explica para que sirve. Es contenido, no decoracion. */
+  descripcion: string;
+}
+
+/**
  * Un bloque de la guia. El texto va verbatim; la pantalla decide como pintarlo y
  * no agrega ninguno propio.
  */
@@ -43,6 +62,12 @@ export interface BloqueGuia {
   pasos?: string[];
   asientos?: AsientoGuia[];
   advertencia?: string;
+  /**
+   * La plantilla cuelga del BLOQUE y no del contenido global para que el archivo
+   * de datos decida tambien EN QUE seccion aparece el boton. Hoy es "primeros
+   * pasos"; moverlo a otra seccion seria mover este campo, sin tocar la pantalla.
+   */
+  plantilla?: PlantillaCarga;
 }
 
 export interface ContenidoCentroOperativo {
@@ -132,6 +157,31 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
     ],
     advertencia:
       "No uses una compra ficticia para representar un vehículo que Mapaal ya poseía: eso fabricaría una deuda con un proveedor que no existe.",
+    /*
+     * PLANTILLA DE CARGA — pendiente del fichero oficial.
+     *
+     * Para encenderla hacen falta dos cosas, las dos SIN tocar codigo:
+     *
+     *   1. dejar el .xlsx oficial en `public/assets/centro-operativo/`
+     *   2. descomentar este bloque con el nombre y la version reales
+     *
+     * Queda sin declarar a proposito. Medido el 2026-10-02: el fichero no
+     * existe en nadakki-dashboard ni en nadakki-ai-suite, y en el tablero
+     * suite#1501 no hay ningun artefacto de P5 --claude-b1 todavia no ha
+     * confirmado si la oficial es la v3 o la v4; las unicas menciones de
+     * "plantilla" en ese tablero son del plan de cuentas contable AR/dealer/ARS,
+     * que es otra cosa. Declarar una ruta inventada pintaria un boton que
+     * descarga un 404, y poner "v3" o "v4" a ojo serviria la plantilla
+     * equivocada para cargar un inventario real.
+     *
+     * plantilla: {
+     *   ruta: "/assets/centro-operativo/plantilla-carga-mapaal-v4.xlsx",
+     *   version: "v4",
+     *   etiqueta: "Descargar plantilla de carga (Excel)",
+     *   descripcion:
+     *     "Es la planilla donde listás los vehículos que Mapaal ya tenía, para cargarlos como saldos iniciales antes de empezar a operar.",
+     * },
+     */
   },
   {
     id: "alta-vehiculo",
