@@ -21,6 +21,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DealerDashboardView } from "@/components/credit-hub/dealer/DealerDashboardView";
 import { WelcomeGuide } from "@/components/credit-hub/onboarding/WelcomeGuide";
 import { useAccessEntitlementsBatch, useAccessReadiness } from "@/lib/access/hooks";
+import {
+  ACCESS_UNVERIFIED_DETAIL,
+  ACCESS_UNVERIFIED_MESSAGE,
+  unverifiedReasonFromBatch,
+} from "@/lib/access/reason-codes";
 import { DEALER_CORE_STATUS_ROWS, deriveDealerCoreUiState } from "@/lib/dealer/core-status";
 import { localeDeTenant } from "@/lib/dealer-management/formato";
 import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
@@ -65,6 +70,26 @@ export default function DealerDashboardPage() {
   const montosVisibles =
     !cargandoAcceso && !accessError && estado.state === "READY" && estado.action === "open";
 
+  /**
+   * "No pude evaluarte" no es "no tienes derecho" (#550). Con
+   * `no_organization_unit` o `no_beneficiary_entitlement` el motor no esta diciendo
+   * que falte la capability: esta diciendo que no llego a comprobarlo. Nombrar la
+   * capability ahi manda al usuario a pedir un permiso que quiza ya tiene.
+   *
+   * Se lee del BATCH y no de `estado.reason_code`: cuando readiness declara
+   * NOT_READY, `deriveDealerCoreUiState` llena `reason_code` con lo de readiness y
+   * el codigo del batch no llega hasta aqui. Medido con un caso que fallaba:
+   * readiness PENDING_EXTERNAL_ACTIVATION + batch `no_organization_unit` pintaba
+   * "Próximamente", afirmando que el core no esta certificado cuando en realidad
+   * no se pudo comprobar nada. `unverifiedReasonFromBatch` recorre los items
+   * porque la denegacion es por capability: basta una para saber que la unidad no
+   * llego.
+   */
+  const motivoNoVerificado = cargandoAcceso
+    ? null
+    : unverifiedReasonFromBatch(access.data?.results);
+  const noVerificado = Boolean(motivoNoVerificado);
+
   return (
     <>
       <WelcomeGuide
@@ -74,9 +99,20 @@ export default function DealerDashboardPage() {
       />
 
       {montosVisibles ? null : (
-        <div role="status" data-testid="dealer-bank-montos-ocultos" data-core-state={estado.state} className={AVISO_CLASS}>
+        <div
+          role="status"
+          data-testid="dealer-bank-montos-ocultos"
+          data-core-state={estado.state}
+          data-no-verificado={noVerificado ? "true" : "false"}
+          className={AVISO_CLASS}
+        >
           {cargandoAcceso ? (
             <span>Verificando el acceso a Dealer-Bank…</span>
+          ) : noVerificado ? (
+            <>
+              <strong>{ACCESS_UNVERIFIED_MESSAGE}.</strong> {ACCESS_UNVERIFIED_DETAIL}{" "}
+              reason_code: <code>{motivoNoVerificado}</code>
+            </>
           ) : estado.state === "NOT_READY" || estado.state === "BLOCKED" ? (
             <>
               <strong>Próximamente.</strong> Dealer-Bank todavía no está certificado para este tenant, así

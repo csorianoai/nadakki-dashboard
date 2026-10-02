@@ -13,6 +13,7 @@ import { render, screen } from "@testing-library/react";
 
 import DealerDashboardPage from "@/app/(forge)/credit-hub/dealer/page";
 import { DEALER_CORE_STATUS_ROWS } from "@/lib/dealer/core-status";
+import { ACCESS_UNVERIFIED_MESSAGE } from "@/lib/access/reason-codes";
 
 const ROW = DEALER_CORE_STATUS_ROWS.find((row) => row.name === "Dealer-Bank")!;
 
@@ -174,5 +175,63 @@ describe("cuando se publican importes", () => {
     render(<DealerDashboardPage />);
     expect(screen.getByTestId("dealer-bank-montos-ocultos")).toBeInTheDocument();
     expect(lastProps().currency).toBeNull();
+  });
+});
+
+/**
+ * "No pude evaluarte" no es "no tienes derecho" (#550).
+ *
+ * Con `no_organization_unit` o `no_beneficiary_entitlement` el motor no dice que
+ * falte la capability: dice que no llego a comprobarlo --sin
+ * `organization_unit_id` la cadena BENEFICIARY deniega cerrado antes de consultar
+ * nada, services/access/entitlements.py:330-339--. Los codigos llegan en
+ * MINUSCULAS dentro de un 200, no como error HTTP.
+ */
+describe("acceso que no se pudo verificar", () => {
+  for (const codigo of ["no_organization_unit", "no_beneficiary_entitlement"]) {
+    it(`con ${codigo} dice que no se pudieron verificar los accesos`, () => {
+      batchMock.mockReturnValue(batch(false, codigo));
+      render(<DealerDashboardPage />);
+      const aviso = screen.getByTestId("dealer-bank-montos-ocultos");
+      expect(aviso).toHaveAttribute("data-no-verificado", "true");
+      expect(aviso).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
+      expect(aviso.textContent).not.toContain("reservados a quien tenga la capability");
+      expect(aviso).toHaveTextContent(codigo);
+    });
+  }
+
+  it("no distingue la caja del codigo: el motor los emite en minuscula", () => {
+    batchMock.mockReturnValue(batch(false, "NO_BENEFICIARY_ENTITLEMENT"));
+    render(<DealerDashboardPage />);
+    expect(screen.getByTestId("dealer-bank-montos-ocultos")).toHaveTextContent(
+      ACCESS_UNVERIFIED_MESSAGE,
+    );
+  });
+
+  it("gana sobre el Proximamente de readiness: si no se evaluo, no se afirma que falte certificacion", () => {
+    readinessMock.mockReturnValue(readinessReady("PENDING_EXTERNAL_ACTIVATION", false));
+    batchMock.mockReturnValue(batch(false, "no_organization_unit"));
+    render(<DealerDashboardPage />);
+    const aviso = screen.getByTestId("dealer-bank-montos-ocultos");
+    expect(aviso).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
+    expect(aviso.textContent).not.toContain("Próximamente");
+  });
+
+  it("una denegacion normal sigue nombrando la capability que falta", () => {
+    batchMock.mockReturnValue(batch(false, "UPGRADE_REQUIRED"));
+    render(<DealerDashboardPage />);
+    const aviso = screen.getByTestId("dealer-bank-montos-ocultos");
+    expect(aviso).toHaveAttribute("data-no-verificado", "false");
+    expect(aviso).toHaveTextContent(ROW.actionCapability);
+    expect(aviso.textContent).not.toContain(ACCESS_UNVERIFIED_MESSAGE);
+  });
+
+  it("en ninguno de los dos casos se publican importes", () => {
+    for (const codigo of ["no_organization_unit", "UPGRADE_REQUIRED"]) {
+      batchMock.mockReturnValue(batch(false, codigo));
+      const { unmount } = render(<DealerDashboardPage />);
+      expect(screen.getByTestId("dealer-bank-montos-ocultos")).toBeInTheDocument();
+      unmount();
+    }
   });
 });
