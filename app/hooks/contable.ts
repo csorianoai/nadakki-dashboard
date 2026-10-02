@@ -165,8 +165,16 @@ function toAsiento(row: Record<string, unknown>): AsientoContable {
     numero_asiento: row.numero_asiento ? String(row.numero_asiento) : undefined,
     fecha: String(row.fecha ?? "").slice(0, 10),
     descripcion: String(row.descripcion ?? ""),
-    currency: (String(row.currency ?? "DOP") as AsientoContable["currency"]),
+    // Sin `?? "DOP"`. Un asiento cuya moneda el backend no informa no es un
+    // asiento en pesos dominicanos: es un asiento sin moneda conocida, y
+    // rellenarlo falseaba la moneda de todo tenant que no fuera de RD.
+    currency: typeof row.currency === "string" && row.currency.trim() ? row.currency.trim().toUpperCase() : null,
     exchange_rate: Number(row.exchange_rate ?? 1),
+    // El contrato la devuelve (asientos_router.py:296-298) y se tiraba.
+    functional_currency:
+      typeof row.functional_currency === "string" && row.functional_currency.trim()
+        ? row.functional_currency.trim().toUpperCase()
+        : null,
     status: String(row.status ?? "draft") as AsientoContable["status"],
     lineas: lineas.map((l) => {
       const x = l as Record<string, unknown>;
