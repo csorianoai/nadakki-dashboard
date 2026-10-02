@@ -128,7 +128,10 @@ export function DealerShell({ children }: { children: ReactNode }) {
     if (salida.estado === "sin_asignacion") {
       return {
         estado: salida.estado,
-        titulo: "Tu usuario no tiene un dealer asignado",
+        /* Texto fijado por el protocolo de D1, que es lo que se verifica en
+           Cowork sobre mapaal.nadakki.com. Antes decia "no tiene un dealer
+           asignado": mismo estado, otra frase. */
+        titulo: "Tu usuario no está asignado a ningún concesionario",
         detalle: "Pide a tu administrador que te asigne un concesionario.",
         codigo: null,
       };

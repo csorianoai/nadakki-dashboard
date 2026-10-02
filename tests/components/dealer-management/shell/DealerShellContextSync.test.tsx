@@ -175,7 +175,8 @@ describe("sin asignacion", () => {
     montar();
 
     const aviso = await screen.findByTestId("dealer-context-aviso");
-    expect(aviso).toHaveTextContent("Tu usuario no tiene un dealer asignado");
+    // Literal del protocolo de D1: es el que se verifica en produccion.
+    expect(aviso).toHaveTextContent("Tu usuario no está asignado a ningún concesionario");
     expect(aviso.querySelector("a")).toBeNull();
     expect(rutasDeAutos()).toEqual([]);
   });
