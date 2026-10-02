@@ -96,6 +96,19 @@ describe("las cinco reglas de carga, verbatim", () => {
 
     expect(screen.getByTestId("reglas-contables-costos")).toHaveTextContent("RT 54 FACPCE");
   });
+
+  it("el encabezado NO atribuye la regla a una persona de Nadakki", () => {
+    // Lo lee el dealer. La guia encabeza la seccion 4 con "Por decisión de
+    // César para Mapaal, basada en..."; desde el lado de Carolina eso no es lo
+    // que tiene que leer, y Cesar pidio la correccion de presentacion. La base
+    // del criterio se queda; el nombre no.
+    montar();
+
+    const bloque = screen.getByTestId("reglas-contables-costos");
+    expect(bloque).toHaveTextContent("Criterio contable adoptado (RT 54 FACPCE):");
+    expect(bloque.textContent ?? "").not.toMatch(/César|Cesar/);
+    expect(bloque.textContent ?? "").not.toMatch(/Por decisión de/);
+  });
 });
 
 describe("la ayuda del tipo elegido", () => {

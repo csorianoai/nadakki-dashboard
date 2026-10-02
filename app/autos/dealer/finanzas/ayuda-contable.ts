@@ -6,6 +6,10 @@
  * estas cadenas no se parafrasean ni se "mejoran" al tocarlas: si la guia
  * cambia, se vuelve a copiar de la fuente.
  *
+ * Hay UNA desviacion, documentada donde ocurre: el encabezado de la seccion 4
+ * (`REGLAS_CONTABLES_BASE`), por decision explicita de Cesar. Las reglas en si
+ * siguen palabra por palabra.
+ *
  * Aqui va SOLO lo que es de D4 --los tipos de costo y las reglas de carga--. El
  * resto de la guia (saldos iniciales, venta, cobro, pago, plan de cuentas) es
  * contenido de D9, que lleva dashboard-2 en su propio archivo de datos; no se
@@ -40,9 +44,17 @@ export const AYUDA_REVERSIONES =
 
 export const REGLAS_CONTABLES_TITULO = "Reglas contables de carga de costos";
 
-/** Encabezado de la seccion 4, con la base del criterio. */
-export const REGLAS_CONTABLES_BASE =
-  "Por decisión de César para Mapaal, basada en el criterio adoptado de RT 54 FACPCE:";
+/**
+ * Encabezado de la seccion 4, con la base del criterio.
+ *
+ * UNICA desviacion del verbatim de la guia, y por decision explicita de Cesar:
+ * la guia encabeza con "Por decisión de César para Mapaal, basada en el criterio
+ * adoptado de RT 54 FACPCE:". Esto lo lee el dealer, y una regla contable
+ * atribuida por nombre a alguien de Nadakki no es lo que tiene que leer. Es
+ * correccion de PRESENTACION: la base del criterio --RT 54 FACPCE-- no cambia,
+ * y las cinco reglas de abajo siguen palabra por palabra.
+ */
+export const REGLAS_CONTABLES_BASE = "Criterio contable adoptado (RT 54 FACPCE):";
 
 /** Las cinco reglas de la seccion 4, en su orden. */
 export const REGLAS_CONTABLES = [
