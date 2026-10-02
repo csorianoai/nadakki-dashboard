@@ -15,6 +15,23 @@ import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
 
+/**
+ * Mismo criterio que el proxy v1: el error del backend se reenvia tal cual.
+ *
+ * Aqui pesa ademas la sesion. `POST /api/v2/auth/refresh` y `GET /api/v2/auth/me`
+ * pasan por este proxy, y quien decide si una sesion murio necesita el cuerpo
+ * del backend, no un `{error: "Upstream error 401"}` que ya no distingue un
+ * token revocado de un token caducado.
+ */
+function upstreamError(res: Response, text: string): NextResponse {
+  return new NextResponse(text, {
+    status: res.status,
+    headers: {
+      "Content-Type": res.headers.get("Content-Type") || "application/json",
+    },
+  });
+}
+
 async function proxyRequest(
   req: NextRequest,
   path: string[],
@@ -40,13 +57,7 @@ async function proxyRequest(
     const text = await res.text().catch(() => "");
 
     if (!res.ok) {
-      return NextResponse.json(
-        {
-          error: `Upstream error ${res.status}`,
-          details: text.slice(0, 500),
-        },
-        { status: res.status }
-      );
+      return upstreamError(res, text);
     }
     const contentType = res.headers.get("Content-Type") || "";
     if (contentType.includes("application/json")) {

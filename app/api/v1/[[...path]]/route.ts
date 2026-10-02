@@ -5,6 +5,41 @@ import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
 
+/**
+ * Un error del backend se reenvia TAL CUAL: mismo status, mismo cuerpo.
+ *
+ * Medido en produccion (D8, suite#1501). El proxy reescribia el cuerpo como
+ * `{error: "Upstream error <status>", details: "<texto>"}`, y con eso el
+ * `detail` del backend dejaba de ser un campo para pasar a ser texto plano
+ * dentro de `details`:
+ *
+ *   directo  api.nadakki.com/api/v1/contable/fiscal/documents
+ *            {"detail":"missing_auth"}
+ *   proxy    dashboard.nadakki.com/api/v1/contable/fiscal/documents
+ *            {"error":"Upstream error 401","details":"{\"detail\":\"missing_auth\"}"}
+ *
+ * Quien lo paga: el aviso de facturacion electronica. El backend contesta
+ * `409 {"detail":{"error":"AR_NOT_CONFIGURED","country":"AR"}}` para un tenant
+ * argentino, que NO es un fallo --se emite en ARCA--, pero `leeCuerpoFiscal`
+ * busca `detail.error`, no lo encuentra, y acaba leyendo
+ * `codigo = "Upstream error 409"`. La pantalla pintaba "No se pudo leer el
+ * estado... codigo: Upstream error 409" y la rama ARCA era inalcanzable en
+ * produccion. El dispatcher y el componente estaban bien; el proxy no.
+ *
+ * Un proxy traduce transporte, no semantica. Reescribir el cuerpo de error
+ * convierte cada codigo de dominio del backend en una cadena opaca, y la unica
+ * forma de recuperarlo seria volver a parsear `details` --un JSON dentro de un
+ * string, ya truncado a 500 caracteres.
+ */
+function upstreamError(res: Response, text: string): NextResponse {
+  return new NextResponse(text, {
+    status: res.status,
+    headers: {
+      "Content-Type": res.headers.get("Content-Type") || "application/json",
+    },
+  });
+}
+
 async function proxyRequest(
   req: NextRequest,
   path: string[],
@@ -58,10 +93,7 @@ async function proxyRequest(
           { status: 200 }
         );
       }
-      return NextResponse.json(
-        { error: `Upstream error ${res.status}`, details: text.slice(0, 500) },
-        { status: res.status }
-      );
+      return upstreamError(res, text);
     }
     const contentType = res.headers.get("Content-Type") || "";
     if (contentType.includes("application/json")) {
