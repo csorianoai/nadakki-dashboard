@@ -39,6 +39,7 @@ import {
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
+import { VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
 
 const CAPABILITY = "autos.inventory.list";
 
@@ -55,10 +56,15 @@ function SinVerificar({ codigo }: { codigo: string }) {
 }
 
 export default function DealerInventoryPage() {
-  const access = useAccessEntitlementsBatch([CAPABILITY]);
+  /* Dos claves en UNA sola consulta: la de leer y la de crear. El CTA de alta
+     se pinta solo con la de crear concedida; el frontend restringe y la
+     autoridad sigue siendo el HTTP del backend. */
+  const access = useAccessEntitlementsBatch([CAPABILITY, VEHICLE_WRITE_CAPABILITY]);
   const decision = access.data?.results[CAPABILITY];
   const cargando = access.isPending || access.isLoading;
   const allowed = !cargando && !access.error && decision?.allowed === true;
+  const puedeCrear =
+    !cargando && !access.error && access.data?.results[VEHICLE_WRITE_CAPABILITY]?.allowed === true;
 
   /** Solo para construir la peticion. No participa en la decision de acceso. */
   const binding = selectedDealerIdentity()?.dealerId ?? null;
@@ -101,6 +107,15 @@ export default function DealerInventoryPage() {
         <p className="mt-1 text-sm text-nk-fg-muted">
           Inventario privado del dealer autenticado. No usa la vitrina pública ni filtra autoridad en cliente.
         </p>
+        {puedeCrear ? (
+          <Link
+            href="/autos/dealer/inventario/nuevo"
+            data-testid="inventario-nuevo"
+            className="mt-3 inline-flex min-h-11 items-center rounded-full border border-brand-2/40 bg-brand-2/10 px-4 text-sm font-bold text-nk-fg"
+          >
+            Nuevo vehículo
+          </Link>
+        ) : null}
       </header>
 
       {cargando ? (
