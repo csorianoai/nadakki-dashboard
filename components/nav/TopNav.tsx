@@ -10,7 +10,7 @@ import { HoverTooltip } from "@/components/ui/HoverTooltip";
 import { useTheme } from "@/components/system/ThemeProvider";
 import { useTenant } from "@/components/system/TenantProvider";
 import { useShopper } from "@/components/shopper/ShopperProvider";
-import { isDealerManagementPath } from "@/lib/autos-portal/routes";
+import { isDealerChromePath } from "@/lib/autos-portal/routes";
 import { TENANT_OPTIONS, TENANTS, type TenantSlug } from "@/lib/tenants";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +43,7 @@ export function TopNav() {
   // El panel del dealer trae su propio chrome (DealerShell). La barra del
   // marketplace --Vender, Dealers, Match My Approval, Mi Shopper, carrito-- es
   // de la vitrina publica y ahi se apilaba sobre el menu del dealer.
-  if (isDealerManagementPath(pathname)) return null;
+  if (isDealerChromePath(pathname)) return null;
 
   return (
     <>
