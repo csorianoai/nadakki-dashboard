@@ -27,6 +27,7 @@
  */
 
 import Link from "next/link";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
@@ -36,6 +37,7 @@ import {
   isAccessUnverified,
 } from "@/lib/access/reason-codes";
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
+import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
 
 const CAPABILITY = "autos.inventory.list";
@@ -59,7 +61,29 @@ export default function DealerInventoryPage() {
   const allowed = !cargando && !access.error && decision?.allowed === true;
 
   /** Solo para construir la peticion. No participa en la decision de acceso. */
-  const dealerId = selectedDealerIdentity()?.dealerId ?? null;
+  const binding = selectedDealerIdentity()?.dealerId ?? null;
+
+  /**
+   * Varias asignaciones: el usuario elige, y la eleccion vive SOLO aqui.
+   *
+   * Nada de `localStorage` ni `sessionStorage`: dura lo que dura la sesion y al
+   * recargar se vuelve a preguntar. Con UNA asignacion no hay selector --el
+   * shell ya escribio el binding-- y esta consulta ni se lanza, asi que el caso
+   * de Mapaal sigue costando una sola peticion al contrato del contexto.
+   */
+  const [elegido, setElegido] = useState<string | null>(null);
+
+  const asignaciones = useQuery({
+    queryKey: ["dealer-assignments"],
+    queryFn: fetchMyDealerContext,
+    enabled: allowed && binding === null,
+    staleTime: Infinity,
+    retry: false,
+  });
+
+  const porElegir = binding === null ? (asignaciones.data ?? []) : [];
+  const hayQueElegir = porElegir.length > 1 && elegido === null;
+  const dealerId = binding ?? elegido;
 
   const inventory = useQuery({
     queryKey: ["dealer-private-inventory", dealerId ?? "none"],
@@ -139,6 +163,43 @@ export default function DealerInventoryPage() {
             </p>
           </section>
         )
+      ) : binding === null && (asignaciones.isPending || asignaciones.isLoading) ? (
+        <p className="animate-pulse text-sm text-nk-fg-muted">Verificando tus concesionarios…</p>
+      ) : binding === null && asignaciones.error ? (
+        <section role="alert" data-testid="inventario-asignaciones-error" className={CAJA}>
+          <p className="font-semibold">No se pudo leer tus concesionarios.</p>
+          <p className="mt-1 text-nk-fg-muted">
+            {asignaciones.error instanceof AccessApiError && asignaciones.error.reason_code ? (
+              <>
+                reason_code: <code>{asignaciones.error.reason_code}</code>
+              </>
+            ) : (
+              <>La consulta no llegó a responder.</>
+            )}
+          </p>
+        </section>
+      ) : hayQueElegir ? (
+        <section data-testid="inventario-selector-dealer" className={CAJA}>
+          <h2 className="font-semibold">Elegí el concesionario</h2>
+          <p className="mt-1 text-nk-fg-muted">
+            Tu usuario está asignado a {porElegir.length}. No se elige uno por vos: sería mostrarte el
+            inventario de otro. La elección dura esta sesión.
+          </p>
+          <ul className="mt-3 grid gap-2">
+            {porElegir.map((asignacion) => (
+              <li key={asignacion.dealerId}>
+                <button
+                  type="button"
+                  data-dealer-id={asignacion.dealerId}
+                  onClick={() => setElegido(asignacion.dealerId)}
+                  className="inline-flex min-h-10 w-full items-center rounded-lg border border-nk-border px-3 text-left text-sm font-semibold text-nk-fg hover:bg-nk-surface-2"
+                >
+                  {asignacion.dealerName ?? asignacion.dealerId}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : !dealerId ? (
         <section role="status" data-testid="inventario-sin-dealer" className={CAJA}>
           <p className="font-semibold">No se pudo identificar el dealer de tu sesión.</p>

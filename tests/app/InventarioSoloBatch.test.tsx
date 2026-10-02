@@ -29,6 +29,18 @@ jest.mock("@/lib/auth/token-refresh", () => ({
   isTokenExpiringSoon: jest.fn(() => false),
 }));
 
+/**
+ * Sin dealer en la sesion, la pagina pregunta por las asignaciones antes de
+ * rendirse: es el selector de D1. Por defecto se devuelven CERO, que es el caso
+ * que estos tests miden; los de varias asignaciones viven en
+ * tests/app/InventarioSelectorDealer.test.tsx.
+ */
+const fetchAsignaciones = jest.fn();
+jest.mock("@/lib/dealer/dealer-context-api", () => ({
+  ...jest.requireActual("@/lib/dealer/dealer-context-api"),
+  fetchMyDealerContext: () => fetchAsignaciones(),
+}));
+
 const fetchInventory = jest.fn();
 jest.mock("@/lib/dealer-management/inventory", () => ({
   fetchDealerInventory: (dealerId: string) => fetchInventory(dealerId),
@@ -89,6 +101,8 @@ beforeEach(() => {
   batchMock.mockReset();
   fetchInventory.mockReset();
   fetchInventory.mockResolvedValue([]);
+  fetchAsignaciones.mockReset();
+  fetchAsignaciones.mockResolvedValue([]);
 });
 
 describe("allowed=true: se pide el inventario", () => {
@@ -219,20 +233,23 @@ describe("no_organization_unit en la respuesta", () => {
 });
 
 describe("concedido pero sin dealer en la sesion", () => {
-  it("lo dice con honestidad y NO lo llama bloqueado", () => {
+  it("lo dice con honestidad y NO lo llama bloqueado", async () => {
     sesionSinDealer();
     batchMock.mockReturnValue(batch({ allowed: true }));
     montar();
-    const aviso = screen.getByTestId("inventario-sin-dealer");
+    // Pasa por "Verificando tus concesionarios": con cero asignaciones
+    // desemboca en el mismo aviso de siempre.
+    const aviso = await screen.findByTestId("inventario-sin-dealer");
     expect(aviso).toHaveTextContent("No se pudo identificar el dealer de tu sesión");
     expect(aviso.textContent ?? "").not.toMatch(/bloquead/i);
     expect(screen.queryByText(/DEFAULT_DENY/)).toBeNull();
   });
 
-  it("no lleva ningun enlace", () => {
+  it("no lleva ningun enlace", async () => {
     sesionSinDealer();
     batchMock.mockReturnValue(batch({ allowed: true }));
     montar();
+    await screen.findByTestId("inventario-sin-dealer");
     expect(screen.queryAllByRole("link")).toHaveLength(0);
   });
 
