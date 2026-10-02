@@ -18,6 +18,11 @@ import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import type { SituacionFinancieraReport, SituacionFinancieraDetalle } from "@/types/contable";
 import { cn } from "@/lib/utils";
+import {
+  MonedaFuncionalNota,
+  formateaImporteContable,
+  useMonedaFuncional,
+} from "@/components/contable/monedaFuncional";
 
 const COLORS = {
   activo: "#10b981",
@@ -25,20 +30,23 @@ const COLORS = {
   patrimonio: "#6366f1",
 };
 
-function fmt(n: number): string {
-  return n.toLocaleString("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 function ExpandableSection({
   title,
   total,
   detalle,
   colorClass,
+  importe,
 }: {
   title: string;
   total: number;
   detalle: SituacionFinancieraDetalle[] | { codigo: string; nombre: string; saldo: number }[];
   colorClass: string;
+  /**
+   * Formateador de la pantalla. Baja como prop en vez de llamar al hook aqui para
+   * que este bloque siga siendo puro: la moneda la decide el cliente, una sola vez.
+   */
+  importe: (valor: number | null | undefined) => string;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -51,7 +59,7 @@ function ExpandableSection({
           {open ? <ChevronDown className="h-4 w-4 text-zinc-400" /> : <ChevronRight className="h-4 w-4 text-zinc-400" />}
           <span className={cn("text-sm font-bold", colorClass)}>{title}</span>
         </div>
-        <span className={cn("font-mono text-sm font-bold", colorClass)}>{fmt(total)}</span>
+        <span className={cn("font-mono text-sm font-bold", colorClass)}>{importe(total)}</span>
       </button>
       {open && detalle.length > 0 && (
         <div className="border-t border-white/5 px-4 py-2">
@@ -61,7 +69,7 @@ function ExpandableSection({
                 <tr key={d.codigo} className="border-b border-white/5">
                   <td className="py-1.5 font-mono text-xs text-zinc-400">{d.codigo}</td>
                   <td className="py-1.5 pl-3">{d.nombre}</td>
-                  <td className="py-1.5 text-right font-mono">{fmt(d.saldo)}</td>
+                  <td className="py-1.5 text-right font-mono">{importe(d.saldo)}</td>
                 </tr>
               ))}
             </tbody>
@@ -73,6 +81,9 @@ function ExpandableSection({
 }
 
 export function SituacionFinancieraClient() {
+  const moneda = useMonedaFuncional();
+  /** Importe en la moneda funcional del tenant. Sin moneda, em dash: nunca una inventada. */
+  const importe = (valor: number | null | undefined) => formateaImporteContable(valor, moneda);
   const tenantId = useContableTenantId();
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
   const [report, setReport] = useState<SituacionFinancieraReport | null>(null);
@@ -120,6 +131,8 @@ export function SituacionFinancieraClient() {
       description="Balance general: activos, pasivos y patrimonio a una fecha determinada."
       icon={<PieChartIcon className="h-10 w-10" aria-hidden />}
     >
+      <MonedaFuncionalNota locale={moneda} />
+
       <div className="mb-6 flex flex-wrap items-end gap-3">
         <Input label="Fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
         <Button onClick={() => void generate()} disabled={loading}>
@@ -157,22 +170,22 @@ export function SituacionFinancieraClient() {
             ) : (
               <XCircle className="h-4 w-4" />
             )}
-            Ecuación contable {report?.ecuacion_cuadra ? "CUADRA" : "NO CUADRA"}: Activos ({fmt(report?.activos?.total ?? 0)}) = Pasivos ({fmt(report?.pasivos?.total ?? 0)}) + Patrimonio ({fmt(report?.patrimonio?.total ?? 0)})
+            Ecuación contable {report?.ecuacion_cuadra ? "CUADRA" : "NO CUADRA"}: Activos ({importe(report?.activos?.total ?? 0)}) = Pasivos ({importe(report?.pasivos?.total ?? 0)}) + Patrimonio ({importe(report?.patrimonio?.total ?? 0)})
           </div>
 
           {/* 3 KPI cards */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/80">Total Activos</p>
-              <p className="mt-1 font-mono text-2xl font-bold text-emerald-100">{fmt(report?.activos?.total ?? 0)}</p>
+              <p className="mt-1 font-mono text-2xl font-bold text-emerald-100">{importe(report?.activos?.total ?? 0)}</p>
             </div>
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/80">Total Pasivos</p>
-              <p className="mt-1 font-mono text-2xl font-bold text-amber-100">{fmt(report?.pasivos?.total ?? 0)}</p>
+              <p className="mt-1 font-mono text-2xl font-bold text-amber-100">{importe(report?.pasivos?.total ?? 0)}</p>
             </div>
             <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/80">Total Patrimonio</p>
-              <p className="mt-1 font-mono text-2xl font-bold text-indigo-100">{fmt(report?.patrimonio?.total ?? 0)}</p>
+              <p className="mt-1 font-mono text-2xl font-bold text-indigo-100">{importe(report?.patrimonio?.total ?? 0)}</p>
             </div>
           </div>
 
@@ -186,7 +199,7 @@ export function SituacionFinancieraClient() {
                   <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#18181b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
-                    formatter={(value: number) => [fmt(value), ""]}
+                    formatter={(value: number) => [importe(value), ""]}
                   />
                   <Legend wrapperStyle={{ color: "#a1a1aa", fontSize: 11 }} />
                   <Bar dataKey="Corriente" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
@@ -198,18 +211,21 @@ export function SituacionFinancieraClient() {
 
           {/* Expandable sections */}
           <ExpandableSection
+            importe={importe}
             title="Activos"
             total={report?.activos?.total ?? 0}
             detalle={report?.activos?.detalle ?? []}
             colorClass="text-emerald-200"
           />
           <ExpandableSection
+            importe={importe}
             title="Pasivos"
             total={report?.pasivos?.total ?? 0}
             detalle={report?.pasivos?.detalle ?? []}
             colorClass="text-amber-200"
           />
           <ExpandableSection
+            importe={importe}
             title="Patrimonio"
             total={report?.patrimonio?.total ?? 0}
             detalle={report?.patrimonio?.detalle ?? []}
