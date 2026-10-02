@@ -9,6 +9,7 @@ import { render, screen } from "@testing-library/react";
 
 import DealerApplicationsPage from "@/app/(forge)/credit-hub/dealer/applications/page";
 import { DEALER_CORE_STATUS_ROWS } from "@/lib/dealer/core-status";
+import { ACCESS_UNVERIFIED_MESSAGE } from "@/lib/access/reason-codes";
 
 const ROW = DEALER_CORE_STATUS_ROWS.find((row) => row.name === "Dealer-Bank")!;
 
@@ -157,4 +158,52 @@ it("sin reason_code no inventa la etiqueta", () => {
   expect(screen.getByTestId("solicitudes-montos-ocultos")).toHaveTextContent(ROW.actionCapability);
   expect(screen.queryByTestId("solicitudes-reason-code")).toBeNull();
   expect(screen.getByTestId("solicitudes-montos-ocultos").textContent).not.toContain("reason_code");
+});
+
+/**
+ * "No pude evaluarte" no es "no tienes derecho" (#550).
+ *
+ * Con `no_organization_unit` o `no_beneficiary_entitlement` el motor no dice que
+ * falte la capability: dice que no llego a comprobarlo. Los codigos llegan en
+ * MINUSCULAS dentro de un 200, no como error HTTP.
+ */
+describe("acceso que no se pudo verificar", () => {
+  for (const codigo of ["no_organization_unit", "no_beneficiary_entitlement"]) {
+    it(`con ${codigo} dice que no se pudieron verificar los accesos`, () => {
+      batchMock.mockReturnValue(batchConMotivo(codigo));
+      render(<DealerApplicationsPage />);
+      const aviso = screen.getByTestId("solicitudes-montos-ocultos");
+      expect(aviso).toHaveAttribute("data-no-verificado", "true");
+      expect(aviso).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
+      expect(aviso.textContent).not.toContain("reservados a quien tenga la capability");
+      expect(screen.getByTestId("solicitudes-reason-code")).toHaveTextContent(codigo);
+      expect(lastProps().currency).toBeNull();
+    });
+  }
+
+  it("no distingue la caja del codigo: el motor los emite en minuscula", () => {
+    batchMock.mockReturnValue(batchConMotivo("NO_ORGANIZATION_UNIT"));
+    render(<DealerApplicationsPage />);
+    expect(screen.getByTestId("solicitudes-montos-ocultos")).toHaveTextContent(
+      ACCESS_UNVERIFIED_MESSAGE,
+    );
+  });
+
+  it("gana sobre el Proximamente de readiness: si no se evaluo, no se afirma que falte certificacion", () => {
+    readinessMock.mockReturnValue(readiness("PENDING_EXTERNAL_ACTIVATION", false));
+    batchMock.mockReturnValue(batchConMotivo("no_organization_unit"));
+    render(<DealerApplicationsPage />);
+    const aviso = screen.getByTestId("solicitudes-montos-ocultos");
+    expect(aviso).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
+    expect(aviso.textContent).not.toContain("Próximamente");
+  });
+
+  it("una denegacion normal sigue nombrando la capability que falta", () => {
+    batchMock.mockReturnValue(batch(false));
+    render(<DealerApplicationsPage />);
+    const aviso = screen.getByTestId("solicitudes-montos-ocultos");
+    expect(aviso).toHaveAttribute("data-no-verificado", "false");
+    expect(aviso).toHaveTextContent(ROW.actionCapability);
+    expect(aviso.textContent).not.toContain(ACCESS_UNVERIFIED_MESSAGE);
+  });
 });
