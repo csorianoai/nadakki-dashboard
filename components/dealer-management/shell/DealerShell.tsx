@@ -44,6 +44,22 @@ export function DealerShell({ children }: { children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   /**
+   * Barra estrecha o completa. Estado de React, y nada mas.
+   *
+   * Dura la sesion a proposito (pedido de Cesar): NO se escribe en Local
+   * Storage. Persistirlo traeria el problema que ya tiene la Suite --que lee
+   * `nadakki-sidebar-collapsed` en un efecto--: el servidor no tiene Local
+   * Storage, asi que el primer HTML sale con la barra completa y la barra salta
+   * a estrecha despues de hidratar. Mientras la preferencia viva en memoria no
+   * hay salto, porque cliente y servidor arrancan en el mismo valor.
+   *
+   * Vive en el shell y no en el sidebar porque el shell es el que sobrevive a
+   * las navegaciones --es el layout-- y es quien ya reparte el resto del estado
+   * del chrome por props: entitlements, menu de celular y paleta.
+   */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  /**
    * El dealer de la sesion se trae del BACKEND antes de pintar nada que lo lea.
    *
    * Doce ficheros leen el binding del Local Storage, y nadie lo escribia: el
@@ -136,14 +152,18 @@ export function DealerShell({ children }: { children: ReactNode }) {
         codigo: null,
       };
     }
-    if (salida.estado === "multiples") {
-      return {
-        estado: salida.estado,
-        titulo: "Tu usuario tiene varios dealers asignados; falta elegir uno",
-        detalle: `El backend reportó ${salida.total}. No se elige uno por defecto: sería mostrarte el inventario de otro.`,
-        codigo: null,
-      };
-    }
+    /**
+     * Varias asignaciones NO es un estado terminal del shell: pasa a los hijos.
+     *
+     * Antes el shell cortaba aqui con un aviso sin salida. Quien elige es la
+     * pagina de Inventario, con un selector que dura lo que dura la sesion y no
+     * persiste nada (decision de Cesar). El shell sigue sin elegir por su
+     * cuenta: el binding queda BORRADO --lo borra `syncDealerContextFromBackend`
+     * (lib/dealer/dealer-context-api.ts)-- asi que ninguna otra pantalla del
+     * dealer hereda un concesionario que el usuario no ha elegido; cada una
+     * muestra su propio estado de "sin dealer".
+     */
+    if (salida.estado === "multiples") return null;
     if (salida.estado === "error_http") {
       /* El reason_code REAL del backend, o la frase de "no verificado". */
       return isAccessUnverified(salida.reason_code)
@@ -198,6 +218,8 @@ export function DealerShell({ children }: { children: ReactNode }) {
         loading={loading}
         mobileOpen={mobileNav}
         onClose={() => setMobileNav(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed((previo) => !previo)}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">

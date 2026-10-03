@@ -45,7 +45,7 @@ export type DealerAccessResolution =
     }
   | {
       status: "no_organization_unit";
-      reason_code: "NO_ORGANIZATION_UNIT";
+      reason_code: "no_organization_unit";
       tenantId: string;
       dealerId: string;
       organizationUnitId: null;
@@ -220,7 +220,13 @@ export function resolveDealerAccessContext(): DealerAccessResolution {
   if (!organizationUnitId) {
     return {
       status: "no_organization_unit",
-      reason_code: "NO_ORGANIZATION_UNIT",
+      /**
+       * El MISMO codigo que emite el backend
+       * (services/access/entitlements.py:66), no una variante en MAYUSCULAS.
+       * Dos ortografias para una sola condicion dejaban a `REASON_CODE_INFO`
+       * sin copia en una de las dos, y a cualquier `===` reconociendo solo una.
+       */
+      reason_code: "no_organization_unit",
       tenantId,
       dealerId,
       organizationUnitId: null,

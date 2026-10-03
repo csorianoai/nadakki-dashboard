@@ -34,6 +34,31 @@ export function isDealerManagementPath(pathname: string | null): boolean {
   return pathname === DEALER_MANAGEMENT_ROOT || pathname.startsWith(`${DEALER_MANAGEMENT_ROOT}/`);
 }
 
+/** Centro Operativo: la guia de carga y operacion del dealer (D9). */
+export const CENTRO_OPERATIVO_ROOT = "/centro-operativo";
+
+/**
+ * Rutas que se pintan con el chrome del dealer (`DealerShell`).
+ *
+ * Es el panel del dealer MAS el Centro Operativo. Decision de Cesar: el
+ * onboarding de Mapaal se lee dentro del panel, no en `GlobalForgeAppShell`,
+ * que es el chrome de la Suite con la barra de todos los hubs. Un dealer que
+ * entra a la guia desde su Inicio no deberia cambiar de mundo al pulsar el
+ * boton, ni perder el menu desde el que vino.
+ *
+ * Separada de {@link isDealerManagementPath} a proposito: esa sigue
+ * significando "el panel privado del dealer bajo /autos/dealer" --su prefijo,
+ * su test-- y el Centro Operativo no vive ahi. Lo que comparten es el chrome,
+ * no la raiz, y eso es exactamente lo que nombra esta funcion.
+ */
+export function isDealerChromePath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (isDealerManagementPath(pathname)) return true;
+  return (
+    pathname === CENTRO_OPERATIVO_ROOT || pathname.startsWith(`${CENTRO_OPERATIVO_ROOT}/`)
+  );
+}
+
 /** Consumer-facing Autos Portal paths that must stay public on autos.nadakki.com. */
 export function isAutosConsumerPublicPath(pathname: string | null): boolean {
   if (!pathname) return false;

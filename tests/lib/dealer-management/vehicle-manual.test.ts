@@ -22,6 +22,10 @@ import {
   vehicleIdFrom,
   vehiclePriceFields,
 } from "@/lib/dealer-management/vehicle-manual";
+import {
+  DEALER_REGISTER_CAPABILITY,
+  DEALER_VEHICLE_CAPABILITY,
+} from "@/lib/dealer/capabilities";
 import { MIGRATION_097_CAPABILITY_KEYS } from "@/lib/dealer/core-status";
 
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
@@ -53,6 +57,34 @@ function ok(body: unknown) {
 describe("capability y estado inicial", () => {
   it("usa una clave del catalogo 097 y no una inventada", () => {
     expect(MIGRATION_097_CAPABILITY_KEYS.has(VEHICLE_WRITE_CAPABILITY)).toBe(true);
+  });
+
+  /**
+   * El caso de arriba no basta, y lo detecto la auditoria: `autos.inventory.list`
+   * TAMBIEN esta en el catalogo 097, asi que cambiar la clave de escritura por la
+   * de lectura dejaba el test en verde. Una pantalla de ALTA pidiendo permiso de
+   * LECTURA concede de mas, y nada lo habria notado.
+   *
+   * Por eso aqui se fija el valor, y ademas se fija la propiedad que lo hace
+   * correcto --que no sea la clave de lectura-- contra la constante que ya nombra
+   * esa lectura en lib/dealer/capabilities.ts. Asi el caso no depende solo de un
+   * literal: si manana se renombran las claves del catalogo, el que falla señala
+   * el motivo.
+   */
+  it("es la clave de ESCRITURA, no la de lectura", () => {
+    expect(VEHICLE_WRITE_CAPABILITY).toBe("autos.inventory.create");
+    expect(VEHICLE_WRITE_CAPABILITY).not.toBe(DEALER_VEHICLE_CAPABILITY);
+    expect(DEALER_VEHICLE_CAPABILITY).toBe("autos.inventory.list");
+  });
+
+  it("y es exactamente la que el repo ya usa para dar de alta", () => {
+    expect(VEHICLE_WRITE_CAPABILITY).toBe(DEALER_REGISTER_CAPABILITY);
+  });
+
+  it("no es una clave de solo lectura: el sufijo lo dice", () => {
+    expect(VEHICLE_WRITE_CAPABILITY.endsWith(".create")).toBe(true);
+    expect(VEHICLE_WRITE_CAPABILITY.endsWith(".list")).toBe(false);
+    expect(VEHICLE_WRITE_CAPABILITY.endsWith(".view")).toBe(false);
   });
 
   it("el alta nace en BORRADOR y el label no se escribe en la pantalla", () => {

@@ -192,16 +192,38 @@ describe("sin asignacion", () => {
 });
 
 describe("varias asignaciones", () => {
-  it("no elige ninguna, lo informa y no pide inventario", async () => {
+  it("no elige ninguna y NO escribe binding: elegir por el usuario seria ensenarle otro inventario", async () => {
     red({ contexto: asignaciones({ dealer_id: DEALER }, { dealer_id: OTRO_DEALER }) });
 
+    montar(<p>contenido del hijo</p>);
+
+    await screen.findByText("contenido del hijo");
+    expect(window.localStorage.getItem("nadakki_dealer_id")).toBeNull();
+    expect(window.localStorage.getItem("nadakki_organization_unit_id")).toBeNull();
+  });
+
+  it("el shell deja pasar a los hijos: quien elige es la pagina de Inventario", async () => {
+    red({ contexto: asignaciones({ dealer_id: DEALER }, { dealer_id: OTRO_DEALER }) });
+
+    montar(<p>contenido del hijo</p>);
+
+    // Antes el shell cortaba con un aviso sin salida y el hijo no se pintaba.
+    expect(await screen.findByText("contenido del hijo")).toBeInTheDocument();
+    expect(screen.queryByTestId("dealer-context-aviso")).toBeNull();
+  });
+
+  it("sin dealer elegido, no sale ninguna peticion a /autos/*", async () => {
+    red({ contexto: asignaciones({ dealer_id: DEALER }, { dealer_id: OTRO_DEALER }) });
+
+    // Se monta la pagina real del inventario: lo que se afirma es que, aunque
+    // el shell ya la deja pintarse, no pide el inventario de ningun dealer
+    // mientras el usuario no haya elegido.
     montar();
 
-    const aviso = await screen.findByTestId("dealer-context-aviso");
-    expect(aviso).toHaveTextContent("Tu usuario tiene varios dealers asignados; falta elegir uno");
-    expect(aviso.querySelector("a")).toBeNull();
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(DEALER_CONTEXT_PATH, expect.anything());
+    });
     expect(rutasDeAutos()).toEqual([]);
-    expect(window.localStorage.getItem("nadakki_dealer_id")).toBeNull();
   });
 });
 

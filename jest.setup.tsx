@@ -4,7 +4,15 @@ import "@testing-library/jest-dom";
 
 Object.assign(global, { TextEncoder, TextDecoder });
 
-Element.prototype.scrollIntoView = jest.fn();
+/**
+ * Las rutas de API son codigo de servidor y se prueban con
+ * `@jest-environment node`, donde no hay `Element`. Este setup corre en TODAS
+ * las suites (`setupFilesAfterEach`), asi que sin la guarda una sola linea de
+ * DOM impedia escribir cualquier test de un route handler.
+ */
+if (typeof Element !== "undefined") {
+  Element.prototype.scrollIntoView = jest.fn();
+}
 
 jest.mock("react-markdown", () => ({
   __esModule: true,

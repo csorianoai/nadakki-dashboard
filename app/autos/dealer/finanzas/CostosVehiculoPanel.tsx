@@ -16,6 +16,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { formateaMoneda, type LocaleTenant } from "@/lib/dealer-management/formato";
 import {
+  AYUDA_POR_TIPO_DE_COSTO,
+  AYUDA_REVERSIONES,
+  REGLAS_CONTABLES,
+  REGLAS_CONTABLES_BASE,
+  REGLAS_CONTABLES_CIERRE,
+  REGLAS_CONTABLES_TITULO,
+} from "./ayuda-contable";
+import {
   COSTS_LIST_MISSING_ENDPOINT,
   COST_FORM_EMPTY,
   COST_PENDING_FIELDS,
@@ -162,6 +170,18 @@ export function CostosVehiculoPanel({
                 </option>
               ))}
             </select>
+            {/* Ayuda del tipo ELEGIDO: la regla se lee donde se decide, no en
+                una pagina aparte. Un tipo sin ayuda no pinta nada en vez de un
+                texto de relleno. */}
+            {AYUDA_POR_TIPO_DE_COSTO[form.cost_type] ? (
+              <span
+                data-testid="ayuda-tipo-de-costo"
+                data-cost-type={form.cost_type}
+                className="mt-1 block text-xs text-nk-fg-muted"
+              >
+                {AYUDA_POR_TIPO_DE_COSTO[form.cost_type]}
+              </span>
+            ) : null}
           </label>
           <label className="block">
             <span className={LABEL_CLASS}>Monto</span>
@@ -280,6 +300,21 @@ export function CostosVehiculoPanel({
         >
           {alta.isPending ? "Registrando…" : "Registrar costo"}
         </button>
+
+        {/* Reglas de carga, verbatim de GUIA-CARGA-MAPAAL. Van en el formulario
+            porque son la diferencia entre capitalizar el neto y capitalizar el
+            IVA recuperable, y eso se decide al escribir el monto. */}
+        <section data-testid="reglas-contables-costos" className="mt-4 rounded-xl border border-nk-border p-3">
+          <h3 className="text-sm font-semibold text-nk-fg">{REGLAS_CONTABLES_TITULO}</h3>
+          <p className="mt-1 text-xs text-nk-fg-muted">{REGLAS_CONTABLES_BASE}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-nk-fg-muted">
+            {REGLAS_CONTABLES.map((regla) => (
+              <li key={regla}>{regla}</li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-nk-fg-muted">{REGLAS_CONTABLES_CIERRE}</p>
+          <p className="mt-2 text-xs text-nk-fg-muted">{AYUDA_REVERSIONES}</p>
+        </section>
       </form>
     </div>
   );

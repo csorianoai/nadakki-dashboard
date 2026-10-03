@@ -91,7 +91,7 @@ describe("DASH-DEALER-CONTEXT-01", () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  test("missing organization_unit stays NO_ORGANIZATION_UNIT through checkAccess", async () => {
+  test("missing organization_unit stays no_organization_unit through checkAccess", async () => {
     setDealerAccessContext({
       tenantId: "tenant-a",
       dealerId: "dealer-alpha",
@@ -101,7 +101,11 @@ describe("DASH-DEALER-CONTEXT-01", () => {
     const resolved = resolveDealerAccessContext();
     expect(resolved.status).toBe("no_organization_unit");
     if (resolved.status !== "no_organization_unit") throw new Error("expected no_organization_unit");
-    expect(resolved.reason_code).toBe("NO_ORGANIZATION_UNIT");
+    // Minusculas: es el valor que emite el backend
+    // (services/access/entitlements.py:66) y ahora tambien el que emite el
+    // cliente. Antes aqui se fijaba la variante en MAYUSCULAS, que era la
+    // segunda ortografia de una sola condicion.
+    expect(resolved.reason_code).toBe("no_organization_unit");
     expect(resolved.dealerId).toBe("dealer-alpha");
     expect(resolved.organizationUnitId).toBeNull();
     expect(selectedDealerIdentity()).toEqual({
@@ -113,7 +117,9 @@ describe("DASH-DEALER-CONTEXT-01", () => {
 
     const decision = await entitlementsAPI.checkAccess("credit.applications.create");
     expect(decision.allowed).toBe(false);
-    expect(decision.reason_code).toBe("NO_ORGANIZATION_UNIT");
+    // El mismo codigo viaja intacto hasta la decision: `entitlementsAPI`
+    // propaga lo que el contexto emite, sin reescribir la ortografia.
+    expect(decision.reason_code).toBe("no_organization_unit");
     expect(global.fetch).not.toHaveBeenCalled();
   });
 

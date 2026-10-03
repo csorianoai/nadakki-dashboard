@@ -121,6 +121,36 @@ function hasCoreAccess(
 }
 
 export { ACCESS_UNVERIFIED_MESSAGE, isAccessUnverified } from "@/lib/access/reason-codes";
+/**
+ * Claves con las que el sidebar PREGUNTA si el acceso se puede verificar.
+ *
+ * No deciden que hub se ve --eso sale de `subscribed_cores` y de nada mas--. Son
+ * una sonda: se piden al batch para leer los `reason_code` de la RESPUESTA y
+ * saber si el motor pudo evaluar. Deducirlo en el cliente seria adivinar.
+ *
+ * Las cinco existen en `MIGRATION_097_CAPABILITY_KEYS` (lib/dealer/core-status.ts)
+ * y las cinco ya se usan en el repo, asi que no se inventa ninguna:
+ *
+ *   credit.applications.view    DEALER_CORE_STATUS_ROWS, fila Dealer-Bank
+ *   legal.cases.view            DEALER_CORE_STATUS_ROWS, fila Legal
+ *   marketing.social.publish    DEALER_CORE_STATUS_ROWS, fila Marketing
+ *   accounting.invoices.view    DEALER_CORE_STATUS_ROWS, fila Contable
+ *   autos.inventory.list        dealer-nav.ts, Inventario
+ *
+ * El catalogo 097 solo cubre cinco cores: autos, marketing, legal, credit y
+ * accounting. Los hubs cuyos `coreMatchers` son `nauta`, `sic`, `platform`,
+ * `projects` o `admin` NO tienen clave en el catalogo y por eso no entran en la
+ * sonda. No se inventa una para ellos: la sonda no necesita cubrir todos los
+ * cores --un solo `reason_code` basta para saber si el motor pudo evaluar-- y la
+ * visibilidad de esos hubs no cambia.
+ */
+export const SUITE_ACCESS_PROBE_CAPABILITIES = [
+  "credit.applications.view",
+  "legal.cases.view",
+  "marketing.social.publish",
+  "accounting.invoices.view",
+  "autos.inventory.list",
+] as const;
 
 
 export type EmptyCoreReason = "plan" | "role" | "unverified";

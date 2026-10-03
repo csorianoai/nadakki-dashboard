@@ -7,6 +7,7 @@ import {
   ACCESS_UNIT_SCOPE_UNAVAILABLE,
   AccessApiError,
 } from "@/lib/access/client";
+import { ACCESS_UNVERIFIED_MESSAGE, isAccessUnverified } from "@/lib/access/reason-codes";
 import type { EntitlementDecision, EntitlementReasonCode } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
 
@@ -194,11 +195,21 @@ function NavItemRenderer({ item }: { item: NavItem }) {
   }
 
   if (!decision.allowed) {
+    /**
+     * `isAccessUnverified` en vez de comparar el codigo a mano.
+     *
+     * Esta linea comparaba contra "NO_ORGANIZATION_UNIT" en MAYUSCULAS y el
+     * backend lo emite en minusculas (services/access/entitlements.py:65-66): la
+     * rama NUNCA entraba, y el badge caia a "Locked" --o sea, "no tienes
+     * permiso"-- cuando lo cierto es que el motor no pudo evaluar. Ademas se
+     * perdia `no_beneficiary_entitlement`, que es la misma situacion.
+     */
+    const sinVerificar = isAccessUnverified(decision.reason_code);
     const badge =
       decision.reason_code === "LIMIT_REACHED"
         ? "Limit Hit"
-        : decision.reason_code === "NO_ORGANIZATION_UNIT"
-          ? "No organization unit"
+        : sinVerificar
+          ? "Sin verificar"
           : "Locked";
 
     return (
@@ -206,7 +217,8 @@ function NavItemRenderer({ item }: { item: NavItem }) {
         className="flex cursor-not-allowed items-center justify-between rounded-r-sm border border-nk-border bg-nk-surface-2 p-3 text-nk-fg-muted"
         data-reason-code={decision.reason_code}
         data-allowed="false"
-        title={info?.description ?? decision.reason_code}
+        data-unverified={sinVerificar ? "true" : undefined}
+        title={sinVerificar ? ACCESS_UNVERIFIED_MESSAGE : (info?.description ?? decision.reason_code)}
       >
         <span>
           🔒 {label}{" "}
