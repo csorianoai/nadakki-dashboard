@@ -158,30 +158,18 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
     advertencia:
       "No uses una compra ficticia para representar un vehículo que Mapaal ya poseía: eso fabricaría una deuda con un proveedor que no existe.",
     /*
-     * PLANTILLA DE CARGA — pendiente del fichero oficial.
-     *
-     * Para encenderla hacen falta dos cosas, las dos SIN tocar codigo:
-     *
-     *   1. dejar el .xlsx oficial en `public/assets/centro-operativo/`
-     *   2. descomentar este bloque con el nombre y la version reales
-     *
-     * Queda sin declarar a proposito. Medido el 2026-10-02: el fichero no
-     * existe en nadakki-dashboard ni en nadakki-ai-suite, y en el tablero
-     * suite#1501 no hay ningun artefacto de P5 --claude-b1 todavia no ha
-     * confirmado si la oficial es la v3 o la v4; las unicas menciones de
-     * "plantilla" en ese tablero son del plan de cuentas contable AR/dealer/ARS,
-     * que es otra cosa. Declarar una ruta inventada pintaria un boton que
-     * descarga un 404, y poner "v3" o "v4" a ojo serviria la plantilla
-     * equivocada para cargar un inventario real.
-     *
-     * plantilla: {
-     *   ruta: "/assets/centro-operativo/plantilla-carga-mapaal-v4.xlsx",
-     *   version: "v4",
-     *   etiqueta: "Descargar plantilla de carga (Excel)",
-     *   descripcion:
-     *     "Es la planilla donde listás los vehículos que Mapaal ya tenía, para cargarlos como saldos iniciales antes de empezar a operar.",
-     * },
+     * PLANTILLA DE CARGA — la v4 oficial, entregada en suite#1550 (revision de
+     * claude-b1 en suite#1501). El fichero es una copia byte a byte de
+     * nadakki-ai-suite `docs/autos_portal/plantillas/Plantilla_Activos_Mapaal_v4.xlsx`
+     * (blob b67f172f); el nombre se conserva para que lleve la version.
      */
+    plantilla: {
+      ruta: "/assets/centro-operativo/Plantilla_Activos_Mapaal_v4.xlsx",
+      version: "v4",
+      etiqueta: "Descargar plantilla de carga (Excel)",
+      descripcion:
+        "Es la planilla donde listás los vehículos que Mapaal ya tenía, para cargarlos como saldos iniciales antes de empezar a operar.",
+    },
   },
   {
     id: "alta-vehiculo",
