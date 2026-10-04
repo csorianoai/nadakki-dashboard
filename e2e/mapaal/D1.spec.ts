@@ -4,7 +4,9 @@
  * Es el GUION COWORK de #570 convertido en aserciones. Se ejecuta contra
  * produccion (BASE_URL, mapaal.nadakki.com) con el usuario QA, y SOLO con el:
  * si el tenant de la sesion no es el tenant QA, el test aborta antes de abrir
- * ninguna pantalla con datos.
+ * ninguna pantalla con datos. El login NO se hace en BASE_URL: ese host fija el
+ * tenant `mapaal` y el usuario QA es de `mapaal-qa` (401). Lo hace
+ * `iniciarSesionQA` (sesion-qa.ts) por el host universal y lleva la sesion a BASE_URL.
  *
  *   npx playwright test e2e/mapaal/D1.spec.ts --reporter=line
  *
@@ -19,9 +21,10 @@
 
 import { expect, test, type Page, type Request } from "@playwright/test";
 
+import { iniciarSesionQA } from "./sesion-qa";
+
 import {
   DEALER_CONTEXT,
-  TENANT_QA,
   VEHICLES,
   fallosDeCronologia,
   interesa,
@@ -52,29 +55,6 @@ function registrarRed(page: Page) {
   return eventos;
 }
 
-async function iniciarSesion(page: Page) {
-  await page.goto("/login");
-  await page.locator('input[type="email"]').fill(QA_USER);
-  await page.locator('input[type="password"]').fill(QA_PASSWORD);
-  await page.getByRole("button", { name: /Iniciar Sesi/i }).click();
-
-  // O sale de /login, o el formulario dice por que no.
-  const errorDelFormulario = page.locator("form .bg-red-50");
-  await expect
-    .poll(
-      async () => {
-        if (!new URL(page.url()).pathname.startsWith("/login")) return "fuera";
-        if (await errorDelFormulario.isVisible()) return `error: ${await errorDelFormulario.innerText()}`;
-        return "esperando";
-      },
-      { timeout: 45_000, message: "el login no termino" },
-    )
-    .toBe("fuera");
-
-  const tenant = await page.evaluate(() => window.localStorage.getItem("nadakki_tenant_id"));
-  expect(tenant, "la sesion debe ser del tenant QA; con otro tenant el test no sigue").toBe(TENANT_QA);
-}
-
 test.describe("D1 — inventario visible, una asignacion", () => {
   test.beforeAll(() => {
     // Sin credenciales no hay prueba: fallar, no saltar (un skip saldria verde).
@@ -84,12 +64,14 @@ test.describe("D1 — inventario visible, una asignacion", () => {
   });
 
   test("Carolina: dealer-context, luego /vehicles con ese dealer, sin selector; el logout borra el binding", async ({
-    page,
+    browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
 
+    // El login va donde existe el tenant QA (ver sesion-qa.ts); la pagina ya esta en BASE_URL.
+    let page!: Page;
     await test.step("entrar como el usuario QA", async () => {
-      await iniciarSesion(page);
+      page = await iniciarSesionQA(browser, { baseUrl: BASE_URL, usuario: QA_USER, clave: QA_PASSWORD });
     });
 
     const eventos = registrarRed(page);
@@ -179,5 +161,8 @@ test.describe("D1 — inventario visible, una asignacion", () => {
       expect(tras.dealer, "nadakki_dealer_id sobrevive al logout").toBeNull();
       expect(tras.unidad, "nadakki_organization_unit_id sobrevive al logout").toBeNull();
     });
+
+    await page.context().close();
+    console.log("RESULT_D1=PASS");
   });
 });
