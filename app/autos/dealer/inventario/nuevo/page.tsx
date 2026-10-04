@@ -5,7 +5,12 @@
  * "Publicar" con IA y fotos, y el backend de fotos no existe: un dealer no
  * podia cargar una unidad a mano.
  *
- * El frontend no concede: sin contexto de dealer o sin la clave de escritura
+ * El dealer sale de `selectedDealerIdentity`, la MISMA lectura que usa la lista
+ * para pintar el CTA: un dealer sin unidad organizativa (Mapaal) entra, y la
+ * unidad la resuelve el backend. Si aqui se exigiera el contexto "ready", la
+ * lista ofreceria un enlace a una puerta cerrada.
+ *
+ * El frontend no concede: sin dealer o sin la clave de escritura
  * en el batch de entitlements no se pinta el formulario, y cargando o con
  * error tampoco (fail-closed). El 403 del backend sigue siendo la autoridad.
  */
@@ -15,7 +20,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
-import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
+import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { VehicleManualForm } from "@/components/dealer-management/VehicleManualForm";
 import {
   VEHICLE_INITIAL_STATUS,
@@ -32,8 +37,7 @@ function nuevaIdempotencyKey(): string | undefined {
 
 export default function DealerVehicleNuevoPage() {
   const router = useRouter();
-  const resolved = resolveDealerAccessContext();
-  const context = resolved.status === "ready" ? resolved.context : null;
+  const context = selectedDealerIdentity();
   const access = useAccessEntitlementsBatch([VEHICLE_WRITE_CAPABILITY]);
   const decision = access.data?.results[VEHICLE_WRITE_CAPABILITY];
   const allowed = !access.isLoading && !access.error && decision?.allowed === true;
@@ -84,7 +88,7 @@ export default function DealerVehicleNuevoPage() {
 
       {!context ? (
         <div role="alert" data-testid="nuevo-sin-contexto" className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg">
-          Alta bloqueada: {resolved.reason_code}
+          Alta bloqueada: {resolveDealerAccessContext().reason_code}
         </div>
       ) : access.isLoading ? (
         <p className="animate-pulse text-sm text-nk-fg-muted">Verificando acceso…</p>

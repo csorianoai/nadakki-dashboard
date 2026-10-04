@@ -50,7 +50,7 @@ let resolution: unknown;
  * `resolveDealerAccessContext`, asi que al rebasar sobre staging la pagina
  * llamaba a una funcion que el mock no exporta.
  */
-let identidad: { dealerId: string; organizationUnitId: string | null } | null = null;
+let identidad: { tenantId: string; dealerId: string; organizationUnitId: string | null } | null = null;
 jest.mock("@/lib/dealer/access-context", () => ({
   resolveDealerAccessContext: () => resolution,
   selectedDealerIdentity: () => identidad,
@@ -111,13 +111,14 @@ beforeEach(() => {
   branding = { locale: "es-AR", currency: "ARS" };
   resolution = READY;
   // Mismo dealer que READY: es el binding que el shell deja tras sincronizar.
-  identidad = { dealerId: "dealer-a", organizationUnitId: "ou-a" };
+  identidad = { tenantId: "tenant-a", dealerId: "dealer-a", organizationUnitId: "ou-a" };
   batchMock.mockReturnValue(batch({ allowed: true }));
 });
 
 describe("cierre antes del formulario", () => {
   it("sin contexto de dealer no pinta el formulario", () => {
     resolution = { status: "no_dealer", reason_code: "DEFAULT_DENY", tenantId: "tenant-a" };
+    identidad = null;
     render(<DealerVehicleNuevoPage />);
     expect(screen.queryByTestId("vehicle-manual-form")).toBeNull();
     expect(screen.getByTestId("nuevo-sin-contexto")).toHaveTextContent("DEFAULT_DENY");
@@ -188,6 +189,8 @@ describe("envio", () => {
     const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
     expect(body).toEqual({ make: "Toyota", model: "Hilux", year: 2021, condition: "used" });
     expect(Object.keys(body)).not.toContain("price_rd");
+    expect(Object.keys(body)).not.toContain("price_usd");
+    expect((init?.headers as Record<string, string>)["X-Organization-Unit-ID"]).toBe("ou-a");
     expect(Object.keys(body)).not.toContain("status");
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/autos/dealer/inventario/veh-9"));
@@ -255,5 +258,73 @@ describe("entrada desde el inventario", () => {
   it("sin la clave de escritura no pinta la entrada", () => {
     lista(false);
     expect(screen.queryByTestId("inventario-nuevo")).toBeNull();
+  });
+
+  it("sin binding de dealer no pinta la entrada: /nuevo estaria cerrada", () => {
+    identidad = null;
+    lista(true);
+    expect(screen.queryByTestId("inventario-nuevo")).toBeNull();
+  });
+});
+
+/**
+ * El caso de Mapaal: dealer SIN unidad organizativa. La lista pinta el CTA, asi
+ * que la pantalla tiene que abrir y el POST salir sin inventar una unidad.
+ */
+describe("dealer sin unidad organizativa", () => {
+  beforeEach(() => {
+    resolution = {
+      status: "no_organization_unit",
+      reason_code: "NO_ORGANIZATION_UNIT",
+      tenantId: "tenant-a",
+      dealerId: "dealer-a",
+      organizationUnitId: null,
+    };
+    identidad = { tenantId: "tenant-a", dealerId: "dealer-a", organizationUnitId: null };
+  });
+
+  it("la lista ofrece la entrada y la pantalla pinta el formulario", () => {
+    batchMock.mockReturnValue({
+      isLoading: false,
+      isPending: false,
+      isError: false,
+      error: null,
+      data: {
+        results: {
+          "autos.inventory.list": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
+          [VEHICLE_WRITE_CAPABILITY]: { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
+        },
+      },
+    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { unmount } = render(
+      <QueryClientProvider client={client}>
+        <DealerInventoryPage />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByTestId("inventario-nuevo")).toBeInTheDocument();
+    unmount();
+
+    batchMock.mockReturnValue(batch({ allowed: true }));
+    render(<DealerVehicleNuevoPage />);
+    expect(screen.queryByTestId("nuevo-sin-contexto")).toBeNull();
+    expect(screen.getByTestId("vehicle-manual-form")).toBeInTheDocument();
+  });
+
+  it("el POST sale sin cabecera de unidad y sin precios", async () => {
+    fetchMock.mockResolvedValue({ ok: true, status: 201, json: async () => ({ id: "veh-1" }) } as unknown as Response);
+    render(<DealerVehicleNuevoPage />);
+    rellenaMinimo();
+    fireEvent.submit(screen.getByTestId("vehicle-manual-form"));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const [path, init] = fetchMock.mock.calls[0];
+    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles");
+    const headers = init?.headers as Record<string, string>;
+    expect(headers).not.toHaveProperty("X-Organization-Unit-ID");
+    expect(headers["X-Dealer-ID"]).toBe("dealer-a");
+    const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    expect(body).not.toHaveProperty("price_rd");
+    expect(body).not.toHaveProperty("price_usd");
   });
 });
