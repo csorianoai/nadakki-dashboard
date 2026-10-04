@@ -71,8 +71,9 @@ async function proxyRequest(
 
     const init: RequestInit = { method, headers };
     if (method !== "GET" && method !== "HEAD") {
-      const body = await req.text();
-      if (body) init.body = body;
+      // Bytes, no texto: decodificar a UTF-8 corrompe un multipart con una foto.
+      const body = await req.arrayBuffer();
+      if (body.byteLength > 0) init.body = body;
     }
 
     const res = await fetch(target, { ...init, cache: "no-store" });
@@ -98,7 +99,7 @@ async function proxyRequest(
     const contentType = res.headers.get("Content-Type") || "";
     if (contentType.includes("application/json")) {
       const json = text ? JSON.parse(text) : null;
-      return NextResponse.json(json);
+      return NextResponse.json(json, { status: res.status });
     }
     return new NextResponse(text, {
       status: res.status,
