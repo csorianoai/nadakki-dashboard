@@ -33,6 +33,19 @@
  *   npx playwright test e2e/mapaal/D8.spec.ts
  */
 import { expect, test, type Page, type Response } from "@playwright/test";
+import {
+  ARCA_TITULO,
+  REINTENTAR,
+  RUTAS,
+  SESION_FALLIDA,
+  SESION_VERIFICANDO,
+  TESTIDS,
+  TITULOS,
+  esLogin,
+  esPeticionFiscal,
+  esRefresh,
+  fallaFiscalAR,
+} from "./d8-guion";
 
 const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
 const QA_USER = process.env.QA_USER;
@@ -40,9 +53,9 @@ const QA_PASSWORD = process.env.QA_PASSWORD;
 const QA_TENANT_SLUG = process.env.QA_TENANT_SLUG;
 const PAIS_FISCAL = (process.env.D8_FISCAL_COUNTRY ?? "AR").toUpperCase();
 
-const PLAN = "/contable/plan-cuentas";
-const LIBRO = "/contable/libro-mayor";
-const BALANCE = "/contable/balance-comprobacion";
+const PLAN = RUTAS.plan;
+const LIBRO = RUTAS.libro;
+const BALANCE = RUTAS.balance;
 
 test.describe.configure({ mode: "serial" });
 test.skip(
@@ -59,7 +72,7 @@ async function login(page: Page) {
   if (QA_TENANT_SLUG && (await tenantInput.count()) > 0)
     await tenantInput.fill(QA_TENANT_SLUG);
   await page.locator('button[type="submit"]').click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"), {
+  await page.waitForURL((url) => !esLogin(url.pathname), {
     timeout: 60_000,
   });
 }
@@ -70,8 +83,8 @@ async function pantallaConSesion(page: Page, ruta: string, titulo: string) {
     { timeout: 45_000 },
   );
   expect(new URL(page.url()).pathname).toBe(ruta);
-  await expect(page.getByText("No se pudo verificar la sesion")).toHaveCount(0);
-  await expect(page.getByText("Verificando sesion...")).toHaveCount(0);
+  await expect(page.getByText(SESION_FALLIDA)).toHaveCount(0);
+  await expect(page.getByText(SESION_VERIFICANDO)).toHaveCount(0);
   await expect(page.getByText(/Upstream/)).toHaveCount(0);
 }
 
@@ -82,23 +95,23 @@ async function ir(page: Page, ruta: string) {
     await enlace.click();
   else await page.goto(`${BASE_URL}${ruta}`);
   await page.waitForURL(
-    (url) => url.pathname === ruta || url.pathname.startsWith("/login"),
+    (url) => url.pathname === ruta || esLogin(url.pathname),
     { timeout: 45_000 },
   );
 }
 
 async function libroMayorCargado(page: Page) {
-  await pantallaConSesion(page, LIBRO, "Libro mayor");
+  await pantallaConSesion(page, LIBRO, TITULOS.libro);
   await expect(page.getByLabel("Cuenta", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Periodo", { exact: true })).toBeVisible();
   // Si cuentas/periodos fallan, la pantalla lo dice con Reintentar; no debe hacer falta.
-  await expect(page.getByTestId("contable-error-reintentar")).toHaveCount(0);
+  await expect(page.getByTestId(TESTIDS.errorReintentar)).toHaveCount(0);
 }
 
 async function balanceCargado(page: Page) {
-  await pantallaConSesion(page, BALANCE, "Balance de comprobación");
+  await pantallaConSesion(page, BALANCE, TITULOS.balance);
   await expect(page.getByLabel("Periodo", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("contable-error-reintentar")).toHaveCount(0);
+  await expect(page.getByTestId(TESTIDS.errorReintentar)).toHaveCount(0);
 }
 
 test("D8.1: Plan de cuentas dice que la facturacion electronica se gestiona en ARCA", async ({
@@ -108,12 +121,11 @@ test("D8.1: Plan de cuentas dice que la facturacion electronica se gestiona en A
   await login(page);
 
   const fiscal = page.waitForResponse(
-    (res: Response) =>
-      new URL(res.url()).pathname.startsWith("/api/v1/contable/fiscal/"),
+    (res: Response) => esPeticionFiscal(res.url()),
     { timeout: 45_000 },
   );
   await page.goto(`${BASE_URL}${PLAN}`);
-  await pantallaConSesion(page, PLAN, "Plan de cuentas");
+  await pantallaConSesion(page, PLAN, TITULOS.plan);
 
   const res = await fiscal;
   const cuerpo = await res.text();
@@ -124,17 +136,12 @@ test("D8.1: Plan de cuentas dice que la facturacion electronica se gestiona en A
   expect(cuerpo).not.toContain("Upstream error");
 
   if (PAIS_FISCAL === "AR") {
-    expect(res.status()).toBe(409);
-    expect(
-      (JSON.parse(cuerpo) as { detail?: { error?: string } }).detail?.error,
-    ).toBe("AR_NOT_CONFIGURED");
-    const arca = page.getByTestId("facturacion-arca");
+    expect(fallaFiscalAR(res.status(), cuerpo)).toBeNull();
+    const arca = page.getByTestId(TESTIDS.arca);
     await expect(arca).toBeVisible({ timeout: 30_000 });
     await expect(arca).toHaveAttribute("role", "note");
-    await expect(arca).toContainText(
-      "Facturación electrónica: se gestiona en ARCA",
-    );
-    await expect(page.getByTestId("facturacion-problema")).toHaveCount(0);
+    await expect(arca).toContainText(ARCA_TITULO);
+    await expect(page.getByTestId(TESTIDS.problema)).toHaveCount(0);
   }
 });
 
@@ -145,12 +152,12 @@ test("D8.2: Libro mayor y Balance abren, aguantan F5 y la navegacion, sin /login
   await login(page);
 
   await page.goto(`${BASE_URL}${PLAN}`);
-  await pantallaConSesion(page, PLAN, "Plan de cuentas");
+  await pantallaConSesion(page, PLAN, TITULOS.plan);
 
   await page.goto(`${BASE_URL}${LIBRO}`);
   await libroMayorCargado(page);
   if (PAIS_FISCAL === "AR")
-    await expect(page.getByTestId("facturacion-arca")).toBeVisible({
+    await expect(page.getByTestId(TESTIDS.arca)).toBeVisible({
       timeout: 30_000,
     });
   await page.reload();
@@ -159,7 +166,7 @@ test("D8.2: Libro mayor y Balance abren, aguantan F5 y la navegacion, sin /login
   await page.goto(`${BASE_URL}${BALANCE}`);
   await balanceCargado(page);
   if (PAIS_FISCAL === "AR")
-    await expect(page.getByTestId("facturacion-arca")).toBeVisible({
+    await expect(page.getByTestId(TESTIDS.arca)).toBeVisible({
       timeout: 30_000,
     });
   await page.reload();
@@ -168,7 +175,7 @@ test("D8.2: Libro mayor y Balance abren, aguantan F5 y la navegacion, sin /login
   // Ida y vuelta por el menu, sin recargar: ningun salto pide login.
   for (let vuelta = 0; vuelta < 2; vuelta++) {
     await ir(page, PLAN);
-    await pantallaConSesion(page, PLAN, "Plan de cuentas");
+    await pantallaConSesion(page, PLAN, TITULOS.plan);
     await ir(page, LIBRO);
     await libroMayorCargado(page);
     await ir(page, BALANCE);
@@ -182,11 +189,11 @@ test("D8.3: un refresh que falla con 504 no cierra la sesion y Reintentar la rec
   test.setTimeout(150_000);
   await login(page);
   await page.goto(`${BASE_URL}${PLAN}`);
-  await pantallaConSesion(page, PLAN, "Plan de cuentas");
+  await pantallaConSesion(page, PLAN, TITULOS.plan);
 
   // Solo el PRIMER refresh tras la recarga falla, como un backend frio.
   let fallados = 0;
-  await page.route("**/api/v2/auth/refresh**", async (route) => {
+  await page.route((url) => esRefresh(url.href), async (route) => {
     if (fallados === 0) {
       fallados++;
       await route.fulfill({
@@ -200,15 +207,15 @@ test("D8.3: un refresh que falla con 504 no cierra la sesion y Reintentar la rec
   });
 
   await page.goto(`${BASE_URL}${LIBRO}`);
-  const aviso = page.getByText("No se pudo verificar la sesion");
+  const aviso = page.getByText(SESION_FALLIDA);
   await expect(aviso).toBeVisible({ timeout: 30_000 });
   expect(fallados).toBe(1);
   expect(new URL(page.url()).pathname).toBe(LIBRO);
 
-  await page.getByRole("button", { name: "Reintentar" }).click();
+  await page.getByRole("button", { name: REINTENTAR }).click();
   await libroMayorCargado(page);
   await expect(aviso).toHaveCount(0);
-  expect(new URL(page.url()).pathname).not.toMatch(/^\/login/);
+  expect(esLogin(new URL(page.url()).pathname)).toBe(false);
 
   console.log("RESULT_D8=PASS");
 });
