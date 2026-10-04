@@ -136,6 +136,12 @@ export interface AuthContextValue {
   tenant: TenantInfo | null;
   activeRole: RoleInfo | null;
   allRoles: RoleInfo[];
+  /**
+   * Todos los tenants del usuario, de `GET /auth/me` (`all_tenants`). Antes se
+   * descartaba, y por eso "Cambiar tenant" se pintaba sin saber si habia a que
+   * cambiar. Vacio mientras no se sabe: quien lo lea, fail-closed.
+   */
+  allTenants: TenantInfo[];
   isAuthenticated: boolean;
   isLoading: boolean;
   /** Non-null when the session init failed (timeout, network error, etc.). */
@@ -160,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenant] = useState<TenantInfo | null>(null);
   const [activeRole, setActiveRole] = useState<RoleInfo | null>(null);
   const [allRoles, setAllRoles] = useState<RoleInfo[]>([]);
+  const [allTenants, setAllTenants] = useState<TenantInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
   const [initAttempt, setInitAttempt] = useState(0);
@@ -203,6 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(me.data.user);
             setTenant(me.data.current_tenant);
             setAllRoles(me.data.active_roles);
+            setAllTenants(me.data.all_tenants ?? []);
             const firstRole = me.data.active_roles.length > 0 ? me.data.active_roles[0] : null;
             if (firstRole) setActiveRole(firstRole);
             // Keep localStorage in sync on session restore
@@ -283,6 +291,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // loginV2 ya devuelve active_role — no necesitamos un segundo /me call
     const roles = result.data.active_role ? [result.data.active_role] : [];
     setAllRoles(roles);
+    // El login no trae `all_tenants`. Se pide aparte y sin bloquear: si falla,
+    // la lista se queda vacia y "Cambiar tenant" no se pinta.
+    setAllTenants([]);
+    void getMeV2(result.data.access_token)
+      .then((me) => {
+        if (me?.ok && me.data) setAllTenants(me.data.all_tenants ?? []);
+      })
+      .catch(() => {});
     return { ok: true, redirectTo: getPostLoginRedirectPath(roles) };
   };
 
@@ -306,6 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTenant(null);
     setActiveRole(null);
     setAllRoles([]);
+    setAllTenants([]);
   };
 
   const switchTenant = async (tenantId?: string, tenantSlug?: string) => {
@@ -357,6 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tenant,
     activeRole,
     allRoles,
+    allTenants,
     isAuthenticated: user !== null,
     isLoading,
     initError,

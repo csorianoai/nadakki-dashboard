@@ -20,6 +20,8 @@ import {
 import { useAgentRegistrySummary } from "@/app/hooks/useAgentRegistrySummary";
 import { AgentRegistryStatHome } from "@/components/agent-registry/AgentRegistryStatHome";
 import { CORES_CONFIG } from "@/config/cores";
+import { useAuth } from "@/hooks/useAuth";
+import { esPersonalDePlataforma } from "@/lib/auth/platform-staff";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
@@ -57,6 +59,22 @@ const HIGHLIGHT_CORE_IDS = ["marketing", "contabilidad", "legal", "ventascrm", "
 export default function HomePage() {
   const agentReg = useAgentRegistrySummary();
   const [stats, setStats] = useState({ totalTenants: 0, backendOnline: false });
+
+  /**
+   * Las metricas de abajo son de la PLATAFORMA: registro de agentes, numero de
+   * tenants, estado del backend y catalogo de cores. Ninguna es dato del tenant,
+   * y un usuario de un tenant no tiene por que ver cuantos clientes tiene
+   * Nadakki ni cuantos agentes hay en el registro.
+   *
+   * Verificado por Cesar en produccion con cajamapaal+carolina: las veia. El
+   * motivo esta en `lib/auth/platform-staff.ts` --`tenant_admin` se trataba como
+   * personal de plataforma-- y ahi vive la regla.
+   *
+   * Fail-closed: mientras la sesion carga, `allRoles` esta vacio y esto es
+   * `false`, asi que las metricas no asoman antes de saber quien mira.
+   */
+  const { allRoles } = useAuth();
+  const esPlataforma = esPersonalDePlataforma(allRoles);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -134,7 +152,9 @@ export default function HomePage() {
           </p>
         </motion.div>
 
+        {esPlataforma ? (
         <motion.div
+          data-testid="home-metricas-plataforma"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -180,6 +200,7 @@ export default function HomePage() {
             <span className="text-2xl font-bold text-white">{coresList.length}</span>
           </div>
         </motion.div>
+        ) : null}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

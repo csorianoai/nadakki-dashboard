@@ -2,15 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { AlertTriangle, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import { cn } from "@/lib/utils";
+import {
+  ACCESS_UNVERIFIED_DETAIL,
+  ACCESS_UNVERIFIED_MESSAGE,
+} from "@/lib/access/reason-codes";
 import { isDealerNavItemActive, type DealerNavGroup, type DealerNavItem } from "./dealer-nav";
 
 export type DealerSidebarProps = {
   /** Grupos ya filtrados por entitlements en el shell. */
   groups: DealerNavGroup[];
   loading: boolean;
+  /**
+   * Reason code cuando el acceso NO se pudo verificar. Con esto el menu vacio
+   * deja de ser mudo: no es lo mismo "tu plan no incluye nada" que "no pudimos
+   * comprobarlo".
+   */
+  unverifiedReason?: string | null;
   mobileOpen: boolean;
   onClose: () => void;
   /** Barra estrecha: solo iconos. Lo decide el shell y dura la sesion. */
@@ -98,6 +108,7 @@ function NavLink({
 export function DealerSidebar({
   groups,
   loading,
+  unverifiedReason = null,
   mobileOpen,
   onClose,
   collapsed,
@@ -217,6 +228,35 @@ export function DealerSidebar({
               className={cn("space-y-6 py-4", collapsed ? "px-2" : "px-3")}
               aria-label="Navegación del dealer"
             >
+              {unverifiedReason ? (
+                /* En estrecha la frase no cabe en 72 px: queda el icono, la
+                   frase en el tooltip y el texto entero en sr-only, igual que
+                   el nombre de los modulos. El aviso no desaparece. */
+                <div
+                  role="alert"
+                  data-testid="dealer-acceso-no-verificado"
+                  data-reason-code={unverifiedReason}
+                  title={collapsed ? ACCESS_UNVERIFIED_MESSAGE : undefined}
+                  className={cn(
+                    "rounded-lg border border-amber-500/30 bg-amber-500/10",
+                    collapsed ? "flex justify-center p-2" : "p-3",
+                  )}
+                >
+                  {collapsed ? (
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-200" aria-hidden="true" />
+                  ) : null}
+                  <p className={collapsed ? "sr-only" : "text-xs font-semibold text-amber-200"}>
+                    {ACCESS_UNVERIFIED_MESSAGE}
+                  </p>
+                  <p
+                    className={
+                      collapsed ? "sr-only" : "mt-1 text-[11px] leading-snug text-amber-200/80"
+                    }
+                  >
+                    {ACCESS_UNVERIFIED_DETAIL}
+                  </p>
+                </div>
+              ) : null}
               {groups.map((group, index) => (
                 <div key={group.id} className="space-y-1">
                   {collapsed ? (

@@ -3,6 +3,7 @@
 import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import { useState, type ReactNode } from "react";
 import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
+import { DealerSuiteGate } from "@/components/dealer/DealerSuiteGate";
 import { ForgeAppShell } from "./ForgeAppShell";
 import { ForgeGlobalCoresSidebar } from "./ForgeGlobalCoresSidebar";
 import { ForgeGlobalTopbar } from "./ForgeGlobalTopbar";
@@ -39,6 +40,7 @@ export function GlobalForgeAppShell({ children }: { children: ReactNode }) {
   const forgeTenantAttr = forgeAppDataTenantAttribute();
 
   return (
+    <DealerSuiteGate>
     <div
       className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} forge-app flex h-screen flex-col overflow-hidden antialiased`}
       data-tenant={forgeTenantAttr}
@@ -53,5 +55,6 @@ export function GlobalForgeAppShell({ children }: { children: ReactNode }) {
         {children}
       </ForgeAppShell>
     </div>
+    </DealerSuiteGate>
   );
 }

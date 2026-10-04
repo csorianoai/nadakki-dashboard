@@ -4,13 +4,24 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { useQuery } from "@tanstack/react-query";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
-import { ACCESS_UNVERIFIED_MESSAGE, isAccessUnverified } from "@/lib/access/reason-codes";
+import {
+  ACCESS_UNVERIFIED_MESSAGE,
+  isAccessUnverified,
+  unverifiedReasonFromBatch,
+} from "@/lib/access/reason-codes";
 import { syncDealerContextFromBackend } from "@/lib/dealer/dealer-context-api";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { DEALER_NAV_CAPABILITY_KEYS, DEALER_NAV_GROUPS } from "./dealer-nav";
 import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
+
+/** `reason_code` de un error de acceso, sin depender de la clase que lo lanza. */
+function reasonCodeOfError(error: unknown): string | null {
+  if (typeof error !== "object" || error === null || !("reason_code" in error)) return null;
+  const codigo = (error as { reason_code?: unknown }).reason_code;
+  return typeof codigo === "string" ? codigo : null;
+}
 
 /**
  * Chrome unico del panel del dealer.
@@ -107,6 +118,28 @@ export function DealerShell({ children }: { children: ReactNode }) {
   const failClosed = isAccessQueryFailClosed(query);
   const loading = query.isPending || query.isLoading;
   const results = query.data?.results;
+
+  /**
+   * Fail-closed sin explicacion es peor que un 404.
+   *
+   * Cuando `failClosed` entra, `allows` devuelve false para todo, `groups` queda
+   * en [] y el sidebar pintaba un <nav> vacio. Un dealer no puede distinguir eso
+   * de "tu plan no incluye nada", y hoy el caso REAL de Mapaal es el primero: el
+   * backend no recibe la unidad organizativa y el motor deniega cerrado con
+   * `no_organization_unit` (services/access/entitlements.py:330-339).
+   *
+   * El codigo llega POR CAPABILITY dentro de un 200, no como error HTTP, asi que
+   * se buscan los items. El 403 se mira aparte porque ahi si viene en el error.
+   *
+   * El error se lee por FORMA y no con `instanceof AccessApiError`: importar la
+   * clase en runtime arrastra lib/access/client -> fetch-client -> auth al cargar
+   * el shell, y eso exige backend configurado en cualquier test que lo monte.
+   */
+  const unverifiedReason = useMemo(() => {
+    const codigoDelError = reasonCodeOfError(query.error);
+    if (isAccessUnverified(codigoDelError)) return codigoDelError;
+    return unverifiedReasonFromBatch(results);
+  }, [query.error, results]);
 
   /** El frontend restringe: sin permiso explicito, no se pinta. */
   const allows = useCallback(
@@ -216,6 +249,7 @@ export function DealerShell({ children }: { children: ReactNode }) {
       <DealerSidebar
         groups={groups}
         loading={loading}
+        unverifiedReason={unverifiedReason}
         mobileOpen={mobileNav}
         onClose={() => setMobileNav(false)}
         collapsed={sidebarCollapsed}

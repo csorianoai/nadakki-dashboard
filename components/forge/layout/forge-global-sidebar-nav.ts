@@ -849,7 +849,6 @@ export const NAV_SECTIONS: NavSection[] = [
             featureFlag: "cockpit-consolidation",
           },
           { id: "adm-dashboard", label: "Dashboard", href: "/dashboard" },
-          { id: "adm-tenants", label: "Tenants", href: "/tenants" },
           { id: "adm-activation", label: "Activación", href: "/admin/activation" },
           { id: "adm-gates", label: "Gates / roles", href: "/admin/gates" },
           { id: "adm-billing", label: "Billing", href: "/admin/billing" },
