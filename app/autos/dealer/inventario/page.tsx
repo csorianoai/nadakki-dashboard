@@ -101,6 +101,15 @@ export default function DealerInventoryPage() {
         <p className="mt-1 text-sm text-nk-fg-muted">
           Inventario privado del dealer autenticado. No usa la vitrina pública ni filtra autoridad en cliente.
         </p>
+        {allowed && dealerId && !hayQueElegir ? (
+          <Link
+            href="/autos/dealer/inventario/importar"
+            data-testid="inventario-importar"
+            className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-brand-2 underline"
+          >
+            Importar planilla
+          </Link>
+        ) : null}
       </header>
 
       {cargando ? (
