@@ -24,7 +24,17 @@
 
 import { accessApiErrorFromHttp } from "@/lib/access/client";
 import { apiFetch } from "@/lib/api/fetch-client";
-import type { DealerAccessContext } from "@/lib/dealer/access-context";
+
+/**
+ * Dealer con el que se construye la peticion. La unidad organizativa puede
+ * faltar --el dealer de Mapaal no tiene-- y entonces no se envia la cabecera:
+ * la unidad la resuelve el backend, igual que en la lista del inventario.
+ */
+export type VehicleDealerIdentity = {
+  tenantId: string;
+  dealerId: string;
+  organizationUnitId: string | null;
+};
 
 /** Clave 097 de escritura de inventario. */
 export const VEHICLE_WRITE_CAPABILITY = "autos.inventory.create";
@@ -224,7 +234,7 @@ export function vehicleIdFrom(body: unknown): string | null {
 }
 
 export async function createVehicleManual(
-  context: DealerAccessContext,
+  context: VehicleDealerIdentity,
   form: VehicleManualForm,
   idempotencyKey?: string,
 ): Promise<unknown> {
@@ -236,8 +246,8 @@ export async function createVehicleManual(
     "Content-Type": "application/json",
     "X-Tenant-ID": context.tenantId,
     "X-Dealer-ID": context.dealerId,
-    "X-Organization-Unit-ID": context.organizationUnitId,
   };
+  if (context.organizationUnitId) headers["X-Organization-Unit-ID"] = context.organizationUnitId;
   if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
   const response = await apiFetch(path, {
     method: "POST",
