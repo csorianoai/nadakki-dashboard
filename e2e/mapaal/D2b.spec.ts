@@ -7,18 +7,20 @@
  * `QA_TOTP_SECRET` no se usa.
  *
  * Guion:
- *   1. Inicia sesion. Si el usuario tiene dealer, la Suite redirige a
- *      /autos/dealer y la barra "Suite operativa" no aparece nunca.
+ *   1. Inicia sesion. El usuario QA tiene dealer (las herramientas QA solo
+ *      crean usuarios con un dealer, ver D1.spec.ts), asi que la Suite DEBE
+ *      redirigir a /autos/dealer y "Suite operativa" no aparece nunca.
  *   2. En Inicio no estan las metricas de plataforma.
  *   3. Ningun enlace lleva a /tenants ("Cambiar tenant" ya no apunta ahi).
- *   4. /tenants no ensena los tenants inventados.
+ *   4. /tenants no ensena los tenants inventados y tambien redirige al panel
+ *      del dealer.
  *
  * Ejecutar: BASE_URL=... QA_USER=... QA_PASSWORD=... \
  *   npx playwright test e2e/mapaal/D2b.spec.ts
  */
 import { expect, test, type Page } from "@playwright/test";
 import {
-  DOMINIOS_CATALOGO, LEGAL_HUB, RUTA_TENANTS, SUITE_OPERATIVA, TENANT_QA, TENANTS_INVENTADOS, TESTIDS,
+  DOMINIOS_CATALOGO, LEGAL_HUB, RUTA_DEALER, RUTA_TENANTS, SUITE_OPERATIVA, TENANT_QA, TENANTS_INVENTADOS, TESTIDS,
   enPanelDealer,
 } from "./d2b-guion";
 
@@ -46,7 +48,15 @@ async function esperarVerificacion(page: Page) {
   await expect(page.getByTestId(TESTIDS.suiteVerificando)).toHaveCount(0, { timeout: 30_000 });
 }
 
-let esDealer = false;
+/** Exige que la pagina acabe en el panel del dealer: el usuario QA tiene dealer (D1). */
+async function exigirPanelDealer(page: Page, desde: string) {
+  await expect
+    .poll(() => enPanelDealer(new URL(page.url()).pathname), {
+      message: `el usuario QA tiene dealer (D1); ${desde} debe redirigir a ${RUTA_DEALER}`,
+      timeout: 30_000,
+    })
+    .toBe(true);
+}
 
 test.beforeEach(async ({ page }) => {
   // Sin credenciales no hay prueba: fallar, no saltar (un skip saldria verde).
@@ -60,12 +70,10 @@ test("1. un usuario con dealer nunca ve la Suite operativa", async ({ page }) =>
   await page.goto(`${BASE_URL}/`);
   await esperarVerificacion(page);
   await page.waitForLoadState("networkidle");
-  esDealer = enPanelDealer(new URL(page.url()).pathname);
-  if (esDealer) {
-    await expect(page.getByText(SUITE_OPERATIVA, { exact: false })).toHaveCount(0);
-    await expect(page.getByText(LEGAL_HUB, { exact: true })).toHaveCount(0);
-  }
-  console.log(`D2b: usuario QA ${esDealer ? "con" : "sin"} dealer -> ${page.url()}`);
+  await exigirPanelDealer(page, "la Suite");
+  await expect(page.getByText(SUITE_OPERATIVA, { exact: false })).toHaveCount(0);
+  await expect(page.getByText(LEGAL_HUB, { exact: true })).toHaveCount(0);
+  console.log(`D2b: usuario QA con dealer -> ${page.url()}`);
 });
 
 test("2. Inicio no ensena metricas de plataforma", async ({ page }) => {
@@ -91,8 +99,10 @@ test("4. /tenants no ensena los tenants inventados", async ({ page }) => {
     await expect(page.getByText(nombre, { exact: true })).toHaveCount(0);
   }
   await expect(page.getByTestId(TESTIDS.tenantsVerificando)).toHaveCount(0, { timeout: 30_000 });
-  if (!enPanelDealer(new URL(page.url()).pathname))
-    await expect(page.getByTestId(TESTIDS.tenantsSoloPlataforma)).toBeVisible();
+  await exigirPanelDealer(page, RUTA_TENANTS);
+  for (const nombre of TENANTS_INVENTADOS) {
+    await expect(page.getByText(nombre, { exact: true })).toHaveCount(0);
+  }
 });
 
 test("RESULT", async () => {
