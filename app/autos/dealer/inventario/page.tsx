@@ -107,7 +107,9 @@ export default function DealerInventoryPage() {
         <p className="mt-1 text-sm text-nk-fg-muted">
           Inventario privado del dealer autenticado. No usa la vitrina pública ni filtra autoridad en cliente.
         </p>
-        {puedeCrear ? (
+        {/* Con el binding, no con el dealer elegido: la eleccion vive en el estado
+            de ESTA pantalla y /nuevo no la ve; sin binding seria una puerta cerrada. */}
+        {puedeCrear && binding !== null ? (
           <Link
             href="/autos/dealer/inventario/nuevo"
             data-testid="inventario-nuevo"
