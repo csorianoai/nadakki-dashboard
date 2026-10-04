@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { render, screen } from "@testing-library/react";
 import HomePage from "@/app/page";
 import TenantsLayout from "@/app/tenants/layout";
@@ -91,5 +93,34 @@ describe("/tenants: cerrado para usuarios de tenant", () => {
     sesion(SUPERADMIN);
     render(<TenantsLayout>{dentro}</TenantsLayout>);
     expect(screen.getByText("Enterprise One")).toBeInTheDocument();
+  });
+});
+
+describe("/tenants: la puerta no se puede perder (regresion)", () => {
+  // El cierre de /tenants depende de que `app/tenants/layout.tsx` exista y
+  // envuelva TODAS las paginas de debajo. Si alguien borra el layout, lo vacia o
+  // saca una pagina a un grupo de rutas fuera de el, los tenants inventados de
+  // `TENANTS_INITIAL` vuelven a verse y los tests de arriba no lo notarian.
+  const raiz = path.join(process.cwd(), "app", "tenants");
+
+  function paginas(dir: string): string[] {
+    return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) return paginas(p);
+      return /^page\.(tsx|ts|jsx|js)$/.test(e.name) ? [p] : [];
+    });
+  }
+
+  test("el layout existe y usa el predicado de plataforma", () => {
+    const layout = fs.readFileSync(path.join(raiz, "layout.tsx"), "utf8");
+    expect(layout).toContain("esPersonalDePlataforma");
+  });
+
+  test("ninguna pagina bajo /tenants trae su propio layout que la saque de la puerta", () => {
+    const encontradas = paginas(raiz).map((p) => path.relative(raiz, p));
+    expect(encontradas).toEqual(expect.arrayContaining(["page.tsx", path.join("[tenantId]", "page.tsx")]));
+    for (const rel of encontradas) {
+      expect(rel.split(path.sep).some((seg) => seg.startsWith("("))).toBe(false);
+    }
   });
 });
