@@ -9,6 +9,7 @@ import {
   isAccessUnverified,
   unverifiedReasonFromBatch,
 } from "@/lib/access/reason-codes";
+import { AuthProvider as AutosAuthProvider } from "@/lib/auth-context";
 import { syncDealerContextFromBackend } from "@/lib/dealer/dealer-context-api";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { DEALER_NAV_CAPABILITY_KEYS, DEALER_NAV_GROUPS } from "./dealer-nav";
@@ -49,8 +50,23 @@ function reasonCodeOfError(error: unknown): string | null {
  *
  * El resultado se reparte a sidebar, topbar y paleta por props, para que los
  * tres filtren exactamente igual.
+ *
+ * PROVIDER: el sidebar lee la marca con `useDealerManagementBranding`, que usa
+ * el `useAuth` de `@/lib/auth-context` y LANZA sin su provider. En /autos/dealer
+ * lo pone `app/autos/layout.tsx`; en /centro-operativo no habia ninguno y la
+ * pagina entera caia en "This page couldn't load" (D9). El shell trae lo que
+ * necesita. Dentro de `app/autos` este provider tapa al del layout con el mismo
+ * dato: los dos solo leen el Local Storage de la sesion.
  */
 export function DealerShell({ children }: { children: ReactNode }) {
+  return (
+    <AutosAuthProvider>
+      <DealerShellChrome>{children}</DealerShellChrome>
+    </AutosAuthProvider>
+  );
+}
+
+function DealerShellChrome({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 

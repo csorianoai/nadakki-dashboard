@@ -29,6 +29,13 @@ import type { DealerNavGroup } from "@/components/dealer-management/shell/dealer
 
 let pathname = "/autos/dealer";
 
+// `DealerShell` monta el AuthProvider de `@/lib/auth-context`: se corta aqui la
+// cadena de imports antes de `lib/config/backend-url`, que lanza sin backend.
+jest.mock("@/lib/auth/token-refresh", () => ({
+  refreshAccessToken: jest.fn(async () => false),
+  isTokenExpiringSoon: jest.fn(() => false),
+}));
+
 jest.mock("next/navigation", () => ({
   usePathname: () => pathname,
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
