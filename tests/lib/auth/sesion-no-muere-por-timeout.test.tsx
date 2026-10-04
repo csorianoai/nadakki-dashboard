@@ -15,7 +15,7 @@
 
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { AuthProvider } from "@/lib/auth/auth-context";
+import { AuthProvider, SESSION_INIT_TIMEOUT_MS } from "@/lib/auth/auth-context";
 import { useAuth } from "@/hooks/useAuth";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import { getMeV2, refreshTokenV2 } from "@/lib/api/auth-v2";
@@ -65,11 +65,21 @@ function conSesionGuardada() {
   tokenStorage.setTokens({ accessToken: "access-viejo", refreshToken: "refresh-viejo" });
 }
 
+/**
+ * Monta el provider y deja terminar el init, reintentos con backoff incluidos
+ * (W0-2). Reloj falso: el backoff no hace esperar al test.
+ */
 async function montar() {
   const hook = renderHook(() => useAuth(), { wrapper });
-  await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(SESSION_INIT_TIMEOUT_MS - 1);
+  });
+  expect(hook.result.current.isLoading).toBe(false);
   return hook;
 }
+
+beforeEach(() => jest.useFakeTimers());
+afterEach(() => jest.useRealTimers());
 
 describe("un timeout o un 5xx NO cierran la sesion", () => {
   beforeEach(() => {
@@ -190,13 +200,17 @@ describe("Reintentar reintenta — ya no es el logout", () => {
 
   test("tras un timeout, Reintentar recupera la sesion", async () => {
     conSesionGuardada();
-    // Primer intento: el backend esta frio y expira.
-    refreshMock.mockResolvedValueOnce({
+    // Los tres intentos automaticos (W0-2): el backend sigue frio y expira.
+    const EXPIRA = {
       ok: false,
       status: 0,
       error: "Tiempo de espera agotado — /api/v2/auth/refresh",
-    } as never);
-    // Segundo intento: ya caliente.
+    };
+    refreshMock
+      .mockResolvedValueOnce(EXPIRA as never)
+      .mockResolvedValueOnce(EXPIRA as never)
+      .mockResolvedValueOnce(EXPIRA as never);
+    // El intento del boton: ya caliente.
     refreshMock.mockResolvedValueOnce(SESION_OK as never);
     meMock.mockResolvedValue(ME_OK as never);
 
@@ -212,8 +226,8 @@ describe("Reintentar reintenta — ya no es el logout", () => {
     await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
     expect(result.current.initError).toBeNull();
     expect(result.current.tenant?.id).toBe("t-caja");
-    expect(refreshMock).toHaveBeenCalledTimes(2);
-    // El segundo intento uso el refresh token que el fallo NO borro.
-    expect(refreshMock).toHaveBeenNthCalledWith(2, "refresh-viejo");
+    expect(refreshMock).toHaveBeenCalledTimes(4);
+    // El intento del boton uso el refresh token que los fallos NO borraron.
+    expect(refreshMock).toHaveBeenNthCalledWith(4, "refresh-viejo");
   });
 });

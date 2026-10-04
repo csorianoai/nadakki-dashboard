@@ -13,7 +13,9 @@ describe("session init timeout (M7)", () => {
   const authV2 = readSrc("lib/api/auth-v2.ts");
 
   test("auth-context uses bounded SESSION_INIT_TIMEOUT_MS", () => {
-    expect(authCtx).toMatch(/SESSION_INIT_TIMEOUT_MS\s*=\s*8_000/);
+    // Techo total del init, reintentos con backoff incluidos (W0-2).
+    expect(authCtx).toMatch(/SESSION_INIT_TIMEOUT_MS\s*=\s*20_000/);
+    expect(authCtx).toContain("SESSION_INIT_RETRY_DELAYS_MS");
     expect(authCtx).toContain("setInitError");
     expect(authCtx).toContain("retryInit");
   });
