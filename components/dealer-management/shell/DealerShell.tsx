@@ -16,6 +16,13 @@ import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
 
+/** `reason_code` de un error de acceso, sin depender de la clase que lo lanza. */
+function reasonCodeOfError(error: unknown): string | null {
+  if (typeof error !== "object" || error === null || !("reason_code" in error)) return null;
+  const codigo = (error as { reason_code?: unknown }).reason_code;
+  return typeof codigo === "string" ? codigo : null;
+}
+
 /**
  * Chrome unico del panel del dealer.
  *
@@ -43,13 +50,6 @@ import { DealerTopbar } from "./DealerTopbar";
  * El resultado se reparte a sidebar, topbar y paleta por props, para que los
  * tres filtren exactamente igual.
  */
-/** `reason_code` de un error de acceso, sin depender de la clase que lo lanza. */
-function reasonCodeOfError(error: unknown): string | null {
-  if (typeof error !== "object" || error === null || !("reason_code" in error)) return null;
-  const codigo = (error as { reason_code?: unknown }).reason_code;
-  return typeof codigo === "string" ? codigo : null;
-}
-
 export function DealerShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
