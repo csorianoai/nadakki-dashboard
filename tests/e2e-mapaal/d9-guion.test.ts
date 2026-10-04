@@ -9,10 +9,11 @@ import path from "path";
 import { contenidoCentroOperativo } from "@/app/centro-operativo/contenido";
 import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-nav";
 import { isDealerChromePath } from "@/lib/autos-portal/routes";
+import { resolveDealerAdminHost } from "@/lib/dealer-management/admin-host";
 import {
-  ANCLA_PRIMEROS_PASOS, CTA_PRIMEROS_PASOS, ENLACE_MENU, GRUPO_MENU, NAV, RUTAS,
-  SUITE_OPERATIVA, TENANT_QA, TESTIDS, esInventario, esXlsx, fallosDePlantilla,
-  primerosPasosEsperado, vehiculosEnRespuesta,
+  ANCLA_PRIMEROS_PASOS, CTA_PRIMEROS_PASOS, ENLACE_MENU, GRUPO_MENU, NAV, ORIGEN_UNIVERSAL,
+  PLACEHOLDER_TENANT, RUTAS, SLUG_QA, SUITE_OPERATIVA, TENANT_QA, TESTIDS, esInventario, esXlsx,
+  fallosDePlantilla, huellaDespliegue, origenDeLogin, primerosPasosEsperado, vehiculosEnRespuesta,
 } from "../../e2e/mapaal/d9-guion";
 
 const raiz = path.resolve(__dirname, "../..");
@@ -111,5 +112,58 @@ describe("D9 guion: lectura de las respuestas", () => {
       const bytes = new Uint8Array(readFileSync(path.join(raiz, "public", bloque.plantilla.ruta)));
       expect(fallosDePlantilla(bloque.plantilla, { status: 200, bytes })).toEqual([]);
     }
+  });
+});
+
+/**
+ * Regresion del RESULT_D9=FAIL en d4277c09: "Credenciales invalidas" en el
+ * login. BASE_URL es mapaal.nadakki.com; ahi el login manda tenant_slug=mapaal
+ * y el usuario QA es de mapaal-qa. Si el spec vuelve a iniciar sesion en un
+ * subdominio de otro tenant, esto se pone rojo antes de llegar a produccion.
+ */
+describe("D9 guion: el usuario QA inicia sesion donde su tenant existe", () => {
+  const PROD = "https://mapaal.nadakki.com"; // superloop-evidence.yml: BASE_URL
+  const por = (url: string) => origenDeLogin(url, resolveDealerAdminHost(new URL(url).hostname));
+
+  it("en el subdominio de Mapaal el login fija otro tenant: hay que ir al universal", () => {
+    const host = resolveDealerAdminHost(new URL(PROD).hostname);
+    expect(host).toEqual({ mode: "dealer_subdomain", tenantSlug: "mapaal" });
+    expect(SLUG_QA).not.toBe("mapaal");
+    expect(por(PROD)).toBe(ORIGEN_UNIVERSAL);
+    expect(por(`${PROD}/`)).toBe(ORIGEN_UNIVERSAL);
+    expect(resolveDealerAdminHost(new URL(ORIGEN_UNIVERSAL).hostname)).toEqual({ mode: "universal" });
+  });
+
+  it("donde el host admite el tenant QA, el login se queda en BASE_URL", () => {
+    expect(por(`https://${SLUG_QA}.nadakki.com/`)).toBe(`https://${SLUG_QA}.nadakki.com`);
+    expect(por(ORIGEN_UNIVERSAL)).toBe(ORIGEN_UNIVERSAL);
+    expect(por("http://localhost:3000")).toBe("http://localhost:3000");
+  });
+
+  it("el login pinta el host del dealer en vez del campo de tenant, y su placeholder es exacto", () => {
+    const login = fuente("app/(auth)/login/page.tsx");
+    expect(login).toContain('adminHost?.mode === "dealer_subdomain" ? adminHost.tenantSlug : undefined');
+    expect(login).toContain("hostTenantSlug ?? tenantSlug");
+    expect(login).toContain(`placeholder="${PLACEHOLDER_TENANT}"`);
+    expect(login).toMatch(new RegExp(`placeholder="[^"]+${PLACEHOLDER_TENANT}[^"]*"`)); // el del email lo contiene
+  });
+
+  it("el spec inicia sesion por origenDeLogin, escribe el tenant QA con exact y lleva la sesion a BASE_URL", () => {
+    const spec = fuente("e2e/mapaal/D9.spec.ts");
+    expect(spec).toContain("origenDeLogin(BASE_URL, host)");
+    expect(spec).toContain("goto(`${origenLogin}/login`)");
+    expect(spec).toContain("getByPlaceholder(PLACEHOLDER_TENANT, { exact: true })");
+    expect(spec).toContain("fill(SLUG_QA)");
+    expect(spec).toContain("huellaDespliegue(");
+    expect(spec).toContain("origin: new URL(BASE_URL).origin");
+    expect(spec).not.toMatch(/goto\("\/login"\)/);
+  });
+
+  it("la huella del despliegue sale del dpl de Vercel o de los chunks", () => {
+    expect(huellaDespliegue('<script src="/_next/static/chunks/a.js?dpl=dpl_AfRS9"></script>')).toBe("dpl_AfRS9");
+    expect(
+      huellaDespliegue('<script src="/_next/static/chunks/b.js"></script><script src="/_next/static/chunks/a.js"></script>'),
+    ).toBe("/_next/static/chunks/a.js,/_next/static/chunks/b.js");
+    expect(huellaDespliegue("<html></html>")).toBeNull();
   });
 });

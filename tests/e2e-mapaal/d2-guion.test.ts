@@ -8,11 +8,14 @@ import path from "path";
 import {
   AVISO,
   MODULOS,
+  PLACEHOLDER_TENANT,
   REASON,
   RUTA_PANEL,
+  TENANT_QA,
   TESTIDS,
   denegarCuerpo,
 } from "@/e2e/mapaal/d2-guion";
+import { TENANT_QA as TENANT_QA_D1 } from "@/e2e/mapaal/d1-red";
 import {
   ACCESS_UNVERIFIED_MESSAGE,
   isAccessUnverified,
@@ -26,6 +29,25 @@ const SIDEBAR = fs.readFileSync(
   path.join(process.cwd(), "components/dealer-management/shell/DealerSidebar.tsx"),
   "utf8",
 );
+
+const LOGIN = fs.readFileSync(path.join(process.cwd(), "app/(auth)/login/page.tsx"), "utf8");
+const D2_SPEC = fs.readFileSync(path.join(process.cwd(), "e2e/mapaal/D2.spec.ts"), "utf8");
+
+describe("D2 login", () => {
+  it("el campo de tenant tiene ese placeholder exacto y el del email lo contiene", () => {
+    expect(LOGIN).toContain(`placeholder="${PLACEHOLDER_TENANT}"`);
+    expect(LOGIN).toMatch(new RegExp(`placeholder="[^"]+@${PLACEHOLDER_TENANT}[^"]*"`));
+  });
+
+  it("el spec busca el campo de tenant con exact (si no, en el subdominio pisa el email)", () => {
+    expect(D2_SPEC).toContain("getByPlaceholder(PLACEHOLDER_TENANT, { exact: true })");
+    expect(D2_SPEC).not.toMatch(/getByPlaceholder\("tu-institucion"\)/);
+  });
+
+  it("el tenant QA es el mismo que usan los otros guiones", () => {
+    expect(TENANT_QA).toBe(TENANT_QA_D1);
+  });
+});
 
 describe("D2 guion vs app", () => {
   it("la frase del aviso es la de la capa de acceso", () => {
