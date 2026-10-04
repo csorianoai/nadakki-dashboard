@@ -321,11 +321,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // No se relanza: los llamadores (menus, login) no tienen catch y deben navegar igual.
       console.error("[auth] logout: fallo previo a la limpieza local", error);
     } finally {
-      tokenStorage.clearTokens();
-      clearLocalStorage();
       try {
+        tokenStorage.clearTokens();
+        clearLocalStorage();
         const { clearSessionStorage } = await import("@/lib/auth/auth-session-cleanup");
         clearSessionStorage(); // Clear PII from sessionStorage (Ley 172-13)
+      } catch (error) {
+        console.error("[auth] logout: fallo en la limpieza local", error);
       } finally {
         cancelProactiveRefresh();
         setUser(null);
