@@ -1,11 +1,4 @@
-/**
- * Contrato del importador de la PLANTILLA_ACTIVOS_v4 (D7), con la forma REAL de
- * P5 (suite `main`, services/autos_portal/import_activos/router.py).
- *
- * Lo que se prueba es lo que escribe dinero de mas: que no se ofrezca aplicar
- * una revision con errores, que el tenant no viaje desde el cliente, y que un
- * 422 se lea como la revision que es y no como "error 422".
- */
+/** Contrato D7 con la forma REAL de P5: no ofrecer aplicar con errores, tenant fuera del cliente, 422 leído como revisión. */
 import {
   IMPORT_CAPABILITY_KEYS,
   ImportRechazado,
@@ -176,11 +169,7 @@ describe("postImportActivos", () => {
   });
 });
 
-/**
- * Contrato REAL de P5 (suite main, services/autos_portal/import_activos/router.py):
- * query `aplicar=true|false`, campo multipart `file`, respuesta
- * { ok, vehiculos, costos, incidencias[{hoja,fila,codigo,detalle,nivel}], aplicado, creados }.
- */
+// Forma real de P5: ?aplicar=, campo `file`, { ok, vehiculos, costos, incidencias, aplicado, creados }.
 describe("contrato real de P5", () => {
   const archivo = new Blob(["xlsx"]);
   const REAL_OK = {

@@ -1,25 +1,12 @@
 /**
- * Importador de la PLANTILLA_ACTIVOS_v4 (D7, contrato P5 de suite#1501).
+ * Importador de la PLANTILLA_ACTIVOS_v4 (D7, contrato P5). El backend LEE el
+ * fichero (`services/autos_portal/import_activos/`); aqui no se copia su spec.
  *
- * Lo que el dealer sube es el fichero oficial,
- * `docs/autos_portal/plantillas/Plantilla_Activos_Mapaal_v4.xlsx` del backend.
- * Quien lo LEE es el backend: el contrato de columnas, listas y traducciones
- * vive en `services/autos_portal/import_activos/` y aqui NO se copia. Una
- * segunda lectura en el navegador seria una segunda fuente de verdad.
- *
- * Contrato REAL de P5 (`import_activos/router.py` en `main` del backend):
- *
- *   POST /api/v1/autos/dealers/{dealer_id}/import-activos?aplicar=false  (revisar, no escribe)
- *   POST /api/v1/autos/dealers/{dealer_id}/import-activos?aplicar=true   (todo o nada)
- *
- * multipart con el campo `file`. Respuesta:
- *   { ok, vehiculos, costos, incidencias: [{ hoja, fila, codigo, detalle, nivel }],
- *     aplicado, creados?: { vehiculos, costos } }
- * `nivel` es ERROR o AVISO; `fila` 0 = error del fichero. Un 422 trae
- * `detail: { reason_code, error, ...misma revision }`. La version de la
- * plantilla la verifica el backend (VERSION_INCORRECTA es un ERROR).
- *
- * El tenant sale del token. No se manda `X-Tenant-ID` ni el tenant en la ruta.
+ * POST /api/v1/autos/dealers/{dealer_id}/import-activos?aplicar=false|true,
+ * multipart con el campo `file`. Respuesta: { ok, vehiculos, costos,
+ * incidencias: [{ hoja, fila, codigo, detalle, nivel }], aplicado, creados? }.
+ * `nivel` es ERROR o AVISO; `fila` 0 = error del fichero. Un 422 trae la misma
+ * forma en `detail`. El tenant sale del token: ni `X-Tenant-ID` ni ruta.
  */
 
 import { accessApiErrorFromHttp } from "@/lib/access/client";
@@ -37,10 +24,7 @@ export function importActivosPath(dealerId: string, modo: ImportModo): string {
   return `/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/import-activos?aplicar=${modo === "aplicar"}`;
 }
 
-/**
- * Solo la forma del fichero: extension y que no este vacio. Si la version o
- * las columnas estan bien lo dice la REVISION del backend, no esta funcion.
- */
+/** Solo la forma del fichero; version y columnas las dice la REVISION del backend. */
 export function validarArchivo(file: { name: string; size: number } | null): string | null {
   if (!file) return "Elegí el archivo de la plantilla.";
   if (!/\.(xlsx|zip)$/i.test(file.name.trim())) {
@@ -156,11 +140,7 @@ export function filasTotales(resultado: ImportResultado): number {
   return resultado.hojas.reduce((total, hoja) => total + hoja.filas, 0);
 }
 
-/**
- * Fail-closed: solo se ofrece aplicar una revision con `ok` del backend, sin un
- * solo error y con algo que cargar. Una revision a medias no es un permiso
- * para escribir la mitad que paso.
- */
+/** Fail-closed: revision con `ok` del backend, sin ningun error y con algo que cargar. */
 export function puedeAplicar(resultado: ImportResultado | null): boolean {
   if (!resultado || resultado.modo !== "revision" || resultado.aplicado) return false;
   if (!resultado.ok || resultado.errores.length > 0 || resultado.hojasIlegibles > 0) return false;

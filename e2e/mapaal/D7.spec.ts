@@ -1,18 +1,10 @@
 /**
  * D7 — prueba de hecho del importador (contrato P5). SOLO tenant QA.
- *
- * Inicia sesion con QA_USER/QA_PASSWORD (+ QA_TOTP_SECRET si existe) contra
- * BASE_URL y sube a la REVISION (nunca a aplicar) un fichero que no es la
- * plantilla. Comprueba contra el backend real (P5, ?aplicar=false, campo `file`):
- *   - la ruta existe (si no esta desplegada, esto FALLA: no hay PASS falso);
- *   - responde 200 con ok=false y la incidencia FICHERO_ILEGIBLE;
- *   - la respuesta se lee con parseImportResultado (mismo contrato que la pantalla);
- *   - un fichero invalido nunca es aplicable (puedeAplicar fail-closed) ni escribe.
- * QA_DEALER_ID: dealer del tenant QA.
+ * Sube a la REVISION (nunca aplicar) un fichero invalido: espera 200, ok=false,
+ * FICHERO_ILEGIBLE y puedeAplicar=false. Sin ruta desplegada FALLA (no hay PASS falso).
  */
 import { createHmac } from "node:crypto";
 import { expect, test } from "@playwright/test";
-
 
 const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 const QA_USER = process.env.QA_USER ?? "";
@@ -43,8 +35,7 @@ function totp(secret: string): string {
 }
 
 test("D7: la revision del importador responde el contrato y un fichero invalido no se puede aplicar", async ({ page }) => {
-  // El cliente arrastra apiFetch, que exige un backend declarado al cargarse:
-  // el navegador va same-origin a BASE_URL, asi que se declara ese.
+  // apiFetch exige un backend declarado al cargarse: same-origin a BASE_URL.
   process.env.BACKEND_URL ??= BASE_URL;
   const { importActivosPath, parseImportResultado, puedeAplicar } = await import(
     "../../lib/dealer-management/import-activos"
