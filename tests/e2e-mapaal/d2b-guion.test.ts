@@ -74,4 +74,12 @@ describe("D2b guion vs app", () => {
     expect(sidebar).not.toContain(`href="${RUTA_TENANTS}"`);
     expect(sidebar).not.toContain(`"${RUTA_TENANTS}"`);
   });
+
+  it("el login del spec no pisa el email y entra por donde existe el tenant QA (RESULT_D2b=FAIL en 3fa62a90)", () => {
+    const spec = fuente("e2e/mapaal/D2b.spec.ts");
+    expect(spec).toContain("getByPlaceholder(PLACEHOLDER_TENANT, { exact: true })");
+    expect(spec).not.toMatch(/getByPlaceholder\("tu-institucion"\)/);
+    expect(spec).toContain("origenDeLogin(BASE_URL, host)");
+    expect(spec).toContain("campoTenant.fill(SLUG_QA)");
+  });
 });
