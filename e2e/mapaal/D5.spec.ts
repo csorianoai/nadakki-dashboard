@@ -5,16 +5,18 @@
  * una foto, comprueba que el nombre original no viaja ni se pinta, prueba el
  * 422 de formato y borra lo que subio: deja el vehiculo como estaba.
  *
- * Variables: BASE_URL, QA_USER, QA_PASSWORD (obligatorias); QA_TENANT_SLUG,
- * QA_TENANT_ID y QA_VEHICLE_ID (opcionales). Ultima linea: RESULT_D5=PASS|FAIL.
+ * Variables: BASE_URL, QA_USER, QA_PASSWORD (obligatorias); QA_VEHICLE_ID
+ * (opcional). El login va por `iniciarSesionQA`: si BASE_URL es el subdominio de
+ * otro dealer (mapaal.nadakki.com), entra por el host universal con el tenant QA
+ * y lleva la sesion a BASE_URL. Ultima linea: RESULT_D5=PASS|FAIL.
  */
 import { expect, test, type Page } from "@playwright/test";
+
+import { iniciarSesionQA } from "./sesion-qa";
 
 const BASE_URL = (process.env.BASE_URL ?? "").replace(/\/+$/, "");
 const QA_USER = process.env.QA_USER ?? "";
 const QA_PASSWORD = process.env.QA_PASSWORD ?? "";
-const QA_TENANT_SLUG = process.env.QA_TENANT_SLUG ?? "";
-const QA_TENANT_ID = process.env.QA_TENANT_ID ?? "";
 const NOMBRE_PERSONAL = "DNI-juan-perez.jpg";
 
 test.describe.configure({ mode: "serial" });
@@ -22,20 +24,6 @@ test.describe.configure({ mode: "serial" });
 let fallos = 0;
 test.afterEach(({}, info) => void (info.status !== info.expectedStatus && (fallos += 1)));
 test.afterAll(() => console.log(`RESULT_D5=${fallos === 0 ? "PASS" : "FAIL"}`));
-
-async function login(page: Page) {
-  await page.goto(`${BASE_URL}/login`);
-  await page.locator('input[type="email"]').fill(QA_USER);
-  await page.locator('input[type="password"]').fill(QA_PASSWORD);
-  const tenant = page.getByPlaceholder("tu-institucion");
-  if (QA_TENANT_SLUG && (await tenant.count()) > 0) await tenant.fill(QA_TENANT_SLUG);
-  await page.getByRole("button", { name: /Iniciar Sesión/i }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 90_000 });
-  if (QA_TENANT_ID) {
-    const tenantId = await page.evaluate(() => window.localStorage.getItem("nadakki_tenant_id"));
-    expect(tenantId, "la sesion no es del tenant QA").toBe(QA_TENANT_ID);
-  }
-}
 
 async function vehiculoQa(page: Page): Promise<string> {
   if (process.env.QA_VEHICLE_ID) return process.env.QA_VEHICLE_ID;
@@ -57,11 +45,11 @@ async function jpegValido(page: Page): Promise<Buffer> {
   return Buffer.from(b64, "base64");
 }
 
-test("D5 fotos: subir sin nombre personal, cortar formato, eliminar", async ({ page }) => {
+test("D5 fotos: subir sin nombre personal, cortar formato, eliminar", async ({ browser }) => {
   test.setTimeout(240_000);
   expect(BASE_URL && QA_USER && QA_PASSWORD, "faltan BASE_URL / QA_USER / QA_PASSWORD").toBeTruthy();
 
-  await login(page);
+  const page = await iniciarSesionQA(browser, { baseUrl: BASE_URL, usuario: QA_USER, clave: QA_PASSWORD });
   const vehicleId = await vehiculoQa(page);
   expect(vehicleId).not.toBe("");
 
