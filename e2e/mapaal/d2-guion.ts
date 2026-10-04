@@ -20,6 +20,15 @@ export const TESTIDS = {
   aviso: "dealer-acceso-no-verificado",
 } as const;
 
+/** El tenant QA: el unico en el que corre el guion. */
+export const TENANT_QA = "9a9a0001-0000-4000-8000-000000000001";
+
+/**
+ * Placeholder del campo de tenant de `/login`. Hay que buscarlo con `exact`:
+ * el del email ("admin@tu-institucion.com") lo contiene.
+ */
+export const PLACEHOLDER_TENANT = "tu-institucion";
+
 export const RUTA_PANEL = "/autos/dealer";
 export const RUTA_BATCH = "**/api/v1/access/entitlements/batch**";
 
