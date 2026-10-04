@@ -12,15 +12,20 @@ import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
+import { FotosVehiculoPanel } from "./FotosVehiculoPanel";
+import { PHOTOS_CAPABILITY } from "./fotos";
 
-function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): EntitlementDecision {
+function asDecision(
+  query: ReturnType<typeof useAccessEntitlementsBatch>,
+  capability: string = DEALER_VEHICLE_CAPABILITY,
+): EntitlementDecision {
   if (query.error instanceof AccessApiError) {
     return {
       allowed: false,
       reason_code: (query.error.reason_code as EntitlementDecision["reason_code"]) || "DEFAULT_DENY",
     };
   }
-  const item = query.data?.results?.[DEALER_VEHICLE_CAPABILITY];
+  const item = query.data?.results?.[capability];
   if (!item) return { allowed: false, reason_code: "DEFAULT_DENY" };
   return {
     allowed: item.allowed === true,
@@ -28,7 +33,7 @@ function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): Entit
   };
 }
 
-function VehicleFicha({ dealerId, vehicleId }: { dealerId: string; vehicleId: string }) {
+function VehicleFicha({ dealerId, vehicleId, photos }: { dealerId: string; vehicleId: string; photos: EntitlementDecision }) {
   const query = useQuery({
     queryKey: ["dealer-vehicle", dealerId, vehicleId],
     queryFn: () => fetchDealerVehicleStatus(dealerId, vehicleId),
@@ -71,6 +76,14 @@ function VehicleFicha({ dealerId, vehicleId }: { dealerId: string; vehicleId: st
         <h2 className="font-manrope text-lg font-bold text-nk-fg break-words">{title}</h2>
         <p className="mt-1 text-sm text-nk-fg-muted">Estado: {query.data.status ?? "no disponible"}</p>
       </section>
+      {/* `autos.inventory.photos` depende del plan: sin ella se dice por que. */}
+      {photos.allowed ? (
+        <FotosVehiculoPanel vehicleId={vehicleId} />
+      ) : (
+        <p role="status" data-testid="vehicle-photos-gated" data-reason-code={photos.reason_code} className="text-sm text-nk-fg-muted">
+          Tu plan no incluye las fotos del vehículo. reason_code: <code>{photos.reason_code}</code>
+        </p>
+      )}
       <DealerVehicleEconomicsPanel vehicleId={vehicleId} />
     </>
   );
@@ -81,9 +94,10 @@ export default function DealerVehicleEconomicsPage() {
   const vehicleId = String(params?.vehicleId ?? "").trim();
   const resolved = resolveDealerAccessContext();
   const dealerId = resolved.status === "ready" ? resolved.context.dealerId : "";
-  const access = useAccessEntitlementsBatch([DEALER_VEHICLE_CAPABILITY]);
+  const access = useAccessEntitlementsBatch([DEALER_VEHICLE_CAPABILITY, PHOTOS_CAPABILITY]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const decision = asDecision(access);
+  const photos = asDecision(access, PHOTOS_CAPABILITY);
 
   return (
     <main className="max-w-full space-y-4 overflow-x-hidden">
@@ -152,7 +166,7 @@ export default function DealerVehicleEconomicsPage() {
           Falta el dealer para leer la ficha autenticada.
         </p>
       ) : (
-        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} />
+        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} />
       )}
     </main>
   );
