@@ -77,6 +77,11 @@ async function proxyRequest(
     }
 
     const res = await fetch(target, { ...init, cache: "no-store" });
+    // 204/205/304 no admiten cuerpo: `new NextResponse("", {status: 204})` lanza y acababa en 502
+    // (el DELETE de una foto salia bien en el backend y el panel veia un fallo).
+    if (res.ok && (res.status === 204 || res.status === 205)) {
+      return new NextResponse(null, { status: res.status });
+    }
     const text = await res.text().catch(() => "");
 
     const isRunsPath =
