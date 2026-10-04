@@ -25,6 +25,14 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  // /logout se pinta solo, como /login. Dentro del GlobalForgeAppShell, el
+  // DealerSuiteGate (#582) lleva a un dealer a /autos/dealer antes de que la
+  // pagina monte: el logout no se ejecutaba y el binding del dealer y el
+  // refresh token sobrevivian (D1).
+  if (pathname === "/logout") {
+    return <>{children}</>;
+  }
+
   if (pathname.startsWith("/consent")) {
     return <>{children}</>;
   }
