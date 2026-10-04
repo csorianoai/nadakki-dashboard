@@ -122,6 +122,11 @@ const MSG_TIMEOUT = "El servidor no respondió a tiempo. Verifica tu conexión."
 const MSG_NO_VERIFICADA = "No se pudo verificar la sesión. Intenta de nuevo.";
 const MSG_EXPIRADA = "Tu sesión expiró. Inicia sesión nuevamente.";
 
+/** Texto bajo el spinner mientras el init reintenta: "(2 de 3)", "(3 de 3)". */
+export function mensajeReintento(intento: number): string {
+  return `Reintentando conexión (${intento} de ${1 + SESSION_INIT_RETRY_DELAYS_MS.length})…`;
+}
+
 /**
  * LA REGLA: solo un 401 cierra la sesion.
  *
@@ -178,6 +183,11 @@ export interface AuthContextValue {
   isLoading: boolean;
   /** Non-null when the session init failed (timeout, network error, etc.). */
   initError: string | null;
+  /**
+   * Progreso del init mientras reintenta ("Reintentando conexión (2 de 3)…").
+   * Null en el primer intento y al terminar: el spinner no se queda mudo (W0-2).
+   */
+  initProgress: string | null;
   /** Retry the session init after a failure. */
   retryInit: () => void;
   login: (
@@ -201,10 +211,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [allTenants, setAllTenants] = useState<TenantInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
+  const [initProgress, setInitProgress] = useState<string | null>(null);
   const [initAttempt, setInitAttempt] = useState(0);
 
   const retryInit = useCallback(() => {
     setInitError(null);
+    setInitProgress(null);
     setIsLoading(true);
     setInitAttempt((n) => n + 1);
   }, []);
@@ -217,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // servidor lento no es una sesion invalida.
         cancelled = true;
         setInitError(MSG_TIMEOUT);
+        setInitProgress(null);
         setIsLoading(false);
       }
     }, SESSION_INIT_TIMEOUT_MS);
@@ -241,9 +254,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setInitError(r.mensaje);
           break;
         }
+        setInitProgress(mensajeReintento(intento + 2));
         await esperar(espera);
         if (cancelled) return;
       }
+      setInitProgress(null);
       setIsLoading(false);
       clearTimeout(timeout);
     };
@@ -420,6 +435,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: user !== null,
     isLoading,
     initError,
+    initProgress,
     retryInit,
     login,
     logout,
