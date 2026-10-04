@@ -16,6 +16,8 @@ import {
   denegarCuerpo,
 } from "@/e2e/mapaal/d2-guion";
 import { TENANT_QA as TENANT_QA_D1 } from "@/e2e/mapaal/d1-red";
+import { ORIGEN_UNIVERSAL, SLUG_QA, origenDeLogin } from "@/e2e/mapaal/d9-guion";
+import { resolveDealerAdminHost } from "@/lib/dealer-management/admin-host";
 import {
   ACCESS_UNVERIFIED_MESSAGE,
   isAccessUnverified,
@@ -46,6 +48,28 @@ describe("D2 login", () => {
 
   it("el tenant QA es el mismo que usan los otros guiones", () => {
     expect(TENANT_QA).toBe(TENANT_QA_D1);
+  });
+
+  // Regresion RESULT_D2=FAIL "Credenciales invalidas" (#599 ya en produccion):
+  // en el subdominio de Mapaal el login fija el tenant `mapaal` y el usuario QA
+  // es de `mapaal-qa`. El login tiene que ir por el host universal.
+  it("en mapaal.nadakki.com el login del usuario QA va por el host universal", () => {
+    const host = resolveDealerAdminHost("mapaal.nadakki.com");
+    expect(host).toEqual({ mode: "dealer_subdomain", tenantSlug: "mapaal" });
+    expect(origenDeLogin("https://mapaal.nadakki.com", host)).toBe(ORIGEN_UNIVERSAL);
+    expect(resolveDealerAdminHost(new URL(ORIGEN_UNIVERSAL).hostname)).toEqual({ mode: "universal" });
+  });
+
+  it("el spec inicia sesion con origenDeLogin, escribe el tenant QA y lleva la sesion a BASE_URL", () => {
+    expect(D2_SPEC).toContain("resolveDealerAdminHost(new URL(BASE_URL).hostname)");
+    expect(D2_SPEC).toContain("origenDeLogin(BASE_URL, host)");
+    expect(D2_SPEC).toContain("goto(`${origenLogin}/login`)");
+    expect(D2_SPEC).toContain("campoTenant.fill(SLUG_QA)");
+    expect(D2_SPEC).toContain("storageState: { cookies: [], origins: [{ origin: new URL(BASE_URL).origin");
+    // El login viejo: goto a /login de BASE_URL sin mirar el host.
+    expect(D2_SPEC).not.toContain("goto(`${BASE_URL}/login`)");
+    expect(D2_SPEC).not.toContain("QA_TENANT_SLUG");
+    expect(SLUG_QA).toBe("mapaal-qa");
   });
 });
 
