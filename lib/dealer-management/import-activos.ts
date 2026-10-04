@@ -2,29 +2,24 @@
  * Importador de la PLANTILLA_ACTIVOS_v4 (D7, contrato P5 de suite#1501).
  *
  * Lo que el dealer sube es el fichero oficial,
- * `docs/autos_portal/plantillas/Plantilla_Activos_Mapaal_v4.xlsx` del backend
- * (o su `_CSV.zip`). Quien lo LEE es el backend: el contrato de columnas,
- * listas y traducciones vive en
- * `services/autos_portal/import_activos/plantilla_spec.py` y aqui NO se copia.
- * Una segunda lectura en el navegador seria una segunda fuente de verdad que
- * se desalinea sola.
+ * `docs/autos_portal/plantillas/Plantilla_Activos_Mapaal_v4.xlsx` del backend.
+ * Quien lo LEE es el backend: el contrato de columnas, listas y traducciones
+ * vive en `services/autos_portal/import_activos/` y aqui NO se copia. Una
+ * segunda lectura en el navegador seria una segunda fuente de verdad.
  *
- * Dos pasos, como dice la spec ("se informa en la REVISION"):
+ * Contrato REAL de P5 (`import_activos/router.py` en `main` del backend):
  *
- *   POST /api/v1/autos/dealers/{dealer_id}/import-activos?modo=revision
- *   POST /api/v1/autos/dealers/{dealer_id}/import-activos?modo=aplicar
+ *   POST /api/v1/autos/dealers/{dealer_id}/import-activos?aplicar=false  (revisar, no escribe)
+ *   POST /api/v1/autos/dealers/{dealer_id}/import-activos?aplicar=true   (todo o nada)
  *
- * multipart con el campo `archivo`. La revision no escribe nada; aplicar
- * escribe y es idempotente por `stock_number` (CLAVE_DE_IDEMPOTENCIA de la
- * spec) y por la `Idempotency-Key` que manda la pantalla.
+ * multipart con el campo `file`. Respuesta:
+ *   { ok, vehiculos, costos, incidencias: [{ hoja, fila, codigo, detalle, nivel }],
+ *     aplicado, creados?: { vehiculos, costos } }
+ * `nivel` es ERROR o AVISO; `fila` 0 = error del fichero. Un 422 trae
+ * `detail: { reason_code, error, ...misma revision }`. La version de la
+ * plantilla la verifica el backend (VERSION_INCORRECTA es un ERROR).
  *
- * El tenant sale del token. No se manda `X-Tenant-ID` ni el tenant en la ruta:
- * un tenant que viaja desde el cliente es un tenant que el cliente elige.
- *
- * Las rutas de arriba son la forma que este frontend PROPONE a P5: medido el
- * 2026-10-04, `services/autos_portal/import_activos/` en `main` del backend
- * solo tiene la spec y ninguna ruta HTTP. Estan declaradas UNA vez, en
- * `importActivosPath`, para que alinearlas con P5 sea una linea.
+ * El tenant sale del token. No se manda `X-Tenant-ID` ni el tenant en la ruta.
  */
 
 import { accessApiErrorFromHttp } from "@/lib/access/client";
@@ -36,16 +31,10 @@ export const IMPORT_VEHICLES_CAPABILITY = "autos.inventory.create";
 export const IMPORT_COSTS_CAPABILITY = "accounting.ledger.entries";
 export const IMPORT_CAPABILITY_KEYS = [IMPORT_VEHICLES_CAPABILITY, IMPORT_COSTS_CAPABILITY];
 
-/** LEEME!B3. El backend la verifica; aqui se usa para no ofrecer aplicar otra. */
-export const PLANTILLA_VERSION = "PLANTILLA_ACTIVOS_v4";
-
-export const IMPORT_ACCEPT =
-  ".xlsx,.zip,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip";
-
 export type ImportModo = "revision" | "aplicar";
 
 export function importActivosPath(dealerId: string, modo: ImportModo): string {
-  return `/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/import-activos?modo=${modo}`;
+  return `/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/import-activos?aplicar=${modo === "aplicar"}`;
 }
 
 /**
@@ -64,36 +53,28 @@ export function validarArchivo(file: { name: string; size: number } | null): str
 export type ImportHoja = {
   hoja: string;
   filas: number;
-  crear: number | null;
-  actualizar: number | null;
-  archivar: number | null;
-  /** Costos con es_apertura=SI: haber 3020 Saldos iniciales. */
-  apertura: number | null;
-  /** Costos con es_apertura=NO: haber 2010 Proveedores. */
-  operacion: number | null;
 };
 
 export type ImportError = {
   hoja: string | null;
-  /** null = error del FICHERO (version, columna obligatoria), no de una fila. */
+  /** null = error del FICHERO (fila 0 del backend), no de una fila. */
   fila: number | null;
-  columna: string | null;
   codigo: string | null;
   mensaje: string;
 };
 
-export type ImportNoAplicado = { hoja: string; columna: string | null; motivo: string | null };
-
 export type ImportResultado = {
   modo: ImportModo | null;
-  version: string | null;
   aplicado: boolean;
+  /** `ok` del backend: sin ninguna incidencia ERROR. */
+  ok: boolean;
+  /** Vehiculos y costos leidos (revision) o creados (aplicar). */
   hojas: ImportHoja[];
-  /** Hojas que llegaron sin nombre o sin conteo entero: bloquean el aplicar. */
+  /** Conteos ausentes o no enteros: bloquean el aplicar. */
   hojasIlegibles: number;
   errores: ImportError[];
-  /** PROXIMAMENTE y hojas bloqueadas: se aceptan y NO se guardan. */
-  noAplicado: ImportNoAplicado[];
+  /** Incidencias nivel AVISO: no bloquean (p. ej. columnas PROXIMAMENTE que no se guardan). */
+  avisos: ImportError[];
 };
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -108,107 +89,62 @@ function text(value: unknown): string | null {
 
 function count(value: unknown): number | null {
   if (typeof value === "number" && Number.isInteger(value) && value >= 0) return value;
-  if (typeof value === "string" && /^\d+$/.test(value.trim())) return Number(value.trim());
   return null;
 }
 
-function list(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
+function incidencia(item: unknown): ImportError {
+  const rec = record(item);
+  if (!rec) {
+    // Numero, null, lista, cadena: ilegible, pero una incidencia no se descarta.
+    const mensaje = typeof item === "string" && item.trim() ? item.trim() : "Error ilegible del backend.";
+    return { hoja: null, fila: null, codigo: null, mensaje };
+  }
+  const codigo = text(rec.codigo);
+  const fila = count(rec.fila);
+  return {
+    hoja: text(rec.hoja) === "-" ? null : text(rec.hoja),
+    fila: fila === 0 ? null : fila,
+    codigo,
+    mensaje: text(rec.detalle) ?? codigo ?? "Error sin descripción del backend.",
+  };
 }
 
-function hojas(value: unknown): { hojas: ImportHoja[]; ilegibles: number } {
-  const out: ImportHoja[] = [];
-  let ilegibles = 0;
-  for (const item of list(value)) {
-    const rec = record(item);
-    const hoja = rec ? text(rec.hoja) : null;
-    const filas = rec ? count(rec.filas) : null;
-    // Una hoja sin nombre o sin conteo no se pinta con un cero inventado,
-    // pero tampoco se ignora: se cuenta y puedeAplicar() queda cerrado.
-    if (!rec || !hoja || filas === null) {
-      ilegibles += 1;
-      continue;
-    }
-    out.push({
-      hoja,
-      filas,
-      crear: count(rec.crear),
-      actualizar: count(rec.actualizar),
-      archivar: count(rec.archivar),
-      apertura: count(rec.apertura),
-      operacion: count(rec.operacion),
-    });
-  }
-  return { hojas: out, ilegibles };
-}
-
-function errores(value: unknown): ImportError[] {
-  const out: ImportError[] = [];
-  for (const item of list(value)) {
-    const rec = record(item);
-    if (typeof item === "string" && item.trim()) {
-      out.push({ hoja: null, fila: null, columna: null, codigo: null, mensaje: item.trim() });
-      continue;
-    }
-    if (!rec) {
-      // Numero, null, lista, cadena vacia: ilegible, pero un error no se descarta.
-      out.push({ hoja: null, fila: null, columna: null, codigo: null, mensaje: "Error ilegible del backend." });
-      continue;
-    }
-    const codigo = text(rec.codigo) ?? text(rec.code);
-    const mensaje = text(rec.mensaje) ?? text(rec.message) ?? codigo;
-    // Sin mensaje ni codigo no hay nada que decirle al dealer, pero tampoco se
-    // descarta: un error mudo sigue bloqueando el aplicar.
-    out.push({
-      hoja: text(rec.hoja),
-      fila: count(rec.fila),
-      columna: text(rec.columna),
-      codigo,
-      mensaje: mensaje ?? "Error sin descripción del backend.",
-    });
-  }
-  return out;
-}
-
-function noAplicado(value: unknown): ImportNoAplicado[] {
-  const out: ImportNoAplicado[] = [];
-  for (const item of list(value)) {
-    const rec = record(item);
-    const hoja = rec ? text(rec.hoja) : null;
-    if (!rec || !hoja) continue;
-    out.push({ hoja, columna: text(rec.columna), motivo: text(rec.motivo) });
-  }
-  return out;
+/** Solo `nivel: "AVISO"` es aviso; cualquier otro valor (o ninguno) cuenta como ERROR. */
+function esAviso(item: unknown): boolean {
+  return record(item)?.nivel === "AVISO";
 }
 
 /**
  * Lee la respuesta de los dos modos. Un 422 trae la misma forma dentro de
  * `detail`, y se lee igual: es la revision que dice que no se puede aplicar.
+ * `modo` es el que pidio el cliente (la respuesta no lo repite).
  */
-export function parseImportResultado(body: unknown): ImportResultado | null {
+export function parseImportResultado(body: unknown, modo: ImportModo | null = null): ImportResultado | null {
   const root = record(body);
-  const rec = root && record(root.detail) && !("hojas" in root) ? record(root.detail) : root;
+  const rec = root && record(root.detail) && !("incidencias" in root) ? record(root.detail) : root;
   if (!rec) return null;
-  const leidas = hojas(rec.hojas);
-  const modo = rec.modo === "revision" || rec.modo === "aplicar" ? rec.modo : null;
-  const resultado: ImportResultado = {
-    modo,
-    version: text(rec.version),
-    aplicado: rec.aplicado === true,
-    hojas: leidas.hojas,
-    hojasIlegibles: leidas.ilegibles,
-    errores: errores(rec.errores),
-    noAplicado: noAplicado(rec.no_aplicado ?? rec.proximamente),
-  };
-  if (
-    !resultado.version &&
-    resultado.hojas.length === 0 &&
-    resultado.hojasIlegibles === 0 &&
-    resultado.errores.length === 0
-  ) {
-    return null;
+  const incidencias = Array.isArray(rec.incidencias) ? rec.incidencias : [];
+  const conteos: Array<[string, number | null]> = [
+    ["Vehiculos", count(rec.vehiculos)],
+    ["Costos_vehiculos", count(rec.costos)],
+  ];
+  if (typeof rec.ok !== "boolean" && incidencias.length === 0 && conteos.every(([, n]) => n === null)) return null;
+  const hojas: ImportHoja[] = [];
+  let hojasIlegibles = 0;
+  for (const [hoja, filas] of conteos) {
+    // Un conteo ausente no se pinta con un cero inventado, pero tampoco se ignora.
+    if (filas === null) hojasIlegibles += 1;
+    else hojas.push({ hoja, filas });
   }
-  return resultado;
+  return {
+    modo,
+    aplicado: rec.aplicado === true,
+    ok: rec.ok === true,
+    hojas,
+    hojasIlegibles,
+    errores: incidencias.filter((item) => !esAviso(item)).map(incidencia),
+    avisos: incidencias.filter(esAviso).map(incidencia),
+  };
 }
 
 /** Errores sin fila: el fichero entero esta mal y ninguna fila cuenta. */
@@ -221,14 +157,13 @@ export function filasTotales(resultado: ImportResultado): number {
 }
 
 /**
- * Fail-closed: solo se ofrece aplicar una revision de ESTA version, sin un
+ * Fail-closed: solo se ofrece aplicar una revision con `ok` del backend, sin un
  * solo error y con algo que cargar. Una revision a medias no es un permiso
  * para escribir la mitad que paso.
  */
 export function puedeAplicar(resultado: ImportResultado | null): boolean {
-  if (!resultado || resultado.modo !== "revision") return false;
-  if (resultado.version !== PLANTILLA_VERSION) return false;
-  if (resultado.errores.length > 0 || resultado.hojasIlegibles > 0) return false;
+  if (!resultado || resultado.modo !== "revision" || resultado.aplicado) return false;
+  if (!resultado.ok || resultado.errores.length > 0 || resultado.hojasIlegibles > 0) return false;
   return filasTotales(resultado) > 0;
 }
 
@@ -251,7 +186,7 @@ export async function postImportActivos(
 ): Promise<ImportResultado> {
   const path = importActivosPath(dealerId, modo);
   const form = new FormData();
-  form.append("archivo", file, fileName);
+  form.append("file", file, fileName);
   const headers: Record<string, string> = { Accept: "application/json" };
   if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
   // Sin Content-Type: el navegador pone el boundary del multipart.
@@ -262,7 +197,7 @@ export async function postImportActivos(
   } catch {
     body = null;
   }
-  const resultado = parseImportResultado(body);
+  const resultado = parseImportResultado(body, modo);
   if (response.status === 422 && resultado) throw new ImportRechazado(resultado);
   if (!response.ok) throw accessApiErrorFromHttp(response.status, body, path);
   if (!resultado) throw accessApiErrorFromHttp(502, { detail: "IMPORT_RESPUESTA_ILEGIBLE" }, path);
