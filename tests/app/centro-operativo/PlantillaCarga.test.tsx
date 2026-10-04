@@ -14,14 +14,14 @@
  *  3. El enlace lleva `download`, para que el navegador guarde el .xlsx en vez
  *     de intentar abrir un binario en una pestana.
  *
- * Estado del asset, medido el 2026-10-02: el .xlsx oficial NO existe todavia
- * --ni en este repo ni en nadakki-ai-suite-- y en suite#1501 no hay artefacto
- * de P5, asi que claude-b1 aun no ha confirmado si la oficial es v3 o v4. Por
- * eso el bloque de Mapaal deja la plantilla sin declarar y el ultimo test de
- * este fichero FIJA ese estado: cuando se declare, ese test avisa y hay que
- * cambiarlo a la expectativa contraria.
+ * Estado del asset: Mapaal declara la v4 oficial (suite#1550). El ultimo bloque
+ * de este fichero comprueba que la ruta declarada EXISTE en `public/`, que es un
+ * .xlsx de verdad (empieza por PK) y que es el mismo fichero que el de la suite.
  */
 
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import { render, screen } from "@testing-library/react";
 import CentroOperativoPage from "@/app/centro-operativo/page";
 import {
@@ -132,16 +132,31 @@ describe("el boton de la plantilla se pinta desde el archivo de datos", () => {
 });
 
 describe("el estado real del asset, para que no se declare una ruta muerta", () => {
-  test("Mapaal todavia NO declara plantilla (pendiente de P5 / claude-b1)", () => {
-    const real = jest.requireActual("@/app/centro-operativo/contenido");
-    const bloque = real
-      .contenidoCentroOperativo("mapaal")
-      .bloques.find((b: { id: string }) => b.id === "primeros-pasos");
+  const real = jest.requireActual("@/app/centro-operativo/contenido");
+  const bloque = real
+    .contenidoCentroOperativo("mapaal")
+    .bloques.find((b: { id: string }) => b.id === "primeros-pasos");
 
+  test("Mapaal declara la plantilla v4 oficial en primeros pasos", () => {
     expect(bloque).toBeDefined();
-    // CUANDO LLEGUE EL .xlsx OFICIAL este test se pone en rojo. Es su trabajo:
-    // avisa de que hay que invertirlo y comprobar que la ruta declarada existe
-    // de verdad en `public/`.
-    expect(bloque.plantilla).toBeUndefined();
+    expect(bloque.plantilla).toEqual(
+      expect.objectContaining({
+        ruta: "/assets/centro-operativo/Plantilla_Activos_Mapaal_v4.xlsx",
+        version: "v4",
+      }),
+    );
+  });
+
+  test("la ruta declarada existe en public/ y es un .xlsx de verdad", () => {
+    const bytes = fs.readFileSync(path.join(process.cwd(), "public", bloque.plantilla.ruta));
+    // Un .xlsx es un zip: sin la cabecera PK el navegador descargaria basura.
+    expect(Array.from(bytes.subarray(0, 4))).toEqual([0x50, 0x4b, 0x03, 0x04]);
+    // Mismo blob que nadakki-ai-suite docs/autos_portal/plantillas/ (suite#1550).
+    const blob = crypto
+      .createHash("sha1")
+      .update(`blob ${bytes.length}\0`)
+      .update(bytes)
+      .digest("hex");
+    expect(blob).toBe("b67f172f1e26adfe41694fb9ed09f6cee5744226");
   });
 });
