@@ -251,6 +251,17 @@ describe("createVehicleManual", () => {
     expect(headers["Idempotency-Key"]).toBe("key-1");
   });
 
+  it("dealer sin unidad organizativa: no inventa la cabecera de unidad", async () => {
+    fetchMock.mockResolvedValue(ok({ id: "veh-9" }));
+    await createVehicleManual({ ...CONTEXT, organizationUnitId: null }, COMPLETO);
+    const headers = fetchMock.mock.calls[0][1]?.headers as Record<string, string>;
+    expect("X-Organization-Unit-ID" in headers).toBe(false);
+    expect(headers["X-Dealer-ID"]).toBe("dealer-a");
+    const body = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as Record<string, unknown>;
+    expect(body).not.toHaveProperty("price_rd");
+    expect(body).not.toHaveProperty("price_usd");
+  });
+
   it("sin Idempotency-Key no manda la cabecera vacia", async () => {
     fetchMock.mockResolvedValue(ok({ id: "veh-9" }));
     await createVehicleManual(CONTEXT, COMPLETO);
