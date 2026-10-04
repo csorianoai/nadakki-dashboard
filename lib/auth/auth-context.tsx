@@ -308,7 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // dirección, ingreso_mensual. Must not survive logout in shared device.
     //
     // try/finally: si una purga o el POST lanzan, tokens y binding del dealer
-    // se borran igual (D1: sobrevivian al logout).
+    // se borran igual (D1: sobrevivian al logout). El error se registra, no se relanza.
     try {
       const { purgeAllWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-storage");
       purgeAllWizardDrafts();
@@ -317,6 +317,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const refreshToken = tokenStorage.getRefreshToken();
       const logoutToken = accessToken ?? refreshToken;
       if (logoutToken) await logoutV2(logoutToken, refreshToken ?? undefined);
+    } catch (error) {
+      // No se relanza: los llamadores (menus, login) no tienen catch y deben navegar igual.
+      console.error("[auth] logout: fallo previo a la limpieza local", error);
     } finally {
       tokenStorage.clearTokens();
       clearLocalStorage();

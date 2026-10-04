@@ -30,7 +30,18 @@ import { tokenStorage } from "@/lib/auth/token-storage";
 
 function Salir() {
   const ctx = useContext(AuthContext);
-  return <button onClick={() => void ctx?.logout().catch(() => {})}>salir</button>;
+  return (
+    <button
+      onClick={() =>
+        void ctx?.logout().then(
+          () => localStorage.setItem("test_logout_resolvio", "1"),
+          () => localStorage.setItem("test_logout_lanzo", "1"),
+        )
+      }
+    >
+      salir
+    </button>
+  );
 }
 
 test("logout con una purga que lanza: binding y tokens desaparecen", async () => {
@@ -56,5 +67,8 @@ test("logout con una purga que lanza: binding y tokens desaparecen", async () =>
     expect(localStorage.getItem("nadakki_dealer_id")).toBeNull();
     expect(localStorage.getItem("nadakki_organization_unit_id")).toBeNull();
     expect(tokenStorage.getAccessToken()).toBeNull();
+    // logout no relanza: los llamadores sin catch no deben ver un rechazo.
+    expect(localStorage.getItem("test_logout_resolvio")).toBe("1");
+    expect(localStorage.getItem("test_logout_lanzo")).toBeNull();
   });
 });
