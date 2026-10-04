@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { AlertTriangle, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import { cn } from "@/lib/utils";
 import {
@@ -229,14 +229,30 @@ export function DealerSidebar({
               aria-label="Navegación del dealer"
             >
               {unverifiedReason ? (
+                /* En estrecha la frase no cabe en 72 px: queda el icono, la
+                   frase en el tooltip y el texto entero en sr-only, igual que
+                   el nombre de los modulos. El aviso no desaparece. */
                 <div
                   role="alert"
                   data-testid="dealer-acceso-no-verificado"
                   data-reason-code={unverifiedReason}
-                  className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3"
+                  title={collapsed ? ACCESS_UNVERIFIED_MESSAGE : undefined}
+                  className={cn(
+                    "rounded-lg border border-amber-500/30 bg-amber-500/10",
+                    collapsed ? "flex justify-center p-2" : "p-3",
+                  )}
                 >
-                  <p className="text-xs font-semibold text-amber-200">{ACCESS_UNVERIFIED_MESSAGE}</p>
-                  <p className="mt-1 text-[11px] leading-snug text-amber-200/80">
+                  {collapsed ? (
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-200" aria-hidden="true" />
+                  ) : null}
+                  <p className={collapsed ? "sr-only" : "text-xs font-semibold text-amber-200"}>
+                    {ACCESS_UNVERIFIED_MESSAGE}
+                  </p>
+                  <p
+                    className={
+                      collapsed ? "sr-only" : "mt-1 text-[11px] leading-snug text-amber-200/80"
+                    }
+                  >
                     {ACCESS_UNVERIFIED_DETAIL}
                   </p>
                 </div>

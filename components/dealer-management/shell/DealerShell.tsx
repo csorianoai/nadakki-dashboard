@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { useQuery } from "@tanstack/react-query";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
-import { AccessApiError } from "@/lib/access/client";
 import {
   ACCESS_UNVERIFIED_MESSAGE,
   isAccessUnverified,
@@ -44,6 +43,13 @@ import { DealerTopbar } from "./DealerTopbar";
  * El resultado se reparte a sidebar, topbar y paleta por props, para que los
  * tres filtren exactamente igual.
  */
+/** `reason_code` de un error de acceso, sin depender de la clase que lo lanza. */
+function reasonCodeOfError(error: unknown): string | null {
+  if (typeof error !== "object" || error === null || !("reason_code" in error)) return null;
+  const codigo = (error as { reason_code?: unknown }).reason_code;
+  return typeof codigo === "string" ? codigo : null;
+}
+
 export function DealerShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -124,11 +130,14 @@ export function DealerShell({ children }: { children: ReactNode }) {
    *
    * El codigo llega POR CAPABILITY dentro de un 200, no como error HTTP, asi que
    * se buscan los items. El 403 se mira aparte porque ahi si viene en el error.
+   *
+   * El error se lee por FORMA y no con `instanceof AccessApiError`: importar la
+   * clase en runtime arrastra lib/access/client -> fetch-client -> auth al cargar
+   * el shell, y eso exige backend configurado en cualquier test que lo monte.
    */
   const unverifiedReason = useMemo(() => {
-    if (query.error instanceof AccessApiError && isAccessUnverified(query.error.reason_code)) {
-      return query.error.reason_code;
-    }
+    const codigoDelError = reasonCodeOfError(query.error);
+    if (isAccessUnverified(codigoDelError)) return codigoDelError;
     return unverifiedReasonFromBatch(results);
   }, [query.error, results]);
 

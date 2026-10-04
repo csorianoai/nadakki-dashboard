@@ -16,7 +16,7 @@
  * items denegados, no un error HTTP. Hay uno aparte para el 403.
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import DealerLayout from "@/app/autos/dealer/layout";
 import { DEALER_NAV_CAPABILITY_KEYS } from "@/components/dealer-management/shell/dealer-nav";
@@ -203,6 +203,24 @@ describe("cuando el acceso no se pudo verificar", () => {
     montar();
     expect(screen.queryByRole("link", { name: /Inventario/ })).toBeNull();
     expect(screen.queryByRole("link", { name: /Finanzas por vehículo/ })).toBeNull();
+  });
+});
+
+/**
+ * El aviso vive tambien en la barra estrecha (#578). En 72 px la frase no cabe:
+ * queda el icono, la frase en el tooltip y el texto en sr-only. Contraer la
+ * barra no puede volver mudo al menu.
+ */
+describe("con la barra estrecha", () => {
+  it("el aviso sigue ahi y sigue diciendo la frase", () => {
+    batchMock.mockReturnValue(batchDenegado("no_organization_unit"));
+    montar();
+    fireEvent.click(screen.getByTestId("dealer-sidebar-toggle"));
+    expect(screen.getByTestId("dealer-sidebar")).toHaveAttribute("data-collapsed", "true");
+    const aviso = screen.getByTestId("dealer-acceso-no-verificado");
+    expect(aviso).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
+    expect(aviso).toHaveAttribute("title", ACCESS_UNVERIFIED_MESSAGE);
+    expect(screen.queryByRole("link", { name: /Inventario/ })).toBeNull();
   });
 });
 
