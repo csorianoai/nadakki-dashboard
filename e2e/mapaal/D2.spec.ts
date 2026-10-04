@@ -25,14 +25,25 @@
  *   npx playwright test e2e/mapaal/D2.spec.ts
  */
 import { expect, test, type Page } from "@playwright/test";
-import { AVISO, MODULOS, REASON, RUTA_BATCH, RUTA_PANEL, TESTIDS, denegarCuerpo } from "./d2-guion";
+import {
+  AVISO,
+  MODULOS,
+  PLACEHOLDER_TENANT,
+  REASON,
+  RUTA_BATCH,
+  RUTA_PANEL,
+  TENANT_QA,
+  TESTIDS,
+  denegarCuerpo,
+} from "./d2-guion";
 
 const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
 const QA_USER = process.env.QA_USER;
 const QA_PASSWORD = process.env.QA_PASSWORD;
 const QA_TENANT_SLUG = process.env.QA_TENANT_SLUG;
 
-test.describe.configure({ mode: "serial" });
+// Cada test entra de cero; el login en produccion tarda mas que los 30 s por defecto.
+test.describe.configure({ mode: "serial", timeout: 120_000 });
 test.skip(!BASE_URL || !QA_USER || !QA_PASSWORD, "Faltan BASE_URL, QA_USER o QA_PASSWORD");
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -40,10 +51,27 @@ async function login(page: Page) {
   await page.goto(`${BASE_URL}/login`);
   await page.locator('input[type="email"]').fill(QA_USER!);
   await page.locator('input[type="password"]').fill(QA_PASSWORD!);
-  const tenantInput = page.getByPlaceholder("tu-institucion");
+  // `exact`: sin el, el placeholder del email ("admin@tu-institucion.com") tambien
+  // casa, y en un subdominio de dealer (sin campo de tenant) el slug pisaba el email.
+  const tenantInput = page.getByPlaceholder(PLACEHOLDER_TENANT, { exact: true });
   if (QA_TENANT_SLUG && (await tenantInput.count()) > 0) await tenantInput.fill(QA_TENANT_SLUG);
-  await page.locator('button[type="submit"]').click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 60_000 });
+  await page.getByRole("button", { name: /Iniciar Sesi/i }).click();
+
+  // O sale de /login, o el formulario dice por que no.
+  const errorDelFormulario = page.locator("form .bg-red-50");
+  await expect
+    .poll(
+      async () => {
+        if (!new URL(page.url()).pathname.startsWith("/login")) return "fuera";
+        if (await errorDelFormulario.isVisible()) return `error: ${await errorDelFormulario.innerText()}`;
+        return "esperando";
+      },
+      { timeout: 60_000, message: "el login no termino" },
+    )
+    .toBe("fuera");
+
+  const tenant = await page.evaluate(() => window.localStorage.getItem("nadakki_tenant_id"));
+  expect(tenant, "la sesion debe ser del tenant QA; con otro tenant el test no sigue").toBe(TENANT_QA);
 }
 
 /** El batch real, con cada item denegado por `no_organization_unit`. */
