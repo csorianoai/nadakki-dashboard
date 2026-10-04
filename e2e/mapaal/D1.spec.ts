@@ -19,39 +19,29 @@
 
 import { expect, test, type Page, type Request } from "@playwright/test";
 
+import {
+  DEALER_CONTEXT,
+  TENANT_QA,
+  VEHICLES,
+  fallosDeCronologia,
+  interesa,
+  leerAsignacionUnica,
+  pathOf,
+  type Evento,
+} from "./d1-red";
+
 const BASE_URL = (process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "").replace(/\/$/, "");
 const QA_USER = process.env.QA_USER ?? "";
 const QA_PASSWORD = process.env.QA_PASSWORD ?? "";
-
-/** superloop/config/fase2.json: ids.tenant_qa. Nunca el tenant real de Mapaal. */
-const TENANT_QA = "9a9a0001-0000-4000-8000-000000000001";
-
-const DEALER_CONTEXT = /\/api\/v1\/autos\/me\/dealer-context(\?|$)/;
-const VEHICLES = /\/api\/v1\/autos\/dealers\/([^/?]+)\/vehicles(\?|$)/;
 
 /** El tiempo que se retiene dealer-context para ver "Verificando". */
 const RETENCION_MS = 2_000;
 
 test.use({ baseURL: BASE_URL || undefined });
 
-function pathOf(url: string): string {
-  try {
-    return new URL(url).pathname;
-  } catch {
-    return url;
-  }
-}
-
-/**
- * Cronologia de la red: cada peticion de los dos contratos con el orden en que
- * se emitio, y cuando termino la de dealer-context.
- */
-type Evento = { tipo: "request" | "response"; ruta: string; url: string; seq: number };
-
 function registrarRed(page: Page) {
   const eventos: Evento[] = [];
   let seq = 0;
-  const interesa = (url: string) => DEALER_CONTEXT.test(pathOf(url)) || VEHICLES.test(pathOf(url));
 
   page.on("request", (req: Request) => {
     if (interesa(req.url())) eventos.push({ tipo: "request", ruta: pathOf(req.url()), url: req.url(), seq: seq++ });
@@ -134,12 +124,9 @@ test.describe("D1 — inventario visible, una asignacion", () => {
       await expect.poll(() => respuestaContexto, { timeout: 30_000 }).not.toBeNull();
       const { status, body } = respuestaContexto!;
       expect(status, "dealer-context debe responder 200").toBe(200);
-      const asignaciones = (body as { assignments?: Array<Record<string, unknown>> } | null)?.assignments;
-      expect(Array.isArray(asignaciones), "la respuesta no trae assignments").toBe(true);
-      expect(asignaciones!.length, "el usuario QA debe tener exactamente UNA asignacion").toBe(1);
-      dealerId = String(asignaciones![0]!.dealer_id ?? "");
-      unidad = (asignaciones![0]!.organization_unit_id as string | null | undefined) ?? null;
-      expect(dealerId).not.toBe("");
+      const asignacion = leerAsignacionUnica(body);
+      expect(asignacion.ok ? "" : asignacion.motivo, "dealer-context con UNA asignacion").toBe("");
+      if (asignacion.ok) ({ dealerId, unidad } = asignacion);
     });
 
     await test.step("la lista: con datos o vacia con el texto del contrato", async () => {
@@ -150,18 +137,7 @@ test.describe("D1 — inventario visible, una asignacion", () => {
     });
 
     await test.step("red: /vehicles con el dealer_id del contrato, despues de su respuesta, y un solo dealer-context", async () => {
-      const contexto = eventos.filter((e) => DEALER_CONTEXT.test(e.ruta));
-      const vehiculos = eventos.filter((e) => e.tipo === "request" && VEHICLES.test(e.ruta));
-
-      expect(contexto.filter((e) => e.tipo === "request"), "ninguna segunda peticion a dealer-context").toHaveLength(1);
-      expect(vehiculos.length, "con dealer resuelto tiene que salir la peticion a /vehicles").toBeGreaterThan(0);
-
-      const finContexto = contexto.find((e) => e.tipo === "response");
-      expect(finContexto, "dealer-context no termino").toBeTruthy();
-      for (const v of vehiculos) {
-        expect(decodeURIComponent(VEHICLES.exec(v.ruta)![1]!), "dealer_id de /vehicles").toBe(dealerId);
-        expect(v.seq, "/vehicles salio antes de que dealer-context respondiera").toBeGreaterThan(finContexto!.seq);
-      }
+      expect(fallosDeCronologia(eventos, dealerId), "cronologia de la red").toEqual([]);
     });
 
     await test.step("pantalla: sin selector, sin DEFAULT_DENY, sin avisos de error", async () => {
