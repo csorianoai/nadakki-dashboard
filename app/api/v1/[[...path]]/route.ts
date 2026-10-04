@@ -71,8 +71,12 @@ async function proxyRequest(
 
     const init: RequestInit = { method, headers };
     if (method !== "GET" && method !== "HEAD") {
-      const body = await req.text();
-      if (body) init.body = body;
+      // Bytes, no texto. `req.text()` decodifica como UTF-8 y un multipart
+      // con un .xlsx (el importador de D7) llegaba al backend con cada byte
+      // no valido cambiado por U+FFFD: un zip roto con su Content-Type
+      // intacto. El JSON viaja igual, byte a byte.
+      const body = await req.arrayBuffer();
+      if (body.byteLength > 0) init.body = body;
     }
 
     const res = await fetch(target, { ...init, cache: "no-store" });
