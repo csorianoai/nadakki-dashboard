@@ -168,7 +168,21 @@ function sectionHasActiveRoute(section: NavSection, pathname: string | null): bo
 
 export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalCoresSidebarProps) {
   const pathname = usePathname();
-  const { tenant, allRoles, user, activeRole, isAuthenticated } = useAuth();
+  const { tenant, allRoles, allTenants = [], user, activeRole, isAuthenticated, switchTenant } = useAuth();
+  /**
+   * "Cambiar tenant" solo si HAY a que cambiar. Antes era un enlace incondicional
+   * a `/tenants`, una pantalla de plataforma con tenants inventados que un
+   * usuario de Mapaal abria desde aqui. Ahora cambia con `switchTenant`, que es
+   * el que de verdad emite el token del otro tenant.
+   */
+  const otrosTenants = allTenants.length > 1 ? allTenants.filter((t) => t.id !== tenant?.id) : [];
+  const [cambiando, setCambiando] = useState(false);
+  const cambiarA = async (tenantId: string) => {
+    setCambiando(true);
+    const r = await switchTenant(tenantId);
+    if (r.ok) window.location.assign("/");
+    else setCambiando(false);
+  };
   const showAdmin = userCanAccessAdminNav(allRoles);
 
   /**
@@ -556,13 +570,24 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
                     </span>
                   </div>
                 </div>
-                <Link
-                  href="/tenants"
-                  onClick={onNavigate}
-                  className="mt-2 block rounded-md py-1.5 text-center text-[11px] font-medium text-violet-400 transition-colors hover:text-violet-300"
-                >
-                  Cambiar tenant
-                </Link>
+                {otrosTenants.length > 0 ? (
+                  <details data-testid="sidebar-cambiar-tenant" className="mt-2 text-[11px]">
+                    <summary className="cursor-pointer rounded-md py-1.5 text-center font-medium text-violet-400 transition-colors hover:text-violet-300">
+                      Cambiar tenant
+                    </summary>
+                    {otrosTenants.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        disabled={cambiando}
+                        onClick={() => void cambiarA(t.id)}
+                        className="block w-full truncate rounded-md px-2 py-1 text-left text-zinc-300 hover:bg-white/5 disabled:opacity-50"
+                      >
+                        {t.display_name}
+                      </button>
+                    ))}
+                  </details>
+                ) : null}
               </>
             )
           ) : (
