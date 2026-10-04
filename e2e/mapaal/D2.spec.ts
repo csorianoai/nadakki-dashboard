@@ -25,36 +25,12 @@
  *   npx playwright test e2e/mapaal/D2.spec.ts
  */
 import { expect, test, type Page } from "@playwright/test";
+import { AVISO, MODULOS, REASON, RUTA_BATCH, RUTA_PANEL, TESTIDS, denegarCuerpo } from "./d2-guion";
 
 const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
 const QA_USER = process.env.QA_USER;
 const QA_PASSWORD = process.env.QA_PASSWORD;
 const QA_TENANT_SLUG = process.env.QA_TENANT_SLUG;
-
-const AVISO = "No se pudieron verificar tus accesos";
-const REASON = "no_organization_unit";
-
-/**
- * Todos los enlaces del menu que dependen de una capability (dealer-nav.ts).
- * Los de `capability: null` (Inicio, Centro Operativo, Estado de modulos) no
- * son modulos del plan y se pintan siempre.
- */
-const MODULOS = [
-  "/autos/dealer/inventario",
-  "/autos/dealer/publicar-rapido",
-  "/autos/dealer/leads",
-  "/autos/dealer/finanzas",
-  "/contable",
-  "/contable/plan-cuentas",
-  "/contable/libro-mayor",
-  "/contable/balance-comprobacion",
-  "/contable/estado-resultados",
-  "/credit-hub/dealer",
-  "/credit-hub/dealer/applications",
-  "/marketing/campaigns",
-  "/autos/dealer/insights",
-  "/autos/dealer/conexiones",
-];
 
 test.describe.configure({ mode: "serial" });
 test.skip(!BASE_URL || !QA_USER || !QA_PASSWORD, "Faltan BASE_URL, QA_USER o QA_PASSWORD");
@@ -72,41 +48,32 @@ async function login(page: Page) {
 
 /** El batch real, con cada item denegado por `no_organization_unit`. */
 async function denegarBatch(page: Page) {
-  await page.route("**/api/v1/access/entitlements/batch**", async (route) => {
-    const pedidas = (new URL(route.request().url()).searchParams.get("capabilities") ?? "")
-      .split(",")
-      .map((k) => k.trim())
-      .filter(Boolean);
-    let cuerpo: Record<string, unknown> = {};
+  await page.route(RUTA_BATCH, async (route) => {
+    let real: Record<string, unknown> = {};
     try {
-      const real = await route.fetch();
-      if (real.ok()) cuerpo = (await real.json()) as Record<string, unknown>;
+      const respuesta = await route.fetch();
+      if (respuesta.ok()) real = (await respuesta.json()) as Record<string, unknown>;
     } catch {
-      cuerpo = {};
+      real = {};
     }
-    const reales = Object.keys((cuerpo.results as Record<string, unknown> | undefined) ?? {});
-    const claves = Array.from(new Set([...pedidas, ...reales]));
-    const results = Object.fromEntries(
-      claves.map((k) => [k, { allowed: false, reason_code: REASON, limit: null, current_usage: null }]),
-    );
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ ...cuerpo, evaluated_organization_unit_id: null, results }),
+      body: JSON.stringify(denegarCuerpo(route.request().url(), real)),
     });
   });
 }
 
 async function abrirPanel(page: Page) {
   await denegarBatch(page);
-  await page.goto(`${BASE_URL}/autos/dealer`);
-  const barra = page.getByTestId("dealer-sidebar");
+  await page.goto(`${BASE_URL}${RUTA_PANEL}`);
+  const barra = page.getByTestId(TESTIDS.barra);
   await expect(barra).toBeVisible({ timeout: 30_000 });
   return barra;
 }
 
 async function sinModulos(page: Page) {
-  const barra = page.getByTestId("dealer-sidebar");
+  const barra = page.getByTestId(TESTIDS.barra);
   for (const href of MODULOS) {
     await expect(barra.locator(`a[href="${href}"]`)).toHaveCount(0);
   }
@@ -119,7 +86,7 @@ test.beforeEach(async ({ page }) => {
 test("1. barra ancha: el aviso esta en el menu y no hay modulos", async ({ page }) => {
   const barra = await abrirPanel(page);
   await expect(barra).toHaveAttribute("data-collapsed", "false");
-  const aviso = barra.getByTestId("dealer-acceso-no-verificado");
+  const aviso = barra.getByTestId(TESTIDS.aviso);
   await expect(aviso).toBeVisible({ timeout: 30_000 });
   await expect(aviso).toContainText(AVISO);
   await expect(aviso).toHaveAttribute("data-reason-code", REASON);
@@ -129,10 +96,10 @@ test("1. barra ancha: el aviso esta en el menu y no hay modulos", async ({ page 
 
 test("2. barra estrecha: el aviso sigue, en tooltip y sin desbordar", async ({ page }) => {
   const barra = await abrirPanel(page);
-  await expect(barra.getByTestId("dealer-acceso-no-verificado")).toBeVisible({ timeout: 30_000 });
-  await page.getByTestId("dealer-sidebar-toggle").click();
+  await expect(barra.getByTestId(TESTIDS.aviso)).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId(TESTIDS.toggle).click();
   await expect(barra).toHaveAttribute("data-collapsed", "true");
-  const aviso = barra.getByTestId("dealer-acceso-no-verificado");
+  const aviso = barra.getByTestId(TESTIDS.aviso);
   await expect(aviso).toBeVisible();
   await expect(aviso).toContainText(AVISO);
   await expect(aviso).toHaveAttribute("title", AVISO);
