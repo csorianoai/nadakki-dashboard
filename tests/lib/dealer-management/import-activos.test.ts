@@ -99,6 +99,18 @@ describe("parseImportResultado", () => {
     expect(erroresDeArchivo(r)).toHaveLength(1);
   });
 
+  it("un elemento ilegible en errores cuenta como error", () => {
+    const r = parseImportResultado({ ...REVISION_OK, errores: [123, null, [], ""] })!;
+    expect(r.errores).toHaveLength(4);
+    expect(puedeAplicar(r)).toBe(false);
+  });
+
+  it("una hoja ilegible bloquea el aplicar", () => {
+    const r = parseImportResultado({ ...REVISION_OK, hojas: [...REVISION_OK.hojas, { hoja: "Costos_vehiculos", filas: 2.5 }] })!;
+    expect(r.hojasIlegibles).toBe(1);
+    expect(puedeAplicar(r)).toBe(false);
+  });
+
   it("un cuerpo sin nada del contrato es ilegible, no una revision vacia", () => {
     expect(parseImportResultado({ detail: "Not Found" })).toBeNull();
     expect(parseImportResultado(null)).toBeNull();

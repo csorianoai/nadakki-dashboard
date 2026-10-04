@@ -89,6 +89,8 @@ export type ImportResultado = {
   version: string | null;
   aplicado: boolean;
   hojas: ImportHoja[];
+  /** Hojas que llegaron sin nombre o sin conteo entero: bloquean el aplicar. */
+  hojasIlegibles: number;
   errores: ImportError[];
   /** PROXIMAMENTE y hojas bloqueadas: se aceptan y NO se guardan. */
   noAplicado: ImportNoAplicado[];
@@ -114,14 +116,19 @@ function list(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
-function hojas(value: unknown): ImportHoja[] {
+function hojas(value: unknown): { hojas: ImportHoja[]; ilegibles: number } {
   const out: ImportHoja[] = [];
+  let ilegibles = 0;
   for (const item of list(value)) {
     const rec = record(item);
     const hoja = rec ? text(rec.hoja) : null;
     const filas = rec ? count(rec.filas) : null;
-    // Una hoja sin nombre o sin conteo no se pinta con un cero inventado.
-    if (!rec || !hoja || filas === null) continue;
+    // Una hoja sin nombre o sin conteo no se pinta con un cero inventado,
+    // pero tampoco se ignora: se cuenta y puedeAplicar() queda cerrado.
+    if (!rec || !hoja || filas === null) {
+      ilegibles += 1;
+      continue;
+    }
     out.push({
       hoja,
       filas,
@@ -132,7 +139,7 @@ function hojas(value: unknown): ImportHoja[] {
       operacion: count(rec.operacion),
     });
   }
-  return out;
+  return { hojas: out, ilegibles };
 }
 
 function errores(value: unknown): ImportError[] {
@@ -143,7 +150,11 @@ function errores(value: unknown): ImportError[] {
       out.push({ hoja: null, fila: null, columna: null, codigo: null, mensaje: item.trim() });
       continue;
     }
-    if (!rec) continue;
+    if (!rec) {
+      // Numero, null, lista, cadena vacia: ilegible, pero un error no se descarta.
+      out.push({ hoja: null, fila: null, columna: null, codigo: null, mensaje: "Error ilegible del backend." });
+      continue;
+    }
     const codigo = text(rec.codigo) ?? text(rec.code);
     const mensaje = text(rec.mensaje) ?? text(rec.message) ?? codigo;
     // Sin mensaje ni codigo no hay nada que decirle al dealer, pero tampoco se
@@ -178,16 +189,25 @@ export function parseImportResultado(body: unknown): ImportResultado | null {
   const root = record(body);
   const rec = root && record(root.detail) && !("hojas" in root) ? record(root.detail) : root;
   if (!rec) return null;
+  const leidas = hojas(rec.hojas);
   const modo = rec.modo === "revision" || rec.modo === "aplicar" ? rec.modo : null;
   const resultado: ImportResultado = {
     modo,
     version: text(rec.version),
     aplicado: rec.aplicado === true,
-    hojas: hojas(rec.hojas),
+    hojas: leidas.hojas,
+    hojasIlegibles: leidas.ilegibles,
     errores: errores(rec.errores),
     noAplicado: noAplicado(rec.no_aplicado ?? rec.proximamente),
   };
-  if (!resultado.version && resultado.hojas.length === 0 && resultado.errores.length === 0) return null;
+  if (
+    !resultado.version &&
+    resultado.hojas.length === 0 &&
+    resultado.hojasIlegibles === 0 &&
+    resultado.errores.length === 0
+  ) {
+    return null;
+  }
   return resultado;
 }
 
@@ -208,7 +228,7 @@ export function filasTotales(resultado: ImportResultado): number {
 export function puedeAplicar(resultado: ImportResultado | null): boolean {
   if (!resultado || resultado.modo !== "revision") return false;
   if (resultado.version !== PLANTILLA_VERSION) return false;
-  if (resultado.errores.length > 0) return false;
+  if (resultado.errores.length > 0 || resultado.hojasIlegibles > 0) return false;
   return filasTotales(resultado) > 0;
 }
 
