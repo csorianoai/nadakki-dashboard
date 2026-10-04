@@ -23,6 +23,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import DealerInventoryPage from "@/app/autos/dealer/inventario/page";
 import { AccessApiError } from "@/lib/access/client";
 import { ACCESS_UNVERIFIED_MESSAGE } from "@/lib/access/reason-codes";
+import { VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
 
 jest.mock("@/lib/auth/token-refresh", () => ({
   refreshAccessToken: jest.fn(async () => false),
@@ -123,11 +124,16 @@ describe("allowed=true: se pide el inventario", () => {
     expect(screen.queryByText(/bloqueado/i)).toBeNull();
   });
 
-  it("pide al batch exactamente la clave de lectura, y nada mas", () => {
+  it("pide al batch las dos claves de la pantalla, y ninguna ajena", () => {
     sesionConDealerSinUnidad();
     batchMock.mockReturnValue(batch({ allowed: true }));
     montar();
-    expect(batchMock).toHaveBeenCalledWith([CAPABILITY]);
+    // Leer el inventario y crear un vehiculo, en UNA sola consulta. Antes aqui
+    // se afirmaba "solo la de lectura"; el CTA de alta manual necesita la de
+    // escritura y pedirla en un batch aparte seria una peticion de mas. Lo que
+    // sigue fijado --y es lo que importa-- es que no se pide ninguna clave que
+    // esta pantalla no use.
+    expect(batchMock).toHaveBeenCalledWith([CAPABILITY, VEHICLE_WRITE_CAPABILITY]);
   });
 
   it("muestra los vehiculos que devuelve el contrato privado", async () => {
