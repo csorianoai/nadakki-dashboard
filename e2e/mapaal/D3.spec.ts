@@ -1,10 +1,12 @@
 /**
  * D3 — alta manual de vehiculo desde el inventario, sin price_rd/price_usd.
  *
- * Corre SOLO contra el tenant QA, con `QA_USER` / `QA_PASSWORD` (y
- * `QA_TENANT_SLUG` si el host no fija el tenant). Nunca con credenciales de
- * usuarios reales de Mapaal. El login de la app no tiene paso MFA, asi que
- * `QA_TOTP_SECRET` no se usa. Crea UN vehiculo en BORRADOR en el tenant QA.
+ * Corre SOLO contra el tenant QA, con `QA_USER` / `QA_PASSWORD`. Nunca con
+ * credenciales de usuarios reales de Mapaal. El login va por `iniciarSesionQA`
+ * (como D5/D8): si BASE_URL es mapaal.nadakki.com entra por el host universal
+ * con el tenant QA y aborta si la sesion no es de ese tenant. El login de la app
+ * no tiene paso MFA, asi que `QA_TOTP_SECRET` no se usa. Crea UN vehiculo en
+ * BORRADOR en el tenant QA.
  *
  * Guion (del PR #534):
  *   1. /autos/dealer/inventario ofrece "Nuevo vehiculo" (clave de alta concedida).
@@ -21,30 +23,21 @@
  * Ejecutar: BASE_URL=... QA_USER=... QA_PASSWORD=... \
  *   npx playwright test e2e/mapaal/D3.spec.ts
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
-const QA_USER = process.env.QA_USER;
-const QA_PASSWORD = process.env.QA_PASSWORD;
-const QA_TENANT_SLUG = process.env.QA_TENANT_SLUG;
+import { iniciarSesionQA } from "./sesion-qa";
+
+const BASE_URL = (process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "").replace(/\/+$/, "");
+const QA_USER = process.env.QA_USER ?? "";
+const QA_PASSWORD = process.env.QA_PASSWORD ?? "";
 
 const ALTA = /\/dealers\/[^/]+\/vehicles\/?(\?.*)?$/;
 
 test.skip(!BASE_URL || !QA_USER || !QA_PASSWORD, "Faltan BASE_URL, QA_USER o QA_PASSWORD");
 
-async function login(page: Page) {
-  await page.goto(`${BASE_URL}/login`);
-  await page.locator('input[type="email"]').fill(QA_USER!);
-  await page.locator('input[type="password"]').fill(QA_PASSWORD!);
-  const tenantInput = page.getByPlaceholder("tu-institucion");
-  if (QA_TENANT_SLUG && (await tenantInput.count()) > 0) await tenantInput.fill(QA_TENANT_SLUG);
-  await page.locator('button[type="submit"]').click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 60_000 });
-}
-
-test("D3: inventario -> Nuevo vehiculo -> POST sin price_rd/price_usd", async ({ page }) => {
-  test.setTimeout(120_000);
-  await login(page);
+test("D3: inventario -> Nuevo vehiculo -> POST sin price_rd/price_usd", async ({ browser }) => {
+  test.setTimeout(180_000);
+  const page = await iniciarSesionQA(browser, { baseUrl: BASE_URL, usuario: QA_USER, clave: QA_PASSWORD });
 
   // 1. La entrada desde la lista.
   await page.goto(`${BASE_URL}/autos/dealer/inventario`);
