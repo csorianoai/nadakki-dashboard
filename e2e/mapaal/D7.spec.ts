@@ -1,8 +1,9 @@
 /**
  * D7 — importador de la PLANTILLA_ACTIVOS_v4 (contrato P5).
  *
- * Corre SOLO contra el tenant QA, con `QA_USER` / `QA_PASSWORD` (y
- * `QA_TENANT_SLUG` si el host no fija el tenant). Nunca con credenciales de
+ * Corre SOLO contra el tenant QA, con `QA_USER` / `QA_PASSWORD`. El login va por
+ * `iniciarSesionQA` (como D3/D5/D8): mapaal.nadakki.com fija el tenant `mapaal`
+ * y el usuario QA (`mapaal-qa`) recibe 401, asi que entra por el host universal. Nunca con credenciales de
  * usuarios reales de Mapaal. El login de la app no tiene paso MFA, asi que
  * `QA_TOTP_SECRET` no se usa.
  *
@@ -27,7 +28,7 @@
  *   npx playwright test e2e/mapaal/D7.spec.ts
  */
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import {
   PREFIJO_HOJA,
@@ -37,35 +38,25 @@ import {
   TESTIDS_INVENTARIO,
   TEXTO_SIN_IVA,
 } from "./d7-guion";
+import { iniciarSesionQA } from "./sesion-qa";
 
 const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
 const QA_USER = process.env.QA_USER;
 const QA_PASSWORD = process.env.QA_PASSWORD;
-const QA_TENANT_SLUG = process.env.QA_TENANT_SLUG;
 
 const FIXTURE = path.join(__dirname, "fixtures", "D7_plantilla_v4_qa.xlsx");
 const IMPORT = /\/dealers\/[^/]+\/import-activos\/?$/;
 
 test.skip(!BASE_URL || !QA_USER || !QA_PASSWORD, "Faltan BASE_URL, QA_USER o QA_PASSWORD");
 
-async function login(page: Page) {
-  await page.goto(`${BASE_URL}/login`);
-  await page.locator('input[type="email"]').fill(QA_USER!);
-  await page.locator('input[type="password"]').fill(QA_PASSWORD!);
-  const tenantInput = page.getByPlaceholder("tu-institucion");
-  if (QA_TENANT_SLUG && (await tenantInput.count()) > 0) await tenantInput.fill(QA_TENANT_SLUG);
-  await page.locator('button[type="submit"]').click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 60_000 });
-}
-
 function esImport(url: string, modo: string, method: string) {
   const u = new URL(url);
   return method === "POST" && IMPORT.test(u.pathname) && u.searchParams.get("modo") === modo;
 }
 
-test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({ page }) => {
+test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({ browser }) => {
   test.setTimeout(180_000);
-  await login(page);
+  const page = await iniciarSesionQA(browser, { baseUrl: BASE_URL!.replace(/\/+$/, ""), usuario: QA_USER!, clave: QA_PASSWORD! });
 
   // 1. La entrada desde el inventario.
   await page.goto(`${BASE_URL}${RUTA_INVENTARIO}`);
