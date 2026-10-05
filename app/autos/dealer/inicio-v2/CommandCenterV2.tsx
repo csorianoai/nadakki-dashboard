@@ -124,12 +124,12 @@ export function CommandCenterV2() {
   return (
     <DccPage titulo="Command Center">
       <div className="flex flex-col gap-[var(--dcc-gap)]">
-        <DccSeccion titulo="Brief del día" icono={Sparkles} tono="dorado" testId="dcc-seccion-brief">
+        <DccSeccion titulo="Brief del día" icono={Sparkles} clave testId="dcc-seccion-brief">
           <SinFuente motivo={SECCIONES_SIN_FUENTE.brief} />
         </DccSeccion>
         <div className="grid grid-cols-1 items-start gap-[var(--dcc-gap)] lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <DccSeccion titulo="Cola de atención" icono={AlertTriangle} tono="dorado" testId="dcc-seccion-cola">
+            <DccSeccion titulo="Cola de atención" icono={AlertTriangle} clave testId="dcc-seccion-cola">
               <SinFuente motivo={SECCIONES_SIN_FUENTE.cola} />
             </DccSeccion>
           </div>
@@ -137,7 +137,7 @@ export function CommandCenterV2() {
             <SinFuente motivo={SECCIONES_SIN_FUENTE.salud} />
           </DccSeccion>
         </div>
-        <DccSeccion titulo="Estado del negocio" icono={BarChart3} tono="azul" meta="totales del backend" testId="dcc-seccion-negocio">
+        <DccSeccion titulo="Estado del negocio" icono={BarChart3} meta="totales del backend" testId="dcc-seccion-negocio">
           <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">{negocio.map(tile)}</div>
         </DccSeccion>
         <DccSeccion titulo="Más indicadores" icono={Gauge} meta="registrados en N6, sin fuente todavía" testId="dcc-seccion-mas">
@@ -149,7 +149,7 @@ export function CommandCenterV2() {
               <SinFuente motivo={SECCIONES_SIN_FUENTE.hoy} />
             </DccSeccion>
           </div>
-          <DccSeccion titulo="Reportes e inteligencia" icono={FileText} tono="azul" testId="dcc-seccion-reportes">
+          <DccSeccion titulo="Reportes e inteligencia" icono={FileText} testId="dcc-seccion-reportes">
             <p className={`text-sm ${DCC_CLASSES.muted}`}>Reportes contables y ejecutivo con su naturaleza (en vivo o guardado).</p>
             <Link href="/autos/dealer/reportes-v2" className={`mt-3 ${DCC_CLASSES.actionButton}`}>
               Abrir Centro de Reportes

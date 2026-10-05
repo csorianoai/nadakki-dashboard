@@ -7,9 +7,9 @@ import type { DccTheme } from "@/lib/dcc/tokens";
 import { DCC_CLASSES } from "./clases";
 
 /**
- * Barra superior blanca con borde inferior sutil. La marca del tenant manda
- * arriba a la izquierda (con hueco para logo); la linea de plataforma va
- * debajo, pequena, y solo si el tenant la trae.
+ * Cabecera de la pagina: titulo, acciones y conmutador de tema. La marca del
+ * tenant ya esta en la barra lateral, asi que aqui no se repite; el logo solo
+ * aparece si el tenant lo tiene (sin recuadro vacio).
  */
 export function DccHeader({
   marca,
@@ -31,28 +31,13 @@ export function DccHeader({
       className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--dcc-border-strong)] bg-[var(--dcc-surface)] px-5 py-4 lg:px-6"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <div
-          data-testid="dcc-logo-slot"
-          className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--dcc-border-strong)] bg-[var(--dcc-surface-muted)]"
-        >
-          {marca.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- logo del tenant, URL externa del branding
-            <img src={marca.logoUrl} alt="" className="h-full w-full object-contain" />
-          ) : null}
-        </div>
-        <div className="min-w-0">
-          <p data-testid="dcc-marca-nombre" className="truncate text-lg font-bold leading-tight text-[var(--dcc-fg)]">
-            {marca.nombre ?? ""}
-          </p>
-          {marca.plataforma ? (
-            <p data-testid="dcc-marca-plataforma" className={`text-xs ${DCC_CLASSES.subtle}`}>
-              {marca.plataforma}
-            </p>
-          ) : null}
-        </div>
+        {marca.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- logo del tenant, URL externa del branding
+          <img data-testid="dcc-logo" src={marca.logoUrl} alt={marca.nombre ?? ""} className="h-8 w-auto max-w-[140px] object-contain" />
+        ) : null}
+        <h1 className="truncate text-lg font-bold text-[var(--dcc-fg)]">{titulo}</h1>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className={`mr-2 text-sm font-medium ${DCC_CLASSES.muted}`}>{titulo}</h1>
         {acciones}
         <button
           type="button"

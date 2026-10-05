@@ -4,29 +4,15 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { DCC_CLASSES } from "./clases";
 
-/** Tono de la banda de cabecera (referencia v3): azul = Datos, dorado = Prioridad. */
-export type TonoSeccion = "azul" | "dorado" | "neutro";
-
-const BANDA: Record<TonoSeccion, string> = {
-  azul: "bg-[var(--dcc-blue-bg)] border-[var(--dcc-blue-line)]",
-  dorado: "bg-[var(--dcc-gold-bg)] border-[var(--dcc-gold-line)]",
-  neutro: "bg-[var(--dcc-surface-muted)] border-[var(--dcc-border)]",
-};
-
-const ICONO: Record<TonoSeccion, string> = {
-  azul: "bg-[var(--dcc-action)] text-[var(--dcc-on-action)]",
-  dorado: "bg-[var(--dcc-gold-line)] text-[var(--dcc-gold-ink)]",
-  neutro: "bg-[var(--dcc-surface)] text-[var(--dcc-fg-muted)] border border-[var(--dcc-border-strong)]",
-};
-
 /**
- * Seccion de la referencia v3: tarjeta blanca con banda de cabecera clara
- * tintada, icono, titulo y metadato. Altura automatica; nada se corta.
+ * Seccion de la referencia v3: tarjeta blanca con cabecera clara, icono de
+ * seccion en turquesa, titulo marino y metadato. `clave` = filo superior
+ * dorado (Brief, Cola de atencion). Altura automatica; nada se corta.
  */
 export function DccSeccion({
   titulo,
   icono: Icono,
-  tono = "neutro",
+  clave = false,
   meta,
   acciones,
   children,
@@ -34,7 +20,7 @@ export function DccSeccion({
 }: {
   titulo: string;
   icono: LucideIcon;
-  tono?: TonoSeccion;
+  clave?: boolean;
   meta?: string | null;
   acciones?: ReactNode;
   children: ReactNode;
@@ -43,21 +29,19 @@ export function DccSeccion({
   return (
     <section
       data-testid={testId ?? "dcc-seccion"}
-      data-tono={tono}
+      data-clave={clave ? "si" : "no"}
       aria-label={titulo}
-      className="h-auto min-w-0 overflow-visible rounded-[var(--dcc-radius)] border border-[var(--dcc-border)] bg-[var(--dcc-surface)] shadow-[var(--dcc-shadow)]"
+      className={`h-auto min-w-0 rounded-[var(--dcc-radius)] border border-[var(--dcc-border)] bg-[var(--dcc-surface)] shadow-[var(--dcc-shadow)] ${clave ? DCC_CLASSES.filoClave : ""}`}
     >
-      <header className={`flex flex-wrap items-center justify-between gap-2 rounded-t-[var(--dcc-radius)] border-b px-5 py-3 ${BANDA[tono]}`}>
-        <div className="flex min-w-0 items-center gap-3">
-          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${ICONO[tono]}`}>
-            <Icono className="h-4 w-4" aria-hidden="true" />
-          </span>
+      <header className="flex flex-wrap items-center justify-between gap-2 px-5 pt-4">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Icono className="h-4 w-4 shrink-0 text-[var(--dcc-teal)]" aria-hidden="true" />
           <h2 className="text-base font-semibold text-[var(--dcc-fg)]">{titulo}</h2>
           {meta ? <span className={`text-xs ${DCC_CLASSES.subtle}`}>{meta}</span> : null}
         </div>
         {acciones}
       </header>
-      <div className="p-[var(--dcc-pad)]">{children}</div>
+      <div className="px-5 pb-5 pt-3">{children}</div>
     </section>
   );
 }

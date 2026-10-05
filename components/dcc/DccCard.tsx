@@ -17,15 +17,17 @@ export type DccCardProps = {
   evidencia?: ReactNode;
   children?: ReactNode;
   testId?: string;
+  /** Tarjeta clave: filo superior dorado. */
+  clave?: boolean;
 };
 
 /**
  * Tarjeta del DCC. Altura automatica: el contenido nunca se corta (sin
  * alturas fijas ni overflow oculto). Cabecera clara, sin bloques oscuros.
  */
-export function DccCard({ titulo, tecnico, calidad, acciones, evidencia, children, testId }: DccCardProps) {
+export function DccCard({ titulo, tecnico, calidad, acciones, evidencia, children, testId, clave }: DccCardProps) {
   return (
-    <section data-testid={testId ?? "dcc-card"} className={DCC_CLASSES.card} aria-label={titulo}>
+    <section data-testid={testId ?? "dcc-card"} className={`${DCC_CLASSES.card} ${clave ? DCC_CLASSES.filoClave : ""}`} aria-label={titulo}>
       <header className="flex flex-wrap items-start justify-between gap-2">
         <DccTooltip contenido={tecnico}>
           <h2 className="text-sm font-semibold text-[var(--dcc-fg)]">{titulo}</h2>
@@ -38,7 +40,7 @@ export function DccCard({ titulo, tecnico, calidad, acciones, evidencia, childre
       {children ? <div className="mt-3">{children}</div> : null}
       {evidencia ? (
         <details data-testid="dcc-evidencia" className="group mt-4 border-t border-[var(--dcc-border-strong)] pt-3">
-          <summary className={`flex cursor-pointer list-none items-center gap-1 text-xs font-medium ${DCC_CLASSES.muted}`}>
+          <summary className={`flex cursor-pointer list-none items-center gap-1 text-xs font-semibold text-[var(--dcc-teal-ink)]`}>
             <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" aria-hidden="true" />
             Ver evidencia
           </summary>
