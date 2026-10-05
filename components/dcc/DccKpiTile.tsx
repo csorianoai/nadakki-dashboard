@@ -1,16 +1,15 @@
 "use client";
 
-import { CircleDashed, Lock } from "lucide-react";
 import { permiteCifra, type Calidad } from "@/lib/dcc/calidad";
 import { DCC_CLASSES } from "./clases";
 import { DccTooltip } from "./DccTooltip";
 import { SelloCalidad } from "./SelloCalidad";
 
 /**
- * Mosaico de KPI de "Estado del negocio" (referencia v3): filete superior,
- * etiqueta en versalitas, cifra + unidad, sello y nota. `valor` llega ya
- * formateado desde lo que dio el backend; aqui no se calcula nada. Sin cifra
- * permitida, el mosaico dice "cifra no disponible" y nunca pinta un numero.
+ * KPI compacto de la fila "Estado del negocio" (referencia v3): etiqueta,
+ * cifra en dorado legible + unidad, sello y nota. `valor` llega ya formateado
+ * desde lo que dio el backend; aqui no se calcula nada. Sin cifra permitida,
+ * el mosaico se queda en etiqueta + sello "Próximamente": no ocupa mas.
  */
 export function DccKpiTile({
   etiqueta,
@@ -30,35 +29,23 @@ export function DccKpiTile({
   testId?: string;
 }) {
   const conCifra = permiteCifra(calidad) && valor !== null;
-  const Icono = calidad.estado === "bloqueado" ? Lock : CircleDashed;
   return (
-    <div
-      data-testid={testId ?? "dcc-kpi-tile"}
-      data-con-cifra={conCifra ? "si" : "no"}
-      className={`h-auto min-w-0 rounded-[10px] border border-[var(--dcc-border)] border-t-[3px] bg-[var(--dcc-surface)] p-4 ${
-        conCifra ? "border-t-[var(--dcc-action)]" : "border-t-[var(--dcc-border-strong)] bg-[var(--dcc-surface-muted)]"
-      }`}
-    >
+    <div data-testid={testId ?? "dcc-kpi-tile"} data-con-cifra={conCifra ? "si" : "no"} className="h-auto min-w-0 py-1">
       <DccTooltip contenido={tecnico}>
         <p className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${DCC_CLASSES.muted}`}>{etiqueta}</p>
       </DccTooltip>
       {conCifra ? (
-        <p className="mt-2 flex flex-wrap items-baseline gap-x-2">
-          <span data-testid="dcc-kpi-valor" className="font-dealer-numeric text-2xl font-semibold text-[var(--dcc-fg)]">
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
+          <span data-testid="dcc-kpi-valor" className={`${DCC_CLASSES.cifra} text-2xl`}>
             {valor}
           </span>
           {unidad ? <span className={`text-xs ${DCC_CLASSES.subtle}`}>{unidad}</span> : null}
         </p>
-      ) : (
-        <p className={`mt-2 flex items-center gap-1.5 text-sm ${DCC_CLASSES.muted}`}>
-          <Icono className="h-4 w-4" aria-hidden="true" />
-          cifra no disponible
-        </p>
-      )}
-      <div className="mt-2">
+      ) : null}
+      <div className="mt-1.5">
         <SelloCalidad calidad={calidad} tecnico={tecnico} />
       </div>
-      {nota ? <p className={`mt-2 text-xs ${DCC_CLASSES.subtle}`}>{nota}</p> : null}
+      {conCifra && nota ? <p className={`mt-1 text-xs ${DCC_CLASSES.subtle}`}>{nota}</p> : null}
     </div>
   );
 }

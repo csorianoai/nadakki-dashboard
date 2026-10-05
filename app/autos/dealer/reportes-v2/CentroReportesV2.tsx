@@ -128,7 +128,7 @@ export function CentroReportesV2() {
   return (
     <DccPage titulo="Centro de Reportes">
       <div className="flex flex-col gap-[var(--dcc-gap)]">
-        <DccSeccion titulo="Contabilidad" icono={BookOpen} tono="azul" meta={`${contables.length} reportes · catálogo N7`} testId="dcc-seccion-contabilidad">
+        <DccSeccion titulo="Contabilidad" icono={BookOpen} meta={`${contables.length} reportes · catálogo N7`} testId="dcc-seccion-contabilidad">
           <DccGrid>{contables.map(tarjeta)}</DccGrid>
         </DccSeccion>
         <DccSeccion titulo="Ejecutivo" icono={BarChart3} meta={`${ejecutivos.length} reporte`} testId="dcc-seccion-ejecutivo">

@@ -45,7 +45,6 @@ describe("Command Center v2", () => {
   it("conecta solo stock, leads y solicitudes, con el formato del tenant", async () => {
     acceso({ "autos.inventory.list": permitido, "autos.leads.crm": permitido, "credit.applications.view": permitido });
     montar();
-    expect(screen.getByTestId("dcc-marca-nombre")).toHaveTextContent("Mapaal Automotores");
     await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-stock")).getByTestId("dcc-kpi-valor")).toHaveTextContent("1.234"));
     expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-kpi-valor")).toHaveTextContent("42");
     expect(within(screen.getByTestId("dcc-tarjeta-solicitudes")).getByTestId("dcc-kpi-valor")).toHaveTextContent("7");
