@@ -13,7 +13,14 @@ import { apiFetch } from "@/lib/api/fetch-client";
 import { calidadDesdeBackend, type Calidad } from "@/lib/dcc/calidad";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
 
-export type Cifra = { valor: number; calidad: Calidad; nota: string };
+export type Cifra = {
+  valor: number;
+  calidad: Calidad;
+  nota: string;
+  /** Solo inventario: filas que devolvio el backend y cuantas estan en borrador. */
+  cargados?: number;
+  borradores?: number;
+};
 
 /** D-N6-1 (firmada): stock = disponible + reservado. */
 export const ESTADOS_STOCK = new Set(["disponible", "reservado"]);
@@ -47,7 +54,9 @@ function totalDe(body: unknown): number {
 /** inventory_units@1.0 — N6: PARCIAL mientras el conteo se arme sobre la lista. */
 export async function fetchUnidadesEnStock(dealerId: string): Promise<Cifra> {
   const vehiculos = await fetchDealerInventory(dealerId);
-  const enStock = vehiculos.filter((v) => ESTADOS_STOCK.has((v.status ?? "").toLowerCase())).length;
+  const estado = (v: { status: string | null }) => (v.status ?? "").toLowerCase();
+  const enStock = vehiculos.filter((v) => ESTADOS_STOCK.has(estado(v))).length;
+  const borradores = vehiculos.filter((v) => estado(v) === "draft").length;
   return {
     valor: enStock,
     calidad: {
@@ -56,7 +65,11 @@ export async function fetchUnidadesEnStock(dealerId: string): Promise<Cifra> {
       total: null,
       motivo: "Conteo armado sobre la lista del inventario; falta el conteo del backend por dealer",
     },
-    nota: "Disponibles y reservadas",
+    // Distingue "sin stock cargado" de "stock cargado en borrador" (el importador
+    // de la plantilla v4 puede crear vehiculos en `draft`, que no son stock).
+    nota: `de ${vehiculos.length} cargados · ${borradores} en borrador`,
+    cargados: vehiculos.length,
+    borradores,
   };
 }
 
@@ -78,43 +91,68 @@ export type TarjetaInicio = {
   id: string;
   titulo: string;
   metricKey: string;
-  /** "negocio" = fila "Estado del negocio" de la referencia v3; "mas" = resto de N6. */
-  grupo: "negocio" | "mas";
-  /** Unidad que acompana a la cifra (la cifra la da el backend). */
   unidad: string | null;
-  /** Capability que decide el backend; null = no aplica todavia (sin endpoint). */
+  /** Capability que decide el backend; null = sin endpoint todavia. */
   capability: string | null;
-  /** Por que no hay cifra hoy (tooltip), o null si esta conectada. */
+  /** Por que no hay cifra hoy: SOLO para el tooltip. */
   falta: string | null;
 };
 
-const t = (
-  id: string, titulo: string, metricKey: string, grupo: TarjetaInicio["grupo"],
-  unidad: string | null, capability: string | null, falta: string | null,
-): TarjetaInicio => ({ id, titulo, metricKey, grupo, unidad, capability, falta });
-
-/** Orden de la referencia v3. `falta` != null => "cifra no disponible", sin numero. */
+/** Fila "Estado del negocio" de la referencia v3: seis KPI, en este orden. */
 export const TARJETAS_INICIO: TarjetaInicio[] = [
-  t("stock", "Inventario", "inventory_units@1.0", "negocio", "unidades", "autos.inventory.list", null),
-  t("capital", "Capital en inventario", "inventory_capital@1.0", "negocio", null, null, "Falta endpoint: suma de costos por dealer sobre el stock"),
-  t("potencial", "Margen potencial", "potential_revenue@1.0 · gross_margin@1.0", "negocio", null, null, "Falta endpoint: precio de lista menos costo del stock, con cobertura"),
-  t("leads", "Leads", "lead_count@1.0", "negocio", "leads", "autos.leads.crm", null),
-  t("solicitudes", "Financiamiento", "financing_applications@1.0", "negocio", "solicitudes", "credit.applications.view", null),
-  t("caja", "Caja / Cobranzas", "— (sin métrica en N6)", "negocio", null, null, "Falta métrica y endpoint de caja y cobranzas"),
-  t("dias", "Días en inventario", "inventory_age_days@1.0", "mas", null, null, "Falta endpoint: promedio y máximo por dealer"),
-  t("margen", "Margen bruto del mes", "gross_margin@1.0 · gross_margin_pct@1.0", "mas", null, null, "Falta endpoint: margen por dealer y mes"),
-  t("respuesta", "Tiempo de respuesta a leads", "lead_response_time@1.0", "mas", null, null, "Falta endpoint: mediana de primer contacto"),
-  t("conversion-leads", "Conversión de leads", "lead_conversion_rate@1.0", "mas", null, null, "Falta endpoint: tasa calculada en el backend"),
-  t("ofertas", "Ofertas listas", "financing_offers_ready@1.0", "mas", null, null, "Falta endpoint: conteo por dealer"),
-  t("fondeo", "Conversión a fondeo", "finance_conversion_rate@1.0", "mas", null, null, "Falta endpoint: DISBURSED por dealer (D-N6-3)"),
+  { id: "stock", titulo: "Inventario", metricKey: "inventory_units@1.0", unidad: "en stock", capability: "autos.inventory.list", falta: null },
+  { id: "capital", titulo: "Capital", metricKey: "inventory_capital@1.0", unidad: null, capability: null, falta: "Falta endpoint: suma de costos por dealer sobre el stock" },
+  { id: "margen", titulo: "Margen", metricKey: "gross_margin@1.0", unidad: null, capability: null, falta: "Falta endpoint: margen por dealer, con cobertura" },
+  { id: "leads", titulo: "Leads", metricKey: "lead_count@1.0", unidad: "total", capability: "autos.leads.crm", falta: null },
+  { id: "solicitudes", titulo: "Financiamiento", metricKey: "financing_applications@1.0", unidad: "solicitudes", capability: "credit.applications.view", falta: null },
+  { id: "caja", titulo: "Caja", metricKey: "— (sin métrica en N6)", unidad: null, capability: null, falta: "Falta métrica y endpoint de caja y cobranzas" },
 ];
 
-/** Secciones de la referencia sin fuente hoy: se pintan con su motivo, sin datos. */
+/** Motivo tecnico de cada seccion sin fuente: solo tooltip. */
 export const SECCIONES_SIN_FUENTE = {
-  brief: "Falta endpoint: brief del día (atención, oportunidades, riesgo) calculado sobre métricas versionadas",
   cola: "Falta endpoint: cola priorizada con umbral, recomendación y evidencia",
   salud: "Falta endpoint: cobertura y estado por área calculados en el backend",
   hoy: "Falta endpoint: no hay feed de actividad del dealer",
 } as const;
 
 export const CAPABILITIES_INICIO = TARJETAS_INICIO.map((t) => t.capability).filter((c): c is string => c !== null);
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** La ruta de leads lleva el tenant en el path: tiene que ser el UUID, nunca el slug. */
+export function esUuid(valor: unknown): valor is string {
+  return typeof valor === "string" && UUID.test(valor);
+}
+
+/** Detalle de un error para el tooltip: codigo HTTP y motivo si los hay. */
+export function detalleDeError(error: unknown): string {
+  const rec = error && typeof error === "object" ? (error as { status?: unknown; reason_code?: unknown; message?: unknown }) : {};
+  const partes = [
+    typeof rec.status === "number" ? `HTTP ${rec.status}` : null,
+    typeof rec.reason_code === "string" ? rec.reason_code : null,
+    typeof rec.message === "string" ? rec.message : null,
+  ].filter((p, i, arr): p is string => Boolean(p) && arr.indexOf(p) === i);
+  return partes.join(" · ") || "Error desconocido";
+}
+
+/**
+ * Brief del dia DETERMINISTA: una frase hecha solo con las cifras que llegaron
+ * del backend (sin estimar ni inferir). Sin ninguna cifra, devuelve null.
+ */
+export function briefDeterminista(cifras: { stock?: Cifra; leads?: Cifra; solicitudes?: Cifra }, fmt: (n: number) => string): string | null {
+  const partes: string[] = [];
+  if (cifras.stock) {
+    const { valor, cargados, borradores } = cifras.stock;
+    let frase = `${fmt(valor)} ${valor === 1 ? "unidad" : "unidades"} en stock`;
+    if (cargados !== undefined && borradores) frase += ` (${fmt(borradores)} en borrador de ${fmt(cargados)} cargadas)`;
+    partes.push(frase);
+  }
+  if (cifras.leads) partes.push(`${fmt(cifras.leads.valor)} ${cifras.leads.valor === 1 ? "lead" : "leads"} en total`);
+  if (cifras.solicitudes) {
+    const n = cifras.solicitudes.valor;
+    partes.push(`${fmt(n)} ${n === 1 ? "solicitud" : "solicitudes"} de crédito`);
+  }
+  if (partes.length === 0) return null;
+  const ultima = partes.pop() as string;
+  return `Hoy tienes ${partes.length ? `${partes.join(", ")} y ${ultima}` : ultima}.`;
+}
