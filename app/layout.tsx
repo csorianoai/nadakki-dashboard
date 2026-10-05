@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Manrope } from "next/font/google";
 import "../styles/forge-tokens-v2.css";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/AppProviders";
@@ -7,20 +6,12 @@ import { PWAClientProvider } from "@/components/pwa/PWAClientProvider";
 import AppGate from "@/components/auth/AppGate";
 import { ModalProvider } from "@/components/system/ModalRoot";
 import { Toaster } from "@/components/ui/sonner";
+import { systemFont } from "@/lib/fonts/system-fonts";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-manrope",
-  display: "swap",
-});
+// Pilas del sistema (sin Google Fonts en build ni runtime): valores en :root de
+// app/globals.css. Ver lib/fonts/system-fonts.
+const inter = systemFont("--font-inter");
+const manrope = systemFont("--font-manrope");
 
 export const metadata: Metadata = {
   title: "Plataforma de crédito",
@@ -53,16 +44,6 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
-        />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0F172A" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -79,7 +60,7 @@ export default function RootLayout({
           href="/icons/apple-splash-1290x2796.png"
         />
       </head>
-      <body className={`${inter.variable} ${manrope.variable} ${inter.className}`}>
+      <body className={`${inter.variable} ${manrope.variable}`}>
         <AppProviders>
           <ModalProvider>
             <AppGate>{children}</AppGate>

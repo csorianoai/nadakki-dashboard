@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Tipografia sin red ──
+   No se usa next/font/google ni fonts.googleapis.com (el build de CI no puede
+   descargarlas). Cada variable nombra la fuente de marca primero (por si esta
+   instalada en el equipo) y cae a pilas del sistema. Son las variables que
+   antes inyectaba next/font; los consumidores usan lib/fonts/system-fonts. */
+:root {
+  --font-stack-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-stack-serif: "Source Serif 4", "Source Serif Pro", Georgia, Cambria, "Times New Roman", serif;
+  --font-stack-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --font-inter: var(--font-stack-sans);
+  --font-manrope: "Manrope", var(--font-stack-sans);
+  --font-jetbrains-mono: var(--font-stack-mono);
+  --font-sora: "Sora", var(--font-stack-sans);
+  --font-ibm-plex-sans: "IBM Plex Sans", var(--font-stack-sans);
+  --font-ibm-plex-mono: "IBM Plex Mono", var(--font-stack-mono);
+  --font-source-serif: var(--font-stack-serif);
+  --forge-font-sans: var(--font-stack-sans);
+  --forge-font-mono-opt: var(--font-stack-mono);
+  --forge-font-display-opt: var(--font-stack-serif);
+  --fm-font-sans-opt: var(--font-stack-sans);
+  --fm-font-display-opt: "Space Grotesk", var(--font-stack-sans);
+  --fm-font-mono-opt: var(--font-stack-mono);
+  --font-nauta-serif: "Fraunces", var(--font-stack-serif);
+  --font-nauta-sans: var(--font-stack-sans);
+  --font-nauta-mono: "IBM Plex Mono", var(--font-stack-mono);
+}
+
 /* ── PWA Mobile UX + WCAG AA ── */
 @layer base {
   input, select, textarea {
@@ -49,7 +77,7 @@
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter);
 }
 
 body {
@@ -978,8 +1006,8 @@ body {
 }
 
 /* Tipografia del panel (ficha 1.1): Sora titulos/KPIs, IBM Plex Sans texto,
-   IBM Plex Mono cifras. Cargadas con next/font en DealerFonts — nunca por
-   fonts.googleapis.com, que en la red medida responde 503. */
+   IBM Plex Mono cifras. Pilas del sistema definidas en :root (sin red);
+   ver DealerFonts y lib/fonts/system-fonts. */
 [data-portal="dealer"] {
   font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
 }

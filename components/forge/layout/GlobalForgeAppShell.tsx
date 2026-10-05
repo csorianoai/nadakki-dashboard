@@ -1,6 +1,5 @@
 "use client";
 
-import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 import { useState, type ReactNode } from "react";
 import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
 import { DealerSuiteGate } from "@/components/dealer/DealerSuiteGate";
@@ -8,25 +7,12 @@ import { ForgeAppShell } from "./ForgeAppShell";
 import { ForgeGlobalCoresSidebar } from "./ForgeGlobalCoresSidebar";
 import { ForgeGlobalTopbar } from "./ForgeGlobalTopbar";
 import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
+import { systemFont } from "@/lib/fonts/system-fonts";
 
-const fontSans = Inter({
-  subsets: ["latin"],
-  variable: "--forge-font-sans",
-  display: "swap",
-  preload: true,
-});
-
-const fontMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--forge-font-mono-opt",
-  display: "swap",
-});
-
-const fontDisplay = Source_Serif_4({
-  subsets: ["latin"],
-  variable: "--forge-font-display-opt",
-  display: "swap",
-});
+// Pilas del sistema (sin Google Fonts): valores en :root de app/globals.css.
+const fontSans = systemFont("--forge-font-sans");
+const fontMono = systemFont("--forge-font-mono-opt");
+const fontDisplay = systemFont("--forge-font-display-opt");
 
 /**
  * Root Forge chrome for authenticated app surfaces: cores sidebar, unified top bar,

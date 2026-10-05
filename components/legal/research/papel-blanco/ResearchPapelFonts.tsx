@@ -1,28 +1,12 @@
 "use client";
 
-import { Source_Serif_4, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import type { ReactNode } from "react";
+import { systemFont } from "@/lib/fonts/system-fonts";
 
-const sourceSerif = Source_Serif_4({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-source-serif",
-  display: "swap",
-});
-
-const ibmSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-ibm-plex-sans",
-  display: "swap",
-});
-
-const ibmMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-ibm-plex-mono",
-  display: "swap",
-});
+// Pilas del sistema (sin Google Fonts): valores en :root de app/globals.css.
+const sourceSerif = systemFont("--font-source-serif");
+const ibmSans = systemFont("--font-ibm-plex-sans");
+const ibmMono = systemFont("--font-ibm-plex-mono");
 
 export function ResearchPapelFonts({ children }: { children: ReactNode }) {
   return (

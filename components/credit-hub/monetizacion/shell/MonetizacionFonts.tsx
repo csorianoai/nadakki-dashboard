@@ -1,28 +1,12 @@
 "use client";
 
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
+import { systemFont } from "@/lib/fonts/system-fonts";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--fm-font-sans-opt",
-  display: "swap",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--fm-font-display-opt",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--fm-font-mono-opt",
-  display: "swap",
-});
+// Pilas del sistema (sin Google Fonts): valores en :root de app/globals.css.
+const inter = systemFont("--fm-font-sans-opt");
+const spaceGrotesk = systemFont("--fm-font-display-opt");
+const jetbrainsMono = systemFont("--fm-font-mono-opt");
 
 export function MonetizacionFonts({ children }: { children: ReactNode }) {
   return (

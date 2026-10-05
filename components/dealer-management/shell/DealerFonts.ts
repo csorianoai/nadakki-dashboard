@@ -1,41 +1,21 @@
 /**
- * Fuentes del panel del dealer, cargadas con next/font (self-hosted en el build).
+ * Fuentes del panel del dealer, sin red: pilas del sistema.
  *
- * No se anade un <link> a fonts.googleapis.com como hace app/layout.tsx para
- * otras superficies: esa CDN se midio caida (503) durante el inventario, y un
- * <link> en runtime deja la tipografia a merced de la red del usuario.
- * next/font descarga una sola vez en build y sirve los ficheros desde el mismo
- * origen, asi que en runtime no hay salto de red ni FOIT. La descarga de build
- * si necesita salida a internet, igual que el Inter/Manrope que el layout raiz
- * ya carga por esta misma via.
+ * Antes se cargaban con next/font/google, que descarga de Google en
+ * `next build` y rompia el build en CI. Ahora las variables se definen en
+ * :root de app/globals.css con la fuente de marca primero (si esta instalada
+ * localmente) y equivalentes del sistema despues. Ver lib/fonts/system-fonts.
  *
  * Sora           -> titulos y cifras de KPI   (--font-sora)
  * IBM Plex Sans  -> texto de interfaz          (--font-ibm-plex-sans)
  * IBM Plex Mono  -> montos y tablas numericas  (--font-ibm-plex-mono)
  */
 
-import { IBM_Plex_Mono, IBM_Plex_Sans, Sora } from "next/font/google";
+import { systemFont } from "@/lib/fonts/system-fonts";
 
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-sora",
-  display: "swap",
-});
-
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-ibm-plex-sans",
-  display: "swap",
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-ibm-plex-mono",
-  display: "swap",
-});
+const sora = systemFont("--font-sora");
+const ibmPlexSans = systemFont("--font-ibm-plex-sans");
+const ibmPlexMono = systemFont("--font-ibm-plex-mono");
 
 /** Clases de variable CSS para el contenedor raiz del panel. */
 export const dealerFontVariables = [sora.variable, ibmPlexSans.variable, ibmPlexMono.variable].join(

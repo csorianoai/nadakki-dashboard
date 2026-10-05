@@ -1,25 +1,8 @@
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import { systemFont } from "@/lib/fonts/system-fonts";
 
-export const nautaSerif = Fraunces({
-  subsets: ["latin"],
-  axes: ["opsz"],
-  weight: "variable",
-  variable: "--font-nauta-serif",
-  display: "swap",
-});
-
-export const nautaSans = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-nauta-sans",
-  display: "swap",
-});
-
-export const nautaMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-nauta-mono",
-  display: "swap",
-});
+// Pilas del sistema (sin Google Fonts): valores en :root de app/globals.css.
+export const nautaSerif = systemFont("--font-nauta-serif");
+export const nautaSans = systemFont("--font-nauta-sans");
+export const nautaMono = systemFont("--font-nauta-mono");
 
 export const nautaFontClassName = [nautaSerif.variable, nautaSans.variable, nautaMono.variable].join(" ");

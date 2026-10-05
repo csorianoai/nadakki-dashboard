@@ -1,17 +1,9 @@
-import { Inter, JetBrains_Mono } from "next/font/google";
 import type { ReactNode } from "react";
+import { systemFont } from "@/lib/fonts/system-fonts";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
-});
+// Pilas del sistema (sin Google Fonts): valores en :root de app/globals.css.
+const inter = systemFont("--font-inter");
+const jetbrainsMono = systemFont("--font-jetbrains-mono");
 
 /** Isolated cockpit segment — dark theme + fonts scoped here only. */
 export default function CockpitRouteGroupLayout({ children }: { children: ReactNode }) {
