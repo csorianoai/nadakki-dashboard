@@ -42,13 +42,15 @@ describe("DccKpi", () => {
     expect(screen.getByTestId("dcc-kpi-valor")).toHaveTextContent("1.234");
   });
 
-  it.each([
-    [{ estado: "bloqueado", reasonCode: "UPGRADE_REQUIRED" } as const, "bloqueado"],
-    [{ estado: "no_disponible", motivo: null } as const, "no_disponible"],
-  ])("sello %o no pinta cifra aunque llegue valor", (calidad, estado) => {
-    render(<DccKpi valor="999" calidad={calidad} />);
+  it("bloqueado no pinta cifra aunque llegue valor", () => {
+    render(<DccKpi valor="999" calidad={{ estado: "bloqueado", reasonCode: "UPGRADE_REQUIRED" }} />);
     expect(screen.queryByTestId("dcc-kpi-valor")).toBeNull();
-    expect(screen.getByTestId("dcc-estado")).toHaveAttribute("data-estado", estado);
+    expect(screen.getByTestId("dcc-estado")).toHaveAttribute("data-estado", "bloqueado");
+  });
+
+  it("sin dato no ocupa cuerpo: ni cifra ni bloque (el sello de la cabecera basta)", () => {
+    const { container } = render(<DccKpi valor="999" calidad={{ estado: "no_disponible", motivo: "Falta endpoint" }} />);
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("sin valor pinta 'aún no disponible', nunca 0", () => {
@@ -67,17 +69,16 @@ describe("DccEstado", () => {
 });
 
 describe("DccHeader / DccPage", () => {
-  it("la marca del tenant arriba; la linea de plataforma solo si el tenant la trae", () => {
+  it("sin bloque de marca duplicado ni recuadro de logo vacio; el logo solo si el tenant lo tiene", () => {
     const { rerender } = render(<DccHeader marca={MARCA} titulo="Inicio" theme="light" onTheme={() => {}} />);
-    expect(screen.getByTestId("dcc-marca-nombre")).toHaveTextContent("Mapaal Automotores");
-    expect(screen.queryByTestId("dcc-marca-plataforma")).toBeNull();
-    rerender(
-      <DccHeader marca={{ ...MARCA, plataforma: "con Nadakki Dealer OS" }} titulo="Inicio" theme="light" onTheme={() => {}} />,
-    );
-    expect(screen.getByTestId("dcc-marca-plataforma")).toHaveTextContent("con Nadakki Dealer OS");
+    expect(screen.getByRole("heading", { name: "Inicio" })).toBeInTheDocument();
+    expect(screen.queryByText("Mapaal Automotores")).toBeNull();
+    expect(screen.queryByTestId("dcc-logo")).toBeNull();
+    rerender(<DccHeader marca={{ ...MARCA, logoUrl: "https://cdn.example/logo.svg" }} titulo="Inicio" theme="light" onTheme={() => {}} />);
+    expect(screen.getByTestId("dcc-logo")).toHaveAttribute("src", "https://cdn.example/logo.svg");
   });
 
-  it("la pagina arranca en claro, conmuta a oscuro y lee la marca del branding", () => {
+  it("la pagina arranca en claro y conmuta a oscuro", () => {
     const { container } = render(
       <DccPage titulo="Inicio">
         <DccGrid>
@@ -87,7 +88,6 @@ describe("DccHeader / DccPage", () => {
     );
     const raiz = container.querySelector("[data-dcc-root]");
     expect(raiz).toHaveAttribute("data-dcc-theme", "light");
-    expect(screen.getByTestId("dcc-marca-nombre")).toHaveTextContent("Mapaal Automotores");
     fireEvent.click(screen.getByTestId("dcc-theme-toggle"));
     expect(raiz).toHaveAttribute("data-dcc-theme", "dark");
     expect(screen.getByTestId("dcc-grid").className).toContain("items-start");

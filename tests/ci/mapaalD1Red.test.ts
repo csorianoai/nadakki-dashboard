@@ -6,7 +6,9 @@ import {
   TENANT_QA,
   fallosDeCronologia,
   interesa,
+  RETENCION_MAX_MS,
   leerAsignacionUnica,
+  mensajeSinPeticion,
   pathOf,
   type Evento,
 } from "../../e2e/mapaal/d1-red";
@@ -104,5 +106,15 @@ describe("D1 red: fallosDeCronologia", () => {
   it("dealer_id codificado en la URL se compara decodificado", () => {
     const eventos = [ev("request", CONTEXTO, 0), ev("response", CONTEXTO, 1), ev("request", vehiculos("d%201"), 2)];
     expect(fallosDeCronologia(eventos, "d 1")).toEqual([]);
+  });
+});
+
+describe("D1 red: retencion de dealer-context", () => {
+  it("el tope de seguridad es 60 s, no 2 s fijos", () => {
+    expect(RETENCION_MAX_MS).toBe(60_000);
+  });
+
+  it("el mensaje de fallo incluye la URL de la pagina", () => {
+    expect(mensajeSinPeticion("https://mapaal.nadakki.com/login")).toContain("https://mapaal.nadakki.com/login");
   });
 });

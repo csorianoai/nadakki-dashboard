@@ -31,7 +31,7 @@ describe("SelloCalidad", () => {
 
   it("no disponible sin detalle no crea tooltip vacio", () => {
     render(<SelloCalidad calidad={{ estado: "no_disponible", motivo: null }} />);
-    expect(screen.getByTestId("dcc-sello")).toHaveTextContent("aún no disponible");
+    expect(screen.getByTestId("dcc-sello")).toHaveTextContent("Próximamente");
     expect(screen.queryByTestId("dcc-tooltip")).toBeNull();
   });
 });

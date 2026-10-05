@@ -25,10 +25,12 @@ import { iniciarSesionQA } from "./sesion-qa";
 
 import {
   DEALER_CONTEXT,
+  RETENCION_MAX_MS,
   VEHICLES,
   fallosDeCronologia,
   interesa,
   leerAsignacionUnica,
+  mensajeSinPeticion,
   pathOf,
   type Evento,
 } from "./d1-red";
@@ -36,9 +38,6 @@ import {
 const BASE_URL = (process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "").replace(/\/$/, "");
 const QA_USER = process.env.QA_USER ?? "";
 const QA_PASSWORD = process.env.QA_PASSWORD ?? "";
-
-/** El tiempo que se retiene dealer-context para ver "Verificando". */
-const RETENCION_MS = 2_000;
 
 test.use({ baseURL: BASE_URL || undefined });
 
@@ -86,14 +85,21 @@ test.describe("D1 — inventario visible, una asignacion", () => {
     // Se retiene dealer-context: mientras tanto el inventario NO puede pintarse.
     let liberar: () => void = () => {};
     const liberado = new Promise<void>((resolve) => (liberar = resolve));
+    let retenido = false;
     await page.route(DEALER_CONTEXT, async (route) => {
-      await Promise.race([liberado, new Promise((r) => setTimeout(r, RETENCION_MS))]);
+      retenido = true;
+      await Promise.race([liberado, new Promise((r) => setTimeout(r, RETENCION_MAX_MS))]);
       await route.continue();
     });
 
     await test.step("panel del dealer -> Inventario: mientras resuelve, 'Verificando' y nada mas", async () => {
       await page.goto("/autos/dealer/inventario");
-      await expect(page.getByTestId("dealer-context-verificando")).toBeVisible({ timeout: 30_000 });
+      // La peticion se queda retenida hasta liberar(): el estado intermedio no
+      // depende de un reloj. Si no llega a retenerse, el mensaje dice donde esta la pagina.
+      await expect
+        .poll(() => retenido, { timeout: 30_000, message: mensajeSinPeticion(page.url()) })
+        .toBe(true);
+      await expect(page.getByTestId("dealer-context-verificando")).toBeVisible({ timeout: 10_000 });
       await expect(page.getByRole("heading", { name: "Inventario" })).toHaveCount(0);
       expect(eventos.filter((e) => VEHICLES.test(e.ruta)), "inventario pedido antes de dealer-context").toHaveLength(0);
       liberar();

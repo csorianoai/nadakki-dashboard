@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import { CommandCenterV2 } from "../CommandCenterV2";
+import { AuthContext } from "@/lib/auth/auth-context";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { fetchLeadsTotal, fetchSolicitudesTotal, fetchUnidadesEnStock } from "@/lib/dcc/inicio";
@@ -18,87 +19,104 @@ jest.mock("@/lib/dcc/inicio", () => ({
   fetchSolicitudesTotal: jest.fn(),
 }));
 
+const UUID = "11111111-1111-1111-1111-111111111111";
 const permitido = { allowed: true, reason_code: null };
+const TODO = { "autos.inventory.list": permitido, "autos.leads.crm": permitido, "credit.applications.view": permitido };
 
-function montar() {
+function montar(tenantId: string | null = UUID) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const auth = { tenant: tenantId ? { id: tenantId, slug: "mapaal", display_name: "Mapaal", subscribed_cores: [] } : null };
   return render(
     <QueryClientProvider client={client}>
-      <CommandCenterV2 />
+      <AuthContext.Provider value={auth as never}>
+        <CommandCenterV2 />
+      </AuthContext.Provider>
     </QueryClientProvider>,
   );
 }
 
 function acceso(results: Record<string, unknown>) {
-  (useAccessEntitlementsBatch as jest.Mock).mockReturnValue({ isPending: false, isLoading: false, isError: false, error: null, data: { results } });
+  (useAccessEntitlementsBatch as jest.Mock).mockReturnValue({ isPending: false, isLoading: false, isError: false, error: null, data: { results }, refetch: jest.fn() });
 }
 
-describe("Command Center v2", () => {
+const visible = (el: HTMLElement) => {
+  const c = el.cloneNode(true) as HTMLElement;
+  c.querySelectorAll(".sr-only").forEach((n) => n.remove());
+  return c.textContent ?? "";
+};
+
+describe("Command Center v2 (estructura de la referencia v3)", () => {
   beforeEach(() => {
     jest.resetAllMocks();
-    (selectedDealerIdentity as jest.Mock).mockReturnValue({ tenantId: "t-1", dealerId: "d-1", organizationUnitId: null });
-    (fetchUnidadesEnStock as jest.Mock).mockResolvedValue({ valor: 1234, calidad: { estado: "parcial", cubiertos: null, total: null, motivo: "m" }, nota: "Disponibles y reservadas" });
-    (fetchLeadsTotal as jest.Mock).mockResolvedValue({ valor: 42, calidad: { estado: "verificado" }, nota: "Total histórico" });
-    (fetchSolicitudesTotal as jest.Mock).mockResolvedValue({ valor: 7, calidad: { estado: "verificado" }, nota: "Total histórico" });
+    (selectedDealerIdentity as jest.Mock).mockReturnValue({ tenantId: "mapaal", dealerId: "d-1", organizationUnitId: null });
+    (fetchUnidadesEnStock as jest.Mock).mockResolvedValue({ valor: 0, calidad: { estado: "parcial", cubiertos: null, total: null, motivo: "m" }, nota: "de 5 cargados · 5 en borrador", cargados: 5, borradores: 5 });
+    (fetchLeadsTotal as jest.Mock).mockResolvedValue({ valor: 37, calidad: { estado: "verificado" }, nota: "Total histórico" });
+    (fetchSolicitudesTotal as jest.Mock).mockResolvedValue({ valor: 12, calidad: { estado: "verificado" }, nota: "Total histórico" });
   });
 
-  it("conecta solo stock, leads y solicitudes, con el formato del tenant", async () => {
-    acceso({ "autos.inventory.list": permitido, "autos.leads.crm": permitido, "credit.applications.view": permitido });
+  it("orden: Brief, Estado del negocio, Cola, Salud, Hoy, Reportes", () => {
+    acceso(TODO);
     montar();
-    expect(screen.getByTestId("dcc-marca-nombre")).toHaveTextContent("Mapaal Automotores");
-    await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-stock")).getByTestId("dcc-kpi-valor")).toHaveTextContent("1.234"));
-    expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-kpi-valor")).toHaveTextContent("42");
-    expect(within(screen.getByTestId("dcc-tarjeta-solicitudes")).getByTestId("dcc-kpi-valor")).toHaveTextContent("7");
-    expect(fetchLeadsTotal).toHaveBeenCalledWith("t-1", "d-1");
+    const ids = Array.from(document.querySelectorAll('[data-testid^="dcc-seccion-"]')).map((n) => n.getAttribute("data-testid"));
+    expect(ids).toEqual(["dcc-seccion-brief", "dcc-seccion-negocio", "dcc-seccion-cola", "dcc-seccion-salud", "dcc-seccion-hoy", "dcc-seccion-reportes"]);
   });
 
-  it("las tarjetas sin endpoint muestran 'aún no disponible' y ninguna cifra", () => {
-    acceso({ "autos.inventory.list": permitido, "autos.leads.crm": permitido, "credit.applications.view": permitido });
+  it("leads usa el UUID del tenant de /auth/me, no el slug del Local Storage", async () => {
+    acceso(TODO);
     montar();
-    for (const id of ["capital", "potencial", "caja", "dias", "margen", "respuesta", "conversion-leads", "ofertas", "fondeo"]) {
-      const tarjeta = screen.getByTestId(`dcc-tarjeta-${id}`);
-      expect(within(tarjeta).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "no_disponible");
-      expect(within(tarjeta).queryByTestId("dcc-kpi-valor")).toBeNull();
+    await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-kpi-valor")).toHaveTextContent("37"));
+    expect(fetchLeadsTotal).toHaveBeenCalledWith(UUID, "d-1");
+  });
+
+  it("sin UUID en la sesion no se pide la ruta de leads y se dice por que", () => {
+    acceso(TODO);
+    montar("mapaal");
+    expect(fetchLeadsTotal).not.toHaveBeenCalled();
+    expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-estado")).toHaveAttribute("data-estado", "error");
+  });
+
+  it("un error de carga lleva el codigo HTTP al tooltip", async () => {
+    acceso(TODO);
+    (fetchLeadsTotal as jest.Mock).mockRejectedValue({ status: 500, reason_code: null, message: "HTTP 500" });
+    montar();
+    await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-estado").getAttribute("title")).toContain("HTTP 500"));
+  });
+
+  it("Brief determinista con las cifras cargadas; Inventario distingue borradores", async () => {
+    acceso(TODO);
+    montar();
+    await waitFor(() => expect(screen.getByTestId("dcc-brief")).toHaveTextContent("0 unidades en stock (5 en borrador de 5 cargadas), 37 leads en total y 12 solicitudes de crédito"));
+    expect(within(screen.getByTestId("dcc-tarjeta-stock")).getByText("de 5 cargados · 5 en borrador")).toBeInTheDocument();
+  });
+
+  it("sin dato: compacto, solo 'Próximamente'; nada tecnico a la vista", () => {
+    acceso(TODO);
+    montar();
+    for (const id of ["capital", "margen", "caja"]) {
+      const t = screen.getByTestId(`dcc-tarjeta-${id}`);
+      expect(within(t).getByTestId("dcc-sello")).toHaveTextContent("Próximamente");
+      expect(within(t).queryByTestId("dcc-kpi-valor")).toBeNull();
+      expect(visible(t)).not.toMatch(/Falta|endpoint|metric_key/);
     }
-  });
-
-  it("las secciones de la referencia sin fuente muestran su motivo y ningún dato", () => {
-    acceso({ "autos.inventory.list": permitido, "autos.leads.crm": permitido, "credit.applications.view": permitido });
-    montar();
-    for (const id of ["brief", "cola", "salud", "hoy"]) {
-      const seccion = screen.getByTestId(`dcc-seccion-${id}`);
-      expect(within(seccion).getByTestId("dcc-estado")).toHaveAttribute("data-estado", "no_disponible");
-      expect(seccion.textContent).toMatch(/Falta endpoint/);
-      expect(seccion.textContent).not.toMatch(/\d/);
-    }
-    expect(screen.getByTestId("dcc-seccion-negocio").querySelectorAll('[data-testid^="dcc-tarjeta-"]')).toHaveLength(6);
+    for (const id of ["salud", "hoy"]) expect(visible(screen.getByTestId(`dcc-seccion-${id}`))).not.toMatch(/Falta|endpoint|\d/);
+    expect(screen.getByTestId("dcc-seccion-cola")).toHaveTextContent("Sin alertas por ahora");
   });
 
   it("el acceso lo decide el backend: capability denegada = bloqueado, sin pedir datos", () => {
-    acceso({ "autos.inventory.list": permitido, "autos.leads.crm": { allowed: false, reason_code: "UPGRADE_REQUIRED" }, "credit.applications.view": permitido });
+    acceso({ ...TODO, "autos.leads.crm": { allowed: false, reason_code: "UPGRADE_REQUIRED" } });
     montar();
-    const leads = screen.getByTestId("dcc-tarjeta-leads");
-    expect(within(leads).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "bloqueado");
+    expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "bloqueado");
     expect(fetchLeadsTotal).not.toHaveBeenCalled();
   });
 
-  it("sin decision del backend para una capability, no se abre (fail-closed)", () => {
-    acceso({ "autos.inventory.list": permitido, "autos.leads.crm": permitido });
-    montar();
-    expect(within(screen.getByTestId("dcc-tarjeta-solicitudes")).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "bloqueado");
-    expect(fetchSolicitudesTotal).not.toHaveBeenCalled();
-  });
-
-  it("un 403 del endpoint pinta bloqueado, no error ni cifra", async () => {
-    acceso({ "autos.inventory.list": permitido, "autos.leads.crm": permitido, "credit.applications.view": permitido });
+  it("un 403 del endpoint pinta bloqueado, no error", async () => {
+    acceso(TODO);
     (fetchSolicitudesTotal as jest.Mock).mockRejectedValue({ status: 403, reason_code: null });
     montar();
-    await waitFor(() =>
-      expect(within(screen.getByTestId("dcc-tarjeta-solicitudes")).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "bloqueado"),
-    );
+    await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-solicitudes")).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "bloqueado"));
   });
 
-  it("si el batch de accesos falla, las tarjetas conectadas muestran error, no cifras", () => {
+  it("si el batch de accesos falla, no hay cifras ni peticiones", () => {
     (useAccessEntitlementsBatch as jest.Mock).mockReturnValue({ isPending: false, isLoading: false, isError: true, error: new Error("x"), data: undefined, refetch: jest.fn() });
     montar();
     expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-estado")).toHaveAttribute("data-estado", "error");

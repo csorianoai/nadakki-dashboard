@@ -7,15 +7,19 @@ describe("tokens DCC", () => {
     }
   });
 
-  it("tema claro = referencia v3: lienzo gris claro y tarjeta blanca", () => {
-    expect(DCC_TOKENS.light["--dcc-canvas"]).toBe("#EEF2F7");
+  it("tema claro: lienzo gris muy claro y tarjeta blanca", () => {
+    expect(DCC_TOKENS.light["--dcc-canvas"]).toBe("#F5F7FA");
     expect(DCC_TOKENS.light["--dcc-surface"]).toBe("#FFFFFF");
     expect(DCC_TOKENS.light["--dcc-radius"]).toBe("12px");
   });
 
-  it("un solo color de accion por tema", () => {
-    const acciones = Object.keys(DCC_TOKENS.light).filter((k) => k.startsWith("--dcc-action") && !k.endsWith("hover"));
-    expect(acciones).toEqual(["--dcc-action"]);
+  it("roles fijos: marino para barra y boton principal, dorado y turquesa como acentos", () => {
+    const t = DCC_TOKENS.light;
+    expect(t["--dcc-navy"]).toBe("#0B1220");
+    expect(t["--dcc-action"]).toBe(t["--dcc-navy"]);
+    expect(t["--dcc-fg"]).toBe(t["--dcc-navy"]);
+    expect(t["--dcc-gold"]).toBe("#C9A227");
+    expect(t["--dcc-teal"]).toBe("#0EA5A4");
   });
 
   it("el estilo raiz expone las variables del tema pedido", () => {

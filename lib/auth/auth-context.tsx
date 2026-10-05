@@ -103,8 +103,29 @@ export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
   return "/";
 }
 
-/** Max time to wait for refresh + /me during session init (Render cold start ~4.6s). */
-const SESSION_INIT_TIMEOUT_MS = 8_000;
+/**
+ * Techo total del init de sesion, reintentos incluidos. Cada fetch ya corta a
+ * los AUTH_FETCH_TIMEOUT_MS (5s); esto solo evita un "Verificando sesion"
+ * eterno. Exportado para los tests (W0-2).
+ */
+export const SESSION_INIT_TIMEOUT_MS = 20_000;
+
+/**
+ * Esperas entre intentos del init ante un fallo transitorio (timeout, red,
+ * 5xx). Backend en frio en Render: ~4.6s, asi que el primer intento puede
+ * expirar y el segundo ya llega caliente. Antes no habia reintento: un solo
+ * fallo pintaba el error y habia que pulsar "Reintentar" (W0-2).
+ */
+export const SESSION_INIT_RETRY_DELAYS_MS: readonly number[] = [1_000, 2_000];
+
+const MSG_TIMEOUT = "El servidor no respondió a tiempo. Verifica tu conexión.";
+const MSG_NO_VERIFICADA = "No se pudo verificar la sesión. Intenta de nuevo.";
+const MSG_EXPIRADA = "Tu sesión expiró. Inicia sesión nuevamente.";
+
+/** Texto bajo el spinner mientras el init reintenta: "(2 de 3)", "(3 de 3)". */
+export function mensajeReintento(intento: number): string {
+  return `Reintentando conexión (${intento} de ${1 + SESSION_INIT_RETRY_DELAYS_MS.length})…`;
+}
 
 /**
  * LA REGLA: solo un 401 cierra la sesion.
@@ -131,6 +152,22 @@ function esTimeout(error?: string): boolean {
   return Boolean(error && error.includes("Tiempo de espera"));
 }
 
+/** Sin status (red, timeout), 408, 429 o 5xx: vale la pena reintentar. */
+function esTransitorio(status?: number): boolean {
+  return !status || status === 408 || status === 429 || status >= 500;
+}
+
+function esperar(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Resultado de un intento del init. */
+type IntentoInit =
+  | { tipo: "ok" }
+  | { tipo: "sin-sesion" }
+  | { tipo: "expirada" }
+  | { tipo: "fallo"; mensaje: string; reintentable: boolean };
+
 export interface AuthContextValue {
   user: UserInfo | null;
   tenant: TenantInfo | null;
@@ -146,6 +183,11 @@ export interface AuthContextValue {
   isLoading: boolean;
   /** Non-null when the session init failed (timeout, network error, etc.). */
   initError: string | null;
+  /**
+   * Progreso del init mientras reintenta ("Reintentando conexión (2 de 3)…").
+   * Null en el primer intento y al terminar: el spinner no se queda mudo (W0-2).
+   */
+  initProgress: string | null;
   /** Retry the session init after a failure. */
   retryInit: () => void;
   login: (
@@ -169,10 +211,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [allTenants, setAllTenants] = useState<TenantInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
+  const [initProgress, setInitProgress] = useState<string | null>(null);
   const [initAttempt, setInitAttempt] = useState(0);
 
   const retryInit = useCallback(() => {
     setInitError(null);
+    setInitProgress(null);
     setIsLoading(true);
     setInitAttempt((n) => n + 1);
   }, []);
@@ -184,84 +228,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // `cancelled` corta el init en vuelo, pero NO toca los tokens: un
         // servidor lento no es una sesion invalida.
         cancelled = true;
-        setInitError("El servidor no respondió a tiempo. Verifica tu conexión.");
+        setInitError(MSG_TIMEOUT);
+        setInitProgress(null);
         setIsLoading(false);
       }
     }, SESSION_INIT_TIMEOUT_MS);
 
     const init = async () => {
-      const refreshToken = tokenStorage.getRefreshToken();
-      if (!refreshToken) {
-        if (!cancelled) setIsLoading(false);
-        clearTimeout(timeout);
-        return;
-      }
-      try {
-        const result = await refreshTokenV2(refreshToken);
+      for (let intento = 0; ; intento++) {
+        const r = await intentar();
         if (cancelled) return;
-        if (result.ok && result.data) {
-          tokenStorage.setTokens({
-            accessToken: result.data.access_token,
-            refreshToken: result.data.refresh_token,
-          });
-          const me = await getMeV2(result.data.access_token);
-          if (cancelled) return;
-          if (me.ok && me.data) {
-            setUser(me.data.user);
-            setTenant(me.data.current_tenant);
-            setAllRoles(me.data.active_roles);
-            setAllTenants(me.data.all_tenants ?? []);
-            const firstRole = me.data.active_roles.length > 0 ? me.data.active_roles[0] : null;
-            if (firstRole) setActiveRole(firstRole);
-            // Keep localStorage in sync on session restore
-            syncLocalStorage(me.data.current_tenant, firstRole, result.data.access_token);
-            scheduleProactiveRefresh();
-          } else if (!cancelled) {
-            if (me.status === 401) {
-              tokenStorage.clearTokens();
-              clearLocalStorage();
-              setInitError("Tu sesión expiró. Inicia sesión nuevamente.");
-              setIsLoading(false);
-              clearTimeout(timeout);
-              return;
-            }
-            // Ni timeout ni 5xx de /me cierran la sesion: los tokens que acaba
-            // de devolver el refresh son validos y sirven para reintentar.
-            const msg = esTimeout(me.error)
-              ? "El servidor no respondió a tiempo. Verifica tu conexión."
-              : "No se pudo verificar la sesión. Intenta de nuevo.";
-            console.error("[auth-init] /me failed (sesion intacta):", me.status, me.error);
-            setInitError(msg);
-          }
-        } else if (result.status === 401) {
+        if (r.tipo === "expirada") {
           // El unico caso en que la sesion esta muerta de verdad.
           tokenStorage.clearTokens();
           clearLocalStorage();
-          if (!cancelled) setInitError("Tu sesión expiró. Inicia sesión nuevamente.");
-        } else {
-          // Timeout, 5xx, red caida: la sesion sigue viva y los tokens se
-          // quedan donde estan, para que "Reintentar" tenga algo con lo que
-          // reintentar.
-          const msg = esTimeout(result.error)
-            ? "El servidor no respondió a tiempo. Verifica tu conexión."
-            : "No se pudo verificar la sesión. Intenta de nuevo.";
-          console.error("[auth-init] refresh failed (sesion intacta):", result.status, result.error);
-          if (!cancelled) setInitError(msg);
+          setInitError(MSG_EXPIRADA);
+          break;
         }
-        if (!cancelled) setIsLoading(false);
-      } catch (err) {
-        // Excepcion de red. Los tokens se quedan: no hubo ningun 401.
+        if (r.tipo !== "fallo") break;
+        const espera = SESSION_INIT_RETRY_DELAYS_MS[intento];
+        if (!r.reintentable || espera === undefined) {
+          // Timeout, 5xx, red caida, ya reintentados: la sesion sigue viva y
+          // los tokens se quedan donde estan, para que "Reintentar" tenga
+          // algo con lo que reintentar.
+          setInitError(r.mensaje);
+          break;
+        }
+        setInitProgress(mensajeReintento(intento + 2));
+        await esperar(espera);
         if (cancelled) return;
-        console.error("[auth-init] excepcion (sesion intacta):", err);
-        setInitError(
-          err instanceof Error && err.message
-            ? err.message
-            : "No se pudo verificar la sesión. Intenta de nuevo.",
-        );
-        setIsLoading(false);
       }
+      setInitProgress(null);
+      setIsLoading(false);
       clearTimeout(timeout);
     };
+
+    /** Un intento de refresh + /me. Solo un 401 borra los tokens. */
+    const intentar = async (): Promise<IntentoInit> => {
+      // Se relee en cada intento: si un intento anterior roto los tokens y
+      // luego fallo /me, el siguiente usa el refresh token nuevo.
+      const refreshToken = tokenStorage.getRefreshToken();
+      if (!refreshToken) return { tipo: "sin-sesion" };
+      try {
+        const result = await refreshTokenV2(refreshToken);
+        if (cancelled) return { tipo: "ok" };
+        if (!result.ok || !result.data) {
+          if (result.status === 401) return { tipo: "expirada" };
+          console.error("[auth-init] refresh failed (sesion intacta):", result.status, result.error);
+          return {
+            tipo: "fallo",
+            mensaje: esTimeout(result.error) ? MSG_TIMEOUT : MSG_NO_VERIFICADA,
+            reintentable: esTransitorio(result.status),
+          };
+        }
+        tokenStorage.setTokens({
+          accessToken: result.data.access_token,
+          refreshToken: result.data.refresh_token,
+        });
+        const me = await getMeV2(result.data.access_token);
+        if (cancelled) return { tipo: "ok" };
+        if (!me.ok || !me.data) {
+          if (me.status === 401) return { tipo: "expirada" };
+          // Ni timeout ni 5xx de /me cierran la sesion: los tokens que acaba
+          // de devolver el refresh son validos y sirven para reintentar.
+          console.error("[auth-init] /me failed (sesion intacta):", me.status, me.error);
+          return {
+            tipo: "fallo",
+            mensaje: esTimeout(me.error) ? MSG_TIMEOUT : MSG_NO_VERIFICADA,
+            reintentable: esTransitorio(me.status),
+          };
+        }
+        setUser(me.data.user);
+        setTenant(me.data.current_tenant);
+        setAllRoles(me.data.active_roles);
+        setAllTenants(me.data.all_tenants ?? []);
+        const firstRole = me.data.active_roles.length > 0 ? me.data.active_roles[0] : null;
+        if (firstRole) setActiveRole(firstRole);
+        // Keep localStorage in sync on session restore
+        syncLocalStorage(me.data.current_tenant, firstRole, result.data.access_token);
+        scheduleProactiveRefresh();
+        return { tipo: "ok" };
+      } catch (err) {
+        // Excepcion de red. Los tokens se quedan: no hubo ningun 401.
+        console.error("[auth-init] excepcion (sesion intacta):", err);
+        return {
+          tipo: "fallo",
+          mensaje: err instanceof Error && err.message ? err.message : MSG_NO_VERIFICADA,
+          reintentable: true,
+        };
+      }
+    };
+
     init();
 
     return () => {
@@ -306,23 +363,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // CRITICAL: Purge ALL wizard drafts on logout (Ley 172-13).
     // Draft contains PII: cédula, nombre, fecha_nacimiento, teléfono, correo,
     // dirección, ingreso_mensual. Must not survive logout in shared device.
-    const { purgeAllWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-storage");
-    const { clearSessionStorage } = await import("@/lib/auth/auth-session-cleanup");
-    purgeAllWizardDrafts();
-    
-    const accessToken = tokenStorage.getAccessToken();
-    const refreshToken = tokenStorage.getRefreshToken();
-    const logoutToken = accessToken ?? refreshToken;
-    if (logoutToken) await logoutV2(logoutToken, refreshToken ?? undefined);
-    tokenStorage.clearTokens();
-    clearLocalStorage();
-    clearSessionStorage(); // ← NEW: Clear PII from sessionStorage (Ley 172-13)
-    cancelProactiveRefresh();
-    setUser(null);
-    setTenant(null);
-    setActiveRole(null);
-    setAllRoles([]);
-    setAllTenants([]);
+    //
+    // try/finally: si una purga o el POST lanzan, tokens y binding del dealer
+    // se borran igual (D1: sobrevivian al logout). El error se registra, no se relanza.
+    try {
+      const { purgeAllWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-storage");
+      purgeAllWizardDrafts();
+
+      const accessToken = tokenStorage.getAccessToken();
+      const refreshToken = tokenStorage.getRefreshToken();
+      const logoutToken = accessToken ?? refreshToken;
+      if (logoutToken) await logoutV2(logoutToken, refreshToken ?? undefined);
+    } catch (error) {
+      // No se relanza: los llamadores (menus, login) no tienen catch y deben navegar igual.
+      console.error("[auth] logout: fallo previo a la limpieza local", error);
+    } finally {
+      try {
+        tokenStorage.clearTokens();
+        clearLocalStorage();
+        const { clearSessionStorage } = await import("@/lib/auth/auth-session-cleanup");
+        clearSessionStorage(); // Clear PII from sessionStorage (Ley 172-13)
+      } catch (error) {
+        console.error("[auth] logout: fallo en la limpieza local", error);
+      } finally {
+        cancelProactiveRefresh();
+        setUser(null);
+        setTenant(null);
+        setActiveRole(null);
+        setAllRoles([]);
+        setAllTenants([]);
+      }
+    }
   };
 
   const switchTenant = async (tenantId?: string, tenantSlug?: string) => {
@@ -378,6 +449,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: user !== null,
     isLoading,
     initError,
+    initProgress,
     retryInit,
     login,
     logout,

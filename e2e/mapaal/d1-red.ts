@@ -72,3 +72,11 @@ export function fallosDeCronologia(eventos: Evento[], dealerId: string): string[
   }
   return fallos;
 }
+
+/** Tope de seguridad de la retencion de dealer-context; normalmente la libera el test. */
+export const RETENCION_MAX_MS = 60_000;
+
+/** Mensaje cuando dealer-context no llego a pedirse: deja la URL donde quedo la pagina. */
+export function mensajeSinPeticion(urlPagina: string): string {
+  return `dealer-context no se pidio; pagina en ${urlPagina}`;
+}

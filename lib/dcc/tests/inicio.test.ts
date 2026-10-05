@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/fetch-client";
-import { fetchLeadsTotal, fetchSolicitudesTotal, fetchUnidadesEnStock, TARJETAS_INICIO } from "@/lib/dcc/inicio";
+import { briefDeterminista, detalleDeError, esUuid, fetchLeadsTotal, fetchSolicitudesTotal, fetchUnidadesEnStock, TARJETAS_INICIO } from "@/lib/dcc/inicio";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
 
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
@@ -42,11 +42,40 @@ describe("datos del Command Center v2", () => {
     const cifra = await fetchUnidadesEnStock("d-1");
     expect(cifra.valor).toBe(3);
     expect(cifra.calidad.estado).toBe("parcial");
+    expect(cifra.cargados).toBe(6);
+    expect(cifra.borradores).toBe(1);
+    expect(cifra.nota).toBe("de 6 cargados · 1 en borrador");
   });
 
   it("toda tarjeta sin capability declara por que falta", () => {
     for (const t of TARJETAS_INICIO) {
       if (t.capability === null) expect(t.falta).toMatch(/^Falta (endpoint|métrica)/);
     }
+  });
+
+  it("la fila de Estado del negocio son los 6 KPI de la referencia, en orden", () => {
+    expect(TARJETAS_INICIO.map((t) => t.titulo)).toEqual(["Inventario", "Capital", "Margen", "Leads", "Financiamiento", "Caja"]);
+  });
+
+  it("esUuid distingue el UUID del tenant de su slug", () => {
+    expect(esUuid("11111111-1111-1111-1111-111111111111")).toBe(true);
+    expect(esUuid("mapaal")).toBe(false);
+    expect(esUuid(null)).toBe(false);
+  });
+
+  it("detalleDeError da codigo HTTP y motivo para el tooltip", () => {
+    expect(detalleDeError({ status: 500, reason_code: null, message: "HTTP 500" })).toBe("HTTP 500");
+    expect(detalleDeError({ status: 422, reason_code: "X" })).toBe("HTTP 422 · X");
+    expect(detalleDeError(null)).toBe("Error desconocido");
+  });
+
+  it("brief determinista: solo con las cifras que llegaron", () => {
+    const f = (n: number) => String(n);
+    const c = (valor: number, extra = {}) => ({ valor, calidad: { estado: "verificado" as const }, nota: "", ...extra });
+    expect(briefDeterminista({}, f)).toBeNull();
+    expect(briefDeterminista({ leads: c(14) }, f)).toBe("Hoy tienes 14 leads en total.");
+    expect(briefDeterminista({ stock: c(0, { cargados: 5, borradores: 5 }), leads: c(1), solicitudes: c(2) }, f)).toBe(
+      "Hoy tienes 0 unidades en stock (5 en borrador de 5 cargadas), 1 lead en total y 2 solicitudes de crédito.",
+    );
   });
 });
