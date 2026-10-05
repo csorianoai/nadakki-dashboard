@@ -31,7 +31,13 @@ export function DealerTopbar({
   const crumbs = dealerBreadcrumbFor(pathname);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--surface)]">
+    /* Fondo = token del tema DCC (QA P2): en oscuro es #111A2B, no blanco. Se
+       apunta al token directo y no a `--surface`, que en globals.css vale
+       #FFFFFF para todo [data-portal="dealer"] si falta el estilo del shell. */
+    <header
+      data-testid="dealer-topbar"
+      className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--dcc-surface)] text-[var(--dcc-fg)]"
+    >
       <div className="flex h-14 items-center gap-2 px-3 sm:px-4 lg:h-16 lg:px-6">
         <button
           type="button"
