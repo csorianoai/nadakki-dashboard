@@ -12,7 +12,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, fallbackPath = "/login" }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, isLoading, initError, retryInit, logout } = useAuth();
+  const { isAuthenticated, isLoading, initError, initProgress, retryInit, logout } = useAuth();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !initError) {
@@ -56,6 +56,11 @@ export function ProtectedRoute({ children, fallbackPath = "/login" }: ProtectedR
         <div className="flex flex-col items-center gap-2">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-forgeBrand-500 border-t-transparent" />
           <div className="text-forge-sm text-forgeGray-500">Verificando sesion...</div>
+          {initProgress && (
+            <div role="status" className="text-forge-xs text-forgeGray-500">
+              {initProgress}
+            </div>
+          )}
         </div>
       </div>
     );
