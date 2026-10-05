@@ -8,8 +8,8 @@ import { dccThemeStyle, type DccTheme } from "@/lib/dcc/tokens";
  * (`--nav-*`, `--bg`, `--surface*`, `--fg*`, `--brand*`, `--ring`) se
  * redefinen en la raiz del shell apuntando a los tokens claro/oscuro. No se
  * toca app/globals.css: el estilo inline gana sobre `[data-portal="dealer"]`
- * solo dentro de este nodo. Sin bloques oscuros en el tema claro: la barra
- * lateral pasa a superficie blanca con borde sutil.
+ * solo dentro de este nodo. Roles: barra lateral marina, item activo dorado,
+ * foco turquesa; el contenido sigue en lienzo claro con tarjetas blancas.
  */
 const LEGADO: Record<string, string> = {
   "--bg": "var(--dcc-canvas)",
@@ -27,11 +27,12 @@ const LEGADO: Record<string, string> = {
   "--on-brand": "var(--dcc-on-action)",
   "--ring": "var(--dcc-focus)",
   "--shadow-sm": "var(--dcc-shadow)",
-  "--nav-bg": "var(--dcc-surface)",
-  "--nav-bg-2": "var(--dcc-surface-muted)",
-  "--nav-fg": "var(--dcc-fg)",
-  "--nav-fg-muted": "var(--dcc-fg-muted)",
-  "--nav-border": "var(--dcc-border-strong)",
+  // Barra lateral MARINA (decision de Cesar): no pasa a blanco.
+  "--nav-bg": "var(--dcc-navy)",
+  "--nav-bg-2": "var(--dcc-navy-2)",
+  "--nav-fg": "var(--dcc-on-navy)",
+  "--nav-fg-muted": "var(--dcc-on-navy-muted)",
+  "--nav-border": "var(--dcc-navy-2)",
 };
 
 export const DEALER_SHELL_VARIABLES_LEGADO = Object.keys(LEGADO);

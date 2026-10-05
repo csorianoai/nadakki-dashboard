@@ -6,8 +6,9 @@ import { fetchBalanceComprobacion } from "@/lib/dcc/reportes";
 
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
 jest.mock("@/lib/access/hooks", () => ({ useAccessEntitlementsBatch: jest.fn() }));
+const branding: Record<string, unknown> = {};
 jest.mock("@/lib/dealer-management/useDealerManagementBranding", () => ({
-  useDealerManagementBranding: () => ({ data: { display_name: "Mapaal Automotores", locale: "es-AR", currency: "ARS" } }),
+  useDealerManagementBranding: () => ({ data: branding }),
 }));
 jest.mock("@/lib/dcc/reportes", () => ({ ...jest.requireActual("@/lib/dcc/reportes"), fetchBalanceComprobacion: jest.fn() }));
 
@@ -24,17 +25,42 @@ function montar(results: Record<string, unknown>) {
 }
 
 describe("Centro de Reportes v2", () => {
-  beforeEach(() => jest.resetAllMocks());
+  beforeEach(() => {
+    jest.resetAllMocks();
+    for (const k of Object.keys(branding)) delete branding[k];
+    Object.assign(branding, { display_name: "Mapaal Automotores", locale: "es-AR", currency: "ARS", country_code: "AR" });
+  });
 
-  it("lista los ReportDefinitions con su naturaleza y no pide datos al entrar", () => {
-    montar({ "accounting.reports.financial": { allowed: true, reason_code: null } });
-    expect(screen.getAllByTestId("dcc-naturaleza")).toHaveLength(10);
-    expect(within(screen.getByTestId("dcc-seccion-contabilidad")).getAllByTestId("dcc-naturaleza")).toHaveLength(9);
-    expect(within(screen.getByTestId("dcc-seccion-ejecutivo")).getAllByTestId("dcc-naturaleza")).toHaveLength(1);
-    expect(within(screen.getByTestId("dcc-reporte-dgii_606")).getByTestId("dcc-naturaleza")).toHaveTextContent("Guardado");
+  const PERMITIDO = { "accounting.reports.financial": { allowed: true, reason_code: null } };
+
+  it("Mapaal (AR): oculta 606/607 de RD, sin escribir el pais a mano, y no pide datos al entrar", () => {
+    montar(PERMITIDO);
+    expect(screen.queryByTestId("dcc-reporte-dgii_606")).toBeNull();
+    expect(screen.queryByTestId("dcc-reporte-dgii_607")).toBeNull();
+    expect(screen.getAllByTestId("dcc-naturaleza")).toHaveLength(8);
+    expect(screen.getByTestId("dcc-seccion-contabilidad")).toHaveTextContent("Reportes de Argentina");
     expect(within(screen.getByTestId("dcc-reporte-income_statement")).getByTestId("dcc-naturaleza")).toHaveTextContent("En vivo");
     expect(fetchBalanceComprobacion).not.toHaveBeenCalled();
-    expect(screen.getAllByTestId("dcc-ver-totales")).toHaveLength(1);
+  });
+
+  it("tenant de RD: los 606/607 si aparecen", () => {
+    branding.country_code = "DO";
+    montar(PERMITIDO);
+    expect(within(screen.getByTestId("dcc-reporte-dgii_606")).getByTestId("dcc-naturaleza")).toHaveTextContent("Guardado");
+  });
+
+  it("sin pais configurado se ocultan los reportes fiscales (cerrado ante la duda)", () => {
+    delete branding.country_code;
+    montar(PERMITIDO);
+    expect(screen.queryByTestId("dcc-reporte-dgii_606")).toBeNull();
+    expect(screen.getByTestId("dcc-seccion-contabilidad")).toHaveTextContent("País del tenant sin configurar");
+  });
+
+  it("'Abrir' solo donde hay pantalla existente de ese reporte", () => {
+    montar(PERMITIDO);
+    const hrefs = screen.getAllByTestId("dcc-reporte-abrir").map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(["/contable/balance-comprobacion", "/contable/libro-mayor", "/contable/estado-resultados"]);
+    expect(within(screen.getByTestId("dcc-reporte-cash_flow")).getByTestId("dcc-sello")).toHaveTextContent("Próximamente");
   });
 
   it("Ver totales trae las cifras del backend y Explicar cifra muestra su desglose", async () => {
@@ -59,6 +85,6 @@ describe("Centro de Reportes v2", () => {
     montar({ "accounting.reports.financial": { allowed: false, reason_code: "UPGRADE_REQUIRED" } });
     expect(within(screen.getByTestId("dcc-reporte-trial_balance")).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "bloqueado");
     expect(screen.queryByTestId("dcc-ver-totales")).toBeNull();
-    expect(within(screen.getByTestId("dcc-reporte-executive_report")).queryByTestId("dcc-sello")).toBeNull();
+    expect(within(screen.getByTestId("dcc-reporte-executive_report")).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "no_disponible");
   });
 });
