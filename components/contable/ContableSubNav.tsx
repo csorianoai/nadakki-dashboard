@@ -23,7 +23,7 @@ const TABS = [
   { slug: "asientos/nuevo", label: "Nuevo Asiento", icon: FilePenLine },
   { slug: "libro-mayor", label: "Libro Mayor", icon: BookMarked },
   { slug: "balance-comprobacion", label: "Balance", icon: Scale },
-  { slug: "estado-resultados", label: "Estado Resultados", icon: TrendingUp },
+  { slug: "estado-resultados", label: "Estado de Resultados", icon: TrendingUp },
   { slug: "situacion-financiera", label: "Situación Financiera", icon: PieChart },
   { slug: "monitor-gastos", label: "Monitor Gastos", icon: AlertTriangle },
   { slug: "agente-ia", label: "Consultor IA", icon: Sparkles },
@@ -46,14 +46,14 @@ export function ContableSubNav() {
             key={slug}
             href={href}
             className={cn(
-              "inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+              "inline-flex min-h-9 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition",
               active
                 ? "bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/40"
                 : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100",
             )}
           >
-            <Icon className="h-3.5 w-3.5" aria-hidden />
-            {label}
+            <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span data-testid="contable-tab-label">{label}</span>
           </Link>
         );
       })}

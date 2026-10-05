@@ -1,147 +1,136 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { DemoModeBadge } from "@/components/search/DemoModeBadge";
-import { LeadCard } from "@/components/dealer/LeadCard";
-import { getDealerId, getLeadsPriority, markLeadContacted } from "@/lib/api/dealer-leads";
-import { getLeadStats } from "@/lib/dealer/leads-mock";
-import type { DealerLead } from "@/lib/dealer/leads-mock";
-import { VEHICLES_SEED } from "@/lib/vehicles";
-import { cn } from "@/lib/utils";
+import { useContext, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Users } from "lucide-react";
+import { DCC_CLASSES } from "@/components/dcc/clases";
+import { DccEstado } from "@/components/dcc/DccEstado";
+import { DccPage } from "@/components/dcc/DccPage";
+import { DccSeccion } from "@/components/dcc/DccSeccion";
+import { AuthContext } from "@/lib/auth/auth-context";
+import { formatEntero } from "@/lib/dcc/formato";
+import { detalleDeError, esUuid, fetchLeadsPagina, textoLeads, type LeadDealer } from "@/lib/dcc/inicio";
+import { marcaDesdeBranding } from "@/lib/dcc/marca";
+import { selectedDealerIdentity } from "@/lib/dealer/access-context";
+import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 
+const EVIDENCIA = "GET /api/v1/autos/tenants/{tenant_uuid}/dealers/{dealer_id}/leads";
+const POR_PAGINA = 20;
+
+const ESTADO: Record<string, string> = {
+  new: "Nuevo",
+  contacted: "Contactado",
+  qualified: "Calificado",
+  negotiating: "En negociación",
+  won: "Ganado",
+  lost: "Perdido",
+  archived: "Archivado",
+};
+const PRIORIDAD: Record<string, string> = { low: "Baja", normal: "Normal", high: "Alta", urgent: "Urgente" };
+
+function es403(error: unknown): string | null {
+  const rec = error && typeof error === "object" ? (error as { status?: unknown; reason_code?: unknown }) : null;
+  if (!rec || rec.status !== 403) return null;
+  return typeof rec.reason_code === "string" ? rec.reason_code : "FORBIDDEN";
+}
+
+/**
+ * Leads del dealer desde el backend (misma ruta y mismos estados que el
+ * Command Center). Sin datos de ejemplo: si no hay leads, se dice.
+ */
 export default function DealerLeadsPage() {
-  const [leads, setLeads] = useState<DealerLead[]>([]);
-  const [demoMode, setDemoMode] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [vehicleFilter, setVehicleFilter] = useState<number | "all">("all");
-  const [tierFilter, setTierFilter] = useState<"all" | "hot" | "warm" | "cold">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "new" | "contacted" | "closed">("all");
-  const [search, setSearch] = useState("");
+  const formato = marcaDesdeBranding(useDealerManagementBranding().data).formato;
+  // Igual que el Command Center: el tenant de la ruta es el UUID de /auth/me.
+  const tenantUuid = useContext(AuthContext)?.tenant?.id ?? null;
+  const dealerId = selectedDealerIdentity()?.dealerId ?? null;
+  const [pagina, setPagina] = useState(1);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const dealerId = getDealerId();
-    if (!dealerId) {
-      setLeads([]);
-      setDemoMode(false);
-      setLoading(false);
-      return;
-    }
-    const res = await getLeadsPriority(dealerId, {
-      vehicleId: vehicleFilter === "all" ? undefined : vehicleFilter,
-      tier: tierFilter,
-      status: statusFilter,
-      search: search || undefined,
-    });
-    setLeads(res.data);
-    setDemoMode(!res.fromBackend);
-    setLoading(false);
-  }, [vehicleFilter, tierFilter, statusFilter, search]);
+  const q = useQuery({
+    queryKey: ["dcc-leads", tenantUuid, dealerId, pagina],
+    queryFn: () => fetchLeadsPagina(tenantUuid as string, dealerId as string, pagina, POR_PAGINA),
+    enabled: Boolean(dealerId) && esUuid(tenantUuid),
+    retry: false,
+  });
+  const fmt = (n: number) => formatEntero(n, formato) ?? String(n);
+  const fecha = (iso: string | null) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString(formato.locale, { day: "numeric", month: "short", year: "numeric" });
+  };
 
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  const stats = useMemo(() => getLeadStats(leads), [leads]);
+  let cuerpo: React.ReactNode;
+  if (!dealerId) {
+    cuerpo = <DccEstado estado="vacio" detalle="Tu usuario no tiene un concesionario resuelto." />;
+  } else if (!esUuid(tenantUuid)) {
+    cuerpo = <DccEstado estado="error" detalle={`Tenant sin UUID en la sesión (${tenantUuid ?? "vacío"})`} />;
+  } else if (q.isPending) {
+    cuerpo = <DccEstado estado="cargando" />;
+  } else if (q.isError) {
+    const motivo = es403(q.error);
+    cuerpo = motivo ? (
+      <DccEstado estado="bloqueado" detalle={`reason_code: ${motivo}`} />
+    ) : (
+      <DccEstado estado="error" detalle={`${EVIDENCIA} → ${detalleDeError(q.error)}`} onReintentar={() => void q.refetch()} />
+    );
+  } else if (q.data.total === 0) {
+    cuerpo = (
+      <p data-testid="leads-vacio" className={`text-sm ${DCC_CLASSES.muted}`}>
+        Todavía no hay leads.
+      </p>
+    );
+  } else {
+    const { leads, total, hasNext } = q.data;
+    cuerpo = (
+      <div className="flex flex-col gap-4">
+        <p data-testid="leads-total" className="text-sm font-semibold text-[var(--dcc-fg)]">
+          {textoLeads(total, fmt)} en total
+        </p>
+        <ul className="divide-y divide-[var(--dcc-border)]">
+          {leads.map((lead) => (
+            <FilaLead key={lead.id} lead={lead} fecha={fecha(lead.created_at)} />
+          ))}
+        </ul>
+        {pagina > 1 || hasNext ? (
+          <div className="flex items-center gap-4 text-sm">
+            <button type="button" disabled={pagina === 1} onClick={() => setPagina((p) => p - 1)} className={`${DCC_CLASSES.link} disabled:opacity-40`}>
+              ← Anterior
+            </button>
+            <span className={DCC_CLASSES.muted}>Página {fmt(pagina)}</span>
+            <button type="button" disabled={!hasNext} onClick={() => setPagina((p) => p + 1)} className={`${DCC_CLASSES.link} disabled:opacity-40`}>
+              Siguiente →
+            </button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
-    <main>
-      <header className="mb-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Leads Prioritarios</h1>
-          <DemoModeBadge visible={demoMode} />
-        </div>
-        <p className="mt-1 text-nk-fg-muted">
-          AI clasificó tus leads por probabilidad de conversión
-        </p>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm">
-          <Stat dot="bg-red-500" label={`${stats.hot} leads hot`} />
-          <Stat dot="bg-yellow-500" label={`${stats.warm} leads warm`} />
-          <Stat dot="bg-sky-400" label={`${stats.cold} leads cold`} />
-          <span className="text-nk-fg-muted">{stats.total} leads totales esta semana</span>
-        </div>
-      </header>
-
-      <div className="mb-6 flex flex-wrap gap-3">
-        <select
-          value={vehicleFilter}
-          onChange={(e) =>
-            setVehicleFilter(e.target.value === "all" ? "all" : Number(e.target.value))
-          }
-          className="rounded-r-sm border border-nk-border bg-nk-surface-2 px-3 py-2 text-sm"
-        >
-          <option value="all">Todos los vehículos</option>
-          {VEHICLES_SEED.slice(0, 8).map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.year} {v.make} {v.model}
-            </option>
-          ))}
-        </select>
-        <select
-          value={tierFilter}
-          onChange={(e) => setTierFilter(e.target.value as typeof tierFilter)}
-          className="rounded-r-sm border border-nk-border bg-nk-surface-2 px-3 py-2 text-sm"
-        >
-          <option value="all">Todos los scores</option>
-          <option value="hot">Hot 90+</option>
-          <option value="warm">Warm 60-89</option>
-          <option value="cold">Cold &lt;60</option>
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-          className="rounded-r-sm border border-nk-border bg-nk-surface-2 px-3 py-2 text-sm"
-        >
-          <option value="all">Todos los estados</option>
-          <option value="new">Nuevo</option>
-          <option value="contacted">Contactado</option>
-          <option value="closed">Cerrado</option>
-        </select>
-        <input
-          type="search"
-          placeholder="Buscar nombre o teléfono"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="min-w-[200px] flex-1 rounded-r-sm border border-nk-border bg-nk-surface-2 px-3 py-2 text-sm"
-        />
-      </div>
-
-      {loading ? (
-        <p className="text-sm text-nk-fg-muted">Cargando leads…</p>
-      ) : (
-        <div className="space-y-4">
-          {leads.map((lead) => (
-            <LeadCard
-              key={lead.id}
-              lead={lead}
-              onContact={() => {
-                window.open(
-                  `https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${lead.name}, vi tu interés en ${lead.vehicleName} en Nadakki.`)}`,
-                  "_blank",
-                );
-              }}
-              onMarkContacted={() => {
-                markLeadContacted(lead.id);
-                toast.success("Lead marcado como contactado");
-                void load();
-              }}
-            />
-          ))}
-          {leads.length === 0 ? (
-            <p className="text-sm text-nk-fg-muted">No hay leads con estos filtros.</p>
-          ) : null}
-        </div>
-      )}
-    </main>
+    <DccPage titulo="Leads">
+      <DccSeccion titulo="Leads del concesionario" icono={Users} testId="dcc-seccion-leads">
+        {cuerpo}
+      </DccSeccion>
+    </DccPage>
   );
 }
 
-function Stat({ dot, label }: { dot: string; label: string }) {
+function FilaLead({ lead, fecha }: { lead: LeadDealer; fecha: string | null }) {
+  const contacto = [lead.buyer_phone, lead.buyer_email].filter(Boolean).join(" · ");
+  const etiquetas = [
+    lead.status ? (ESTADO[lead.status] ?? lead.status) : null,
+    lead.priority ? `Prioridad ${(PRIORIDAD[lead.priority] ?? lead.priority).toLowerCase()}` : null,
+    lead.finance_interested ? "Interesado en financiamiento" : null,
+    lead.source ? `Origen: ${lead.source}` : null,
+  ].filter(Boolean);
   return (
-    <span className="inline-flex items-center gap-2 font-semibold text-nk-fg">
-      <span className={cn("h-2 w-2 rounded-full", dot)} aria-hidden />
-      {label}
-    </span>
+    <li data-testid="lead-fila" className="py-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="font-semibold text-[var(--dcc-fg)]">{lead.buyer_name || "Sin nombre"}</p>
+        {fecha ? <p className={`text-xs ${DCC_CLASSES.subtle}`}>{fecha}</p> : null}
+      </div>
+      {contacto ? <p className={`text-sm ${DCC_CLASSES.muted}`}>{contacto}</p> : null}
+      {lead.buyer_message ? <p className="mt-1 text-sm text-[var(--dcc-fg)]">{lead.buyer_message}</p> : null}
+      {etiquetas.length ? <p className={`mt-1 text-xs ${DCC_CLASSES.subtle}`}>{etiquetas.join(" · ")}</p> : null}
+    </li>
   );
 }
