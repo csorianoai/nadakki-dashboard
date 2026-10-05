@@ -71,7 +71,9 @@ test("D5 fotos: subir sin nombre personal, cortar formato, eliminar", async ({ b
     page.waitForResponse((r) => esPost(r.request().method(), r.url())),
     page.getByTestId("vehicle-photos-input").setInputFiles({ name: "a.gif", mimeType: "image/gif", buffer: Buffer.from("GIF89a") }),
   ]);
-  expect(gif.status()).toBe(422);
+  // Un 503 aqui no es del dashboard (el proxy reenvia el status tal cual): suele ser el backend sin
+  // almacenamiento de medios (`media_storage_unconfigured`), que responde antes de validar el formato.
+  expect(gif.status(), `POST /photos -> ${gif.status()}: ${await gif.text().catch(() => "")}`).toBe(422);
   await expect(page.getByTestId("vehicle-photos-error")).toHaveAttribute("data-kind", "otro_archivo");
   await expect(page.getByTestId("vehicle-photos-error")).toHaveAttribute("data-reason-code", /^unsupported_mime_type/);
 

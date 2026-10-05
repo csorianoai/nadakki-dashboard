@@ -74,6 +74,16 @@ describe("fotos del vehiculo: cliente + proxy BFF", () => {
     expect(photoError(error)).toMatchObject({ kind: "otro_archivo", reasonCode: "unsupported_mime_type:image/gif" });
   });
 
+  test("503 del backend (almacenamiento sin configurar): el proxy lo reenvia tal cual y es 'despliegue', no 'otro_archivo'", async () => {
+    await conProxy(() => json({ detail: { reason_code: "media_storage_unconfigured" } }, 503));
+    const { uploadVehiclePhoto, photoError } = await import("@/app/autos/dealer/inventario/[vehicleId]/fotos");
+
+    const error = await uploadVehiclePhoto("v1", new File(["GIF89a"], "a.gif", { type: "image/gif" })).catch((e) => e);
+
+    expect(error.status).toBe(503);
+    expect(photoError(error)).toMatchObject({ kind: "despliegue", reasonCode: "media_storage_unconfigured" });
+  });
+
   test("eliminar: el 204 del backend no es un fallo", async () => {
     const llamadas = await conProxy(() => new Response(null, { status: 204 }));
     const { deleteVehiclePhoto } = await import("@/app/autos/dealer/inventario/[vehicleId]/fotos");
