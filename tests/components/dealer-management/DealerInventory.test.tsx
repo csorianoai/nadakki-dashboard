@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import DealerInventoryPage from "@/app/autos/dealer/inventario/page";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
@@ -131,6 +131,38 @@ describe("dealer private inventory contract", () => {
     expect(route).toBe(PRIVATE_ROUTE);
     expect((init?.method ?? "GET").toUpperCase()).toBe("GET");
     expect(route).not.toContain("/marketplace/");
-    expect(await screen.findByText("No hay vehículos reportados por el contrato privado para este dealer.")).toBeInTheDocument();
+    expect(await screen.findByText("Todavía no hay vehículos cargados en este concesionario.")).toBeInTheDocument();
+  });
+  test("busca, filtra por estado y ordena la lista (auditoria Mapaal QA)", async () => {
+    entitlement({ allowed: true, reason_code: "ALLOWED" });
+    mockedApiFetch.mockResolvedValue(
+      jsonResponse({
+        vehicles: [
+          { id: "a", make: "Toyota", model: "Hilux", year: 2021, status: "disponible", plate: "AB123CD" },
+          { id: "b", make: "Peugeot", model: "208", year: 2018, status: "draft", stock_number: "S-2" },
+        ],
+      }),
+    );
+    render(<DealerInventoryPage />, { wrapper: wrapper(testClient()) });
+    const lista = await screen.findByTestId("inventario-lista");
+    expect(lista).toHaveAttribute("data-cantidad", "2");
+    expect(lista).toHaveTextContent("Estado: BORRADOR");
+    expect(lista).toHaveTextContent("Dominio AB123CD");
+
+    fireEvent.change(screen.getByRole("searchbox", { name: /Buscar/ }), { target: { value: "s-2" } });
+    expect(screen.getByTestId("inventario-lista")).toHaveAttribute("data-cantidad", "1");
+    expect(screen.getByTestId("inventario-lista")).toHaveTextContent("2018 Peugeot 208");
+
+    fireEvent.change(screen.getByRole("searchbox", { name: /Buscar/ }), { target: { value: "" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Estado" }), { target: { value: "disponible" } });
+    expect(screen.getByTestId("inventario-lista")).toHaveAttribute("data-cantidad", "1");
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Estado" }), { target: { value: "" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Ordenar por" }), { target: { value: "anio-asc" } });
+    const titulos = within(screen.getByTestId("inventario-lista")).getAllByText(/^\d{4} /).map((n) => n.textContent);
+    expect(titulos).toEqual(["2018 Peugeot 208", "2021 Toyota Hilux"]);
+
+    fireEvent.change(screen.getByRole("searchbox", { name: /Buscar/ }), { target: { value: "ferrari" } });
+    expect(screen.getByTestId("inventario-sin-resultados")).toBeInTheDocument();
   });
 });
