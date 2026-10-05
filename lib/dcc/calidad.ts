@@ -57,19 +57,19 @@ export function calidadDesdeEntitlement(decision: DecisionAcceso): Calidad | nul
   return { estado: "bloqueado", reasonCode: decision.reason_code ?? null };
 }
 
-/** Texto corto del sello, en espanol, sin rotulos tecnicos. */
+/** Texto corto del sello, como en la referencia v3, sin rotulos tecnicos. */
 export function rotuloCalidad(calidad: Calidad): string {
   switch (calidad.estado) {
     case "verificado":
-      return "Verificado";
+      return "verificado";
     case "parcial":
       return calidad.cubiertos !== null && calidad.total !== null
-        ? `Parcial ${calidad.cubiertos}/${calidad.total}`
-        : "Parcial";
+        ? `parcial ${calidad.cubiertos}/${calidad.total}`
+        : "parcial";
     case "bloqueado":
-      return "Bloqueado por tu plan";
+      return "bloqueado · requiere entitlement";
     case "no_disponible":
-      return "Aún no disponible";
+      return "aún no disponible";
   }
 }
 

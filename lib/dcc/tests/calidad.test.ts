@@ -20,13 +20,13 @@ describe("calidad (sello DCC)", () => {
   it("forma desconocida nunca sube a verificado; cobertura incoherente no pinta n/m", () => {
     expect(calidadDesdeBackend(undefined).estado).toBe("no_disponible");
     expect(calidadDesdeBackend("OK").estado).toBe("no_disponible");
-    expect(rotuloCalidad(calidadDesdeBackend({ status: "PARTIAL", covered: 9, total: 5 }))).toBe("Parcial");
+    expect(rotuloCalidad(calidadDesdeBackend({ status: "PARTIAL", covered: 9, total: 5 }))).toBe("parcial");
   });
 
   it("rotulos legibles, sin claves tecnicas", () => {
-    expect(rotuloCalidad({ estado: "parcial", cubiertos: 3, total: 5, motivo: null })).toBe("Parcial 3/5");
-    expect(rotuloCalidad({ estado: "bloqueado", reasonCode: "UPGRADE_REQUIRED" })).toBe("Bloqueado por tu plan");
-    expect(rotuloCalidad({ estado: "no_disponible", motivo: null })).toBe("Aún no disponible");
+    expect(rotuloCalidad({ estado: "parcial", cubiertos: 3, total: 5, motivo: null })).toBe("parcial 3/5");
+    expect(rotuloCalidad({ estado: "bloqueado", reasonCode: "UPGRADE_REQUIRED" })).toBe("bloqueado · requiere entitlement");
+    expect(rotuloCalidad({ estado: "no_disponible", motivo: null })).toBe("aún no disponible");
   });
 
   it("el entitlement denegado del backend bloquea; permitido no aporta sello", () => {
