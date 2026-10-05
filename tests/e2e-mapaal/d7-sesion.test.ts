@@ -45,8 +45,11 @@ describe("D7: un fallo transitorio de verificar la sesion no tumba el spec", () 
   const spec = fuente("e2e/mapaal/D7.spec.ts");
 
   it("D7.spec.ts reconoce la pantalla de sesion fallida y pulsa Reintentar", () => {
-    expect(spec).toContain("SESION_FALLIDA");
-    expect(spec).toContain('name: "Reintentar"');
+    const sesion = fuente("e2e/mapaal/sesion-qa.ts");
+    expect(sesion).toContain("SESION_FALLIDA");
+    expect(sesion).toContain('name: "Reintentar"');
+    // Cada navegacion (inventario, importar, inventario tras aplicar) recupera.
+    expect(spec.match(/esperarConReintento\(page,/g)?.length).toBeGreaterThanOrEqual(3);
   });
 
   it("la pantalla de la app sigue diciendo lo que el spec busca", () => {
