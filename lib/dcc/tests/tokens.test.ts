@@ -7,8 +7,8 @@ describe("tokens DCC", () => {
     }
   });
 
-  it("tema claro: lienzo gris muy claro y tarjeta blanca", () => {
-    expect(DCC_TOKENS.light["--dcc-canvas"]).toBe("#F5F7FA");
+  it("tema claro = referencia v3: lienzo gris claro y tarjeta blanca", () => {
+    expect(DCC_TOKENS.light["--dcc-canvas"]).toBe("#EEF2F7");
     expect(DCC_TOKENS.light["--dcc-surface"]).toBe("#FFFFFF");
     expect(DCC_TOKENS.light["--dcc-radius"]).toBe("12px");
   });
