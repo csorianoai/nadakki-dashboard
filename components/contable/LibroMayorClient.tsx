@@ -1,5 +1,6 @@
 "use client";
 
+import { formateaFecha } from "@/lib/dealer-management/formato";
 import { useCallback, useEffect, useState } from "react";
 import { BookMarked } from "lucide-react";
 import { toast } from "sonner";
@@ -141,7 +142,7 @@ export function LibroMayorClient() {
                 <tbody>
                   {report?.movimientos?.map((m) => (
                     <tr key={m.id} className="border-b border-white/5">
-                      <td className="px-4 py-2">{m.fecha}</td>
+                      <td className="px-4 py-2">{formateaFecha(m.fecha, moneda) ?? m.fecha}</td>
                       <td className="px-4 py-2 font-mono text-xs">{m.numero_asiento ?? m.asiento_id.slice(0, 8)}</td>
                       <td className="px-4 py-2">{m.descripcion}</td>
                       <td className="px-4 py-2 text-right font-mono">{m.debe_base ? importe(m.debe_base) : "—"}</td>
