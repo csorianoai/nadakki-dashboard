@@ -32,6 +32,7 @@ import { expect, test } from "@playwright/test";
 
 import {
   PREFIJO_HOJA,
+  esPeticionImport,
   RUTA_IMPORTAR,
   RUTA_INVENTARIO,
   TESTIDS_IMPORTAR as T,
@@ -45,14 +46,10 @@ const QA_USER = process.env.QA_USER;
 const QA_PASSWORD = process.env.QA_PASSWORD;
 
 const FIXTURE = path.join(__dirname, "fixtures", "D7_plantilla_v4_qa.xlsx");
-const IMPORT = /\/dealers\/[^/]+\/import-activos\/?$/;
 
 test.skip(!BASE_URL || !QA_USER || !QA_PASSWORD, "Faltan BASE_URL, QA_USER o QA_PASSWORD");
 
-function esImport(url: string, modo: string, method: string) {
-  const u = new URL(url);
-  return method === "POST" && IMPORT.test(u.pathname) && u.searchParams.get("modo") === modo;
-}
+const esImport = esPeticionImport;
 
 test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({ browser }) => {
   test.setTimeout(180_000);
