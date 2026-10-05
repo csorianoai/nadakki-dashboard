@@ -18,7 +18,7 @@ describe("DealerShell sobre los tokens del DCC", () => {
   it("cada variable heredada apunta a un token DCC que existe en claro y oscuro", () => {
     const estilo = dealerShellThemeStyle("light") as Record<string, string>;
     for (const clave of DEALER_SHELL_VARIABLES_LEGADO) {
-      const destino = /^var\((--dcc-[a-z-]+)\)$/.exec(estilo[clave])?.[1];
+      const destino = /^var\((--dcc-[a-z0-9-]+)\)$/.exec(estilo[clave])?.[1];
       expect(destino && (DCC_TOKEN_KEYS as string[]).includes(destino)).toBe(true);
     }
   });
@@ -34,10 +34,20 @@ describe("DealerShell sobre los tokens del DCC", () => {
     for (const src of SHELL) expect(src).not.toMatch(/text-white|bg-white\/|ring-white|text-amber-/);
   });
 
-  it("el tema claro deja la barra lateral en superficie clara, no oscura", () => {
+  it("barra lateral MARINA con item activo dorado y foco turquesa (no pasa a blanco)", () => {
     const estilo = dealerShellThemeStyle("light") as Record<string, string>;
-    expect(estilo["--nav-bg"]).toBe("var(--dcc-surface)");
-    expect(estilo["--dcc-surface"]).toBe("#FFFFFF");
+    expect(estilo["--nav-bg"]).toBe("var(--dcc-navy)");
+    expect(estilo["--dcc-navy"]).toBe("#0B1220");
+    expect(estilo["--nav-fg"]).toBe("var(--dcc-on-navy)");
+    const sidebar = SHELL[1];
+    expect(sidebar).toContain("text-[var(--dcc-gold)]");
+    expect(sidebar).toContain("ring-[var(--dcc-teal)]");
+    expect(sidebar).not.toContain("--dcc-action");
+  });
+
+  it("la firma bajo la marca es la constante del producto", () => {
+    expect(SHELL[1]).toContain("DCC_PRODUCTO.firma");
+    expect(SHELL[1]).not.toContain("Powered by Nadakki");
   });
 
   it("dentro del shell, el conmutador de una pagina v2 cambia el tema compartido", () => {

@@ -176,7 +176,7 @@ export function DealerCommandPalette({ open, onClose, items }: DealerCommandPale
                     className={cn(
                       "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm",
                       index === active
-                        ? "bg-[var(--nav-bg-2)] text-[var(--dcc-action)]"
+                        ? "bg-[var(--nav-bg-2)] text-[var(--dcc-gold)]"
                         : "text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)]",
                     )}
                   >
