@@ -2,7 +2,7 @@
  * D5 — que enlace del inventario es un vehiculo. Pura, sin Playwright, para que
  * tests/e2e-mapaal/d5-vehiculo.test.ts la pruebe con Jest.
  *
- * El inventario tiene `/autos/dealer/inventario/nuevo` (boton "Nuevo vehiculo")
+ * El inventario tiene `/nuevo` (boton "Nuevo vehiculo") e `/importar` ("Importar planilla")
  * ANTES de las filas: un `a[href^="/autos/dealer/inventario/"]` sin excluirlo
  * devuelve ese boton, el spec abre el formulario de alta y el panel de fotos
  * nunca aparece.
@@ -11,7 +11,7 @@
 export const PREFIJO_VEHICULO = "/autos/dealer/inventario/";
 
 /** Segmentos de /autos/dealer/inventario/ que son pantallas, no vehiculos. */
-export const RUTAS_NO_VEHICULO = ["nuevo"];
+export const RUTAS_NO_VEHICULO = ["nuevo", "importar"];
 
 /** Selector CSS de los enlaces a la ficha de un vehiculo (excluye las pantallas). */
 export const SELECTOR_VEHICULO =

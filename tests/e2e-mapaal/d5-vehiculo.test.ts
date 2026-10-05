@@ -16,12 +16,22 @@ describe("D5: el vehiculo de prueba no es la pantalla de alta", () => {
     expect(idPrimerVehiculo(hrefs)).toBe("veh/1");
   });
 
+  it("salta /importar (enlace de cabecera) aunque vaya antes que las filas", () => {
+    const hrefs = ["/autos/dealer/inventario/nuevo", "/autos/dealer/inventario/importar", "/autos/dealer/inventario/v1"];
+    expect(idPrimerVehiculo(hrefs)).toBe("v1");
+    expect(idPrimerVehiculo(["/autos/dealer/inventario/importar"])).toBe("");
+  });
+
   it("sin vehiculos devuelve vacio, no 'nuevo'", () => {
     expect(idPrimerVehiculo(["/autos/dealer/inventario/nuevo", "/autos/dealer/inventario", "/otra"])).toBe("");
   });
 
   it("el selector excluye /nuevo", () => {
     expect(SELECTOR_VEHICULO).toContain(':not([href="/autos/dealer/inventario/nuevo"])');
+  });
+
+  it("el selector excluye /importar", () => {
+    expect(SELECTOR_VEHICULO).toContain(':not([href="/autos/dealer/inventario/importar"])');
   });
 
   it("D5.spec.ts usa el selector y no un a[href^=...] pelado", () => {
