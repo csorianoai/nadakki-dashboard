@@ -14,6 +14,10 @@
  * ellas seria la que el dealer lee para cargar su contabilidad. Lo unico propio
  * de este componente es la etiqueta del boton.
  *
+ * A la vista van los `pasosInicio` del bloque (lenguaje llano, sin codigos
+ * contables). Los `pasos` verbatim de la guia --con cuentas y detalles
+ * tecnicos-- quedan dentro de "Ver detalle contable", cerrado por defecto.
+ *
  * CUANDO SE PINTA: solo cuando SABEMOS que el inventario esta vacio, o sea
  * cuando la consulta respondio bien y trajo cero vehiculos. Cargando, con
  * error, sin acceso verificado o sin dealer resuelto NO se pinta. Un fallo de
@@ -107,12 +111,28 @@ export function PrimerosPasosInicio() {
             {bloque.titulo}
           </h2>
 
-          {bloque.pasos?.length ? (
-            <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-nk-fg-muted">
-              {bloque.pasos.map((paso) => (
+          {bloque.pasosInicio?.length ? (
+            <ol
+              data-testid="dealer-primeros-pasos-lista"
+              className="mt-3 list-decimal space-y-1 pl-5 text-sm text-nk-fg-muted"
+            >
+              {bloque.pasosInicio.map((paso) => (
                 <li key={paso}>{paso}</li>
               ))}
             </ol>
+          ) : null}
+
+          {bloque.pasos?.length ? (
+            <details data-testid="dealer-primeros-pasos-detalle" className="mt-3 text-sm">
+              <summary className="cursor-pointer font-semibold text-brand-2">
+                Ver detalle contable
+              </summary>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-nk-fg-muted">
+                {bloque.pasos.map((paso) => (
+                  <li key={paso}>{paso}</li>
+                ))}
+              </ol>
+            </details>
           ) : null}
 
           <Link
