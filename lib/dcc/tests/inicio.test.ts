@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/fetch-client";
-import { briefDeterminista, detalleDeError, esUuid, fetchLeadsTotal, fetchSolicitudesTotal, fetchUnidadesEnStock, TARJETAS_INICIO } from "@/lib/dcc/inicio";
+import { briefDeterminista, detalleDeError, esUuid, fetchLeadsTotal, fetchSolicitudesTotal, fetchLeadsPagina, fetchUnidadesEnStock, TARJETAS_INICIO, textoLeads } from "@/lib/dcc/inicio";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
 
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
@@ -77,5 +77,21 @@ describe("datos del Command Center v2", () => {
     expect(briefDeterminista({ stock: c(0, { cargados: 5, borradores: 5 }), leads: c(1), solicitudes: c(2) }, f)).toBe(
       "Hoy tienes 0 unidades en stock (5 en borrador de 5 cargadas), 1 lead en total y 2 solicitudes de crédito.",
     );
+  });
+
+  it("textoLeads pluraliza: 1 lead / N leads", () => {
+    expect(textoLeads(1)).toBe("1 lead");
+    expect(textoLeads(0)).toBe("0 leads");
+    expect(textoLeads(1234, (n) => n.toLocaleString("es-AR"))).toBe("1.234 leads");
+  });
+
+  it("fetchLeadsPagina pide la pagina con tenant UUID y dealer, y rechaza respuestas sin lista", async () => {
+    const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
+    (apiFetch as jest.Mock).mockResolvedValueOnce(ok({ leads: [{ id: "x" }], total: 21, page: 2, page_size: 20, has_next: false }));
+    const r = await fetchLeadsPagina("t-uuid", "d 1", 2, 20);
+    expect(apiFetch).toHaveBeenCalledWith("/api/v1/autos/tenants/t-uuid/dealers/d%201/leads?page=2&page_size=20", expect.anything());
+    expect(r).toEqual({ leads: [{ id: "x" }], total: 21, page: 2, hasNext: false });
+    (apiFetch as jest.Mock).mockResolvedValueOnce(ok({ total: 3 }));
+    await expect(fetchLeadsPagina("t", "d")).rejects.toThrow("DCC_RESPUESTA_SIN_LEADS");
   });
 });

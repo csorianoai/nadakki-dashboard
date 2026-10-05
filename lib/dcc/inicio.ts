@@ -81,6 +81,37 @@ export async function fetchLeadsTotal(tenantId: string, dealerId: string): Promi
   return { valor: totalDe(body), calidad: calidadDe(body, { estado: "verificado" }), nota: "Total histórico" };
 }
 
+/** Fila de `GET .../dealers/{dealer_id}/leads` (solo los campos que se pintan). */
+export type LeadDealer = {
+  id: string;
+  buyer_name: string | null;
+  buyer_phone: string | null;
+  buyer_email: string | null;
+  buyer_message: string | null;
+  source: string | null;
+  status: string | null;
+  priority: string | null;
+  finance_interested: boolean | null;
+  created_at: string | null;
+};
+
+export type PaginaLeads = { leads: LeadDealer[]; total: number; page: number; hasNext: boolean };
+
+/** Lista paginada de leads del dealer: la misma ruta (tenant UUID) que `fetchLeadsTotal`. */
+export async function fetchLeadsPagina(tenantId: string, dealerId: string, page = 1, pageSize = 20): Promise<PaginaLeads> {
+  const body = await leerJson(
+    `/api/v1/autos/tenants/${encodeURIComponent(tenantId)}/dealers/${encodeURIComponent(dealerId)}/leads?page=${page}&page_size=${pageSize}`,
+  );
+  const rec = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  if (!Array.isArray(rec.leads)) throw new Error("DCC_RESPUESTA_SIN_LEADS");
+  return { leads: rec.leads as LeadDealer[], total: totalDe(body), page, hasNext: rec.has_next === true };
+}
+
+/** "1 lead" / "N leads". */
+export function textoLeads(n: number, fmt: (n: number) => string = String): string {
+  return `${fmt(n)} ${n === 1 ? "lead" : "leads"}`;
+}
+
 /** financing_applications@1.0 — N6: VERIFICADA para el total del dealer via la lista. */
 export async function fetchSolicitudesTotal(): Promise<Cifra> {
   const body = await leerJson("/api/v2/credit/applications?limit=1&offset=0");
