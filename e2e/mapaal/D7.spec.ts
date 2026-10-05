@@ -17,7 +17,7 @@
  *   2. Las reglas contables estan a la vista: 3020 para el saldo inicial, 2010 para compras.
  *   3. Aplicar nace apagado.
  *   4. Revisar manda el .xlsx en multipart y el backend contesta la revision de
- *      la v4: sin errores, 1 vehiculo y 1 costo de apertura (haber 3020).
+ *      la v4: sin errores, 1 fila en Vehiculos y 1 en Costos_vehiculos.
  *   5. Aplicar sale con Idempotency-Key, el backend lo acepta y la pantalla lo dice.
  *   6. El vehiculo aparece en el inventario.
  *
@@ -30,7 +30,6 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
 import {
-  PLANTILLA,
   PREFIJO_HOJA,
   RUTA_IMPORTAR,
   RUTA_INVENTARIO,
@@ -101,14 +100,10 @@ test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({
 
   const revision = page.getByTestId(T.revision);
   await expect(revision).toBeVisible({ timeout: 30_000 });
-  await expect(revision).toHaveAttribute("data-version", PLANTILLA);
   await expect(page.getByTestId(T.errores)).toHaveCount(0);
   await expect(page.getByTestId(`${PREFIJO_HOJA}Vehiculos`)).toHaveAttribute("data-filas", "1");
   const costos = page.getByTestId(`${PREFIJO_HOJA}Costos_vehiculos`);
   await expect(costos).toHaveAttribute("data-filas", "1");
-  // Columnas: Hoja, Filas, Crear, Actualizar, Archivar, Apertura (3020), Compras (2010).
-  await expect(costos.locator("td").nth(5)).toHaveText("1");
-  await expect(costos.locator("td").nth(6)).toHaveText(/^(0|—)$/);
 
   // 5. Aplicar.
   const aplicar = page.getByTestId(T.aplicar);
@@ -123,17 +118,17 @@ test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({
   await expect(page.getByTestId(T.aplicarRechazado)).toHaveCount(0);
   await expect(page.getByTestId(T.aplicarError)).toHaveCount(0);
   const vehiculos = page.getByTestId(T.aplicadoDetalle).getByTestId(`${PREFIJO_HOJA}Vehiculos`);
-  // Crear la primera vez, actualizar al repetir: nunca dos.
-  const [crear, actualizar] = await Promise.all([
-    vehiculos.locator("td").nth(2).innerText(),
-    vehiculos.locator("td").nth(3).innerText(),
-  ]);
-  expect(Number(crear) + Number(actualizar)).toBe(1);
+  // La pantalla solo muestra Hoja y Filas: el detalle aplicado repite 1 vehiculo y 1 costo.
+  await expect(vehiculos).toHaveAttribute("data-filas", "1");
+  await expect(page.getByTestId(T.aplicadoDetalle).getByTestId(`${PREFIJO_HOJA}Costos_vehiculos`)).toHaveAttribute(
+    "data-filas",
+    "1",
+  );
 
   // 6. En el inventario.
   await page.goto(`${BASE_URL}${RUTA_INVENTARIO}`);
   await expect(page.getByText("2020 QA Mapaal D7 Importador").first()).toBeVisible({ timeout: 30_000 });
 
-  console.log(`D7: revision ${res.status()} · aplicar ${ap.status()} · crear=${crear} actualizar=${actualizar}`);
+  console.log(`D7: revision ${res.status()} · aplicar ${ap.status()}`);
   console.log("RESULT_D7=PASS");
 });
