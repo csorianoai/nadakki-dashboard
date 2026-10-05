@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { BarChart3, BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { DCC_CLASSES } from "@/components/dcc/clases";
 import { DccCard } from "@/components/dcc/DccCard";
 import { DccEstado } from "@/components/dcc/DccEstado";
 import { DccGrid, DccPage } from "@/components/dcc/DccPage";
 import { DccSeccion } from "@/components/dcc/DccSeccion";
-import { BarChart3, BookOpen } from "lucide-react";
+import { SelloCalidad } from "@/components/dcc/SelloCalidad";
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { calidadDesdeEntitlement, type Calidad } from "@/lib/dcc/calidad";
@@ -17,6 +19,8 @@ import {
   CAPABILITY_REPORTES_CONTABLES,
   REPORT_DEFINITIONS,
   fetchBalanceComprobacion,
+  paisDelTenant,
+  reportesDelPais,
   type ReportDefinition,
 } from "@/lib/dcc/reportes";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
@@ -34,7 +38,11 @@ function Naturaleza({ valor }: { valor: ReportDefinition["naturaleza"] }) {
     <span
       data-testid="dcc-naturaleza"
       title={valor === "LIVE" ? "Se calcula en cada consulta" : "Lee datos guardados"}
-      className="rounded-full border border-[var(--dcc-border-strong)] px-2 py-0.5 text-xs font-medium text-[var(--dcc-fg-muted)]"
+      className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${
+        valor === "LIVE"
+          ? "border-[var(--dcc-teal)] bg-[var(--dcc-teal-bg)] text-[var(--dcc-teal-ink)]"
+          : "border-[var(--dcc-border-strong)] text-[var(--dcc-fg-muted)]"
+      }`}
     >
       {valor === "LIVE" ? "En vivo" : "Guardado"}
     </span>
@@ -46,7 +54,7 @@ function Importe({ etiqueta, valor, formato }: { etiqueta: string; valor: number
   return (
     <div className="min-w-0">
       <p className={`text-xs ${DCC_CLASSES.subtle}`}>{etiqueta}</p>
-      <p title={formatMoneda(valor, formato) ?? undefined} className="break-words font-dealer-numeric text-lg font-semibold">
+      <p title={formatMoneda(valor, formato) ?? undefined} className={`${DCC_CLASSES.cifra} break-words text-lg`}>
         {formatMonedaCompacta(valor, formato) ?? "—"}
       </p>
     </div>
@@ -78,7 +86,7 @@ function BalanceComprobacion({ formato }: { formato: LocaleTenant }) {
         {b.cuadra === null ? "El backend no informa si cuadra" : b.cuadra ? "Cuadra según el backend" : "No cuadra según el backend"}
       </p>
       <details data-testid="dcc-explicar-cifra" className="mt-3">
-        <summary className="cursor-pointer text-sm font-medium text-[var(--dcc-action)]">Explicar cifra</summary>
+        <summary className={`cursor-pointer ${DCC_CLASSES.link}`}>Explicar cifra</summary>
         {b.cuentas.length === 0 ? (
           <DccEstado estado="vacio" />
         ) : (
@@ -98,6 +106,16 @@ function BalanceComprobacion({ formato }: { formato: LocaleTenant }) {
   );
 }
 
+/** "Abrir" lleva a la pantalla existente de ese reporte; si no hay, "Próximamente". */
+function Abrir({ r }: { r: ReportDefinition }) {
+  if (!r.pantalla) return <SelloCalidad calidad={{ estado: "no_disponible", motivo: "Sin pantalla para este reporte todavía" }} />;
+  return (
+    <Link href={r.pantalla} data-testid="dcc-reporte-abrir" className={DCC_CLASSES.link}>
+      Abrir →
+    </Link>
+  );
+}
+
 export function CentroReportesV2() {
   const access = useAccessEntitlementsBatch([CAPABILITY_REPORTES_CONTABLES]);
   const failClosed = isAccessQueryFailClosed(access);
@@ -105,7 +123,11 @@ export function CentroReportesV2() {
   const bloqueoContable = failClosed
     ? null
     : calidadDesdeEntitlement(access.data?.results[CAPABILITY_REPORTES_CONTABLES] ?? { allowed: false, reason_code: null });
-  const formato = marcaDesdeBranding(useDealerManagementBranding().data).formato;
+  const branding = useDealerManagementBranding().data;
+  const formato = marcaDesdeBranding(branding).formato;
+  const pais = paisDelTenant(branding);
+  const nombrePais = pais ? new Intl.DisplayNames([formato.locale], { type: "region" }).of(pais) ?? pais : null;
+  const visibles = reportesDelPais(REPORT_DEFINITIONS, pais);
 
   const tarjeta = (r: ReportDefinition) => {
     const contable = r.grupo === "Contabilidad";
@@ -118,22 +140,25 @@ export function CentroReportesV2() {
     if (contable && bloqueoContable) return <DccCard key={r.key} {...comun} acciones={cabecera} calidad={bloqueoContable}><DccEstado estado="bloqueado" /></DccCard>;
     return (
       <DccCard key={r.key} {...comun} acciones={cabecera} calidad={r.explicable ? CALIDAD_BALANCE : null}>
-        {r.explicable ? <BalanceComprobacion formato={formato} /> : null}
+        {r.explicable ? <div className="mb-3"><BalanceComprobacion formato={formato} /></div> : null}
+        <Abrir r={r} />
       </DccCard>
     );
   };
-  const contables = REPORT_DEFINITIONS.filter((r) => r.grupo === "Contabilidad");
-  const ejecutivos = REPORT_DEFINITIONS.filter((r) => r.grupo === "Ejecutivo");
+  const contables = visibles.filter((r) => r.grupo === "Contabilidad");
+  const ejecutivos = visibles.filter((r) => r.grupo === "Ejecutivo");
 
   return (
     <DccPage titulo="Centro de Reportes">
       <div className="flex flex-col gap-[var(--dcc-gap)]">
-        <DccSeccion titulo="Contabilidad" icono={BookOpen} meta={`${contables.length} reportes · catálogo N7`} testId="dcc-seccion-contabilidad">
+        <DccSeccion titulo="Contabilidad" icono={BookOpen} meta={nombrePais ? `Reportes de ${nombrePais}` : "País del tenant sin configurar: se ocultan los reportes fiscales"} testId="dcc-seccion-contabilidad">
           <DccGrid>{contables.map(tarjeta)}</DccGrid>
         </DccSeccion>
-        <DccSeccion titulo="Ejecutivo" icono={BarChart3} meta={`${ejecutivos.length} reporte`} testId="dcc-seccion-ejecutivo">
-          <DccGrid>{ejecutivos.map(tarjeta)}</DccGrid>
-        </DccSeccion>
+        {ejecutivos.length ? (
+          <DccSeccion titulo="Ejecutivo" icono={BarChart3} testId="dcc-seccion-ejecutivo">
+            <DccGrid>{ejecutivos.map(tarjeta)}</DccGrid>
+          </DccSeccion>
+        ) : null}
       </div>
     </DccPage>
   );
