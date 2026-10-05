@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { CentroReportesV2 } from "../CentroReportesV2";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { fetchBalanceComprobacion } from "@/lib/dcc/reportes";
+import * as cuadre from "@/lib/contable/cuadre";
 
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
 jest.mock("@/lib/access/hooks", () => ({ useAccessEntitlementsBatch: jest.fn() }));
@@ -74,11 +75,30 @@ describe("Centro de Reportes v2", () => {
     fireEvent.click(screen.getByTestId("dcc-ver-totales"));
     await waitFor(() => expect(screen.getByTestId("dcc-balance-totales")).toBeInTheDocument());
     expect(n(screen.getByTestId("dcc-balance-totales").textContent)).toContain("$ 182,4 M");
-    expect(screen.getByText("Cuadra según el backend", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("Debe y haber cuadran", { exact: false })).toBeInTheDocument();
     const explicar = screen.getByTestId("dcc-explicar-cifra");
     expect(explicar).not.toHaveAttribute("open");
     expect(within(explicar).getByText("1010 Caja")).toBeInTheDocument();
     expect(n(explicar.textContent)).toContain("$ 182.400.000,00");
+  });
+
+  it("cuadre con la misma funcion que /contable/balance-comprobacion: 0 = 0 cuadra", async () => {
+    const espia = jest.spyOn(cuadre, "evaluaCuadre");
+    (fetchBalanceComprobacion as jest.Mock).mockResolvedValue({ totalDebe: 0, totalHaber: 0, cuadra: false, cuentas: [] });
+    montar(PERMITIDO);
+    fireEvent.click(screen.getByTestId("dcc-ver-totales"));
+    await waitFor(() => expect(screen.getByTestId("dcc-balance-totales")).toBeInTheDocument());
+    expect(screen.getByText("Debe y haber cuadran", { exact: false })).toBeInTheDocument();
+    expect(espia).toHaveBeenCalledWith(0, 0);
+    espia.mockRestore();
+  });
+
+  it("diferencia real: no cuadra", async () => {
+    (fetchBalanceComprobacion as jest.Mock).mockResolvedValue({ totalDebe: 1000, totalHaber: 900, cuadra: true, cuentas: [] });
+    montar(PERMITIDO);
+    fireEvent.click(screen.getByTestId("dcc-ver-totales"));
+    await waitFor(() => expect(screen.getByTestId("dcc-balance-totales")).toBeInTheDocument());
+    expect(screen.getByText("Debe y haber no cuadran", { exact: false })).toBeInTheDocument();
   });
 
   it("sin el entitlement contable del backend, los contables quedan bloqueados", () => {
