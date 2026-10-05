@@ -14,6 +14,7 @@ import {
   RUTA_INVENTARIO,
   TESTIDS_IMPORTAR,
   TESTIDS_INVENTARIO,
+  TESTIDS_SIN_FORMULARIO,
   TEXTO_SIN_IVA,
 } from "../../e2e/mapaal/d7-guion";
 import { importActivosPath } from "@/lib/dealer-management/import-activos";
@@ -36,6 +37,11 @@ describe("D7 guion: selectores y textos contra el codigo de la app", () => {
     const pagina = fuente(`app${RUTA_IMPORTAR}/page.tsx`);
     for (const id of Object.values(TESTIDS_IMPORTAR)) expect(pagina).toContain(`"${id}"`);
     expect(pagina).toContain(`data-testid={\`${PREFIJO_HOJA}\${`);
+  });
+
+  it("los estados sin formulario que el spec diagnostica existen en la pagina", () => {
+    const pagina = fuente(`app${RUTA_IMPORTAR}/page.tsx`);
+    for (const id of Object.values(TESTIDS_SIN_FORMULARIO)) expect(pagina).toContain(`"${id}"`);
   });
 
   it("la pantalla declara la plantilla y la regla sin IVA del guion", () => {
