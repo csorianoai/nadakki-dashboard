@@ -19,6 +19,7 @@ import {
 } from "@/components/contable/monedaFuncional";
 import type { BalanceComprobacionReport, PeriodoContable } from "@/types/contable";
 import { cn } from "@/lib/utils";
+import { evaluaCuadre } from "@/lib/contable/cuadre";
 
 export function BalanceComprobacionClient() {
   const tenantId = useContableTenantId();
@@ -70,6 +71,9 @@ export function BalanceComprobacionClient() {
     void load();
   }, [load]);
 
+  // El veredicto sale de los totales (en centavos), no del flag: debe = haber = 0 cuadra.
+  const cuadra = evaluaCuadre(report?.totals?.total_debe ?? 0, report?.totals?.total_haber ?? 0) === true;
+
   return (
     <ContablePageShell
       title="Balance de comprobación"
@@ -99,12 +103,12 @@ export function BalanceComprobacionClient() {
         <p className="text-sm text-zinc-500">Calculando balance…</p>
       ) : report ? (
         <div className="space-y-4">
-          {report?.totals?.cuadra ? (
-            <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200">
+          {cuadra ? (
+            <p data-testid="balance-veredicto" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200">
               Totales globales CUADRAN
             </p>
           ) : (
-            <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200">
+            <p data-testid="balance-veredicto" className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200">
               Totales globales NO cuadran — revisar asientos posteados
             </p>
           )}
@@ -130,7 +134,7 @@ export function BalanceComprobacionClient() {
                     <td className="px-4 py-2 text-right font-mono">{importe(r.saldo)}</td>
                   </tr>
                 ))}
-                <tr className={cn("bg-white/[0.04] font-bold", report?.totals?.cuadra ? "text-emerald-200" : "text-rose-200")}>
+                <tr className={cn("bg-white/[0.04] font-bold", cuadra ? "text-emerald-200" : "text-rose-200")}>
                   <td className="px-4 py-3" colSpan={2}>TOTALES</td>
                   <td className="px-4 py-3 text-right font-mono">{importe(report?.totals?.total_debe ?? 0)}</td>
                   <td className="px-4 py-3 text-right font-mono">{importe(report?.totals?.total_haber ?? 0)}</td>

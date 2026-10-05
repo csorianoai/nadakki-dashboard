@@ -12,6 +12,7 @@ import { DccSeccion } from "@/components/dcc/DccSeccion";
 import { SelloCalidad } from "@/components/dcc/SelloCalidad";
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
+import { evaluaCuadre } from "@/lib/contable/cuadre";
 import { calidadDesdeEntitlement, type Calidad } from "@/lib/dcc/calidad";
 import { formatMoneda, formatMonedaCompacta, type LocaleTenant } from "@/lib/dcc/formato";
 import { marcaDesdeBranding } from "@/lib/dcc/marca";
@@ -83,7 +84,7 @@ function BalanceComprobacion({ formato }: { formato: LocaleTenant }) {
       </div>
       <p className={`mt-2 text-xs ${DCC_CLASSES.muted}`}>
         Todos los períodos ·{" "}
-        {b.cuadra === null ? "El backend no informa si cuadra" : b.cuadra ? "Cuadra según el backend" : "No cuadra según el backend"}
+        {evaluaCuadre(b.totalDebe, b.totalHaber) ? "Debe y haber cuadran" : "Debe y haber no cuadran"}
       </p>
       <details data-testid="dcc-explicar-cifra" className="mt-3">
         <summary className={`cursor-pointer ${DCC_CLASSES.link}`}>Explicar cifra</summary>
