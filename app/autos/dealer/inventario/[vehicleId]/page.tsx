@@ -72,8 +72,8 @@ function VehicleFicha({
         className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer el vehículo</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted">
-          reason_code: <code>{query.error.reason_code ?? `HTTP_${query.error.status}`}</code>
+        <p className="mt-1 text-xs text-nk-fg-muted">
+          Código para soporte: {query.error.reason_code ?? `HTTP_${query.error.status}`}
         </p>
       </section>
     );
@@ -104,12 +104,17 @@ function VehicleFicha({
         <FotosVehiculoPanel vehicleId={vehicleId} />
       ) : (
         <p role="status" data-testid="vehicle-photos-gated" data-reason-code={photos.reason_code} className="text-sm text-nk-fg-muted">
-          Tu plan no incluye las fotos del vehículo. reason_code: <code>{photos.reason_code}</code>
+          Tu plan no incluye las fotos del vehículo.
         </p>
       )}
       <DealerVehicleEconomicsPanel vehicleId={vehicleId} />
     </>
   );
+}
+
+/** "2021 Toyota Hilux". Sin datos, un nombre generico: nunca el UUID. */
+function tituloDeVehiculo(row: { year: number | null; make: string | null; model: string | null } | undefined): string {
+  return (row ? [row.year, row.make, row.model].filter(Boolean).join(" ") : "") || "Vehículo";
 }
 
 export default function DealerVehicleEconomicsPage() {
@@ -126,16 +131,21 @@ export default function DealerVehicleEconomicsPage() {
   const decision = asDecision(access);
   const photos = asDecision(access, PHOTOS_CAPABILITY);
   const write = asDecision(access, VEHICLE_WRITE_CAPABILITY);
+  // Misma clave que la ficha: el titulo sale de la lectura que ya se hace.
+  const ficha = useQuery({
+    queryKey: ["dealer-vehicle", dealerId, vehicleId],
+    queryFn: () => fetchDealerVehicleStatus(dealerId, vehicleId),
+    enabled: decision.allowed && dealerId.length > 0 && vehicleId.length > 0,
+    retry: false,
+  });
 
   return (
     <main className="max-w-full space-y-4 overflow-x-hidden">
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg break-words">
-          {vehicleId || "Vehículo"}
+          {tituloDeVehiculo(ficha.data)}
         </h1>
-        <p className="mt-1 text-sm text-nk-fg-muted">
-          Ficha autenticada del dealer. Margen y días salen del GET autenticado. El marketplace público no es fuente.
-        </p>
+        <p className="mt-1 text-sm text-nk-fg-muted">Datos, fotos, margen y días en stock de esta unidad.</p>
       </header>
 
       {!vehicleId ? (
@@ -156,8 +166,8 @@ export default function DealerVehicleEconomicsPage() {
           className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
-          <p className="mt-1 text-sm text-nk-fg-muted">
-            reason_code: <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
+          <p className="mt-1 text-xs text-nk-fg-muted">
+            Código para soporte: {access.error.reason_code ?? `HTTP_${access.error.status}`}
           </p>
         </section>
       ) : !decision.allowed ? (
@@ -174,9 +184,7 @@ export default function DealerVehicleEconomicsPage() {
           <p className="mt-1 text-sm text-nk-fg-muted">
             {REASON_CODE_INFO[decision.reason_code]?.description ?? "Esta superficie no está disponible."}
           </p>
-          <p className="mt-2 text-xs font-semibold text-nk-fg">
-            reason_code: <code>{decision.reason_code}</code>
-          </p>
+          <p className="mt-2 text-xs text-nk-fg-muted">Código para soporte: {decision.reason_code}</p>
           {REASON_CODE_INFO[decision.reason_code]?.action_required === "upgrade_plan" ||
           decision.reason_code === "UPGRADE_REQUIRED" ? (
             <button
@@ -191,7 +199,7 @@ export default function DealerVehicleEconomicsPage() {
         </section>
       ) : !dealerId ? (
         <p role="alert" className="text-sm text-nk-fg-muted">
-          Falta el dealer para leer la ficha autenticada.
+          No se pudo identificar tu concesionario. Volvé a iniciar sesión.
         </p>
       ) : (
         <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} />

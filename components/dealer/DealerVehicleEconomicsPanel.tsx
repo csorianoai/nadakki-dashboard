@@ -54,9 +54,9 @@ export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }
         data-http-status={access ? String(access.status) : undefined}
         className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
-        <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer la economía</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted break-words">
-          reason_code: <code>{access?.reason_code ?? `HTTP_${access?.status ?? "error"}`}</code>
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudieron leer el margen y los días en stock</h2>
+        <p className="mt-1 text-xs text-nk-fg-muted break-words">
+          Código para soporte: {access?.reason_code ?? `HTTP_${access?.status ?? "error"}`}
         </p>
       </section>
     );
@@ -71,7 +71,7 @@ export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }
   if (empty) {
     return (
       <p data-testid="dealer-economics-empty" className="text-sm text-nk-fg-muted">
-        El backend no devolvió margen ni días de inventario para este vehículo.
+        Todavía no hay margen ni días en stock para este vehículo: aparecen cuando se registra su compra o ingreso.
       </p>
     );
   }
