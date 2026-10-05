@@ -6,10 +6,8 @@ export default function DealerCoreStatusPage() {
   return (
     <main className="max-w-full space-y-4 overflow-x-hidden">
       <header>
-        <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Estado de cores</h1>
-        <p className="mt-1 text-sm text-nk-fg-muted">
-          Qué puedes operar ahora. El estado sale de readiness (is_usable). El batch solo arma el CTA.
-        </p>
+        <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Estado de módulos</h1>
+        <p className="mt-1 text-sm text-nk-fg-muted">Qué módulos incluye tu plan y cómo abrirlos.</p>
       </header>
       <DealerCoreStatusHome />
     </main>

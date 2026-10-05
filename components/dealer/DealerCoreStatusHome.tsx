@@ -2,152 +2,94 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AccessApiError, getAccessClientContext } from "@/lib/access/client";
-import { useAccessEntitlementsBatch, useAccessReadiness } from "@/lib/access/hooks";
+import { getAccessClientContext } from "@/lib/access/client";
+import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
+import { isAccessUnverified, unverifiedReasonFromBatch } from "@/lib/access/reason-codes";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
-import {
-  DEALER_CORE_STATUS_ROWS,
-  deriveDealerCoreUiState,
-} from "@/lib/dealer/core-status";
+import { DEALER_NAV_CAPABILITY_KEYS, visibleDealerNavGroups } from "@/components/dealer-management/shell/dealer-nav";
 import type { EntitlementDecision } from "@/types/entitlements";
 
-const ACTION_CAPS = DEALER_CORE_STATUS_ROWS.map((row) => row.actionCapability);
+/**
+ * Estado de modulos (P2): los mismos modulos y el mismo batch que el menu
+ * (`visibleDealerNavGroups`), asi que nada que rebote puede salir "Disponible".
+ * Solo dos estados visibles, con su accion. Sin reason_code, readiness ni notas
+ * del catalogo: son internos.
+ */
+const UPGRADE_REASONS = new Set(["UPGRADE_REQUIRED", "NO_ACTIVE_SUBSCRIPTION", "LIMIT_REACHED", "ADD_ON_REQUIRED"]);
+const MODULE_GROUPS = visibleDealerNavGroups((capability) => capability !== null);
+const CARD = "max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4";
+const BOTON = "mt-3 min-h-11 rounded-full border border-brand-2/40 bg-brand-2/10 px-4 text-sm font-semibold text-nk-fg";
 
 export function DealerCoreStatusHome() {
   const context = getAccessClientContext();
-  const readiness = useAccessReadiness();
-  const batch = useAccessEntitlementsBatch([...ACTION_CAPS]);
+  const batch = useAccessEntitlementsBatch(DEALER_NAV_CAPABILITY_KEYS);
   const [upgradeFor, setUpgradeFor] = useState<EntitlementDecision | null>(null);
 
   if (!context?.tenantId) {
     return (
-      <section
-        role="alert"
-        data-testid="dealer-core-status-error"
-        data-reason-code="TENANT_NOT_FOUND"
-        className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
-      >
-        <h2 className="font-manrope text-lg font-bold text-nk-fg">Sin tenant</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted">No hay contexto de tenant para leer readiness.</p>
+      <section role="alert" data-testid="dealer-core-status-error" className={CARD}>
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">No pudimos identificar tu cuenta</h2>
+        <p className="mt-1 text-sm text-nk-fg-muted">Cierra sesión y vuelve a entrar para ver tus módulos.</p>
       </section>
     );
   }
 
-  const loading =
-    readiness.isPending ||
-    readiness.isLoading ||
-    batch.isPending ||
-    batch.isLoading;
-  const accessError =
-    readiness.error instanceof AccessApiError ||
-    batch.error instanceof AccessApiError ||
-    Boolean(readiness.error) ||
-    Boolean(batch.error);
-
-  if (loading) {
+  if (batch.isPending || batch.isLoading) {
     return (
       <p className="animate-pulse text-sm text-nk-fg-muted" data-testid="dealer-core-status-loading">
-        Cargando estado de cores…
+        Cargando tus módulos…
       </p>
     );
   }
 
-  if (accessError) {
-    const err =
-      readiness.error instanceof AccessApiError
-        ? readiness.error
-        : batch.error instanceof AccessApiError
-          ? batch.error
-          : null;
+  const results = batch.data?.results;
+  // Sin verificar el acceso no se sabe que incluye el plan: "No incluido" seria falso.
+  if (batch.error || !results || isAccessUnverified(unverifiedReasonFromBatch(results))) {
     return (
-      <section
-        role="alert"
-        data-testid="dealer-core-status-error"
-        data-reason-code={err?.reason_code ?? "DEFAULT_DENY"}
-        data-http-status={err ? String(err.status) : undefined}
-        className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
-      >
-        <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo cargar el estado</h2>
+      <section role="alert" data-testid="dealer-core-status-error" className={CARD}>
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">No pudimos comprobar tus módulos</h2>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          {err?.reason_code ?? "Error al leer readiness o entitlements."}
+          Esto no significa que tu plan no los incluya. Vuelve a intentarlo en unos minutos o avisa a soporte.
         </p>
+        <button type="button" className={BOTON} onClick={() => void batch.refetch()}>
+          Reintentar
+        </button>
       </section>
     );
   }
 
-  const entries = readiness.data?.entries ?? [];
-  const byKey = new Map(entries.map((e) => [e.capability_key, e]));
-
   return (
-    <div className="max-w-full space-y-3 overflow-x-hidden" data-testid="dealer-core-status-ready">
-      {DEALER_CORE_STATUS_ROWS.map((row) => {
-        const entry = byKey.get(row.readinessKey) ?? null;
-        const item = batch.data?.results?.[row.actionCapability] ?? null;
-        const derived = deriveDealerCoreUiState({
-          accessError: false,
-          readinessKey: row.readinessKey,
-          entry,
-          batch: item,
-        });
-        const upgradeDecision: EntitlementDecision | null =
-          derived.action === "upgrade"
-            ? {
-                allowed: false,
-                reason_code: (derived.reason_code as EntitlementDecision["reason_code"]) || "UPGRADE_REQUIRED",
-              }
-            : null;
-        return (
-          <article
-            key={row.name}
-            data-testid="dealer-core-card"
-            data-core-name={row.name}
-            data-core-state={derived.state}
-            data-readiness-key={row.readinessKey}
-            data-action-capability={row.actionCapability}
-            data-reason-code={derived.reason_code ?? ""}
-            className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="font-manrope text-base font-bold text-nk-fg">{row.name}</h2>
-              <p className="text-xs font-semibold uppercase tracking-wide text-nk-fg-muted">{derived.state}</p>
-            </div>
-            <p className="mt-2 text-sm text-nk-fg-muted break-words">{derived.reason}</p>
-            {derived.reason_code ? (
-              <p className="mt-1 text-xs font-semibold text-nk-fg">
-                reason_code: <code>{derived.reason_code}</code>
-              </p>
-            ) : null}
-            {entry ? (
-              <p className="mt-1 text-xs text-nk-fg-muted">
-                readiness: {entry.status}
-                {entry.is_usable ? " · usable" : " · no usable"}
-              </p>
-            ) : (
-              <p className="mt-1 text-xs text-nk-fg-muted">readiness: sin entrada para esta capability</p>
-            )}
-            {derived.action === "open" ? (
-              <Link
-                href={row.href}
-                className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand-2 underline"
-              >
-                Abrir
-              </Link>
-            ) : null}
-            {derived.action === "upgrade" && upgradeDecision ? (
-              <button
-                type="button"
-                className="mt-3 min-h-11 w-full rounded-full border border-brand-2/40 bg-brand-2/10 px-4 text-sm font-semibold text-nk-fg"
-                onClick={() => setUpgradeFor(upgradeDecision)}
-              >
-                Ver planes publicados
-              </button>
-            ) : null}
-            {derived.action === "contact_admin" ? (
-              <p className="mt-3 text-sm text-nk-fg">Contacta a tu administrador para desbloquear.</p>
-            ) : null}
-          </article>
-        );
-      })}
+    <div className="max-w-full space-y-5 overflow-x-hidden" data-testid="dealer-core-status-ready">
+      {MODULE_GROUPS.map((group) => (
+        <section key={group.id} aria-label={group.label} className="space-y-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-nk-fg-muted">{group.label}</h2>
+          {group.items.map((item) => {
+            const decision = results[item.capability as string];
+            const disponible = decision?.allowed === true;
+            return (
+              <article key={item.href} data-testid="dealer-core-card" data-module={item.label} className={CARD}>
+                <h3 className="font-manrope text-base font-bold text-nk-fg">{item.label}</h3>
+                <p className="mt-1 text-sm text-nk-fg-muted">{disponible ? "Disponible" : "No incluido en tu plan"}</p>
+                {disponible ? (
+                  <Link href={item.href} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand-2 underline">
+                    Abrir {item.label}
+                  </Link>
+                ) : decision && UPGRADE_REASONS.has(decision.reason_code ?? "") ? (
+                  <button
+                    type="button"
+                    className={BOTON}
+                    onClick={() => setUpgradeFor({ allowed: false, reason_code: decision.reason_code as EntitlementDecision["reason_code"] })}
+                  >
+                    Ver planes
+                  </button>
+                ) : (
+                  <p className="mt-3 text-sm text-nk-fg">Pídele al administrador de tu cuenta que lo agregue a tu plan.</p>
+                )}
+              </article>
+            );
+          })}
+        </section>
+      ))}
       {upgradeFor ? <UpgradeModal decision={upgradeFor} onClose={() => setUpgradeFor(null)} /> : null}
     </div>
   );
