@@ -7,6 +7,10 @@ jest.mock("@/lib/credit-hub/hooks/useBankDecision", () => ({
   useBankCounterOffer: jest.fn(),
 }));
 
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: { id: "user-1", email: "analista@banco.test" } }),
+}));
+
 jest.mock("@/lib/credit-hub/hooks/useTenantConfig", () => ({
   useTenantConfig: () => ({ tenantConfig: { locale: "es-DO" }, loading: false }),
 }));
