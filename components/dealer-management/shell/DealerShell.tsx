@@ -16,6 +16,8 @@ import { DEALER_NAV_CAPABILITY_KEYS, DEALER_NAV_GROUPS } from "./dealer-nav";
 import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
+import { DccThemeProvider, useDccThemeContext } from "@/components/dcc/DccThemeContext";
+import { dealerShellThemeStyle } from "./dealer-shell-theme";
 
 /** `reason_code` de un error de acceso, sin depender de la clase que lo lanza. */
 function reasonCodeOfError(error: unknown): string | null {
@@ -61,12 +63,15 @@ function reasonCodeOfError(error: unknown): string | null {
 export function DealerShell({ children }: { children: ReactNode }) {
   return (
     <AutosAuthProvider>
-      <DealerShellChrome>{children}</DealerShellChrome>
+      <DccThemeProvider>
+        <DealerShellChrome>{children}</DealerShellChrome>
+      </DccThemeProvider>
     </AutosAuthProvider>
   );
 }
 
 function DealerShellChrome({ children }: { children: ReactNode }) {
+  const theme = useDccThemeContext()?.theme ?? "light";
   const [mobileNav, setMobileNav] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -260,6 +265,8 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
   return (
     <div
       data-portal="dealer"
+      data-dcc-theme={theme}
+      style={dealerShellThemeStyle(theme)}
       className="flex min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--fg)] antialiased"
     >
       <DealerSidebar
@@ -292,11 +299,11 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
               data-testid="dealer-context-aviso"
               data-estado={avisoDeContexto.estado}
               data-reason-code={avisoDeContexto.codigo ?? ""}
-              className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100"
+              className="rounded-xl border border-[var(--dcc-border-strong)] bg-[var(--dcc-partial-bg)] p-4 text-sm text-[var(--dcc-partial-fg)]"
             >
               <p className="font-semibold">{avisoDeContexto.titulo}</p>
               {avisoDeContexto.detalle ? (
-                <p className="mt-1 text-amber-200/90">{avisoDeContexto.detalle}</p>
+                <p className="mt-1 text-[var(--dcc-partial-fg)]">{avisoDeContexto.detalle}</p>
               ) : null}
             </section>
           ) : (

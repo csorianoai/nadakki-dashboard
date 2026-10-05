@@ -150,7 +150,7 @@ export function DealerCommandPalette({ open, onClose, items }: DealerCommandPale
             aria-controls={listboxId}
             aria-autocomplete="list"
             placeholder="Buscar una pantalla…"
-            className="min-h-12 w-full bg-transparent text-sm text-white placeholder:text-[var(--nav-fg-muted)] focus:outline-none"
+            className="min-h-12 w-full bg-transparent text-sm text-[var(--nav-fg)] placeholder:text-[var(--nav-fg-muted)] focus:outline-none"
           />
         </div>
 
@@ -176,8 +176,8 @@ export function DealerCommandPalette({ open, onClose, items }: DealerCommandPale
                     className={cn(
                       "flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm",
                       index === active
-                        ? "bg-[var(--nav-bg-2)] text-white"
-                        : "text-[var(--nav-fg-muted)] hover:bg-white/[0.06]",
+                        ? "bg-[var(--nav-bg-2)] text-[var(--dcc-action)]"
+                        : "text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)]",
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
