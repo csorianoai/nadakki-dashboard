@@ -51,11 +51,16 @@ describe("campos del contrato", () => {
 });
 
 describe("lo que el contrato no acepta no se habilita", () => {
-  it("dominio, numero de stock, puertas, cilindrada y cilindros van deshabilitados", () => {
+  it("dominio y numero de stock ya se editan (backend #1564)", () => {
+    montar();
+    for (const name of [/^Dominio/, /^Número de stock/, /País del dominio/, /Moneda de la referencia/]) {
+      expect(screen.getByRole("textbox", { name })).toBeEnabled();
+    }
+  });
+
+  it("puertas, cilindrada y cilindros siguen deshabilitados: el contrato no los acepta", () => {
     montar();
     for (const name of [
-      /Dominio · Próximamente/,
-      /Número de stock · Próximamente/,
       /Puertas · Próximamente/,
       /Cilindrada · Próximamente/,
       /Cilindros · Próximamente/,
@@ -73,15 +78,15 @@ describe("lo que el contrato no acepta no se habilita", () => {
 describe("moneda de los dos precios", () => {
   it("el oficial toma la moneda funcional del tenant", () => {
     montar();
-    expect(screen.getByRole("textbox", { name: /Precio \(ARS\)/ })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /Precio \(ARS\)/ })).toBeEnabled();
   });
 
-  it("la referencia no asume US$: dice que falta su moneda", () => {
+  it("la referencia no asume US$: toma la moneda que escribe el dealer", () => {
     montar();
     expect(screen.queryByRole("textbox", { name: /Precio de referencia \(US\$\)/ })).toBeNull();
-    expect(
-      screen.getByRole("textbox", { name: /Precio de referencia \(moneda de referencia del tenant\)/ }),
-    ).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /Precio de referencia \(otra moneda\)/ })).toBeEnabled();
+    fireEvent.change(screen.getByRole("textbox", { name: /Moneda de la referencia/ }), { target: { value: "usd" } });
+    expect(screen.getByRole("textbox", { name: /Precio de referencia \(USD\)/ })).toBeEnabled();
   });
 
   it("la ayuda no nombra ninguna moneda como autoridad contable", () => {
@@ -94,13 +99,13 @@ describe("moneda de los dos precios", () => {
     branding = { locale: "es-AR", currency: null };
     montar();
     expect(screen.queryByRole("textbox", { name: /Precio \(ARS\)/ })).toBeNull();
-    expect(screen.getByRole("textbox", { name: /moneda funcional del tenant/ })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /moneda funcional del tenant/ })).toBeEnabled();
   });
 
   it("otra moneda del tenant produce otra etiqueta", () => {
     branding = { locale: "es-DO", currency: "DOP" };
     montar();
-    expect(screen.getByRole("textbox", { name: /Precio \(DOP\)/ })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /Precio \(DOP\)/ })).toBeEnabled();
   });
 
   /**
@@ -166,6 +171,37 @@ describe("validacion antes de llamar al padre", () => {
     fireEvent.submit(screen.getByTestId("vehicle-manual-form"));
     expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(onSubmit.mock.calls[0][0]).toMatchObject({ make: "Toyota", model: "Hilux", year: "2021" });
+  });
+});
+
+describe("precio, dominio y stock", () => {
+  it("el formulario no usa la validacion nativa del navegador", () => {
+    montar();
+    expect(screen.getByTestId("vehicle-manual-form")).toHaveAttribute("novalidate");
+  });
+
+  it("el pais del dominio se propone con el del tenant", () => {
+    montar();
+    expect(screen.getByRole("textbox", { name: /País del dominio/ })).toHaveValue("AR");
+  });
+
+  it("referencia en la misma moneda que el precio: error junto al campo y no se envia", () => {
+    montar();
+    rellenaMinimo();
+    fireEvent.change(screen.getByRole("textbox", { name: /Precio \(ARS\)/ }), { target: { value: "100" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Precio de referencia/ }), { target: { value: "1" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Moneda de la referencia/ }), { target: { value: "ARS" } });
+    fireEvent.submit(screen.getByTestId("vehicle-manual-form"));
+    expect(onSubmit).not.toHaveBeenCalled();
+    const campo = screen.getByRole("textbox", { name: /Moneda de la referencia/ });
+    expect(campo).toHaveAttribute("aria-invalid", "true");
+    expect(document.getElementById("display_price_currency-error")).toHaveTextContent(/otra moneda/);
+  });
+
+  it("el reason_code del backend se pinta en su campo, no como codigo suelto", () => {
+    montar({ errorReasonCode: "STOCK_NUMBER_TAKEN" });
+    expect(document.getElementById("stock_number-error")).toHaveTextContent("Ese número de stock ya lo tiene otro vehículo.");
+    expect(screen.queryByTestId("vehicle-manual-error")).toBeNull();
   });
 });
 
