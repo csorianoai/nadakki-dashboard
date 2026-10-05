@@ -1,148 +1,80 @@
 /**
  * @jest-environment jsdom
+ *
+ * P2 (QA Mapaal AR): Estado de modulos ensenaba reason_code, readiness y notas
+ * del catalogo ("Seeded by migration 097") y marcaba READY modulos que
+ * rebotaban. Ahora: solo "Disponible" / "No incluido en tu plan", con accion.
  */
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import DealerCoreStatusPage from "@/app/autos/dealer/estado/page";
-import { DEALER_CORE_STATUS_ROWS } from "@/lib/dealer/core-status";
-import { tokenStorage } from "@/lib/auth/token-storage";
-import {
-  resetDealerAccessMemoryForTests,
-  setDealerAccessContext,
-} from "@/lib/dealer/access-context";
+import { visibleDealerNavGroups } from "@/components/dealer-management/shell/dealer-nav";
 
-jest.mock("@/lib/auth/token-refresh", () => ({
-  refreshAccessToken: jest.fn(async () => false),
-  isTokenExpiringSoon: jest.fn(() => false),
+type Decision = { allowed: boolean; reason_code: string | null };
+let batch: { isPending: boolean; isLoading: boolean; error: unknown; data?: { results: Record<string, Decision> }; refetch: jest.Mock };
+
+jest.mock("@/lib/access/client", () => ({
+  getAccessClientContext: () => ({ tenantId: "tenant-mapaal" }),
+  AccessApiError: class AccessApiError extends Error {},
+}));
+jest.mock("@/lib/access/hooks", () => ({
+  useAccessEntitlementsBatch: () => batch,
+  useAccessPlans: () => ({ isPending: true, isLoading: true, error: null }),
 }));
 
-function jsonResponse(body: unknown, status: number) {
-  return { ok: status >= 200 && status < 300, status, json: async () => body };
-}
+const MODULOS = visibleDealerNavGroups((cap) => cap !== null).flatMap((g) => g.items);
+const SI: Decision = { allowed: true, reason_code: "ALLOWED" };
 
-function seedDealer() {
-  window.localStorage.setItem("nadakki_tenant_id", "tenant-a");
-  setDealerAccessContext({ tenantId: "tenant-a", dealerId: "dealer-a", organizationUnitId: "ou-a" });
+/** Todo el menu con `base`, mas excepciones. Credit y Marketing llegan permitidos, como en Mapaal. */
+function responder(base: Decision, excepciones: Record<string, Decision> = {}) {
+  const results: Record<string, Decision> = { "credit.applications.view": SI, "credit.applications.submit": SI, "marketing.email.campaigns": SI };
+  for (const m of MODULOS) results[m.capability as string] = base;
+  batch = { isPending: false, isLoading: false, error: null, data: { results: { ...results, ...excepciones } }, refetch: jest.fn() };
 }
+const tarjeta = (label: string) => screen.getAllByTestId("dealer-core-card").find((el) => el.dataset.module === label);
 
-function wrapperFor(client: QueryClient) {
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  };
-}
-
-describe("Dealer core status home", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-    resetDealerAccessMemoryForTests();
-    tokenStorage.clearTokens();
-    seedDealer();
+describe("Estado de modulos", () => {
+  it("no renderiza internals y cada modulo tiene solo uno de los dos estados", () => {
+    responder({ allowed: false, reason_code: "DEFAULT_DENY" }, { "autos.inventory.list": SI, "autos.leads.crm": { allowed: false, reason_code: "UPGRADE_REQUIRED" } });
+    const { container } = render(<DealerCoreStatusPage />);
+    for (const interno of ["reason_code", "readiness", "Seeded by migration", "UPGRADE_REQUIRED", "DEFAULT_DENY", "ALLOWED", "READY", "usable"]) {
+      expect(container.innerHTML).not.toContain(interno);
+    }
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Estado de módulos");
+    const tarjetas = screen.getAllByTestId("dealer-core-card");
+    expect(tarjetas).toHaveLength(MODULOS.length);
+    for (const t of tarjetas) {
+      const estados = within(t).queryAllByText(/^(Disponible|No incluido en tu plan)$/);
+      expect(estados).toHaveLength(1);
+    }
   });
 
-  test("state from readinessKey; CTA from actionCapability; batch omits readiness keys", async () => {
-    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.includes("/api/v1/access/readiness")) {
-        return jsonResponse(
-          {
-            entries: [
-              {
-                capability_key: "credit.applications.view",
-                status: "LIVE",
-                is_usable: true,
-                version: "1",
-                notes: null,
-              },
-              {
-                capability_key: "legal.cases.view",
-                status: "PENDING_EXTERNAL_ACTIVATION",
-                is_usable: false,
-                version: null,
-                notes: "Proveedor legal pendiente",
-              },
-              {
-                capability_key: "marketing.social.publish",
-                status: "LIVE",
-                is_usable: true,
-                version: "1",
-                notes: null,
-              },
-              {
-                capability_key: "accounting.invoices.view",
-                status: "BLOCKED",
-                is_usable: false,
-                version: null,
-                notes: "Contable bloqueado",
-              },
-            ],
-            summary: {},
-            total: 4,
-          },
-          200,
-        ) as Response;
-      }
-      if (url.includes("/api/v1/access/entitlements/batch")) {
-        return jsonResponse(
-          {
-            results: {
-              "credit.applications.submit": {
-                allowed: true,
-                reason_code: "ALLOWED",
-                limit: null,
-                current_usage: null,
-              },
-              "legal.cases.create": {
-                allowed: true,
-                reason_code: "ALLOWED",
-                limit: null,
-                current_usage: null,
-              },
-              "marketing.ads.manage": {
-                allowed: false,
-                reason_code: "UPGRADE_REQUIRED",
-                limit: null,
-                current_usage: null,
-              },
-              "accounting.invoices.create": {
-                allowed: false,
-                reason_code: "DEFAULT_DENY",
-                limit: null,
-                current_usage: null,
-              },
-            },
-          },
-          200,
-        ) as Response;
-      }
-      return jsonResponse({}, 404) as Response;
-    });
+  it("los modulos que rebotan no aparecen aunque el plan los permita", () => {
+    responder(SI);
+    render(<DealerCoreStatusPage />);
+    for (const label of ["Dealer-Bank", "Solicitudes", "Marketing"]) expect(tarjeta(label)).toBeUndefined();
+    for (const link of screen.getAllByRole("link")) expect(link.getAttribute("href")).not.toMatch(/^\/(credit-hub|marketing)/);
+  });
 
-    render(<DealerCoreStatusPage />, {
-      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
-    });
+  it("Disponible lleva el enlace; No incluido lleva como pedirlo", () => {
+    responder({ allowed: false, reason_code: "DEFAULT_DENY" }, { "autos.inventory.list": SI, "autos.leads.crm": { allowed: false, reason_code: "UPGRADE_REQUIRED" } });
+    render(<DealerCoreStatusPage />);
+    const inventario = tarjeta("Inventario")!;
+    expect(within(inventario).getByText("Disponible")).toBeInTheDocument();
+    expect(within(inventario).getByRole("link", { name: "Abrir Inventario" })).toHaveAttribute("href", "/autos/dealer/inventario");
+    const leads = tarjeta("Leads")!;
+    expect(within(leads).getByText("No incluido en tu plan")).toBeInTheDocument();
+    expect(within(leads).queryByRole("link")).toBeNull();
+    fireEvent.click(within(leads).getByRole("button", { name: "Ver planes" }));
+    expect(within(tarjeta("Conexiones")!).getByText(/administrador de tu cuenta/)).toBeInTheDocument();
+  });
 
-    await waitFor(() => expect(screen.getByTestId("dealer-core-status-ready")).toBeInTheDocument());
-    const cards = screen.getAllByTestId("dealer-core-card");
-    const byName = Object.fromEntries(cards.map((el) => [el.getAttribute("data-core-name"), el]));
-    expect(byName["Dealer-Bank"]).toHaveAttribute("data-core-state", "READY");
-    expect(byName["Dealer-Bank"]).toHaveAttribute("data-readiness-key", "credit.applications.view");
-    expect(byName["Dealer-Bank"]).toHaveAttribute("data-action-capability", "credit.applications.submit");
-    expect(byName.Legal).toHaveAttribute("data-core-state", "NOT_READY");
-    expect(byName.Marketing).toHaveAttribute("data-core-state", "READY");
-    expect(byName.Contable).toHaveAttribute("data-core-state", "BLOCKED");
-    expect(screen.getByRole("link", { name: /Abrir/ })).toHaveAttribute("href", "/credit-hub/dealer");
-    expect(screen.getByRole("button", { name: /Ver planes publicados/ })).toBeInTheDocument();
-
-    const batchUrl = (global.fetch as jest.Mock).mock.calls
-      .map((c) => String(c[0]))
-      .find((u) => u.includes("/api/v1/access/entitlements/batch"));
-    expect(batchUrl).toBeTruthy();
-    for (const row of DEALER_CORE_STATUS_ROWS) {
-      expect(batchUrl).toContain(row.actionCapability);
-      expect(batchUrl).not.toContain(`capabilities=${row.readinessKey}`);
-      expect(batchUrl?.includes(row.readinessKey)).toBe(false);
-    }
+  it("sin acceso verificado no dice 'No incluido': lo explica y ofrece reintentar", () => {
+    responder({ allowed: false, reason_code: "no_organization_unit" });
+    render(<DealerCoreStatusPage />);
+    expect(screen.queryAllByTestId("dealer-core-card")).toHaveLength(0);
+    expect(screen.getByRole("alert")).toHaveTextContent("No pudimos comprobar tus módulos");
+    expect(screen.getByRole("alert")).not.toHaveTextContent("no_organization_unit");
+    fireEvent.click(screen.getByRole("button", { name: "Reintentar" }));
+    expect(batch.refetch).toHaveBeenCalled();
   });
 });

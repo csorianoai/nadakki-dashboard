@@ -34,6 +34,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { isDealerChromePath } from "@/lib/autos-portal/routes";
 
 export type DealerNavItem = {
   href: string;
@@ -103,6 +104,32 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     ],
   },
 ];
+
+/**
+ * Pantallas de la Suite que un dealer SI puede abrir (P1-3). Fuera del chrome
+ * del dealer, DealerSuiteGate hace `router.replace("/autos/dealer")` salvo en
+ * /contable/* (components/dealer/DealerSuiteGate.tsx:34 y :69): por eso
+ * Dealer-Bank, Solicitudes y Marketing rebotaban aunque el plan los permitiera.
+ * Un test compara esta lista con `isDealerReachableSuitePath`.
+ */
+const DEALER_REACHABLE_SUITE_PREFIXES = ["/contable"] as const;
+
+/** true si el enlace se abre desde el panel del dealer sin que el gate lo devuelva. */
+export function isDealerNavItemOpenable(href: string): boolean {
+  if (isDealerChromePath(href)) return true;
+  return DEALER_REACHABLE_SUITE_PREFIXES.some((prefix) => href === prefix || href.startsWith(`${prefix}/`));
+}
+
+/**
+ * Lo que el menu pinta: lo que el plan permite Y se puede abrir desde el panel.
+ * Un enlace que rebota no se muestra; los grupos que quedan vacios tampoco.
+ */
+export function visibleDealerNavGroups(allows: (capability: string | null) => boolean): DealerNavGroup[] {
+  return DEALER_NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => isDealerNavItemOpenable(item.href) && allows(item.capability)),
+  })).filter((group) => group.items.length > 0);
+}
 
 /** Claves unicas para una sola peticion de batch. */
 export const DEALER_NAV_CAPABILITY_KEYS = Array.from(

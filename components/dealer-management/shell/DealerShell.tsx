@@ -12,7 +12,7 @@ import {
 import { AuthProvider as AutosAuthProvider } from "@/lib/auth-context";
 import { syncDealerContextFromBackend } from "@/lib/dealer/dealer-context-api";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
-import { DEALER_NAV_CAPABILITY_KEYS, DEALER_NAV_GROUPS } from "./dealer-nav";
+import { DEALER_NAV_CAPABILITY_KEYS, visibleDealerNavGroups } from "./dealer-nav";
 import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
@@ -247,14 +247,8 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
     };
   }, [sync.data]);
 
-  const groups = useMemo(
-    () =>
-      DEALER_NAV_GROUPS.map((group) => ({
-        ...group,
-        items: group.items.filter((item) => allows(item.capability)),
-      })).filter((group) => group.items.length > 0),
-    [allows],
-  );
+  // Plan + que el enlace no rebote fuera del panel (P1-3, ver dealer-nav.ts).
+  const groups = useMemo(() => visibleDealerNavGroups(allows), [allows]);
 
   // La paleta solo ofrece lo que el plan permite: mismo filtro que el sidebar.
   const paletteItems = useMemo(
