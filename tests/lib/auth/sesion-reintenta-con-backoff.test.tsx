@@ -237,3 +237,50 @@ describe("un 401 real no se reintenta: cierra la sesion a la primera", () => {
     expect(result.current.initError).toBe("No se pudo verificar la sesión. Intenta de nuevo.");
   });
 });
+
+describe("mientras reintenta, el spinner dice en que intento va", () => {
+  test("sin fallos no hay texto de progreso", async () => {
+    conSesionGuardada();
+    refreshMock.mockResolvedValue(SESION_OK as never);
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    expect(result.current.initProgress).toBeNull();
+    await dejarTerminar();
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.initProgress).toBeNull();
+  });
+
+  test("(2 de 3) tras el primer fallo, (3 de 3) tras el segundo, y se limpia al terminar", async () => {
+    conSesionGuardada();
+    refreshMock.mockResolvedValue({ ok: false, status: 503, error: "HTTP 503" } as never);
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    const [primera, segunda] = SESSION_INIT_RETRY_DELAYS_MS;
+
+    await avanzar(0);
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.initProgress).toBe("Reintentando conexión (2 de 3)…");
+
+    await avanzar(primera);
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.initProgress).toBe("Reintentando conexión (3 de 3)…");
+
+    await avanzar(segunda);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.initProgress).toBeNull();
+    expect(result.current.initError).toBe("No se pudo verificar la sesión. Intenta de nuevo.");
+  });
+
+  test("si el reintento recupera la sesion, el texto desaparece", async () => {
+    conSesionGuardada();
+    refreshMock.mockResolvedValueOnce(TIMEOUT as never).mockResolvedValue(SESION_OK as never);
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await avanzar(0);
+    expect(result.current.initProgress).toBe("Reintentando conexión (2 de 3)…");
+
+    await dejarTerminar();
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.initProgress).toBeNull();
+  });
+});
