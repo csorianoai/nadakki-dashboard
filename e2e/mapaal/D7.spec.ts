@@ -39,8 +39,7 @@ import {
   TESTIDS_INVENTARIO,
   TEXTO_SIN_IVA,
 } from "./d7-guion";
-import { SESION_FALLIDA } from "./d8-guion";
-import { iniciarSesionQA } from "./sesion-qa";
+import { esperarConReintento, iniciarSesionQA } from "./sesion-qa";
 
 const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
 const QA_USER = process.env.QA_USER;
@@ -59,19 +58,11 @@ test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({
   // 1. La entrada desde el inventario.
   await page.goto(`${BASE_URL}${RUTA_INVENTARIO}`);
   const cta = page.getByTestId(TESTIDS_INVENTARIO[0]);
-  // La primera carga tras el login puede topar con un fallo transitorio del
-  // servidor (arranque en frio) y la app lo dice con "Reintentar", que recupera
-  // la sesion sin tocar los tokens (D8.3). Se usa ese mismo camino, una sola vez.
-  const sesionFallida = page.getByText(SESION_FALLIDA);
-  await expect(cta.or(sesionFallida).first()).toBeVisible({ timeout: 30_000 });
-  if (await sesionFallida.isVisible()) {
-    console.log("D7: la sesion no se pudo verificar a la primera; Reintentar");
-    await page.getByRole("button", { name: "Reintentar" }).click();
-  }
-  await expect(cta).toBeVisible({ timeout: 30_000 });
+  await esperarConReintento(page, cta);
   await expect(cta).toHaveAttribute("href", RUTA_IMPORTAR);
   await cta.click();
   await page.waitForURL((url) => url.pathname === RUTA_IMPORTAR, { timeout: 30_000 });
+  await esperarConReintento(page, page.getByTestId(T.reglas));
 
   // 2. Las reglas, antes de subir nada.
   const reglas = page.getByTestId(T.reglas);
@@ -125,6 +116,7 @@ test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({
 
   // 6. En el inventario.
   await page.goto(`${BASE_URL}${RUTA_INVENTARIO}`);
+  await esperarConReintento(page, page.getByText("2020 QA Mapaal D7 Importador").first());
   await expect(page.getByText("2020 QA Mapaal D7 Importador").first()).toBeVisible({ timeout: 30_000 });
 
   console.log(`D7: revision ${res.status()} · aplicar ${ap.status()}`);
