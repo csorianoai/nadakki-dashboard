@@ -10,8 +10,9 @@
  * Fixture: `fixtures/D7_plantilla_v4_qa.xlsx` es la plantilla v4 oficial del
  * backend con UNA fila en Vehiculos (QA-D7-0001, stock inicial, BORRADOR) y
  * UNA en Costos_vehiculos (COMPRA 1.000.000 ARS, es_apertura=SI). Aplicarla
- * escribe en el tenant QA; el vehiculo es idempotente por `stock_number`, asi
- * que al repetir la prueba se ACTUALIZA en vez de duplicarse.
+ * escribe en el tenant QA. El backend NO actualiza: un `nro_stock` ya existente
+ * rechaza la carga con 422 STOCK_YA_EXISTE. Por eso cada corrida sube el fixture
+ * con un `nro_stock` propio (`xlsx-unico.ts`), no el QA-D7-0001 del archivo.
  *
  * Guion (de la pantalla de D7 3/4):
  *   1. El inventario ofrece "Importar planilla" y abre /autos/dealer/inventario/importar.
@@ -27,6 +28,7 @@
  * Ejecutar: BASE_URL=... QA_USER=... QA_PASSWORD=... \
  *   npx playwright test e2e/mapaal/D7.spec.ts
  */
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 
@@ -41,6 +43,7 @@ import {
   TEXTO_SIN_IVA,
 } from "./d7-guion";
 import { esperarConReintento, iniciarSesionQA } from "./sesion-qa";
+import { stockUnico, xlsxConStock } from "./xlsx-unico";
 
 const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
 const QA_USER = process.env.QA_USER;
@@ -96,7 +99,14 @@ test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({
   await expect(page.getByTestId(T.aplicar)).toBeDisabled();
 
   // 4. Revision.
-  await page.getByTestId(T.archivo).setInputFiles(FIXTURE);
+  const stock = stockUnico();
+  const { buffer, cambios } = xlsxConStock(readFileSync(FIXTURE), "QA-D7-0001", stock);
+  expect(cambios, "el fixture ya no trae QA-D7-0001 en sus hojas").toBeGreaterThan(0);
+  await page.getByTestId(T.archivo).setInputFiles({
+    name: `D7_${stock}.xlsx`,
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer,
+  });
   const revReq = page.waitForRequest((r) => esImport(r.url(), "revision", r.method()));
   const revRes = page.waitForResponse((r) => esImport(r.url(), "revision", r.request().method()));
   await page.getByTestId(T.revisar).click();
@@ -122,7 +132,8 @@ test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({
   await aplicar.click();
   expect((await apReq).headers()["idempotency-key"] ?? "").not.toBe("");
   const ap = await apRes;
-  expect(ap.status(), `aplicar ${ap.url()} -> ${ap.status()}`).toBe(200);
+  // Con el cuerpo: un 422 trae el reason_code (p. ej. STOCK_YA_EXISTE).
+  expect(ap.status(), `aplicar ${ap.url()} -> ${ap.status()} ${(await ap.text().catch(() => "")).slice(0, 400)}`).toBe(200);
   await expect(page.getByTestId(T.aplicado)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId(T.aplicarRechazado)).toHaveCount(0);
   await expect(page.getByTestId(T.aplicarError)).toHaveCount(0);
