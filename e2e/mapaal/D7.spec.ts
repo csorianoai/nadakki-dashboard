@@ -1,0 +1,155 @@
+/**
+ * D7 — importador de la PLANTILLA_ACTIVOS_v4 (contrato P5).
+ *
+ * Corre SOLO contra el tenant QA, con `QA_USER` / `QA_PASSWORD`. El login va por
+ * `iniciarSesionQA` (como D3/D5/D8): mapaal.nadakki.com fija el tenant `mapaal`
+ * y el usuario QA (`mapaal-qa`) recibe 401, asi que entra por el host universal. Nunca con credenciales de
+ * usuarios reales de Mapaal. El login de la app no tiene paso MFA, asi que
+ * `QA_TOTP_SECRET` no se usa.
+ *
+ * Fixture: `fixtures/D7_plantilla_v4_qa.xlsx` es la plantilla v4 oficial del
+ * backend con UNA fila en Vehiculos (QA-D7-0001, stock inicial, BORRADOR) y
+ * UNA en Costos_vehiculos (COMPRA 1.000.000 ARS, es_apertura=SI). Aplicarla
+ * escribe en el tenant QA. El backend NO actualiza: un `nro_stock` ya existente
+ * rechaza la carga con 422 STOCK_YA_EXISTE. Por eso cada corrida sube el fixture
+ * con un `nro_stock` propio (`xlsx-unico.ts`), no el QA-D7-0001 del archivo.
+ *
+ * Guion (de la pantalla de D7 3/4):
+ *   1. El inventario ofrece "Importar planilla" y abre /autos/dealer/inventario/importar.
+ *   2. Las reglas contables estan a la vista: 3020 para el saldo inicial, 2010 para compras.
+ *   3. Aplicar nace apagado.
+ *   4. Revisar manda el .xlsx en multipart y el backend contesta la revision de
+ *      la v4: sin errores, 1 fila en Vehiculos y 1 en Costos_vehiculos.
+ *   5. Aplicar sale con Idempotency-Key, el backend lo acepta y la pantalla lo dice.
+ *   6. El vehiculo aparece en el inventario.
+ *
+ * RESULT_D7=PASS se imprime al FINAL del mismo test, despues de las aserciones.
+ *
+ * Ejecutar: BASE_URL=... QA_USER=... QA_PASSWORD=... \
+ *   npx playwright test e2e/mapaal/D7.spec.ts
+ */
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { expect, test } from "@playwright/test";
+
+import {
+  PREFIJO_HOJA,
+  esPeticionImport,
+  RUTA_IMPORTAR,
+  RUTA_INVENTARIO,
+  TESTIDS_IMPORTAR as T,
+  TESTIDS_INVENTARIO,
+  TESTIDS_SIN_FORMULARIO as SF,
+  TEXTO_SIN_IVA,
+} from "./d7-guion";
+import { esperarConReintento, iniciarSesionQA } from "./sesion-qa";
+import { stockUnico, xlsxConStock } from "./xlsx-unico";
+
+const BASE_URL = process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
+const QA_USER = process.env.QA_USER;
+const QA_PASSWORD = process.env.QA_PASSWORD;
+
+const FIXTURE = path.join(__dirname, "fixtures", "D7_plantilla_v4_qa.xlsx");
+
+test.skip(!BASE_URL || !QA_USER || !QA_PASSWORD, "Faltan BASE_URL, QA_USER o QA_PASSWORD");
+
+const esImport = esPeticionImport;
+
+test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({ browser }) => {
+  test.setTimeout(180_000);
+  const page = await iniciarSesionQA(browser, { baseUrl: BASE_URL!.replace(/\/+$/, ""), usuario: QA_USER!, clave: QA_PASSWORD! });
+
+  // 1. La entrada desde el inventario.
+  await page.goto(`${BASE_URL}${RUTA_INVENTARIO}`);
+  const cta = page.getByTestId(TESTIDS_INVENTARIO[0]);
+  await esperarConReintento(page, cta);
+  await expect(cta).toHaveAttribute("href", RUTA_IMPORTAR);
+  await cta.click();
+  await page.waitForURL((url) => url.pathname === RUTA_IMPORTAR, { timeout: 30_000 });
+  await esperarConReintento(page, page.getByTestId(T.reglas));
+
+  // 2. Las reglas, antes de subir nada.
+  const reglas = page.getByTestId(T.reglas);
+  await expect(reglas).toContainText("3020");
+  await expect(reglas).toContainText("2010");
+  await expect(reglas).toContainText(TEXTO_SIN_IVA);
+
+  // 3. La puerta esta abierta y aplicar nace apagado.
+  // Si no sale el formulario, el mensaje dice cual de los estados de la pantalla salio.
+  const sinFormulario = [
+    ["denegado", T.denegado],
+    ["error-acceso", SF.errorAcceso],
+    ["sin-dealer", SF.sinDealer],
+    ["selector-dealer", SF.selectorDealer],
+  ];
+  await expect
+    .poll(
+      async () => {
+        if (await page.getByTestId(T.formulario).isVisible()) return "formulario";
+        for (const [estado, id] of sinFormulario) {
+          const caja = page.getByTestId(id);
+          if (await caja.isVisible()) return `${estado} reason_code=${(await caja.getAttribute("data-reason-code")) ?? "-"}`;
+        }
+        return "cargando";
+      },
+      { timeout: 30_000, message: "la pantalla de importar no mostro el formulario" },
+    )
+    .toBe("formulario");
+  await expect(page.getByTestId(T.denegado)).toHaveCount(0);
+  await expect(page.getByTestId(T.aplicar)).toBeDisabled();
+
+  // 4. Revision.
+  const stock = stockUnico();
+  const { buffer, cambios } = xlsxConStock(readFileSync(FIXTURE), "QA-D7-0001", stock);
+  expect(cambios, "el fixture ya no trae QA-D7-0001 en sus hojas").toBeGreaterThan(0);
+  await page.getByTestId(T.archivo).setInputFiles({
+    name: `D7_${stock}.xlsx`,
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer,
+  });
+  const revReq = page.waitForRequest((r) => esImport(r.url(), "revision", r.method()));
+  const revRes = page.waitForResponse((r) => esImport(r.url(), "revision", r.request().method()));
+  await page.getByTestId(T.revisar).click();
+
+  const req = await revReq;
+  expect(req.headers()["content-type"] ?? "").toMatch(/^multipart\/form-data; boundary=/);
+  expect(req.headers()).not.toHaveProperty("x-tenant-id");
+  const res = await revRes;
+  expect(res.status(), `revision ${res.url()} -> ${res.status()}`).toBe(200);
+
+  const revision = page.getByTestId(T.revision);
+  await expect(revision).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId(T.errores)).toHaveCount(0);
+  await expect(page.getByTestId(`${PREFIJO_HOJA}Vehiculos`)).toHaveAttribute("data-filas", "1");
+  const costos = page.getByTestId(`${PREFIJO_HOJA}Costos_vehiculos`);
+  await expect(costos).toHaveAttribute("data-filas", "1");
+
+  // 5. Aplicar.
+  const aplicar = page.getByTestId(T.aplicar);
+  await expect(aplicar).toBeEnabled();
+  const apReq = page.waitForRequest((r) => esImport(r.url(), "aplicar", r.method()));
+  const apRes = page.waitForResponse((r) => esImport(r.url(), "aplicar", r.request().method()));
+  await aplicar.click();
+  expect((await apReq).headers()["idempotency-key"] ?? "").not.toBe("");
+  const ap = await apRes;
+  // Con el cuerpo: un 422 trae el reason_code (p. ej. STOCK_YA_EXISTE).
+  expect(ap.status(), `aplicar ${ap.url()} -> ${ap.status()} ${(await ap.text().catch(() => "")).slice(0, 400)}`).toBe(200);
+  await expect(page.getByTestId(T.aplicado)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId(T.aplicarRechazado)).toHaveCount(0);
+  await expect(page.getByTestId(T.aplicarError)).toHaveCount(0);
+  const vehiculos = page.getByTestId(T.aplicadoDetalle).getByTestId(`${PREFIJO_HOJA}Vehiculos`);
+  // La pantalla solo muestra Hoja y Filas: el detalle aplicado repite 1 vehiculo y 1 costo.
+  await expect(vehiculos).toHaveAttribute("data-filas", "1");
+  await expect(page.getByTestId(T.aplicadoDetalle).getByTestId(`${PREFIJO_HOJA}Costos_vehiculos`)).toHaveAttribute(
+    "data-filas",
+    "1",
+  );
+
+  // 6. En el inventario.
+  await page.goto(`${BASE_URL}${RUTA_INVENTARIO}`);
+  await esperarConReintento(page, page.getByText("2020 QA Mapaal D7 Importador").first());
+  await expect(page.getByText("2020 QA Mapaal D7 Importador").first()).toBeVisible({ timeout: 30_000 });
+
+  console.log(`D7: revision ${res.status()} · aplicar ${ap.status()}`);
+  console.log("RESULT_D7=PASS");
+});

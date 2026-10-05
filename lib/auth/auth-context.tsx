@@ -363,23 +363,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // CRITICAL: Purge ALL wizard drafts on logout (Ley 172-13).
     // Draft contains PII: cédula, nombre, fecha_nacimiento, teléfono, correo,
     // dirección, ingreso_mensual. Must not survive logout in shared device.
-    const { purgeAllWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-storage");
-    const { clearSessionStorage } = await import("@/lib/auth/auth-session-cleanup");
-    purgeAllWizardDrafts();
-    
-    const accessToken = tokenStorage.getAccessToken();
-    const refreshToken = tokenStorage.getRefreshToken();
-    const logoutToken = accessToken ?? refreshToken;
-    if (logoutToken) await logoutV2(logoutToken, refreshToken ?? undefined);
-    tokenStorage.clearTokens();
-    clearLocalStorage();
-    clearSessionStorage(); // ← NEW: Clear PII from sessionStorage (Ley 172-13)
-    cancelProactiveRefresh();
-    setUser(null);
-    setTenant(null);
-    setActiveRole(null);
-    setAllRoles([]);
-    setAllTenants([]);
+    //
+    // try/finally: si una purga o el POST lanzan, tokens y binding del dealer
+    // se borran igual (D1: sobrevivian al logout). El error se registra, no se relanza.
+    try {
+      const { purgeAllWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-storage");
+      purgeAllWizardDrafts();
+
+      const accessToken = tokenStorage.getAccessToken();
+      const refreshToken = tokenStorage.getRefreshToken();
+      const logoutToken = accessToken ?? refreshToken;
+      if (logoutToken) await logoutV2(logoutToken, refreshToken ?? undefined);
+    } catch (error) {
+      // No se relanza: los llamadores (menus, login) no tienen catch y deben navegar igual.
+      console.error("[auth] logout: fallo previo a la limpieza local", error);
+    } finally {
+      try {
+        tokenStorage.clearTokens();
+        clearLocalStorage();
+        const { clearSessionStorage } = await import("@/lib/auth/auth-session-cleanup");
+        clearSessionStorage(); // Clear PII from sessionStorage (Ley 172-13)
+      } catch (error) {
+        console.error("[auth] logout: fallo en la limpieza local", error);
+      } finally {
+        cancelProactiveRefresh();
+        setUser(null);
+        setTenant(null);
+        setActiveRole(null);
+        setAllRoles([]);
+        setAllTenants([]);
+      }
+    }
   };
 
   const switchTenant = async (tenantId?: string, tenantSlug?: string) => {

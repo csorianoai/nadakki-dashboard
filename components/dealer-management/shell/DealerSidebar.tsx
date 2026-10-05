@@ -37,9 +37,9 @@ function NavSkeleton({ collapsed }: { collapsed: boolean }) {
     <div className={cn("space-y-6 py-4", collapsed ? "px-2" : "px-3")} aria-hidden>
       {[4, 3, 2].map((count, group) => (
         <div key={group} className="space-y-2">
-          {collapsed ? null : <div className="mx-3 h-2 w-20 rounded bg-white/10" />}
+          {collapsed ? null : <div className="mx-3 h-2 w-20 rounded bg-[var(--nav-bg-2)]" />}
           {Array.from({ length: count }).map((_, item) => (
-            <div key={item} className={cn("h-11 rounded-lg bg-white/[0.06]", collapsed && "w-11")} />
+            <div key={item} className={cn("h-11 rounded-lg bg-[var(--nav-bg-2)]", collapsed && "w-11")} />
           ))}
         </div>
       ))}
@@ -72,11 +72,11 @@ function NavLink({
       title={collapsed ? item.label : undefined}
       className={cn(
         "flex min-h-11 items-center rounded-lg text-sm transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-action)]",
         collapsed ? "justify-center px-0" : "gap-3 px-3",
         active
-          ? "bg-[var(--nav-bg-2)] font-semibold text-white"
-          : "font-medium text-[var(--nav-fg-muted)] hover:bg-white/[0.06] hover:text-[var(--nav-fg)]",
+          ? "bg-[var(--nav-bg-2)] font-semibold text-[var(--dcc-action)]"
+          : "font-medium text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)]",
       )}
     >
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -153,7 +153,7 @@ export function DealerSidebar({
             onClick={onClose}
             title={collapsed ? brandName : undefined}
             className={cn(
-              "flex min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+              "flex min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-action)]",
               collapsed ? "items-center justify-center" : "flex-col",
             )}
           >
@@ -162,7 +162,7 @@ export function DealerSidebar({
                 {/* La inicial es decoracion: el nombre accesible es el sr-only. */}
                 <span
                   aria-hidden="true"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 font-dealer-display text-base font-bold text-white"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--nav-bg-2)] font-dealer-display text-base font-bold text-[var(--nav-fg)]"
                 >
                   {brandName.charAt(0).toUpperCase()}
                 </span>
@@ -170,7 +170,7 @@ export function DealerSidebar({
               </>
             ) : (
               <>
-                <span className="truncate font-dealer-display text-base font-bold text-white">
+                <span className="truncate font-dealer-display text-base font-bold text-[var(--nav-fg)]">
                   {brandName}
                 </span>
                 <span className="text-[11px] text-[var(--nav-fg-muted)]">Powered by Nadakki</span>
@@ -182,7 +182,7 @@ export function DealerSidebar({
             type="button"
             onClick={onClose}
             aria-label="Cerrar menú"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--nav-fg-muted)] hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 lg:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-action)] lg:hidden"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -207,7 +207,7 @@ export function DealerSidebar({
             aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
             title={collapsed ? "Expandir menú" : "Contraer menú"}
             className={cn(
-              "flex min-h-9 w-full items-center rounded-lg text-[var(--nav-fg-muted)] transition-colors hover:bg-white/[0.06] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+              "flex min-h-9 w-full items-center rounded-lg text-[var(--nav-fg-muted)] transition-colors hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-action)]",
               collapsed ? "justify-center" : "justify-end px-2",
             )}
           >
@@ -238,19 +238,19 @@ export function DealerSidebar({
                   data-reason-code={unverifiedReason}
                   title={collapsed ? ACCESS_UNVERIFIED_MESSAGE : undefined}
                   className={cn(
-                    "rounded-lg border border-amber-500/30 bg-amber-500/10",
+                    "rounded-lg border border-[var(--dcc-border-strong)] bg-[var(--dcc-partial-bg)]",
                     collapsed ? "flex justify-center p-2" : "p-3",
                   )}
                 >
                   {collapsed ? (
-                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-200" aria-hidden="true" />
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--dcc-partial-fg)]" aria-hidden="true" />
                   ) : null}
-                  <p className={collapsed ? "sr-only" : "text-xs font-semibold text-amber-200"}>
+                  <p className={collapsed ? "sr-only" : "text-xs font-semibold text-[var(--dcc-partial-fg)]"}>
                     {ACCESS_UNVERIFIED_MESSAGE}
                   </p>
                   <p
                     className={
-                      collapsed ? "sr-only" : "mt-1 text-[11px] leading-snug text-amber-200/80"
+                      collapsed ? "sr-only" : "mt-1 text-[11px] leading-snug text-[var(--dcc-partial-fg)]"
                     }
                   >
                     {ACCESS_UNVERIFIED_DETAIL}

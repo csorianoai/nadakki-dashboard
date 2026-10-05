@@ -118,6 +118,15 @@ export default function DealerInventoryPage() {
             Nuevo vehículo
           </Link>
         ) : null}
+        {allowed && dealerId && !hayQueElegir ? (
+          <Link
+            href="/autos/dealer/inventario/importar"
+            data-testid="inventario-importar"
+            className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-brand-2 underline"
+          >
+            Importar planilla
+          </Link>
+        ) : null}
       </header>
 
       {cargando ? (
