@@ -118,7 +118,7 @@ describe("Dealer vehicle economics", () => {
       wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
     });
     expect(await screen.findByTestId("dealer-vehicle-ready")).toBeInTheDocument();
-    expect(screen.getByText(/reservado/)).toBeInTheDocument();
+    expect(screen.getByText(/Estado: RESERVADO/)).toBeInTheDocument();
     expect(await screen.findByTestId("dealer-economics-ready")).toBeInTheDocument();
     expect(screen.getByText(/margen 300/)).toBeInTheDocument();
     expect(screen.getByText(/Días en inventario: 12/)).toBeInTheDocument();

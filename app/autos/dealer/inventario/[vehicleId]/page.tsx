@@ -2,13 +2,15 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { DealerVehicleEconomicsPanel } from "@/components/dealer/DealerVehicleEconomicsPanel";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
-import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
+import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
+import { VehicleEditPanel } from "@/components/dealer-management/VehicleEditPanel";
+import { VEHICLE_STATUS_LABEL, VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
@@ -33,7 +35,18 @@ function asDecision(
   };
 }
 
-function VehicleFicha({ dealerId, vehicleId, photos }: { dealerId: string; vehicleId: string; photos: EntitlementDecision }) {
+function VehicleFicha({
+  dealerId,
+  vehicleId,
+  photos,
+  write,
+}: {
+  dealerId: string;
+  vehicleId: string;
+  photos: EntitlementDecision;
+  write: EntitlementDecision;
+}) {
+  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["dealer-vehicle", dealerId, vehicleId],
     queryFn: () => fetchDealerVehicleStatus(dealerId, vehicleId),
@@ -74,8 +87,18 @@ function VehicleFicha({ dealerId, vehicleId, photos }: { dealerId: string; vehic
     <>
       <section data-testid="dealer-vehicle-ready" className="rounded-r-sm border border-nk-border bg-nk-surface p-4">
         <h2 className="font-manrope text-lg font-bold text-nk-fg break-words">{title}</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted">Estado: {query.data.status ?? "no disponible"}</p>
+        <p className="mt-1 text-sm text-nk-fg-muted">
+          Estado: {query.data.status ? (VEHICLE_STATUS_LABEL[query.data.status] ?? query.data.status) : "no disponible"}
+        </p>
       </section>
+      {/* Editar y publicar piden la clave de ESCRITURA; el 403 del backend sigue mandando. */}
+      {write.allowed ? (
+        <VehicleEditPanel
+          ficha={query.data}
+          context={selectedDealerIdentity()}
+          onSaved={() => void queryClient.invalidateQueries({ queryKey: ["dealer-vehicle", dealerId, vehicleId] })}
+        />
+      ) : null}
       {/* `autos.inventory.photos` depende del plan: sin ella se dice por que. */}
       {photos.allowed ? (
         <FotosVehiculoPanel vehicleId={vehicleId} />
@@ -94,10 +117,15 @@ export default function DealerVehicleEconomicsPage() {
   const vehicleId = String(params?.vehicleId ?? "").trim();
   const resolved = resolveDealerAccessContext();
   const dealerId = resolved.status === "ready" ? resolved.context.dealerId : "";
-  const access = useAccessEntitlementsBatch([DEALER_VEHICLE_CAPABILITY, PHOTOS_CAPABILITY]);
+  const access = useAccessEntitlementsBatch([
+    DEALER_VEHICLE_CAPABILITY,
+    PHOTOS_CAPABILITY,
+    VEHICLE_WRITE_CAPABILITY,
+  ]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const decision = asDecision(access);
   const photos = asDecision(access, PHOTOS_CAPABILITY);
+  const write = asDecision(access, VEHICLE_WRITE_CAPABILITY);
 
   return (
     <main className="max-w-full space-y-4 overflow-x-hidden">
@@ -166,7 +194,7 @@ export default function DealerVehicleEconomicsPage() {
           Falta el dealer para leer la ficha autenticada.
         </p>
       ) : (
-        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} />
+        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} />
       )}
     </main>
   );
