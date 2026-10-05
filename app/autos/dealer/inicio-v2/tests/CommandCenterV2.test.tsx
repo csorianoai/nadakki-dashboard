@@ -55,11 +55,23 @@ describe("Command Center v2", () => {
   it("las tarjetas sin endpoint muestran 'aún no disponible' y ninguna cifra", () => {
     acceso({ "autos.inventory.list": permitido, "autos.leads.crm": permitido, "credit.applications.view": permitido });
     montar();
-    for (const id of ["capital", "dias", "potencial", "margen", "respuesta", "conversion-leads", "ofertas", "fondeo", "actividad"]) {
+    for (const id of ["capital", "potencial", "caja", "dias", "margen", "respuesta", "conversion-leads", "ofertas", "fondeo"]) {
       const tarjeta = screen.getByTestId(`dcc-tarjeta-${id}`);
       expect(within(tarjeta).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "no_disponible");
       expect(within(tarjeta).queryByTestId("dcc-kpi-valor")).toBeNull();
     }
+  });
+
+  it("las secciones de la referencia sin fuente muestran su motivo y ningún dato", () => {
+    acceso({ "autos.inventory.list": permitido, "autos.leads.crm": permitido, "credit.applications.view": permitido });
+    montar();
+    for (const id of ["brief", "cola", "salud", "hoy"]) {
+      const seccion = screen.getByTestId(`dcc-seccion-${id}`);
+      expect(within(seccion).getByTestId("dcc-estado")).toHaveAttribute("data-estado", "no_disponible");
+      expect(seccion.textContent).toMatch(/Falta endpoint/);
+      expect(seccion.textContent).not.toMatch(/\d/);
+    }
+    expect(screen.getByTestId("dcc-seccion-negocio").querySelectorAll('[data-testid^="dcc-tarjeta-"]')).toHaveLength(6);
   });
 
   it("el acceso lo decide el backend: capability denegada = bloqueado, sin pedir datos", () => {

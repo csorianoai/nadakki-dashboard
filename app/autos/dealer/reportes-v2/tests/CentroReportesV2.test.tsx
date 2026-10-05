@@ -29,6 +29,8 @@ describe("Centro de Reportes v2", () => {
   it("lista los ReportDefinitions con su naturaleza y no pide datos al entrar", () => {
     montar({ "accounting.reports.financial": { allowed: true, reason_code: null } });
     expect(screen.getAllByTestId("dcc-naturaleza")).toHaveLength(10);
+    expect(within(screen.getByTestId("dcc-seccion-contabilidad")).getAllByTestId("dcc-naturaleza")).toHaveLength(9);
+    expect(within(screen.getByTestId("dcc-seccion-ejecutivo")).getAllByTestId("dcc-naturaleza")).toHaveLength(1);
     expect(within(screen.getByTestId("dcc-reporte-dgii_606")).getByTestId("dcc-naturaleza")).toHaveTextContent("Guardado");
     expect(within(screen.getByTestId("dcc-reporte-income_statement")).getByTestId("dcc-naturaleza")).toHaveTextContent("En vivo");
     expect(fetchBalanceComprobacion).not.toHaveBeenCalled();

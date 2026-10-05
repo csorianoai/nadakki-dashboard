@@ -6,6 +6,8 @@ import { DCC_CLASSES } from "@/components/dcc/clases";
 import { DccCard } from "@/components/dcc/DccCard";
 import { DccEstado } from "@/components/dcc/DccEstado";
 import { DccGrid, DccPage } from "@/components/dcc/DccPage";
+import { DccSeccion } from "@/components/dcc/DccSeccion";
+import { BarChart3, BookOpen } from "lucide-react";
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { calidadDesdeEntitlement, type Calidad } from "@/lib/dcc/calidad";
@@ -105,26 +107,34 @@ export function CentroReportesV2() {
     : calidadDesdeEntitlement(access.data?.results[CAPABILITY_REPORTES_CONTABLES] ?? { allowed: false, reason_code: null });
   const formato = marcaDesdeBranding(useDealerManagementBranding().data).formato;
 
+  const tarjeta = (r: ReportDefinition) => {
+    const contable = r.grupo === "Contabilidad";
+    const comun = { titulo: r.titulo, tecnico: `${r.key} · ${r.endpoint} · Pendiente: ${r.pendiente}`, testId: `dcc-reporte-${r.key.split("@")[0]}` };
+    const cabecera = <Naturaleza valor={r.naturaleza} />;
+    if (contable && cargando) return <DccCard key={r.key} {...comun} acciones={cabecera}><DccEstado estado="cargando" /></DccCard>;
+    if (contable && failClosed) {
+      return <DccCard key={r.key} {...comun} acciones={cabecera}><DccEstado estado="error" detalle="No se pudieron verificar tus accesos." onReintentar={() => void access.refetch()} /></DccCard>;
+    }
+    if (contable && bloqueoContable) return <DccCard key={r.key} {...comun} acciones={cabecera} calidad={bloqueoContable}><DccEstado estado="bloqueado" /></DccCard>;
+    return (
+      <DccCard key={r.key} {...comun} acciones={cabecera} calidad={r.explicable ? CALIDAD_BALANCE : null}>
+        {r.explicable ? <BalanceComprobacion formato={formato} /> : null}
+      </DccCard>
+    );
+  };
+  const contables = REPORT_DEFINITIONS.filter((r) => r.grupo === "Contabilidad");
+  const ejecutivos = REPORT_DEFINITIONS.filter((r) => r.grupo === "Ejecutivo");
+
   return (
     <DccPage titulo="Centro de Reportes">
-      <DccGrid>
-        {REPORT_DEFINITIONS.map((r) => {
-          const contable = r.grupo === "Contabilidad";
-          const comun = { titulo: r.titulo, tecnico: `${r.key} · ${r.endpoint} · Pendiente: ${r.pendiente}`, testId: `dcc-reporte-${r.key.split("@")[0]}` };
-          const cabecera = <Naturaleza valor={r.naturaleza} />;
-          if (contable && cargando) return <DccCard key={r.key} {...comun} acciones={cabecera}><DccEstado estado="cargando" /></DccCard>;
-          if (contable && failClosed) {
-            return <DccCard key={r.key} {...comun} acciones={cabecera}><DccEstado estado="error" detalle="No se pudieron verificar tus accesos." onReintentar={() => void access.refetch()} /></DccCard>;
-          }
-          if (contable && bloqueoContable) return <DccCard key={r.key} {...comun} acciones={cabecera} calidad={bloqueoContable}><DccEstado estado="bloqueado" /></DccCard>;
-          return (
-            <DccCard key={r.key} {...comun} acciones={cabecera} calidad={r.explicable ? CALIDAD_BALANCE : null}>
-              <p className={`text-sm ${DCC_CLASSES.muted}`}>{r.grupo}</p>
-              {r.explicable ? <div className="mt-3"><BalanceComprobacion formato={formato} /></div> : null}
-            </DccCard>
-          );
-        })}
-      </DccGrid>
+      <div className="flex flex-col gap-[var(--dcc-gap)]">
+        <DccSeccion titulo="Contabilidad" icono={BookOpen} tono="azul" meta={`${contables.length} reportes · catálogo N7`} testId="dcc-seccion-contabilidad">
+          <DccGrid>{contables.map(tarjeta)}</DccGrid>
+        </DccSeccion>
+        <DccSeccion titulo="Ejecutivo" icono={BarChart3} meta={`${ejecutivos.length} reporte`} testId="dcc-seccion-ejecutivo">
+          <DccGrid>{ejecutivos.map(tarjeta)}</DccGrid>
+        </DccSeccion>
+      </div>
     </DccPage>
   );
 }

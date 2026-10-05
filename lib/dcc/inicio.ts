@@ -78,26 +78,43 @@ export type TarjetaInicio = {
   id: string;
   titulo: string;
   metricKey: string;
+  /** "negocio" = fila "Estado del negocio" de la referencia v3; "mas" = resto de N6. */
+  grupo: "negocio" | "mas";
+  /** Unidad que acompana a la cifra (la cifra la da el backend). */
+  unidad: string | null;
   /** Capability que decide el backend; null = no aplica todavia (sin endpoint). */
   capability: string | null;
   /** Por que no hay cifra hoy (tooltip), o null si esta conectada. */
   falta: string | null;
 };
 
-/** Orden de la rejilla. `falta` != null => tarjeta "aun no disponible", sin cifra. */
+const t = (
+  id: string, titulo: string, metricKey: string, grupo: TarjetaInicio["grupo"],
+  unidad: string | null, capability: string | null, falta: string | null,
+): TarjetaInicio => ({ id, titulo, metricKey, grupo, unidad, capability, falta });
+
+/** Orden de la referencia v3. `falta` != null => "cifra no disponible", sin numero. */
 export const TARJETAS_INICIO: TarjetaInicio[] = [
-  { id: "stock", titulo: "Unidades en stock", metricKey: "inventory_units@1.0", capability: "autos.inventory.list", falta: null },
-  { id: "capital", titulo: "Capital en inventario", metricKey: "inventory_capital@1.0", capability: null, falta: "Falta endpoint: suma de costos por dealer sobre el stock" },
-  { id: "dias", titulo: "Días en inventario", metricKey: "inventory_age_days@1.0", capability: null, falta: "Falta endpoint: promedio y máximo por dealer" },
-  { id: "potencial", titulo: "Ingreso potencial", metricKey: "potential_revenue@1.0", capability: null, falta: "Falta endpoint: suma de precios de lista del stock" },
-  { id: "margen", titulo: "Margen bruto del mes", metricKey: "gross_margin@1.0 · gross_margin_pct@1.0", capability: null, falta: "Falta endpoint: margen por dealer y mes" },
-  { id: "leads", titulo: "Leads", metricKey: "lead_count@1.0", capability: "autos.leads.crm", falta: null },
-  { id: "respuesta", titulo: "Tiempo de respuesta a leads", metricKey: "lead_response_time@1.0", capability: null, falta: "Falta endpoint: mediana de primer contacto" },
-  { id: "conversion-leads", titulo: "Conversión de leads", metricKey: "lead_conversion_rate@1.0", capability: null, falta: "Falta endpoint: tasa calculada en el backend" },
-  { id: "solicitudes", titulo: "Solicitudes de crédito", metricKey: "financing_applications@1.0", capability: "credit.applications.view", falta: null },
-  { id: "ofertas", titulo: "Ofertas listas", metricKey: "financing_offers_ready@1.0", capability: null, falta: "Falta endpoint: conteo por dealer" },
-  { id: "fondeo", titulo: "Conversión a fondeo", metricKey: "finance_conversion_rate@1.0", capability: null, falta: "Falta endpoint: DISBURSED por dealer (D-N6-3)" },
-  { id: "actividad", titulo: "Actividad reciente", metricKey: "—", capability: null, falta: "Falta endpoint: no hay feed de actividad del dealer" },
+  t("stock", "Inventario", "inventory_units@1.0", "negocio", "unidades", "autos.inventory.list", null),
+  t("capital", "Capital en inventario", "inventory_capital@1.0", "negocio", null, null, "Falta endpoint: suma de costos por dealer sobre el stock"),
+  t("potencial", "Margen potencial", "potential_revenue@1.0 · gross_margin@1.0", "negocio", null, null, "Falta endpoint: precio de lista menos costo del stock, con cobertura"),
+  t("leads", "Leads", "lead_count@1.0", "negocio", "leads", "autos.leads.crm", null),
+  t("solicitudes", "Financiamiento", "financing_applications@1.0", "negocio", "solicitudes", "credit.applications.view", null),
+  t("caja", "Caja / Cobranzas", "— (sin métrica en N6)", "negocio", null, null, "Falta métrica y endpoint de caja y cobranzas"),
+  t("dias", "Días en inventario", "inventory_age_days@1.0", "mas", null, null, "Falta endpoint: promedio y máximo por dealer"),
+  t("margen", "Margen bruto del mes", "gross_margin@1.0 · gross_margin_pct@1.0", "mas", null, null, "Falta endpoint: margen por dealer y mes"),
+  t("respuesta", "Tiempo de respuesta a leads", "lead_response_time@1.0", "mas", null, null, "Falta endpoint: mediana de primer contacto"),
+  t("conversion-leads", "Conversión de leads", "lead_conversion_rate@1.0", "mas", null, null, "Falta endpoint: tasa calculada en el backend"),
+  t("ofertas", "Ofertas listas", "financing_offers_ready@1.0", "mas", null, null, "Falta endpoint: conteo por dealer"),
+  t("fondeo", "Conversión a fondeo", "finance_conversion_rate@1.0", "mas", null, null, "Falta endpoint: DISBURSED por dealer (D-N6-3)"),
 ];
+
+/** Secciones de la referencia sin fuente hoy: se pintan con su motivo, sin datos. */
+export const SECCIONES_SIN_FUENTE = {
+  brief: "Falta endpoint: brief del día (atención, oportunidades, riesgo) calculado sobre métricas versionadas",
+  cola: "Falta endpoint: cola priorizada con umbral, recomendación y evidencia",
+  salud: "Falta endpoint: cobertura y estado por área calculados en el backend",
+  hoy: "Falta endpoint: no hay feed de actividad del dealer",
+} as const;
 
 export const CAPABILITIES_INICIO = TARJETAS_INICIO.map((t) => t.capability).filter((c): c is string => c !== null);
