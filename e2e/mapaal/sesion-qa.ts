@@ -8,9 +8,10 @@
  * Despues la sesion (el refresh token de localStorage) se lleva a BASE_URL.
  * Fuera del login nada mira el host. Es el mismo enfoque que D9 (#600).
  */
-import { expect, type Browser, type Page } from "@playwright/test";
+import { expect, type Browser, type Locator, type Page } from "@playwright/test";
 
 import { resolveDealerAdminHost } from "../../lib/dealer-management/admin-host";
+import { SESION_FALLIDA } from "./d8-guion";
 import { PLACEHOLDER_TENANT, SLUG_QA, TENANT_QA, huellaDespliegue, origenDeLogin } from "./d9-guion";
 
 export type CredencialesQA = { baseUrl: string; usuario: string; clave: string };
@@ -75,4 +76,25 @@ export async function iniciarSesionQA(browser: Browser, { baseUrl, usuario, clav
         : { cookies: [], origins: [{ origin: new URL(baseUrl).origin, localStorage: deLogin!.localStorage }] },
   });
   return ctx.newPage();
+}
+
+/**
+ * Espera `objetivo` y, si en su lugar sale "No se pudo verificar la sesion"
+ * (fallo transitorio, arranque en frio), pulsa "Reintentar" -el camino de D8.3,
+ * que no toca los tokens- hasta `intentos` veces. Se usa en CADA navegacion: la
+ * pantalla de sesion fallida puede salir en cualquiera, no solo en la primera.
+ */
+export async function esperarConReintento(
+  page: Page,
+  objetivo: Locator,
+  { intentos = 3, timeout = 30_000 }: { intentos?: number; timeout?: number } = {},
+): Promise<void> {
+  const fallida = page.getByText(SESION_FALLIDA);
+  for (let i = 0; i < intentos; i++) {
+    await expect(objetivo.or(fallida).first()).toBeVisible({ timeout });
+    if (!(await fallida.isVisible())) break;
+    console.log(`sesion QA: no se pudo verificar; Reintentar (${i + 1}/${intentos})`);
+    await page.getByRole("button", { name: "Reintentar" }).click();
+  }
+  await expect(objetivo).toBeVisible({ timeout });
 }

@@ -12,6 +12,7 @@
  */
 import { expect, test, type Page } from "@playwright/test";
 
+import { SELECTOR_VEHICULO, idPrimerVehiculo } from "./d5-vehiculo";
 import { iniciarSesionQA } from "./sesion-qa";
 
 const BASE_URL = (process.env.BASE_URL ?? "").replace(/\/+$/, "");
@@ -28,10 +29,9 @@ test.afterAll(() => console.log(`RESULT_D5=${fallos === 0 ? "PASS" : "FAIL"}`));
 async function vehiculoQa(page: Page): Promise<string> {
   if (process.env.QA_VEHICLE_ID) return process.env.QA_VEHICLE_ID;
   await page.goto(`${BASE_URL}/autos/dealer/inventario`);
-  const link = page.locator('a[href^="/autos/dealer/inventario/"]').first();
+  const link = page.locator(SELECTOR_VEHICULO).first();
   await expect(link, "el tenant QA no tiene vehiculos en el inventario").toBeVisible({ timeout: 60_000 });
-  const href = (await link.getAttribute("href")) ?? "";
-  return decodeURIComponent(href.split("/").pop() ?? "");
+  return idPrimerVehiculo([(await link.getAttribute("href")) ?? ""]);
 }
 
 /** JPEG real, hecho por el navegador: un sello falso lo rechaza el backend con 422. */
