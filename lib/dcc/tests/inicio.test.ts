@@ -46,7 +46,7 @@ describe("datos del Command Center v2", () => {
 
   it("toda tarjeta sin capability declara por que falta", () => {
     for (const t of TARJETAS_INICIO) {
-      if (t.capability === null) expect(t.falta).toMatch(/^Falta endpoint/);
+      if (t.capability === null) expect(t.falta).toMatch(/^Falta (endpoint|métrica)/);
     }
   });
 });

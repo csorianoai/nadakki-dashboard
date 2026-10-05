@@ -1,16 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { DccCard } from "@/components/dcc/DccCard";
+import { Activity, AlertTriangle, BarChart3, Clock, FileText, Gauge, Sparkles } from "lucide-react";
+import { DCC_CLASSES } from "@/components/dcc/clases";
 import { DccEstado } from "@/components/dcc/DccEstado";
-import { DccKpi } from "@/components/dcc/DccKpi";
-import { DccGrid, DccPage } from "@/components/dcc/DccPage";
+import { DccKpiTile } from "@/components/dcc/DccKpiTile";
+import { DccPage } from "@/components/dcc/DccPage";
+import { DccSeccion } from "@/components/dcc/DccSeccion";
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { calidadDesdeEntitlement, type Calidad } from "@/lib/dcc/calidad";
 import { formatEntero, type LocaleTenant } from "@/lib/dcc/formato";
 import {
   CAPABILITIES_INICIO,
+  SECCIONES_SIN_FUENTE,
   TARJETAS_INICIO,
   fetchLeadsTotal,
   fetchSolicitudesTotal,
@@ -22,13 +26,11 @@ import { marcaDesdeBranding } from "@/lib/dcc/marca";
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 
-const NO_DISPONIBLE = (motivo: string | null): Calidad => ({ estado: "no_disponible", motivo });
-
-/** Evidencia plegada: de donde sale la cifra. */
+/** Evidencia de cada cifra conectada (tooltip): de donde sale. */
 const EVIDENCIA: Record<string, string> = {
-  stock: "GET /api/v1/autos/dealers/{dealer_id}/vehicles — conteo de estados disponible y reservado (D-N6-1).",
-  leads: "GET /api/v1/autos/tenants/{tenant_id}/dealers/{dealer_id}/leads — campo total.",
-  solicitudes: "GET /api/v2/credit/applications — campo total, filtrado por el dealer en el backend.",
+  stock: "GET /api/v1/autos/dealers/{dealer_id}/vehicles — disponible + reservado (D-N6-1)",
+  leads: "GET /api/v1/autos/tenants/{tenant_id}/dealers/{dealer_id}/leads — total",
+  solicitudes: "GET /api/v2/credit/applications — total filtrado por dealer",
 };
 
 function cargador(id: string, tenantId: string, dealerId: string): () => Promise<Cifra> {
@@ -43,71 +45,118 @@ function reasonCode(error: unknown): string | null {
   return typeof rec.reason_code === "string" ? rec.reason_code : "FORBIDDEN";
 }
 
-function TarjetaConectada({
-  tarjeta,
-  ids,
-  formato,
-}: {
-  tarjeta: TarjetaInicio;
-  ids: { tenantId: string; dealerId: string };
-  formato: LocaleTenant;
-}) {
+const tecnico = (t: TarjetaInicio, extra?: string | null) =>
+  [`metric_key: ${t.metricKey}`, extra].filter(Boolean).join(" · ");
+
+function Envoltorio({ tarjeta, children }: { tarjeta: TarjetaInicio; children: React.ReactNode }) {
+  return (
+    <div data-testid={`dcc-tarjeta-${tarjeta.id}`} className="min-w-0">
+      {children}
+    </div>
+  );
+}
+
+function TileConectado({ tarjeta, ids, formato }: { tarjeta: TarjetaInicio; ids: { tenantId: string; dealerId: string }; formato: LocaleTenant }) {
   const query = useQuery({
     queryKey: ["dcc-inicio", tarjeta.id, ids.tenantId, ids.dealerId],
     queryFn: cargador(tarjeta.id, ids.tenantId, ids.dealerId),
     retry: false,
   });
-  const comun = { titulo: tarjeta.titulo, tecnico: `metric_key: ${tarjeta.metricKey}`, testId: `dcc-tarjeta-${tarjeta.id}` };
-  if (query.isPending) return <DccCard {...comun}><DccEstado estado="cargando" /></DccCard>;
-  if (query.isError) {
-    const codigo = reasonCode(query.error);
+  if (query.isPending || query.isError) {
+    const codigo = query.isError ? reasonCode(query.error) : null;
     if (codigo) {
-      const calidad: Calidad = { estado: "bloqueado", reasonCode: codigo };
-      return <DccCard {...comun} calidad={calidad}><DccKpi valor={null} calidad={calidad} /></DccCard>;
+      return <DccKpiTile etiqueta={tarjeta.titulo} valor={null} calidad={{ estado: "bloqueado", reasonCode: codigo }} tecnico={tecnico(tarjeta)} />;
     }
-    return <DccCard {...comun}><DccEstado estado="error" onReintentar={() => void query.refetch()} /></DccCard>;
+    return (
+      <div className="rounded-[10px] border border-[var(--dcc-border)] p-4">
+        <p className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${DCC_CLASSES.muted}`}>{tarjeta.titulo}</p>
+        <div className="mt-2">
+          {query.isPending ? <DccEstado estado="cargando" /> : <DccEstado estado="error" onReintentar={() => void query.refetch()} />}
+        </div>
+      </div>
+    );
   }
   const cifra = query.data;
   return (
-    <DccCard {...comun} calidad={cifra.calidad} evidencia={<p>{EVIDENCIA[tarjeta.id]}</p>}>
-      <DccKpi valor={formatEntero(cifra.valor, formato)} calidad={cifra.calidad} nota={cifra.nota} />
-    </DccCard>
+    <DccKpiTile
+      etiqueta={tarjeta.titulo}
+      valor={formatEntero(cifra.valor, formato)}
+      unidad={tarjeta.unidad}
+      calidad={cifra.calidad}
+      nota={cifra.nota}
+      tecnico={tecnico(tarjeta, EVIDENCIA[tarjeta.id])}
+    />
   );
+}
+
+function SinFuente({ motivo }: { motivo: string }) {
+  return <DccEstado estado="no_disponible" detalle={motivo} />;
 }
 
 export function CommandCenterV2() {
   const access = useAccessEntitlementsBatch(CAPABILITIES_INICIO);
   const failClosed = isAccessQueryFailClosed(access);
   const cargandoAcceso = access.isPending || access.isLoading;
-  const branding = useDealerManagementBranding();
-  const formato = marcaDesdeBranding(branding.data).formato;
+  const formato = marcaDesdeBranding(useDealerManagementBranding().data).formato;
   const identidad = selectedDealerIdentity();
+
+  const tile = (tarjeta: TarjetaInicio) => {
+    let contenido: React.ReactNode;
+    if (tarjeta.falta !== null || tarjeta.capability === null) {
+      const calidad: Calidad = { estado: "no_disponible", motivo: tarjeta.falta };
+      contenido = <DccKpiTile etiqueta={tarjeta.titulo} valor={null} calidad={calidad} nota={tarjeta.falta} tecnico={tecnico(tarjeta)} />;
+    } else if (cargandoAcceso) {
+      contenido = <DccEstado estado="cargando" />;
+    } else if (failClosed) {
+      contenido = <DccEstado estado="error" detalle="No se pudieron verificar tus accesos." onReintentar={() => void access.refetch()} />;
+    } else {
+      const bloqueo = calidadDesdeEntitlement(access.data?.results[tarjeta.capability] ?? { allowed: false, reason_code: null });
+      if (bloqueo) contenido = <DccKpiTile etiqueta={tarjeta.titulo} valor={null} calidad={bloqueo} tecnico={tecnico(tarjeta)} />;
+      else if (!identidad) contenido = <DccEstado estado="vacio" detalle="Tu usuario no tiene un concesionario resuelto." />;
+      else contenido = <TileConectado tarjeta={tarjeta} ids={identidad} formato={formato} />;
+    }
+    return <Envoltorio key={tarjeta.id} tarjeta={tarjeta}>{contenido}</Envoltorio>;
+  };
+
+  const negocio = TARJETAS_INICIO.filter((x) => x.grupo === "negocio");
+  const mas = TARJETAS_INICIO.filter((x) => x.grupo === "mas");
 
   return (
     <DccPage titulo="Command Center">
-      <DccGrid>
-        {TARJETAS_INICIO.map((tarjeta) => {
-          const comun = { titulo: tarjeta.titulo, tecnico: `metric_key: ${tarjeta.metricKey}`, testId: `dcc-tarjeta-${tarjeta.id}` };
-          if (tarjeta.falta !== null || tarjeta.capability === null) {
-            const calidad = NO_DISPONIBLE(tarjeta.falta);
-            return <DccCard key={tarjeta.id} {...comun} calidad={calidad}><DccKpi valor={null} calidad={calidad} /></DccCard>;
-          }
-          if (cargandoAcceso) return <DccCard key={tarjeta.id} {...comun}><DccEstado estado="cargando" /></DccCard>;
-          if (failClosed) {
-            return (
-              <DccCard key={tarjeta.id} {...comun}>
-                <DccEstado estado="error" detalle="No se pudieron verificar tus accesos." onReintentar={() => void access.refetch()} />
-              </DccCard>
-            );
-          }
-          const bloqueo = calidadDesdeEntitlement(access.data?.results[tarjeta.capability] ?? { allowed: false, reason_code: null });
-          if (bloqueo) return <DccCard key={tarjeta.id} {...comun} calidad={bloqueo}><DccKpi valor={null} calidad={bloqueo} /></DccCard>;
-          if (!identidad) {
-            return <DccCard key={tarjeta.id} {...comun}><DccEstado estado="vacio" detalle="Tu usuario no tiene un concesionario resuelto." /></DccCard>;
-          }
-          return <TarjetaConectada key={tarjeta.id} tarjeta={tarjeta} ids={identidad} formato={formato} />;
-        })}
-      </DccGrid>
+      <div className="flex flex-col gap-[var(--dcc-gap)]">
+        <DccSeccion titulo="Brief del día" icono={Sparkles} tono="dorado" testId="dcc-seccion-brief">
+          <SinFuente motivo={SECCIONES_SIN_FUENTE.brief} />
+        </DccSeccion>
+        <div className="grid grid-cols-1 items-start gap-[var(--dcc-gap)] lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <DccSeccion titulo="Cola de atención" icono={AlertTriangle} tono="dorado" testId="dcc-seccion-cola">
+              <SinFuente motivo={SECCIONES_SIN_FUENTE.cola} />
+            </DccSeccion>
+          </div>
+          <DccSeccion titulo="Salud operativa" icono={Activity} testId="dcc-seccion-salud">
+            <SinFuente motivo={SECCIONES_SIN_FUENTE.salud} />
+          </DccSeccion>
+        </div>
+        <DccSeccion titulo="Estado del negocio" icono={BarChart3} tono="azul" meta="totales del backend" testId="dcc-seccion-negocio">
+          <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">{negocio.map(tile)}</div>
+        </DccSeccion>
+        <DccSeccion titulo="Más indicadores" icono={Gauge} meta="registrados en N6, sin fuente todavía" testId="dcc-seccion-mas">
+          <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">{mas.map(tile)}</div>
+        </DccSeccion>
+        <div className="grid grid-cols-1 items-start gap-[var(--dcc-gap)] lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <DccSeccion titulo="Hoy" icono={Clock} testId="dcc-seccion-hoy">
+              <SinFuente motivo={SECCIONES_SIN_FUENTE.hoy} />
+            </DccSeccion>
+          </div>
+          <DccSeccion titulo="Reportes e inteligencia" icono={FileText} tono="azul" testId="dcc-seccion-reportes">
+            <p className={`text-sm ${DCC_CLASSES.muted}`}>Reportes contables y ejecutivo con su naturaleza (en vivo o guardado).</p>
+            <Link href="/autos/dealer/reportes-v2" className={`mt-3 ${DCC_CLASSES.actionButton}`}>
+              Abrir Centro de Reportes
+            </Link>
+          </DccSeccion>
+        </div>
+      </div>
     </DccPage>
   );
 }

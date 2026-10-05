@@ -5,9 +5,9 @@ import { rotuloCalidad, type Calidad } from "@/lib/dcc/calidad";
 import { DccTooltip } from "./DccTooltip";
 
 const ESTILO: Record<Calidad["estado"], string> = {
-  verificado: "bg-[var(--dcc-ok-bg)] text-[var(--dcc-ok-fg)] border-transparent",
-  parcial: "bg-[var(--dcc-partial-bg)] text-[var(--dcc-partial-fg)] border-transparent",
-  bloqueado: "bg-[var(--dcc-blocked-bg)] text-[var(--dcc-blocked-fg)] border-transparent",
+  verificado: "bg-[var(--dcc-ok-bg)] text-[var(--dcc-ok-fg)] border-[var(--dcc-ok-line)]",
+  parcial: "bg-[var(--dcc-partial-bg)] text-[var(--dcc-partial-fg)] border-[var(--dcc-partial-line)]",
+  bloqueado: "bg-[var(--dcc-blocked-bg)] text-[var(--dcc-blocked-fg)] border-[var(--dcc-blocked-line)]",
   no_disponible: "bg-transparent text-[var(--dcc-na-fg)] border-dashed border-[var(--dcc-na-border)]",
 };
 
@@ -36,7 +36,7 @@ export function SelloCalidad({ calidad, tecnico }: { calidad: Calidad; tecnico?:
       <span
         data-testid="dcc-sello"
         data-estado={calidad.estado}
-        className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium ${ESTILO[calidad.estado]}`}
+        className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold ${ESTILO[calidad.estado]}`}
       >
         <Icono className="h-3.5 w-3.5" aria-hidden="true" />
         {rotuloCalidad(calidad)}

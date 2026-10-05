@@ -4,16 +4,22 @@ import { useState, type ReactNode } from "react";
 import { marcaDesdeBranding } from "@/lib/dcc/marca";
 import type { DccTheme } from "@/lib/dcc/tokens";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
+import { useDccThemeContext } from "./DccThemeContext";
 import { DccHeader } from "./DccHeader";
 import { DccThemeRoot } from "./DccThemeRoot";
 
 /**
  * Estructura de una pagina del DCC: raiz con tema, cabecera con la marca del
  * tenant y rejilla de tarjetas. El tema dura la sesion en memoria (como la
- * barra del DealerShell): sin Local Storage no hay salto al hidratar.
+ * barra del DealerShell): sin Local Storage no hay salto al hidratar. Dentro
+ * del DealerShell se comparte con el chrome (DccThemeContext).
  */
 export function DccPage({ titulo, acciones, children }: { titulo: string; acciones?: ReactNode; children: ReactNode }) {
-  const [theme, setTheme] = useState<DccTheme>("light");
+  const [local, setLocal] = useState<DccTheme>("light");
+  // Dentro del DealerShell el tema es el del shell; fuera, uno propio.
+  const compartido = useDccThemeContext();
+  const theme = compartido?.theme ?? local;
+  const setTheme = compartido?.setTheme ?? setLocal;
   const branding = useDealerManagementBranding();
   const marca = marcaDesdeBranding(branding.data);
   return (
