@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AlertTriangle, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { DCC_PRODUCTO } from "@/lib/dcc/producto";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import { cn } from "@/lib/utils";
 import {
@@ -72,10 +73,10 @@ function NavLink({
       title={collapsed ? item.label : undefined}
       className={cn(
         "flex min-h-11 items-center rounded-lg text-sm transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-action)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)]",
         collapsed ? "justify-center px-0" : "gap-3 px-3",
         active
-          ? "bg-[var(--nav-bg-2)] font-semibold text-[var(--dcc-action)]"
+          ? "bg-[var(--nav-bg-2)] font-semibold text-[var(--dcc-gold)] shadow-[inset_3px_0_0_var(--dcc-gold)]"
           : "font-medium text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)]",
       )}
     >
@@ -153,7 +154,7 @@ export function DealerSidebar({
             onClick={onClose}
             title={collapsed ? brandName : undefined}
             className={cn(
-              "flex min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-action)]",
+              "flex min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)]",
               collapsed ? "items-center justify-center" : "flex-col",
             )}
           >
@@ -173,7 +174,7 @@ export function DealerSidebar({
                 <span className="truncate font-dealer-display text-base font-bold text-[var(--nav-fg)]">
                   {brandName}
                 </span>
-                <span className="text-[11px] text-[var(--nav-fg-muted)]">Powered by Nadakki</span>
+                <span className="text-[11px] text-[var(--nav-fg-muted)]">{DCC_PRODUCTO.firma}</span>
               </>
             )}
           </Link>
@@ -182,7 +183,7 @@ export function DealerSidebar({
             type="button"
             onClick={onClose}
             aria-label="Cerrar menú"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-action)] lg:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)] lg:hidden"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -207,7 +208,7 @@ export function DealerSidebar({
             aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
             title={collapsed ? "Expandir menú" : "Contraer menú"}
             className={cn(
-              "flex min-h-9 w-full items-center rounded-lg text-[var(--nav-fg-muted)] transition-colors hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-action)]",
+              "flex min-h-9 w-full items-center rounded-lg text-[var(--nav-fg-muted)] transition-colors hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)]",
               collapsed ? "justify-center" : "justify-end px-2",
             )}
           >
