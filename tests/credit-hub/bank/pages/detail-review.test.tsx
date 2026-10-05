@@ -7,8 +7,16 @@ jest.mock("react", () => {
   return { ...actual, use: (value: unknown) => value };
 });
 
-jest.mock("@/components/forge/credit-hub/BankApplicationDetailView", () => ({
-  BankApplicationDetailView: () => <div>Detalle bancario renderizado</div>,
+jest.mock("@/app/credit/CreditTenantGate", () => ({
+  CreditTenantGate: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("@/components/credit-hub/bank/BankDetailLayout", () => ({
+  BankDetailLayout: () => <div>Detalle bancario renderizado</div>,
+}));
+
+jest.mock("@/app/(forge)/credit-hub/bank/_components/BankApplicationOpsPanel", () => ({
+  BankApplicationOpsPanel: () => null,
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useBankDecision", () => ({
