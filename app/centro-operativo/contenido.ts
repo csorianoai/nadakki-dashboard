@@ -68,6 +68,12 @@ export interface BloqueGuia {
    * pasos"; moverlo a otra seccion seria mover este campo, sin tocar la pantalla.
    */
   plantilla?: PlantillaCarga;
+  /**
+   * Los pasos en lenguaje llano para el Inicio del dealer, sin codigos
+   * contables. NO reemplazan a `pasos`: la guia validada sigue intacta y el
+   * Inicio la ofrece plegada bajo "Ver detalle contable".
+   */
+  pasosInicio?: string[];
 }
 
 export interface ContenidoCentroOperativo {
@@ -154,6 +160,11 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
       "Cargá primero todos los vehículos que Mapaal ya tenía antes de empezar a operar en Nadakki como SALDOS INICIALES.",
       "Para esos vehículos usá is_opening=true. La contrapartida contable del inventario es 3020 — Saldos iniciales, no Proveedores. El asiento de apertura es Debe 1220 — Inventario de vehículos / Haber 3020 — Saldos iniciales.",
       "Recién después de terminar y revisar esa carga inicial, empezá a registrar compras, reparaciones, otros costos, ventas, cobros y pagos de la operación normal.",
+    ],
+    pasosInicio: [
+      "Descargá la plantilla y cargá todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
+      "Revisá la carga antes de aplicarla.",
+      "Después registrá compras, reparaciones, ventas, cobros y pagos del día a día.",
     ],
     advertencia:
       "No uses una compra ficticia para representar un vehículo que Mapaal ya poseía: eso fabricaría una deuda con un proveedor que no existe.",

@@ -8,14 +8,14 @@
  *  1. El bloque se pinta SOLO con el inventario vacio de verdad. Cargando, con
  *     error de red o sin acceso verificado NO se pinta: ensenarle "Primeros
  *     pasos" a un dealer que ya tiene stock le diria que su trabajo se perdio.
- *  2. El texto sale del archivo de datos de D9, no del componente. El test
- *     compara contra `contenidoCentroOperativo`, asi que si alguien duplica el
- *     texto en el JSX y luego corrigen la guia, esto se rompe.
+ *  2. El texto sale del archivo de datos de D9, no del componente. A la vista
+ *     van los pasos en lenguaje llano; los codigos contables solo dentro del
+ *     plegable "Ver detalle contable", cerrado por defecto.
  *  3. El boton lleva a la SECCION de primeros pasos, no al principio de la guia.
  */
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import DealerDashboardPage from "@/app/autos/dealer/page";
 import { contenidoCentroOperativo } from "@/app/centro-operativo/contenido";
@@ -154,16 +154,48 @@ describe("el texto sale del archivo de datos de D9, no del componente", () => {
     expect(bloque).toHaveTextContent(BLOQUE.titulo);
   });
 
-  test("los pasos son los de la guia, con el saldo inicial y la cuenta 3020", async () => {
+  test("a la vista van los pasos en lenguaje llano, con el texto exacto", async () => {
+    render(<DealerDashboardPage />, { wrapper: wrapper(client()) });
+
+    const lista = await screen.findByTestId("dealer-primeros-pasos-lista");
+    const items = within(lista).getAllByRole("listitem").map((li) => li.textContent);
+    expect(items).toEqual([
+      "Descargá la plantilla y cargá todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
+      "Revisá la carga antes de aplicarla.",
+      "Después registrá compras, reparaciones, ventas, cobros y pagos del día a día.",
+    ]);
+    expect(items).toEqual(BLOQUE.pasosInicio);
+  });
+
+  test("los codigos contables solo estan dentro de 'Ver detalle contable'", async () => {
     render(<DealerDashboardPage />, { wrapper: wrapper(client()) });
 
     const bloque = await screen.findByTestId("dealer-primeros-pasos");
+    const detalle = screen.getByTestId("dealer-primeros-pasos-detalle");
+    expect(detalle.tagName).toBe("DETAILS");
+    expect(within(detalle).getByText("Ver detalle contable").tagName).toBe("SUMMARY");
+
+    // Dentro del plegable: la guia validada, verbatim, con sus cuentas.
     for (const paso of BLOQUE.pasos ?? []) {
-      expect(bloque).toHaveTextContent(paso);
+      expect(detalle).toHaveTextContent(paso);
     }
-    // La regla contable que valida Cesar: contrapartida 3020, no Proveedores.
-    expect(bloque).toHaveTextContent("3020");
-    expect(bloque).toHaveTextContent("is_opening=true");
+    expect(detalle).toHaveTextContent("3020");
+    expect(detalle).toHaveTextContent("is_opening=true");
+
+    // Fuera del plegable: nada de codigos ni jerga tecnica.
+    const fuera = bloque.cloneNode(true) as HTMLElement;
+    fuera.querySelector("details")?.remove();
+    for (const jerga of ["3020", "1220", "is_opening", "SALDOS INICIALES", "Debe", "Haber"]) {
+      expect(fuera.textContent).not.toContain(jerga);
+    }
+  });
+
+  test("el plegable esta cerrado por defecto", async () => {
+    render(<DealerDashboardPage />, { wrapper: wrapper(client()) });
+
+    const detalle = (await screen.findByTestId("dealer-primeros-pasos-detalle")) as HTMLDetailsElement;
+    expect(detalle.open).toBe(false);
+    expect(detalle).not.toHaveAttribute("open");
   });
 });
 
