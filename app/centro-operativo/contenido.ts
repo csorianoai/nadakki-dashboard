@@ -316,3 +316,11 @@ export function contenidoCentroOperativo(tenant?: string | null): ContenidoCentr
   if (!clave) return MAPAAL;
   return POR_TENANT[clave] ?? MAPAAL;
 }
+
+/**
+ * La plantilla de carga del tenant: la del bloque que la declare. La usan el
+ * Centro Operativo y el importador, asi los dos ofrecen el MISMO fichero.
+ */
+export function plantillaDeCarga(tenant?: string | null): PlantillaCarga | null {
+  return contenidoCentroOperativo(tenant).bloques.find((bloque) => bloque.plantilla)?.plantilla ?? null;
+}

@@ -10,7 +10,7 @@
  * cifras-- asi que no hay nada que cerrar por acceso.
  */
 
-import { Download } from "lucide-react";
+import { PlantillaDescarga } from "@/components/dealer-management/PlantillaDescarga";
 import { useAuth } from "@/hooks/useAuth";
 import { contenidoCentroOperativo, type BloqueGuia } from "./contenido";
 
@@ -63,29 +63,10 @@ function Bloque({ bloque }: { bloque: BloqueGuia }) {
         </ul>
       ) : null}
 
-      {/*
-        La plantilla de carga. Ruta, version, etiqueta y la linea que explica
-        para que sirve salen TODAS del archivo de datos: aqui no hay ningun
-        texto ni ninguna ruta escrita. Si el bloque no declara plantilla no se
-        pinta nada --un boton de descarga que apunta a un fichero que no esta
-        desplegado es peor que no tener boton.
-
-        `download` y no `target="_blank"`: el navegador lo guarda en vez de
-        intentar abrir un binario en una pestana.
-      */}
+      {/* La plantilla cuelga del bloque que la declara; el boton es el compartido. */}
       {bloque.plantilla ? (
-        <div data-testid={`centro-plantilla-${bloque.id}`} className="mt-4">
-          <a
-            href={bloque.plantilla.ruta}
-            download
-            data-testid="centro-plantilla-descargar"
-            data-version={bloque.plantilla.version}
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-emerald-500/30 transition-colors hover:bg-emerald-500/25"
-          >
-            <Download className="h-4 w-4" aria-hidden />
-            {bloque.plantilla.etiqueta}
-          </a>
-          <p className="mt-2 text-xs text-nk-fg-muted">{bloque.plantilla.descripcion}</p>
+        <div data-testid={`centro-plantilla-${bloque.id}`}>
+          <PlantillaDescarga plantilla={bloque.plantilla} testId="centro-plantilla-descargar" />
         </div>
       ) : null}
 

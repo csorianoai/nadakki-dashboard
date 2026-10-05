@@ -13,12 +13,15 @@
  */
 
 import Link from "next/link";
-import { useState, type ChangeEvent } from "react";
+import { useContext, useState, type ChangeEvent } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
+import { AuthContext } from "@/lib/auth/auth-context";
+import { plantillaDeCarga } from "@/app/centro-operativo/contenido";
+import { PlantillaDescarga } from "@/components/dealer-management/PlantillaDescarga";
 import {
   IMPORT_CAPABILITY_KEYS,
   ImportRechazado,
@@ -99,6 +102,8 @@ function Resultado({ resultado, testId }: { resultado: ImportResultado; testId: 
 }
 
 export default function ImportarActivosPage() {
+  // Sin AuthProvider (tests, pantallas sueltas) se ofrece la plantilla por defecto.
+  const plantilla = plantillaDeCarga(useContext(AuthContext)?.tenant?.id);
   const access = useAccessEntitlementsBatch(IMPORT_CAPABILITY_KEYS);
   const cargando = access.isPending || access.isLoading;
   const denegada = IMPORT_CAPABILITY_KEYS.find((key) => access.data?.results[key]?.allowed !== true);
@@ -160,6 +165,7 @@ export default function ImportarActivosPage() {
           Subí la plantilla oficial <code>{PLANTILLA}</code> (.xlsx o su .zip de CSV). Primero se
           revisa sin guardar nada; después aplicás.
         </p>
+        <PlantillaDescarga plantilla={plantilla} testId="import-plantilla-descargar" />
       </header>
 
       <section data-testid="import-reglas" className={CAJA}>
