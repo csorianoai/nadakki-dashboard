@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/fetch-client";
-import { fetchBalanceComprobacion, REPORT_DEFINITIONS } from "@/lib/dcc/reportes";
+import { fetchBalanceComprobacion, paisDelTenant, REPORT_DEFINITIONS, reportesDelPais } from "@/lib/dcc/reportes";
 
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
 
@@ -16,6 +16,25 @@ describe("catalogo N7 (Centro de Reportes v2)", () => {
 
   it("solo es explicable el que trae cifra y desglose en la misma respuesta", () => {
     expect(REPORT_DEFINITIONS.filter((r) => r.explicable).map((r) => r.key)).toEqual(["trial_balance@1.0"]);
+  });
+});
+
+describe("reportes por pais", () => {
+  it("el pais sale del branding; sin pais o con forma rara, null", () => {
+    expect(paisDelTenant({ country_code: "ar" })).toBe("AR");
+    expect(paisDelTenant({ country_code: "Argentina" })).toBeNull();
+    expect(paisDelTenant(null)).toBeNull();
+  });
+
+  it("los de jurisdiccion solo para su pais; sin pais se ocultan", () => {
+    const keys = (p: string | null) => reportesDelPais(REPORT_DEFINITIONS, p).map((r) => r.key);
+    expect(keys("AR")).not.toContain("dgii_606@1.0");
+    expect(keys("DO")).toContain("dgii_607@1.0");
+    expect(keys(null)).toHaveLength(8);
+  });
+
+  it("solo hay 'Abrir' donde existe una pantalla real", () => {
+    expect(REPORT_DEFINITIONS.filter((r) => r.pantalla).map((r) => r.key)).toEqual(["trial_balance@1.0", "general_ledger@1.0", "income_statement@1.0"]);
   });
 });
 
