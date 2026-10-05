@@ -1,6 +1,6 @@
 "use client";
 
-import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
+import localFont from "next/font/local";
 import { useState, type ReactNode } from "react";
 import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
 import { DealerSuiteGate } from "@/components/dealer/DealerSuiteGate";
@@ -9,21 +9,23 @@ import { ForgeGlobalCoresSidebar } from "./ForgeGlobalCoresSidebar";
 import { ForgeGlobalTopbar } from "./ForgeGlobalTopbar";
 import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
 
-const fontSans = Inter({
-  subsets: ["latin"],
+const fontSans = localFont({
+  src: "../../../lib/fonts/files/inter/inter-latin-wght-normal.woff2",
+  weight: "100 900",
   variable: "--forge-font-sans",
   display: "swap",
-  preload: true,
 });
 
-const fontMono = JetBrains_Mono({
-  subsets: ["latin"],
+const fontMono = localFont({
+  src: "../../../lib/fonts/files/jetbrains-mono/jetbrains-mono-latin-wght-normal.woff2",
+  weight: "100 800",
   variable: "--forge-font-mono-opt",
   display: "swap",
 });
 
-const fontDisplay = Source_Serif_4({
-  subsets: ["latin"],
+const fontDisplay = localFont({
+  src: "../../../lib/fonts/files/source-serif-4/source-serif-4-latin-wght-normal.woff2",
+  weight: "200 900",
   variable: "--forge-font-display-opt",
   display: "swap",
 });
