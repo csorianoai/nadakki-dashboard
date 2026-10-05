@@ -37,6 +37,7 @@ import {
   RUTA_INVENTARIO,
   TESTIDS_IMPORTAR as T,
   TESTIDS_INVENTARIO,
+  TESTIDS_SIN_FORMULARIO as SF,
   TEXTO_SIN_IVA,
 } from "./d7-guion";
 import { esperarConReintento, iniciarSesionQA } from "./sesion-qa";
@@ -71,7 +72,26 @@ test("D7: inventario -> Importar planilla -> revisar -> aplicar la v4", async ({
   await expect(reglas).toContainText(TEXTO_SIN_IVA);
 
   // 3. La puerta esta abierta y aplicar nace apagado.
-  await expect(page.getByTestId(T.formulario)).toBeVisible({ timeout: 30_000 });
+  // Si no sale el formulario, el mensaje dice cual de los estados de la pantalla salio.
+  const sinFormulario = [
+    ["denegado", T.denegado],
+    ["error-acceso", SF.errorAcceso],
+    ["sin-dealer", SF.sinDealer],
+    ["selector-dealer", SF.selectorDealer],
+  ];
+  await expect
+    .poll(
+      async () => {
+        if (await page.getByTestId(T.formulario).isVisible()) return "formulario";
+        for (const [estado, id] of sinFormulario) {
+          const caja = page.getByTestId(id);
+          if (await caja.isVisible()) return `${estado} reason_code=${(await caja.getAttribute("data-reason-code")) ?? "-"}`;
+        }
+        return "cargando";
+      },
+      { timeout: 30_000, message: "la pantalla de importar no mostro el formulario" },
+    )
+    .toBe("formulario");
   await expect(page.getByTestId(T.denegado)).toHaveCount(0);
   await expect(page.getByTestId(T.aplicar)).toBeDisabled();
 

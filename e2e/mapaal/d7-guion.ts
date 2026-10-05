@@ -27,6 +27,16 @@ export const TESTIDS_IMPORTAR = {
   aplicarError: "import-aplicar-error",
 } as const;
 
+/**
+ * Estados de la pantalla en que NO hay formulario. El spec los nombra (con su
+ * reason_code) en vez de agotar el tiempo sin decir por que.
+ */
+export const TESTIDS_SIN_FORMULARIO = {
+  errorAcceso: "import-error-acceso",
+  sinDealer: "import-sin-dealer",
+  selectorDealer: "import-selector-dealer",
+} as const;
+
 /** `data-testid` de cada hoja: `import-hoja-<hoja>`. */
 export const PREFIJO_HOJA = "import-hoja-";
 
