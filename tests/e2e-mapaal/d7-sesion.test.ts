@@ -35,3 +35,23 @@ describe("D7: el usuario QA inicia sesion donde existe su tenant", () => {
     expect(sesion).toContain("toBe(TENANT_QA)");
   });
 });
+
+/**
+ * Regresion (evidence D7 b182d618): el primer intento se quedo 30 s en "No se
+ * pudo verificar la sesion" sin CTA y solo paso en el reintento de Playwright.
+ * El spec recupera por "Reintentar", como D8.3, en vez de depender del retry.
+ */
+describe("D7: un fallo transitorio de verificar la sesion no tumba el spec", () => {
+  const spec = fuente("e2e/mapaal/D7.spec.ts");
+
+  it("D7.spec.ts reconoce la pantalla de sesion fallida y pulsa Reintentar", () => {
+    expect(spec).toContain("SESION_FALLIDA");
+    expect(spec).toContain('name: "Reintentar"');
+  });
+
+  it("la pantalla de la app sigue diciendo lo que el spec busca", () => {
+    const { SESION_FALLIDA } = require("../../e2e/mapaal/d8-guion");
+    expect(fuente("components/forge/auth/ProtectedRoute.tsx")).toContain(SESION_FALLIDA);
+    expect(fuente("components/forge/auth/ProtectedRoute.tsx")).toContain("Reintentar");
+  });
+});
