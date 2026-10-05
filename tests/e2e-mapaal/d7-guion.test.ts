@@ -9,12 +9,14 @@ import path from "path";
 import {
   PLANTILLA,
   PREFIJO_HOJA,
+  esPeticionImport,
   RUTA_IMPORTAR,
   RUTA_INVENTARIO,
   TESTIDS_IMPORTAR,
   TESTIDS_INVENTARIO,
   TEXTO_SIN_IVA,
 } from "../../e2e/mapaal/d7-guion";
+import { importActivosPath } from "@/lib/dealer-management/import-activos";
 
 const raiz = path.resolve(__dirname, "../..");
 const fuente = (rel: string) => readFileSync(path.join(raiz, rel), "utf8");
@@ -40,5 +42,19 @@ describe("D7 guion: selectores y textos contra el codigo de la app", () => {
     const pagina = fuente(`app${RUTA_IMPORTAR}/page.tsx`);
     expect(pagina).toContain(`"${PLANTILLA}"`);
     expect(pagina).toContain(TEXTO_SIN_IVA);
+  });
+});
+
+describe("D7 guion: el filtro de peticiones reconoce lo que manda el cliente", () => {
+  // Regresion: el spec filtraba `?modo=` y el cliente manda `?aplicar=`, asi que
+  // waitForRequest agotaba el tiempo y RESULT_D7 salia FAIL.
+  const abs = (modo: "revision" | "aplicar") => `https://x.test${importActivosPath("d-1", modo)}`;
+
+  it("revision y aplicar se distinguen con la URL real de importActivosPath", () => {
+    expect(esPeticionImport(abs("revision"), "revision", "POST")).toBe(true);
+    expect(esPeticionImport(abs("aplicar"), "aplicar", "POST")).toBe(true);
+    expect(esPeticionImport(abs("revision"), "aplicar", "POST")).toBe(false);
+    expect(esPeticionImport(abs("aplicar"), "revision", "POST")).toBe(false);
+    expect(esPeticionImport(abs("revision"), "revision", "GET")).toBe(false);
   });
 });
