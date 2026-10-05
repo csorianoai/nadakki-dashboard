@@ -32,3 +32,16 @@ export const PREFIJO_HOJA = "import-hoja-";
 
 export const PLANTILLA = "PLANTILLA_ACTIVOS_v4";
 export const TEXTO_SIN_IVA = "SIN IVA recuperable";
+
+/**
+ * Es la peticion del importador en ese modo? El cliente (`importActivosPath`)
+ * distingue revision de aplicar con `?aplicar=false|true`, no con `?modo=`.
+ */
+export function esPeticionImport(url: string, modo: "revision" | "aplicar", method: string): boolean {
+  const u = new URL(url);
+  return (
+    method === "POST" &&
+    /\/dealers\/[^/]+\/import-activos\/?$/.test(u.pathname) &&
+    u.searchParams.get("aplicar") === String(modo === "aplicar")
+  );
+}
