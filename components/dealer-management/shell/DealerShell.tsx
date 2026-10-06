@@ -16,6 +16,7 @@ import { DEALER_NAV_CAPABILITY_KEYS, visibleDealerNavGroups } from "./dealer-nav
 import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
+import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
 import { DccThemeProvider, useDccThemeContext } from "@/components/dcc/DccThemeContext";
 import { DEALER_THEME_STORAGE_KEY, dealerShellThemeStyle } from "./dealer-shell-theme";
 import { dealerFontVariables } from "./DealerFonts";
@@ -230,9 +231,7 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
         : {
             estado: salida.estado,
             titulo: "No se pudo leer el dealer de tu sesión",
-            detalle: salida.reason_code
-              ? `reason_code: ${salida.reason_code}`
-              : `El backend respondió HTTP ${salida.status} sin reason_code.`,
+            detalle: "Probá de nuevo en unos minutos. Si sigue igual, avisá a soporte.",
             codigo: salida.reason_code,
           };
     }
@@ -307,6 +306,11 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
               <p className="font-semibold">{avisoDeContexto.titulo}</p>
               {avisoDeContexto.detalle ? (
                 <p className="mt-1 text-[var(--dcc-partial-fg)]">{avisoDeContexto.detalle}</p>
+              ) : null}
+              {avisoDeContexto.codigo ? (
+                <DetalleTecnico>
+                  <p>Código para soporte: {avisoDeContexto.codigo}</p>
+                </DetalleTecnico>
               ) : null}
             </section>
           ) : (

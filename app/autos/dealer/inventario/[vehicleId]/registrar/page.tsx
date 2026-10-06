@@ -138,7 +138,7 @@ export default function DealerVehicleRegisterPage() {
           className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">
-            {REASON_CODE_INFO[decision.reason_code]?.title ?? decision.reason_code}
+            {REASON_CODE_INFO[decision.reason_code]?.title ?? "Esta función no está disponible"}
           </h2>
           <p className="mt-1 text-sm text-nk-fg-muted">
             {REASON_CODE_INFO[decision.reason_code]?.description ?? "Esta superficie no está disponible."}
