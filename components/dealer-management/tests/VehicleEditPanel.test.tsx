@@ -95,3 +95,46 @@ it("sin cambios lo dice y no llama al backend", () => {
   expect(screen.getByTestId("vehicle-edit-ack")).toHaveTextContent("No hay cambios");
   expect(fetchMock).not.toHaveBeenCalled();
 });
+
+it("con el precio borrado sin guardar no publica: boton deshabilitado y aviso visible", () => {
+  render(<VehicleEditPanel ficha={{ ...BASE, price_amount: "100" }} context={CONTEXT} onSaved={onSaved} />);
+  expect(screen.getByTestId("vehicle-publicar")).toBeEnabled();
+  expect(screen.queryByTestId("vehicle-publicar-sin-guardar")).toBeNull();
+
+  fireEvent.change(screen.getByRole("textbox", { name: /^Precio (?!de referencia)/ }), { target: { value: "" } });
+
+  expect(screen.getByTestId("vehicle-publicar")).toBeDisabled();
+  expect(screen.getByTestId("vehicle-publicar-sin-guardar")).toHaveTextContent(
+    "Guardá los cambios antes de pasar a Disponible.",
+  );
+  fireEvent.click(screen.getByTestId("vehicle-publicar"));
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+it("cualquier campo sin guardar deshabilita publicar; tras guardar vuelve a habilitarse", async () => {
+  fetchMock.mockResolvedValue(respuesta(200, {}));
+  const ficha = { ...BASE, price_amount: "100" };
+  const { rerender } = render(<VehicleEditPanel ficha={ficha} context={CONTEXT} onSaved={onSaved} />);
+
+  fireEvent.change(screen.getByRole("textbox", { name: /^Precio (?!de referencia)/ }), { target: { value: "150" } });
+  expect(screen.getByTestId("vehicle-publicar")).toBeDisabled();
+  expect(screen.getByTestId("vehicle-publicar-sin-guardar")).toBeInTheDocument();
+
+  fireEvent.submit(screen.getByTestId("vehicle-edit-form"));
+  await waitFor(() => expect(screen.getByTestId("vehicle-edit-ack")).toHaveTextContent("Cambios guardados."));
+  expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ price_amount: "150" });
+
+  // onSaved recarga la ficha: llega con el precio ya guardado.
+  rerender(<VehicleEditPanel ficha={{ ...ficha, price_amount: "150" }} context={CONTEXT} onSaved={onSaved} />);
+  expect(screen.getByTestId("vehicle-publicar")).toBeEnabled();
+  expect(screen.queryByTestId("vehicle-publicar-sin-guardar")).toBeNull();
+});
+
+it("volver al valor guardado sin guardar tambien rehabilita publicar", () => {
+  render(<VehicleEditPanel ficha={{ ...BASE, price_amount: "100", stock_number: "S-1" }} context={CONTEXT} onSaved={onSaved} />);
+  const stock = screen.getByRole("textbox", { name: "Número de stock" });
+  fireEvent.change(stock, { target: { value: "S-2" } });
+  expect(screen.getByTestId("vehicle-publicar")).toBeDisabled();
+  fireEvent.change(stock, { target: { value: "S-1" } });
+  expect(screen.getByTestId("vehicle-publicar")).toBeEnabled();
+});
