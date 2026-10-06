@@ -27,8 +27,8 @@ describe("BFF v1 catch-all proxy", () => {
     expect(shared).toMatch(/req\.headers\.get\("Authorization"\)/);
   });
 
-  test("forwards X-Role and Idempotency-Key like v2", () => {
-    expect(shared).toContain('"X-Role"');
+  test("does not forward client X-Role; forwards Idempotency-Key like v2", () => {
+    expect(shared).not.toContain('headers["X-Role"]');
     expect(shared).toContain('"Idempotency-Key"');
   });
 

@@ -29,8 +29,7 @@ export function buildBffUpstreamHeaders(
   const auth = req.headers.get("Authorization") || req.headers.get("authorization");
   if (auth) headers["Authorization"] = auth;
 
-  const role = req.headers.get("X-Role") || req.headers.get("x-role");
-  if (role) headers["X-Role"] = role;
+  // X-Role is client-controlled: never forward it. The backend derives the role from the token.
 
   const actorRole =
     req.headers.get("X-Actor-Role") || req.headers.get("x-actor-role");
