@@ -116,6 +116,66 @@ describe("Command Center v2 (estructura de la referencia v3)", () => {
     await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-solicitudes")).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "bloqueado"));
   });
 
+  describe("el lector de pantalla oye lenguaje llano, no rotulos tecnicos", () => {
+    const TECNICO = /metric_key|GET \/api|\/api\//;
+
+    /** Todo lo que puede llegar al arbol accesible: texto (sr-only incluido), title y aria-*. */
+    function textoAccesible(raiz: HTMLElement): string[] {
+      const partes = [raiz.textContent ?? ""];
+      for (const el of [raiz, ...Array.from(raiz.querySelectorAll("*"))]) {
+        for (const attr of Array.from(el.attributes)) {
+          if (attr.name === "title" || attr.name.startsWith("aria-")) partes.push(`${attr.name}=${attr.value}`);
+        }
+      }
+      return partes;
+    }
+
+    const sinTecnico = (raiz: HTMLElement) => {
+      for (const parte of textoAccesible(raiz)) expect(parte).not.toMatch(TECNICO);
+    };
+
+    it("con cifras: ni metric_key ni GET /api en texto, title ni aria-*", async () => {
+      acceso(TODO);
+      const { container } = montar();
+      await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-kpi-valor")).toHaveTextContent("37"));
+      await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-solicitudes")).getByTestId("dcc-kpi-valor")).toHaveTextContent("12"));
+      sinTecnico(container);
+    });
+
+    it("con error, bloqueo y sin dato: tampoco", async () => {
+      acceso({ ...TODO, "autos.inventory.list": { allowed: false, reason_code: "UPGRADE_REQUIRED" } });
+      (fetchLeadsTotal as jest.Mock).mockRejectedValue({ status: 500, reason_code: null, message: "HTTP 500" });
+      (fetchSolicitudesTotal as jest.Mock).mockRejectedValue({ status: 403, reason_code: null });
+      const { container } = montar();
+      await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-leads")).getByTestId("dcc-estado")).toHaveAttribute("data-estado", "error"));
+      await waitFor(() => expect(within(screen.getByTestId("dcc-tarjeta-solicitudes")).getByTestId("dcc-sello")).toHaveAttribute("data-estado", "bloqueado"));
+      sinTecnico(container);
+    });
+
+    it("la descripcion accesible dice que mide la tarjeta", async () => {
+      acceso(TODO);
+      montar();
+      const leads = screen.getByTestId("dcc-tarjeta-leads");
+      await waitFor(() => expect(within(leads).getByTestId("dcc-kpi-valor")).toHaveTextContent("37"));
+      // DccTooltip pone aria-describedby en su envoltorio del rotulo.
+      const rotulo = (tarjeta: HTMLElement, texto: string) =>
+        within(tarjeta).getByText(texto).closest('[data-testid="dcc-tooltip"]') as HTMLElement;
+      expect(rotulo(leads, "Leads")).toHaveAccessibleDescription("Total de leads recibidos por tu concesionario.");
+      expect(rotulo(screen.getByTestId("dcc-tarjeta-capital"), "Capital")).toHaveAccessibleDescription(
+        "Costo del inventario que tienes en stock.",
+      );
+    });
+
+    it("el dato tecnico queda solo en data-* para soporte", () => {
+      acceso(TODO);
+      montar();
+      const stock = screen.getByTestId("dcc-tarjeta-stock");
+      expect(stock).toHaveAttribute("data-metric-key", "inventory_units@1.0");
+      expect(stock.getAttribute("data-fuente")).toContain("GET /api/v1/autos/dealers/{dealer_id}/vehicles");
+      expect(screen.getByTestId("dcc-tarjeta-caja")).not.toHaveAttribute("data-fuente");
+    });
+  });
+
   it("si el batch de accesos falla, no hay cifras ni peticiones", () => {
     (useAccessEntitlementsBatch as jest.Mock).mockReturnValue({ isPending: false, isLoading: false, isError: true, error: new Error("x"), data: undefined, refetch: jest.fn() });
     montar();

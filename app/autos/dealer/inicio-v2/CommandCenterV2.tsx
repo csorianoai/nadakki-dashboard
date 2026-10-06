@@ -33,13 +33,33 @@ import { marcaDesdeBranding } from "@/lib/dcc/marca";
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 
+/**
+ * Fuente de cada cifra, SOLO para soporte: va en `data-fuente` del contenedor
+ * de la tarjeta, que no se anuncia ni se ve. Nunca en `title`, `aria-*` ni
+ * `sr-only`: antes viajaba en el tooltip y el lector de pantalla leia
+ * "metric_key: ..." y "GET /api/..." como descripcion de la tarjeta.
+ */
 const EVIDENCIA: Record<string, string> = {
   stock: "GET /api/v1/autos/dealers/{dealer_id}/vehicles — disponible + reservado (D-N6-1)",
   leads: "GET /api/v1/autos/tenants/{tenant_uuid}/dealers/{dealer_id}/leads — total",
   solicitudes: "GET /api/v2/credit/applications — total filtrado por dealer",
 };
 
-const tecnico = (t: TarjetaInicio, extra?: string | null) => [`metric_key: ${t.metricKey}`, extra].filter(Boolean).join(" · ");
+/**
+ * Lo que mide cada tarjeta, en lenguaje llano: es la descripcion accesible
+ * (tooltip + lector de pantalla). Sale de la definicion de cada metrica
+ * (EVIDENCIA y el motivo `falta` de lib/dcc/inicio), sin anadir datos.
+ */
+const QUE_MIDE: Record<string, string> = {
+  stock: "Vehículos de tu concesionario disponibles o reservados.",
+  capital: "Costo del inventario que tienes en stock.",
+  margen: "Margen bruto de tu concesionario.",
+  leads: "Total de leads recibidos por tu concesionario.",
+  solicitudes: "Total de solicitudes de crédito de tu concesionario.",
+  caja: "Caja y cobranzas de tu concesionario.",
+};
+
+const descripcion = (t: TarjetaInicio) => QUE_MIDE[t.id] ?? null;
 
 function bloqueoPor403(error: unknown): Calidad | null {
   const rec = error && typeof error === "object" ? (error as { status?: unknown; reason_code?: unknown }) : null;
@@ -81,15 +101,19 @@ export function CommandCenterV2() {
   const brief = briefDeterminista({ stock: stock.data, leads: leads.data, solicitudes: solicitudes.data }, fmt);
 
   const kpi = (t: TarjetaInicio) => {
-    const envolver = (n: React.ReactNode) => <div key={t.id} data-testid={`dcc-tarjeta-${t.id}`} className="min-w-0">{n}</div>;
+    const envolver = (n: React.ReactNode) => (
+      <div key={t.id} data-testid={`dcc-tarjeta-${t.id}`} data-metric-key={t.metricKey} data-fuente={EVIDENCIA[t.id]} className="min-w-0">
+        {n}
+      </div>
+    );
     if (t.falta !== null || t.capability === null) {
-      return envolver(<DccKpiTile etiqueta={t.titulo} valor={null} calidad={{ estado: "no_disponible", motivo: t.falta }} tecnico={tecnico(t)} />);
+      return envolver(<DccKpiTile etiqueta={t.titulo} valor={null} calidad={{ estado: "no_disponible", motivo: t.falta }} tecnico={descripcion(t)} />);
     }
     const titulo = <p className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${DCC_CLASSES.muted}`}>{t.titulo}</p>;
     if (cargandoAcceso) return envolver(<>{titulo}<DccEstado estado="cargando" /></>);
     if (failClosed) return envolver(<>{titulo}<DccEstado estado="error" detalle="No se pudieron verificar tus accesos." onReintentar={() => void access.refetch()} /></>);
     const bloqueo = calidadDesdeEntitlement(access.data?.results[t.capability] ?? { allowed: false, reason_code: null });
-    if (bloqueo) return envolver(<DccKpiTile etiqueta={t.titulo} valor={null} calidad={bloqueo} tecnico={tecnico(t)} />);
+    if (bloqueo) return envolver(<DccKpiTile etiqueta={t.titulo} valor={null} calidad={bloqueo} tecnico={descripcion(t)} />);
     if (!dealerId) return envolver(<>{titulo}<DccEstado estado="vacio" detalle="Tu usuario no tiene un concesionario resuelto." /></>);
     if (t.id === "leads" && !esUuid(tenantUuid)) {
       return envolver(<>{titulo}<DccEstado estado="error" detalle={`Tenant sin UUID en la sesión (${tenantUuid ?? "vacío"})`} /></>);
@@ -98,11 +122,11 @@ export function CommandCenterV2() {
     if (q.isPending) return envolver(<>{titulo}<DccEstado estado="cargando" /></>);
     if (q.isError) {
       const b = bloqueoPor403(q.error);
-      if (b) return envolver(<DccKpiTile etiqueta={t.titulo} valor={null} calidad={b} tecnico={tecnico(t)} />);
-      return envolver(<>{titulo}<DccEstado estado="error" detalle={`${EVIDENCIA[t.id]} → ${detalleDeError(q.error)}`} onReintentar={() => void q.refetch()} /></>);
+      if (b) return envolver(<DccKpiTile etiqueta={t.titulo} valor={null} calidad={b} tecnico={descripcion(t)} />);
+      return envolver(<>{titulo}<DccEstado estado="error" detalle={detalleDeError(q.error)} onReintentar={() => void q.refetch()} /></>);
     }
     const c: Cifra = q.data;
-    return envolver(<DccKpiTile etiqueta={t.titulo} valor={fmt(c.valor)} unidad={t.unidad} calidad={c.calidad} nota={c.nota} tecnico={tecnico(t, EVIDENCIA[t.id])} />);
+    return envolver(<DccKpiTile etiqueta={t.titulo} valor={fmt(c.valor)} unidad={t.unidad} calidad={c.calidad} nota={c.nota} tecnico={descripcion(t)} />);
   };
 
   const proximamente = (motivo: string) => <SelloCalidad calidad={{ estado: "no_disponible", motivo }} />;
