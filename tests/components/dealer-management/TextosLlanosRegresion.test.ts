@@ -1,0 +1,63 @@
+/**
+ * Regresión UX-TEXTOS: el usuario del dealer no debe ver jerga técnica.
+ * Recorre los fuentes .tsx del dealer y falla si reaparece texto técnico visible.
+ * El detalle técnico va en `DetalleTecnico` (plegado) o en un tooltip, nunca como texto suelto.
+ */
+import fs from "fs";
+import path from "path";
+
+const RAIZ = path.resolve(__dirname, "../../..");
+const CARPETAS = ["app/autos/dealer", "components/dealer", "components/dealer-management", "components/contable"];
+
+// Frases que ya se corrigieron y no pueden volver.
+const PROHIBIDAS: Array<{ nombre: string; patron: RegExp }> = [
+  { nombre: "Accesos reales del tenant", patron: /Accesos reales del tenant/ },
+  { nombre: "El frontend restringe", patron: /El frontend restringe|nunca concede permisos/ },
+  { nombre: "sin reason_code", patron: /sin reason_code/ },
+  { nombre: "El backend respondió HTTP", patron: /El backend respondi[óo] HTTP/ },
+  { nombre: "reason_code: como etiqueta visible", patron: />[^<>{}]*\breason_code:\s*(<code>|\{)/ },
+  { nombre: "reason_code: en texto de JSX", patron: /^\s*[A-Za-zÁ-ú][^`'"=<>{}]*\.\s*reason_code:\s*<code>/ },
+];
+
+// Pendientes conocidos, a corregir en un PR de seguimiento (no agregar archivos nuevos acá).
+const PENDIENTES = new Set([
+  "app/autos/dealer/inventario/[vehicleId]/vender/page.tsx",
+  "components/dealer/DealerPostSaleCores.tsx",
+  "components/dealer/DealerVehicleEconomicsPanel.tsx",
+]);
+const esPendiente = (f: string) => PENDIENTES.has(f.split(path.sep).join("/"));
+const esComentario = (l: string) => /^\s*(\/\/|\/\*|\*)/.test(l);
+
+function archivos(dir: string): string[] {
+  const abs = path.join(RAIZ, dir);
+  if (!fs.existsSync(abs)) return [];
+  return fs.readdirSync(abs, { withFileTypes: true }).flatMap((e) => {
+    const rel = path.join(dir, e.name);
+    if (e.isDirectory()) return e.name === "tests" || e.name === "__tests__" ? [] : archivos(rel);
+    return /\.tsx$/.test(e.name) && !/\.test\.tsx$/.test(e.name) ? [rel] : [];
+  });
+}
+
+describe("textos llanos del dealer (regresión UX-TEXTOS)", () => {
+  const todos = CARPETAS.flatMap(archivos);
+
+  it("encuentra fuentes para revisar", () => {
+    expect(todos.length).toBeGreaterThan(20);
+  });
+
+  it.each(PROHIBIDAS)("no reaparece: $nombre", ({ patron }) => {
+    const hallazgos = todos
+      .filter((f) => !esPendiente(f))
+      .filter((f) => fs.readFileSync(path.join(RAIZ, f), "utf8").split("\n").some((l) => !esComentario(l) && patron.test(l)));
+    expect(hallazgos).toEqual([]);
+  });
+
+  it("el código para soporte solo aparece dentro de DetalleTecnico", () => {
+    const sueltos = todos.filter((f) => !esPendiente(f)).filter((f) => {
+      const txt = fs.readFileSync(path.join(RAIZ, f), "utf8");
+      const i = txt.indexOf("Código para soporte");
+      return i >= 0 && !/DetalleTecnico|<details/.test(txt);
+    });
+    expect(sueltos).toEqual([]);
+  });
+});
