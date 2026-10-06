@@ -59,7 +59,7 @@ export default function DealerVehicleNuevoPage() {
         router.push(`/autos/dealer/inventario/${encodeURIComponent(id)}`);
         return;
       }
-      setAck("Vehículo creado. El backend no devolvió identificador.");
+      setAck("Vehículo creado. Lo vas a ver en el inventario.");
     } catch (error) {
       if (error instanceof AccessApiError) {
         setReasonCode(error.reason_code ?? `HTTP_${error.status}`);

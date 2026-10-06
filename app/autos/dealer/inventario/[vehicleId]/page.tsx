@@ -2,13 +2,15 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { DealerVehicleEconomicsPanel } from "@/components/dealer/DealerVehicleEconomicsPanel";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
-import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
+import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
+import { VehicleEditPanel } from "@/components/dealer-management/VehicleEditPanel";
+import { VEHICLE_STATUS_LABEL, VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
@@ -33,7 +35,18 @@ function asDecision(
   };
 }
 
-function VehicleFicha({ dealerId, vehicleId, photos }: { dealerId: string; vehicleId: string; photos: EntitlementDecision }) {
+function VehicleFicha({
+  dealerId,
+  vehicleId,
+  photos,
+  write,
+}: {
+  dealerId: string;
+  vehicleId: string;
+  photos: EntitlementDecision;
+  write: EntitlementDecision;
+}) {
+  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["dealer-vehicle", dealerId, vehicleId],
     queryFn: () => fetchDealerVehicleStatus(dealerId, vehicleId),
@@ -59,8 +72,8 @@ function VehicleFicha({ dealerId, vehicleId, photos }: { dealerId: string; vehic
         className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer el vehículo</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted">
-          reason_code: <code>{query.error.reason_code ?? `HTTP_${query.error.status}`}</code>
+        <p className="mt-1 text-xs text-nk-fg-muted">
+          Código para soporte: {query.error.reason_code ?? `HTTP_${query.error.status}`}
         </p>
       </section>
     );
@@ -74,14 +87,24 @@ function VehicleFicha({ dealerId, vehicleId, photos }: { dealerId: string; vehic
     <>
       <section data-testid="dealer-vehicle-ready" className="rounded-r-sm border border-nk-border bg-nk-surface p-4">
         <h2 className="font-manrope text-lg font-bold text-nk-fg break-words">{title}</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted">Estado: {query.data.status ?? "no disponible"}</p>
+        <p className="mt-1 text-sm text-nk-fg-muted">
+          Estado: {query.data.status ? (VEHICLE_STATUS_LABEL[query.data.status] ?? query.data.status) : "no disponible"}
+        </p>
       </section>
+      {/* Editar y publicar piden la clave de ESCRITURA; el 403 del backend sigue mandando. */}
+      {write.allowed ? (
+        <VehicleEditPanel
+          ficha={query.data}
+          context={selectedDealerIdentity()}
+          onSaved={() => void queryClient.invalidateQueries({ queryKey: ["dealer-vehicle", dealerId, vehicleId] })}
+        />
+      ) : null}
       {/* `autos.inventory.photos` depende del plan: sin ella se dice por que. */}
       {photos.allowed ? (
         <FotosVehiculoPanel vehicleId={vehicleId} />
       ) : (
         <p role="status" data-testid="vehicle-photos-gated" data-reason-code={photos.reason_code} className="text-sm text-nk-fg-muted">
-          Tu plan no incluye las fotos del vehículo. reason_code: <code>{photos.reason_code}</code>
+          Tu plan no incluye las fotos del vehículo.
         </p>
       )}
       <DealerVehicleEconomicsPanel vehicleId={vehicleId} />
@@ -89,25 +112,40 @@ function VehicleFicha({ dealerId, vehicleId, photos }: { dealerId: string; vehic
   );
 }
 
+/** "2021 Toyota Hilux". Sin datos, un nombre generico: nunca el UUID. */
+function tituloDeVehiculo(row: { year: number | null; make: string | null; model: string | null } | undefined): string {
+  return (row ? [row.year, row.make, row.model].filter(Boolean).join(" ") : "") || "Vehículo";
+}
+
 export default function DealerVehicleEconomicsPage() {
   const params = useParams();
   const vehicleId = String(params?.vehicleId ?? "").trim();
   const resolved = resolveDealerAccessContext();
   const dealerId = resolved.status === "ready" ? resolved.context.dealerId : "";
-  const access = useAccessEntitlementsBatch([DEALER_VEHICLE_CAPABILITY, PHOTOS_CAPABILITY]);
+  const access = useAccessEntitlementsBatch([
+    DEALER_VEHICLE_CAPABILITY,
+    PHOTOS_CAPABILITY,
+    VEHICLE_WRITE_CAPABILITY,
+  ]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const decision = asDecision(access);
   const photos = asDecision(access, PHOTOS_CAPABILITY);
+  const write = asDecision(access, VEHICLE_WRITE_CAPABILITY);
+  // Misma clave que la ficha: el titulo sale de la lectura que ya se hace.
+  const ficha = useQuery({
+    queryKey: ["dealer-vehicle", dealerId, vehicleId],
+    queryFn: () => fetchDealerVehicleStatus(dealerId, vehicleId),
+    enabled: decision.allowed && dealerId.length > 0 && vehicleId.length > 0,
+    retry: false,
+  });
 
   return (
     <main className="max-w-full space-y-4 overflow-x-hidden">
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg break-words">
-          {vehicleId || "Vehículo"}
+          {tituloDeVehiculo(ficha.data)}
         </h1>
-        <p className="mt-1 text-sm text-nk-fg-muted">
-          Ficha autenticada del dealer. Margen y días salen del GET autenticado. El marketplace público no es fuente.
-        </p>
+        <p className="mt-1 text-sm text-nk-fg-muted">Datos, fotos, margen y días en stock de esta unidad.</p>
       </header>
 
       {!vehicleId ? (
@@ -128,8 +166,8 @@ export default function DealerVehicleEconomicsPage() {
           className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
-          <p className="mt-1 text-sm text-nk-fg-muted">
-            reason_code: <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
+          <p className="mt-1 text-xs text-nk-fg-muted">
+            Código para soporte: {access.error.reason_code ?? `HTTP_${access.error.status}`}
           </p>
         </section>
       ) : !decision.allowed ? (
@@ -146,9 +184,7 @@ export default function DealerVehicleEconomicsPage() {
           <p className="mt-1 text-sm text-nk-fg-muted">
             {REASON_CODE_INFO[decision.reason_code]?.description ?? "Esta superficie no está disponible."}
           </p>
-          <p className="mt-2 text-xs font-semibold text-nk-fg">
-            reason_code: <code>{decision.reason_code}</code>
-          </p>
+          <p className="mt-2 text-xs text-nk-fg-muted">Código para soporte: {decision.reason_code}</p>
           {REASON_CODE_INFO[decision.reason_code]?.action_required === "upgrade_plan" ||
           decision.reason_code === "UPGRADE_REQUIRED" ? (
             <button
@@ -163,10 +199,10 @@ export default function DealerVehicleEconomicsPage() {
         </section>
       ) : !dealerId ? (
         <p role="alert" className="text-sm text-nk-fg-muted">
-          Falta el dealer para leer la ficha autenticada.
+          No se pudo identificar tu concesionario. Volvé a iniciar sesión.
         </p>
       ) : (
-        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} />
+        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} />
       )}
     </main>
   );
