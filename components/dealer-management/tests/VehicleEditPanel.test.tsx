@@ -96,3 +96,17 @@ it("sin cambios lo dice y no llama al backend", () => {
   expect(screen.getByTestId("vehicle-edit-ack")).toHaveTextContent("No hay cambios");
   expect(fetchMock).not.toHaveBeenCalled();
 });
+
+it("un error sin campo asignado muestra el código plegado y sin anidar <details> en <p>", async () => {
+  const errores = jest.spyOn(console, "error").mockImplementation(() => {});
+  fetchMock.mockResolvedValue(respuesta(500, { detail: { reason_code: "CODIGO_DESCONOCIDO_X" } }));
+  render(<VehicleEditPanel ficha={BASE} context={CONTEXT} onSaved={onSaved} />);
+  fireEvent.change(screen.getByRole("textbox", { name: "Número de stock" }), { target: { value: "S-9" } });
+  fireEvent.submit(screen.getByTestId("vehicle-edit-form"));
+  const aviso = await screen.findByTestId("vehicle-edit-error");
+  expect(aviso.tagName).toBe("DIV");
+  expect(aviso.querySelector("details")).not.toBeNull();
+  expect(aviso).toHaveAttribute("data-reason-code", "CODIGO_DESCONOCIDO_X");
+  expect(errores).not.toHaveBeenCalled();
+  errores.mockRestore();
+});
