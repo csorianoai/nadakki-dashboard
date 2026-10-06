@@ -51,8 +51,12 @@ describe("D9 guion: selectores y textos contra el codigo de la app", () => {
 
   it("los testids existen donde el spec los busca", () => {
     const pagina = fuente("app/centro-operativo/page.tsx");
-    for (const id of [TESTIDS.plantilla, TESTIDS.tiposCosto, TESTIDS.cuentas, TESTIDS.reglaFinal])
+    for (const id of [TESTIDS.tiposCosto, TESTIDS.cuentas, TESTIDS.reglaFinal])
       expect(pagina).toContain(`data-testid="${id}"`);
+    // El boton de la plantilla es el compartido con el importador (P0-3): la
+    // pagina le pasa el testid y el componente lo pinta tal cual.
+    expect(pagina).toContain(`testId="${TESTIDS.plantilla}"`);
+    expect(fuente("components/dealer-management/PlantillaDescarga.tsx")).toContain("data-testid={testId}");
     expect(pagina).toContain("data-testid={`centro-bloque-${bloque.id}`}");
     expect(pagina).toContain("data-testid={`centro-advertencia-${bloque.id}`}");
     expect(pagina).toContain("id={bloque.id}");
