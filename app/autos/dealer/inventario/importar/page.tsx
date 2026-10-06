@@ -18,6 +18,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
+import { DetalleTecnico } from "../DetalleTecnico";
 import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
 import {
   IMPORT_CAPABILITY_KEYS,
@@ -178,9 +179,10 @@ export default function ImportarActivosPage() {
       ) : access.error || !access.data ? (
         <section role="alert" data-testid="import-error-acceso" data-reason-code={codigoDe(access.error)} className={CAJA}>
           <p className="font-semibold">No se pudo verificar el acceso al importador.</p>
-          <p className="mt-1 text-nk-fg-muted">
-            reason_code: <code>{codigoDe(access.error)}</code>
-          </p>
+          <p className="mt-1 text-nk-fg-muted">Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.</p>
+          <DetalleTecnico>
+            <code>{codigoDe(access.error)}</code>
+          </DetalleTecnico>
         </section>
       ) : denegada ? (
         <section
@@ -192,9 +194,11 @@ export default function ImportarActivosPage() {
         >
           <p className="font-semibold">El importador no está disponible para tu usuario.</p>
           <p className="mt-1 text-nk-fg-muted">
-            Falta <code>{denegada}</code> · reason_code:{" "}
-            <code>{access.data.results[denegada]?.reason_code ?? "—"}</code>
+            Tu usuario no tiene habilitada esta función. Pedile a quien administra tu cuenta que la active.
           </p>
+          <DetalleTecnico>
+            Falta <code>{denegada}</code> · <code>{access.data.results[denegada]?.reason_code ?? "—"}</code>
+          </DetalleTecnico>
         </section>
       ) : binding === null && asignaciones.isPending ? (
         <p className="animate-pulse text-sm text-nk-fg-muted">Verificando tus concesionarios…</p>
@@ -259,9 +263,10 @@ export default function ImportarActivosPage() {
           {revisar.error && !(revisar.error instanceof ImportRechazado) ? (
             <section role="alert" data-testid="import-error" data-reason-code={codigoDe(revisar.error)} className={CAJA}>
               <p className="font-semibold">No se pudo revisar el archivo.</p>
-              <p className="mt-1 text-nk-fg-muted">
-                reason_code: <code>{codigoDe(revisar.error)}</code>
-              </p>
+              <p className="mt-1 text-nk-fg-muted">Probá de nuevo; si sigue igual, avisá a soporte.</p>
+              <DetalleTecnico>
+                <code>{codigoDe(revisar.error)}</code>
+              </DetalleTecnico>
             </section>
           ) : null}
           {revision ? <Resultado resultado={revision} testId="import-revision" /> : null}
@@ -272,9 +277,10 @@ export default function ImportarActivosPage() {
             ) : (
               <section role="alert" data-testid="import-aplicar-error" data-reason-code={codigoDe(aplicar.error)} className={CAJA}>
                 <p className="font-semibold">No se aplicó la planilla.</p>
-                <p className="mt-1 text-nk-fg-muted">
-                  reason_code: <code>{codigoDe(aplicar.error)}</code>. Podés reintentar: no duplica.
-                </p>
+                <p className="mt-1 text-nk-fg-muted">Podés reintentar: no duplica.</p>
+                <DetalleTecnico>
+                  <code>{codigoDe(aplicar.error)}</code>
+                </DetalleTecnico>
               </section>
             )
           ) : null}

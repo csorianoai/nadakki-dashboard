@@ -192,7 +192,7 @@ describe("ningun codigo inventado", () => {
     montar();
     const aviso = screen.getByTestId("inventario-sin-decision");
     expect(aviso).toHaveAttribute("data-allowed", "false");
-    expect(aviso).toHaveTextContent("no devolvió una decisión");
+    expect(aviso).toHaveTextContent("No pudimos confirmar si tu usuario puede ver el inventario");
     expect(screen.queryByText(/DEFAULT_DENY/)).toBeNull();
     expect(fetchInventory).not.toHaveBeenCalled();
   });
@@ -201,7 +201,7 @@ describe("ningun codigo inventado", () => {
     sesionConDealerSinUnidad();
     batchMock.mockReturnValue(batch({ allowed: false, reason: null }));
     montar();
-    expect(screen.getByTestId("inventario-denegado")).toHaveTextContent("denegó sin indicar motivo");
+    expect(screen.getByTestId("inventario-denegado")).toHaveTextContent("no tiene acceso al inventario");
     expect(screen.queryByText(/DEFAULT_DENY/)).toBeNull();
   });
 
