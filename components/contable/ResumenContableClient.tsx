@@ -1,5 +1,6 @@
 "use client";
 
+import { formateaFecha } from "@/lib/dealer-management/formato";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -209,7 +210,7 @@ export function ResumenContableClient() {
                     <p className="text-xs font-mono text-emerald-200">
                       {a.numero_asiento ?? a.id.slice(0, 8)}
                     </p>
-                    <p className="text-xs text-zinc-400">{a.fecha} — {a.descripcion}</p>
+                    <p className="text-xs text-zinc-400">{formateaFecha(a.fecha, moneda) ?? a.fecha} — {a.descripcion}</p>
                   </div>
                   <p className="text-xs font-mono text-white">{importe(a.total_debe_base)}</p>
                 </div>

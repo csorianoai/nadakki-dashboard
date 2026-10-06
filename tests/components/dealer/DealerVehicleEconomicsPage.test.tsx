@@ -118,7 +118,7 @@ describe("Dealer vehicle economics", () => {
       wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
     });
     expect(await screen.findByTestId("dealer-vehicle-ready")).toBeInTheDocument();
-    expect(screen.getByText(/reservado/)).toBeInTheDocument();
+    expect(screen.getByText(/Estado: RESERVADO/)).toBeInTheDocument();
     expect(await screen.findByTestId("dealer-economics-ready")).toBeInTheDocument();
     expect(screen.getByText(/margen 300/)).toBeInTheDocument();
     expect(screen.getByText(/Días en inventario: 12/)).toBeInTheDocument();
@@ -336,5 +336,51 @@ describe("DealerVehicleEconomicsPanel states", () => {
     expect(screen.queryByTestId("dealer-economics-ready")).not.toBeInTheDocument();
     await Promise.resolve();
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("auditoria Mapaal QA: titulo y textos de la ficha", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetDealerAccessMemoryForTests();
+    tokenStorage.clearTokens();
+    seedDealer();
+  });
+
+  function montarCon(ficha: Record<string, unknown>, economia: "vacia" | "error") {
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/access/entitlements/batch")) return allowBatch();
+      if (url.includes("/api/v1/autos/dealers/dealer-a/vehicles/veh-1")) return jsonResponse(ficha, 200);
+      if (economia === "error") return jsonResponse({ reason_code: "DEFAULT_DENY" }, 403);
+      if (url.includes("/margin")) return jsonResponse([], 200);
+      if (url.includes("/days")) return jsonResponse({ acquired_at: null, days_in_inventory: null }, 200);
+      return jsonResponse({ detail: "not-mocked" }, 404);
+    }) as unknown as typeof fetch;
+    render(<DealerVehicleEconomicsPage />, {
+      wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+    });
+  }
+
+  const FICHA = { id: "veh-1", dealer_id: "dealer-a", make: "Toyota", model: "Hilux", year: 2021, status: "draft" };
+
+  test("el titulo es año, marca y modelo, no el id", async () => {
+    montarCon(FICHA, "vacia");
+    expect(await screen.findByRole("heading", { level: 1, name: "2021 Toyota Hilux" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1, name: "veh-1" })).toBeNull();
+  });
+
+  test("sin textos tecnicos: ni GET, ni 'el backend', ni reason_code ni rutas", async () => {
+    montarCon(FICHA, "vacia");
+    expect(await screen.findByTestId("dealer-economics-empty")).toBeInTheDocument();
+    const texto = document.body.textContent ?? "";
+    expect(texto).not.toMatch(/GET autenticado|el backend|reason_code|\/api\//i);
+  });
+
+  test("un error de la economia se explica y el codigo queda para soporte", async () => {
+    montarCon(FICHA, "error");
+    const error = await screen.findByTestId("dealer-economics-error");
+    expect(error).toHaveTextContent("Código para soporte: DEFAULT_DENY");
+    expect(error.textContent).not.toMatch(/reason_code/);
   });
 });

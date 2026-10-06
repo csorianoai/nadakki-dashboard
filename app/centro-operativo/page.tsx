@@ -3,6 +3,11 @@
 /**
  * Centro Operativo y Guia de Carga (D9).
  *
+ * Lenguaje llano a la vista, como "Primeros pasos" del Inicio (#662): los
+ * pasos con `is_opening`, los asientos Debe/Haber y el plan de cuentas con sus
+ * codigos van dentro de "Ver detalle contable", cerrado por defecto. El texto
+ * validado no se toca: solo se pliega.
+ *
  * La pantalla no tiene texto propio: pinta los bloques que le da
  * `contenidoCentroOperativo` para el tenant de la sesion. Si ese tenant todavia
  * no tiene guia validada recibe la de Mapaal, que es la unica revisada
@@ -10,11 +15,14 @@
  * cifras-- asi que no hay nada que cerrar por acceso.
  */
 
-import { Download } from "lucide-react";
+import { PlantillaDescarga } from "@/components/dealer-management/PlantillaDescarga";
 import { useAuth } from "@/hooks/useAuth";
 import { contenidoCentroOperativo, type BloqueGuia } from "./contenido";
 
 const TARJETA = "rounded-xl border border-nk-border bg-nk-surface p-4";
+
+/** Mismo rotulo que "Primeros pasos" del Inicio (#662). Cerrado por defecto. */
+const DETALLE_CONTABLE = "Ver detalle contable";
 
 function Bloque({ bloque }: { bloque: BloqueGuia }) {
   return (
@@ -35,9 +43,11 @@ function Bloque({ bloque }: { bloque: BloqueGuia }) {
         </p>
       ))}
 
-      {bloque.pasos?.length ? (
+      {/* A la vista, los pasos en lenguaje llano (#662). Los de la guia
+          validada, con is_opening y codigos de cuenta, van plegados abajo. */}
+      {(bloque.pasosInicio ?? bloque.pasos)?.length ? (
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-nk-fg">
-          {bloque.pasos.map((paso) => (
+          {(bloque.pasosInicio ?? bloque.pasos ?? []).map((paso) => (
             <li key={paso}>{paso}</li>
           ))}
         </ol>
@@ -51,41 +61,34 @@ function Bloque({ bloque }: { bloque: BloqueGuia }) {
         </ul>
       ) : null}
 
-      {bloque.asientos?.length ? (
-        <ul className="mt-3 space-y-2 text-sm text-nk-fg">
-          {bloque.asientos.map((asiento) => (
-            <li key={`${asiento.debe}-${asiento.haber}`} className="font-mono text-xs">
-              <span className="font-semibold">Debe</span> {asiento.debe}{" "}
-              <span className="font-semibold">/ Haber</span> {asiento.haber}
-              <span className="ml-1 font-sans text-nk-fg-muted">— {asiento.concepto}</span>
-            </li>
-          ))}
-        </ul>
+      {(bloque.pasosInicio && bloque.pasos?.length) || bloque.asientos?.length ? (
+        <details data-testid={`centro-detalle-contable-${bloque.id}`} className="mt-3 text-sm">
+          <summary className="cursor-pointer font-semibold text-nk-fg">{DETALLE_CONTABLE}</summary>
+          {bloque.pasosInicio && bloque.pasos?.length ? (
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-nk-fg-muted">
+              {bloque.pasos.map((paso) => (
+                <li key={paso}>{paso}</li>
+              ))}
+            </ol>
+          ) : null}
+          {bloque.asientos?.length ? (
+            <ul className="mt-2 space-y-2 text-nk-fg">
+              {bloque.asientos.map((asiento) => (
+                <li key={`${asiento.debe}-${asiento.haber}`} className="font-mono text-xs">
+                  <span className="font-semibold">Debe</span> {asiento.debe}{" "}
+                  <span className="font-semibold">/ Haber</span> {asiento.haber}
+                  <span className="ml-1 font-sans text-nk-fg-muted">— {asiento.concepto}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </details>
       ) : null}
 
-      {/*
-        La plantilla de carga. Ruta, version, etiqueta y la linea que explica
-        para que sirve salen TODAS del archivo de datos: aqui no hay ningun
-        texto ni ninguna ruta escrita. Si el bloque no declara plantilla no se
-        pinta nada --un boton de descarga que apunta a un fichero que no esta
-        desplegado es peor que no tener boton.
-
-        `download` y no `target="_blank"`: el navegador lo guarda en vez de
-        intentar abrir un binario en una pestana.
-      */}
+      {/* La plantilla cuelga del bloque que la declara; el boton es el compartido. */}
       {bloque.plantilla ? (
-        <div data-testid={`centro-plantilla-${bloque.id}`} className="mt-4">
-          <a
-            href={bloque.plantilla.ruta}
-            download
-            data-testid="centro-plantilla-descargar"
-            data-version={bloque.plantilla.version}
-            className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-emerald-500/30 transition-colors hover:bg-emerald-500/25"
-          >
-            <Download className="h-4 w-4" aria-hidden />
-            {bloque.plantilla.etiqueta}
-          </a>
-          <p className="mt-2 text-xs text-nk-fg-muted">{bloque.plantilla.descripcion}</p>
+        <div data-testid={`centro-plantilla-${bloque.id}`}>
+          <PlantillaDescarga plantilla={bloque.plantilla} testId="centro-plantilla-descargar" />
         </div>
       ) : null}
 
@@ -131,13 +134,16 @@ export default function CentroOperativoPage() {
 
       <section data-testid="centro-cuentas" className={TARJETA}>
         <h2 className="text-lg font-bold text-nk-fg">{contenido.cuentasIntro}</h2>
-        <ul className="mt-3 space-y-1 text-sm text-nk-fg">
-          {contenido.cuentas.map((cuenta) => (
-            <li key={cuenta.codigo} data-testid={`centro-cuenta-${cuenta.codigo}`}>
-              <span className="font-mono font-semibold">{cuenta.codigo}</span> — {cuenta.nombre}
-            </li>
-          ))}
-        </ul>
+        <details data-testid="centro-detalle-contable-cuentas" className="mt-3 text-sm">
+          <summary className="cursor-pointer font-semibold text-nk-fg">{DETALLE_CONTABLE}</summary>
+          <ul className="mt-2 space-y-1 text-nk-fg">
+            {contenido.cuentas.map((cuenta) => (
+              <li key={cuenta.codigo} data-testid={`centro-cuenta-${cuenta.codigo}`}>
+                <span className="font-mono font-semibold">{cuenta.codigo}</span> — {cuenta.nombre}
+              </li>
+            ))}
+          </ul>
+        </details>
       </section>
 
       <section data-testid="centro-regla-final" className={TARJETA}>

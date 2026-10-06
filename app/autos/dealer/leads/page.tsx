@@ -13,6 +13,7 @@ import { detalleDeError, esUuid, fetchLeadsPagina, textoLeads, type LeadDealer }
 import { marcaDesdeBranding } from "@/lib/dcc/marca";
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
+import { formateaFecha } from "@/lib/dealer-management/formato";
 
 const EVIDENCIA = "GET /api/v1/autos/tenants/{tenant_uuid}/dealers/{dealer_id}/leads";
 const POR_PAGINA = 20;
@@ -52,11 +53,7 @@ export default function DealerLeadsPage() {
     retry: false,
   });
   const fmt = (n: number) => formatEntero(n, formato) ?? String(n);
-  const fecha = (iso: string | null) => {
-    if (!iso) return null;
-    const d = new Date(iso);
-    return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString(formato.locale, { day: "numeric", month: "short", year: "numeric" });
-  };
+  const fecha = (iso: string | null) => formateaFecha(iso, formato);
 
   let cuerpo: React.ReactNode;
   if (!dealerId) {

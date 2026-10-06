@@ -7,11 +7,17 @@
  * `/costs/total`. Decirlo es mas util que inventar filas.
  *
  * Reparacion no es un tipo mas: viaja por POST /repair-invoices y exige
- * proveedor, n.o de factura y el `document_id` de un documento ya subido. Los
- * tres campos aparecen al elegir Reparacion; el enrutado lo decide `postCost`.
+ * proveedor, n.o de factura y el `document_id` de un documento ya subido. El
+ * dealer no escribe ese id: elige el archivo en "Subir factura", se sube por
+ * POST /documents y el id que devuelve rellena el campo. El enrutado lo decide
+ * `postCost`.
+ *
+ * Al registrar se espera a releer el total ANTES de confirmar, para que "Costo
+ * registrado." y el total nuevo lleguen juntos. Un error se dice en castellano;
+ * el codigo queda aparte, para soporte.
  */
 
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { formateaMoneda, type LocaleTenant } from "@/lib/dealer-management/formato";
@@ -28,10 +34,13 @@ import {
   COST_FORM_EMPTY,
   COST_PENDING_FIELDS,
   COST_TYPES,
+  FACTURA_MAX_BYTES,
   esReparacion,
   fetchVehicleCostTotals,
+  mensajeDeErrorCosto,
   postCost,
   totalEnMoneda,
+  uploadRepairInvoice,
   validateCostForm,
   type CostForm,
   type CostFormErrors,
@@ -45,11 +54,14 @@ const LABEL_CLASS = "block text-sm font-semibold text-nk-fg";
 
 const CARD_CLASS = "rounded-xl border border-nk-border bg-nk-surface p-4";
 
-/** Los tres que `RepairInvoiceIn` exige. No son opcionales. */
+/**
+ * Los tres que `RepairInvoiceIn` exige. No son opcionales. `document_id` se
+ * pinta como "Subir factura" (archivo), no como texto: lo rellena la subida.
+ */
 const REPAIR_FIELDS = [
   { name: "supplier_name", label: "Proveedor" },
   { name: "invoice_number", label: "N.º de factura" },
-  { name: "document_id", label: "Documento de la factura (document_id)" },
+  { name: "document_id", label: "Subir factura" },
 ] as const;
 
 function reasonOf(error: unknown): string {
@@ -75,6 +87,7 @@ export function CostosVehiculoPanel({
   const [form, setForm] = useState<CostForm>(COST_FORM_EMPTY);
   const [errors, setErrors] = useState<CostFormErrors>({});
   const [ack, setAck] = useState<string | null>(null);
+  const [factura, setFactura] = useState<{ nombre: string; error: unknown } | null>(null);
 
   const totals = useQuery({
     queryKey: ["vehicle-cost-totals", tenantId, vehicleId],
@@ -85,12 +98,30 @@ export function CostosVehiculoPanel({
   const alta = useMutation({
     mutationFn: (payload: CostForm) =>
       postCost(vehicleId, tenantId, payload, locale.currency as string),
-    onSuccess: () => {
-      setAck("Costo registrado.");
+    onSuccess: async () => {
       setForm({ ...COST_FORM_EMPTY, cost_type: form.cost_type });
-      void client.invalidateQueries({ queryKey: ["vehicle-cost-totals", tenantId, vehicleId] });
+      setFactura(null);
+      await client.refetchQueries({ queryKey: ["vehicle-cost-totals", tenantId, vehicleId] });
+      setAck("Costo registrado.");
     },
   });
+
+  const subida = useMutation({
+    mutationFn: (file: File) => uploadRepairInvoice(vehicleId, tenantId, file),
+    onSuccess: (id) => setForm((prev) => ({ ...prev, document_id: id })),
+    onError: (error, file) => setFactura({ nombre: file.name, error }),
+  });
+
+  function elegirFactura(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    setForm((prev) => ({ ...prev, document_id: "" }));
+    if (!file) return setFactura(null);
+    if (file.size > FACTURA_MAX_BYTES) {
+      return setFactura({ nombre: file.name, error: new Error("413") });
+    }
+    setFactura({ nombre: file.name, error: null });
+    subida.mutate(file);
+  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,7 +149,7 @@ export function CostosVehiculoPanel({
             data-reason-code={reasonOf(totals.error)}
             className="mt-2 text-sm text-nk-fg"
           >
-            No se pudo leer el total de costos. reason_code: <code>{reasonOf(totals.error)}</code>
+            No se pudo leer el total de costos. {mensajeDeErrorCosto(totals.error)}
           </p>
         ) : !locale.currency ? (
           <p role="alert" data-testid="costos-sin-moneda" className="mt-2 text-sm text-nk-fg">
@@ -146,13 +177,17 @@ export function CostosVehiculoPanel({
             ) : null}
           </>
         )}
-        <p className="mt-3 text-xs text-nk-fg-muted">
-          El detalle asiento por asiento no se puede mostrar: falta <code>{COSTS_LIST_MISSING_ENDPOINT}</code> en
-          el backend. Esta pantalla solo lee el total por moneda.
+        {ack ? (
+          <p data-testid="costos-total-actualizado" className="mt-1 text-xs font-semibold text-nk-fg">
+            El total ya incluye el último costo registrado.
+          </p>
+        ) : null}
+        <p data-missing-endpoint={COSTS_LIST_MISSING_ENDPOINT} className="mt-3 text-xs text-nk-fg-muted">
+          Por ahora se muestra el total por moneda; el detalle de cada costo todavía no está disponible.
         </p>
       </section>
 
-      <form onSubmit={submit} data-testid="costo-alta-form" className={`${CARD_CLASS} space-y-3`}>
+      <form onSubmit={submit} noValidate data-testid="costo-alta-form" className={`${CARD_CLASS} space-y-3`}>
         <h2 className="font-manrope text-lg font-bold text-nk-fg">Registrar un costo</h2>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="block">
@@ -228,10 +263,44 @@ export function CostosVehiculoPanel({
         {reparacion ? (
           <div data-testid="costo-reparacion" className="grid gap-3 rounded-r-sm border border-nk-border p-3 md:grid-cols-3">
             <p className="text-xs text-nk-fg-muted md:col-span-3">
-              La base exige proveedor y n.º de factura en una reparación, y la factura tiene que estar
-              subida: el contrato pide su <code>document_id</code>.
+              Una reparación necesita proveedor, n.º de factura y la factura subida (PDF o foto, hasta 10 MB).
             </p>
-            {REPAIR_FIELDS.map((field) => (
+            {REPAIR_FIELDS.map((field) =>
+              field.name === "document_id" ? (
+                <label key={field.name} className="block">
+                  <span className={LABEL_CLASS}>
+                    {field.label}
+                    <span aria-hidden> *</span>
+                  </span>
+                  <input
+                    type="file"
+                    name={field.name}
+                    accept=".pdf,image/*"
+                    onChange={elegirFactura}
+                    disabled={alta.isPending || subida.isPending}
+                    aria-invalid={errors.document_id || factura?.error ? true : undefined}
+                    className="mt-1 block w-full max-w-full text-sm text-nk-fg"
+                  />
+                  <span data-testid="costo-factura-estado" className="mt-1 block text-xs text-nk-fg-muted">
+                    {subida.isPending
+                      ? "Subiendo la factura…"
+                      : form.document_id
+                        ? `Factura subida: ${factura?.nombre ?? "lista"}`
+                        : null}
+                  </span>
+                  {factura?.error ? (
+                    <span role="alert" className="mt-1 block text-xs font-semibold text-red-600">
+                      No se pudo subir la factura. {factura.error instanceof Error && factura.error.message === "413"
+                        ? "El archivo pesa más de 10 MB."
+                        : mensajeDeErrorCosto(factura.error)}
+                    </span>
+                  ) : errors.document_id ? (
+                    <span role="alert" className="mt-1 block text-xs font-semibold text-red-600">
+                      {errors.document_id}
+                    </span>
+                  ) : null}
+                </label>
+              ) : (
               <label key={field.name} className="block">
                 <span className={LABEL_CLASS}>
                   {field.label}
@@ -251,7 +320,8 @@ export function CostosVehiculoPanel({
                   </span>
                 ) : null}
               </label>
-            ))}
+              ),
+            )}
           </div>
         ) : null}
 
@@ -283,7 +353,8 @@ export function CostosVehiculoPanel({
             data-reason-code={reasonOf(alta.error)}
             className="text-sm text-nk-fg"
           >
-            No se pudo registrar el costo. reason_code: <code>{reasonOf(alta.error)}</code>
+            No se pudo registrar el costo. {mensajeDeErrorCosto(alta.error)}
+            <span className="mt-1 block text-xs text-nk-fg-muted">Código para soporte: {reasonOf(alta.error)}</span>
           </p>
         ) : null}
 
@@ -295,7 +366,7 @@ export function CostosVehiculoPanel({
 
         <button
           type="submit"
-          disabled={alta.isPending || !locale.currency}
+          disabled={alta.isPending || subida.isPending || !locale.currency}
           className="min-h-11 w-full rounded-full border border-brand-2/40 bg-brand-2/10 px-4 text-sm font-bold text-nk-fg disabled:opacity-60 sm:w-auto"
         >
           {alta.isPending ? "Registrando…" : "Registrar costo"}

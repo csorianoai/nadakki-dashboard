@@ -42,6 +42,9 @@ function respondeTotales(body: unknown) {
     if (path.endsWith("/costs/total")) {
       return { ok: true, status: 200, json: async () => body } as unknown as Response;
     }
+    if (path.endsWith("/documents")) {
+      return { ok: true, status: 201, json: async () => ({ id: "doc-1", doc_type: "repair_invoice" }) } as unknown as Response;
+    }
     return { ok: true, status: 201, json: async () => ({ id: "cost-1" }) } as unknown as Response;
   });
 }
@@ -98,9 +101,10 @@ describe("total por moneda", () => {
     expect(await screen.findByTestId("costos-total-error")).toHaveAttribute("data-reason-code", "DEFAULT_DENY");
   });
 
-  it("dice que el detalle asiento por asiento no tiene endpoint", async () => {
+  it("dice que el detalle todavia no esta, sin rutas de API a la vista", async () => {
     montar();
-    expect(await screen.findByText(/GET \/api\/v1\/autos\/vehicles\/\{vehicle_id\}\/costs/)).toBeInTheDocument();
+    expect(await screen.findByText(/el detalle de cada costo todavía no está disponible/)).toBeInTheDocument();
+    expect(screen.getByTestId("costos-total").textContent).not.toMatch(/\/api\/|GET |reason_code/);
   });
 });
 
@@ -171,7 +175,9 @@ describe("reparacion", () => {
     expect(screen.getByTestId("costo-reparacion")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: /Proveedor/ })).toBeEnabled();
     expect(screen.getByRole("textbox", { name: /N\.º de factura/ })).toBeEnabled();
-    expect(screen.getByRole("textbox", { name: /document_id/ })).toBeEnabled();
+    // "Subir factura" es un archivo, no un id que el dealer tenga que conocer.
+    expect(screen.queryByRole("textbox", { name: /document_id/ })).toBeNull();
+    expect(screen.getByLabelText(/Subir factura/)).toHaveAttribute("type", "file");
   });
 
   it("sin proveedor, factura o documento no sale a la red", async () => {
@@ -184,7 +190,7 @@ describe("reparacion", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.getByText("El proveedor es obligatorio en una reparación.")).toBeInTheDocument();
-    expect(screen.getByText(/el backend exige document_id/)).toBeInTheDocument();
+    expect(screen.getByText("Subí la factura de la reparación.")).toBeInTheDocument();
   });
 
   it("completa, va por /repair-invoices con los tres identificadores", async () => {
@@ -194,7 +200,14 @@ describe("reparacion", () => {
     rellena("1000");
     fireEvent.change(screen.getByRole("textbox", { name: /Proveedor/ }), { target: { value: "Taller Sur" } });
     fireEvent.change(screen.getByRole("textbox", { name: /N\.º de factura/ }), { target: { value: "A-1" } });
-    fireEvent.change(screen.getByRole("textbox", { name: /document_id/ }), { target: { value: "doc-1" } });
+    const pdf = new File(["%PDF"], "factura.pdf", { type: "application/pdf" });
+    fireEvent.change(screen.getByLabelText(/Subir factura/), { target: { files: [pdf] } });
+    expect(await screen.findByText("Factura subida: factura.pdf")).toBeInTheDocument();
+    const subida = fetchMock.mock.calls.find(([path]) => String(path).endsWith("/documents"));
+    expect(subida?.[0]).toBe("/api/v1/autos/vehicles/veh-1/documents");
+    const multipart = subida?.[1]?.body as FormData;
+    expect(multipart.get("doc_type")).toBe("repair_invoice");
+    expect((multipart.get("file") as File).name).toBe("factura.pdf");
     fetchMock.mockClear();
     respondeTotales([]);
     fireEvent.submit(screen.getByTestId("costo-alta-form"));
@@ -210,5 +223,60 @@ describe("reparacion", () => {
       invoice_number: "A-1",
       document_id: "doc-1",
     });
+  });
+});
+
+describe("confirmacion del alta", () => {
+  it("el total se relee ANTES de confirmar y la confirmacion lo dice", async () => {
+    montar();
+    await screen.findByTestId("costos-total-valor");
+    eligeTipo("transport");
+    rellena("1500,50");
+    fetchMock.mockClear();
+    respondeTotales([{ currency: "ARS", total_cost: "1500.50" }]);
+    fireEvent.submit(screen.getByTestId("costo-alta-form"));
+
+    expect(await screen.findByTestId("costo-alta-ack")).toHaveTextContent(/^Costo registrado\.$/);
+    const rutas = fetchMock.mock.calls.map(([path]) => String(path));
+    const post = rutas.findIndex((p) => p.endsWith("/costs"));
+    expect(post).toBeGreaterThanOrEqual(0);
+    expect(rutas.slice(post + 1).some((p) => p.endsWith("/costs/total"))).toBe(true);
+    expect(screen.getByTestId("costos-total-valor").textContent).toContain("1.500,50");
+    expect(screen.getByTestId("costos-total-actualizado")).toBeInTheDocument();
+    expect(JSON.parse(String(fetchMock.mock.calls[post][1]?.body)).amount).toBe("1500.50");
+  });
+
+  it("un error se dice en castellano; el codigo queda aparte", async () => {
+    montar();
+    await screen.findByTestId("costos-total-valor");
+    eligeTipo("transport");
+    rellena("10");
+    fetchMock.mockImplementation(async (path: string) =>
+      path.endsWith("/costs/total")
+        ? ({ ok: true, status: 200, json: async () => [] } as unknown as Response)
+        : ({ ok: false, status: 500, json: async () => ({}) } as unknown as Response),
+    );
+    fireEvent.submit(screen.getByTestId("costo-alta-form"));
+    const error = await screen.findByTestId("costo-alta-error");
+    expect(error).toHaveTextContent("No se pudo registrar el costo. El servicio no respondió.");
+    expect(error).toHaveTextContent("Código para soporte: HTTP_500");
+    expect(screen.queryByTestId("costo-alta-ack")).toBeNull();
+  });
+
+  it("una factura de mas de 10 MB no se sube y se dice por que", async () => {
+    montar();
+    await screen.findByTestId("costo-alta-form");
+    eligeTipo("repair");
+    const grande = new File(["x"], "grande.pdf", { type: "application/pdf" });
+    Object.defineProperty(grande, "size", { value: 11 * 1024 * 1024 });
+    fetchMock.mockClear();
+    fireEvent.change(screen.getByLabelText(/Subir factura/), { target: { files: [grande] } });
+    expect(await screen.findByText(/El archivo pesa más de 10 MB/)).toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith("/documents"))).toBe(false);
+  });
+
+  it("el formulario no usa la validacion nativa del navegador", async () => {
+    montar();
+    expect(await screen.findByTestId("costo-alta-form")).toHaveAttribute("novalidate");
   });
 });

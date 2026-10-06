@@ -373,7 +373,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const accessToken = tokenStorage.getAccessToken();
       const refreshToken = tokenStorage.getRefreshToken();
       const logoutToken = accessToken ?? refreshToken;
-      if (logoutToken) await logoutV2(logoutToken, refreshToken ?? undefined);
+      // La revocacion SALE antes de limpiar (con los tokens ya capturados) pero
+      // NO se espera: con el backend en arranque en frio la respuesta tardaba
+      // decenas de segundos y "Cerrar sesión" parecia no hacer nada al primer
+      // clic (auditoria Mapaal QA). `logoutV2` no lanza: devuelve ok:false.
+      if (logoutToken) void logoutV2(logoutToken, refreshToken ?? undefined);
     } catch (error) {
       // No se relanza: los llamadores (menus, login) no tienen catch y deben navegar igual.
       console.error("[auth] logout: fallo previo a la limpieza local", error);

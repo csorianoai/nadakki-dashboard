@@ -1,13 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { formateaFecha } from "@/lib/dealer-management/formato";
 import { AccessApiError, getAccessClientContext } from "@/lib/access/client";
 import {
   fetchVehicleDays,
   fetchVehicleMargins,
 } from "@/lib/dealer/vehicle-economics";
 
-export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }) {
+export function DealerVehicleEconomicsPanel({ vehicleId, locale }: { vehicleId: string; locale?: string }) {
   const tenantId = getAccessClientContext()?.tenantId ?? "";
   const enabled = vehicleId.length > 0 && tenantId.length > 0;
   const margins = useQuery({
@@ -54,9 +55,9 @@ export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }
         data-http-status={access ? String(access.status) : undefined}
         className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
-        <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer la economía</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted break-words">
-          reason_code: <code>{access?.reason_code ?? `HTTP_${access?.status ?? "error"}`}</code>
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudieron leer el margen y los días en stock</h2>
+        <p className="mt-1 text-xs text-nk-fg-muted break-words">
+          Código para soporte: {access?.reason_code ?? `HTTP_${access?.status ?? "error"}`}
         </p>
       </section>
     );
@@ -71,7 +72,7 @@ export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }
   if (empty) {
     return (
       <p data-testid="dealer-economics-empty" className="text-sm text-nk-fg-muted">
-        El backend no devolvió margen ni días de inventario para este vehículo.
+        Todavía no hay margen ni días en stock para este vehículo: aparecen cuando se registra su compra o ingreso.
       </p>
     );
   }
@@ -86,7 +87,9 @@ export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }
         <p className="text-sm text-nk-fg">Días en inventario: {daysRow.days_in_inventory}</p>
       ) : null}
       {daysRow?.acquired_at ? (
-        <p className="text-sm text-nk-fg-muted break-words">Adquirido: {daysRow.acquired_at}</p>
+        <p className="text-sm text-nk-fg-muted break-words">
+          Adquirido: {formateaFecha(daysRow.acquired_at, locale ? { locale } : undefined) ?? daysRow.acquired_at}
+        </p>
       ) : null}
       {marginRows.length > 0 ? (
         <ul className="space-y-2">

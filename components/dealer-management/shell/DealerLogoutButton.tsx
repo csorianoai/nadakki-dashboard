@@ -1,10 +1,11 @@
 "use client";
 
-import { useContext, useEffect, useState, type Context } from "react";
+import { useContext, useState, type Context } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import type { AuthContextValue } from "@/lib/auth/auth-context";
 import { cn } from "@/lib/utils";
+import { useContextoSesionV2 } from "./useSesionV2";
 
 type ContextoV2 = Context<AuthContextValue | null>;
 
@@ -16,35 +17,17 @@ type ContextoV2 = Context<AuthContextValue | null>;
  * con PII, revoca el token en backend y limpia tokens y binding del dealer.
  * Despues navega a /login, como esos dos.
  *
- * El modulo de la sesion V2 se carga en un efecto y no con un import estatico:
- * `lib/auth/auth-context` arrastra `lib/api/auth-v2`, que resuelve la URL del
- * backend AL CARGARSE y lanza sin backend declarado. Con import estatico, todo
- * test que monte el shell (siete suites hoy) caeria antes de renderizar. El
- * objeto de contexto es el mismo: el modulo se evalua una sola vez.
+ * El modulo de la sesion V2 se carga en un efecto (`useContextoSesionV2`), no
+ * con un import estatico: ver el motivo en ./useSesionV2.
  *
  * Se lee con `useContext` y no con `useAuth` (que lanza): el provider V2 lo pone
  * `AppProviders` en el layout raiz, asi que en produccion siempre existe; sin
  * provider no hay sesion que cerrar y el boton no se pinta.
  */
 export function DealerLogoutButton({ collapsed }: { collapsed: boolean }) {
-  const [contexto, setContexto] = useState<{ ctx: ContextoV2 } | null>(null);
-
-  useEffect(() => {
-    let vivo = true;
-    import("@/lib/auth/auth-context")
-      .then((mod) => {
-        if (vivo) setContexto({ ctx: mod.AuthContext });
-      })
-      .catch(() => {
-        /* Sin backend declarado no hay sesion V2 que cerrar. */
-      });
-    return () => {
-      vivo = false;
-    };
-  }, []);
-
-  if (!contexto) return null;
-  return <BotonCerrarSesion ctx={contexto.ctx} collapsed={collapsed} />;
+  const ctx = useContextoSesionV2();
+  if (!ctx) return null;
+  return <BotonCerrarSesion ctx={ctx} collapsed={collapsed} />;
 }
 
 function BotonCerrarSesion({ ctx, collapsed }: { ctx: ContextoV2; collapsed: boolean }) {

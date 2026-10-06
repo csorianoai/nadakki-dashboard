@@ -5,6 +5,7 @@
  *   POST /api/v1/autos/vehicles/{id}/costs            CostIn
  *   POST /api/v1/autos/vehicles/{id}/repair-invoices   RepairInvoiceIn
  *   GET  /api/v1/autos/vehicles/{id}/costs/total       [{currency,total_cost}]
+ *   POST /api/v1/autos/vehicles/{id}/documents         multipart file+doc_type -> {id}
  *
  * `cost_type` NO es texto libre: lo cierra un CHECK en PostgreSQL. Los valores
  * son codigos en ingles (`purchase`, `repair`, ...) y la etiqueta en espanol es
@@ -30,7 +31,7 @@
  * La moneda sale del tenant (`localeDeTenant`, #517) y nunca se escribe a mano.
  */
 
-import { accessApiErrorFromHttp } from "@/lib/access/client";
+import { AccessApiError, accessApiErrorFromHttp } from "@/lib/access/client";
 import { apiFetch } from "@/lib/api/fetch-client";
 
 /**
@@ -106,10 +107,10 @@ export function validateCostForm(form: CostForm, currency: string | null): CostF
   const type = form.cost_type.trim();
   if (!COST_TYPE_CHECK.has(type)) errors.cost_type = "Elegí un tipo de costo del catálogo.";
 
-  const amount = form.amount.trim();
+  const amount = montoNormalizado(form.amount);
   if (!amount) errors.amount = "El monto es obligatorio.";
   else if (!/^\d+(\.\d{1,2})?$/.test(amount) || Number(amount) <= 0) {
-    errors.amount = "El monto es un número mayor que cero, con hasta dos decimales.";
+    errors.amount = "El monto es un número mayor que cero, con hasta dos decimales (por ejemplo 1500,50).";
   }
 
   if (!form.incurred_at.trim()) errors.incurred_at = "La fecha es obligatoria.";
@@ -118,10 +119,16 @@ export function validateCostForm(form: CostForm, currency: string | null): CostF
     if (!form.supplier_name.trim()) errors.supplier_name = "El proveedor es obligatorio en una reparación.";
     if (!form.invoice_number.trim()) errors.invoice_number = "El n.º de factura es obligatorio en una reparación.";
     if (!form.document_id.trim()) {
-      errors.document_id = "La reparación necesita la factura subida: el backend exige document_id.";
+      errors.document_id = "Subí la factura de la reparación.";
     }
   }
   return errors;
+}
+
+/** "1500,50" -> "1500.50": el dealer escribe con coma decimal. */
+export function montoNormalizado(monto: string): string {
+  const limpio = monto.trim();
+  return /^\d+,\d{1,2}$/.test(limpio) ? limpio.replace(",", ".") : limpio;
 }
 
 /** `date-time` del contrato a partir del `type="date"` del formulario. */
@@ -141,7 +148,7 @@ export function costInPayload(form: CostForm, currency: string): Record<string, 
   }
   return {
     cost_type,
-    amount: form.amount.trim(),
+    amount: montoNormalizado(form.amount),
     currency,
     incurred_at: incurredAtIso(form.incurred_at),
     ...(form.is_opening ? { is_opening: true } : {}),
@@ -151,7 +158,7 @@ export function costInPayload(form: CostForm, currency: string): Record<string, 
 /** Cuerpo de `RepairInvoiceIn`. Los tres identificadores son obligatorios. */
 export function repairInvoicePayload(form: CostForm, currency: string): Record<string, unknown> {
   return {
-    amount: form.amount.trim(),
+    amount: montoNormalizado(form.amount),
     currency,
     incurred_at: incurredAtIso(form.incurred_at),
     supplier_name: form.supplier_name.trim(),
@@ -257,4 +264,39 @@ export async function postCost(
     body: JSON.stringify(body),
   });
   return readJson(response, path);
+}
+
+/** Tope del backend para un documento del vehiculo (`MAX_BYTES`, 10 MB). */
+export const FACTURA_MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Sube la factura de la reparacion y devuelve su `id`, que es el `document_id`
+ * que pide `/repair-invoices`. Multipart con `file` y `doc_type`; sin
+ * Content-Type para que el navegador ponga el boundary.
+ */
+export async function uploadRepairInvoice(vehicleId: string, tenantId: string, file: File): Promise<string> {
+  const path = vehiclePath(vehicleId, "documents");
+  const body = new FormData();
+  body.append("file", file);
+  body.append("doc_type", "repair_invoice");
+  const response = await apiFetch(path, {
+    method: "POST",
+    headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
+    body,
+  });
+  const id = record(await readJson(response, path))?.id;
+  if (typeof id !== "string" || !id.trim()) throw accessApiErrorFromHttp(502, { reason_code: "DOCUMENT_ID_MISSING" }, path);
+  return id.trim();
+}
+
+/** Un error de la API, dicho para el dealer. El codigo queda aparte, para soporte. */
+export function mensajeDeErrorCosto(error: unknown): string {
+  const status = error instanceof AccessApiError ? error.status : 0;
+  if (status === 413) return "El archivo pesa más de 10 MB. Subí una versión más liviana.";
+  if (status === 401) return "Tu sesión venció. Volvé a iniciar sesión e intentá de nuevo.";
+  if (status === 403) return "Tu usuario no tiene permiso para registrar costos de este vehículo.";
+  if (status === 404) return "No encontramos este vehículo. Recargá la página.";
+  if (status === 409 || status === 422) return "El sistema rechazó los datos. Revisá monto, fecha y factura.";
+  if (status >= 500) return "El servicio no respondió. Probá de nuevo en unos minutos.";
+  return "No hubo respuesta del servidor. Revisá tu conexión e intentá de nuevo.";
 }

@@ -233,7 +233,7 @@ export function paisDeLocale(locale: string | null | undefined): string {
 const IMPORTE_INVALIDO = "Ingresá un importe mayor que cero, por ejemplo 18500000,50.";
 
 /** Las reglas de pareja del contrato P2, con el mensaje junto a su campo. */
-function validatePriceAndPlate(form: VehicleManualForm, functionalCurrency: string | null): VehicleFormErrors {
+export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrency: string | null): VehicleFormErrors {
   const errors: VehicleFormErrors = {};
   const precio = form.price_amount.trim();
   if (precio && normalizaImporte(precio) === null) errors.price_amount = IMPORTE_INVALIDO;
