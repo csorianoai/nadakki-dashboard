@@ -83,21 +83,32 @@ describe("vehicle economics POST forms", () => {
     });
   });
 
-  test("READY no ofrece formulario de venta y enlaza al flujo de venta", async () => {
-    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-      if (String(input).includes("/api/v1/access/entitlements/batch")) return allowCreate();
+  test("READY posts sale to the live path and shows backend id", async () => {
+    const user = userEvent.setup();
+    global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/v1/access/entitlements/batch")) return allowCreate();
+      if (url.includes("/api/v1/autos/vehicles/veh-1/sale") && init?.method === "POST") {
+        return jsonResponse({ id: "sale-1" }, 200);
+      }
       return jsonResponse({ detail: "not-mocked" }, 404);
     });
     render(<DealerVehicleRegisterPage />, {
       wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
     });
     expect(await screen.findByTestId("dealer-register-ready")).toBeInTheDocument();
-    expect(screen.queryByLabelText("sale_currency")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("sale_price_amount")).not.toBeInTheDocument();
-    expect(screen.getByTestId("dealer-register-vender")).toHaveAttribute(
-      "href",
-      "/autos/dealer/inventario/veh-1/vender",
-    );
+    await user.type(screen.getByLabelText("sale_price_amount"), "150000");
+    await user.type(screen.getByLabelText("sale_currency"), "DOP");
+    await user.type(screen.getByLabelText("sold_at"), "2026-03-01T12:00");
+    await user.click(screen.getByRole("button", { name: "Registrar venta" }));
+    expect(await screen.findByTestId("dealer-register-ack")).toHaveTextContent("sale sale-1");
+    const saleCall = (global.fetch as jest.Mock).mock.calls.find((c) => String(c[0]).includes("/sale"));
+    expect(saleCall[1].method).toBe("POST");
+    expect(JSON.parse(saleCall[1].body)).toEqual({
+      sale_price_amount: "150000",
+      currency: "DOP",
+      sold_at: "2026-03-01T12:00",
+    });
   });
 
   test("BLOCKED when create capability is denied", async () => {
@@ -120,7 +131,7 @@ describe("vehicle economics POST forms", () => {
       wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
     });
     expect(await screen.findByTestId("dealer-register-blocked")).toBeInTheDocument();
-    expect(screen.queryByTestId("dealer-register-vender")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Registrar venta" })).not.toBeInTheDocument();
   });
 
   test("ERROR fail-closed on 409 POST", async () => {
@@ -128,7 +139,7 @@ describe("vehicle economics POST forms", () => {
     global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.includes("/api/v1/access/entitlements/batch")) return allowCreate();
-      if (url.includes("/acquisition") && init?.method === "POST") {
+      if (url.includes("/sale") && init?.method === "POST") {
         return jsonResponse({ reason_code: "CONFLICT" }, 409);
       }
       return jsonResponse({ detail: "not-mocked" }, 404);
@@ -137,10 +148,10 @@ describe("vehicle economics POST forms", () => {
       wrapper: wrapperFor(new QueryClient({ defaultOptions: { queries: { retry: false } } })),
     });
     await screen.findByTestId("dealer-register-ready");
-    await user.type(screen.getByLabelText("acquisition_mode_code"), "auction");
-    await user.type(screen.getByLabelText("acquired_at"), "2026-03-01T12:00");
-    await user.type(screen.getByLabelText("country_code"), "DO");
-    await user.click(screen.getByRole("button", { name: "Registrar adquisición" }));
+    await user.type(screen.getByLabelText("sale_price_amount"), "1");
+    await user.type(screen.getByLabelText("sale_currency"), "DOP");
+    await user.type(screen.getByLabelText("sold_at"), "2026-03-01T12:00");
+    await user.click(screen.getByRole("button", { name: "Registrar venta" }));
     await waitFor(() => expect(screen.getByTestId("dealer-register-post-error")).toBeInTheDocument());
     expect(screen.getByTestId("dealer-register-post-error")).toHaveTextContent("CONFLICT");
   });

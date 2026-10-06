@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AccessApiError, getAccessClientContext } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
@@ -9,6 +8,7 @@ import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import {
   postVehicleAcquisition,
   postVehicleCost,
+  postVehicleSale,
 } from "@/lib/dealer/vehicle-economics-write";
 import { DEALER_REGISTER_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
@@ -40,11 +40,11 @@ export default function DealerVehicleRegisterPage() {
   const access = useAccessEntitlementsBatch([DEALER_REGISTER_CAPABILITY]);
   const decision = asDecision(access);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [busy, setBusy] = useState<"acquisition" | "cost" | null>(null);
+  const [busy, setBusy] = useState<"acquisition" | "cost" | "sale" | null>(null);
   const [ack, setAck] = useState<string | null>(null);
   const [formError, setFormError] = useState<{ reason_code: string; status?: number } | null>(null);
 
-  async function run(kind: "acquisition" | "cost", job: () => Promise<unknown>) {
+  async function run(kind: "acquisition" | "cost" | "sale", job: () => Promise<unknown>) {
     setBusy(kind);
     setAck(null);
     setFormError(null);
@@ -91,6 +91,19 @@ export default function DealerVehicleRegisterPage() {
         currency: String(data.get("currency") ?? "").trim(),
         incurred_at: String(data.get("incurred_at") ?? "").trim(),
         reverses_entry_id: reverses || null,
+      }),
+    );
+  }
+
+  function onSale(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!vehicleId || !tenantId) return;
+    const data = new FormData(event.currentTarget);
+    void run("sale", () =>
+      postVehicleSale(vehicleId, tenantId, {
+        sale_price_amount: String(data.get("sale_price_amount") ?? "").trim(),
+        currency: String(data.get("sale_currency") ?? "").trim(),
+        sold_at: String(data.get("sold_at") ?? "").trim(),
       }),
     );
   }
@@ -226,19 +239,28 @@ export default function DealerVehicleRegisterPage() {
             </button>
           </form>
 
-          <section className="space-y-2 rounded-r-sm border border-nk-border bg-nk-surface p-4">
+          <form onSubmit={onSale} className="space-y-3 rounded-r-sm border border-nk-border bg-nk-surface p-4">
             <h2 className="font-manrope text-lg font-bold text-nk-fg">Venta</h2>
-            <p className="text-sm text-nk-fg-muted">
-              La venta se registra solo desde su pantalla: la moneda es la del concesionario y de ahí salen el ingreso y el costo contables.
-            </p>
-            <Link
-              href={`/autos/dealer/inventario/${encodeURIComponent(vehicleId)}/vender`}
-              data-testid="dealer-register-vender"
-              className="inline-flex min-h-11 items-center rounded-full bg-brand-2 px-4 text-sm font-semibold text-white"
+            <label className="block text-sm text-nk-fg">
+              sale_price_amount
+              <input name="sale_price_amount" required className={fieldClass()} />
+            </label>
+            <label className="block text-sm text-nk-fg">
+              sale_currency
+              <input name="sale_currency" required maxLength={3} className={fieldClass()} />
+            </label>
+            <label className="block text-sm text-nk-fg">
+              sold_at
+              <input name="sold_at" type="datetime-local" required className={fieldClass()} />
+            </label>
+            <button
+              type="submit"
+              disabled={busy != null}
+              className="min-h-11 w-full rounded-full bg-brand-2 px-4 text-sm font-semibold text-white"
             >
               Registrar venta
-            </Link>
-          </section>
+            </button>
+          </form>
         </div>
       )}
     </main>
