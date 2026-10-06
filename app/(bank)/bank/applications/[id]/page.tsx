@@ -37,6 +37,9 @@ import {
 } from "@/components/ui/dialog";
 import { isDocumentPreviewUiEnabled } from "@/lib/env/feature-document-preview-ui";
 
+/** Bandeja real del banco. "/bank/applications/queue" no existe: los tres enlaces daban 404. */
+const BANDEJA_HREF = "/credit-hub/bank/applications";
+
 function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -186,7 +189,7 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
         <h1 className="text-xl font-semibold text-forgeGray-900">Solicitud no encontrada</h1>
         <p className="mt-2 text-forge-sm text-forgeGray-600">Verifica el enlace o vuelve a la bandeja.</p>
         <Link
-          href="/bank/applications/queue"
+          href={BANDEJA_HREF}
           className="mt-6 inline-block text-forge-sm font-medium text-forgeBrand-700 underline-offset-4 hover:underline"
         >
           Ir a la bandeja
@@ -203,7 +206,7 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
         <button
           type="button"
           className="mt-6 rounded-lg border border-forgeGray-300 px-4 py-2 text-forge-sm"
-          onClick={() => router.push("/bank/applications/queue")}
+          onClick={() => router.push(BANDEJA_HREF)}
         >
           Volver a la bandeja
         </button>
@@ -230,7 +233,7 @@ function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }
     <main className="bank-application-detail mx-auto max-w-6xl space-y-6 p-4 md:p-8" aria-label="Detalle de solicitud bancaria">
       <nav aria-label="Migas">
         <Link
-          href="/bank/applications/queue"
+          href={BANDEJA_HREF}
           className="text-forge-sm font-medium text-forgeBrand-700 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500"
         >
           ← Bandeja
