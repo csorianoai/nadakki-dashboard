@@ -54,7 +54,7 @@ test("D3: inventario -> Nuevo vehiculo -> POST sin price_rd/price_usd", async ({
   await expect(page.getByTestId("nuevo-bloqueado")).toHaveCount(0);
 
   // 3. Nace en BORRADOR.
-  await expect(page.getByTestId("vehicle-status")).toHaveText("BORRADOR");
+  await expect(page.getByTestId("vehicle-status")).toHaveText("Borrador");
 
   // 4. El cuerpo que sale por la red.
   const modelo = `D3 QA ${Date.now()}`;

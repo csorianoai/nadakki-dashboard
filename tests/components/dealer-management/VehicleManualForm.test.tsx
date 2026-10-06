@@ -46,7 +46,7 @@ describe("campos del contrato", () => {
 
   it("nace en BORRADOR y el estado no se edita", () => {
     montar();
-    expect(screen.getByTestId("vehicle-status")).toHaveTextContent("BORRADOR");
+    expect(screen.getByTestId("vehicle-status")).toHaveTextContent("Borrador");
   });
 });
 

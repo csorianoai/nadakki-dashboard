@@ -193,7 +193,7 @@ export function VehicleManualForm({
       <section data-testid="vehicle-price-fields" className="space-y-3 rounded-xl border border-nk-border bg-nk-surface p-4">
         <h2 className="font-manrope text-lg font-bold text-nk-fg">Precio, dominio y stock</h2>
         <p className="text-sm text-nk-fg-muted">
-          Sin precio el vehículo puede quedar en BORRADOR; para pasarlo a DISPONIBLE el precio es obligatorio.
+          Sin precio el vehículo puede quedar en Borrador; para pasarlo a Disponible el precio es obligatorio.
         </p>
         <div className="grid gap-3 md:grid-cols-2">{PRECIO.map(renderText)}</div>
       </section>
