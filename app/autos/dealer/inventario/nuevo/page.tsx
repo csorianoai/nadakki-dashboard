@@ -29,6 +29,7 @@ import {
   vehicleIdFrom,
   type VehicleManualForm as VehicleForm,
 } from "@/lib/dealer-management/vehicle-manual";
+import { DetalleTecnico } from "../DetalleTecnico";
 
 function nuevaIdempotencyKey(): string | undefined {
   const api = typeof globalThis.crypto === "undefined" ? null : globalThis.crypto;
@@ -59,7 +60,7 @@ export default function DealerVehicleNuevoPage() {
         router.push(`/autos/dealer/inventario/${encodeURIComponent(id)}`);
         return;
       }
-      setAck("Vehículo creado. Lo vas a ver en el inventario.");
+      setAck("Vehículo creado. No pudimos abrir su ficha; buscalo en el inventario.");
     } catch (error) {
       if (error instanceof AccessApiError) {
         setReasonCode(error.reason_code ?? `HTTP_${error.status}`);
@@ -76,7 +77,7 @@ export default function DealerVehicleNuevoPage() {
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Nuevo vehículo</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Carga manual. Nace en BORRADOR y no se publica hasta que el dealer lo pase a DISPONIBLE.
+          Carga manual. Se crea como borrador y no se publica hasta que lo pases a disponible.
         </p>
         <Link
           href="/autos/dealer/inventario"
@@ -88,7 +89,10 @@ export default function DealerVehicleNuevoPage() {
 
       {!context ? (
         <div role="alert" data-testid="nuevo-sin-contexto" className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg">
-          Alta bloqueada: {resolveDealerAccessContext().reason_code}
+          No podés cargar vehículos todavía: no pudimos identificar tu concesionario.
+          <DetalleTecnico>
+            <code>{resolveDealerAccessContext().reason_code}</code>
+          </DetalleTecnico>
         </div>
       ) : access.isLoading ? (
         <p className="animate-pulse text-sm text-nk-fg-muted">Verificando acceso…</p>
@@ -104,10 +108,15 @@ export default function DealerVehicleNuevoPage() {
           }
           className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg"
         >
-          Alta bloqueada:{" "}
-          {access.error instanceof AccessApiError
-            ? (access.error.reason_code ?? `HTTP_${access.error.status}`)
-            : (decision?.reason_code ?? "DEFAULT_DENY")}
+          Tu usuario no puede cargar vehículos. Si creés que es un error, pedile a quien administra tu cuenta que
+          revise tus permisos.
+          <DetalleTecnico>
+            <code>
+              {access.error instanceof AccessApiError
+                ? (access.error.reason_code ?? `HTTP_${access.error.status}`)
+                : (decision?.reason_code ?? "DEFAULT_DENY")}
+            </code>
+          </DetalleTecnico>
         </div>
       ) : (
         <VehicleManualForm
