@@ -26,7 +26,6 @@ import {
 import {
   COSTS_LIST_MISSING_ENDPOINT,
   COST_FORM_EMPTY,
-  COST_PENDING_FIELDS,
   COST_TYPES,
   esReparacion,
   fetchVehicleCostTotals,
@@ -255,20 +254,25 @@ export function CostosVehiculoPanel({
           </div>
         ) : null}
 
-        <div data-testid="costo-pendientes" className="rounded-r-sm border border-dashed border-nk-border p-3">
-          <p className="text-xs text-nk-fg-muted">
-            Esto el contrato todavía no lo acepta, así que no se habilita: lo que se escribiera aquí no
-            quedaría registrado.
-          </p>
-          <div className="mt-2 grid gap-3 md:grid-cols-3">
-            {COST_PENDING_FIELDS.map((field) => (
-              <label key={field.name} className="block">
-                <span className={LABEL_CLASS}>{field.label} · Próximamente</span>
-                <input name={field.name} value="" disabled readOnly className={FIELD_CLASS} />
-              </label>
-            ))}
-          </div>
-        </div>
+        {reparacion ? null : (
+          <label data-testid="costo-saldo-inicial" className="flex min-h-11 items-start gap-2">
+            <input
+              type="checkbox"
+              name="is_opening"
+              checked={form.is_opening}
+              onChange={(event) => setForm({ ...form, is_opening: event.target.checked })}
+              disabled={alta.isPending}
+              className="mt-1 h-4 w-4"
+            />
+            <span className="text-sm text-nk-fg">
+              <span className="font-semibold">Saldo inicial</span>
+              <span className="block text-xs text-nk-fg-muted">
+                Tildalo si el vehículo ya estaba en stock antes de usar el sistema. El asiento va contra
+                3020 — Saldos iniciales, no contra 2010 — Proveedores.
+              </span>
+            </span>
+          </label>
+        )}
 
         {errors.currency ? (
           <p role="alert" data-testid="costo-sin-moneda" className="text-sm font-semibold text-nk-fg">
