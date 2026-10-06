@@ -12,6 +12,7 @@
  * campo que hay que corregir con la misma tabla que el alta.
  */
 
+import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
 import { useMemo, useState, type FormEvent } from "react";
 import { AccessApiError } from "@/lib/access/client";
 import type { DealerVehicleStatusRow } from "@/lib/dealer/vehicle-status";
@@ -163,7 +164,9 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
       {codigo && !motivo ? (
         <p role="alert" data-testid="vehicle-edit-error" data-reason-code={codigo} className="text-sm text-nk-fg">
           No se pudo guardar. Revisá los datos e intentá de nuevo.
-          <span className="mt-1 block text-xs text-nk-fg-muted">Código para soporte: {codigo}</span>
+          <DetalleTecnico>
+            <span className="block">Código para soporte: {codigo}</span>
+          </DetalleTecnico>
         </p>
       ) : null}
       {ack ? (
