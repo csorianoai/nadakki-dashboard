@@ -22,8 +22,8 @@ export const BANCO_V2_NAV: DccNavGroup[] = [
   {
     label: "Inteligencia",
     items: [
-      { id: "analitica", label: "Analítica", href: "/credit-hub/bank/analytics", icon: BarChart3 },
-      { id: "kpis", label: "KPIs de banco", href: "/credit/bank/kpis", icon: Gauge },
+      { id: "analitica", label: "Analítica", href: `${BANCO_V2_RAIZ}/analitica`, icon: BarChart3 },
+      { id: "kpis", label: "KPIs de banco", href: `${BANCO_V2_RAIZ}/kpis`, icon: Gauge },
     ],
   },
   {

@@ -11,7 +11,7 @@ export default function MesaDecisionesV2Page() {
       marca={marca}
       hrefSolicitud={(id) => `/credit-hub/bank-v2/solicitudes/${encodeURIComponent(id)}`}
       hrefBandeja="/credit-hub/bank-v2/solicitudes"
-      hrefAnalitica="/credit-hub/bank/analytics"
+      hrefAnalitica="/credit-hub/bank-v2/analitica"
     />
   );
 }
