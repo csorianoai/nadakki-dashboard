@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronRight, Menu, PackagePlus, Search } from "lucide-react";
+import { Bell, ChevronRight, Menu, Moon, PackagePlus, Search, Sun } from "lucide-react";
+import { useDccThemeContext } from "@/components/dcc/DccThemeContext";
 import { cn } from "@/lib/utils";
 import { dealerBreadcrumbFor } from "./dealer-nav";
 
@@ -29,6 +30,14 @@ export function DealerTopbar({
 }: DealerTopbarProps) {
   const pathname = usePathname();
   const crumbs = dealerBreadcrumbFor(pathname);
+  /**
+   * Conmutador de tema EN EL CHROME (auditoria Mapaal QA). Antes solo estaba
+   * dentro de las paginas DCC (Inicio v2, reportes, leads): en inventario,
+   * ficha, finanzas o el Centro Operativo no habia forma de pasar a oscuro, y
+   * el shell --barra superior y lateral incluidas-- sigue a este mismo estado.
+   */
+  const tema = useDccThemeContext();
+  const siguiente = tema?.theme === "dark" ? "light" : "dark";
 
   return (
     /* Fondo = token del tema DCC (QA P2): en oscuro es #111A2B, no blanco. Se
@@ -102,6 +111,19 @@ export function DealerTopbar({
           >
             <Search className="h-5 w-5" aria-hidden="true" />
           </button>
+
+          {tema ? (
+            <button
+              type="button"
+              data-testid="dealer-theme-toggle"
+              onClick={() => tema.setTheme(siguiente)}
+              aria-label={siguiente === "dark" ? "Cambiar a tema oscuro" : "Cambiar a tema claro"}
+              aria-pressed={tema.theme === "dark"}
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:shadow-[var(--ring)]"
+            >
+              {tema.theme === "dark" ? <Sun className="h-5 w-5" aria-hidden="true" /> : <Moon className="h-5 w-5" aria-hidden="true" />}
+            </button>
+          ) : null}
 
           {canSeeNotifications ? (
             <Link
