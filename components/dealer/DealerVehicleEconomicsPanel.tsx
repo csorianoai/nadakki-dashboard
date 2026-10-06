@@ -1,13 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { formateaFecha } from "@/lib/dealer-management/formato";
 import { AccessApiError, getAccessClientContext } from "@/lib/access/client";
 import {
   fetchVehicleDays,
   fetchVehicleMargins,
 } from "@/lib/dealer/vehicle-economics";
 
-export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }) {
+export function DealerVehicleEconomicsPanel({ vehicleId, locale }: { vehicleId: string; locale?: string }) {
   const tenantId = getAccessClientContext()?.tenantId ?? "";
   const enabled = vehicleId.length > 0 && tenantId.length > 0;
   const margins = useQuery({
@@ -86,7 +87,9 @@ export function DealerVehicleEconomicsPanel({ vehicleId }: { vehicleId: string }
         <p className="text-sm text-nk-fg">Días en inventario: {daysRow.days_in_inventory}</p>
       ) : null}
       {daysRow?.acquired_at ? (
-        <p className="text-sm text-nk-fg-muted break-words">Adquirido: {daysRow.acquired_at}</p>
+        <p className="text-sm text-nk-fg-muted break-words">
+          Adquirido: {formateaFecha(daysRow.acquired_at, locale ? { locale } : undefined) ?? daysRow.acquired_at}
+        </p>
       ) : null}
       {marginRows.length > 0 ? (
         <ul className="space-y-2">
