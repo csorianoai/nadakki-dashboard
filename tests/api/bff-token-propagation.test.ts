@@ -54,8 +54,8 @@ describe("BFF v2 proxy route handler", () => {
     expect(src).toContain("/api/v2/");
   });
 
-  test("forwards X-Role header for bank endpoints", () => {
-    expect(shared).toContain('"X-Role"');
+  test("does not forward client-supplied X-Role header", () => {
+    expect(shared).not.toContain('headers["X-Role"]');
   });
 
   test("forwards Idempotency-Key header", () => {

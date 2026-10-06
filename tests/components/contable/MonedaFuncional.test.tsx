@@ -107,6 +107,17 @@ describe("formateaImporteContable", () => {
 });
 
 describe("MonedaFuncionalNota", () => {
+  // React avisa una sola vez por mensaje: el espia vigila todo el describe, no un test suelto.
+  let espia: jest.SpyInstance;
+  beforeEach(() => {
+    espia = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    // Un bloque dentro de <p> rompe la hidratacion del primer render (currency=null).
+    expect(espia).not.toHaveBeenCalled();
+    espia.mockRestore();
+  });
+
   it("deja dicho en que moneda esta todo lo que sigue", () => {
     render(<MonedaFuncionalNota locale={ARGENTINA} />);
     expect(screen.getByTestId("contable-moneda-funcional")).toHaveTextContent("ARS");

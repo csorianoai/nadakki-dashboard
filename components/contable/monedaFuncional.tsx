@@ -19,7 +19,7 @@ import { localeDeTenant, type LocaleTenant } from "@/lib/dealer-management/forma
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 
 export const SIN_MONEDA_FUNCIONAL =
-  "Falta la moneda funcional del tenant. Los importes no se muestran con una moneda inventada.";
+  "Todavía no se configuró la moneda de tu concesionaria, por eso no mostramos los importes. Pedile a quien administra tu cuenta que la cargue.";
 
 /**
  * El codigo que `formateaMoneda` LANZA cuando no hay moneda
@@ -53,15 +53,18 @@ export function formateaImporteContable(valor: number | null | undefined, locale
 export function MonedaFuncionalNota({ locale }: { locale: LocaleTenant }) {
   if (!locale.currency) {
     return (
-      <p
+      <div
         role="alert"
         data-testid="contable-sin-moneda"
         data-reason-code={TENANT_CURRENCY_NOT_CONFIGURED}
         className="mb-3 text-sm text-amber-300"
       >
-        {SIN_MONEDA_FUNCIONAL}{" "}
-        <code data-testid="contable-sin-moneda-codigo">{TENANT_CURRENCY_NOT_CONFIGURED}</code>
-      </p>
+        {SIN_MONEDA_FUNCIONAL}
+        <details className="mt-1 text-xs text-zinc-400">
+          <summary className="cursor-pointer">Detalle técnico</summary>
+          <code data-testid="contable-sin-moneda-codigo">{TENANT_CURRENCY_NOT_CONFIGURED}</code>
+        </details>
+      </div>
     );
   }
   return (
