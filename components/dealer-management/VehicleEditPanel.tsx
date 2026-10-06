@@ -162,12 +162,12 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
         ) : null}
       </form>
       {codigo && !motivo ? (
-        <p role="alert" data-testid="vehicle-edit-error" data-reason-code={codigo} className="text-sm text-nk-fg">
+        <div role="alert" data-testid="vehicle-edit-error" data-reason-code={codigo} className="text-sm text-nk-fg">
           No se pudo guardar. Revisá los datos e intentá de nuevo.
           <DetalleTecnico>
             <span className="block">Código para soporte: {codigo}</span>
           </DetalleTecnico>
-        </p>
+        </div>
       ) : null}
       {ack ? (
         <p role="status" data-testid="vehicle-edit-ack" className="text-sm font-semibold text-nk-fg">

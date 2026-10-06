@@ -55,8 +55,15 @@ describe("textos llanos del dealer (regresión UX-TEXTOS)", () => {
   it("el código para soporte solo aparece dentro de DetalleTecnico", () => {
     const sueltos = todos.filter((f) => !esPendiente(f)).filter((f) => {
       const txt = fs.readFileSync(path.join(RAIZ, f), "utf8");
-      const i = txt.indexOf("Código para soporte");
-      return i >= 0 && !/DetalleTecnico|<details/.test(txt);
+      const re = /Código para soporte/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(txt))) {
+        const antes = txt.slice(0, m.index);
+        const abre = Math.max(antes.lastIndexOf("<DetalleTecnico"), antes.lastIndexOf("<details"));
+        const cierra = Math.max(antes.lastIndexOf("</DetalleTecnico>"), antes.lastIndexOf("</details>"));
+        if (abre < 0 || cierra > abre) return true;
+      }
+      return false;
     });
     expect(sueltos).toEqual([]);
   });
