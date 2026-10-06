@@ -587,6 +587,8 @@ tr.sel td { background: var(--gold-bg); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   var NOW = new Date(2026, 9, 5, 14, 30);
+  /* Saludo segun la hora del corte: 05–11 dias, 12–18 tardes, resto noches. */
+  function saludo(d) { var h = d.getHours(); return h >= 5 && h < 12 ? "Buenos días" : h >= 12 && h < 19 ? "Buenas tardes" : "Buenas noches"; }
   var ASOF = hhmm(NOW);
 
   /* ================= Iconos ================= */
@@ -847,7 +849,7 @@ tr.sel td { background: var(--gold-bg); }
     return '' +
       '<section class="card brief" aria-label="Resumen del día">' +
         '<div><span class="eyebrow">' + fecha(NOW) + ' · resumen de la mesa</span>' +
-          '<h1>Buenos días, Laura. 12 solicitudes nuevas desde ayer; 3 vencen su SLA hoy.</h1>' +
+          '<h1>' + saludo(NOW) + ', Laura. 12 solicitudes nuevas desde ayer; 3 vencen su SLA hoy.</h1>' +
           '<p>La primera vence a las 15:18 y el sistema recomienda pre-aprobarla. Motorsur Santiago tiene 2 casos esperando documentos. El ofertado de 30 días está parcial porque Rodríguez Motors no sincroniza desde las 12:05.</p>' +
           '<div class="pts"><span class="chip chip-err"><i class="dot"></i>3 SLA vencen hoy</span><span class="chip chip-warn"><i class="dot"></i>2 esperan documento</span><span class="chip chip-info"><i class="dot"></i>2 van a comité mañana 11:30</span></div>' +
         '</div>' +
