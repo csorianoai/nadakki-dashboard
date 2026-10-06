@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
 import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { VehicleEditPanel } from "@/components/dealer-management/VehicleEditPanel";
 import { VEHICLE_STATUS_LABEL, VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
+import { isSold } from "@/lib/dealer-management/vehicle-sale";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
@@ -94,6 +96,15 @@ function VehicleFicha({
         <p className="mt-1 text-sm text-nk-fg-muted">
           Estado: {query.data.status ? (VEHICLE_STATUS_LABEL[query.data.status] ?? query.data.status) : "no disponible"}
         </p>
+        {!isSold(query.data.status) ? (
+          <Link
+            href={`/autos/dealer/inventario/${encodeURIComponent(vehicleId)}/vender`}
+            data-testid="dealer-vehicle-vender"
+            className="mt-3 inline-flex min-h-11 items-center rounded-full bg-brand-2 px-4 text-sm font-semibold text-white"
+          >
+            Registrar venta
+          </Link>
+        ) : null}
       </section>
       {/* Editar y publicar piden la clave de ESCRITURA; el 403 del backend sigue mandando. */}
       {write.allowed ? (
