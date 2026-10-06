@@ -348,7 +348,7 @@ export function CostosVehiculoPanel({
         ) : null}
 
         {alta.error ? (
-          <p
+          <div
             role="alert"
             data-testid="costo-alta-error"
             data-reason-code={reasonOf(alta.error)}
@@ -358,7 +358,7 @@ export function CostosVehiculoPanel({
             <DetalleTecnico>
               <span className="mt-1 block">Código para soporte: {reasonOf(alta.error)}</span>
             </DetalleTecnico>
-          </p>
+          </div>
         ) : null}
 
         {ack ? (
