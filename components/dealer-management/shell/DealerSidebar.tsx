@@ -12,6 +12,7 @@ import {
 } from "@/lib/access/reason-codes";
 import { isDealerNavItemActive, type DealerNavGroup, type DealerNavItem } from "./dealer-nav";
 import { DealerLogoutButton } from "./DealerLogoutButton";
+import { DealerTenantActivo } from "./DealerTenantActivo";
 
 export type DealerSidebarProps = {
   /** Grupos ya filtrados por entitlements en el shell. */
@@ -289,6 +290,7 @@ export function DealerSidebar({
           data-testid="dealer-sidebar-footer"
           className={cn("shrink-0 border-t border-[var(--nav-border)] py-3", collapsed ? "px-2" : "px-3")}
         >
+          <DealerTenantActivo collapsed={collapsed} />
           <DealerLogoutButton collapsed={collapsed} />
         </div>
       </aside>
