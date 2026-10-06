@@ -1,17 +1,17 @@
 "use client";
 
-import { DccCard } from "@/components/dcc/DccCard";
-import { DccGrid, DccPageMarco } from "@/components/dcc/DccPageMarco";
+import { MesaDecisiones } from "@/components/credit-hub/bank-v2/mesa/MesaDecisiones";
 import { useMarcaBanco } from "./BancoV2Shell";
 
-/** Esqueleto de la Mesa de decisiones. Su contenido llega en B3. */
+/** Mesa de decisiones del banco (bank-v2). El expediente sigue siendo el actual hasta B4. */
 export default function MesaDecisionesV2Page() {
   const marca = useMarcaBanco();
   return (
-    <DccPageMarco titulo="Mesa de decisiones" marca={marca}>
-      <DccGrid>
-        <DccCard titulo="Cola de decisión" calidad={{ estado: "no_disponible", motivo: "Pantalla en construcción (serie B, B3)" }} />
-      </DccGrid>
-    </DccPageMarco>
+    <MesaDecisiones
+      marca={marca}
+      hrefSolicitud={(id) => `/credit-hub/bank/applications/${encodeURIComponent(id)}`}
+      hrefBandeja="/credit-hub/bank/applications"
+      hrefAnalitica="/credit-hub/bank/analytics"
+    />
   );
 }
