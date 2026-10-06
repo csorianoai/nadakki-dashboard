@@ -37,6 +37,9 @@ const LEGADO: Record<string, string> = {
 
 export const DEALER_SHELL_VARIABLES_LEGADO = Object.keys(LEGADO);
 
+/** Clave de Local Storage del tema del panel del dealer (solo "light" | "dark"). */
+export const DEALER_THEME_STORAGE_KEY = "nadakki-dealer-theme";
+
 export function dealerShellThemeStyle(theme: DccTheme): CSSProperties {
   return { ...dccThemeStyle(theme), ...LEGADO } as CSSProperties;
 }
