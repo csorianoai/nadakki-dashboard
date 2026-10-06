@@ -107,6 +107,17 @@ describe("formateaImporteContable", () => {
 });
 
 describe("MonedaFuncionalNota", () => {
+  // React avisa una sola vez por mensaje: el espia vigila todo el describe, no un test suelto.
+  let espia: jest.SpyInstance;
+  beforeEach(() => {
+    espia = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    // Un bloque dentro de <p> rompe la hidratacion del primer render (currency=null).
+    expect(espia).not.toHaveBeenCalled();
+    espia.mockRestore();
+  });
+
   it("deja dicho en que moneda esta todo lo que sigue", () => {
     render(<MonedaFuncionalNota locale={ARGENTINA} />);
     expect(screen.getByTestId("contable-moneda-funcional")).toHaveTextContent("ARS");
@@ -116,13 +127,6 @@ describe("MonedaFuncionalNota", () => {
     render(<MonedaFuncionalNota locale={SIN_MONEDA} />);
     expect(screen.getByTestId("contable-sin-moneda")).toHaveTextContent(SIN_MONEDA_FUNCIONAL);
     expect(screen.queryByTestId("contable-moneda-funcional")).toBeNull();
-  });
-
-  it("el aviso no anida bloques dentro de un <p> (error de hidratacion)", () => {
-    const espia = jest.spyOn(console, "error").mockImplementation(() => {});
-    render(<MonedaFuncionalNota locale={SIN_MONEDA} />);
-    expect(espia).not.toHaveBeenCalled();
-    espia.mockRestore();
   });
 });
 
