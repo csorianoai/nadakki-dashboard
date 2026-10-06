@@ -50,7 +50,7 @@ export function DealerModuleGrid() {
     <section className="space-y-4" aria-labelledby="dealer-control-title">
       <div>
         <h2 id="dealer-control-title" className="font-manrope text-lg font-extrabold text-nk-fg">Centro de Control</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted">Accesos reales del tenant. El frontend restringe; nunca concede permisos.</p>
+        <p className="mt-1 text-sm text-nk-fg-muted">Acá ves a qué módulos de tu concesionaria tenés acceso. Si alguno figura bloqueado, pedile a quien administra tu cuenta que te lo habilite.</p>
       </div>
       <div className="grid gap-5 xl:grid-cols-2">
         {SECTIONS.map((section) => (
