@@ -117,6 +117,13 @@ describe("MonedaFuncionalNota", () => {
     expect(screen.getByTestId("contable-sin-moneda")).toHaveTextContent(SIN_MONEDA_FUNCIONAL);
     expect(screen.queryByTestId("contable-moneda-funcional")).toBeNull();
   });
+
+  it("el aviso no anida bloques dentro de un <p> (error de hidratacion)", () => {
+    const espia = jest.spyOn(console, "error").mockImplementation(() => {});
+    render(<MonedaFuncionalNota locale={SIN_MONEDA} />);
+    expect(espia).not.toHaveBeenCalled();
+    espia.mockRestore();
+  });
 });
 
 

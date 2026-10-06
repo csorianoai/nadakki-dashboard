@@ -53,7 +53,7 @@ export function formateaImporteContable(valor: number | null | undefined, locale
 export function MonedaFuncionalNota({ locale }: { locale: LocaleTenant }) {
   if (!locale.currency) {
     return (
-      <p
+      <div
         role="alert"
         data-testid="contable-sin-moneda"
         data-reason-code={TENANT_CURRENCY_NOT_CONFIGURED}
@@ -64,7 +64,7 @@ export function MonedaFuncionalNota({ locale }: { locale: LocaleTenant }) {
           <summary className="cursor-pointer">Detalle técnico</summary>
           <code data-testid="contable-sin-moneda-codigo">{TENANT_CURRENCY_NOT_CONFIGURED}</code>
         </details>
-      </p>
+      </div>
     );
   }
   return (
