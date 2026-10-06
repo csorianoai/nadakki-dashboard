@@ -102,7 +102,7 @@ describe("dealer private inventory contract", () => {
     render(<DealerInventoryPage />, { wrapper: wrapper(testClient()) });
 
     const aviso = await screen.findByRole("alert");
-    expect(aviso).toHaveTextContent("no devolvió una decisión");
+    expect(aviso).toHaveTextContent("No pudimos confirmar si tu usuario puede ver el inventario");
     expect(aviso.textContent ?? "").not.toContain("DEFAULT_DENY");
     expect(mockedApiFetch).not.toHaveBeenCalled();
   });
