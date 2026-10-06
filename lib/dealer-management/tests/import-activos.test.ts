@@ -4,8 +4,13 @@ import {
   ImportRechazado,
   erroresDeArchivo,
   filasTotales,
+  MENSAJES_INCIDENCIA,
+  MENSAJE_INCIDENCIA_DESCONOCIDA,
   importActivosPath,
+  mensajeIncidencia,
   parseImportResultado,
+  resumenCreados,
+  ubicacionIncidencia,
   postImportActivos,
   puedeAplicar,
   validarArchivo,
@@ -224,5 +229,80 @@ describe("contrato real de P5", () => {
     const r = await postImportActivos("d", archivo, "p.xlsx", "aplicar", "k");
     expect(fetchMock.mock.calls[1][0]).toBe("/api/v1/autos/dealers/d/import-activos?aplicar=true");
     expect(r.aplicado).toBe(true);
+  });
+});
+
+describe("mensajes en español de las incidencias", () => {
+  it("MONTO_INVALIDO y FECHA_INGRESO_FUTURA tienen su texto, sin el codigo crudo", () => {
+    const monto = mensajeIncidencia({ codigo: "MONTO_INVALIDO", mensaje: "monto: '1.500' no es un monto" });
+    expect(monto).toMatch(/^El monto no es válido/);
+    expect(mensajeIncidencia({ codigo: "FECHA_INGRESO_FUTURA", mensaje: "x" })).toBe(
+      "La fecha de ingreso al stock no puede ser posterior a hoy.",
+    );
+    const codigos = Object.keys(MENSAJES_INCIDENCIA);
+    for (const texto of Object.values(MENSAJES_INCIDENCIA)) for (const c of codigos) expect(texto).not.toContain(c);
+  });
+
+  it("cubre todos los codigos que emite el importador del backend", () => {
+    const delBackend = [
+      "FICHERO_ILEGIBLE", "VERSION_INCORRECTA", "HOJA_AUSENTE", "COLUMNA_OBLIGATORIA_AUSENTE",
+      "OBLIGATORIO_VACIO", "VALOR_FUERA_DE_LISTA", "NO_ES_ENTERO", "MONTO_INVALIDO", "MONTO_NO_POSITIVO",
+      "FECHA_INVALIDA", "FECHA_INGRESO_FUTURA", "PAREJA_INCOMPLETA", "OBLIGATORIO_CONDICIONAL",
+      "REF_REPETIDA", "STOCK_REPETIDO", "VEHICULO_DESCONOCIDO", "FALTA_PROVEEDOR_O_FACTURA",
+      "APERTURA_EN_COMPRA_NUEVA", "COMPRA_DE_STOCK_INICIAL_A_PROVEEDORES",
+      "SIN_FECHA_INGRESO", "FECHA_INGRESO_SIN_MODO", "ARCHIVAR_NO_DISPONIBLE", "SIN_COSTO_DE_COMPRA",
+    ];
+    expect(Object.keys(MENSAJES_INCIDENCIA).sort()).toEqual([...delBackend].sort());
+  });
+
+  it("'fallará' va con tilde", () => {
+    expect(MENSAJES_INCIDENCIA.SIN_COSTO_DE_COMPRA).toContain("fallará");
+    expect(Object.values(MENSAJES_INCIDENCIA).join(" ")).not.toMatch(/fallara\b/);
+  });
+
+  it("un codigo desconocido da el mensaje generico, no uno inventado", () => {
+    expect(mensajeIncidencia({ codigo: "OTRA_COSA", mensaje: "detalle del backend" })).toBe(MENSAJE_INCIDENCIA_DESCONOCIDA);
+  });
+
+  it("sin codigo (respuesta ilegible) se muestra el mensaje tal cual", () => {
+    expect(mensajeIncidencia({ codigo: null, mensaje: "Error ilegible del backend." })).toBe("Error ilegible del backend.");
+  });
+});
+
+describe("la fila es la de la planilla", () => {
+  it("se muestra el numero del backend sin sumarle la cabecera (ya la cuenta)", () => {
+    const r = parseImportResultado({ ...REVISION_OK, ok: false, incidencias: [ERROR_FILA] }, "revision")!;
+    expect(ubicacionIncidencia(r.errores[0])).toBe("Costos_vehiculos · fila 5");
+  });
+
+  it("un aviso tambien dice su fila; un error de fichero, solo la hoja o nada", () => {
+    const r = parseImportResultado(REVISION_OK, "revision")!;
+    expect(ubicacionIncidencia(r.avisos[0])).toBe("Vehiculos · fila 4");
+    expect(ubicacionIncidencia({ hoja: "Vehiculos", fila: null })).toBe("Vehiculos");
+    expect(ubicacionIncidencia({ hoja: null, fila: null })).toBe("");
+  });
+});
+
+describe("resumen de lo creado al aplicar", () => {
+  it("lee `creados` de la respuesta real", () => {
+    const r = parseImportResultado(
+      { ...REVISION_OK, aplicado: true, creados: { vehiculos: 2, costos: 3, adquisiciones: 2 } },
+      "aplicar",
+    )!;
+    expect(r.creados).toEqual({ vehiculos: 2, costos: 3, adquisiciones: 2 });
+    expect(resumenCreados(r.creados)).toBe("Creados: 2 vehículos, 3 costos y 2 fechas de ingreso al stock.");
+  });
+
+  it("singular y conteos parciales: lo ausente se omite, nunca se pinta 0", () => {
+    expect(resumenCreados({ vehiculos: 1, costos: null, adquisiciones: null })).toBe("Creados: 1 vehículo.");
+    expect(resumenCreados({ vehiculos: 1, costos: 1, adquisiciones: null })).toBe("Creados: 1 vehículo y 1 costo.");
+    const r = parseImportResultado({ ...REVISION_OK, aplicado: true, creados: { vehiculos: 2, costos: "x" } }, "aplicar")!;
+    expect(r.creados).toEqual({ vehiculos: 2, costos: null, adquisiciones: null });
+  });
+
+  it("sin `creados` (revision, o respuesta sin el campo) no hay resumen", () => {
+    expect(parseImportResultado(REVISION_OK, "revision")!.creados).toBeNull();
+    expect(parseImportResultado({ ...REVISION_OK, creados: {} }, "aplicar")!.creados).toBeNull();
+    expect(resumenCreados(null)).toBeNull();
   });
 });

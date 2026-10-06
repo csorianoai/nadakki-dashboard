@@ -27,9 +27,13 @@ import {
   IMPORT_CAPABILITY_KEYS,
   ImportRechazado,
   erroresDeArchivo,
+  mensajeIncidencia,
   postImportActivos,
   puedeAplicar,
+  resumenCreados,
+  ubicacionIncidencia,
   validarArchivo,
+  type ImportError,
   type ImportResultado,
 } from "@/lib/dealer-management/import-activos";
 
@@ -44,6 +48,24 @@ const ACEPTA = ".xlsx,.zip";
 function codigoDe(error: unknown): string {
   if (error instanceof AccessApiError) return error.reason_code ?? `HTTP_${error.status}`;
   return "SIN_RESPUESTA";
+}
+
+/** Fila y mensaje en español; el codigo y el detalle del backend, plegados. */
+function Incidencia({ incidencia: e }: { incidencia: ImportError }) {
+  const donde = ubicacionIncidencia(e);
+  return (
+    <>
+      {donde}
+      {donde ? ": " : ""}
+      {mensajeIncidencia(e)}
+      {e.codigo ? (
+        <DetalleTecnico>
+          <code>{e.codigo}</code>
+          {e.mensaje !== e.codigo ? ` · ${e.mensaje}` : null}
+        </DetalleTecnico>
+      ) : null}
+    </>
+  );
 }
 
 function Resultado({ resultado, testId }: { resultado: ImportResultado; testId: string }) {
@@ -79,10 +101,7 @@ function Resultado({ resultado, testId }: { resultado: ImportResultado; testId: 
           <ul className="mt-2 list-disc pl-5">
             {resultado.errores.map((e, i) => (
               <li key={i}>
-                {[e.hoja, e.fila !== null ? `fila ${e.fila}` : null].filter(Boolean).join(" · ")}
-                {e.hoja || e.fila !== null ? ": " : ""}
-                {e.mensaje}
-                {e.codigo && e.codigo !== e.mensaje ? <code className="ml-1">{e.codigo}</code> : null}
+                <Incidencia incidencia={e} />
               </li>
             ))}
           </ul>
@@ -93,7 +112,9 @@ function Resultado({ resultado, testId }: { resultado: ImportResultado; testId: 
           <p className="font-semibold">Se lee pero todavía no se guarda (no lo cargues dos veces):</p>
           <ul className="mt-1 list-disc pl-5 text-nk-fg-muted">
             {resultado.avisos.map((n, i) => (
-              <li key={i}>{[n.hoja, n.mensaje].filter(Boolean).join(" · ")}</li>
+              <li key={i}>
+                <Incidencia incidencia={n} />
+              </li>
             ))}
           </ul>
         </div>
@@ -293,6 +314,11 @@ export default function ImportarActivosPage() {
           {aplicar.data ? (
             <div data-testid="import-aplicado">
               <p className="mb-2 font-semibold text-nk-fg">Planilla aplicada.</p>
+              {resumenCreados(aplicar.data.creados) ? (
+                <p data-testid="import-aplicado-resumen" className="mb-2 text-sm text-nk-fg">
+                  {resumenCreados(aplicar.data.creados)}
+                </p>
+              ) : null}
               <Resultado resultado={aplicar.data} testId="import-aplicado-detalle" />
             </div>
           ) : null}
