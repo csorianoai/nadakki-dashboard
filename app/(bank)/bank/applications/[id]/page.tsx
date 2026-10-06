@@ -37,7 +37,11 @@ import {
 } from "@/components/ui/dialog";
 import { isDocumentPreviewUiEnabled } from "@/lib/env/feature-document-preview-ui";
 
-/** Bandeja real del banco. "/bank/applications/queue" no existe: los tres enlaces daban 404. */
+/**
+ * Bandeja real del banco. "/bank/applications/queue" no existe: los tres
+ * enlaces daban 404. Esta pantalla es una copia sin enlace en el menu
+ * (COPIA_INTENCIONAL): se toca solo para que la vuelta funcione.
+ */
 const BANDEJA_HREF = "/credit-hub/bank/applications";
 
 function BankApplicationDetailInner({ params }: { params: Promise<{ id: string }> }) {
