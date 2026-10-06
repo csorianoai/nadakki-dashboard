@@ -45,7 +45,12 @@ export default function LoginPage() {
   const mismatchHandled = useRef(false);
 
   useEffect(() => {
-    setAdminHost(resolveDealerAdminHost(window.location.hostname));
+    const resolved = resolveDealerAdminHost(window.location.hostname);
+    setAdminHost(resolved);
+    if (resolved.mode !== "dealer_subdomain") {
+      const fromQuery = new URLSearchParams(window.location.search).get("tenant")?.trim().toLowerCase();
+      if (fromQuery && /^[a-z0-9][a-z0-9-]*$/.test(fromQuery)) setTenantSlug(fromQuery);
+    }
   }, []);
 
   const hostTenantSlug = adminHost?.mode === "dealer_subdomain" ? adminHost.tenantSlug : undefined;
@@ -207,6 +212,17 @@ export default function LoginPage() {
                 <div className="w-full px-3 py-2 border border-[var(--forge-border-default)] rounded-md bg-[var(--forge-bg-app)] text-[var(--forge-text-muted)]">
                   {hostTenantSlug}.nadakki.com
                 </div>
+                <p className="text-xs text-[var(--forge-text-muted)] mt-1" data-testid="dealer-admin-host-notice">
+                  Estás entrando a {brandingQuery.data?.display_name?.trim() || hostTenantSlug}. Solo
+                  pueden ingresar usuarios de este concesionario.
+                </p>
+                <a
+                  href="https://dashboard.nadakki.com/login"
+                  data-testid="dealer-admin-other-dealer-link"
+                  className="text-xs text-[var(--forge-accent)] underline mt-1 inline-block"
+                >
+                  Soy de otro concesionario
+                </a>
               </div>
             ) : (
               <div>
