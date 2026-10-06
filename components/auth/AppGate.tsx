@@ -5,6 +5,8 @@ import OnboardingAgent from "@/components/ai/OnboardingAgent";
 import { ProtectedRoute } from "@/components/forge/auth/ProtectedRoute";
 import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
 import { isAutosConsumerPublicPath, isDealerChromePath } from "@/lib/autos-portal/routes";
+import { ContableChrome } from "@/components/dealer/ContableChrome";
+import { isDealerReachableSuitePath } from "@/components/dealer/DealerSuiteGate";
 
 function getEffectivePathname(pathname: string | null): string {
   if (pathname) {
@@ -50,6 +52,16 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
   // dentro de su panel (decision de Cesar, D9).
   if (isDealerChromePath(pathname)) {
     return <ProtectedRoute>{children}</ProtectedRoute>;
+  }
+
+  // Contabilidad: la abre el menu del dealer. Un usuario de dealer la ve dentro
+  // de su panel; el resto, dentro de la Suite como siempre (ContableChrome).
+  if (isDealerReachableSuitePath(pathname)) {
+    return (
+      <ProtectedRoute>
+        <ContableChrome>{children}</ContableChrome>
+      </ProtectedRoute>
+    );
   }
 
   if (pathname.startsWith("/cockpit")) {

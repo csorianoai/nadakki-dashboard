@@ -53,7 +53,7 @@ function eligeTipo(value: string) {
   fireEvent.change(screen.getByRole("combobox", { name: /Tipo de costo/ }), { target: { value } });
 }
 
-function rellena(monto: string, fecha = "2026-09-30") {
+function rellena(monto: string, fecha = "30/09/2026") {
   fireEvent.change(screen.getByRole("textbox", { name: /Monto/ }), { target: { value: monto } });
   fireEvent.change(screen.getByLabelText(/Fecha/), { target: { value: fecha } });
 }
@@ -145,7 +145,8 @@ describe("alta de un costo normal", () => {
 
   it("el gasto de apertura sigue deshabilitado, con el motivo", async () => {
     montar();
-    expect(await screen.findByTestId("costo-pendientes")).toHaveTextContent("no quedaría registrado");
+    expect(await screen.findByTestId("costo-pendientes")).toHaveTextContent("Todavía no se puede cargar desde aquí");
+    expect(screen.getByTestId("costo-pendientes").textContent).not.toMatch(/contrato/);
     expect(screen.getByRole("textbox", { name: /Gasto de apertura · Próximamente/ })).toBeDisabled();
   });
 
@@ -162,6 +163,37 @@ describe("alta de un costo normal", () => {
     await waitFor(() =>
       expect(screen.getByTestId("costo-alta-error")).toHaveAttribute("data-reason-code", "DEFAULT_DENY"),
     );
+  });
+});
+
+describe("fecha en el formato del tenant", () => {
+  it("es texto con dd/mm/aaaa, no el type=date del navegador", async () => {
+    montar();
+    const campo = await screen.findByRole("textbox", { name: /Fecha/ });
+    expect(campo).not.toHaveAttribute("type", "date");
+    expect(campo).toHaveAttribute("placeholder", "dd/mm/aaaa");
+  });
+
+  it("30/09/2026 viaja como el mismo ISO de siempre", async () => {
+    montar();
+    await screen.findByTestId("costo-alta-form");
+    rellena("10", "30/09/2026");
+    fetchMock.mockClear();
+    respondeTotales([]);
+    fireEvent.submit(screen.getByTestId("costo-alta-form"));
+    await waitFor(() => expect(screen.getByTestId("costo-alta-ack")).toBeInTheDocument());
+    const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    expect(JSON.parse(String(post?.[1]?.body)).incurred_at).toBe("2026-09-30T00:00:00Z");
+  });
+
+  it("una fecha que no existe no sale a la red y se dice como escribirla", async () => {
+    montar();
+    await screen.findByTestId("costo-alta-form");
+    rellena("10", "31/02/2026");
+    fetchMock.mockClear();
+    fireEvent.submit(screen.getByTestId("costo-alta-form"));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText("La fecha no es válida. Escribila como dd/mm/aaaa.")).toBeInTheDocument();
   });
 });
 
@@ -273,6 +305,27 @@ describe("confirmacion del alta", () => {
     fireEvent.change(screen.getByLabelText(/Subir factura/), { target: { files: [grande] } });
     expect(await screen.findByText(/El archivo pesa más de 10 MB/)).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([path]) => String(path).endsWith("/documents"))).toBe(false);
+  });
+
+  it("tras un costo registrado, una factura que falla no deja el 'Costo registrado.' a la vista", async () => {
+    montar();
+    await screen.findByTestId("costos-total-valor");
+    eligeTipo("transport");
+    rellena("10");
+    fireEvent.submit(screen.getByTestId("costo-alta-form"));
+    expect(await screen.findByTestId("costo-alta-ack")).toHaveTextContent("Costo registrado.");
+
+    eligeTipo("repair");
+    fetchMock.mockImplementation(async (path: string) =>
+      path.endsWith("/costs/total")
+        ? ({ ok: true, status: 200, json: async () => [] } as unknown as Response)
+        : ({ ok: false, status: 500, json: async () => ({}) } as unknown as Response),
+    );
+    const pdf = new File(["%PDF"], "factura.pdf", { type: "application/pdf" });
+    fireEvent.change(screen.getByLabelText(/Subir factura/), { target: { files: [pdf] } });
+    expect(await screen.findByText(/No se pudo subir la factura/)).toBeInTheDocument();
+    expect(screen.queryByTestId("costo-alta-ack")).toBeNull();
+    expect(screen.queryByTestId("costos-total-actualizado")).toBeNull();
   });
 
   it("el formulario no usa la validacion nativa del navegador", async () => {

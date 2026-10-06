@@ -56,6 +56,7 @@ import {
   formateaImporteContable,
   useMonedaFuncional,
 } from "@/components/contable/monedaFuncional";
+import { opcionPeriodo } from "@/lib/contable/periodo-nombre";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -329,7 +330,7 @@ export function DashboardEjecutivoClient() {
               label="Período"
               value={periodoId}
               onChange={(e) => setPeriodoId(e.target.value)}
-              options={periodos.map((p) => ({ value: p.id, label: `${p.label} (${p.status})` }))}
+              options={periodos.map((p) => ({ value: p.id, label: opcionPeriodo(p) }))}
             />
           </div>
           <Button variant="secondary" onClick={() => void loadReports()} disabled={loading}>

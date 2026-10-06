@@ -102,7 +102,7 @@ export function esReparacion(costType: string): boolean {
 /** `amount` viaja como texto: el patron del contrato lo acepta y no pierde el decimal. */
 export function validateCostForm(form: CostForm, currency: string | null): CostFormErrors {
   const errors: CostFormErrors = {};
-  if (!currency) errors.currency = "Falta la moneda funcional del tenant. No se puede registrar el costo.";
+  if (!currency) errors.currency = "Falta configurar la moneda de tu concesionario. No se puede registrar el costo.";
 
   const type = form.cost_type.trim();
   if (!COST_TYPE_CHECK.has(type)) errors.cost_type = "Elegí un tipo de costo del catálogo.";

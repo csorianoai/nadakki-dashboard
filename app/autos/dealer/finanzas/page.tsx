@@ -89,7 +89,7 @@ export default function DealerFinanzasPage() {
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Finanzas por vehículo</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Costos de cada unidad y su total acumulado, en la moneda funcional del tenant.
+          Costos de cada unidad y su total acumulado, en la moneda de tu concesionario.
         </p>
       </header>
 

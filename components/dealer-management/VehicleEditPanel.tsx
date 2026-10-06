@@ -111,7 +111,7 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
 
   function publicar() {
     if (!context) return;
-    void correr(() => pasarADisponible(context, ficha.id, nuevaClave()), "El vehículo quedó DISPONIBLE.");
+    void correr(() => pasarADisponible(context, ficha.id, nuevaClave()), "El vehículo quedó Disponible.");
   }
 
   return (
@@ -150,13 +150,13 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
           </button>
           {publicable && conPrecio ? (
             <button type="button" onClick={publicar} disabled={busy || !context} data-testid="vehicle-publicar" className={BOTON}>
-              Pasar a DISPONIBLE
+              Pasar a Disponible
             </button>
           ) : null}
         </div>
         {publicable && !conPrecio ? (
           <p data-testid="vehicle-publicar-falta-precio" className="text-sm text-nk-fg-muted">
-            Para pasar a DISPONIBLE primero cargá el precio y guardá.
+            Para pasar a Disponible primero cargá el precio y guardá.
           </p>
         ) : null}
       </form>

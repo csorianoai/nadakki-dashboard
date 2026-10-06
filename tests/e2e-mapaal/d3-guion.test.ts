@@ -49,8 +49,8 @@ describe("D3 guion: selectores, red y login contra el codigo de la app", () => {
   });
 
   it("el alta nace en BORRADOR", () => {
-    expect(VEHICLE_STATUS_LABEL[VEHICLE_INITIAL_STATUS]).toBe("BORRADOR");
-    expect(spec).toContain('toHaveText("BORRADOR")');
+    expect(VEHICLE_STATUS_LABEL[VEHICLE_INITIAL_STATUS]).toBe("Borrador");
+    expect(spec).toContain('toHaveText("Borrador")');
   });
 
   it("la ruta del POST casa con el patron ALTA del spec", () => {

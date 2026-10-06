@@ -3,7 +3,11 @@ import { join } from "path";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { DccThemeProvider, useDccThemeContext } from "@/components/dcc/DccThemeContext";
 import { DccPage } from "@/components/dcc/DccPage";
-import { dealerShellThemeStyle, DEALER_SHELL_VARIABLES_LEGADO } from "@/components/dealer-management/shell/dealer-shell-theme";
+import {
+  dealerShellThemeStyle,
+  DEALER_SHELL_VARIABLES_LEGADO,
+  DEALER_THEME_STORAGE_KEY,
+} from "@/components/dealer-management/shell/dealer-shell-theme";
 import { DCC_TOKEN_KEYS } from "@/lib/dcc/tokens";
 
 jest.mock("@/lib/dealer-management/useDealerManagementBranding", () => ({
@@ -63,5 +67,95 @@ describe("DealerShell sobre los tokens del DCC", () => {
     expect(screen.getByTestId("sonda")).toHaveTextContent("light");
     fireEvent.click(screen.getByTestId("dcc-theme-toggle"));
     expect(screen.getByTestId("sonda")).toHaveTextContent("dark");
+  });
+});
+
+describe("El panel del dealer recuerda el tema al recargar", () => {
+  const CLAVE = DEALER_THEME_STORAGE_KEY;
+
+  function Sonda() {
+    const tema = useDccThemeContext();
+    return (
+      <>
+        <span data-testid="sonda">{tema?.theme}</span>
+        <button type="button" onClick={() => tema?.setTheme("dark")}>
+          oscuro
+        </button>
+      </>
+    );
+  }
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    window.localStorage.clear();
+  });
+
+  it("elegir oscuro y volver a montar: sigue oscuro", () => {
+    const primero = render(
+      <DccThemeProvider storageKey={CLAVE}>
+        <Sonda />
+      </DccThemeProvider>,
+    );
+    expect(screen.getByTestId("sonda")).toHaveTextContent("light");
+    fireEvent.click(screen.getByText("oscuro"));
+    expect(window.localStorage.getItem(CLAVE)).toBe("dark");
+    primero.unmount();
+
+    render(
+      <DccThemeProvider storageKey={CLAVE}>
+        <Sonda />
+      </DccThemeProvider>,
+    );
+    expect(screen.getByTestId("sonda")).toHaveTextContent("dark");
+  });
+
+  it("Local Storage que lanza no rompe: cae a claro y el conmutador sigue funcionando", () => {
+    jest.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("SecurityError");
+    });
+    jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("QuotaExceededError");
+    });
+    render(
+      <DccThemeProvider storageKey={CLAVE}>
+        <Sonda />
+      </DccThemeProvider>,
+    );
+    expect(screen.getByTestId("sonda")).toHaveTextContent("light");
+    fireEvent.click(screen.getByText("oscuro"));
+    expect(screen.getByTestId("sonda")).toHaveTextContent("dark");
+  });
+
+  it("un valor guardado que no es un tema se ignora", () => {
+    window.localStorage.setItem(CLAVE, "sepia");
+    render(
+      <DccThemeProvider storageKey={CLAVE}>
+        <Sonda />
+      </DccThemeProvider>,
+    );
+    expect(screen.getByTestId("sonda")).toHaveTextContent("light");
+  });
+
+  it("sin storageKey (DccShell y demas) no lee ni escribe Local Storage", () => {
+    window.localStorage.setItem(CLAVE, "dark");
+    const lee = jest.spyOn(Storage.prototype, "getItem");
+    const escribe = jest.spyOn(Storage.prototype, "setItem");
+    render(
+      <DccThemeProvider>
+        <Sonda />
+      </DccThemeProvider>,
+    );
+    expect(screen.getByTestId("sonda")).toHaveTextContent("light");
+    fireEvent.click(screen.getByText("oscuro"));
+    expect(screen.getByTestId("sonda")).toHaveTextContent("dark");
+    expect(lee).not.toHaveBeenCalled();
+    expect(escribe).not.toHaveBeenCalled();
+  });
+
+  it("solo el DealerShell pasa la clave; DccShell sigue en memoria", () => {
+    expect(SHELL[0]).toContain("<DccThemeProvider storageKey={DEALER_THEME_STORAGE_KEY}>");
+    const dccShell = readFileSync(join(__dirname, "..", "..", "..", "dcc", "shell", "DccShell.tsx"), "utf8");
+    expect(dccShell).toContain("<DccThemeProvider>");
+    expect(dccShell).not.toContain("storageKey");
   });
 });
