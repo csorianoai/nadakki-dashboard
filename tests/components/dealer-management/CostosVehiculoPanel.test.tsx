@@ -139,18 +139,20 @@ describe("alta de un costo normal", () => {
     });
   });
 
-  it("tildar saldo inicial envia is_opening=true y avisa de 3020", async () => {
+  it("saldo inicial queda deshabilitado, con el motivo, y no se envia is_opening", async () => {
     montar();
     await screen.findByTestId("costo-alta-form");
-    expect(screen.getByTestId("costo-saldo-inicial")).toHaveTextContent("3020");
+    expect(screen.getByTestId("costo-saldo-inicial")).toHaveTextContent("no acepta este dato");
+    expect(screen.getByTestId("costo-saldo-inicial")).not.toHaveTextContent("va contra 3020");
+    const casilla = screen.getByRole("checkbox", { name: /Saldo inicial/ });
+    expect(casilla).toBeDisabled();
     rellena("125000.50");
-    fireEvent.click(screen.getByRole("checkbox", { name: /Saldo inicial/ }));
     fetchMock.mockClear();
     respondeTotales([]);
     fireEvent.submit(screen.getByTestId("costo-alta-form"));
     await waitFor(() => expect(screen.getByTestId("costo-alta-ack")).toBeInTheDocument());
     const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
-    expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({ cost_type: "purchase", is_opening: true });
+    expect(JSON.parse(String(post?.[1]?.body))).not.toHaveProperty("is_opening");
   });
 
   it("en una reparacion no se ofrece saldo inicial", async () => {

@@ -259,16 +259,16 @@ export function CostosVehiculoPanel({
             <input
               type="checkbox"
               name="is_opening"
-              checked={form.is_opening}
-              onChange={(event) => setForm({ ...form, is_opening: event.target.checked })}
-              disabled={alta.isPending}
+              checked={false}
+              disabled
+              readOnly
               className="mt-1 h-4 w-4"
             />
             <span className="text-sm text-nk-fg">
-              <span className="font-semibold">Saldo inicial</span>
+              <span className="font-semibold">Saldo inicial · Próximamente</span>
               <span className="block text-xs text-nk-fg-muted">
-                Tildalo si el vehículo ya estaba en stock antes de usar el sistema. El asiento va contra
-                3020 — Saldos iniciales, no contra 2010 — Proveedores.
+                El servidor todavía no acepta este dato, así que no se habilita: si se tildara, el costo
+                quedaría registrado como compra nueva (2010 — Proveedores).
               </span>
             </span>
           </label>
