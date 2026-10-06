@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -90,6 +91,15 @@ function VehicleFicha({
         <p className="mt-1 text-sm text-nk-fg-muted">
           Estado: {query.data.status ? (VEHICLE_STATUS_LABEL[query.data.status] ?? query.data.status) : "no disponible"}
         </p>
+        {query.data.status !== "vendido" ? (
+          <Link
+            href={`/autos/dealer/inventario/${encodeURIComponent(vehicleId)}/vender`}
+            data-testid="dealer-vehicle-vender"
+            className="mt-3 inline-flex min-h-11 items-center rounded-full bg-brand-2 px-4 text-sm font-semibold text-white"
+          >
+            Registrar venta
+          </Link>
+        ) : null}
       </section>
       {/* Editar y publicar piden la clave de ESCRITURA; el 403 del backend sigue mandando. */}
       {write.allowed ? (
