@@ -15,7 +15,7 @@ export const BANCO_V2_NAV: DccNavGroup[] = [
     label: "Operación",
     items: [
       { id: "mesa", label: "Mesa de decisiones", href: BANCO_V2_RAIZ, icon: LayoutDashboard },
-      { id: "bandeja", label: "Bandeja", href: "/credit-hub/bank/applications", icon: Inbox },
+      { id: "bandeja", label: "Bandeja", href: `${BANCO_V2_RAIZ}/solicitudes`, icon: Inbox },
       { id: "escalaciones", label: "Escalaciones", href: "/credit-hub/bank/escalations", icon: ShieldAlert },
     ],
   },
