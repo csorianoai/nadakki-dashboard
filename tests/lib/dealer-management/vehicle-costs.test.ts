@@ -124,8 +124,13 @@ describe("validateCostForm", () => {
     expect(incurredAtIso("2026-01-02")).toBe("2026-01-02T00:00:00Z");
   });
 
-  it("el gasto de apertura sigue fuera del contrato", () => {
+  it("el gasto de apertura sigue deshabilitado en el formulario hasta la parte 2", () => {
     expect(COST_PENDING_FIELDS.map((field) => field.name)).toEqual(["is_opening"]);
+  });
+
+  it("is_opening solo viaja tildada", () => {
+    expect(costInPayload({ ...COMPRA, is_opening: true }, "ARS")).toHaveProperty("is_opening", true);
+    expect(costInPayload(COMPRA, "ARS")).not.toHaveProperty("is_opening");
   });
 });
 

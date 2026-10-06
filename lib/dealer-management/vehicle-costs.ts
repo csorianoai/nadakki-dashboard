@@ -19,9 +19,10 @@
  * (RepairInvoiceIn), :214 (ruta de reparacion), :255 (total).
  * migrations/proposals/DMS-02R-REPAIR_external.request.yaml:36-37 (los dos CHECK).
  *
- * No hay GET de la lista de costos: solo el total por moneda. Y la marca de
- * gasto de apertura es la columna `is_opening` de la propuesta
- * PEV-COST-RECORDED, todavia fuera de `CostIn`.
+ * No hay GET de la lista de costos: solo el total por moneda. La marca de
+ * saldo inicial es `is_opening` (PEV-COST-RECORDED): el asiento va contra 3020
+ * (Saldos iniciales) en vez de 2010 (Proveedores). Solo viaja si esta tildada y
+ * solo por /costs; una reparacion es siempre una compra nueva.
  *
  * La moneda sale del tenant (`localeDeTenant`, #517) y nunca se escribe a mano.
  */
@@ -75,6 +76,7 @@ export type CostForm = {
   supplier_name: string;
   invoice_number: string;
   document_id: string;
+  is_opening: boolean;
 };
 
 export const COST_FORM_EMPTY: CostForm = {
@@ -84,6 +86,7 @@ export const COST_FORM_EMPTY: CostForm = {
   supplier_name: "",
   invoice_number: "",
   document_id: "",
+  is_opening: false,
 };
 
 export type CostFormErrors = Partial<Record<keyof CostForm | "currency", string>>;
@@ -124,7 +127,7 @@ export function incurredAtIso(fecha: string): string {
   return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? `${trimmed}T00:00:00Z` : trimmed;
 }
 
-/** Cuerpo de `CostIn`. Rechaza `repair`: esa via no lo acepta en la base. */
+/** Cuerpo de `CostIn`. Rechaza `repair`. `is_opening` solo viaja si esta tildada. */
 export function costInPayload(form: CostForm, currency: string): Record<string, unknown> {
   const cost_type = form.cost_type.trim();
   if (esReparacion(cost_type)) {
@@ -135,6 +138,7 @@ export function costInPayload(form: CostForm, currency: string): Record<string, 
     amount: form.amount.trim(),
     currency,
     incurred_at: incurredAtIso(form.incurred_at),
+    ...(form.is_opening ? { is_opening: true } : {}),
   };
 }
 
