@@ -33,3 +33,20 @@ describe("marca del tenant (DCC)", () => {
     expect(marcaDesdeBranding({ logo_url: "javascript:alert(1)" }).logoUrl).toBeNull();
   });
 });
+
+describe("firma por producto (B1)", () => {
+  it("el banco firma 'con Nadakki Credit Hub'", () => {
+    const m = marcaDesdeBranding({ display_name: "Banco Ejemplo", locale: "es-DO", currency: "DOP" }, "banco");
+    expect(m).toEqual({
+      nombre: "Banco Ejemplo",
+      plataforma: "con Nadakki Credit Hub",
+      logoUrl: null,
+      formato: { locale: "es-DO", currency: "DOP" },
+    });
+  });
+
+  it("sin producto sigue siendo la firma del dealer", () => {
+    expect(marcaDesdeBranding({}).plataforma).toBe("con Nadakki Dealer OS");
+    expect(marcaDesdeBranding({}, "dealer").plataforma).toBe("con Nadakki Dealer OS");
+  });
+});
