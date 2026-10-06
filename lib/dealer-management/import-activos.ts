@@ -7,6 +7,11 @@
  * incidencias: [{ hoja, fila, codigo, detalle, nivel }], aplicado, creados? }.
  * `nivel` es ERROR o AVISO; `fila` 0 = error del fichero. Un 422 trae la misma
  * forma en `detail`. El tenant sale del token: ni `X-Tenant-ID` ni ruta.
+ *
+ * `fila` es el numero de fila de Excel tal como lo ve el dealer: el backend
+ * enumera desde PRIMERA_FILA_DE_DATOS (5) con las cabeceras contadas, asi que
+ * aqui no se le suma nada. `creados` solo viene al aplicar:
+ * { vehiculos, costos, adquisiciones }.
  */
 
 import { accessApiErrorFromHttp } from "@/lib/access/client";
@@ -59,6 +64,14 @@ export type ImportResultado = {
   errores: ImportError[];
   /** Incidencias nivel AVISO: no bloquean (p. ej. columnas PROXIMAMENTE que no se guardan). */
   avisos: ImportError[];
+  /** `creados` del aplicar; null si la respuesta no lo trae. Un conteo ilegible queda null, nunca 0. */
+  creados: ImportCreados | null;
+};
+
+export type ImportCreados = {
+  vehiculos: number | null;
+  costos: number | null;
+  adquisiciones: number | null;
 };
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -128,7 +141,91 @@ export function parseImportResultado(body: unknown, modo: ImportModo | null = nu
     hojasIlegibles,
     errores: incidencias.filter((item) => !esAviso(item)).map(incidencia),
     avisos: incidencias.filter(esAviso).map(incidencia),
+    creados: creados(rec.creados),
   };
+}
+
+function creados(value: unknown): ImportCreados | null {
+  const rec = record(value);
+  if (!rec) return null;
+  const leidos = { vehiculos: count(rec.vehiculos), costos: count(rec.costos), adquisiciones: count(rec.adquisiciones) };
+  return Object.values(leidos).every((n) => n === null) ? null : leidos;
+}
+
+function plural(n: number, uno: string, varios: string): string {
+  return `${n} ${n === 1 ? uno : varios}`;
+}
+
+/**
+ * "Creados: 2 vehículos, 3 costos y 2 fechas de ingreso al stock." Solo con lo
+ * que trae `creados`; un conteo ausente se omite y sin ninguno no hay frase.
+ */
+export function resumenCreados(c: ImportCreados | null): string | null {
+  if (!c) return null;
+  const partes = [
+    c.vehiculos !== null ? plural(c.vehiculos, "vehículo", "vehículos") : null,
+    c.costos !== null ? plural(c.costos, "costo", "costos") : null,
+    c.adquisiciones !== null
+      ? plural(c.adquisiciones, "fecha de ingreso al stock", "fechas de ingreso al stock")
+      : null,
+  ].filter((p): p is string => p !== null);
+  if (partes.length === 0) return null;
+  const lista = partes.length === 1 ? partes[0] : `${partes.slice(0, -1).join(", ")} y ${partes[partes.length - 1]}`;
+  return `Creados: ${lista}.`;
+}
+
+/**
+ * Codigo de incidencia del backend (`services/autos_portal/import_activos/importador.py`)
+ * -> lo que el dealer lee. El `detalle` del backend (columna y valor) queda en
+ * el detalle tecnico plegado, junto al codigo.
+ */
+export const MENSAJES_INCIDENCIA: Readonly<Record<string, string>> = {
+  // Del fichero entero.
+  FICHERO_ILEGIBLE: "El archivo no se puede abrir como una planilla .xlsx.",
+  VERSION_INCORRECTA: "La planilla no es la versión oficial PLANTILLA_ACTIVOS_v4. Descargá la plantilla de nuevo.",
+  HOJA_AUSENTE: "Falta una de las hojas de la plantilla.",
+  COLUMNA_OBLIGATORIA_AUSENTE: "A la hoja le faltan columnas obligatorias de la plantilla.",
+  // De una fila.
+  OBLIGATORIO_VACIO: "Falta completar un dato obligatorio.",
+  VALOR_FUERA_DE_LISTA: "Hay un valor que no está entre las opciones de la plantilla.",
+  NO_ES_ENTERO: "Hay un dato que tiene que ser un número entero.",
+  MONTO_INVALIDO: "El monto no es válido: escribilo sin $ ni separador de miles (por ejemplo 1500000 o 1500000,50).",
+  MONTO_NO_POSITIVO: "El monto tiene que ser mayor que cero.",
+  FECHA_INVALIDA: "La fecha no es válida: usá el formato DD/MM/AAAA.",
+  FECHA_INGRESO_FUTURA: "La fecha de ingreso al stock no puede ser posterior a hoy.",
+  PAREJA_INCOMPLETA: "Hay dos datos que van juntos: completá los dos o ninguno.",
+  OBLIGATORIO_CONDICIONAL: "Falta un dato que es obligatorio por lo que marcaste en otra columna.",
+  REF_REPETIDA: "La referencia del vehículo ya aparece en una fila anterior.",
+  STOCK_REPETIDO: "El número de stock ya aparece en una fila anterior.",
+  VEHICULO_DESCONOCIDO: "El costo es de un vehículo que no está en la hoja Vehiculos.",
+  FALTA_PROVEEDOR_O_FACTURA: "Este tipo de costo necesita proveedor y número de factura.",
+  APERTURA_EN_COMPRA_NUEVA: "Un vehículo comprado después de empezar no lleva costos de saldo inicial (es_apertura=SI).",
+  COMPRA_DE_STOCK_INICIAL_A_PROVEEDORES:
+    "La compra de un vehículo de stock inicial va con es_apertura=SI; con NO quedaría como deuda con proveedores.",
+  // Avisos: no bloquean.
+  SIN_FECHA_INGRESO: "Sin fecha de ingreso: la antigüedad en stock quedará vacía.",
+  FECHA_INGRESO_SIN_MODO: "En una compra nueva la fecha de ingreso no se registra: la antigüedad quedará vacía.",
+  ARCHIVAR_NO_DISPONIBLE: "ARCHIVAR todavía no se aplica: esta fila y sus costos no se cargan.",
+  SIN_COSTO_DE_COMPRA: "Sin costo de COMPRA en Costos_vehiculos: la venta de este vehículo fallará hasta que tenga ese costo.",
+};
+
+/** Para un codigo que este mapa no conoce: no se le inventa significado. */
+export const MENSAJE_INCIDENCIA_DESCONOCIDA =
+  "La revisión marcó un problema que esta pantalla todavía no sabe explicar. El detalle técnico lo identifica para soporte.";
+
+/**
+ * Lo que se lee de una incidencia. Sin codigo (respuesta ilegible) se muestra
+ * el mensaje tal cual, como antes; con codigo, el texto en español y el codigo
+ * va plegado.
+ */
+export function mensajeIncidencia(e: Pick<ImportError, "codigo" | "mensaje">): string {
+  if (!e.codigo) return e.mensaje;
+  return MENSAJES_INCIDENCIA[e.codigo] ?? MENSAJE_INCIDENCIA_DESCONOCIDA;
+}
+
+/** "Vehiculos · fila 7": la fila es la de la planilla abierta en Excel. */
+export function ubicacionIncidencia(e: Pick<ImportError, "hoja" | "fila">): string {
+  return [e.hoja, e.fila !== null ? `fila ${e.fila}` : null].filter(Boolean).join(" · ");
 }
 
 /** Errores sin fila: el fichero entero esta mal y ninguna fila cuenta. */
