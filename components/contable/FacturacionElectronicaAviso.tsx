@@ -66,9 +66,10 @@ export function FacturacionElectronicaAviso() {
     >
       <p className="font-semibold">Facturación electrónica</p>
       <p className="mt-1">{copia}</p>
-      <p className="mt-2 text-xs text-amber-200/80">
+      <details className="mt-2 text-xs text-amber-200/80">
+        <summary className="cursor-pointer">Detalle técnico</summary>
         código: <code>{estado.codigo}</code>
-      </p>
+      </details>
     </section>
   );
 }
