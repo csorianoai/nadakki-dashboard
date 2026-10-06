@@ -13,6 +13,7 @@ import {
 import { DEALER_REGISTER_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
+import { DetalleTecnico } from "../../DetalleTecnico";
 
 function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): EntitlementDecision {
   if (query.error instanceof AccessApiError) {
@@ -135,8 +136,11 @@ export default function DealerVehicleRegisterPage() {
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
           <p className="mt-1 text-sm text-nk-fg-muted">
-            reason_code: <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
+            No pudimos confirmar tu permiso para registrar. Probá de nuevo en unos minutos.
           </p>
+          <DetalleTecnico>
+            <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
+          </DetalleTecnico>
         </section>
       ) : !decision.allowed ? (
         <section
@@ -171,9 +175,12 @@ export default function DealerVehicleRegisterPage() {
       ) : (
         <div data-testid="dealer-register-ready" className="space-y-6">
           {formError ? (
-            <p role="alert" data-testid="dealer-register-post-error" className="text-sm text-nk-fg">
-              reason_code: <code>{formError.reason_code}</code>
-            </p>
+            <div role="alert" data-testid="dealer-register-post-error" className="text-sm text-nk-fg">
+              No se pudo guardar el registro. Revisá los datos y probá de nuevo; si sigue igual, avisá a soporte.
+              <DetalleTecnico>
+                <code>{formError.reason_code}</code>
+              </DetalleTecnico>
+            </div>
           ) : null}
           {ack ? (
             <p data-testid="dealer-register-ack" className="text-sm text-nk-fg">

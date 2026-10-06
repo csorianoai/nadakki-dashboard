@@ -59,13 +59,13 @@ export default function DealerLeadsPage() {
   if (!dealerId) {
     cuerpo = <DccEstado estado="vacio" detalle="Tu usuario no tiene un concesionario resuelto." />;
   } else if (!esUuid(tenantUuid)) {
-    cuerpo = <DccEstado estado="error" detalle={`Tenant sin UUID en la sesión (${tenantUuid ?? "vacío"})`} />;
+    cuerpo = <DccEstado estado="error" detalle="No pudimos identificar tu concesionario en la sesión. Cerrá sesión y volvé a ingresar." />;
   } else if (q.isPending) {
     cuerpo = <DccEstado estado="cargando" />;
   } else if (q.isError) {
     const motivo = es403(q.error);
     cuerpo = motivo ? (
-      <DccEstado estado="bloqueado" detalle={`reason_code: ${motivo}`} />
+      <DccEstado estado="bloqueado" detalle="Tu usuario no tiene permiso para ver los leads. Pedile acceso al administrador de tu concesionario." />
     ) : (
       <DccEstado estado="error" detalle={`${EVIDENCIA} → ${detalleDeError(q.error)}`} onReintentar={() => void q.refetch()} />
     );
