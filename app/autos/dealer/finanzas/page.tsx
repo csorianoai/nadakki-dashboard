@@ -10,6 +10,7 @@
  * error, o sin alguna de las dos claves, no se pinta el panel.
  */
 
+import { DetalleTecnico } from "../inventario/DetalleTecnico";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
@@ -113,14 +114,15 @@ export default function DealerFinanzasPage() {
             </>
           ) : (
             <>
-              Los costos y el margen de cada unidad están reservados a quien tenga la capability{" "}
-              <code>{COSTS_CAPABILITY}</code>.
+              Los costos y el margen de cada unidad solo los ve el personal autorizado. Pedile acceso al administrador de tu concesionario.
             </>
           )}
           {noVerificado || denyReason ? (
             <>
-              {" "}
-              reason_code: <code>{motivoNoVerificado ?? denyReason}</code>
+              <DetalleTecnico>
+                Código: <code>{motivoNoVerificado ?? denyReason}</code>
+                {" · "}Permiso: <code>{COSTS_CAPABILITY}</code>
+              </DetalleTecnico>
             </>
           ) : null}
         </div>

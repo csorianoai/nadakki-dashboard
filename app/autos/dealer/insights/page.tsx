@@ -17,7 +17,7 @@ export default function DealerInsightsPage() {
       <DccSeccion titulo="Recomendaciones para tu concesionario" icono={Lightbulb} testId="dcc-seccion-insights">
         <div className="flex flex-wrap items-center gap-3">
           <p className={`text-sm ${DCC_CLASSES.muted}`}>Estamos preparando esta sección con los datos reales de tu concesionario.</p>
-          <SelloCalidad calidad={{ estado: "no_disponible", motivo: "Falta endpoint: insights del dealer en el backend" }} />
+          <SelloCalidad calidad={{ estado: "no_disponible", motivo: "Todavía no disponible para tu concesionario" }} />
         </div>
       </DccSeccion>
     </DccPage>
