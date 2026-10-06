@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="es-DO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mesa de crédito Banco Ejemplo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+/* Referencia visual del lado BANCO de Nadakki Credit Hub (revision 1).
+   Misma familia que el Dealer OS: tokens de lib/dcc/tokens.ts (DCC), con el
+   turquesa de enlaces fijado en #0F766E. Layout: barra lateral marina fija +
+   lienzo gris claro con tarjetas blancas; la cola de decision es la estrella. */
+:root {
+  --canvas: #F5F7FA; --surface: #FFFFFF; --surface-muted: #F8FAFC;
+  --border: #E6EAF0; --border-strong: #D5DCE5;
+  --fg: #0B1220; --fg-muted: #475467; --fg-subtle: #5B6577;
+  --navy: #0B1220; --navy-2: #17223A; --on-navy: #FFFFFF; --on-navy-muted: #A9B4C8;
+  --action: #0B1220; --action-hover: #17223A; --on-action: #FFFFFF;
+  --gold: #C9A227; --gold-ink: #8A6A10; --gold-bg: #FBF4E2;
+  --teal: #0F766E; --teal-ink: #0F766E; --teal-bg: #E6F6F6; --teal-mark: #14A39A;
+  --ok-fg: #067647; --ok-bg: #ECFDF3; --ok-line: #ABEFC6;
+  --partial-fg: #C2410C; --partial-bg: #FFF4ED; --partial-line: #FDBA8C;
+  --na-fg: #5B6577; --na-bg: #F2F4F7; --na-line: #D0D5DD;
+  --err-fg: #B42318; --err-bg: #FEF3F2; --err-line: #FECDCA;
+  --warn-fg: #B54708; --warn-bg: #FFFAEB;
+  --bar: #0F766E; --bar-soft: #A7D8D3; --grid: #EEF1F5; --target: #0B1220;
+  --shadow: 0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+  --shadow-pop: 0 12px 32px rgba(16,24,40,.16);
+  --scrim: rgba(11,18,32,.32);
+  --radius: 12px;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: #141C28; --surface: #111A2B; --surface-muted: #162236;
+    --border: #24314F; --border-strong: #34435A;
+    --fg: #E8EDF4; --fg-muted: #B1BBCA; --fg-subtle: #9AA6B8;
+    --navy: #070C17; --navy-2: #111A2A; --on-navy: #F1F5F9; --on-navy-muted: #A9B4C8;
+    --action: #E8EDF4; --action-hover: #FFFFFF; --on-action: #0B1220;
+    --gold: #E2B857; --gold-ink: #E2B857; --gold-bg: rgba(226,184,87,.12);
+    --teal: #2DD4BF; --teal-ink: #5EEAD4; --teal-bg: rgba(45,212,191,.12); --teal-mark: #2DD4BF;
+    --ok-fg: #62C79F; --ok-bg: rgba(98,199,159,.11); --ok-line: rgba(98,199,159,.32);
+    --partial-fg: #FF8552; --partial-bg: rgba(255,133,82,.12); --partial-line: rgba(255,133,82,.36);
+    --na-fg: #A8B1C0; --na-bg: rgba(168,177,192,.09); --na-line: rgba(168,177,192,.30);
+    --err-fg: #F08C78; --err-bg: rgba(240,140,120,.11); --err-line: rgba(240,140,120,.32);
+    --warn-fg: #F5B754; --warn-bg: rgba(245,183,84,.10);
+    --bar: #2DD4BF; --bar-soft: #1D5B57; --grid: #1E2A40; --target: #E8EDF4;
+    --shadow: 0 1px 2px rgba(0,0,0,.28); --shadow-pop: 0 12px 32px rgba(0,0,0,.5);
+    --scrim: rgba(0,0,0,.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --canvas: #141C28; --surface: #111A2B; --surface-muted: #162236;
+  --border: #24314F; --border-strong: #34435A;
+  --fg: #E8EDF4; --fg-muted: #B1BBCA; --fg-subtle: #9AA6B8;
+  --navy: #070C17; --navy-2: #111A2A; --on-navy: #F1F5F9; --on-navy-muted: #A9B4C8;
+  --action: #E8EDF4; --action-hover: #FFFFFF; --on-action: #0B1220;
+  --gold: #E2B857; --gold-ink: #E2B857; --gold-bg: rgba(226,184,87,.12);
+  --teal: #2DD4BF; --teal-ink: #5EEAD4; --teal-bg: rgba(45,212,191,.12); --teal-mark: #2DD4BF;
+  --ok-fg: #62C79F; --ok-bg: rgba(98,199,159,.11); --ok-line: rgba(98,199,159,.32);
+  --partial-fg: #FF8552; --partial-bg: rgba(255,133,82,.12); --partial-line: rgba(255,133,82,.36);
+  --na-fg: #A8B1C0; --na-bg: rgba(168,177,192,.09); --na-line: rgba(168,177,192,.30);
+  --err-fg: #F08C78; --err-bg: rgba(240,140,120,.11); --err-line: rgba(240,140,120,.32);
+  --warn-fg: #F5B754; --warn-bg: rgba(245,183,84,.10);
+  --bar: #2DD4BF; --bar-soft: #1D5B57; --grid: #1E2A40; --target: #E8EDF4;
+  --shadow: 0 1px 2px rgba(0,0,0,.28); --shadow-pop: 0 12px 32px rgba(0,0,0,.5);
+  --scrim: rgba(0,0,0,.5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--canvas); color: var(--fg);
+  font: 400 13px/1.45 var(--font-body);
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+}
+button, select, input { font: inherit; color: inherit; }
+a { color: var(--teal-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--teal-mark); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3, h4 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.muted { color: var(--fg-muted); }
+.subtle { color: var(--fg-subtle); }
+.eyebrow { font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-subtle); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Shell ---------- */
+.app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+.side { background: var(--navy); color: var(--on-navy); display: flex; flex-direction: column; padding: 18px 12px; gap: 20px; position: sticky; top: 0; height: 100vh; }
+.brand { display: flex; gap: 10px; align-items: center; padding: 2px 8px 14px; border-bottom: 1px solid var(--navy-2); }
+.brand-logo { width: 36px; height: 36px; border-radius: 8px; border: 1px dashed var(--on-navy-muted); display: grid; place-items: center; font-size: 9px; color: var(--on-navy-muted); letter-spacing: .04em; flex: none; }
+.brand-name { font-weight: 600; font-size: 15px; line-height: 1.2; }
+.brand-sub { font-size: 11px; color: var(--on-navy-muted); }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-label { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--on-navy-muted); padding: 10px 10px 6px; }
+.nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--on-navy-muted); font-weight: 500; position: relative; }
+.nav a:hover { background: var(--navy-2); color: var(--on-navy); text-decoration: none; }
+.nav a[aria-current="page"] { background: var(--navy-2); color: var(--gold); }
+.nav a[aria-current="page"]::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--gold); }
+.nav svg { width: 16px; height: 16px; flex: none; }
+.nav .count { margin-left: auto; font-size: 11px; background: var(--navy-2); color: var(--on-navy); padding: 1px 7px; border-radius: 10px; }
+.nav a[aria-current="page"] .count { background: var(--gold); color: #0B1220; }
+.side-foot { margin-top: auto; font-size: 11px; color: var(--on-navy-muted); padding: 10px; border-top: 1px solid var(--navy-2); display: grid; gap: 4px; }
+
+.main { min-width: 0; display: flex; flex-direction: column; }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 10px 28px; }
+.crumbs { display: flex; gap: 6px; align-items: center; color: var(--fg-subtle); font-size: 12px; min-width: 0; }
+.crumbs b { color: var(--fg); font-weight: 600; }
+.search { flex: 1; max-width: 380px; margin-left: auto; position: relative; }
+.search input { width: 100%; height: 34px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-muted); padding: 0 12px 0 32px; }
+.search svg { position: absolute; left: 10px; top: 9px; width: 16px; height: 16px; color: var(--fg-subtle); }
+.asof { font-size: 12px; color: var(--fg-muted); white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal-mark); }
+.icon-btn { height: 34px; min-width: 34px; display: inline-grid; place-items: center; border: 1px solid var(--border-strong); background: var(--surface); border-radius: 8px; cursor: pointer; color: var(--fg-muted); }
+.icon-btn:hover { background: var(--surface-muted); color: var(--fg); }
+.icon-btn svg { width: 16px; height: 16px; }
+.user { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--teal-bg); color: var(--teal-ink); font-weight: 600; font-size: 12px; flex: none; }
+.user small { display: block; color: var(--fg-subtle); font-size: 11px; }
+
+.content { padding: 24px 28px 28px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
+.page-head { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.page-head h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 1.2; letter-spacing: -.005em; }
+.page-head .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.foot { margin: 0 28px; padding: 14px 0 22px; border-top: 1px solid var(--border); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 11.5px; color: var(--fg-subtle); }
+.seal { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed var(--border-strong); border-radius: 6px; padding: 3px 8px; color: var(--fg-muted); font-weight: 500; }
+.seal svg { width: 13px; height: 13px; }
+.foot .right { margin-left: auto; }
+
+/* ---------- Building blocks ---------- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); min-width: 0; }
+.card-h { display: flex; align-items: center; gap: 10px; padding: 14px 18px 0; flex-wrap: wrap; }
+.card-h h2 { font-size: 14px; font-weight: 600; }
+.card-h .meta { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.card-b { padding: 14px 18px 18px; }
+.card.key { border-top: 2px solid var(--gold); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid transparent; font-weight: 500; cursor: pointer; white-space: nowrap; font-size: 12.5px; }
+.btn svg { width: 14px; height: 14px; }
+.btn-primary { background: var(--action); color: var(--on-action); }
+.btn-primary:hover { background: var(--action-hover); }
+.btn-secondary { background: var(--surface); color: var(--teal-ink); border-color: var(--teal); }
+.btn-secondary:hover { background: var(--teal-bg); }
+.btn-ghost { background: transparent; color: var(--fg-muted); border-color: var(--border-strong); }
+.btn-ghost:hover { background: var(--surface-muted); color: var(--fg); }
+.btn-danger { background: var(--surface); color: var(--err-fg); border-color: var(--err-line); }
+.btn-danger:hover { background: var(--err-bg); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--teal-ink); cursor: pointer; font-weight: 500; font-size: 12px; display: inline-flex; gap: 4px; align-items: center; }
+.link-btn:hover { text-decoration: underline; }
+.link-btn svg { width: 13px; height: 13px; }
+
+/* Data-quality badge: every figure carries one */
+.dq { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--fg-subtle); white-space: nowrap; }
+.dq-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px 1px 6px; border-radius: 999px; border: 1px solid; font-weight: 500; line-height: 16px; }
+.dq-chip svg { width: 11px; height: 11px; }
+.dq-ok .dq-chip { color: var(--ok-fg); background: var(--ok-bg); border-color: var(--ok-line); }
+.dq-partial .dq-chip { color: var(--partial-fg); background: var(--partial-bg); border-color: var(--partial-line); }
+.dq-na .dq-chip { color: var(--na-fg); background: var(--na-bg); border-color: var(--na-line); border-style: dashed; }
+
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 500; border: 1px solid var(--border-strong); color: var(--fg-muted); background: var(--surface-muted); white-space: nowrap; }
+.chip-ok { color: var(--ok-fg); background: var(--ok-bg); border-color: var(--ok-line); }
+.chip-warn { color: var(--warn-fg); background: var(--warn-bg); border-color: var(--partial-line); }
+.chip-err { color: var(--err-fg); background: var(--err-bg); border-color: var(--err-line); }
+.chip-info { color: var(--teal-ink); background: var(--teal-bg); border-color: transparent; }
+.chip-gold { color: var(--gold-ink); background: var(--gold-bg); border-color: transparent; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+
+.band { display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 5px; border-radius: 5px; font-size: 11px; font-weight: 600; border: 1px solid; }
+.band-A { color: var(--ok-fg); border-color: var(--ok-line); background: var(--ok-bg); }
+.band-B { color: var(--teal-ink); border-color: var(--teal); background: var(--teal-bg); }
+.band-C { color: var(--warn-fg); border-color: var(--partial-line); background: var(--warn-bg); }
+.band-D { color: var(--err-fg); border-color: var(--err-line); background: var(--err-bg); }
+
+table { border-collapse: collapse; width: 100%; }
+th { text-align: left; font-size: 11px; font-weight: 500; color: var(--fg-subtle); letter-spacing: .03em; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+th.r, td.r { text-align: right; }
+.scroll-x { overflow-x: auto; }
+
+/* ---------- Screen 1: Mesa ---------- */
+.brief { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 16px 20px; }
+.brief h1 { font-family: var(--font-display); font-weight: 600; font-size: 21px; line-height: 1.25; }
+.brief p { color: var(--fg-muted); margin-top: 4px; max-width: 78ch; }
+.brief .pts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.brief .pts .chip { cursor: default; }
+.brief-side { display: grid; gap: 6px; justify-items: end; text-align: right; }
+
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.kpi { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 6px; }
+.kpi .label { font-size: 12px; color: var(--fg-muted); font-weight: 500; display: flex; gap: 6px; align-items: center; }
+.kpi .value { font-size: 22px; font-weight: 600; line-height: 1.15; letter-spacing: -.01em; }
+.kpi .value small { font-size: 13px; font-weight: 500; color: var(--fg-muted); }
+.kpi .ctx { font-size: 11.5px; color: var(--fg-muted); min-height: 17px; }
+.kpi .ctx b { color: var(--fg); font-weight: 500; }
+.kpi .bottom { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; padding-top: 8px; border-top: 1px solid var(--border); }
+.meter { height: 6px; border-radius: 3px; background: var(--grid); position: relative; overflow: hidden; }
+.meter i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--bar); }
+
+.mesa-grid { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 20px; align-items: start; }
+.col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.queue-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 5px 10px; font-size: 12px; color: var(--fg-muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--border-strong); }
+.seg button[aria-pressed="true"] { background: var(--navy); color: var(--on-navy); }
+.queue { display: flex; flex-direction: column; }
+.qcard { padding: 14px 18px; border-top: 1px solid var(--border); display: grid; gap: 10px; }
+.qcard:first-child { border-top: 0; }
+.qrow { display: grid; grid-template-columns: 36px minmax(0, 1fr) 150px 76px 150px; gap: 14px; align-items: center; }
+.qwho { min-width: 0; }
+.qwho .id { font-size: 11.5px; color: var(--fg-subtle); }
+.qwho .veh { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qwho .dlr { color: var(--fg-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qamt .a { font-weight: 600; }
+.qamt .t { font-size: 12px; color: var(--fg-muted); }
+.qscore { display: flex; align-items: center; gap: 6px; }
+.qscore b { font-size: 16px; font-weight: 600; }
+.qsla { display: grid; gap: 4px; }
+.qsla .t { font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 5px; }
+.qsla .d { font-size: 11px; color: var(--fg-subtle); }
+.sla-red .t { color: var(--err-fg); } .sla-red .meter i { background: var(--err-fg); }
+.sla-amber .t { color: var(--warn-fg); } .sla-amber .meter i { background: var(--warn-fg); }
+.sla-ok .t { color: var(--fg); }
+.qact { display: flex; gap: 12px; align-items: center; margin-left: auto; }
+.qsub { display: flex; align-items: center; gap: 14px; padding-left: 50px; flex-wrap: wrap; }
+.qsub .why { color: var(--fg-muted); font-size: 12px; flex: 1; min-width: 200px; }
+.qsub .why b { color: var(--fg); font-weight: 500; }
+.evidence { margin-left: 50px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-muted); }
+.evidence summary { list-style: none; cursor: pointer; padding: 8px 12px; font-size: 12px; font-weight: 500; color: var(--teal-ink); display: flex; gap: 6px; align-items: center; }
+.evidence summary::-webkit-details-marker { display: none; }
+.evidence summary svg { width: 13px; height: 13px; transition: transform .15s; }
+.evidence[open] summary svg { transform: rotate(90deg); }
+.evidence summary .sum-hint { margin-left: auto; color: var(--fg-subtle); font-weight: 400; }
+.ev-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--border); border-top: 1px solid var(--border); border-radius: 0 0 10px 10px; overflow: hidden; }
+.ev { background: var(--surface); padding: 10px 12px; display: grid; gap: 4px; align-content: start; }
+.ev .k { font-size: 11px; color: var(--fg-subtle); }
+.ev .v { font-weight: 600; }
+.ev .n { font-size: 11.5px; color: var(--fg-muted); }
+.confirm { margin-left: 50px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface-muted); font-size: 12px; }
+.confirm select { height: 30px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--surface); padding: 0 8px; max-width: 100%; }
+.confirm .done { color: var(--ok-fg); font-weight: 500; display: inline-flex; gap: 6px; align-items: center; }
+.queue-foot { border-top: 1px solid var(--border); padding: 10px 18px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--fg-muted); }
+
+.funnel { display: grid; gap: 10px; }
+.fstep { display: grid; grid-template-columns: 104px minmax(0, 1fr) 54px; gap: 10px; align-items: center; }
+.fstep .lbl { font-size: 12px; color: var(--fg-muted); }
+.fstep .trk { height: 22px; background: var(--grid); border-radius: 4px; position: relative; }
+.fstep .trk i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 0 4px 4px 0; }
+.fstep.final .trk i { background: var(--gold); }
+.fstep .trk span { position: absolute; left: 8px; top: 3px; font-size: 12px; font-weight: 600; color: var(--on-action); }
+.fstep .trk span.out { color: var(--fg); }
+.fstep .cv { font-size: 11.5px; color: var(--fg-muted); text-align: right; }
+.fconv { display: grid; grid-template-columns: 104px minmax(0,1fr); gap: 10px; font-size: 11px; color: var(--fg-subtle); margin-top: -6px; }
+.fnote { margin-top: 12px; display: flex; gap: 8px; padding: 9px 10px; border-radius: 8px; background: var(--gold-bg); color: var(--fg); font-size: 12px; }
+.fnote svg { width: 14px; height: 14px; flex: none; color: var(--gold-ink); margin-top: 1px; }
+
+.dealers td { padding: 8px 6px; }
+.dealers th { padding: 6px 6px; }
+.dname { font-weight: 500; }
+.dname small { display: block; font-weight: 400; color: var(--fg-subtle); font-size: 11px; }
+.qbar { display: flex; align-items: center; gap: 6px; }
+.qbar .meter { width: 44px; }
+
+.bottom-grid { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 20px; align-items: start; }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; }
+.tl { display: grid; grid-template-columns: 52px 18px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px 0; position: relative; }
+.tl .h { font-weight: 600; font-size: 12px; padding-top: 1px; }
+.tl .mk { position: relative; height: 100%; display: flex; justify-content: center; }
+.tl .mk::before { content: ""; position: absolute; top: 0; bottom: -16px; width: 1px; background: var(--border-strong); }
+.tl:last-child .mk::before { display: none; }
+.tl .mk i { position: relative; width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; background: var(--surface); border: 2px solid var(--fg-subtle); }
+.tl.done .mk i { background: var(--teal-mark); border-color: var(--teal-mark); }
+.tl.now .mk i { border-color: var(--gold); background: var(--gold); box-shadow: 0 0 0 3px var(--gold-bg); }
+.tl.alert .mk i { border-color: var(--err-fg); }
+.tl .tx b { font-weight: 500; }
+.tl .tx small { display: block; color: var(--fg-subtle); font-size: 11.5px; }
+.tl.future { color: var(--fg-muted); }
+.now-line { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 11px; color: var(--gold-ink); font-weight: 600; padding: 2px 0; }
+.now-line hr { border: 0; border-top: 1px dashed var(--gold); margin: 0; }
+.tl-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+
+.reports { list-style: none; margin: 0; padding: 0; display: grid; }
+.rep { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+.rep:first-child { border-top: 0; padding-top: 0; }
+.rep .ico { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; background: var(--teal-bg); color: var(--teal-ink); }
+.rep .ico svg { width: 15px; height: 15px; }
+.rep b { font-weight: 500; display: block; }
+.rep small { color: var(--fg-subtle); font-size: 11.5px; }
+
+/* ---------- Screen 2: Expediente ---------- */
+.file-head { padding: 16px 20px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 24px; align-items: start; }
+.fh-who { display: flex; gap: 14px; align-items: center; min-width: 0; }
+.fh-who .avatar { width: 44px; height: 44px; font-size: 15px; }
+.fh-who h1 { font-family: var(--font-display); font-weight: 600; font-size: 22px; line-height: 1.2; }
+.fh-who .sub { color: var(--fg-muted); font-size: 12.5px; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 2px; }
+.fh-status { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.fh-facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.fact { padding: 10px 14px; border-left: 1px solid var(--border); display: grid; gap: 2px; min-width: 0; }
+.fact:first-child { border-left: 0; }
+.fact .k { font-size: 11px; color: var(--fg-subtle); }
+.fact .v { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fact .n { font-size: 11.5px; color: var(--fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sla-box { display: inline-flex; gap: 8px; align-items: center; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--err-line); background: var(--err-bg); color: var(--err-fg); font-weight: 600; font-size: 12.5px; }
+.sla-box svg { width: 14px; height: 14px; }
+.sla-box small { font-weight: 400; color: var(--fg-muted); }
+
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); overflow-x: auto; padding: 0 8px; }
+.tabs button { border: 0; background: none; padding: 12px 12px 10px; font-weight: 500; color: var(--fg-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.tabs button:hover { color: var(--fg); }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--gold); }
+.tabs .tc { font-size: 11px; padding: 0 6px; border-radius: 8px; background: var(--surface-muted); border: 1px solid var(--border); color: var(--fg-muted); }
+.tabs .tc.warn { color: var(--partial-fg); background: var(--partial-bg); border-color: var(--partial-line); }
+.tabpanel { padding: 18px 20px 22px; }
+
+.sum-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr); gap: 16px; }
+.panel { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.panel h3 { font-size: 13px; font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.panel h3 .dq { margin-left: auto; }
+dl.kv { margin: 0; display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 7px 14px; }
+dl.kv dt { color: var(--fg-subtle); font-size: 12px; }
+dl.kv dd { margin: 0; text-align: right; font-weight: 500; }
+.reco { border-color: var(--teal); background: var(--teal-bg); }
+.reco .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.reco .head b { font-size: 16px; font-weight: 600; }
+.reco ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.reco li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; font-size: 12.5px; }
+.reco li svg { width: 15px; height: 15px; margin-top: 1px; }
+.reco .ok svg { color: var(--ok-fg); }
+.reco .warn svg { color: var(--partial-fg); }
+.ratios { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.ratio { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; }
+.ratio .k { font-size: 12px; color: var(--fg-muted); display: flex; justify-content: space-between; gap: 6px; }
+.ratio .v { font-size: 20px; font-weight: 600; }
+.ratio .lim { position: relative; height: 6px; border-radius: 3px; background: var(--grid); }
+.ratio .lim i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--bar); }
+.ratio .lim u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--target); }
+.ratio .n { font-size: 11.5px; color: var(--fg-subtle); }
+
+.inc-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; }
+.flag { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 12.5px; }
+.flag:first-of-type { border-top: 0; padding-top: 0; }
+.flag svg { width: 16px; height: 16px; }
+.flag.info svg { color: var(--teal-ink); }
+.flag.warn svg { color: var(--partial-fg); }
+.flag small { display: block; color: var(--fg-subtle); }
+tr.excluded td { color: var(--fg-subtle); }
+.st-ok { color: var(--ok-fg); }
+.st-fail { color: var(--err-fg); }
+.st-pend { color: var(--partial-fg); }
+.rule-id { font-size: 12px; font-weight: 500; }
+.rule-ver { font-size: 11px; color: var(--fg-subtle); }
+.rule-st { display: inline-flex; gap: 5px; align-items: center; font-weight: 500; font-size: 12px; }
+.rule-st svg { width: 14px; height: 14px; }
+.factors { display: grid; gap: 8px; }
+.factor { display: grid; grid-template-columns: minmax(0, 1fr) 140px 44px; gap: 10px; align-items: center; font-size: 12.5px; }
+.factor .tr { position: relative; height: 8px; }
+.factor .tr::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--border-strong); }
+.factor .tr i { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
+.factor .tr i.pos { left: 50%; background: var(--bar); }
+.factor .tr i.neg { right: 50%; background: var(--partial-fg); }
+.factor .p { text-align: right; font-weight: 500; }
+
+.offer-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.offer-hero { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.offer-hero .ratio .v { font-size: 22px; }
+.conds { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.conds li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 8px; align-items: start; font-size: 12.5px; }
+.conds li svg { width: 15px; height: 15px; color: var(--teal-ink); margin-top: 1px; }
+tr.sel td { background: var(--gold-bg); }
+
+.log { list-style: none; margin: 0; padding: 0; }
+.log li { display: grid; grid-template-columns: 150px 170px minmax(0, 1fr) 96px; gap: 14px; padding: 10px 0; border-top: 1px solid var(--border); align-items: start; font-size: 12.5px; }
+.log li:first-child { border-top: 0; }
+.log .when { color: var(--fg-muted); white-space: nowrap; }
+.log .who b { font-weight: 500; display: block; }
+.log .who small { color: var(--fg-subtle); font-size: 11px; }
+.log .why small { display: block; color: var(--fg-subtle); font-size: 11.5px; margin-top: 2px; }
+.log .hash { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 11px; color: var(--fg-subtle); text-align: right; }
+.log li.fresh { background: var(--gold-bg); margin: 0 -10px; padding-left: 10px; padding-right: 10px; border-radius: 8px; }
+.lock-note { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--fg-muted); padding: 8px 10px; border-radius: 8px; background: var(--surface-muted); border: 1px solid var(--border); margin-bottom: 12px; }
+.lock-note svg { width: 14px; height: 14px; flex: none; }
+
+.decision-bar { position: sticky; bottom: 0; z-index: 4; background: var(--surface); border-top: 1px solid var(--border-strong); box-shadow: 0 -4px 16px rgba(16,24,40,.06); padding: 12px 28px calc(12px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 10px; }
+.db-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.db-row .hint { font-size: 12px; color: var(--fg-muted); margin-right: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.db-row .hint b { color: var(--fg); font-weight: 600; }
+.db-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface-muted); }
+.db-form label { display: grid; gap: 4px; font-size: 11.5px; color: var(--fg-muted); font-weight: 500; }
+.db-form select, .db-form input { height: 32px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--surface); padding: 0 8px; min-width: 0; }
+.db-form .grow { flex: 1; min-width: 220px; }
+.db-form .grow select, .db-form .grow input { width: 100%; }
+.db-form .err { color: var(--err-fg); font-size: 11.5px; width: 100%; }
+.db-done { display: flex; gap: 8px; align-items: center; color: var(--ok-fg); font-weight: 500; font-size: 12.5px; }
+.db-done svg { width: 16px; height: 16px; }
+
+/* ---------- Screen 3: Analitica ---------- */
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.filters label { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--fg-muted); }
+.filters select { height: 32px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); padding: 0 8px; }
+.an-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px; }
+.span-12 { grid-column: span 12; } .span-7 { grid-column: span 7; } .span-5 { grid-column: span 5; } .span-6 { grid-column: span 6; }
+.chart { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { fill: var(--fg-subtle); font-size: 11px; font-family: var(--font-body); }
+.chart text.val { fill: var(--fg); font-weight: 500; }
+.chart .gridl { stroke: var(--grid); stroke-width: 1; }
+.chart .axis { stroke: var(--border-strong); stroke-width: 1; }
+.chart .tgt { stroke: var(--target); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.chart .b { fill: var(--bar); }
+.chart .b.soft { fill: var(--bar-soft); }
+.chart .b.hatch { fill: url(#hatch); stroke: var(--bar); stroke-width: 1; }
+.chart .b.low { fill: var(--partial-fg); }
+.chart [data-tip] { cursor: default; }
+.chart .hit { fill: transparent; }
+.chart .hit:hover + .b, .chart .b:hover { opacity: .85; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--fg-muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.legend i.l-bar { background: var(--bar); }
+.legend i.l-soft { background: var(--bar-soft); }
+.legend i.l-tgt { height: 0; width: 14px; border-top: 2px dashed var(--target); border-radius: 0; }
+.legend i.l-low { background: var(--partial-fg); }
+.legend i.l-hatch { background: repeating-linear-gradient(45deg, var(--bar) 0 1.5px, transparent 1.5px 4px); border: 1px solid var(--bar); }
+.ftable td, .ftable th { padding: 7px 8px; }
+.ftable .convbar { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.ftable .convbar .meter { width: 70px; }
+.ibar { display: flex; align-items: center; gap: 8px; }
+.ibar .trk { flex: 1; height: 8px; background: var(--grid); border-radius: 2px; position: relative; min-width: 50px; }
+.ibar .trk i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 2px; }
+.ibar span { width: 72px; text-align: right; font-weight: 500; }
+
+#tip { position: fixed; z-index: 50; pointer-events: none; background: var(--navy); color: var(--on-navy); font-size: 12px; padding: 6px 9px; border-radius: 6px; box-shadow: var(--shadow-pop); max-width: 260px; }
+
+/* Explicar cifra drawer */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100vw); z-index: 41; background: var(--surface); border-left: 1px solid var(--border-strong); box-shadow: var(--shadow-pop); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
+.dr-h { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); display: grid; gap: 6px; }
+.dr-h .row { display: flex; gap: 10px; align-items: center; }
+.dr-h h2 { font-size: 15px; font-weight: 600; }
+.dr-h .row .icon-btn { margin-left: auto; }
+.dr-val { font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
+.dr-b { padding: 16px 20px 24px; overflow-y: auto; display: grid; gap: 18px; align-content: start; }
+.lineage { list-style: none; margin: 0; padding: 0; display: grid; }
+.lin { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; padding-bottom: 14px; position: relative; }
+.lin::before { content: ""; position: absolute; left: 12px; top: 26px; bottom: 0; width: 1px; background: var(--border-strong); }
+.lin:last-child::before { display: none; }
+.lin .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 600; background: var(--teal-bg); color: var(--teal-ink); }
+.lin:last-child .n { background: var(--gold-bg); color: var(--gold-ink); }
+.lin b { font-weight: 600; display: block; }
+.lin p { color: var(--fg-muted); font-size: 12.5px; margin-top: 2px; }
+.lin code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 11.5px; background: var(--surface-muted); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; color: var(--fg); }
+.lin .ex { margin-top: 6px; font-size: 12px; padding: 7px 9px; border-radius: 7px; background: var(--err-bg); color: var(--fg); border: 1px solid var(--err-line); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1360px) {
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fh-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fact:nth-child(4) { border-left: 0; }
+  .fact:nth-child(n+4) { border-top: 1px solid var(--border); }
+  .sum-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .sum-grid .reco { grid-column: 1 / -1; }
+}
+@media (max-width: 1120px) {
+  .mesa-grid, .bottom-grid, .inc-grid, .offer-grid { grid-template-columns: minmax(0, 1fr); }
+  .span-7, .span-5, .span-6 { grid-column: span 12; }
+  .ev-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .log li { grid-template-columns: 130px minmax(0, 1fr); }
+  .log .why { grid-column: 1 / -1; } .log .hash { grid-column: 1 / -1; text-align: left; }
+}
+@media (max-width: 900px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 16px; }
+  .brand { border: 0; padding: 0; }
+  .nav { flex-direction: row; flex-wrap: wrap; }
+  .nav-label, .side-foot, .nav .count { display: none; }
+  .nav a[aria-current="page"]::before { display: none; }
+  .top { padding: 10px 16px; flex-wrap: wrap; }
+  .search { order: 5; max-width: none; flex-basis: 100%; }
+  .content { padding: 18px 16px; }
+  .foot { margin: 0 16px; }
+  .decision-bar { padding-left: 16px; padding-right: 16px; }
+  .ratios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tl-cols { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+@media (max-width: 640px) {
+  .kpis { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .brief { grid-template-columns: minmax(0, 1fr); }
+  .brief-side { justify-items: start; text-align: left; }
+  .qrow { grid-template-columns: 36px minmax(0, 1fr); }
+  .qrow > .qamt, .qrow > .qscore, .qrow > .qsla { grid-column: 2; }
+  .qact { margin-left: 0; }
+  .qsub, .evidence, .confirm { margin-left: 0; padding-left: 0; }
+  .confirm { padding-left: 12px; }
+  .ev-grid, .sum-grid, .offer-hero { grid-template-columns: minmax(0, 1fr); }
+  .fh-facts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .fact { border-left: 0 !important; border-top: 1px solid var(--border); }
+  .fact:nth-child(-n+2) { border-top: 0; }
+  .file-head { grid-template-columns: minmax(0, 1fr); }
+  .fh-status { justify-content: flex-start; }
+  .user small, .asof .lbl { display: none; }
+  .factor { grid-template-columns: minmax(0, 1fr) 90px 40px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" aria-label="Navegación principal">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">LOGO</div>
+      <div>
+        <div class="brand-name">Banco Ejemplo</div>
+        <div class="brand-sub">con Nadakki Credit Hub</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <div class="nav-label">Crédito vehicular</div>
+      <a href="#mesa" data-screen="mesa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Mesa de decisiones<span class="count">38</span></a>
+      <a href="#expediente" data-screen="expediente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>Expedientes</a>
+      <a href="#analitica" data-screen="analitica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Cartera y analítica</a>
+      <div class="nav-label">Red</div>
+      <a href="#mesa" data-static="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14l-1.5-6.5A2 2 0 0 0 15.6 9H8.4a2 2 0 0 0-1.9 1.5zM7 17v2M17 17v2M8 13h.01M16 13h.01"/></svg>Dealers</a>
+      <a href="#mesa" data-static="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>Políticas de crédito</a>
+      <a href="#mesa" data-static="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4zM4 9h16M9 9v11"/></svg>Reportes</a>
+    </nav>
+    <div class="side-foot">
+      <span>Mesa de crédito vehicular · Santo Domingo</span>
+      <span>Horario hábil 8:00–18:00 (AST)</span>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div class="crumbs" id="crumbs"></div>
+      <label class="search"><span class="sr-only">Buscar</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Buscar solicitud, dealer o cédula (últimos 4)">
+      </label>
+      <span class="asof"><i class="live-dot"></i><span class="lbl">Datos al</span> <b class="num" id="asof-top"></b></span>
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Cambiar tema claro u oscuro" title="Tema claro / oscuro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <div class="user"><div class="avatar">LM</div><div>Laura Méndez<small>Oficial de crédito senior</small></div></div>
+    </header>
+
+    <main class="content" id="screen" tabindex="-1"></main>
+    <div id="decision-slot"></div>
+
+    <footer class="foot">
+      <span class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>Datos de ejemplo</span>
+      <span>Cifras en RD$ (DOP). Fuente: core bancario y Nadakki Credit Hub.</span>
+      <span class="right">Referencia visual · Banco · rev. 1</span>
+    </footer>
+  </div>
+</div>
+<div id="tip" hidden></div>
+<div id="drawer-root"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= Formato es-DO ================= */
+  var DIAS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+  var MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  function group(intStr) { return intStr.replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function rd(n) { var neg = n < 0; var s = Math.abs(n).toFixed(2).split("."); return (neg ? "−" : "") + "RD$ " + group(s[0]) + "." + s[1]; }
+  function mm(n) { return "RD$ " + (n / 1e6).toFixed(1) + " MM"; }
+  function int(n) { return group(String(Math.round(n))); }
+  function pct(n, d) { return (d === undefined ? n : n.toFixed(d)) + " %"; }
+  function fecha(d, withTime) {
+    var s = DIAS[d.getDay()] + " " + d.getDate() + " " + MESES[d.getMonth()] + " " + d.getFullYear();
+    return withTime ? s + " · " + hhmm(d) : s;
+  }
+  function hhmm(d) { return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  function cuota(P, tasaAnual, n) { var r = tasaAnual / 12; return P * r / (1 - Math.pow(1 + r, -n)); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  var NOW = new Date(2026, 9, 5, 14, 30);
+  var ASOF = hhmm(NOW);
+
+  /* ================= Iconos ================= */
+  var I = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+    half: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>',
+    none: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>',
+    lineage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 6h3a3 3 0 0 1 3 3v0a3 3 0 0 0 2 2.8M8 18h3a3 3 0 0 0 3-3v0a3 3 0 0 1 2-2.8"/></svg>',
+    doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>'
+  };
+
+  /* Insignia de calidad de dato: verificado | parcial n/m | no disponible, siempre con hora */
+  function dq(kind, n, m, at) {
+    var cls = kind === "ok" ? "dq-ok" : kind === "partial" ? "dq-partial" : "dq-na";
+    var txt = kind === "ok" ? "verificado" : kind === "partial" ? "parcial " + n + "/" + m : "no disponible";
+    var ic = kind === "ok" ? I.check : kind === "partial" ? I.half : I.none;
+    return '<span class="dq ' + cls + '"><span class="dq-chip">' + ic + txt + '</span><span class="num">al ' + (at || ASOF) + '</span></span>';
+  }
+  function explainBtn(key, label) {
+    return '<button class="link-btn" type="button" data-explain="' + key + '">' + I.lineage + (label || "Explicar cifra") + '</button>';
+  }
+
+  /* ================= Datos de ejemplo ================= */
+  var KPIS = [
+    { key: "bandeja", label: "Solicitudes en bandeja", value: "38", ctx: "<b>12</b> nuevas desde ayer · <b>3</b> vencen hoy", q: ["ok"] },
+    { key: "preap", label: "Pre-aprobadas hoy", value: "9", ctx: "de <b>21</b> decididas hoy", q: ["ok"] },
+    { key: "tiempo", label: "Respuesta media vs SLA", value: "3 h 40 min", sub: " / 4 h", ctx: "<b>92 %</b> dentro de SLA (30 d)", meter: 3.67 / 4 * 100, q: ["ok"] },
+    { key: "aprob", label: "Tasa de aprobación (30 d)", value: "62 %", ctx: "<b>196</b> ofertadas de <b>318</b> evaluadas", q: ["ok"] },
+    { key: "ofertado", label: "Monto ofertado (30 d)", value: mm(284.2e6), ctx: "<b>196</b> ofertas · prom. " + mm(1.45e6), q: ["partial", 4, 5] },
+    { key: "desemb", label: "Desembolsado (30 d)", value: mm(118.4e6), ctx: "<b>84</b> operaciones · solo DESEMBOLSADO", q: ["ok"], key2: true }
+  ];
+
+  var QUEUE = [
+    { id: "CH-2026-04427", ini: "MR", veh: "Toyota RAV4 XLE 2024", dealer: "Autos del Caribe", city: "Santo Domingo", amt: 2150000, term: 60, score: 742, band: "A", left: 48, due: "15:18", dueDay: "hoy", tier: "4 h", sla: "red",
+      act: "pre", why: "Cumple 7 de 8 reglas; la póliza de seguro se exige antes del desembolso.",
+      ev: [["Ingresos verificados", rd(245000) + "/mes", "Nómina 6/6 meses, variación 2.9 %", ["ok"]], ["Estados de cuenta", "Saldo prom. " + rd(96400), "0 sobregiros en 6 meses", ["ok"]], ["Deuda / ingreso", "31.0 %", "Límite de política 40 %", ["ok"]], ["Regla aplicada", "POL-AUTO-07 v3.2", "Score ≥ 700 y DTI ≤ 40 % → elegible para pre-aprobación", ["ok"]]] },
+    { id: "CH-2026-04419", ini: "JP", veh: "Hyundai Tucson 2023", dealer: "Motorsur Santiago", city: "Santiago", amt: 1680000, term: 72, score: 668, band: "B", left: 115, due: "16:25", dueDay: "hoy", tier: "4 h", sla: "amber",
+      act: "doc", doc: "Carta laboral vigente", why: "La carta laboral tiene 117 días; la política acepta hasta 90.",
+      ev: [["Ingresos detectados", rd(138500) + "/mes", "4 de 6 meses con nómina identificable", ["partial", 4, 6]], ["Estados de cuenta", "Saldo prom. " + rd(41200), "1 sobregiro (julio)", ["ok"]], ["Deuda / ingreso", "37.4 %", "Límite de política 40 %", ["partial", 4, 6]], ["Regla aplicada", "DOC-03 v1.4", "Carta laboral emitida hace ≤ 90 días", ["ok"]]] },
+    { id: "CH-2026-04411", ini: "AG", veh: "Kia Sportage 2022", dealer: "Plaza Automotriz Este", city: "La Romana", amt: 1320000, term: 48, score: 588, band: "D", left: 190, due: "17:40", dueDay: "hoy", tier: "4 h", sla: "amber",
+      act: "rej", reason: "dti", why: "DTI de 52.3 % supera el límite duro de 45 %; no hay contraoferta viable a 72 meses.",
+      ev: [["Ingresos verificados", rd(96000) + "/mes", "Nómina 6/6 meses", ["ok"]], ["Estados de cuenta", "Saldo prom. " + rd(8900), "4 sobregiros en 6 meses", ["ok"]], ["Deuda / ingreso", "52.3 %", "Límite duro 45 % · a 72 m sería 47.1 %", ["ok"]], ["Regla aplicada", "R-DTI-01 v2.0", "DTI > 45 % → rechazo con motivo", ["ok"]]] },
+    { id: "CH-2026-04431", ini: "RD", veh: "Suzuki Swift 2023", dealer: "AutoCentro Higüey", city: "Higüey", amt: 890000, term: 48, score: 701, band: "B", left: 235, due: "08:25", dueDay: "mar 6 oct", tier: "4 h", sla: "ok",
+      act: "pre", why: "Ingresos y documentos completos; monto bajo el umbral de comité.",
+      ev: [["Ingresos verificados", rd(78500) + "/mes", "Nómina 6/6 meses", ["ok"]], ["Estados de cuenta", "Saldo prom. " + rd(22300), "0 sobregiros", ["ok"]], ["Deuda / ingreso", "33.8 %", "Límite de política 40 %", ["ok"]], ["Regla aplicada", "POL-AUTO-07 v3.2", "Score ≥ 700 y DTI ≤ 40 % → elegible", ["ok"]]] },
+    { id: "CH-2026-04425", ini: "CT", veh: "Honda CR-V 2025", dealer: "Autos del Caribe", city: "Santo Domingo", amt: 2640000, term: 60, score: 781, band: "A", left: 320, due: "11:50", dueDay: "mar 6 oct", tier: "8 h · comité", sla: "ok",
+      act: "pre", why: "Monto sobre RD$ 2.5 MM: la pre-aprobación pasa a comité de las 11:30.",
+      ev: [["Ingresos verificados", rd(312000) + "/mes", "Independiente: 12/12 meses de facturación", ["ok"]], ["Estados de cuenta", "Saldo prom. " + rd(184500), "0 sobregiros", ["ok"]], ["Deuda / ingreso", "24.6 %", "Límite de política 40 %", ["ok"]], ["Regla aplicada", "POL-AUTO-09 v3.2", "Monto > RD$ 2.5 MM requiere visto de comité", ["ok"]]] },
+    { id: "CH-2026-04416", ini: "LF", veh: "Toyota Hilux 2024", dealer: "Motorsur Santiago", city: "Santiago", amt: 3050000, term: 72, score: 712, band: "B", left: 365, due: "12:35", dueDay: "mar 6 oct", tier: "8 h · comité", sla: "ok",
+      act: "doc", doc: "Estado de cuenta de agosto", why: "Falta 1 de 6 estados de cuenta; sin él el ingreso queda parcial.",
+      ev: [["Ingresos detectados", rd(265000) + "/mes", "5 de 6 meses", ["partial", 5, 6]], ["Estados de cuenta", "5 de 6 recibidos", "Falta agosto 2026", ["partial", 5, 6]], ["Deuda / ingreso", "35.2 %", "Estimado con 5 meses", ["partial", 5, 6]], ["Regla aplicada", "DOC-01 v1.4", "6 estados de cuenta consecutivos", ["ok"]]] }
+  ];
+  var ACTIONS = { pre: { label: "Pre-aprobar", cls: "btn-primary" }, doc: { label: "Pedir documento", cls: "btn-secondary" }, rej: { label: "Rechazar con motivo", cls: "btn-danger" } };
+  var REASONS = [
+    ["dti", "DTI sobre el límite de política"],
+    ["ing", "Ingresos no verificables"],
+    ["buro", "Historial de buró desfavorable"],
+    ["doc", "Documentación incompleta tras 2 solicitudes"],
+    ["ltv", "LTV sobre el máximo de política"],
+    ["fraude", "Inconsistencia de identidad o documentos"],
+    ["otro", "Otro (requiere nota)"]
+  ];
+
+  var FUNNEL = [["Recibidas", 352], ["Evaluadas", 318], ["Ofertadas", 196], ["Aceptadas", 121], ["Desembolsadas", 84]];
+
+  var DEALERS = [
+    { n: "Autos del Caribe", c: "Santo Domingo", sol: 94, ap: 71, docs: 88 },
+    { n: "Motorsur Santiago", c: "Santiago", sol: 71, ap: 58, docs: 74 },
+    { n: "Plaza Automotriz Este", c: "La Romana", sol: 63, ap: 49, docs: 61 },
+    { n: "AutoCentro Higüey", c: "Higüey", sol: 48, ap: 66, docs: 83 },
+    { n: "Rodríguez Motors", c: "San Francisco de Macorís", sol: 39, ap: 62, docs: 79 }
+  ];
+
+  var TODAY = [
+    { t: "08:00", s: "done", tx: "Resumen de la mesa enviado", d: "12 nuevas · 3 con SLA hoy" },
+    { t: "09:40", s: "done", tx: "Desembolso confirmado CH-2026-04371", d: rd(1940000) + " · Rodríguez Motors" },
+    { t: "11:30", s: "done", tx: "Comité de crédito", d: "4 casos > RD$ 2.5 MM · 3 aprobados, 1 devuelto" },
+    { t: "13:52", s: "done", tx: "Motorsur subió carta laboral (J.P.)", d: "En verificación automática" },
+    { t: "14:30", s: "now" },
+    { t: "15:00", s: "future", tx: "Corte de desembolsos del día", d: "6 operaciones listas · " + mm(9.8e6) },
+    { t: "15:18", s: "alert", tx: "Vence SLA · CH-2026-04427 (M.R.)", d: "Recomendación: pre-aprobar" },
+    { t: "16:25", s: "alert", tx: "Vence SLA · CH-2026-04419 (J.P.)", d: "Pendiente carta laboral" },
+    { t: "17:40", s: "alert", tx: "Vence SLA · CH-2026-04411 (A.G.)", d: "Recomendación: rechazar" }
+  ];
+
+  var REPORTS = [
+    { n: "Informe diario de la mesa", d: "PDF · generado hoy 08:00", st: ["ok"] },
+    { n: "Cartera por dealer · semanal", d: "XLSX · lun 5 oct 2026 · 07:30", st: ["ok"] },
+    { n: "Reporte regulatorio de cartera vehicular", d: "Mensual · septiembre 2026 · en cierre", st: ["partial", 3, 4] },
+    { n: "Rechazos con motivo (auditoría)", d: "CSV · últimos 30 d", st: ["ok"] }
+  ];
+
+  /* Expediente: M.R. */
+  var APP = {
+    id: "CH-2026-04427", name: "Marisol Reyes Almonte", ini: "MR", ced: "***-*******-4", age: 38,
+    job: "Gerente de operaciones", employer: "Distribuidora del Cibao SRL (ejemplo)", tenure: "6 años 4 meses",
+    veh: "Toyota RAV4 XLE 2024", cond: "Nuevo", price: 2690000, down: 540000, amt: 2150000, term: 60, rate: 0.125,
+    dealer: "Autos del Caribe", seller: "Ramón Ortiz", received: new Date(2026, 9, 5, 11, 18),
+    income: 245000, obligations: [["Préstamo personal (otra entidad)", 18500, "Débito día 15 · 6/6 meses"], ["Tarjeta de crédito · pago mínimo", 9200, "Variable · prom. 6 m"]],
+    score: 742, band: "A"
+  };
+  APP.cuota = cuota(APP.amt, APP.rate, APP.term);
+  APP.oblig = APP.obligations.reduce(function (s, o) { return s + o[1]; }, 0);
+  APP.dti = (APP.cuota + APP.oblig) / APP.income * 100;
+  APP.ltv = APP.amt / APP.price * 100;
+
+  var MONTHS = [
+    ["abr 2026", 245000, 0, 91800, 0], ["may 2026", 245000, 0, 94100, 0], ["jun 2026", 245000, 0, 89600, 0],
+    ["jul 2026", 252300, 0, 98200, 0], ["ago 2026", 245000, 120000, 103900, 0], ["sep 2026", 245000, 0, 100800, 0]
+  ];
+
+  var DOCS = [
+    ["Cédula de identidad", "Validada contra el registro de la JCE", "11:24", ["ok"]],
+    ["Carta laboral", "Emitida 22 sep 2026 (13 días) · firma y sello verificados", "11:26", ["ok"]],
+    ["Estados de cuenta (6 meses)", "abr–sep 2026 · PDF original, sin alteraciones detectadas", "11:27", ["ok"]],
+    ["Reporte de buró de crédito", "Consulta con consentimiento firmado · score 742", "11:22", ["ok"]],
+    ["Cotización del dealer", "Precio " + rd(2690000) + " · inicial " + rd(540000), "11:18", ["ok"]],
+    ["Comprobante de domicilio", "Factura de servicio a nombre de un familiar · 1 de 2 datos coincide", "11:29", ["partial", 1, 2]],
+    ["Póliza de seguro del vehículo", "Se exige endosada antes del desembolso", "—", ["na"]]
+  ];
+
+  var RULES = [
+    ["POL-AUTO-01", "v3.2", "Edad de 21 a 70 años al final del plazo", "38 → 43 años", "pass"],
+    ["POL-AUTO-03", "v3.2", "Antigüedad laboral ≥ 1 año", "6 años 4 meses", "pass"],
+    ["POL-AUTO-05", "v3.2", "LTV ≤ 85 % en vehículo nuevo", null, "pass"],
+    ["R-DTI-01", "v2.0", "Deuda / ingreso ≤ 40 % (límite duro 45 %)", null, "pass"],
+    ["POL-AUTO-07", "v3.2", "Score ≥ 700 y DTI ≤ 40 % → elegible para pre-aprobación", "742 · banda A", "pass"],
+    ["DOC-03", "v1.4", "Carta laboral emitida hace ≤ 90 días", "13 días", "pass"],
+    ["POL-AUTO-11", "v3.2", "Plazo ≤ 72 meses", "60 meses", "pass"],
+    ["SEG-02", "v1.1", "Póliza de seguro endosada antes del desembolso", "No recibida · condición de oferta", "fail"]
+  ];
+  var FACTORS = [["Historial de pagos sin atrasos (24 m)", 38], ["Antigüedad laboral", 21], ["Utilización de tarjetas 34 %", -9], ["Ingreso estable 6/6 meses", 17], ["Consultas recientes al buró (2 en 90 d)", -6]];
+
+  var LOG = [
+    { at: new Date(2026, 9, 5, 11, 18), who: "Sistema", role: "Integración dealer", what: "Solicitud recibida desde Autos del Caribe", why: "Vendedor: Ramón Ortiz · canal API", h: "a91f…3c07" },
+    { at: new Date(2026, 9, 5, 11, 19), who: "M. Reyes Almonte", role: "Solicitante", what: "Consentimiento de consulta a buró firmado", why: "Firma electrónica · IP registrada", h: "5be2…d410" },
+    { at: new Date(2026, 9, 5, 11, 22), who: "Sistema", role: "Buró de crédito", what: "Buró consultado · score 742 (banda A)", why: "Modelo SCORE-AUTO v4.1", h: "07cd…9a2e" },
+    { at: new Date(2026, 9, 5, 11, 27), who: "Sistema", role: "Análisis de estados", what: "Ingreso detectado " + rd(245000) + "/mes", why: "Depósito no recurrente de agosto excluido", h: "e3a0…41bb" },
+    { at: new Date(2026, 9, 5, 11, 31), who: "Motor de política", role: "Política v3.2", what: "7 de 8 reglas cumplidas · recomienda pre-aprobar", why: "SEG-02 pendiente: pasa a condición de oferta", h: "c6f8…0e95" },
+    { at: new Date(2026, 9, 5, 14, 12), who: "Laura Méndez", role: "Oficial de crédito senior", what: "Abrió el expediente", why: "Asignación automática por cola", h: "19d4…b7a3" }
+  ];
+
+  /* Analitica */
+  var WEEKS = [
+    ["16 ago", 71, 63, 38, 23, 15], ["23 ago", 76, 69, 42, 26, 17], ["30 ago", 74, 66, 40, 24, 16], ["6 sep", 79, 71, 44, 27, 18],
+    ["13 sep", 82, 74, 46, 28, 19], ["20 sep", 84, 76, 47, 29, 20], ["27 sep", 88, 79, 49, 31, 21], ["4 oct", 91, 82, 51, 32, 22]
+  ];
+  var ANALYSTS = [["Ana Batista", 96, 71, ["ok"]], ["Laura Méndez", 94, 88, ["ok"]], ["Carmen Valdez", 91, 64, ["ok"]], ["Pedro Guzmán", 88, 59, ["ok"]], ["José Cabrera", 81, 36, ["partial", 34, 36]]];
+  var DEALER_AN = [["Autos del Caribe", 94, 71, 1.86e6], ["Motorsur Santiago", 71, 58, 1.52e6], ["Plaza Automotriz Este", 63, 49, 1.31e6], ["AutoCentro Higüey", 48, 66, 0.98e6], ["Rodríguez Motors", 39, 62, 1.44e6], ["Otros 7 dealers", 37, 54, 1.21e6]];
+  var REJECT = [["DTI sobre el límite de política", 46], ["Ingresos no verificables", 26], ["Historial de buró desfavorable", 21], ["Documentación incompleta tras 2 solicitudes", 15], ["LTV sobre el máximo de política", 9], ["Otros", 5]];
+  var DISB = [["may", 92.4e6, 66, "ok"], ["jun", 101.7e6, 72, "ok"], ["jul", 108.9e6, 77, "ok"], ["ago", 112.3e6, 80, "ok"], ["sep", 116.1e6, 83, "ok"], ["oct", 14.2e6, 10, "partial"]];
+
+  /* Linaje de cifras para "Explicar cifra" */
+  var LINEAGE = {
+    desemb: { title: "Desembolsado (30 d)", value: mm(118.4e6), exact: rd(118412650), q: ["ok"], def: "MET-DESEMB v1.3 · dueño: Finanzas de crédito",
+      steps: [
+        ["Fuente", "Tabla de desembolsos del core bancario, sincronizada " + fecha(NOW, true) + ".", "<code>core.desembolsos</code>"],
+        ["Filtro de estado", "Solo operaciones en estado <code>DESEMBOLSADO</code>. Una oferta aceptada no cuenta como financiada hasta que el dinero sale.", null, "Excluidas: 37 operaciones en ACEPTADA o EN TRÁMITE por " + mm(52.6e6) + "."],
+        ["Ventana", "5 sep 2026 00:00 – 5 oct 2026 14:30, hora de Santo Domingo (AST).", null],
+        ["Moneda", "Montos en DOP. No hay operaciones en USD en esta línea de producto.", null],
+        ["Cálculo", "Suma del monto desembolsado de 84 operaciones: " + rd(118412650) + ". Se muestra redondeado a una decimal en millones.", null],
+        ["Conciliación", "Cuadra con contabilidad al cierre del 4 oct 2026 (diferencia RD$ 0.00). Las operaciones de hoy se concilian al cierre.", null]
+      ] },
+    ofertado: { title: "Monto ofertado (30 d)", value: mm(284.2e6), exact: rd(284180000), q: ["partial", 4, 5], def: "MET-OFERTA v1.1 · dueño: Mesa de crédito",
+      steps: [
+        ["Fuente", "Ofertas emitidas en Nadakki Credit Hub, por dealer.", "<code>hub.ofertas</code>"],
+        ["Filtro de estado", "Estados OFERTADA, ACEPTADA, EN TRÁMITE y DESEMBOLSADO. No incluye pre-aprobaciones sin oferta formal.", null],
+        ["Cobertura", "4 de 5 fuentes de dealer al día. Rodríguez Motors no sincroniza desde 12:05.", null, "Faltan como máximo 3 ofertas de ese dealer (estimado " + mm(4.3e6) + ")."],
+        ["Cálculo", "Suma del monto ofertado de 196 ofertas en la ventana de 30 días.", null]
+      ] },
+    aprob: { title: "Tasa de aprobación (30 d)", value: "62 %", exact: "61.6 % (196 / 318)", q: ["ok"], def: "MET-APROB v2.0 · dueño: Riesgo de crédito",
+      steps: [
+        ["Numerador", "Solicitudes con oferta emitida (incluye aprobadas con condiciones): 196.", null],
+        ["Denominador", "Solicitudes evaluadas con decisión final: 318. Excluye 34 retiradas por el dealer antes de evaluar.", null],
+        ["Ventana", "5 sep – 5 oct 2026, por fecha de decisión.", null],
+        ["Redondeo", "Se muestra sin decimales; el valor exacto es 61.6 %.", null]
+      ] },
+    tiempo: { title: "Respuesta media vs SLA", value: "3 h 40 min", exact: "3 h 39 min 48 s (n = 318)", q: ["ok"], def: "MET-SLA v1.2 · dueño: Operaciones de crédito",
+      steps: [
+        ["Inicio", "Recepción de la solicitud completa desde el dealer.", null],
+        ["Fin", "Primera decisión comunicada al dealer (pre-aprobación, condiciones, pedido de información o rechazo).", null],
+        ["Reloj", "Solo horas hábiles 8:00–18:00, lunes a viernes; sábados 8:00–12:00.", null],
+        ["Meta", "4 h hábiles hasta RD$ 2.5 MM; 8 h para montos mayores (comité).", null]
+      ] },
+    bandeja: { title: "Solicitudes en bandeja", value: "38", exact: "38 abiertas", q: ["ok"], def: "MET-BANDEJA v1.0",
+      steps: [["Fuente", "Solicitudes asignadas a la mesa sin decisión final.", "<code>hub.solicitudes</code>"], ["Filtro", "Estados RECIBIDA, EN EVALUACIÓN e INFORMACIÓN PEDIDA.", null], ["Corte", "Al " + fecha(NOW, true) + ".", null]] },
+    preap: { title: "Pre-aprobadas hoy", value: "9", exact: "9 de 21 decisiones", q: ["ok"], def: "MET-PREAP v1.0",
+      steps: [["Fuente", "Bitácora de decisiones de la mesa.", "<code>hub.bitacora</code>"], ["Filtro", "Decisión = PRE-APROBADA con fecha de hoy.", null], ["Corte", "Al " + fecha(NOW, true) + ".", null]] }
+  };
+
+  /* ================= Pantalla 1 · Mesa ================= */
+  function slaWidth(q) { var total = q.tier.indexOf("8") === 0 ? 480 : 240; return Math.max(4, Math.min(100, (1 - q.left / total) * 100)); }
+  function dur(m) { return Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0") + " min"; }
+
+  function renderMesa() {
+    var k = KPIS.map(function (x) {
+      return '<section class="card kpi' + (x.key2 ? " key" : "") + '" aria-label="' + esc(x.label) + '">' +
+        '<div class="label">' + x.label + '</div>' +
+        '<div class="value num">' + x.value + (x.sub ? '<small>' + x.sub + '</small>' : "") + '</div>' +
+        (x.meter ? '<div class="meter" aria-hidden="true"><i style="width:' + x.meter + '%"></i></div>' : "") +
+        '<div class="ctx">' + x.ctx + '</div>' +
+        '<div class="bottom">' + dq.apply(null, x.q) + explainBtn(x.key, "Explicar") + '</div></section>';
+    }).join("");
+
+    var q = QUEUE.map(function (c, i) {
+      var a = ACTIONS[c.act];
+      return '<article class="qcard" data-i="' + i + '">' +
+        '<div class="qrow">' +
+          '<div class="avatar" aria-hidden="true">' + c.ini + '</div>' +
+          '<div class="qwho"><div class="id num">' + c.id + ' · ' + c.ini.split("").join(".") + '.</div><div class="veh">' + c.veh + '</div><div class="dlr">' + c.dealer + ' · ' + c.city + '</div></div>' +
+          '<div class="qamt"><div class="a num">' + rd(c.amt) + '</div><div class="t">' + c.term + ' meses</div></div>' +
+          '<div class="qscore"><b class="num">' + c.score + '</b><span class="band band-' + c.band + '" title="Banda de riesgo ' + c.band + '">' + c.band + '</span></div>' +
+          '<div class="qsla sla-' + c.sla + '"><div class="t">' + I.clock.replace("<svg", '<svg width="13" height="13"') + '<span class="num">' + dur(c.left) + '</span></div>' +
+            '<div class="meter"><i style="width:' + slaWidth(c) + '%"></i></div><div class="d">vence ' + c.dueDay + ' ' + c.due + ' · SLA ' + c.tier + '</div></div>' +
+        '</div>' +
+        '<div class="qsub"><span class="why"><b>Recomendación:</b> ' + c.why + '</span>' + dq.apply(null, c.ev[0][3]) +
+          '<span class="qact"><a class="link-btn" href="#expediente">Abrir expediente ' + I.arrow + '</a><button class="btn ' + a.cls + '" type="button" data-act="' + i + '">' + a.label + '</button></span></div>' +
+        '<details class="evidence"><summary>' + I.chev + 'Ver evidencia<span class="sum-hint">' + c.ev.length + ' fuentes</span></summary><div class="ev-grid">' +
+          c.ev.map(function (e) { return '<div class="ev"><span class="k">' + e[0] + '</span><span class="v num">' + e[1] + '</span><span class="n">' + e[2] + '</span>' + dq.apply(null, e[3]) + '</div>'; }).join("") +
+        '</div></details>' +
+        '<div class="confirm-slot"></div>' +
+      '</article>';
+    }).join("");
+
+    var max = FUNNEL[0][1];
+    var fun = FUNNEL.map(function (f, i) {
+      var w = f[1] / max * 100, conv = i === 0 ? "100 %" : Math.round(f[1] / FUNNEL[i - 1][1] * 100) + " %";
+      return '<div class="fstep' + (i === FUNNEL.length - 1 ? " final" : "") + '" data-tip="' + f[0] + ': ' + f[1] + (i ? ' · ' + conv + ' del paso anterior' : '') + '">' +
+        '<span class="lbl">' + f[0] + '</span><span class="trk"><i style="width:' + w + '%"></i><span class="num' + (w < 18 ? " out" : "") + '"' + (w < 18 ? ' style="left:calc(' + w + '% + 6px)"' : "") + '>' + f[1] + '</span></span>' +
+        '<span class="cv num">' + (i ? "→ " + conv : "") + '</span></div>';
+    }).join("");
+
+    var dl = DEALERS.map(function (d) {
+      return '<tr><td><span class="dname">' + d.n + '<small>' + d.c + '</small></span></td><td class="r num">' + d.sol + '</td>' +
+        '<td class="r num">' + d.ap + ' %</td><td><span class="qbar"><span class="meter"><i style="width:' + d.docs + '%"></i></span><span class="num">' + d.docs + ' %</span></span></td></tr>';
+    }).join("");
+
+    var tlItems = TODAY.map(function (t) {
+      if (t.s === "now") return '<li class="now-line"><span class="num">' + t.t + '</span><hr><span class="sr-only">Ahora</span></li>';
+      return '<li class="tl ' + t.s + (t.s === "alert" ? " future" : "") + '"><span class="h num">' + t.t + '</span><span class="mk"><i></i></span><span class="tx"><b>' + t.tx + '</b><small>' + t.d + '</small></span>' +
+        (t.s === "alert" ? '<span class="chip chip-err">SLA</span>' : t.s === "done" ? '<span class="chip">hecho</span>' : '<span class="chip chip-info">próximo</span>') + '</li>';
+    });
+    var mid = 5;
+
+    var reps = REPORTS.map(function (r) {
+      return '<li class="rep"><span class="ico">' + I.doc + '</span><span><b>' + r.n + '</b><small>' + r.d + '</small></span>' + dq.apply(null, r.st) + '</li>';
+    }).join("");
+
+    return '' +
+      '<section class="card brief" aria-label="Resumen del día">' +
+        '<div><span class="eyebrow">' + fecha(NOW) + ' · resumen de la mesa</span>' +
+          '<h1>Buenos días, Laura. 12 solicitudes nuevas desde ayer; 3 vencen su SLA hoy.</h1>' +
+          '<p>La primera vence a las 15:18 y el sistema recomienda pre-aprobarla. Motorsur Santiago tiene 2 casos esperando documentos. El ofertado de 30 días está parcial porque Rodríguez Motors no sincroniza desde las 12:05.</p>' +
+          '<div class="pts"><span class="chip chip-err"><i class="dot"></i>3 SLA vencen hoy</span><span class="chip chip-warn"><i class="dot"></i>2 esperan documento</span><span class="chip chip-info"><i class="dot"></i>2 van a comité mañana 11:30</span></div>' +
+        '</div>' +
+        '<div class="brief-side"><button class="btn btn-primary" type="button" data-jump="0">Empezar por la que vence primero ' + I.arrow + '</button>' + dq("ok") + '</div>' +
+      '</section>' +
+      '<div class="kpis">' + k + '</div>' +
+      '<div class="mesa-grid">' +
+        '<section class="card" aria-labelledby="h-cola">' +
+          '<div class="card-h"><h2 id="h-cola">Cola de decisión</h2><span class="chip num">6 de 38</span>' +
+            '<div class="meta"><div class="seg" role="group" aria-label="Orden de la cola"><button type="button" aria-pressed="true">SLA y score</button><button type="button" aria-pressed="false">Monto</button><button type="button" aria-pressed="false">Dealer</button></div>' + dq("ok") + '</div></div>' +
+          '<div class="card-b" style="padding:8px 0 0"><div class="queue" id="queue">' + q + '</div></div>' +
+          '<div class="queue-foot"><span>Orden: primero el SLA más próximo; a igual SLA, mayor score. SLA en horas hábiles 8:00–18:00.</span><a href="#mesa">Ver las 38 solicitudes ' + '</a></div>' +
+        '</section>' +
+        '<div class="col">' +
+          '<section class="card" aria-labelledby="h-salud"><div class="card-h"><h2 id="h-salud">Salud de la cartera</h2><span class="subtle">últimos 30 días</span><div class="meta">' + explainBtn("desemb", "Linaje") + '</div></div>' +
+            '<div class="card-b"><div class="funnel">' + fun + '</div>' +
+            '<div class="fnote">' + I.info + '<span>Conversión total recibida → desembolsada: <b class="num">24 %</b> (84 de 352). Solo el estado DESEMBOLSADO cuenta como financiado.</span></div>' +
+            '<div style="margin-top:10px">' + dq("ok") + '</div></div></section>' +
+          '<section class="card" aria-labelledby="h-red"><div class="card-h"><h2 id="h-red">Red de dealers</h2><span class="subtle">top 5 por volumen · 30 d</span><div class="meta">' + dq("partial", 4, 5) + '</div></div>' +
+            '<div class="card-b scroll-x"><table class="dealers"><thead><tr><th>Dealer</th><th class="r">Sol.</th><th class="r">Aprob.</th><th>Docs completos</th></tr></thead><tbody>' + dl + '</tbody></table>' +
+            '<p class="subtle" style="font-size:11.5px;margin-top:8px">Calidad = solicitudes con documentación completa al primer envío.</p></div></section>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bottom-grid">' +
+        '<section class="card" aria-labelledby="h-hoy"><div class="card-h"><h2 id="h-hoy">Hoy</h2><span class="subtle">' + fecha(NOW) + '</span><div class="meta">' + dq("ok") + '</div></div>' +
+          '<div class="card-b"><div class="tl-cols"><ol class="timeline">' + tlItems.slice(0, mid).join("") + '</ol><ol class="timeline">' + tlItems.slice(mid).join("") + '</ol></div></div></section>' +
+        '<section class="card" aria-labelledby="h-rep"><div class="card-h"><h2 id="h-rep">Reportes</h2><div class="meta"><button class="link-btn" type="button">Programar ' + I.cal + '</button></div></div>' +
+          '<div class="card-b"><ul class="reports">' + reps + '</ul></div></section>' +
+      '</div>';
+  }
+
+  function bindMesa(root) {
+    root.querySelectorAll("[data-act]").forEach(function (b) {
+      b.addEventListener("click", function () { openConfirm(+b.getAttribute("data-act")); });
+    });
+    var jump = root.querySelector("[data-jump]");
+    if (jump) jump.addEventListener("click", function () {
+      var c = root.querySelector('.qcard[data-i="0"]'); c.scrollIntoView({ block: "center", behavior: "smooth" });
+      var d = c.querySelector("details"); d.open = true; c.querySelector("[data-act]").focus({ preventScroll: true });
+    });
+    root.querySelectorAll(".seg button").forEach(function (b) {
+      b.addEventListener("click", function () { root.querySelectorAll(".seg button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); }); });
+    });
+  }
+
+  function openConfirm(i) {
+    var c = QUEUE[i], card = document.querySelector('.qcard[data-i="' + i + '"]'), slot = card.querySelector(".confirm-slot");
+    var a = ACTIONS[c.act], body;
+    if (c.act === "rej") {
+      body = '<label for="rs-' + i + '">Motivo</label><select id="rs-' + i + '"><option value="">Elegir motivo…</option>' +
+        REASONS.map(function (r) { return '<option value="' + r[0] + '"' + (r[0] === c.reason ? " selected" : "") + '>' + r[1] + '</option>'; }).join("") + '</select>';
+    } else if (c.act === "doc") {
+      body = '<span>Pedir a ' + c.dealer + ': <b>' + c.doc + '</b>. El SLA se pausa hasta recibirlo.</span>';
+    } else {
+      body = '<span>Pre-aprobar ' + rd(c.amt) + ' a ' + c.term + ' meses. Se notifica a ' + c.dealer + '.</span>';
+    }
+    slot.innerHTML = '<div class="confirm" role="group" aria-label="Confirmar ' + a.label + '">' + body +
+      '<button class="btn ' + (c.act === "rej" ? "btn-danger" : "btn-primary") + '" type="button" data-ok>Confirmar</button><button class="btn btn-ghost" type="button" data-cancel>Cancelar</button></div>';
+    var sel = slot.querySelector("select"), ok = slot.querySelector("[data-ok]");
+    function sync() { if (sel) ok.disabled = !sel.value; }
+    if (sel) { sel.addEventListener("change", sync); sync(); }
+    slot.querySelector("[data-cancel]").addEventListener("click", function () { slot.innerHTML = ""; });
+    ok.addEventListener("click", function () {
+      var label = c.act === "rej" ? "Rechazada · " + sel.options[sel.selectedIndex].text : c.act === "doc" ? "Documento pedido" : "Pre-aprobada";
+      slot.innerHTML = '<div class="confirm"><span class="done">' + I.check.replace("<svg", '<svg width="14" height="14"') + label + '</span><span class="subtle">Registrado en la bitácora · ' + fecha(NOW, true) + ' · Laura Méndez</span></div>';
+      card.querySelector("[data-act]").disabled = true;
+    });
+    (sel || ok).focus();
+  }
+
+  /* ================= Pantalla 2 · Expediente ================= */
+  var currentTab = "resumen";
+  var decisionState = null;
+
+  function ratioBox(k, v, pctFill, limitPct, note, q) {
+    return '<div class="ratio"><span class="k">' + k + '</span><span class="v num">' + v + '</span>' +
+      '<span class="lim" aria-hidden="true"><i style="width:' + pctFill + '%"></i>' + (limitPct != null ? '<u style="left:' + limitPct + '%"></u>' : "") + '</span>' +
+      '<span class="n">' + note + '</span>' + (q ? dq.apply(null, q) : "") + '</div>';
+  }
+
+  function tabResumen() {
+    return '<div class="sum-grid">' +
+      '<div class="panel"><h3>Solicitante ' + dq("ok") + '</h3><dl class="kv">' +
+        '<dt>Cédula</dt><dd class="num">' + APP.ced + '</dd><dt>Edad</dt><dd>' + APP.age + ' años</dd>' +
+        '<dt>Empleo</dt><dd>' + APP.job + '</dd><dt>Empleador</dt><dd>' + APP.employer + '</dd>' +
+        '<dt>Antigüedad</dt><dd>' + APP.tenure + '</dd><dt>Ingreso verificado</dt><dd class="num">' + rd(APP.income) + '/mes</dd></dl></div>' +
+      '<div class="panel"><h3>Vehículo y operación ' + dq("ok") + '</h3><dl class="kv">' +
+        '<dt>Vehículo</dt><dd>' + APP.veh + ' · ' + APP.cond + '</dd><dt>Precio</dt><dd class="num">' + rd(APP.price) + '</dd>' +
+        '<dt>Inicial</dt><dd class="num">' + rd(APP.down) + ' (' + (APP.down / APP.price * 100).toFixed(1) + ' %)</dd>' +
+        '<dt>Monto solicitado</dt><dd class="num">' + rd(APP.amt) + '</dd><dt>Plazo</dt><dd>' + APP.term + ' meses</dd>' +
+        '<dt>Dealer</dt><dd>' + APP.dealer + ' · ' + APP.seller + '</dd></dl></div>' +
+      '<div class="panel reco"><div class="head"><span class="eyebrow">Recomendación del motor · política v3.2</span>' + dq("ok") + '</div><b>Pre-aprobar con 1 condición</b><ul>' +
+        '<li class="ok">' + I.check + '<span>Score <b class="num">742</b>, banda A. Sin atrasos en 24 meses.</span></li>' +
+        '<li class="ok">' + I.check + '<span>DTI <b class="num">' + APP.dti.toFixed(1) + ' %</b> con la nueva cuota; límite 40 %.</span></li>' +
+        '<li class="ok">' + I.check + '<span>LTV <b class="num">' + APP.ltv.toFixed(1) + ' %</b>; máximo 85 % en vehículo nuevo.</span></li>' +
+        '<li class="ok">' + I.check + '<span>Ingreso estable 6 de 6 meses; depósito no recurrente excluido.</span></li>' +
+        '<li class="warn">' + I.warn + '<span>Póliza de seguro endosada: se exige antes del desembolso (SEG-02).</span></li></ul>' +
+        '<div><button class="link-btn" type="button" data-tab-jump="politica">Ver las 8 reglas ' + I.arrow + '</button></div></div>' +
+      '</div>' +
+      '<div class="ratios">' +
+        ratioBox("Score de riesgo", '742 <span class="band band-A">A</span>', (742 - 300) / 550 * 100, (700 - 300) / 550 * 100, "Corte de pre-aprobación 700 · escala 300–850", ["ok"]) +
+        ratioBox("Deuda / ingreso", APP.dti.toFixed(1) + " %", APP.dti / 60 * 100, 40 / 60 * 100, "Límite 40 % · cuota nueva incluida", ["ok"]) +
+        ratioBox("LTV", APP.ltv.toFixed(1) + " %", APP.ltv, 85, "Máximo 85 % · vehículo nuevo", ["ok"]) +
+        ratioBox("Documentos", "5 de 7", 5 / 7 * 100, null, "1 parcial · 1 no disponible", ["partial", 5, 7]) +
+      '</div>';
+  }
+
+  function tabIngresos() {
+    var rows = MONTHS.map(function (m) {
+      return '<tr><td>' + m[0] + '</td><td class="r num">' + rd(m[1]) + '</td><td class="r num">' + (m[2] ? rd(m[2]) : "—") + '</td><td class="r num">' + rd(m[3]) + '</td><td class="r num">' + m[4] + '</td></tr>';
+    }).join("");
+    var ob = APP.obligations.map(function (o) { return '<tr><td>' + o[0] + '<div class="subtle" style="font-size:11.5px">' + o[2] + '</div></td><td class="r num">' + rd(o[1]) + '</td></tr>'; }).join("");
+    return '<div class="ratios" style="margin-top:0;margin-bottom:16px">' +
+        ratioBox("Ingreso detectado", rd(APP.income), 100, null, "Mediana de 6 meses · nómina", ["ok"]) +
+        ratioBox("Estabilidad", "6 de 6 meses", 100, null, "Variación máx. 2.9 % (julio, horas extra)", ["ok"]) +
+        ratioBox("Obligaciones recurrentes", rd(APP.oblig), APP.oblig / APP.income * 100, null, (APP.oblig / APP.income * 100).toFixed(1) + " % del ingreso", ["ok"]) +
+        ratioBox("Cuota nueva", rd(APP.cuota), APP.cuota / APP.income * 100, null, (APP.cuota / APP.income * 100).toFixed(1) + " % del ingreso", ["ok"]) +
+      '</div>' +
+      '<div class="inc-grid">' +
+        '<div class="panel"><h3>Estados de cuenta · cuenta nómina en otra entidad ' + dq("ok", null, null, "11:27") + '</h3><div class="scroll-x"><table><thead><tr><th>Mes</th><th class="r">Nómina detectada</th><th class="r">No recurrente (excluido)</th><th class="r">Saldo promedio</th><th class="r">Sobregiros</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
+        '<div class="col" style="gap:16px">' +
+          '<div class="panel"><h3>Obligaciones recurrentes ' + dq("ok", null, null, "11:27") + '</h3><table><tbody>' + ob + '<tr><td><b>Total mensual</b></td><td class="r num"><b>' + rd(APP.oblig) + '</b></td></tr></tbody></table></div>' +
+          '<div class="panel"><h3>Señales</h3>' +
+            '<div class="flag info">' + I.info + '<span>Depósito no recurrente de ' + rd(120000) + ' en agosto<small>Transferencia de un tercero. Excluido del ingreso; no afecta la decisión.</small></span></div>' +
+            '<div class="flag warn">' + I.warn + '<span>1 pago de servicio con atraso (junio, 6 días)<small>Monto ' + rd(3480) + '. Por debajo del umbral de alerta de la política.</small></span></div>' +
+            '<div class="flag info">' + I.check.replace("<svg", '<svg style="color:var(--ok-fg)"') + '<span>Sin transacciones con casas de apuestas ni préstamos informales<small>Revisadas 412 transacciones.</small></span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function tabDocs() {
+    var rows = DOCS.map(function (d) {
+      var act = d[3][0] === "ok" ? '<button class="link-btn" type="button">Ver</button>' : '<button class="link-btn" type="button">Pedir al dealer</button>';
+      return '<tr><td><b style="font-weight:500">' + d[0] + '</b><div class="subtle" style="font-size:11.5px">' + d[1] + '</div></td><td>' + dq(d[3][0], d[3][1], d[3][2], d[2] === "—" ? ASOF : d[2]) + '</td><td class="r">' + act + '</td></tr>';
+    }).join("");
+    return '<div class="scroll-x"><table><thead><tr><th>Documento</th><th>Verificación</th><th class="r">Acción</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function tabPolitica() {
+    var rows = RULES.map(function (r) {
+      var val = r[3] || (r[0] === "POL-AUTO-05" ? APP.ltv.toFixed(1) + " %" : APP.dti.toFixed(1) + " %");
+      var st = r[4] === "pass" ? '<span class="rule-st st-ok">' + I.check + 'Cumple</span>' : '<span class="rule-st st-pend">' + I.warn + 'Pendiente · condición</span>';
+      return '<tr><td><div class="rule-id">' + r[0] + '</div><div class="rule-ver">' + r[1] + '</div></td><td>' + r[2] + '</td><td class="num">' + val + '</td><td>' + st + '</td></tr>';
+    }).join("");
+    var f = FACTORS.map(function (x) {
+      var w = Math.abs(x[1]) / 40 * 50;
+      return '<div class="factor"><span>' + x[0] + '</span><span class="tr" aria-hidden="true"><i class="' + (x[1] > 0 ? "pos" : "neg") + '" style="width:' + w + '%"></i></span><span class="p num">' + (x[1] > 0 ? "+" : "−") + Math.abs(x[1]) + '</span></div>';
+    }).join("");
+    return '<div class="inc-grid">' +
+      '<div class="panel"><h3>Reglas evaluadas · política de crédito vehicular v3.2 (vigente desde 1 sep 2026) ' + dq("ok", null, null, "11:31") + '</h3><div class="scroll-x"><table><thead><tr><th>Regla</th><th>Condición</th><th>Valor</th><th>Resultado</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        '<p class="subtle" style="font-size:11.5px">7 de 8 reglas cumplidas. SEG-02 no bloquea la pre-aprobación; pasa a condición de la oferta.</p></div>' +
+      '<div class="panel"><h3>Score 742 · banda A ' + dq("ok", null, null, "11:22") + '</h3>' +
+        '<p class="muted" style="font-size:12px">Modelo SCORE-AUTO v4.1. Bandas: A ≥ 720 · B 650–719 · C 600–649 · D &lt; 600. Puntos aportados por cada factor respecto al promedio de la cartera.</p>' +
+        '<div class="factors">' + f + '</div></div>' +
+    '</div>';
+  }
+
+  function tabOferta() {
+    var c = APP.cuota, totalInt = c * APP.term - APP.amt;
+    var alt = [48, 60, 72].map(function (n) {
+      var cu = cuota(APP.amt, APP.rate, n), dti = (cu + APP.oblig) / APP.income * 100;
+      return '<tr' + (n === APP.term ? ' class="sel"' : "") + '><td>' + n + ' meses' + (n === APP.term ? ' · solicitado' : '') + '</td><td class="r num">' + rd(cu) + '</td><td class="r num">' + dti.toFixed(1) + ' %</td><td class="r num">' + rd(cu * n - APP.amt) + '</td></tr>';
+    }).join("");
+    return '<div class="offer-grid">' +
+      '<div class="col" style="gap:16px">' +
+        '<div class="offer-hero">' +
+          ratioBox("Tasa anual fija", "12.50 %", 12.5 / 20 * 100, null, "Tarifario banda A · vigente oct 2026", ["ok"]) +
+          ratioBox("Plazo", APP.term + " meses", APP.term / 72 * 100, null, "Máximo de política 72", ["ok"]) +
+          ratioBox("Cuota mensual", rd(c), c / APP.income * 100, null, "Sistema francés, sin seguros", ["ok"]) +
+        '</div>' +
+        '<div class="panel"><h3>Detalle de la oferta ' + dq("ok") + '</h3><dl class="kv">' +
+          '<dt>Monto financiado</dt><dd class="num">' + rd(APP.amt) + '</dd>' +
+          '<dt>Comisión de apertura (1 %)</dt><dd class="num">' + rd(APP.amt * 0.01) + '</dd>' +
+          '<dt>Intereses totales</dt><dd class="num">' + rd(totalInt) + '</dd>' +
+          '<dt>Seguro de vida (estimado)</dt><dd>' + dq("na") + '</dd>' +
+          '<dt>Vigencia de la oferta</dt><dd>15 días · hasta mar 20 oct 2026</dd></dl></div>' +
+      '</div>' +
+      '<div class="col" style="gap:16px">' +
+        '<div class="panel"><h3>Condiciones</h3><ul class="conds">' +
+          '<li>' + I.shield + '<span>Póliza de seguro todo riesgo endosada a Banco Ejemplo</span><span class="chip chip-warn">antes del desembolso</span></li>' +
+          '<li>' + I.check + '<span>Domiciliación de la cuota en cuenta de Banco Ejemplo</span><span class="chip">al firmar</span></li>' +
+          '<li>' + I.check + '<span>Dispositivo GPS instalado por el dealer</span><span class="chip">al entregar</span></li>' +
+          '<li>' + I.check + '<span>Prenda sin desapoderamiento sobre el vehículo</span><span class="chip">al firmar</span></li></ul></div>' +
+        '<div class="panel"><h3>Otros plazos a la misma tasa</h3><div class="scroll-x"><table><thead><tr><th>Plazo</th><th class="r">Cuota</th><th class="r">DTI</th><th class="r">Intereses</th></tr></thead><tbody>' + alt + '</tbody></table></div></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function tabBitacora() {
+    var items = LOG.slice().reverse().map(function (l) {
+      return '<li' + (l.fresh ? ' class="fresh"' : "") + '><span class="when num">' + fecha(l.at, true) + '</span><span class="who"><b>' + esc(l.who) + '</b><small>' + esc(l.role) + '</small></span>' +
+        '<span class="why">' + esc(l.what) + '<small>' + esc(l.why) + '</small></span><span class="hash">' + l.h + '</span></li>';
+    }).join("");
+    return '<div class="lock-note">' + I.lock + '<span>Registro inmutable: solo se agregan entradas. Cada entrada se encadena con la anterior por su huella.</span></div><ol class="log">' + items + '</ol>';
+  }
+
+  var TABS = [
+    ["resumen", "Resumen", tabResumen],
+    ["ingresos", "Ingresos y estados de cuenta", tabIngresos],
+    ["documentos", "Documentos", tabDocs, '<span class="tc warn">2</span>'],
+    ["politica", "Política y score", tabPolitica, '<span class="tc">7/8</span>'],
+    ["oferta", "Oferta", tabOferta],
+    ["bitacora", "Bitácora", tabBitacora, null]
+  ];
+
+  function renderExpediente() {
+    var head = '<section class="card file-head" aria-label="Encabezado del expediente">' +
+      '<div class="fh-who"><div class="avatar">' + APP.ini + '</div><div><span class="eyebrow num">Expediente ' + APP.id + '</span><h1>' + APP.name + '</h1>' +
+        '<div class="sub"><span class="num">Cédula ' + APP.ced + '</span><span>Recibida ' + fecha(APP.received, true) + '</span></div></div></div>' +
+      '<div class="fh-status"><span class="chip chip-info" id="status-chip"><i class="dot"></i>En evaluación</span>' +
+        '<span class="sla-box">' + I.clock + '<span class="num">0 h 48 min</span><small>vence 15:18 · SLA 4 h</small></span></div>' +
+      '<div class="fh-facts">' +
+        '<div class="fact"><span class="k">Vehículo</span><span class="v">' + APP.veh + '</span><span class="n">' + APP.cond + ' · precio ' + rd(APP.price) + '</span></div>' +
+        '<div class="fact"><span class="k">Dealer</span><span class="v">' + APP.dealer + '</span><span class="n">Vendedor ' + APP.seller + '</span></div>' +
+        '<div class="fact"><span class="k">Monto</span><span class="v num">' + rd(APP.amt) + '</span><span class="n">LTV ' + APP.ltv.toFixed(1) + ' %</span></div>' +
+        '<div class="fact"><span class="k">Plazo</span><span class="v">' + APP.term + ' meses</span><span class="n">Cuota ' + rd(APP.cuota) + '</span></div>' +
+        '<div class="fact"><span class="k">Score</span><span class="v num">742 <span class="band band-A">A</span></span><span class="n">SCORE-AUTO v4.1</span></div>' +
+        '<div class="fact"><span class="k">Calidad del expediente</span><span class="v">' + dq("partial", 5, 7) + '</span><span class="n">2 documentos sin completar</span></div>' +
+      '</div></section>';
+    var tabs = '<section class="card" aria-label="Detalle del expediente"><div class="tabs" role="tablist">' +
+      TABS.map(function (t) {
+        var badge = t[0] === "bitacora" ? '<span class="tc">' + LOG.length + '</span>' : (t[3] || "");
+        return '<button role="tab" type="button" id="tab-' + t[0] + '" aria-controls="tp" aria-selected="' + (t[0] === currentTab) + '" data-tab="' + t[0] + '">' + t[1] + badge + '</button>';
+      }).join("") +
+      '</div><div class="tabpanel" id="tp" role="tabpanel" aria-labelledby="tab-' + currentTab + '">' + TABS.filter(function (t) { return t[0] === currentTab; })[0][2]() + '</div></section>';
+    return head + tabs;
+  }
+
+  function renderDecisionBar() {
+    var s = decisionState;
+    var main = '<div class="db-row"><span class="hint">' + I.info.replace("<svg", '<svg width="14" height="14"') + '<span>Recomendación: <b>Pre-aprobar con condiciones</b></span><span>·</span><span class="num">SLA 0 h 48 min</span></span>' +
+      '<button class="btn btn-primary" type="button" data-dec="pre">Pre-aprobar</button>' +
+      '<button class="btn btn-secondary" type="button" data-dec="cond">Aprobar con condiciones</button>' +
+      '<button class="btn btn-ghost" type="button" data-dec="info">Pedir información</button>' +
+      '<button class="btn btn-danger" type="button" data-dec="rej">Rechazar</button></div>';
+    if (!s) return main;
+    if (s.done) return '<div class="db-row"><span class="db-done">' + I.check + s.done + '</span><span class="hint" style="margin-right:0">Registrado en la bitácora · ' + fecha(NOW, true) + '</span><button class="btn btn-ghost" type="button" data-dec="reset" style="margin-left:auto">Deshacer vista</button></div>';
+    var f = "";
+    if (s.kind === "rej") {
+      f = '<label class="grow" for="dec-reason">Motivo de rechazo (obligatorio)<select id="dec-reason"><option value="">Elegir motivo…</option>' + REASONS.map(function (r) { return '<option value="' + r[0] + '">' + r[1] + '</option>'; }).join("") + '</select></label>' +
+        '<label class="grow" for="dec-note">Nota para el dealer<input id="dec-note" type="text" placeholder="Opcional salvo motivo “Otro”"></label>';
+    } else if (s.kind === "info") {
+      f = '<label class="grow" for="dec-doc">Información a pedir<select id="dec-doc"><option value="dom">Comprobante de domicilio a nombre del solicitante</option><option value="seg">Póliza de seguro endosada</option><option value="otro">Otro documento</option></select></label>';
+    } else if (s.kind === "cond") {
+      f = '<label class="grow" for="dec-cond">Condiciones<select id="dec-cond"><option>Póliza endosada antes del desembolso + GPS + domiciliación</option><option>Inicial mínima 25 % + condiciones estándar</option></select></label>';
+    } else {
+      f = '<span class="grow" style="font-size:12.5px">Pre-aprobar ' + rd(APP.amt) + ' a ' + APP.term + ' meses, 12.50 % anual, cuota ' + rd(APP.cuota) + '. Se notifica a ' + APP.dealer + '.</span>';
+    }
+    var labels = { pre: "Confirmar pre-aprobación", cond: "Confirmar aprobación con condiciones", info: "Enviar pedido", rej: "Confirmar rechazo" };
+    return main + '<div class="db-form" role="group" aria-label="' + labels[s.kind] + '">' + f +
+      '<button class="btn ' + (s.kind === "rej" ? "btn-danger" : "btn-primary") + '" type="button" data-confirm>' + labels[s.kind] + '</button>' +
+      '<button class="btn btn-ghost" type="button" data-dec="cancel">Cancelar</button>' +
+      (s.err ? '<span class="err" role="alert">' + s.err + '</span>' : "") + '</div>';
+  }
+
+  function bindExpediente(root) {
+    root.querySelectorAll("[data-tab]").forEach(function (b) {
+      b.addEventListener("click", function () { currentTab = b.getAttribute("data-tab"); render(); var t = document.getElementById("tab-" + currentTab); if (t) t.focus(); });
+      b.addEventListener("keydown", function (e) {
+        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        var ids = TABS.map(function (t) { return t[0]; }), i = ids.indexOf(currentTab);
+        currentTab = ids[(i + (e.key === "ArrowRight" ? 1 : ids.length - 1)) % ids.length]; render(); document.getElementById("tab-" + currentTab).focus();
+      });
+    });
+    root.querySelectorAll("[data-tab-jump]").forEach(function (b) { b.addEventListener("click", function () { currentTab = b.getAttribute("data-tab-jump"); render(); }); });
+  }
+
+  function bindDecision(bar) {
+    bar.querySelectorAll("[data-dec]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var k = b.getAttribute("data-dec");
+        decisionState = (k === "cancel" || k === "reset") ? null : { kind: k };
+        renderBar(); var first = bar.querySelector("select, [data-confirm]"); if (first) first.focus();
+      });
+    });
+    var c = bar.querySelector("[data-confirm]");
+    if (c) c.addEventListener("click", function () {
+      var s = decisionState, entry = { at: NOW, who: "Laura Méndez", role: "Oficial de crédito senior", h: "pend…" + String(LOG.length).padStart(4, "0"), fresh: true }, chip = "";
+      if (s.kind === "rej") {
+        var r = bar.querySelector("#dec-reason"), note = bar.querySelector("#dec-note").value.trim();
+        if (!r.value) { decisionState.err = "Elige un motivo de la lista para poder rechazar."; renderBar(); bar.querySelector("#dec-reason").focus(); return; }
+        if (r.value === "otro" && !note) { decisionState.err = "El motivo “Otro” necesita una nota para el dealer."; renderBar(); return; }
+        entry.what = "Rechazó la solicitud"; entry.why = "Motivo: " + r.options[r.selectedIndex].text + (note ? " · " + note : ""); s.done = "Solicitud rechazada · " + r.options[r.selectedIndex].text; chip = "Rechazada";
+      } else if (s.kind === "info") {
+        var d = bar.querySelector("#dec-doc"); entry.what = "Pidió información al dealer"; entry.why = d.options[d.selectedIndex].text + " · SLA en pausa"; s.done = "Pedido enviado a " + APP.dealer + "; el SLA queda en pausa"; chip = "Información pedida";
+      } else if (s.kind === "cond") {
+        var cd = bar.querySelector("#dec-cond"); entry.what = "Aprobó con condiciones"; entry.why = cd.value; s.done = "Aprobada con condiciones"; chip = "Aprobada con condiciones";
+      } else {
+        entry.what = "Pre-aprobó la solicitud"; entry.why = "Según recomendación del motor · condición SEG-02"; s.done = "Pre-aprobada · se notificó a " + APP.dealer; chip = "Pre-aprobada";
+      }
+      LOG.push(entry); s.err = null;
+      var sc = document.getElementById("status-chip"); if (sc) { sc.className = "chip " + (s.kind === "rej" ? "chip-err" : s.kind === "info" ? "chip-warn" : "chip-ok"); sc.innerHTML = '<i class="dot"></i>' + chip; }
+      renderBar();
+      if (currentTab === "bitacora") render();
+    });
+  }
+  function renderBar() {
+    var slot = document.getElementById("decision-slot");
+    if (route !== "expediente") { slot.innerHTML = ""; return; }
+    slot.innerHTML = '<div class="decision-bar" role="region" aria-label="Decisión">' + renderDecisionBar() + '</div>';
+    bindDecision(slot.firstChild);
+  }
+
+  /* ================= Pantalla 3 · Analitica ================= */
+  function svgOpen(w, h, label) { return '<svg class="chart" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + esc(label) + '"><defs><pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="var(--surface)"/><line x1="0" y1="0" x2="0" y2="5" stroke="var(--bar)" stroke-width="2"/></pattern></defs>'; }
+  function topRoundRect(x, y, w, h, r) { r = Math.min(r, h, w / 2); return '<path d="M' + x + ',' + (y + h) + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y + 'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h) + 'Z"'; }
+  function rightRoundRect(x, y, w, h, r) { r = Math.min(r, w, h / 2); return '<path d="M' + x + ',' + y + 'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h - r) + 'Q' + (x + w) + ',' + (y + h) + ' ' + (x + w - r) + ',' + (y + h) + 'H' + x + 'Z"'; }
+
+  function chartFunnelWeeks() {
+    // Recibidas (barra suave) y desembolsadas (barra plena) por semana, misma escala.
+    var W = 640, H = 230, L = 36, R = 8, T = 14, B = 26, max = 100, pw = W - L - R, ph = H - T - B, slot = pw / WEEKS.length, bw = Math.min(22, slot / 2 - 4);
+    var s = svgOpen(W, H, "Recibidas y desembolsadas por semana");
+    [0, 25, 50, 75, 100].forEach(function (v) { var y = T + ph - v / max * ph; s += '<line class="gridl" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (L - 6) + '" y="' + (y + 4) + '" text-anchor="end">' + v + '</text>'; });
+    WEEKS.forEach(function (w, i) {
+      var cx = L + slot * i + slot / 2, h1 = w[1] / max * ph, h2 = w[5] / max * ph, last = i === WEEKS.length - 1;
+      s += topRoundRect(cx - bw - 1, T + ph - h1, bw, h1, 4) + ' class="b soft" data-tip="Semana al ' + w[0] + ': ' + w[1] + ' recibidas"/>';
+      s += topRoundRect(cx + 1, T + ph - h2, bw, h2, 4) + ' class="b' + (last ? " hatch" : "") + '" data-tip="Semana al ' + w[0] + ': ' + w[5] + ' desembolsadas' + (last ? " (parcial: hay aceptadas aún en trámite)" : "") + '"/>';
+      s += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + w[0] + '</text>';
+      if (last) { s += '<text class="val" x="' + (cx - bw / 2 - 1) + '" y="' + (T + ph - h1 - 5) + '" text-anchor="middle">' + w[1] + '</text><text class="val" x="' + (cx + 1 + bw / 2) + '" y="' + (T + ph - h2 - 5) + '" text-anchor="middle">' + w[5] + '</text>'; }
+    });
+    s += '<line class="axis" x1="' + L + '" x2="' + (W - R) + '" y1="' + (T + ph) + '" y2="' + (T + ph) + '"/></svg>';
+    return s;
+  }
+
+  function funnelTable() {
+    var rows = WEEKS.map(function (w, i) {
+      var conv = w[5] / w[1] * 100, last = i === WEEKS.length - 1;
+      return '<tr><td>' + w[0] + (last ? ' <span class="chip chip-warn" style="font-size:10.5px">parcial</span>' : "") + '</td><td class="r num">' + w[1] + '</td><td class="r num">' + w[2] + '</td><td class="r num">' + w[3] + '</td><td class="r num">' + w[4] + '</td><td class="r num">' + w[5] + '</td>' +
+        '<td class="r"><span class="convbar"><span class="meter"><i style="width:' + conv / 30 * 100 + '%"></i></span><span class="num">' + Math.round(conv) + ' %</span></span></td></tr>';
+    }).join("");
+    return '<div class="scroll-x"><table class="ftable"><thead><tr><th>Semana al</th><th class="r">Recib.</th><th class="r">Evaluad.</th><th class="r">Ofert.</th><th class="r">Acept.</th><th class="r">Desemb.</th><th class="r">Conversión</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function chartSla() {
+    var W = 520, H = 40 + ANALYSTS.length * 36, L = 118, R = 70, T = 22, rowH = 36, pw = W - L - R, x0 = 70, x1 = 100;
+    function X(v) { return L + (v - x0) / (x1 - x0) * pw; }
+    var s = svgOpen(W, H, "Cumplimiento de SLA por analista");
+    [70, 80, 90, 100].forEach(function (v) { s += '<line class="gridl" x1="' + X(v) + '" x2="' + X(v) + '" y1="' + (T - 6) + '" y2="' + (H - 18) + '"/><text x="' + X(v) + '" y="' + (H - 4) + '" text-anchor="middle">' + v + ' %</text>'; });
+    ANALYSTS.forEach(function (a, i) {
+      var y = T + i * rowH, below = a[1] < 90;
+      s += '<text x="' + (L - 10) + '" y="' + (y + 15) + '" text-anchor="end" class="val">' + a[0] + '</text>';
+      s += rightRoundRect(L, y + 4, X(a[1]) - L, 16, 4) + ' class="b' + (below ? " low" : "") + '" data-tip="' + a[0] + ': ' + a[1] + ' % dentro de SLA · ' + a[2] + ' casos' + (a[3][0] === "partial" ? " · parcial 34/36 (2 sin marca de cierre)" : "") + '"/>';
+      s += '<text x="' + (X(a[1]) + 6) + '" y="' + (y + 16) + '" class="val">' + a[1] + ' %</text><text x="' + (W - 2) + '" y="' + (y + 16) + '" text-anchor="end">n=' + a[2] + '</text>';
+    });
+    s += '<line class="tgt" x1="' + X(90) + '" x2="' + X(90) + '" y1="' + (T - 10) + '" y2="' + (H - 18) + '"/><text x="' + (X(90) + 4) + '" y="' + (T - 10) + '" class="val">meta 90 %</text></svg>';
+    return s;
+  }
+
+  function dealerTable() {
+    var maxAmt = 2e6;
+    var rows = DEALER_AN.map(function (d) {
+      return '<tr><td>' + d[0] + '</td><td class="r num">' + d[1] + '</td>' +
+        '<td><span class="ibar"><span class="trk"><i style="width:' + d[2] + '%"></i></span><span class="num">' + d[2] + ' %</span></span></td>' +
+        '<td><span class="ibar"><span class="trk"><i style="width:' + d[3] / maxAmt * 100 + '%;background:var(--bar-soft)"></i></span><span class="num">' + mm(d[3]) + '</span></span></td></tr>';
+    }).join("");
+    return '<div class="scroll-x"><table><thead><tr><th>Dealer</th><th class="r">Solicitudes</th><th>Tasa de aprobación</th><th>Monto promedio ofertado</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function rejectBars() {
+    var total = REJECT.reduce(function (s, r) { return s + r[1]; }, 0), max = REJECT[0][1];
+    return '<div style="display:grid;gap:10px">' + REJECT.map(function (r) {
+      return '<div style="display:grid;gap:4px" data-tip="' + r[0] + ': ' + r[1] + ' de ' + total + ' rechazos"><div style="display:flex;justify-content:space-between;gap:10px;font-size:12.5px"><span>' + r[0] + '</span><span class="num muted">' + r[1] + ' · <b style="color:var(--fg);font-weight:500">' + Math.round(r[1] / total * 100) + ' %</b></span></div>' +
+        '<div class="ibar"><span class="trk"><i style="width:' + r[1] / max * 100 + '%"></i></span></div></div>';
+    }).join("") + '<p class="subtle" style="font-size:11.5px">' + total + ' rechazos en 30 días. Cada rechazo lleva un motivo de esta lista (obligatorio).</p></div>';
+  }
+
+  function chartDisb() {
+    var W = 520, H = 230, L = 48, R = 8, T = 22, B = 26, max = 125e6, pw = W - L - R, ph = H - T - B, slot = pw / DISB.length, bw = Math.min(40, slot * 0.55);
+    var s = svgOpen(W, H, "Desembolsos por mes en RD$");
+    [0, 25e6, 50e6, 75e6, 100e6, 125e6].forEach(function (v) { var y = T + ph - v / max * ph; s += '<line class="gridl" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (L - 6) + '" y="' + (y + 4) + '" text-anchor="end">' + v / 1e6 + '</text>'; });
+    s += '<text x="' + (L - 6) + '" y="' + (T - 10) + '" text-anchor="end">RD$ MM</text>';
+    DISB.forEach(function (d, i) {
+      var cx = L + slot * i + slot / 2, h = d[1] / max * ph, part = d[3] === "partial";
+      s += topRoundRect(cx - bw / 2, T + ph - h, bw, h, 4) + ' class="b' + (part ? " hatch" : "") + '" data-tip="' + d[0] + ' 2026: ' + rd(d[1]) + ' · ' + d[2] + ' operaciones' + (part ? " · parcial (1–5 oct)" : "") + '"/>';
+      s += '<text class="val" x="' + cx + '" y="' + (T + ph - h - 6) + '" text-anchor="middle">' + (d[1] / 1e6).toFixed(1) + '</text>';
+      s += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + d[0] + (part ? "*" : "") + '</text>';
+    });
+    s += '<line class="axis" x1="' + L + '" x2="' + (W - R) + '" y1="' + (T + ph) + '" y2="' + (T + ph) + '"/></svg>';
+    return s;
+  }
+
+  function renderAnalitica() {
+    return '' +
+      '<div class="page-head"><div><span class="eyebrow">Cartera vehicular · Banco Ejemplo</span><h1>Cartera y analítica</h1></div>' +
+        '<div class="actions filters">' +
+          '<label for="f-per">Periodo <select id="f-per"><option>Últimas 8 semanas</option><option>Últimos 30 días</option><option>Trimestre actual</option></select></label>' +
+          '<label for="f-dlr">Dealer <select id="f-dlr"><option>Todos (12)</option><option>Autos del Caribe</option><option>Motorsur Santiago</option></select></label>' +
+          '<label for="f-an">Analista <select id="f-an"><option>Todos (5)</option><option>Laura Méndez</option></select></label>' +
+        '</div></div>' +
+      '<div class="an-grid">' +
+        '<section class="card span-7" aria-labelledby="h-fw"><div class="card-h"><h2 id="h-fw">Embudo y conversión por semana</h2><div class="meta">' + dq("partial", 7, 8) + '</div></div>' +
+          '<div class="card-b" style="display:grid;gap:12px"><div class="legend"><span><i class="l-soft"></i>Recibidas</span><span><i class="l-bar"></i>Desembolsadas</span><span><i class="l-hatch"></i>Semana en curso (parcial)</span></div>' + chartFunnelWeeks() + funnelTable() + '</div></section>' +
+        '<div class="span-5 col">' +
+          '<section class="card" aria-labelledby="h-sla"><div class="card-h"><h2 id="h-sla">Cumplimiento de SLA por analista</h2><span class="subtle">30 d</span><div class="meta">' + explainBtn("tiempo", "Explicar cifra") + '</div></div>' +
+            '<div class="card-b" style="display:grid;gap:10px"><div class="legend"><span><i class="l-bar"></i>En meta</span><span><i class="l-low"></i>Bajo meta</span><span><i class="l-tgt"></i>Meta 90 %</span></div>' + chartSla() + '<div>' + dq("partial", 34, 36) + ' <span class="subtle" style="font-size:11.5px">José Cabrera: 2 casos sin marca de cierre.</span></div></div></section>' +
+          '<section class="card key" aria-labelledby="h-disb"><div class="card-h"><h2 id="h-disb">Desembolsos por mes</h2><span class="subtle">solo DESEMBOLSADO</span><div class="meta">' + explainBtn("desemb", "Explicar cifra") + '</div></div>' +
+            '<div class="card-b" style="display:grid;gap:10px">' + chartDisb() + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">' + dq("ok") + '<span class="subtle" style="font-size:11.5px">* octubre: del 1 al 5, ' + dq("partial", 5, 23).replace('<span class="dq ', '<span class="dq ') + '</span></div></div></section>' +
+        '</div>' +
+        '<section class="card span-7" aria-labelledby="h-dlr"><div class="card-h"><h2 id="h-dlr">Aprobación y monto promedio por dealer</h2><span class="subtle">30 d</span><div class="meta">' + explainBtn("aprob", "Explicar cifra") + dq("partial", 4, 5) + '</div></div>' +
+          '<div class="card-b">' + dealerTable() + '</div></section>' +
+        '<section class="card span-5" aria-labelledby="h-rej"><div class="card-h"><h2 id="h-rej">Motivos de rechazo</h2><span class="subtle">30 d</span><div class="meta">' + dq("ok") + '</div></div>' +
+          '<div class="card-b">' + rejectBars() + '</div></section>' +
+      '</div>';
+  }
+
+  /* ================= Drawer · Explicar cifra ================= */
+  var lastFocus = null;
+  function openDrawer(key) {
+    var L = LINEAGE[key]; if (!L) return;
+    lastFocus = document.activeElement;
+    var steps = L.steps.map(function (s, i) {
+      return '<li class="lin"><span class="n">' + (i + 1) + '</span><div><b>' + s[0] + '</b><p>' + s[1] + '</p>' + (s[2] ? '<p>' + s[2] + '</p>' : "") + (s[3] ? '<div class="ex">' + s[3] + '</div>' : "") + '</div></li>';
+    }).join("");
+    document.getElementById("drawer-root").innerHTML = '<div class="scrim" data-close></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title">' +
+      '<div class="dr-h"><div class="row"><span class="eyebrow">Explicar cifra · linaje</span><button class="icon-btn" type="button" data-close aria-label="Cerrar">' + I.x + '</button></div>' +
+      '<h2 id="dr-title">' + L.title + '</h2><div class="dr-val num">' + L.value + '</div><div class="muted num" style="font-size:12px">Valor exacto: ' + L.exact + '</div>' +
+      '<div>' + dq.apply(null, L.q) + '</div></div>' +
+      '<div class="dr-b"><div><span class="eyebrow">Cómo se calcula</span></div><ol class="lineage">' + steps + '</ol>' +
+      '<div class="panel"><dl class="kv"><dt>Definición</dt><dd>' + L.def + '</dd><dt>Última sincronización</dt><dd class="num">' + fecha(NOW, true) + '</dd><dt>Próxima</dt><dd class="num">15:00</dd></dl></div></div></aside>';
+    var root = document.getElementById("drawer-root");
+    root.querySelectorAll("[data-close]").forEach(function (b) { b.addEventListener("click", closeDrawer); });
+    root.querySelector(".drawer .icon-btn").focus();
+  }
+  function closeDrawer() { document.getElementById("drawer-root").innerHTML = ""; if (lastFocus) lastFocus.focus(); }
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && document.querySelector(".drawer")) closeDrawer(); });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-explain]"); if (b) openDrawer(b.getAttribute("data-explain"));
+  });
+
+  /* ================= Tooltip ================= */
+  var tip = document.getElementById("tip");
+  document.addEventListener("mouseover", function (e) {
+    var t = e.target.closest("[data-tip]"); if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.getAttribute("data-tip"); tip.hidden = false;
+  });
+  document.addEventListener("mousemove", function (e) {
+    if (tip.hidden) return;
+    var x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8), y = e.clientY + 16;
+    if (y + tip.offsetHeight > window.innerHeight - 8) y = e.clientY - tip.offsetHeight - 10;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  });
+
+  /* ================= Router ================= */
+  var SCREENS = {
+    mesa: { crumb: "Mesa de decisiones", render: renderMesa, bind: bindMesa },
+    expediente: { crumb: "Expedientes / <b class='num'>CH-2026-04427</b>", render: renderExpediente, bind: bindExpediente },
+    analitica: { crumb: "Cartera y analítica", render: renderAnalitica, bind: function () {} }
+  };
+  var route = "mesa";
+  function render() {
+    var s = SCREENS[route], el = document.getElementById("screen");
+    el.innerHTML = s.render(); s.bind(el);
+    document.getElementById("crumbs").innerHTML = '<span>Banco Ejemplo</span><span aria-hidden="true">/</span>' + (route === "expediente" ? "<span>Expedientes</span><span aria-hidden='true'>/</span><b class='num'>CH-2026-04427</b>" : "<b>" + s.crumb + "</b>");
+    document.querySelectorAll("#nav a[data-screen]").forEach(function (a) { if (a.getAttribute("data-screen") === route) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    renderBar();
+  }
+  function go() {
+    var h = (location.hash || "").replace("#", "");
+    var next = SCREENS[h] ? h : "mesa";
+    if (next !== route) { route = next; render(); window.scrollTo(0, 0); } else render();
+  }
+  window.addEventListener("hashchange", go);
+  document.getElementById("asof-top").textContent = fecha(NOW, true);
+
+  /* ================= Tema ================= */
+  var rootEl = document.documentElement;
+  try { var saved = localStorage.getItem("banco-ref-theme"); if (saved) rootEl.setAttribute("data-theme", saved); } catch (e) {}
+  document.getElementById("theme-btn").addEventListener("click", function () {
+    var cur = rootEl.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    var nx = cur === "dark" ? "light" : "dark"; rootEl.setAttribute("data-theme", nx);
+    try { localStorage.setItem("banco-ref-theme", nx); } catch (e) {}
+  });
+
+  go();
+})();
+</script>
+</body>
+</html>
