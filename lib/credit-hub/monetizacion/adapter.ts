@@ -40,9 +40,15 @@ export function monetizacionUsesApi(): boolean {
   return USE_API;
 }
 
-/** Local dev only — clearly marked mock fallback when API flag is off. */
+/**
+ * Fixtures SOLO fuera de produccion. Cada llamada llega aqui unicamente con la
+ * API apagada (`if (USE_API) return ...` va antes), asi que la guarda tiene que
+ * saltar con la API apagada: antes exigia `USE_API`, la combinacion nunca se
+ * daba y produccion servia datos de demostracion como si fueran reales. El
+ * error lo recogen las paginas (try/catch) y los loaders (estado de error).
+ */
 function mockOnly<T>(label: string, value: T): T {
-  if (process.env.NODE_ENV === "production" && USE_API) {
+  if (process.env.NODE_ENV === "production" && !USE_API) {
     throw new Error(`Monetización mock blocked in production without API: ${label}`);
   }
   return value;
