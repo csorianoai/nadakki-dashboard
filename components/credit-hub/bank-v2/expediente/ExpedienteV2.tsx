@@ -15,6 +15,7 @@ import { useBankApplication, useBankCompliance } from "@/lib/credit-hub/hooks/us
 import { chKeys } from "@/lib/credit-hub/hooks/queryKeys";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import type { BankDocumentPayload, BankReviewPayload } from "@/lib/credit-hub/types/bank-views";
+import type { BankReviewApplication } from "@/lib/credit-hub/types/bankDecision";
 import { formatEntero, formatMoneda, formatPorcentaje, type LocaleTenant } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { BANDA_TEXTO, RIESGO_TEXTO } from "../mesa/mesa";
@@ -39,8 +40,8 @@ export type ExpedienteProps = {
   /** Vista actual del detalle: contraoferta, ofertas, estipulaciones, mensajes, notas y operaciones. */
   hrefVistaActual: string;
   hrefBandeja: string;
-  /** Barra de decision (B4b). */
-  decision?: ReactNode;
+  /** Barra de decision (B4b), con la solicitud ya cargada. */
+  decision?: (app: BankReviewApplication) => ReactNode;
 };
 
 /**
@@ -205,7 +206,7 @@ export function ExpedienteV2({ applicationId, marca, hrefVistaActual, hrefBandej
             </DccSeccion>
           ) : null}
         </div>
-        {decision}
+        {decision?.(appQ.data)}
       </div>
     </DccPageMarco>
   );

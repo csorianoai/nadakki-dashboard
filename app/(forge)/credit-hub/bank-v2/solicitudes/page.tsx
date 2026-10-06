@@ -31,7 +31,7 @@ function BandejaPagina() {
       q={q}
       page={page}
       onParams={onParams}
-      hrefSolicitud={(id) => `/credit-hub/bank/applications/${encodeURIComponent(id)}`}
+      hrefSolicitud={(id) => `/credit-hub/bank-v2/solicitudes/${encodeURIComponent(id)}`}
       analistaId={user?.id ?? "unknown"}
     />
   );
