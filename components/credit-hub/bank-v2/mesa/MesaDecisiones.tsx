@@ -18,6 +18,7 @@ import type { Calidad } from "@/lib/dcc/calidad";
 import { formatEntero, formatMonedaCompacta, formatPorcentaje } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { colaPorUrgencia, primerNombre, saludo } from "./mesa";
+import { MetasDelMes } from "./MetasDelMes";
 import { TarjetaCola } from "./TarjetaCola";
 import { useKpisBanco } from "./useKpisBanco";
 
@@ -183,6 +184,8 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
             </div>
           ) : null}
         </DccSeccion>
+
+        <MetasDelMes formato={formato} />
 
         <div className="grid items-start gap-[var(--dcc-gap)] md:grid-cols-2">
           <DccSeccion titulo="Hoy" icono={CalendarClock} testId="mesa-hoy">

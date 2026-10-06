@@ -36,6 +36,6 @@ export const BANCO_V2_NAV: DccNavGroup[] = [
   },
   {
     label: "Configuración",
-    items: [{ id: "filtros", label: "Filtros de pool", href: "/credit/pool-filters", icon: SlidersHorizontal }],
+    items: [{ id: "filtros", label: "Filtros de pool", href: `${BANCO_V2_RAIZ}/filtros`, icon: SlidersHorizontal }],
   },
 ];

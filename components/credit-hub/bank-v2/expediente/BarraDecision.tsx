@@ -175,7 +175,11 @@ export function BarraDecision({ application }: { application: BankReviewApplicat
               type="button"
               disabled={mutacion.isPending}
               onClick={() => void confirmar()}
-              className={accion === "reject" ? `${DCC_CLASSES.quietButton} border-[var(--dcc-error-fg)] font-semibold text-[var(--dcc-error-fg)]` : DCC_CLASSES.actionButton}
+              className={
+                accion === "reject"
+                  ? "inline-flex min-h-9 items-center justify-center rounded-lg border border-[var(--dcc-error-fg)] bg-[var(--dcc-surface)] px-4 text-sm font-semibold text-[var(--dcc-error-fg)] hover:bg-[var(--dcc-error-bg)] focus-visible:outline-none focus-visible:shadow-[var(--dcc-focus)] disabled:opacity-50"
+                  : DCC_CLASSES.actionButton
+              }
             >
               {mutacion.isPending ? "Registrando…" : `Confirmar: ${ACCION[accion].texto.toLowerCase()}`}
             </button>

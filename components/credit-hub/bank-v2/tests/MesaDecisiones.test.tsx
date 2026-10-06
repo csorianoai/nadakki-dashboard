@@ -48,8 +48,9 @@ describe("Mesa de decisiones v2 (B3)", () => {
     expect(within(cola[0]).getByTestId("cola-accion")).toHaveAttribute("href", "/s/c");
     expect(cola[0].textContent).toContain("RD$2,150,000.00");
     expect(await screen.findByText("RD$284.2 M")).toBeInTheDocument();
-    expect([...new Set(llamadas)].sort()).toEqual([
+    expect([...new Set(llamadas.map((p) => p.replace(/\/\d{4}-\d{2}$/, "/:periodo")))].sort()).toEqual([
       "/api/v2/credit/analytics/dashboard", "/api/v2/credit/applications/queue", "/api/v2/credit/bank/kpis/approval", "/api/v2/credit/bank/kpis/portfolio",
+      "/api/v2/credit/goals/monthly/:periodo",
     ]);
     const texto = container.textContent ?? "";
     expect(texto).not.toMatch(/Error HTTP|DEMO|ROADMAP|undefined|NaN|[0-9a-f]{8}-[0-9a-f]{4}-/i);
