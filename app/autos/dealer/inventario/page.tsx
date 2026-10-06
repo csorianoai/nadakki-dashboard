@@ -40,6 +40,7 @@ import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
 import { VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
+import { DetalleTecnico } from "./DetalleTecnico";
 
 const CAPABILITY = "autos.inventory.list";
 
@@ -144,27 +145,32 @@ export default function DealerInventoryPage() {
           >
             <p className="font-semibold">No se pudo verificar el acceso al inventario.</p>
             <p className="mt-1 text-nk-fg-muted">
-              {errorDeAcceso.reason_code ? (
-                <>
-                  reason_code: <code>{errorDeAcceso.reason_code}</code>
-                </>
-              ) : (
-                <>El backend respondió HTTP {errorDeAcceso.status} sin reason_code.</>
-              )}
+              No pudimos confirmar si tu usuario tiene permiso para ver el inventario. Probá de nuevo en unos
+              minutos; si sigue igual, avisá a soporte.
             </p>
+            <DetalleTecnico>
+              {errorDeAcceso.reason_code ? (
+                <code>{errorDeAcceso.reason_code}</code>
+              ) : (
+                <>Respuesta HTTP {errorDeAcceso.status} sin código de motivo.</>
+              )}
+            </DetalleTecnico>
           </section>
         )
       ) : access.error ? (
         <section role="alert" data-testid="inventario-error-red" className={CAJA}>
           <p className="font-semibold">No se pudo verificar el acceso al inventario.</p>
-          <p className="mt-1 text-nk-fg-muted">La consulta de permisos no llegó a responder.</p>
+          <p className="mt-1 text-nk-fg-muted">No pudimos conectarnos para revisar tus permisos. Probá de nuevo.</p>
         </section>
       ) : !decision ? (
         <section role="alert" data-testid="inventario-sin-decision" data-allowed="false" className={CAJA}>
           <p className="font-semibold">Inventario no disponible.</p>
           <p className="mt-1 text-nk-fg-muted">
-            El backend no devolvió una decisión para <code>{CAPABILITY}</code>.
+            No pudimos confirmar si tu usuario puede ver el inventario. Probá de nuevo o avisá a soporte.
           </p>
+          <DetalleTecnico>
+            Sin decisión de acceso para <code>{CAPABILITY}</code>.
+          </DetalleTecnico>
         </section>
       ) : !allowed ? (
         isAccessUnverified(decision.reason_code) ? (
@@ -179,14 +185,12 @@ export default function DealerInventoryPage() {
           >
             <p className="font-semibold">Inventario no disponible.</p>
             <p className="mt-1 text-nk-fg-muted">
-              {decision.reason_code ? (
-                <>
-                  reason_code: <code>{decision.reason_code}</code>
-                </>
-              ) : (
-                <>El backend denegó sin indicar motivo.</>
-              )}
+              Tu usuario no tiene acceso al inventario. Si creés que es un error, pedile a quien administra tu
+              cuenta que revise tus permisos.
             </p>
+            <DetalleTecnico>
+              {decision.reason_code ? <code>{decision.reason_code}</code> : <>Denegado sin motivo informado.</>}
+            </DetalleTecnico>
           </section>
         )
       ) : binding === null && (asignaciones.isPending || asignaciones.isLoading) ? (
@@ -194,15 +198,12 @@ export default function DealerInventoryPage() {
       ) : binding === null && asignaciones.error ? (
         <section role="alert" data-testid="inventario-asignaciones-error" className={CAJA}>
           <p className="font-semibold">No se pudo leer tus concesionarios.</p>
-          <p className="mt-1 text-nk-fg-muted">
-            {asignaciones.error instanceof AccessApiError && asignaciones.error.reason_code ? (
-              <>
-                reason_code: <code>{asignaciones.error.reason_code}</code>
-              </>
-            ) : (
-              <>La consulta no llegó a responder.</>
-            )}
-          </p>
+          <p className="mt-1 text-nk-fg-muted">Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.</p>
+          {asignaciones.error instanceof AccessApiError && asignaciones.error.reason_code ? (
+            <DetalleTecnico>
+              <code>{asignaciones.error.reason_code}</code>
+            </DetalleTecnico>
+          ) : null}
         </section>
       ) : hayQueElegir ? (
         <section data-testid="inventario-selector-dealer" className={CAJA}>
@@ -249,9 +250,12 @@ export default function DealerInventoryPage() {
         >
           <p className="font-semibold">No se pudo cargar el inventario privado.</p>
           {inventory.error instanceof AccessApiError ? (
-            <p className="mt-1 text-nk-fg-muted">
-              reason_code: <code>{inventory.error.reason_code ?? `HTTP_${inventory.error.status}`}</code>
-            </p>
+            <>
+              <p className="mt-1 text-nk-fg-muted">Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.</p>
+              <DetalleTecnico>
+                <code>{inventory.error.reason_code ?? `HTTP_${inventory.error.status}`}</code>
+              </DetalleTecnico>
+            </>
           ) : null}
         </section>
       ) : (inventory.data?.length ?? 0) === 0 ? (
