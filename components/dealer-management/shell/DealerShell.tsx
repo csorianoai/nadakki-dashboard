@@ -18,6 +18,7 @@ import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
 import { DccThemeProvider, useDccThemeContext } from "@/components/dcc/DccThemeContext";
 import { dealerShellThemeStyle } from "./dealer-shell-theme";
+import { dealerFontVariables } from "./DealerFonts";
 
 /** `reason_code` de un error de acceso, sin depender de la clase que lo lanza. */
 function reasonCodeOfError(error: unknown): string | null {
@@ -261,7 +262,11 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
       data-portal="dealer"
       data-dcc-theme={theme}
       style={dealerShellThemeStyle(theme)}
-      className="flex min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--fg)] antialiased"
+      /* Las variables de next/font van en la MISMA raiz que lleva
+         data-portal="dealer": las reglas de globals.css que eligen Sora e IBM
+         Plex solo aplican bajo ese atributo y leen estas variables. Sin ellas
+         el panel caia a la Inter del body. */
+      className={`${dealerFontVariables} flex min-h-screen overflow-x-hidden bg-[var(--bg)] text-[var(--fg)] antialiased`}
     >
       <DealerSidebar
         groups={groups}
