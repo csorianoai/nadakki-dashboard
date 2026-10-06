@@ -39,12 +39,74 @@ import {
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
-import { VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
+import { VEHICLE_STATUS_LABEL, VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
+import {
+  FILTROS_VACIOS,
+  ORDENES,
+  estadosPresentes,
+  filtrarInventario,
+  type FiltrosInventario,
+  type OrdenInventario,
+} from "@/lib/dealer-management/inventario-filtros";
 import { DetalleTecnico } from "./DetalleTecnico";
 
 const CAPABILITY = "autos.inventory.list";
 
 const CAJA = "rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg";
+
+const CONTROL =
+  "mt-1 min-h-10 w-full rounded-lg border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg";
+
+/** Buscar, filtrar por estado y ordenar (auditoria Mapaal QA, P1). */
+function BarraInventario({
+  filtros,
+  estados,
+  onChange,
+}: {
+  filtros: FiltrosInventario;
+  estados: string[];
+  onChange: (f: FiltrosInventario) => void;
+}) {
+  return (
+    <div data-testid="inventario-barra" role="search" className="grid gap-3 md:grid-cols-[2fr_1fr_1fr]">
+      <label className="block text-sm font-semibold text-nk-fg">
+        Buscar
+        <input
+          type="search"
+          value={filtros.texto}
+          onChange={(e) => onChange({ ...filtros, texto: e.target.value })}
+          placeholder="Marca, modelo, año, dominio, n.º de stock o VIN"
+          className={CONTROL}
+        />
+      </label>
+      <label className="block text-sm font-semibold text-nk-fg">
+        Estado
+        <select value={filtros.estado} onChange={(e) => onChange({ ...filtros, estado: e.target.value })} className={CONTROL}>
+          <option value="">Todos</option>
+          {estados.map((estado) => (
+            <option key={estado} value={estado}>
+              {VEHICLE_STATUS_LABEL[estado] ?? estado}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block text-sm font-semibold text-nk-fg">
+        Ordenar por
+        <select
+          value={filtros.orden}
+          onChange={(e) => onChange({ ...filtros, orden: e.target.value as OrdenInventario })}
+          className={CONTROL}
+        >
+          {ORDENES.map((orden) => (
+            <option key={orden.value} value={orden.value}>
+              {orden.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+}
 
 /** "No se pudo verificar": es informacion sobre el motor, no una denegacion. */
 function SinVerificar({ codigo }: { codigo: string }) {
@@ -57,6 +119,7 @@ function SinVerificar({ codigo }: { codigo: string }) {
 }
 
 export default function DealerInventoryPage() {
+  const [filtros, setFiltros] = useState<FiltrosInventario>(FILTROS_VACIOS);
   /* Dos claves en UNA sola consulta: la de leer y la de crear. El CTA de alta
      se pinta solo con la de crear concedida; el frontend restringe y la
      autoridad sigue siendo el HTTP del backend. */
@@ -98,6 +161,7 @@ export default function DealerInventoryPage() {
     enabled: allowed && Boolean(dealerId),
     retry: false,
   });
+  const visibles = filtrarInventario(inventory.data ?? [], filtros);
 
   const errorDeAcceso = access.error instanceof AccessApiError ? access.error : null;
 
@@ -106,7 +170,7 @@ export default function DealerInventoryPage() {
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Inventario</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Inventario privado del dealer autenticado. No usa la vitrina pública ni filtra autoridad en cliente.
+          Tus vehículos: buscá, filtrá por estado y ordená la lista.
         </p>
         {/* Con el binding, no con el dealer elegido: la eleccion vive en el estado
             de ESTA pantalla y /nuevo no la ve; sin binding seria una puerta cerrada. */}
@@ -260,16 +324,36 @@ export default function DealerInventoryPage() {
         </section>
       ) : (inventory.data?.length ?? 0) === 0 ? (
         <div className="rounded-xl border border-dashed border-nk-border bg-nk-surface p-6 text-sm text-nk-fg-muted">
-          No hay vehículos reportados por el contrato privado para este dealer.
+          Todavía no hay vehículos cargados en este concesionario.
         </div>
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2">
-          {inventory.data!.map((vehicle) => {
+        <section className="space-y-3">
+          <BarraInventario
+            filtros={filtros}
+            estados={estadosPresentes(inventory.data!, Object.keys(VEHICLE_STATUS_LABEL))}
+            onChange={setFiltros}
+          />
+          {visibles.length === 0 ? (
+            <p data-testid="inventario-sin-resultados" className="text-sm text-nk-fg-muted">
+              Ningún vehículo coincide con la búsqueda.
+            </p>
+          ) : null}
+        <ul data-testid="inventario-lista" data-cantidad={visibles.length} className="grid gap-3 md:grid-cols-2">
+          {visibles.map((vehicle) => {
             const title = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ") || vehicle.id;
             return (
               <li key={vehicle.id} className="rounded-xl border border-nk-border bg-nk-surface p-4">
                 <p className="font-manrope font-bold text-nk-fg">{title}</p>
-                <p className="mt-1 text-sm text-nk-fg-muted">Estado: {vehicle.status ?? "No reportado"}</p>
+                <p className="mt-1 text-sm text-nk-fg-muted">
+                  Estado: {vehicle.status ? (VEHICLE_STATUS_LABEL[vehicle.status] ?? vehicle.status) : "sin estado"}
+                </p>
+                {vehicle.plate || vehicle.stock_number ? (
+                  <p className="mt-1 text-xs text-nk-fg-muted">
+                    {[vehicle.plate && `Dominio ${vehicle.plate}`, vehicle.stock_number && `Stock ${vehicle.stock_number}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
                 <Link
                   href={`/autos/dealer/inventario/${encodeURIComponent(vehicle.id)}`}
                   className="mt-3 inline-flex min-h-10 items-center text-sm font-semibold text-brand-2 underline"
@@ -280,6 +364,7 @@ export default function DealerInventoryPage() {
             );
           })}
         </ul>
+        </section>
       )}
     </main>
   );

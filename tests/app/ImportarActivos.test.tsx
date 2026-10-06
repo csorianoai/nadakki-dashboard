@@ -147,8 +147,100 @@ test("un 422 pinta las filas y aplicar sigue apagado", async () => {
   subir();
   fireEvent.click(screen.getByTestId("import-revisar"));
   const errores = await screen.findByTestId("import-errores");
-  expect(errores).toHaveTextContent("Vehiculos · fila 5: DISPONIBLE exige precio_venta");
+  // Un codigo que la pantalla no conoce: mensaje generico, sin inventarle significado.
+  expect(errores).toHaveTextContent("Vehiculos · fila 5: La revisión marcó un problema que esta pantalla todavía no sabe explicar.");
+  // El codigo y el detalle del backend quedan plegados.
+  const detalle = errores.querySelector("details")!;
+  expect(detalle).not.toHaveAttribute("open");
+  expect(detalle).toHaveTextContent("PRECIO · DISPONIBLE exige precio_venta");
   expect(screen.getByTestId("import-aplicar")).toBeDisabled();
+});
+
+test("MONTO_INVALIDO y FECHA_INGRESO_FUTURA se leen en español con su fila; el codigo va plegado", async () => {
+  postImport.mockRejectedValueOnce(
+    new ImportRechazado(
+      resultado({
+        ok: false,
+        aplicado: false,
+        vehiculos: 0,
+        costos: 0,
+        incidencias: [
+          { hoja: "Vehiculos", fila: 6, codigo: "FECHA_INGRESO_FUTURA", detalle: "fecha_ingreso_stock no puede ser posterior a hoy", nivel: "ERROR" },
+          { hoja: "Costos_vehiculos", fila: 5, codigo: "MONTO_INVALIDO", detalle: "monto: '1.500' no es un monto (sin $ ni separador de miles)", nivel: "ERROR" },
+        ],
+      }),
+    ),
+  );
+  montar();
+  subir();
+  fireEvent.click(screen.getByTestId("import-revisar"));
+  const errores = await screen.findByTestId("import-errores");
+  const [fecha, monto] = Array.from(errores.querySelectorAll("li"));
+  expect(fecha).toHaveTextContent("Vehiculos · fila 6: La fecha de ingreso al stock no puede ser posterior a hoy.");
+  expect(monto).toHaveTextContent("Costos_vehiculos · fila 5: El monto no es válido");
+  expect(fecha.querySelector("summary")).toHaveTextContent("Detalle técnico");
+  expect(fecha.querySelector("details code")).toHaveTextContent("FECHA_INGRESO_FUTURA");
+  expect(monto.querySelector("details code")).toHaveTextContent("MONTO_INVALIDO");
+  // Fuera del plegado no queda ningun codigo crudo.
+  for (const li of [fecha, monto]) {
+    const visible = li.cloneNode(true) as HTMLElement;
+    visible.querySelector("details")?.remove();
+    expect(visible.textContent).not.toMatch(/[A-Z]+_[A-Z_]+/);
+  }
+});
+
+test("los avisos dicen la fila y 'fallará' con tilde", async () => {
+  postImport.mockResolvedValueOnce(
+    resultado({
+      ...REVISION,
+      incidencias: [
+        {
+          hoja: "Vehiculos",
+          fila: 7,
+          codigo: "SIN_COSTO_DE_COMPRA",
+          detalle: "sin COMPRA en Costos_vehiculos: la venta fallara cerrada hasta que el auto tenga costo",
+          nivel: "AVISO",
+        },
+      ],
+    }),
+  );
+  montar();
+  subir();
+  fireEvent.click(screen.getByTestId("import-revisar"));
+  await screen.findByTestId("import-revision");
+  const aviso = screen.getByTestId("import-no-aplicado").querySelector("li")!;
+  expect(aviso).toHaveTextContent("Vehiculos · fila 7: Sin costo de COMPRA en Costos_vehiculos: la venta de este vehículo fallará");
+  expect(aviso.querySelector("details code")).toHaveTextContent("SIN_COSTO_DE_COMPRA");
+});
+
+test("planilla aplicada resume lo creado con los conteos de la respuesta", async () => {
+  postImport.mockResolvedValueOnce(resultado(REVISION));
+  postImport.mockResolvedValueOnce(
+    resultado({ ...REVISION, aplicado: true, creados: { vehiculos: 2, costos: 3, adquisiciones: 1 } }, "aplicar"),
+  );
+  montar();
+  subir();
+  fireEvent.click(screen.getByTestId("import-revisar"));
+  await screen.findByTestId("import-revision");
+  await waitFor(() => expect(screen.getByTestId("import-aplicar")).toBeEnabled());
+  fireEvent.click(screen.getByTestId("import-aplicar"));
+  await screen.findByTestId("import-aplicado");
+  expect(screen.getByTestId("import-aplicado-resumen")).toHaveTextContent(
+    "Creados: 2 vehículos, 3 costos y 1 fecha de ingreso al stock.",
+  );
+});
+
+test("sin `creados` en la respuesta no se inventa un resumen", async () => {
+  postImport.mockResolvedValueOnce(resultado(REVISION));
+  postImport.mockResolvedValueOnce(resultado({ ...REVISION, aplicado: true }, "aplicar"));
+  montar();
+  subir();
+  fireEvent.click(screen.getByTestId("import-revisar"));
+  await screen.findByTestId("import-revision");
+  await waitFor(() => expect(screen.getByTestId("import-aplicar")).toBeEnabled());
+  fireEvent.click(screen.getByTestId("import-aplicar"));
+  await screen.findByTestId("import-aplicado");
+  expect(screen.queryByTestId("import-aplicado-resumen")).toBeNull();
 });
 
 test("una revision sin conteos legibles no se aplica", async () => {

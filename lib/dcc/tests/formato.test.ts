@@ -49,3 +49,35 @@ describe("formato del tenant (DCC)", () => {
     expect(formatFecha("no-es-fecha", MAPAAL)).toBeNull();
   });
 });
+
+describe("formato del tenant del banco (B1)", () => {
+  const RD = localeDeTenant({ locale: "es-DO", currency: "DOP" });
+
+  it("es-DO / DOP da RD$ con coma de miles y punto decimal", () => {
+    expect(n(formatMoneda(1234.5, RD))).toBe("RD$1,234.50");
+    expect(n(formatMonedaCompacta(182_400_000, RD))).toBe("RD$182.4 M");
+  });
+
+  it("es_DO (con guion bajo) se normaliza a es-DO y no lanza", () => {
+    const posix = localeDeTenant({ locale: "es_DO", currency: "dop" });
+    expect(posix).toEqual({ locale: "es-DO", currency: "DOP" });
+    expect(n(formatMoneda(1234.5, posix))).toBe("RD$1,234.50");
+  });
+
+  it("un tag invalido cae al locale por defecto en vez de romper", () => {
+    const roto = localeDeTenant({ locale: "no es un locale!", currency: "DOP" });
+    expect(roto.locale).toBe("es");
+    expect(() => formatMoneda(10, roto)).not.toThrow();
+  });
+
+  it("un tag valido pasa tal cual (el dealer no cambia)", () => {
+    expect(localeDeTenant({ locale: "es-AR", currency: "ARS" })).toEqual({ locale: "es-AR", currency: "ARS" });
+    expect(localeDeTenant(null)).toEqual({ locale: "es", currency: null });
+  });
+
+  it("sin moneda del branding no se pinta importe", () => {
+    const sinMoneda = localeDeTenant({ locale: "es-DO" });
+    expect(formatMoneda(1234.5, sinMoneda)).toBeNull();
+    expect(formatMonedaCompacta(1234.5, sinMoneda)).toBeNull();
+  });
+});

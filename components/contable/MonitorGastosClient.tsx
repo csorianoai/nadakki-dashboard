@@ -21,6 +21,7 @@ import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import type { GastosMonitorReport, PeriodoContable, GastoMonitor } from "@/types/contable";
 import { cn } from "@/lib/utils";
+import { opcionPeriodo } from "@/lib/contable/periodo-nombre";
 
 function fmt(n: number): string {
   return n.toLocaleString("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -89,7 +90,7 @@ export function MonitorGastosClient() {
           label="Periodo"
           value={periodoId}
           onChange={(e) => setPeriodoId(e.target.value)}
-          options={periodos.map((p) => ({ value: p.id, label: `${p.label} (${p.status})` }))}
+          options={periodos.map((p) => ({ value: p.id, label: opcionPeriodo(p) }))}
         />
       </div>
 

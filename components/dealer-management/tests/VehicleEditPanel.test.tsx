@@ -55,8 +55,9 @@ it("sin precio guardado no ofrece publicar y dice que falta", () => {
 it("con precio en BORRADOR publica con un PATCH de solo status y avisa", async () => {
   fetchMock.mockResolvedValue(respuesta(200, {}));
   render(<VehicleEditPanel ficha={{ ...BASE, price_amount: "100" }} context={CONTEXT} onSaved={onSaved} />);
+  expect(screen.getByTestId("vehicle-publicar")).toHaveTextContent("Pasar a Disponible");
   fireEvent.click(screen.getByTestId("vehicle-publicar"));
-  await waitFor(() => expect(screen.getByTestId("vehicle-edit-ack")).toHaveTextContent("quedó DISPONIBLE"));
+  await waitFor(() => expect(screen.getByTestId("vehicle-edit-ack")).toHaveTextContent("quedó Disponible"));
   expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ status: "disponible" });
   expect(onSaved).toHaveBeenCalled();
 });

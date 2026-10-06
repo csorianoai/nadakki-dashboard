@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,11 +12,13 @@ import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
 import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { VehicleEditPanel } from "@/components/dealer-management/VehicleEditPanel";
 import { VEHICLE_STATUS_LABEL, VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
+import { isSold } from "@/lib/dealer-management/vehicle-sale";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
 import { FotosVehiculoPanel } from "./FotosVehiculoPanel";
 import { PHOTOS_CAPABILITY } from "./fotos";
+import { DetalleTecnico } from "../DetalleTecnico";
 
 function asDecision(
   query: ReturnType<typeof useAccessEntitlementsBatch>,
@@ -72,9 +75,12 @@ function VehicleFicha({
         className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer el vehículo</h2>
-        <p className="mt-1 text-xs text-nk-fg-muted">
-          Código para soporte: {query.error.reason_code ?? `HTTP_${query.error.status}`}
+        <p className="mt-1 text-sm text-nk-fg-muted">
+          No pudimos abrir la ficha de este vehículo. Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.
         </p>
+        <DetalleTecnico>
+          <code>{query.error.reason_code ?? `HTTP_${query.error.status}`}</code>
+        </DetalleTecnico>
       </section>
     );
   }
@@ -90,6 +96,15 @@ function VehicleFicha({
         <p className="mt-1 text-sm text-nk-fg-muted">
           Estado: {query.data.status ? (VEHICLE_STATUS_LABEL[query.data.status] ?? query.data.status) : "no disponible"}
         </p>
+        {!isSold(query.data.status) ? (
+          <Link
+            href={`/autos/dealer/inventario/${encodeURIComponent(vehicleId)}/vender`}
+            data-testid="dealer-vehicle-vender"
+            className="mt-3 inline-flex min-h-11 items-center rounded-full bg-brand-2 px-4 text-sm font-semibold text-white"
+          >
+            Registrar venta
+          </Link>
+        ) : null}
       </section>
       {/* Editar y publicar piden la clave de ESCRITURA; el 403 del backend sigue mandando. */}
       {write.allowed ? (
@@ -166,9 +181,12 @@ export default function DealerVehicleEconomicsPage() {
           className="rounded-r-sm border border-nk-border bg-nk-surface p-4"
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
-          <p className="mt-1 text-xs text-nk-fg-muted">
-            Código para soporte: {access.error.reason_code ?? `HTTP_${access.error.status}`}
+          <p className="mt-1 text-sm text-nk-fg-muted">
+            No pudimos confirmar tu permiso para ver este vehículo. Probá de nuevo en unos minutos.
           </p>
+          <DetalleTecnico>
+            <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
+          </DetalleTecnico>
         </section>
       ) : !decision.allowed ? (
         <section
@@ -184,7 +202,9 @@ export default function DealerVehicleEconomicsPage() {
           <p className="mt-1 text-sm text-nk-fg-muted">
             {REASON_CODE_INFO[decision.reason_code]?.description ?? "Esta superficie no está disponible."}
           </p>
-          <p className="mt-2 text-xs text-nk-fg-muted">Código para soporte: {decision.reason_code}</p>
+          <DetalleTecnico>
+            <code>{decision.reason_code}</code>
+          </DetalleTecnico>
           {REASON_CODE_INFO[decision.reason_code]?.action_required === "upgrade_plan" ||
           decision.reason_code === "UPGRADE_REQUIRED" ? (
             <button

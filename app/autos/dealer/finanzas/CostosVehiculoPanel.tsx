@@ -15,12 +15,22 @@
  * Al registrar se espera a releer el total ANTES de confirmar, para que "Costo
  * registrado." y el total nuevo lleguen juntos. Un error se dice en castellano;
  * el codigo queda aparte, para soporte.
+ *
+ * La fecha es texto en el formato del tenant (dd/mm/aaaa en es-AR), no un
+ * `type="date"`: ese lo pinta el navegador en SU idioma (mm/dd/yyyy). Se
+ * convierte a ISO al registrar; el cuerpo que viaja no cambia.
  */
 
+import { DetalleTecnico } from "../inventario/DetalleTecnico";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
-import { formateaMoneda, type LocaleTenant } from "@/lib/dealer-management/formato";
+import {
+  formateaMoneda,
+  parseaFecha,
+  patronFecha,
+  type LocaleTenant,
+} from "@/lib/dealer-management/formato";
 import {
   AYUDA_POR_TIPO_DE_COSTO,
   AYUDA_REVERSIONES,
@@ -84,6 +94,8 @@ export function CostosVehiculoPanel({
 }) {
   const client = useQueryClient();
   const [form, setForm] = useState<CostForm>(COST_FORM_EMPTY);
+  // Lo que escribe el dealer; `form.incurred_at` lleva el ISO al registrar.
+  const [fecha, setFecha] = useState("");
   const [errors, setErrors] = useState<CostFormErrors>({});
   const [ack, setAck] = useState<string | null>(null);
   const [factura, setFactura] = useState<{ nombre: string; error: unknown } | null>(null);
@@ -99,6 +111,7 @@ export function CostosVehiculoPanel({
       postCost(vehicleId, tenantId, payload, locale.currency as string),
     onSuccess: async () => {
       setForm({ ...COST_FORM_EMPTY, cost_type: form.cost_type });
+      setFecha("");
       setFactura(null);
       await client.refetchQueries({ queryKey: ["vehicle-cost-totals", tenantId, vehicleId] });
       setAck("Costo registrado.");
@@ -113,6 +126,10 @@ export function CostosVehiculoPanel({
 
   function elegirFactura(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    // Elegir otra factura es un intento nuevo: el "Costo registrado." o el
+    // error del alta anterior ya no hablan de lo que hay en pantalla.
+    setAck(null);
+    alta.reset();
     setForm((prev) => ({ ...prev, document_id: "" }));
     if (!file) return setFactura(null);
     if (file.size > FACTURA_MAX_BYTES) {
@@ -125,10 +142,15 @@ export function CostosVehiculoPanel({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAck(null);
-    const found = validateCostForm(form, locale.currency);
+    const iso = parseaFecha(fecha, locale);
+    const datos = { ...form, incurred_at: iso ?? "" };
+    const found = validateCostForm(datos, locale.currency);
+    if (fecha.trim() && !iso) {
+      found.incurred_at = `La fecha no es válida. Escribila como ${patronFecha(locale)}.`;
+    }
     setErrors(found);
     if (Object.keys(found).length > 0) return;
-    alta.mutate(form);
+    alta.mutate(datos);
   }
 
   const reparacion = esReparacion(form.cost_type);
@@ -152,7 +174,7 @@ export function CostosVehiculoPanel({
           </p>
         ) : !locale.currency ? (
           <p role="alert" data-testid="costos-sin-moneda" className="mt-2 text-sm text-nk-fg">
-            Falta la moneda funcional del tenant. El total no se muestra con una moneda inventada.
+            Falta configurar la moneda de tu concesionario. Sin ella no mostramos el total, para no usar una moneda equivocada.
           </p>
         ) : (
           <>
@@ -237,16 +259,17 @@ export function CostosVehiculoPanel({
           <div>
             <span className={LABEL_CLASS}>Moneda</span>
             <p data-testid="costo-moneda" className="mt-1 min-h-11 pt-3 text-sm font-bold text-nk-fg">
-              {locale.currency ?? "sin moneda funcional configurada"}
+              {locale.currency ?? "sin moneda configurada"}
             </p>
           </div>
           <label className="block">
             <span className={LABEL_CLASS}>Fecha</span>
             <input
-              type="date"
               name="incurred_at"
-              value={form.incurred_at}
-              onChange={(event) => setForm({ ...form, incurred_at: event.target.value })}
+              value={fecha}
+              onChange={(event) => setFecha(event.target.value)}
+              placeholder={patronFecha(locale)}
+              autoComplete="off"
               disabled={alta.isPending}
               aria-invalid={errors.incurred_at ? true : undefined}
               className={FIELD_CLASS}
@@ -344,15 +367,17 @@ export function CostosVehiculoPanel({
         ) : null}
 
         {alta.error ? (
-          <p
+          <div
             role="alert"
             data-testid="costo-alta-error"
             data-reason-code={reasonOf(alta.error)}
             className="text-sm text-nk-fg"
           >
             No se pudo registrar el costo. {mensajeDeErrorCosto(alta.error)}
-            <span className="mt-1 block text-xs text-nk-fg-muted">Código para soporte: {reasonOf(alta.error)}</span>
-          </p>
+            <DetalleTecnico>
+              <span className="mt-1 block">Código para soporte: {reasonOf(alta.error)}</span>
+            </DetalleTecnico>
+          </div>
         ) : null}
 
         {ack ? (
