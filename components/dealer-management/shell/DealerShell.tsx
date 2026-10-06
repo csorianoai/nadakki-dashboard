@@ -17,7 +17,7 @@ import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
 import { DccThemeProvider, useDccThemeContext } from "@/components/dcc/DccThemeContext";
-import { dealerShellThemeStyle } from "./dealer-shell-theme";
+import { DEALER_THEME_STORAGE_KEY, dealerShellThemeStyle } from "./dealer-shell-theme";
 import { dealerFontVariables } from "./DealerFonts";
 
 /** `reason_code` de un error de acceso, sin depender de la clase que lo lanza. */
@@ -64,7 +64,11 @@ function reasonCodeOfError(error: unknown): string | null {
 export function DealerShell({ children }: { children: ReactNode }) {
   return (
     <AutosAuthProvider>
-      <DccThemeProvider>
+      {/* El tema SI se recuerda al recargar (a diferencia del colapso de la
+          barra): el primer render sigue en claro y la preferencia se aplica
+          en un efecto de layout; ver DccThemeContext. La clave solo la usa
+          este shell: DccShell sigue en memoria. */}
+      <DccThemeProvider storageKey={DEALER_THEME_STORAGE_KEY}>
         <DealerShellChrome>{children}</DealerShellChrome>
       </DccThemeProvider>
     </AutosAuthProvider>
