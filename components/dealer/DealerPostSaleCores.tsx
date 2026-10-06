@@ -1,6 +1,5 @@
 "use client";
 
-import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
 import { useQuery } from "@tanstack/react-query";
 import { AccessApiError, getAccessClientContext } from "@/lib/access/client";
 import { fetchPostSaleSnapshot } from "@/lib/dealer/post-sale";
@@ -37,10 +36,9 @@ export function DealerPostSaleCores() {
         className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer el estado post-venta</h2>
-        <p className="mt-1 text-sm text-nk-fg-muted">Probá de nuevo en unos minutos. Si sigue igual, avisale a soporte.</p>
-        <DetalleTecnico>
-          Código: <code>{access?.reason_code ?? "DEFAULT_DENY"}</code>
-        </DetalleTecnico>
+        <p className="mt-1 text-sm text-nk-fg-muted">
+          reason_code: <code>{access?.reason_code ?? "DEFAULT_DENY"}</code>
+        </p>
       </section>
     );
   }
