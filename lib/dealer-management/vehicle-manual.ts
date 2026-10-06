@@ -1,23 +1,15 @@
 /**
- * Alta manual de vehiculo (DASH-VEHICLE-MANUAL-CONTRACT-01).
+ * Alta manual de vehiculo (DASH-VEHICLE-MANUAL-CONTRACT-01, P2 del backend).
  *
- * Solo ALTA. La edicion --PATCH material y transicion de `status`-- sale en su
- * propio packet: juntarlas pasaba el limite GR-12 de 500 lineas, y son dos vias
- * distintas del contrato.
+ * Solo se serializa lo que acepta `VehicleCreateRequest` (backend #1545 y
+ * #1564): el precio OFICIAL va como `price_amount` y la moneda NO se manda, la
+ * pone el servidor con la funcional de la entidad legal del dealer. La
+ * referencia (`display_price_amount` + `display_price_currency`), el dominio
+ * (`plate` + `plate_country`) y `stock_number` van en pareja segun el contrato.
  *
- * Solo se serializa lo que acepta `VehicleCreateRequest`. Lo que la ficha pide y
- * el backend no expone se declara PROXIMAMENTE y NO se envia: un extra inventado
- * no crea el dato, lo pierde en silencio.
- *
- * Los dos precios estan en ese grupo. Sus columnas --`price_amount`/
- * `price_currency` para el OFICIAL, `display_price_amount`/
- * `display_price_currency` para la referencia-- llegan con
- * VEHICLE-PRICE-PLATE-01 (backend #1511, P-A; plantilla_spec.py:168-172); hoy el
- * contrato aun los llama `price_rd`/`price_usd`, con la moneda en el nombre.
- *
- * Ninguna moneda de precio se escribe a mano: las dos entran por parametro desde
- * `legal_entities.functional_currency` y `display_price_currency`, y si faltan la
- * UI dice que falta el dato en vez de elegir una.
+ * Puertas, cilindrada y cilindros siguen PROXIMAMENTE: la base tiene columnas,
+ * pero ni el alta ni la edicion las aceptan, y un extra que Pydantic ignora no
+ * crea el dato, lo pierde en silencio.
  *
  * El frontend NO concede: la clave 097 decide que se PINTA, la autoridad es HTTP.
  */
@@ -72,6 +64,12 @@ export type VehicleManualForm = {
   province: string;
   municipality: string;
   description: string;
+  price_amount: string;
+  display_price_amount: string;
+  display_price_currency: string;
+  plate: string;
+  plate_country: string;
+  stock_number: string;
 };
 
 export const VEHICLE_FORM_EMPTY: VehicleManualForm = {
@@ -91,12 +89,19 @@ export const VEHICLE_FORM_EMPTY: VehicleManualForm = {
   province: "",
   municipality: "",
   description: "",
+  price_amount: "",
+  display_price_amount: "",
+  display_price_currency: "",
+  plate: "",
+  plate_country: "",
+  stock_number: "",
 };
 
-/** Campos que la ficha pide y el contrato publicado no expone todavia. */
+/**
+ * Campos que la ficha pide y el contrato publicado no expone todavia: hay
+ * columna en la base, pero ni el POST ni el PATCH los aceptan.
+ */
 export const VEHICLE_PENDING_FIELDS = [
-  { name: "dominio", label: "Dominio" },
-  { name: "stock_number", label: "Número de stock" },
   { name: "doors", label: "Puertas" },
   { name: "engine_displacement", label: "Cilindrada" },
   { name: "cylinders", label: "Cilindros" },
@@ -114,8 +119,8 @@ function conMoneda(base: string, currency: string | null, falta: string): string
 
 /**
  * Los dos precios. `functionalCurrency` es `legal_entities.functional_currency`
- * y `displayCurrency` es `display_price_currency`; sin codigo la etiqueta dice
- * que falta el dato. La referencia es informativa: no entra en el payload
+ * y `displayCurrency` es la `display_price_currency` que escribe el dealer; sin
+ * codigo la etiqueta no elige ninguno. La referencia es informativa: no entra en el payload
  * contable ni altera el precio oficial.
  */
 export function vehiclePriceFields(
@@ -130,8 +135,8 @@ export function vehiclePriceFields(
     },
     {
       name: "price_reference",
-      label: conMoneda("Precio de referencia", displayCurrency, "moneda de referencia del tenant"),
-      ayuda: "Solo se muestra en la publicación; la contabilidad usa el precio oficial.",
+      label: conMoneda("Precio de referencia", displayCurrency, "otra moneda"),
+      ayuda: "Opcional y en otra moneda. Solo se muestra en la publicación; la contabilidad usa el precio oficial.",
     },
   ];
 }
@@ -149,12 +154,17 @@ const MAX_LENGTH: Partial<Record<keyof VehicleManualForm, number>> = {
   province: 100,
   municipality: 100,
   description: 5000,
+  plate: 16,
+  stock_number: 32,
 };
 
 export type VehicleFormErrors = Partial<Record<keyof VehicleManualForm, string>>;
 
 /** Mismos limites que el contrato. El 422 del backend sigue siendo la autoridad. */
-export function validateVehicleForm(form: VehicleManualForm): VehicleFormErrors {
+export function validateVehicleForm(
+  form: VehicleManualForm,
+  functionalCurrency: string | null = null,
+): VehicleFormErrors {
   const errors: VehicleFormErrors = {};
   if (!form.make.trim()) errors.make = "La marca es obligatoria.";
   if (!form.model.trim()) errors.model = "El modelo es obligatorio.";
@@ -181,11 +191,102 @@ export function validateVehicleForm(form: VehicleManualForm): VehicleFormErrors 
     errors.condition = "Elegí una condición.";
   }
 
+  Object.assign(errors, validatePriceAndPlate(form, functionalCurrency));
+
   for (const [name, limit] of Object.entries(MAX_LENGTH) as [keyof VehicleManualForm, number][]) {
     if (form[name].trim().length > limit) errors[name] = `Máximo ${limit} caracteres.`;
   }
   return errors;
 }
+
+/**
+ * Importe escrito por el dealer -> decimal con punto, o null si no es un
+ * importe. Acepta "18500000,50", "18500000.50" y los miles con punto
+ * ("18.500.000,50"); a lo sumo dos decimales. Viaja como string: es dinero y el
+ * backend lo lee como Decimal.
+ */
+export function normalizaImporte(texto: string): string | null {
+  const limpio = texto.trim().replace(/\s/g, "");
+  let entero: string;
+  let decimales = "";
+  const miles = /^(\d{1,3}(?:\.\d{3})+)(?:,(\d{1,2}))?$/.exec(limpio);
+  const simple = /^(\d+)(?:[.,](\d{1,2}))?$/.exec(limpio);
+  if (miles) {
+    entero = miles[1].replace(/\./g, "");
+    decimales = miles[2] ?? "";
+  } else if (simple) {
+    entero = simple[1];
+    decimales = simple[2] ?? "";
+  } else {
+    return null;
+  }
+  const valor = decimales ? `${entero}.${decimales}` : entero;
+  return Number(valor) > 0 ? valor.replace(/^0+(?=\d)/, "") : null;
+}
+
+/** "es-AR" -> "AR". Sirve para proponer el pais del dominio, nunca para imponerlo. */
+export function paisDeLocale(locale: string | null | undefined): string {
+  const region = (locale ?? "").split(/[-_]/)[1] ?? "";
+  return /^[A-Za-z]{2}$/.test(region) ? region.toUpperCase() : "";
+}
+
+const IMPORTE_INVALIDO = "Ingresá un importe mayor que cero, por ejemplo 18500000,50.";
+
+/** Las reglas de pareja del contrato P2, con el mensaje junto a su campo. */
+function validatePriceAndPlate(form: VehicleManualForm, functionalCurrency: string | null): VehicleFormErrors {
+  const errors: VehicleFormErrors = {};
+  const precio = form.price_amount.trim();
+  if (precio && normalizaImporte(precio) === null) errors.price_amount = IMPORTE_INVALIDO;
+
+  const refImporte = form.display_price_amount.trim();
+  const refMoneda = form.display_price_currency.trim().toUpperCase();
+  if (refImporte || refMoneda) {
+    if (!refImporte) errors.display_price_amount = "Falta el importe de la referencia (o borrá su moneda).";
+    else if (normalizaImporte(refImporte) === null) errors.display_price_amount = IMPORTE_INVALIDO;
+    else if (!precio) errors.display_price_amount = "Para cargar una referencia primero cargá el precio.";
+    if (!refMoneda) errors.display_price_currency = "Falta la moneda de la referencia (o borrá su importe).";
+    else if (!/^[A-Z]{3}$/.test(refMoneda)) {
+      errors.display_price_currency = "La moneda va con su código de 3 letras, por ejemplo USD.";
+    } else if (functionalCurrency && refMoneda === functionalCurrency.trim().toUpperCase()) {
+      errors.display_price_currency = `La referencia tiene que estar en otra moneda que el precio (${refMoneda}).`;
+    }
+  }
+
+  if (form.plate.trim()) {
+    const pais = form.plate_country.trim();
+    if (!pais) errors.plate_country = "Indicá el país del dominio.";
+    else if (!/^[A-Za-z]{2}$/.test(pais)) errors.plate_country = "El país va con su código de 2 letras, por ejemplo AR.";
+  }
+  return errors;
+}
+
+/**
+ * Motivo estable del backend (P2) -> el campo donde se corrige y que decir.
+ * Lo que no esta aqui se pinta como error general del formulario.
+ */
+export const MOTIVO_EN_CAMPO: Record<string, { campo: keyof VehicleManualForm; mensaje: string }> = {
+  PRICE_NOT_POSITIVE: { campo: "price_amount", mensaje: "El precio tiene que ser mayor que cero." },
+  PRICE_REQUIRED_FOR_DISPONIBLE: { campo: "price_amount", mensaje: "Cargá el precio antes de pasar a DISPONIBLE." },
+  PRICE_CURRENCY_NOT_FUNCTIONAL: {
+    campo: "price_amount",
+    mensaje: "El precio no está en la moneda oficial de tu concesionario.",
+  },
+  FUNCTIONAL_CURRENCY_NOT_CONFIGURED: {
+    campo: "price_amount",
+    mensaje: "Tu cuenta todavía no tiene moneda oficial configurada. Pedila a soporte antes de cargar precios.",
+  },
+  DISPLAY_PRICE_PAIR: { campo: "display_price_amount", mensaje: "Completá importe y moneda de la referencia, o ninguno." },
+  DISPLAY_PRICE_WITHOUT_PRICE: { campo: "display_price_amount", mensaje: "Para cargar una referencia primero cargá el precio." },
+  DISPLAY_PRICE_NOT_POSITIVE: { campo: "display_price_amount", mensaje: "La referencia tiene que ser mayor que cero." },
+  DISPLAY_PRICE_SAME_CURRENCY: {
+    campo: "display_price_currency",
+    mensaje: "La referencia tiene que estar en otra moneda que el precio.",
+  },
+  DISPLAY_PRICE_CURRENCY_INVALID: { campo: "display_price_currency", mensaje: "Esa moneda no es válida." },
+  PLATE_PAIR: { campo: "plate", mensaje: "Completá dominio y país, o ninguno." },
+  PLATE_COUNTRY_INVALID: { campo: "plate_country", mensaje: "Ese país no es válido para el dominio." },
+  STOCK_NUMBER_TAKEN: { campo: "stock_number", mensaje: "Ese número de stock ya lo tiene otro vehículo." },
+};
 
 function optionalText(value: string): string | null {
   const trimmed = value.trim();
@@ -220,6 +321,33 @@ export function vehicleCreatePayload(form: VehicleManualForm): Record<string, un
   }
   const km = optionalText(form.mileage_km);
   if (km !== null) payload.mileage_km = Number(km);
+  Object.assign(payload, priceAndPlatePayload(form));
+  return payload;
+}
+
+/**
+ * Precio, referencia, dominio y stock, como los pide el contrato. Comun al alta
+ * y a la edicion. La moneda del precio oficial NUNCA viaja. El pais del dominio
+ * sin dominio no se manda: es una propuesta del formulario, no un dato.
+ */
+export function priceAndPlatePayload(form: VehicleManualForm): Record<string, string> {
+  const payload: Record<string, string> = {};
+  const precio = normalizaImporte(form.price_amount);
+  if (precio !== null) payload.price_amount = precio;
+  const referencia = normalizaImporte(form.display_price_amount);
+  const moneda = optionalText(form.display_price_currency);
+  if (referencia !== null && moneda !== null) {
+    payload.display_price_amount = referencia;
+    payload.display_price_currency = moneda.toUpperCase();
+  }
+  const plate = optionalText(form.plate);
+  const pais = optionalText(form.plate_country);
+  if (plate !== null && pais !== null) {
+    payload.plate = plate.toUpperCase();
+    payload.plate_country = pais.toUpperCase();
+  }
+  const stock = optionalText(form.stock_number);
+  if (stock !== null) payload.stock_number = stock;
   return payload;
 }
 

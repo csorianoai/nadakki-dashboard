@@ -3,28 +3,31 @@
 /**
  * Formulario de alta manual de vehiculo.
  *
- * Lo que el contrato publicado no acepta se pinta deshabilitado con
- * "Próximamente" en vez de ofrecer una casilla que se guardaria en la nada. Los
- * dos precios estan en ese grupo hasta VEHICLE-PRICE-PLATE-01 (backend #1511).
+ * Precio, referencia, dominio y n.o de stock se escriben con el contrato P2 del
+ * backend (#1545, #1564). La moneda del precio es la funcional del tenant
+ * (`localeDeTenant`, #517) y no se envia: la pone el servidor. La de la
+ * referencia la escribe el dealer y tiene que ser otra.
  *
- * Las dos monedas de precio vienen del backend y ninguna se escribe aqui: la
- * oficial es la funcional del tenant (`localeDeTenant`, #517) y la de referencia
- * es `display_price_currency`, que todavia no se expone --se pasa null y la
- * etiqueta dice que falta el dato, en vez de asumir US$-.
+ * Lo que el contrato todavia no acepta (puertas, cilindrada, cilindros) se pinta
+ * deshabilitado con "Próximamente" en vez de una casilla que se guardaria en la
+ * nada.
  *
- * La edicion va en su propio packet: el PATCH del contrato no acepta los mismos
- * campos que el alta, asi que no es el mismo formulario con otro boton.
+ * Los errores van junto a su campo y en español: el formulario es `noValidate`
+ * para que el navegador no pinte su globo en otro idioma, y el `reason_code`
+ * del backend se traduce al campo que hay que corregir (`MOTIVO_EN_CAMPO`).
  */
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { localeDeTenant } from "@/lib/dealer-management/formato";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import {
+  MOTIVO_EN_CAMPO,
   PENDING_FIELD_NOTE,
   VEHICLE_CONDITIONS,
   VEHICLE_FORM_EMPTY,
   VEHICLE_PENDING_FIELDS,
   VEHICLE_STATUS_LABEL,
+  paisDeLocale,
   validateVehicleForm,
   vehiclePriceFields,
   type VehicleFormErrors,
@@ -36,15 +39,22 @@ const FIELD_CLASS =
 
 const LABEL_CLASS = "block text-sm font-semibold text-nk-fg";
 
-type TextField = { name: keyof VehicleForm; label: string; required?: boolean; maxLength?: number };
+type TextField = {
+  name: keyof VehicleForm;
+  label: string;
+  required?: boolean;
+  maxLength?: number;
+  ayuda?: string;
+  inputMode?: "numeric" | "decimal";
+};
 
 const IDENTIDAD: TextField[] = [
   { name: "make", label: "Marca", required: true, maxLength: 50 },
   { name: "model", label: "Modelo", required: true, maxLength: 50 },
-  { name: "year", label: "Año", required: true },
+  { name: "year", label: "Año", required: true, inputMode: "numeric" },
   { name: "trim", label: "Versión", maxLength: 50 },
   { name: "vin", label: "VIN", maxLength: 17 },
-  { name: "mileage_km", label: "Kilómetros" },
+  { name: "mileage_km", label: "Kilómetros", inputMode: "numeric" },
 ];
 
 const FICHA: TextField[] = [
@@ -79,12 +89,33 @@ export function VehicleManualForm({
   const [errors, setErrors] = useState<VehicleFormErrors>({});
   const branding = useDealerManagementBranding();
   const locale = useMemo(() => localeDeTenant(branding.data), [branding.data]);
-  /**
-   * `display_price_currency` no se expone todavia: se pasa null a proposito, y la
-   * etiqueta de la referencia dira que falta el dato.
-   */
-  const priceFields = useMemo(() => vehiclePriceFields(locale.currency, null), [locale.currency]);
+  /** La etiqueta de la referencia sigue a la moneda que escribe el dealer. */
+  const priceFields = useMemo(
+    () => vehiclePriceFields(locale.currency, form.display_price_currency.trim() || null),
+    [locale.currency, form.display_price_currency],
+  );
   const estado = status ?? "draft";
+  const motivo = errorReasonCode ? MOTIVO_EN_CAMPO[errorReasonCode] : undefined;
+
+  // El pais del dominio se PROPONE con el del tenant; el dealer lo cambia.
+  const paisPropuesto = paisDeLocale(branding.data ? locale.locale : null);
+  useEffect(() => {
+    if (!paisPropuesto) return;
+    setForm((previous) => (previous.plate_country ? previous : { ...previous, plate_country: paisPropuesto }));
+  }, [paisPropuesto]);
+
+  const PRECIO: TextField[] = [
+    { name: "price_amount", label: priceFields[0].label, ayuda: priceFields[0].ayuda, inputMode: "decimal" },
+    { name: "display_price_amount", label: priceFields[1].label, ayuda: priceFields[1].ayuda, inputMode: "decimal" },
+    { name: "display_price_currency", label: "Moneda de la referencia", maxLength: 3, ayuda: "Código de 3 letras." },
+    { name: "plate", label: "Dominio", maxLength: 16, ayuda: "La patente del vehículo." },
+    { name: "plate_country", label: "País del dominio", maxLength: 2, ayuda: "Código de 2 letras." },
+    { name: "stock_number", label: "Número de stock", maxLength: 32, ayuda: "Tu número interno; no se puede repetir." },
+  ];
+
+  function errorDe(name: keyof VehicleForm): string | undefined {
+    return errors[name] ?? (motivo?.campo === name ? motivo.mensaje : undefined);
+  }
 
   function set(name: keyof VehicleForm, value: string) {
     setForm((previous) => ({ ...previous, [name]: value }));
@@ -92,14 +123,14 @@ export function VehicleManualForm({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const found = validateVehicleForm(form);
+    const found = validateVehicleForm(form, locale.currency);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     onSubmit(form);
   }
 
   function renderText(field: TextField) {
-    const error = errors[field.name];
+    const error = errorDe(field.name);
     return (
       <label key={field.name} className="block">
         <span className={LABEL_CLASS}>
@@ -113,11 +144,12 @@ export function VehicleManualForm({
           required={field.required}
           disabled={busy}
           maxLength={field.maxLength}
-          inputMode={field.name === "year" || field.name === "mileage_km" ? "numeric" : undefined}
+          inputMode={field.inputMode}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${field.name}-error` : undefined}
           className={FIELD_CLASS}
         />
+        {field.ayuda && !error ? <span className="mt-1 block text-xs text-nk-fg-muted">{field.ayuda}</span> : null}
         {error ? (
           <span id={`${field.name}-error`} role="alert" className="mt-1 block text-xs font-semibold text-red-600">
             {error}
@@ -128,7 +160,7 @@ export function VehicleManualForm({
   }
 
   return (
-    <form onSubmit={submit} data-testid="vehicle-manual-form" data-mode="crear" className="space-y-6">
+    <form onSubmit={submit} noValidate data-testid="vehicle-manual-form" data-mode="crear" className="space-y-6">
       <section className="space-y-3 rounded-xl border border-nk-border bg-nk-surface p-4">
         <h2 className="font-manrope text-lg font-bold text-nk-fg">Identificación</h2>
         <div className="grid gap-3 md:grid-cols-2">
@@ -158,6 +190,14 @@ export function VehicleManualForm({
         </div>
       </section>
 
+      <section data-testid="vehicle-price-fields" className="space-y-3 rounded-xl border border-nk-border bg-nk-surface p-4">
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">Precio, dominio y stock</h2>
+        <p className="text-sm text-nk-fg-muted">
+          Sin precio el vehículo puede quedar en BORRADOR; para pasarlo a DISPONIBLE el precio es obligatorio.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">{PRECIO.map(renderText)}</div>
+      </section>
+
       <section className="space-y-3 rounded-xl border border-nk-border bg-nk-surface p-4">
         <h2 className="font-manrope text-lg font-bold text-nk-fg">Ficha técnica y ubicación</h2>
         <div className="grid gap-3 md:grid-cols-2">{FICHA.map(renderText)}</div>
@@ -184,21 +224,12 @@ export function VehicleManualForm({
         data-testid="vehicle-pending-fields"
         className="space-y-3 rounded-xl border border-dashed border-nk-border bg-nk-surface-2 p-4"
       >
-        <h2 className="font-manrope text-lg font-bold text-nk-fg">Pendientes del contrato</h2>
+        <h2 className="font-manrope text-lg font-bold text-nk-fg">Todavía no disponibles</h2>
         <p className="text-sm text-nk-fg-muted">
-          Estos campos quedan deshabilitados hasta que el backend los exponga. Lo que se escriba aquí no
-          se guardaría, así que no se habilita todavía.
+          El sistema todavía no guarda estos datos: lo que se escriba aquí no se guardaría, así que siguen
+          deshabilitados.
         </p>
         <div className="grid gap-3 md:grid-cols-2">
-          {priceFields.map((field) => (
-            <label key={field.name} className="block">
-              <span className={LABEL_CLASS}>
-                {field.label} · {PENDING_FIELD_NOTE}
-              </span>
-              <input name={field.name} value="" disabled readOnly className={FIELD_CLASS} />
-              <span className="mt-1 block text-xs text-nk-fg-muted">{field.ayuda}</span>
-            </label>
-          ))}
           {VEHICLE_PENDING_FIELDS.map((field) => (
             <label key={field.name} className="block">
               <span className={LABEL_CLASS}>
@@ -210,14 +241,15 @@ export function VehicleManualForm({
         </div>
       </section>
 
-      {errorReasonCode ? (
+      {errorReasonCode && !motivo ? (
         <div
           role="alert"
           data-testid="vehicle-manual-error"
           data-reason-code={errorReasonCode}
           className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg"
         >
-          No se pudo guardar el vehículo. reason_code: <code>{errorReasonCode}</code>
+          No se pudo guardar el vehículo. Revisá los datos e intentá de nuevo.
+          <span className="mt-1 block text-xs text-nk-fg-muted">Código para soporte: {errorReasonCode}</span>
         </div>
       ) : null}
 

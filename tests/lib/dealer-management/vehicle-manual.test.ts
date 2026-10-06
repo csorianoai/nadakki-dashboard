@@ -9,7 +9,10 @@
  * o codigo ISO colado en etiqueta o ayuda.
  */
 import {
+  MOTIVO_EN_CAMPO,
   PENDING_FIELD_NOTE,
+  normalizaImporte,
+  paisDeLocale,
   VEHICLE_CONDITIONS,
   VEHICLE_FORM_EMPTY,
   VEHICLE_INITIAL_STATUS,
@@ -111,9 +114,11 @@ describe("vehicleCreatePayload", () => {
     expect(payload.description).toBe("Unico dueno");
   });
 
-  it("no serializa ningun precio mientras el contrato lo llame price_rd", () => {
-    const keys = Object.keys(vehicleCreatePayload(COMPLETO));
-    for (const key of ["price_rd", "price_usd", "price_official", "price_reference", "status"]) {
+  it("nunca serializa los precios deprecados, la moneda oficial ni el estado", () => {
+    const keys = Object.keys(
+      vehicleCreatePayload({ ...COMPLETO, price_amount: "100", display_price_amount: "1", display_price_currency: "usd" }),
+    );
+    for (const key of ["price_rd", "price_usd", "price_currency", "price_official", "price_reference", "status"]) {
       expect(keys).not.toContain(key);
     }
   });
@@ -187,7 +192,7 @@ describe("vehiclePriceFields: ninguna moneda escrita a mano", () => {
 
   it("sin moneda de referencia tampoco la inventa: no asume US$", () => {
     const [, referencia] = vehiclePriceFields("ARS", null);
-    expect(referencia.label).toBe("Precio de referencia (moneda de referencia del tenant)");
+    expect(referencia.label).toBe("Precio de referencia (otra moneda)");
     expect(referencia.label).not.toContain("US$");
     expect(referencia.label).not.toContain("USD");
   });
@@ -225,8 +230,6 @@ describe("vehiclePriceFields: ninguna moneda escrita a mano", () => {
   it("los campos pendientes se anuncian como Proximamente", () => {
     expect(PENDING_FIELD_NOTE).toBe("Próximamente");
     expect(VEHICLE_PENDING_FIELDS.map((field) => field.label)).toEqual([
-      "Dominio",
-      "Número de stock",
       "Puertas",
       "Cilindrada",
       "Cilindros",
@@ -284,5 +287,94 @@ describe("createVehicleManual", () => {
     expect(vehicleIdFrom(null)).toBeNull();
     expect(vehicleIdFrom({})).toBeNull();
     expect(vehicleIdFrom({ vehicle_id: " veh-7 " })).toBe("veh-7");
+  });
+});
+
+describe("precio, referencia, dominio y stock (contrato P2, backend #1545/#1564)", () => {
+  const BASE = { ...VEHICLE_FORM_EMPTY, make: "Fiat", model: "Cronos", year: "2020" };
+
+  it("normalizaImporte lee coma, punto y miles con punto; rechaza cero y basura", () => {
+    expect(normalizaImporte("18500000,50")).toBe("18500000.50");
+    expect(normalizaImporte("18500000.5")).toBe("18500000.5");
+    expect(normalizaImporte("18.500.000,50")).toBe("18500000.50");
+    expect(normalizaImporte(" 18500000 ")).toBe("18500000");
+    for (const malo of ["", "0", "0,00", "-5", "abc", "1,234", "12.34.5"]) expect(normalizaImporte(malo)).toBeNull();
+  });
+
+  it("el precio viaja como price_amount en string y SIN moneda: la pone el servidor", () => {
+    const body = vehicleCreatePayload({ ...BASE, price_amount: "18.500.000,50" });
+    expect(body.price_amount).toBe("18500000.50");
+    expect(body).not.toHaveProperty("price_currency");
+  });
+
+  it("referencia, dominio y stock salen con los nombres del contrato", () => {
+    const body = vehicleCreatePayload({
+      ...BASE,
+      price_amount: "100",
+      display_price_amount: "80",
+      display_price_currency: "usd",
+      plate: "ab 123 cd",
+      plate_country: "ar",
+      stock_number: " S-12 ",
+    });
+    expect(body).toMatchObject({
+      display_price_amount: "80",
+      display_price_currency: "USD",
+      plate: "AB 123 CD",
+      plate_country: "AR",
+      stock_number: "S-12",
+    });
+  });
+
+  it("el pais propuesto sin dominio no viaja: no hay pareja a medias", () => {
+    const body = vehicleCreatePayload({ ...BASE, plate_country: "AR" });
+    expect(body).not.toHaveProperty("plate");
+    expect(body).not.toHaveProperty("plate_country");
+  });
+
+  it("valida las parejas en español y en el campo que hay que corregir", () => {
+    expect(validateVehicleForm({ ...BASE, price_amount: "0" }).price_amount).toMatch(/mayor que cero/);
+    expect(validateVehicleForm({ ...BASE, display_price_currency: "USD" }).display_price_amount).toMatch(/Falta el importe/);
+    expect(
+      validateVehicleForm({ ...BASE, display_price_amount: "10", display_price_currency: "USD" }).display_price_amount,
+    ).toMatch(/primero cargá el precio/);
+    expect(
+      validateVehicleForm({ ...BASE, price_amount: "1", display_price_amount: "1", display_price_currency: "ars" }, "ARS")
+        .display_price_currency,
+    ).toMatch(/otra moneda/);
+    expect(validateVehicleForm({ ...BASE, plate: "AB123CD" }).plate_country).toMatch(/país del dominio/);
+    expect(validateVehicleForm({ ...BASE, stock_number: "x".repeat(33) }).stock_number).toBeDefined();
+    expect(
+      validateVehicleForm(
+        { ...BASE, price_amount: "1", display_price_amount: "1", display_price_currency: "USD", plate: "A", plate_country: "AR" },
+        "ARS",
+      ),
+    ).toEqual({});
+  });
+
+  it("cada reason_code estable de P2 tiene su campo y su texto", () => {
+    for (const codigo of [
+      "PRICE_NOT_POSITIVE",
+      "PRICE_REQUIRED_FOR_DISPONIBLE",
+      "PRICE_CURRENCY_NOT_FUNCTIONAL",
+      "FUNCTIONAL_CURRENCY_NOT_CONFIGURED",
+      "DISPLAY_PRICE_PAIR",
+      "DISPLAY_PRICE_WITHOUT_PRICE",
+      "DISPLAY_PRICE_NOT_POSITIVE",
+      "DISPLAY_PRICE_SAME_CURRENCY",
+      "DISPLAY_PRICE_CURRENCY_INVALID",
+      "PLATE_PAIR",
+      "PLATE_COUNTRY_INVALID",
+      "STOCK_NUMBER_TAKEN",
+    ]) {
+      expect(MOTIVO_EN_CAMPO[codigo]).toBeDefined();
+      expect(Object.keys(VEHICLE_FORM_EMPTY)).toContain(MOTIVO_EN_CAMPO[codigo].campo);
+    }
+  });
+
+  it("paisDeLocale propone el pais del tenant y no inventa uno", () => {
+    expect(paisDeLocale("es-AR")).toBe("AR");
+    expect(paisDeLocale("es")).toBe("");
+    expect(paisDeLocale(null)).toBe("");
   });
 });
