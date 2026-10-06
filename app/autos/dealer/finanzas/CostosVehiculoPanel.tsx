@@ -17,6 +17,7 @@
  * el codigo queda aparte, para soporte.
  */
 
+import { DetalleTecnico } from "../inventario/DetalleTecnico";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
@@ -354,7 +355,9 @@ export function CostosVehiculoPanel({
             className="text-sm text-nk-fg"
           >
             No se pudo registrar el costo. {mensajeDeErrorCosto(alta.error)}
-            <span className="mt-1 block text-xs text-nk-fg-muted">Código para soporte: {reasonOf(alta.error)}</span>
+            <DetalleTecnico>
+              <span className="mt-1 block">Código para soporte: {reasonOf(alta.error)}</span>
+            </DetalleTecnico>
           </p>
         ) : null}
 

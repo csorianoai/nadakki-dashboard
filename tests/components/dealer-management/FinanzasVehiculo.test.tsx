@@ -194,7 +194,7 @@ describe("acceso que no se pudo verificar", () => {
       const bloqueo = screen.getByTestId("finanzas-bloqueado");
       expect(bloqueo).toHaveAttribute("data-no-verificado", "true");
       expect(bloqueo).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
-      expect(bloqueo.textContent).not.toContain("reservados a quien tenga la capability");
+      expect(bloqueo.textContent).not.toContain("solo los ve el personal autorizado");
       expect(bloqueo).toHaveAttribute("data-reason-code", codigo);
     });
   }
@@ -206,12 +206,12 @@ describe("acceso que no se pudo verificar", () => {
     expect(screen.getByTestId("finanzas-bloqueado")).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
   });
 
-  it("una denegacion normal sigue nombrando la capability que falta", () => {
+  it("una denegacion normal se explica en llano y la capability queda en el detalle tecnico", () => {
     batchMock.mockReturnValue(batch({ costos: false, reason: "UPGRADE_REQUIRED" }));
     montar();
     const bloqueo = screen.getByTestId("finanzas-bloqueado");
     expect(bloqueo).toHaveAttribute("data-no-verificado", "false");
-    expect(bloqueo).toHaveTextContent("reservados a quien tenga la capability");
+    expect(bloqueo).toHaveTextContent("solo los ve el personal autorizado");
     expect(bloqueo.textContent).not.toContain(ACCESS_UNVERIFIED_MESSAGE);
   });
 
@@ -258,7 +258,7 @@ describe("el codigo de no verificado se busca en todo el batch", () => {
     const bloqueo = screen.getByTestId("finanzas-bloqueado");
     expect(bloqueo).toHaveAttribute("data-no-verificado", "true");
     expect(bloqueo).toHaveTextContent(ACCESS_UNVERIFIED_MESSAGE);
-    expect(bloqueo.textContent).not.toContain("reservados a quien tenga la capability");
+    expect(bloqueo.textContent).not.toContain("solo los ve el personal autorizado");
     expect(bloqueo).toHaveTextContent("no_organization_unit");
   });
 });
