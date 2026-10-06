@@ -17,14 +17,19 @@ export const SALE_STATUS = "vendido";
 export const SALE_BLOCKED_IN_EDIT_NOTE =
   "Para vender un vehículo usá «Registrar venta». Cambiar el estado a VENDIDO desde la edición no registra la venta ni entra en contabilidad.";
 
+/** True si el estado es "vendido", sin importar mayusculas ni espacios. */
+export function isSold(status: string | null | undefined): boolean {
+  return (status ?? "").trim().toLowerCase() === SALE_STATUS;
+}
+
 /** Estados que la edicion puede ofrecer: todos menos "vendido". */
 export function editableStatuses(all: readonly string[]): string[] {
-  return all.filter((status) => status !== SALE_STATUS);
+  return all.filter((status) => !isSold(status));
 }
 
 /** True si el cambio de estado pedido desde la edicion debe bloquearse. */
 export function blocksStatusChangeInEdit(target: string | null | undefined): boolean {
-  return (target ?? "").trim().toLowerCase() === SALE_STATUS;
+  return isSold(target);
 }
 
 export type SaleForm = { sale_price_amount: string; sold_at: string };

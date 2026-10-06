@@ -12,6 +12,7 @@ import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
 import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { VehicleEditPanel } from "@/components/dealer-management/VehicleEditPanel";
 import { VEHICLE_STATUS_LABEL, VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
+import { isSold } from "@/lib/dealer-management/vehicle-sale";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
@@ -91,7 +92,7 @@ function VehicleFicha({
         <p className="mt-1 text-sm text-nk-fg-muted">
           Estado: {query.data.status ? (VEHICLE_STATUS_LABEL[query.data.status] ?? query.data.status) : "no disponible"}
         </p>
-        {query.data.status !== "vendido" ? (
+        {!isSold(query.data.status) ? (
           <Link
             href={`/autos/dealer/inventario/${encodeURIComponent(vehicleId)}/vender`}
             data-testid="dealer-vehicle-vender"
