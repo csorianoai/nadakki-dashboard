@@ -19,13 +19,7 @@ const PROHIBIDAS: Array<{ nombre: string; patron: RegExp }> = [
   { nombre: "reason_code: en texto de JSX", patron: /^\s*[A-Za-zÁ-ú][^`'"=<>{}]*\.\s*reason_code:\s*<code>/ },
 ];
 
-// Pendientes conocidos, a corregir en un PR de seguimiento (no agregar archivos nuevos acá).
-const PENDIENTES = new Set([
-  "app/autos/dealer/inventario/[vehicleId]/vender/page.tsx",
-  "components/dealer/DealerPostSaleCores.tsx",
-  "components/dealer/DealerVehicleEconomicsPanel.tsx",
-]);
-const esPendiente = (f: string) => PENDIENTES.has(f.split(path.sep).join("/"));
+const esPendiente = (_f: string) => false;
 const esComentario = (l: string) => /^\s*(\/\/|\/\*|\*)/.test(l);
 
 function archivos(dir: string): string[] {
