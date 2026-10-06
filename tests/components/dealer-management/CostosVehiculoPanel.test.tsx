@@ -139,10 +139,27 @@ describe("alta de un costo normal", () => {
     });
   });
 
-  it("el gasto de apertura sigue deshabilitado, con el motivo", async () => {
+  it("saldo inicial queda deshabilitado, con el motivo, y no se envia is_opening", async () => {
     montar();
-    expect(await screen.findByTestId("costo-pendientes")).toHaveTextContent("no quedaría registrado");
-    expect(screen.getByRole("textbox", { name: /Gasto de apertura · Próximamente/ })).toBeDisabled();
+    await screen.findByTestId("costo-alta-form");
+    expect(screen.getByTestId("costo-saldo-inicial")).toHaveTextContent("no acepta este dato");
+    expect(screen.getByTestId("costo-saldo-inicial")).not.toHaveTextContent("va contra 3020");
+    const casilla = screen.getByRole("checkbox", { name: /Saldo inicial/ });
+    expect(casilla).toBeDisabled();
+    rellena("125000.50");
+    fetchMock.mockClear();
+    respondeTotales([]);
+    fireEvent.submit(screen.getByTestId("costo-alta-form"));
+    await waitFor(() => expect(screen.getByTestId("costo-alta-ack")).toBeInTheDocument());
+    const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    expect(JSON.parse(String(post?.[1]?.body))).not.toHaveProperty("is_opening");
+  });
+
+  it("en una reparacion no se ofrece saldo inicial", async () => {
+    montar();
+    await screen.findByTestId("costo-alta-form");
+    eligeTipo("repair");
+    expect(screen.queryByTestId("costo-saldo-inicial")).toBeNull();
   });
 
   it("un 403 del POST se ve con su reason_code", async () => {
