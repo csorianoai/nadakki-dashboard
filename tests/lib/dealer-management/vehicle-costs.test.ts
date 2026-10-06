@@ -90,7 +90,7 @@ describe("catalogo de cost_type", () => {
 
 describe("validateCostForm", () => {
   it("sin moneda del tenant no deja registrar", () => {
-    expect(validateCostForm(COMPRA, null).currency).toContain("moneda funcional");
+    expect(validateCostForm(COMPRA, null).currency).toContain("moneda de tu concesionario");
   });
 
   it("una compra completa no tiene errores y no exige factura", () => {
