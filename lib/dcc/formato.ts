@@ -5,9 +5,39 @@
  * entre simbolo y numero sale del patron no compacto del propio locale.
  */
 
-import { localeDeTenant, type LocaleTenant } from "@/lib/dealer-management/formato";
+/** Locale y moneda del tenant. La moneda NO tiene valor por defecto: sin ella, null. */
+export type LocaleTenant = { locale: string; currency: string | null };
 
-export { localeDeTenant, type LocaleTenant };
+/** Locale neutro mientras no llega el branding (mismo valor que usa el dealer). */
+export const LOCALE_POR_DEFECTO: LocaleTenant = { locale: "es", currency: null };
+
+/**
+ * Tag BCP 47 utilizable por Intl. El backend puede mandar "es_DO" (estilo
+ * POSIX): Intl lo rechaza con RangeError y nada lo capturaba. Se cambia el
+ * guion bajo por guion; un tag que aun asi no vale cae al locale por defecto.
+ * Un tag valido pasa tal cual, sin recapitalizar.
+ */
+function localeValido(crudo: string): string {
+  const tag = crudo.replace(/_/g, "-");
+  try {
+    Intl.NumberFormat.supportedLocalesOf([tag]);
+    return tag;
+  } catch {
+    return LOCALE_POR_DEFECTO.locale;
+  }
+}
+
+/** Locale y moneda desde el branding del tenant (`locale`, `currency`). */
+export function localeDeTenant(
+  branding: { locale?: string | null; currency?: string | null } | null | undefined,
+): LocaleTenant {
+  const locale = branding?.locale?.trim();
+  const currency = branding?.currency?.trim();
+  return {
+    locale: locale ? localeValido(locale) : LOCALE_POR_DEFECTO.locale,
+    currency: currency ? currency.toUpperCase() : null,
+  };
+}
 
 function finito(valor: unknown): valor is number {
   return typeof valor === "number" && Number.isFinite(valor);
