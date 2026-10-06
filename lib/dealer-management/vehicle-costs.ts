@@ -20,9 +20,12 @@
  * migrations/proposals/DMS-02R-REPAIR_external.request.yaml:36-37 (los dos CHECK).
  *
  * No hay GET de la lista de costos: solo el total por moneda. La marca de
- * saldo inicial es `is_opening` (PEV-COST-RECORDED): el asiento va contra 3020
- * (Saldos iniciales) en vez de 2010 (Proveedores). Solo viaja si esta tildada y
- * solo por /costs; una reparacion es siempre una compra nueva.
+ * saldo inicial es `is_opening` (PEV-COST-RECORDED). Objetivo contable: asiento
+ * contra 3020 (Saldos iniciales) en vez de 2010 (Proveedores). OJO: hoy el
+ * backend (nadakki-ai-suite, `CostIn` en vehicle_economics_router.py) NO declara
+ * `is_opening` y lo ignora sin error, asi que el asiento sigue yendo a 2010.
+ * Solo viaja si esta tildada y solo por /costs; una reparacion es siempre una
+ * compra nueva. No exponer la casilla en la UI hasta que el backend lo acepte.
  *
  * La moneda sale del tenant (`localeDeTenant`, #517) y nunca se escribe a mano.
  */
@@ -127,7 +130,10 @@ export function incurredAtIso(fecha: string): string {
   return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? `${trimmed}T00:00:00Z` : trimmed;
 }
 
-/** Cuerpo de `CostIn`. Rechaza `repair`. `is_opening` solo viaja si esta tildada. */
+/**
+ * Cuerpo de `CostIn`. Rechaza `repair`. `is_opening` solo viaja si esta tildada;
+ * el backend actual lo ignora (no cambia la cuenta contra 2010 todavia).
+ */
 export function costInPayload(form: CostForm, currency: string): Record<string, unknown> {
   const cost_type = form.cost_type.trim();
   if (esReparacion(cost_type)) {
