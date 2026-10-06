@@ -16,7 +16,7 @@ export const BANCO_V2_NAV: DccNavGroup[] = [
     items: [
       { id: "mesa", label: "Mesa de decisiones", href: BANCO_V2_RAIZ, icon: LayoutDashboard },
       { id: "bandeja", label: "Bandeja", href: `${BANCO_V2_RAIZ}/solicitudes`, icon: Inbox },
-      { id: "escalaciones", label: "Escalaciones", href: "/credit-hub/bank/escalations", icon: ShieldAlert },
+      { id: "escalaciones", label: "Escalaciones", href: `${BANCO_V2_RAIZ}/escalaciones`, icon: ShieldAlert },
     ],
   },
   {
@@ -29,9 +29,9 @@ export const BANCO_V2_NAV: DccNavGroup[] = [
   {
     label: "Control",
     items: [
-      { id: "cumplimiento", label: "Cumplimiento", href: "/credit-hub/bank/compliance", icon: ClipboardCheck },
-      { id: "auditoria", label: "Auditoría", href: "/credit-hub/bank/audit", icon: History },
-      { id: "vehiculos", label: "Historial de vehículos", href: "/credit-hub/bank/vehicles", icon: Car },
+      { id: "cumplimiento", label: "Cumplimiento", href: `${BANCO_V2_RAIZ}/cumplimiento`, icon: ClipboardCheck },
+      { id: "auditoria", label: "Auditoría", href: `${BANCO_V2_RAIZ}/auditoria`, icon: History },
+      { id: "vehiculos", label: "Historial de vehículos", href: `${BANCO_V2_RAIZ}/vehiculos`, icon: Car },
     ],
   },
   {
