@@ -5,6 +5,7 @@
 
 import { getAuthHeaders, resolveApiUrl } from "@/lib/api/fetch-client";
 import * as mock from "@/lib/mocks/contable-api";
+import { nombrePeriodo } from "@/lib/contable/periodo-nombre";
 import type {
   AgenteSugerenciasResponse,
   AsientoContable,
@@ -144,16 +145,18 @@ function toCuenta(row: Record<string, unknown>): CuentaContable {
 }
 
 function toPeriodo(row: Record<string, unknown>): PeriodoContable {
-  return {
+  // La tabla trae start_date/end_date y ninguna columna de nombre: se leian
+  // fecha_inicio/fecha_fin y label, que no llegan, y el periodo salia en blanco.
+  const periodo = {
     id: String(row.id),
     tenant_id: String(row.tenant_id),
     fiscal_year: Number(row.fiscal_year),
     period_number: Number(row.period_number),
-    label: String(row.label ?? ""),
     status: String(row.status ?? "open") as PeriodoContable["status"],
-    fecha_inicio: String(row.fecha_inicio ?? "").slice(0, 10),
-    fecha_fin: String(row.fecha_fin ?? "").slice(0, 10),
+    fecha_inicio: String(row.fecha_inicio ?? row.start_date ?? "").slice(0, 10),
+    fecha_fin: String(row.fecha_fin ?? row.end_date ?? "").slice(0, 10),
   };
+  return { ...periodo, label: nombrePeriodo({ ...periodo, label: typeof row.label === "string" ? row.label : null }) };
 }
 
 function toAsiento(row: Record<string, unknown>): AsientoContable {

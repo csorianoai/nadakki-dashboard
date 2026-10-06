@@ -14,10 +14,13 @@ import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { PeriodoStatusBadge } from "@/components/contable/ContableBadges";
 import { JustificationModal } from "@/components/proyectos/finanzas/JustificationModal";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
+import { useMonedaFuncional } from "@/components/contable/monedaFuncional";
+import { formateaFecha } from "@/lib/dealer-management/formato";
 import type { PeriodoContable } from "@/types/contable";
 
 export function PeriodosClient() {
   const tenantId = useContableTenantId();
+  const locale = useMonedaFuncional();
   const [year, setYear] = useState(new Date().getFullYear());
   const [rows, setRows] = useState<PeriodoContable[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,9 +90,9 @@ export function PeriodosClient() {
             <tbody>
               {rows.map((p) => (
                 <tr key={p.id} className="border-b border-white/5">
-                  <td className="px-4 py-3 font-mono text-xs">{p.label}</td>
-                  <td className="px-4 py-3">{p.fecha_inicio}</td>
-                  <td className="px-4 py-3">{p.fecha_fin}</td>
+                  <td className="px-4 py-3 font-medium">{p.label}</td>
+                  <td className="px-4 py-3">{formateaFecha(p.fecha_inicio, locale) ?? "—"}</td>
+                  <td className="px-4 py-3">{formateaFecha(p.fecha_fin, locale) ?? "—"}</td>
                   <td className="px-4 py-3"><PeriodoStatusBadge status={p.status} /></td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
