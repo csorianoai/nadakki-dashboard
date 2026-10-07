@@ -12,6 +12,7 @@ import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdenti
 import { BANK_NAV_ROUTES, bankTrailForPath, pathnameToBankNavId } from "@/lib/credit-hub/bank/bankFormat";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useAuth } from "@/hooks/useAuth";
+import { IrAlPanelNuevo } from "@/components/credit-hub/bank/IrAlPanelNuevo";
 
 export function BankChShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -62,6 +63,7 @@ export function BankChShell({ children }: { children: ReactNode }) {
             />
           }
         >
+          <IrAlPanelNuevo />
           {children}
         </ChAppShell>
       </CHPortalAccessGuard>

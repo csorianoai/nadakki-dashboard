@@ -38,3 +38,18 @@ export const RUTA_V2_POR_RUTA_BANCO: Readonly<Record<string, string>> = {
   "/credit/bank/kpis": `${PANEL_BANCO_V2}/kpis`,
   "/credit/pool-filters": `${PANEL_BANCO_V2}/filtros`,
 };
+
+const DETALLE_SOLICITUD = /^\/credit-hub\/bank\/applications\/([^/]+)$/;
+
+/**
+ * Pantalla de bank-v2 equivalente a la ruta actual del panel viejo. Detalle de
+ * solicitud → su expediente en bank-v2; sin equivalente → raiz de bank-v2.
+ */
+export function equivalenteBancoV2(pathname: string): string {
+  const ruta = pathname.split(/[?#]/)[0].replace(/\/+$/, "") || "/";
+  const directa = RUTA_V2_POR_RUTA_BANCO[ruta];
+  if (directa) return directa;
+  const detalle = DETALLE_SOLICITUD.exec(ruta);
+  if (detalle) return `${PANEL_BANCO_V2}/solicitudes/${detalle[1]}`;
+  return PANEL_BANCO_V2;
+}
