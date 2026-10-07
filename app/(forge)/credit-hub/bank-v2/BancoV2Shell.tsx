@@ -4,14 +4,29 @@ import { createContext, useContext, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { CHPortalAccessGuard } from "@/components/credit-hub/system/CHPortalAccessGuard";
-import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
-import { DccShell, itemActivo } from "@/components/dcc/shell/DccShell";
+import { useChromeIdentity, type ChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
+import { DccShell, itemActivo, type DccUsuario } from "@/components/dcc/shell/DccShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { marcaDesdeBranding, type MarcaDcc } from "@/lib/dcc/marca";
 import { BANCO_V2_NAV, BANCO_V2_RAIZ } from "./_nav";
 
 const MarcaBancoContext = createContext<MarcaDcc | null>(null);
+
+/** Clave de Local Storage del tema del banco v2 (solo "light" | "dark"), como la del dealer. */
+export const BANCO_V2_THEME_STORAGE_KEY = "nadakki-banco-v2-theme";
+
+/**
+ * Usuario de la cabecera: el nombre de la sesion; sin nombre, el email (nunca
+ * el generico "Usuario" si hay email). useChromeIdentity es compartido con el
+ * dealer y el banco actual, asi que el respaldo vive aqui.
+ */
+export function usuarioCabecera(identidad: ChromeIdentity): DccUsuario {
+  const conNombre = identidad.initials !== "—";
+  if (conNombre || !identidad.email) return { nombre: identidad.name, rol: identidad.role, iniciales: identidad.initials };
+  const local = identidad.email.split("@")[0]?.replace(/[^\p{L}\p{N}]/gu, "") ?? "";
+  return { nombre: identidad.email, rol: identidad.role, iniciales: local.slice(0, 2).toUpperCase() || "—" };
+}
 
 /** Marca del banco (nombre, logo, locale y moneda del branding) para las paginas de bank-v2. */
 export function useMarcaBanco(): MarcaDcc {
@@ -56,8 +71,9 @@ function BancoV2Chrome({ children }: { children: ReactNode }) {
         grupos={BANCO_V2_NAV}
         activo={activo}
         migas={[{ label: "Banco", href: BANCO_V2_RAIZ }, ...(item ? [{ label: item.label }] : [])]}
-        usuario={{ nombre: identidad.name, rol: identidad.role, iniciales: identidad.initials }}
+        usuario={usuarioCabecera(identidad)}
         onSalir={() => void salir()}
+        temaStorageKey={BANCO_V2_THEME_STORAGE_KEY}
       >
         {children}
       </DccShell>

@@ -50,3 +50,11 @@ describe("DccKpiTile", () => {
     expect(screen.queryByTestId("dcc-kpi-valor")).toBeNull();
   });
 });
+
+describe("DccKpiTile sin calidad (banco v2)", () => {
+  it("calidad null: pinta la cifra sin sello", () => {
+    const { container } = render(<DccKpiTile etiqueta="Aprobadas" valor="12" calidad={null} />);
+    expect(container.querySelector("[data-testid=dcc-kpi-valor]")).toHaveTextContent("12");
+    expect(container.querySelector("[data-testid=dcc-sello]")).toBeNull();
+  });
+});

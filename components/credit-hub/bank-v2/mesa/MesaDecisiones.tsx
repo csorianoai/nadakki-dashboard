@@ -14,17 +14,24 @@ import { isChPanelLoading } from "@/lib/credit-hub/hooks/chQueryPanel";
 import { useBankAnalytics } from "@/lib/credit-hub/hooks/useBankAnalytics";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
-import type { Calidad } from "@/lib/dcc/calidad";
 import { formatEntero, formatMonedaCompacta, formatPorcentaje } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
+import { DetalleTecnico } from "../comun/DetalleTecnico";
+import { parcialSiLimite, proximamente, type NotaTecnica } from "../comun/llano";
 import { colaPorUrgencia, primerNombre, saludo } from "./mesa";
 import { MetasDelMes } from "./MetasDelMes";
 import { TarjetaCola } from "./TarjetaCola";
 import { useKpisBanco } from "./useKpisBanco";
 
-/** El banco aun no recibe sello de calidad del backend (N6 solo cubre al dealer). */
-const SIN_SELLO: Calidad = { estado: "parcial", cubiertos: null, total: null, motivo: "El backend del banco aún no declara la calidad de esta cifra" };
-const NO_DISPONIBLE = (motivo: string): Calidad => ({ estado: "no_disponible", motivo });
+/**
+ * El backend del banco aun no declara calidad (N6 solo cubre al dealer): una
+ * cifra que llega se pinta sin sello, y "parcial" solo cuando el dato dice que
+ * no cubre todo. Lo que falta dice "Próximamente" en llano; el porque tecnico
+ * va al bloque plegado "Detalle técnico".
+ */
+const URGENCIA_LLANO = "La urgencia por plazo estará disponible próximamente; por ahora la cola se ordena por prioridad y score.";
+const EMBUDO_LLANO = "El embudo de la cartera, de solicitudes recibidas a desembolsadas, estará disponible próximamente.";
+const HOY_LLANO = "La actividad del día estará disponible próximamente.";
 
 export type MesaProps = {
   marca: MarcaDcc;
@@ -39,7 +46,7 @@ export type MesaProps = {
  * Mesa de decisiones (bank-v2). Mismas consultas que la Mesa actual: la cola
  * de la Bandeja, analytics/dashboard a 30 dias y kpis/portfolio + approval.
  * Lo que el backend no expone (SLA, embudo, desembolsado, actividad del dia)
- * queda en "Próximamente", con el motivo solo en el tooltip.
+ * queda en "Próximamente" con una frase llana; el detalle tecnico, plegado.
  */
 export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitica, ahora = new Date() }: MesaProps) {
   const { apiTenantId } = useTenant();
@@ -57,6 +64,18 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
   const nombre = primerNombre(identidad.name);
   // Sin analytics ni cola cargada no hay cifra: nunca un 0 por defecto.
   const pendientes = analytics || colaQ.data ? pendingQueueCount(analytics, items) : null;
+  const notas: NotaTecnica[] = [
+    { que: "Urgencia por SLA", detalle: "applications/queue no expone sla_deadline; se ordena por prioridad y score del motor" },
+    { que: "Salud de la cartera", detalle: "falta el endpoint de embudo (kpis/funnel) con fondeado = DESEMBOLSADO" },
+    { que: "Desembolsado", detalle: "ningún endpoint cuenta solo DESEMBOLSADO; kpis/trends suma también ofertas aceptadas" },
+    { que: "Hoy", detalle: "no hay endpoint de actividad del día de la mesa" },
+    { que: "Tarjetas de la cola", detalle: "applications/queue no trae verificación de ingresos, DTI ni la regla de política (están en el expediente)" },
+  ];
+  if (aprobacion && aprobacion.avg_response_hours == null) notas.push({ que: "Respuesta media", detalle: "kpis/approval no trae avg_response_hours" });
+  if (aprobacion && aprobacion.approved_count == null) notas.push({ que: "Aprobadas", detalle: "kpis/approval no trae approved_count" });
+  if (portafolio && (portafolio.total_approved_amount == null || !formato.currency)) notas.push({ que: "Monto aprobado", detalle: "sin total_approved_amount en kpis/portfolio o sin moneda en el branding" });
+  if (!formato.currency) notas.push({ que: "Importes", detalle: "el branding del tenant no declara moneda" });
+  if (analytics && parcialSiLimite(analytics.total_applications)) notas.push({ que: "Red de dealers", detalle: "el ranking toma el dealer del payload y analytics/dashboard lee como máximo 500 solicitudes" });
   const corte = colaQ.dataUpdatedAt ? new Intl.DateTimeFormat(formato.locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(colaQ.dataUpdatedAt) : null;
 
   return (
@@ -86,7 +105,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
               <div className="flex flex-wrap items-center gap-3">
                 <span className={`inline-flex items-center gap-1.5 text-xs ${DCC_CLASSES.subtle}`}>
                   Urgencia por SLA
-                  <SelloCalidad calidad={NO_DISPONIBLE("La cola actual (applications/queue) no expone sla_deadline: se ordena por prioridad y score del motor")} />
+                  <SelloCalidad calidad={proximamente(URGENCIA_LLANO)} />
                 </span>
                 <Link href={hrefBandeja} className={DCC_CLASSES.link}>
                   Ver bandeja
@@ -112,10 +131,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
 
           <div className="grid gap-[var(--dcc-gap)]">
             <DccSeccion titulo="Salud de la cartera" icono={HeartPulse} testId="mesa-salud">
-              <p className={`text-xs ${DCC_CLASSES.muted}`}>Recibidas → evaluadas → ofertadas → aceptadas → desembolsadas.</p>
-              <div className="mt-2">
-                <SelloCalidad calidad={NO_DISPONIBLE("Falta el endpoint de embudo (kpis/funnel) con fondeado = DESEMBOLSADO")} />
-              </div>
+              <SelloCalidad calidad={proximamente(EMBUDO_LLANO)} />
             </DccSeccion>
             <DccSeccion titulo="Red de dealers" icono={Network} meta="top por volumen · 30 d" testId="mesa-dealers">
               {analyticsQ.isError ? (
@@ -144,9 +160,9 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
                   </tbody>
                 </table>
               )}
-              {analytics ? (
+              {analytics && parcialSiLimite(analytics.total_applications) ? (
                 <div className="mt-3">
-                  <SelloCalidad calidad={{ estado: "parcial", cubiertos: null, total: null, motivo: "El ranking toma el dealer del payload y se corta en 500 solicitudes" }} />
+                  <SelloCalidad calidad={parcialSiLimite(analytics.total_applications)!} />
                 </div>
               ) : null}
             </DccSeccion>
@@ -155,28 +171,28 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
 
         <DccSeccion titulo="Indicadores" icono={Gauge} testId="mesa-kpis">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3 xl:grid-cols-6">
-            <DccKpiTile etiqueta="Solicitudes pendientes" valor={formatEntero(pendientes, formato)} calidad={pendientes != null ? SIN_SELLO : NO_DISPONIBLE("Ni la cola ni analytics respondieron")} />
-            <DccKpiTile etiqueta="Tasa de aprobación · 30 d" valor={formatPorcentaje(analytics?.approval_rate, formato)} calidad={analytics ? SIN_SELLO : NO_DISPONIBLE("analytics/dashboard no respondió")} />
+            <DccKpiTile etiqueta="Solicitudes pendientes" valor={formatEntero(pendientes, formato)} calidad={pendientes != null ? null : proximamente()} />
+            <DccKpiTile etiqueta="Tasa de aprobación · 30 d" valor={formatPorcentaje(analytics?.approval_rate, formato)} calidad={analytics ? null : proximamente()} />
             <DccKpiTile
               etiqueta="Respuesta media"
               valor={aprobacion?.avg_response_hours != null ? new Intl.NumberFormat(formato.locale, { maximumFractionDigits: 1 }).format(aprobacion.avg_response_hours) : null}
               unidad="h"
               nota="Sin SLA configurado para comparar"
-              calidad={aprobacion?.avg_response_hours != null ? SIN_SELLO : NO_DISPONIBLE("kpis/approval no trae avg_response_hours")}
+              calidad={aprobacion?.avg_response_hours != null ? null : proximamente()}
             />
             <DccKpiTile
               etiqueta="Aprobadas"
               valor={formatEntero(aprobacion?.approved_count, formato)}
               nota={aprobacion?.declined_count != null ? `${formatEntero(aprobacion.declined_count, formato)} rechazadas` : null}
-              calidad={aprobacion?.approved_count != null ? SIN_SELLO : NO_DISPONIBLE("kpis/approval no trae approved_count")}
+              calidad={aprobacion?.approved_count != null ? null : proximamente()}
             />
             <DccKpiTile
               etiqueta="Monto aprobado"
               valor={formatMonedaCompacta(portafolio?.total_approved_amount, formato)}
               nota={portafolio?.accepted_offers != null ? `${formatEntero(portafolio.accepted_offers, formato)} ofertas aceptadas` : null}
-              calidad={portafolio?.total_approved_amount != null && formato.currency ? SIN_SELLO : NO_DISPONIBLE("Sin monto en kpis/portfolio o sin moneda en el branding")}
+              calidad={portafolio?.total_approved_amount != null && formato.currency ? null : proximamente()}
             />
-            <DccKpiTile etiqueta="Desembolsado" valor={null} calidad={NO_DISPONIBLE("Ningún endpoint cuenta solo DESEMBOLSADO; kpis/trends suma también ofertas aceptadas")} />
+            <DccKpiTile etiqueta="Desembolsado" valor={null} calidad={proximamente()} />
           </div>
           {kpisQ.isError ? (
             <div className="mt-3">
@@ -189,7 +205,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
 
         <div className="grid items-start gap-[var(--dcc-gap)] md:grid-cols-2">
           <DccSeccion titulo="Hoy" icono={CalendarClock} testId="mesa-hoy">
-            <SelloCalidad calidad={NO_DISPONIBLE("No hay un endpoint de actividad del día de la mesa")} />
+            <SelloCalidad calidad={proximamente(HOY_LLANO)} />
           </DccSeccion>
           <DccSeccion titulo="Reportes" icono={BarChart3} testId="mesa-reportes">
             <p className={`text-sm ${DCC_CLASSES.muted}`}>Analítica de cartera, dealers y salud del portafolio.</p>
@@ -198,6 +214,8 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
             </Link>
           </DccSeccion>
         </div>
+
+        <DetalleTecnico notas={notas} />
       </div>
     </DccPageMarco>
   );

@@ -9,12 +9,11 @@ import { DccSeccion } from "@/components/dcc/DccSeccion";
 import { SelloCalidad } from "@/components/dcc/SelloCalidad";
 import { formatDefaultPredictionDisplay } from "@/lib/credit-hub/bank/bankFormat";
 import { useBankAnalytics, useBankDealersRanking, useBankPortfolioHealth } from "@/lib/credit-hub/hooks/useBankAnalytics";
-import type { Calidad } from "@/lib/dcc/calidad";
 import { formatEntero, formatMonedaCompacta, formatPorcentaje } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
+import { DetalleTecnico } from "../comun/DetalleTecnico";
+import { parcialSiLimite, proximamente, type NotaTecnica } from "../comun/llano";
 
-const SIN_SELLO: Calidad = { estado: "parcial", cubiertos: null, total: null, motivo: "El backend del banco aún no declara la calidad de esta cifra" };
-const NO_DISPONIBLE = (motivo: string): Calidad => ({ estado: "no_disponible", motivo });
 const BANDAS_SCORE = ["300-579", "580-669", "670-739", "740-799", "800-850"] as const;
 
 /** Barra horizontal a escala: valor / maximo. Sin eje doble. */
@@ -50,6 +49,15 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
   const defaultPred = formatDefaultPredictionDisplay(a.default_prediction.predicted_default_rate, a.default_prediction.predicted_default_count, a.total_applications);
   const distribucion = (saludQ.data as { score_distribution?: Record<string, number> } | undefined)?.score_distribution;
   const maxBanda = distribucion ? Math.max(0, ...BANDAS_SCORE.map((b) => distribucion[b] ?? 0)) : 0;
+  // Sin sello salvo que el total informado alcance el limite de lectura (parcial de verdad).
+  const limite = parcialSiLimite(a.total_applications);
+  const notas: NotaTecnica[] = [];
+  if (!formatMonedaCompacta(a.portfolio_value, f)) notas.push({ que: "Volumen aprobado", detalle: "sin portfolio_value o sin moneda en el branding" });
+  if (defaultPred.isExtreme) notas.push({ que: "Default predicho", detalle: "predicción extrema: el motor cuenta un score ausente como 0 (regla score < 600)" });
+  if (a.avg_decision_time_hours == null) notas.push({ que: "Tiempo medio de decisión", detalle: "analytics/dashboard aún no calcula avg_decision_time_hours" });
+  if (cohortes.length === 0) notas.push({ que: "Solicitudes y aprobación por periodo", detalle: "analytics/dashboard no devolvió cohort_analysis" });
+  if (!saludQ.isError && !distribucion) notas.push({ que: "Salud del portafolio", detalle: "portfolio-health aún no expone score_distribution" });
+  if (limite) notas.push({ que: "Ranking y predicción", detalle: "el ranking toma el dealer del payload; analytics/dashboard lee como máximo 500 solicitudes" });
 
   return (
     <DccPageMarco titulo="Analítica" marca={marca}>
@@ -59,30 +67,26 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
             <DccKpiTile
               etiqueta="Volumen aprobado"
               valor={formatMonedaCompacta(a.portfolio_value, f)}
-              calidad={formatMonedaCompacta(a.portfolio_value, f) ? SIN_SELLO : NO_DISPONIBLE("Sin moneda en el branding")}
+              calidad={formatMonedaCompacta(a.portfolio_value, f) ? null : proximamente()}
             />
-            <DccKpiTile etiqueta="Tasa de aprobación" valor={formatPorcentaje(a.approval_rate, f)} calidad={SIN_SELLO} />
+            <DccKpiTile etiqueta="Tasa de aprobación" valor={formatPorcentaje(a.approval_rate, f)} calidad={formatPorcentaje(a.approval_rate, f) ? null : proximamente()} />
             <DccKpiTile
               etiqueta="Default predicho"
               valor={defaultPred.isExtreme ? null : `${defaultPred.percentLabel} %`}
               nota={`${formatEntero(a.default_prediction.predicted_default_count, f)} casos estimados`}
-              calidad={
-                defaultPred.isExtreme
-                  ? NO_DISPONIBLE("Predicción extrema: el motor cuenta un score ausente como 0. No usar para decidir.")
-                  : { estado: "parcial", cubiertos: null, total: null, motivo: "Regla heurística score < 600 sobre un máximo de 500 solicitudes" }
-              }
+              calidad={defaultPred.isExtreme ? proximamente() : limite}
             />
             <DccKpiTile
               etiqueta="Tiempo medio de decisión"
               valor={a.avg_decision_time_hours != null ? `${formatEntero(a.avg_decision_time_hours, f)} h` : null}
-              calidad={a.avg_decision_time_hours != null ? SIN_SELLO : NO_DISPONIBLE("analytics/dashboard aún no calcula avg_decision_time_hours")}
+              calidad={a.avg_decision_time_hours != null ? null : proximamente()}
             />
           </div>
         </DccSeccion>
 
         <DccSeccion titulo="Solicitudes y aprobación por periodo" icono={BarChart3}>
           {cohortes.length === 0 ? (
-            <DccEstado estado="no_disponible" detalle="analytics/dashboard no devolvió cohort_analysis" />
+            <DccEstado estado="no_disponible" detalle="Esta información estará disponible próximamente." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[560px] text-sm">
@@ -144,16 +148,18 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
                 </tbody>
               </table>
             )}
-            <div className="mt-3">
-              <SelloCalidad calidad={{ estado: "parcial", cubiertos: null, total: null, motivo: "El ranking toma el dealer del payload y se corta en 500 solicitudes" }} />
-            </div>
+            {limite ? (
+              <div className="mt-3">
+                <SelloCalidad calidad={limite} />
+              </div>
+            ) : null}
           </DccSeccion>
 
           <DccSeccion titulo="Salud del portafolio" icono={HeartPulse} meta="solicitudes por banda de score">
             {saludQ.isError ? (
               <DccEstado estado="error" detalle="No pudimos cargar la salud del portafolio" onReintentar={() => void saludQ.refetch()} />
             ) : !distribucion ? (
-              <DccEstado estado="no_disponible" detalle="portfolio-health aún no expone score_distribution" />
+              <DccEstado estado="no_disponible" detalle="Esta información estará disponible próximamente." />
             ) : (
               <dl className="grid gap-2 text-sm">
                 {BANDAS_SCORE.map((b) => (
@@ -167,6 +173,8 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
             )}
           </DccSeccion>
         </div>
+
+        <DetalleTecnico notas={notas} />
       </div>
     </DccPageMarco>
   );

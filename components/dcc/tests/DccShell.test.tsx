@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Inbox, LayoutDashboard } from "lucide-react";
+import { DccPageMarco } from "@/components/dcc/DccPageMarco";
 import { DccShell, itemActivo, type DccNavGroup } from "@/components/dcc/shell/DccShell";
+import { marcaDesdeBranding } from "@/lib/dcc/marca";
 
 jest.mock("next/link", () => {
   const React = require("react");
@@ -21,9 +23,10 @@ const GRUPOS: DccNavGroup[] = [
   },
 ];
 
-function shell(activo: string | null, onSalir?: () => void) {
+function shell(activo: string | null, onSalir?: () => void, temaStorageKey?: string, hijo?: React.ReactNode) {
   return render(
     <DccShell
+      temaStorageKey={temaStorageKey}
       firma="con Nadakki Credit Hub"
       marca={{ nombre: "Banco Ejemplo", logoUrl: null }}
       grupos={GRUPOS}
@@ -32,7 +35,7 @@ function shell(activo: string | null, onSalir?: () => void) {
       usuario={{ nombre: "Laura Méndez", rol: "Analista", iniciales: "LM" }}
       onSalir={onSalir}
     >
-      <p>pagina</p>
+      {hijo ?? <p>pagina</p>}
     </DccShell>,
   );
 }
@@ -72,6 +75,49 @@ describe("DccShell (shell generico)", () => {
     expect(screen.getByRole("link", { name: "Banco" })).toHaveAttribute("href", "/x");
     fireEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
     expect(salir).toHaveBeenCalled();
+  });
+});
+
+describe("DccShell: tema recordado y un solo conmutador (banco v2)", () => {
+  beforeEach(() => window.localStorage.clear());
+
+  it("con temaStorageKey el oscuro sobrevive a recargar (nuevo montaje)", () => {
+    const primero = shell("mesa", undefined, "clave-tema");
+    fireEvent.click(screen.getByTestId("dcc-shell-theme"));
+    expect(window.localStorage.getItem("clave-tema")).toBe("dark");
+    primero.unmount();
+    const { container } = shell("mesa", undefined, "clave-tema");
+    expect(container.querySelector("[data-dcc-shell]")).toHaveAttribute("data-dcc-theme", "dark");
+  });
+
+  it("sin temaStorageKey no escribe en Local Storage", () => {
+    shell("mesa");
+    fireEvent.click(screen.getByTestId("dcc-shell-theme"));
+    expect(window.localStorage.length).toBe(0);
+  });
+
+  it("dentro del shell la pagina no repite el conmutador; el de la cabecera manda en ambas", () => {
+    const { container } = shell(
+      "mesa",
+      undefined,
+      undefined,
+      <DccPageMarco titulo="Mesa" marca={marcaDesdeBranding(null, "banco")}>
+        <p>pagina</p>
+      </DccPageMarco>,
+    );
+    expect(screen.queryByTestId("dcc-theme-toggle")).toBeNull();
+    expect(screen.getAllByRole("button", { name: "Cambiar a tema oscuro" })).toHaveLength(1);
+    fireEvent.click(screen.getByTestId("dcc-shell-theme"));
+    expect(container.querySelector("[data-dcc-root]")).toHaveAttribute("data-dcc-theme", "dark");
+  });
+
+  it("fuera del shell la pagina conserva su conmutador (sin cambios)", () => {
+    render(
+      <DccPageMarco titulo="Mesa" marca={marcaDesdeBranding(null, "banco")}>
+        <p>pagina</p>
+      </DccPageMarco>,
+    );
+    expect(screen.getByTestId("dcc-theme-toggle")).toBeInTheDocument();
   });
 });
 
