@@ -1,10 +1,13 @@
 import { apiFetch } from "@/lib/api/fetch-client";
 import {
+  fetchFinanciamientoDelMes,
   fetchMargenDelMes,
+  fetchMetricasLeadsDelMes,
   fetchMetricasInventario,
   metricaDesdeBackend,
   presentarDias,
   presentarImporte,
+  presentarNumero,
   presentarPorcentaje,
 } from "@/lib/dcc/metricas";
 
@@ -59,6 +62,33 @@ describe("metricas F3 del dealer", () => {
     expect(apiFetch).toHaveBeenCalledWith("/api/v1/autos/dealers/d-1/metrics/margin", expect.anything());
     expect(r.periodo).toBe("2026-10");
     expect(r.metricas.gross_margin.calidad).toEqual({ estado: "no_disponible", motivo: "Sin ventas registradas este mes", delBackend: true });
+  });
+
+  it("leads y financiamiento: rutas del dealer y sello PARCIAL de la ficha con su motivo en llano", async () => {
+    responde(200, {
+      period: "2026-10",
+      metrics: { lead_response_time: { value: 3.5, unit: "hours", quality: q("PARCIAL", 8, 10), reasons: ["NEW_A_QUALIFIED_SIN_CONTACTO"] } },
+    });
+    const l = await fetchMetricasLeadsDelMes("d-1");
+    expect(apiFetch).toHaveBeenLastCalledWith("/api/v1/autos/dealers/d-1/metrics/leads", expect.anything());
+    expect(presentarNumero(l, "lead_response_time", "es-AR").valor).toBe("3,5");
+    responde(200, {
+      period: "2026-10",
+      metrics: {
+        financing_offers_ready: { value: 4, unit: "applications", quality: q("PARCIAL", 4, 4), reasons: ["FICHA_PARCIAL_POR_DEALER"] },
+        finance_conversion_rate: { value: null, unit: "percent", quality: q("NO_DISPONIBLE", 0, 0), reasons: ["SIN_SOLICITUDES_EN_EL_PERIODO"] },
+      },
+    });
+    const f = await fetchFinanciamientoDelMes("d-1");
+    expect(apiFetch).toHaveBeenLastCalledWith("/api/v1/autos/dealers/d-1/metrics/financing", expect.anything());
+    expect(presentarNumero(f, "financing_offers_ready", "es-AR")).toEqual({
+      valor: "4",
+      calidad: { estado: "parcial", cubiertos: 4, total: 4, motivo: "Parcial según la ficha firmada" },
+    });
+    expect(presentarPorcentaje(f, "finance_conversion_rate", "es-AR")).toEqual({
+      valor: null,
+      calidad: { estado: "no_disponible", motivo: "Sin solicitudes de crédito este mes", delBackend: true },
+    });
   });
 
   it("error HTTP se propaga con su status; respuesta sin metrics falla", async () => {

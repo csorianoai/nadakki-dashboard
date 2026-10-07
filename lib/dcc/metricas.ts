@@ -5,9 +5,11 @@
  * El backend calcula cifra y calidad; aqui solo se traduce y se formatea:
  * no se suma, no se divide y no se decide si una cifra esta completa.
  *
- * Rutas montadas en main (las dos exigen `autos.inventory.list`):
- *   GET /api/v1/autos/dealers/{dealer_id}/metrics/inventory
- *   GET /api/v1/autos/dealers/{dealer_id}/metrics/margin   (mes en curso, UTC)
+ * Rutas montadas en main (mes en curso, UTC, salvo inventario):
+ *   GET .../dealers/{dealer_id}/metrics/inventory  `autos.inventory.list`
+ *   GET .../dealers/{dealer_id}/metrics/margin     `autos.inventory.list`
+ *   GET .../dealers/{dealer_id}/metrics/leads      `autos.leads.crm`
+ *   GET .../dealers/{dealer_id}/metrics/financing  `credit.applications.view`
  */
 
 import type { Calidad } from "@/lib/dcc/calidad";
@@ -33,6 +35,11 @@ export const MOTIVOS: Record<string, string> = {
   VENTAS_SIN_COMPRA: "Hay ventas del mes sin costo de compra",
   VENDIDOS_SIN_REGISTRO_DE_VENTA: "Hay unidades vendidas sin la venta registrada",
   INGRESO_CERO: "Las ventas incluidas suman cero",
+  NEW_A_QUALIFIED_SIN_CONTACTO: "Un lead que pasa a calificado sin contacto registrado no se mide",
+  WON_SIN_ENLACE_A_VENTA: "Un lead ganado aún no se enlaza con su venta",
+  FICHA_PARCIAL_POR_PERIODO: "El conteo por mes es parcial según la ficha firmada",
+  FICHA_PARCIAL_POR_DEALER: "Parcial según la ficha firmada",
+  SIN_SOLICITUDES_EN_EL_PERIODO: "Sin solicitudes de crédito este mes",
 };
 
 const FORMA_INVALIDA = "La respuesta no trae esta métrica";
@@ -102,6 +109,18 @@ export async function fetchMargenDelMes(dealerId: string): Promise<MetricasDcc> 
   return metricasDe(body, "Sin ventas registradas este mes");
 }
 
+/** lead_count, lead_response_time y lead_conversion_rate del mes en curso. */
+export async function fetchMetricasLeadsDelMes(dealerId: string): Promise<MetricasDcc> {
+  const body = await leerJson(`/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/metrics/leads`);
+  return metricasDe(body, "Sin leads este mes");
+}
+
+/** financing_applications, financing_offers_ready y finance_conversion_rate del mes en curso. */
+export async function fetchFinanciamientoDelMes(dealerId: string): Promise<MetricasDcc> {
+  const body = await leerJson(`/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/metrics/financing`);
+  return metricasDe(body, "Sin solicitudes de crédito este mes");
+}
+
 /** Lo que pinta una tarjeta: cifra ya formateada (o null) y su sello. */
 export type Presentada = { valor: string | null; calidad: Calidad };
 
@@ -132,6 +151,14 @@ export function presentarPorcentaje(metricas: MetricasDcc | undefined, clave: st
   if (!m) return NO_ESTA(clave);
   const ok = typeof m.valor === "number" && Number.isFinite(m.valor);
   return presentar(m, ok ? `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(m.valor as number)} %` : null);
+}
+
+/** Numero del backend tal cual (conteo, horas): solo se formatea con el locale. */
+export function presentarNumero(metricas: MetricasDcc | undefined, clave: string, locale: string): Presentada {
+  const m = metricas?.metricas[clave];
+  if (!m) return NO_ESTA(clave);
+  const ok = typeof m.valor === "number" && Number.isFinite(m.valor);
+  return presentar(m, ok ? new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(m.valor as number) : null);
 }
 
 /** Dias en inventario: promedio (cifra) y maximo (nota), ambos del backend. */

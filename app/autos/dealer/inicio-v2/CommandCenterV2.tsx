@@ -19,6 +19,7 @@ import { formatEntero } from "@/lib/dcc/formato";
 import {
   CAPABILITIES_INICIO,
   SECCIONES_SIN_FUENTE,
+  TARJETAS_DETALLE,
   TARJETAS_INICIO,
   briefDeterminista,
   detalleDeError,
@@ -30,6 +31,18 @@ import {
   type TarjetaInicio,
 } from "@/lib/dcc/inicio";
 import { marcaDesdeBranding } from "@/lib/dcc/marca";
+import {
+  fetchFinanciamientoDelMes,
+  fetchMargenDelMes,
+  fetchMetricasInventario,
+  fetchMetricasLeadsDelMes,
+  presentarDias,
+  presentarImporte,
+  presentarNumero,
+  presentarPorcentaje,
+  type MetricasDcc,
+  type Presentada,
+} from "@/lib/dcc/metricas";
 import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 
@@ -43,6 +56,14 @@ const EVIDENCIA: Record<string, string> = {
   stock: "GET /api/v1/autos/dealers/{dealer_id}/vehicles — disponible + reservado (D-N6-1)",
   leads: "GET /api/v1/autos/tenants/{tenant_uuid}/dealers/{dealer_id}/leads — total",
   solicitudes: "GET /api/v2/credit/applications — total filtrado por dealer",
+  capital: "GET /api/v1/autos/dealers/{dealer_id}/metrics/inventory — inventory_capital",
+  dias: "GET /api/v1/autos/dealers/{dealer_id}/metrics/inventory — inventory_age_days",
+  ingreso: "GET /api/v1/autos/dealers/{dealer_id}/metrics/inventory — potential_revenue",
+  margen: "GET /api/v1/autos/dealers/{dealer_id}/metrics/margin — gross_margin, gross_margin_pct",
+  respuesta: "GET /api/v1/autos/dealers/{dealer_id}/metrics/leads — lead_response_time",
+  conversion: "GET /api/v1/autos/dealers/{dealer_id}/metrics/leads — lead_conversion_rate",
+  ofertas: "GET /api/v1/autos/dealers/{dealer_id}/metrics/financing — financing_offers_ready",
+  fondeo: "GET /api/v1/autos/dealers/{dealer_id}/metrics/financing — finance_conversion_rate",
 };
 
 /**
@@ -53,7 +74,13 @@ const EVIDENCIA: Record<string, string> = {
 const QUE_MIDE: Record<string, string> = {
   stock: "Vehículos de tu concesionario disponibles o reservados.",
   capital: "Costo del inventario que tienes en stock.",
-  margen: "Margen bruto de tu concesionario.",
+  margen: "Margen bruto de las ventas de este mes.",
+  dias: "Días promedio que llevan en stock tus unidades.",
+  ingreso: "Suma de los precios de venta del stock.",
+  respuesta: "Tiempo hasta el primer contacto con cada lead.",
+  conversion: "Leads del mes que terminaron en venta.",
+  ofertas: "Solicitudes con oferta lista para el cliente.",
+  fondeo: "Solicitudes que llegaron a desembolso.",
   leads: "Total de leads recibidos por tu concesionario.",
   solicitudes: "Total de solicitudes de crédito de tu concesionario.",
   caja: "Caja y cobranzas de tu concesionario.",
@@ -96,7 +123,45 @@ export function CommandCenterV2() {
     enabled: permitido("credit.applications.view") && Boolean(dealerId),
     retry: false,
   });
-  const consultas: Record<string, typeof stock> = { stock, leads, solicitudes };
+  // F3-METRICAS: la misma capability que exige el backend en las dos rutas.
+  const conMetricas = permitido("autos.inventory.list") && Boolean(dealerId);
+  const inventario = useQuery({
+    queryKey: ["dcc-inicio", "metricas-inventario", dealerId],
+    queryFn: () => fetchMetricasInventario(dealerId as string),
+    enabled: conMetricas,
+    retry: false,
+  });
+  const margen = useQuery({
+    queryKey: ["dcc-inicio", "metricas-margen", dealerId],
+    queryFn: () => fetchMargenDelMes(dealerId as string),
+    enabled: conMetricas,
+    retry: false,
+  });
+  const leadsMes = useQuery({
+    queryKey: ["dcc-inicio", "metricas-leads", dealerId],
+    queryFn: () => fetchMetricasLeadsDelMes(dealerId as string),
+    enabled: permitido("autos.leads.crm") && Boolean(dealerId),
+    retry: false,
+  });
+  const financiamiento = useQuery({
+    queryKey: ["dcc-inicio", "metricas-financiamiento", dealerId],
+    queryFn: () => fetchFinanciamientoDelMes(dealerId as string),
+    enabled: permitido("credit.applications.view") && Boolean(dealerId),
+    retry: false,
+  });
+  const consultas: Record<string, { isPending: boolean; isError: boolean; error: unknown; refetch: () => unknown }> = {
+    stock,
+    leads,
+    solicitudes,
+    capital: inventario,
+    dias: inventario,
+    ingreso: inventario,
+    margen,
+    respuesta: leadsMes,
+    conversion: leadsMes,
+    ofertas: financiamiento,
+    fondeo: financiamiento,
+  };
   const fmt = (n: number) => formatEntero(n, formato) ?? String(n);
   const brief = briefDeterminista({ stock: stock.data, leads: leads.data, solicitudes: solicitudes.data }, fmt);
 
@@ -125,8 +190,35 @@ export function CommandCenterV2() {
       if (b) return envolver(<DccKpiTile etiqueta={t.titulo} valor={null} calidad={b} tecnico={descripcion(t)} />);
       return envolver(<>{titulo}<DccEstado estado="error" detalle={detalleDeError(q.error)} onReintentar={() => void q.refetch()} /></>);
     }
-    const c: Cifra = q.data;
-    return envolver(<DccKpiTile etiqueta={t.titulo} valor={fmt(c.valor)} unidad={t.unidad} calidad={c.calidad} nota={c.nota} tecnico={descripcion(t)} />);
+    const p = presentada(t.id);
+    return envolver(<DccKpiTile etiqueta={t.titulo} valor={p.valor} unidad={t.unidad} calidad={p.calidad} nota={p.nota} tecnico={descripcion(t)} />);
+  };
+
+  /** Cifra ya formateada, sello y nota de cada tarjeta con datos (consulta ya resuelta). */
+  const presentada = (id: string): Presentada & { nota: string | null } => {
+    const loc = formato.locale;
+    const inv = inventario.data as MetricasDcc | undefined;
+    const mes = margen.data as MetricasDcc | undefined;
+    if (id === "capital") return { ...presentarImporte(inv, "inventory_capital", loc), nota: null };
+    if (id === "ingreso") return { ...presentarImporte(inv, "potential_revenue", loc), nota: "Precio de venta del stock" };
+    if (id === "dias") {
+      const d = presentarDias(inv, loc);
+      return { valor: d.valor, calidad: d.calidad, nota: d.maximo ? `máximo ${d.maximo} días` : null };
+    }
+    if (id === "margen") {
+      const pct = presentarPorcentaje(mes, "gross_margin_pct", loc).valor;
+      const periodo = mes?.periodo ? `Mes ${mes.periodo}` : null;
+      return { ...presentarImporte(mes, "gross_margin", loc), nota: [pct ? `${pct} de las ventas` : null, periodo].filter(Boolean).join(" · ") || null };
+    }
+    const lm = leadsMes.data as MetricasDcc | undefined;
+    const fin = financiamiento.data as MetricasDcc | undefined;
+    const delMes = (m: MetricasDcc | undefined) => (m?.periodo ? `Mes ${m.periodo}` : null);
+    if (id === "respuesta") return { ...presentarNumero(lm, "lead_response_time", loc), nota: delMes(lm) };
+    if (id === "conversion") return { ...presentarPorcentaje(lm, "lead_conversion_rate", loc), nota: delMes(lm) };
+    if (id === "ofertas") return { ...presentarNumero(fin, "financing_offers_ready", loc), nota: "Con oferta vigente hoy" };
+    if (id === "fondeo") return { ...presentarPorcentaje(fin, "finance_conversion_rate", loc), nota: delMes(fin) };
+    const c = (consultas[id] as { data?: Cifra }).data as Cifra;
+    return { valor: fmt(c.valor), calidad: c.calidad, nota: c.nota };
   };
 
   const proximamente = (motivo: string) => <SelloCalidad calidad={{ estado: "no_disponible", motivo }} />;
@@ -143,6 +235,9 @@ export function CommandCenterV2() {
         </DccSeccion>
         <DccSeccion titulo="Estado del negocio" icono={BarChart3} testId="dcc-seccion-negocio">
           <div className="grid grid-cols-2 items-start gap-x-6 gap-y-4 sm:grid-cols-3 xl:grid-cols-6">{TARJETAS_INICIO.map(kpi)}</div>
+          <div data-testid="dcc-fila-detalle" className="mt-5 grid grid-cols-2 items-start gap-x-6 gap-y-4 border-t border-[var(--dcc-border)] pt-4 sm:grid-cols-3 xl:grid-cols-6">
+            {TARJETAS_DETALLE.map(kpi)}
+          </div>
         </DccSeccion>
         <div className="grid grid-cols-1 items-start gap-[var(--dcc-gap)] lg:grid-cols-3">
           <div className="lg:col-span-2">
