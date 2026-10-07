@@ -29,6 +29,8 @@ export type DccShellProps = {
    * el tema dura la sesion en memoria.
    */
   temaStorageKey?: string;
+  /** Controles extra de la barra superior (buscador, campana), antes del conmutador de tema. */
+  extrasCabecera?: ReactNode;
   children: ReactNode;
 };
 
@@ -61,7 +63,7 @@ export function DccShell(props: DccShellProps) {
   );
 }
 
-function DccShellChrome({ firma, marca, grupos, activo, migas, usuario, onSalir, children }: Omit<DccShellProps, "temaStorageKey">) {
+function DccShellChrome({ firma, marca, grupos, activo, migas, usuario, onSalir, extrasCabecera, children }: Omit<DccShellProps, "temaStorageKey">) {
   const contexto = useDccThemeContext();
   const theme = contexto?.theme ?? "light";
   const [menuMovil, setMenuMovil] = useState(false);
@@ -88,6 +90,7 @@ function DccShellChrome({ firma, marca, grupos, activo, migas, usuario, onSalir,
           onTheme={(t) => contexto?.setTheme(t)}
           onMenu={() => setMenuMovil(true)}
           onSalir={onSalir}
+          extras={extrasCabecera}
         />
         <div className="min-w-0 flex-1 px-4 py-5 sm:px-5 lg:px-6 lg:py-6">{children}</div>
       </div>
