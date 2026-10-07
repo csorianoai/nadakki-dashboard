@@ -2,6 +2,8 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { BuscadorBanco } from "@/components/credit-hub/bank-v2/cabecera/BuscadorBanco";
+import { CampanaBanco } from "@/components/credit-hub/bank-v2/cabecera/CampanaBanco";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { CHPortalAccessGuard } from "@/components/credit-hub/system/CHPortalAccessGuard";
 import { useChromeIdentity, type ChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
@@ -74,6 +76,12 @@ function BancoV2Chrome({ children }: { children: ReactNode }) {
         usuario={usuarioCabecera(identidad)}
         onSalir={() => void salir()}
         temaStorageKey={BANCO_V2_THEME_STORAGE_KEY}
+        extrasCabecera={
+          <>
+            <BuscadorBanco grupos={BANCO_V2_NAV} hrefBandeja={`${BANCO_V2_RAIZ}/solicitudes`} onIr={(href) => router.push(href)} />
+            <CampanaBanco hrefSolicitud={(id) => `${BANCO_V2_RAIZ}/solicitudes/${encodeURIComponent(id)}`} onIr={(href) => router.push(href)} />
+          </>
+        }
       >
         {children}
       </DccShell>
