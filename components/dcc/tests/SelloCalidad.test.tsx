@@ -34,6 +34,13 @@ describe("SelloCalidad", () => {
     expect(screen.getByTestId("dcc-sello")).toHaveTextContent("Próximamente");
     expect(screen.queryByTestId("dcc-tooltip")).toBeNull();
   });
+
+  it("no disponible dicho por el backend: 'no disponible' y el motivo al tooltip", () => {
+    render(<SelloCalidad calidad={{ estado: "no_disponible", motivo: "Sin ventas registradas este mes", delBackend: true }} />);
+    expect(screen.getByTestId("dcc-sello")).toHaveTextContent("no disponible");
+    expect(screen.getByTestId("dcc-sello")).not.toHaveTextContent("Próximamente");
+    expect(screen.getByTestId("dcc-tooltip")).toHaveAttribute("title", "Sin ventas registradas este mes");
+  });
 });
 
 describe("DccThemeRoot", () => {
