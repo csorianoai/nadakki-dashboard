@@ -152,10 +152,12 @@ describe("El panel del dealer recuerda el tema al recargar", () => {
     expect(escribe).not.toHaveBeenCalled();
   });
 
-  it("solo el DealerShell pasa la clave; DccShell sigue en memoria", () => {
+  it("el DealerShell pasa SU clave; DccShell (banco v2) solo usa la que le da su llamador", () => {
     expect(SHELL[0]).toContain("<DccThemeProvider storageKey={DEALER_THEME_STORAGE_KEY}>");
     const dccShell = readFileSync(join(__dirname, "..", "..", "..", "dcc", "shell", "DccShell.tsx"), "utf8");
-    expect(dccShell).toContain("<DccThemeProvider>");
-    expect(dccShell).not.toContain("storageKey");
+    expect(dccShell).toContain("<DccThemeProvider storageKey={props.temaStorageKey} conmutadorEnChrome>");
+    expect(dccShell).not.toContain("DEALER_THEME_STORAGE_KEY");
+    const bancoV2 = readFileSync(join(__dirname, "..", "..", "..", "..", "app", "(forge)", "credit-hub", "bank-v2", "BancoV2Shell.tsx"), "utf8");
+    expect(bancoV2).not.toContain(DEALER_THEME_STORAGE_KEY);
   });
 });
