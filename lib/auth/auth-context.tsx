@@ -16,6 +16,11 @@ import { tokenStorage } from "./token-storage";
 import { scheduleProactiveRefresh, cancelProactiveRefresh } from "./token-refresh";
 import { clearWizardDraftStorage } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 import { clearDealerAccessContextFully } from "@/lib/dealer/access-context";
+import {
+  PANEL_BANCO_V2,
+  ROLES_PANEL_BANCO_V2,
+  aplicaPanelBancoV2,
+} from "@/lib/credit-hub/bank/panel-v2-por-defecto";
 
 // ── localStorage keys that must stay in sync with JWT claims ──────────────
 /** JWT claim → localStorage keys. TEST HOOK: exported for executable tests (C2). */
@@ -93,10 +98,21 @@ const POST_LOGIN_ROLE_PRIORITY = [
   "banker",
 ] as const;
 
+/**
+ * Con NEXT_PUBLIC_FF_BANK_V2_DEFAULT encendido, credit_admin, banker y
+ * bank_analyst aterrizan en el panel nuevo. Apagado (el default) el mapa de
+ * arriba manda sin excepcion. `admin`, superadmin y dealer no cambian nunca.
+ */
 export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
   const keys = new Set(roles.map((r) => r.role_key));
   for (const roleKey of POST_LOGIN_ROLE_PRIORITY) {
     if (keys.has(roleKey)) {
+      if (
+        (ROLES_PANEL_BANCO_V2 as readonly string[]).includes(roleKey) &&
+        aplicaPanelBancoV2(roles)
+      ) {
+        return PANEL_BANCO_V2;
+      }
       return POST_LOGIN_REDIRECT_BY_ROLE[roleKey] ?? "/";
     }
   }
