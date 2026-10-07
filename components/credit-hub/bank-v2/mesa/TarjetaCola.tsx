@@ -23,11 +23,15 @@ const PRIORIDAD_ESTILO: Record<BankQueueItem["priority"], string> = {
   BAJA: "border-[var(--dcc-border-strong)] text-[var(--dcc-fg-muted)] bg-[var(--dcc-surface-muted)]",
 };
 
-/** El backend no expone estas fuentes en la cola: se muestran como "Próximamente". */
+/**
+ * La cola no trae estas fuentes: "Próximamente" con frase llana. El detalle
+ * tecnico esta en el bloque plegado de la Mesa.
+ */
+const EN_EXPEDIENTE = "Pronto aquí; mientras tanto, consúltalo en el expediente.";
 const PROXIMAMENTE = [
-  ["Ingresos verificados", "La cola no trae la verificación de ingresos; está en el expediente"],
-  ["Deuda / ingreso", "La cola no trae el DTI; está en el expediente"],
-  ["Regla de política aplicada", "La cola no trae la regla que disparó la banda"],
+  ["Ingresos verificados", EN_EXPEDIENTE],
+  ["Deuda / ingreso", EN_EXPEDIENTE],
+  ["Regla de política aplicada", "Este dato estará disponible próximamente."],
 ] as const;
 
 /**
@@ -54,7 +58,7 @@ export function TarjetaCola({ item, formato, href }: { item: BankQueueItem; form
           </p>
         </div>
         <div className="min-w-[132px]">
-          {monto ? <p className={`${DCC_CLASSES.cifra} text-base`}>{monto}</p> : <SelloCalidad calidad={{ estado: "no_disponible", motivo: "El branding del tenant no declara moneda" }} />}
+          {monto ? <p className={`${DCC_CLASSES.cifra} text-base`}>{monto}</p> : <SelloCalidad calidad={{ estado: "no_disponible", motivo: "El importe estará disponible próximamente." }} />}
           <span className={`mt-1 inline-flex rounded-full border px-2 text-[11px] font-semibold ${PRIORIDAD_ESTILO[item.priority] ?? PRIORIDAD_ESTILO.BAJA}`}>
             Prioridad {PRIORIDAD_TEXTO[item.priority] ?? "—"}
           </span>
