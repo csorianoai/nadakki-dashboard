@@ -24,6 +24,7 @@ export function DecisionPanel({
   sticky = false,
   className,
   canDecide = true,
+  forbiddenReason,
   errorDetail,
   lenderOptions = [],
   lenderCode,
@@ -251,7 +252,7 @@ export function DecisionPanel({
               data-testid="decision-panel-forbidden"
               style={{ marginBottom: 12, fontSize: 12.5, color: "var(--ch-text-3)" }}
             >
-              Tu rol no tiene permiso para registrar decisiones en esta solicitud.
+              {forbiddenReason ?? "Tu rol no tiene permiso para registrar decisiones en esta solicitud."}
             </p>
           ) : null}
 
