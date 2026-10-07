@@ -64,6 +64,8 @@ function normalizeSeverity(raw: string | null | undefined): BankComplianceIssueV
   return s || "media";
 }
 
+const AUDIT_QUEUE_FILTERS = { estado: "todas" };
+
 /**
  * Tenant-wide audit timeline built from the real per-application audit trail
  * endpoint, aggregated across the active queue. No synthetic events.
@@ -71,9 +73,11 @@ function normalizeSeverity(raw: string | null | undefined): BankComplianceIssueV
 export function useBankGlobalAuditTrail(appLimit: number = GLOBAL_AGGREGATION_APP_LIMIT): BankGlobalAuditTrailResult {
   const { tenantId } = useTenant();
 
+  // BANK-V2-06: la bitacora es de TODAS las solicitudes. La cola por defecto
+  // excluye lo ya decidido, que es justo lo que mas importa auditar.
   const queueQuery = useQuery({
-    queryKey: chKeys.bankQueue(tenantId ?? "", { limit: appLimit }),
-    queryFn: () => getQueue({ tenantId: tenantId!, limit: appLimit }),
+    queryKey: chKeys.bankQueue(tenantId ?? "", { limit: appLimit, filters: AUDIT_QUEUE_FILTERS }),
+    queryFn: () => getQueue({ tenantId: tenantId!, limit: appLimit, filters: AUDIT_QUEUE_FILTERS }),
     enabled: !!tenantId,
     staleTime: AUDIT_STALE_MS,
   });
