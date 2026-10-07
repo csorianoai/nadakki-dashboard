@@ -24,6 +24,11 @@ export type DccShellProps = {
   migas: DccMiga[];
   usuario: DccUsuario;
   onSalir?: () => void;
+  /**
+   * Clave de Local Storage para recordar el tema (como el dealer). Sin clave,
+   * el tema dura la sesion en memoria.
+   */
+  temaStorageKey?: string;
   children: ReactNode;
 };
 
@@ -43,18 +48,20 @@ const TIPOGRAFIA = [
 /**
  * Shell de presentacion del sistema DCC: barra lateral marina con el item
  * activo en dorado, barra superior con migas, conmutador de tema y usuario.
- * Todo llega por props; no sabe de ningun portal. El tema dura la sesion en
- * memoria y se comparte con las paginas (DccThemeContext).
+ * Todo llega por props; no sabe de ningun portal. El tema se comparte con las
+ * paginas (DccThemeContext) y se recuerda si el llamador da `temaStorageKey`.
+ * El conmutador vive SOLO en la barra superior: las cabeceras de pagina no
+ * repiten el suyo.
  */
 export function DccShell(props: DccShellProps) {
   return (
-    <DccThemeProvider>
+    <DccThemeProvider storageKey={props.temaStorageKey} conmutadorEnChrome>
       <DccShellChrome {...props} />
     </DccThemeProvider>
   );
 }
 
-function DccShellChrome({ firma, marca, grupos, activo, migas, usuario, onSalir, children }: DccShellProps) {
+function DccShellChrome({ firma, marca, grupos, activo, migas, usuario, onSalir, children }: Omit<DccShellProps, "temaStorageKey">) {
   const contexto = useDccThemeContext();
   const theme = contexto?.theme ?? "light";
   const [menuMovil, setMenuMovil] = useState(false);
