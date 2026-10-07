@@ -12,6 +12,8 @@ import { useBankGlobalCompliance } from "@/lib/credit-hub/hooks/useBankAuditComp
 import type { Calidad } from "@/lib/dcc/calidad";
 import { formatEntero } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
+import { DetalleTecnico } from "../comun/DetalleTecnico";
+import { proximamente } from "../comun/llano";
 import { textoSeveridad } from "../expediente/expediente";
 
 const RANGO: Record<string, number> = { alta: 0, media: 1, baja: 2 };
@@ -29,9 +31,10 @@ export function CumplimientoV2({ marca, hrefSolicitud }: { marca: MarcaDcc; href
   if (c.isLoading) return <DccEstado estado="cargando" />;
   const issues = [...c.issues].sort((a, b) => (RANGO[a.severity] ?? 9) - (RANGO[b.severity] ?? 9));
   const altas = issues.filter((i) => i.severity === "alta").length;
-  const cobertura: Calidad = c.isPartialCoverage
-    ? { estado: "parcial", cubiertos: c.reviewedCount, total: null, motivo: "Se revisan las solicitudes más recientes de la cola (máximo 50): no hay un listado de cumplimiento del tenant" }
-    : { estado: "parcial", cubiertos: null, total: null, motivo: "El backend del banco aún no declara la calidad de esta cifra" };
+  // "parcial" solo si la cola informa mas solicitudes de las revisadas; si no, sin sello.
+  const cobertura: Calidad | null = c.isPartialCoverage
+    ? { estado: "parcial", cubiertos: c.reviewedCount, total: null, motivo: "Se revisan las 50 solicitudes más recientes de la cola." }
+    : null;
 
   return (
     <DccPageMarco titulo="Cumplimiento" marca={marca}>
@@ -40,7 +43,7 @@ export function CumplimientoV2({ marca, hrefSolicitud }: { marca: MarcaDcc; href
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
             <DccKpiTile etiqueta="Incidencias abiertas" valor={formatEntero(issues.length, f)} nota={`${formatEntero(altas, f)} de severidad alta`} calidad={cobertura} />
             <DccKpiTile etiqueta="Solicitudes revisadas" valor={formatEntero(c.reviewedCount, f)} calidad={cobertura} />
-            <DccKpiTile etiqueta="Derecho al olvido pendientes" valor={null} calidad={{ estado: "no_disponible", motivo: "No hay endpoint de listado RTBF" }} />
+            <DccKpiTile etiqueta="Derecho al olvido pendientes" valor={null} calidad={proximamente()} />
           </div>
           <div className="mt-4">
             {issues.length === 0 ? (
@@ -67,9 +70,15 @@ export function CumplimientoV2({ marca, hrefSolicitud }: { marca: MarcaDcc; href
         <DccSeccion titulo="Derecho al olvido" icono={ShieldOff}>
           <p className={`text-sm ${DCC_CLASSES.muted}`}>Solicitudes de eliminación de datos personales.</p>
           <div className="mt-2">
-            <SelloCalidad calidad={{ estado: "no_disponible", motivo: "El backend aún no expone el listado RTBF" }} />
+            <SelloCalidad calidad={proximamente("El listado de solicitudes de derecho al olvido estará disponible próximamente.")} />
           </div>
         </DccSeccion>
+        <DetalleTecnico
+          notas={[
+            { que: "Derecho al olvido", detalle: "el backend aún no expone el listado RTBF" },
+            ...(c.isPartialCoverage ? [{ que: "Incidencias", detalle: "no hay listado de cumplimiento del tenant: se lee compliance/{id} de las 50 solicitudes más recientes de la cola" }] : []),
+          ]}
+        />
       </div>
     </DccPageMarco>
   );

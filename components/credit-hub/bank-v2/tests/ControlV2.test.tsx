@@ -31,7 +31,7 @@ const marca = marcaDesdeBranding({ locale: "es-DO", currency: "DOP" }, "banco");
 const envolver = (ui: React.ReactNode) => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider>);
 const visible = (c: HTMLElement) => {
   const x = c.cloneNode(true) as HTMLElement;
-  x.querySelectorAll(".sr-only").forEach((n) => n.remove());
+  x.querySelectorAll(".sr-only, [data-testid=detalle-tecnico]").forEach((n) => n.remove());
   return x.textContent ?? "";
 };
 
@@ -62,6 +62,10 @@ describe("Cumplimiento y Auditoria v2 (B6)", () => {
     const { container } = envolver(<EscalacionesV2 marca={marca} hrefSolicitud={(id) => id} />);
     expect(visible(container)).toContain("Próximamente");
     expect(visible(container)).not.toMatch(/NEXT_PUBLIC|PENDING_MANUAL_REVIEW|flag/);
+    // El nombre del flag solo dentro del bloque plegado "Detalle técnico".
+    const detalle = screen.getByTestId("detalle-tecnico");
+    expect(detalle).not.toHaveAttribute("open");
+    expect(detalle.textContent).toMatch(/NEXT_PUBLIC_/);
   });
 
   it("vehiculos: misma consulta; anomalia en llano, sin JSON ni campos crudos", async () => {
