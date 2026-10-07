@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
+import { Asignacion } from "@/components/credit-hub/bank-v2/expediente/Asignacion";
+import { bloqueoDecision } from "@/components/credit-hub/bank-v2/expediente/decision";
 import { PrintExportActions } from "@/components/credit-hub/bank/PrintExportActions";
 import { EscalateKycButton } from "@/components/credit-hub/bank/EscalateKycButton";
 import { PilotLabelsRow } from "@/components/credit-hub/labels/PilotLabelsRow";
@@ -80,6 +82,10 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
     bankClaim?.analyst_id && user?.id && bankClaim.analyst_id === user.id,
   );
   const canDecide = actorCan("create_decision") && ownsBankClaim && !hasBankDecision;
+  // BANK-V2-03: el panel decia "Tu rol no tiene permiso" tambien cuando lo que
+  // faltaba era el claim. Misma causa en llano que el expediente v2.
+  const forbiddenReason = bloqueoDecision({ puedeRol: actorCan("create_decision"), esDueno: ownsBankClaim, yaDecidida: hasBankDecision }) ?? undefined;
+  const sinAsignar = !bankClaim?.analyst_id && !hasBankDecision;
   const applicant = payload.applicant ?? {};
   const financial = payload.financial ?? {};
   const vehicle = payload.vehicle ?? {};
@@ -248,6 +254,19 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
 
       <AssignedAnalystSection applicationId={application.application_id} roleKey={roleKey} claim={bankClaim} />
 
+      {sinAsignar ? (
+        <div style={{ marginBottom: 12 }}>
+          <Asignacion
+            applicationId={application.application_id}
+            tenantId={apiTenantId}
+            userId={user?.id}
+            roleKey={roleKey}
+            puedeDecidir={actorCan("create_decision")}
+            prestamistas={lenderOptions}
+          />
+        </div>
+      ) : null}
+
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <EscalateKycButton applicationId={application.application_id} />
       </div>
@@ -380,6 +399,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           sticky
           state={panelState}
           canDecide={canDecide}
+          forbiddenReason={forbiddenReason}
           errorDetail={decisionErrorDetail}
           lenderOptions={lenderOptions}
           lenderCode={selectedLenderCode}
