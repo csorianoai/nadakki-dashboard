@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, ShieldOff } from "lucide-react";
+import { ClipboardCheck, Scale, ShieldOff } from "lucide-react";
 import { DCC_CLASSES } from "@/components/dcc/clases";
 import { DccEstado } from "@/components/dcc/DccEstado";
 import { DccKpiTile } from "@/components/dcc/DccKpiTile";
@@ -14,6 +14,7 @@ import { formatEntero } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { DetalleTecnico } from "../comun/DetalleTecnico";
 import { proximamente } from "../comun/llano";
+import { marcoRegulatorio } from "../comun/regulacion";
 import { textoSeveridad } from "../expediente/expediente";
 
 const RANGO: Record<string, number> = { alta: 0, media: 1, baja: 2 };
@@ -22,9 +23,21 @@ const RANGO: Record<string, number> = { alta: 0, media: 1, baja: 2 };
  * Cumplimiento (bank-v2). El mismo agregado que la pantalla actual
  * (useBankGlobalCompliance: compliance/{id} de las ultimas solicitudes de la
  * cola). Sin el boton "Resolver", que hoy no hace nada, y sin contadores
- * fijos en "—": lo que no tiene endpoint dice "Próximamente".
+ * fijos en "—": lo que no tiene endpoint dice "Próximamente". Arriba, el marco
+ * regulatorio del tenant (Ley 172-13 en Republica Dominicana) si el branding
+ * declara su perfil.
  */
-export function CumplimientoV2({ marca, hrefSolicitud }: { marca: MarcaDcc; hrefSolicitud: (id: string) => string }) {
+export function CumplimientoV2({
+  marca,
+  hrefSolicitud,
+  perfilRegulatorio,
+}: {
+  marca: MarcaDcc;
+  hrefSolicitud: (id: string) => string;
+  /** `regulatory_profile` del branding del tenant. */
+  perfilRegulatorio?: string | null;
+}) {
+  const marco = marcoRegulatorio(perfilRegulatorio);
   const c = useBankGlobalCompliance();
   const f = marca.formato;
   if (c.isError) return <DccEstado estado="error" detalle="No pudimos cargar el cumplimiento" onReintentar={c.refetch} />;
@@ -39,6 +52,12 @@ export function CumplimientoV2({ marca, hrefSolicitud }: { marca: MarcaDcc; href
   return (
     <DccPageMarco titulo="Cumplimiento" marca={marca}>
       <div className="grid gap-[var(--dcc-gap)]">
+        {marco ? (
+          <DccSeccion titulo="Marco regulatorio" icono={Scale} testId="cumplimiento-marco">
+            <p className="font-semibold">{marco.titulo}</p>
+            <p className={`mt-1 text-sm ${DCC_CLASSES.muted}`}>{marco.descripcion}</p>
+          </DccSeccion>
+        ) : null}
         <DccSeccion titulo="Incidencias" icono={ClipboardCheck} clave>
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
             <DccKpiTile etiqueta="Incidencias abiertas" valor={formatEntero(issues.length, f)} nota={`${formatEntero(altas, f)} de severidad alta`} calidad={cobertura} />
@@ -68,7 +87,9 @@ export function CumplimientoV2({ marca, hrefSolicitud }: { marca: MarcaDcc; href
           </div>
         </DccSeccion>
         <DccSeccion titulo="Derecho al olvido" icono={ShieldOff}>
-          <p className={`text-sm ${DCC_CLASSES.muted}`}>Solicitudes de eliminación de datos personales.</p>
+          <p className={`text-sm ${DCC_CLASSES.muted}`}>
+            Solicitudes de eliminación de datos personales{marco?.codigo === "DO" ? ", conforme a la Ley 172-13" : ""}.
+          </p>
           <div className="mt-2">
             <SelloCalidad calidad={proximamente("El listado de solicitudes de derecho al olvido estará disponible próximamente.")} />
           </div>
