@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -22,6 +22,8 @@ import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { cn } from "@/lib/utils";
 import { personaLabel } from "@/lib/credit-hub/design/persona";
 import { DEALER_NEW_APPLICATION_QUERY } from "@/lib/credit-hub/dealer/dealerFormat";
+import { AuthContext } from "@/lib/auth/auth-context";
+import { RUTA_V2_POR_RUTA_BANCO, aplicaPanelBancoV2 } from "@/lib/credit-hub/bank/panel-v2-por-defecto";
 
 type NavItem = { id: string; href: string; label: string; icon: typeof Home };
 
@@ -48,6 +50,8 @@ export function ForgeCreditHubSidebar({
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
   const { data: branding, isPending: brandingPending } = useTenantBranding();
+  // Sin AuthProvider (previews, tests) no hay roles: menu de siempre.
+  const panelBancoV2 = aplicaPanelBancoV2(useContext(AuthContext)?.allRoles ?? []);
 
   const loadingHeader = showHeaderSkeleton || brandingPending;
   const logoSrc = branding?.logo_url ?? tenantConfig.branding.logo_url ?? null;
@@ -62,14 +66,18 @@ export function ForgeCreditHubSidebar({
         { id: "d-new", href: `/credit-hub/dealer/applications/new?${DEALER_NEW_APPLICATION_QUERY}`, label: "Nueva", icon: Plus },
       ];
     }
-    return [
+    const bank: NavItem[] = [
       { id: "b-dash", href: "/credit-hub/bank", label: t.bank.nav.dashboard, icon: Gauge },
       { id: "b-queue", href: "/credit-hub/bank/applications", label: t.bank.nav.queue, icon: ClipboardList },
       { id: "b-analytics", href: "/credit-hub/bank/analytics", label: t.bank.nav.analytics, icon: BarChart3 },
       { id: "b-comp", href: "/credit-hub/bank/compliance", label: t.bank.nav.compliance, icon: ShieldCheck },
       { id: "b-audit", href: "/credit-hub/bank/audit", label: t.bank.nav.audit, icon: History },
     ];
-  }, [persona, t]);
+    // BANK-V2-DEFAULT: con el interruptor apagado (default) los href no cambian.
+    return panelBancoV2
+      ? bank.map((i) => ({ ...i, href: RUTA_V2_POR_RUTA_BANCO[i.href] ?? i.href }))
+      : bank;
+  }, [persona, t, panelBancoV2]);
 
   return (
     <aside
@@ -117,6 +125,7 @@ export function ForgeCreditHubSidebar({
           const active =
             pathname === item.href ||
             (item.href !== "/credit-hub/bank" &&
+              item.href !== "/credit-hub/bank-v2" &&
               item.href !== "/credit-hub/dealer" &&
               pathname?.startsWith(item.href));
           return (

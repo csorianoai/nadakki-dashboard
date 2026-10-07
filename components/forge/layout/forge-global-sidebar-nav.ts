@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import type { RoleInfo } from "@/lib/api/auth-v2";
 import { isForgeMonetizacionEnabled } from "@/lib/env/feature-forge-monetizacion";
+import { RUTA_V2_POR_RUTA_BANCO, aplicaPanelBancoV2 } from "@/lib/credit-hub/bank/panel-v2-por-defecto";
 import { COCKPIT_CONSOLIDATION_FLAGS } from "@/lib/cockpit/finance-v3/flags";
 
 export type NavBadge = "NEW" | "BETA" | "POPULAR";
@@ -286,6 +287,15 @@ function filterNavItemsForCoreAccess(
     });
 }
 
+/** Cambia los href del panel actual del banco por los de bank-v2; el resto queda igual. */
+function aRutasBancoV2(items: NavItem[]): NavItem[] {
+  return items.map((i) => ({
+    ...i,
+    href: i.href ? (RUTA_V2_POR_RUTA_BANCO[i.href] ?? i.href) : i.href,
+    children: i.children ? aRutasBancoV2(i.children) : undefined,
+  }));
+}
+
 /** v2: all cores always visible; sub-items filtered by role, subscription, and super-admin flags. */
 export function filterSectionsForUser(
   sections: NavSection[],
@@ -295,6 +305,7 @@ export function filterSectionsForUser(
 ): NavSection[] {
   const isSuper = isPlatformSuperAdmin(allRoles);
   const seesAllHubs = userSeesAllForgeHubSections(allRoles);
+  const panelBancoV2 = aplicaPanelBancoV2(allRoles);
 
   return sections.map((sec) => {
     if (sec.id === "admin") {
@@ -303,16 +314,19 @@ export function filterSectionsForUser(
         children: showAdmin ? filterNavItems(sec.children, isSuper) : [],
       };
     }
+    const children = filterNavItemsForCoreAccess(
+      sec.children,
+      isSuper,
+      allRoles,
+      subscribed,
+      sec.coreMatchers,
+      seesAllHubs,
+    );
+    // BANK-V2-DEFAULT: solo con el interruptor encendido y un usuario de banco
+    // (nunca superadmin ni dealer) el menu del banco apunta a bank-v2.
     return {
       ...sec,
-      children: filterNavItemsForCoreAccess(
-        sec.children,
-        isSuper,
-        allRoles,
-        subscribed,
-        sec.coreMatchers,
-        seesAllHubs,
-      ),
+      children: sec.id === "credit-hub" && panelBancoV2 ? aRutasBancoV2(children) : children,
     };
   });
 }
