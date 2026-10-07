@@ -14,9 +14,10 @@ import { isChPanelLoading } from "@/lib/credit-hub/hooks/chQueryPanel";
 import { useBankAnalytics } from "@/lib/credit-hub/hooks/useBankAnalytics";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
-import { formatEntero, formatMonedaCompacta, formatPorcentaje } from "@/lib/dcc/formato";
+import { formatEntero, formatMonedaCompacta } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { DetalleTecnico } from "../comun/DetalleTecnico";
+import { porcentaje } from "../comun/formato";
 import { parcialSiLimite, proximamente, type NotaTecnica } from "../comun/llano";
 import { colaPorUrgencia, primerNombre, saludo } from "./mesa";
 import { MetasDelMes } from "./MetasDelMes";
@@ -154,7 +155,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
                       <tr key={d.dealer} className="border-t border-[var(--dcc-border)]">
                         <td className="py-2 pr-2">{d.dealer}</td>
                         <td className="py-2 text-right tabular-nums">{formatEntero(d.volume, formato)}</td>
-                        <td className="py-2 text-right tabular-nums">{formatPorcentaje(d.approval_rate, formato)}</td>
+                        <td className="py-2 text-right tabular-nums">{porcentaje(d.approval_rate, formato)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -172,7 +173,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
         <DccSeccion titulo="Indicadores" icono={Gauge} testId="mesa-kpis">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3 xl:grid-cols-6">
             <DccKpiTile etiqueta="Solicitudes pendientes" valor={formatEntero(pendientes, formato)} calidad={pendientes != null ? null : proximamente()} />
-            <DccKpiTile etiqueta="Tasa de aprobación · 30 d" valor={formatPorcentaje(analytics?.approval_rate, formato)} calidad={analytics ? null : proximamente()} />
+            <DccKpiTile etiqueta="Tasa de aprobación · 30 d" valor={porcentaje(analytics?.approval_rate, formato)} calidad={analytics ? null : proximamente()} />
             <DccKpiTile
               etiqueta="Respuesta media"
               valor={aprobacion?.avg_response_hours != null ? new Intl.NumberFormat(formato.locale, { maximumFractionDigits: 1 }).format(aprobacion.avg_response_hours) : null}

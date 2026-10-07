@@ -16,7 +16,8 @@ import { chKeys } from "@/lib/credit-hub/hooks/queryKeys";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import type { BankDocumentPayload, BankReviewPayload } from "@/lib/credit-hub/types/bank-views";
 import type { BankReviewApplication } from "@/lib/credit-hub/types/bankDecision";
-import { formatEntero, formatMoneda, formatPorcentaje, type LocaleTenant } from "@/lib/dcc/formato";
+import { formatEntero, formatMoneda, type LocaleTenant } from "@/lib/dcc/formato";
+import { porcentaje, puntosPorcentuales } from "../comun/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { BANDA_TEXTO, RIESGO_TEXTO } from "../mesa/mesa";
 import { datosCabecera, estadoDocumento, textoActor, textoDecision, textoEstado, textoEvento, textoSeveridad } from "./expediente";
@@ -106,7 +107,7 @@ export function ExpedienteV2({ applicationId, marca, hrefVistaActual, hrefBandej
             <Hecho k="Plazo" v={c.plazo != null ? `${formatEntero(c.plazo, f)} meses` : null} />
             <Hecho
               k="Tasa solicitada"
-              v={c.tasa != null ? `${new Intl.NumberFormat(f.locale, { maximumFractionDigits: 2 }).format(c.tasa)} %` : null}
+              v={puntosPorcentuales(c.tasa, f)}
             />
             <Hecho k="Inicial" v={formatMoneda(c.inicial, f)} />
           </dl>
@@ -255,7 +256,7 @@ function Resumen({ payload, formato }: { payload: BankReviewPayload; formato: Lo
         <Hecho k="Score" v={formatEntero(a.score, formato)} cifra />
         <Hecho k="Nivel de riesgo" v={RIESGO_TEXTO[a.risk_level] ?? null} />
         <Hecho k="Banda del motor" v={BANDA_TEXTO[a.approval_band] ?? null} />
-        <Hecho k="Deuda / ingreso" v={formatPorcentaje(a.dti, formato)} />
+        <Hecho k="Deuda / ingreso" v={porcentaje(a.dti, formato)} />
         <Hecho k="Ingreso mensual" v={formatMoneda(m?.monthly_income, formato)} />
         <Hecho k="Deudas mensuales" v={formatMoneda(m?.monthly_debts, formato)} />
         <Hecho k="Cuota estimada" v={formatMoneda(a.estimated_payment, formato)} />
