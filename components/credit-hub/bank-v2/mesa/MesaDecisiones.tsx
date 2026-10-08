@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, CalendarClock, Gauge, HeartPulse, Inbox, Network, Sparkles } from "lucide-react";
+import { BarChart3, BellRing, CalendarClock, Gauge, HeartPulse, Inbox, Network, Sparkles } from "lucide-react";
 import { DCC_CLASSES } from "@/components/dcc/clases";
 import { DccEstado } from "@/components/dcc/DccEstado";
 import { DccKpiTile } from "@/components/dcc/DccKpiTile";
@@ -13,12 +13,15 @@ import { pendingQueueCount } from "@/lib/credit-hub/bank/bankFormat";
 import { isChPanelLoading } from "@/lib/credit-hub/hooks/chQueryPanel";
 import { useBankAnalytics } from "@/lib/credit-hub/hooks/useBankAnalytics";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
+import { currentGoalsPeriod } from "@/lib/credit-hub/api/goalsClient";
+import { useMonthlyGoals } from "@/lib/credit-hub/hooks/useMonthlyGoals";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { formatEntero, formatMonedaCompacta } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { DetalleTecnico } from "../comun/DetalleTecnico";
 import { porcentaje } from "../comun/formato";
 import { parcialSiLimite, proximamente, type NotaTecnica } from "../comun/llano";
+import { alertasMesa } from "./alertas";
 import { colaPorUrgencia, primerNombre, saludo } from "./mesa";
 import { MetasDelMes } from "./MetasDelMes";
 import { TarjetaCola } from "./TarjetaCola";
@@ -55,6 +58,8 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
   const colaQ = useBankQueue();
   const analyticsQ = useBankAnalytics();
   const kpisQ = useKpisBanco();
+  // Misma consulta (y misma clave de cache) que MetasDelMes: no hay peticion extra.
+  const metasQ = useMonthlyGoals("bank", currentGoalsPeriod());
   const formato = marca.formato;
   const items = colaQ.data?.applications ?? [];
   const cola = colaPorUrgencia(items);
@@ -77,6 +82,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
   if (portafolio && (portafolio.total_approved_amount == null || !formato.currency)) notas.push({ que: "Monto aprobado", detalle: "sin total_approved_amount en kpis/portfolio o sin moneda en el branding" });
   if (!formato.currency) notas.push({ que: "Importes", detalle: "el branding del tenant no declara moneda" });
   if (analytics && parcialSiLimite(analytics.total_applications)) notas.push({ que: "Red de dealers", detalle: "el ranking toma el dealer del payload y analytics/dashboard lee como máximo 500 solicitudes" });
+  const alertas = colaQ.data ? alertasMesa({ items, metas: metasQ.data?.goals ?? [], periodo: metasQ.data?.period ?? currentGoalsPeriod(), ahora }) : null;
   const corte = colaQ.dataUpdatedAt ? new Intl.DateTimeFormat(formato.locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(colaQ.dataUpdatedAt) : null;
 
   return (
@@ -95,6 +101,33 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
                 : `${formatEntero(cola.length, formato)} ${cola.length === 1 ? "solicitud pendiente" : "solicitudes pendientes"}; ${formatEntero(altas, formato)} de prioridad alta.`}
           </p>
         </DccSeccion>
+
+        {alertas ? (
+          <DccSeccion titulo="Alertas" icono={BellRing} meta={alertas.length ? `${formatEntero(alertas.length, formato)} activas` : null} testId="mesa-alertas">
+            {alertas.length === 0 ? (
+              <p className={`text-sm ${DCC_CLASSES.muted}`}>Sin alertas por ahora.</p>
+            ) : (
+              <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {alertas.map((a) => (
+                  <li
+                    key={a.id}
+                    data-testid="mesa-alerta"
+                    data-tono={a.tono}
+                    className={`rounded-lg border px-3 py-2 text-sm ${a.tono === "alta" ? "border-[var(--dcc-error-fg)] bg-[var(--dcc-error-bg)]" : "border-[var(--dcc-partial-line)] bg-[var(--dcc-partial-bg)]"}`}
+                  >
+                    <p className="font-semibold">{a.titulo}</p>
+                    <p className={`text-xs ${DCC_CLASSES.muted}`}>{a.detalle}</p>
+                    {a.id.startsWith("meta-") ? null : (
+                      <Link href={hrefBandeja} className={`mt-1 text-xs ${DCC_CLASSES.link}`}>
+                        Ver en la bandeja
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </DccSeccion>
+        ) : null}
 
         <div className="grid items-start gap-[var(--dcc-gap)] xl:grid-cols-[minmax(0,1fr)_340px]">
           <DccSeccion
