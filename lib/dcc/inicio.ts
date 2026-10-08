@@ -30,7 +30,7 @@ function calidadDe(body: unknown, firmadaN6: Calidad): Calidad {
   return rec && rec.quality !== undefined ? calidadDesdeBackend(rec.quality) : firmadaN6;
 }
 
-async function leerJson(path: string): Promise<unknown> {
+export async function leerJson(path: string): Promise<unknown> {
   const response = await apiFetch(path, { headers: { Accept: "application/json" } });
   let body: unknown = null;
   try {

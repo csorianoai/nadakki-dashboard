@@ -19,9 +19,13 @@ const ICONO = {
   no_disponible: CircleDashed,
 } as const;
 
-/** Lo que ve el usuario. Sin dato: solo "Próximamente"; el porque va al tooltip. */
+/**
+ * Lo que ve el usuario. Sin dato: "no disponible" si el backend lo dijo y
+ * "Próximamente" si aun no hay endpoint; el porque va al tooltip.
+ */
 export function textoSello(calidad: Calidad): string {
-  return calidad.estado === "no_disponible" ? "Próximamente" : rotuloCalidad(calidad);
+  if (calidad.estado !== "no_disponible") return rotuloCalidad(calidad);
+  return calidad.delBackend ? "no disponible" : "Próximamente";
 }
 
 /** Detalle para el tooltip: motivo y rotulos tecnicos, nunca en la vista. */
