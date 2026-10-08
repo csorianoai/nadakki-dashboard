@@ -216,7 +216,9 @@ export function CostosVehiculoPanel({
             <select
               name="cost_type"
               value={form.cost_type}
-              onChange={(event) => setForm({ ...form, cost_type: event.target.value })}
+              onChange={(event) =>
+                setForm({ ...form, cost_type: event.target.value, is_opening: false })
+              }
               disabled={alta.isPending}
               className={FIELD_CLASS}
             >
@@ -349,12 +351,20 @@ export function CostosVehiculoPanel({
 
         {reparacion ? null : (
           <label data-testid="costo-saldo-inicial" className="flex min-h-11 items-start gap-2">
-            <input type="checkbox" name="is_opening" checked={false} disabled readOnly className="mt-1 h-4 w-4" />
+            <input
+              type="checkbox"
+              name="is_opening"
+              checked={form.is_opening}
+              onChange={(event) => setForm({ ...form, is_opening: event.target.checked })}
+              disabled={alta.isPending}
+              className="mt-1 h-4 w-4"
+            />
             <span className="text-sm text-nk-fg">
-              <span className="font-semibold">Saldo inicial · Próximamente</span>
+              <span className="font-semibold">Saldo inicial</span>
               <span className="block text-xs text-nk-fg-muted">
-                El servidor todavía no acepta este dato, así que no se habilita: si se tildara, el costo
-                quedaría registrado como compra nueva (2010 — Proveedores).
+                {form.is_opening
+                  ? "Stock que ya tenías: el costo se registra como saldo inicial (3020), no como compra nueva."
+                  : "Tildalo si este vehículo ya estaba en stock. Si no, se registra como compra nueva (2010 — Proveedores)."}
               </span>
             </span>
           </label>

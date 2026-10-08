@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/fetch-client";
-import { briefDeterminista, detalleDeError, esUuid, fetchLeadsTotal, fetchSolicitudesTotal, fetchLeadsPagina, fetchUnidadesEnStock, TARJETAS_INICIO, textoLeads } from "@/lib/dcc/inicio";
+import { briefDeterminista, CAPABILITIES_INICIO, detalleDeError, esUuid, fetchLeadsTotal, fetchSolicitudesTotal, fetchLeadsPagina, fetchUnidadesEnStock, TARJETAS_DETALLE, TARJETAS_INICIO, textoLeads } from "@/lib/dcc/inicio";
 import { fetchDealerInventory } from "@/lib/dealer-management/inventory";
 
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
@@ -55,6 +55,20 @@ describe("datos del Command Center v2", () => {
 
   it("la fila de Estado del negocio son los 6 KPI de la referencia, en orden", () => {
     expect(TARJETAS_INICIO.map((t) => t.titulo)).toEqual(["Inventario", "Capital", "Margen", "Leads", "Financiamiento", "Caja"]);
+  });
+
+  it("F3: toda la fila de detalle tiene ruta en main y la capability que exige el backend; el batch no repite capabilities", () => {
+    expect(TARJETAS_DETALLE.filter((t) => t.capability === null)).toEqual([]);
+    expect(Object.fromEntries(TARJETAS_DETALLE.map((t) => [t.id, t.capability]))).toEqual({
+      dias: "autos.inventory.list",
+      ingreso: "autos.inventory.list",
+      respuesta: "autos.leads.crm",
+      conversion: "autos.leads.crm",
+      ofertas: "credit.applications.view",
+      fondeo: "credit.applications.view",
+    });
+    expect(TARJETAS_INICIO.find((t) => t.id === "capital")?.capability).toBe("autos.inventory.list");
+    expect(new Set(CAPABILITIES_INICIO).size).toBe(CAPABILITIES_INICIO.length);
   });
 
   it("esUuid distingue el UUID del tenant de su slug", () => {

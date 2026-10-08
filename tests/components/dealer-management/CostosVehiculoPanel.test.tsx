@@ -143,15 +143,30 @@ describe("alta de un costo normal", () => {
     });
   });
 
-  it("saldo inicial es una casilla deshabilitada que avisa que iria a 2010, y no envia is_opening", async () => {
+  it("saldo inicial tildado envia is_opening=true y avisa que va contra 3020", async () => {
     montar();
     await screen.findByTestId("costo-alta-form");
-    const aviso = screen.getByTestId("costo-saldo-inicial");
-    expect(aviso).toHaveTextContent("no acepta este dato");
-    expect(aviso).not.toHaveTextContent("va contra 3020");
     const casilla = screen.getByRole("checkbox", { name: /Saldo inicial/ });
-    expect(casilla).toBeDisabled();
+    expect(casilla).toBeEnabled();
     expect(casilla).not.toBeChecked();
+    fireEvent.click(casilla);
+    expect(screen.getByTestId("costo-saldo-inicial")).toHaveTextContent("3020");
+    rellena("125000.50");
+    fetchMock.mockClear();
+    respondeTotales([]);
+    fireEvent.submit(screen.getByTestId("costo-alta-form"));
+    await waitFor(() => expect(screen.getByTestId("costo-alta-ack")).toBeInTheDocument());
+    const post = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    expect(JSON.parse(String(post?.[1]?.body))).toHaveProperty("is_opening", true);
+  });
+
+  it("sin tildar no se envia is_opening, y al pasar a reparacion se descarta", async () => {
+    montar();
+    await screen.findByTestId("costo-alta-form");
+    fireEvent.click(screen.getByRole("checkbox", { name: /Saldo inicial/ }));
+    eligeTipo("repair");
+    eligeTipo("purchase");
+    expect(screen.getByRole("checkbox", { name: /Saldo inicial/ })).not.toBeChecked();
     rellena("125000.50");
     fetchMock.mockClear();
     respondeTotales([]);

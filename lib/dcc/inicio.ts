@@ -132,11 +132,24 @@ export type TarjetaInicio = {
 /** Fila "Estado del negocio" de la referencia v3: seis KPI, en este orden. */
 export const TARJETAS_INICIO: TarjetaInicio[] = [
   { id: "stock", titulo: "Inventario", metricKey: "inventory_units@1.0", unidad: "en stock", capability: "autos.inventory.list", falta: null },
-  { id: "capital", titulo: "Capital", metricKey: "inventory_capital@1.0", unidad: null, capability: null, falta: "Falta endpoint: suma de costos por dealer sobre el stock" },
-  { id: "margen", titulo: "Margen", metricKey: "gross_margin@1.0", unidad: null, capability: null, falta: "Falta endpoint: margen por dealer, con cobertura" },
+  { id: "capital", titulo: "Capital", metricKey: "inventory_capital@1.0", unidad: null, capability: "autos.inventory.list", falta: null },
+  { id: "margen", titulo: "Margen", metricKey: "gross_margin@1.0", unidad: null, capability: "autos.inventory.list", falta: null },
   { id: "leads", titulo: "Leads", metricKey: "lead_count@1.0", unidad: "total", capability: "autos.leads.crm", falta: null },
   { id: "solicitudes", titulo: "Financiamiento", metricKey: "financing_applications@1.0", unidad: "solicitudes", capability: "credit.applications.view", falta: null },
   { id: "caja", titulo: "Caja", metricKey: "— (sin métrica en N6)", unidad: null, capability: null, falta: "Falta métrica y endpoint de caja y cobranzas" },
+];
+
+/**
+ * Segunda fila (F3-METRICAS): todas sus rutas estan montadas en main. El
+ * feed de actividad ("Hoy") es F3-FEED y sigue sin fuente.
+ */
+export const TARJETAS_DETALLE: TarjetaInicio[] = [
+  { id: "dias", titulo: "Días en inventario", metricKey: "inventory_age_days@1.0", unidad: "días prom.", capability: "autos.inventory.list", falta: null },
+  { id: "ingreso", titulo: "Ingreso potencial", metricKey: "potential_revenue@1.0", unidad: null, capability: "autos.inventory.list", falta: null },
+  { id: "respuesta", titulo: "Respuesta a leads", metricKey: "lead_response_time@1.0", unidad: "h (mediana)", capability: "autos.leads.crm", falta: null },
+  { id: "conversion", titulo: "Conversión de leads", metricKey: "lead_conversion_rate@1.0", unidad: null, capability: "autos.leads.crm", falta: null },
+  { id: "ofertas", titulo: "Ofertas listas", metricKey: "financing_offers_ready@1.0", unidad: "solicitudes", capability: "credit.applications.view", falta: null },
+  { id: "fondeo", titulo: "Conversión a fondeo", metricKey: "finance_conversion_rate@1.0", unidad: null, capability: "credit.applications.view", falta: null },
 ];
 
 /** Motivo tecnico de cada seccion sin fuente: solo tooltip. */
@@ -146,7 +159,9 @@ export const SECCIONES_SIN_FUENTE = {
   hoy: "Falta endpoint: no hay feed de actividad del dealer",
 } as const;
 
-export const CAPABILITIES_INICIO = TARJETAS_INICIO.map((t) => t.capability).filter((c): c is string => c !== null);
+export const CAPABILITIES_INICIO = Array.from(
+  new Set([...TARJETAS_INICIO, ...TARJETAS_DETALLE].map((t) => t.capability).filter((c): c is string => c !== null)),
+);
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
