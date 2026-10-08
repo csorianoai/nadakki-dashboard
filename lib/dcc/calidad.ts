@@ -8,7 +8,11 @@ export type Calidad =
   | { estado: "verificado" }
   | { estado: "parcial"; cubiertos: number | null; total: number | null; motivo: string | null }
   | { estado: "bloqueado"; reasonCode: string | null }
-  | { estado: "no_disponible"; motivo: string | null };
+  /**
+   * `delBackend`: el endpoint existe y DIJO que no hay cifra (sello "no
+   * disponible"). Sin la marca, aun no hay endpoint (sello "Próximamente").
+   */
+  | { estado: "no_disponible"; motivo: string | null; delBackend?: boolean };
 
 export const NO_DISPONIBLE: Calidad = { estado: "no_disponible", motivo: null };
 
