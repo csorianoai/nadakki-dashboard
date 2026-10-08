@@ -202,7 +202,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
           ) : null}
         </DccSeccion>
 
-        <MetasDelMes formato={formato} />
+        <MetasDelMes formato={formato} ahora={ahora} />
 
         <div className="grid items-start gap-[var(--dcc-gap)] md:grid-cols-2">
           <DccSeccion titulo="Hoy" icono={CalendarClock} testId="mesa-hoy">
