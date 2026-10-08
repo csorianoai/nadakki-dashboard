@@ -16,6 +16,10 @@ jest.mock("@/lib/credit-hub/hooks/useCreditHubActor", () => ({
   useCreditHubActor: () => ({ roleKey: "bank_analyst", can: () => true }),
 }));
 
+jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({
+  useTenant: () => ({ apiTenantId: "t1", tenantId: "t1", loading: false }),
+}));
+
 jest.mock("@/lib/bank-application-detail/claim-application", () => ({
   claimBankApplication: jest.fn().mockResolvedValue(undefined),
 }));
@@ -100,6 +104,10 @@ describe("BankDetailLayout", () => {
     expect(screen.getByTestId("decision-panel-forbidden")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /aprobar solicitud/i })).toBeDisabled();
     expect(screen.getByLabelText("Monto aprobado")).toHaveAttribute("readonly");
+    // BANK-V2-03: dice la causa real (no el rol) y ofrece asignarse.
+    expect(screen.getByTestId("decision-panel-forbidden")).toHaveTextContent("no está asignada a ti");
+    expect(screen.getByTestId("decision-panel-forbidden")).not.toHaveTextContent("Tu rol");
+    expect(screen.getByRole("button", { name: "Asignarme" })).toBeInTheDocument();
   });
 
   test("keeps controls blocked for another analyst in the same tenant", () => {
@@ -114,6 +122,8 @@ describe("BankDetailLayout", () => {
 
     expect(screen.getByTestId("decision-panel-forbidden")).toBeInTheDocument();
     expect(screen.getByLabelText("Monto aprobado")).toHaveAttribute("readonly");
+    expect(screen.getByTestId("decision-panel-forbidden")).toHaveTextContent("no está asignada a ti");
+    expect(screen.queryByRole("button", { name: "Asignarme" })).toBeNull();
   });
 
   test("enables decision controls for the analyst who owns the claim", () => {

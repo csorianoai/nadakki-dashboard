@@ -27,12 +27,12 @@ const EXPORTAR_TEXTO: Record<ResultadoExportar, string> = {
   error: "No pudimos exportar. Vuelve a intentarlo.",
 };
 
-function coincideEstado(item: BankQueueItem, estado: string): boolean {
-  const s = (item.state ?? "").toLowerCase();
-  if (estado === "pending") return s === "submitted";
-  if (estado === "review") return s === "claimed";
-  if (estado === "decided") return s === "decided";
-  return true;
+/** BANK-V2-05: el estado lo filtra el backend (`estado`), con total real. */
+const ESTADO_BACKEND: Record<string, string> = { all: "todas", pending: "pendientes", review: "en_revision", decided: "decididas" };
+const ESTADO_TEXTO: Record<string, string> = { pendiente: "Pendiente", en_revision: "En revisión", decidida: "Decidida" };
+
+function textoEstado(item: BankQueueItem & { estado_bandeja?: string | null }): string {
+  return (item.estado_bandeja && ESTADO_TEXTO[item.estado_bandeja]) ?? STATE_LABEL[item.state]?.[0] ?? (item.bank_decision ? "Decidida" : "Pendiente");
 }
 
 export type BandejaProps = {
@@ -47,16 +47,17 @@ export type BandejaProps = {
 
 /**
  * Bandeja (bank-v2). Misma consulta paginada que la actual (limit 20, offset,
- * `q`), los mismos filtros locales, la misma exportacion y la misma accion
+ * `q`, y `estado`, que filtra el backend), los mismos filtros locales de
+ * prioridad y score, la misma exportacion y la misma accion
  * masiva (regla APROBAR_SCORE_GTE_800). Cambia la lectura: estados
  * traducidos, sin UUID, montos en la moneda del branding.
  */
 export function BandejaV2({ marca, q, page, onParams, hrefSolicitud, analistaId }: BandejaProps) {
   const { apiTenantId } = useTenant();
-  const filtros = useMemo(() => (q.trim() ? { q: q.trim() } : undefined), [q]);
+  const [estado, setEstado] = useState("all");
+  const filtros = useMemo(() => ({ estado: ESTADO_BACKEND[estado] ?? "todas", ...(q.trim() ? { q: q.trim() } : {}) }), [estado, q]);
   const colaQ = useBankQueue({ limit: BANK_QUEUE_PAGE_SIZE, offset: (page - 1) * BANK_QUEUE_PAGE_SIZE, filters: filtros });
   const masiva = useBulkActions();
-  const [estado, setEstado] = useState("all");
   const [prioridad, setPrioridad] = useState("all");
   const [scoreMin, setScoreMin] = useState("");
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
@@ -67,7 +68,7 @@ export function BandejaV2({ marca, q, page, onParams, hrefSolicitud, analistaId 
   const total = resolveBankQueueTotal(colaQ.data) ?? 0;
   const paginas = Math.max(1, Math.ceil(total / BANK_QUEUE_PAGE_SIZE));
   const visibles = sortQueueItems(
-    items.filter((i) => coincideEstado(i, estado) && (prioridad === "all" || i.priority === prioridad) && (!scoreMin || i.score >= Number(scoreMin))),
+    items.filter((i) => (prioridad === "all" || i.priority === prioridad) && (!scoreMin || i.score >= Number(scoreMin))),
     "priority",
     "asc",
   );
@@ -125,7 +126,15 @@ export function BandejaV2({ marca, q, page, onParams, hrefSolicitud, analistaId 
               className="h-9 w-full rounded-lg border border-[var(--dcc-border-strong)] bg-[var(--dcc-surface)] pl-9 pr-3 text-sm"
             />
           </label>
-          <Segmento etiqueta="Estado" valor={estado} opciones={ESTADOS} onCambio={setEstado} />
+          <Segmento
+            etiqueta="Estado"
+            valor={estado}
+            opciones={ESTADOS}
+            onCambio={(v) => {
+              setEstado(v);
+              onParams(q, 1);
+            }}
+          />
           <Segmento etiqueta="Prioridad" valor={prioridad} opciones={PRIORIDADES} onCambio={setPrioridad} />
           <label className={`flex items-center gap-2 text-xs ${DCC_CLASSES.muted}`}>
             Score ≥
@@ -178,7 +187,7 @@ export function BandejaV2({ marca, q, page, onParams, hrefSolicitud, analistaId 
                         <p className={`text-xs ${DCC_CLASSES.subtle}`}>{(i.approval_band && BANDA_TEXTO[i.approval_band.toUpperCase()]) ?? ""}</p>
                       </td>
                       <td className="py-2.5 pr-3">{PRIORIDAD_TEXTO[i.priority] ?? "—"}</td>
-                      <td className="py-2.5 pr-3">{STATE_LABEL[i.state]?.[0] ?? (i.bank_decision ? "Decidida" : "Pendiente")}</td>
+                      <td className="py-2.5 pr-3">{textoEstado(i)}</td>
                       <td className={`py-2.5 ${DCC_CLASSES.muted}`}>{chRelTime(i.created_at)}</td>
                     </tr>
                   ))}

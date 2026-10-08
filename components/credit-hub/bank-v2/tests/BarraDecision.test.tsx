@@ -8,13 +8,14 @@ let rol = "bank_analyst";
 jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({ useTenant: () => ({ apiTenantId: "t-1", tenantId: "t-1", loading: false }) }));
 jest.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u-1" } }) }));
 jest.mock("@/lib/credit-hub/hooks/useCreditHubActor", () => ({
-  useCreditHubActor: () => ({ can: (a: string) => a === "create_decision" && rol === "bank_analyst", roleKey: rol }),
+  useCreditHubActor: () => ({ can: (a: string) => a === "create_decision" && (rol === "bank_analyst" || rol === "credit_admin"), roleKey: rol }),
 }));
 jest.mock("@/lib/credit-hub/api/client", () => ({
   ...jest.requireActual("@/lib/credit-hub/api/client"),
   chFetch: jest.fn(async (path: string, init: { body?: string }) => {
     llamadas.push({ path, body: init.body });
     if (path.endsWith("/offers/compare")) return { offers_detail: [] };
+    if (path.endsWith("/bank/assignable-analysts")) return { analysts: [{ user_id: "u-2", email: "banco.demo@nadakki.com", role_key: "banker" }] };
     return { ok: true };
   }),
 }));
@@ -52,5 +53,45 @@ describe("Barra de decision v2 (B4b)", () => {
     expect(llamadas.map((l) => l.path).filter((p) => !p.endsWith("/offers/compare"))).toEqual(["/api/v2/credit/applications/a-1/claim", "/api/v2/credit/applications/a-1/decide"]);
     expect(JSON.parse(llamadas.find((l) => l.path.endsWith("/decide"))!.body!)).toMatchObject({ decision_type: "REJECT", notes: "Ingresos no verificables", adverse_action: true });
     expect(await screen.findByRole("status")).toHaveTextContent("decisión registrada");
+  });
+
+  describe("asignacion (BANK-V2-03)", () => {
+    it("un analista se asigna una solicitud sin asignar y queda auditado por el claim", async () => {
+      pintar(app(null));
+      expect(screen.getByTestId("decision-bloqueada")).toHaveTextContent("no está asignada a ti");
+      expect(screen.queryByLabelText("Asignar a")).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "Asignarme" }));
+      await waitFor(() => expect(llamadas.find((l) => l.path.endsWith("/claim"))).toBeDefined());
+      const claim = llamadas.find((l) => l.path.endsWith("/claim"))!;
+      expect(claim.path).toBe("/api/v2/credit/applications/a-1/claim");
+      expect(JSON.parse(claim.body!)).toMatchObject({ analyst_id: "u-1" });
+      expect(await screen.findByTestId("asignacion-hecha")).toHaveTextContent("asignada a ti");
+    });
+
+    it("si la tiene otro analista no ofrece asignarse", () => {
+      pintar(app({ analyst_id: "otro" }));
+      expect(screen.queryByRole("button", { name: "Asignarme" })).toBeNull();
+      expect(screen.queryByLabelText("Asignar a")).toBeNull();
+    });
+
+    it("el administrador del banco asigna a un analista con Asignar a…", async () => {
+      rol = "credit_admin";
+      pintar(app(null));
+      const select = await screen.findByLabelText("Asignar a");
+      await screen.findByRole("option", { name: "banco.demo@nadakki.com" });
+      fireEvent.change(select, { target: { value: "u-2" } });
+      fireEvent.click(screen.getByRole("button", { name: "Asignar" }));
+      await waitFor(() => expect(llamadas.find((l) => l.path.endsWith("/claim/assign"))).toBeDefined());
+      const asignar = llamadas.find((l) => l.path.endsWith("/claim/assign"))!;
+      expect(asignar.path).toBe("/api/v2/credit/applications/a-1/claim/assign");
+      expect(JSON.parse(asignar.body!)).toEqual({ analyst_id: "u-2" });
+      expect(await screen.findByTestId("asignacion-hecha")).toHaveTextContent("banco.demo@nadakki.com");
+    });
+
+    it("un analista no ve Asignar a…", () => {
+      pintar(app(null));
+      expect(screen.queryByLabelText("Asignar a")).toBeNull();
+      expect(llamadas.some((l) => l.path.endsWith("/bank/assignable-analysts"))).toBe(false);
+    });
   });
 });

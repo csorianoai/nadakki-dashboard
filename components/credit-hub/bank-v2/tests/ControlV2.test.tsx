@@ -56,6 +56,8 @@ describe("Cumplimiento y Auditoria v2 (B6)", () => {
     fireEvent.change(screen.getByLabelText("Qué"), { target: { value: "Decisión registrada" } });
     expect(screen.getByText("Decisión registrada · Rechazada")).toBeInTheDocument();
     expect(llamadas).toContain("/api/v2/credit/applications/:id/events");
+    // BANK-V2-06: Auditoria recorre todas las solicitudes, no solo la cola de pendientes.
+    expect(llamadas).toContain("/api/v2/credit/applications/queue?limit=50&estado=todas");
   });
 
   it("escalaciones sin fuente: Proximamente, sin nombres de variables a la vista", () => {
