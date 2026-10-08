@@ -8,14 +8,15 @@ import { currentGoalsPeriod } from "@/lib/credit-hub/api/goalsClient";
 import { useMonthlyGoals } from "@/lib/credit-hub/hooks/useMonthlyGoals";
 import { presentMonthlyGoal } from "@/lib/credit-hub/utils/goalPresentation";
 import type { MonthlyGoalItem } from "@/lib/credit-hub/types/goals";
-import { formatEntero, formatMonedaCompacta, formatPorcentaje, type LocaleTenant } from "@/lib/dcc/formato";
+import { formatEntero, formatMonedaCompacta, type LocaleTenant } from "@/lib/dcc/formato";
+import { porcentaje } from "../comun/formato";
 
 const ESTADO: Record<string, string> = { cumplido: "text-[var(--dcc-ok-fg)]", "en camino": "text-[var(--dcc-fg-muted)]", atrasado: "text-[var(--dcc-partial-fg)]" };
 
 /** Valor de una meta segun su unidad, con la moneda del branding (nunca RD$ fijo). */
 function valor(v: number | null | undefined, unidad: string, f: LocaleTenant): string | null {
   const u = unidad.toLowerCase();
-  if (u === "ratio") return formatPorcentaje(v, f);
+  if (u === "ratio") return porcentaje(v, f);
   if (u === "hours" || u === "hour") return v != null ? `${new Intl.NumberFormat(f.locale, { maximumFractionDigits: 1 }).format(v)} h` : null;
   if (u === "dop" || u === "currency") return formatMonedaCompacta(v, f);
   return formatEntero(v, f);

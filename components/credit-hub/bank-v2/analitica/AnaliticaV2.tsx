@@ -9,9 +9,10 @@ import { DccSeccion } from "@/components/dcc/DccSeccion";
 import { SelloCalidad } from "@/components/dcc/SelloCalidad";
 import { formatDefaultPredictionDisplay } from "@/lib/credit-hub/bank/bankFormat";
 import { useBankAnalytics, useBankDealersRanking, useBankPortfolioHealth } from "@/lib/credit-hub/hooks/useBankAnalytics";
-import { formatEntero, formatMonedaCompacta, formatPorcentaje } from "@/lib/dcc/formato";
+import { formatEntero, formatMonedaCompacta } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { DetalleTecnico } from "../comun/DetalleTecnico";
+import { porcentaje } from "../comun/formato";
 import { parcialSiLimite, proximamente, type NotaTecnica } from "../comun/llano";
 
 const BANDAS_SCORE = ["300-579", "580-669", "670-739", "740-799", "800-850"] as const;
@@ -47,13 +48,15 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
   const cohortes = a.cohort_analysis ?? [];
   const maxCohorte = Math.max(0, ...cohortes.map((c) => c.applications));
   const defaultPred = formatDefaultPredictionDisplay(a.default_prediction.predicted_default_rate, a.default_prediction.predicted_default_count, a.total_applications);
+  // El backend puede mandar la tasa en 0..1 o en puntos (0..100): misma regla que formatDefaultPredictionDisplay.
+  const tasaIncumplimiento = a.default_prediction.predicted_default_rate > 1 ? a.default_prediction.predicted_default_rate / 100 : a.default_prediction.predicted_default_rate;
   const distribucion = (saludQ.data as { score_distribution?: Record<string, number> } | undefined)?.score_distribution;
   const maxBanda = distribucion ? Math.max(0, ...BANDAS_SCORE.map((b) => distribucion[b] ?? 0)) : 0;
   // Sin sello salvo que el total informado alcance el limite de lectura (parcial de verdad).
   const limite = parcialSiLimite(a.total_applications);
   const notas: NotaTecnica[] = [];
   if (!formatMonedaCompacta(a.portfolio_value, f)) notas.push({ que: "Volumen aprobado", detalle: "sin portfolio_value o sin moneda en el branding" });
-  if (defaultPred.isExtreme) notas.push({ que: "Default predicho", detalle: "predicción extrema: el motor cuenta un score ausente como 0 (regla score < 600)" });
+  if (defaultPred.isExtreme) notas.push({ que: "Incumplimiento previsto", detalle: "predicción extrema: el motor cuenta un score ausente como 0 (regla score < 600)" });
   if (a.avg_decision_time_hours == null) notas.push({ que: "Tiempo medio de decisión", detalle: "analytics/dashboard aún no calcula avg_decision_time_hours" });
   if (cohortes.length === 0) notas.push({ que: "Solicitudes y aprobación por periodo", detalle: "analytics/dashboard no devolvió cohort_analysis" });
   if (!saludQ.isError && !distribucion) notas.push({ que: "Salud del portafolio", detalle: "portfolio-health aún no expone score_distribution" });
@@ -69,10 +72,10 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
               valor={formatMonedaCompacta(a.portfolio_value, f)}
               calidad={formatMonedaCompacta(a.portfolio_value, f) ? null : proximamente()}
             />
-            <DccKpiTile etiqueta="Tasa de aprobación" valor={formatPorcentaje(a.approval_rate, f)} calidad={formatPorcentaje(a.approval_rate, f) ? null : proximamente()} />
+            <DccKpiTile etiqueta="Tasa de aprobación" valor={porcentaje(a.approval_rate, f)} calidad={porcentaje(a.approval_rate, f) ? null : proximamente()} />
             <DccKpiTile
-              etiqueta="Default predicho"
-              valor={defaultPred.isExtreme ? null : `${defaultPred.percentLabel} %`}
+              etiqueta="Incumplimiento previsto"
+              valor={defaultPred.isExtreme ? null : porcentaje(tasaIncumplimiento, f)}
               nota={`${formatEntero(a.default_prediction.predicted_default_count, f)} casos estimados`}
               calidad={defaultPred.isExtreme ? proximamente() : limite}
             />
@@ -108,7 +111,7 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
                       </td>
                       <td className="py-2 pr-3 text-right tabular-nums">{formatEntero(c.applications, f)}</td>
                       <td className="py-2 pr-3 text-right tabular-nums">{formatEntero(c.approved, f)}</td>
-                      <td className="py-2 text-right tabular-nums">{formatPorcentaje(c.approval_rate, f)}</td>
+                      <td className="py-2 text-right tabular-nums">{porcentaje(c.approval_rate, f)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -142,7 +145,7 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
                         </span>
                       </td>
                       <td className="py-2 pr-3 text-right tabular-nums">{formatEntero(d.approved, f)}</td>
-                      <td className="py-2 text-right tabular-nums">{formatPorcentaje(d.approval_rate, f)}</td>
+                      <td className="py-2 text-right tabular-nums">{porcentaje(d.approval_rate, f)}</td>
                     </tr>
                   ))}
                 </tbody>
