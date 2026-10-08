@@ -76,7 +76,7 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
             <DccKpiTile
               etiqueta="Incumplimiento previsto"
               valor={defaultPred.isExtreme ? null : porcentaje(tasaIncumplimiento, f)}
-              nota={`${formatEntero(a.default_prediction.predicted_default_count, f)} casos estimados`}
+              nota={`${formatEntero(a.default_prediction.predicted_default_count, f)} ${a.default_prediction.predicted_default_count === 1 ? "caso estimado" : "casos estimados"}`}
               calidad={defaultPred.isExtreme ? proximamente() : limite}
             />
             <DccKpiTile

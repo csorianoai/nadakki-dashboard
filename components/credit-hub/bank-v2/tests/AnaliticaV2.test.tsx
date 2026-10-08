@@ -46,6 +46,16 @@ describe("Analitica v2 (B5)", () => {
     expect(container.textContent).not.toMatch(/RD\$94|score_lt_600|motor score|Error HTTP|DEMO|REAL/);
   });
 
+  it("un solo caso: singular ('1 caso estimado'); varios: plural", async () => {
+    defaultCount = 1;
+    const uno = pintar();
+    expect(await screen.findByText("1 caso estimado")).toBeInTheDocument();
+    uno.unmount();
+    defaultCount = 12;
+    pintar();
+    expect(await screen.findByText("12 casos estimados")).toBeInTheDocument();
+  });
+
   it("default extremo: no pinta la cifra", async () => {
     defaultCount = 352;
     const { container } = pintar();
