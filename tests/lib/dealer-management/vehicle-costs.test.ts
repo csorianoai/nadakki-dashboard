@@ -11,7 +11,6 @@ import {
   COSTS_CAPABILITY_KEYS,
   COSTS_VEHICLE_CAPABILITY,
   COST_FORM_EMPTY,
-  COST_PENDING_FIELDS,
   COST_TYPES,
   COST_TYPE_CHECK,
   COST_TYPE_REPAIR,
@@ -124,8 +123,9 @@ describe("validateCostForm", () => {
     expect(incurredAtIso("2026-01-02")).toBe("2026-01-02T00:00:00Z");
   });
 
-  it("el campo pendiente sigue declarado hasta la PARTE 3/3", () => {
-    expect(COST_PENDING_FIELDS.map((field) => field.name)).toEqual(["is_opening"]);
+  it("el campo is_opening ya no figura como pendiente: el backend lo acepta", async () => {
+    const modulo = await import("@/lib/dealer-management/vehicle-costs");
+    expect(modulo).not.toHaveProperty("COST_PENDING_FIELDS");
   });
 
   it("is_opening solo viaja tildada", () => {
