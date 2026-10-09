@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { TIMEOUT_TEST_MS } from "./login";
 
 const baseURL = process.env.BASE_URL;
 if (!baseURL) {
@@ -11,7 +12,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  timeout: 120_000,
+  timeout: TIMEOUT_TEST_MS,
   expect: { timeout: 30_000 },
   reporter: [["list"]],
   use: {

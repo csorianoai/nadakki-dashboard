@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { login } from "../../e2e/bank-v2/login";
+import { ESPERA_FORMULARIO_MS, ESPERA_SALIDA_LOGIN_MS, TIMEOUT_TEST_MS, login } from "../../e2e/bank-v2/login";
 
 describe("e2e/bank-v2/login", () => {
   const previo = { ...process.env };
@@ -66,5 +66,11 @@ describe("e2e/bank-v2/login locator de tenant", () => {
       waitForLoadState: jest.fn(),
     };
     await expect(login(page as never)).rejects.toThrow("Login rechazado por la UI: Credenciales inválidas");
+  });
+});
+
+describe("e2e/bank-v2 presupuesto de tiempo", () => {
+  it("el timeout del test cubre las esperas del login más 60 s para el panel (si no, el diagnóstico nunca se ve)", () => {
+    expect(TIMEOUT_TEST_MS).toBeGreaterThanOrEqual(ESPERA_FORMULARIO_MS + ESPERA_SALIDA_LOGIN_MS + 60_000);
   });
 });
