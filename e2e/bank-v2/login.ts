@@ -21,22 +21,34 @@ export async function login(page: Page): Promise<void> {
   // En subdominios de concesionario el campo de tenant no existe (el tenant lo fija el host).
   const campoTenant = page.getByPlaceholder("tu-institucion", { exact: true });
   if (await campoTenant.count()) await campoTenant.fill(tenant);
+  // Traza de red del login: si no termina, el motivo real (HTTP, petición colgada) va en el error.
+  const trazas: string[] = [];
+  page.on("response", (r) => {
+    if (/\/auth\//.test(r.url())) trazas.push(`${r.status()} ${r.request().method()} ${r.url()}`);
+  });
+  page.on("requestfailed", (r) => {
+    if (/\/auth\//.test(r.url())) trazas.push(`FALLO ${r.method()} ${r.url()} ${r.failure()?.errorText ?? ""}`);
+  });
   await page.getByRole("button", { name: /iniciar sesi/i }).click();
 
-  // Carrera entre salir de /login y el aviso de error de la propia página: si el login es
-  // rechazado, fallar con el motivo real en vez de un timeout opaco de 60 s.
-  const salio = page
-    .waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 60_000, waitUntil: "commit" })
-    .then(() => null);
-  const aviso = page
-    .locator("form div.bg-red-50")
-    .first()
-    .waitFor({ state: "visible", timeout: 60_000 })
-    .then(async () => (await page.locator("form div.bg-red-50").first().innerText()).trim())
-    .catch(() => new Promise<string>(() => {})); // sin aviso: que decida la otra rama
-  salio.catch(() => {}); // evita rechazo no atendido si gana el aviso
-  const motivo = await Promise.race([salio, aviso]);
-  if (motivo) throw new Error(`Login rechazado por la UI: ${motivo}`);
+  // Sondeo (como D9) en vez de waitForURL: la salida de /login es una navegación de cliente
+  // (router.push) y el sondeo no depende de eventos de navegación. Si el login es rechazado
+  // o se queda colgado, el error dice por qué.
+  const aviso = page.locator("form div.bg-red-50").first();
+  const limite = Date.now() + 90_000;
+  for (;;) {
+    if (!new URL(page.url()).pathname.startsWith("/login")) break;
+    if (await aviso.isVisible()) {
+      throw new Error(`Login rechazado por la UI: ${(await aviso.innerText()).trim()}`);
+    }
+    if (Date.now() > limite) {
+      const boton = (await page.getByRole("button", { name: /iniciar sesi|iniciando/i }).first().innerText()).trim();
+      throw new Error(
+        `Login sin terminar a los 90 s: url=${page.url()} boton="${boton}" red=[${trazas.join(" | ") || "sin peticiones /auth/"}]`,
+      );
+    }
+    await page.waitForTimeout(500);
+  }
   // Deja que la sesión termine de asentarse antes de navegar al panel.
   await page.waitForLoadState("load");
 }

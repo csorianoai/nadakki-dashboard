@@ -27,14 +27,19 @@ describe("e2e/bank-v2/login locator de tenant", () => {
     const accion = { fill: jest.fn(), click: jest.fn(), count: jest.fn().mockResolvedValue(1) };
     const getByPlaceholder = jest.fn().mockReturnValue(accion);
     const campo = { ...accion, waitFor: jest.fn().mockResolvedValue(undefined) };
-    // El aviso de error nunca aparece: el login "sale" de /login.
-    const aviso = { waitFor: jest.fn().mockReturnValue(new Promise(() => {})), innerText: jest.fn() };
+    // El aviso de error nunca aparece: el login "sale" de /login en el segundo sondeo.
+    const aviso = { isVisible: jest.fn().mockResolvedValue(false), innerText: jest.fn() };
     const page = {
       goto: jest.fn(),
       locator: jest.fn((sel: string) => (sel.includes("bg-red-50") ? { first: () => aviso } : campo)),
       getByPlaceholder,
       getByRole: jest.fn().mockReturnValue(accion),
-      waitForURL: jest.fn().mockResolvedValue(undefined),
+      on: jest.fn(),
+      url: jest
+        .fn()
+        .mockReturnValueOnce("https://x.test/login")
+        .mockReturnValue("https://x.test/credit-hub/bank-v2"),
+      waitForTimeout: jest.fn().mockResolvedValue(undefined),
       waitForLoadState: jest.fn().mockResolvedValue(undefined),
     };
     await login(page as never);
@@ -47,7 +52,7 @@ describe("e2e/bank-v2/login locator de tenant", () => {
     process.env.QA_TENANT_SLUG = "t";
     const accion = { fill: jest.fn(), click: jest.fn(), count: jest.fn().mockResolvedValue(0), waitFor: jest.fn() };
     const aviso = {
-      waitFor: jest.fn().mockResolvedValue(undefined),
+      isVisible: jest.fn().mockResolvedValue(true),
       innerText: jest.fn().mockResolvedValue(" Credenciales inválidas "),
     };
     const page = {
@@ -55,7 +60,9 @@ describe("e2e/bank-v2/login locator de tenant", () => {
       locator: jest.fn((sel: string) => (sel.includes("bg-red-50") ? { first: () => aviso } : accion)),
       getByPlaceholder: jest.fn().mockReturnValue(accion),
       getByRole: jest.fn().mockReturnValue(accion),
-      waitForURL: jest.fn().mockReturnValue(new Promise(() => {})),
+      on: jest.fn(),
+      url: jest.fn().mockReturnValue("https://x.test/login"),
+      waitForTimeout: jest.fn().mockResolvedValue(undefined),
       waitForLoadState: jest.fn(),
     };
     await expect(login(page as never)).rejects.toThrow("Login rechazado por la UI: Credenciales inválidas");
