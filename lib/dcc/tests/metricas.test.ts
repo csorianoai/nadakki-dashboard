@@ -91,6 +91,27 @@ describe("metricas F3 del dealer", () => {
     });
   });
 
+  it("lead_response_time NO_DISPONIBLE sin reasons: motivo propio, aunque el universo sea 0 (leads aun en 'new')", () => {
+    const sinMedidos = { metric_key: "lead_response_time@1.0", value: null, unit: "hours", reasons: [] };
+    for (const total of [0, 3]) {
+      expect(metricaDesdeBackend({ ...sinMedidos, quality: q("NO_DISPONIBLE", 0, total) }, "Sin leads este mes").calidad).toEqual({
+        estado: "no_disponible",
+        motivo: "Ningún lead del mes tiene contacto registrado",
+        delBackend: true,
+      });
+    }
+  });
+
+  it("NO_DISPONIBLE bien formado sin reasons y con universo: no se dice que falte la métrica", () => {
+    const m = metricaDesdeBackend({ metric_key: "inventory_capital@1.0", value: null, unit: "ARS", quality: q("NO_DISPONIBLE", 0, 5), reasons: [] }, "vacio");
+    expect(m.calidad).toEqual({ estado: "no_disponible", motivo: "El backend no publicó la cifra", delBackend: true });
+  });
+
+  it("el motivo propio no se aplica a un PARCIAL sin reasons", () => {
+    const m = metricaDesdeBackend({ metric_key: "lead_response_time@1.0", value: 2, unit: "hours", quality: q("PARCIAL", 1, 2), reasons: [] }, "vacio");
+    expect(m.calidad).toEqual({ estado: "parcial", cubiertos: 1, total: 2, motivo: null });
+  });
+
   it("error HTTP se propaga con su status; respuesta sin metrics falla", async () => {
     responde(403, { detail: { reason_code: "UPGRADE_REQUIRED" } });
     await expect(fetchMetricasInventario("d-1")).rejects.toMatchObject({ status: 403 });

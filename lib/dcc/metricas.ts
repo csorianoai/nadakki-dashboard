@@ -44,6 +44,18 @@ export const MOTIVOS: Record<string, string> = {
 
 const FORMA_INVALIDA = "La respuesta no trae esta métrica";
 
+/** NO_DISPONIBLE bien formado pero sin `reasons` ni universo vacio: no se inventa la causa. */
+const SIN_MOTIVO = "El backend no publicó la cifra";
+
+/**
+ * Motivo propio de una metrica cuando el backend la da NO_DISPONIBLE sin
+ * `reasons`. lead_response_time: no hay ningun lead medido (dealer_metrics.py,
+ * calcular_metricas_leads), aunque el mes si tenga leads todavia en `new`.
+ */
+const MOTIVO_SIN_REASONS: Record<string, string> = {
+  "lead_response_time@1.0": "Ningún lead del mes tiene contacto registrado",
+};
+
 function registro(valor: unknown): Record<string, unknown> | null {
   return valor && typeof valor === "object" && !Array.isArray(valor) ? (valor as Record<string, unknown>) : null;
 }
@@ -52,9 +64,11 @@ function entero(valor: unknown): number | null {
   return typeof valor === "number" && Number.isInteger(valor) && valor >= 0 ? valor : null;
 }
 
-function motivoDe(reasons: unknown, total: number | null, vacio: string): string | null {
+/** `propio` (solo NO_DISPONIBLE) manda sobre `vacio`: un universo 0 no siempre es "sin datos del mes". */
+function motivoDe(reasons: unknown, total: number | null, vacio: string, propio: string | null): string | null {
   const codigos = Array.isArray(reasons) ? reasons.filter((r): r is string => typeof r === "string" && r.trim() !== "") : [];
   if (codigos.length) return codigos.map((c) => MOTIVOS[c] ?? c).join(" · ");
+  if (propio) return propio;
   return total === 0 ? vacio : null;
 }
 
@@ -69,7 +83,7 @@ export function metricaDesdeBackend(raw: unknown, vacio: string): MetricaDcc {
   if (!m || !q) return { metricKey, valor: null, unidad: null, calidad: { estado: "no_disponible", motivo: FORMA_INVALIDA, delBackend: true } };
   const cubiertos = entero(q.covered);
   const total = entero(q.total);
-  const motivo = motivoDe(m.reasons, total, vacio);
+  const motivo = motivoDe(m.reasons, total, vacio, null);
   const unidad = typeof m.unit === "string" ? m.unit : null;
   let calidad: Calidad;
   switch (q.status) {
@@ -82,7 +96,11 @@ export function metricaDesdeBackend(raw: unknown, vacio: string): MetricaDcc {
       break;
     }
     default:
-      calidad = { estado: "no_disponible", motivo: motivo ?? FORMA_INVALIDA, delBackend: true };
+      calidad = {
+        estado: "no_disponible",
+        motivo: motivoDe(m.reasons, total, vacio, (metricKey && MOTIVO_SIN_REASONS[metricKey]) || null) ?? SIN_MOTIVO,
+        delBackend: true,
+      };
   }
   return { metricKey, valor: m.value ?? null, unidad, calidad };
 }
