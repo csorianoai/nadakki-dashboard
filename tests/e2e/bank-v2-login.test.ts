@@ -18,3 +18,22 @@ describe("e2e/bank-v2/login", () => {
     },
   );
 });
+
+describe("e2e/bank-v2/login locator de tenant", () => {
+  it("busca el placeholder del tenant con exact:true (el del email lo contiene)", async () => {
+    process.env.QA_USER = "u";
+    process.env.QA_PASSWORD = "p";
+    process.env.QA_TENANT_SLUG = "t";
+    const accion = { fill: jest.fn(), click: jest.fn(), count: jest.fn().mockResolvedValue(1) };
+    const getByPlaceholder = jest.fn().mockReturnValue(accion);
+    const page = {
+      goto: jest.fn(),
+      locator: jest.fn().mockReturnValue(accion),
+      getByPlaceholder,
+      getByRole: jest.fn().mockReturnValue(accion),
+      waitForURL: jest.fn(),
+    };
+    await login(page as never);
+    expect(getByPlaceholder).toHaveBeenCalledWith("tu-institucion", { exact: true });
+  });
+});

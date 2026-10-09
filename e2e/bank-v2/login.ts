@@ -16,7 +16,7 @@ export async function login(page: Page): Promise<void> {
   await page.locator('input[type="email"]').fill(user);
   await page.locator('input[type="password"]').fill(password);
   // En subdominios de concesionario el campo de tenant no existe (el tenant lo fija el host).
-  const campoTenant = page.getByPlaceholder("tu-institucion");
+  const campoTenant = page.getByPlaceholder("tu-institucion", { exact: true });
   if (await campoTenant.count()) await campoTenant.fill(tenant);
   await page.getByRole("button", { name: /iniciar sesi/i }).click();
   await page.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 60_000 });
