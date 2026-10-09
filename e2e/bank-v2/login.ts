@@ -1,5 +1,10 @@
 import type { Page } from "@playwright/test";
 
+/** Esperas máximas del login; el timeout del test debe cubrirlas con holgura (ver tests/e2e/bank-v2-login.test.ts). */
+export const ESPERA_FORMULARIO_MS = 60_000;
+export const ESPERA_SALIDA_LOGIN_MS = 90_000;
+export const TIMEOUT_TEST_MS = 300_000;
+
 function requerida(nombre: string): string {
   const v = process.env[nombre];
   if (!v) throw new Error(`Falta la variable de entorno ${nombre}`);
@@ -15,7 +20,7 @@ export async function login(page: Page): Promise<void> {
   await page.goto("/login");
   // El formulario solo se pinta cuando termina "Verificando sesión…"; esperarlo evita rellenar antes de hidratar.
   const email = page.locator('input[type="email"]');
-  await email.waitFor({ state: "visible", timeout: 60_000 });
+  await email.waitFor({ state: "visible", timeout: ESPERA_FORMULARIO_MS });
   await email.fill(user);
   await page.locator('input[type="password"]').fill(password);
   // En subdominios de concesionario el campo de tenant no existe (el tenant lo fija el host).
@@ -35,7 +40,7 @@ export async function login(page: Page): Promise<void> {
   // (router.push) y el sondeo no depende de eventos de navegación. Si el login es rechazado
   // o se queda colgado, el error dice por qué.
   const aviso = page.locator("form div.bg-red-50").first();
-  const limite = Date.now() + 90_000;
+  const limite = Date.now() + ESPERA_SALIDA_LOGIN_MS;
   for (;;) {
     if (!new URL(page.url()).pathname.startsWith("/login")) break;
     if (await aviso.isVisible()) {
