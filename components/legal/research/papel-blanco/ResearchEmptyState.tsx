@@ -29,7 +29,6 @@ type Props = {
 export function ResearchEmptyState({ onPickQuestion, onOpenRecent, recentCount }: Props) {
   return (
     <div className="lr-content">
-      <span className="lr-empty-badge">Asistente jurídico con citas verificadas</span>
       <h2 className="lr-empty-title">¿Qué necesitas consultar hoy?</h2>
       <p className="lr-empty-sub">
         Consulta normativa y criterios con trazabilidad verificable. Cada respuesta incluye fuentes citadas y

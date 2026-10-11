@@ -1,4 +1,38 @@
-import { fetchAPI, type APIError } from "@/lib/api/base";
+import type { APIError } from "@/lib/api/base";
+import { apiFetch } from "@/lib/api/fetch-client";
+
+/**
+ * Mismo contrato que `fetchAPI` de lib/api/base.ts (cabeceras, mensajes y forma
+ * de APIError), pero por `apiFetch`: Legal exige el JWT de la sesion y
+ * `fetchAPI` no lo envia (401 missing_auth desde LEGAL-AUTH-02, #1181).
+ */
+async function fetchLegalAPI<T>(
+  endpoint: string,
+  options: RequestInit & { tenantId?: string } = {}
+): Promise<T> {
+  const { tenantId, ...fetchOptions } = options;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...((fetchOptions.headers ?? {}) as Record<string, string>),
+  };
+  if (tenantId) headers["X-Tenant-ID"] = tenantId;
+
+  const response = await apiFetch(endpoint, { ...fetchOptions, headers });
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    const msg =
+      response.status === 401
+        ? "No autorizado"
+        : response.status === 403
+          ? "Acceso denegado"
+          : response.status === 404
+            ? "Recurso no encontrado"
+            : (errorBody?.error?.message ?? errorBody?.message ?? `HTTP ${response.status}`);
+    throw { status: response.status, endpoint, error: { message: msg, detail: errorBody } } as APIError;
+  }
+  return response.json();
+}
 
 export interface CodigoRazon {
   codigo: string;
@@ -123,7 +157,7 @@ export const legalApi = {
     payload: QuickCheckRequest,
     tenantId?: string | null
   ): Promise<LegalQuickCheckResponse> {
-    return fetchAPI<LegalQuickCheckResponse>("/api/v1/legal/quick-check", {
+    return fetchLegalAPI<LegalQuickCheckResponse>("/api/v1/legal/quick-check", {
       method: "POST",
       body: JSON.stringify(payload),
       tenantId: tenantId ?? undefined,
@@ -134,7 +168,7 @@ export const legalApi = {
     limite: number = 50,
     tenantId?: string | null
   ): Promise<{ ejecuciones: AuditEntry[] }> {
-    return fetchAPI<{ ejecuciones: AuditEntry[] }>(
+    return fetchLegalAPI<{ ejecuciones: AuditEntry[] }>(
       `/api/v1/legal/audit-trail?limite=${encodeURIComponent(String(limite))}`,
       { method: "GET", tenantId: tenantId ?? undefined }
     );
@@ -145,7 +179,7 @@ export const legalApi = {
     tenantId?: string | null
   ): Promise<KnowledgePackInfo> {
     const q = encodeURIComponent(jurisdiccion);
-    return fetchAPI<KnowledgePackInfo>(
+    return fetchLegalAPI<KnowledgePackInfo>(
       `/api/v1/legal/knowledge-pack/status?jurisdiccion=${q}`,
       { method: "GET", tenantId: tenantId ?? undefined }
     );
