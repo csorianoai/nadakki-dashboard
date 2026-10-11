@@ -141,3 +141,13 @@ describe("contenido de señales y Fair Housing", () => {
     expect(screen.getByLabelText("Operación")).toHaveValue("venta");
   });
 });
+
+describe("config: lectura literal de process.env (sustitución de Next en el cliente)", () => {
+  it("config.ts usa referencias literales process.env.NEXT_PUBLIC_* y ningún alias", () => {
+    const src = require("fs").readFileSync(require("path").join(__dirname, "../../lib/realtor/config.ts"), "utf8");
+    for (const k of ["NEXT_PUBLIC_REALTOR_DEMAND_RADAR", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_APP_ENV"]) {
+      expect(src).toContain(`process.env.${k}`);
+    }
+    expect(src).not.toMatch(/=\s*process\.env\s*[,)]/);
+  });
+});
