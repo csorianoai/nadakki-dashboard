@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLegalEffectiveTenantId, useLegalAgentRun } from "@/hooks/useLegal";
 import { formatLegalAgentRunError } from "@/lib/api/legal";
+import { AI_UNAVAILABLE_MARKER, aiUnavailableText, isLlmUnavailable, isMockOutput } from "@/lib/legal/llm-availability";
 import { trackEvent } from "@/lib/legal/telemetry";
 import type { AgentRunResponse } from "@/types/legal";
 import { LegalErrorState } from "@/components/legal/LegalErrorState";
@@ -135,6 +136,12 @@ export default function LegalResearchClient() {
       try {
         const run = await runHook.run(agentId, buildInputs(agentId, trimmed, historial));
         sent = true;
+        if (isMockOutput(run)) {
+          // L2c: salida MOCK; se guarda sin `run`, así no hay dictamen, riesgo ni citas.
+          const aviso = (run as { aviso_mock?: unknown }).aviso_mock;
+          setMessages((m) => [...m, { role: "assistant", content: `${AI_UNAVAILABLE_MARKER}\n${aiUnavailableText("mock", typeof aviso === "string" ? aviso : undefined)}` }]);
+          return sent;
+        }
         setMessages((m) => [...m, { role: "assistant", content: run.respuesta || "", run }]);
         trackEvent("legal_agent_run_completed", {
           agent_id: agentId,
@@ -151,8 +158,11 @@ export default function LegalResearchClient() {
           error_type: "run_error",
           http_status: err.status ?? 0,
         });
-        const msg = formatLegalAgentRunError(e);
-        setMessages((m) => [...m, { role: "assistant", content: `**Error**\n${msg}` }]);
+        const msg = isLlmUnavailable(e)
+          ? aiUnavailableText("unavailable")
+          : formatLegalAgentRunError(e);
+        const prefix = isLlmUnavailable(e) ? AI_UNAVAILABLE_MARKER : "**Error**";
+        setMessages((m) => [...m, { role: "assistant", content: `${prefix}\n${msg}` }]);
       }
       return sent;
     },

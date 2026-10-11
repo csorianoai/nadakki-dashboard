@@ -83,6 +83,8 @@ class LegalApiClient {
             (typeof o.message === "string" ? o.message : null) ||
             err.message;
           err.request_id = typeof o.request_id === "string" ? o.request_id : err.request_id;
+          // L2c: conserva el código estable (p. ej. LLM_UNAVAILABLE de nadakki-ai-suite#1881).
+          if (typeof o.code === "string") (err as LegalApiError & { code?: string }).code = o.code;
         }
         throw err;
       }

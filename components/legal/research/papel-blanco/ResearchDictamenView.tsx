@@ -1,5 +1,6 @@
 "use client";
 
+import { AI_UNAVAILABLE_MARKER, AI_UNAVAILABLE_TITLE } from "@/lib/legal/llm-availability";
 import { MessageSquare, ClipboardCheck, AlertTriangle, Eye, MessageCircle } from "lucide-react";
 import type { AgentRunResponse, Citation } from "@/types/legal";
 import {
@@ -110,6 +111,18 @@ export function ResearchDictamenView({
       onHighlight: (id) => onHighlightSourceId(id),
     });
   };
+
+  // L2c: sin modelo o salida MOCK: aviso, sin dictamen, riesgo, confianza ni citas.
+  if (content.startsWith(AI_UNAVAILABLE_MARKER)) {
+    return (
+      <div className="lr-content">
+        <div className="lr-query-card" role="status" data-testid="ai-unavailable">
+          <p className="lr-query-text"><strong>{AI_UNAVAILABLE_TITLE}</strong></p>
+          <p className="lr-query-text">{content.slice(AI_UNAVAILABLE_MARKER.length).trim()}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isError) {
     return (
