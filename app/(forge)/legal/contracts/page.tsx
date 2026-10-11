@@ -10,6 +10,8 @@ import { LlmModeNotice } from "@/components/legal/LlmModeNotice";
 import { PracticeAreaChipGroup } from "@/components/legal/PracticeAreaChipGroup";
 import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
 import { legalCaughtErrorToSpanish } from "@/lib/legal/api-error-es";
+import { isLlmUnavailable, isMockOutput } from "@/lib/legal/llm-availability";
+import { AiUnavailableNotice } from "@/components/legal/AiUnavailableNotice";
 
 const CONTRACT_TYPES = [
   {
@@ -98,10 +100,17 @@ export default function LegalForgeContractsPage() {
   const [practiceAreaTags, setPracticeAreaTags] = useState<string[]>(["civil", "bancario"]);
   const { loading, result, submit, tenantMissing } = useLegalQuickCheck();
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  // L2c: sin modelo (503 LLM_UNAVAILABLE) o salida MOCK no hay análisis que mostrar.
+  const [llmUnavailable, setLlmUnavailable] = useState(false);
+  const mockResult = Boolean(result && isMockOutput(result));
+  const noAnalysis = llmUnavailable || mockResult;
+  const avisoMockRaw = (result as unknown as { aviso_mock?: unknown } | null)?.aviso_mock;
+  const avisoMock = typeof avisoMockRaw === "string" ? avisoMockRaw : undefined;
 
   const handleAnalyze = async () => {
     if (!texto.trim()) return;
     setAnalyzeError(null);
+    setLlmUnavailable(false);
     try {
       await submit({
         tipo_solicitud: "contrato_simple",
@@ -110,6 +119,10 @@ export default function LegalForgeContractsPage() {
         etiquetas_area_practica: practiceAreaTags,
       });
     } catch (e: unknown) {
+      if (isLlmUnavailable(e)) {
+        setLlmUnavailable(true);
+        return;
+      }
       // L2a: el fallo se muestra; antes la excepción se perdía y el botón "no hacía nada".
       setAnalyzeError(`No se pudo analizar el contrato. ${legalCaughtErrorToSpanish(e)}`);
     }
@@ -217,15 +230,22 @@ export default function LegalForgeContractsPage() {
         </p>
       )}
 
+      {noAnalysis && !analyzeError && (
+        <AiUnavailableNotice
+          reason={llmUnavailable ? "unavailable" : "mock"}
+          avisoMock={avisoMock}
+        />
+      )}
+
       {/* Sin decision (p. ej. timeout del backend): no se inventa un veredicto. */}
-      {result && !result.decision && !analyzeError && (
+      {result && !result.decision && !analyzeError && !noAnalysis && (
         <p role="status" className="mt-4 rounded-lg border border-amber-700/50 bg-amber-950/30 p-3 text-sm text-amber-200">
           El análisis no terminó y no hay resultado. Inténtalo de nuevo; si persiste, el contrato requiere revisión por un abogado.
         </p>
       )}
 
       {/* Resultado */}
-      {result && result.decision && !analyzeError && (
+      {result && result.decision && !analyzeError && !noAnalysis && (
         <div className="mt-6 space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-5 shadow-sm">
           <LlmModeNotice resultado={result} />
           <DecisionBadge decision={result.decision} />
