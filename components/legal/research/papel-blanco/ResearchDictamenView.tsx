@@ -60,7 +60,8 @@ function buildSourcesPill(citations: Citation[]): string {
   if (jurisprudencia) parts.push(`${jurisprudencia} jurisprudencia`);
   if (bibliografica) parts.push(`${bibliografica} bibliográfica${bibliografica > 1 ? "s" : ""}`);
   if (parts.length === 0) return "Sin fuentes estructuradas";
-  return `${parts.join(" · ")} · rigor alto`;
+  // L2a: sin "rigor alto": la base legal no está certificada.
+  return parts.join(" · ");
 }
 
 function renderRecommendationSteps(md: string) {

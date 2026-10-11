@@ -24,7 +24,7 @@ export function CitationCard({ citation }: { citation: Citation }) {
               : "bg-amber-200 text-amber-950 dark:bg-amber-900 dark:text-amber-100"
           )}
         >
-          {verified ? "Fuente normativa verificada" : "Contexto bibliográfico"}
+          {verified ? "Fuente normativa (sin certificar)" : "Contexto bibliográfico"}
         </span>
         <button
           type="button"

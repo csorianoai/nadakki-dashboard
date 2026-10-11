@@ -3,6 +3,10 @@
 import { useCallback, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { TaskExecutionResult } from "@/components/legal/TaskExecutionResult";
+import { legalCaughtErrorToSpanish } from "@/lib/legal/api-error-es";
+
+// L2a: el panel ejecuta tareas en simulación y lo declara; el backend no lo devuelve.
+const TASK_DRY_RUN = true;
 import { useLegalHomeMessages } from "@/hooks/useLegalHomeMessages";
 import type { LegalTask, LegalTaskRequiredInput } from "@/lib/legal/task-types";
 
@@ -49,12 +53,11 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
       for (const [k, f] of Object.entries(files)) {
         if (f) payload[k] = f.name;
       }
-      const out = await runExecute(tenantId, task.task_id, { inputs: payload });
+      const out = await runExecute(tenantId, task.task_id, { inputs: payload, dry_run: TASK_DRY_RUN });
       setResult(out);
       setPhase("done");
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Error al ejecutar";
-      setError(msg);
+      setError(`No se pudo ejecutar la tarea. ${legalCaughtErrorToSpanish(e)}`);
       setPhase("form");
     } finally {
       setBusy(false);
@@ -137,7 +140,7 @@ export function TaskExecuteModal({ task, tenantId, onClose, runExecute }: Props)
 
           {error ? <p className="mt-3 text-forge-sm text-forge-danger">{error}</p> : null}
 
-          {result ? <TaskExecutionResult data={result} /> : null}
+          {result ? <TaskExecutionResult data={result} dryRun={TASK_DRY_RUN} /> : null}
 
           <div className="mt-6 flex justify-end gap-2">
             <button

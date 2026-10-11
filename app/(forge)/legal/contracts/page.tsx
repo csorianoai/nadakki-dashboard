@@ -9,6 +9,7 @@ import { AuditTrailCard } from "@/components/legal/AuditTrailCard";
 import { LlmModeNotice } from "@/components/legal/LlmModeNotice";
 import { PracticeAreaChipGroup } from "@/components/legal/PracticeAreaChipGroup";
 import { PracticeAreaFilter } from "@/components/legal/PracticeAreaFilter";
+import { legalCaughtErrorToSpanish } from "@/lib/legal/api-error-es";
 
 const CONTRACT_TYPES = [
   {
@@ -96,15 +97,22 @@ export default function LegalForgeContractsPage() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [practiceAreaTags, setPracticeAreaTags] = useState<string[]>(["civil", "bancario"]);
   const { loading, result, submit, tenantMissing } = useLegalQuickCheck();
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     if (!texto.trim()) return;
-    await submit({
-      tipo_solicitud: "contrato_simple",
-      texto,
-      jurisdiccion: "DO",
-      etiquetas_area_practica: practiceAreaTags,
-    });
+    setAnalyzeError(null);
+    try {
+      await submit({
+        tipo_solicitud: "contrato_simple",
+        texto,
+        jurisdiccion: "DO",
+        etiquetas_area_practica: practiceAreaTags,
+      });
+    } catch (e: unknown) {
+      // L2a: el fallo se muestra; antes la excepción se perdía y el botón "no hacía nada".
+      setAnalyzeError(`No se pudo analizar el contrato. ${legalCaughtErrorToSpanish(e)}`);
+    }
   };
 
   const handleTypeSelect = (typeId: string, prompt: string) => {
@@ -203,8 +211,21 @@ export default function LegalForgeContractsPage() {
         )}
       </div>
 
+      {analyzeError && (
+        <p role="alert" className="mt-4 rounded-lg border border-red-800/50 bg-red-950/30 p-3 text-sm text-red-200">
+          {analyzeError}
+        </p>
+      )}
+
+      {/* Sin decision (p. ej. timeout del backend): no se inventa un veredicto. */}
+      {result && !result.decision && !analyzeError && (
+        <p role="status" className="mt-4 rounded-lg border border-amber-700/50 bg-amber-950/30 p-3 text-sm text-amber-200">
+          El análisis no terminó y no hay resultado. Inténtalo de nuevo; si persiste, el contrato requiere revisión por un abogado.
+        </p>
+      )}
+
       {/* Resultado */}
-      {result && (
+      {result && result.decision && !analyzeError && (
         <div className="mt-6 space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-5 shadow-sm">
           <LlmModeNotice resultado={result} />
           <DecisionBadge decision={result.decision} />
