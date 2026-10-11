@@ -60,12 +60,12 @@ No se solicita VISUAL_ACCEPT ni TECH_ACCEPT. Sin merge; Marca/Canales requieren 
 
 ## Evidencias ejecutadas
 PASS: Jest, 20 casos; TypeScript acotado a componentes/pruebas, sin emit; ESLint, cero advertencias.
-PASS: Chromium + axe WCAG 2/2.1 A/AA, cero infracciones en Licencia/Broker a 1440/390px;
-sin desbordamiento y tabulación nativa. Capturas en evidence/part1/*.png, generadas por isolated-qa.cjs.
-Render estático del componente real: no prueba navegación React hidratada (NOT_EXECUTED en navegador).
-La navegación, foco, validación, estados, ES/EN y ausencia de transporte/storage sí se probaron en Jest.
+PASS: React SSR renderToString + hydrateRoot en Chromium offline a 390/768/1024/1440px, flujo teclado/ratón.
+PASS: errores, corrección, revisión, ida/vuelta y preservación de licencia/firma/supervisor; 28 capturas en evidence/part1.
+PASS: firma y supervisión opcionales, pack/jurisdicciones/supervisores ausentes; axe WCAG 2/2.1 A/AA sin infracciones.
+PASS: foco por teclado/cambio/error, outline visible >=3px, sin desbordamiento ni errores de consola/hidratación.
 NOT_EXECUTED: integración backend, gate runtime, build global, CI remoto y navegación productiva.
 Los resultados del ZIP no se presentan como pruebas de esta implementación. Fuentes de respaldo en capturas.
 Comandos: Jest --runInBand --roots tests/realtor --runTestsByPath tests/realtor/license-broker.test.tsx;
 tsc --noEmit --incremental false (entradas locales y css-modules.d.ts); eslint --max-warnings 0;
-node tests/realtor/isolated-qa.cjs. Herramientas del node_modules existente, sin cambiar configuración.
+node tests/realtor/isolated-qa.cjs (webpack + loader local, temporales fuera de app, fuentes de respaldo).
