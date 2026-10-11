@@ -26,6 +26,12 @@ const CAPABILITY_REASONS: Record<string, string> = {
   TARGET_CORE_NOT_READY: "Esta función de Legal todavía no está habilitada.",
   FEATURE_FLAG_DISABLED: "Esta función de Legal todavía no está habilitada.",
   PROVIDER_UNAVAILABLE: "El servicio necesario para esta función no está disponible ahora.",
+  // Estos ReasonCode llegan en minúsculas (services/access/entitlements.py:64-66 y legacy).
+  capability_not_in_archetype: "Esta función de Legal no está disponible para el tipo de organización de tu despacho.",
+  no_beneficiary_entitlement: "Tu organización no tiene habilitado el acceso a Legal.",
+  no_organization_unit: "Tu usuario no tiene una unidad organizativa asignada, y Legal la necesita para esta acción.",
+  no_active_subscription: "Tu organización no tiene una suscripción activa que incluya Legal.",
+  capability_disabled_for_plan: "Tu plan no incluye esta función de Legal.",
 };
 
 const CONTACT = "Si crees que es un error, contacta al administrador de tu despacho.";
@@ -57,7 +63,7 @@ export function legalErrorToSpanish(status: number, detail: string): string {
     return `Tu usuario no tiene una unidad organizativa asignada, y Legal la necesita para esta acción. ${CONTACT}`;
   }
   if (/tenant_mismatch/i.test(d)) return `${CAPABILITY_REASONS.TENANT_MISMATCH} Cambia de organización o vuelve a iniciar sesión.`;
-  const cap = /^capability_denied:[^:]+:([A-Z_]+)/.exec(d);
+  const cap = /^capability_denied:[^:]+:([A-Za-z_]+)/.exec(d);
   if (cap) return `${CAPABILITY_REASONS[cap[1]] ?? "Tu organización no tiene acceso a esta función de Legal."} ${CONTACT}`;
   if (status === 403) return `No tienes permiso para esta acción. ${CONTACT}`;
   if (status === 404) return "No se encontró el recurso solicitado.";
