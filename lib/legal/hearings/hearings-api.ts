@@ -94,8 +94,9 @@ async function request<T>(
   let res: Response;
   try {
     const headers = { ...tenantHeaders(tenantId), ...(init.headers ?? {}) };
-    const fetchWithAuth = process.env.NODE_ENV === "test" ? fetch : apiFetch;
-    res = await fetchWithAuth(url, {
+    // L2b: siempre apiFetch (Bearer). Antes, en NODE_ENV=test se usaba fetch crudo
+    // y Jest no podia probar Audiencias con token.
+    res = await apiFetch(url, {
       ...init,
       headers,
     });

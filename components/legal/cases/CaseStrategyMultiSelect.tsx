@@ -18,6 +18,13 @@ export function CaseStrategyMultiSelect({
   busy?: boolean;
 }) {
   const m = useLegalCasesMessages();
+  // L2b: el backend aplica una sola estrategia (StrategySelectRequest.strategy_id).
+  // Se aplica la primera seleccionada y se dice cuál; nada se descarta en silencio.
+  const aplicada =
+    selectedIds.length > 1 ? strategies.find((s) => s.strategy_id === selectedIds[0]) : undefined;
+  // El tipo del panel usa `name`; el backend hoy devuelve `title` (strategy_engine.py).
+  const nombreAplicada =
+    aplicada?.name ?? (aplicada as { title?: string } | undefined)?.title ?? selectedIds[0];
   const toggle = (id: string) => {
     if (selectedIds.includes(id)) onChange(selectedIds.filter((x) => x !== id));
     else onChange([...selectedIds, id]);
@@ -40,6 +47,12 @@ export function CaseStrategyMultiSelect({
           </div>
         ))}
       </div>
+      {selectedIds.length > 1 ? (
+        <p role="status" data-testid="strategy-single-notice" className="rounded-forge-sm border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Por ahora se aplica una sola estrategia: «{nombreAplicada}». Las demás
+          seleccionadas no se guardarán.
+        </p>
+      ) : null}
       <button
         type="button"
         disabled={busy || selectedIds.length === 0}
