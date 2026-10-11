@@ -1,0 +1,26 @@
+.root { box-sizing: border-box; width: 100%; max-width: 760px; margin: auto; padding: clamp(16px, 4vw, 32px); background: #F3F5F7; color: #13202B; font: 15px/1.5 'IBM Plex Sans', Arial, sans-serif; overflow-wrap: anywhere; }
+.root *, .root *::before, .root *::after { box-sizing: border-box; }
+.brand { padding: 16px 20px; border-radius: 12px; background: linear-gradient(180deg, #13202B, #0E1922); color: #E8EEF2; font: 700 19px 'Space Grotesk', Arial, sans-serif; }
+.brand span { color: #6FD3DC; }
+.root h1, .root h2 { font-family: 'Space Grotesk', Arial, sans-serif; line-height: 1.2; }
+.root h1 { font-size: clamp(26px, 4vw, 34px); }
+.root h2 { margin: 0 0 16px; font-size: 22px; }
+.steps { display: flex; gap: 12px; margin: 20px 0; padding: 0; list-style: none; }
+.steps li { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid #B8C4CE; border-radius: 8px; }
+.steps li[aria-current] { border-color: #0B6E78; background: #E5F5F6; font-weight: 600; }
+.card { padding: 20px; border: 1px solid #DCE2E8; border-radius: 12px; background: white; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-weight: 600; }
+.field input, .field select { width: 100%; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid #B8C4CE; border-radius: 8px; color: #13202B; background: white; font: inherit; font-weight: 400; }
+.field [aria-invalid=true] { border-color: #8A3B0A; }
+.error { margin: 0; color: #8A3B0A; font-size: 13px; }
+.note { color: #4A5A68; font-size: 14px; }
+.badge { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #FFF1D6; color: #6E4300; font-size: 13px; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.actions button { min-height: 44px; padding: 10px 16px; border: 1px solid #B8C4CE; border-radius: 8px; background: white; color: #13202B; font: inherit; font-weight: 600; cursor: pointer; }
+.actions button:last-child { background: #6FD3DC; border-color: #6FD3DC; color: #0C1A24; }
+.root :focus-visible { outline: 3px solid #0B6E78; outline-offset: 3px; }
+.review { margin-top: 20px; padding: 14px; border: 1px solid #DCE2E8; border-radius: 8px; }
+.review dl { margin: 0; }
+.review dd { margin: 0 0 10px; }
+@media (max-width: 480px) { .fields { grid-template-columns: minmax(0, 1fr); } .card { padding: 16px; } .actions button { flex: 1 1 100%; } }
