@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api/fetch-client";
 import { getPdfExportUrl } from "@/lib/legal/cases/legal-cases-api";
 
 type Props = {
@@ -17,7 +18,7 @@ export function PdfDownloadButton({
 }: Props) {
   const handleDownload = async () => {
     const url = getPdfExportUrl(caseId, documentId);
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       headers: { "X-Tenant-ID": tenantId.trim() },
     });
     if (!res.ok) return;

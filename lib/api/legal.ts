@@ -7,6 +7,7 @@ import type {
   LegalHealthResponse,
 } from "@/types/legal";
 import type { LegalTask } from "@/lib/legal/task-types";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const API_BASE = "/api/legal";
 
@@ -63,7 +64,7 @@ class LegalApiClient {
         headers["X-Tenant-ID"] = tenantId.trim();
       }
 
-      const res = await fetch(`${API_BASE}${path}`, {
+      const res = await apiFetch(`${API_BASE}${path}`, {
         ...options,
         headers,
         signal: controller.signal,
@@ -178,7 +179,9 @@ class LegalApiClient {
       `/tasks/${encodeURIComponent(taskId)}/execute`,
       {
         method: "POST",
-        body: JSON.stringify({ ...body, tenant_id: tenantId }),
+        // TaskExecutionRequest es extra="forbid" y exige task_id: el tenant
+        // sale del JWT y no puede ir en el body.
+        body: JSON.stringify({ ...body, task_id: taskId }),
       },
       tenantId
     );
