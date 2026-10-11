@@ -29,6 +29,7 @@ import { legalCaughtErrorToSpanish, legalErrorToSpanish } from "@/lib/legal/api-
 import { createCase } from "@/lib/legal/cases/legal-cases-api";
 import { LegalApiHttpError } from "@/lib/legal/parse-api-error";
 import { TaskExecutionResult } from "@/components/legal/TaskExecutionResult";
+import { TaskExecuteModal } from "@/components/legal/TaskExecuteModal";
 import { ResearchComposer } from "@/components/legal/research/papel-blanco/ResearchComposer";
 import { CITATION_TIPO_META } from "@/lib/legal/research/citation-type";
 import LegalResearchClient from "@/components/legal/LegalResearchClient";
@@ -40,6 +41,9 @@ describe("errores del backend en español llano", () => {
     [403, "sin unidad organizativa resoluble", /unidad organizativa asignada/],
     [403, "capability_denied:legal.cases.create:TARGET_CORE_NOT_READY", /todavía no está habilitada/],
     [403, "capability_denied:legal.cases.view:NO_ACTIVE_SUBSCRIPTION", /suscripción activa/],
+    [403, "capability_denied:legal.cases.create:no_beneficiary_entitlement", /no tiene habilitado el acceso a Legal/],
+    [403, "capability_denied:legal.cases.create:capability_not_in_archetype", /tipo de organización/],
+    [403, "capability_denied:legal.cases.create:no_organization_unit", /unidad organizativa asignada/],
     [403, "tenant_mismatch", /no coincide con tu sesión/],
     [401, "missing_auth", /Vuelve a iniciar sesión/],
   ])("%i %s", (status, detail, esperado) => {
@@ -94,6 +98,15 @@ describe("tareas: modo visible y sin JSON crudo", () => {
     expect(screen.getByText("Revisar cláusula 4.")).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/sealed_output|"confianza"|\{/);
     expect(container.querySelector("pre")).toBeNull();
+  });
+
+  it("el modal envía dry_run: true explícito y lo declara", async () => {
+    const runExecute = jest.fn().mockResolvedValue(data);
+    const task = { task_id: "review_contract", required_inputs: [], sync_mode: "sync" } as never;
+    render(<TaskExecuteModal task={task} tenantId="t1" onClose={jest.fn()} runExecute={runExecute} />);
+    fireEvent.click(screen.getByRole("button", { name: "Ejecutar" }));
+    expect(await screen.findByTestId("task-run-mode")).toHaveTextContent(/Simulación/);
+    expect(runExecute).toHaveBeenCalledWith("t1", "review_contract", expect.objectContaining({ dry_run: true }));
   });
 
   it("estado error: no muestra explicación técnica", () => {
