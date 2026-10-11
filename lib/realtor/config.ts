@@ -6,14 +6,14 @@ export function isPanelFlagOn(env: Record<string, string | undefined> = process.
   return env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR === "on";
 }
 
-/** Producción: cualquier señal de producción bloquea los datos DEMO. */
+const NON_PROD_ENVS = ["local", "development", "preview"];
+
+/** Fail-closed: no productivo solo si NEXT_PUBLIC_APP_ENV lo dice; otro valor o ausencia = producción. */
 export function isProductionEnv(env: Record<string, string | undefined> = process.env): boolean {
-  const vercel = env.NEXT_PUBLIC_VERCEL_ENV;
-  const app = env.NEXT_PUBLIC_APP_ENV;
-  return vercel === "production" || app === "production";
+  return !NON_PROD_ENVS.includes(env.NEXT_PUBLIC_APP_ENV ?? "");
 }
 
-/** DEMO solo con opt-in explícito y nunca en producción. */
+/** DEMO solo con opt-in explícito y entorno positivamente no productivo. */
 export function isDemoAllowed(env: Record<string, string | undefined> = process.env): boolean {
   return env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO === "1" && !isProductionEnv(env);
 }

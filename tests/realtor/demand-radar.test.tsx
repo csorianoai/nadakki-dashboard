@@ -27,6 +27,7 @@ describe("interruptor fail-closed", () => {
   it("positivo: flag on + 200 muestra el panel con filtros y aviso de señales", async () => {
     process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
+    process.env.NEXT_PUBLIC_APP_ENV = "local";
     setAccess(200);
     render(<DemandRadarPanel />);
     expect(await screen.findByTestId("demand-radar-panel")).toBeInTheDocument();
@@ -81,6 +82,7 @@ describe("DEMO nunca en producción", () => {
   it("positivo: con opt-in y fuera de producción se rotula DEMO con banner", async () => {
     process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
+    process.env.NEXT_PUBLIC_APP_ENV = "local";
     setAccess(200);
     render(<DemandRadarPanel />);
     expect(await screen.findByTestId("demo-banner")).toBeInTheDocument();
@@ -92,7 +94,7 @@ describe("DEMO nunca en producción", () => {
   it("negativo: en producción, aun con opt-in, no hay DEMO y todo es UNAVAILABLE", async () => {
     process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-    process.env.NEXT_PUBLIC_VERCEL_ENV = "production";
+    process.env.NEXT_PUBLIC_APP_ENV = "production";
     setAccess(200);
     render(<DemandRadarPanel />);
     await screen.findByTestId("demand-radar-panel");
@@ -101,8 +103,10 @@ describe("DEMO nunca en producción", () => {
     expect(badges.every((b) => b === "UNAVAILABLE")).toBe(true);
     expect(screen.queryByTestId("demo-banner")).toBeNull();
     expect(isProductionEnv({ NEXT_PUBLIC_APP_ENV: "production" })).toBe(true);
-    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "1" })).toBe(true);
-    expect(isDemoAllowed({})).toBe(false);
+    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "1" })).toBe(false);
+    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "1", NEXT_PUBLIC_APP_ENV: "staging" })).toBe(false);
+    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "1", NEXT_PUBLIC_APP_ENV: "preview" })).toBe(true);
+    expect(isDemoAllowed({ NEXT_PUBLIC_APP_ENV: "local" })).toBe(false);
   });
 });
 
