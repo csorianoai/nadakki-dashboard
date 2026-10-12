@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { DemandRadarPanel } from "@/components/realtor/DemandRadarPanel";
 import { isDemoAllowed, isPanelFlagOn, isProductionEnv } from "@/lib/realtor/config";
 import { DATA_STATUSES } from "@/lib/realtor/types";
@@ -13,6 +13,11 @@ const ENV_KEYS = ["NEXT_PUBLIC_REALTOR_DEMAND_RADAR", "NEXT_PUBLIC_REALTOR_ALLOW
 beforeEach(() => { mockApiFetch.mockReset(); ENV_KEYS.forEach((k) => delete process.env[k]); });
 
 const setAccess = (status: number) => mockApiFetch.mockResolvedValue({ status });
+// Espera a que la promesa de acceso se resuelva y se aplique el estado: sin esto el DOM vacío sería el estado inicial.
+const settle = async () => {
+  await waitFor(() => expect(mockApiFetch).toHaveBeenCalled());
+  await act(async () => { await mockApiFetch.mock.results[0].value.catch(() => undefined); });
+};
 
 describe("interruptor fail-closed", () => {
   it("apagado por defecto: no pregunta al backend ni muestra nada", () => {
@@ -40,7 +45,7 @@ describe("interruptor fail-closed", () => {
     process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
     setAccess(status);
     const { container } = render(<DemandRadarPanel />);
-    await waitFor(() => expect(mockApiFetch).toHaveBeenCalled());
+    await settle();
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -48,7 +53,7 @@ describe("interruptor fail-closed", () => {
     process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
     mockApiFetch.mockRejectedValue(new Error("red"));
     const { container } = render(<DemandRadarPanel />);
-    await waitFor(() => expect(mockApiFetch).toHaveBeenCalled());
+    await settle();
     expect(container).toBeEmptyDOMElement();
   });
 });
@@ -58,7 +63,7 @@ describe("tenant ajeno: el cliente nunca envía tenant", () => {
     process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
     setAccess(403);
     const { container } = render(<DemandRadarPanel />);
-    await waitFor(() => expect(mockApiFetch).toHaveBeenCalled());
+    await settle();
     const [url, init] = mockApiFetch.mock.calls[0];
     expect(String(url)).not.toMatch(/tenant/i);
     expect(JSON.stringify(init)).not.toMatch(/tenant/i);
@@ -148,6 +153,6 @@ describe("config: lectura literal de process.env (sustitución de Next en el cli
     for (const k of ["NEXT_PUBLIC_REALTOR_DEMAND_RADAR", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_APP_ENV"]) {
       expect(src).toContain(`process.env.${k}`);
     }
-    expect(src).not.toMatch(/=\s*process\.env\s*[,)]/);
+    expect(src).not.toMatch(/=\s*process\.env\s*[;,)]/);
   });
 });
