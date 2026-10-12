@@ -16,7 +16,7 @@ const setAccess = (status: number) => mockApiFetch.mockResolvedValue({ status })
 // Espera a que la promesa de acceso se resuelva y se aplique el estado: sin esto el DOM vacío sería el estado inicial.
 const settle = async () => {
   await waitFor(() => expect(mockApiFetch).toHaveBeenCalled());
-  await act(async () => { await mockApiFetch.mock.results[0].value.catch(() => undefined); });
+  await act(async () => { await mockApiFetch.mock.results[0].value.catch(() => undefined); await new Promise((r) => setTimeout(r, 0)); });
 };
 
 describe("interruptor fail-closed", () => {
