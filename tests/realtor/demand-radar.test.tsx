@@ -88,7 +88,9 @@ describe("tenant ajeno: el cliente nunca envía tenant", () => {
     });
     roots.forEach((r) => walk(path.join(process.cwd(), r)));
     expect(files.length).toBeGreaterThan(5);
-    files.forEach((f) => expect(fs.readFileSync(f, "utf8")).not.toMatch(/tenant/i));
+    // Prohibe el tenant del cliente (tenant_id, cabeceras x-tenant). La ruta /tenant/profile
+    // del backend y los comentarios que explican que el tenant sale del token son legitimos.
+    files.forEach((f) => expect(fs.readFileSync(f, "utf8")).not.toMatch(/tenant[_-]?id|x-tenant|tenant-?header/i));
   });
 });
 
