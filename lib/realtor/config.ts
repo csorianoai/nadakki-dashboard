@@ -6,25 +6,20 @@ type Env = Record<string, string | undefined>;
 /** Next solo sustituye en el cliente las referencias literales process.env.NEXT_PUBLIC_X; no usar alias. */
 function buildEnv(): Env {
   return {
-    NEXT_PUBLIC_REALTOR_DEMAND_RADAR: process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR,
+    NEXT_PUBLIC_REALTOR_PANEL: process.env.NEXT_PUBLIC_REALTOR_PANEL,
     NEXT_PUBLIC_REALTOR_ALLOW_DEMO: process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO,
-    NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
   };
 }
 
-/** Apagado por defecto: solo el valor exacto "on" lo enciende. */
+/** Interruptor único de las pantallas Realtor: apagado salvo el valor exacto "1". */
 export function isPanelFlagOn(env: Env = buildEnv()): boolean {
-  return env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR === "on";
+  return env.NEXT_PUBLIC_REALTOR_PANEL === "1";
 }
 
-const NON_PROD_ENVS = ["local", "development", "preview"];
-
-/** Fail-closed: no productivo solo si NEXT_PUBLIC_APP_ENV lo dice; otro valor o ausencia = producción. */
-export function isProductionEnv(env: Env = buildEnv()): boolean {
-  return !NON_PROD_ENVS.includes(env.NEXT_PUBLIC_APP_ENV ?? "");
-}
-
-/** DEMO solo con opt-in explícito y entorno positivamente no productivo. */
+/**
+ * DEMO solo con opt-in explícito ("1" exacto). Modo construcción (MC2 de REALTOR_DECISION_LOG): se permite
+ * fuera de preview porque el panel entero solo se pinta tras un 200 de /acceso, que exige el core real_estate.
+ */
 export function isDemoAllowed(env: Env = buildEnv()): boolean {
-  return env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO === "1" && !isProductionEnv(env);
+  return env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO === "1";
 }

@@ -1,15 +1,15 @@
 import fs from "fs";
 import path from "path";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { DemandRadarPanel } from "@/components/realtor/DemandRadarPanel";
-import { isDemoAllowed, isPanelFlagOn, isProductionEnv } from "@/lib/realtor/config";
+import { isDemoAllowed, isPanelFlagOn } from "@/lib/realtor/config";
 import { DATA_STATUSES } from "@/lib/realtor/types";
 import { buildDemoDataset, PILOT_FILTERS } from "@/lib/realtor/demo-data";
 
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
 
-const ENV_KEYS = ["NEXT_PUBLIC_REALTOR_DEMAND_RADAR", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_VERCEL_ENV", "NEXT_PUBLIC_APP_ENV"];
+const ENV_KEYS = ["NEXT_PUBLIC_REALTOR_PANEL", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO"];
 beforeEach(() => { mockApiFetch.mockReset(); ENV_KEYS.forEach((k) => delete process.env[k]); });
 
 const setAccess = (status: number) => mockApiFetch.mockResolvedValue({ status });
@@ -26,13 +26,14 @@ describe("interruptor fail-closed", () => {
     expect(container).toBeEmptyDOMElement();
     expect(mockApiFetch).not.toHaveBeenCalled();
     expect(isPanelFlagOn({})).toBe(false);
-    expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_DEMAND_RADAR: "true" })).toBe(false);
+    expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_PANEL: "true" })).toBe(false);
+    expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_PANEL: "on" })).toBe(false);
+    expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_PANEL: "1" })).toBe(true);
   });
 
   it("positivo: flag on + 200 muestra el panel con filtros y aviso de señales", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-    process.env.NEXT_PUBLIC_APP_ENV = "local";
     setAccess(200);
     render(<DemandRadarPanel />);
     expect(await screen.findByTestId("demand-radar-panel")).toBeInTheDocument();
@@ -42,7 +43,7 @@ describe("interruptor fail-closed", () => {
   });
 
   it.each([401, 403, 404, 500])("negativo: %s oculta el panel", async (status) => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(status);
     const { container } = render(<DemandRadarPanel />);
     await settle();
@@ -50,7 +51,7 @@ describe("interruptor fail-closed", () => {
   });
 
   it("negativo: error de red oculta el panel", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     mockApiFetch.mockRejectedValue(new Error("red"));
     const { container } = render(<DemandRadarPanel />);
     await settle();
@@ -60,7 +61,7 @@ describe("interruptor fail-closed", () => {
 
 describe("tenant ajeno: el cliente nunca envía tenant", () => {
   it("el backend responde 403 a un tenant sin acceso y la solicitud no lleva tenant", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(403);
     const { container } = render(<DemandRadarPanel />);
     await settle();
@@ -83,11 +84,10 @@ describe("tenant ajeno: el cliente nunca envía tenant", () => {
   });
 });
 
-describe("DEMO nunca en producción", () => {
-  it("positivo: con opt-in y fuera de producción se rotula DEMO con banner", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+describe("DEMO solo con opt-in y siempre detrás de /acceso", () => {
+  it("positivo: con opt-in y acceso 200 se rotula DEMO con banner", async () => {
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-    process.env.NEXT_PUBLIC_APP_ENV = "local";
     setAccess(200);
     render(<DemandRadarPanel />);
     expect(await screen.findByTestId("demo-banner")).toBeInTheDocument();
@@ -96,10 +96,8 @@ describe("DEMO nunca en producción", () => {
     badges.forEach((b) => expect(DATA_STATUSES).toContain(b));
   });
 
-  it("negativo: en producción, aun con opt-in, no hay DEMO y todo es UNAVAILABLE", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
-    process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-    process.env.NEXT_PUBLIC_APP_ENV = "production";
+  it("negativo: sin opt-in no hay DEMO y todo es UNAVAILABLE", async () => {
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(200);
     render(<DemandRadarPanel />);
     await screen.findByTestId("demand-radar-panel");
@@ -107,11 +105,32 @@ describe("DEMO nunca en producción", () => {
     expect(badges.length).toBeGreaterThan(0);
     expect(badges.every((b) => b === "UNAVAILABLE")).toBe(true);
     expect(screen.queryByTestId("demo-banner")).toBeNull();
-    expect(isProductionEnv({ NEXT_PUBLIC_APP_ENV: "production" })).toBe(true);
-    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "1" })).toBe(false);
-    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "1", NEXT_PUBLIC_APP_ENV: "staging" })).toBe(false);
-    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "1", NEXT_PUBLIC_APP_ENV: "preview" })).toBe(true);
-    expect(isDemoAllowed({ NEXT_PUBLIC_APP_ENV: "local" })).toBe(false);
+    expect(isDemoAllowed({})).toBe(false);
+    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "true" })).toBe(false);
+    expect(isDemoAllowed({ NEXT_PUBLIC_REALTOR_ALLOW_DEMO: "1" })).toBe(true);
+  });
+
+  it("negativo: con opt-in pero sin 200 de /acceso (tenant sin el core) no se pinta nada, tampoco DEMO", async () => {
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
+    process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
+    setAccess(403);
+    const { container } = render(<DemandRadarPanel />);
+    await settle();
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByTestId("demo-banner")).toBeNull();
+  });
+
+  it("las señales que DR-TRENDS y DR-ORIGEN aún no dan salen UNAVAILABLE, sin cifras", async () => {
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
+    process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
+    setAccess(200);
+    render(<DemandRadarPanel />);
+    await screen.findByTestId("demand-radar-panel");
+    for (const t of ["Tendencia de búsqueda (Google Trends)", "Procedencia de las búsquedas"]) {
+      const card = screen.getByRole("article", { name: t });
+      expect(within(card).getByTestId("status-badge")).toHaveAttribute("data-status", "UNAVAILABLE");
+      expect(within(card).queryByRole("list")).toBeNull();
+    }
   });
 });
 
@@ -139,7 +158,7 @@ describe("contenido de señales y Fair Housing", () => {
   });
 
   it("muestra la nota de Fair Housing y filtra por operación", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(200);
     render(<DemandRadarPanel />);
     expect(await screen.findByText(/Fair Housing/)).toBeInTheDocument();
@@ -150,7 +169,7 @@ describe("contenido de señales y Fair Housing", () => {
 describe("config: lectura literal de process.env (sustitución de Next en el cliente)", () => {
   it("config.ts usa referencias literales process.env.NEXT_PUBLIC_* y ningún alias", () => {
     const src = require("fs").readFileSync(require("path").join(__dirname, "../../lib/realtor/config.ts"), "utf8");
-    for (const k of ["NEXT_PUBLIC_REALTOR_DEMAND_RADAR", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_APP_ENV"]) {
+    for (const k of ["NEXT_PUBLIC_REALTOR_PANEL", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO"]) {
       expect(src).toContain(`process.env.${k}`);
     }
     expect(src).not.toMatch(/=\s*process\.env\s*[;,)]/);
