@@ -78,5 +78,7 @@ export function buildDemoDataset(filters: RadarFilters): RadarDataset {
 export function pendingIntegrations(): RadarSignal[] {
   return [
     unavailableSignal("fuente-mls", "Transacciones cerradas", "Ventas registradas", "Fuente de transacciones (pendiente)"),
+    unavailableSignal("dr-trends", "Tendencia de búsqueda (Google Trends)", "Índice relativo de búsqueda", "DR-TRENDS (pendiente)"),
+    unavailableSignal("dr-origen", "Procedencia de las búsquedas", "Procedencia geográfica agregada", "DR-ORIGEN (pendiente)"),
   ];
 }
