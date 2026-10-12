@@ -221,7 +221,7 @@ jobs:
   next-build:
     name: next production build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       NEXT_PUBLIC_BACKEND_URL: http://backend.invalid
     steps:
@@ -237,3 +237,28 @@ jobs:
 
       - name: Next.js production build
         run: npm run build
+
+      # Captura de las pantallas principales (portada, /admin, /social) sobre este mismo build: fondo oscuro
+      # continuo y texto legible (e2e/visual). La portada salió a producción con media página ilegible.
+      - name: Chromium para Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Pantallas principales (Playwright)
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+        run: |
+          npx next start -p 3000 > next-start.log 2>&1 &
+          for _ in $(seq 1 60); do curl -fsS -o /dev/null http://127.0.0.1:3000/login && break; sleep 1; done
+          npx playwright test -c playwright.config.visual.ts
+
+      - name: Capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pantallas-principales
+          path: |
+            test-results/
+            playwright-report/
+            next-start.log
+          if-no-files-found: ignore
+          retention-days: 14

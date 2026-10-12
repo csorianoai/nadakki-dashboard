@@ -598,6 +598,9 @@ body {
   padding: var(--space-xl);
   background: var(--bg-primary);
   min-height: 100vh;
+  /* Dentro del GlobalForgeAppShell, `main` es flex-col con scroll (#124): sin esto el bloque encogía hasta la
+     altura de la ventana y el resto del contenido caía, con texto blanco, sobre el fondo claro del shell. */
+  flex-shrink: 0;
 }
 
 .ndk-page-header {
