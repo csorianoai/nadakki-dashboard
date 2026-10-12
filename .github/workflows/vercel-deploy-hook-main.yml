@@ -1,0 +1,38 @@
+name: Vercel deploy hook (main)
+
+# La integración Git de Vercel no está desplegando los merges a main. Cada push a main llama al
+# deploy hook de producción (secreto VERCEL_DEPLOY_HOOK_MAIN). La URL del hook es la credencial:
+# nunca se imprime (va por env, curl no la muestra y GitHub la enmascara si apareciera).
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-hook:
+    name: llamar al deploy hook de Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: POST al deploy hook
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_MAIN }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::Falta el secreto VERCEL_DEPLOY_HOOK_MAIN en este repositorio."
+            exit 1
+          fi
+          resp="$(curl -sS --fail-with-body --retry 3 --max-time 30 -X POST "$HOOK")" || {
+            echo "::error::El deploy hook respondió con error."
+            exit 1
+          }
+          # Solo el estado del trabajo creado (sin la URL): {"job":{"id":"…","state":"PENDING",…}}
+          echo "$resp" | jq -r '"job \(.job.id // "?") \(.job.state // "?") para ${{ github.sha }}"'
