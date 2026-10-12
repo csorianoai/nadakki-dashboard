@@ -4,14 +4,14 @@ import { RealtorHome } from "@/components/realtor/RealtorHome";
 import { isPanelFlagOn } from "@/lib/realtor/config";
 
 /**
- * Medido en producción (2026-10-12): Vercel tiene NEXT_PUBLIC_REALTOR_PANEL=1 y el código solo leía
- * NEXT_PUBLIC_REALTOR_DEMAND_RADAR=on. El panel devolvía null sin llamar a /acceso: pantalla en blanco.
+ * Medido en producción (2026-10-12): con el interruptor sin reconocer el panel devolvía null sin llamar a
+ * /acceso y la pantalla quedaba en blanco (el interruptor lo corrigió #782).
  * Contrato nuevo: nunca en blanco; sin acceso, un aviso con el motivo y sin datos.
  */
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
 
-const ENV_KEYS = ["NEXT_PUBLIC_REALTOR_PANEL", "NEXT_PUBLIC_REALTOR_DEMAND_RADAR", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_APP_ENV"];
+const ENV_KEYS = ["NEXT_PUBLIC_REALTOR_PANEL", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO"];
 beforeEach(() => { mockApiFetch.mockReset(); ENV_KEYS.forEach((k) => delete process.env[k]); });
 
 const settle = async () => {
@@ -24,7 +24,6 @@ describe("interruptor: el nombre configurado en Vercel enciende el panel", () =>
     expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_PANEL: "1" })).toBe(true);
     expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_PANEL: "0" })).toBe(false);
     expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_PANEL: "true" })).toBe(false);
-    expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_DEMAND_RADAR: "on" })).toBe(true);
   });
 
   it("con NEXT_PUBLIC_REALTOR_PANEL=1 y 200 llama a /acceso y pinta el panel", async () => {
