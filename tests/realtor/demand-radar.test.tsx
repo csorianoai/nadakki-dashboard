@@ -9,7 +9,7 @@ import { buildDemoDataset, PILOT_FILTERS } from "@/lib/realtor/demo-data";
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
 
-const ENV_KEYS = ["NEXT_PUBLIC_REALTOR_DEMAND_RADAR", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_VERCEL_ENV", "NEXT_PUBLIC_APP_ENV"];
+const ENV_KEYS = ["NEXT_PUBLIC_REALTOR_PANEL", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_VERCEL_ENV", "NEXT_PUBLIC_APP_ENV"];
 beforeEach(() => { mockApiFetch.mockReset(); ENV_KEYS.forEach((k) => delete process.env[k]); });
 
 const setAccess = (status: number) => mockApiFetch.mockResolvedValue({ status });
@@ -26,11 +26,11 @@ describe("interruptor fail-closed", () => {
     expect(container).toBeEmptyDOMElement();
     expect(mockApiFetch).not.toHaveBeenCalled();
     expect(isPanelFlagOn({})).toBe(false);
-    expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_DEMAND_RADAR: "true" })).toBe(false);
+    expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_PANEL: "on" })).toBe(false);
   });
 
   it("positivo: flag on + 200 muestra el panel con filtros y aviso de señales", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
     process.env.NEXT_PUBLIC_APP_ENV = "local";
     setAccess(200);
@@ -42,7 +42,7 @@ describe("interruptor fail-closed", () => {
   });
 
   it.each([401, 403, 404, 500])("negativo: %s oculta el panel", async (status) => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(status);
     const { container } = render(<DemandRadarPanel />);
     await settle();
@@ -50,7 +50,7 @@ describe("interruptor fail-closed", () => {
   });
 
   it("negativo: error de red oculta el panel", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     mockApiFetch.mockRejectedValue(new Error("red"));
     const { container } = render(<DemandRadarPanel />);
     await settle();
@@ -60,7 +60,7 @@ describe("interruptor fail-closed", () => {
 
 describe("tenant ajeno: el cliente nunca envía tenant", () => {
   it("el backend responde 403 a un tenant sin acceso y la solicitud no lleva tenant", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(403);
     const { container } = render(<DemandRadarPanel />);
     await settle();
@@ -85,7 +85,7 @@ describe("tenant ajeno: el cliente nunca envía tenant", () => {
 
 describe("DEMO nunca en producción", () => {
   it("positivo: con opt-in y fuera de producción se rotula DEMO con banner", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
     process.env.NEXT_PUBLIC_APP_ENV = "local";
     setAccess(200);
@@ -97,7 +97,7 @@ describe("DEMO nunca en producción", () => {
   });
 
   it("negativo: en producción, aun con opt-in, no hay DEMO y todo es UNAVAILABLE", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
     process.env.NEXT_PUBLIC_APP_ENV = "production";
     setAccess(200);
@@ -139,7 +139,7 @@ describe("contenido de señales y Fair Housing", () => {
   });
 
   it("muestra la nota de Fair Housing y filtra por operación", async () => {
-    process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR = "on";
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(200);
     render(<DemandRadarPanel />);
     expect(await screen.findByText(/Fair Housing/)).toBeInTheDocument();
@@ -150,7 +150,7 @@ describe("contenido de señales y Fair Housing", () => {
 describe("config: lectura literal de process.env (sustitución de Next en el cliente)", () => {
   it("config.ts usa referencias literales process.env.NEXT_PUBLIC_* y ningún alias", () => {
     const src = require("fs").readFileSync(require("path").join(__dirname, "../../lib/realtor/config.ts"), "utf8");
-    for (const k of ["NEXT_PUBLIC_REALTOR_DEMAND_RADAR", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_APP_ENV"]) {
+    for (const k of ["NEXT_PUBLIC_REALTOR_PANEL", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO", "NEXT_PUBLIC_APP_ENV"]) {
       expect(src).toContain(`process.env.${k}`);
     }
     expect(src).not.toMatch(/=\s*process\.env\s*[;,)]/);

@@ -6,15 +6,15 @@ type Env = Record<string, string | undefined>;
 /** Next solo sustituye en el cliente las referencias literales process.env.NEXT_PUBLIC_X; no usar alias. */
 function buildEnv(): Env {
   return {
-    NEXT_PUBLIC_REALTOR_DEMAND_RADAR: process.env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR,
+    NEXT_PUBLIC_REALTOR_PANEL: process.env.NEXT_PUBLIC_REALTOR_PANEL,
     NEXT_PUBLIC_REALTOR_ALLOW_DEMO: process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO,
     NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
   };
 }
 
-/** Apagado por defecto: solo el valor exacto "on" lo enciende. */
+/** Interruptor único de todas las pantallas Realtor. Apagado por defecto: solo el valor exacto "1" lo enciende. */
 export function isPanelFlagOn(env: Env = buildEnv()): boolean {
-  return env.NEXT_PUBLIC_REALTOR_DEMAND_RADAR === "on";
+  return env.NEXT_PUBLIC_REALTOR_PANEL === "1";
 }
 
 const NON_PROD_ENVS = ["local", "development", "preview"];
