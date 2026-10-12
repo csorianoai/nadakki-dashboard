@@ -84,7 +84,6 @@ export function LicenseBrokerDraft({
     </div>
   );
   return <section className={styles.root} lang={lang} aria-label={t.title}>
-    <div className={styles.brand}>Nadakki <span>Realtor OS</span></div>
     <h1>{t.title}</h1><p className={styles.note}>{t.notice}</p>
     <ol className={styles.steps} aria-label={t.progress}>
       <li aria-current={isLicense ? "step" : undefined}>1 · {t.license}</li>

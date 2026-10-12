@@ -2,8 +2,8 @@
 COMPONENTS_ONLY / NO_RUNTIME_EXPOSURE.
 DESIGN_IN_REVIEW · CONTRACT_PENDING · BLOCKED_SECURITY_DEPENDENCY.
 Referencia de censo: PR #772, HEAD 7f51bee96fd7cf64b35346dcb3f6aec72a715b75; sin modificar.
-Base: 5c7acd85ef5b3185948e2b4fa8f1ebbaedc7146e (origin/main verificado).
-Rama: codex/realtor-alta-license-broker. HEAD final: metadatos del PR de esta parte.
+Base: 5ae8b825 (origin/staging).
+Rama: codex/realtor-alta-license-broker (PR #773, base staging). HEAD final: metadatos del PR de esta parte.
 
 ## Diseño identificado
 ZIP externo: Nadakki realtor OS design loop 03 (14).zip.
@@ -11,7 +11,7 @@ SHA256: C883E9B226CE59831AFB22D0922914A4CB64855684CB636683A727C8358EF311.
 Identificador interno: Nadakki_Realtor_OS_DL10A_FINAL_GATE, versión Design Loop 10A, 2026-10-11.
 Leídos: DL10A_FINAL_GATE_REPORT.md, MATRIZ_CONTRACTUAL_DL10A.md, LIMITACIONES_DL10A.md;
 inspeccionados Nadakki Realtor OS DL10A.dc.html y Nadakki_Realtor_OS_DL10A_autonomo.html.
-Final Gate declara CONDITIONAL_ACCEPT y DESIGN_APPROVED: NO; no es VISUAL_ACCEPT del frontend.
+Final Gate declara CONDITIONAL_ACCEPT; después DESIGN_APPROVED=YES (DESIGN_SCOPE=DL10A_PROTOTYPE_ONLY, decisión en nadakki-dashboard#774); no es VISUAL_ACCEPT del frontend.
 La matriz trata Listing/Buyer Director y autonomía propuesta, no especifica un asistente de alta.
 El editable conserva title «Design Loop 09 DEMO»: el informe y carpeta identifican 10A.
 No se reutiliza la simulación del HTML, sus roles, almacenamiento ni datos.
@@ -56,7 +56,7 @@ Componentes no importados por app, layouts ni navegación. No fetch, credenciale
 La revisión nunca cambia un estado de licencia, agente o broker.
 Sin ruta de acceso: no se pretende resolver el gate de seguridad con un flag o componente cliente.
 Integración bloqueada hasta backend verificable, contrato completo y diseño aprobado.
-No se solicita VISUAL_ACCEPT ni TECH_ACCEPT. Sin merge; Marca/Canales requieren autorización posterior.
+En modo construcción se mergea con TECH_ACCEPT y CI en verde; VISUAL_ACCEPT es revisión posterior no bloqueante. La pantalla no pinta marca ni fondo propios: vive dentro del armazón de app/realtor/layout.tsx (fuentes vía --rt-font-body/--rt-font-display). Marca/Canales requieren autorización posterior.
 
 ## Evidencias ejecutadas
 PASS: Jest, 20 casos; TypeScript acotado a componentes/pruebas, sin emit; ESLint, cero advertencias.

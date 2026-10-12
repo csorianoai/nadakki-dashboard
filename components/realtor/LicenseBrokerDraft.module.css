@@ -1,8 +1,6 @@
-.root { box-sizing: border-box; width: 100%; max-width: 760px; margin: auto; padding: clamp(16px, 4vw, 32px); background: #F3F5F7; color: #13202B; font: 15px/1.5 'IBM Plex Sans', Arial, sans-serif; overflow-wrap: anywhere; }
+.root { box-sizing: border-box; width: 100%; color: #13202B; font: 15px/1.5 var(--rt-font-body), 'IBM Plex Sans', Arial, sans-serif; overflow-wrap: anywhere; }
 .root *, .root *::before, .root *::after { box-sizing: border-box; }
-.brand { padding: 16px 20px; border-radius: 12px; background: linear-gradient(180deg, #13202B, #0E1922); color: #E8EEF2; font: 700 19px 'Space Grotesk', Arial, sans-serif; }
-.brand span { color: #6FD3DC; }
-.root h1, .root h2 { font-family: 'Space Grotesk', Arial, sans-serif; line-height: 1.2; }
+.root h1, .root h2 { font-family: var(--rt-font-display), 'Space Grotesk', Arial, sans-serif; line-height: 1.2; }
 .root h1 { font-size: clamp(26px, 4vw, 34px); }
 .root h2 { margin: 0 0 16px; font-size: 22px; }
 .steps { display: flex; gap: 12px; margin: 20px 0; padding: 0; list-style: none; }

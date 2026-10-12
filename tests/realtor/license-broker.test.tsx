@@ -127,6 +127,7 @@ describe("Licencia y Broker: componentes aislados", () => {
       fireEvent.click(screen.getByRole("button", { name: "Revisar datos" }));
       expect(fetchSpy).not.toHaveBeenCalled(); expect(storage).not.toHaveBeenCalled();
       expect(screen.queryByRole("button", { name: /guardar|enviar|aprobar|conectar/i })).not.toBeInTheDocument();
+      expect(document.body.innerHTML).not.toMatch(/tenant/i);
     } finally { global.fetch = fetchBefore; storage.mockRestore(); }
   });
 });
