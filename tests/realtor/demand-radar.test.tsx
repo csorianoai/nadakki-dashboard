@@ -88,7 +88,9 @@ describe("tenant ajeno: el cliente nunca envía tenant", () => {
     });
     roots.forEach((r) => walk(path.join(process.cwd(), r)));
     expect(files.length).toBeGreaterThan(5);
-    files.forEach((f) => expect(fs.readFileSync(f, "utf8")).not.toMatch(/tenant/i));
+    // La ruta del backend /tenant/profile y los comentarios son legitimos; lo prohibido es
+    // mandar el tenant: campo tenant_id o cabeceras de tenant.
+    files.forEach((f) => expect(fs.readFileSync(f, "utf8")).not.toMatch(/tenant[_-]?id|x-tenant|tenantid/i));
   });
 });
 
