@@ -119,6 +119,8 @@ const configuredBackendUrl = resolveConfiguredBackendUrl();
 const configuredBackendWsUrl = configuredBackendUrl.replace(/^http/, "ws");
 
 const nextConfig = {
+  // Solo la evidencia Playwright de Realtor construye una segunda copia (sin DEMO); por defecto es .next.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   images: {
     remotePatterns: [

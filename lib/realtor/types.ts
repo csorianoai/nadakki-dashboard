@@ -31,6 +31,9 @@ export interface RadarSignal {
   unit: string;
   points: SignalPoint[];
   note: string;
+  /** Texto del período y de la precisión de la ficha; ausentes si no hay dato. */
+  period?: string;
+  precision?: string;
 }
 
 export interface RadarDataset {
