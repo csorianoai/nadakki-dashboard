@@ -30,6 +30,7 @@ import {
 } from "./forge-global-sidebar-nav";
 import { getSidebarTheme, roleAccentClasses } from "./forge-sidebar-core-themes";
 import { ProyectosFinanzasSidebarLinks } from "./ProyectosFinanzasSidebarLinks";
+import { RealtorNavEntry } from "@/components/realtor/RealtorNavEntry";
 
 export type ForgeGlobalCoresSidebarProps = {
   mobileOpen: boolean;
@@ -532,6 +533,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
             ? visibleSections.map((section) => renderCollapsedSection(section))
             : visibleSections.map((section) => renderSection(section))
           }
+          <RealtorNavEntry collapsed={collapsed} onNavigate={onNavigate} />
         </nav>
 
         <div className={cn("mt-auto border-t border-zinc-800 bg-zinc-950/95", collapsed ? "p-2" : "p-3")}>

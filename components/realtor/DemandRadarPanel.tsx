@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { fetchPanelAccess } from "@/lib/realtor/access";
-import { isDemoAllowed, isPanelFlagOn } from "@/lib/realtor/config";
+import { useMemo, useState } from "react";
+import { isDemoAllowed } from "@/lib/realtor/config";
 import { DEMO_BANNER, FAIR_HOUSING_NOTE, INTRO } from "@/lib/realtor/copy";
 import { buildDemoDataset, PILOT_FILTERS, pendingIntegrations, unavailableSignal } from "@/lib/realtor/demo-data";
 import type { RadarFilters, RadarSignal } from "@/lib/realtor/types";
 import { FiltersBar } from "./FiltersBar";
+import { RealtorNotice } from "./RealtorNotice";
 import { SignalCard } from "./SignalCard";
+import { useRealtorAccess } from "./useRealtorAccess";
 
 /** Hasta que exista el backend de señales, fuera de DEMO todo es UNAVAILABLE. */
 function signalsFor(filters: RadarFilters, demoAllowed: boolean): RadarSignal[] {
@@ -18,21 +19,13 @@ function signalsFor(filters: RadarFilters, demoAllowed: boolean): RadarSignal[] 
 }
 
 export function DemandRadarPanel() {
-  const flagOn = isPanelFlagOn();
-  const [allowed, setAllowed] = useState(false);
+  const access = useRealtorAccess();
   const [filters, setFilters] = useState<RadarFilters>(PILOT_FILTERS);
   const demoAllowed = isDemoAllowed();
 
-  useEffect(() => {
-    if (!flagOn) return;
-    let alive = true;
-    fetchPanelAccess().then((ok) => { if (alive) setAllowed(ok); });
-    return () => { alive = false; };
-  }, [flagOn]);
-
   const signals = useMemo(() => signalsFor(filters, demoAllowed), [filters, demoAllowed]);
 
-  if (!flagOn || !allowed) return null;
+  if (access !== "ok") return <RealtorNotice reason={access} />;
 
   const showsDemo = signals.some((s) => s.status === "DEMO");
   return (

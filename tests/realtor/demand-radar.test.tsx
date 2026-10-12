@@ -20,10 +20,11 @@ const settle = async () => {
 };
 
 describe("interruptor fail-closed", () => {
-  it("apagado por defecto: no pregunta al backend ni muestra nada", () => {
+  it("apagado por defecto: no pregunta al backend y solo avisa del motivo", () => {
     setAccess(200);
-    const { container } = render(<DemandRadarPanel />);
-    expect(container).toBeEmptyDOMElement();
+    render(<DemandRadarPanel />);
+    expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", "apagado");
+    expect(screen.queryByTestId("demand-radar-panel")).toBeNull();
     expect(mockApiFetch).not.toHaveBeenCalled();
     expect(isPanelFlagOn({})).toBe(false);
     expect(isPanelFlagOn({ NEXT_PUBLIC_REALTOR_PANEL: "true" })).toBe(false);
@@ -42,20 +43,22 @@ describe("interruptor fail-closed", () => {
     expect(mockApiFetch).toHaveBeenCalledWith("/api/v1/realestate/acceso", expect.objectContaining({ method: "GET" }));
   });
 
-  it.each([401, 403, 404, 500])("negativo: %s oculta el panel", async (status) => {
+  it.each([401, 403, 404, 500])("negativo: %s oculta el panel y deja solo el aviso", async (status) => {
     process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(status);
-    const { container } = render(<DemandRadarPanel />);
+    render(<DemandRadarPanel />);
     await settle();
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByTestId("demand-radar-panel")).toBeNull();
+    expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", status === 500 ? "error" : "sin-acceso");
   });
 
-  it("negativo: error de red oculta el panel", async () => {
+  it("negativo: error de red oculta el panel y deja solo el aviso", async () => {
     process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     mockApiFetch.mockRejectedValue(new Error("red"));
-    const { container } = render(<DemandRadarPanel />);
+    render(<DemandRadarPanel />);
     await settle();
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByTestId("demand-radar-panel")).toBeNull();
+    expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", "error");
   });
 });
 
@@ -63,12 +66,13 @@ describe("tenant ajeno: el cliente nunca envía tenant", () => {
   it("el backend responde 403 a un tenant sin acceso y la solicitud no lleva tenant", async () => {
     process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     setAccess(403);
-    const { container } = render(<DemandRadarPanel />);
+    render(<DemandRadarPanel />);
     await settle();
     const [url, init] = mockApiFetch.mock.calls[0];
     expect(String(url)).not.toMatch(/tenant/i);
     expect(JSON.stringify(init)).not.toMatch(/tenant/i);
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByTestId("demand-radar-panel")).toBeNull();
+    expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", "sin-acceso");
   });
 
   it("ningún archivo del módulo menciona tenant_id ni cabeceras de tenant", () => {
@@ -114,9 +118,10 @@ describe("DEMO solo con opt-in y siempre detrás de /acceso", () => {
     process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
     setAccess(403);
-    const { container } = render(<DemandRadarPanel />);
+    render(<DemandRadarPanel />);
     await settle();
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByTestId("demand-radar-panel")).toBeNull();
+    expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", "sin-acceso");
     expect(screen.queryByTestId("demo-banner")).toBeNull();
   });
 
