@@ -68,6 +68,13 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <ProtectedRoute>{children}</ProtectedRoute>;
   }
 
+  // Realtor OS: autenticado, pero con su propio armazón (DL10A: barra de centros, Career Director, Smart
+  // Calendar), que pinta app/realtor/layout.tsx. Dentro del GlobalForgeAppShell se apilaba sobre el
+  // menú genérico de la Suite (decisión de César, 2026-10-12, tarea RE-SHELL).
+  if (pathname === "/realtor" || pathname.startsWith("/realtor/")) {
+    return <ProtectedRoute>{children}</ProtectedRoute>;
+  }
+
   // Exclude /credit/* paths from GlobalForgeAppShell
   if (pathname === "/credit" || pathname.startsWith("/credit/")) {
     return <ProtectedRoute>{children}</ProtectedRoute>;
