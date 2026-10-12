@@ -30,7 +30,7 @@ jobs:
             echo "::error::Falta el secreto VERCEL_DEPLOY_HOOK_MAIN en este repositorio."
             exit 1
           fi
-          resp="$(curl -sS --fail-with-body --retry 3 --max-time 30 -X POST "$HOOK")" || {
+          resp="$(curl -fsS --retry 3 --max-time 30 -X POST "$HOOK")" || {
             echo "::error::El deploy hook respondió con error."
             exit 1
           }
