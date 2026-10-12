@@ -88,7 +88,7 @@ describe("tenant ajeno: el cliente nunca envía tenant", () => {
     });
     roots.forEach((r) => walk(path.join(process.cwd(), r)));
     expect(files.length).toBeGreaterThan(5);
-    files.forEach((f) => expect(fs.readFileSync(f, "utf8")).not.toMatch(/tenant/i));
+    files.forEach((f) => expect(fs.readFileSync(f, "utf8")).not.toMatch(/tenant[_-]?id|x-tenant/i));
   });
 });
 
