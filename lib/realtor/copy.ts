@@ -13,7 +13,7 @@ export const STATUS_EXPLAIN: Record<DataStatus, string> = {
 };
 
 export const INTRO =
-  "Estas son señales del mercado para orientar decisiones, no certezas. Muestran tendencias agregadas por zona; no predicen ventas ni identifican personas.";
+  "Explora la demanda en cualquier lugar del mundo: intención de búsqueda, compras registradas y conversiones de tu CRM. Son señales para decidir contenido y estrategia, no certezas.";
 
 export const FAIR_HOUSING_NOTE =
   "Cumplimiento de Fair Housing: el radar sugiere contenido, idioma y estrategia. No sirve para elegir a quién mostrar un anuncio ni para excluir personas por origen nacional u otra clase protegida. Solo se muestran datos agregados.";
