@@ -114,7 +114,8 @@ export async function postCaseAction(
   caseId: string,
   actionName: string,
   payload: Record<string, unknown> = {},
-  actorType: "human" | "agent" | "system" = "human",
+  // L2b: por HTTP solo actúa un humano; identidad_del_jwt.py veta otro actor_type (403).
+  actorType: "human" = "human",
 ): Promise<unknown> {
   const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/actions`, {
     method: "POST",
@@ -197,10 +198,17 @@ export async function postStrategiesSelect(
   caseId: string,
   body: { strategy_ids: string[]; rationale?: string; generate_documents_immediately?: boolean }
 ) {
+  // L2b: StrategySelectRequest solo acepta `strategy_id`. Se envía la primera
+  // seleccionada, la misma que nombra el aviso de CaseStrategyMultiSelect.
+  const strategyId = body.strategy_ids[0];
+  if (!strategyId) throw new Error("Selecciona una estrategia.");
   const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/strategies/select`, {
     method: "POST",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      strategy_id: strategyId,
+      ...(body.rationale !== undefined ? { rationale: body.rationale } : {}),
+    }),
   });
   if (!res.ok) throw new Error(`Error al seleccionar estrategias (${res.status})`);
   return parseJson<unknown>(res);

@@ -41,6 +41,10 @@ const LEGAL_API_PATH = /["'`]\/api\/(?:v1\/)?legal(?:[/?"'`$]|$)/;
 const LEGAL_CLIENT_IMPORT =
   /from\s+["']@\/lib\/(?:api\/legal|legal-api|legal\/cases\/legal-cases-api|legal\/library-api|legal-cockpit\/api)["']/;
 const RAW_FETCH = /(?<![\w$])fetch\s*\(/;
+// L2b: `fetch` como valor (variable, ternario: `x ? fetch : apiFetch`) tampoco vale.
+// Se busca sin comentarios ni cadenas; se excluyen `.fetch`, llamadas `fetch(` y el
+// metodo generico `fetch<T>(` de lib/api/legal.ts.
+const FETCH_REF = /(?<![\w$.])fetch(?![\w$])(?!\s*[(<])/;
 const BASE_FETCHAPI_IMPORT = /import\s*\{[^}]*\bfetchAPI\b[^}]*\}\s*from\s*["']@\/lib\/api\/base["']/;
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -57,6 +61,8 @@ function walk(dir: string, out: string[] = []): string[] {
 
 const stripComments = (src: string) =>
   src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
+const stripStrings = (src: string) =>
+  src.replace(/`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, '""');
 
 function legalFilesWithoutToken(): string[] {
   const files = Array.from(new Set(SCAN_ROOTS.flatMap((d) => walk(d)))).filter(IN_SCOPE);
@@ -65,7 +71,8 @@ function legalFilesWithoutToken(): string[] {
     .filter((rel) => {
       const src = stripComments(fs.readFileSync(path.join(ROOT, rel), "utf8"));
       const talksToLegal = LEGAL_API_PATH.test(src) || LEGAL_CLIENT_IMPORT.test(src);
-      return talksToLegal && (RAW_FETCH.test(src) || BASE_FETCHAPI_IMPORT.test(src));
+      const code = stripStrings(src);
+      return talksToLegal && (RAW_FETCH.test(code) || FETCH_REF.test(code) || BASE_FETCHAPI_IMPORT.test(src));
     })
     .sort();
 }
@@ -75,7 +82,7 @@ describe("DASH-LEGAL: los clientes Legal envian el JWT", () => {
     const offenders = legalFilesWithoutToken();
     if (offenders.length > 0) {
       throw new Error(
-        "Llaman a la API Legal sin apiFetch (fetch crudo o fetchAPI de lib/api/base.ts, sin token):\n" +
+        "Llaman a la API Legal sin apiFetch (fetch crudo, fetch guardado en una variable o fetchAPI de lib/api/base.ts, sin token):\n" +
           offenders.map((f) => `  - ${f}`).join("\n"),
       );
     }

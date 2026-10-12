@@ -1,3 +1,6 @@
+jest.mock("@/lib/auth/token-storage", () => ({ tokenStorage: { getAccessToken: () => "tok-l2b" } }));
+jest.mock("@/lib/auth/token-refresh", () => ({ isTokenExpiringSoon: () => false, refreshAccessToken: async () => false }));
+
 import {
   HearingsApiError,
   createHearing,
@@ -74,7 +77,7 @@ describe("hearings-api", () => {
     expect(url).toContain("status=SCHEDULED");
     expect(url).toContain("hearing_type=AUDIENCIA_FONDO");
     expect(url).toContain("case_id=case-9");
-    expect((init.headers as Record<string, string>)["X-Tenant-ID"]).toBe(TENANT);
+    expect(new Headers(init.headers).get("X-Tenant-ID")).toBe(TENANT);
   });
 
   it("listHearings normalizes a missing total to the array length", async () => {
@@ -122,7 +125,9 @@ describe("hearings-api", () => {
     const body = JSON.parse(init.body as string);
     expect(body).not.toHaveProperty("tenant_id");
     expect(body.title).toBe("Nueva");
-    expect((init.headers as Record<string, string>)["X-Tenant-ID"]).toBe(TENANT);
+    expect(new Headers(init.headers).get("X-Tenant-ID")).toBe(TENANT);
+    // L2b: Audiencias va por apiFetch tambien en Jest; antes NODE_ENV=test usaba fetch sin token.
+    expect(new Headers(init.headers).get("Authorization")).toBe("Bearer tok-l2b");
   });
 
   it("patchHearingStatus PATCHes /{hearing_id}/status with { status, reason? }", async () => {
