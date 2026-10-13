@@ -41,3 +41,9 @@ DL10A no tiene pantalla propia de Career Director (solo el bloque de la barra); 
 `ref/career-director.png` = centro "Mi oficina" (NAV[11]), la misma imagen que `career_director.png` de O2-REGISTRO. Mismo umbral
 (12 %). `DIFF_MEDIA` aún sin medir: no hay navegador utilizable en el entorno del constructor (faltan librerías del sistema para
 Chromium); medirlo en CI antes de dar el umbral por bueno.
+
+## Smart Calendar (`smart-calendar.spec.ts`)
+
+DL10A no tiene pantalla para el botón Smart Calendar: la referencia `ref/smart-calendar.png` es la de Mi día (nav-0). Mismo
+umbral (12 %). `DIFF_MEDIA` aún sin medir en este entorno (sin navegador del constructor): se imprime en cada ejecución;
+medirlo en CI antes de dar el umbral por bueno.
