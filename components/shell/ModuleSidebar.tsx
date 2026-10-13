@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronRight, PanelLeft, PanelLeftClose, X } from "lucide-react";
 import { ProyectosFinanzasSidebarLinks } from "@/components/forge/layout/ProyectosFinanzasSidebarLinks";
-import { itemActivo, type GrupoMenu } from "@/lib/modulos/registro";
+import { grupoDePantalla, itemActivo, rutaGrupo, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
 import { CLASES } from "./clases";
 
 const CLAVE_PLEGADO = "nadakki-sidebar-collapsed-modulo";
@@ -20,6 +20,8 @@ export type ModuleSidebarProps = {
   onCerrar: () => void;
   /** Todos los grupos desplegados y sin cabecera de acordeón (la Suite: elegir módulo siempre a la vista). */
   plano?: boolean;
+  /** Si el módulo tiene pantalla de grupo, el título de cada grupo lleva a ella (y la flecha despliega sus páginas). */
+  modulo?: ModuloConfig | null;
 };
 
 /**
@@ -27,9 +29,10 @@ export type ModuleSidebarProps = {
  * aria-current, plegable a iconos en escritorio y cajón en móvil (con Escape y foco). Comportamiento tomado de
  * ForgeGlobalCoresSidebar y ShellSidebar; el estilo sale de ./clases.
  */
-export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onCerrar, plano = false }: ModuleSidebarProps) {
+export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onCerrar, plano = false, modulo = null }: ModuleSidebarProps) {
   const activo = itemActivo(grupos, pathname);
-  const grupoActivo = grupos.find((g) => g.items.some((i) => i.id === activo?.id))?.id ?? grupos[0]?.id ?? null;
+  const enPantalla = modulo ? grupoDePantalla(modulo, grupos, pathname) : null;
+  const grupoActivo = enPantalla?.id ?? grupos.find((g) => g.items.some((i) => i.id === activo?.id))?.id ?? grupos[0]?.id ?? null;
   const [abiertoGrupo, setAbiertoGrupo] = useState<string | null>(grupoActivo);
   const [plegado, setPlegado] = useState(false);
   const aside = useRef<HTMLElement>(null);
@@ -87,7 +90,22 @@ export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onC
               <div key={g.id} className={CLASES.grupo} data-testid={`menu-grupo-${g.id}`}>
                 {plegado ? null : plano ? (
                   <p className={CLASES.grupoTitulo}>{g.label}</p>
-                ) : unico ? null : (
+                ) : unico ? null : modulo ? (
+                  <div className="flex items-center">
+                    <Link
+                      href={rutaGrupo(modulo, g)}
+                      data-testid={`menu-grupo-enlace-${g.id}`}
+                      aria-current={enPantalla?.id === g.id ? "page" : undefined}
+                      onClick={onCerrar}
+                      className={`${CLASES.grupoTitulo} min-w-0 flex-1 ${enPantalla?.id === g.id ? CLASES.grupoTituloActivo : ""}`}
+                    >
+                      <span className="min-w-0 flex-1 truncate">{g.label}</span>
+                    </Link>
+                    <button type="button" aria-label={`${open ? "Plegar" : "Desplegar"} las páginas de ${g.label}`} aria-expanded={open} aria-controls={`grupo-${g.id}`} onClick={() => setAbiertoGrupo(open ? null : g.id)} className={CLASES.boton}>
+                      <ChevronRight aria-hidden className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
+                    </button>
+                  </div>
+                ) : (
                   <button type="button" aria-expanded={open} aria-controls={`grupo-${g.id}`} onClick={() => setAbiertoGrupo(open ? null : g.id)} className={CLASES.grupoTitulo}>
                     <span className="min-w-0 flex-1 truncate">{g.label}</span>
                     <ChevronRight aria-hidden className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />

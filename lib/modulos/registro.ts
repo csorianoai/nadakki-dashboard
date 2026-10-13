@@ -15,8 +15,9 @@ import {
   userCanAccessAdminNav,
 } from "@/components/forge/layout/forge-global-sidebar-nav";
 import type { RoleInfo } from "@/lib/api/auth-v2";
-import { NAVEGACION, PESTANAS_MARKETING, PREFIJOS_MARKETING, ROLES_ADMINISTRACION, type NavItem, type NavSection } from "@/lib/navigation";
+import { ICONO_PESTANA, NAVEGACION, PESTANAS_MARKETING, PREFIJOS_MARKETING, ROLES_ADMINISTRACION, type NavItem, type NavSection } from "@/lib/navigation";
 import { ALL_CENTERS, REALTOR_CENTERS } from "@/lib/realtor/centers";
+import { DESCRIPCIONES } from "./descripciones";
 import type { CarcasaCore, GrupoMenu, ItemMenu, ModuloConfig } from "./tipos";
 
 export type { CarcasaCore, GrupoMenu, ItemMenu, ModuloConfig } from "./tipos";
@@ -47,6 +48,7 @@ function aItem(it: NavItem): ItemMenu {
     superAdminOnly: it.superAdminOnly,
     sinModulo: it.sinModulo,
     keywords: it.keywords,
+    descripcion: DESCRIPCIONES[it.id],
   };
 }
 
@@ -67,7 +69,13 @@ function desdeSeccion(seccionId: string, general: string, reglas: ReglaGrupo[] =
 const deMarketing: GrupoMenu[] = PESTANAS_MARKETING.map((p) => ({
   id: `marketing-${p.id}`,
   label: p.label,
-  items: p.paginas.map((pg) => ({ id: `mkt-${p.id}-${pg.href}`, label: pg.label, href: pg.href, keywords: pg.keywords })),
+  icono: ICONO_PESTANA[p.id],
+  // Lo que PestanasMarketing resolvía por prefijo (rutas de la pestaña que no son item del menú; "/marketing" cae en la primera).
+  prefijos: p.id === PESTANAS_MARKETING[0]!.id ? [...p.prefijos, "/marketing"] : p.prefijos,
+  items: p.paginas.map((pg) => {
+    const id = `mkt-${p.id}-${pg.href}`;
+    return { id, label: pg.label, href: pg.href, keywords: pg.keywords, descripcion: DESCRIPCIONES[id] };
+  }),
 }));
 
 const deDealer: GrupoMenu[] = DEALER_NAV_GROUPS.map((g) => ({
@@ -282,9 +290,44 @@ export function menuVisible(m: ModuloConfig, u: ContextoUsuario): GrupoMenu[] {
   return m.menu.map((g) => ({ ...g, items: g.items.filter((i) => quedan.has(i.id)) })).filter((g) => g.items.length > 0);
 }
 
+// ── Grupos del menú: pantalla del grupo y pestañas ─────────────────────────────────────────────────
+
+/** `/<raiz>/grupo/<id>`: la pantalla de un grupo (tarjetas con todas sus páginas). */
+const PANTALLA_GRUPO = /^\/[^/]+\/grupo\/([^/]+)$/;
+
+/** ¿Este módulo muestra pantalla de grupo? Solo con ModuleShell y con más de un grupo; el menú plano no la tiene. */
+export function tienePantallaGrupo(m: ModuloConfig, grupos: GrupoMenu[] = m.menu): boolean {
+  return m.carcasa === "comun" && grupos.length > 1;
+}
+
+/** URL estable de la pantalla de un grupo: `<raiz del módulo>/grupo/<id del grupo>`. */
+export function rutaGrupo(m: ModuloConfig, g: GrupoMenu): string {
+  return `${m.raiz}/grupo/${g.id}`;
+}
+
+/** Grupo cuya pantalla es esta ruta, si lo es. */
+export function grupoDePantalla(m: ModuloConfig, grupos: GrupoMenu[], pathname: string | null | undefined): GrupoMenu | null {
+  const ruta = sinQuery(pathname || "/").replace(/\/+$/, "");
+  if (!ruta.startsWith(`${m.raiz}/grupo/`) || !PANTALLA_GRUPO.test(ruta)) return null;
+  const id = decodeURIComponent(PANTALLA_GRUPO.exec(ruta)![1]!);
+  return grupos.find((g) => g.id === id) ?? null;
+}
+
+/** Grupo al que pertenece la ruta: por su item activo; si no es item, por el prefijo más largo del grupo. */
+export function grupoDeRuta(grupos: GrupoMenu[], pathname: string | null | undefined): GrupoMenu | null {
+  const it = itemActivo(grupos, pathname);
+  if (it) return grupos.find((g) => g.items.some((i) => i.id === it.id)) ?? null;
+  const ruta = sinQuery(pathname || "/");
+  let mejor: GrupoMenu | null = null;
+  let largo = -1;
+  for (const g of grupos) for (const p of g.prefijos ?? []) if (bajo(ruta, p) && p.length > largo) [mejor, largo] = [g, p.length];
+  return mejor;
+}
+
 /** Item activo: el de href MÁS específico (más largo) que cubre la ruta. */
 export function itemActivo(grupos: GrupoMenu[], pathname: string | null | undefined): ItemMenu | null {
   const ruta = sinQuery(pathname || "/");
+  if (PANTALLA_GRUPO.test(ruta.replace(/\/+$/, ""))) return null; // la pantalla de un grupo no es ninguna de sus páginas
   let mejor: ItemMenu | null = null;
   for (const g of grupos) {
     for (const it of g.items) {

@@ -113,9 +113,11 @@ describe("ModuleShell: barra común + menú del módulo + hueco de contexto", ()
     const cabeceras = within(menu).getAllByRole("button").filter((b) => b.hasAttribute("aria-expanded"));
     expect(cabeceras.length).toBeGreaterThan(2);
     const abiertas = () => cabeceras.filter((b) => b.getAttribute("aria-expanded") === "true");
-    expect(abiertas().map((b) => b.textContent)).toEqual(["Campañas"]);
+    // Con pantalla de grupo, el título del grupo es un ENLACE y la flecha es el botón que despliega (nombre = aria-label).
+    const nombre = (b: HTMLElement) => b.getAttribute("aria-label");
+    expect(abiertas().map(nombre)).toEqual(["Plegar las páginas de Campañas"]);
     fireEvent.click(cabeceras[1]);
-    expect(abiertas().map((b) => b.textContent)).toEqual([cabeceras[1].textContent]);
+    expect(abiertas().map(nombre)).toEqual([nombre(cabeceras[1]!)]);
     fireEvent.click(cabeceras[2]);
     expect(abiertas()).toHaveLength(1);
     fireEvent.click(cabeceras[2]);

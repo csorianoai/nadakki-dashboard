@@ -5,7 +5,7 @@
  * Dealer OS, Realtor OS) se leen del registro de módulos (lib/modulos); el resto, de lib/navigation.ts (fuente única de la Suite) y de
  * las pestañas de Marketing. Una ruta que ningún menú conoce cae a Inicio › primer segmento › pantalla.
  */
-import { MODULOS } from "@/lib/modulos/registro";
+import { MODULOS, grupoDePantalla, tienePantallaGrupo } from "@/lib/modulos/registro";
 import { NAVEGACION, PESTANAS_MARKETING, type NavItem } from "@/lib/navigation";
 
 export type Miga = { label: string; href: string };
@@ -108,6 +108,11 @@ function migasSuite(ruta: string): Miga[] | null {
 export function migasDe(pathname: string | null): Miga[] {
   const ruta = sinQuery(pathname || "/").replace(/\/+$/, "") || "/";
   if (ruta === "/") return [INICIO];
+  // Pantalla de un grupo del menú de un módulo: Inicio › Módulo › Grupo.
+  for (const m of MODULOS) {
+    const g = tienePantallaGrupo(m) ? grupoDePantalla(m, m.menu, ruta) : null;
+    if (g) return [INICIO, { label: m.label, href: m.raiz }, { label: g.label, href: ruta }];
+  }
   let core: MenuCore | null = null;
   let largo = -1;
   for (const m of MENUS_CORE) {

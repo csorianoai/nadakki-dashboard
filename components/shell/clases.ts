@@ -28,7 +28,27 @@ export const CLASES = {
   telon: "fixed inset-0 z-40 bg-black/60 lg:hidden",
   grupo: "px-1 py-1",
   grupoTitulo: "flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-[11px] font-bold uppercase tracking-[0.1em] text-zinc-500 hover:text-zinc-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400",
+  grupoTituloActivo: "!text-white",
   item: "flex min-h-8 items-center gap-2 rounded-md border-l-2 border-transparent py-1.5 pl-4 pr-3 text-xs text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400",
   itemActivo: "!border-[var(--acento-modulo,#a78bfa)] bg-zinc-800/60 text-white",
   insignia: "ml-auto shrink-0 rounded px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide bg-amber-500/20 text-amber-400",
+
+  /**
+   * Pantalla del grupo y pestañas (César, 2026-10-13). El turquesa sale de --turquesa-modulo (ModuleShell lo
+   * define; mismo matiz que el turquesa de DCC, #0EA5A4). Relieve: UNA sombra suave, elevación de 2 px al pasar
+   * el ratón o enfocar; sin perspectiva ni transformaciones 3D; con prefers-reduced-motion no se mueve.
+   */
+  pantalla: "min-h-full bg-zinc-950 p-4 text-zinc-100 sm:p-6",
+  rejilla: "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
+  tarjeta: "group flex h-full flex-col gap-2 rounded-xl border border-[color-mix(in_srgb,var(--turquesa-modulo,#0ea5a4)_45%,transparent)] bg-zinc-900/60 p-4 text-left shadow-[0_1px_3px_rgba(0,0,0,0.35)] transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 hover:border-[var(--turquesa-modulo,#0ea5a4)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.45)] focus-visible:-translate-y-0.5 focus-visible:border-[var(--turquesa-modulo,#0ea5a4)] focus-visible:shadow-[0_4px_12px_rgba(0,0,0,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--turquesa-modulo,#0ea5a4)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:focus-visible:translate-y-0",
+  tarjetaIcono: "inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-950 text-[var(--turquesa-modulo,#0ea5a4)]",
+  tarjetaTitulo: "text-sm font-semibold text-zinc-100",
+  tarjetaDescripcion: "text-xs leading-snug text-zinc-400",
+
+  /** Barra de pestañas del grupo: sobre el contenido, con flechas solo si hay desbordamiento. */
+  pestanasBarra: "sticky top-0 z-10 flex items-stretch border-b border-zinc-800 bg-zinc-950",
+  pestanasLista: "flex min-w-0 flex-1 scroll-px-2 snap-x snap-proximity gap-1 overflow-x-auto overscroll-x-contain px-2 pt-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+  pestana: "inline-flex shrink-0 snap-start items-center gap-1.5 whitespace-nowrap rounded-t-md border border-b-2 border-transparent border-b-transparent px-3 py-2 text-xs font-medium text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--turquesa-modulo,#0ea5a4)]",
+  pestanaActiva: "!border-zinc-700 !border-b-[var(--turquesa-modulo,#0ea5a4)] bg-zinc-900 !text-white",
+  pestanasFlecha: "inline-flex w-8 shrink-0 items-center justify-center text-zinc-300 hover:bg-zinc-900 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--turquesa-modulo,#0ea5a4)]",
 } as const;

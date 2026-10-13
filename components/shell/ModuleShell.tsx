@@ -6,13 +6,13 @@ import { DealerSuiteGate } from "@/components/dealer/DealerSuiteGate";
 import { CLASES_FUENTES_FORGE } from "@/components/shell/fuentes-forge";
 import { BuscadorNavegacion } from "@/components/nav/BuscadorNavegacion";
 import { MarcoSuite } from "@/components/nav/MarcoSuite";
-import { PestanasMarketing } from "@/components/nav/PestanasMarketing";
 import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
 import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
-import { menuVisible, modulosVisibles, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
+import { grupoDePantalla, grupoDeRuta, menuVisible, modulosVisibles, tienePantallaGrupo, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
 import { CLASES } from "./clases";
 import { ModuleSidebar } from "./ModuleSidebar";
 import { ModuleTopBar } from "./ModuleTopBar";
+import { PestanasGrupo } from "./PestanasGrupo";
 import { useContextoShell } from "./useContextoShell";
 
 /** Menú de la Suite (portada y notificaciones): sirve para ELEGIR módulo. */
@@ -29,6 +29,9 @@ function menuDeSuite(modulos: ModuloConfig[]): GrupoMenu[] {
     { id: "suite-modulos", label: "Elegir módulo", items: modulos.map((m) => ({ id: `modulo-${m.id}`, label: m.label, href: m.raiz, icono: m.icono })) },
   ];
 }
+
+/** Turquesa de las tarjetas y pestañas: el matiz del turquesa de DCC (lib/dcc/tokens.ts, --dcc-teal), que no es un token global. */
+const TURQUESA_MODULO = "#0ea5a4";
 
 export type ModuleShellProps = {
   /** Módulo que se abre; `null` = la Suite (portada), cuyo menú lista los módulos para elegir. */
@@ -51,6 +54,11 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
 
   const modulos = useMemo(() => modulosVisibles(usuario), [usuario]);
   const grupos = useMemo(() => (modulo ? menuVisible(modulo, usuario) : menuDeSuite(modulos)), [modulo, modulos, usuario]);
+  // Pestañas: las páginas del grupo de la pantalla actual; en un módulo sin grupos (menú plano), todas las suyas.
+  // La pantalla del grupo (tarjetas) no lleva pestañas: ya muestra todas las páginas.
+  const conGrupos = modulo ? tienePantallaGrupo(modulo, grupos) : false;
+  const enPantallaGrupo = modulo ? grupoDePantalla(modulo, grupos, pathname) !== null : false;
+  const grupoPestanas = !modulo || enPantallaGrupo ? null : conGrupos ? grupoDeRuta(grupos, pathname) : grupos.length === 1 ? grupos[0]! : null;
   const Puerta = conSesion ? DealerSuiteGate : Fragment;
 
   return (
@@ -72,15 +80,15 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
           data-testid="module-shell"
           data-modulo={modulo?.id ?? "suite"}
           data-tenant={forgeAppDataTenantAttribute()}
-          style={modulo ? ({ ["--acento-modulo" as string]: modulo.acento } as CSSProperties) : undefined}
+          style={modulo ? ({ ["--acento-modulo" as string]: modulo.acento, ["--turquesa-modulo" as string]: TURQUESA_MODULO } as CSSProperties) : undefined}
         >
           <a href="#main-content" className={CLASES.saltar}>Saltar al contenido</a>
           <div className={CLASES.cuerpo}>
-            <ModuleSidebar titulo={modulo?.label ?? "Suite"} moduloId={modulo?.id ?? null} grupos={grupos} pathname={pathname} abierto={cajon} onCerrar={cerrar} plano={!modulo} />
+            <ModuleSidebar titulo={modulo?.label ?? "Suite"} moduloId={modulo?.id ?? null} grupos={grupos} pathname={pathname} abierto={cajon} onCerrar={cerrar} plano={!modulo} modulo={conGrupos ? modulo : null} />
             <div className={CLASES.columna}>
               <main id="main-content" className={CLASES.contenido}>
                 {conSesion ? <TenantBrandedDocumentTitle /> : null}
-                {modulo?.id === "marketing" ? <PestanasMarketing /> : null}
+                {modulo && grupoPestanas ? <PestanasGrupo titulo={conGrupos ? grupoPestanas.label : modulo.label} paginas={grupoPestanas.items} pathname={pathname} /> : null}
                 {children}
               </main>
             </div>

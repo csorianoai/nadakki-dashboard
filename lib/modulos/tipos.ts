@@ -24,9 +24,19 @@ export type ItemMenu = {
   superAdminOnly?: boolean;
   sinModulo?: boolean;
   keywords?: string[];
+  /** Una línea, en español, de qué hace la página (≤ 110 caracteres). La muestran las tarjetas de la pantalla del grupo. */
+  descripcion?: string;
 };
 
-export type GrupoMenu = { id: string; label: string; items: ItemMenu[] };
+export type GrupoMenu = {
+  id: string;
+  label: string;
+  items: ItemMenu[];
+  /** Rutas que, sin ser un item del menú, pertenecen al grupo (Marketing: las de cada pestaña de lib/navigation.ts). */
+  prefijos?: string[];
+  /** Icono del grupo: las tarjetas de sus páginas sin icono propio lo usan. */
+  icono?: LucideIcon;
+};
 
 /** Menú de un core que conserva su carcasa propia: lo lee lib/migas.ts (misma salida que antes del registro). */
 export type CarcasaCore = {
