@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { ALL_CENTERS, REALTOR_CENTERS } from "../../../lib/realtor/centers";
 
 /**
  * Armazón de Realtor OS (DL10A): hitos del diseño con /acceso a 200 y a 403 (fail-closed) y comparación visual
@@ -39,17 +40,24 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
   expect(labels.map((t) => t.split("\n")[0].trim())).toEqual(ORDER);
   expect(await side.getByTestId("center-group").allInnerTexts()).toEqual(GROUPS);
 
-  // Solo Demand Radar existe: el resto está deshabilitado, rotulado y sin enlace.
-  await expect(side.getByTestId("center-demand-radar")).toHaveAttribute("href", "/realtor/demand-radar");
-  for (const id of ["mi-dia", "clientes", "finanzas", "mi-oficina"]) {
-    const c = side.getByTestId(`center-${id}`);
-    await expect(c).toHaveAttribute("aria-disabled", "true");
-    await expect(c).toContainText("Próximamente");
-    expect(await c.getAttribute("href")).toBeNull();
+  // Lo esperado sale del registro: con href enlaza; sin href está deshabilitado y dice «Próximamente».
+  for (const c of REALTOR_CENTERS) {
+    const el = side.getByTestId(`center-${c.id}`);
+    if (c.href) {
+      await expect(el).toHaveAttribute("href", c.href);
+    } else {
+      await expect(el).toHaveAttribute("aria-disabled", "true");
+      await expect(el).toContainText("Próximamente");
+      expect(await el.getAttribute("href")).toBeNull();
+    }
   }
+  expect(ALL_CENTERS.some((c) => c.id === "demand-radar" && c.href)).toBe(true);
   await expect(page.getByTestId("career-director")).toContainText("Career Director · guía");
-  await expect(page.getByTestId("career-director")).toContainText("Próximamente");
-  await expect(page.getByTestId("smart-calendar")).toContainText("Próximamente");
+  for (const id of ["career-director", "smart-calendar"]) {
+    const reg = ALL_CENTERS.find((c) => c.id === id)!;
+    if (reg.href) await expect(page.getByTestId(id)).toHaveAttribute("href", reg.href);
+    else await expect(page.getByTestId(id)).toContainText("Próximamente");
+  }
 
   await expect(page.getByTestId("shell-crumb")).toContainText("Demand Radar");
   await expect(page.getByTestId("view-agente")).toHaveAttribute("aria-pressed", "true");
@@ -66,6 +74,7 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
   await page.keyboard.type("fin");
   await expect(side.getByTestId("center-finanzas")).toBeVisible();
   await expect(side.getByTestId("center-clientes")).toHaveCount(0);
+  console.log("RESULT_O2_REGISTRO=PASS");
 });
 
 test("con 403 de /acceso no se pinta el armazón", async ({ page }) => {

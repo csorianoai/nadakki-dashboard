@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { RealtorShell } from "@/components/realtor/shell/RealtorShell";
-import { filterCenters, REALTOR_CENTERS } from "@/lib/realtor/centers";
+import { ALL_CENTERS, filterCenters, REALTOR_CENTERS } from "@/lib/realtor/centers";
 
 jest.mock("next/navigation", () => ({ usePathname: () => "/realtor/demand-radar" }));
 const mockApiFetch = jest.fn();
@@ -46,7 +46,19 @@ it("con el interruptor apagado no pregunta al backend ni pinta el armazón", () 
   expect(screen.queryByTestId("shell-sidebar")).toBeNull();
 });
 
-it("solo Demand Radar enlaza y el filtro busca por nombre", () => {
-  expect(REALTOR_CENTERS.filter((c) => c.href).map((c) => c.id)).toEqual(["demand-radar"]);
+it("los centros sin href dicen «Próximamente» según el registro y el filtro busca por nombre", async () => {
+  mockApiFetch.mockResolvedValue({ status: 200 });
+  render(<RealtorShell><p>contenido</p></RealtorShell>);
+  await screen.findByTestId("shell-sidebar");
+  for (const c of REALTOR_CENTERS) {
+    const el = screen.getByTestId(`center-${c.id}`);
+    if (c.href) expect(el).toHaveAttribute("href", c.href);
+    else expect(el).toHaveTextContent("Próximamente");
+  }
+  for (const id of ["career-director", "smart-calendar"]) {
+    const reg = ALL_CENTERS.find((c) => c.id === id)!;
+    if (!reg.href) expect(screen.getByTestId(id)).toHaveTextContent("Próximamente");
+  }
+  expect(ALL_CENTERS.filter((c) => c.href).map((c) => c.id)).toContain("demand-radar");
   expect(filterCenters("fin").map((c) => c.id)).toEqual(["finanzas"]);
 });

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { filterCenters, SOON, type RealtorCenter } from "@/lib/realtor/centers";
+import { CAREER_DIRECTOR, filterCenters, SMART_CALENDAR, SOON, type RealtorCenter } from "@/lib/realtor/centers";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { usePathname } from "next/navigation";
 
@@ -28,6 +28,12 @@ function CenterItem({ c, current }: { c: RealtorCenter; current: boolean }) {
       {c.label}
     </Link>
   );
+}
+
+/** Bloque fijo: sin `href` en su center.ts es un div deshabilitado; con `href`, un enlace. */
+function BlockWrap({ c, testid, style, children }: { c: { href?: string }; testid: string; style: React.CSSProperties; children: React.ReactNode }) {
+  if (!c.href) return <div data-testid={testid} aria-disabled="true" style={style}>{children}</div>;
+  return <Link href={c.href} data-testid={testid} style={{ ...style, opacity: 1, cursor: "pointer", textDecoration: "none", color: "inherit" }}>{children}</Link>;
 }
 
 /** Barra lateral de centros (DL10A). Career Director y Smart Calendar quedan «Próximamente» hasta tener backend. */
@@ -56,16 +62,16 @@ export function ShellSidebar({ view }: { view: string }) {
         <span aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 9, background: `linear-gradient(140deg, ${RT.cyan}, ${RT.teal})` }} />
         <span>Nadakki <span style={{ color: RT.cyan }}>Realtor OS</span></span>
       </div>
-      <div data-testid="career-director" aria-disabled="true"
+      <BlockWrap c={CAREER_DIRECTOR} testid="career-director"
         style={{ display: "flex", flexDirection: "column", gap: 2, padding: 12, borderRadius: 16, border: "1px solid rgba(111, 211, 220, 0.4)", opacity: 0.85,
           background: "linear-gradient(145deg, rgba(111, 211, 220, 0.16), rgba(11, 110, 120, 0.08) 60%, rgba(19, 32, 43, 0.6))" }}>
         <span style={{ fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: RT.cyan, fontWeight: 700 }}>Career Director · guía</span>
-        <span style={{ fontSize: 12, color: RT.navMuted }}>{SOON}</span>
-      </div>
-      <div data-testid="smart-calendar" aria-disabled="true"
+        {!CAREER_DIRECTOR.href ? <span style={{ fontSize: 12, color: RT.navMuted }}>{SOON}</span> : null}
+      </BlockWrap>
+      <BlockWrap c={SMART_CALENDAR} testid="smart-calendar"
         style={{ ...ITEM, border: "1px solid rgba(111, 211, 220, 0.2)", background: "rgba(12, 26, 36, 0.6)", justifyContent: "space-between", opacity: 0.85, cursor: "not-allowed" }}>
-        <span>Smart Calendar</span><span style={{ ...CHIP, marginLeft: 0 }}>{SOON}</span>
-      </div>
+        <span>Smart Calendar</span>{!SMART_CALENDAR.href ? <span style={{ ...CHIP, marginLeft: 0 }}>{SOON}</span> : null}
+      </BlockWrap>
       <div>
         <label htmlFor="rt-navq" style={{ position: "absolute", left: -9999 }}>Filtrar centros</label>
         <input id="rt-navq" ref={input} data-testid="center-search" type="search" autoComplete="off" placeholder="Buscar centro · tecla /"
