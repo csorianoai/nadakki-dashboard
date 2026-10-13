@@ -22,22 +22,18 @@ import {
   countNavLeaves,
   ACCESS_UNVERIFIED_MESSAGE,
   SUITE_ACCESS_PROBE_CAPABILITIES,
-  filterSectionsForUser,
-  getEmptyCoreMessage,
-  getEmptyCoreReason,
   isHrefActive,
-  userCanAccessAdminNav,
 } from "./forge-global-sidebar-nav";
 import { getSidebarTheme, roleAccentClasses } from "./forge-sidebar-core-themes";
 import { ProyectosFinanzasSidebarLinks } from "./ProyectosFinanzasSidebarLinks";
-import { RealtorNavEntry } from "@/components/realtor/RealtorNavEntry";
+import { useNavegacionVisible } from "./useNavegacionVisible";
 
 export type ForgeGlobalCoresSidebarProps = {
   mobileOpen: boolean;
   onNavigate?: () => void;
 };
 
-const STORAGE_KEY = "forge-global-sidebar-expanded-v2";
+const STORAGE_KEY = "forge-global-sidebar-expanded-v3";
 const STORAGE_KEY_V1 = "forge-global-sidebar-expanded-v1";
 const SIDEBAR_COLLAPSED_KEY = "nadakki-sidebar-collapsed";
 
@@ -184,7 +180,6 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     if (r.ok) window.location.assign("/");
     else setCambiando(false);
   };
-  const showAdmin = userCanAccessAdminNav(allRoles);
 
   /**
    * Se PREGUNTA, no se deduce.
@@ -213,10 +208,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
   }, [probe.error, probe.data, probe.isPending, probe.isLoading]);
   const accesoNoVerificado = accessReason !== null;
 
-  const visibleSections = useMemo(
-    () => filterSectionsForUser(NAV_SECTIONS, allRoles, tenant?.subscribed_cores, showAdmin),
-    [allRoles, showAdmin, tenant?.subscribed_cores],
-  );
+  const { secciones: visibleSections } = useNavegacionVisible();
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
@@ -242,18 +234,16 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
 
   useEffect(() => {
     if (!hydrated) return;
+    // Un solo desplegable abierto: el de la sección de la página actual.
     const auto = collectExpandIdsForPath(visibleSections, pathname ?? null);
-    setExpanded((prev) => {
-      const next = { ...prev };
-      auto.forEach((id) => {
-        next[id] = true;
-      });
-      return next;
-    });
+    // Si la página es de una sección-enlace (Marketing, Real Estate) o de ninguna, no queda nada abierto.
+    const activa = visibleSections.find((sec) => auto.has(sec.id) && !sec.href);
+    setExpanded(activa ? { [activa.id]: true } : {});
   }, [pathname, visibleSections, hydrated]);
 
+  /** Abrir una sección cierra las demás: un solo desplegable abierto a la vez. */
   const toggle = useCallback((id: string) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpanded((prev) => (prev[id] ? {} : { [id]: true }));
   }, []);
 
   const toggleCollapse = useCallback(() => {
@@ -390,7 +380,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
       }
       return undefined;
     }
-    const href = firstHref(section.children);
+    const href = section.href ?? firstHref(section.children);
 
     const iconEl = (
       <div
@@ -426,10 +416,30 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     const theme = getSidebarTheme(section.id);
     const HeaderIcon = theme.Icon;
     const isActive = sectionHasActiveRoute(section, pathname ?? null);
-    const emptyCore = section.children.length === 0;
-    const emptyMessage = getEmptyCoreMessage(
-      getEmptyCoreReason(section, allRoles, tenant?.subscribed_cores, showAdmin, accessReason),
-    );
+    if (section.href) {
+      const activo = isHrefActive(section.href, pathname ?? null) || isActive;
+      return (
+        <div key={section.id} className="mb-0.5">
+          <Link
+            href={section.href}
+            onClick={onNavigate}
+            data-testid={`nav-seccion-${section.id}`}
+            aria-current={activo ? "page" : undefined}
+            className={cn(
+              "flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-semibold transition-colors duration-150",
+              "focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/40",
+              activo
+                ? "border-l-2 border-violet-500 bg-violet-500/10 text-violet-300"
+                : "border-l-2 border-transparent text-zinc-100 hover:bg-zinc-800/60",
+            )}
+          >
+            <HeaderIcon className={cn("h-[18px] w-[18px] shrink-0", theme.iconText)} aria-hidden />
+            <span className="min-w-0 flex-1 truncate">{section.label}</span>
+            {renderBadge(section.badge)}
+          </Link>
+        </div>
+      );
+    }
 
     return (
       <div key={section.id} className="mb-0.5">
@@ -444,6 +454,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
               : "border-l-2 border-transparent text-zinc-100 hover:bg-zinc-800/60",
           )}
           aria-expanded={open}
+          data-testid={`nav-seccion-${section.id}`}
         >
           <HeaderIcon className={cn("h-[18px] w-[18px] shrink-0", theme.iconText)} aria-hidden />
           <span className="min-w-0 flex-1 truncate">{section.label}</span>
@@ -460,11 +471,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
           )}
         >
           <div className="space-y-0.5 pb-1 pt-0.5">
-            {emptyCore ? (
-              <p className="px-9 py-2 text-xs italic text-zinc-500">{emptyMessage}</p>
-            ) : (
-              renderSectionChildren(section)
-            )}
+            {renderSectionChildren(section)}
           </div>
         </div>
       </div>
@@ -533,7 +540,6 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
             ? visibleSections.map((section) => renderCollapsedSection(section))
             : visibleSections.map((section) => renderSection(section))
           }
-          <RealtorNavEntry collapsed={collapsed} onNavigate={onNavigate} />
         </nav>
 
         <div className={cn("mt-auto border-t border-zinc-800 bg-zinc-950/95", collapsed ? "p-2" : "p-3")}>

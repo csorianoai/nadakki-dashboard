@@ -161,7 +161,13 @@ Multi-hub navigation: expands/collapses sections from `forge-global-sidebar-nav.
 
 **File:** `components/forge/layout/ForgeGlobalTopbar.tsx`
 
-Global top bar: mobile menu trigger, optional institution logo/title from `useTenantBranding`, Credit Hub command palette search when applicable, `TenantSwitcher`, `UserMenu`.
+Global top bar: mobile menu trigger, optional institution logo/title from `useTenantBranding`, search (Credit Hub palette in Credit Hub; elsewhere the Suite-wide Ctrl+K `BuscadorNavegacion`), `TenantSwitcher`, `UserMenu`.
+
+## useNavegacionVisible
+
+**File:** `components/forge/layout/useNavegacionVisible.ts`
+
+Secciones de `lib/navigation.ts` que ve el usuario actual (módulos del tenant, rol y acceso de Real Estate). Lo comparten el menú lateral y el buscador Ctrl+K (`components/nav/BuscadorNavegacion.tsx`), así que los dos enseñan lo mismo.
 
 ## forge-global-sidebar-nav
 
