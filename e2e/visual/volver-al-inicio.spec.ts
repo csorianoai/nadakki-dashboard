@@ -80,3 +80,42 @@ for (const core of CORES) {
     await expect.poll(() => ruta(page)).toBe("/");
   });
 }
+
+/**
+ * Móvil: la barra de la Suite (40 px, z-60) no tapa la cabecera del cajón lateral de ningún core. Los cajones eran
+ * `fixed inset-y-0` y empezaban en el borde superior, bajo la barra nueva. Se abre el menú en cada carcasa y se mide:
+ * el cajón empieza justo debajo de la barra y el punto de su esquina superior pertenece al cajón (no a la barra).
+ */
+const MOVIL = [
+  { ruta: "/", boton: "Abrir el menú" },
+  { ruta: "/autos/dealer", boton: "Abrir menú" },
+  { ruta: "/credit-hub/bank-v2", boton: "Abrir menú" },
+];
+for (const m of MOVIL) {
+  test(`móvil ${m.ruta}: el cajón del menú queda bajo la barra de la Suite`, async ({ page }) => {
+    await sesion(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(m.ruta);
+    await expect(page.getByTestId("barra-suite")).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(2500);
+    await page.getByRole("button", { name: m.boton }).first().click();
+    await page.waitForTimeout(600);                  // fin de la transición del cajón
+    const medida = await page.evaluate(() => {
+      const barra = document.querySelector('[data-testid="barra-suite"]')!.getBoundingClientRect();
+      const cajones = Array.from(document.querySelectorAll("aside")).map((a) => ({ a, r: a.getBoundingClientRect() }))
+        .filter(({ r }) => r.width > 0 && r.left >= 0 && r.left < window.innerWidth - 40 && r.height > 200);
+      return {
+        barraBajo: barra.bottom,
+        cajones: cajones.map(({ a, r }) => ({
+          top: r.top,
+          tapado: !a.contains(document.elementFromPoint(r.left + 20, r.top + 6)),
+        })),
+      };
+    });
+    expect(medida.cajones.length).toBeGreaterThan(0);
+    for (const c of medida.cajones) {
+      expect(c.top).toBeGreaterThanOrEqual(medida.barraBajo - 1);
+      expect(c.tapado).toBe(false);
+    }
+  });
+}

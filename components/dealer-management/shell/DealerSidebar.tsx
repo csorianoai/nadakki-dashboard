@@ -154,7 +154,7 @@ export function DealerSidebar({
           data-testid="dealer-sidebar"
           data-collapsed={collapsed}
           className={cn(
-            "fixed inset-y-0 left-0 z-50 flex w-[264px] max-w-[85vw] shrink-0 flex-col",
+            "fixed bottom-0 left-0 top-10 z-50 flex w-[264px] max-w-[85vw] shrink-0 flex-col",
             "bg-[var(--nav-bg)] text-[var(--nav-fg)] transition-[transform,width] duration-200 motion-reduce:transition-none",
             "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:max-w-none lg:translate-x-0",
             /* El ancho estrecho va con `lg:` y nunca en celular: alli manda mobileOpen. */
