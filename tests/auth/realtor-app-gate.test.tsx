@@ -20,8 +20,8 @@ jest.mock("@/components/ai/OnboardingAgent", () => ({ __esModule: true, default:
 describe("AppGate: Realtor OS con su propio armazón", () => {
   test.each(["/realtor", "/realtor/demand-radar", "/realtor/alta"])("%s: protegido y sin el armazón genérico", (p) => {
     pathname = p;
-    render(<AppGate>Realtor OS</AppGate>);
-    expect(screen.getByText("Realtor OS")).toBeInTheDocument();
+    render(<AppGate>contenido de Realtor OS</AppGate>);
+    expect(screen.getByText("contenido de Realtor OS")).toBeInTheDocument();
     expect(screen.getByTestId("protected")).toBeInTheDocument();
     expect(screen.queryByTestId("forge-shell")).not.toBeInTheDocument();
     expect(screen.queryByTestId("bot-widget")).not.toBeInTheDocument();

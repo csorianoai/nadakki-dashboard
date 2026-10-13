@@ -1049,3 +1049,11 @@ body {
 [data-portal="dealer"] aside ::-webkit-scrollbar-thumb:hover {
   background: var(--nav-border);
 }
+
+/* MarcoSuite (components/nav/MarcoSuite.tsx): la barra de la Suite va encima de todas las carcasas. Lo que
+   se medía con 100vh se mide con el alto que queda debajo de la barra. */
+[data-marco-suite] .h-screen { height: var(--alto-marco, 100vh); }
+[data-marco-suite] .min-h-screen { min-height: var(--alto-marco, 100vh); }
+@media (min-width: 1024px) {
+  [data-marco-suite] .lg\:h-screen { height: var(--alto-marco, 100vh); }
+}

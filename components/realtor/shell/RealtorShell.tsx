@@ -24,7 +24,7 @@ export function RealtorShell({ children }: { children: React.ReactNode }) {
   const demo = isDemoAllowed();
   return (
     <div data-testid="realtor-shell" data-view={view}
-      style={{ display: "flex", minHeight: "100vh", fontFamily: FONT_BODY, color: RT.ink, background: RT.page }}>
+      style={{ display: "flex", minHeight: "var(--alto-marco, 100vh)", fontFamily: FONT_BODY, color: RT.ink, background: RT.page }}>
       <ShellSidebar view={view} />
       <div style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column" }}>
         <ShellTopBar center={centerForPath(pathname)} view={view} onView={setView} demo={demo}

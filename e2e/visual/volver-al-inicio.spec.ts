@@ -1,0 +1,75 @@
+import { test, expect, type Page } from "@playwright/test";
+
+/**
+ * Desde cada core se vuelve al Inicio con un clic, y Atrás vuelve a la pantalla anterior (César, 2026-10-13).
+ * Mismo arranque que fondo-continuo.spec.ts: backend simulado y sesión de superadmin de plataforma, que abre
+ * todas las carcasas. Por core: se entra en la pantalla, un clic en «Inicio» lleva a "/", el botón Atrás de la
+ * barra vuelve a la pantalla del core, Adelante otra vez a "/", y el Atrás del navegador también funciona.
+ * El logotipo de arriba a la izquierda también lleva a "/".
+ */
+const B = process.env.VISUAL_BACKEND ?? "http://backend.invalid";
+const CORES = [
+  "/credit-hub/bank-v2",
+  "/credit-hub/bank-v2/solicitudes",
+  "/credit-hub/bank",
+  "/credit-hub/dealer",
+  "/autos/dealer",
+  "/realtor",
+  "/contable",
+  "/sic",
+  "/marketing-hub",
+];
+
+async function sesion(page: Page) {
+  await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
+  await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
+  await page.route(`${B}/api/v2/auth/refresh`, (route) =>
+    route.fulfill({ json: { access_token: "a.b.c", refresh_token: "r", expires_in: 3600 } }));
+  const tenant = { id: "t1", slug: "qa", display_name: "QA", subscribed_cores: ["credit", "autos", "real_estate", "accounting", "marketing", "sic"] };
+  await page.route(`${B}/api/v2/auth/me`, (route) =>
+    route.fulfill({ json: {
+      user: { id: "u1", email: "qa@nadakki.test", name: "QA", is_active: true, mfa_enabled: false },
+      current_tenant: tenant, all_tenants: [tenant],
+      active_roles: [{ core_name: "platform", role_key: "platform_superadmin", display_name: "Superadmin" }],
+    } }));
+  await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
+}
+
+const ruta = (page: Page) => new URL(page.url()).pathname;
+
+for (const core of CORES) {
+  test(`desde ${core}: Inicio con un clic y Atrás vuelve`, async ({ page }) => {
+    await sesion(page);
+    await page.goto(core);
+    const barra = page.getByTestId("barra-suite");
+    await expect(barra).toBeVisible({ timeout: 30_000 });
+    const enCore = ruta(page);                       // la del core (o la que su redirección decida)
+    expect(enCore).not.toBe("/");
+
+    // la barra está arriba a la izquierda y no la tapa la carcasa del core
+    const caja = (await barra.boundingBox())!;
+    expect(caja.y).toBe(0);
+    const logo = (await page.getByTestId("barra-suite-logo").boundingBox())!;
+    expect(logo.x).toBeLessThan(40);
+    await expect(page.getByTestId("barra-suite-inicio")).toBeVisible();
+    await expect(page.getByTestId("barra-suite-migas").getByRole("link").first()).toHaveAttribute("href", "/");
+
+    await page.getByTestId("barra-suite-inicio").click();
+    await expect.poll(() => ruta(page)).toBe("/");
+
+    await page.getByTestId("barra-suite-atras").click();
+    await expect.poll(() => ruta(page)).toBe(enCore);
+    await expect(page.getByTestId("barra-suite")).toBeVisible();
+
+    await page.getByTestId("barra-suite-adelante").click();
+    await expect.poll(() => ruta(page)).toBe("/");
+
+    await page.goBack();                              // el Atrás del navegador
+    await expect.poll(() => ruta(page)).toBe(enCore);
+    await page.waitForTimeout(1500);                  // sin redirección en bucle: sigue en el core
+    expect(ruta(page)).toBe(enCore);
+
+    await page.getByTestId("barra-suite-logo").click();
+    await expect.poll(() => ruta(page)).toBe("/");
+  });
+}

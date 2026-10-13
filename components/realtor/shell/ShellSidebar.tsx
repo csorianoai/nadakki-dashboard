@@ -56,7 +56,7 @@ export function ShellSidebar({ view }: { view: string }) {
   return (
     <nav aria-label="Centros" data-testid="shell-sidebar"
       style={{ width: RT.sidebarWidth, flexShrink: 0, background: `linear-gradient(180deg, ${RT.ink} 0%, ${RT.inkDeep} 100%)`, color: RT.navText,
-        padding: "20px 14px 14px", position: "sticky", top: 0, height: "100vh", display: "flex", flexDirection: "column", gap: 12,
+        padding: "20px 14px 14px", position: "sticky", top: 0, height: "var(--alto-marco, 100vh)", display: "flex", flexDirection: "column", gap: 12,
         borderRight: `1px solid ${RT.navBorder}`, overflow: "hidden" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 4px", font: `700 19px ${FONT_DISPLAY}` }}>
         <span aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 9, background: `linear-gradient(140deg, ${RT.cyan}, ${RT.teal})` }} />
