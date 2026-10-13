@@ -63,6 +63,18 @@ test("acceso denegado (403): no se pinta nada de la pantalla", async ({ page }) 
   await expect(page.getByTestId("shell-sidebar")).toHaveCount(0);
 });
 
+test("tenant ajeno (404): pantalla vacía, sin filas y el tenant no viaja desde el cliente", async ({ page }) => {
+  const pedidos: string[] = [];
+  page.on("request", (r) => { if (r.url().includes("/api/v1/realestate/")) pedidos.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
+  await sesion(page, 404);
+  await page.goto("/realtor/mi-dia");
+  await expect(page.getByTestId("realtor-notice")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("mi-dia-panel")).toHaveCount(0);
+  await expect(page.getByTestId("mi-dia-row")).toHaveCount(0);
+  expect(pedidos.length).toBeGreaterThan(0);
+  for (const p of pedidos) expect(p.toLowerCase()).not.toMatch(/x-tenant|tenant_id|tenant=/);
+});
+
 test("captura a 1440×900 de /realtor/mi-dia (DEMO) frente a la referencia DL10A", async ({ page }, info) => {
   await sesion(page, 200);
   await page.goto("/realtor/mi-dia");
