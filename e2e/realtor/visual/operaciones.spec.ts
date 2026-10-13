@@ -12,9 +12,11 @@ const THRESHOLD = 0.12;
 const NODEMO = "http://127.0.0.1:3101";
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/operaciones.png");
 
+const TOTAL = 5;
+let pasados = 0;
 let fallos = 0;
-test.afterEach(({}, info) => void (info.status !== info.expectedStatus && (fallos += 1)));
-test.afterAll(() => console.log(`RESULT_O2_P_OPERACIONES=${fallos === 0 ? "PASS" : "FAIL"}`));
+test.afterEach(({}, info) => void (info.status === "passed" ? (pasados += 1) : (fallos += 1)));
+test.afterAll(() => console.log(`RESULT_O2_P_OPERACIONES=${fallos === 0 && pasados === TOTAL ? "PASS" : "FAIL"}`));
 
 async function sesion(page: Page, acceso: number) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));

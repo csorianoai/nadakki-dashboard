@@ -92,6 +92,18 @@ describe("pantalla", () => {
     expect(within(screen.getByTestId("operaciones-panel")).queryByText(/SYNTH/)).toBeNull();
   });
 
+  it("tenant ajeno con DEMO: solo se pintan datos SYNTH propios del demo y la petición sigue sin tenant", async () => {
+    on(true);
+    mockApiFetch.mockResolvedValue({ status: 200 });
+    render(<OperacionesPanel />);
+    await screen.findByTestId("operaciones-panel");
+    expect(mockApiFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = mockApiFetch.mock.calls[0];
+    expect(String(url)).not.toMatch(/tenant/i);
+    expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
+    expect(within(screen.getByTestId("operaciones-panel")).getAllByText(/SYNTH/).length).toBeGreaterThan(0);
+  });
+
   it("apagado: no pregunta al backend", () => {
     render(<OperacionesPanel />);
     expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", "apagado");

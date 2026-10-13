@@ -5,7 +5,7 @@ export type Lang = "es" | "en";
 export const COPY = {
   es: {
     title: "Operaciones",
-    intro: "Cada alquiler avanza por etapas con requisitos, documentos y responsables; una etapa obligatoria incompleta no se puede cerrar.",
+    intro: "Cada alquiler avanza por etapas con requisitos, documentos y responsables.",
     demo: "DEMO · datos sintéticos",
     empty: "Sin datos todavía",
     emptyHint: "Cuando tengas operaciones registradas aparecerán aquí, por etapa.",
@@ -19,7 +19,7 @@ export const COPY = {
   },
   en: {
     title: "Operations",
-    intro: "Each rental moves through stages with requirements, documents and owners; an incomplete mandatory stage cannot be closed.",
+    intro: "Each rental moves through stages with requirements, documents and owners.",
     demo: "DEMO · synthetic data",
     empty: "No data yet",
     emptyHint: "Once you have registered operations they will show up here, by stage.",
