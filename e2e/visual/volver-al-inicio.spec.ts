@@ -18,6 +18,15 @@ const CORES = [
   "/contable",
   "/sic",
   "/marketing-hub",
+  // Módulos ya migrados al armazón común (ModuleShell, PR 6a): mismo recorrido Inicio / Atrás / Adelante.
+  "/marketing/campaigns",
+  "/legal",
+  "/admin",
+];
+const MIGRADOS = [
+  { ruta: "/marketing/campaigns", modulo: "marketing", menu: "Menú de Marketing" },
+  { ruta: "/legal", modulo: "legal", menu: "Menú de Legal" },
+  { ruta: "/admin", modulo: "administracion", menu: "Menú de Administración" },
 ];
 
 async function sesion(page: Page) {
@@ -80,3 +89,45 @@ for (const core of CORES) {
     await expect.poll(() => ruta(page)).toBe("/");
   });
 }
+
+// Armazón común: barra con selector de módulos + menú lateral propio del módulo, y el selector lleva a otro módulo.
+for (const m of MIGRADOS) {
+  test(`${m.ruta}: ModuleShell con menú propio, selector de módulos y un solo desplegable`, async ({ page }) => {
+    await sesion(page);
+    await page.goto(m.ruta);
+    await expect(page.getByTestId("barra-suite")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("module-shell")).toHaveAttribute("data-modulo", m.modulo);
+    const menu = page.getByRole("complementary", { name: m.menu });
+    await expect(menu).toBeVisible();
+    expect(await menu.getByRole("link").count()).toBeGreaterThan(2);
+    await expect(menu.locator('a[aria-current="page"]')).toHaveCount(1);
+    // la barra y el menú no se tapan: el menú arranca justo debajo de la barra
+    const barra = (await page.getByTestId("barra-suite").boundingBox())!;
+    const lateral = (await menu.boundingBox())!;
+    expect(Math.round(lateral.y)).toBe(Math.round(barra.y + barra.height));
+    await expect(page.getByTestId("hueco-contexto")).toHaveCount(1);          // superadmin: el hueco existe y está vacío
+    await expect(page.getByTestId("hueco-contexto")).toBeEmpty();
+
+    await page.getByRole("button", { name: /Módulos/ }).click();
+    const lista = page.getByTestId("selector-modulos-lista");
+    await expect(lista).toBeVisible();
+    expect(await lista.getByRole("link").count()).toBeGreaterThanOrEqual(3);
+    await page.keyboard.press("Escape");
+    await expect(lista).toHaveCount(0);
+
+    await page.getByRole("button", { name: /Módulos/ }).click();
+    await lista.getByRole("link", { name: "Legal" }).click();
+    await expect.poll(() => ruta(page)).toBe("/legal");
+    await expect(page.getByTestId("module-shell")).toHaveAttribute("data-modulo", "legal");
+  });
+}
+
+test("la portada «/» es la Suite: su menú sirve para elegir módulo", async ({ page }) => {
+  await sesion(page);
+  await page.goto("/");
+  await expect(page.getByTestId("module-shell")).toHaveAttribute("data-modulo", "suite", { timeout: 30_000 });
+  const elegir = page.getByTestId("menu-grupo-suite-modulos");
+  expect(await elegir.getByRole("link").count()).toBeGreaterThanOrEqual(3);
+  await elegir.getByRole("link", { name: "Legal" }).click();
+  await expect.poll(() => ruta(page)).toBe("/legal");
+});

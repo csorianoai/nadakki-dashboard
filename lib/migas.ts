@@ -2,12 +2,10 @@
  * Migas de pan de la barra de la Suite: Inicio › Módulo › Sección › Pantalla, cada nivel con enlace.
  *
  * Fuente: los menús que ya existen, nada escrito a mano por pantalla. Los cores con menú propio (banco,
- * Dealer OS, Realtor OS) se leen de su menú; el resto, de lib/navigation.ts (fuente única de la Suite) y de
+ * Dealer OS, Realtor OS) se leen del registro de módulos (lib/modulos); el resto, de lib/navigation.ts (fuente única de la Suite) y de
  * las pestañas de Marketing. Una ruta que ningún menú conoce cae a Inicio › primer segmento › pantalla.
  */
-import { BANCO_V2_NAV, BANCO_V2_RAIZ } from "@/app/(forge)/credit-hub/bank-v2/_nav";
-import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-nav";
-import { ALL_CENTERS, REALTOR_CENTERS } from "@/lib/realtor/centers";
+import { MODULOS } from "@/lib/modulos/registro";
 import { NAVEGACION, PESTANAS_MARKETING, type NavItem } from "@/lib/navigation";
 
 export type Miga = { label: string; href: string };
@@ -17,32 +15,11 @@ export const INICIO: Miga = { label: "Inicio", href: "/" };
 type Grupo = { label: string; items: { label: string; href: string }[] };
 type MenuCore = { prefijos: string[]; modulo: Miga; grupos: Grupo[] };
 
-const CENTROS_REALTOR: Grupo[] = (() => {
-  const porGrupo = new Map<string, { label: string; href: string }[]>();
-  for (const c of REALTOR_CENTERS) {
-    if (!c.href) continue;
-    porGrupo.set(c.group, [...(porGrupo.get(c.group) ?? []), { label: c.label, href: c.href }]);
-  }
-  const fijos = ALL_CENTERS.filter((c) => c.href && !REALTOR_CENTERS.some((r) => r.id === c.id)).map((c) => ({
-    label: c.id === "career-director" ? "Career Director" : c.id === "smart-calendar" ? "Smart Calendar" : c.id,
-    href: c.href as string,
-  }));
-  return [...Array.from(porGrupo, ([label, items]) => ({ label: titulo(label), items })), { label: "Herramientas", items: fijos }];
-})();
-
-/** Cores con carcasa y menú propios. El orden no importa: gana el prefijo más largo. */
-export const MENUS_CORE: MenuCore[] = [
-  { prefijos: [BANCO_V2_RAIZ], modulo: { label: "Banco", href: BANCO_V2_RAIZ }, grupos: BANCO_V2_NAV },
-  {
-    prefijos: ["/autos/dealer", "/centro-operativo"],
-    modulo: { label: "Dealer OS", href: "/autos/dealer" },
-    grupos: DEALER_NAV_GROUPS,
-  },
-  { prefijos: ["/realtor"], modulo: { label: "Realtor OS", href: "/realtor" }, grupos: CENTROS_REALTOR },
-  { prefijos: ["/credit-hub/bank"], modulo: { label: "Banco", href: "/credit-hub/bank" }, grupos: [] },
-  { prefijos: ["/credit-hub/dealer"], modulo: { label: "Crédito del concesionario", href: "/credit-hub/dealer" }, grupos: [] },
-  { prefijos: ["/cockpit"], modulo: { label: "Cockpit", href: "/cockpit" }, grupos: [] },
-];
+/**
+ * Cores con carcasa y menú propios: salen del registro de módulos (lib/modulos), que los lee de la fuente de
+ * cada core (BANCO_V2_NAV, DEALER_NAV_GROUPS, centros de Realtor). El orden no importa: gana el prefijo más largo.
+ */
+export const MENUS_CORE: MenuCore[] = MODULOS.flatMap((m) => m.carcasas ?? []);
 
 function titulo(s: string): string {
   const t = s.toLowerCase().replace(/[-_]+/g, " ");
