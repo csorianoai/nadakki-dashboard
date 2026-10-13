@@ -47,3 +47,8 @@ Chromium); medirlo en CI antes de dar el umbral por bueno.
 DL10A no tiene pantalla para el botón Smart Calendar: la referencia `ref/smart-calendar.png` es la de Mi día (nav-0). Mismo
 umbral (12 %). `DIFF_MEDIA` aún sin medir en este entorno (sin navegador del constructor): se imprime en cada ejecución;
 medirlo en CI antes de dar el umbral por bueno.
+
+## Propiedades (`propiedades.spec.ts`)
+
+Referencia `ref/propiedades.png` (centro "Propiedades" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
+entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.
