@@ -30,6 +30,10 @@ cercana (cuenta y oficina del agente). Mismo umbral (12 %). La referencia se gen
 de esta pantalla aún no se ha medido (no hay ZIP ni navegador en el entorno del constructor): medirlo en CI antes
 de dar el umbral por bueno.
 
+## Mi día (`mi-dia.spec.ts`)
+
+Referencia `ref/mi-dia.png` (centro 0, copia de `mi_dia.png`). Mismo umbral (12 %). `DIFF_MEDIA`: aún no medido (el navegador del constructor no arranca); medirlo en CI.
+
 ## Clientes (`clientes.spec.ts`)
 
 Referencia `ref/clientes.png` (centro "Clientes" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
