@@ -23,6 +23,9 @@ const CORES = [
 async function sesion(page: Page) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
   await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
+  // Credit Hub lee locale, moneda y zona horaria del branding del tenant: con `{}` su layout falla (locale.split).
+  const branding = { display_name: "QA", locale: "es-DO", currency: "DOP", timezone: "America/Santo_Domingo", primary_color: "#2F4A6B" };
+  await page.route("**/branding**", (route) => route.fulfill({ json: branding }));
   await page.route(`${B}/api/v2/auth/refresh`, (route) =>
     route.fulfill({ json: { access_token: "a.b.c", refresh_token: "r", expires_in: 3600 } }));
   const tenant = { id: "t1", slug: "qa", display_name: "QA", subscribed_cores: ["credit", "autos", "real_estate", "accounting", "marketing", "sic"] };
@@ -32,7 +35,10 @@ async function sesion(page: Page) {
       current_tenant: tenant, all_tenants: [tenant],
       active_roles: [{ core_name: "platform", role_key: "platform_superadmin", display_name: "Superadmin" }],
     } }));
-  await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
+  await page.addInitScript(() => {
+    localStorage.setItem("nadakki_refresh_token_v2", "r");
+    localStorage.setItem("nadakki_tenant_id", "t1");     // el guard de Credit Hub (CHTenantGuard) exige un tenant
+  });
 }
 
 const ruta = (page: Page) => new URL(page.url()).pathname;
@@ -43,6 +49,7 @@ for (const core of CORES) {
     await page.goto(core);
     const barra = page.getByTestId("barra-suite");
     await expect(barra).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(2500);                 // deja que terminen las redirecciones del propio core
     const enCore = ruta(page);                       // la del core (o la que su redirección decida)
     expect(enCore).not.toBe("/");
 
