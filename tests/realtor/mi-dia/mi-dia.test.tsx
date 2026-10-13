@@ -2,7 +2,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { MiDiaPanel } from "@/components/realtor/mi-dia/MiDiaPanel";
 import { center } from "@/lib/realtor/mi-dia/center";
 import { DEMO_LEADS } from "@/lib/realtor/mi-dia/demo";
-import { miDiaEn, miDiaEs } from "@/lib/realtor/mi-dia/copy";
+import { blockerText, miDiaEn, miDiaEs } from "@/lib/realtor/mi-dia/copy";
 
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
@@ -67,6 +67,22 @@ it("tenant ajeno: el tenant no viaja desde el cliente y un 403 no deja datos", a
   expect(path).toBe("/api/v1/realestate/acceso");
   expect(JSON.stringify(init ?? {}).toLowerCase()).not.toMatch(/tenant/);
   expect(screen.queryByTestId("mi-dia-panel")).toBeNull();
+});
+
+it("tenant ajeno: un 404 deja la pantalla vacía y sin filas", async () => {
+  process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
+  mockApiFetch.mockResolvedValue({ status: 404 });
+  render(<MiDiaPanel />);
+  await settle();
+  expect(screen.queryByTestId("mi-dia-panel")).toBeNull();
+  expect(screen.queryByTestId("mi-dia-leads")).toBeNull();
+  expect(screen.getByTestId("realtor-notice")).toBeInTheDocument();
+});
+
+it("un código de bloqueo desconocido no se pinta como texto técnico", () => {
+  expect(blockerText(miDiaEs, "missing_x")).toBe(miDiaEs.blockerUnknown);
+  expect(blockerText(miDiaEn, "missing_x")).toBe(miDiaEn.blockerUnknown);
+  expect(blockerText(miDiaEs, "missing_disclosure")).toBe(miDiaEs.blockers.missing_disclosure);
 });
 
 it("la vista Broker añade los pendientes del broker desk", async () => {

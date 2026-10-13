@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
-import { miDiaCopy, type MiDiaCopy } from "@/lib/realtor/mi-dia/copy";
+import { blockerText, miDiaCopy, type MiDiaCopy } from "@/lib/realtor/mi-dia/copy";
 import { DEMO_DATE, DEMO_DESK, DEMO_LEADS, DEMO_LISTINGS } from "@/lib/realtor/mi-dia/demo";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccess } from "../useRealtorAccess";
@@ -87,7 +87,7 @@ export function MiDiaPanel() {
         {demo ? <Rows items={DEMO_LEADS.map((l) => ({ id: l.id, main: l.name, sub: `${l.source} · ${l.phone} · ${l.email} · ${t.waiting} ${l.waitingHours}${t.hours}` }))} /> : <NoDisponible t={t} />}
       </Section>
       <Section id="listings" title={t.listings} count={demo ? DEMO_LISTINGS.length : undefined}>
-        {demo ? <Rows items={DEMO_LISTINGS.map((l) => ({ id: l.id, main: l.title, sub: t.blockers[l.blocker] ?? l.blocker }))} /> : <NoDisponible t={t} />}
+        {demo ? <Rows items={DEMO_LISTINGS.map((l) => ({ id: l.id, main: l.title, sub: blockerText(t, l.blocker) }))} /> : <NoDisponible t={t} />}
       </Section>
       {broker ? (
         <Section id="desk" title={t.desk} count={demo ? DEMO_DESK.length : undefined}>
