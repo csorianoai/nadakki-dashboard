@@ -2,6 +2,9 @@ import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
   Building2,
+  Car,
+  Home,
+  House,
   FileSpreadsheet,
   Megaphone,
   Scale,
@@ -20,6 +23,9 @@ export type SidebarCoreThemeId =
   | "contable"
   | "ai-studio"
   | "advertising"
+  | "inicio"
+  | "concesionarios"
+  | "real-estate"
   | "admin";
 
 /** Visual system: one identity per top-level hub (Tailwind utility classes). */
@@ -38,6 +44,9 @@ export const SIDEBAR_SECTION_TO_THEME: Record<string, SidebarCoreThemeId> = {
   "contable-hub": "contable",
   "ai-studio-hub": "ai-studio",
   "advertising-hub": "advertising",
+  inicio: "inicio",
+  concesionarios: "concesionarios",
+  "real-estate": "real-estate",
   admin: "admin",
 };
 
@@ -81,6 +90,21 @@ export const SIDEBAR_CORE_THEMES: Record<SidebarCoreThemeId, SidebarCoreTheme> =
     id: "advertising",
     Icon: Target,
     iconText: "text-orange-400",
+  },
+  inicio: {
+    id: "inicio",
+    Icon: Home,
+    iconText: "text-sky-400",
+  },
+  concesionarios: {
+    id: "concesionarios",
+    Icon: Car,
+    iconText: "text-cyan-400",
+  },
+  "real-estate": {
+    id: "real-estate",
+    Icon: House,
+    iconText: "text-lime-400",
   },
   admin: {
     id: "admin",

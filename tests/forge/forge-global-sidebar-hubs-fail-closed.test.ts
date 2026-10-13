@@ -28,8 +28,10 @@ const TENANT_ADMIN: RoleInfo[] = [{ core_name: "platform", role_key: "tenant_adm
 const SUPER: RoleInfo[] = [{ core_name: "platform", role_key: "platform_superadmin" }];
 
 function hubs(roles: RoleInfo[], subscribed: string[] | undefined) {
+  // Hubs = secciones de un módulo. Inicio y Real Estate no dependen de `subscribed_cores` (Inicio es de
+  // todos; Real Estate lo decide /api/v1/realestate/acceso en el componente), así que no cuentan aquí.
   return filterSectionsForUser(NAV_SECTIONS, roles, subscribed, false)
-    .filter((section) => section.children.length > 0)
+    .filter((section) => section.children.length > 0 && section.coreMatchers.length > 0)
     .map((section) => section.id);
 }
 
@@ -76,9 +78,12 @@ describe("el rol no habilita el core", () => {
 });
 
 describe("administradores", () => {
-  it("tenant_admin conserva su bypass sin depender de la lista", () => {
-    expect(hubs(TENANT_ADMIN, undefined).length).toBeGreaterThan(0);
-    expect(hubs(TENANT_ADMIN, undefined)).toContain("credit-hub");
+  // Rediseño de navegación (César, 2026-10-13; auditoría de dash#820): tenant_admin ya NO salta la
+  // suscripción. El backend solo da todos los cores al superadmin (auth_v2_service); a tenant_admin le da
+  // `cores_enabled` de su tenant, y el menú no puede enseñar más que eso.
+  it("tenant_admin ve solo los módulos de su tenant", () => {
+    expect(hubs(TENANT_ADMIN, undefined)).toEqual([]);
+    expect(hubs(TENANT_ADMIN, ["credit"])).toEqual(["credit-hub"]);
   });
 
   it("platform_superadmin tambien", () => {

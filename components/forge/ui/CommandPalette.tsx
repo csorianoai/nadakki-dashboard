@@ -44,11 +44,11 @@ export function CommandPalette({
   groups,
   search: controlledSearch,
   onSearchChange,
-  placeholder = "Search commands…",
+  placeholder = "Buscar…",
   className,
   closeOnBackdropClick = true,
   keyboardShortcut = true,
-  emptyMessage = "No results.",
+  emptyMessage = "Sin resultados.",
 }: CommandPaletteProps) {
   const [innerSearch, setInnerSearch] = useState("");
   const search = controlledSearch !== undefined ? controlledSearch : innerSearch;
@@ -94,7 +94,7 @@ export function CommandPalette({
       ref={panelRef}
       role="dialog"
       aria-modal="true"
-      aria-label="Command palette"
+      aria-label="Buscador"
       className="fixed inset-0 z-[60] flex items-start justify-center bg-forgeSurface-overlay px-4 pt-[12vh]"
       onMouseDown={() => {
         if (closeOnBackdropClick) onOpenChange(false);
@@ -135,7 +135,7 @@ export function CommandPalette({
                     a.onSelect();
                     onOpenChange(false);
                   }}
-                  className="flex cursor-pointer items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm text-forgeGray-800 transition-colors duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 aria-selected:bg-forgeSurface-sunken aria-selected:text-forgeBrand-700"
+                  className="flex cursor-pointer items-center gap-2 rounded-forge-sm px-3 py-2 text-forge-sm font-normal normal-case tracking-normal text-forgeGray-800 transition-colors duration-[var(--forge-duration-fast)] ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-500 aria-selected:bg-forgeSurface-sunken aria-selected:text-forgeBrand-700"
                 >
                   {a.icon ? <span className="text-forgeGray-500">{a.icon}</span> : null}
                   {a.label}
@@ -148,7 +148,7 @@ export function CommandPalette({
           <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
             Esc
           </kbd>{" "}
-          close ·{" "}
+          cerrar ·{" "}
           <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
             Ctrl+K
           </kbd>
@@ -156,7 +156,7 @@ export function CommandPalette({
           <kbd className="rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-sunken px-1.5 py-0.5 font-forgeMono">
             ⌘K
           </kbd>{" "}
-          toggle
+          abrir o cerrar
         </div>
       </Command>
     </div>

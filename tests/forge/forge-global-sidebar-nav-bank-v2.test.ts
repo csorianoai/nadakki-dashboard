@@ -78,9 +78,16 @@ describe("interruptor ENCENDIDO", () => {
     }
     // Mesa, bandeja, filtros, KPIs, vehiculos, analitica, cumplimiento, auditoria.
     expect(cambiados).toBe(8);
-    // El lado dealer del menu no se toca.
+    // Por rol (César, 2026-10-13): el usuario de banco no ve el lado del concesionario.
+    expect(enlaces.some((h) => h.startsWith("/credit-hub/dealer"))).toBe(false);
+  });
+
+  it("el lado del concesionario no se toca: el dealer sigue viendo sus pantallas", () => {
+    process.env[VAR] = "1";
+    const enlaces = hrefs(credit(filtrar(PERFILES.dealer)).children);
     expect(enlaces).toContain("/credit-hub/dealer");
     expect(enlaces).toContain("/credit-hub/dealer/applications");
+    expect(enlaces.some((h) => h.includes("bank-v2"))).toBe(false);
   });
 
   it("solo cambia la seccion Credit Hub y solo los href del banco", () => {

@@ -8,6 +8,8 @@ import { ForgeAppShell } from "./ForgeAppShell";
 import { ForgeGlobalCoresSidebar } from "./ForgeGlobalCoresSidebar";
 import { ForgeGlobalTopbar } from "./ForgeGlobalTopbar";
 import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
+import { BuscadorNavegacion } from "@/components/nav/BuscadorNavegacion";
+import { PestanasMarketing } from "@/components/nav/PestanasMarketing";
 
 const fontSans = localFont({
   src: "../../../lib/fonts/files/inter/inter-latin-wght-normal.woff2",
@@ -54,8 +56,10 @@ export function GlobalForgeAppShell({ children }: { children: ReactNode }) {
         topbar={<ForgeGlobalTopbar onMenuClick={() => setMobileNav((o) => !o)} />}
       >
         <TenantBrandedDocumentTitle />
+        <PestanasMarketing />
         {children}
       </ForgeAppShell>
+      <BuscadorNavegacion />
     </div>
     </DealerSuiteGate>
   );
