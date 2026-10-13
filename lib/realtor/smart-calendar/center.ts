@@ -1,2 +1,2 @@
 /** Registro del centro: cuando exista su pantalla, añade `href` aquí (y solo aquí). */
-export const center: { id: string; href?: string } = { id: "smart-calendar" };
+export const center: { id: string; href?: string } = { id: "smart-calendar", href: "/realtor/smart-calendar" };
