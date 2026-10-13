@@ -37,7 +37,7 @@ test("positivo con DEMO: marca, tabla de propietarios, conteos por rol y centro 
   await expect(page.getByTestId("owner-row")).toHaveCount(3);
   await expect(page.getByTestId("count-arrendador")).toHaveText("Arrendador · 2");
   await expect(page.getByTestId("center-propietarios")).toHaveAttribute("data-center-state", "live");
-  await page.getByLabel("Rol").selectOption("vendedor");
+  await page.getByLabel("Rol", { exact: true }).selectOption("vendedor");
   await expect(page.getByTestId("owner-row")).toHaveCount(1);
 });
 
