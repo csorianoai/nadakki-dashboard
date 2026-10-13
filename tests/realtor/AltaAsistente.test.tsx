@@ -79,4 +79,31 @@ describe("AltaAsistente", () => {
     expect(screen.queryByTestId("agenda-unavailable")).toBeNull();
     expect(enviados.join("")).not.toMatch(/tenant_id|x-tenant/i);
   });
+
+  it("kind=agent: el paso de firma no ofrece crear un broker (C-RE-ALTA)", async () => {
+    const f = servidor(200, (r) => (r.endsWith("/tenant/profile") ? json(PERFIL) : json({})));
+    render(<AltaAsistente enviar={f} encendido demo={false} />);
+    await screen.findByTestId("realtor-alta");
+    fireEvent.change(screen.getByLabelText(/Código de la licencia/), { target: { value: LIC } });
+    fireEvent.change(screen.getByLabelText("Nombre del agente"), { target: { value: "Ana Prueba" } });
+    fireEvent.click(screen.getByText("Siguiente"));
+    await screen.findByTestId("alta-sin-firma");
+    expect(screen.queryByLabelText("Razón social del broker")).toBeNull();
+  });
+
+  it("kind=brokerage: pide la firma y no envía el alta sin ella", async () => {
+    const f = servidor(200, (r) => (r.endsWith("/tenant/profile") ? json({ ...PERFIL, kind: "brokerage" }) : json({ id: "x" }, 201)));
+    render(<AltaAsistente enviar={f} encendido demo={false} />);
+    await screen.findByTestId("realtor-alta");
+    fireEvent.change(screen.getByLabelText(/Código de la licencia/), { target: { value: LIC } });
+    fireEvent.change(screen.getByLabelText("Nombre del agente"), { target: { value: "Ana Prueba" } });
+    fireEvent.click(screen.getByText("Siguiente"));
+    expect(await screen.findByLabelText("Razón social del broker")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Siguiente"));
+    fireEvent.change(screen.getByLabelText("Nombre de tu marca"), { target: { value: "Casa Ana" } });
+    fireEvent.change(screen.getByLabelText(/Dirección pública/), { target: { value: "casa-ana" } });
+    fireEvent.click(screen.getByText("Enviar alta"));
+    await waitFor(() => expect(f.mock.calls.some(([r]) => String(r).endsWith("/brokerage"))).toBe(false));
+    expect(f.mock.calls.some(([r]) => String(r).endsWith("/agents"))).toBe(false);
+  });
 });

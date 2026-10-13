@@ -58,7 +58,7 @@ export function AltaAsistente({ enviar, demo = modoDemo(), encendido = panelEnce
   const pasos = t.pasos.length;
 
   async function terminar() {
-    const e = validar(datos);
+    const e = validar(datos, perfil?.kind);   // C-RE-ALTA: la firma solo se exige (y se crea) en kind=brokerage
     setErrores(e);
     if (Object.keys(e).length > 0) {
       setPaso(e.licencia || e.nombre ? 0 : e.razonSocial ? 1 : 2);
@@ -113,11 +113,10 @@ export function AltaAsistente({ enviar, demo = modoDemo(), encendido = panelEnce
           )}
           {paso === 1 && (
             <DccCard titulo={t.pasos[1]}>
-              <label className="mb-3 flex min-h-[44px] items-center gap-2 text-sm">
-                <input type="checkbox" checked={datos.broker.usar} onChange={(ev) => cambiar({ broker: { ...datos.broker, usar: ev.target.checked } })} />
-                {t.usarBroker}
-              </label>
-              {datos.broker.usar && (
+              {perfil?.kind !== "brokerage" && (
+                <p className="text-sm text-muted-foreground" data-testid="alta-sin-firma">{t.sinFirma}</p>
+              )}
+              {perfil?.kind === "brokerage" && (
                 <>
                   {campo("razon", t.razonSocial, datos.broker.razonSocial, (v) => cambiar({ broker: { ...datos.broker, razonSocial: v } }), errores.razonSocial)}
                   {campo("broker", t.nombreBroker, datos.broker.nombre, (v) => cambiar({ broker: { ...datos.broker, nombre: v } }), errores.razonSocial)}
