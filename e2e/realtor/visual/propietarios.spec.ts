@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 /**
  * O2-P-PROPIETARIOS sobre el armazón de RE-SHELL: /realtor/propietarios (DEMO) frente a la referencia DL10A con el umbral
- * de UMBRAL.md, más el caso sin DEMO (servidor 3101), el acceso denegado y el tenant ajeno.
+ * de docs/design/realtor/propietarios/UMBRAL.md, más el caso sin DEMO (servidor 3101), el acceso denegado y el tenant ajeno.
  */
 
 const B = "http://backend.invalid";
