@@ -106,7 +106,7 @@ describe("(2) cada usuario ve solo lo suyo", () => {
   it("en Crédito, el banco ve lo del banco y el concesionario lo suyo", () => {
     const banco = hrefs(ver([rol("bank_analyst")], ["credit"]).find((s) => s.id === "credit-hub")!.children);
     const dealer = hrefs(ver([rol("dealer")], ["credit"]).find((s) => s.id === "credit-hub")!.children);
-    expect(banco).toContain("/credit-hub/bank/applications");
+    expect(banco).toContain("/credit-hub/bank-v2/solicitudes");
     expect(banco.some((h) => h.startsWith("/credit-hub/dealer"))).toBe(false);
     expect(dealer).toContain("/credit-hub/dealer/applications");
     expect(dealer.some((h) => h.startsWith("/credit-hub/bank"))).toBe(false);
@@ -133,7 +133,7 @@ describe("(2) cada usuario ve solo lo suyo", () => {
     expect(ids(ver([rol("platform_superadmin", "platform")], []))).toEqual(expect.arrayContaining(["credit-hub", "marketing-hub", "legal-hub"]));
     // dentro de un módulo suyo, tenant_admin ve banco y concesionario (bypass de rol, no de módulo)
     const credito = hrefs(ver(ta, ["credit"]).find((s) => s.id === "credit-hub")!.children);
-    expect(credito).toEqual(expect.arrayContaining(["/credit-hub/bank", "/credit-hub/dealer"]));
+    expect(credito).toEqual(expect.arrayContaining(["/credit-hub/bank-v2", "/credit-hub/dealer"]));
     expect(credito.some((h) => h.startsWith("/sic"))).toBe(false);
   });
 
@@ -160,13 +160,13 @@ describe("(2) cada usuario ve solo lo suyo", () => {
 describe("(3) desarrollo y duplicadas: fuera del menú y del buscador, sin borrar", () => {
   const OCULTAS = [
     "/credit-hub/_design/shell-preview", "/credit-hub/components", "/credit-hub/preview", "/testing", "/testing/lab",
-    "/sic/demo", "/workflow-real", "/execute", "/agents/execute", "/bank/applications", "/credit-hub/bank-v2/solicitudes",
+    "/sic/demo", "/workflow-real", "/execute", "/agents/execute", "/bank/applications",
     "/proyectos/123/masterplan", "/autos/dealer/inicio-v2", "/autos/dealer/reportes-v2",
   ];
 
   it.each(OCULTAS)("%s está oculta", (ruta) => expect(esRutaOculta(ruta)).toBe(true));
 
-  it.each(["/credit-hub/bank", "/proyectos/123/master-plan", "/autos/dealer", "/sic", "/bankers", "/testingx"])(
+  it.each(["/credit-hub/bank-v2", "/credit-hub/bank-v2/solicitudes", "/proyectos/123/master-plan", "/autos/dealer", "/sic", "/bankers", "/testingx"])(
     "%s NO está oculta",
     (ruta) => expect(esRutaOculta(ruta)).toBe(false),
   );
@@ -181,7 +181,7 @@ describe("(3) desarrollo y duplicadas: fuera del menú y del buscador, sin borra
       "app/(forge)/credit-hub/_design/shell-preview/page.tsx", "app/(forge)/credit-hub/components/page.tsx",
       "app/(forge)/credit-hub/preview/page.tsx", "app/testing/page.tsx", "app/sic/demo/page.tsx",
       "app/(bank)/workflow-real/page.tsx", "app/execute/page.tsx", "app/(bank)/bank/applications",
-      "app/(forge)/credit-hub/bank-v2/page.tsx", "app/proyectos/[id]/masterplan/page.tsx",
+      "app/proyectos/[id]/masterplan/page.tsx",
       "app/autos/dealer/inicio-v2/page.tsx", "app/autos/dealer/reportes-v2/page.tsx",
     ]) expect([f, fs.existsSync(path.join(ROOT, f))]).toEqual([f, true]);
   });

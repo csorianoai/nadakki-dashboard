@@ -215,7 +215,7 @@ const nextConfig = {
       },
       {
         source: "/credit-hub/bank/queue",
-        destination: "/credit-hub/bank/applications",
+        destination: "/credit-hub/bank-v2/solicitudes",
         permanent: false,
       },
       // F2-ROUTE-HYGIENE: permanent redirects for top-level legacy routes
@@ -264,12 +264,12 @@ const nextConfig = {
         // Exclude KEEP_TEMPORARILY single-segment routes (kpis, queue) so they are
         // not swallowed by the dynamic :applicationId match.
         source: "/credit/bank/:applicationId((?!kpis|queue)[^/]+)",
-        destination: "/credit-hub/bank/applications/:applicationId",
+        destination: "/credit-hub/bank-v2/solicitudes/:applicationId",
         permanent: false,
       },
       {
         source: "/credit/bank",
-        destination: "/credit-hub/bank",
+        destination: "/credit-hub/bank-v2",
         permanent: false,
       },
       {
@@ -277,6 +277,39 @@ const nextConfig = {
         destination: "/credit-hub/dealer/applications/:applicationId",
         permanent: false,
       },
+      // UNA-VERSION (César, una sola interfaz, PR 1): una versión por pantalla. Temporales (307)
+      // para poder volver atrás; las páginas viejas siguen en app/ hasta el PR 7.
+      // tests/nav/redirecciones-una-version.test.ts: sin ciclos y cada destino existe en app/.
+      // Banco: bank-v2 es el banco. Panel anterior (app/(forge)/credit-hub/bank/**) -> su pantalla v2.
+      { source: "/credit-hub/bank", destination: "/credit-hub/bank-v2", permanent: false },
+      { source: "/credit-hub/bank/applications", destination: "/credit-hub/bank-v2/solicitudes", permanent: false },
+      { source: "/credit-hub/bank/applications/:applicationId", destination: "/credit-hub/bank-v2/solicitudes/:applicationId", permanent: false },
+      { source: "/credit-hub/bank/escalations", destination: "/credit-hub/bank-v2/escalaciones", permanent: false },
+      { source: "/credit-hub/bank/analytics", destination: "/credit-hub/bank-v2/analitica", permanent: false },
+      { source: "/credit-hub/bank/compliance", destination: "/credit-hub/bank-v2/cumplimiento", permanent: false },
+      { source: "/credit-hub/bank/audit", destination: "/credit-hub/bank-v2/auditoria", permanent: false },
+      { source: "/credit-hub/bank/vehicles", destination: "/credit-hub/bank-v2/vehiculos", permanent: false },
+      // Copias antiguas del banco (app/credit/**, app/(bank)/**, app/bank/**) -> su pantalla v2.
+      // /credit/:id excluye las carpetas reales de app/credit (y /credit/new, que va antes).
+      { source: "/credit/dashboard", destination: "/credit-hub/bank-v2/kpis", permanent: false },
+      { source: "/credit/bank/kpis", destination: "/credit-hub/bank-v2/kpis", permanent: false },
+      { source: "/credit/bank/queue", destination: "/credit-hub/bank-v2/solicitudes", permanent: false },
+      { source: "/credit/pool-filters", destination: "/credit-hub/bank-v2/filtros", permanent: false },
+      { source: "/credit/:id((?!(?:new|dashboard|pool-filters|bank|dealer|applications|status)(?:/|$))[^/]+)", destination: "/credit-hub/bank-v2/solicitudes/:id", permanent: false },
+      { source: "/bank/applications/:id", destination: "/credit-hub/bank-v2/solicitudes/:id", permanent: false },
+      { source: "/bank/applications/:id/stipulations", destination: "/credit-hub/bank-v2/solicitudes/:id", permanent: false },
+      { source: "/workflow-real", destination: "/credit-hub/bank-v2/solicitudes", permanent: false },
+      { source: "/bank/analytics", destination: "/credit-hub/bank-v2/analitica", permanent: false },
+      // Dealer OS: se quedan inicio (/autos/dealer) e insights. Consola antigua (app/(forge)/autos/*) -> Dealer OS.
+      { source: "/autos/dealer/inicio-v2", destination: "/autos/dealer", permanent: false },
+      { source: "/autos/dealer/reportes-v2", destination: "/autos/dealer/insights", permanent: false },
+      { source: "/autos/console", destination: "/autos/dealer", permanent: false },
+      { source: "/autos/finance", destination: "/autos/dealer/finanzas", permanent: false },
+      { source: "/autos/inventory", destination: "/autos/dealer/inventario", permanent: false },
+      { source: "/autos/leads", destination: "/autos/dealer/leads", permanent: false },
+      // Páginas vacías.
+      { source: "/credit-agents", destination: "/", permanent: false },
+      { source: "/institutions", destination: "/", permanent: false },
     ];
   },
   async rewrites() {
