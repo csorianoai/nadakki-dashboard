@@ -28,8 +28,10 @@ const TENANT_ADMIN: RoleInfo[] = [{ core_name: "platform", role_key: "tenant_adm
 const SUPER: RoleInfo[] = [{ core_name: "platform", role_key: "platform_superadmin" }];
 
 function hubs(roles: RoleInfo[], subscribed: string[] | undefined) {
+  // Hubs = secciones de un módulo. Inicio y Real Estate no dependen de `subscribed_cores` (Inicio es de
+  // todos; Real Estate lo decide /api/v1/realestate/acceso en el componente), así que no cuentan aquí.
   return filterSectionsForUser(NAV_SECTIONS, roles, subscribed, false)
-    .filter((section) => section.children.length > 0)
+    .filter((section) => section.children.length > 0 && section.coreMatchers.length > 0)
     .map((section) => section.id);
 }
 

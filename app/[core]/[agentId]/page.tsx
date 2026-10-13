@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import { CORES_CONFIG } from '@/config/cores';
+import { PaginaNoEncontrada } from '@/components/nav/PaginaNoEncontrada';
 import { api } from '@/lib/api';
 
 export default function AgentDetailPage() {
@@ -32,13 +33,7 @@ export default function AgentDetailPage() {
   };
 
   if (!coreConfig) {
-    return (
-      <div className="flex min-h-screen">
-<main className="flex-1 flex items-center justify-center">
-          <h1 className="text-4xl font-bold text-gray-400">Core no encontrado</h1>
-        </main>
-      </div>
-    );
+    return <PaginaNoEncontrada detalle={`No existe un módulo llamado «${coreId}». Elegí uno del menú o buscá con Ctrl+K.`} />;
   }
 
   return (
