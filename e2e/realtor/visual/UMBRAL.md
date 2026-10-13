@@ -30,6 +30,11 @@ de dar el umbral por bueno.
 Referencia `ref/clientes.png` (centro "Clientes" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
 entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.
 
+## Documentos (`documentos.spec.ts`)
+
+Referencia `ref/documentos.png` (centro "Documentos" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
+entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.
+
 ## Marketing AI (`marketing-ai.spec.ts`)
 
 Referencia `ref/marketing-ai.png` (centro "Marketing AI" de DL10A, nav-4). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
