@@ -15,11 +15,11 @@ export function PaginaNoEncontrada({ detalle }: { detalle?: string }) {
     else router.push("/");
   };
   return (
-    <div data-testid="pagina-no-encontrada" className="flex flex-1 items-center justify-center p-8">
+    <div data-testid="pagina-no-encontrada" className="ndk-page flex flex-1 items-center justify-center p-8">
       <div className="max-w-md text-center">
         <p className="text-sm font-semibold text-violet-500">Error 404</p>
-        <h1 className="mt-2 text-2xl font-bold text-zinc-800 dark:text-zinc-100">No encontramos esta página</h1>
-        <p className="mt-2 text-sm text-zinc-500">
+        <h1 className="mt-2 text-2xl font-bold text-zinc-100">No encontramos esta página</h1>
+        <p className="mt-2 text-sm text-zinc-400">
           {detalle ?? "La dirección no existe o ya no está disponible. Usá el menú de la izquierda o buscá con Ctrl+K."}
         </p>
         <div className="mt-6 flex justify-center gap-3">
@@ -33,7 +33,7 @@ export function PaginaNoEncontrada({ detalle }: { detalle?: string }) {
           </button>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+            className="inline-flex items-center gap-2 rounded-md border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-900"
           >
             <Home className="h-4 w-4" aria-hidden />
             Ir al inicio

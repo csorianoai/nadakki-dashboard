@@ -236,8 +236,9 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     if (!hydrated) return;
     // Un solo desplegable abierto: el de la sección de la página actual.
     const auto = collectExpandIdsForPath(visibleSections, pathname ?? null);
-    const activa = visibleSections.find((sec) => auto.has(sec.id));
-    if (activa) setExpanded({ [activa.id]: true });
+    // Si la página es de una sección-enlace (Marketing, Real Estate) o de ninguna, no queda nada abierto.
+    const activa = visibleSections.find((sec) => auto.has(sec.id) && !sec.href);
+    setExpanded(activa ? { [activa.id]: true } : {});
   }, [pathname, visibleSections, hydrated]);
 
   /** Abrir una sección cierra las demás: un solo desplegable abierto a la vez. */
