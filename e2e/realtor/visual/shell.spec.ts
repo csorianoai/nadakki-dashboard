@@ -14,6 +14,10 @@ const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/demand_radar
 const ORDER = ["Mi día", "Clientes", "Propietarios", "Propiedades", "Marketing AI", "Demand Radar", "Operaciones", "Documentos", "Finanzas", "CRM", "Academia", "Mi oficina"];
 const GROUPS = ["HOY", "CARTERA", "CRECIMIENTO IA", "OPERACIÓN", "RELACIÓN Y CARRERA"];
 
+let fallos = 0;
+test.afterEach(({}, info) => void (info.status !== info.expectedStatus && (fallos += 1)));
+test.afterAll(() => console.log(`RESULT_O2_REGISTRO=${fallos === 0 ? "PASS" : "FAIL"}`));
+
 async function sesion(page: Page, acceso: number) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
   await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
@@ -74,7 +78,6 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
   await page.keyboard.type("fin");
   await expect(side.getByTestId("center-finanzas")).toBeVisible();
   await expect(side.getByTestId("center-clientes")).toHaveCount(0);
-  console.log("RESULT_O2_REGISTRO=PASS");
 });
 
 test("con 403 de /acceso no se pinta el armazón", async ({ page }) => {
