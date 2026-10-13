@@ -82,9 +82,11 @@ describe("pantalla", () => {
 
   it("tenant ajeno: el cliente no envía tenant y no aparecen datos de otro tenant", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    const ajeno = { documents: [{ name: "Contrato OtroTenant", status: "firmado" }], templates: [{ name: "Plantilla OtroTenant" }] };
+    mockApiFetch.mockResolvedValue({ status: 200, ok: true, json: async () => ajeno });
     render(<DocumentosPanel />);
     await screen.findByTestId("documentos-empty");
+    expect(screen.queryByText(/OtroTenant/)).toBeNull();
     expect(mockApiFetch).toHaveBeenCalledTimes(1);
     const [url, init] = mockApiFetch.mock.calls[0];
     expect(String(url)).not.toMatch(/tenant/i);
