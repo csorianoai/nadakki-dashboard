@@ -36,6 +36,8 @@ const legal = MODULOS.find((m) => m.id === "legal")!;
 const marketing = MODULOS.find((m) => m.id === "marketing")!;
 const SUPER = sesion("platform_superadmin", ["legal", "marketing", "credit"]);
 
+beforeEach(() => { window.localStorage.clear(); });
+
 describe("ModuleShell: barra común + menú del módulo + hueco de contexto", () => {
   beforeEach(() => { pathname = "/legal/cases/new"; });
 

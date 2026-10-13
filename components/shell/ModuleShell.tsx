@@ -76,7 +76,7 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
         >
           <a href="#main-content" className={CLASES.saltar}>Saltar al contenido</a>
           <div className={CLASES.cuerpo}>
-            <ModuleSidebar titulo={modulo?.label ?? "Suite"} moduloId={modulo?.id ?? null} grupos={grupos} pathname={pathname} abierto={cajon} onCerrar={cerrar} />
+            <ModuleSidebar titulo={modulo?.label ?? "Suite"} moduloId={modulo?.id ?? null} grupos={grupos} pathname={pathname} abierto={cajon} onCerrar={cerrar} plano={!modulo} />
             <div className={CLASES.columna}>
               <main id="main-content" className={CLASES.contenido}>
                 {conSesion ? <TenantBrandedDocumentTitle /> : null}

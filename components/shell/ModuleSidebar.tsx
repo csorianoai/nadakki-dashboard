@@ -18,6 +18,8 @@ export type ModuleSidebarProps = {
   /** Cajón abierto en móvil. */
   abierto: boolean;
   onCerrar: () => void;
+  /** Todos los grupos desplegados y sin cabecera de acordeón (la Suite: elegir módulo siempre a la vista). */
+  plano?: boolean;
 };
 
 /**
@@ -25,7 +27,7 @@ export type ModuleSidebarProps = {
  * aria-current, plegable a iconos en escritorio y cajón en móvil (con Escape y foco). Comportamiento tomado de
  * ForgeGlobalCoresSidebar y ShellSidebar; el estilo sale de ./clases.
  */
-export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onCerrar }: ModuleSidebarProps) {
+export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onCerrar, plano = false }: ModuleSidebarProps) {
   const activo = itemActivo(grupos, pathname);
   const grupoActivo = grupos.find((g) => g.items.some((i) => i.id === activo?.id))?.id ?? grupos[0]?.id ?? null;
   const [abiertoGrupo, setAbiertoGrupo] = useState<string | null>(grupoActivo);
@@ -57,7 +59,7 @@ export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onC
     return () => document.removeEventListener("keydown", tecla);
   }, [abierto, onCerrar]);
 
-  const unico = grupos.length === 1;
+  const unico = grupos.length === 1 || plano;
   return (
     <>
       {abierto ? <div role="presentation" data-testid="menu-telon" className={CLASES.telon} onClick={onCerrar} /> : null}
@@ -83,7 +85,9 @@ export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onC
             const open = unico || plegado || abiertoGrupo === g.id;
             return (
               <div key={g.id} className={CLASES.grupo} data-testid={`menu-grupo-${g.id}`}>
-                {unico || plegado ? null : (
+                {plegado ? null : plano ? (
+                  <p className={CLASES.grupoTitulo}>{g.label}</p>
+                ) : unico ? null : (
                   <button type="button" aria-expanded={open} aria-controls={`grupo-${g.id}`} onClick={() => setAbiertoGrupo(open ? null : g.id)} className={CLASES.grupoTitulo}>
                     <span className="min-w-0 flex-1 truncate">{g.label}</span>
                     <ChevronRight aria-hidden className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? "rotate-90" : ""}`} />
