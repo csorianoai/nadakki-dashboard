@@ -85,8 +85,9 @@ describe("interruptor ENCENDIDO", () => {
   it("el lado del concesionario no se toca: el dealer sigue viendo sus pantallas", () => {
     process.env[VAR] = "1";
     const enlaces = hrefs(credit(filtrar(PERFILES.dealer)).children);
-    expect(enlaces).toContain("/credit-hub/dealer");
-    expect(enlaces).toContain("/credit-hub/dealer/applications");
+    // El crédito del concesionario vive en Dealer OS (PR 2 "una sola interfaz").
+    expect(enlaces).toContain("/autos/dealer/credito");
+    expect(enlaces).toContain("/autos/dealer/credito/solicitudes");
     expect(enlaces.some((h) => h.includes("bank-v2"))).toBe(false);
   });
 

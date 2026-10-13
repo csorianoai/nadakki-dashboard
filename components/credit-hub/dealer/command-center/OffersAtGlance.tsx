@@ -26,7 +26,7 @@ export function OffersAtGlance({
       sub="abre el comparador en cada solicitud"
       truth="REAL"
       action={
-        <Link href="/credit-hub/dealer/applications" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ textDecoration: "none" }}>
+        <Link href="/autos/dealer/credito/solicitudes" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ textDecoration: "none" }}>
           Ver solicitudes
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </Link>

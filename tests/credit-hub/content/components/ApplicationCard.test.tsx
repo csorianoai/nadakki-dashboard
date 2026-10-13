@@ -28,7 +28,7 @@ describe("ApplicationCard", () => {
   test("navigates on click", () => {
     render(<ApplicationCard application={makeApplication({ application_id: "app-99" })} />);
     fireEvent.click(screen.getByRole("button"));
-    expect(push).toHaveBeenCalledWith("/credit-hub/dealer/applications/app-99");
+    expect(push).toHaveBeenCalledWith("/autos/dealer/credito/solicitudes/app-99");
   });
 
   test("avatar uses initials", () => {

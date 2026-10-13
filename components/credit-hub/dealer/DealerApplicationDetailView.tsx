@@ -240,7 +240,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
 
   return (
     <div>
-      <button type="button" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ marginLeft: -9, marginBottom: 8, minHeight: 44 }} onClick={() => router.push("/credit-hub/dealer/applications")}>
+      <button type="button" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ marginLeft: -9, marginBottom: 8, minHeight: 44 }} onClick={() => router.push("/autos/dealer/credito/solicitudes")}>
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
         Mis solicitudes
       </button>
@@ -660,7 +660,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
             onCancelled={() => void refetch()}
           />
         ) : null}
-        <button type="button" className="ch-btn ch-btn-secondary min-h-[44px] w-full sm:w-auto" onClick={() => router.push("/credit-hub/dealer/applications")}>
+        <button type="button" className="ch-btn ch-btn-secondary min-h-[44px] w-full sm:w-auto" onClick={() => router.push("/autos/dealer/credito/solicitudes")}>
           Ver todas
         </button>
         <Link href={dealerNewApplicationHref()} className="ch-btn ch-btn-persona min-h-[44px] w-full sm:w-auto" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>

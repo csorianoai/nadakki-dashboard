@@ -271,15 +271,16 @@ export const NAVEGACION: NavSection[] = [
       { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank/compliance", roles: ROLES_BANCO },
       { id: "credit-audit-ch", label: "Auditoría de crédito", href: "/credit-hub/bank/audit", roles: ROLES_BANCO },
       { id: "credit-pool-filters", label: "Filtros de cartera", href: "/credit/pool-filters", roles: ROLES_BANCO },
-      { id: "credit-dealer", label: "Crédito del concesionario", href: "/credit-hub/dealer", roles: ROLES_DEALER },
-      { id: "credit-dealer-apps", label: "Solicitudes del concesionario", href: "/credit-hub/dealer/applications", roles: ROLES_DEALER },
+      // Crédito del concesionario: vive en Dealer OS (/autos/dealer/credito/**, PR 2 "una sola interfaz").
+      { id: "credit-dealer", label: "Crédito del concesionario", href: "/autos/dealer/credito", roles: ROLES_DEALER },
+      { id: "credit-dealer-apps", label: "Solicitudes del concesionario", href: "/autos/dealer/credito/solicitudes", roles: ROLES_DEALER },
       {
         id: "credit-new",
         label: "Nueva solicitud",
-        href: "/credit-hub/dealer/applications/new?new=1",
+        href: "/autos/dealer/credito/solicitudes/nueva?new=1",
         roles: ROLES_DEALER,
       },
-      { id: "credit-preapproval", label: "Preaprobación", href: "/credit-hub/dealer/preapproval", roles: ROLES_DEALER },
+      { id: "credit-preapproval", label: "Preaprobación", href: "/autos/dealer/credito/preaprobacion", roles: ROLES_DEALER },
       { id: "credit-legacy", label: "Crédito clásico", href: "/credit" },
       { id: "market-intel-investigations", label: "Inteligencia de mercado", href: "/market-intel", badge: "BETA" },
       {

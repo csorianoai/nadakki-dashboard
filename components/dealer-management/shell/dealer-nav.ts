@@ -19,8 +19,10 @@ import {
   BookOpen,
   Building2,
   Cable,
+  Calculator,
   Car,
   Compass,
+  FilePlus2,
   FileText,
   Gauge,
   LayoutDashboard,
@@ -83,8 +85,12 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     id: "financiamiento",
     label: "Financiamiento",
     items: [
-      { href: "/credit-hub/dealer", label: "Dealer-Bank", icon: Landmark, capability: "credit.applications.view" },
-      { href: "/credit-hub/dealer/applications", label: "Solicitudes", icon: Building2, capability: "credit.applications.submit" },
+      // Credito del concesionario dentro de Dealer OS (/autos/dealer/credito/**, PR 2 "una sola
+      // interfaz"). Antes apuntaba a /credit-hub/dealer, que DealerSuiteGate devolvia a /autos/dealer.
+      { href: "/autos/dealer/credito", label: "Crédito", icon: Landmark, capability: "credit.applications.view" },
+      { href: "/autos/dealer/credito/solicitudes", label: "Solicitudes", icon: Building2, capability: "credit.applications.view" },
+      { href: "/autos/dealer/credito/solicitudes/nueva?new=1", label: "Nueva solicitud", icon: FilePlus2, capability: "credit.applications.submit" },
+      { href: "/autos/dealer/credito/preaprobacion", label: "Preaprobación", icon: Calculator, capability: "credit.applications.view" },
     ],
   },
   {
@@ -108,9 +114,13 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
 /**
  * Pantallas de la Suite que un dealer SI puede abrir (P1-3). Fuera del chrome
  * del dealer, DealerSuiteGate hace `router.replace("/autos/dealer")` salvo en
- * /contable/* (components/dealer/DealerSuiteGate.tsx:34 y :69): por eso
- * Dealer-Bank, Solicitudes y Marketing rebotaban aunque el plan los permitiera.
+ * /contable/* (components/dealer/DealerSuiteGate.tsx): por eso Dealer-Bank,
+ * Solicitudes y Marketing rebotaban aunque el plan los permitiera.
  * Un test compara esta lista con `isDealerReachableSuitePath`.
+ *
+ * El credito ya no necesita excepcion: vive en /autos/dealer/credito/**, dentro
+ * del chrome del dealer (`isDealerChromePath`), y /credit-hub/dealer/** redirige
+ * alli (next.config.js). Marketing sigue fuera: su enlace se oculta.
  */
 const DEALER_REACHABLE_SUITE_PREFIXES = ["/contable"] as const;
 
@@ -140,11 +150,24 @@ export const DEALER_NAV_CAPABILITY_KEYS = Array.from(
   ),
 );
 
-/** Activo por prefijo, salvo Inicio, que solo coincide exacto. */
+function coincidePorPrefijo(base: string, pathname: string): boolean {
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
+/**
+ * Activo por prefijo, salvo Inicio, que solo coincide exacto. La query del enlace
+ * no cuenta (Nueva solicitud lleva `?new=1`). Si otro item del menu, mas largo,
+ * tambien coincide, gana ese: en /autos/dealer/credito/solicitudes se marca
+ * Solicitudes y no Credito.
+ */
 export function isDealerNavItemActive(href: string, pathname: string | null): boolean {
   if (!pathname) return false;
-  if (href === "/autos/dealer") return pathname === href;
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const base = href.split("?")[0]!;
+  if (base === "/autos/dealer") return pathname === base;
+  if (!coincidePorPrefijo(base, pathname)) return false;
+  return !DEALER_NAV_GROUPS.flatMap((group) => group.items)
+    .map((item) => item.href.split("?")[0]!)
+    .some((otro) => otro.length > base.length && otro.startsWith(`${base}/`) && coincidePorPrefijo(otro, pathname));
 }
 
 /** Migas: Inicio + el item que coincide. No inventa niveles que no existen. */

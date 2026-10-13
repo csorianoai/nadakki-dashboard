@@ -21,7 +21,7 @@ export function PreApprovalView({ locale, currency }: DealerPreApprovalViewProps
         loanAmount: Math.max(0, inputs.vehiclePrice - inputs.downPayment),
       }),
     );
-    router.push(`/credit-hub/dealer/applications/new/applicant?preset=${encodeURIComponent(preset)}`);
+    router.push(`/autos/dealer/credito/solicitudes/nueva/solicitante?preset=${encodeURIComponent(preset)}`);
   };
 
   return (
