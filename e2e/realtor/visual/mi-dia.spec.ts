@@ -12,6 +12,9 @@ const THRESHOLD = 0.12;
 const NODEMO = "http://127.0.0.1:3101";
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/mi-dia.png");
 
+// Los textos se afirman en español: el idioma sale de navigator.language y no debe depender del LANG del entorno.
+test.use({ locale: "es-ES" });
+
 async function sesion(page: Page, acceso: number) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
   await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
