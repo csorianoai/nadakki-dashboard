@@ -90,6 +90,19 @@ describe("pantalla", () => {
     expect(within(screen.getByTestId("propietarios-panel")).queryByText(/SYNTH/)).toBeNull();
   });
 
+  it("tenant ajeno (DEMO activo): el acceso 404 no deja ver ningún dato y no se pide nada más que /acceso", async () => {
+    on(true);
+    mockApiFetch.mockResolvedValue({ status: 404 });
+    render(<PropietariosPanel />);
+    await waitFor(() => expect(screen.getByTestId("realtor-notice")).not.toHaveAttribute("data-reason", "comprobando"));
+    expect(screen.queryByTestId("propietarios-panel")).toBeNull();
+    expect(screen.queryByTestId("owner-row")).toBeNull();
+    expect(document.body.textContent).not.toMatch(/SYNTH/);
+    expect(mockApiFetch).toHaveBeenCalledTimes(1);
+    expect(String(mockApiFetch.mock.calls[0][0])).toMatch(/\/realestate\/acceso/);
+    expect(JSON.stringify(mockApiFetch.mock.calls[0])).not.toMatch(/tenant/i);
+  });
+
   it("apagado: no pregunta al backend", () => {
     render(<PropietariosPanel />);
     expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", "apagado");
