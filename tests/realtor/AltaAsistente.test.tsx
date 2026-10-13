@@ -62,6 +62,30 @@ describe("AltaAsistente", () => {
     expect(f).toHaveBeenCalledTimes(1);
   });
 
+  it("DEMO por NEXT_PUBLIC_REALTOR_ALLOW_DEMO=1 sin prop: badge y ninguna llamada a /alta/*", async () => {
+    process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
+    try {
+      const f = servidor(200, () => json({}, 500));
+      render(<AltaAsistente enviar={f} encendido />);
+      await screen.findByTestId("badge-demo");
+      expect(f.mock.calls.every(([r]) => String(r).endsWith("/acceso"))).toBe(true);
+    } finally {
+      delete process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO;
+    }
+  });
+
+  it("NEXT_PUBLIC_REALTOR_DEMO=1 solo no activa DEMO", async () => {
+    process.env.NEXT_PUBLIC_REALTOR_DEMO = "1";
+    try {
+      const f = servidor(200, (r) => json(r.endsWith("/tenant/profile") ? PERFIL : {}));
+      render(<AltaAsistente enviar={f} encendido />);
+      await screen.findByTestId("realtor-alta");
+      expect(screen.queryByTestId("badge-demo")).toBeNull();
+    } finally {
+      delete process.env.NEXT_PUBLIC_REALTOR_DEMO;
+    }
+  });
+
   it("tenant ajeno: 404 del servidor muestra error generico y ningun dato ni tenant enviado", async () => {
     const enviados: string[] = [];
     const f = jest.fn((ruta: string, init?: RequestInit) => {

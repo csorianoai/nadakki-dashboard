@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { consultarAcceso, modoDemo, panelEncendido } from "@/lib/realtor/acceso";
+import { consultarAcceso } from "@/lib/realtor/acceso";
+import { isDemoAllowed, isPanelFlagOn } from "@/lib/realtor/config";
 import {
   DATOS_VACIOS, altaDemo, enviarAlta, leerPerfil, validar,
   type Datos, type Enviar, type Errores, type Perfil, type Resultado,
@@ -33,7 +34,7 @@ export type AltaProps = {
   encendido?: boolean;
 };
 
-export function AltaAsistente({ enviar, demo = modoDemo(), encendido = panelEncendido() }: AltaProps) {
+export function AltaAsistente({ enviar, demo = isDemoAllowed(), encendido = isPanelFlagOn() }: AltaProps) {
   const [acceso, setAcceso] = useState(false);
   const [idioma, setIdioma] = useState<Idioma>("es");
   const [paso, setPaso] = useState(0);
