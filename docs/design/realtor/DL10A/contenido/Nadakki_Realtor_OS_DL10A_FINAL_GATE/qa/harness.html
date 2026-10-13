@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>QA DL09 · viewports reales</title>
+<style>body{margin:0;background:#DCE2E8;font:13px Arial,sans-serif;color:#13202B;padding:12px}#out{white-space:pre-wrap;background:#fff;padding:10px;border-radius:8px;font-size:11px;line-height:1.3;margin-bottom:12px}#frames{display:flex;gap:8px;align-items:flex-start}iframe{border:1px solid #13202B;background:#fff;flex-shrink:0}</style></head>
+<body><div id="out">Arnés QA DL09. Funciones: runSuite(ancho), responsive(), persist(), runAll().</div><div id="frames"></div>
+<script>
+let SRC='../Nadakki_Realtor_OS_DL10A_autonomo.html';const out=document.getElementById('out');const log=s=>{out.textContent+='\n'+s};
+const sleep=ms=>new Promise(r=>{const t0=performance.now(),ch=new MessageChannel();ch.port1.onmessage=()=>performance.now()-t0>=ms?r():ch.port2.postMessage(0);ch.port2.postMessage(0)});
+function frame(w,h,src){const f=document.createElement('iframe');f.width=w;f.height=h;f.src=src||SRC;document.getElementById('frames').appendChild(f);return new Promise(r=>f.onload=async()=>{for(let i=0;i<100&&!f.contentWindow.__nadakkiDemo;i++)await sleep(100);await sleep(300);r(f)})}
+async function runSuite(w,h=844){const f=await frame(w,h);const t=await (await fetch('run_tests.js?'+Date.now())).text();f.contentWindow.__qaSrc=t;const res=await f.contentWindow.eval(t);f.contentWindow.document.getElementById('qa-results')?.remove();
+ log(`SUITE ${w}×${h} (iframe innerWidth ${f.contentWindow.innerWidth}) · ${res.filter(r=>r.ok===true).length+' PASS · '+res.filter(r=>r.ok===null).length+' NOT_EXECUTED · '+res.filter(r=>r.ok===false).length+' FAIL · total '}/${res.length} PASS`);res.filter(r=>r.ok===false).forEach(r=>log('  FAIL '+r.id+' '+r.name+' · '+r.detail));f.remove();return res}
+async function responsive(){const rows=[];for(const w of [390,768,1024,1440]){const f=await frame(w,800);const W=f.contentWindow,D=W.__nadakkiDemo,doc=W.document;const bad=[];
+ for(let i=0;i<12;i++){D.go(i);await sleep(120);const sw=doc.documentElement.scrollWidth;if(sw>W.innerWidth+1)bad.push(i+':'+sw);}
+ const mobileNav=!!doc.querySelector('[data-qa=menu-toggle]'),side=!!doc.querySelector('[data-qa=nav-0]');const expectMobile=w<=860;const navOk=expectMobile?(mobileNav&&!side):(side&&!mobileNav);
+ const small=[...doc.querySelectorAll('main button:not([disabled])')].filter(b=>b.offsetParent&&b.getBoundingClientRect().height<36).length;
+ const ok=!bad.length&&navOk;rows.push(ok);log(`RESPONSIVE ${w}px · ${ok?'PASS':'FAIL'} · desbordes horizontales: ${bad.length?bad.join(','):'0 de 12 centros'} · navegación ${expectMobile?'móvil':'lateral'} ${navOk?'OK':'INCORRECTA'} · botones <36px en Mi día: ${small}`);D.go(0);f.remove()}return rows}
+async function persist(){let f=await frame(1024,800);let W=f.contentWindow,d=W.document;const c=id=>d.querySelector(`[data-qa="${id}"]`);
+ c('reset').click();await sleep(100);c('confirm-ok').click();await sleep(150);c('nav-3').click();await sleep(150);c('pick-A').click();await sleep(150);c('nav-9').click();await sleep(150);c('crm-consent').click();await sleep(150);
+ f.contentWindow.location.reload();await new Promise(r=>f.onload=r);for(let i=0;i<100&&!f.contentWindow.__nadakkiDemo;i++)await sleep(100);await sleep(300);W=f.contentWindow;d=W.document;
+ const S=W.__nadakkiDemo.state;const ok=S.op.property==='A'&&S.crm.consents.whatsapp&&S.center===9&&d.querySelector('[data-qa=ctx-property]')?.textContent==='Apartamento DEMO A';
+ log(`PERSISTENCIA tras recarga real del iframe · ${ok?'PASS':'FAIL'} · propiedad=${S.op.property} consentimiento WhatsApp=${S.crm.consents.whatsapp} centro=${S.center} (hash ${W.location.hash})`);
+ W.__nadakkiDemo.doReset();await sleep(200);f.remove();return ok}
+async function layout(src){src=src||SRC;const rows=[];for(const [w,h] of [[390,844],[768,1024],[1024,768],[1440,900]]){const f=await frame(w,h,src);const p=await (await fetch('layout_probe.js?'+Date.now())).text();const r=await f.contentWindow.eval(p);rows.push(r);log(`LAYOUT ${w}×${h} · ${r.ok?'PASS':'FAIL'} · cabecera ${r.headerPos} ${r.headerH}px · ${r.rows.filter(x=>x.ok).length}/${r.rows.length}`);r.rows.filter(x=>!x.ok).forEach(x=>log('   ✗ '+x.id+' · '+x.detail));f.remove()}window.__layout=rows;return rows}
+async function runAll(){out.textContent='QA DL09 · '+new Date().toISOString()+' · '+navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0];await responsive();await layout();await persist();await runSuite(390);await runSuite(1440,900);log('FIN '+new Date().toISOString());window.__done=true}
+</script></body></html>
