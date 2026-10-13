@@ -133,3 +133,18 @@ describe("(4) los cores con menú propio quedan bajo la barra sin cortarse", () 
     }
   });
 });
+
+
+describe("(5) los cajones laterales en móvil empiezan bajo la barra de 40 px", () => {
+  const CAJONES = [
+    "components/forge/layout/ForgeGlobalCoresSidebar.tsx",
+    "components/dealer-management/shell/DealerSidebar.tsx",
+    "components/dcc/shell/DccShellSidebar.tsx",
+    "components/cockpit/CockpitSidebar.tsx",
+  ];
+  test.each(CAJONES)("%s no es fixed inset-y-0", (f) => {
+    const src = fs.readFileSync(path.join(ROOT, f), "utf8");
+    expect(src).not.toMatch(/fixed[^"`]*inset-y-0/);
+    expect(src).toMatch(/fixed[^"`]*top-1[02]|top-10[^"`]*fixed/);          // 40 px (top-10) o el botón del Cockpit (top-12)
+  });
+});
