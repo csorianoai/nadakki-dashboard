@@ -160,7 +160,7 @@ export function NextBestAction({
 }) {
   let title = "Captura una nueva solicitud";
   let body = "Inicia el wizard guiado para enviar a varios bancos en un solo flujo.";
-  let href = "/credit-hub/dealer/applications/new/applicant";
+  let href = "/autos/dealer/credito/solicitudes/nueva/solicitante";
   let truth: "REAL" | "DEMO" = "REAL";
 
   const offerPending = applications.find((a) =>
@@ -182,7 +182,7 @@ export function NextBestAction({
   } else if (draftCount > 0) {
     title = "Reanuda borradores pendientes";
     body = `${draftCount} solicitud(es) sin enviar — completa y envía hoy.`;
-    href = "/credit-hub/dealer/applications/new/applicant";
+    href = "/autos/dealer/credito/solicitudes/nueva/solicitante";
   } else if (incomplete) {
     title = "Completa expedientes incompletos";
     body = "Hay solicitudes sin nombre de cliente — mejora la tasa de respuesta bancaria.";

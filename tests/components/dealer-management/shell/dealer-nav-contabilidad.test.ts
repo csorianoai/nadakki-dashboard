@@ -72,7 +72,8 @@ const PENDIENTES = new Set([
 
 function hrefSinPantalla(href: string): boolean {
   if (href.includes("[")) return false;
-  const segments = href.replace(/^\//, "");
+  // La query no es parte de la ruta (Nueva solicitud lleva ?new=1).
+  const segments = href.split("?")[0]!.replace(/^\//, "");
   return ![
     join(process.cwd(), "app", segments, "page.tsx"),
     join(process.cwd(), "app", "(forge)", segments, "page.tsx"),

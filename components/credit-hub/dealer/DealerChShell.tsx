@@ -108,7 +108,7 @@ export function DealerChShell({ children }: { children: ReactNode }) {
     });
 
   const handleMessageNotificationClick = (applicationId: string) => {
-    router.push(`/credit-hub/dealer/applications/${applicationId}`);
+    router.push(`/autos/dealer/credito/solicitudes/${applicationId}`);
   };
 
   const handleLogout = async () => {

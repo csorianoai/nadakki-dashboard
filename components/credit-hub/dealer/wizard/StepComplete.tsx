@@ -46,13 +46,13 @@ export function StepComplete() {
       {/* TODO(tenant-config): Read from tenantConfig.sla_commitment_hours when available */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 28 }}>
         <Link
-          href={applicationId ? dealerDetailHref(applicationId) : "/credit-hub/dealer/applications"}
+          href={applicationId ? dealerDetailHref(applicationId) : "/autos/dealer/credito/solicitudes"}
           className="ch-btn ch-btn-persona min-h-[48px]"
           style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
         >
           Ver estado
         </Link>
-        <Link href="/credit-hub/dealer" className="ch-btn ch-btn-secondary min-h-[48px]" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+        <Link href="/autos/dealer/credito" className="ch-btn ch-btn-secondary min-h-[48px]" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
           Volver al panel
         </Link>
       </div>
