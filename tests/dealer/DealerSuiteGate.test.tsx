@@ -99,6 +99,21 @@ test.each(["/contable", "/contable/plan-cuentas", "/contable/libro-mayor", "/con
   },
 );
 
+test("un dealer que vuelve del OAuth de Google o Meta no es expulsado de /marketing/social-connections", () => {
+  // El callback del backend redirige ahí con ?success= o ?error=; el replace a /autos/dealer los perdía.
+  pathname = "/marketing/social-connections";
+  fetchMock.mockResolvedValue([{ dealerId: "d1", organizationUnitId: null, dealerName: "Mapaal" }]);
+  montar();
+  expect(screen.getByText("Suite operativa")).toBeInTheDocument();
+  expect(fetchMock).not.toHaveBeenCalled();
+  expect(replace).not.toHaveBeenCalled();
+});
+
+test.each(["/marketing", "/marketing/social-connections-x", "/marketing/campaigns"])(
+  "solo la página de conexiones queda exenta, no el resto de Marketing (%s)",
+  (ruta) => expect(isDealerReachableSuitePath(ruta)).toBe(false),
+);
+
 test("otra ruta de la Suite sigue expulsando al dealer", async () => {
   pathname = "/legal";
   fetchMock.mockResolvedValue([{ dealerId: "d1", organizationUnitId: null, dealerName: "Mapaal" }]);

@@ -24,3 +24,8 @@ DL10A no tiene una pantalla de alta; la referencia es `ref/alta.png` = centro "M
 cercana (cuenta y oficina del agente). Mismo umbral (12 %). La referencia se genera con `ref.sh`; el `DIFF_MEDIA`
 de esta pantalla aún no se ha medido (no hay ZIP ni navegador en el entorno del constructor): medirlo en CI antes
 de dar el umbral por bueno.
+
+## Clientes (`clientes.spec.ts`)
+
+Referencia `ref/clientes.png` (centro "Clientes" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
+entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.

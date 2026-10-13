@@ -32,7 +32,13 @@ import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
  * a /autos/dealer (D8).
  */
 export function isDealerReachableSuitePath(pathname: string | null): boolean {
-  return pathname === "/contable" || (pathname?.startsWith("/contable/") ?? false);
+  return (
+    pathname === "/contable" ||
+    (pathname?.startsWith("/contable/") ?? false) ||
+    // Vuelta del OAuth de Google y Meta: el callback del backend redirige aquí con ?success= o ?error=.
+    // Si el gate expulsara a un dealer a /autos/dealer, esos parámetros se perderían.
+    pathname === "/marketing/social-connections"
+  );
 }
 
 type Estado = "verificando" | "dealer" | "suite";
