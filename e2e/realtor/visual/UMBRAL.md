@@ -17,10 +17,3 @@ media absoluta, normalizada a 0–1, sea **≤ 12 %** (`THRESHOLD` en el spec).
 
 El umbral es un punto de partida: si el diseño cambia, regenerar la referencia con `tests/realtor/visual/ref.sh`
 y volver a medir `DIFF_MEDIA` (se imprime en cada ejecución) antes de tocar `THRESHOLD`.
-
-## Asistente de alta (`alta.spec.ts`)
-
-DL10A no tiene una pantalla de alta; la referencia es `ref/alta.png` = centro "Mi oficina" (NAV[11]), la más
-cercana (cuenta y oficina del agente). Mismo umbral (12 %). La referencia se genera con `ref.sh`; el `DIFF_MEDIA`
-de esta pantalla aún no se ha medido (no hay ZIP ni navegador en el entorno del constructor): medirlo en CI antes
-de dar el umbral por bueno.

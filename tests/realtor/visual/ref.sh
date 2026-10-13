@@ -13,6 +13,4 @@ out="$root/docs/design/realtor/DL10A/ref"
 mkdir -p "$out"
 # Centro 5 del prototipo = Demand Radar (NAV[5]); el script vive fuera del directorio extraído.
 node "$root/tests/realtor/visual/ref-capture.js" "$html" "$out/demand_radar.png" 5
-# DL10A no tiene pantalla de alta: la referencia del asistente es "Mi oficina" (NAV[11]).
-node "$root/tests/realtor/visual/ref-capture.js" "$html" "$out/alta.png" 11
-echo "REF_OK=$out/demand_radar.png $out/alta.png"
+echo "REF_OK=$out/demand_radar.png"
