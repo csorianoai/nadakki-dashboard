@@ -142,8 +142,9 @@ export function isPlatformSuperAdmin(allRoles: { role_key: string }[]): boolean 
 }
 
 /**
- * Bypass hub visibility rules (subscriptions + matcher roles) so admins can navigate every Forge core.
- * Navigation only — API authorization remains on the backend.
+ * Administradores: dentro de un módulo ven todas sus páginas sin filtro de rol (banco y concesionario).
+ * El MÓDULO no lo saltan: eso solo platform_superadmin, en `filterNavItemsForCoreAccess`.
+ * Navegación, no autorización: el backend sigue decidiendo.
  */
 export function userSeesAllForgeHubSections(allRoles: RoleInfo[]): boolean {
   if (isPlatformSuperAdmin(allRoles)) return true;
@@ -213,7 +214,10 @@ function filterNavItemsForCoreAccess(
     .filter((i) => {
       if (i.children && i.children.length > 0) return true;
       if (!i.href) return false;
-      if (i.sinModulo || seesAllHubs) return true;
+      // El módulo solo lo salta platform_superadmin: es al único al que el backend le da todos los cores
+      // (auth_v2_service: superadmin → _get_all_enabled_cores; el resto → tenants.cores_enabled). tenant_admin
+      // ve los módulos de SU tenant; dentro de ellos sí ve todas las páginas (bypass de rol, más arriba).
+      if (i.sinModulo || isSuperAdmin) return true;
       const synthetic: CoreNav = { id: "", coreMatchers: i.coreMatchers ?? coreMatchers };
       return hasCoreAccess(synthetic, allRoles, subscribed);
     });

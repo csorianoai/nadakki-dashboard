@@ -127,6 +127,16 @@ describe("(2) cada usuario ve solo lo suyo", () => {
     }
   });
 
+  it("el módulo solo lo salta platform_superadmin; tenant_admin ve los de su tenant", () => {
+    const ta = [rol("tenant_admin", "platform")];
+    expect(ids(ver(ta, ["legal"]))).toEqual(["inicio", "legal-hub", "real-estate", "admin"]);
+    expect(ids(ver([rol("platform_superadmin", "platform")], []))).toEqual(expect.arrayContaining(["credit-hub", "marketing-hub", "legal-hub"]));
+    // dentro de un módulo suyo, tenant_admin ve banco y concesionario (bypass de rol, no de módulo)
+    const credito = hrefs(ver(ta, ["credit"]).find((s) => s.id === "credit-hub")!.children);
+    expect(credito).toEqual(expect.arrayContaining(["/credit-hub/bank", "/credit-hub/dealer"]));
+    expect(credito.some((h) => h.startsWith("/sic"))).toBe(false);
+  });
+
   it("tenant_admin no ve las pantallas de plataforma (las abre solo el superadmin)", () => {
     const ta = hrefs(ver([rol("tenant_admin", "platform")], []).find((s) => s.id === "admin")!.children);
     const sa = hrefs(ver([rol("platform_superadmin", "platform")], []).find((s) => s.id === "admin")!.children);
