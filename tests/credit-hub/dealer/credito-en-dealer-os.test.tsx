@@ -83,10 +83,32 @@ function loadRedirects(): Promise<Redirect[]> {
 }
 
 function sourceRegex(source: string): RegExp {
-  const body = source
-    .replace(/:([A-Za-z_]+)\(((?:[^()]|\([^()]*\))*)\)/g, "($2)")
-    .replace(/:([A-Za-z_]+)\*/g, "(.*)")
-    .replace(/:([A-Za-z_]+)/g, "([^/]+)");
+  // Mini path-to-regexp: `:nombre`, `:nombre*` y `:nombre(expresión con grupos anidados)`, recorrido a mano para no
+  // tocar los `(?:` de dentro de la expresión (p. ej. /credit/:id((?!(?:new|dashboard)(?:/|$))[^/]+)).
+  let body = "";
+  for (let i = 0; i < source.length; ) {
+    const nombre = /^:[A-Za-z_]+/.exec(source.slice(i));
+    if (!nombre) {
+      body += source[i++];
+      continue;
+    }
+    i += nombre[0].length;
+    if (source[i] === "(") {
+      let profundidad = 0;
+      const ini = i;
+      do {
+        if (source[i] === "(") profundidad++;
+        if (source[i] === ")") profundidad--;
+        i++;
+      } while (profundidad > 0 && i < source.length);
+      body += source.slice(ini, i);
+    } else if (source[i] === "*") {
+      body += "(.*)";
+      i++;
+    } else {
+      body += "([^/]+)";
+    }
+  }
   return new RegExp(`^${body}$`);
 }
 
