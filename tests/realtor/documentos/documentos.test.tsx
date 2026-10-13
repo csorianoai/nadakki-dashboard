@@ -25,6 +25,14 @@ describe("lógica", () => {
     expect(templateState({ ...base, lawyerApproval: { reviewer: "", date: "2026-01-01" } })).toBe("pendiente");
     expect(templateState({ ...base, lawyerApproval: { reviewer: "SYNTH Abogado", date: "2026-01-01" } })).toBe("aprobada");
   });
+  it("B5: fecha mal formada o futura no cuenta como visto bueno", () => {
+    const base = DEMO_TEMPLATES[0];
+    const ap = (date: string) => ({ ...base, lawyerApproval: { reviewer: "SYNTH Abogado", date } });
+    expect(templateState(ap("ayer"))).toBe("pendiente");
+    expect(templateState(ap("2026-13-45"))).toBe("pendiente");
+    expect(templateState(ap("2999-01-01"))).toBe("pendiente");
+  });
+
   it("ninguna plantilla DEMO está aprobada", () => {
     DEMO_TEMPLATES.forEach((p) => expect(templateState(p)).toBe("pendiente"));
   });
