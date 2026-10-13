@@ -831,13 +831,36 @@ export async function fetchSocialStatus(tenantId: string) {
   }
 }
 
-export function getOAuthConnectUrl(platform: string, tenantId: string) {
-  return `${BACKEND_URL}/auth/${platform}/connect/${tenantId}`;
+// Solo se abren URLs de autorización de los proveedores; cualquier otra respuesta se descarta.
+const OAUTH_HOSTS = /^https:\/\/(accounts\.google\.com|www\.facebook\.com)\//;
+
+/**
+ * Pide al backend, con la sesión, la URL de autorización OAuth del tenant (Google o Meta).
+ * Desde 2026-10-12 /auth/{platform}/connect/{tenant} exige JWT y que el tenant sea el del token:
+ * ya no es un enlace navegable, devuelve {authorization_url} en JSON.
+ */
+export async function startOAuthConnect(
+  platform: string,
+  tenantId: string
+): Promise<{ url: string | null; error: string | null }> {
+  try {
+    const r = await fetch(`${BACKEND_URL}/auth/${platform}/connect/${encodeURIComponent(tenantId)}`, {
+      headers: authHeaders({ Accept: "application/json" }),
+    });
+    if (!r.ok) return { url: null, error: `HTTP ${r.status}` };
+    const j = (await r.json()) as { authorization_url?: unknown };
+    const url = j?.authorization_url;
+    if (typeof url !== "string" || !OAUTH_HOSTS.test(url)) return { url: null, error: "invalid_authorization_url" };
+    return { url, error: null };
+  } catch (e) {
+    return { url: null, error: (e as Error)?.message ?? "Network error" };
+  }
 }
 
 export async function disconnectPlatform(platform: string, tenantId: string) {
-  return fetch(`${BACKEND_URL}/auth/${platform}/disconnect/${tenantId}`, {
+  return fetch(`${BACKEND_URL}/auth/${platform}/disconnect/${encodeURIComponent(tenantId)}`, {
     method: "DELETE",
+    headers: authHeaders(),
   });
 }
 

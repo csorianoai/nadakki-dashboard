@@ -17,6 +17,13 @@ export const RT = {
   navField: "rgba(12, 26, 36, 0.7)",
   demoBg: "#FFF1D6",
   demoText: "#6E4300",
+  barMuted: "#92B8C0",
+  calloutBg: "#EAF4F5",
+  calloutLine: "#CFE3E6",
+  chipUpBg: "#E3F4EA",
+  chipUpText: "#0B5A32",
+  chipDownBg: "#FBE7E4",
+  chipDownText: "#8A2418",
   sidebarWidth: 288,
 } as const;
 

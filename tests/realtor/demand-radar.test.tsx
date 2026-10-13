@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
+import userEvent from "@testing-library/user-event";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { DemandRadarPanel } from "@/components/realtor/DemandRadarPanel";
 import { isDemoAllowed, isPanelFlagOn } from "@/lib/realtor/config";
 import { DATA_STATUSES } from "@/lib/realtor/types";
-import { buildDemoDataset, PILOT_FILTERS } from "@/lib/realtor/demo-data";
+import { buildDemoDataset, PILOT_FILTERS, TABS } from "@/lib/realtor/demo-data";
 
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
@@ -38,7 +39,10 @@ describe("interruptor fail-closed", () => {
     setAccess(200);
     render(<DemandRadarPanel />);
     expect(await screen.findByTestId("demand-radar-panel")).toBeInTheDocument();
-    ["País", "Región", "Ciudad", "Zona", "Código postal", "Operación"].forEach((l) => expect(screen.getByLabelText(l)).toBeInTheDocument());
+    ["País", "Región · ciudad · zona"].forEach((l) => expect(screen.getByLabelText(l)).toBeInTheDocument());
+    expect(screen.getByRole("group", { name: "Operación" })).toBeInTheDocument();
+    expect(screen.getByText("Demand Radar AI")).toBeInTheDocument();
+    TABS.forEach((t) => expect(screen.getByRole("button", { name: t.label })).toBeInTheDocument());
     expect(screen.getByText(/no certezas/)).toBeInTheDocument();
     expect(mockApiFetch).toHaveBeenCalledWith("/api/v1/realestate/acceso", expect.objectContaining({ method: "GET" }));
   });
@@ -84,7 +88,9 @@ describe("tenant ajeno: el cliente nunca envía tenant", () => {
     });
     roots.forEach((r) => walk(path.join(process.cwd(), r)));
     expect(files.length).toBeGreaterThan(5);
-    files.forEach((f) => expect(fs.readFileSync(f, "utf8")).not.toMatch(/tenant/i));
+    // Prohibe el tenant del cliente (tenant_id, cabeceras x-tenant). La ruta /tenant/profile
+    // del backend y los comentarios que explican que el tenant sale del token son legitimos.
+    files.forEach((f) => expect(fs.readFileSync(f, "utf8")).not.toMatch(/tenant[_-]?id|x-tenant|tenant-?header/i));
   });
 });
 
@@ -146,7 +152,7 @@ describe("contenido de señales y Fair Housing", () => {
     signals.forEach((s) => {
       expect(s.signalType).toBeTruthy();
       expect(s.source).toBeTruthy();
-      expect(s.asOf).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(s.asOf).toMatch(s.status === "UNAVAILABLE" ? /^—$/ : /^\d{4}-\d{2}-\d{2}$/);
       expect(DATA_STATUSES).toContain(s.status);
     });
   });
@@ -167,7 +173,31 @@ describe("contenido de señales y Fair Housing", () => {
     setAccess(200);
     render(<DemandRadarPanel />);
     expect(await screen.findByText(/Fair Housing/)).toBeInTheDocument();
-    expect(screen.getByLabelText("Operación")).toHaveValue("venta");
+    expect(screen.getByTestId("op-alquiler")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("article", { name: "Intención de búsqueda · Alquiler" })).toBeInTheDocument();
+    await userEvent.click(screen.getByTestId("op-venta"));
+    expect(screen.getByTestId("op-venta")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("article", { name: "Intención de búsqueda · Venta" })).toBeInTheDocument();
+  });
+
+  it("DEMO: 8 barras S1–S8 con la actual resaltada, «Cómo leerlo» y ficha; las otras pestañas sin cifras", async () => {
+    process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
+    process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
+    setAccess(200);
+    render(<DemandRadarPanel />);
+    await screen.findByTestId("demand-radar-panel");
+    const bars = screen.getAllByTestId("signal-bar");
+    expect(bars).toHaveLength(8);
+    expect(bars[7]).toHaveAttribute("data-current", "true");
+    expect(bars[0]).toHaveAttribute("aria-label", expect.stringMatching(/^S1: 29/));
+    expect(screen.getByTestId("como-leerlo")).toHaveTextContent("Cómo leerlo");
+    expect(screen.getByTestId("signal-ficha")).toHaveTextContent(/Fuente.*Período.*Precisión/);
+    expect(screen.getByTestId("trend-chip")).toHaveTextContent("Subiendo");
+    await userEvent.click(screen.getByRole("button", { name: "Compras registradas" }));
+    const card = screen.getByRole("article", { name: "Compras registradas · Alquiler" });
+    expect(within(card).getByTestId("status-badge")).toHaveAttribute("data-status", "UNAVAILABLE");
+    expect(screen.queryAllByTestId("signal-bar")).toHaveLength(0);
+    expect(screen.queryByTestId("como-leerlo")).toBeNull();
   });
 });
 
