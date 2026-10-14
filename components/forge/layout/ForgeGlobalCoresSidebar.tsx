@@ -267,6 +267,24 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     ) : null;
 
   const renderLink = (item: NavItem, depth: number) => {
+    if (!item.href && item.pronto) {
+      // Ruta aprobada sin página todavía: sin enlace, para no mandar a un 404.
+      return (
+        <div
+          key={item.id}
+          aria-disabled="true"
+          data-pronto={item.pronto}
+          className={cn(
+            "flex min-h-8 cursor-default items-center gap-2 rounded-md border-l-2 border-transparent py-1.5 pr-3 text-xs text-zinc-500",
+            depth >= 1 ? "pl-9" : "pl-6",
+          )}
+        >
+          <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-700" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          <span className="shrink-0 rounded border border-zinc-700 px-1 text-[10px] leading-4 text-zinc-500">Pronto</span>
+        </div>
+      );
+    }
     if (!item.href) return null;
     const active = isHrefActive(item.href, pathname);
     const isSubItem = depth >= 1;
