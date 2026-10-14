@@ -39,6 +39,18 @@ describe("lógica", () => {
 });
 
 describe("pantalla", () => {
+  it("regresión: «Rol» por subcadena casa con select y con el contenedor de conteos; el selector exacto solo con el select", async () => {
+    on(true);
+    mockApiFetch.mockResolvedValue({ status: 200 });
+    render(<PropietariosPanel />);
+    await screen.findByTestId("propietarios-panel");
+    // Playwright getByLabel("Rol") compara por subcadena sin mayúsculas: dos elementos (strict mode violation).
+    expect(screen.getAllByLabelText(/rol/i)).toHaveLength(2);
+    // getByLabel("Rol", { exact: true }) en la spec e2e: solo el select.
+    const exact = screen.getAllByLabelText("Rol");
+    expect(exact).toHaveLength(1);
+    expect(exact[0].tagName).toBe("SELECT");
+  });
   it("positivo: DEMO con 200 muestra marca, tabla y conteos; filtra y cambia de idioma", async () => {
     on(true);
     mockApiFetch.mockResolvedValue({ status: 200 });
