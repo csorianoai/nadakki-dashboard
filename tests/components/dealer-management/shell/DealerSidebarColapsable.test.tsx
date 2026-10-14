@@ -314,3 +314,51 @@ describe("nada se superpone al contenido", () => {
     expect(barra().contains(contenido)).toBe(false);
   });
 });
+
+/**
+ * El fondo marino llega hasta el final de una pagina larga (QA: se cortaba a
+ * la altura del viewport). jsdom no calcula layout: se fija la ESTRUCTURA que
+ * lo arregla, medida antes y despues en Chromium con Playwright.
+ */
+describe("el fondo de la barra no se corta al hacer scroll", () => {
+  const fondo = () => screen.getByTestId("dealer-sidebar-fondo");
+
+  it("en escritorio, una columna en el flujo con el fondo marino que se estira con la fila", () => {
+    sidebar();
+
+    const clases = fondo().className.split(/\s+/);
+    expect(clases).toEqual(
+      expect.arrayContaining(["lg:block", "lg:shrink-0", "lg:self-stretch", "lg:bg-[var(--nav-bg)]"]),
+    );
+    // La columna es la que estira, no un panel flotante encima del contenido.
+    expect(fondo().className).not.toMatch(/\b(lg:)?(fixed|absolute|sticky)\b/);
+    expect(fondo().className).not.toContain("h-screen");
+  });
+
+  it("la barra va DENTRO de la columna y conserva su alto de pantalla en el flujo", () => {
+    sidebar();
+
+    expect(fondo().contains(barra())).toBe(true);
+    expect(barra().parentElement).toBe(fondo());
+    expect(barra().className).toContain("lg:sticky");
+    expect(barra().className).toContain("lg:h-screen");
+  });
+
+  it("en celular la columna no existe como caja: el panel superpuesto no cambia", () => {
+    sidebar({ mobileOpen: true });
+
+    const clases = fondo().className.split(/\s+/);
+    expect(clases[0]).toBe("contents");
+    // Ninguna clase sin prefijo que pinte o dimensione la columna en celular.
+    expect(clases.filter((c) => !c.startsWith("lg:"))).toEqual(["contents"]);
+    expect(barra().className).toContain("fixed inset-y-0 left-0 z-50");
+  });
+
+  it("en el shell, la columna es hija directa de la raiz flex", () => {
+    montarShell();
+
+    const raiz = fondo().parentElement as HTMLElement;
+    expect(raiz).toHaveAttribute("data-portal", "dealer");
+    expect(raiz.className).toContain("flex min-h-screen");
+  });
+});

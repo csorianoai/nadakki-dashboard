@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/forge/ui/Skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { resolveVisiblePlatformTitle } from "@/lib/white-label/brand-display";
+import { EVENTO_ABRIR_BUSCADOR } from "@/components/nav/BuscadorNavegacion";
 import { useForgeCommandPaletteOptional } from "./ForgeCommandPaletteContext";
 import { Topbar } from "./Topbar";
 
@@ -62,7 +63,7 @@ export function ForgeGlobalTopbar({ onMenuClick }: ForgeGlobalTopbarProps) {
         type="button"
         variant="subtle"
         className="lg:hidden"
-        aria-label="Abrir menú de cores"
+        aria-label="Abrir el menú"
         onClick={onMenuClick}
       >
         <Menu aria-hidden className="h-4 w-4" />
@@ -87,12 +88,22 @@ export function ForgeGlobalTopbar({ onMenuClick }: ForgeGlobalTopbarProps) {
         <IconButton
           type="button"
           variant="subtle"
-          aria-label="Open command palette"
+          aria-label="Abrir el buscador"
           onClick={() => palette?.toggle()}
         >
           <Search aria-hidden className="h-4 w-4" />
         </IconButton>
-      ) : null}
+      ) : (
+        <IconButton
+          type="button"
+          variant="subtle"
+          aria-label="Buscar una pantalla (Ctrl+K)"
+          title="Buscar una pantalla (Ctrl+K)"
+          onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCADOR))}
+        >
+          <Search aria-hidden className="h-4 w-4" />
+        </IconButton>
+      )}
       <TenantSwitcher />
       <UserMenu />
     </div>

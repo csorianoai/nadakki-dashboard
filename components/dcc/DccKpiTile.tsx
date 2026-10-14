@@ -10,6 +10,9 @@ import { SelloCalidad } from "./SelloCalidad";
  * cifra en dorado legible + unidad, sello y nota. `valor` llega ya formateado
  * desde lo que dio el backend; aqui no se calcula nada. Sin cifra permitida,
  * el mosaico se queda en etiqueta + sello "Próximamente": no ocupa mas.
+ * `calidad` null = la cifra se pinta sin sello (el banco, cuyo backend aun no
+ * declara calidad: un "parcial" generico haria pensar que no es fiable). El
+ * dealer siempre pasa su calidad y no cambia.
  */
 export function DccKpiTile({
   etiqueta,
@@ -23,12 +26,12 @@ export function DccKpiTile({
   etiqueta: string;
   valor: string | null;
   unidad?: string | null;
-  calidad: Calidad;
+  calidad: Calidad | null;
   nota?: string | null;
   tecnico?: string | null;
   testId?: string;
 }) {
-  const conCifra = permiteCifra(calidad) && valor !== null;
+  const conCifra = valor !== null && (calidad === null || permiteCifra(calidad));
   return (
     <div data-testid={testId ?? "dcc-kpi-tile"} data-con-cifra={conCifra ? "si" : "no"} className="h-auto min-w-0 py-1">
       <DccTooltip contenido={tecnico}>
@@ -42,9 +45,11 @@ export function DccKpiTile({
           {unidad ? <span className={`text-xs ${DCC_CLASSES.subtle}`}>{unidad}</span> : null}
         </p>
       ) : null}
-      <div className="mt-1.5">
-        <SelloCalidad calidad={calidad} tecnico={tecnico} />
-      </div>
+      {calidad ? (
+        <div className="mt-1.5">
+          <SelloCalidad calidad={calidad} tecnico={tecnico} />
+        </div>
+      ) : null}
       {conCifra && nota ? <p className={`mt-1 text-xs ${DCC_CLASSES.subtle}`}>{nota}</p> : null}
     </div>
   );

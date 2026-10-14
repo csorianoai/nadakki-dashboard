@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { ESTADO_PERIODO_LABEL } from "@/lib/contable/periodo-nombre";
 import type { NaturalezaCuenta, PeriodoStatus, TipoCuenta } from "@/types/contable";
 
 export function NaturalezaBadge({ naturaleza }: { naturaleza: NaturalezaCuenta }) {
@@ -31,14 +32,9 @@ export function PeriodoStatusBadge({ status }: { status: PeriodoStatus }) {
     soft_closed: "bg-amber-500/15 text-amber-200 ring-amber-400/30",
     locked: "bg-rose-500/15 text-rose-200 ring-rose-400/30",
   };
-  const labels: Record<PeriodoStatus, string> = {
-    open: "Abierto",
-    soft_closed: "Cierre suave",
-    locked: "Locked",
-  };
   return (
     <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ring-1", styles[status])}>
-      {labels[status]}
+      {ESTADO_PERIODO_LABEL[status]}
     </span>
   );
 }

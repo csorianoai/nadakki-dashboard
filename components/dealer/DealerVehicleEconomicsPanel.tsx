@@ -56,9 +56,13 @@ export function DealerVehicleEconomicsPanel({ vehicleId, locale }: { vehicleId: 
         className="max-w-full overflow-x-hidden rounded-r-sm border border-nk-border bg-nk-surface p-4"
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudieron leer el margen y los días en stock</h2>
-        <p className="mt-1 text-xs text-nk-fg-muted break-words">
-          Código para soporte: {access?.reason_code ?? `HTTP_${access?.status ?? "error"}`}
+        <p className="mt-1 text-sm text-nk-fg-muted">
+          Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.
         </p>
+        <details className="mt-1 text-xs text-nk-fg-muted break-words">
+          <summary className="cursor-pointer">Detalle técnico</summary>
+          Código para soporte: {access?.reason_code ?? `HTTP_${access?.status ?? "error"}`}
+        </details>
       </section>
     );
   }

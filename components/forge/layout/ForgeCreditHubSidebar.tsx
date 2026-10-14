@@ -62,12 +62,13 @@ export function ForgeCreditHubSidebar({
         { id: "d-new", href: `/credit-hub/dealer/applications/new?${DEALER_NEW_APPLICATION_QUERY}`, label: "Nueva", icon: Plus },
       ];
     }
+    // Bank v2 es el banco (una sola interfaz).
     return [
-      { id: "b-dash", href: "/credit-hub/bank", label: t.bank.nav.dashboard, icon: Gauge },
-      { id: "b-queue", href: "/credit-hub/bank/applications", label: t.bank.nav.queue, icon: ClipboardList },
-      { id: "b-analytics", href: "/credit-hub/bank/analytics", label: t.bank.nav.analytics, icon: BarChart3 },
-      { id: "b-comp", href: "/credit-hub/bank/compliance", label: t.bank.nav.compliance, icon: ShieldCheck },
-      { id: "b-audit", href: "/credit-hub/bank/audit", label: t.bank.nav.audit, icon: History },
+      { id: "b-dash", href: "/credit-hub/bank-v2", label: t.bank.nav.dashboard, icon: Gauge },
+      { id: "b-queue", href: "/credit-hub/bank-v2/solicitudes", label: t.bank.nav.queue, icon: ClipboardList },
+      { id: "b-analytics", href: "/credit-hub/bank-v2/analitica", label: t.bank.nav.analytics, icon: BarChart3 },
+      { id: "b-comp", href: "/credit-hub/bank-v2/cumplimiento", label: t.bank.nav.compliance, icon: ShieldCheck },
+      { id: "b-audit", href: "/credit-hub/bank-v2/auditoria", label: t.bank.nav.audit, icon: History },
     ];
   }, [persona, t]);
 
@@ -117,6 +118,7 @@ export function ForgeCreditHubSidebar({
           const active =
             pathname === item.href ||
             (item.href !== "/credit-hub/bank" &&
+              item.href !== "/credit-hub/bank-v2" &&
               item.href !== "/credit-hub/dealer" &&
               pathname?.startsWith(item.href));
           return (

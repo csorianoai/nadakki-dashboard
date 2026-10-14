@@ -9,7 +9,8 @@ import { DCC_CLASSES } from "./clases";
 /**
  * Cabecera de la pagina: titulo, acciones y conmutador de tema. La marca del
  * tenant ya esta en la barra lateral, asi que aqui no se repite; el logo solo
- * aparece si el tenant lo tiene (sin recuadro vacio).
+ * aparece si el tenant lo tiene (sin recuadro vacio). Sin `onTheme` no hay
+ * conmutador: lo tiene el chrome.
  */
 export function DccHeader({
   marca,
@@ -21,7 +22,7 @@ export function DccHeader({
   marca: MarcaDcc;
   titulo: string;
   theme: DccTheme;
-  onTheme: (t: DccTheme) => void;
+  onTheme?: (t: DccTheme) => void;
   acciones?: ReactNode;
 }) {
   const siguiente: DccTheme = theme === "light" ? "dark" : "light";
@@ -39,15 +40,17 @@ export function DccHeader({
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {acciones}
-        <button
-          type="button"
-          data-testid="dcc-theme-toggle"
-          onClick={() => onTheme(siguiente)}
-          aria-label={siguiente === "dark" ? "Cambiar a tema oscuro" : "Cambiar a tema claro"}
-          className={DCC_CLASSES.quietButton}
-        >
-          {theme === "light" ? <Moon className="h-4 w-4" aria-hidden="true" /> : <Sun className="h-4 w-4" aria-hidden="true" />}
-        </button>
+        {onTheme ? (
+          <button
+            type="button"
+            data-testid="dcc-theme-toggle"
+            onClick={() => onTheme(siguiente)}
+            aria-label={siguiente === "dark" ? "Cambiar a tema oscuro" : "Cambiar a tema claro"}
+            className={DCC_CLASSES.quietButton}
+          >
+            {theme === "light" ? <Moon className="h-4 w-4" aria-hidden="true" /> : <Sun className="h-4 w-4" aria-hidden="true" />}
+          </button>
+        ) : null}
       </div>
     </header>
   );

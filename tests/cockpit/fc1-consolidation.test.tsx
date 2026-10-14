@@ -165,17 +165,14 @@ describe("FC1 TenantsView", () => {
 
 describe("FC1 forge sidebar — Network Cockpit", () => {
   function findAdminPlatformItems(sections: ReturnType<typeof filterSectionsForUser>) {
-    const admin = sections.find((s) => s.id === "admin");
-    const platform = admin?.children?.find((c) => c.id === "adm-platform");
-    return platform?.children ?? [];
+    return sections.find((s) => s.id === "admin")?.children ?? [];
   }
 
-  test("NAV_SECTIONS registers Network Cockpit under Plataforma", () => {
+  test("NAV_SECTIONS registers Network Cockpit under Administración", () => {
     const admin = NAV_SECTIONS.find((s) => s.id === "admin");
-    const platform = admin?.children?.find((c) => c.id === "adm-platform");
-    const item = platform?.children?.find((c) => c.id === "adm-network-cockpit");
+    const item = admin?.children?.find((c) => c.id === "adm-network-cockpit");
     expect(item).toMatchObject({
-      label: "Network Cockpit",
+      label: "Cabina de la red",
       href: "/cockpit",
       superAdminOnly: true,
       featureFlag: "cockpit-consolidation",

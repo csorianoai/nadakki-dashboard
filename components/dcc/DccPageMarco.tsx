@@ -14,7 +14,8 @@ export type DccPageProps = { titulo: string; acciones?: ReactNode; children: Rea
  * No importa nada de ningun portal; el dealer la usa a traves de `DccPage` y
  * el banco directamente. El tema dura la sesion en memoria: sin Local Storage
  * no hay salto al hidratar. Dentro de un shell DCC se comparte con el chrome
- * (DccThemeContext).
+ * (DccThemeContext); si el chrome ya pinta el conmutador, la cabecera no
+ * repite el suyo.
  */
 export function DccPageMarco({ marca, titulo, acciones, children }: DccPageProps & { marca: MarcaDcc }) {
   const [local, setLocal] = useState<DccTheme>("light");
@@ -24,7 +25,7 @@ export function DccPageMarco({ marca, titulo, acciones, children }: DccPageProps
   return (
     <DccThemeRoot theme={theme}>
       <div className="overflow-hidden rounded-[var(--dcc-radius)] border border-[var(--dcc-border)]">
-        <DccHeader marca={marca} titulo={titulo} theme={theme} onTheme={setTheme} acciones={acciones} />
+        <DccHeader marca={marca} titulo={titulo} theme={theme} onTheme={compartido?.conmutadorEnChrome ? undefined : setTheme} acciones={acciones} />
         <div className="p-5 lg:p-6">{children}</div>
       </div>
     </DccThemeRoot>

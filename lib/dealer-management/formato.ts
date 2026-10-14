@@ -71,3 +71,56 @@ export function formateaFecha(
     ...(soloFecha ? { timeZone: "UTC" } : {}),
   }).format(fecha);
 }
+
+type ParteFecha = "day" | "month" | "year";
+
+/** Orden de dia, mes y año que usa el locale ("es-AR": dia, mes, año). */
+function ordenFecha(locale: string): ParteFecha[] {
+  const partes = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "UTC",
+  }).formatToParts(new Date(Date.UTC(2026, 9, 5)));
+  const orden = partes
+    .map((parte) => parte.type)
+    .filter((tipo): tipo is ParteFecha => tipo === "day" || tipo === "month" || tipo === "year");
+  return orden.length === 3 ? orden : ["day", "month", "year"];
+}
+
+const PATRON_PARTE: Record<ParteFecha, string> = { day: "dd", month: "mm", year: "aaaa" };
+
+/** Lo que se le pide escribir al dealer: "dd/mm/aaaa" en es-AR, "mm/dd/aaaa" en en-US. */
+export function patronFecha({ locale }: Pick<LocaleTenant, "locale"> = LOCALE_POR_DEFECTO): string {
+  return ordenFecha(locale).map((parte) => PATRON_PARTE[parte]).join("/");
+}
+
+/**
+ * Lo inverso de `formateaFecha`: el texto que escribe el dealer, en el orden
+ * de su locale, a ISO "aaaa-mm-dd". Tambien acepta ISO tal cual. Una fecha que
+ * no existe (31/02/2026) o un texto vacio devuelve null: no se corrige sola.
+ */
+export function parseaFecha(
+  texto: string | null | undefined,
+  { locale }: Pick<LocaleTenant, "locale"> = LOCALE_POR_DEFECTO,
+): string | null {
+  const limpio = texto?.trim();
+  if (!limpio) return null;
+  let partes: Record<ParteFecha, string>;
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(limpio);
+  if (iso) {
+    partes = { year: iso[1], month: iso[2], day: iso[3] };
+  } else {
+    const trozos = /^(\d{1,4})[/.-](\d{1,4})[/.-](\d{1,4})$/.exec(limpio);
+    if (!trozos) return null;
+    const [a, b, c] = ordenFecha(locale);
+    partes = { [a]: trozos[1], [b]: trozos[2], [c]: trozos[3] } as Record<ParteFecha, string>;
+    if (partes.year.length !== 4 || partes.month.length > 2 || partes.day.length > 2) return null;
+  }
+  const [anio, mes, dia] = [Number(partes.year), Number(partes.month), Number(partes.day)];
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
+  const existe =
+    fecha.getUTCFullYear() === anio && fecha.getUTCMonth() === mes - 1 && fecha.getUTCDate() === dia;
+  if (!existe) return null;
+  return `${partes.year}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+}

@@ -43,7 +43,7 @@ describe("Filtros de pool y Metas v2 (B6)", () => {
   });
 
   it("metas: misma consulta, con la moneda del branding (no RD$ fijo)", async () => {
-    const { container } = envolver(<MetasDelMes formato={{ locale: "es-AR", currency: "ARS" }} />);
+    const { container } = envolver(<MetasDelMes formato={{ locale: "es-AR", currency: "ARS" }} ahora={new Date(2026, 9, 28)} />);
     expect(await screen.findByText("Monto aprobado")).toBeInTheDocument();
     const texto = (container.textContent ?? "").replace(/[  ]/g, " ");
     expect(texto).toContain("$ 4,8 M");

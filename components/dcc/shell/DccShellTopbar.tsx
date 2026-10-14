@@ -1,12 +1,13 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight, LogOut, Menu, Moon, Sun } from "lucide-react";
 import type { DccTheme } from "@/lib/dcc/tokens";
 import { DCC_CLASSES } from "@/components/dcc/clases";
 import type { DccMiga, DccUsuario } from "./DccShell";
 
-/** Barra superior del shell DCC: migas, conmutador de tema, usuario y salir. */
+/** Barra superior del shell DCC: migas, extras (buscador, campana), conmutador de tema, usuario y salir. */
 export function DccShellTopbar({
   migas,
   usuario,
@@ -14,6 +15,7 @@ export function DccShellTopbar({
   onTheme,
   onMenu,
   onSalir,
+  extras,
 }: {
   migas: DccMiga[];
   usuario: DccUsuario;
@@ -21,6 +23,7 @@ export function DccShellTopbar({
   onTheme: (t: DccTheme) => void;
   onMenu: () => void;
   onSalir?: () => void;
+  extras?: ReactNode;
 }) {
   const siguiente: DccTheme = theme === "light" ? "dark" : "light";
   return (
@@ -49,6 +52,7 @@ export function DccShellTopbar({
           })}
         </ol>
       </nav>
+      {extras}
       <button
         type="button"
         data-testid="dcc-shell-theme"

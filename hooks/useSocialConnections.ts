@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   fetchSocialStatus,
-  getOAuthConnectUrl,
+  startOAuthConnect,
   disconnectPlatform,
 } from "@/lib/api/marketing";
 import { useToast } from "@/components/ui/Toast";
@@ -26,7 +26,7 @@ export type UseSocialConnectionsResult = {
   error: string | null;
   connecting: boolean;
   fetchStatus: (tenantId?: string, options?: { quiet?: boolean }) => Promise<void>;
-  connect: (platform: string, tenantId?: string) => void;
+  connect: (platform: string, tenantId?: string) => Promise<void>;
   disconnect: (platform: string, tenantId?: string) => Promise<void>;
 };
 
@@ -125,21 +125,24 @@ export function useSocialConnections(): UseSocialConnectionsResult {
   }, [searchParams, toast, fetchStatus]);
 
   const connect = useCallback(
-    (platform: string, tid?: string) => {
+    async (platform: string, tid?: string) => {
       const t = tid ?? tenantId;
       if (!t) return;
       setConnecting(true);
-      const url = getOAuthConnectUrl(platform, t);
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // La pestaña se abre en el clic (si se abre tras el await, el navegador la bloquea) y se dirige
+      // cuando el backend devuelve la URL de autorización con la sesión del usuario.
+      const w = window.open("", "_blank");
+      const { url, error } = await startOAuthConnect(platform, t);
+      if (url && w) {
+        w.opener = null;
+        w.location.href = url;
+      } else {
+        w?.close();
+        toast.error("Error de conexión", error ?? "No se pudo iniciar la conexión");
+      }
       setConnecting(false);
     },
-    [tenantId]
+    [tenantId, toast]
   );
 
   const disconnect = useCallback(

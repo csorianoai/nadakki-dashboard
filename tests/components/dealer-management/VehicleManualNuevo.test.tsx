@@ -154,7 +154,7 @@ describe("formulario concedido", () => {
   it("el formulario aparece y nace en BORRADOR", () => {
     render(<DealerVehicleNuevoPage />);
     expect(screen.getByTestId("vehicle-manual-form")).toBeInTheDocument();
-    expect(screen.getByTestId("vehicle-status")).toHaveTextContent("BORRADOR");
+    expect(screen.getByTestId("vehicle-status")).toHaveTextContent("Borrador");
   });
 });
 

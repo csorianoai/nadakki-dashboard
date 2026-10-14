@@ -51,3 +51,23 @@ export function esPersonalDePlataforma(roles: RolParaPlataforma[] | null | undef
 export const SOLO_PLATAFORMA_TITULO = "Esta pantalla es de la plataforma";
 export const SOLO_PLATAFORMA_DETALLE =
   "La administración de tenants es de Nadakki, no de tu institución. Si necesitás un cambio en tu tenant, escribinos.";
+
+/**
+ * `true` solo si el usuario es `platform_superadmin`.
+ *
+ * Mas estricto que `esPersonalDePlataforma`: el Panel de Administracion de la
+ * plataforma (/admin y sus subrutas) no lo abre ni el soporte. Verificado en
+ * produccion: un usuario de banco abria /admin y veia el panel entero.
+ *
+ * Fail-closed: sin roles, o con cualquier rol que no sea exactamente
+ * `platform_superadmin`, devuelve `false`.
+ */
+export function esSuperadminDePlataforma(roles: RolParaPlataforma[] | null | undefined): boolean {
+  if (!roles?.length) return false;
+  return roles.some((r) => r.role_key === SUPERADMIN);
+}
+
+/** El texto que ve quien no es superadmin en una pantalla de administracion de plataforma. */
+export const SOLO_SUPERADMIN_TITULO = "Acceso no autorizado";
+export const SOLO_SUPERADMIN_DETALLE =
+  "Esta pantalla es de administración de la plataforma y solo la abre el superadministrador de Nadakki.";

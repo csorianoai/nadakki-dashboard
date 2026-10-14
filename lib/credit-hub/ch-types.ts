@@ -41,6 +41,8 @@ export interface DecisionPanelProps {
   className?: string;
   /** When false, decision actions are disabled (role guard). */
   canDecide?: boolean;
+  /** Por que no se puede decidir, en llano. Sin el, el texto generico de rol. */
+  forbiddenReason?: string;
   /** Specific backend error (e.g. OFFER_ROOM_CLOSED). */
   errorDetail?: string | null;
   lenderOptions?: string[];

@@ -52,6 +52,8 @@ describe("Mesa de decisiones v2 (B3)", () => {
       "/api/v2/credit/analytics/dashboard", "/api/v2/credit/applications/queue", "/api/v2/credit/bank/kpis/approval", "/api/v2/credit/bank/kpis/portfolio",
       "/api/v2/credit/goals/monthly/:periodo",
     ]);
+    // Alertas con datos de la cola: 2 de prioridad alta pendientes (la decidida no cuenta).
+    expect(within(screen.getByTestId("mesa-alertas")).getByText("2 solicitudes de prioridad alta")).toBeInTheDocument();
     const texto = container.textContent ?? "";
     expect(texto).not.toMatch(/Error HTTP|DEMO|ROADMAP|undefined|NaN|[0-9a-f]{8}-[0-9a-f]{4}-/i);
   });

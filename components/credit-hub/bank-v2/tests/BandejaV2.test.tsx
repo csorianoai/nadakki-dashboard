@@ -14,7 +14,7 @@ jest.mock("@/lib/credit-hub/api/client", () => ({
     if (path.includes("bulk-decide")) return { processed: 1, skipped: 0, errors: 0, results: [] };
     return {
       total_count: 41,
-      applications: [{ application_id: ID, tenant_id: "t", state: "claimed", applicant_name: "Marisol Reyes", dealer_name: "Autos del Caribe", vehicle_label: "Toyota RAV4 2024", requested_amount: 2150000, score: 742, risk_level: "BAJO", approval_band: "PREAPROBABLE", priority: "ALTA", created_at: null, bank_decision: null }],
+      applications: [{ application_id: ID, tenant_id: "t", state: "SUBMITTED", estado_bandeja: "en_revision", applicant_name: "Marisol Reyes", dealer_name: "Autos del Caribe", vehicle_label: "Toyota RAV4 2024", requested_amount: 2150000, score: 742, risk_level: "BAJO", approval_band: "PREAPROBABLE", priority: "ALTA", created_at: null, bank_decision: null }],
     };
   }),
 }));
@@ -36,12 +36,24 @@ describe("Bandeja v2 (B3)", () => {
   it("misma consulta paginada con busqueda; estados traducidos, monto del branding y sin UUID", async () => {
     const { container } = pintar("reyes");
     expect(await screen.findAllByTestId("bandeja-fila")).toHaveLength(1);
-    expect(llamadas[0].path).toBe("/api/v2/credit/applications/queue?limit=20&offset=0&q=reyes");
+    // BANK-V2-05: el estado se pide al backend (todas por defecto) junto con la busqueda.
+    expect(llamadas[0].path).toBe("/api/v2/credit/applications/queue?limit=20&offset=0&estado=todas&q=reyes");
     expect(container.textContent).toContain("En revisión");
     expect(container.textContent).toContain("RD$2,150,000.00");
     expect(container.textContent).toContain("Página 1 de 3");
-    expect(container.textContent).not.toMatch(/claimed|ALTA|PREAPROBABLE|Error HTTP|DEMO|7f3c1a10/);
+    expect(container.textContent).not.toMatch(/claimed|SUBMITTED|en_revision|ALTA|PREAPROBABLE|Error HTTP|DEMO|7f3c1a10/);
     expect(screen.getByRole("link", { name: "Marisol Reyes" })).toHaveAttribute("href", `/s/${ID}`);
+  });
+
+  it("el filtro de estado lo resuelve el backend y vuelve a la pagina 1 (BANK-V2-05)", async () => {
+    const { onParams } = pintar("reyes");
+    expect(await screen.findAllByTestId("bandeja-fila")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Decididas" }));
+    await waitFor(() => expect(llamadas.some((l) => l.path.includes("estado=decididas"))).toBe(true));
+    expect(llamadas.find((l) => l.path.includes("estado=decididas"))!.path).toBe("/api/v2/credit/applications/queue?limit=20&offset=0&estado=decididas&q=reyes");
+    expect(onParams).toHaveBeenCalledWith("reyes", 1);
+    // La fila que trae el backend no se vuelve a filtrar en el cliente por un estado que no existe.
+    expect(await screen.findAllByTestId("bandeja-fila")).toHaveLength(1);
   });
 
   it("accion masiva: misma regla, analista y justificacion que la Bandeja actual, tras confirmar", async () => {

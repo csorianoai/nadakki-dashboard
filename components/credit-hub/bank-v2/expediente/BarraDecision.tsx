@@ -11,6 +11,7 @@ import { CHApiError } from "@/lib/credit-hub/api/client";
 import type { BankReviewPayload } from "@/lib/credit-hub/types/bank-views";
 import type { BankReviewApplication } from "@/lib/credit-hub/types/bankDecision";
 import { useAuth } from "@/hooks/useAuth";
+import { Asignacion } from "./Asignacion";
 import { ACCION, MOTIVOS_RECHAZO, bloqueoDecision, errorFormulario, esDuenoDelClaim, justificacion, prestamistas, terminosPorDefecto, type Accion } from "./decision";
 
 const CAMPO = "h-9 w-full rounded-lg border border-[var(--dcc-border-strong)] bg-[var(--dcc-surface)] px-2 text-sm";
@@ -40,10 +41,12 @@ function mensajeError(err: unknown): string {
 export function BarraDecision({ application }: { application: BankReviewApplication }) {
   const { user } = useAuth();
   const { apiTenantId } = useTenant();
-  const { can } = useCreditHubActor();
+  const { can, roleKey } = useCreditHubActor();
   const payload = application.application_payload as BankReviewPayload;
   const claim = application.bank_claim ?? payload.bank_claim ?? null;
   const esDueno = esDuenoDelClaim(claim, user?.id);
+  // Nadie la tiene: se puede asignar (BANK-V2-03). Si la tiene otro, no.
+  const sinAsignar = !claim?.analyst_id && !payload.bank_decision;
   const bloqueo = bloqueoDecision({ puedeRol: can("create_decision"), esDueno, yaDecidida: Boolean(payload.bank_decision) });
   const mutacion = useBankDecision(application.application_id);
   const ofertasQ = useQuery({
@@ -100,7 +103,18 @@ export function BarraDecision({ application }: { application: BankReviewApplicat
         <p role="status" data-testid="decision-bloqueada" className={`text-sm ${DCC_CLASSES.muted}`}>
           {bloqueo}
         </p>
-      ) : (
+      ) : null}
+      {!hecho && bloqueo && sinAsignar ? (
+        <Asignacion
+          applicationId={application.application_id}
+          tenantId={apiTenantId}
+          userId={user?.id}
+          roleKey={roleKey}
+          puedeDecidir={can("create_decision")}
+          prestamistas={opciones}
+        />
+      ) : null}
+      {hecho || bloqueo ? null : (
         <div className="flex flex-wrap items-center gap-2">
           <span className={`mr-auto text-sm ${DCC_CLASSES.muted}`}>Decide esta solicitud</span>
           {(Object.keys(ACCION) as Accion[]).map((a) => (

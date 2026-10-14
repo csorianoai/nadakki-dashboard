@@ -20,6 +20,7 @@ import {
 import type { BalanceComprobacionReport, PeriodoContable } from "@/types/contable";
 import { cn } from "@/lib/utils";
 import { evaluaCuadre } from "@/lib/contable/cuadre";
+import { opcionPeriodo } from "@/lib/contable/periodo-nombre";
 
 export function BalanceComprobacionClient() {
   const tenantId = useContableTenantId();
@@ -93,7 +94,7 @@ export function BalanceComprobacionClient() {
           label="Periodo"
           value={periodoId}
           onChange={(e) => setPeriodoId(e.target.value)}
-          options={periodos.map((p) => ({ value: p.id, label: `${p.label} (${p.status})` }))}
+          options={periodos.map((p) => ({ value: p.id, label: opcionPeriodo(p) }))}
         />
       </div>
 

@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { DetalleTecnico } from "../../DetalleTecnico";
 import { useParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { AccessApiError, getAccessClientContext } from "@/lib/access/client";
@@ -91,7 +92,10 @@ export default function DealerVehicleSalePage() {
           {errors.currency ? <p role="alert" data-testid="venta-sin-moneda" className="text-sm text-nk-fg">{errors.currency}</p> : null}
           {venta.isError ? (
             <p role="alert" data-testid="venta-error" className="text-sm text-nk-fg">
-              No se pudo registrar la venta. reason_code: <code>{reason}</code>
+              No se pudo registrar la venta. Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.
+              <DetalleTecnico>
+                <code>{reason}</code>
+              </DetalleTecnico>
             </p>
           ) : null}
           {venta.isSuccess ? (

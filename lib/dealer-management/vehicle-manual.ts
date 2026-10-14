@@ -34,12 +34,16 @@ export const VEHICLE_WRITE_CAPABILITY = "autos.inventory.create";
 /** Estado inicial que fija el backend al crear: no se envia, se informa. */
 export const VEHICLE_INITIAL_STATUS = "draft";
 
+/**
+ * Etiqueta en español llano del estado que manda el backend. Un estado que no
+ * esta aqui se muestra tal cual: no se inventa traduccion.
+ */
 export const VEHICLE_STATUS_LABEL: Record<string, string> = {
-  draft: "BORRADOR",
-  disponible: "DISPONIBLE",
-  reservado: "RESERVADO",
-  vendido: "VENDIDO",
-  archivado: "ARCHIVADO",
+  draft: "Borrador",
+  disponible: "Disponible",
+  reservado: "Reservado",
+  vendido: "Vendido",
+  archivado: "Archivado",
 };
 
 export const VEHICLE_CONDITIONS = [

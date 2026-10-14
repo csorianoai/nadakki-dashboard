@@ -133,167 +133,185 @@ export function DealerSidebar({
         />
       ) : null}
 
-      <aside
-        data-testid="dealer-sidebar"
-        data-collapsed={collapsed}
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[264px] max-w-[85vw] shrink-0 flex-col",
-          "bg-[var(--nav-bg)] text-[var(--nav-fg)] transition-[transform,width] duration-200 motion-reduce:transition-none",
-          "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:max-w-none lg:translate-x-0",
-          /* El ancho estrecho va con `lg:` y nunca en celular: alli manda mobileOpen. */
-          collapsed && "lg:w-[72px]",
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
-        )}
+      {/* Columna del fondo, solo escritorio. La barra es `lg:sticky lg:h-screen`,
+          pero hoy no se pega: por encima del shell hay contenedores con
+          `overflow-x: hidden` (el layout de app/autos y el <body> de
+          globals.css) que, al forzar `overflow-y: auto`, se vuelven el
+          contenedor de scroll de la barra sin scrollear nunca. En una pagina
+          mas larga que la pantalla la barra se iba con el scroll y el fondo
+          marino acababa a la altura del viewport. Esta columna va en el flujo
+          y se estira con la fila del shell (align-items: stretch), asi que el
+          fondo llega hasta el final. La barra sigue dentro, en el flujo: nada
+          se superpone al contenido, y si un dia esos ancestros dejan de
+          recortar, el `sticky` funciona dentro de esta columna alta. En
+          celular es `contents`: no existe como caja y el panel superpuesto
+          queda exactamente igual. */}
+      <div
+        data-testid="dealer-sidebar-fondo"
+        className="contents lg:block lg:shrink-0 lg:self-stretch lg:bg-[var(--nav-bg)]"
       >
-        <div
+        <aside
+          data-testid="dealer-sidebar"
+          data-collapsed={collapsed}
           className={cn(
-            "flex items-center gap-2 border-b border-[var(--nav-border)] py-4",
-            collapsed ? "justify-center px-2" : "justify-between px-4",
+            "fixed inset-y-0 left-0 z-50 flex w-[264px] max-w-[85vw] shrink-0 flex-col",
+            "bg-[var(--nav-bg)] text-[var(--nav-fg)] transition-[transform,width] duration-200 motion-reduce:transition-none",
+            "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:max-w-none lg:translate-x-0",
+            /* El ancho estrecho va con `lg:` y nunca en celular: alli manda mobileOpen. */
+            collapsed && "lg:w-[72px]",
+            mobileOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <Link
-            href="/autos/dealer"
-            onClick={onClose}
-            title={collapsed ? brandName : undefined}
+          <div
             className={cn(
-              "flex min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)]",
-              collapsed ? "items-center justify-center" : "flex-col",
+              "flex items-center gap-2 border-b border-[var(--nav-border)] py-4",
+              collapsed ? "justify-center px-2" : "justify-between px-4",
             )}
           >
-            {collapsed ? (
-              <>
-                {/* La inicial es decoracion: el nombre accesible es el sr-only. */}
-                <span
-                  aria-hidden="true"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--nav-bg-2)] font-dealer-display text-base font-bold text-[var(--nav-fg)]"
-                >
-                  {brandName.charAt(0).toUpperCase()}
-                </span>
-                <span className="sr-only">{brandName}</span>
-              </>
-            ) : (
-              <>
-                <span className="truncate font-dealer-display text-base font-bold text-[var(--nav-fg)]">
-                  {brandName}
-                </span>
-                <span className="text-[11px] text-[var(--nav-fg-muted)]">{DCC_PRODUCTO.firma}</span>
-              </>
-            )}
-          </Link>
-
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar menú"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)] lg:hidden"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
-
-        {/* Contraer/expandir: solo escritorio. En celular el eje es mobileOpen. */}
-        <div
-          className={cn(
-            "hidden border-b border-[var(--nav-border)] py-2 lg:block",
-            collapsed ? "px-2" : "px-3",
-          )}
-        >
-          <button
-            type="button"
-            data-testid="dealer-sidebar-toggle"
-            onClick={onToggleCollapsed}
-            /* aria-expanded describe la BARRA que gobierna, no el boton:
-               true = barra completa. El aria-label dice la accion, que es lo
-               que necesita oir quien navega con lector de pantalla. */
-            aria-expanded={!collapsed}
-            aria-controls={NAV_ID}
-            aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
-            title={collapsed ? "Expandir menú" : "Contraer menú"}
-            className={cn(
-              "flex min-h-9 w-full items-center rounded-lg text-[var(--nav-fg-muted)] transition-colors hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)]",
-              collapsed ? "justify-center" : "justify-end px-2",
-            )}
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
-            )}
-          </button>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-          {loading ? (
-            <NavSkeleton collapsed={collapsed} />
-          ) : (
-            <nav
-              id={NAV_ID}
-              className={cn("space-y-6 py-4", collapsed ? "px-2" : "px-3")}
-              aria-label="Navegación del dealer"
+            <Link
+              href="/autos/dealer"
+              onClick={onClose}
+              title={collapsed ? brandName : undefined}
+              className={cn(
+                "flex min-w-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)]",
+                collapsed ? "items-center justify-center" : "flex-col",
+              )}
             >
-              {unverifiedReason ? (
-                /* En estrecha la frase no cabe en 72 px: queda el icono, la
-                   frase en el tooltip y el texto entero en sr-only, igual que
-                   el nombre de los modulos. El aviso no desaparece. */
-                <div
-                  role="alert"
-                  data-testid="dealer-acceso-no-verificado"
-                  data-reason-code={unverifiedReason}
-                  title={collapsed ? ACCESS_UNVERIFIED_MESSAGE : undefined}
-                  className={cn(
-                    "rounded-lg border border-[var(--dcc-border-strong)] bg-[var(--dcc-partial-bg)]",
-                    collapsed ? "flex justify-center p-2" : "p-3",
-                  )}
-                >
-                  {collapsed ? (
-                    <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--dcc-partial-fg)]" aria-hidden="true" />
-                  ) : null}
-                  <p className={collapsed ? "sr-only" : "text-xs font-semibold text-[var(--dcc-partial-fg)]"}>
-                    {ACCESS_UNVERIFIED_MESSAGE}
-                  </p>
-                  <p
-                    className={
-                      collapsed ? "sr-only" : "mt-1 text-[11px] leading-snug text-[var(--dcc-partial-fg)]"
-                    }
+              {collapsed ? (
+                <>
+                  {/* La inicial es decoracion: el nombre accesible es el sr-only. */}
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--nav-bg-2)] font-dealer-display text-base font-bold text-[var(--nav-fg)]"
                   >
-                    {ACCESS_UNVERIFIED_DETAIL}
-                  </p>
-                </div>
-              ) : null}
-              {groups.map((group, index) => (
-                <div key={group.id} className="space-y-1">
-                  {collapsed ? (
-                    /* En estrecha el titulo del grupo no cabe. Lo sustituye una
-                       linea entre grupos: separa sin fingir una etiqueta
-                       recortada a tres letras. El nombre del grupo sigue
-                       estando en la paleta (Cmd+K), que no se estrecha. */
-                    index > 0 ? (
-                      <hr className="mx-2 border-[var(--nav-border)]" aria-hidden="true" />
-                    ) : null
-                  ) : (
-                    <h2 className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nav-fg-muted)]">
-                      {group.label}
-                    </h2>
-                  )}
-                  {group.items.map((item) => (
-                    <NavLink key={item.href} item={item} collapsed={collapsed} onNavigate={onClose} />
-                  ))}
-                </div>
-              ))}
-            </nav>
-          )}
-        </div>
+                    {brandName.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="sr-only">{brandName}</span>
+                </>
+              ) : (
+                <>
+                  <span className="truncate font-dealer-display text-base font-bold text-[var(--nav-fg)]">
+                    {brandName}
+                  </span>
+                  <span className="text-[11px] text-[var(--nav-fg-muted)]">{DCC_PRODUCTO.firma}</span>
+                </>
+              )}
+            </Link>
 
-        {/* Pie fijo, fuera del scroll: "Cerrar sesión" siempre visible (QA P1-4).
-            El boton flotante del Concierge vive a la DERECHA para no taparlo. */}
-        <div
-          data-testid="dealer-sidebar-footer"
-          className={cn("shrink-0 border-t border-[var(--nav-border)] py-3", collapsed ? "px-2" : "px-3")}
-        >
-          <DealerTenantActivo collapsed={collapsed} />
-          <DealerLogoutButton collapsed={collapsed} />
-        </div>
-      </aside>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar menú"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--nav-fg-muted)] hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)] lg:hidden"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* Contraer/expandir: solo escritorio. En celular el eje es mobileOpen. */}
+          <div
+            className={cn(
+              "hidden border-b border-[var(--nav-border)] py-2 lg:block",
+              collapsed ? "px-2" : "px-3",
+            )}
+          >
+            <button
+              type="button"
+              data-testid="dealer-sidebar-toggle"
+              onClick={onToggleCollapsed}
+              /* aria-expanded describe la BARRA que gobierna, no el boton:
+                 true = barra completa. El aria-label dice la accion, que es lo
+                 que necesita oir quien navega con lector de pantalla. */
+              aria-expanded={!collapsed}
+              aria-controls={NAV_ID}
+              aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+              title={collapsed ? "Expandir menú" : "Contraer menú"}
+              className={cn(
+                "flex min-h-9 w-full items-center rounded-lg text-[var(--nav-fg-muted)] transition-colors hover:bg-[var(--nav-bg-2)] hover:text-[var(--nav-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dcc-teal)]",
+                collapsed ? "justify-center" : "justify-end px-2",
+              )}
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+            {loading ? (
+              <NavSkeleton collapsed={collapsed} />
+            ) : (
+              <nav
+                id={NAV_ID}
+                className={cn("space-y-6 py-4", collapsed ? "px-2" : "px-3")}
+                aria-label="Navegación del dealer"
+              >
+                {unverifiedReason ? (
+                  /* En estrecha la frase no cabe en 72 px: queda el icono, la
+                     frase en el tooltip y el texto entero en sr-only, igual que
+                     el nombre de los modulos. El aviso no desaparece. */
+                  <div
+                    role="alert"
+                    data-testid="dealer-acceso-no-verificado"
+                    data-reason-code={unverifiedReason}
+                    title={collapsed ? ACCESS_UNVERIFIED_MESSAGE : undefined}
+                    className={cn(
+                      "rounded-lg border border-[var(--dcc-border-strong)] bg-[var(--dcc-partial-bg)]",
+                      collapsed ? "flex justify-center p-2" : "p-3",
+                    )}
+                  >
+                    {collapsed ? (
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--dcc-partial-fg)]" aria-hidden="true" />
+                    ) : null}
+                    <p className={collapsed ? "sr-only" : "text-xs font-semibold text-[var(--dcc-partial-fg)]"}>
+                      {ACCESS_UNVERIFIED_MESSAGE}
+                    </p>
+                    <p
+                      className={
+                        collapsed ? "sr-only" : "mt-1 text-[11px] leading-snug text-[var(--dcc-partial-fg)]"
+                      }
+                    >
+                      {ACCESS_UNVERIFIED_DETAIL}
+                    </p>
+                  </div>
+                ) : null}
+                {groups.map((group, index) => (
+                  <div key={group.id} className="space-y-1">
+                    {collapsed ? (
+                      /* En estrecha el titulo del grupo no cabe. Lo sustituye una
+                         linea entre grupos: separa sin fingir una etiqueta
+                         recortada a tres letras. El nombre del grupo sigue
+                         estando en la paleta (Cmd+K), que no se estrecha. */
+                      index > 0 ? (
+                        <hr className="mx-2 border-[var(--nav-border)]" aria-hidden="true" />
+                      ) : null
+                    ) : (
+                      <h2 className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--nav-fg-muted)]">
+                        {group.label}
+                      </h2>
+                    )}
+                    {group.items.map((item) => (
+                      <NavLink key={item.href} item={item} collapsed={collapsed} onNavigate={onClose} />
+                    ))}
+                  </div>
+                ))}
+              </nav>
+            )}
+          </div>
+
+          {/* Pie fijo, fuera del scroll: "Cerrar sesión" siempre visible (QA P1-4).
+              El boton flotante del Concierge vive a la DERECHA para no taparlo. */}
+          <div
+            data-testid="dealer-sidebar-footer"
+            className={cn("shrink-0 border-t border-[var(--nav-border)] py-3", collapsed ? "px-2" : "px-3")}
+          >
+            <DealerTenantActivo collapsed={collapsed} />
+            <DealerLogoutButton collapsed={collapsed} />
+          </div>
+        </aside>
+      </div>
     </>
   );
 }

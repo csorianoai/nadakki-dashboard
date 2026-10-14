@@ -44,7 +44,7 @@ describe("D2b guion vs app", () => {
 
   it("los textos que el spec busca para detectar la Suite existen en la Suite", () => {
     expect(fuente("components/forge/layout/ForgeGlobalCoresSidebar.tsx")).toContain(`>${SUITE_OPERATIVA}<`);
-    expect(fuente("components/forge/layout/forge-global-sidebar-nav.ts")).toContain(`label: "${LEGAL_HUB}"`);
+    expect(fuente("lib/navigation.ts")).toContain(`label: "${LEGAL_HUB}"`);
   });
 
   it("las metricas de plataforma de Inicio llevan el testid y van tras esPlataforma", () => {

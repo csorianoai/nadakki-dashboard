@@ -146,7 +146,7 @@ describe("dealer private inventory contract", () => {
     render(<DealerInventoryPage />, { wrapper: wrapper(testClient()) });
     const lista = await screen.findByTestId("inventario-lista");
     expect(lista).toHaveAttribute("data-cantidad", "2");
-    expect(lista).toHaveTextContent("Estado: BORRADOR");
+    expect(lista).toHaveTextContent("Estado: Borrador");
     expect(lista).toHaveTextContent("Dominio AB123CD");
 
     fireEvent.change(screen.getByRole("searchbox", { name: /Buscar/ }), { target: { value: "s-2" } });
@@ -164,5 +164,32 @@ describe("dealer private inventory contract", () => {
 
     fireEvent.change(screen.getByRole("searchbox", { name: /Buscar/ }), { target: { value: "ferrari" } });
     expect(screen.getByTestId("inventario-sin-resultados")).toBeInTheDocument();
+  });
+
+  test("los estados se ven en español llano; uno desconocido se muestra tal cual", async () => {
+    entitlement({ allowed: true, reason_code: "ALLOWED" });
+    mockedApiFetch.mockResolvedValue(
+      jsonResponse({
+        vehicles: [
+          { id: "a", make: "Toyota", model: "Hilux", year: 2021, status: "disponible" },
+          { id: "b", make: "Peugeot", model: "208", year: 2018, status: "draft" },
+          { id: "c", make: "Fiat", model: "Cronos", year: 2020, status: "en_transito" },
+        ],
+      }),
+    );
+    render(<DealerInventoryPage />, { wrapper: wrapper(testClient()) });
+    const lista = await screen.findByTestId("inventario-lista");
+    expect(lista).toHaveTextContent("Estado: Disponible");
+    expect(lista).toHaveTextContent("Estado: Borrador");
+    expect(lista).toHaveTextContent("Estado: en_transito");
+    expect(lista.textContent ?? "").not.toMatch(/Estado: (draft|disponible|BORRADOR|DISPONIBLE)\b/);
+
+    const opciones = within(screen.getByRole("combobox", { name: "Estado" }))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(opciones).toEqual(["Todos", "Borrador", "Disponible", "en_transito"]);
+
+    const pantalla = document.body.textContent ?? "";
+    expect(pantalla).not.toMatch(/autoridad|capability|entitlement|reason_code/i);
   });
 });

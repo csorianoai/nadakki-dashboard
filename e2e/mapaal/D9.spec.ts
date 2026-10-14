@@ -302,7 +302,7 @@ test.describe("D9 — Centro Operativo dentro del panel del dealer", () => {
       await expect(boton).toBeVisible();
       await expect(boton).toHaveText(plantilla.etiqueta);
       await expect(boton).toHaveAttribute("href", plantilla.ruta);
-      await expect(boton).toHaveAttribute("download", "");
+      await expect(boton).toHaveAttribute("download", plantilla.ruta.split("/").pop()!);
       await expect(boton).toHaveAttribute("data-version", plantilla.version);
       await expect(page.getByTestId(TESTIDS.bloque(bloque.id)).getByText(plantilla.descripcion)).toBeVisible();
 

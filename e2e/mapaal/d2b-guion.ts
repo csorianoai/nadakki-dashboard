@@ -13,9 +13,10 @@ export const TENANT_QA = "9a9a0001-0000-4000-8000-000000000001";
 export const RUTA_DEALER = "/autos/dealer";
 export const RUTA_TENANTS = "/tenants";
 
-/** Lo que solo pinta la Suite (`ForgeGlobalCoresSidebar`, `forge-global-sidebar-nav`). */
+/** Lo que solo pinta la Suite (`ForgeGlobalCoresSidebar`; secciones en `lib/navigation.ts`). */
 export const SUITE_OPERATIVA = "Suite operativa";
-export const LEGAL_HUB = "Legal Hub";
+/** Sección Legal de la Suite (antes «Legal Hub»; rediseño de navegación 2026-10-13). */
+export const LEGAL_HUB = "Legal";
 
 /** Etiqueta de la tarjeta de plataforma en Inicio (`app/page.tsx`). */
 export const DOMINIOS_CATALOGO = "Dominios (catálogo)";

@@ -55,8 +55,9 @@ it("sin precio guardado no ofrece publicar y dice que falta", () => {
 it("con precio en BORRADOR publica con un PATCH de solo status y avisa", async () => {
   fetchMock.mockResolvedValue(respuesta(200, {}));
   render(<VehicleEditPanel ficha={{ ...BASE, price_amount: "100" }} context={CONTEXT} onSaved={onSaved} />);
+  expect(screen.getByTestId("vehicle-publicar")).toHaveTextContent("Pasar a Disponible");
   fireEvent.click(screen.getByTestId("vehicle-publicar"));
-  await waitFor(() => expect(screen.getByTestId("vehicle-edit-ack")).toHaveTextContent("quedó DISPONIBLE"));
+  await waitFor(() => expect(screen.getByTestId("vehicle-edit-ack")).toHaveTextContent("quedó Disponible"));
   expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ status: "disponible" });
   expect(onSaved).toHaveBeenCalled();
 });
@@ -137,4 +138,18 @@ it("volver al valor guardado sin guardar tambien rehabilita publicar", () => {
   expect(screen.getByTestId("vehicle-publicar")).toBeDisabled();
   fireEvent.change(stock, { target: { value: "S-1" } });
   expect(screen.getByTestId("vehicle-publicar")).toBeEnabled();
+});
+
+it("un error sin campo asignado muestra el código plegado y sin anidar <details> en <p>", async () => {
+  const errores = jest.spyOn(console, "error").mockImplementation(() => {});
+  fetchMock.mockResolvedValue(respuesta(500, { detail: { reason_code: "CODIGO_DESCONOCIDO_X" } }));
+  render(<VehicleEditPanel ficha={BASE} context={CONTEXT} onSaved={onSaved} />);
+  fireEvent.change(screen.getByRole("textbox", { name: "Número de stock" }), { target: { value: "S-9" } });
+  fireEvent.submit(screen.getByTestId("vehicle-edit-form"));
+  const aviso = await screen.findByTestId("vehicle-edit-error");
+  expect(aviso.tagName).toBe("DIV");
+  expect(aviso.querySelector("details")).not.toBeNull();
+  expect(aviso).toHaveAttribute("data-reason-code", "CODIGO_DESCONOCIDO_X");
+  expect(errores).not.toHaveBeenCalled();
+  errores.mockRestore();
 });

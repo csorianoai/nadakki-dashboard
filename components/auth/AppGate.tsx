@@ -5,6 +5,8 @@ import OnboardingAgent from "@/components/ai/OnboardingAgent";
 import { ProtectedRoute } from "@/components/forge/auth/ProtectedRoute";
 import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
 import { isAutosConsumerPublicPath, isDealerChromePath } from "@/lib/autos-portal/routes";
+import { ContableChrome } from "@/components/dealer/ContableChrome";
+import { isDealerReachableSuitePath } from "@/components/dealer/DealerSuiteGate";
 
 function getEffectivePathname(pathname: string | null): string {
   if (pathname) {
@@ -52,7 +54,24 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <ProtectedRoute>{children}</ProtectedRoute>;
   }
 
+  // Contabilidad: la abre el menu del dealer. Un usuario de dealer la ve dentro
+  // de su panel; el resto, dentro de la Suite como siempre (ContableChrome).
+  if (isDealerReachableSuitePath(pathname)) {
+    return (
+      <ProtectedRoute>
+        <ContableChrome>{children}</ContableChrome>
+      </ProtectedRoute>
+    );
+  }
+
   if (pathname.startsWith("/cockpit")) {
+    return <ProtectedRoute>{children}</ProtectedRoute>;
+  }
+
+  // Realtor OS: autenticado, pero con su propio armazón (DL10A: barra de centros, Career Director, Smart
+  // Calendar), que pinta app/realtor/layout.tsx. Dentro del GlobalForgeAppShell se apilaba sobre el
+  // menú genérico de la Suite (decisión de César, 2026-10-12, tarea RE-SHELL).
+  if (pathname === "/realtor" || pathname.startsWith("/realtor/")) {
     return <ProtectedRoute>{children}</ProtectedRoute>;
   }
 

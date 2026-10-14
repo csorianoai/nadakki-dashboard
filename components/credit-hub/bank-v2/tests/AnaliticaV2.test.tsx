@@ -40,7 +40,20 @@ describe("Analitica v2 (B5)", () => {
     const texto = (container.textContent ?? "").replace(/[\u00a0\u202f]/g, " ");
     expect(texto).toContain("RD$284.2 M");
     expect(texto).toContain("3.4 %");
+    expect(texto).toContain("61.6 %");
+    expect(texto).toContain("Incumplimiento previsto");
+    expect(texto).not.toMatch(/Default predicho|\d%/);
     expect(container.textContent).not.toMatch(/RD\$94|score_lt_600|motor score|Error HTTP|DEMO|REAL/);
+  });
+
+  it("un solo caso: singular ('1 caso estimado'); varios: plural", async () => {
+    defaultCount = 1;
+    const uno = pintar();
+    expect(await screen.findByText("1 caso estimado")).toBeInTheDocument();
+    uno.unmount();
+    defaultCount = 12;
+    pintar();
+    expect(await screen.findByText("12 casos estimados")).toBeInTheDocument();
   });
 
   it("default extremo: no pinta la cifra", async () => {

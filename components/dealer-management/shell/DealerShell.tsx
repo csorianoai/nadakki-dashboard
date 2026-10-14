@@ -16,8 +16,9 @@ import { DEALER_NAV_CAPABILITY_KEYS, visibleDealerNavGroups } from "./dealer-nav
 import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
+import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
 import { DccThemeProvider, useDccThemeContext } from "@/components/dcc/DccThemeContext";
-import { dealerShellThemeStyle } from "./dealer-shell-theme";
+import { DEALER_THEME_STORAGE_KEY, dealerShellThemeStyle } from "./dealer-shell-theme";
 import { dealerFontVariables } from "./DealerFonts";
 
 /** `reason_code` de un error de acceso, sin depender de la clase que lo lanza. */
@@ -64,7 +65,11 @@ function reasonCodeOfError(error: unknown): string | null {
 export function DealerShell({ children }: { children: ReactNode }) {
   return (
     <AutosAuthProvider>
-      <DccThemeProvider>
+      {/* El tema SI se recuerda al recargar (a diferencia del colapso de la
+          barra): el primer render sigue en claro y la preferencia se aplica
+          en un efecto de layout; ver DccThemeContext. La clave solo la usa
+          este shell: DccShell sigue en memoria. */}
+      <DccThemeProvider storageKey={DEALER_THEME_STORAGE_KEY}>
         <DealerShellChrome>{children}</DealerShellChrome>
       </DccThemeProvider>
     </AutosAuthProvider>
@@ -226,9 +231,7 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
         : {
             estado: salida.estado,
             titulo: "No se pudo leer el dealer de tu sesión",
-            detalle: salida.reason_code
-              ? `reason_code: ${salida.reason_code}`
-              : `El backend respondió HTTP ${salida.status} sin reason_code.`,
+            detalle: "Probá de nuevo en unos minutos. Si sigue igual, avisá a soporte.",
             codigo: salida.reason_code,
           };
     }
@@ -303,6 +306,11 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
               <p className="font-semibold">{avisoDeContexto.titulo}</p>
               {avisoDeContexto.detalle ? (
                 <p className="mt-1 text-[var(--dcc-partial-fg)]">{avisoDeContexto.detalle}</p>
+              ) : null}
+              {avisoDeContexto.codigo ? (
+                <DetalleTecnico>
+                  <p>Código para soporte: {avisoDeContexto.codigo}</p>
+                </DetalleTecnico>
               ) : null}
             </section>
           ) : (

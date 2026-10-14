@@ -17,6 +17,7 @@
  * del backend se traduce al campo que hay que corregir (`MOTIVO_EN_CAMPO`).
  */
 
+import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { localeDeTenant } from "@/lib/dealer-management/formato";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
@@ -193,7 +194,7 @@ export function VehicleManualForm({
       <section data-testid="vehicle-price-fields" className="space-y-3 rounded-xl border border-nk-border bg-nk-surface p-4">
         <h2 className="font-manrope text-lg font-bold text-nk-fg">Precio, dominio y stock</h2>
         <p className="text-sm text-nk-fg-muted">
-          Sin precio el vehículo puede quedar en BORRADOR; para pasarlo a DISPONIBLE el precio es obligatorio.
+          Sin precio el vehículo puede quedar en Borrador; para pasarlo a Disponible el precio es obligatorio.
         </p>
         <div className="grid gap-3 md:grid-cols-2">{PRECIO.map(renderText)}</div>
       </section>
@@ -249,7 +250,9 @@ export function VehicleManualForm({
           className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg"
         >
           No se pudo guardar el vehículo. Revisá los datos e intentá de nuevo.
-          <span className="mt-1 block text-xs text-nk-fg-muted">Código para soporte: {errorReasonCode}</span>
+          <DetalleTecnico>
+            <span className="block">Código para soporte: {errorReasonCode}</span>
+          </DetalleTecnico>
         </div>
       ) : null}
 

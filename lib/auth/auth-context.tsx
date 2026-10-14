@@ -16,6 +16,7 @@ import { tokenStorage } from "./token-storage";
 import { scheduleProactiveRefresh, cancelProactiveRefresh } from "./token-refresh";
 import { clearWizardDraftStorage } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 import { clearDealerAccessContextFully } from "@/lib/dealer/access-context";
+import { PANEL_BANCO_V2 } from "@/lib/credit-hub/bank/panel-v2-por-defecto";
 
 // ── localStorage keys that must stay in sync with JWT claims ──────────────
 /** JWT claim → localStorage keys. TEST HOOK: exported for executable tests (C2). */
@@ -69,14 +70,14 @@ export function clearLocalStorage() {
 const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
   platform_superadmin: "/",
   tenant_admin: "/",
-  admin: "/credit-hub/bank",
+  admin: PANEL_BANCO_V2,
   sic_admin: "/sic",
   legal_admin: "/legal-hub",
   marketing_admin: "/marketing",
-  credit_admin: "/credit-hub/bank",
+  credit_admin: PANEL_BANCO_V2,
   dealer: "/autos/dealer",
-  bank_analyst: "/credit-hub/bank",
-  banker: "/credit-hub/bank",
+  bank_analyst: PANEL_BANCO_V2,
+  banker: PANEL_BANCO_V2,
 };
 
 /** First matching role wins; credit-hub is intentionally not used (feature-flag off). */
@@ -93,12 +94,15 @@ const POST_LOGIN_ROLE_PRIORITY = [
   "banker",
 ] as const;
 
+/**
+ * Los roles de banco (credit_admin, banker, bank_analyst, y `admin`, cuyo
+ * destino es el banco) aterrizan siempre en /credit-hub/bank-v2: es el banco
+ * (una sola interfaz). Superadmin y dealer conservan su destino.
+ */
 export function getPostLoginRedirectPath(roles: RoleInfo[]): string {
   const keys = new Set(roles.map((r) => r.role_key));
   for (const roleKey of POST_LOGIN_ROLE_PRIORITY) {
-    if (keys.has(roleKey)) {
-      return POST_LOGIN_REDIRECT_BY_ROLE[roleKey] ?? "/";
-    }
+    if (keys.has(roleKey)) return POST_LOGIN_REDIRECT_BY_ROLE[roleKey] ?? "/";
   }
   return "/";
 }

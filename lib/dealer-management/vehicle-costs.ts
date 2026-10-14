@@ -22,11 +22,10 @@
  *
  * No hay GET de la lista de costos: solo el total por moneda. La marca de
  * saldo inicial es `is_opening` (PEV-COST-RECORDED). Objetivo contable: asiento
- * contra 3020 (Saldos iniciales) en vez de 2010 (Proveedores). OJO: hoy el
- * backend (nadakki-ai-suite, `CostIn` en vehicle_economics_router.py) NO declara
- * `is_opening` y lo ignora sin error, asi que el asiento sigue yendo a 2010.
- * Solo viaja si esta tildada y solo por /costs; una reparacion es siempre una
- * compra nueva. No exponer la casilla en la UI hasta que el backend lo acepte.
+ * contra 3020 (Saldos iniciales) en vez de 2010 (Proveedores). El
+ * backend (`CostIn`, nadakki-ai-suite #1679) ya acepta `is_opening` y lo rechaza
+ * junto con `repair`. Solo viaja si esta tildada y solo por /costs; una
+ * reparacion es siempre una compra nueva.
  *
  * La moneda sale del tenant (`localeDeTenant`, #517) y nunca se escribe a mano.
  */
@@ -70,9 +69,6 @@ export const COST_TYPE_CHECK = new Set([
 
 export const COST_TYPE_REPAIR = "repair";
 
-/** Obsoleto: la UI deja de usarlo en la PARTE 2/3 y se borra en la 3/3. */
-export const COST_PENDING_FIELDS = [{ name: "is_opening", label: "Gasto de apertura" }] as const;
-
 export type CostForm = {
   cost_type: string;
   amount: string;
@@ -102,7 +98,7 @@ export function esReparacion(costType: string): boolean {
 /** `amount` viaja como texto: el patron del contrato lo acepta y no pierde el decimal. */
 export function validateCostForm(form: CostForm, currency: string | null): CostFormErrors {
   const errors: CostFormErrors = {};
-  if (!currency) errors.currency = "Falta la moneda funcional del tenant. No se puede registrar el costo.";
+  if (!currency) errors.currency = "Falta configurar la moneda de tu concesionario. No se puede registrar el costo.";
 
   const type = form.cost_type.trim();
   if (!COST_TYPE_CHECK.has(type)) errors.cost_type = "Elegí un tipo de costo del catálogo.";
@@ -138,8 +134,8 @@ export function incurredAtIso(fecha: string): string {
 }
 
 /**
- * Cuerpo de `CostIn`. Rechaza `repair`. `is_opening` solo viaja si esta tildada;
- * el backend actual lo ignora (no cambia la cuenta contra 2010 todavia).
+ * Cuerpo de `CostIn`. Rechaza `repair`. `is_opening` solo viaja si esta tildada
+ * (el asiento va contra 3020 en vez de 2010).
  */
 export function costInPayload(form: CostForm, currency: string): Record<string, unknown> {
   const cost_type = form.cost_type.trim();

@@ -13,6 +13,7 @@ import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import type { AgenteSugerenciasResponse, PeriodoContable, SugerenciaFinanciera } from "@/types/contable";
 import { cn } from "@/lib/utils";
+import { opcionPeriodo } from "@/lib/contable/periodo-nombre";
 
 function scoreColor(score: number): string {
   if (score >= 70) return "text-emerald-400";
@@ -105,7 +106,7 @@ export function AgenteFinancieroClient() {
           label="Periodo a analizar"
           value={periodoId}
           onChange={(e) => setPeriodoId(e.target.value)}
-          options={periodos.map((p) => ({ value: p.id, label: `${p.label} (${p.status})` }))}
+          options={periodos.map((p) => ({ value: p.id, label: opcionPeriodo(p) }))}
         />
       </div>
 

@@ -92,7 +92,17 @@ describe("capability y estado inicial", () => {
 
   it("el alta nace en BORRADOR y el label no se escribe en la pantalla", () => {
     expect(VEHICLE_INITIAL_STATUS).toBe("draft");
-    expect(VEHICLE_STATUS_LABEL[VEHICLE_INITIAL_STATUS]).toBe("BORRADOR");
+    expect(VEHICLE_STATUS_LABEL[VEHICLE_INITIAL_STATUS]).toBe("Borrador");
+  });
+
+  it("los estados se leen en español llano, con mayuscula solo al inicio", () => {
+    expect(VEHICLE_STATUS_LABEL).toEqual({
+      draft: "Borrador",
+      disponible: "Disponible",
+      reservado: "Reservado",
+      vendido: "Vendido",
+      archivado: "Archivado",
+    });
   });
 });
 

@@ -16,6 +16,7 @@
  * campo que hay que corregir con la misma tabla que el alta.
  */
 
+import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
 import { useMemo, useState, type FormEvent } from "react";
 import { AccessApiError } from "@/lib/access/client";
 import type { DealerVehicleStatusRow } from "@/lib/dealer/vehicle-status";
@@ -117,7 +118,7 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
 
   function publicar() {
     if (!context || sinGuardar) return;
-    void correr(() => pasarADisponible(context, ficha.id, nuevaClave()), "El vehículo quedó DISPONIBLE.");
+    void correr(() => pasarADisponible(context, ficha.id, nuevaClave()), "El vehículo quedó Disponible.");
   }
 
   return (
@@ -163,13 +164,13 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
               data-testid="vehicle-publicar"
               className={BOTON}
             >
-              Pasar a DISPONIBLE
+              Pasar a Disponible
             </button>
           ) : null}
         </div>
         {publicable && !conPrecio ? (
           <p data-testid="vehicle-publicar-falta-precio" className="text-sm text-nk-fg-muted">
-            Para pasar a DISPONIBLE primero cargá el precio y guardá.
+            Para pasar a Disponible primero cargá el precio y guardá.
           </p>
         ) : null}
         {publicable && conPrecio && sinGuardar ? (
@@ -179,10 +180,12 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
         ) : null}
       </form>
       {codigo && !motivo ? (
-        <p role="alert" data-testid="vehicle-edit-error" data-reason-code={codigo} className="text-sm text-nk-fg">
+        <div role="alert" data-testid="vehicle-edit-error" data-reason-code={codigo} className="text-sm text-nk-fg">
           No se pudo guardar. Revisá los datos e intentá de nuevo.
-          <span className="mt-1 block text-xs text-nk-fg-muted">Código para soporte: {codigo}</span>
-        </p>
+          <DetalleTecnico>
+            <span className="block">Código para soporte: {codigo}</span>
+          </DetalleTecnico>
+        </div>
       ) : null}
       {ack ? (
         <p role="status" data-testid="vehicle-edit-ack" className="text-sm font-semibold text-nk-fg">
