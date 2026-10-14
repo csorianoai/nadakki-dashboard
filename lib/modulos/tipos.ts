@@ -26,6 +26,8 @@ export type ItemMenu = {
   keywords?: string[];
   /** Una línea, en español, de qué hace la página (≤ 110 caracteres). La muestran las tarjetas de la pantalla del grupo. */
   descripcion?: string;
+  /** Ruta aprobada que aún no tiene página (NavItem.pronto): el menú la pinta como «Pronto», sin enlace (href = ""). */
+  pronto?: string;
 };
 
 export type GrupoMenu = {

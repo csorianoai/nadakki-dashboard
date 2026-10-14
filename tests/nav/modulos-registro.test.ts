@@ -12,7 +12,9 @@ import { REALTOR_CENTERS } from "@/lib/realtor/centers";
 const rol = (role_key: string, core_name = "credit"): RoleInfo => ({ core_name, role_key, display_name: role_key });
 const TODOS = ["autos", "credit", "marketing", "accounting", "legal", "projects", "sic", "platform"];
 
-const hrefs = (m: (typeof MODULOS)[number]) => m.menu.flatMap((g) => g.items.map((i) => i.href));
+const hrefs = (m: (typeof MODULOS)[number]) => m.menu.flatMap((g) => g.items.filter((i) => i.href).map((i) => i.href));
+/** Filas «Pronto» (sin enlace): su ruta aprobada también debe caer en el módulo. */
+const pronto = (m: (typeof MODULOS)[number]) => m.menu.flatMap((g) => g.items.filter((i) => i.pronto).map((i) => i.pronto as string));
 const bajo = (r: string, p: string) => r === p || r.startsWith(`${p}/`);
 const modulo = (id: string) => MODULOS.find((m) => m.id === id)!;
 
@@ -52,6 +54,7 @@ describe("(1) los ocho módulos", () => {
         const compartida = (m.compartidas ?? []).some((p) => bajo(ruta, p));
         expect([m.id, h, propio || compartida]).toEqual([m.id, h, true]);
       }
+      for (const h of pronto(m)) expect([m.id, h, moduloDeRuta(sinQuery(h))?.id === m.id]).toEqual([m.id, h, true]);
     }
     expect(modulo("credito").compartidas).toEqual(["/autos/dealer/credito"]);
   });
