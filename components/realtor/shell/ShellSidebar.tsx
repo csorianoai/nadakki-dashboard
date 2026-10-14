@@ -18,16 +18,19 @@ const CHIP: React.CSSProperties = {
 /** «Pronto»: texto pequeño y apagado, sin borde ni grupo propio. */
 const SOON_STYLE: React.CSSProperties = { marginLeft: "auto", fontSize: 10.5, fontWeight: 600, color: RT.navMuted };
 
+/** Career Director conserva su testid histórico (lo afirma career-director.spec.ts). */
+const testidOf = (c: RealtorCenter) => (c.id === "career-director" ? "career-director" : `center-${c.id}`);
+
 function CenterItem({ c, current }: { c: RealtorCenter; current: boolean }) {
   if (!c.href) {
     return (
-      <div data-testid={`center-${c.id}`} data-center-state="soon" aria-disabled="true" style={{ ...ITEM, opacity: 0.6, cursor: "not-allowed" }}>
+      <div data-testid={testidOf(c)} data-center-state="soon" aria-disabled="true" style={{ ...ITEM, opacity: 0.6, cursor: "not-allowed" }}>
         <span>{c.label}</span><span data-testid="soon-mark" style={SOON_STYLE}>{SOON_MARK}</span>
       </div>
     );
   }
   return (
-    <Link href={c.href} data-testid={`center-${c.id}`} data-center-state="live" aria-current={current ? "page" : undefined}
+    <Link href={c.href} data-testid={testidOf(c)} data-center-state="live" aria-current={current ? "page" : undefined}
       style={{ ...ITEM, background: current ? "rgba(111, 211, 220, 0.2)" : "transparent", borderColor: current ? "rgba(111, 211, 220, 0.4)" : "transparent" }}>
       {c.label}
     </Link>

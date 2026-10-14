@@ -51,7 +51,7 @@ it("los centros sin href dicen «Próximamente» según el registro y el filtro 
   render(<RealtorShell><p>contenido</p></RealtorShell>);
   await screen.findByTestId("shell-sidebar");
   for (const c of REALTOR_CENTERS) {
-    const el = screen.getByTestId(`center-${c.id}`);
+    const el = screen.getByTestId(c.id === "career-director" ? "career-director" : `center-${c.id}`);
     if (c.href) expect(el).toHaveAttribute("href", c.href);
     else expect(el).toHaveTextContent("Pronto");
   }
