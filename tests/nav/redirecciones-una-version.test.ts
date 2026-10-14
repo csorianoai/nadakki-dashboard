@@ -182,11 +182,12 @@ describe("bank-v2 es el banco", () => {
   });
 
   it("/credit/:id no se traga las otras pantallas de /credit", () => {
-    expect(seguir("/credit/new").final).toBe("/credit-hub/dealer/applications/new");
+    // El crédito del concesionario vive ahora en Dealer OS (PR credito-dealer).
+    expect(seguir("/credit/new").final).toBe("/autos/dealer/credito/solicitudes/nueva");
     expect(seguir("/credit").final).toBe("/credit-hub");
-    expect(seguir("/credit/dealer").final).toBe("/credit-hub/dealer");
+    expect(seguir("/credit/dealer").final).toBe("/autos/dealer/credito");
     expect(seguir("/credit/applications/new").final).toBe("/credit/applications/new");
-    expect(seguir("/credit/status/APP-7").final).toBe("/credit-hub/dealer/applications/APP-7");
+    expect(seguir("/credit/status/APP-7").final).toBe("/autos/dealer/credito/solicitudes/APP-7");
   });
 
   it("bank-v2 no redirige a ningún sitio", () => {
@@ -209,9 +210,9 @@ describe("Dealer OS, consola antigua y páginas vacías", () => {
     expect(existePagina(nuevo)).toBe(true);
   });
 
-  it("no toca /credit-hub/dealer/** (lo hace otro PR)", () => {
-    expect(seguir("/credit-hub/dealer").saltos).toEqual(["/credit-hub/dealer"]);
-    expect(seguir("/credit-hub/dealer/applications").saltos).toEqual(["/credit-hub/dealer/applications"]);
+  it("/credit-hub/dealer/** ya lleva a Dealer OS (PR credito-dealer)", () => {
+    expect(seguir("/credit-hub/dealer").saltos).toEqual(["/credit-hub/dealer", "/autos/dealer/credito"]);
+    expect(seguir("/credit-hub/dealer/applications").final).toBe("/autos/dealer/credito/solicitudes");
   });
 });
 

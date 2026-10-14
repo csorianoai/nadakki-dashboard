@@ -107,8 +107,9 @@ describe("(2) cada usuario ve solo lo suyo", () => {
     const banco = hrefs(ver([rol("bank_analyst")], ["credit"]).find((s) => s.id === "credit-hub")!.children);
     const dealer = hrefs(ver([rol("dealer")], ["credit"]).find((s) => s.id === "credit-hub")!.children);
     expect(banco).toContain("/credit-hub/bank-v2/solicitudes");
-    expect(banco.some((h) => h.startsWith("/credit-hub/dealer"))).toBe(false);
-    expect(dealer).toContain("/credit-hub/dealer/applications");
+    expect(banco.some((h) => h.startsWith("/credit-hub/dealer") || h.startsWith("/autos/dealer/credito"))).toBe(false);
+    // El crédito del concesionario vive en Dealer OS (PR 2 "una sola interfaz").
+    expect(dealer).toContain("/autos/dealer/credito/solicitudes");
     expect(dealer.some((h) => h.startsWith("/credit-hub/bank"))).toBe(false);
   });
 
@@ -133,7 +134,7 @@ describe("(2) cada usuario ve solo lo suyo", () => {
     expect(ids(ver([rol("platform_superadmin", "platform")], []))).toEqual(expect.arrayContaining(["credit-hub", "marketing-hub", "legal-hub"]));
     // dentro de un módulo suyo, tenant_admin ve banco y concesionario (bypass de rol, no de módulo)
     const credito = hrefs(ver(ta, ["credit"]).find((s) => s.id === "credit-hub")!.children);
-    expect(credito).toEqual(expect.arrayContaining(["/credit-hub/bank-v2", "/credit-hub/dealer"]));
+    expect(credito).toEqual(expect.arrayContaining(["/credit-hub/bank-v2", "/autos/dealer/credito"]));
     expect(credito.some((h) => h.startsWith("/sic"))).toBe(false);
   });
 

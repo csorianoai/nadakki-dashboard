@@ -79,7 +79,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
       const lang = forgeToastLangFromLocale(tenantConfig.locale);
       const copy = forgeWizardToasts(lang);
       toast.success(copy.requestSubmitted(formatToastApplicationId(r.application_id)), { duration: 4000 });
-      router.push(`/credit-hub/dealer/applications/new/complete?id=${encodeURIComponent(r.application_id)}`);
+      router.push(`/autos/dealer/credito/solicitudes/nueva/completa?id=${encodeURIComponent(r.application_id)}`);
     } catch {
       /* submitError surfaced below */
     }
@@ -100,7 +100,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           <button type="button" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ minHeight: 44 }} onClick={() => setExitOpen(true)}>
             ← Volver al panel
           </button>
-          <Link href="/credit-hub/dealer/applications" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ textDecoration: "none", minHeight: 44 }}>
+          <Link href="/autos/dealer/credito/solicitudes" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ textDecoration: "none", minHeight: 44 }}>
             Mis solicitudes
           </Link>
         </div>
@@ -195,7 +195,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
               <button type="button" className="ch-btn ch-btn-ghost" onClick={() => setExitOpen(false)}>
                 Continuar
               </button>
-              <button type="button" className="ch-btn ch-btn-secondary" onClick={() => router.push("/credit-hub/dealer")}>
+              <button type="button" className="ch-btn ch-btn-secondary" onClick={() => router.push("/autos/dealer/credito")}>
                 Salir sin guardar
               </button>
               <button
@@ -204,7 +204,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
                 onClick={() => {
                   saveDraftToStorage();
                   setExitOpen(false);
-                  router.push("/credit-hub/dealer");
+                  router.push("/autos/dealer/credito");
                 }}
               >
                 Guardar y salir

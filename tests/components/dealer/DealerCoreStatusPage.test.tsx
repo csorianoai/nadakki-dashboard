@@ -51,7 +51,9 @@ describe("Estado de modulos", () => {
   it("los modulos que rebotan no aparecen aunque el plan los permita", () => {
     responder(SI);
     render(<DealerCoreStatusPage />);
-    for (const label of ["Dealer-Bank", "Solicitudes", "Marketing"]) expect(tarjeta(label)).toBeUndefined();
+    for (const label of ["Dealer-Bank", "Marketing"]) expect(tarjeta(label)).toBeUndefined();
+    // El crédito ya vive dentro de Dealer OS (/autos/dealer/credito/**): no rebota y se muestra.
+    expect(within(tarjeta("Solicitudes")!).getByRole("link")).toHaveAttribute("href", "/autos/dealer/credito/solicitudes");
     for (const link of screen.getAllByRole("link")) expect(link.getAttribute("href")).not.toMatch(/^\/(credit-hub|marketing)/);
   });
 

@@ -8,6 +8,10 @@
  * exige (`PRICE_REQUIRED_FOR_DISPONIBLE`) y un boton que siempre falla no ayuda.
  * Sin precio se dice que falta, en vez de esconder la accion.
  *
+ * "Ya guardado" quiere decir eso: con cualquier campo cambiado y sin guardar
+ * --por ejemplo el precio borrado en pantalla-- el boton queda deshabilitado y
+ * se pide guardar primero. Publicar usaria el precio guardado, no el que se ve.
+ *
  * Errores en español junto al campo; el `reason_code` del backend se traduce al
  * campo que hay que corregir con la misma tabla que el alta.
  */
@@ -23,6 +27,7 @@ import {
   cambiosDeEdicion,
   formDeFicha,
   guardarEdicion,
+  hayCambiosSinGuardar,
   pasarADisponible,
   validarEdicion,
 } from "@/lib/dealer-management/vehicle-edit";
@@ -79,6 +84,7 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
 
   const publicable = ESTADOS_PUBLICABLES.has(ficha.status ?? "");
   const conPrecio = Boolean(ficha.price_amount);
+  const sinGuardar = hayCambiosSinGuardar(form, original);
 
   async function correr(accion: () => Promise<unknown>, exito: string) {
     if (!context) return;
@@ -111,7 +117,7 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
   }
 
   function publicar() {
-    if (!context) return;
+    if (!context || sinGuardar) return;
     void correr(() => pasarADisponible(context, ficha.id, nuevaClave()), "El vehículo quedó Disponible.");
   }
 
@@ -150,7 +156,14 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
             {busy ? "Guardando…" : "Guardar cambios"}
           </button>
           {publicable && conPrecio ? (
-            <button type="button" onClick={publicar} disabled={busy || !context} data-testid="vehicle-publicar" className={BOTON}>
+            <button
+              type="button"
+              onClick={publicar}
+              disabled={busy || !context || sinGuardar}
+              aria-describedby={sinGuardar ? "vehicle-publicar-sin-guardar" : undefined}
+              data-testid="vehicle-publicar"
+              className={BOTON}
+            >
               Pasar a Disponible
             </button>
           ) : null}
@@ -158,6 +171,11 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
         {publicable && !conPrecio ? (
           <p data-testid="vehicle-publicar-falta-precio" className="text-sm text-nk-fg-muted">
             Para pasar a Disponible primero cargá el precio y guardá.
+          </p>
+        ) : null}
+        {publicable && conPrecio && sinGuardar ? (
+          <p id="vehicle-publicar-sin-guardar" data-testid="vehicle-publicar-sin-guardar" className="text-sm text-nk-fg-muted">
+            Guardá los cambios antes de pasar a Disponible.
           </p>
         ) : null}
       </form>
