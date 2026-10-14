@@ -69,7 +69,7 @@ export function DecisionPanel({
       style={{
         position: sticky ? "sticky" : "static",
         top: 8,
-        maxHeight: sticky ? "calc(100vh - 16px)" : undefined,
+        maxHeight: sticky ? "calc(var(--alto-marco, 100vh) - 16px)" : undefined,
         overflowY: sticky ? "auto" : undefined,
         overflowX: "hidden",
       }}
