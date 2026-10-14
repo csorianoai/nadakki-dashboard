@@ -17,6 +17,7 @@
 import {
   BarChart3,
   BookOpen,
+  Bell,
   Building2,
   Cable,
   Calculator,
@@ -29,9 +30,12 @@ import {
   Landmark,
   Megaphone,
   PackagePlus,
+  Paperclip,
   ListTree,
   ReceiptText,
   Scale,
+  UserPlus,
+  UserRound,
   Users,
   Wallet,
   type LucideIcon,
@@ -90,7 +94,15 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
       { href: "/autos/dealer/credito", label: "Crédito", icon: Landmark, capability: "credit.applications.view" },
       { href: "/autos/dealer/credito/solicitudes", label: "Solicitudes", icon: Building2, capability: "credit.applications.view" },
       { href: "/autos/dealer/credito/solicitudes/nueva?new=1", label: "Nueva solicitud", icon: FilePlus2, capability: "credit.applications.submit" },
+      // Pasos del asistente que el recorrido de 4 pasos no abre (codeudor y documentos) y las dos pantallas
+      // de apoyo del credito (notificaciones y perfil): quedaron huerfanas tras #827 y Dealer Admin (Argentina)
+      // las usa. Los pasos piden la misma capability que "Nueva solicitud" (no se amplia ningun permiso) y no
+      // llevan `?new=1`, para continuar el borrador en curso en lugar de empezar uno nuevo.
+      { href: "/autos/dealer/credito/solicitudes/nueva/codeudor", label: "Nueva solicitud — codeudor", icon: UserPlus, capability: "credit.applications.submit" },
+      { href: "/autos/dealer/credito/solicitudes/nueva/documentos", label: "Nueva solicitud — documentos", icon: Paperclip, capability: "credit.applications.submit" },
       { href: "/autos/dealer/credito/preaprobacion", label: "Preaprobación", icon: Calculator, capability: "credit.applications.view" },
+      { href: "/autos/dealer/credito/notificaciones", label: "Notificaciones", icon: Bell, capability: "credit.applications.view" },
+      { href: "/autos/dealer/credito/perfil", label: "Perfil", icon: UserRound, capability: "credit.applications.view" },
     ],
   },
   {
