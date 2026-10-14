@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation";
 import { DealerWizardFrame } from "@/components/credit-hub/dealer/wizard/DealerWizardFrame";
 import { DealerWizardProvider } from "@/components/forge/credit-hub/dealer/DealerWizardProvider";
 import { DetailSkeleton } from "@/components/credit-hub/primitives";
+import { isDealerWizardCompletePath } from "@/lib/credit-hub/dealer/dealerCreditRoutes";
 
 export function DealerNewApplicationLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  if (pathname?.includes("/applications/new/complete")) {
+  if (isDealerWizardCompletePath(pathname)) {
     return <>{children}</>;
   }
   // Key on the page outlet (not the chrome frame) so Next.js soft navigation

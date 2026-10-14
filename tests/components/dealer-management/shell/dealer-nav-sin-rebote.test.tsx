@@ -16,6 +16,8 @@ jest.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "u-dealer" }
 jest.mock("@/lib/dealer/dealer-context-api", () => ({ fetchMyDealerContext: jest.fn() }));
 
 const fetchMock = fetchMyDealerContext as jest.MockedFunction<typeof fetchMyDealerContext>;
+// El credito del dealer ya no rebota: vive en /autos/dealer/credito/** (PR 2 "una sola interfaz")
+// y sus enlaces viejos de /credit-hub/dealer redirigen alli (next.config.js). Marketing sigue fuera.
 const REBOTABAN = ["/credit-hub/dealer", "/credit-hub/dealer/applications", "/marketing/campaigns"];
 const TODO_PERMITIDO = () => true;
 const visibles = () => visibleDealerNavGroups(TODO_PERMITIDO).flatMap((g) => g.items);
@@ -49,12 +51,13 @@ describe("menu del dealer sin rebotes mudos", () => {
     }
   });
 
-  it("Dealer-Bank, Solicitudes y Marketing no aparecen aunque el plan los permita", () => {
+  it("Dealer-Bank y Marketing no aparecen aunque el plan los permita; el credito si, dentro del panel", () => {
     const labels = visibles().map((i) => i.label);
-    for (const label of ["Dealer-Bank", "Solicitudes", "Marketing"]) expect(labels).not.toContain(label);
+    for (const label of ["Dealer-Bank", "Marketing"]) expect(labels).not.toContain(label);
     for (const href of REBOTABAN) expect(visibles().map((i) => i.href)).not.toContain(href);
-    // El grupo vacio desaparece; Crecimiento conserva Insights. El plan sigue restringiendo.
-    expect(visibleDealerNavGroups(TODO_PERMITIDO).map((g) => g.id)).not.toContain("financiamiento");
+    // Financiamiento vuelve con el credito dentro de Dealer OS; Crecimiento conserva Insights.
+    const financiamiento = visibleDealerNavGroups(TODO_PERMITIDO).find((g) => g.id === "financiamiento");
+    expect(financiamiento?.items.every((i) => i.href.startsWith("/autos/dealer/credito"))).toBe(true);
     expect(labels).toContain("Insights");
     expect(visibleDealerNavGroups((cap) => cap === null).flatMap((g) => g.items).every((i) => i.capability === null)).toBe(true);
   });

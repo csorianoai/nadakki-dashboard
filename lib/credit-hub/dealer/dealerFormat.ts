@@ -1,21 +1,27 @@
 import type { CreditApplication, CreditEvent } from "@/lib/credit-hub/types/creditCore";
 import type { DealerNotificationItem } from "@/lib/credit-hub/types/dealer-views";
 import { formateaMoneda } from "@/lib/dealer-management/formato";
+import {
+  DEALER_CREDIT_PATHS,
+  dealerCreditApplicationHref,
+  dealerCreditWizardHref,
+} from "@/lib/credit-hub/dealer/dealerCreditRoutes";
 
+/** Rutas del crédito del concesionario: viven en Dealer OS (lib/credit-hub/dealer/dealerCreditRoutes.ts). */
 export const DEALER_NAV_ROUTES: Record<string, string> = {
-  inicio: "/credit-hub/dealer",
-  solicitudes: "/credit-hub/dealer/applications",
-  nueva: "/credit-hub/dealer/applications/new/applicant",
-  preaprobacion: "/credit-hub/dealer/preapproval",
-  notificaciones: "/credit-hub/dealer/notifications",
-  perfil: "/credit-hub/dealer/profile",
+  inicio: DEALER_CREDIT_PATHS.inicio,
+  solicitudes: DEALER_CREDIT_PATHS.solicitudes,
+  nueva: dealerCreditWizardHref("applicant"),
+  preaprobacion: DEALER_CREDIT_PATHS.preaprobacion,
+  notificaciones: DEALER_CREDIT_PATHS.notificaciones,
+  perfil: DEALER_CREDIT_PATHS.perfil,
 };
 
 /** Explicit marker for a fresh wizard; drafts resume through an application_id instead. */
 export const DEALER_NEW_APPLICATION_QUERY = "new=1";
 
 export function dealerNewApplicationHref(): string {
-  return `/credit-hub/dealer/applications/new/applicant?${DEALER_NEW_APPLICATION_QUERY}`;
+  return `${dealerCreditWizardHref("applicant")}?${DEALER_NEW_APPLICATION_QUERY}`;
 }
 
 export function pathnameToDealerNavId(pathname: string): string {
@@ -191,7 +197,7 @@ export function eventsToTimeline(events: CreditEvent[]): Array<{ at: string; lab
 export const DEALER_MOBILE_NAV_IDS = ["inicio", "solicitudes", "nueva", "notificaciones", "perfil"] as const;
 
 export function dealerDetailHref(applicationId: string): string {
-  return `/credit-hub/dealer/applications/${encodeURIComponent(applicationId.trim())}`;
+  return dealerCreditApplicationHref(applicationId);
 }
 
 export function isActivePipelineStatus(status: string): boolean {

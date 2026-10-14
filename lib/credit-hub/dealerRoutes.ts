@@ -6,7 +6,10 @@
  * `/credit-hub/dealer/dealer/applications/<id>` (double `dealer` segment → 404).
  */
 
-export const FORGE_DEALER_APPLICATIONS_DETAIL_BASE = "/credit-hub/dealer/applications";
+import { DEALER_CREDIT_PATHS } from "@/lib/credit-hub/dealer/dealerCreditRoutes";
+
+/** Las solicitudes del concesionario viven en Dealer OS (/autos/dealer/credito/solicitudes). */
+export const FORGE_DEALER_APPLICATIONS_DETAIL_BASE = DEALER_CREDIT_PATHS.solicitudes;
 
 /**
  * Absolute (root-relative) URL for a dealer application detail page.
