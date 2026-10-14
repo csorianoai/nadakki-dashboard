@@ -11,6 +11,8 @@ import { BROKER_ROLE, REALTOR_MENU, visibleMenu } from "../../../lib/realtor/men
 
 const B = "http://backend.invalid";
 const THRESHOLD = 0.12;
+/** Misma regla que ShellSidebar: Career Director conserva su testid histórico (career-director.spec.ts). */
+const testidOf = (id: string) => (id === "career-director" ? "career-director" : `center-${id}`);
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/demand_radar.png");
 let fallos = 0;
 test.afterEach(({}, info) => void (info.status !== info.expectedStatus && (fallos += 1)));
@@ -45,7 +47,7 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
   // Estructura esperada: sale de REALTOR_MENU (sin el rol, sin la Bandeja del broker).
   const esperado = visibleMenu([]);
   expect(await side.getByTestId("center-group").allInnerTexts()).toEqual(esperado.map((g) => g.label));
-  const labels = await side.locator('[data-testid^="center-"]:not([data-testid="center-search"]):not([data-testid="center-group"])').allInnerTexts();
+  const labels = await side.locator('[data-testid^="center-"]:not([data-testid="center-search"]):not([data-testid="center-group"]), [data-testid="career-director"]').allInnerTexts();
   expect(labels.map((t) => t.split("\n")[0].trim())).toEqual(esperado.flatMap((g) => g.items.map((i) => i.label)));
   expect(esperado.map((g) => g.label)).toHaveLength(4);
   await expect(side.getByTestId("center-finanzas")).toHaveCount(0);
@@ -53,7 +55,7 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
 
   // Con href enlaza; sin href está deshabilitado, sin ruta, y lleva la marca «Pronto».
   for (const c of esperado.flatMap((g) => g.items)) {
-    const el = side.getByTestId(`center-${c.id}`);
+    const el = side.getByTestId(testidOf(c.id));
     if (c.href) {
       await expect(el).toHaveAttribute("href", c.href);
     } else {
