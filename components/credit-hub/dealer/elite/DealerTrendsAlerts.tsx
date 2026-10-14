@@ -58,7 +58,7 @@ export function DealerTrendsAlerts({
         severity: "low",
         title: `${drafts} borradores sin enviar`,
         body: "Envíalos a bancos para activar la subasta",
-        href: "/credit-hub/dealer/applications/new/applicant",
+        href: "/autos/dealer/credito/solicitudes/nueva/solicitante",
       });
     }
     return list;

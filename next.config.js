@@ -208,11 +208,26 @@ const nextConfig = {
         destination: "/legal/:path*",
         permanent: false,
       },
-      {
-        source: "/credit-hub/dealer/simulator",
-        destination: "/credit-hub/dealer/preapproval",
-        permanent: false,
-      },
+      // Credito del concesionario dentro de Dealer OS (PR 2 "una sola interfaz"):
+      // /credit-hub/dealer/** vive ahora en /autos/dealer/credito/**. Temporales (307)
+      // mientras las paginas viejas sigan en el repo. Orden: la primera que coincide gana.
+      // Misma lista que DEALER_CREDIT_LEGACY_REDIRECTS (lib/credit-hub/dealer/dealerCreditRoutes.ts);
+      // la query se conserva sola.
+      { source: "/credit-hub/dealer/simulator", destination: "/autos/dealer/credito/preaprobacion", permanent: false },
+      { source: "/credit-hub/dealer/applications/new/applicant", destination: "/autos/dealer/credito/solicitudes/nueva/solicitante", permanent: false },
+      { source: "/credit-hub/dealer/applications/new/co-borrower", destination: "/autos/dealer/credito/solicitudes/nueva/codeudor", permanent: false },
+      { source: "/credit-hub/dealer/applications/new/vehicle", destination: "/autos/dealer/credito/solicitudes/nueva/vehiculo", permanent: false },
+      { source: "/credit-hub/dealer/applications/new/documents", destination: "/autos/dealer/credito/solicitudes/nueva/documentos", permanent: false },
+      { source: "/credit-hub/dealer/applications/new/consent", destination: "/autos/dealer/credito/solicitudes/nueva/consentimiento", permanent: false },
+      { source: "/credit-hub/dealer/applications/new/review", destination: "/autos/dealer/credito/solicitudes/nueva/revision", permanent: false },
+      { source: "/credit-hub/dealer/applications/new/complete", destination: "/autos/dealer/credito/solicitudes/nueva/completa", permanent: false },
+      { source: "/credit-hub/dealer/applications/new", destination: "/autos/dealer/credito/solicitudes/nueva", permanent: false },
+      { source: "/credit-hub/dealer/applications/:applicationId", destination: "/autos/dealer/credito/solicitudes/:applicationId", permanent: false },
+      { source: "/credit-hub/dealer/applications", destination: "/autos/dealer/credito/solicitudes", permanent: false },
+      { source: "/credit-hub/dealer/preapproval", destination: "/autos/dealer/credito/preaprobacion", permanent: false },
+      { source: "/credit-hub/dealer/notifications", destination: "/autos/dealer/credito/notificaciones", permanent: false },
+      { source: "/credit-hub/dealer/profile", destination: "/autos/dealer/credito/perfil", permanent: false },
+      { source: "/credit-hub/dealer", destination: "/autos/dealer/credito", permanent: false },
       {
         source: "/credit-hub/bank/queue",
         destination: "/credit-hub/bank-v2/solicitudes",
@@ -221,7 +236,7 @@ const nextConfig = {
       // F2-ROUTE-HYGIENE: permanent redirects for top-level legacy routes
       {
         source: "/credit/new",
-        destination: "/credit-hub/dealer/applications/new",
+        destination: "/autos/dealer/credito/solicitudes/nueva",
         permanent: true,
       },
       {
@@ -245,19 +260,19 @@ const nextConfig = {
       // /credit/dashboard, /credit/[id]/*) are intentionally NOT redirected.
       {
         source: "/credit/dealer/new",
-        destination: "/credit-hub/dealer/applications/new",
+        destination: "/autos/dealer/credito/solicitudes/nueva",
         permanent: false,
       },
       {
         // Exclude KEEP_TEMPORARILY single-segment routes (analytics, real) and the
         // explicit /new rule above so they are not swallowed by the dynamic :id match.
         source: "/credit/dealer/:applicationId((?!analytics|real|new)[^/]+)",
-        destination: "/credit-hub/dealer/applications/:applicationId",
+        destination: "/autos/dealer/credito/solicitudes/:applicationId",
         permanent: false,
       },
       {
         source: "/credit/dealer",
-        destination: "/credit-hub/dealer",
+        destination: "/autos/dealer/credito",
         permanent: false,
       },
       {
@@ -274,7 +289,7 @@ const nextConfig = {
       },
       {
         source: "/credit/status/:applicationId",
-        destination: "/credit-hub/dealer/applications/:applicationId",
+        destination: "/autos/dealer/credito/solicitudes/:applicationId",
         permanent: false,
       },
       // UNA-VERSION (César, una sola interfaz, PR 1): una versión por pantalla. Temporales (307)

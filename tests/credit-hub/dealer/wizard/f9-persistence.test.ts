@@ -36,8 +36,8 @@ describe("F9 wizard persistence", () => {
   test("new application starts clean while an application id remains a resume link", () => {
     const source = readProvider();
     assertFreshApplicationContract(source);
-    expect(dealerNewApplicationHref()).toBe("/credit-hub/dealer/applications/new/applicant?new=1");
-    expect(dealerDetailHref("draft-123")).toBe("/credit-hub/dealer/applications/draft-123");
+    expect(dealerNewApplicationHref()).toBe("/autos/dealer/credito/solicitudes/nueva/solicitante?new=1");
+    expect(dealerDetailHref("draft-123")).toBe("/autos/dealer/credito/solicitudes/draft-123");
   });
 
   test("mutation that lets the stored id re-enter a new application is rejected", () => {
