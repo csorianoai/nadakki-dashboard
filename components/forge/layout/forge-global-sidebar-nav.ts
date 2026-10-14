@@ -174,7 +174,7 @@ function filterNavItems(items: NavItem[], isSuperAdmin: boolean): NavItem[] {
       ...i,
       children: i.children ? filterNavItems(i.children, isSuperAdmin) : undefined,
     }))
-    .filter((i) => i.href || (i.children?.length ?? 0) > 0);
+    .filter((i) => i.href || i.pronto || (i.children?.length ?? 0) > 0);
 }
 
 /** `roles` de la página: role_key exacto o prefijo terminado en `*` ("bank*"). */
@@ -212,7 +212,7 @@ function filterNavItemsForCoreAccess(
     }))
     .filter((i) => {
       if (i.children && i.children.length > 0) return true;
-      if (!i.href) return false;
+      if (!i.href && !i.pronto) return false;
       // El módulo solo lo salta platform_superadmin: es al único al que el backend le da todos los cores
       // (auth_v2_service: superadmin → _get_all_enabled_cores; el resto → tenants.cores_enabled). tenant_admin
       // ve los módulos de SU tenant; dentro de ellos sí ve todas las páginas (bypass de rol, más arriba).
