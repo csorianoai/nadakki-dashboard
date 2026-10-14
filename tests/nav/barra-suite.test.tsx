@@ -69,7 +69,7 @@ describe("(2) migas Inicio › Módulo › Sección › Pantalla", () => {
     expect(etiquetas("/credit-hub/bank-v2")).toEqual(["Inicio", "Banco"]);
     expect(etiquetas("/autos/dealer/finanzas")).toEqual(["Inicio", "Dealer OS", "Finanzas", "Finanzas por vehículo"]);
     expect(etiquetas("/autos/dealer")).toEqual(["Inicio", "Dealer OS"]);
-    expect(etiquetas("/realtor/clientes")).toEqual(["Inicio", "Realtor OS", "Cartera", "Clientes"]);
+    expect(etiquetas("/realtor/clientes")).toEqual(["Inicio", "Realtor OS", "Clientes", "Contactos"]);
   });
 
   test("detalle: la pantalla final es la propia ruta", () => {
