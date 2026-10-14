@@ -15,7 +15,16 @@ import { BarraSuite } from "@/components/nav/BarraSuite";
 import { migasDe } from "@/lib/migas";
 
 let pathname = "/";
-jest.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => ({ replace: jest.fn(), push: jest.fn() }) }));
+jest.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => ({ replace: jest.fn(), push: jest.fn() }) }), {virtual:true});
+jest.mock("next/link", () => ({ __esModule:true, default: ({href,children,...rest}:any) => <a href={href} {...rest}>{children}</a> }), {virtual:true});
+jest.mock("@/hooks/useAuth", () => ({useAuth: () => ({isLoading:false,isAuthenticated:true,allRoles:[{role_key:"platform_superadmin",core_name:"platform",display_name:"Administrador"}]})}));
+jest.mock("@/lib/api/auth-v2", () => ({}));
+jest.mock("@/lib/auth/token-storage", () => ({}));
+jest.mock("@/lib/auth/token-refresh", () => ({}));
+jest.mock("@/lib/credit-hub/dealer/wizard-draft-storage", () => ({}));
+jest.mock("@/lib/dealer/access-context", () => ({}));
+jest.mock("@/lib/dealer/dealer-context-api", () => ({fetchMyDealerContext:jest.fn()}));
+beforeEach(() => Object.defineProperty(globalThis,"navigation",{configurable:true,value:undefined}));
 jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   __esModule: true,
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
@@ -105,6 +114,7 @@ describe("(2) migas Inicio › Módulo › Sección › Pantalla", () => {
 
 describe("(3) Atrás y Adelante usan el historial del navegador", () => {
   test("cada botón llama a history.back / history.forward", () => {
+    Object.defineProperty(globalThis,"navigation",{configurable:true,value:{canGoBack:true,canGoForward:true}});
     const back = jest.spyOn(window.history, "back").mockImplementation(() => undefined);
     const forward = jest.spyOn(window.history, "forward").mockImplementation(() => undefined);
     pathname = "/autos/dealer";
