@@ -98,6 +98,23 @@ export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onC
                     {g.items.map((it) => {
                       const es = activo?.id === it.id;
                       const Icono = it.icono;
+                      if (!it.href && it.pronto) {
+                        // Ruta aprobada sin página todavía: sin enlace, para no mandar a un 404 (igual que ForgeGlobalCoresSidebar).
+                        return (
+                          <li key={it.id}>
+                            <div
+                              aria-disabled="true"
+                              data-pronto={it.pronto}
+                              title={plegado ? `${it.label} (Pronto)` : undefined}
+                              className={`${CLASES.item} cursor-default opacity-60 ${plegado ? "justify-center !px-0" : ""}`}
+                            >
+                              {plegado ? <span aria-hidden className="text-[11px] font-semibold">{it.label.charAt(0)}</span> : null}
+                              {plegado ? <span className="sr-only">{it.label} (Pronto)</span> : <span className="min-w-0 flex-1 truncate">{it.label}</span>}
+                              {plegado ? null : <span className={CLASES.insignia}>Pronto</span>}
+                            </div>
+                          </li>
+                        );
+                      }
                       return (
                         <li key={it.id}>
                           <Link

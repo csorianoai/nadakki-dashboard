@@ -24,6 +24,8 @@ export type ItemMenu = {
   superAdminOnly?: boolean;
   sinModulo?: boolean;
   keywords?: string[];
+  /** Ruta aprobada que aún no tiene página (NavItem.pronto): el menú la pinta como «Pronto», sin enlace (href = ""). */
+  pronto?: string;
 };
 
 export type GrupoMenu = { id: string; label: string; items: ItemMenu[] };

@@ -38,7 +38,8 @@ function aItem(it: NavItem): ItemMenu {
   return {
     id: it.id,
     label: it.label,
-    href: it.href as string,
+    href: it.href ?? "",
+    pronto: it.href ? undefined : it.pronto,
     icono: it.icon,
     roles: it.roles,
     badge: it.badge,
@@ -54,11 +55,12 @@ type ReglaGrupo = { label: string; prefijos: string[] };
 
 /** Reparte las páginas de la sección en grupos por prefijo de ruta; lo que ninguna regla reclama va al primero. */
 function desdeSeccion(seccionId: string, general: string, reglas: ReglaGrupo[] = []): GrupoMenu[] {
-  const items = seccionDe(seccionId).children.filter((c) => c.href).map(aItem);
+  const items = seccionDe(seccionId).children.filter((c) => c.href || c.pronto).map(aItem);
   const grupos: GrupoMenu[] = [{ id: `${seccionId}-general`, label: general, items: [] }];
   for (const r of reglas) grupos.push({ id: `${seccionId}-${r.label.toLowerCase().replace(/\W+/g, "-")}`, label: r.label, items: [] });
   for (const it of items) {
-    const i = reglas.findIndex((r) => r.prefijos.some((p) => it.href === p || it.href.startsWith(`${p}/`) || it.href.startsWith(`${p}?`)));
+    const h = it.href || it.pronto || "";
+    const i = reglas.findIndex((r) => r.prefijos.some((p) => h === p || h.startsWith(`${p}/`) || h.startsWith(`${p}?`)));
     grupos[i < 0 ? 0 : i + 1].items.push(it);
   }
   return grupos.filter((g) => g.items.length > 0);
@@ -275,7 +277,7 @@ export function menuVisible(m: ModuloConfig, u: ContextoUsuario): GrupoMenu[] {
     label: m.label,
     icon: m.icono,
     coreMatchers: m.coreMatchers,
-    children: items.map((i): NavItem => ({ id: i.id, label: i.label, href: i.href, icon: i.icono, roles: i.roles, badge: i.badge, featureFlag: i.featureFlag, coreMatchers: i.coreMatchers, superAdminOnly: i.superAdminOnly, sinModulo: i.sinModulo })),
+    children: items.map((i): NavItem => ({ id: i.id, label: i.label, href: i.href || undefined, pronto: i.pronto, icon: i.icono, roles: i.roles, badge: i.badge, featureFlag: i.featureFlag, coreMatchers: i.coreMatchers, superAdminOnly: i.superAdminOnly, sinModulo: i.sinModulo })),
   };
   const [filtrada] = filterSectionsForUser([seccion], u.roles, u.subscribedCores, userCanAccessAdminNav(u.roles));
   const quedan = new Set((filtrada?.children ?? []).map((c) => c.id));
@@ -288,6 +290,7 @@ export function itemActivo(grupos: GrupoMenu[], pathname: string | null | undefi
   let mejor: ItemMenu | null = null;
   for (const g of grupos) {
     for (const it of g.items) {
+      if (!it.href) continue;
       const h = sinQuery(it.href);
       if ((ruta === h || (h !== "/" && ruta.startsWith(`${h}/`))) && (!mejor || h.length >= sinQuery(mejor.href).length)) mejor = it;
     }
