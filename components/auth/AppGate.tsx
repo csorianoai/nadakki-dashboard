@@ -7,6 +7,7 @@ import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShe
 import { isAutosConsumerPublicPath, isDealerChromePath } from "@/lib/autos-portal/routes";
 import { ContableChrome } from "@/components/dealer/ContableChrome";
 import { isDealerReachableSuitePath } from "@/components/dealer/DealerSuiteGate";
+import { MarcoSuite } from "@/components/nav/MarcoSuite";
 
 function getEffectivePathname(pathname: string | null): string {
   if (pathname) {
@@ -16,6 +17,9 @@ function getEffectivePathname(pathname: string | null): string {
   return typeof window !== "undefined" ? window.location.pathname : "";
 }
 
+// Toda pantalla autenticada va dentro de MarcoSuite: la barra con logotipo, Inicio, Atrás/Adelante y migas
+// queda encima de cualquier carcasa (Suite, Credit Hub, Dealer OS, Realtor OS, Cockpit, Contabilidad, Crédito),
+// y desde cualquier core se vuelve al Inicio con un clic (César, 2026-10-13).
 export default function AppGate({ children }: { children: React.ReactNode }) {
   const pathname = getEffectivePathname(usePathname());
 
@@ -51,7 +55,7 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
   // Incluye el Centro Operativo, que es la guia de carga del dealer y se lee
   // dentro de su panel (decision de Cesar, D9).
   if (isDealerChromePath(pathname)) {
-    return <ProtectedRoute>{children}</ProtectedRoute>;
+    return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
   }
 
   // Contabilidad: la abre el menu del dealer. Un usuario de dealer la ve dentro
@@ -59,31 +63,35 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
   if (isDealerReachableSuitePath(pathname)) {
     return (
       <ProtectedRoute>
-        <ContableChrome>{children}</ContableChrome>
+        <MarcoSuite>
+          <ContableChrome>{children}</ContableChrome>
+        </MarcoSuite>
       </ProtectedRoute>
     );
   }
 
   if (pathname.startsWith("/cockpit")) {
-    return <ProtectedRoute>{children}</ProtectedRoute>;
+    return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
   }
 
   // Realtor OS: autenticado, pero con su propio armazón (DL10A: barra de centros, Career Director, Smart
   // Calendar), que pinta app/realtor/layout.tsx. Dentro del GlobalForgeAppShell se apilaba sobre el
   // menú genérico de la Suite (decisión de César, 2026-10-12, tarea RE-SHELL).
   if (pathname === "/realtor" || pathname.startsWith("/realtor/")) {
-    return <ProtectedRoute>{children}</ProtectedRoute>;
+    return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
   }
 
   // Exclude /credit/* paths from GlobalForgeAppShell
   if (pathname === "/credit" || pathname.startsWith("/credit/")) {
-    return <ProtectedRoute>{children}</ProtectedRoute>;
+    return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
   }
 
   return (
     <ProtectedRoute>
       <>
-        <GlobalForgeAppShell>{children}</GlobalForgeAppShell>
+        <MarcoSuite>
+          <GlobalForgeAppShell>{children}</GlobalForgeAppShell>
+        </MarcoSuite>
         <OnboardingAgent />
       </>
     </ProtectedRoute>

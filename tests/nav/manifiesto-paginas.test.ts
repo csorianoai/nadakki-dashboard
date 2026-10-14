@@ -26,7 +26,7 @@ const RAIZ = path.resolve(__dirname, "..", "..");
  * Tope de páginas en `pendiente-revision`. Solo puede bajar: si resuelves una, baja la cifra; si necesitas subirla,
  * es una decisión que César ve en el diff.
  */
-const MAXIMO_PENDIENTES = 54;
+const MAXIMO_PENDIENTES = 50;
 
 // ── Utilidades ────────────────────────────────────────────────────────────────────────────────────
 

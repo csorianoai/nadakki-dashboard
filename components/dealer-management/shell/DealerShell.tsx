@@ -1,6 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { AuthContext } from "@/lib/auth/auth-context";
 import { isAccessQueryFailClosed } from "@/components/dealer/CoreNavigation";
 import { useQuery } from "@tanstack/react-query";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
@@ -12,6 +15,7 @@ import {
 import { AuthProvider as AutosAuthProvider } from "@/lib/auth-context";
 import { syncDealerContextFromBackend } from "@/lib/dealer/dealer-context-api";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
+import { esAdministrador, esCreditoDelDealer, SALIDA_ADMIN_SIN_DEALER } from "./dealer-sin-asignacion";
 import { DEALER_NAV_CAPABILITY_KEYS, visibleDealerNavGroups } from "./dealer-nav";
 import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
@@ -131,6 +135,14 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
   }, []);
   const tenantId = sesion.tenantId;
 
+  /**
+   * Administrador: lee el contexto SIN `useAuth` (lanza fuera de su provider, y
+   * los tests del shell no lo montan). Sin provider = no es administrador.
+   */
+  const pathname = usePathname();
+  const roles = useContext(AuthContext)?.allRoles;
+  const administrador = esAdministrador(roles);
+
   const sync = useQuery({
     queryKey: ["dealer-context-sync", tenantId ?? "none"],
     queryFn: () => syncDealerContextFromBackend(tenantId),
@@ -196,6 +208,14 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
    * tiene dealer resuelto.
    */
   const sincronizando = !sesion.listo || (Boolean(tenantId) && (sync.isPending || sync.isLoading));
+
+  /**
+   * Administrador sin concesionario: el aviso lleva salida a la Suite y, en el
+   * credito del concesionario (ambito tenant), los hijos pasan. Ver
+   * dealer-sin-asignacion.ts. Cualquier otro caso queda como estaba.
+   */
+  const adminSinDealer = administrador && sync.data?.estado === "sin_asignacion";
+  const adminEnCredito = adminSinDealer && esCreditoDelDealer(pathname);
 
   const avisoDeContexto = useMemo((): { estado: string; titulo: string; detalle: string | null; codigo: string | null } | null => {
     const salida = sync.data;
@@ -295,7 +315,7 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
             <p data-testid="dealer-context-verificando" className="animate-pulse text-sm text-[var(--nav-fg-muted)]">
               Verificando
             </p>
-          ) : avisoDeContexto ? (
+          ) : avisoDeContexto && !adminEnCredito ? (
             <section
               role="alert"
               data-testid="dealer-context-aviso"
@@ -306,6 +326,15 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
               <p className="font-semibold">{avisoDeContexto.titulo}</p>
               {avisoDeContexto.detalle ? (
                 <p className="mt-1 text-[var(--dcc-partial-fg)]">{avisoDeContexto.detalle}</p>
+              ) : null}
+              {adminSinDealer ? (
+                <Link
+                  href={SALIDA_ADMIN_SIN_DEALER.href}
+                  data-testid="dealer-context-salida-admin"
+                  className="mt-3 inline-block font-semibold underline"
+                >
+                  {SALIDA_ADMIN_SIN_DEALER.label}
+                </Link>
               ) : null}
               {avisoDeContexto.codigo ? (
                 <DetalleTecnico>

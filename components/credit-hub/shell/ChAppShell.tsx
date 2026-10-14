@@ -49,7 +49,7 @@ export function ChAppShell({
         className={cn("credit-hub-forge", className)}
         data-persona={persona}
         style={{
-          height: frame ? "100%" : "100vh",
+          height: frame ? "100%" : "var(--alto-marco, 100vh)",
           display: "flex",
           flexDirection: isMobile ? "column" : "row",
           background: "var(--ch-bg)",

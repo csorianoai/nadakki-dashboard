@@ -25,7 +25,7 @@ export function RealtorShell({ children }: { children: React.ReactNode }) {
   const offBar = OFF_BAR_CENTERS.find((c) => c.href && pathname?.startsWith(c.href));
   return (
     <div data-testid="realtor-shell" data-view={view}
-      style={{ display: "flex", minHeight: "100vh", fontFamily: FONT_BODY, color: RT.ink, background: RT.page }}>
+      style={{ display: "flex", minHeight: "var(--alto-marco, 100vh)", fontFamily: FONT_BODY, color: RT.ink, background: RT.page }}>
       <ShellSidebar view={view} roles={roles} />
       <div style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column" }}>
         <ShellTopBar center={centerForPath(pathname)} offBarId={offBar?.id} view={view} onView={setView} demo={demo}
