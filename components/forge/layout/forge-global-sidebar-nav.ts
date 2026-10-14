@@ -1,7 +1,6 @@
 import { ACCESS_UNVERIFIED_MESSAGE, isAccessUnverified } from "@/lib/access/reason-codes";
 import type { RoleInfo } from "@/lib/api/auth-v2";
 import { isForgeMonetizacionEnabled } from "@/lib/env/feature-forge-monetizacion";
-import { RUTA_V2_POR_RUTA_BANCO, aplicaPanelBancoV2 } from "@/lib/credit-hub/bank/panel-v2-por-defecto";
 import { COCKPIT_CONSOLIDATION_FLAGS } from "@/lib/cockpit/finance-v3/flags";
 
 import { NAVEGACION, type NavItem, type NavSection } from "@/lib/navigation";
@@ -175,7 +174,7 @@ function filterNavItems(items: NavItem[], isSuperAdmin: boolean): NavItem[] {
       ...i,
       children: i.children ? filterNavItems(i.children, isSuperAdmin) : undefined,
     }))
-    .filter((i) => i.href || (i.children?.length ?? 0) > 0);
+    .filter((i) => i.href || i.pronto || (i.children?.length ?? 0) > 0);
 }
 
 /** `roles` de la página: role_key exacto o prefijo terminado en `*` ("bank*"). */
@@ -213,7 +212,7 @@ function filterNavItemsForCoreAccess(
     }))
     .filter((i) => {
       if (i.children && i.children.length > 0) return true;
-      if (!i.href) return false;
+      if (!i.href && !i.pronto) return false;
       // El módulo solo lo salta platform_superadmin: es al único al que el backend le da todos los cores
       // (auth_v2_service: superadmin → _get_all_enabled_cores; el resto → tenants.cores_enabled). tenant_admin
       // ve los módulos de SU tenant; dentro de ellos sí ve todas las páginas (bypass de rol, más arriba).
@@ -221,15 +220,6 @@ function filterNavItemsForCoreAccess(
       const synthetic: CoreNav = { id: "", coreMatchers: i.coreMatchers ?? coreMatchers };
       return hasCoreAccess(synthetic, allRoles, subscribed);
     });
-}
-
-/** Cambia los href del panel actual del banco por los de bank-v2; el resto queda igual. */
-function aRutasBancoV2(items: NavItem[]): NavItem[] {
-  return items.map((i) => ({
-    ...i,
-    href: i.href ? (RUTA_V2_POR_RUTA_BANCO[i.href] ?? i.href) : i.href,
-    children: i.children ? aRutasBancoV2(i.children) : undefined,
-  }));
 }
 
 /** v2: all cores always visible; sub-items filtered by role, subscription, and super-admin flags. */
@@ -241,7 +231,6 @@ export function filterSectionsForUser(
 ): NavSection[] {
   const isSuper = isPlatformSuperAdmin(allRoles);
   const seesAllHubs = userSeesAllForgeHubSections(allRoles);
-  const panelBancoV2 = aplicaPanelBancoV2(allRoles);
 
   // Una sección sin páginas para este usuario no se pinta: cada uno ve solo lo suyo.
   return sections.map((sec) => {
@@ -259,12 +248,7 @@ export function filterSectionsForUser(
       sec.coreMatchers,
       seesAllHubs,
     );
-    // BANK-V2-DEFAULT: solo con el interruptor encendido y un usuario de banco
-    // (nunca superadmin ni dealer) el menu del banco apunta a bank-v2.
-    return {
-      ...sec,
-      children: sec.id === "credit-hub" && panelBancoV2 ? aRutasBancoV2(children) : children,
-    };
+    return { ...sec, children };
   }).filter((sec) => sec.children.length > 0);
 }
 

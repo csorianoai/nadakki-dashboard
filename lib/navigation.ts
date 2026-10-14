@@ -43,6 +43,11 @@ export type NavItem = {
   id: string;
   label: string;
   href?: string;
+  /**
+   * Ruta aprobada cuya página aún no existe: la fila se pinta sin enlace y con la marca «Pronto». Al construirse
+   * la página, se cambia `pronto` por `href` (así el menú nunca apunta a un 404).
+   */
+  pronto?: string;
   badge?: NavBadge;
   icon?: LucideIcon;
   /** Encabezado visual dentro de la sección (solo pinta; no es un nivel). */
@@ -263,14 +268,14 @@ export const NAVEGACION: NavSection[] = [
     coreMatchers: ["credit"],
     children: [
       { id: "credit-home", label: "Centro de crédito", href: "/credit-hub" },
-      { id: "credit-bank", label: "Mesa de decisiones (banco)", href: "/credit-hub/bank", roles: ROLES_BANCO },
-      { id: "credit-bank-apps", label: "Bandeja del banco", href: "/credit-hub/bank/applications", roles: ROLES_BANCO },
-      { id: "credit-bank-kpis", label: "Indicadores del banco", href: "/credit/bank/kpis", roles: ROLES_BANCO },
-      { id: "credit-vehicle-anomalies", label: "Historial de vehículos", href: "/credit-hub/bank/vehicles", roles: ROLES_BANCO },
-      { id: "credit-analytics", label: "Analítica y reportes", href: "/credit-hub/bank/analytics", roles: ROLES_BANCO },
-      { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank/compliance", roles: ROLES_BANCO },
-      { id: "credit-audit-ch", label: "Auditoría de crédito", href: "/credit-hub/bank/audit", roles: ROLES_BANCO },
-      { id: "credit-pool-filters", label: "Filtros de cartera", href: "/credit/pool-filters", roles: ROLES_BANCO },
+      { id: "credit-bank", label: "Mesa de decisiones (banco)", href: "/credit-hub/bank-v2", roles: ROLES_BANCO },
+      { id: "credit-bank-apps", label: "Bandeja del banco", href: "/credit-hub/bank-v2/solicitudes", roles: ROLES_BANCO },
+      { id: "credit-bank-kpis", label: "Indicadores del banco", href: "/credit-hub/bank-v2/kpis", roles: ROLES_BANCO },
+      { id: "credit-vehicle-anomalies", label: "Historial de vehículos", href: "/credit-hub/bank-v2/vehiculos", roles: ROLES_BANCO },
+      { id: "credit-analytics", label: "Analítica y reportes", href: "/credit-hub/bank-v2/analitica", roles: ROLES_BANCO },
+      { id: "credit-compliance", label: "Cumplimiento", href: "/credit-hub/bank-v2/cumplimiento", roles: ROLES_BANCO },
+      { id: "credit-audit-ch", label: "Auditoría de crédito", href: "/credit-hub/bank-v2/auditoria", roles: ROLES_BANCO },
+      { id: "credit-pool-filters", label: "Filtros de cartera", href: "/credit-hub/bank-v2/filtros", roles: ROLES_BANCO },
       { id: "credit-dealer", label: "Crédito del concesionario", href: "/credit-hub/dealer", roles: ROLES_DEALER },
       { id: "credit-dealer-apps", label: "Solicitudes del concesionario", href: "/credit-hub/dealer/applications", roles: ROLES_DEALER },
       {
@@ -280,7 +285,6 @@ export const NAVEGACION: NavSection[] = [
         roles: ROLES_DEALER,
       },
       { id: "credit-preapproval", label: "Preaprobación", href: "/credit-hub/dealer/preapproval", roles: ROLES_DEALER },
-      { id: "credit-legacy", label: "Crédito clásico", href: "/credit" },
       { id: "market-intel-investigations", label: "Inteligencia de mercado", href: "/market-intel", badge: "BETA" },
       {
         id: "credit-monetizacion",
@@ -390,6 +394,8 @@ export const NAVEGACION: NavSection[] = [
       { id: "set-integrations", label: "Integraciones", href: "/settings/integrations" },
       { id: "adm-billing-root", label: "Facturación", href: "/billing", keywords: ["billing"] },
       { id: "adm-audit", label: "Auditoría", href: "/audit", keywords: ["audit"] },
+      // Ruta aprobada por César; la construye O3-D-ADMIN-REAL-ESTATE. Hasta entonces, «Pronto» y sin enlace.
+      { id: "adm-real-estate", label: "Real Estate", pronto: "/admin/real-estate", keywords: ["inmobiliaria", "realtor"] },
       { id: "adm-flags", label: "Interruptores", href: "/feature-flags", superAdminOnly: true, keywords: ["feature flags"] },
     ],
   },
@@ -408,15 +414,10 @@ export const RUTAS_OCULTAS: RutaOculta[] = [
   { ruta: "/credit-hub/preview", motivo: "vista previa de desarrollo" },
   { ruta: "/testing", motivo: "laboratorio de pruebas" },
   { ruta: "/sic/demo", motivo: "modo demostración", vigente: "/sic" },
-  { ruta: "/workflow-real", motivo: "copia sin enlace del flujo del banco", vigente: "/credit-hub/bank/applications" },
+  { ruta: "/workflow-real", motivo: "copia sin enlace del flujo del banco", vigente: "/credit-hub/bank-v2/solicitudes" },
   { ruta: "/execute", motivo: "ejecutor de desarrollo" },
   { ruta: "/agents/execute", motivo: "ejecutor de desarrollo" },
-  { ruta: "/bank", motivo: "copia antigua del panel del banco", vigente: "/credit-hub/bank" },
-  {
-    ruta: "/credit-hub/bank-v2",
-    motivo: "panel nuevo del banco: el menú lo enlaza solo a usuarios de banco con el interruptor BANK-V2-DEFAULT",
-    vigente: "/credit-hub/bank",
-  },
+  { ruta: "/bank", motivo: "copia antigua del panel del banco", vigente: "/credit-hub/bank-v2" },
   {
     ruta: "/proyectos/[id]/masterplan",
     motivo: "duplicado de master-plan (pestaña «Comité MP», solo con NEXT_PUBLIC_MASTERPLAN_ENABLED)",

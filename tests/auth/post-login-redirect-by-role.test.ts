@@ -30,9 +30,9 @@ describe("getPostLoginRedirectPath", () => {
     expect(getPostLoginRedirectPath([rol("dealer")])).not.toContain("credit-hub");
   });
 
-  it("los usuarios de banco conservan su destino", () => {
+  it("los usuarios de banco aterrizan en el banco (bank-v2, UNA-VERSION)", () => {
     for (const clave of ["admin", "credit_admin", "bank_analyst", "banker"]) {
-      expect(getPostLoginRedirectPath([rol(clave)])).toBe("/credit-hub/bank");
+      expect(getPostLoginRedirectPath([rol(clave)])).toBe("/credit-hub/bank-v2");
     }
   });
 
