@@ -16,7 +16,8 @@ export function ProtectedRoute({ children, fallbackPath = "/login" }: ProtectedR
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !initError) {
-      router.push(fallbackPath);
+      // replace: con push, Atrás volvía a la pantalla protegida y esta redirigía otra vez (bucle de historial).
+      router.replace(fallbackPath);
     }
   }, [isAuthenticated, isLoading, initError, router, fallbackPath]);
 

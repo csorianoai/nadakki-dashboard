@@ -31,7 +31,7 @@ export function DccShellSidebar({
       ) : null}
       <aside
         data-testid="dcc-shell-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 flex w-[248px] max-w-[85vw] shrink-0 flex-col bg-[var(--dcc-navy)] text-[var(--dcc-on-navy)] transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+        className={`fixed bottom-0 left-0 top-10 z-50 flex w-[248px] max-w-[85vw] shrink-0 flex-col bg-[var(--dcc-navy)] text-[var(--dcc-on-navy)] transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           abiertoMovil ? "translate-x-0" : "-translate-x-full"
         }`}
       >

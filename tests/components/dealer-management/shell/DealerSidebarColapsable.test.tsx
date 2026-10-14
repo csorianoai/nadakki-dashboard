@@ -351,7 +351,7 @@ describe("el fondo de la barra no se corta al hacer scroll", () => {
     expect(clases[0]).toBe("contents");
     // Ninguna clase sin prefijo que pinte o dimensione la columna en celular.
     expect(clases.filter((c) => !c.startsWith("lg:"))).toEqual(["contents"]);
-    expect(barra().className).toContain("fixed inset-y-0 left-0 z-50");
+    expect(barra().className).toContain("fixed bottom-0 left-0 top-10 z-50");
   });
 
   it("en el shell, la columna es hija directa de la raiz flex", () => {

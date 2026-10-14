@@ -50,14 +50,14 @@ export function CockpitSidebar({ open, onToggle }: { open: boolean; onToggle: ()
     <>
       <button
         type="button"
-        className="fixed left-3 top-3 z-40 rounded border border-cockpit-border bg-cockpit-surface p-2 text-cockpit-muted lg:hidden"
+        className="fixed left-3 top-12 z-40 rounded border border-cockpit-border bg-cockpit-surface p-2 text-cockpit-muted lg:hidden"
         onClick={onToggle}
         aria-label="Menú"
       >
         ☰
       </button>
       <aside
-        className={`${open ? "translate-x-0" : "-translate-x-full"} fixed z-30 flex h-full w-60 flex-col border-r border-cockpit-border bg-cockpit-surface transition-transform lg:static lg:translate-x-0`}
+        className={`${open ? "translate-x-0" : "-translate-x-full"} fixed bottom-0 top-10 z-30 flex w-60 lg:h-full flex-col border-r border-cockpit-border bg-cockpit-surface transition-transform lg:static lg:translate-x-0`}
         data-testid="cockpit-sidebar"
       >
         <div className="border-b border-cockpit-border p-4">
