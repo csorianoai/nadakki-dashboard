@@ -267,7 +267,7 @@ export const NAVEGACION: NavSection[] = [
     icon: Landmark,
     coreMatchers: ["credit"],
     children: [
-      { id: "credit-home", label: "Centro de crédito", href: "/credit-hub" },
+      { id: "credit-home", label: "Dealer Bank", href: "/credit-hub", keywords: ["centro de crédito", "dealer bank", "hub dealer bank", "banco", "concesionario"] },
       { id: "credit-bank", label: "Mesa de decisiones (banco)", href: "/credit-hub/bank-v2", roles: ROLES_BANCO },
       { id: "credit-bank-apps", label: "Bandeja del banco", href: "/credit-hub/bank-v2/solicitudes", roles: ROLES_BANCO },
       { id: "credit-bank-kpis", label: "Indicadores del banco", href: "/credit-hub/bank-v2/kpis", roles: ROLES_BANCO },
