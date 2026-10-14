@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { CAREER_DIRECTOR, filterCenters, SMART_CALENDAR, SOON, type RealtorCenter } from "@/lib/realtor/centers";
+import { CAREER_DIRECTOR, SMART_CALENDAR, SOON, SOON_MARK, type RealtorCenter } from "@/lib/realtor/centers";
+import { visibleMenu } from "@/lib/realtor/menu";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { usePathname } from "next/navigation";
 
@@ -14,11 +15,14 @@ const CHIP: React.CSSProperties = {
   marginLeft: "auto", fontSize: 10.5, fontWeight: 700, color: RT.navMuted, border: `1px solid ${RT.navBorder}`, borderRadius: 999, padding: "2px 8px",
 };
 
+/** «Pronto»: texto pequeño y apagado, sin borde ni grupo propio. */
+const SOON_STYLE: React.CSSProperties = { marginLeft: "auto", fontSize: 10.5, fontWeight: 600, color: RT.navMuted };
+
 function CenterItem({ c, current }: { c: RealtorCenter; current: boolean }) {
   if (!c.href) {
     return (
       <div data-testid={`center-${c.id}`} data-center-state="soon" aria-disabled="true" style={{ ...ITEM, opacity: 0.6, cursor: "not-allowed" }}>
-        <span>{c.label}</span><span style={CHIP}>{SOON}</span>
+        <span>{c.label}</span><span data-testid="soon-mark" style={SOON_STYLE}>{SOON_MARK}</span>
       </div>
     );
   }
@@ -37,11 +41,11 @@ function BlockWrap({ c, testid, style, children }: { c: { href?: string }; testi
 }
 
 /** Barra lateral de centros (DL10A). Career Director y Smart Calendar quedan «Próximamente» hasta tener backend. */
-export function ShellSidebar({ view }: { view: string }) {
+export function ShellSidebar({ view, roles = [] }: { view: string; roles?: readonly string[] }) {
   const [query, setQuery] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
-  const centers = filterCenters(query);
+  const groups = visibleMenu(roles, query);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -79,15 +83,13 @@ export function ShellSidebar({ view }: { view: string }) {
           style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 11, background: RT.navField, border: "1px solid rgba(111, 211, 220, 0.2)", color: RT.white, fontFamily: "inherit", fontSize: 14 }} />
       </div>
       <div style={{ flex: "1 1 auto", minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
-        {centers.map((c, i) => (
-          <div key={c.id} style={{ display: "contents" }}>
-            {i === 0 || centers[i - 1].group !== c.group ? (
-              <div role="presentation" data-testid="center-group" style={{ fontSize: 10.5, letterSpacing: "0.1em", textTransform: "uppercase", color: RT.navGroup, fontWeight: 700, margin: "8px 8px 2px" }}>{c.group}</div>
-            ) : null}
-            <CenterItem c={c} current={!!c.href && !!pathname?.startsWith(c.href)} />
+        {groups.map((g) => (
+          <div key={g.id} style={{ display: "contents" }}>
+            <div role="presentation" data-testid="center-group" style={{ fontSize: 10.5, letterSpacing: "0.1em", textTransform: "uppercase", color: RT.navGroup, fontWeight: 700, margin: "8px 8px 2px" }}>{g.label}</div>
+            {g.items.map((c) => (<CenterItem key={c.id} c={c} current={!!c.href && !!pathname?.startsWith(c.href)} />))}
           </div>
         ))}
-        {centers.length === 0 ? <p style={{ margin: 8, fontSize: 13, color: RT.navMuted }}>Ningún centro coincide.</p> : null}
+        {groups.length === 0 ? <p style={{ margin: 8, fontSize: 13, color: RT.navMuted }}>Ningún centro coincide.</p> : null}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: RT.navMuted, padding: "10px 6px 0", borderTop: `1px solid ${RT.navBorder}` }}>
         <span style={{ marginLeft: "auto", fontWeight: 700, color: RT.cyan, border: `1px solid ${RT.navBorder}`, borderRadius: 999, padding: "2px 8px", textTransform: "capitalize" }}>{view}</span>

@@ -66,3 +66,8 @@ medirlo en CI antes de dar el umbral por bueno.
 
 Referencia `ref/propiedades.png` (centro "Propiedades" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
 entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.
+
+## Menú nuevo y Resultados (`shell.spec.ts`, O2-F-MENU)
+
+Mismo umbral (12 %) y mismo método para `/realtor/demand-radar` con la barra del menú nuevo. Resultados no tiene referencia en
+DL10A y no se compara por píxeles; detalle en `docs/design/realtor/menu/UMBRAL.md`.
