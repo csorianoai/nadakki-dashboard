@@ -13,9 +13,10 @@ export default function ExpedienteV2Page({ params }: { params: Promise<{ applica
     <ExpedienteV2
       applicationId={applicationId}
       marca={marca}
-      hrefVistaActual={`/credit-hub/bank/applications/${encodeURIComponent(applicationId)}`}
+      hrefVistaActual={`/credit-hub/bank-v2/solicitudes/${encodeURIComponent(applicationId)}/herramientas`}
       hrefBandeja="/credit-hub/bank-v2/solicitudes"
       decision={(app) => <BarraDecision application={app} />}
     />
   );
 }
+
