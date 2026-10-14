@@ -42,7 +42,7 @@ describe("el menu apunta a bank-v2", () => {
     expect(enlaces.some((h) => h.startsWith("/credit-hub/dealer"))).toBe(false);
   });
 
-  it("el lado del concesionario no se toca: el dealer sigue viendo sus pantallas", () => {
+  it("el lado del concesionario no se toca", () => {
     const enlaces = hrefs(credit(filtrar(roles("dealer"))).children);
     // El crédito del concesionario vive en Dealer OS (PR 2 "una sola interfaz").
     expect(enlaces).toContain("/autos/dealer/credito");
