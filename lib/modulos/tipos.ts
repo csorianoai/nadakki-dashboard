@@ -34,7 +34,8 @@ export type GrupoMenu = { id: string; label: string; items: ItemMenu[] };
 export type CarcasaCore = {
   prefijos: string[];
   modulo: { label: string; href: string };
-  grupos: { label: string; items: { label: string; href: string }[] }[];
+  /** `capability` (Dealer OS) se conserva para que las migas no enlacen una sección a una entrada con condición de visibilidad. */
+  grupos: { label: string; items: { label: string; href: string; capability?: string | null }[] }[];
 };
 
 export type ModuloConfig = {
