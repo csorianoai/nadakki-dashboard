@@ -93,6 +93,22 @@ export function cambiosDeEdicion(form: VehicleManualForm, original: VehicleManua
   return cambios;
 }
 
+/**
+ * Algo del formulario difiere de lo guardado, aunque no se pueda guardar (un
+ * precio borrado no es un cambio para el PATCH, pero si para la pantalla).
+ * Mismas equivalencias que `cambiosDeEdicion`: importes por valor, dominio y
+ * monedas sin distinguir mayusculas.
+ */
+export function hayCambiosSinGuardar(form: VehicleManualForm, original: VehicleManualForm): boolean {
+  return (Object.keys(original) as (keyof VehicleManualForm)[]).some((campo) => {
+    const actual = form[campo] ?? "";
+    const guardado = original[campo] ?? "";
+    if (campo === "price_amount" || campo === "display_price_amount") return !mismoImporte(actual, guardado);
+    if (campo === "stock_number") return actual.trim() !== guardado.trim();
+    return actual.trim().toUpperCase() !== guardado.trim().toUpperCase();
+  });
+}
+
 async function patchVehicle(
   context: VehicleDealerIdentity,
   vehicleId: string,

@@ -233,7 +233,11 @@ describe("(3) menú de Dealer OS: Crédito con su entitlement", () => {
       ["Crédito", DEALER_CREDIT_BASE],
       ["Solicitudes", `${DEALER_CREDIT_BASE}/solicitudes`],
       ["Nueva solicitud", `${DEALER_CREDIT_BASE}/solicitudes/nueva?new=1`],
+      ["Nueva solicitud — codeudor", `${DEALER_CREDIT_BASE}/solicitudes/nueva/codeudor`],
+      ["Nueva solicitud — documentos", `${DEALER_CREDIT_BASE}/solicitudes/nueva/documentos`],
       ["Preaprobación", `${DEALER_CREDIT_BASE}/preaprobacion`],
+      ["Notificaciones", `${DEALER_CREDIT_BASE}/notificaciones`],
+      ["Perfil", `${DEALER_CREDIT_BASE}/perfil`],
     ]);
     for (const i of credito) expect(isDealerNavItemOpenable(i.href)).toBe(true);
     expect(visibles.some((i) => i.href.startsWith("/credit-hub"))).toBe(false);
@@ -243,8 +247,10 @@ describe("(3) menú de Dealer OS: Crédito con su entitlement", () => {
     expect(items((c) => c === null).some((i) => i.href.startsWith(DEALER_CREDIT_BASE))).toBe(false);
     expect(visibleDealerNavGroups((c) => c === null).map((g) => g.id)).not.toContain("financiamiento");
     const soloVer = items((c) => c === null || c === "credit.applications.view").map((i) => i.label);
-    expect(soloVer).toEqual(expect.arrayContaining(["Crédito", "Solicitudes", "Preaprobación"]));
+    expect(soloVer).toEqual(expect.arrayContaining(["Crédito", "Solicitudes", "Preaprobación", "Notificaciones", "Perfil"]));
     expect(soloVer).not.toContain("Nueva solicitud");
+    expect(soloVer).not.toContain("Nueva solicitud — codeudor");
+    expect(soloVer).not.toContain("Nueva solicitud — documentos");
   });
 
   it("marca el item más específico", () => {
