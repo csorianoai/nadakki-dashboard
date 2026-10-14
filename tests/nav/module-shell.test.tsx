@@ -153,7 +153,7 @@ describe("ModuleShell: filas «Pronto» (NavItem.pronto, #837) no se pierden en 
     render(conSesion(sesion("tenant_admin", ["legal"]), <ModuleShell modulo={admin}><p>contenido</p></ModuleShell>));
     const menu = screen.getByRole("complementary", { name: "Menú de Administración" });
     // «Real Estate» está en el grupo «Plataforma»; en /settings el abierto es «Cuenta».
-    fireEvent.click(within(menu).getByRole("button", { name: "Desplegar las páginas de Plataforma" }));
+    fireEvent.click(within(menu).getByRole("button", { name: "Plataforma" }));
     const fila = menu.querySelector('[data-pronto="/admin/real-estate"]');
     expect(fila).not.toBeNull();
     expect(fila).toHaveAttribute("aria-disabled", "true");

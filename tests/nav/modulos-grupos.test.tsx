@@ -11,6 +11,7 @@ import PantallaGrupo from "@/components/shell/PantallaGrupo";
 import { PestanasGrupo } from "@/components/shell/PestanasGrupo";
 import { AuthContext, type AuthContextValue } from "@/lib/auth/auth-context";
 import { DESCRIPCIONES, MAX_DESCRIPCION } from "@/lib/modulos/descripciones";
+import { NAV_SECTIONS, filterSectionsForUser } from "@/components/forge/layout/forge-global-sidebar-nav";
 import { MODULOS, itemActivo, menuVisible, rutaGrupo, tienePantallaGrupo, usaCarcasaComun, type ContextoUsuario } from "@/lib/modulos/registro";
 import { migasDe } from "@/lib/migas";
 import { NAVEGACION, PESTANAS_MARKETING } from "@/lib/navigation";
@@ -90,7 +91,19 @@ describe("pantalla del grupo: /<raíz>/grupo/<id>", () => {
     render(conSesion(<PantallaGrupo />));
     const grupo = menuVisible(mod(modulo), USUARIO).find((g) => g.id === grupoId)!;
     const tarjetas = screen.getAllByTestId("tarjeta-pagina");
-    expect(tarjetas.map((t) => t.getAttribute("href") ?? "")).toEqual(hrefs(grupo.items));
+    // Una tarjeta con página es un <a href>; una fila «Pronto» (sin href) es texto con aria-disabled, nunca un <a href="">.
+    tarjetas.forEach((t, i) => {
+      const it = grupo.items[i]!;
+      if (it.href) {
+        expect([it.id, t.tagName, t.getAttribute("href")]).toEqual([it.id, "A", it.href]);
+      } else {
+        expect(it.pronto).toBeTruthy();
+        expect([it.id, t.tagName, t.hasAttribute("href")]).toEqual([it.id, "DIV", false]);
+        expect(t).toHaveAttribute("aria-disabled", "true");
+        expect(t).toHaveAttribute("data-pronto", it.pronto);
+        expect(t).toHaveTextContent("Pronto");
+      }
+    });
     expect(tarjetas).toHaveLength(grupo.items.length);
     tarjetas.forEach((t, i) => {
       expect(within(t).getByText(grupo.items[i]!.label)).toBeInTheDocument();
@@ -282,8 +295,90 @@ describe("nada se pierde: ningún módulo pierde páginas respecto a hoy", () =>
       expect(alcanzables.sort()).toEqual(m.menu.flatMap((g) => g.items.map((i) => i.id)).sort());
       for (const g of grupos) {
         // la página de cada item se resuelve a un item activo del menú (y por tanto a un grupo con su barra de pestañas)
-        for (const i of g.items.filter((x) => x.href)) expect(itemActivo(grupos, i.href)).not.toBeNull();
+        for (const i of g.items) {
+          // o tiene página y se resuelve a un item activo, o es una fila «Pronto» (sin href) que no se enlaza
+          if (i.href) expect(itemActivo(grupos, i.href)).not.toBeNull();
+          else expect([i.id, !!i.pronto]).toEqual([i.id, true]);
+        }
       }
     }
+  });
+});
+
+describe("Administración y filas «Pronto» (#837): sin enlaces a pantallas que el rol no puede abrir", () => {
+  const admin = mod("administracion");
+  const enlacesGrupo = (rol: string, cores: string[], ruta: string) => {
+    pathname = ruta;
+    const { container } = render(<AuthContext.Provider value={sesion(rol, cores)}><ModuleShell modulo={admin}><p>x</p></ModuleShell></AuthContext.Provider>);
+    return Array.from(container.querySelectorAll('a[href^="/admin/grupo/"]')).map((a) => a.getAttribute("href"));
+  };
+
+  test("tenant_admin en /settings (ModuleSidebar real): ningún enlace a /admin/grupo/*; ve las filas de Cuenta y «Pronto» sin enlace", () => {
+    expect(enlacesGrupo("tenant_admin", ["legal"], "/settings")).toEqual([]);
+    expect(document.querySelector('[data-pronto="/admin/real-estate"]')).toBeNull(); // grupo plegado: se ve al desplegarlo
+    expect(document.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+    expect(document.querySelector('a[href="/settings"]')).not.toBeNull();
+  });
+
+  test("platform_superadmin sí ve los enlaces de grupo (puede abrirlos)", () => {
+    expect(enlacesGrupo("platform_superadmin", ["legal"], "/admin")).toEqual(expect.arrayContaining(["/admin/grupo/admin-general", "/admin/grupo/admin-cuenta"]));
+  });
+
+  test("tenant_admin: tienePantallaGrupo es falso y la URL /admin/grupo/* da el aviso, no tarjetas", () => {
+    const u: ContextoUsuario = { roles: sesion("tenant_admin", ["legal"]).allRoles, subscribedCores: ["legal"] };
+    const grupos = menuVisible(admin, u);
+    expect(tienePantallaGrupo(admin, grupos, false)).toBe(false);
+    pathname = "/admin/grupo/admin-cuenta";
+    render(<AuthContext.Provider value={sesion("tenant_admin", ["legal"])}><PantallaGrupo /></AuthContext.Provider>);
+    expect(screen.queryAllByTestId("tarjeta-pagina")).toHaveLength(0);
+    expect(screen.getByTestId("pantalla-grupo-vacia")).toBeInTheDocument();
+  });
+
+  test("un grupo solo de filas «Pronto» no cuenta como grupo con pantalla", () => {
+    const soloPronto = [{ id: "g1", label: "G1", items: [{ id: "a", label: "A", href: "", pronto: "/x" }] }, { id: "g2", label: "G2", items: [{ id: "b", label: "B", href: "/b" }] }];
+    expect(tienePantallaGrupo(mod("marketing"), soloPronto)).toBe(false);
+  });
+
+  // Matriz por rol con filterSectionsForUser como oráculo: el menú del registro no ofrece nada que el filtro existente no deje pasar.
+  test.each([
+    ["platform_superadmin", ["legal", "marketing", "credit", "accounting", "projects"]],
+    ["tenant_admin", ["legal", "marketing"]],
+    ["tenant_admin", []],
+    ["banker", ["credit"]],
+    ["dealer", ["autos"]],
+    ["legal_analyst", ["legal"]],
+  ])("%s con cores %j: items del registro = oráculo; enlaces de grupo solo a superadmin", (rol, cores) => {
+    const u: ContextoUsuario = { roles: sesion(rol, cores).allRoles, subscribedCores: cores };
+    const esSuper = rol === "platform_superadmin";
+    const oraculo = new Set(
+      filterSectionsForUser(NAV_SECTIONS, u.roles, cores, esSuper || rol === "tenant_admin").flatMap((s) => s.children.map((c) => c.id)),
+    );
+    for (const m of conShell) {
+      const grupos = menuVisible(m, u);
+      // Marketing deriva sus items de las pestañas (ids propios, no de NAV_SECTIONS): lo cubre el filtro de módulo de menuVisible.
+      if (m.id !== "marketing") for (const g of grupos) for (const i of g.items) expect([m.id, i.id, oraculo.has(i.id)]).toEqual([m.id, i.id, true]);
+      if (m.id === "administracion" && !esSuper) expect(tienePantallaGrupo(m, grupos, false)).toBe(false);
+    }
+    expect(enlacesGrupo(rol, cores, "/settings").every((h) => esSuper)).toBe(true);
+  });
+
+  test("pestañas: una fila «Pronto» es texto (span) con aria-disabled, data-pronto y «Pronto», nunca un <a href>", () => {
+    const grupo = menuVisible(admin, USUARIO).find((g) => g.id === "admin-general")!;
+    expect(grupo.items.some((i) => i.pronto)).toBe(true);
+    pathname = "/admin";
+    render(<PestanasGrupo titulo={grupo.label} paginas={grupo.items} pathname="/admin" />);
+    const pestanas = screen.getAllByTestId("pestana-grupo");
+    const fila = pestanas.find((p) => p.getAttribute("data-pronto") === "/admin/real-estate")!;
+    expect(fila.tagName).toBe("SPAN");
+    expect(fila.hasAttribute("href")).toBe(false);
+    expect(fila).toHaveAttribute("aria-disabled", "true");
+    expect(fila).toHaveTextContent("Pronto");
+    expect(document.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+    pestanas.filter((p) => p !== fila).forEach((p) => expect(p.tagName).toBe("A"));
+  });
+
+  test("URL de grupo mal formada (%E0%A4%A) no lanza: no es ningún grupo", () => {
+    expect(() => require("@/lib/modulos/registro").grupoDePantalla(admin, admin.menu, "/admin/grupo/%E0%A4%A")).not.toThrow();
+    expect(require("@/lib/modulos/registro").grupoDePantalla(admin, admin.menu, "/admin/grupo/%E0%A4%A")).toBeNull();
   });
 });

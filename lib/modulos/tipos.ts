@@ -48,6 +48,8 @@ export type CarcasaCore = {
 };
 
 export type ModuloConfig = {
+  /** Las pantallas de grupo del módulo caen bajo una guarda de superadmin: solo ese rol las ve o las enlaza. */
+  pantallaGrupoSoloSuperadmin?: boolean;
   id: string;
   label: string;
   icono: LucideIcon;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronRight, PanelLeft, PanelLeftClose, X } from "lucide-react";
 import { ProyectosFinanzasSidebarLinks } from "@/components/forge/layout/ProyectosFinanzasSidebarLinks";
-import { grupoDePantalla, itemActivo, rutaGrupo, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
+import { grupoDePantalla, grupoEnlazable, itemActivo, rutaGrupo, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
 import { CLASES } from "./clases";
 
 const CLAVE_PLEGADO = "nadakki-sidebar-collapsed-modulo";
@@ -90,7 +90,7 @@ export function ModuleSidebar({ titulo, moduloId, grupos, pathname, abierto, onC
               <div key={g.id} className={CLASES.grupo} data-testid={`menu-grupo-${g.id}`}>
                 {plegado ? null : plano ? (
                   <p className={CLASES.grupoTitulo}>{g.label}</p>
-                ) : unico ? null : modulo ? (
+                ) : unico ? null : modulo && grupoEnlazable(g) ? (
                   <div className="flex items-center">
                     <Link
                       href={rutaGrupo(modulo, g)}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
-import { grupoDePantalla, menuVisible, moduloDeRuta } from "@/lib/modulos/registro";
+import { grupoDePantalla, menuVisible, moduloDeRuta, tienePantallaGrupo } from "@/lib/modulos/registro";
 import { CLASES } from "./clases";
 import { TarjetaPagina } from "./TarjetaPagina";
 import { useContextoShell } from "./useContextoShell";
@@ -15,10 +15,11 @@ import { useContextoShell } from "./useContextoShell";
  */
 export default function PantallaGrupo() {
   const pathname = usePathname();
-  const { usuario } = useContextoShell();
+  const { usuario, esSuperadmin } = useContextoShell();
   const modulo = moduloDeRuta(pathname);
   const grupos = useMemo(() => (modulo ? menuVisible(modulo, usuario) : []), [modulo, usuario]);
-  const grupo = modulo ? grupoDePantalla(modulo, grupos, pathname) : null;
+  // Sin pantalla de grupo para este rol (p. ej. tenant_admin en Administración): mismo aviso que un grupo inexistente.
+  const grupo = modulo && tienePantallaGrupo(modulo, grupos, esSuperadmin) ? grupoDePantalla(modulo, grupos, pathname) : null;
 
   if (!modulo || !grupo) {
     return (

@@ -227,6 +227,7 @@ export const MODULOS: ModuloConfig[] = [
     menu: desdeSeccion("admin", "Plataforma", [{ label: "Cuenta", prefijos: ["/settings", "/billing", "/audit"] }]),
     acento: "#94a3b8",
     carcasa: "comun",
+    pantallaGrupoSoloSuperadmin: true, // /admin/** lo envuelve SoloSuperadminDePlataforma (app/admin/layout.tsx)
     propias: ["/cockpit"],
     carcasas: [{ prefijos: ["/cockpit"], modulo: { label: "Cockpit", href: "/cockpit" }, grupos: [] }],
   },
@@ -297,9 +298,19 @@ export function menuVisible(m: ModuloConfig, u: ContextoUsuario): GrupoMenu[] {
 /** `/<raiz>/grupo/<id>`: la pantalla de un grupo (tarjetas con todas sus páginas). */
 const PANTALLA_GRUPO = /^\/[^/]+\/grupo\/([^/]+)$/;
 
-/** ¿Este módulo muestra pantalla de grupo? Solo con ModuleShell y con más de un grupo; el menú plano no la tiene. */
-export function tienePantallaGrupo(m: ModuloConfig, grupos: GrupoMenu[] = m.menu): boolean {
-  return m.carcasa === "comun" && grupos.length > 1;
+/** Grupo con al menos una página enlazable: los grupos solo de filas «Pronto» (sin href) no cuentan como grupo con pantalla. */
+export const grupoEnlazable = (g: GrupoMenu): boolean => g.items.some((i) => !!i.href);
+
+/**
+ * ¿Este módulo muestra pantalla de grupo? Solo con ModuleShell y con más de un grupo ENLAZABLE; el menú plano no la
+ * tiene. Las pantallas de grupo de Administración viven bajo /admin/**, que es solo de platform_superadmin
+ * (app/admin/layout.tsx): para cualquier otro rol (tenant_admin) NO hay pantalla de grupo ni enlaces a ella, porque
+ * llevarían a «Acceso no autorizado». No se amplía ningún permiso. `esSuperadmin` por defecto es true para quien solo
+ * necesita las etiquetas (migas); el armazón lo pasa siempre explícito.
+ */
+export function tienePantallaGrupo(m: ModuloConfig, grupos: GrupoMenu[] = m.menu, esSuperadmin = true): boolean {
+  if (m.pantallaGrupoSoloSuperadmin && !esSuperadmin) return false;
+  return m.carcasa === "comun" && grupos.filter(grupoEnlazable).length > 1;
 }
 
 /** URL estable de la pantalla de un grupo: `<raiz del módulo>/grupo/<id del grupo>`. */
@@ -311,7 +322,12 @@ export function rutaGrupo(m: ModuloConfig, g: GrupoMenu): string {
 export function grupoDePantalla(m: ModuloConfig, grupos: GrupoMenu[], pathname: string | null | undefined): GrupoMenu | null {
   const ruta = sinQuery(pathname || "/").replace(/\/+$/, "");
   if (!ruta.startsWith(`${m.raiz}/grupo/`) || !PANTALLA_GRUPO.test(ruta)) return null;
-  const id = decodeURIComponent(PANTALLA_GRUPO.exec(ruta)![1]!);
+  let id: string;
+  try {
+    id = decodeURIComponent(PANTALLA_GRUPO.exec(ruta)![1]!);
+  } catch {
+    return null; // URL mal formada (%E0%A4%A): no es ningún grupo, en vez de tumbar la carcasa
+  }
   return grupos.find((g) => g.id === id) ?? null;
 }
 

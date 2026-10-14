@@ -8,7 +8,7 @@ import { BuscadorNavegacion } from "@/components/nav/BuscadorNavegacion";
 import { MarcoSuite } from "@/components/nav/MarcoSuite";
 import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
 import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
-import { grupoDePantalla, grupoDeRuta, menuVisible, modulosVisibles, tienePantallaGrupo, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
+import { grupoDePantalla, grupoDeRuta, menuVisible, modulosVisibles, tienePantallaGrupo, grupoEnlazable, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
 import { CLASES } from "./clases";
 import { ModuleSidebar } from "./ModuleSidebar";
 import { ModuleTopBar } from "./ModuleTopBar";
@@ -56,9 +56,9 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
   const grupos = useMemo(() => (modulo ? menuVisible(modulo, usuario) : menuDeSuite(modulos)), [modulo, modulos, usuario]);
   // Pestañas: las páginas del grupo de la pantalla actual; en un módulo sin grupos (menú plano), todas las suyas.
   // La pantalla del grupo (tarjetas) no lleva pestañas: ya muestra todas las páginas.
-  const conGrupos = modulo ? tienePantallaGrupo(modulo, grupos) : false;
+  const conGrupos = modulo ? tienePantallaGrupo(modulo, grupos, esSuperadmin) : false;
   const enPantallaGrupo = modulo ? grupoDePantalla(modulo, grupos, pathname) !== null : false;
-  const grupoPestanas = !modulo || enPantallaGrupo ? null : conGrupos ? grupoDeRuta(grupos, pathname) : grupos.length === 1 ? grupos[0]! : null;
+  const grupoPestanas = !modulo || enPantallaGrupo ? null : conGrupos ? grupoDeRuta(grupos, pathname) : (grupos.filter(grupoEnlazable).length === 1 ? grupos.find(grupoEnlazable)! : null);
   const Puerta = conSesion ? DealerSuiteGate : Fragment;
 
   return (
