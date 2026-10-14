@@ -10,7 +10,13 @@ import { BarraSuite } from "@/components/nav/BarraSuite";
 import { getPostLoginRedirectPath } from "@/lib/auth/auth-context";
 
 let auth: { isLoading: boolean; isAuthenticated: boolean; allRoles: { role_key: string; core_name: string; display_name: string }[] };
-jest.mock("@/hooks/useAuth", () => ({ useAuth: () => auth }));
+let sinProvider = false;
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => {
+    if (sinProvider) throw new Error("useAuth must be used within AuthProvider"); // igual que hooks/useAuth.ts:9
+    return auth;
+  },
+}));
 jest.mock("next/navigation", () => ({ usePathname: () => "/credit-hub/bank-v2/solicitudes" }));
 
 const roles = (...keys: string[]) => keys.map((role_key) => ({ role_key, core_name: "credit", display_name: role_key }));
@@ -103,5 +109,15 @@ describe("Atrás/Adelante sin historial ciego", () => {
     expect(forward).toHaveBeenCalledTimes(1);
     unmount();
     expect(nav.removeEventListener).toHaveBeenCalledWith("currententrychange", nav.addEventListener.mock.calls[0][1]);
+  });
+});
+
+describe("sin AuthProvider la barra no lanza (regresión de #848: realtor-app-gate, DealerUnMenu, layout-isolation)", () => {
+  afterEach(() => { sinProvider = false; });
+  test("useAuth lanza como en hooks/useAuth.ts: la barra se monta y Inicio, logotipo y miga van a /", () => {
+    sinProvider = true;
+    expect(() => render(<BarraSuite />)).not.toThrow();
+    expect(screen.getByTestId("barra-suite")).toBeInTheDocument();
+    expect(inicios()).toEqual({ inicio: "/", logo: "/", miga: "/" });
   });
 });

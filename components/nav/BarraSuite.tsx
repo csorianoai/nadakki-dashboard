@@ -22,8 +22,18 @@ export const INICIO_SEGURO = "/";
  * Mientras la sesión carga o no hay roles, «Inicio» NO se queda sin enlace: apunta a "/" (la promesa es
  * «Inicio con un clic» para todo rol y el guard de sesión de "/" decide si hace falta redirigir).
  */
+function useSesionOpcional(): Partial<ReturnType<typeof useAuth>> {
+  // useAuth lanza sin AuthProvider (hooks/useAuth.ts). Su único hook (useContext) se llama siempre antes de lanzar,
+  // así que atrapar aquí no cambia el orden de hooks: sin provider la barra sigue montándose y «Inicio» va a "/".
+  try {
+    return useAuth();
+  } catch {
+    return {};
+  }
+}
+
 function useDestinoInicio(): string {
-  const { allRoles = [], isLoading, isAuthenticated } = useAuth();
+  const { allRoles = [], isLoading, isAuthenticated } = useSesionOpcional();
   return !isLoading && isAuthenticated && allRoles.length ? getPostLoginRedirectPath(allRoles) : INICIO_SEGURO;
 }
 
