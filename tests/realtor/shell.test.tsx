@@ -55,7 +55,7 @@ it("los centros sin href dicen «Próximamente» según el registro y el filtro 
     if (c.href) expect(el).toHaveAttribute("href", c.href);
     else expect(el).toHaveTextContent("Pronto");
   }
-  for (const id of ["career-director", "smart-calendar"]) {
+  for (const id of ["smart-calendar"]) {
     const reg = ALL_CENTERS.find((c) => c.id === id)!;
     if (!reg.href) expect(screen.getByTestId(id)).toHaveTextContent("Próximamente");
   }

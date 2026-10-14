@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { CAREER_DIRECTOR, SMART_CALENDAR, SOON, SOON_MARK, type RealtorCenter } from "@/lib/realtor/centers";
+import { SMART_CALENDAR, SOON, SOON_MARK, type RealtorCenter } from "@/lib/realtor/centers";
 import { visibleMenu } from "@/lib/realtor/menu";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { usePathname } from "next/navigation";
@@ -40,7 +40,7 @@ function BlockWrap({ c, testid, style, children }: { c: { href?: string }; testi
   return <Link href={c.href} data-testid={testid} style={{ ...style, opacity: 1, cursor: "pointer", textDecoration: "none", color: "inherit" }}>{children}</Link>;
 }
 
-/** Barra lateral de centros (DL10A). Career Director y Smart Calendar quedan «Próximamente» hasta tener backend. */
+/** Barra lateral de centros (DL10A). Smart Calendar es el único bloque fijo. */
 export function ShellSidebar({ view, roles = [] }: { view: string; roles?: readonly string[] }) {
   const [query, setQuery] = useState("");
   const input = useRef<HTMLInputElement>(null);
@@ -66,12 +66,6 @@ export function ShellSidebar({ view, roles = [] }: { view: string; roles?: reado
         <span aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 9, background: `linear-gradient(140deg, ${RT.cyan}, ${RT.teal})` }} />
         <span>Nadakki <span style={{ color: RT.cyan }}>Realtor OS</span></span>
       </div>
-      <BlockWrap c={CAREER_DIRECTOR} testid="career-director"
-        style={{ display: "flex", flexDirection: "column", gap: 2, padding: 12, borderRadius: 16, border: "1px solid rgba(111, 211, 220, 0.4)", opacity: 0.85,
-          background: "linear-gradient(145deg, rgba(111, 211, 220, 0.16), rgba(11, 110, 120, 0.08) 60%, rgba(19, 32, 43, 0.6))" }}>
-        <span style={{ fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: RT.cyan, fontWeight: 700 }}>Career Director · guía</span>
-        {!CAREER_DIRECTOR.href ? <span style={{ fontSize: 12, color: RT.navMuted }}>{SOON}</span> : null}
-      </BlockWrap>
       <BlockWrap c={SMART_CALENDAR} testid="smart-calendar"
         style={{ ...ITEM, border: "1px solid rgba(111, 211, 220, 0.2)", background: "rgba(12, 26, 36, 0.6)", justifyContent: "space-between", opacity: 0.85, cursor: "not-allowed" }}>
         <span>Smart Calendar</span>{!SMART_CALENDAR.href ? <span style={{ ...CHIP, marginLeft: 0 }}>{SOON}</span> : null}

@@ -23,13 +23,14 @@ export const REALTOR_CENTERS: readonly RealtorCenter[] = [
   { ...marketingAi, label: "Marketing", group: "CRECER" },
   { id: "demand-radar", label: "Mercado", group: "CRECER", href: "/realtor/demand-radar" },
   { ...resultados, label: "Resultados", group: "CRECER" },
+  { ...careerDirector, label: "Career Director", group: "CRECER" },
   { id: "academia", label: "Academia", group: "CRECER" },
 ];
 
 /** Centros con ruta viva que ya no son fila de la barra: se llegan desde Contactos. Sirven a la miga y al registro. */
 export const OFF_BAR_CENTERS: readonly RealtorCenter[] = [{ ...propietarios, label: "Propietarios", group: "CLIENTES" }];
 
-/** Bloques fijos de la barra (no son filas de la lista): Career Director y Smart Calendar. */
+/** Career Director es fila del grupo «Crecer» (ver REALTOR_CENTERS); se conserva el export por compatibilidad. Smart Calendar es el único bloque fijo. */
 export const CAREER_DIRECTOR = careerDirector;
 export const SMART_CALENDAR = smartCalendar;
 
@@ -38,7 +39,7 @@ export const SOON = "Próximamente";
 export const SOON_MARK = "Pronto";
 
 /** Todo lo que el armazón muestra como centro, con o sin fila: sirve para derivar qué debe decir «Próximamente». */
-export const ALL_CENTERS: readonly { id: string; href?: string }[] = [...REALTOR_CENTERS, ...OFF_BAR_CENTERS, CAREER_DIRECTOR, SMART_CALENDAR];
+export const ALL_CENTERS: readonly { id: string; href?: string }[] = [...REALTOR_CENTERS, ...OFF_BAR_CENTERS, SMART_CALENDAR];
 
 export function filterCenters(query: string): RealtorCenter[] {
   const q = query.trim().toLowerCase();

@@ -63,8 +63,8 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
     }
   }
   expect(ALL_CENTERS.some((c) => c.id === "demand-radar" && c.href)).toBe(true);
-  await expect(page.getByTestId("career-director")).toContainText("Career Director · guía");
-  for (const id of ["career-director", "smart-calendar"]) {
+  await expect(page.getByTestId("center-career-director")).toHaveAttribute("href", "/realtor/career-director");
+  for (const id of ["smart-calendar"]) {
     const reg = ALL_CENTERS.find((c) => c.id === id)!;
     if (reg.href) await expect(page.getByTestId(id)).toHaveAttribute("href", reg.href);
     else await expect(page.getByTestId(id)).toContainText("Próximamente");
@@ -131,7 +131,7 @@ test("con 403 de /acceso no se pinta el armazón", async ({ page }) => {
   await expect(page.getByTestId("realtor-notice")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("realtor-shell")).toHaveCount(0);
   await expect(page.getByTestId("shell-sidebar")).toHaveCount(0);
-  await expect(page.getByTestId("career-director")).toHaveCount(0);
+  await expect(page.getByTestId("center-career-director")).toHaveCount(0);
   await expect(page.getByTestId("demo-pill")).toHaveCount(0);
   await expect(page.getByText("Smart Calendar")).toHaveCount(0);
 });

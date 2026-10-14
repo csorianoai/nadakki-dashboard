@@ -5,21 +5,21 @@ Fuente única: `REALTOR_MENU` en `lib/realtor/menu.ts`, compuesto desde `REALTOR
 
 ## Estructura
 
-Bloques fijos arriba, sin cambios: **Career Director · guía** y **Smart Calendar**. Después, cuatro grupos (ninguno «Próximamente»):
+Un único bloque fijo arriba, sin cambios: **Smart Calendar**. Career Director deja de ser bloque fijo y es fila del grupo Crecer. Después, cuatro grupos (ninguno «Próximamente»):
 
 | Grupo | Entradas |
 |---|---|
 | Hoy | Mi día (`/realtor/mi-dia`) · Bandeja del broker (solo rol `broker_supervisor`) |
 | Clientes | Contactos (`/realtor/clientes`) · Conversaciones (Pronto) · Propiedades (`/realtor/propiedades`) |
 | Negocios | Operaciones (`/realtor/operaciones`, con la Finanzas dentro) · Documentos (`/realtor/documentos`) |
-| Crecer | Marketing (`/realtor/marketing-ai`) · Mercado (`/realtor/demand-radar`) · Resultados (`/realtor/resultados`) · Academia (Pronto) |
+| Crecer | Marketing (`/realtor/marketing-ai`) · Mercado (`/realtor/demand-radar`) · Resultados (`/realtor/resultados`) · Career Director (`/realtor/career-director`) · Academia (Pronto) |
 
 - **Propiedades pasa a Clientes** (antes estaba en Cartera).
 - **Mercado es Demand Radar** y **Marketing es Marketing AI**: solo cambia el rótulo; ids y rutas no cambian.
 - **Contactos** es el listado unificado de clientes y propietarios con filtro de rol (lo construye O2-F-CLIENTES; absorbe al CRM).
   El propietario es un contacto con rol de propietario más `re_owner_mandates` (decisión D8).
 - Finanzas va dentro de Operaciones (la sección la construye O2-F-OPERACIONES); ya no es fila.
-- Mi oficina y CRM dejan de ser filas: Mi oficina se alcanza por Career Director y por `/realtor/alta`.
+- No hay bloque «Mi oficina» (decisión de César, 2026-10-14). El CRM se unifica en Contactos. Alta (`/realtor/alta`), web del agente (`/realtor/agente-web`) y zonas/permisos van en Administración › Real Estate (`/admin/real-estate`, fuera de esta zona); las rutas `/realtor/alta` y `/realtor/agente-web` siguen resolviendo.
 - **«Pronto»**: marca discreta (texto pequeño y apagado) de los centros aún no construidos; no tienen ruta. Al construirse pierden la marca y ganan `href` en su `center.ts`.
 
 ## Bandeja del broker
