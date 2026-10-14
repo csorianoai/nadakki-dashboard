@@ -1,10 +1,32 @@
 import { entradasBuscador, NAVEGACION } from '@/lib/navigation';
 import { filterSectionsForUser } from '@/components/forge/layout/forge-global-sidebar-nav';
+import fs from 'fs';
+import path from 'path';
+import ts from 'typescript';
 
 const role = (role_key: string, core_name = 'credit') => ({ role_key, core_name, display_name: role_key });
 const visible = (roles: ReturnType<typeof role>[], cores: string[]) => filterSectionsForUser(NAVEGACION, roles, cores, true);
 
 describe('entrada reconocible Dealer Bank después del rediseño', () => {
+  test('el acceso rápido de Inicio abre el selector, sin saltar directamente al banco', () => {
+    const source = ts.createSourceFile('page.tsx', fs.readFileSync(path.join(process.cwd(), 'app/page.tsx'), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const entries: Record<string, string>[] = [];
+    function visit(node: ts.Node) {
+      if (ts.isVariableDeclaration(node) && node.name.getText(source) === 'QUICK_LINKS' && node.initializer && ts.isArrayLiteralExpression(node.initializer)) {
+        for (const element of node.initializer.elements) {
+          if (!ts.isObjectLiteralExpression(element)) continue;
+          const item: Record<string, string> = {};
+          for (const p of element.properties) {
+            if (ts.isPropertyAssignment(p) && ts.isStringLiteral(p.initializer)) item[p.name.getText(source)] = p.initializer.text;
+          }
+          entries.push(item);
+        }
+      }
+      ts.forEachChild(node, visit);
+    }
+    visit(source);
+    expect(entries.find(item => item.label === 'Dealer Bank' || item.label === 'Credit Hub')?.href).toBe('/credit-hub');
+  });
   test('el administrador encuentra el antiguo hub bajo Crédito por su nombre', () => {
     const menu = visible([role('platform_superadmin', 'platform')], []);
     const credit = menu.find(s => s.id === 'credit-hub')!;

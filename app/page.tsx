@@ -37,9 +37,9 @@ const QUICK_LINKS: {
 }[] = [
   { href: "/agents/execute", label: "Ejecutar Agentes", icon: Zap, color: "from-cyan-500 to-blue-600" },
   {
-    href: "/credit-hub/bank",
-    label: "Credit Hub",
-    subtitle: "Multi-tenant credit origination & decisioning",
+    href: "/credit-hub",
+    label: "Dealer Bank",
+    subtitle: "Solicitudes del concesionario y decisiones del banco",
     icon: BadgeDollarSign,
     color: "from-emerald-600 to-teal-700",
     badge: "v1.0",
@@ -314,3 +314,4 @@ export default function HomePage() {
     </div>
   );
 }
+
