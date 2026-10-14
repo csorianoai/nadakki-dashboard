@@ -13,6 +13,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import AppGate from "@/components/auth/AppGate";
 import { BarraSuite } from "@/components/nav/BarraSuite";
 import { migasDe } from "@/lib/migas";
+import { NAV_SECTIONS, filterSectionsForUser, userCanAccessAdminNav } from "@/components/forge/layout/forge-global-sidebar-nav";
+import { NAVEGACION, PESTANAS_MARKETING } from "@/lib/navigation";
+import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-nav";
 
 let pathname = "/";
 jest.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => ({ replace: jest.fn(), push: jest.fn() }) }));
@@ -146,5 +149,70 @@ describe("(5) los cajones laterales en móvil empiezan bajo la barra de 40 px", 
     const src = fs.readFileSync(path.join(ROOT, f), "utf8");
     expect(src).not.toMatch(/fixed[^"`]*inset-y-0/);
     expect(src).toMatch(/fixed[^"`]*top-1[02]|top-10[^"`]*fixed/);          // 40 px (top-10) o el botón del Cockpit (top-12)
+  });
+});
+
+describe("(6) las migas no enseñan a nadie un enlace que su menú le oculta (auditor de #825, criterio 3)", () => {
+  const rol = (role_key: string, core_name = "core") => [{ role_key, core_name }] as never;
+  const TODOS_LOS_MODULOS = Array.from(new Set(NAVEGACION.flatMap((s) => [...s.coreMatchers, ...s.children.flatMap((c) => c.coreMatchers ?? [])])));
+  const USUARIOS: [string, never, string[] | undefined][] = [
+    ["tenant_admin", rol("tenant_admin"), TODOS_LOS_MODULOS],
+    ["tenant_admin sin módulos", rol("tenant_admin"), []],
+    ["platform_superadmin", rol("platform_superadmin"), TODOS_LOS_MODULOS],
+    ["banker", rol("banker", "credit"), TODOS_LOS_MODULOS],
+    ["dealer_user", rol("dealer_user", "credit"), TODOS_LOS_MODULOS],
+    ["sin rol", [] as never, []],
+  ];
+
+  test("tenant_admin en /settings, /settings/integrations, /billing y /audit: ninguna miga apunta a /admin", () => {
+    for (const r of ["/settings", "/settings/integrations", "/billing", "/audit"]) {
+      const hrefs = migasDe(r).map((m) => m.href);
+      expect(hrefs).not.toContain("/admin");
+      expect(hrefs).not.toContain("/admin/gates");
+    }
+    pathname = "/settings";
+    render(<BarraSuite />);
+    const enlaces = within(screen.getByTestId("barra-suite-migas")).getAllByRole("link").map((a) => a.getAttribute("href"));
+    expect(enlaces.some((h) => h?.startsWith("/admin"))).toBe(false);
+    expect(etiquetas("/settings")).toEqual(["Inicio", "Administración", "Ajustes"]);
+  });
+
+  test("un superadmin en /admin sigue viendo Administración apuntando a la ruta abierta", () => {
+    expect(migasDe("/admin")).toEqual([{ label: "Inicio", href: "/" }, { label: "Administración", href: "/admin" }]);
+  });
+
+  test.each(USUARIOS)("%s: todo enlace de las migas de una pantalla que su menú le muestra, también está en su menú", (_n, roles, subs) => {
+    const visibles = filterSectionsForUser(NAV_SECTIONS, roles, subs, userCanAccessAdminNav(roles));
+    const hrefsVisibles = new Set(visibles.flatMap((s) => [s.href, ...s.children.flatMap((c) => [c.href, ...(c.children ?? []).map((h) => h.href)])]).filter(Boolean).map((h) => (h as string).split(/[?#]/)[0]));
+    const MARKETING = new Set(["/marketing-hub", ...PESTANAS_MARKETING.flatMap((p) => [p.href, ...p.paginas.map((g) => g.href)]).map((h) => h.split(/[?#]/)[0])]);
+    let revisadas = 0;
+    for (const s of visibles) {
+      for (const c of [...s.children, ...s.children.flatMap((x) => x.children ?? [])]) {
+        if (!c.href) continue;
+        const ruta = c.href.split(/[?#]/)[0];
+        if (MARKETING.has(ruta)) continue;
+        revisadas++;
+        for (const m of migasDe(ruta)) {
+          const h = m.href.split(/[?#]/)[0];
+          expect({ ruta, miga: m.label, h, visible: h === "/" || h === ruta || hrefsVisibles.has(h) }).toEqual({ ruta, miga: m.label, h, visible: true });
+        }
+      }
+    }
+    expect(revisadas).toBeGreaterThan(0);
+  });
+
+  test("Dealer OS y banco v2: el enlace de la sección no es una entrada con rol, plan o capacidad", () => {
+    // Dealer OS: «Conexiones» exige la capacidad autos.api.access; el grupo no puede enlazar a ella si hay otra libre.
+    const dealer = migasDe("/autos/dealer/conexiones");
+    expect(dealer.map((m) => m.href)).toEqual(["/", "/autos/dealer", "/autos/dealer/estado", "/autos/dealer/conexiones"]);
+    // Una entrada restringida primera en el grupo: la sección cae a la pantalla abierta, nunca a la restringida.
+    for (const g of DEALER_NAV_GROUPS) {
+      const libre = g.items.find((i) => i.capability === null);
+      for (const it of g.items) {
+        const href = migasDe(it.href).find((m) => m.label === g.label)?.href;
+        if (href === undefined) continue;
+        expect(href === it.href || href === libre?.href || g.items.find((i) => i.href === href)?.capability === null).toBe(true);
+      }
+    }
   });
 });

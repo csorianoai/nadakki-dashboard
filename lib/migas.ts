@@ -21,6 +21,16 @@ type MenuCore = { prefijos: string[]; modulo: Miga; grupos: Grupo[] };
  */
 export const MENUS_CORE: MenuCore[] = MODULOS.flatMap((m) => m.carcasas ?? []);
 
+/**
+ * ¿La entrada tiene una condición de visibilidad (rol, superadmin, módulo propio, plan, interruptor)?
+ * Las migas no conocen al usuario, así que NUNCA enlazan una sección a una entrada así: la que el menú
+ * le oculta a otro rol (p. ej. /admin, solo superadmin) no puede aparecer como enlace de la barra.
+ */
+function restringida(it: object): boolean {
+  const r = it as { superAdminOnly?: boolean; roles?: unknown[]; coreMatchers?: unknown[]; featureFlag?: string; acceso?: string; capability?: string | null; pronto?: string };
+  return Boolean(r.superAdminOnly || r.roles?.length || r.coreMatchers?.length || r.featureFlag || r.acceso || r.capability || r.pronto);
+}
+
 function titulo(s: string): string {
   const t = s.toLowerCase().replace(/[-_]+/g, " ");
   return t.charAt(0).toUpperCase() + t.slice(1);
@@ -63,7 +73,9 @@ function migasCore(menu: MenuCore, ruta: string): Miga[] {
     return ruta === menu.modulo.href ? base : conDetalle(base, menu.modulo.href, ruta);
   }
   if (sinQuery(mejor.item.href) === menu.modulo.href) return conDetalle(base, menu.modulo.href, ruta);
-  const seccion = { label: mejor.grupo.label, href: mejor.grupo.items[0].href };
+  // El enlace de la sección es la primera entrada SIN restricción; si no hay, la pantalla que ya está abierta.
+  const libre = mejor.grupo.items.find((i) => !restringida(i));
+  const seccion = { label: mejor.grupo.label, href: libre?.href ?? mejor.item.href };
   const pantalla = { label: mejor.item.label, href: mejor.item.href };
   return conDetalle([...base, seccion, pantalla], pantalla.href, ruta);
 }
@@ -98,10 +110,15 @@ function migasSuite(ruta: string): Miga[] | null {
   if (!mejor) return null;
   const m = mejor as { seccion: (typeof NAVEGACION)[number]; padre: NavItem | null; item: { label: string; href: string } };
   if (m.seccion.id === "inicio" && sinQuery(m.item.href) === "/") return [INICIO];
-  const primera = m.seccion.href ?? m.seccion.children.find((c) => c.href)?.href ?? m.item.href;
+  // Primer hijo sin restricción (rol, superadmin, módulo propio, interruptor); si no hay, la pantalla abierta.
+  // Nunca el primer hijo a secas: en Administración es /admin, solo de superadmin.
+  const primera = m.seccion.href ?? m.seccion.children.find((c) => c.href && !restringida(c))?.href ?? m.item.href;
   const migas: Miga[] = [INICIO, { label: m.seccion.label, href: primera }];
   if (m.padre?.href) migas.push({ label: m.padre.label, href: m.padre.href });
-  if (sinQuery(m.item.href) !== sinQuery(primera) || m.padre) migas.push(m.item);
+  // La pantalla se omite solo cuando ES la entrada con la que abre la sección (no cuando el enlace se desvió a otra).
+  const abre = m.seccion.href ?? m.seccion.children.find((c) => c.href)?.href ?? m.item.href;
+  if (sinQuery(m.item.href) !== sinQuery(abre) || m.padre) migas.push(m.item);
+  else migas[1] = { label: m.seccion.label, href: m.item.href };      // ya estás en ella: la miga final apunta a la ruta abierta
   return conDetalle(migas, m.item.href, ruta);
 }
 
