@@ -6,6 +6,8 @@ export type RealtorView = "agente" | "broker";
 
 type Props = {
   center: string;
+  /** Id del centro vivo que no es fila de la barra (p. ej. Propietarios): la miga lo señala. */
+  offBarId?: string;
   view: RealtorView;
   onView: (v: RealtorView) => void;
   demo: boolean;
@@ -18,12 +20,12 @@ const VIEWS: { id: RealtorView; label: string }[] = [
 ];
 
 /** Barra superior: miga, vista simulada Agente/Broker (sin permisos nuevos), píldora y reinicio solo en DEMO. */
-export function ShellTopBar({ center, view, onView, demo, onResetDemo }: Props) {
+export function ShellTopBar({ center, offBarId, view, onView, demo, onResetDemo }: Props) {
   return (
     <header data-testid="shell-topbar" style={{ position: "sticky", top: 0, zIndex: 20, background: RT.page, borderBottom: `1px solid ${RT.line}` }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 16px", padding: "10px 40px" }}>
         <nav aria-label="Miga" data-testid="shell-crumb" style={{ fontSize: 13, color: RT.muted }}>
-          <span style={{ fontFamily: FONT_DISPLAY }}>Nadakki Realtor OS</span> › <strong style={{ color: RT.ink }}>{center}</strong>
+          <span style={{ fontFamily: FONT_DISPLAY }}>Nadakki Realtor OS</span> › <strong {...(offBarId ? { "data-testid": `center-${offBarId}`, "data-center-state": "live" } : {})} style={{ color: RT.ink }}>{center}</strong>
         </nav>
         <div style={{ marginLeft: "auto", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
           <span id="vista-nota" style={{ fontSize: 12, color: RT.muted }}>Vista simulada</span>

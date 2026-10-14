@@ -4,7 +4,7 @@ import { PropietariosPanel } from "@/components/realtor/propietarios/Propietario
 import { DEMO_OWNERS } from "@/lib/realtor/propietarios/demo";
 import { applyFilters, countByRole, formatPrice } from "@/lib/realtor/propietarios/logic";
 import { NO_FILTERS } from "@/lib/realtor/propietarios/types";
-import { REALTOR_CENTERS } from "@/lib/realtor/centers";
+import { ALL_CENTERS } from "@/lib/realtor/centers";
 
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
@@ -34,7 +34,7 @@ describe("lógica", () => {
     DEMO_OWNERS.forEach((o) => { expect(o.name).toMatch(/^SYNTH/); expect(o.property).toMatch(/^SYNTH/); });
   });
   it("el centro está vivo en el registro", () => {
-    expect(REALTOR_CENTERS.find((c) => c.id === "propietarios")?.href).toBe("/realtor/propietarios");
+    expect(ALL_CENTERS.find((c) => c.id === "propietarios")?.href).toBe("/realtor/propietarios");
   });
 });
 
