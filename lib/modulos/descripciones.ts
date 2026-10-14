@@ -69,6 +69,7 @@ export const DESCRIPCIONES: Record<string, string> = {
   "adm-home": "Panel de administración: agentes, tenants, registros y configuración del sistema.",
   "adm-gates": "Gates de configuración que devuelve el API; actívalos o ciérralos para el tenant.",
   "adm-network-cockpit": "Cabina de la red: vista de tenants, usuarios, finanzas y crédito de toda la plataforma.",
+  "adm-real-estate": "Administración de Real Estate: llegará en breve; hoy sin pantalla, por eso no tiene enlace.",
   "adm-flags": "Interruptores de funciones: ver cuáles están activas. Hoy muestra una lista de ejemplo.",
   // Administración · Cuenta
   "set-home": "Ajustes generales del sistema y preferencias, incluida tu clave de API.",

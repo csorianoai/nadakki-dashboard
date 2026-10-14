@@ -90,7 +90,7 @@ describe("pantalla del grupo: /<raíz>/grupo/<id>", () => {
     render(conSesion(<PantallaGrupo />));
     const grupo = menuVisible(mod(modulo), USUARIO).find((g) => g.id === grupoId)!;
     const tarjetas = screen.getAllByTestId("tarjeta-pagina");
-    expect(tarjetas.map((t) => t.getAttribute("href"))).toEqual(hrefs(grupo.items));
+    expect(tarjetas.map((t) => t.getAttribute("href") ?? "")).toEqual(hrefs(grupo.items));
     expect(tarjetas).toHaveLength(grupo.items.length);
     tarjetas.forEach((t, i) => {
       expect(within(t).getByText(grupo.items[i]!.label)).toBeInTheDocument();
@@ -282,7 +282,7 @@ describe("nada se pierde: ningún módulo pierde páginas respecto a hoy", () =>
       expect(alcanzables.sort()).toEqual(m.menu.flatMap((g) => g.items.map((i) => i.id)).sort());
       for (const g of grupos) {
         // la página de cada item se resuelve a un item activo del menú (y por tanto a un grupo con su barra de pestañas)
-        for (const i of g.items) expect(itemActivo(grupos, i.href)).not.toBeNull();
+        for (const i of g.items.filter((x) => x.href)) expect(itemActivo(grupos, i.href)).not.toBeNull();
       }
     }
   });

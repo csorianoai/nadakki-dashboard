@@ -78,6 +78,16 @@ export function PestanasGrupo({ titulo, paginas, pathname }: PestanasGrupoProps)
         {paginas.map((p) => {
           const es = activo?.id === p.id;
           const Icono = p.icono;
+          if (!p.href && p.pronto) {
+            return (
+              <li key={p.id} className="flex">
+                <span aria-disabled="true" data-pronto={p.pronto} data-testid="pestana-grupo" className={`${CLASES.pestana} cursor-default opacity-60`}>
+                  {p.label}
+                  <span className={CLASES.insignia}>Pronto</span>
+                </span>
+              </li>
+            );
+          }
           return (
             <li key={p.id} className="flex">
               <Link href={p.href} data-testid="pestana-grupo" aria-current={es ? "page" : undefined} className={`${CLASES.pestana} ${es ? CLASES.pestanaActiva : ""}`}>
