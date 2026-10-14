@@ -105,7 +105,7 @@ const deRealtor: GrupoMenu[] = (() => {
   ];
 })();
 
-const sinIconos = (g: GrupoMenu[]) => g.map((x) => ({ label: x.label, items: x.items.map((i) => ({ label: i.label, href: i.href })) }));
+const sinIconos = (g: GrupoMenu[]) => g.map((x) => ({ label: x.label, items: x.items.map((i) => ({ label: i.label, href: i.href, ...("capability" in i ? { capability: (i as { capability?: string | null }).capability } : {}) })) }));
 
 // ── Los ocho módulos ───────────────────────────────────────────────────────────────────────────────
 
