@@ -267,6 +267,24 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
     ) : null;
 
   const renderLink = (item: NavItem, depth: number) => {
+    if (!item.href && item.pronto) {
+      // Ruta aprobada sin página todavía: sin enlace, para no mandar a un 404.
+      return (
+        <div
+          key={item.id}
+          aria-disabled="true"
+          data-pronto={item.pronto}
+          className={cn(
+            "flex min-h-8 cursor-default items-center gap-2 rounded-md border-l-2 border-transparent py-1.5 pr-3 text-xs text-zinc-500",
+            depth >= 1 ? "pl-9" : "pl-6",
+          )}
+        >
+          <span className="h-1 w-1 shrink-0 rounded-full bg-zinc-700" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          <span className="shrink-0 rounded border border-zinc-700 px-1 text-[10px] leading-4 text-zinc-500">Pronto</span>
+        </div>
+      );
+    }
     if (!item.href) return null;
     const active = isHrefActive(item.href, pathname);
     const isSubItem = depth >= 1;
@@ -491,7 +509,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.45)] transition-[transform,width] duration-200 ease-in-out motion-reduce:transition-none lg:static lg:z-auto lg:translate-x-0 lg:shadow-none",
+          "fixed bottom-0 left-0 top-10 z-50 flex shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.45)] transition-[transform,width] duration-200 ease-in-out motion-reduce:transition-none lg:static lg:z-auto lg:translate-x-0 lg:shadow-none",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           collapsed
             ? "w-80 max-w-[min(100vw,20rem)] lg:w-[68px] lg:max-w-[68px]"

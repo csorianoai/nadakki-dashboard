@@ -43,6 +43,11 @@ export type NavItem = {
   id: string;
   label: string;
   href?: string;
+  /**
+   * Ruta aprobada cuya página aún no existe: la fila se pinta sin enlace y con la marca «Pronto». Al construirse
+   * la página, se cambia `pronto` por `href` (así el menú nunca apunta a un 404).
+   */
+  pronto?: string;
   badge?: NavBadge;
   icon?: LucideIcon;
   /** Encabezado visual dentro de la sección (solo pinta; no es un nivel). */
@@ -392,6 +397,8 @@ export const NAVEGACION: NavSection[] = [
       { id: "set-integrations", label: "Integraciones", href: "/settings/integrations" },
       { id: "adm-billing-root", label: "Facturación", href: "/billing", keywords: ["billing"] },
       { id: "adm-audit", label: "Auditoría", href: "/audit", keywords: ["audit"] },
+      // Ruta aprobada por César; la construye O3-D-ADMIN-REAL-ESTATE. Hasta entonces, «Pronto» y sin enlace.
+      { id: "adm-real-estate", label: "Real Estate", pronto: "/admin/real-estate", keywords: ["inmobiliaria", "realtor"] },
       { id: "adm-flags", label: "Interruptores", href: "/feature-flags", superAdminOnly: true, keywords: ["feature flags"] },
     ],
   },

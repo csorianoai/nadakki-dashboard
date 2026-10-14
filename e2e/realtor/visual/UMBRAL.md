@@ -18,6 +18,11 @@ media absoluta, normalizada a 0–1, sea **≤ 12 %** (`THRESHOLD` en el spec).
 El umbral es un punto de partida: si el diseño cambia, regenerar la referencia con `tests/realtor/visual/ref.sh`
 y volver a medir `DIFF_MEDIA` (se imprime en cada ejecución) antes de tocar `THRESHOLD`.
 
+## Operaciones (`operaciones.spec.ts`)
+
+Referencia `ref/operaciones.png` (centro "Operaciones" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
+entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.
+
 ## Asistente de alta (`alta.spec.ts`)
 
 DL10A no tiene una pantalla de alta; la referencia es `ref/alta.png` = centro "Mi oficina" (NAV[11]), la más
@@ -25,9 +30,18 @@ cercana (cuenta y oficina del agente). Mismo umbral (12 %). La referencia se gen
 de esta pantalla aún no se ha medido (no hay ZIP ni navegador en el entorno del constructor): medirlo en CI antes
 de dar el umbral por bueno.
 
+## Mi día (`mi-dia.spec.ts`)
+
+Referencia `ref/mi-dia.png` (centro 0, copia de `mi_dia.png`). Mismo umbral (12 %). `DIFF_MEDIA`: aún no medido (el navegador del constructor no arranca); medirlo en CI.
+
 ## Clientes (`clientes.spec.ts`)
 
 Referencia `ref/clientes.png` (centro "Clientes" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
+entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.
+
+## Documentos (`documentos.spec.ts`)
+
+Referencia `ref/documentos.png` (centro "Documentos" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
 entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.
 
 ## Marketing AI (`marketing-ai.spec.ts`)
@@ -52,3 +66,8 @@ medirlo en CI antes de dar el umbral por bueno.
 
 Referencia `ref/propiedades.png` (centro "Propiedades" de DL10A). Mismo umbral (12 %). `DIFF_MEDIA` aún sin medir en este
 entorno (sin navegador del constructor): se imprime en cada ejecución; medirlo en CI antes de dar el umbral por bueno.
+
+## Menú nuevo y Resultados (`shell.spec.ts`, O2-F-MENU)
+
+Mismo umbral (12 %) y mismo método para `/realtor/demand-radar` con la barra del menú nuevo. Resultados no tiene referencia en
+DL10A y no se compara por píxeles; detalle en `docs/design/realtor/menu/UMBRAL.md`.

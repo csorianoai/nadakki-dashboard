@@ -317,3 +317,45 @@ describe("(4) «no encontrado» con salida", () => {
     expect(fs.readFileSync(path.join(ROOT, "app/not-found.tsx"), "utf8")).toContain("<PaginaNoEncontrada");
   });
 });
+
+describe("Administración › Real Estate: «Pronto» hasta que exista /admin/real-estate", () => {
+  const fila = (secs: NavSection[]) => secs.find((s) => s.id === "admin")?.children.find((i) => i.id === "adm-real-estate");
+
+  it("la ven platform_superadmin y tenant_admin (los mismos que ven Administración), sin enlace", () => {
+    for (const r of ["platform_superadmin", "tenant_admin"]) {
+      const it = fila(ver([rol(r, "platform")], []));
+      expect(it).toMatchObject({ label: "Real Estate", pronto: "/admin/real-estate" });
+      expect(it?.href).toBeUndefined();
+    }
+  });
+
+  it("no amplía permisos: nadie más ve Administración ni la fila", () => {
+    for (const r of [rol("support_agent", "platform"), rol("banker"), rol("dealer"), rol("credit_admin")]) {
+      expect(fila(ver([r], ["credit", "marketing", "legal"]))).toBeUndefined();
+    }
+  });
+
+  it("no hay enlace roto: ni en el menú ni en el buscador aparece /admin/real-estate", () => {
+    const secs = ver([rol("platform_superadmin", "platform")], []);
+    expect(hrefs(secs.flatMap((s) => s.children))).not.toContain("/admin/real-estate");
+    expect(entradasBuscador(secs).some((e) => e.href.startsWith("/admin/real-estate"))).toBe(false);
+  });
+
+  it("se pinta como texto con la marca «Pronto», no como enlace", () => {
+    const antes = mockAuth.allRoles;
+    mockAuth.allRoles = [{ core_name: "platform", role_key: "tenant_admin" }];
+    mockPath = "/settings";
+    try {
+      render(<ForgeGlobalCoresSidebar mobileOpen={false} />);
+      const el = document.querySelector('[data-pronto="/admin/real-estate"]')!;
+      expect(el).not.toBeNull();
+      expect(el.tagName).not.toBe("A");
+      expect(el).toHaveAttribute("aria-disabled", "true");
+      expect(el).toHaveTextContent("Real Estate");
+      expect(el).toHaveTextContent("Pronto");
+      expect(document.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+    } finally {
+      mockAuth.allRoles = antes;
+    }
+  });
+});

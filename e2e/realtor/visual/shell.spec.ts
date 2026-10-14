@@ -1,7 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ALL_CENTERS, REALTOR_CENTERS } from "../../../lib/realtor/centers";
+import { ALL_CENTERS } from "../../../lib/realtor/centers";
+import { BROKER_ROLE, REALTOR_MENU, visibleMenu } from "../../../lib/realtor/menu";
 
 /**
  * Armazón de Realtor OS (DL10A): hitos del diseño con /acceso a 200 y a 403 (fail-closed) y comparación visual
@@ -10,15 +11,15 @@ import { ALL_CENTERS, REALTOR_CENTERS } from "../../../lib/realtor/centers";
 
 const B = "http://backend.invalid";
 const THRESHOLD = 0.12;
+/** Misma regla que ShellSidebar: Career Director conserva su testid histórico (career-director.spec.ts). */
+const testidOf = (id: string) => (id === "career-director" ? "career-director" : `center-${id}`);
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/demand_radar.png");
-const ORDER = ["Mi día", "Clientes", "Propietarios", "Propiedades", "Marketing AI", "Demand Radar", "Operaciones", "Documentos", "Finanzas", "CRM", "Academia", "Mi oficina"];
-const GROUPS = ["HOY", "CARTERA", "CRECIMIENTO IA", "OPERACIÓN", "RELACIÓN Y CARRERA"];
-
 let fallos = 0;
 test.afterEach(({}, info) => void (info.status !== info.expectedStatus && (fallos += 1)));
-test.afterAll(() => console.log(`RESULT_O2_REGISTRO=${fallos === 0 ? "PASS" : "FAIL"}`));
+test.afterAll(() => { console.log(`RESULT_O2_REGISTRO=${fallos === 0 ? "PASS" : "FAIL"}`); console.log(`RESULT_O2_F_MENU=${fallos === 0 ? "PASS" : "FAIL"}`); });
 
-async function sesion(page: Page, acceso: number) {
+/** Peticiones del navegador a /acceso: para comprobar que el cliente nunca manda tenant. */
+async function sesion(page: Page, acceso: number, roles: string[] = [], vistas: string[] = []) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
   await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
   await page.route(`${B}/api/v2/auth/refresh`, (route) =>
@@ -30,7 +31,10 @@ async function sesion(page: Page, acceso: number) {
       current_tenant: tenant, all_tenants: [tenant], active_roles: [],
     } }));
   await page.route(/\/api\/v1\/realestate\/acceso/, (route) =>
-    route.fulfill({ status: acceso, json: acceso === 200 ? { ok: true } : { detail: "forbidden" } }));
+    {
+    vistas.push(`${route.request().url()} ${route.request().postData() ?? ""} ${JSON.stringify(route.request().headers())}`);
+    return route.fulfill({ status: acceso, json: acceso === 200 ? { ok: true, roles } : { detail: "forbidden" } });
+  });
   await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
 }
 
@@ -40,30 +44,35 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
   const side = page.getByTestId("shell-sidebar");
   await expect(side).toBeVisible({ timeout: 30_000 });
 
-  const labels = await side.locator('[data-testid^="center-"]:not([data-testid="center-search"]):not([data-testid="center-group"])').allInnerTexts();
-  expect(labels.map((t) => t.split("\n")[0].trim())).toEqual(ORDER);
-  expect(await side.getByTestId("center-group").allInnerTexts()).toEqual(GROUPS);
+  // Estructura esperada: sale de REALTOR_MENU (sin el rol, sin la Bandeja del broker).
+  const esperado = visibleMenu([]);
+  expect(await side.getByTestId("center-group").allInnerTexts()).toEqual(esperado.map((g) => g.label));
+  const labels = await side.locator('[data-testid^="center-"]:not([data-testid="center-search"]):not([data-testid="center-group"]), [data-testid="career-director"]').allInnerTexts();
+  expect(labels.map((t) => t.split("\n")[0].trim())).toEqual(esperado.flatMap((g) => g.items.map((i) => i.label)));
+  expect(esperado.map((g) => g.label)).toHaveLength(4);
+  await expect(side.getByTestId("center-finanzas")).toHaveCount(0);
+  await expect(side.getByTestId("center-bandeja-broker")).toHaveCount(0);
 
-  // Lo esperado sale del registro: con href enlaza; sin href está deshabilitado y dice «Próximamente».
-  for (const c of REALTOR_CENTERS) {
-    const el = side.getByTestId(`center-${c.id}`);
+  // Con href enlaza; sin href está deshabilitado, sin ruta, y lleva la marca «Pronto».
+  for (const c of esperado.flatMap((g) => g.items)) {
+    const el = side.getByTestId(testidOf(c.id));
     if (c.href) {
       await expect(el).toHaveAttribute("href", c.href);
     } else {
       await expect(el).toHaveAttribute("aria-disabled", "true");
-      await expect(el).toContainText("Próximamente");
+      await expect(el).toContainText("Pronto");
       expect(await el.getAttribute("href")).toBeNull();
     }
   }
   expect(ALL_CENTERS.some((c) => c.id === "demand-radar" && c.href)).toBe(true);
-  await expect(page.getByTestId("career-director")).toContainText("Career Director · guía");
-  for (const id of ["career-director", "smart-calendar"]) {
+  await expect(page.getByTestId("career-director")).toHaveAttribute("href", "/realtor/career-director");
+  for (const id of ["smart-calendar"]) {
     const reg = ALL_CENTERS.find((c) => c.id === id)!;
     if (reg.href) await expect(page.getByTestId(id)).toHaveAttribute("href", reg.href);
     else await expect(page.getByTestId(id)).toContainText("Próximamente");
   }
 
-  await expect(page.getByTestId("shell-crumb")).toContainText("Demand Radar");
+  await expect(page.getByTestId("shell-crumb")).toContainText("Mercado");
   await expect(page.getByTestId("view-agente")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("view-broker").click();
   await expect(page.getByTestId("view-broker")).toHaveAttribute("aria-pressed", "true");
@@ -75,9 +84,47 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
   await page.getByTestId("view-agente").click();
   await page.keyboard.press("/");
   await expect(page.getByTestId("center-search")).toBeFocused();
-  await page.keyboard.type("fin");
-  await expect(side.getByTestId("center-finanzas")).toBeVisible();
+  await page.keyboard.type("ope");
+  await expect(side.getByTestId("center-operaciones")).toBeVisible();
   await expect(side.getByTestId("center-clientes")).toHaveCount(0);
+});
+
+test("con el rol broker_supervisor la Bandeja del broker aparece en «Hoy»; el selector Broker no la concede", async ({ page }) => {
+  await sesion(page, 200, [BROKER_ROLE]);
+  await page.goto("/realtor/demand-radar");
+  const side = page.getByTestId("shell-sidebar");
+  await expect(side).toBeVisible({ timeout: 30_000 });
+  const hoy = REALTOR_MENU[0].items.map((i) => i.label);
+  expect(hoy).toContain("Bandeja del broker");
+  await expect(side.getByTestId("center-bandeja-broker")).toBeVisible();
+  await expect(side.getByTestId("center-bandeja-broker")).toContainText("Pronto");
+});
+
+test("negativo: sin el rol no hay Bandeja aunque se elija la vista Broker", async ({ page }) => {
+  await sesion(page, 200, ["agent"]);
+  await page.goto("/realtor/demand-radar");
+  await expect(page.getByTestId("shell-sidebar")).toBeVisible({ timeout: 30_000 });
+  await page.getByTestId("view-broker").click();
+  await expect(page.getByTestId("view-broker")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("center-bandeja-broker")).toHaveCount(0);
+});
+
+test("tenant ajeno: la petición a /acceso no lleva tenant del cliente", async ({ page }) => {
+  const vistas: string[] = [];
+  await sesion(page, 200, [BROKER_ROLE], vistas);
+  await page.goto("/realtor/demand-radar");
+  await expect(page.getByTestId("shell-sidebar")).toBeVisible({ timeout: 30_000 });
+  expect(vistas.length).toBeGreaterThan(0);
+  for (const v of vistas) expect(v).not.toMatch(/tenant/i);
+});
+
+test("Resultados: centro vivo con DEMO rotulado", async ({ page }) => {
+  await sesion(page, 200);
+  await page.goto("/realtor/resultados");
+  await expect(page.getByTestId("resultados-panel")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("demo-banner")).toContainText("DEMO · datos sintéticos");
+  await expect(page.getByTestId("funnel-cierres")).toBeVisible();
+  await expect(page.getByTestId("center-resultados")).toHaveAttribute("data-center-state", "live");
 });
 
 test("con 403 de /acceso no se pinta el armazón", async ({ page }) => {
