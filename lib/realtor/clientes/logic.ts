@@ -1,4 +1,4 @@
-import { LEAD_STATUSES, type ClientFilters, type Contact, type LeadStatus } from "./types";
+import { LEAD_STATUSES, type ClientFilters, type Contact, type ContactKind, type LeadStatus } from "./types";
 
 /** Cliente = contacto con rol de cliente vigente. El resto son prospectos y van en Leads. */
 export const isClient = (c: Contact) => c.role !== null && c.roleActive;
@@ -27,3 +27,10 @@ export function maskEmail(email: string): string {
   const [user, domain] = email.split("@");
   return user && domain ? `${user[0]}•••@${domain}` : "•••";
 }
+
+/** Pestaña del listado unificado: «todos» y «propietario» incluyen propietarios; cliente y lead solo contactos. */
+export function inKind(c: Contact, kind: ContactKind): boolean {
+  return kind === "todos" || (kind === "cliente" ? isClient(c) : kind === "lead" ? !isClient(c) : false);
+}
+export const showsOwners = (kind: ContactKind, f: ClientFilters) =>
+  kind === "propietario" || (kind === "todos" && f.role === "todos" && f.origin === "todos" && f.leadStatus === "todos");

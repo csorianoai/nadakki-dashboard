@@ -1,4 +1,4 @@
-import type { Contact } from "./types";
+import type { Contact, Journey, OwnerContact } from "./types";
 
 /** Datos sintéticos: prefijo SYNTH, teléfonos 555-01xx y correos @example.invalid. Solo con NEXT_PUBLIC_REALTOR_ALLOW_DEMO="1". */
 export const DEMO_CONTACTS: readonly Contact[] = [
@@ -15,3 +15,21 @@ export const DEMO_CONTACTS: readonly Contact[] = [
   { id: "c6", name: "SYNTH Contacto 6", role: null, roleActive: false, origin: "web", leadStatus: "perdido",
     phone: "305-555-0106", email: "synth6@example.invalid", summary: { es: "Sin respuesta desde hace 60 días", en: "No reply for 60 days" } },
 ];
+
+/** Propietarios SYNTH: contacto con rol de propietario y mandatos por propiedad. */
+export const DEMO_OWNERS: readonly OwnerContact[] = [
+  { id: "o1", name: "SYNTH Propietario 1", ownerRole: "arrendador", mandates: [{ property: "SYNTH Apartamento A", agreement: "vigente" }] },
+  { id: "o2", name: "SYNTH Propietario 2", ownerRole: "vendedor", mandates: [{ property: "SYNTH Casa B", agreement: "borrador" }, { property: "SYNTH Terreno C", agreement: "sin-acuerdo" }] },
+];
+
+/** Recorrido de los contactos que ya tienen búsqueda registrada (datos sintéticos). */
+export const DEMO_JOURNEYS: Readonly<Record<string, Journey>> = {
+  c1: {
+    operation: { es: "Alquiler", en: "Rental" }, budget: { es: "Hasta USD 3,200/mes", en: "Up to USD 3,200/mo" }, zone: "Sunny Isles Beach",
+    consent: { whatsapp: false, email: true, call: false },
+    matches: [
+      { name: "SYNTH Apartamento A", detail: { es: "Sunny Isles Beach · USD 3,000/mes", en: "Sunny Isles Beach · USD 3,000/mo" }, fit: true },
+      { name: "SYNTH Apartamento B", detail: { es: "Sunny Isles Beach · USD 3,350/mes", en: "Sunny Isles Beach · USD 3,350/mo" }, fit: false },
+    ],
+  },
+};
