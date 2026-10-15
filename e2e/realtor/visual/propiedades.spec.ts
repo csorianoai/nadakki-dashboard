@@ -51,6 +51,41 @@ test("negativo sin DEMO: «Sin datos todavía», ninguna cifra ni marca DEMO", a
   expect(await page.getByTestId("propiedades-panel").innerText()).not.toMatch(/\d/);
 });
 
+const PID = "00000000-0000-4000-8000-00000000e001";
+const PROPS = { items: [
+  { id: PID, address: { country: "US", region: "SYNTH-REGION", city: "SYNTH City" }, jurisdiction: "US-FL", property_type: "house", unit_count: 1, owner: null, created_at: "2000-01-01T00:00:00Z" },
+], next_cursor: null };
+const LISTINGS = { items: [
+  { id: "00000000-0000-4000-8000-00000000f001", property_id: PID, property_unit_id: "00000000-0000-4000-8000-00000000e101", kind: "sale", status: "active",
+    list_price: { amount: "250000.00", currency: "USD" }, active_stage: "cma", published_channels: [], created_at: "2000-01-01T00:00:00Z" },
+], next_cursor: null };
+
+test("datos reales (contrato C-RE-OLA2, registros SYNTH) sin DEMO: lista, ficha con moneda y sin tenant en el cliente", async ({ page }) => {
+  const peticiones: string[] = [];
+  page.on("request", (r) => { if (/\/realestate\/(properties|listings)/.test(r.url())) peticiones.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/properties/, (route) => route.fulfill({ json: PROPS }));
+  await page.route(/\/api\/v1\/realestate\/listings/, (route) => route.fulfill({ json: LISTINGS }));
+  await page.goto(`${NODEMO}/realtor/propiedades`);
+  await expect(page.getByTestId("property-row")).toHaveCount(1, { timeout: 30_000 });
+  await expect(page.getByTestId("property-row")).toContainText("SYNTH City");
+  await expect(page.getByTestId("ficha-price")).toContainText("USD 250");
+  await expect(page.getByTestId("count-activa")).toContainText("1");
+  await expect(page.getByTestId("stage-cma")).toContainText("1");
+  await expect(page.getByTestId("propiedades-empty")).toHaveCount(0);
+  await expect(page.getByTestId("demo-banner")).toHaveCount(0);
+  expect(peticiones.length).toBeGreaterThan(0);
+  for (const p of peticiones) expect(p.toLowerCase()).not.toMatch(/tenant/);
+});
+
+test("endpoint 404/503 sin DEMO: sigue «Sin datos todavía»", async ({ page }) => {
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/(properties|listings)/, (route) => route.fulfill({ status: 503, json: { detail: "down" } }));
+  await page.goto(`${NODEMO}/realtor/propiedades`);
+  await expect(page.getByTestId("propiedades-empty")).toContainText("Sin datos todavía", { timeout: 30_000 });
+  await expect(page.getByTestId("property-row")).toHaveCount(0);
+});
+
 test("acceso denegado (403): nada de la pantalla ni del armazón", async ({ page }) => {
   await sesion(page, 403);
   await page.goto("/realtor/propiedades");

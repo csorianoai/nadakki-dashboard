@@ -34,8 +34,8 @@ export const COPY = {
 } as const;
 
 export const TYPE_LABEL: Record<Lang, Record<PropType, string>> = {
-  es: { condominio: "Condominio", casa: "Casa", townhouse: "Townhouse", terreno: "Terreno" },
-  en: { condominio: "Condo", casa: "House", townhouse: "Townhouse", terreno: "Land" },
+  es: { condominio: "Condominio", casa: "Casa", townhouse: "Townhouse", terreno: "Terreno", comercial: "Comercial", otro: "Otro" },
+  en: { condominio: "Condo", casa: "House", townhouse: "Townhouse", terreno: "Land", comercial: "Commercial", otro: "Other" },
 };
 export const STATUS_LABEL: Record<Lang, Record<PropStatus, string>> = {
   es: { activa: "Activa", en_contrato: "En contrato", vendida: "Vendida", retirada: "Retirada" },

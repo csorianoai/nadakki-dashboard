@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AGREEMENT_LABEL, COPY, KIND_LABEL, ORIGIN_LABEL, OWNER_LABEL, OWNER_ROLE_LABEL, ROLE_LABEL, STATUS_LABEL, type Lang } from "@/lib/realtor/clientes/copy";
+import { fetchClients } from "@/lib/realtor/clientes/api";
 import { DEMO_CONTACTS, DEMO_JOURNEYS, DEMO_OWNERS } from "@/lib/realtor/clientes/demo";
 import { applyFilters, countByStatus, inKind, maskEmail, maskPhone, showsOwners } from "@/lib/realtor/clientes/logic";
 import { KINDS, LEAD_STATUSES, NO_FILTERS, ORIGINS, ROLES, type ClientFilters, type Contact, type ContactKind } from "@/lib/realtor/clientes/types";
@@ -69,8 +70,15 @@ export function ClientesPanel() {
   const demo = isDemoAllowed();
   const t = COPY[lang];
 
-  // Fuera de DEMO no hay fuente conectada: lista vacía, sin cifras inventadas.
-  const contacts: readonly Contact[] = demo ? DEMO_CONTACTS : [];
+  // Fuera de DEMO se leen los clientes reales del contrato C-RE-OLA2; sin datos (404/503, vacío) la lista queda vacía.
+  const [real, setReal] = useState<readonly Contact[]>([]);
+  useEffect(() => {
+    if (demo || access !== "ok") return;
+    let alive = true;
+    fetchClients().then((list) => { if (alive) setReal(list); });
+    return () => { alive = false; };
+  }, [demo, access]);
+  const contacts: readonly Contact[] = demo ? DEMO_CONTACTS : real;
   const owners = demo ? DEMO_OWNERS : [];
   const inTab = useMemo(() => contacts.filter((c) => inKind(c, kind)), [contacts, kind]);
   const visible = useMemo(() => (kind === "propietario" ? [] : applyFilters(inTab, filters)), [inTab, filters, kind]);
@@ -128,7 +136,7 @@ export function ClientesPanel() {
             <Select label={t.fStatus} value={filters.leadStatus} all={t.all} onChange={(v) => set({ leadStatus: v })}
               options={LEAD_STATUSES.map((id) => ({ id, label: STATUS_LABEL[lang][id] }))} />
           </div>
-          {kind === "propietario" ? null : <div data-testid="status-counts" aria-label={t.statusCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          {kind === "propietario" || !demo ? null : <div data-testid="status-counts" aria-label={t.statusCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {LEAD_STATUSES.map((s) => (
               <span key={s} data-testid={`count-${s}`} style={{ background: RT.calloutBg, border: `1px solid ${RT.calloutLine}`, borderRadius: 999, padding: "6px 14px", fontSize: 13, fontWeight: 700 }}>
                 {STATUS_LABEL[lang][s]} · {counts[s]}
@@ -175,9 +183,9 @@ export function ClientesPanel() {
               {current ? (
                 <dl style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14, margin: 0, fontSize: 14 }}>
                   <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.role}</dt><dd style={{ margin: 0, fontWeight: 700 }}>{current.role ? ROLE_LABEL[lang][current.role] : "—"}</dd></div>
-                  <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.origin}</dt><dd style={{ margin: 0, fontWeight: 700 }}>{ORIGIN_LABEL[lang][current.origin]}</dd></div>
-                  <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.phone}</dt><dd data-testid="ficha-phone" style={{ margin: 0, fontWeight: 700 }}>{maskPhone(current.phone)}</dd></div>
-                  <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.email}</dt><dd data-testid="ficha-email" style={{ margin: 0, fontWeight: 700 }}>{maskEmail(current.email)}</dd></div>
+                  <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.origin}</dt><dd style={{ margin: 0, fontWeight: 700 }}>{current.origin ? ORIGIN_LABEL[lang][current.origin] : "—"}</dd></div>
+                  <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.phone}</dt><dd data-testid="ficha-phone" style={{ margin: 0, fontWeight: 700 }}>{current.phoneMasked ?? (current.phone ? maskPhone(current.phone) : "—")}</dd></div>
+                  <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.email}</dt><dd data-testid="ficha-email" style={{ margin: 0, fontWeight: 700 }}>{current.emailMasked ?? (current.email ? maskEmail(current.email) : "—")}</dd></div>
                   <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.status}</dt><dd style={{ margin: 0, fontWeight: 700 }}>{current.leadStatus ? STATUS_LABEL[lang][current.leadStatus] : t.none}</dd></div>
                 </dl>
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}

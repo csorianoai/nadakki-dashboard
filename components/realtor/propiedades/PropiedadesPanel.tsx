@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { COPY, STAGE_LABEL, STATUS_LABEL, TYPE_LABEL, type Lang } from "@/lib/realtor/propiedades/copy";
+import { fetchProperties } from "@/lib/realtor/propiedades/api";
 import { DEMO_PROPERTIES } from "@/lib/realtor/propiedades/demo";
 import { applyFilters, countByStage, countByStatus, formatPrice } from "@/lib/realtor/propiedades/logic";
 import { NO_FILTERS, STAGES, STATUSES, TYPES, type PropFilters, type Property } from "@/lib/realtor/propiedades/types";
@@ -36,8 +37,15 @@ export function PropiedadesPanel() {
   const demo = isDemoAllowed();
   const t = COPY[lang];
 
-  // Fuera de DEMO no hay fuente conectada: lista vacía, sin cifras inventadas.
-  const props: readonly Property[] = demo ? DEMO_PROPERTIES : [];
+  // Fuera de DEMO se lee C-RE-OLA2; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
+  const [real, setReal] = useState<readonly Property[]>([]);
+  useEffect(() => {
+    if (demo || access !== "ok") return;
+    let alive = true;
+    fetchProperties().then((r) => { if (alive) setReal(r); });
+    return () => { alive = false; };
+  }, [demo, access]);
+  const props: readonly Property[] = demo ? DEMO_PROPERTIES : real;
   const visible = useMemo(() => applyFilters(props, filters), [props, filters]);
   const byStatus = useMemo(() => countByStatus(props), [props]);
   const byStage = useMemo(() => countByStage(props), [props]);
@@ -107,7 +115,7 @@ export function PropiedadesPanel() {
                       <span style={{ display: "block", padding: "18px 18px 20px" }}>
                         <strong style={{ display: "block", fontFamily: FONT_DISPLAY, fontSize: 18 }}>{p.address}</strong>
                         <span style={{ display: "block", fontSize: 14, color: RT.muted, margin: "8px 0 10px" }}>
-                          {TYPE_LABEL[lang][p.type]} · {STAGE_LABEL[lang][p.stage]}
+                          {TYPE_LABEL[lang][p.type]}{p.stage ? ` · ${STAGE_LABEL[lang][p.stage]}` : ""}
                         </span>
                         <span style={{ display: "block", fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, margin: "0 0 12px" }}>{formatPrice(p.price.amount, p.price.currency, lang)}</span>
                         <span style={{ fontSize: 12, fontWeight: 700, background: RT.chipUpBg, color: RT.chipUpText, borderRadius: 999, padding: "3px 10px" }}>{STATUS_LABEL[lang][p.status]}</span>
@@ -125,7 +133,7 @@ export function PropiedadesPanel() {
                     {dt(t.price, formatPrice(current.price.amount, current.price.currency, lang), "ficha-price")}
                     {dt(t.type, TYPE_LABEL[lang][current.type])}
                     {dt(t.status, STATUS_LABEL[lang][current.status])}
-                    {dt(t.stage, STAGE_LABEL[lang][current.stage])}
+                    {current.stage ? dt(t.stage, STAGE_LABEL[lang][current.stage]) : null}
                   </dl>
                   <h3 style={{ margin: "18px 0 8px", fontSize: 14 }}>{t.units}</h3>
                   {current.units.length === 0 ? <p style={{ color: RT.muted, margin: 0 }}>{t.noUnits}</p> : (

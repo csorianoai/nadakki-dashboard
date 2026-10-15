@@ -1,10 +1,11 @@
-export type PropType = "condominio" | "casa" | "townhouse" | "terreno";
+export type PropType = "condominio" | "casa" | "townhouse" | "terreno" | "comercial" | "otro";
 export type PropStatus = "activa" | "en_contrato" | "vendida" | "retirada";
 /** Etapas del pipeline de captación DL10A (ola 2). */
 export type Stage = "acquire" | "cma" | "agreement" | "prepare_publish" | "marketing_showings" | "offers" | "contract_contingencies" | "closing";
-export type Currency = "USD" | "DOP";
+/** Código ISO tal como lo trae el contrato (USD, DOP…). */
+export type Currency = string;
 
-export const TYPES: readonly PropType[] = ["condominio", "casa", "townhouse", "terreno"];
+export const TYPES: readonly PropType[] = ["condominio", "casa", "townhouse", "terreno", "comercial", "otro"];
 export const STATUSES: readonly PropStatus[] = ["activa", "en_contrato", "vendida", "retirada"];
 export const STAGES: readonly Stage[] = ["acquire", "cma", "agreement", "prepare_publish", "marketing_showings", "offers", "contract_contingencies", "closing"];
 
@@ -14,7 +15,8 @@ export type Property = {
   address: string;
   type: PropType;
   status: PropStatus;
-  stage: Stage;
+  /** null: el listing no tiene etapa activa. */
+  stage: Stage | null;
   price: { amount: number; currency: Currency };
   units: readonly Unit[];
 };
