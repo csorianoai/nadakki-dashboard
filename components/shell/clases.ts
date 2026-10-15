@@ -21,7 +21,7 @@ export const CLASES = {
   acciones: "ml-auto flex shrink-0 items-center gap-1",
 
   /** Menú lateral del módulo. */
-  lateral: "fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100 transition-[transform,width] duration-200 motion-reduce:transition-none lg:static lg:z-auto lg:translate-x-0",
+  lateral: "fixed bottom-0 left-0 top-10 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100 transition-[transform,width] duration-200 motion-reduce:transition-none lg:static lg:z-auto lg:translate-x-0",
   lateralPlegado: "lg:w-[60px]",
   lateralOculto: "-translate-x-full",
   lateralCabecera: "flex items-center gap-2 border-b border-zinc-800 px-3 py-3 text-sm font-semibold",
