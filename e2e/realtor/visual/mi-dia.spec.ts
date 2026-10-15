@@ -55,6 +55,52 @@ test("negativo: sin DEMO, «Sin datos todavía», NO_DISPONIBLE y ninguna cifra"
   expect(await page.getByTestId("mi-dia-panel").innerText()).not.toMatch(/\d/);
 });
 
+// Cuerpo con la forma de C-RE-OLA2 (MiDia): registros SYNTH, un id por lead y una sección sin fuente.
+const MI_DIA_REAL = {
+  generated_at: "2000-01-01T00:00:00Z", scope: "supervisor",
+  leads_sin_primera_respuesta: { quality: "OK", count: 2, items: [
+    { lead_id: "00000000-0000-4000-8000-00000000d001", channel: "web", intent: "rent", status: "new", received_at: "2000-01-01T00:00:00Z", waiting_hours: 3.5 },
+    { lead_id: "00000000-0000-4000-8000-00000000d002", channel: "whatsapp", intent: "buy", status: "new", received_at: "2000-01-01T00:00:00Z", waiting_hours: 12 },
+  ] },
+  listings_con_requisitos_bloqueantes: { quality: "NO_DISPONIBLE", reason: "SYNTH: sin fuente hoy", count: null, items: [] },
+  broker_desk_pendientes: { quality: "OK", count: 1, items: [
+    { item_id: "00000000-0000-4000-8000-00000000d003", kind: "agent_activation", created_at: "2000-01-01T00:00:00Z" },
+  ] },
+};
+
+test("datos reales (sin DEMO): filas del contrato, sección sin fuente en NO_DISPONIBLE y sin tenant del cliente", async ({ page }) => {
+  const pedidos: string[] = [];
+  page.on("request", (r) => { if (r.url().includes("/api/v1/realestate/mi-dia")) pedidos.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/mi-dia/, (route) => route.fulfill({ json: MI_DIA_REAL }));
+  await page.goto(`${NODEMO}/realtor/mi-dia`);
+  await expect(page.getByTestId("mi-dia-panel")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("mi-dia-leads-count")).toHaveText("2");
+  await expect(page.getByTestId("mi-dia-leads").getByTestId("mi-dia-row")).toHaveCount(2);
+  await expect(page.getByTestId("mi-dia-leads")).toContainText("Web · alquiler");
+  await expect(page.getByTestId("mi-dia-listings").getByTestId("mi-dia-no-disponible")).toHaveCount(1);
+  await expect(page.getByTestId("mi-dia-empty")).toHaveCount(0);
+  await expect(page.getByTestId("mi-dia-demo")).toHaveCount(0);
+  await expect(page.getByTestId("mi-dia-desk")).toHaveCount(0);
+  await page.getByTestId("view-broker").click();
+  await expect(page.getByTestId("mi-dia-desk")).toContainText("Activación de agente");
+  expect(pedidos.length).toBeGreaterThan(0);
+  for (const p of pedidos) expect(p.toLowerCase()).not.toMatch(/x-tenant|tenant_id|tenant=/);
+});
+
+test("sin DEMO con 503 o lista vacía: sigue «Sin datos todavía»", async ({ page }) => {
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/mi-dia/, (route) => route.fulfill({ status: 503, json: { detail: "down" } }));
+  await page.goto(`${NODEMO}/realtor/mi-dia`);
+  await expect(page.getByTestId("mi-dia-empty")).toContainText("Sin datos todavía");
+  await expect(page.getByTestId("mi-dia-row")).toHaveCount(0);
+  const vacio = { ...MI_DIA_REAL, leads_sin_primera_respuesta: { quality: "OK", count: 0, items: [] }, broker_desk_pendientes: { quality: "OK", count: 0, items: [] } };
+  await page.route(/\/api\/v1\/realestate\/mi-dia/, (route) => route.fulfill({ json: vacio }));
+  await page.reload();
+  await expect(page.getByTestId("mi-dia-empty")).toContainText("Sin datos todavía");
+  await expect(page.getByTestId("mi-dia-row")).toHaveCount(0);
+});
+
 test("acceso denegado (403): no se pinta nada de la pantalla", async ({ page }) => {
   await sesion(page, 403);
   await page.goto("/realtor/mi-dia");
