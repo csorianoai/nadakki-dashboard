@@ -26,6 +26,8 @@ async function sesion(page: Page, { acceso, roles = ["tenant_admin"], perfil = 2
   await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
 }
 
+test.describe.configure({ mode: "serial" });
+
 test("con acceso: enlaces a alta y web del agente, jurisdicción real y solo lectura", async ({ page }) => {
   await sesion(page, { acceso: 200 });
   await page.goto(`${CON_DEMO}/admin/real-estate`);
@@ -69,10 +71,8 @@ test("200 sin rol de administración: no se ve configuración", async ({ page })
   await expect(page.getByTestId("admin-real-estate")).toHaveCount(0);
 });
 
-let fallos = 0;
-test.afterEach(({}, info) => {
-  if (info.status !== info.expectedStatus) fallos++;
-});
-test.afterAll(() => {
-  if (fallos === 0) console.log("RESULT_O3_D_ADMIN_REAL_ESTATE=PASS");
+
+// Último caso: en modo serial un fallo anterior lo salta, así que PASS solo se imprime si todos pasaron.
+test("RESULT", async () => {
+  console.log("RESULT_O3_D_ADMIN_REAL_ESTATE=PASS");
 });

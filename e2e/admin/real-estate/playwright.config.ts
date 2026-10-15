@@ -10,7 +10,7 @@ export default defineConfig({
   testDir: "./",
   testMatch: /.*\.spec\.ts/,
   timeout: 60_000,
-  retries: process.env.CI ? 1 : 0,
+  retries: 0, // sin reintentos: un caso inestable debe fallar la evidencia
   workers: 1,
   reporter: [["list"]],
   use: { baseURL: `http://127.0.0.1:${PORT}`, viewport: { width: 1440, height: 900 }, trace: "retain-on-failure" },
