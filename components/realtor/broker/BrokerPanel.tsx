@@ -65,8 +65,9 @@ function BrokerDesk() {
 
   const abrir = async (id: string) => {
     setAbierto({ id, item: null });
-    if (id.startsWith("demo-")) {
-      setAbierto({ id, item: { estado: "ok", datos: DEMO_ITEMS.find((i) => i.id === id) as DeskItem } });
+    const muestra = demo ? DEMO_ITEMS.find((i) => i.id === id) : undefined;
+    if (muestra) {
+      setAbierto({ id, item: { estado: "ok", datos: muestra } });
       return;
     }
     const item = await leerItem(id);
