@@ -63,6 +63,31 @@ export function DocumentosPanel() {
               </span>
             ))}
           </div>
+          <div data-testid="generator-row" style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 1fr) minmax(300px, 1fr)", alignItems: "start" }}>
+            <div style={CARD}>
+              <h2 style={H2}>{t.genTitle}</h2>
+              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
+                {t.readiness.map((r, i) => (
+                  <li key={r} data-testid="doc-readiness" style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>{r}</span>
+                    <strong style={{ textTransform: "uppercase", color: i === 1 ? RT.teal : RT.demoText }}>{i === 1 ? t.fromCrm : t.missing}</strong>
+                  </li>
+                ))}
+              </ul>
+              <div style={{ display: "flex", gap: 10, margin: "16px 0 12px" }}>
+                <button type="button" disabled data-testid="generate-doc" style={{ minHeight: 44, padding: "0 16px", borderRadius: 8, border: `1px dashed ${RT.lineStrong}`, background: RT.calloutBg, fontFamily: "inherit", fontWeight: 700 }}>{t.genBlocked}</button>
+                <span style={{ minHeight: 44, padding: "0 16px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, display: "inline-flex", alignItems: "center", fontWeight: 700 }}>{t.toOps}</span>
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.aiNote}</p>
+            </div>
+            <div style={CARD}>
+              <h2 style={H2}>{t.draftTitle} <span style={{ ...PILL, background: RT.calloutBg, color: RT.muted, fontSize: 11, textTransform: "uppercase" }}>{t.notGenerated}</span></h2>
+              <p data-testid="doc-note" style={{ margin: "0 0 18px", padding: "14px 18px", border: `1px dashed ${RT.lineStrong}`, borderRadius: 8, color: RT.muted, fontSize: 14 }}>{t.noDraft}</p>
+              <strong style={{ display: "block", fontSize: 14 }}>{t.signState}</strong>
+              <p style={{ margin: "10px 0", fontSize: 14 }}>{t.brokerApproval} <span style={{ ...PILL, background: RT.calloutBg, color: RT.muted }}>{t.notRequested}</span></p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: RT.demoText }}>{t.notLegal}</p>
+            </div>
+          </div>
           <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 3fr) minmax(300px, 2fr)", alignItems: "start" }}>
             <div style={CARD}>
               <h2 style={H2}>{t.docsTitle}</h2>
