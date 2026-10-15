@@ -2,7 +2,8 @@
 
 import { type ReactNode, useEffect } from "react";
 import { Building2 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { ForgeButton } from "../primitives/ForgeButton";
 
@@ -12,18 +13,22 @@ interface CHTenantGuardProps {
 
 export function CHTenantGuard({ children }: CHTenantGuardProps) {
   const { apiTenantId, loading } = useTenant();
+  const { isAuthenticated, isLoading: sessionLoading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
-    if (loading || apiTenantId || typeof window === "undefined") return;
+    // An authenticated session can still need an organization selection.
+    // Sending it back to login creates a loop and never resolves that selection.
+    if (loading || sessionLoading || isAuthenticated || apiTenantId) return;
     const next = pathname && pathname !== "/" ? pathname : "/credit-hub";
     const target = `/login?next=${encodeURIComponent(next)}`;
-    if (!window.location.pathname.startsWith("/login")) {
-      window.location.replace(target);
+    if (!pathname?.startsWith("/login")) {
+      router.replace(target);
     }
-  }, [apiTenantId, loading, pathname]);
+  }, [apiTenantId, loading, sessionLoading, isAuthenticated, pathname, router]);
 
-  if (loading) {
+  if (loading || sessionLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-forge-bg">
         <div className="animate-pulse text-forge-text-muted">Cargando...</div>
