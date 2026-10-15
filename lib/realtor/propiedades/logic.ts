@@ -7,9 +7,9 @@ export function applyFilters(list: readonly Property[], f: PropFilters): Propert
     (f.stage === "todos" || p.stage === f.stage));
 }
 
-function countBy<K extends string>(keys: readonly K[], list: readonly Property[], pick: (p: Property) => K): Record<K, number> {
+function countBy<K extends string>(keys: readonly K[], list: readonly Property[], pick: (p: Property) => K | null): Record<K, number> {
   const out = Object.fromEntries(keys.map((k) => [k, 0])) as Record<K, number>;
-  for (const p of list) out[pick(p)] += 1;
+  for (const p of list) { const k = pick(p); if (k) out[k] += 1; }
   return out;
 }
 export const countByStatus = (list: readonly Property[]): Record<PropStatus, number> => countBy(STATUSES, list, (p) => p.status);
