@@ -52,6 +52,51 @@ test("negativo sin DEMO: «Sin datos todavía», ninguna cifra ni marca DEMO", a
   expect(await page.getByTestId("clientes-panel").innerText()).not.toMatch(/\d/);
 });
 
+/** Página QA según C-RE-OLA2 (ClientSummary): registros SYNTH con etiquetas y puntos ya enmascarados. */
+const CLIENTS_QA = {
+  items: [
+    { contact: { id: "00000000-0000-4000-8000-00000000c001", kind: "person", display_label: "SYNTH A.", source: "referral",
+        owner_user_id: "00000000-0000-4000-8000-0000000000f1", active_roles: ["buyer"],
+        primary_points: [{ type: "email", value_masked: "s***@e***.invalid" }, { type: "sms", value_masked: "***0101" }], created_at: "2000-01-01T00:00:00Z" },
+      client_roles: ["buyer"], agreement_signed: true, agreement_signed_at: "2000-01-02T00:00:00Z" },
+    { contact: { id: "00000000-0000-4000-8000-00000000c002", kind: "person", display_label: "SYNTH B.", source: "manual",
+        owner_user_id: "00000000-0000-4000-8000-0000000000f1", active_roles: ["tenant"], primary_points: [], created_at: "2000-01-01T00:00:00Z" },
+      client_roles: ["tenant"], agreement_signed: false, agreement_signed_at: null },
+  ],
+  next_cursor: null,
+};
+
+async function conClientes(page: Page, status: number, json: unknown) {
+  await page.route(/\/api\/v1\/realestate\/clients/, (route) => route.fulfill({ status, json }));
+}
+
+test("datos reales sin DEMO (contrato C-RE-OLA2): filas SYNTH enmascaradas, sin banner DEMO ni tenant", async ({ page }) => {
+  const peticiones: string[] = [];
+  page.on("request", (r) => { if (r.url().includes("/realestate/clients")) peticiones.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
+  await sesion(page, 200);
+  await conClientes(page, 200, CLIENTS_QA);
+  await page.goto(`${NODEMO}/realtor/clientes`);
+  await expect(page.getByTestId("contact-row")).toHaveCount(2, { timeout: 30_000 });
+  await expect(page.getByTestId("contact-row").first()).toContainText("SYNTH A.");
+  await expect(page.getByTestId("ficha-email")).toHaveText("s***@e***.invalid");
+  await expect(page.getByTestId("ficha-phone")).toHaveText("***0101");
+  await expect(page.getByTestId("clientes-empty")).toHaveCount(0);
+  await expect(page.getByTestId("demo-banner")).toHaveCount(0);
+  await expect(page.getByTestId("demo-pill")).toHaveCount(0);
+  expect(peticiones.length).toBeGreaterThan(0);
+  for (const p of peticiones) expect(p.toLowerCase()).not.toMatch(/tenant/);
+});
+
+test("sin DEMO con 404/503 o lista vacía: sigue «Sin datos todavía»", async ({ page }) => {
+  for (const [status, json] of [[404, { detail: "nf" }], [503, { detail: "off" }], [200, { items: [], next_cursor: null }]] as const) {
+    await sesion(page, 200);
+    await conClientes(page, status, json);
+    await page.goto(`${NODEMO}/realtor/clientes`);
+    await expect(page.getByTestId("clientes-empty")).toContainText("Sin datos todavía", { timeout: 30_000 });
+    await expect(page.getByTestId("contact-row")).toHaveCount(0);
+  }
+});
+
 test("acceso denegado (403): nada de la pantalla ni del armazón", async ({ page }) => {
   await sesion(page, 403);
   await page.goto("/realtor/clientes");
