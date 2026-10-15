@@ -4,8 +4,8 @@ export type Lang = "es" | "en";
 
 export const COPY = {
   es: {
-    title: "Documentos de tus operaciones",
-    intro: "Los documentos de cada operación y las plantillas para prepararlos.",
+    title: "Documentos y contratos",
+    intro: "Biblioteca versionada por jurisdicción, idioma y tipo de operación, con los documentos de cada operación.",
     demo: "DEMO · datos sintéticos",
     empty: "Sin datos todavía",
     emptyHint: "Cuando tengas operaciones con documentos aparecerán aquí.",

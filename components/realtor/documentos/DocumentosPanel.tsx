@@ -29,7 +29,7 @@ export function DocumentosPanel() {
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
   return (
-    <section data-testid="documentos-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
+    <section data-testid="documentos-panel" style={{ display: "flex", flexDirection: "column", gap: 24, padding: "28px 40px 40px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.title}</h1>
@@ -63,7 +63,7 @@ export function DocumentosPanel() {
               </span>
             ))}
           </div>
-          <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 3fr) minmax(300px, 2fr)", alignItems: "start" }}>
+          <div style={{ display: "grid", gap: 24, gridTemplateColumns: "minmax(300px, 1fr) minmax(300px, 1fr)", alignItems: "start" }}>
             <div style={CARD}>
               <h2 style={H2}>{t.docsTitle}</h2>
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -77,23 +77,27 @@ export function DocumentosPanel() {
               </ul>
             </div>
             <div style={CARD}>
-              <h2 style={H2}>{t.tplTitle}</h2>
-              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-                {templates.map((p) => {
-                  const state = templateState(p);
-                  return (
-                    <li key={p.id} data-testid="template-row" data-state={state} style={ROW}>
-                      <strong style={{ display: "block", fontSize: 14 }}>{p.name}</strong>
-                      <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>{p.kind[lang]}</span>
-                      <span data-testid="template-state" style={{ ...PILL, background: state === "aprobada" ? RT.chipUpBg : RT.demoBg, color: state === "aprobada" ? RT.chipUpText : RT.demoText }}>
-                        {state === "aprobada" && p.lawyerApproval ? `${t.approved} · ${t.reviewedBy} ${p.lawyerApproval.reviewer}` : t.pending}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p style={{ margin: "16px 0 0", fontSize: 12, color: RT.muted }}>{t.tplNote}</p>
+              <h2 style={H2}>{t.statusCounts}</h2>
+              <p style={{ margin: 0, fontSize: 14, color: RT.muted }}>{t.tplNote}</p>
             </div>
+          </div>
+          <div style={{ ...CARD, padding: "22px 22px 14px" }}>
+            <h2 style={H2}>{t.tplTitle}</h2>
+            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              {templates.map((p) => {
+                const state = templateState(p);
+                return (
+                  <li key={p.id} data-testid="template-row" data-state={state}
+                    style={{ display: "grid", gridTemplateColumns: "minmax(200px, 2fr) 1fr 2fr", gap: 16, alignItems: "center", padding: "12px 8px", borderTop: `1px solid ${RT.line}`, fontSize: 14 }}>
+                    <strong>{p.name}</strong>
+                    <span style={{ color: RT.muted }}>{p.kind[lang]}</span>
+                    <span data-testid="template-state" style={{ ...PILL, justifySelf: "start", background: state === "aprobada" ? RT.chipUpBg : RT.demoBg, color: state === "aprobada" ? RT.chipUpText : RT.demoText }}>
+                      {state === "aprobada" && p.lawyerApproval ? `${t.approved} · ${t.reviewedBy} ${p.lawyerApproval.reviewer}` : t.pending}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </>
       )}
