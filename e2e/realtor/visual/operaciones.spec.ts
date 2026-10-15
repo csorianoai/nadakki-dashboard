@@ -16,7 +16,7 @@ const TOTAL = 5;
 let pasados = 0;
 let fallos = 0;
 test.afterEach(({}, info) => void (info.status === "passed" ? (pasados += 1) : (fallos += 1)));
-test.afterAll(() => console.log(`RESULT_O2_P_OPERACIONES=${fallos === 0 && pasados === TOTAL ? "PASS" : "FAIL"}`));
+test.afterAll(() => console.log(`RESULT_O2_F_OPERACIONES=${fallos === 0 && pasados === TOTAL ? "PASS" : "FAIL"}`));
 
 async function sesion(page: Page, acceso: number) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
@@ -45,6 +45,8 @@ test("positivo con DEMO: marca, etapas con conteos, expedientes de la etapa y op
   await expect(page.getByTestId("stage-panel").getByTestId("op-row")).toHaveCount(1);
   await expect(page.getByTestId("opp-panel").getByTestId("op-row")).toHaveCount(2);
   await expect(page.getByTestId("center-operaciones")).toHaveAttribute("data-center-state", "live");
+  await expect(page.getByTestId("fin-section")).toBeVisible();
+  for (const id of ["fin-gross", "fin-fee", "fin-split", "fin-closed"]) await expect(page.getByTestId(id)).toBeVisible();
   await page.getByTestId("stage-firma").click();
   await expect(page.getByTestId("stage-empty")).toBeVisible();
 });
@@ -55,6 +57,7 @@ test("negativo sin DEMO: «Sin datos todavía», ninguna cifra ni marca DEMO", a
   await expect(page.getByTestId("operaciones-empty")).toContainText("Sin datos todavía", { timeout: 30_000 });
   await expect(page.getByTestId("op-row")).toHaveCount(0);
   await expect(page.getByTestId("stage-list")).toHaveCount(0);
+  await expect(page.getByTestId("fin-section")).toHaveCount(0);
   await expect(page.getByTestId("demo-banner")).toHaveCount(0);
   await expect(page.getByTestId("demo-pill")).toHaveCount(0);
   expect(await page.getByTestId("operaciones-panel").innerText()).not.toMatch(/\d/);
