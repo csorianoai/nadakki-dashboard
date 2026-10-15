@@ -15,10 +15,13 @@ export type Contact = {
   name: string;
   role: ClientRole | null;
   roleActive: boolean;
-  origin: LeadOrigin;
+  origin: LeadOrigin | null;
   leadStatus: LeadStatus | null;
   phone: string;
   email: string;
+  /** Valores ya enmascarados por el servidor (datos reales); si existen, la pantalla los muestra tal cual. */
+  phoneMasked?: string | null;
+  emailMasked?: string | null;
   summary: { es: string; en: string };
 };
 
