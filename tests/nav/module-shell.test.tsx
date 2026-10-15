@@ -1,0 +1,208 @@
+/**
+ * Armazón común (PR 6a): ModuleShell pinta la barra común + el menú del módulo + el hueco de contexto solo para
+ * superadmin; un solo desplegable abierto; el menú de la portada sirve para elegir módulo; AppGate lo usa para
+ * los módulos migrados y deja como estaban los cores con carcasa propia.
+ */
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import AppGate from "@/components/auth/AppGate";
+import { InicioSuite } from "@/components/shell/InicioSuite";
+import { ModuleShell } from "@/components/shell/ModuleShell";
+import { SelectorContexto } from "@/components/shell/SelectorContexto";
+import { AuthContext, type AuthContextValue } from "@/lib/auth/auth-context";
+import { MODULOS, menuVisible } from "@/lib/modulos/registro";
+
+let pathname = "/legal/cases/new";
+jest.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => ({ replace: jest.fn(), push: jest.fn() }) }));
+jest.mock("@/components/forge/auth/ProtectedRoute", () => ({ __esModule: true, ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
+jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({ __esModule: true, GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="forge-shell">{children}</div> }));
+jest.mock("@/components/dealer/DealerSuiteGate", () => ({ __esModule: true, DealerSuiteGate: ({ children }: { children: React.ReactNode }) => <>{children}</>, isDealerReachableSuitePath: (p: string) => p.startsWith("/contable") }));
+jest.mock("@/components/dealer/ContableChrome", () => ({ __esModule: true, ContableChrome: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
+jest.mock("@/components/white-label/TenantBrandedDocumentTitle", () => ({ __esModule: true, TenantBrandedDocumentTitle: () => null }));
+jest.mock("@/components/nav/BuscadorNavegacion", () => ({ __esModule: true, EVENTO_ABRIR_BUSCADOR: "nadakki:abrir-buscador", BuscadorNavegacion: () => <div data-testid="buscador" /> }));
+jest.mock("@/components/forge/auth/UserMenu", () => ({ __esModule: true, UserMenu: () => <button type="button">Usuario</button> }));
+jest.mock("@/components/forge/auth/TenantSwitcher", () => ({ __esModule: true, TenantSwitcher: () => null }));
+jest.mock("@/components/forge/layout/ProyectosFinanzasSidebarLinks", () => ({ __esModule: true, ProyectosFinanzasSidebarLinks: () => null }));
+jest.mock("@/components/realtor/useRealtorAccess", () => ({ __esModule: true, useRealtorAccess: () => "apagado" }));
+jest.mock("@/components/ai/OnboardingAgent", () => ({ __esModule: true, default: () => null }));
+
+const sesion = (role_key: string, cores: string[]) =>
+  ({
+    user: { id: "u", email: "qa@nadakki.test" },
+    tenant: { id: "t", display_name: "QA", subscribed_cores: cores },
+    allRoles: [{ core_name: "x", role_key, display_name: role_key }],
+  }) as unknown as AuthContextValue;
+const conSesion = (v: AuthContextValue, ui: React.ReactNode) => <AuthContext.Provider value={v}>{ui}</AuthContext.Provider>;
+const legal = MODULOS.find((m) => m.id === "legal")!;
+const marketing = MODULOS.find((m) => m.id === "marketing")!;
+const SUPER = sesion("platform_superadmin", ["legal", "marketing", "credit"]);
+
+beforeEach(() => { window.localStorage.clear(); });
+
+describe("ModuleShell: barra común + menú del módulo + hueco de contexto", () => {
+  beforeEach(() => { pathname = "/legal/cases/new"; });
+
+  test("pinta la barra común, el menú del módulo y los landmarks", () => {
+    render(conSesion(SUPER, <ModuleShell modulo={legal}><p>contenido</p></ModuleShell>));
+    const barra = screen.getByTestId("barra-suite");
+    expect(within(barra).getByTestId("barra-suite-logo")).toHaveAttribute("href", "/");
+    expect(within(barra).getByTestId("barra-suite-inicio")).toHaveAttribute("href", "/");
+    expect(within(barra).getByRole("button", { name: "Atrás" })).toBeInTheDocument();
+    expect(within(barra).getByRole("button", { name: "Adelante" })).toBeInTheDocument();
+    expect(within(barra).getByTestId("barra-suite-migas")).toBeInTheDocument();
+    expect(within(barra).getByRole("button", { name: /Módulos/ })).toBeInTheDocument();
+    expect(within(barra).getByRole("button", { name: /Ctrl\+K/ })).toBeInTheDocument();
+    expect(within(barra).getByRole("link", { name: "Notificaciones" })).toHaveAttribute("href", "/notifications");
+    expect(within(barra).getByRole("button", { name: "Usuario" })).toBeInTheDocument();
+
+    const menu = screen.getByRole("complementary", { name: "Menú de Legal" });
+    const enlaces = within(menu).getAllByRole("link").map((a) => a.getAttribute("href"));
+    expect(enlaces).toEqual(expect.arrayContaining(["/legal", "/legal/cases", "/legal/cases/new", "/legal/contracts"]));
+    expect(within(menu).getByRole("navigation", { name: "Navegación de Legal" })).toBeInTheDocument();
+    expect(screen.getByRole("main")).toHaveTextContent("contenido");
+    expect(screen.getByTestId("buscador")).toBeInTheDocument();
+  });
+
+  test("aria-current solo en el item más específico", () => {
+    render(conSesion(SUPER, <ModuleShell modulo={legal}>x</ModuleShell>));
+    const actuales = within(screen.getByTestId("menu-modulo")).getAllByRole("link").filter((a) => a.getAttribute("aria-current") === "page");
+    expect(actuales.map((a) => a.getAttribute("href"))).toEqual(["/legal/cases/new"]);
+  });
+
+  test("el hueco de contexto solo existe para platform_superadmin y no pinta nada", () => {
+    const { unmount } = render(conSesion(SUPER, <ModuleShell modulo={legal}>x</ModuleShell>));
+    expect(screen.getByTestId("hueco-contexto")).toBeEmptyDOMElement();
+    unmount();
+    render(conSesion(sesion("tenant_admin", ["legal"]), <ModuleShell modulo={legal}>x</ModuleShell>));
+    expect(screen.queryByTestId("hueco-contexto")).toBeNull();
+  });
+
+  test("SelectorContexto: implementación vacía que no renderiza nada (lo construye otro PR)", () => {
+    const { container } = render(<SelectorContexto />);
+    expect(container).toBeEmptyDOMElement();
+    expect(SelectorContexto()).toBeNull();
+  });
+
+  test("el selector lista solo los módulos visibles y marca el actual", () => {
+    render(conSesion(sesion("tenant_admin", ["legal", "marketing"]), <ModuleShell modulo={legal}>x</ModuleShell>));
+    fireEvent.click(screen.getByRole("button", { name: /Módulos/ }));
+    const lista = screen.getByTestId("selector-modulos-lista");
+    expect(within(lista).getAllByRole("link").map((a) => a.textContent)).toEqual(["Marketing", "Legal", "Administración"]);
+    expect(within(lista).getByRole("link", { name: "Legal" })).toHaveAttribute("aria-current", "true");
+    expect(within(lista).getByRole("link", { name: "Legal" })).toHaveAttribute("href", "/legal");
+  });
+
+  test("un solo desplegable abierto: el selector se cierra con Escape, con un clic fuera y al abrir el menú de usuario", () => {
+    render(conSesion(SUPER, <ModuleShell modulo={legal}>x</ModuleShell>));
+    const abrir = () => fireEvent.click(screen.getByRole("button", { name: /Módulos/ }));
+    abrir();
+    expect(screen.getByTestId("selector-modulos-lista")).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByTestId("selector-modulos-lista")).toBeNull();
+    abrir();
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Usuario" }));
+    expect(screen.queryByTestId("selector-modulos-lista")).toBeNull();
+    abrir();
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByTestId("selector-modulos-lista")).toBeNull();
+  });
+
+  test("un solo grupo del menú abierto a la vez", () => {
+    pathname = "/marketing/campaigns";
+    render(conSesion(SUPER, <ModuleShell modulo={marketing}>x</ModuleShell>));
+    const menu = screen.getByTestId("menu-modulo");
+    const cabeceras = within(menu).getAllByRole("button").filter((b) => b.hasAttribute("aria-expanded"));
+    expect(cabeceras.length).toBeGreaterThan(2);
+    const abiertas = () => cabeceras.filter((b) => b.getAttribute("aria-expanded") === "true");
+    // Con pantalla de grupo, el título del grupo es un ENLACE y la flecha es el botón que despliega (nombre = aria-label).
+    const nombre = (b: HTMLElement) => b.getAttribute("aria-label");
+    expect(abiertas().map(nombre)).toEqual(["Plegar las páginas de Campañas"]);
+    fireEvent.click(cabeceras[1]);
+    expect(abiertas().map(nombre)).toEqual([nombre(cabeceras[1]!)]);
+    fireEvent.click(cabeceras[2]);
+    expect(abiertas()).toHaveLength(1);
+    fireEvent.click(cabeceras[2]);
+    expect(abiertas()).toHaveLength(0);
+  });
+
+  test("cajón en móvil: el botón lo abre, Escape lo cierra; plegable a iconos", () => {
+    render(conSesion(SUPER, <ModuleShell modulo={legal}>x</ModuleShell>));
+    expect(screen.queryByTestId("menu-telon")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Abrir el menú del módulo" }));
+    expect(screen.getByTestId("menu-telon")).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByTestId("menu-telon")).toBeNull();
+    const menu = screen.getByTestId("menu-modulo");
+    expect(menu).toHaveAttribute("data-plegado", "false");
+    fireEvent.click(screen.getByRole("button", { name: "Plegar el menú" }));
+    expect(menu).toHaveAttribute("data-plegado", "true");
+    expect(within(menu).getByRole("link", { name: "Expedientes" })).toHaveAttribute("href", "/legal/cases");
+  });
+
+  test("sin sesión (sin AuthProvider) pinta la base sin romper", () => {
+    render(<ModuleShell modulo={legal}>x</ModuleShell>);
+    expect(screen.getByTestId("barra-suite")).toBeInTheDocument();
+    expect(screen.queryByTestId("barra-acciones")).toBeNull();
+  });
+});
+
+describe("ModuleShell: filas «Pronto» (NavItem.pronto, #837) no se pierden en el armazón", () => {
+  const admin = MODULOS.find((m) => m.id === "administracion")!;
+
+  test("Administración en /settings con tenant_admin: «Real Estate» sale como texto Pronto, sin enlace", () => {
+    pathname = "/settings";
+    render(conSesion(sesion("tenant_admin", ["legal"]), <ModuleShell modulo={admin}><p>contenido</p></ModuleShell>));
+    const menu = screen.getByRole("complementary", { name: "Menú de Administración" });
+    // «Real Estate» está en el grupo «Plataforma»; en /settings el abierto es «Cuenta».
+    fireEvent.click(within(menu).getByRole("button", { name: "Plataforma" }));
+    const fila = menu.querySelector('[data-pronto="/admin/real-estate"]');
+    expect(fila).not.toBeNull();
+    expect(fila).toHaveAttribute("aria-disabled", "true");
+    expect(fila?.textContent).toContain("Real Estate");
+    expect(fila?.textContent).toContain("Pronto");
+    expect(menu.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+  });
+
+  test("el registro conserva la fila y menuVisible la oculta a quien no ve Administración", () => {
+    const ids = admin.menu.flatMap((g) => g.items).filter((i) => i.pronto).map((i) => [i.id, i.href, i.pronto]);
+    expect(ids).toEqual([["adm-real-estate", "", "/admin/real-estate"]]);
+    const filas = (u: Parameters<typeof menuVisible>[1]) => menuVisible(admin, u).flatMap((g) => g.items).map((i) => i.id);
+    expect(filas({ roles: [{ core_name: "x", role_key: "tenant_admin", display_name: "t" }], subscribedCores: ["legal"] } as never)).toContain("adm-real-estate");
+    expect(filas({ roles: [{ core_name: "x", role_key: "banker", display_name: "b" }], subscribedCores: ["credit"] } as never)).not.toContain("adm-real-estate");
+  });
+});
+
+describe("InicioSuite: el menú de la Suite sirve para elegir módulo", () => {
+  test("lista los módulos visibles de este usuario", () => {
+    pathname = "/";
+    render(conSesion(sesion("tenant_admin", ["legal", "credit"]), <InicioSuite>portada</InicioSuite>));
+    const menu = screen.getByRole("complementary", { name: "Menú de Suite" });
+    const elegir = within(menu).getByTestId("menu-grupo-suite-modulos");
+    expect(within(elegir).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/credit-hub", "/legal", "/admin"]);
+    expect(within(menu).getByRole("link", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("main")).toHaveTextContent("portada");
+    expect(screen.getByTestId("module-shell")).toHaveAttribute("data-modulo", "suite");
+  });
+});
+
+describe("AppGate: qué rutas usan ModuleShell", () => {
+  const modulo = (r: string) => {
+    pathname = r;
+    const { unmount } = render(conSesion(SUPER, <AppGate>c</AppGate>));
+    const out = screen.queryByTestId("module-shell")?.getAttribute("data-modulo") ?? (screen.queryByTestId("forge-shell") ? "global" : "propia");
+    unmount();
+    return out;
+  };
+  test.each([
+    ["/", "suite"], ["/notifications", "suite"], ["/marketing/campaigns", "marketing"], ["/workflows", "marketing"],
+    ["/legal/cases", "legal"], ["/proyectos/portafolio", "proyectos"], ["/admin/gates", "administracion"], ["/settings", "administracion"],
+  ])("%s -> ModuleShell (%s)", (r, esperado) => expect(modulo(r)).toBe(esperado));
+
+  test.each([["/autos/dealer"], ["/realtor"], ["/cockpit"], ["/contable/resumen"]])("%s conserva su carcasa propia (solo la barra de MarcoSuite)", (r) => {
+    expect(modulo(r)).toBe("propia");
+  });
+
+  test.each([["/sic"], ["/credit-hub"], ["/credit-hub/bank-v2"], ["/agents"], ["/ruta/que/nadie/conoce"]])("%s sigue en GlobalForgeAppShell (Crédito: sus layouts ocultan el chrome global)", (r) => {
+    expect(modulo(r)).toBe("global");
+  });
+});
+

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, ChevronRight, Home } from "lucide-react";
 import { migasDe } from "@/lib/migas";
 import { useAuth } from "@/hooks/useAuth";
@@ -61,12 +61,21 @@ function useHistorial(pathname: string | null) {
 const BOTON =
   "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
 
+export type BarraSuiteProps = {
+  /** Antes del logotipo (botón del menú en móvil). */
+  antes?: ReactNode;
+  /** Entre Atrás/Adelante y las migas (selector de módulos). */
+  despues?: ReactNode;
+  /** A la derecha de las migas (buscador, notificaciones, usuario). */
+  derecha?: ReactNode;
+};
+
 /**
  * Barra fija de la Suite, encima de TODAS las carcasas (Suite, Credit Hub, Dealer OS, Realtor OS, Cockpit,
  * Contabilidad, Crédito): logotipo, «Inicio» y la primera miga llevan al aterrizaje del rol (login), Atrás y Adelante usan el
  * historial del navegador y las migas muestran Inicio › Módulo › Sección › Pantalla con enlace en cada nivel.
  */
-export function BarraSuite() {
+export function BarraSuite({ antes, despues, derecha }: BarraSuiteProps = {}) {
   const pathname = usePathname();
   const inicio = useDestinoInicio();
   const migas = migasDe(pathname);
@@ -78,6 +87,7 @@ export function BarraSuite() {
       style={{ height: ALTO_BARRA_SUITE }}
       className="relative z-[60] flex shrink-0 items-center gap-1 border-b border-zinc-800 bg-zinc-950 px-2 text-zinc-100 sm:px-3"
     >
+      {antes}
       <Link href={inicio} data-testid="barra-suite-logo" aria-label="Nadakki: ir a mi Inicio" className="mr-1 inline-flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-zinc-800">
         <span aria-hidden className="grid h-6 w-6 place-items-center rounded bg-amber-500 text-[13px] font-bold text-zinc-950">N</span>
         <span className="hidden text-sm font-semibold tracking-tight sm:inline">Nadakki</span>
@@ -92,6 +102,7 @@ export function BarraSuite() {
       <button type="button" data-testid="barra-suite-adelante" aria-label="Adelante" title="Adelante" disabled={!adelante} onClick={() => window.history.forward()} className={BOTON}>
         <ArrowRight aria-hidden className="h-4 w-4" />
       </button>
+      {despues}
       <ol aria-label="Estás en" data-testid="barra-suite-migas" className="ml-2 flex min-w-0 flex-1 items-center gap-1 overflow-hidden text-xs text-zinc-400">
         {migas.map((m, i) => {
           const ultima = i === migas.length - 1;
@@ -109,6 +120,7 @@ export function BarraSuite() {
           );
         })}
       </ol>
+      {derecha}
     </nav>
   );
 }

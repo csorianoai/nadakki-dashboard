@@ -10,7 +10,6 @@ import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
 import { LegalCoreShell } from "@/components/legal/LegalCoreShell";
 import { LegalDisclaimerFooter } from "@/components/legal/LegalDisclaimerFooter";
 import { LegalGr14Banner } from "@/components/legal/LegalGr14Banner";
-import { LegalSubNav } from "@/components/legal/LegalSubNav";
 import { DisasterModeProvider } from "@/app/providers/DisasterModeProvider";
 
 import { ForgeToaster } from "@/components/forge/ui/Toast";
@@ -71,7 +70,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
                     <LegalGr14Banner />
                     <DemoBannerStrong />
                     <DeadlineNotificationBanner />
-                    <LegalSubNav />
+                    {/* Las pestañas de Legal las pinta ModuleShell (PestanasGrupo) desde el registro; ya no hay barra propia. */}
                     <LegalCoreShell>
                       <div className="min-h-0 flex-1">{children}</div>
                     </LegalCoreShell>
