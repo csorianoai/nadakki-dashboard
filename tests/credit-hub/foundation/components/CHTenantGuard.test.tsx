@@ -1,3 +1,5 @@
+jest.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ isAuthenticated: true, isLoading: false, tenant: { id: "tenant-1" }, allTenants: [] }) }));
+jest.mock("next/navigation", () => ({ usePathname: () => "/credit-hub", useRouter: () => ({ replace: jest.fn() }) }));
 import { render, screen } from "@testing-library/react";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";

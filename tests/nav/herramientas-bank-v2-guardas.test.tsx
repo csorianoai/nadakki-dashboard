@@ -10,17 +10,20 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import BancoV2Layout from "@/app/(forge)/credit-hub/bank-v2/layout";
 import HerramientasPage from "@/app/(forge)/credit-hub/bank-v2/solicitudes/[applicationId]/herramientas/page";
 
+const mockReplace = jest.fn();
+
 type Sesion = { tenant: string | null; autenticado: boolean; rol: string | null };
 let sesion: Sesion = { tenant: "t-1", autenticado: true, rol: "bank_analyst" };
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/credit-hub/bank-v2/solicitudes/APP-42/herramientas",
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: mockReplace }),
 }));
 jest.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
     isLoading: false,
     isAuthenticated: sesion.autenticado,
+    tenant: sesion.tenant ? { id: sesion.tenant } : null,
     activeRole: sesion.rol ? { role_key: sesion.rol, display_name: "Rol" } : null,
     logout: jest.fn(),
   }),
@@ -52,7 +55,7 @@ describe("herramientas bajo las guardas de bank-v2", () => {
     const layouts: string[] = [];
     for (let d = path.dirname(pagina); d.startsWith(app); d = path.dirname(d)) {
       const l = path.join(d, "layout.tsx");
-      if (fs.existsSync(l)) layouts.push(path.relative(app, l));
+      if (fs.existsSync(l)) layouts.push(path.relative(app, l).split(path.sep).join("/"));
     }
     // Del más cercano al raíz: el primero debe ser el de bank-v2, que monta BancoV2Shell.
     expect(layouts[0]).toBe("(forge)/credit-hub/bank-v2/layout.tsx");
@@ -74,12 +77,13 @@ describe("herramientas bajo las guardas de bank-v2", () => {
     ["rol dealer", { tenant: "t-1", autenticado: true, rol: "dealer" }, "ch-portal-forbidden"],
     ["rol de marketing", { tenant: "t-1", autenticado: true, rol: "marketing_manager" }, "ch-portal-forbidden"],
     ["sin rol", { tenant: "t-1", autenticado: true, rol: null }, "ch-portal-forbidden"],
-    ["sin sesión", { tenant: "t-1", autenticado: false, rol: null }, "ch-portal-auth-required"],
+    ["sin sesión", { tenant: "t-1", autenticado: false, rol: null }, "ch-tenant-guard-blocked"],
     ["sin tenant", { tenant: null, autenticado: true, rol: "bank_analyst" }, "ch-tenant-guard-blocked"],
   ])("%s: no ve las herramientas", (_caso, s, testId) => {
     sesion = s;
     const { container } = pintar();
     expect(container.querySelector(`[data-testid="${testId}"]`)).not.toBeNull();
+    if (!s.autenticado) expect(mockReplace).toHaveBeenCalledWith("/login?next=%2Fcredit-hub%2Fbank-v2%2Fsolicitudes%2FAPP-42%2Fherramientas");
     expect(screen.queryByText("HERRAMIENTAS V1 VISIBLES")).not.toBeInTheDocument();
     expect(screen.queryByTestId("herramientas-volver-expediente")).not.toBeInTheDocument();
   });
