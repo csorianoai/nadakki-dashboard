@@ -10,6 +10,9 @@ import { join } from "node:path";
 const B = "http://backend.invalid";
 const THRESHOLD = 0.12;
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/agente-web.png");
+let fallos = 0;
+test.afterEach(({}, info) => void (info.status !== info.expectedStatus && (fallos += 1)));
+test.afterAll(() => { console.log(`RESULT_O2_F_WEB=${fallos === 0 ? "PASS" : "FAIL"}`); });
 
 async function sesion(page: Page, acceso: number) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
@@ -32,7 +35,8 @@ test("hitos: título y DEMO rotulado", async ({ page }) => {
   await page.goto("/realtor/agente-web");
   await expect(page.getByTestId("agent-site-panel")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Web del agente");
-  await expect(page.getByTestId("badge-demo")).toBeVisible();
+  await expect(page.getByTestId("demo-banner")).toBeVisible();
+  await expect(page.getByTestId("status-badge")).toHaveAttribute("data-status", "DEMO");
   await expect(page.getByLabel("Nombre")).toBeVisible();
 });
 
