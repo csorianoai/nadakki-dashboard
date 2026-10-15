@@ -1,3 +1,5 @@
+import type { AgreementStatus, OwnerRole } from "@/lib/realtor/propietarios/types";
+
 /** Rol comercial del contacto. Un cliente es un contacto con rol de cliente vigente; sin él es un lead. */
 export type ClientRole = "comprador" | "inquilino" | "vendedor";
 export type LeadOrigin = "portal" | "referido" | "web" | "redes";
@@ -13,13 +15,37 @@ export type Contact = {
   name: string;
   role: ClientRole | null;
   roleActive: boolean;
-  origin: LeadOrigin;
+  origin: LeadOrigin | null;
   leadStatus: LeadStatus | null;
   phone: string;
   email: string;
+  /** Valores ya enmascarados por el servidor (datos reales); si existen, la pantalla los muestra tal cual. */
+  phoneMasked?: string | null;
+  emailMasked?: string | null;
   summary: { es: string; en: string };
 };
 
 /** Fair Housing: solo rol, origen del contacto y estado del lead. Ni idioma preferido ni clase protegida. */
 export type ClientFilters = { role: ClientRole | "todos"; origin: LeadOrigin | "todos"; leadStatus: LeadStatus | "todos" };
 export const NO_FILTERS: ClientFilters = { role: "todos", origin: "todos", leadStatus: "todos" };
+
+/** Filtro de tipo de contacto del listado unificado (Clientes, Leads y Propietarios en un solo registro). */
+export type ContactKind = "todos" | "cliente" | "lead" | "propietario";
+export const KINDS: readonly ContactKind[] = ["todos", "cliente", "lead", "propietario"];
+
+/** Propietario = contacto con rol de propietario más sus mandatos por propiedad (D8). La ficha vive en /realtor/propietarios. */
+export type OwnerContact = {
+  id: string;
+  name: string;
+  ownerRole: OwnerRole;
+  mandates: readonly { property: string; agreement: AgreementStatus }[];
+};
+
+/** Recorrido del cliente en la ficha: qué busca, consentimiento y propiedades compatibles. */
+export type Journey = {
+  operation: { es: string; en: string };
+  budget: { es: string; en: string };
+  zone: string;
+  consent: { whatsapp: boolean; email: boolean; call: boolean };
+  matches: readonly { name: string; detail: { es: string; en: string }; fit: boolean }[];
+};

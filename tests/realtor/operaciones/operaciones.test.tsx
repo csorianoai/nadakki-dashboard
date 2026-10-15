@@ -60,6 +60,23 @@ describe("pantalla", () => {
     expect(screen.queryByLabelText(/idioma|language/i, { selector: "select" })).toBeNull();
   });
 
+  it("Finanzas: con DEMO muestra comisión, reparto y cierres; sin DEMO no pinta ninguna cifra", async () => {
+    on(true);
+    mockApiFetch.mockResolvedValue({ status: 200 });
+    const { unmount } = render(<OperacionesPanel />);
+    await screen.findByTestId("operaciones-panel");
+    const fin = screen.getByTestId("fin-section");
+    for (const id of ["fin-gross", "fin-fee", "fin-split", "fin-closed"]) expect(within(fin).getByTestId(id)).toBeInTheDocument();
+    expect(screen.getByTestId("fin-split")).toHaveTextContent("70 / 30");
+    unmount();
+    delete process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO;
+    on(false);
+    render(<OperacionesPanel />);
+    await screen.findByTestId("operaciones-empty");
+    expect(screen.queryByTestId("fin-section")).toBeNull();
+    expect(screen.queryByTestId("fin-gross")).toBeNull();
+  });
+
   it("negativo: sin DEMO solo «Sin datos todavía», sin cifras ni marca DEMO", async () => {
     on(false);
     mockApiFetch.mockResolvedValue({ status: 200 });

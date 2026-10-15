@@ -93,10 +93,11 @@ describe("pantalla", () => {
     mockApiFetch.mockResolvedValue({ status: 200 });
     render(<ClientesPanel />);
     await screen.findByTestId("clientes-empty");
-    expect(mockApiFetch).toHaveBeenCalledTimes(1);
-    const [url, init] = mockApiFetch.mock.calls[0];
-    expect(String(url)).not.toMatch(/tenant/i);
-    expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
+    expect(mockApiFetch).toHaveBeenCalledTimes(2);
+    for (const [url, init] of mockApiFetch.mock.calls) {
+      expect(String(url)).not.toMatch(/tenant/i);
+      expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
+    }
     expect(within(screen.getByTestId("clientes-panel")).queryByText(/SYNTH/)).toBeNull();
   });
 

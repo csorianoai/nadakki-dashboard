@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { COPY, KIND_LABEL, STAGE_LABEL, type Lang } from "@/lib/realtor/operaciones/copy";
-import { DEMO_OPERATIONS } from "@/lib/realtor/operaciones/demo";
+import { DEMO_FINANCE, DEMO_OPERATIONS } from "@/lib/realtor/operaciones/demo";
 import { applyFilters, countByStage, inStage, opportunities } from "@/lib/realtor/operaciones/logic";
 import { KINDS, NO_FILTERS, STAGES, type OpFilters, type Operation, type StageId } from "@/lib/realtor/operaciones/types";
 import { isDemoAllowed } from "@/lib/realtor/config";
@@ -20,6 +20,16 @@ function OpRow({ o, lang }: { o: Operation; lang: Lang }) {
       <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>{o.summary[lang]}</span>
       <span style={{ fontSize: 12, fontWeight: 700, background: RT.chipUpBg, color: RT.chipUpText, borderRadius: 999, padding: "3px 10px" }}>{KIND_LABEL[lang][o.kind]}</span>
     </li>
+  );
+}
+
+function FinCard({ id, label, value, hint }: { id: string; label: string; value: string; hint?: string }) {
+  return (
+    <div data-testid={id} style={{ ...CARD, padding: 18, display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: RT.muted, letterSpacing: 0.4 }}>{label}</span>
+      <strong style={{ fontFamily: FONT_DISPLAY, fontSize: 26 }}>{value}</strong>
+      {hint ? <span style={{ fontSize: 13, color: RT.muted }}>{hint}</span> : null}
+    </div>
   );
 }
 
@@ -105,6 +115,16 @@ export function OperacionesPanel() {
               </ul>
             </div>
           </div>
+          <section data-testid="fin-section" aria-label={t.finTitle} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.finTitle}</h2>
+            <p style={{ margin: 0, fontSize: 13, color: RT.muted }}>{t.finNote}</p>
+            <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+              <FinCard id="fin-gross" label={t.finGross} value={`USD ${DEMO_FINANCE.gross.toLocaleString("en-US")}`} />
+              <FinCard id="fin-fee" label={t.finFee} value={`${DEMO_FINANCE.feePct} %`} />
+              <FinCard id="fin-split" label={t.finSplit} value={`${DEMO_FINANCE.agentPct} / ${DEMO_FINANCE.brokerPct}`} hint={`${t.finAgent} / ${t.finBroker}`} />
+              <FinCard id="fin-closed" label={t.finClosed} value={String(DEMO_FINANCE.closed)} hint={t.finClosedUnit} />
+            </div>
+          </section>
         </>
       )}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.fairHousing}</p>

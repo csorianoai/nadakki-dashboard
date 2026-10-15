@@ -17,3 +17,12 @@ export type Operation = {
 /** Fair Housing: solo tipo de operación y etapa. Ni idioma preferido ni clase protegida. */
 export type OpFilters = { kind: OpKind | "todas" };
 export const NO_FILTERS: OpFilters = { kind: "todas" };
+
+/** Finanzas dentro de Operaciones (NAV[8] de DL10A): comisión, reparto y cierres. Sin fuente conectada no hay cifras. */
+export type FinanceSummary = {
+  gross: number; // comisión bruta, USD
+  feePct: number; // % de la comisión de la operación
+  agentPct: number; // reparto del agente, %
+  brokerPct: number; // reparto del broker, %
+  closed: number; // operaciones cerradas
+};

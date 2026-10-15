@@ -44,7 +44,7 @@ jest.mock("@ducanh2912/next-pwa", () => ({ __esModule: true, default: () => (con
 jest.mock("@/components/credit-hub/system/CreditHubI18nBootstrap", () => ({ CreditHubI18nBootstrap: () => null }));
 jest.mock("@/hooks/useAuth", () => ({ useAuth: jest.fn() }));
 jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({ useTenant: jest.fn() }));
-jest.mock("next/navigation", () => ({ usePathname: () => "/autos/dealer/credito/solicitudes" }));
+jest.mock("next/navigation", () => ({ usePathname: () => "/autos/dealer/credito/solicitudes", useRouter: () => ({ replace: jest.fn() }) }));
 
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -159,7 +159,7 @@ describe("(1) cada página vieja tiene su ruta nueva con la misma pantalla", () 
   it.each(pages.map((p) => [p.url, p.rel]))("%s", async (url, rel) => {
     const { final } = follow(await loadRedirects(), sample(url));
     const page = newPageFor(final);
-    expect([url, page && path.relative(ROOT, page)]).toEqual([url, expect.stringContaining("app/autos/dealer/credito")]);
+    expect([url, page && path.relative(ROOT, page).split(path.sep).join("/")]).toEqual([url, expect.stringContaining("app/autos/dealer/credito")]);
     // Reutiliza el componente de la página vieja; no duplica su lógica.
     const oldModule = ["@/app/(forge)/credit-hub/dealer", rel, "page"].filter(Boolean).join("/");
     expect(fs.readFileSync(page!, "utf8")).toContain(`export { default } from "${oldModule}";`);
@@ -331,7 +331,7 @@ describe("(5) mismos guards de tenant y rol que /credit-hub/dealer", () => {
   });
 
   it("el concesionario ve la pantalla dentro del ámbito credit-hub-forge con persona dealer", () => {
-    auth.mockReturnValue({ isLoading: false, isAuthenticated: true, activeRole: { role_key: "dealer" } });
+    auth.mockReturnValue({ isLoading: false, isAuthenticated: true, tenant: { id: "t-1" }, activeRole: { role_key: "dealer" } });
     pintar();
     const frame = screen.getByTestId("dealer-credito-frame");
     expect(frame).toHaveClass("credit-hub-forge");
@@ -340,7 +340,7 @@ describe("(5) mismos guards de tenant y rol que /credit-hub/dealer", () => {
   });
 
   it("un rol del banco recibe 403 del portal dealer", () => {
-    auth.mockReturnValue({ isLoading: false, isAuthenticated: true, activeRole: { role_key: "bank_analyst" } });
+    auth.mockReturnValue({ isLoading: false, isAuthenticated: true, tenant: { id: "t-1" }, activeRole: { role_key: "bank_analyst" } });
     pintar();
     expect(screen.getByTestId("ch-portal-forbidden")).toHaveAttribute("data-portal", "dealer");
     expect(screen.queryByText("pantalla de crédito")).not.toBeInTheDocument();
@@ -348,7 +348,7 @@ describe("(5) mismos guards de tenant y rol que /credit-hub/dealer", () => {
 
   it("sin tenant no se pinta la pantalla", () => {
     tenant.mockReturnValue({ apiTenantId: null, tenantId: null, tenantSlug: null, loading: false });
-    auth.mockReturnValue({ isLoading: false, isAuthenticated: true, activeRole: { role_key: "dealer" } });
+    auth.mockReturnValue({ isLoading: false, isAuthenticated: true, tenant: { id: "t-1" }, activeRole: { role_key: "dealer" } });
     pintar();
     expect(screen.getByTestId("ch-tenant-guard-blocked")).toBeInTheDocument();
     expect(screen.queryByText("pantalla de crédito")).not.toBeInTheDocument();

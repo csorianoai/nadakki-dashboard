@@ -8,18 +8,21 @@ import { BankChShell } from "@/components/credit-hub/bank/BankChShell";
  * simularlas: CHTenantGuard y CHPortalAccessGuard reales. Se compara lo que
  * pinta cada shell para el mismo usuario.
  */
+const mockReplace = jest.fn();
+
 type Sesion = { tenant: string | null; autenticado: boolean; rol: string | null };
 let sesion: Sesion = { tenant: "t-1", autenticado: true, rol: "bank_analyst" };
 const logout = jest.fn(async () => undefined);
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/credit-hub/bank-v2",
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: jest.fn(), replace: mockReplace }),
 }));
 jest.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
     isLoading: false,
     isAuthenticated: sesion.autenticado,
+    tenant: sesion.tenant ? { id: sesion.tenant } : null,
     activeRole: sesion.rol ? { role_key: sesion.rol, display_name: "Analista de crédito" } : null,
     logout,
   }),
@@ -54,7 +57,7 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
 
   it.each<[string, Sesion, string]>([
     ["sin tenant", { tenant: null, autenticado: true, rol: "bank_analyst" }, "ch-tenant-guard-blocked"],
-    ["sin sesion", { tenant: "t-1", autenticado: false, rol: null }, "ch-portal-auth-required"],
+    ["sin sesion", { tenant: "t-1", autenticado: false, rol: null }, "ch-tenant-guard-blocked"],
     ["rol dealer", { tenant: "t-1", autenticado: true, rol: "dealer" }, "ch-portal-forbidden"],
     ["rol de marketing", { tenant: "t-1", autenticado: true, rol: "marketing_manager" }, "ch-portal-forbidden"],
   ])("%s: bloquea igual que el banco actual y no pinta contenido", (_caso, s, testId) => {
@@ -64,6 +67,7 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
     expect(actual.html).toContain(`data-testid="${testId}"`);
     expect(v2.html).toBe(actual.html);
     expect(v2.texto).not.toContain("contenido del banco");
+    if (!s.autenticado) expect(mockReplace).toHaveBeenCalledWith("/login?next=%2Fcredit-hub%2Fbank-v2");
   });
 
   it.each(["bank_analyst", "bank_admin", "compliance_officer", "credit_admin", "tenant_admin"])(
