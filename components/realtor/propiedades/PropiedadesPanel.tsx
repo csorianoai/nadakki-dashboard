@@ -77,35 +77,41 @@ export function PropiedadesPanel() {
         </div>
       ) : (
         <>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-            <Select label={t.fType} value={filters.type} all={t.all} onChange={(v) => set({ type: v })}
-              options={TYPES.map((id) => ({ id, label: TYPE_LABEL[lang][id] }))} />
-            <Select label={t.fStatus} value={filters.status} all={t.all} onChange={(v) => set({ status: v })}
-              options={STATUSES.map((id) => ({ id, label: STATUS_LABEL[lang][id] }))} />
-            <Select label={t.fStage} value={filters.stage} all={t.all} onChange={(v) => set({ stage: v })}
-              options={STAGES.map((id) => ({ id, label: STAGE_LABEL[lang][id] }))} />
+          <div style={{ ...CARD, display: "flex", flexDirection: "column", gap: 14, padding: "18px 22px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+              <Select label={t.fType} value={filters.type} all={t.all} onChange={(v) => set({ type: v })}
+                options={TYPES.map((id) => ({ id, label: TYPE_LABEL[lang][id] }))} />
+              <Select label={t.fStatus} value={filters.status} all={t.all} onChange={(v) => set({ status: v })}
+                options={STATUSES.map((id) => ({ id, label: STATUS_LABEL[lang][id] }))} />
+              <Select label={t.fStage} value={filters.stage} all={t.all} onChange={(v) => set({ stage: v })}
+                options={STAGES.map((id) => ({ id, label: STAGE_LABEL[lang][id] }))} />
+            </div>
+            <div data-testid="status-counts" aria-label={t.statusCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {STATUSES.map((s) => (<span key={s} data-testid={`count-${s}`} style={PILL}>{STATUS_LABEL[lang][s]} · {byStatus[s]}</span>))}
+            </div>
+            <div data-testid="stage-counts" aria-label={t.stageCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {STAGES.map((s) => (<span key={s} data-testid={`stage-${s}`} style={PILL}>{STAGE_LABEL[lang][s]} · {byStage[s]}</span>))}
+            </div>
           </div>
-          <div data-testid="status-counts" aria-label={t.statusCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {STATUSES.map((s) => (<span key={s} data-testid={`count-${s}`} style={PILL}>{STATUS_LABEL[lang][s]} · {byStatus[s]}</span>))}
-          </div>
-          <div data-testid="stage-counts" aria-label={t.stageCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {STAGES.map((s) => (<span key={s} data-testid={`stage-${s}`} style={PILL}>{STAGE_LABEL[lang][s]} · {byStage[s]}</span>))}
-          </div>
-          <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 2fr) minmax(360px, 3fr)", alignItems: "start" }}>
-            <div style={CARD}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div>
               <h2 style={{ margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.listTitle}</h2>
               {visible.length === 0 ? <p data-testid="propiedades-nomatch" style={{ color: RT.muted }}>{t.noMatch}</p> : null}
-              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 18, gridTemplateColumns: "repeat(auto-fill, minmax(320px, 347px))" }}>
                 {visible.map((p) => (
                   <li key={p.id}>
                     <button type="button" data-testid="property-row" aria-pressed={current?.id === p.id} onClick={() => setSelected(p.id)}
-                      style={{ width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit", color: RT.ink, background: RT.white, borderRadius: 10, padding: 14,
+                      style={{ width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit", color: RT.ink, background: RT.white, borderRadius: 12, padding: 0, overflow: "hidden",
                         border: `${current?.id === p.id ? 2 : 1}px solid ${current?.id === p.id ? RT.teal : RT.line}` }}>
-                      <strong style={{ display: "block", fontSize: 14 }}>{p.address}</strong>
-                      <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>
-                        {TYPE_LABEL[lang][p.type]} · {STAGE_LABEL[lang][p.stage]} · {formatPrice(p.price.amount, p.price.currency, lang)}
+                      <span aria-hidden="true" style={{ display: "block", height: 96, background: RT.calloutBg }} />
+                      <span style={{ display: "block", padding: "18px 18px 20px" }}>
+                        <strong style={{ display: "block", fontFamily: FONT_DISPLAY, fontSize: 18 }}>{p.address}</strong>
+                        <span style={{ display: "block", fontSize: 14, color: RT.muted, margin: "8px 0 10px" }}>
+                          {TYPE_LABEL[lang][p.type]} · {STAGE_LABEL[lang][p.stage]}
+                        </span>
+                        <span style={{ display: "block", fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700, margin: "0 0 12px" }}>{formatPrice(p.price.amount, p.price.currency, lang)}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, background: RT.chipUpBg, color: RT.chipUpText, borderRadius: 999, padding: "3px 10px" }}>{STATUS_LABEL[lang][p.status]}</span>
                       </span>
-                      <span style={{ fontSize: 12, fontWeight: 700, background: RT.chipUpBg, color: RT.chipUpText, borderRadius: 999, padding: "3px 10px" }}>{STATUS_LABEL[lang][p.status]}</span>
                     </button>
                   </li>
                 ))}
