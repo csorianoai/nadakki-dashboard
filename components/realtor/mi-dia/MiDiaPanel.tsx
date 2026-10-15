@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
@@ -45,6 +46,16 @@ function NoDisponible({ t }: { t: MiDiaCopy }) {
   );
 }
 
+function Kpi({ id, label, value, note }: { id: string; label: string; value: string; note: string }) {
+  return (
+    <div data-testid={`mi-dia-kpi-${id}`} style={{ ...card, padding: "18px 18px 16px", minHeight: 134 }}>
+      <div style={{ fontSize: 14, color: RT.muted }}>{label}</div>
+      <div style={{ margin: "8px 0", fontFamily: FONT_DISPLAY, fontSize: 36, fontWeight: 700, lineHeight: 1.1 }}>{value}</div>
+      <div style={{ fontSize: 13, color: RT.muted }}>{note}</div>
+    </div>
+  );
+}
+
 function Rows({ items }: { items: { id: string; main: string; sub: string }[] }) {
   return (
     <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
@@ -83,6 +94,24 @@ export function MiDiaPanel() {
           <p style={{ margin: "6px 0 0", color: RT.muted }}>{t.emptyNote}</p>
         </div>
       )}
+      {demo ? (
+        <>
+          <div data-testid="mi-dia-kpis" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+            <Kpi id="pending" label={t.kpiLeads} value={String(DEMO_LEADS.length)} note={t.kpiLeadsNote} />
+            <Kpi id="progress" label={t.kpiListings} value={String(DEMO_LISTINGS.length)} note={t.kpiListingsNote} />
+            <Kpi id="plan" label={t.kpiPlan} value={`0 / ${DEMO_LEADS.length + DEMO_LISTINGS.length}`} note={t.kpiPlanNote} />
+            <Kpi id="desk" label={t.desk} value={String(DEMO_DESK.length)} note={t.deskNote} />
+          </div>
+          <div data-testid="mi-dia-next" style={{ background: RT.inkDeep, color: RT.navText, borderRadius: 10, padding: "22px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+            <div>
+              <div style={{ fontSize: 14, color: RT.navMuted }}>{t.nextLabel}</div>
+              <div style={{ margin: "6px 0", fontFamily: FONT_DISPLAY, fontSize: 24, fontWeight: 700, color: RT.white }}>{t.nextAction}</div>
+              <div style={{ fontSize: 15 }}>{t.nextDetail}</div>
+            </div>
+            <Link href="/realtor/propiedades" style={{ background: RT.cyan, color: RT.inkDarkest, borderRadius: 8, padding: "12px 18px", fontWeight: 700, fontSize: 15, textDecoration: "none", whiteSpace: "nowrap" }}>{t.nextCta}</Link>
+          </div>
+        </>
+      ) : null}
       <Section id="leads" title={t.leads} count={demo ? DEMO_LEADS.length : undefined}>
         {demo ? <Rows items={DEMO_LEADS.map((l) => ({ id: l.id, main: l.name, sub: `${l.source} · ${l.phone} · ${l.email} · ${t.waiting} ${l.waitingHours}${t.hours}` }))} /> : <NoDisponible t={t} />}
       </Section>
