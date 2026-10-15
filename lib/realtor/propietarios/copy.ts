@@ -12,7 +12,7 @@ export const COPY = {
     listTitle: "Ofrecen propiedad: vendedores y arrendadores", noMatch: "Ningún propietario coincide con los filtros.",
     fRole: "Rol", fAgreement: "Acuerdo", all: "Todos", counts: "Propietarios por rol",
     cOwner: "Propietario", cRole: "Rol", cProperty: "Propiedad", cPrice: "Precio solicitado", cAgreement: "Acuerdo de listing", cStage: "Etapa", cFollow: "Próximo seguimiento",
-    lang: "Idioma de la pantalla",
+    lang: "Idioma de la pantalla", properties: "propiedades",
     fairHousing: "Cumplimiento de Fair Housing: los filtros usan solo rol y estado del acuerdo. Nunca clase protegida.",
   },
   en: {
@@ -24,7 +24,7 @@ export const COPY = {
     listTitle: "Offering a property: sellers and landlords", noMatch: "No owner matches the filters.",
     fRole: "Role", fAgreement: "Agreement", all: "All", counts: "Owners by role",
     cOwner: "Owner", cRole: "Role", cProperty: "Property", cPrice: "Asking price", cAgreement: "Listing agreement", cStage: "Stage", cFollow: "Next follow-up",
-    lang: "Screen language",
+    lang: "Screen language", properties: "properties",
     fairHousing: "Fair Housing compliance: filters use only role and agreement status. Never a protected class.",
   },
 } as const;
