@@ -10,7 +10,7 @@ import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccess } from "../useRealtorAccess";
 
-const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
+const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22, minHeight: 640 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
 const TH: CSSProperties = { padding: "10px 8px", borderBottom: `1px solid ${RT.line}`, textAlign: "left", color: RT.muted, fontWeight: 600 };
 const TD: CSSProperties = { padding: "10px 8px", borderBottom: `1px solid ${RT.line}`, verticalAlign: "top" };
@@ -86,7 +86,12 @@ export function PropietariosPanel() {
             ))}
           </div>
           <section aria-label={t.title} style={CARD}>
-            <h2 style={{ margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 20 }}>{t.listTitle}</h2>
+            <h2 style={{ margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.listTitle}</h2>
+            {visible[0] ? (
+              <p data-testid="owner-focus" style={{ margin: "0 0 18px", background: RT.ink, color: RT.white, borderRadius: 6, padding: "12px 14px", fontSize: 14 }}>
+                {visible[0].name} · {visible[0].property} · {STAGE_LABEL[lang][visible[0].stage]}
+              </p>
+            ) : null}
             {visible.length === 0 ? <p data-testid="propietarios-nomatch" style={{ color: RT.muted }}>{t.noMatch}</p> : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", minWidth: 720, borderCollapse: "collapse", fontSize: 14 }}>
