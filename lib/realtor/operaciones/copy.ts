@@ -15,6 +15,8 @@ export const COPY = {
     oppTitle: "Oportunidades de venta",
     oppNote: "La venta todavía no tiene expediente por etapas: aquí solo se listan sus oportunidades.",
     lang: "Idioma de la pantalla",
+    finTitle: "Finanzas", finNote: "Comisión, reparto y cierres de las operaciones de esta pantalla.",
+    finGross: "Comisión bruta", finFee: "Comisión sobre el alquiler", finSplit: "Reparto", finAgent: "Agente", finBroker: "Broker", finClosed: "Cierres", finClosedUnit: "operaciones cerradas",
     fairHousing: "Cumplimiento de Fair Housing: los filtros usan solo el tipo de operación y la etapa. Nunca clase protegida.",
   },
   en: {
@@ -29,6 +31,8 @@ export const COPY = {
     oppTitle: "Sale opportunities",
     oppNote: "Sales do not have a staged file yet: only their opportunities are listed here.",
     lang: "Screen language",
+    finTitle: "Finance", finNote: "Commission, split and closings for the operations on this screen.",
+    finGross: "Gross commission", finFee: "Commission on the rental", finSplit: "Split", finAgent: "Agent", finBroker: "Broker", finClosed: "Closings", finClosedUnit: "closed operations",
     fairHousing: "Fair Housing compliance: filters use only the operation type and the stage. Never a protected class.",
   },
 } as const;

@@ -1,4 +1,4 @@
-import type { Operation } from "./types";
+import type { FinanceSummary, Operation } from "./types";
 
 /** Datos sintéticos: prefijo SYNTH. Solo con NEXT_PUBLIC_REALTOR_ALLOW_DEMO="1". */
 export const DEMO_OPERATIONS: readonly Operation[] = [
@@ -10,3 +10,6 @@ export const DEMO_OPERATIONS: readonly Operation[] = [
   { id: "o6", code: "SYNTH Venta 0001", kind: "venta", stage: null, summary: { es: "Compraventa · Bal Harbour · oportunidad sin expediente", en: "Sale · Bal Harbour · opportunity without a file" } },
   { id: "o7", code: "SYNTH Venta 0002", kind: "venta", stage: null, summary: { es: "Compraventa · Aventura · oportunidad sin expediente", en: "Sale · Aventura · opportunity without a file" } },
 ];
+
+/** Cifras sintéticas de Finanzas (solo DEMO). Los importes salen de las operaciones SYNTH de arriba. */
+export const DEMO_FINANCE: FinanceSummary = { gross: 6400, feePct: 8, agentPct: 70, brokerPct: 30, closed: 1 };
