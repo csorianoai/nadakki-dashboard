@@ -13,6 +13,10 @@ export const miDiaEs = {
   waiting: "esperando", hours: "h", blockers: { missing_disclosure: "Falta la divulgación firmada", missing_listing_agreement: "Falta el acuerdo de listado" } as Record<string, string>,
   blockerUnknown: "Falta un requisito por completar",
   deskNote: "Solo visible en la vista Broker.",
+  kpiLeads: "Leads por responder", kpiListings: "Listings bloqueados", kpiPlan: "Plan del día",
+  kpiLeadsNote: "Esperando primera respuesta", kpiListingsNote: "Requisitos por completar", kpiPlanNote: "Pasos de hoy · muestra DEMO",
+  nextLabel: "Recomendación principal", nextAction: "Responder al lead que más lleva esperando",
+  nextDetail: "Ordenado solo por tiempo de espera y requisitos pendientes.", nextCta: "Ver propiedades",
   fair: "Cumplimiento de Fair Housing: la agenda ordena por espera y requisitos, nunca por características de las personas.",
 };
 export type MiDiaCopy = typeof miDiaEs;
@@ -30,6 +34,10 @@ export const miDiaEn: MiDiaCopy = {
   waiting: "waiting", hours: "h", blockers: { missing_disclosure: "Signed disclosure is missing", missing_listing_agreement: "Listing agreement is missing" },
   blockerUnknown: "A requirement is still missing",
   deskNote: "Only visible in the Broker view.",
+  kpiLeads: "Leads to answer", kpiListings: "Blocked listings", kpiPlan: "Plan of the day",
+  kpiLeadsNote: "Waiting for a first reply", kpiListingsNote: "Requirements to complete", kpiPlanNote: "Today's steps · DEMO sample",
+  nextLabel: "Main recommendation", nextAction: "Reply to the lead who has waited the longest",
+  nextDetail: "Sorted only by waiting time and pending requirements.", nextCta: "View properties",
   fair: "Fair Housing compliance: the agenda sorts by waiting time and requirements, never by personal characteristics.",
 };
 export const miDiaCopy = (lang: string): MiDiaCopy => (lang.toLowerCase().startsWith("en") ? miDiaEn : miDiaEs);

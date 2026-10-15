@@ -30,6 +30,8 @@ it("positivo: DEMO muestra marcas y datos SYNTH con teléfonos 555-01xx y correo
   expect(screen.getByTestId("mi-dia-leads-count")).toHaveTextContent(String(DEMO_LEADS.length));
   expect(screen.getAllByTestId("mi-dia-row").length).toBeGreaterThan(0);
   expect(screen.queryByTestId("mi-dia-desk")).toBeNull();
+  expect(screen.getByTestId("mi-dia-kpi-pending")).toHaveTextContent(String(DEMO_LEADS.length));
+  expect(screen.getByTestId("mi-dia-next")).toBeInTheDocument();
   DEMO_LEADS.forEach((l) => {
     expect(l.name).toMatch(/^SYNTH/);
     expect(l.phone).toMatch(/^555-01\d\d$/);
@@ -45,6 +47,8 @@ it("negativo: sin DEMO dice «Sin datos todavía», NO_DISPONIBLE y ninguna cifr
   expect(screen.queryByTestId("mi-dia-demo")).toBeNull();
   expect(screen.queryByTestId("mi-dia-row")).toBeNull();
   expect(screen.queryByTestId("mi-dia-leads-count")).toBeNull();
+  expect(screen.queryByTestId("mi-dia-kpis")).toBeNull();
+  expect(screen.queryByTestId("mi-dia-next")).toBeNull();
   expect(screen.getByTestId("mi-dia-panel").textContent).not.toMatch(/\d/);
 });
 
