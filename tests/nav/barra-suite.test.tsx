@@ -19,6 +19,11 @@ import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-n
 
 let pathname = "/";
 jest.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => ({ replace: jest.fn(), push: jest.fn() }) }));
+// La barra lee el rol de la sesión (Inicio por rol); aquí, superadmin: su aterrizaje es "/" (ver retorno-inicio-por-rol.test.tsx).
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ isLoading: false, isAuthenticated: true, allRoles: [{ role_key: "platform_superadmin", core_name: "platform", display_name: "Administrador" }] }),
+}));
+beforeEach(() => Object.defineProperty(globalThis, "navigation", { configurable: true, value: undefined }));
 jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   __esModule: true,
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
@@ -107,7 +112,9 @@ describe("(2) migas Inicio › Módulo › Sección › Pantalla", () => {
 });
 
 describe("(3) Atrás y Adelante usan el historial del navegador", () => {
-  test("cada botón llama a history.back / history.forward", () => {
+  test("cada botón llama a history.back / history.forward (con historial propio medido por la Navigation API)", () => {
+    // Sin Navigation API los botones arrancan desactivados (retorno-inicio-por-rol.test.tsx); aquí hay historial.
+    Object.defineProperty(globalThis, "navigation", { configurable: true, value: { canGoBack: true, canGoForward: true } });
     const back = jest.spyOn(window.history, "back").mockImplementation(() => undefined);
     const forward = jest.spyOn(window.history, "forward").mockImplementation(() => undefined);
     pathname = "/autos/dealer";
