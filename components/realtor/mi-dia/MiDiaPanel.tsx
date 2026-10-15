@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
-import { blockerText, miDiaCopy, type MiDiaCopy } from "@/lib/realtor/mi-dia/copy";
+import { fetchMiDia, type MiDia } from "@/lib/realtor/mi-dia/api";
+import { blockerText, lookup, miDiaCopy, type MiDiaCopy } from "@/lib/realtor/mi-dia/copy";
 import { DEMO_DATE, DEMO_DESK, DEMO_LEADS, DEMO_LISTINGS } from "@/lib/realtor/mi-dia/demo";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccess } from "../useRealtorAccess";
@@ -73,11 +74,18 @@ export function MiDiaPanel() {
   const access = useRealtorAccess();
   const [lang, setLang] = useState("es");
   const broker = useBrokerView();
+  const demo = isDemoAllowed();
+  const [real, setReal] = useState<MiDia | null>(null);
   useEffect(() => { setLang(navigator.language || "es"); }, []);
+  useEffect(() => {
+    if (access !== "ok" || demo) return;
+    let alive = true;
+    fetchMiDia().then((d) => { if (alive) setReal(d); });
+    return () => { alive = false; };
+  }, [access, demo]);
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
   const t = miDiaCopy(lang);
-  const demo = isDemoAllowed();
   const date = new Date(`${DEMO_DATE}T12:00:00Z`).toLocaleDateString(lang, { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   return (
     <section data-testid="mi-dia-panel" lang={lang.startsWith("en") ? "en" : "es"} style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
@@ -88,7 +96,7 @@ export function MiDiaPanel() {
       </div>
       {demo ? (
         <p role="note" data-testid="mi-dia-demo" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demoTag}</p>
-      ) : (
+      ) : real ? null : (
         <div data-testid="mi-dia-empty" style={{ ...card, background: RT.calloutBg, borderColor: RT.calloutLine }}>
           <strong style={{ fontFamily: FONT_DISPLAY, fontSize: 20 }}>{t.empty}</strong>
           <p style={{ margin: "6px 0 0", color: RT.muted }}>{t.emptyNote}</p>
@@ -112,15 +120,23 @@ export function MiDiaPanel() {
           </div>
         </>
       ) : null}
-      <Section id="leads" title={t.leads} count={demo ? DEMO_LEADS.length : undefined}>
-        {demo ? <Rows items={DEMO_LEADS.map((l) => ({ id: l.id, main: l.name, sub: `${l.source} · ${l.phone} · ${l.email} · ${t.waiting} ${l.waitingHours}${t.hours}` }))} /> : <NoDisponible t={t} />}
+      <Section id="leads" title={t.leads} count={demo ? DEMO_LEADS.length : real?.leads.count ?? undefined}>
+        {!demo && real?.leads.quality === "OK" ? <Rows items={real.leads.items.map((l) => ({
+          id: l.lead_id,
+          main: `${lookup(t.channels, l.channel, t.leadFallback)} · ${lookup(t.intents, l.intent, l.intent)}`,
+          sub: `${t.waiting} ${Math.round(l.waiting_hours * 10) / 10}${t.hours}`,
+        }))} /> : demo ? <Rows items={DEMO_LEADS.map((l) => ({ id: l.id, main: l.name, sub: `${l.source} · ${l.phone} · ${l.email} · ${t.waiting} ${l.waitingHours}${t.hours}` }))} /> : <NoDisponible t={t} />}
       </Section>
-      <Section id="listings" title={t.listings} count={demo ? DEMO_LISTINGS.length : undefined}>
-        {demo ? <Rows items={DEMO_LISTINGS.map((l) => ({ id: l.id, main: l.title, sub: blockerText(t, l.blocker) }))} /> : <NoDisponible t={t} />}
+      <Section id="listings" title={t.listings} count={demo ? DEMO_LISTINGS.length : real?.listings.count ?? undefined}>
+        {!demo && real?.listings.quality === "OK" ? <Rows items={real.listings.items.map((l) => ({
+          id: l.listing_id, main: `${t.stage} ${l.stage_key}`, sub: `${l.blocking_count} ${t.blockingReqs}`,
+        }))} /> : demo ? <Rows items={DEMO_LISTINGS.map((l) => ({ id: l.id, main: l.title, sub: blockerText(t, l.blocker) }))} /> : <NoDisponible t={t} />}
       </Section>
       {broker ? (
-        <Section id="desk" title={t.desk} count={demo ? DEMO_DESK.length : undefined}>
-          {demo ? <Rows items={DEMO_DESK.map((d) => ({ id: d.id, main: d.title, sub: d.agent }))} /> : <NoDisponible t={t} />}
+        <Section id="desk" title={t.desk} count={demo ? DEMO_DESK.length : real?.desk.count ?? undefined}>
+          {!demo && real?.desk.quality === "OK" ? <Rows items={real.desk.items.map((d) => ({
+            id: d.item_id, main: lookup(t.deskKinds, d.kind, t.deskFallback), sub: new Date(d.created_at).toLocaleDateString(lang, { timeZone: "UTC" }),
+          }))} /> : demo ? <Rows items={DEMO_DESK.map((d) => ({ id: d.id, main: d.title, sub: d.agent }))} /> : <NoDisponible t={t} />}
         </Section>
       ) : null}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.fair}</p>
