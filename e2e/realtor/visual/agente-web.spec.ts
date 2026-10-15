@@ -36,7 +36,7 @@ test("hitos: título y DEMO rotulado", async ({ page }) => {
   await expect(page.getByTestId("agent-site-panel")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Web del agente");
   await expect(page.getByTestId("demo-banner")).toBeVisible();
-  await expect(page.getByTestId("status-badge")).toHaveAttribute("data-status", "DEMO");
+  await expect(page.getByTestId("agent-site-preview").getByTestId("status-badge")).toHaveAttribute("data-status", "DEMO");
   await expect(page.getByLabel("Nombre")).toBeVisible();
 });
 
