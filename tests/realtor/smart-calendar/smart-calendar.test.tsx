@@ -6,7 +6,7 @@ import { applyFilter, countByKind, eventsOfDay } from "@/lib/realtor/smart-calen
 import { SMART_CALENDAR } from "@/lib/realtor/centers";
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
+jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a), getAuthHeaders: () => ({}) }));
 
 beforeEach(() => {
   mockApiFetch.mockReset();
@@ -80,10 +80,11 @@ describe("pantalla", () => {
     mockApiFetch.mockResolvedValue({ status: 200 });
     render(<SmartCalendarPanel />);
     await screen.findByTestId("smart-calendar-empty");
-    expect(mockApiFetch).toHaveBeenCalledTimes(1);
-    const [url, init] = mockApiFetch.mock.calls[0];
-    expect(String(url)).not.toMatch(/tenant/i);
-    expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
+    await waitFor(() => expect(mockApiFetch.mock.calls.some(([u]) => String(u).includes("/calendar/events"))).toBe(true));
+    for (const [url, init] of mockApiFetch.mock.calls) {
+      expect(String(url)).not.toMatch(/tenant/i);
+      expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
+    }
     expect(within(screen.getByTestId("smart-calendar-panel")).queryByText(/SYNTH/)).toBeNull();
   });
 
