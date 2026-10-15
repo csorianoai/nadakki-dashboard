@@ -8,6 +8,9 @@ import { isAutosConsumerPublicPath, isDealerChromePath } from "@/lib/autos-porta
 import { ContableChrome } from "@/components/dealer/ContableChrome";
 import { isDealerReachableSuitePath } from "@/components/dealer/DealerSuiteGate";
 import { MarcoSuite } from "@/components/nav/MarcoSuite";
+import { InicioSuite } from "@/components/shell/InicioSuite";
+import { ModuleShell } from "@/components/shell/ModuleShell";
+import { moduloDeRuta, usaCarcasaComun } from "@/lib/modulos/registro";
 
 function getEffectivePathname(pathname: string | null): string {
   if (pathname) {
@@ -84,6 +87,22 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
   // Exclude /credit/* paths from GlobalForgeAppShell
   if (pathname === "/credit" || pathname.startsWith("/credit/")) {
     return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
+  }
+
+  // Armazón común de módulos (PR 6a): Marketing, Legal, Proyectos y Administración abren su espacio con su
+  // propio menú lateral; la portada y las notificaciones son la Suite (menú = elegir módulo). Los cores con
+  // carcasa propia (arriba) y las rutas sin módulo siguen como estaban.
+  const sinSlash = pathname.replace(/\/+$/, "") || "/";
+  const enSuite = sinSlash === "/" || sinSlash === "/notifications";
+  if (enSuite || usaCarcasaComun(pathname)) {
+    return (
+      <ProtectedRoute>
+        <>
+          {enSuite ? <InicioSuite>{children}</InicioSuite> : <ModuleShell modulo={moduloDeRuta(pathname)}>{children}</ModuleShell>}
+          <OnboardingAgent />
+        </>
+      </ProtectedRoute>
+    );
   }
 
   return (

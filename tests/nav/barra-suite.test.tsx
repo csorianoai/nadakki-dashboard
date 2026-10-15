@@ -150,6 +150,7 @@ describe("(5) los cajones laterales en móvil empiezan bajo la barra de 40 px", 
     "components/forge/layout/ForgeGlobalCoresSidebar.tsx",
     "components/dealer-management/shell/DealerSidebar.tsx",
     "components/dcc/shell/DccShellSidebar.tsx",
+    "components/shell/clases.ts",                  // cajón de ModuleShell (portada y módulos migrados)
     "components/cockpit/CockpitSidebar.tsx",
   ];
   test.each(CAJONES)("%s no es fixed inset-y-0", (f) => {
