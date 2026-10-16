@@ -44,6 +44,6 @@ export const COPY = {
 } as const;
 
 export const DOC_STATUS_LABEL: Record<Lang, Record<DocStatus, string>> = {
-  es: { borrador: "Borrador", enviado: "Enviado", firmado: "Firmado" },
-  en: { borrador: "Draft", enviado: "Sent", firmado: "Signed" },
+  es: { borrador: "Borrador", enviado: "Enviado", firmado: "Firmado", pending_upload: "Pendiente de subida", active: "Activo", archived: "Archivado" },
+  en: { borrador: "Draft", enviado: "Sent", firmado: "Signed", pending_upload: "Upload pending", active: "Active", archived: "Archived" },
 };
