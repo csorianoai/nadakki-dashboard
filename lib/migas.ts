@@ -77,6 +77,8 @@ function migasCore(menu: MenuCore, ruta: string): Miga[] {
   const libre = mejor.grupo.items.find((i) => !restringida(i));
   const seccion = { label: mejor.grupo.label, href: libre?.href ?? mejor.item.href };
   const pantalla = { label: mejor.item.label, href: mejor.item.href };
+  // Bloque fijo (grupo de una sola entrada con su mismo rótulo): cuelga del módulo, sin sección repetida.
+  if (mejor.grupo.items.length === 1 && mejor.grupo.label === pantalla.label) return conDetalle([...base, pantalla], pantalla.href, ruta);
   return conDetalle([...base, seccion, pantalla], pantalla.href, ruta);
 }
 
