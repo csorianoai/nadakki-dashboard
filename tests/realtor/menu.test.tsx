@@ -79,12 +79,12 @@ it("acceso: expone los roles sin cambiar el estado; sin roles legibles, vacío",
   expect(await fetchPanelAccessStatus()).toBe("sin-acceso");
 });
 
-it("positivo: con el rol, la barra muestra la Bandeja (sin ruta, con «Pronto»)", async () => {
+it("positivo: con el rol, la barra muestra la Bandeja con su enlace, sin «Pronto»", async () => {
   mockApiFetch.mockResolvedValue(ok([BROKER_ROLE]));
   render(<RealtorShell><p>x</p></RealtorShell>);
   const el = await screen.findByTestId("center-bandeja-broker");
-  expect(el).toHaveTextContent("Pronto");
-  expect(el.getAttribute("href")).toBeNull();
+  expect(el).not.toHaveTextContent("Pronto");
+  expect(el.getAttribute("href")).toBe("/realtor/broker");
 });
 
 it("negativo: sin rol no hay Bandeja; el selector simulado Broker no la concede", async () => {
