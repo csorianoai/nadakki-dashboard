@@ -27,7 +27,7 @@ import {
   effectiveWizardDocuments,
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import { createDraftApplication, executeMultiLender, getApplication, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { createDraftApplication, assertMultiLenderSucceeded, executeMultiLender, getApplication, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -984,12 +984,14 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       const result = { application_id: consentApplicationId };
 
       if (tenantId && result.application_id) {
-        await executeMultiLender({
+        const execution = await executeMultiLender({
           tenantId,
           applicationId: result.application_id,
           application: payload,
           dryRun: false,
         });
+        // Falla antes de borrar el borrador: HTTP 200 con status "failed" no es éxito.
+        assertMultiLenderSucceeded(execution);
       }
 
       clearDraftStorage();
