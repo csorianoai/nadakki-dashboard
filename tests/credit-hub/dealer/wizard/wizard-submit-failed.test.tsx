@@ -71,6 +71,7 @@ jest.mock("@/lib/credit-hub/api/creditCoreClient", () => ({
   saveApplicantApplication: jest.fn().mockResolvedValue({}),
   saveVehicleApplication: jest.fn().mockResolvedValue({}),
   executeMultiLender: jest.fn(),
+  getDocumentCompleteness: jest.fn().mockResolvedValue({ total_required: 0, total_uploaded: 0, missing: [], complete: true }),
 }));
 
 const mockExecute = executeMultiLender as jest.Mock;

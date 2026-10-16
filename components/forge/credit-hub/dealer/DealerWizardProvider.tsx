@@ -27,7 +27,7 @@ import {
   effectiveWizardDocuments,
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import { createDraftApplication, assertMultiLenderSucceeded, executeMultiLender, getApplication, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { createDraftApplication, assertMultiLenderSucceeded, executeMultiLender, getApplication, getDocumentCompleteness, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -42,6 +42,7 @@ import {
 import { toast } from "@/components/forge";
 import { forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast-copy";
 import { uploadDocument } from "@/lib/credit-api";
+import { documentsIncompleteMessage, uploadThenDispatch } from "@/lib/credit-hub/dealer/wizard-submit-documents";
 import { calculateEmploymentTenure } from "@/lib/credit/utils/employment-tenure";
 import type { UploadStatus } from "./DocumentUploadZone";
 import { dealerWizardErrorMessage } from "@/lib/credit-hub/dealer/wizard-error";
@@ -313,6 +314,10 @@ const DOC_KEY_TO_BACKEND_TYPE: Record<string, string> = {
   personal_references: "OTRO",
   other_documents: "OTRO",
 };
+
+function missingDocumentLabeler(docs: ReturnType<typeof effectiveWizardDocuments>) {
+  return (code: string) => docs.find((d) => tenantDocumentKey(d) === code)?.label ?? code;
+}
 
 export interface PendingFileEntry {
   file: File;
@@ -983,83 +988,43 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       });
       const result = { application_id: consentApplicationId };
 
-      if (tenantId && result.application_id) {
-        const execution = await executeMultiLender({
-          tenantId,
-          applicationId: result.application_id,
-          application: payload,
-          dryRun: false,
-        });
-        // Falla antes de borrar el borrador: HTTP 200 con status "failed" no es éxito.
-        assertMultiLenderSucceeded(execution);
-      }
+      const appId = result.application_id;
+      const labelForMissing = missingDocumentLabeler(requiredDocumentsList);
+      await uploadThenDispatch({
+        files: pendingFilesRef.current,
+        upload: (docKey, file) => uploadDocument(tenantId, appId, file, DOC_KEY_TO_BACKEND_TYPE[docKey] ?? "OTRO"),
+        onStatus: (docKey, status, errorMessage) =>
+          setPendingFiles((prev) => {
+            const current = prev.get(docKey);
+            if (!current) return prev;
+            const next = new Map(prev);
+            next.set(docKey, { ...current, status, errorMessage });
+            return next;
+          }),
+        getCompleteness: () => getDocumentCompleteness({ tenantId, applicationId: appId }),
+        labelForMissing,
+        dispatch: async () => {
+          const execution = await executeMultiLender({
+            tenantId,
+            applicationId: appId,
+            application: payload,
+            dryRun: false,
+          });
+          // Falla antes de borrar el borrador: HTTP 200 con status "failed" no es éxito.
+          assertMultiLenderSucceeded(execution);
+        },
+      });
 
       clearDraftStorage();
       setFormData(initialApplicationFormData);
-
-      // Upload pending document files in background (fire-and-forget)
-      const files = new Map(pendingFilesRef.current);
-      if (files.size > 0 && tenantId && result.application_id) {
-        const appId = result.application_id;
-        const tid = tenantId;
-        // Update statuses to "uploading"
-        setPendingFiles((prev) => {
-          const next = new Map(prev);
-          for (const [k, entry] of next) {
-            next.set(k, { ...entry, status: "uploading" });
-          }
-          return next;
-        });
-        // Upload each file
-        void (async () => {
-          let ok = 0;
-          let fail = 0;
-          const errors: Array<{ key: string; message: string }> = [];
-          for (const [docKey, entry] of files) {
-            const backendType = DOC_KEY_TO_BACKEND_TYPE[docKey] ?? "OTRO";
-            try {
-              await uploadDocument(tid, appId, entry.file, backendType);
-              ok++;
-              setPendingFiles((prev) => {
-                const next = new Map(prev);
-                const current = next.get(docKey);
-                if (current) {
-                  next.set(docKey, { ...current, status: "uploaded" });
-                }
-                return next;
-              });
-            } catch (err) {
-              fail++;
-              const errorMessage = err instanceof Error ? err.message : "Error desconocido al subir";
-              errors.push({ key: docKey, message: errorMessage });
-              setPendingFiles((prev) => {
-                const next = new Map(prev);
-                const current = next.get(docKey);
-                if (current) {
-                  next.set(docKey, { ...current, status: "error", errorMessage });
-                }
-                return next;
-              });
-            }
-          }
-          if (fail > 0) {
-            const firstError = errors[0];
-            toast.error(
-              `${ok} documento(s) subido(s), ${fail} con error. Primer error: ${firstError?.message || "desconocido"}`,
-              { duration: 8000 }
-            );
-          } else if (ok > 0) {
-            toast.success(`${ok} documento(s) subido(s) correctamente`, { duration: 4000 });
-          }
-        })();
-      }
 
       setIsSubmitting(false);
       return result;
     } catch (err) {
       setIsSubmitting(false);
       submitInFlightRef.current = false;
-      const msg = err instanceof Error ? err.message : t.toasts.application_failed;
+      const incomplete = documentsIncompleteMessage(err, missingDocumentLabeler(requiredDocumentsList));
+      const msg = incomplete ?? (err instanceof Error ? err.message : t.toasts.application_failed);
       setSubmitError(msg);
       throw err;
     }
