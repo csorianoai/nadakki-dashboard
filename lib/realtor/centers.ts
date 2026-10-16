@@ -25,8 +25,6 @@ export const REALTOR_CENTERS: readonly RealtorCenter[] = [
   { id: "demand-radar", label: "Mercado", group: "CRECER", href: "/realtor/demand-radar" },
   { ...resultados, label: "Resultados", group: "CRECER" },
   { ...careerDirector, label: "Career Director", group: "CRECER" },
-  { id: "alta", label: "Alta", group: "CRECER", href: "/realtor/alta" },
-  { id: "agente-web", label: "Agente web", group: "CRECER", href: "/realtor/agente-web" },
   { id: "academia", label: "Academia", group: "CRECER" },
 ];
 
