@@ -12,8 +12,16 @@ const THRESHOLD = 0.12;
 const NODEMO = "http://127.0.0.1:3101";
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/mi-dia.png");
 
-// Los textos se afirman en español: el idioma sale de navigator.language y no debe depender del LANG del entorno.
-test.use({ locale: "es-ES" });
+// El idioma ya no sale del navegador (arranca en español); un navegador en inglés lo demuestra. El reloj se fija para que la
+// captura de referencia sea reproducible: la fecha del panel es la de hoy en la zona del tenant.
+test.use({ locale: "en-US" });
+test.beforeEach(async ({ page }) => { await page.clock.setFixedTime(new Date("2026-10-12T16:00:00Z")); });
+
+const TOTAL = 7;
+let pasados = 0;
+let fallos = 0;
+test.afterEach(({}, info) => void (info.status === "passed" ? (pasados += 1) : (fallos += 1)));
+test.afterAll(() => console.log(`RESULT_O3_FIX_MIDIA=${fallos === 0 && pasados === TOTAL ? "PASS" : "FAIL"}`));
 
 async function sesion(page: Page, acceso: number) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
@@ -52,7 +60,10 @@ test("negativo: sin DEMO, «Sin datos todavía», NO_DISPONIBLE y ninguna cifra"
   await expect(page.getByTestId("mi-dia-row")).toHaveCount(0);
   await expect(page.getByTestId("mi-dia-demo")).toHaveCount(0);
   await expect(page.getByTestId("demo-pill")).toHaveCount(0);
-  expect(await page.getByTestId("mi-dia-panel").innerText()).not.toMatch(/\d/);
+  await expect(page.getByTestId("mi-dia-panel")).toHaveAttribute("lang", "es");
+  await expect(page.getByTestId("mi-dia-date")).toHaveText("lunes, 12 de octubre de 2026");
+  const cuerpo = (await page.getByTestId("mi-dia-panel").innerText()).replace(await page.getByTestId("mi-dia-date").innerText(), "");
+  expect(cuerpo).not.toMatch(/\d/);
 });
 
 // Cuerpo con la forma de C-RE-OLA2 (MiDia): registros SYNTH, un id por lead y una sección sin fuente.

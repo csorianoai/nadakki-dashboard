@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MiDiaPanel } from "@/components/realtor/mi-dia/MiDiaPanel";
 import { center } from "@/lib/realtor/mi-dia/center";
 import { DEMO_LEADS } from "@/lib/realtor/mi-dia/demo";
@@ -49,7 +49,9 @@ it("negativo: sin DEMO dice «Sin datos todavía», NO_DISPONIBLE y ninguna cifr
   expect(screen.queryByTestId("mi-dia-leads-count")).toBeNull();
   expect(screen.queryByTestId("mi-dia-kpis")).toBeNull();
   expect(screen.queryByTestId("mi-dia-next")).toBeNull();
-  expect(screen.getByTestId("mi-dia-panel").textContent).not.toMatch(/\d/);
+  // La fecha de hoy es visible también sin DEMO; fuera de ella, ninguna cifra.
+  const rest = screen.getByTestId("mi-dia-panel").textContent!.replace(screen.getByTestId("mi-dia-date").textContent!, "");
+  expect(rest).not.toMatch(/\d/);
 });
 
 it.each([401, 403, 404])("acceso denegado (%s): nada de la pantalla, solo el aviso", async (status) => {
@@ -108,9 +110,9 @@ it("ES y EN tienen las mismas claves", () => {
   expect(Object.keys(miDiaEn).sort()).toEqual(Object.keys(miDiaEs).sort());
 });
 
-it("EN: con navegador en inglés el texto sale en inglés", async () => {
-  jest.spyOn(window.navigator, "language", "get").mockReturnValue("en-US");
+it("EN: con el conmutador en inglés el texto sale en inglés", async () => {
   mockApiFetch.mockResolvedValue({ status: 200 });
   render(<MiDiaPanel />);
+  fireEvent.click(await screen.findByTestId("lang-en"));
   expect(await screen.findByTestId("mi-dia-empty")).toHaveTextContent("No data yet");
 });
