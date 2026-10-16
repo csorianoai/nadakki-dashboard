@@ -80,13 +80,13 @@ describe("(2) migas Inicio › Módulo › Sección › Pantalla", () => {
     expect(etiquetas("/realtor/clientes")).toEqual(["Inicio", "Realtor OS", "Clientes", "Contactos"]);
   });
 
-  test("Realtor OS: bloque fijo, centro fuera de la barra y rutas de Administración, sin grupo inventado", () => {
+  test("Realtor OS: bloque fijo y centros de la barra (Propietarios, Alta y Agente web, decisión de César 2026-10-16) bajo su grupo", () => {
     const rt = { label: "Realtor OS", href: "/realtor" };
     const esperado: Record<string, { label: string; href: string }[]> = {
       "/realtor/smart-calendar": [rt, { label: "Smart Calendar", href: "/realtor/smart-calendar" }],
       "/realtor/propietarios": [rt, { label: "Clientes", href: "/realtor/clientes" }, { label: "Propietarios", href: "/realtor/propietarios" }],
-      "/realtor/alta": [rt, { label: "Alta", href: "/realtor/alta" }],
-      "/realtor/agente-web": [rt, { label: "Agente web", href: "/realtor/agente-web" }],
+      "/realtor/alta": [rt, { label: "Crecer", href: "/realtor/marketing-ai" }, { label: "Alta", href: "/realtor/alta" }],
+      "/realtor/agente-web": [rt, { label: "Crecer", href: "/realtor/marketing-ai" }, { label: "Agente web", href: "/realtor/agente-web" }],
     };
     for (const [ruta, resto] of Object.entries(esperado)) {
       const m = migasDe(ruta);
