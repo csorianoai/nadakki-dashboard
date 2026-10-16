@@ -12,4 +12,8 @@ export function countByStage(list: readonly Operation[]): Record<StageId, number
 }
 
 export const inStage = (list: readonly Operation[], stage: StageId) => list.filter((o) => o.stage === stage);
-export const opportunities = (list: readonly Operation[]) => list.filter((o) => o.stage === null);
+/** Oportunidades de venta: sin expediente por etapas. */
+export const opportunities = (list: readonly Operation[]) => list.filter((o) => o.kind === "venta" && o.stage === null);
+
+/** Alquileres cuya fuente no informa etapa (datos reales): se listan aparte, nunca en una etapa inventada. */
+export const unstaged = (list: readonly Operation[]) => list.filter((o) => o.kind === "alquiler" && o.stage === null);

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { COPY, KIND_LABEL, STAGE_LABEL, type Lang } from "@/lib/realtor/operaciones/copy";
 import { DEMO_FINANCE, DEMO_OPERATIONS } from "@/lib/realtor/operaciones/demo";
-import { applyFilters, countByStage, inStage, opportunities } from "@/lib/realtor/operaciones/logic";
+import { fetchOperations } from "@/lib/realtor/operaciones/api";
+import { applyFilters, countByStage, inStage, opportunities, unstaged } from "@/lib/realtor/operaciones/logic";
 import { KINDS, NO_FILTERS, STAGES, type OpFilters, type Operation, type StageId } from "@/lib/realtor/operaciones/types";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
@@ -41,12 +42,20 @@ export function OperacionesPanel() {
   const demo = isDemoAllowed();
   const t = COPY[lang];
 
-  // Fuera de DEMO no hay fuente conectada: lista vacía, sin cifras inventadas.
-  const ops: readonly Operation[] = demo ? DEMO_OPERATIONS : [];
+  // Fuera de DEMO se lee C-RE-OLA3; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
+  const [real, setReal] = useState<readonly Operation[]>([]);
+  useEffect(() => {
+    if (demo || access !== "ok") return;
+    let alive = true;
+    fetchOperations().then((r) => { if (alive) setReal(r); });
+    return () => { alive = false; };
+  }, [demo, access]);
+  const ops: readonly Operation[] = demo ? DEMO_OPERATIONS : real;
   const visible = useMemo(() => applyFilters(ops, filters), [ops, filters]);
   const counts = useMemo(() => countByStage(visible), [visible]);
   const inCurrent = useMemo(() => inStage(visible, stage), [visible, stage]);
   const opps = useMemo(() => opportunities(visible), [visible]);
+  const loose = useMemo(() => unstaged(visible), [visible]);
 
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
@@ -107,6 +116,15 @@ export function OperacionesPanel() {
                 </ul>
               )}
             </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {loose.length > 0 ? (
+              <div data-testid="unstaged-panel" style={CARD}>
+                <h2 style={{ margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 22 }}>{t.unstagedTitle}</h2>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {loose.map((o) => (<OpRow key={o.id} o={o} lang={lang} />))}
+                </ul>
+              </div>
+            ) : null}
             <div data-testid="opp-panel" style={CARD}>
               <h2 style={{ margin: "0 0 10px", fontFamily: FONT_DISPLAY, fontSize: 22 }}>{t.oppTitle}</h2>
               <p style={{ margin: "0 0 14px", fontSize: 13, color: RT.muted }}>{t.oppNote}</p>
@@ -114,7 +132,9 @@ export function OperacionesPanel() {
                 {opps.map((o) => (<OpRow key={o.id} o={o} lang={lang} />))}
               </ul>
             </div>
+            </div>
           </div>
+          {demo ? (
           <section data-testid="fin-section" aria-label={t.finTitle} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.finTitle}</h2>
             <p style={{ margin: 0, fontSize: 13, color: RT.muted }}>{t.finNote}</p>
@@ -125,6 +145,7 @@ export function OperacionesPanel() {
               <FinCard id="fin-closed" label={t.finClosed} value={String(DEMO_FINANCE.closed)} hint={t.finClosedUnit} />
             </div>
           </section>
+          ) : null}
         </>
       )}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.fairHousing}</p>
