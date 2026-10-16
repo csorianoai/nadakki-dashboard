@@ -88,6 +88,8 @@ describe("Dashboard ejecutivo: carga", () => {
     }
     render(<DashboardEjecutivoClient />);
     expect(await screen.findByTestId("contable-error-reintentar")).toBeInTheDocument();
+    expect(screen.queryByText('Utilidad Neta')).not.toBeInTheDocument();
+    expect(screen.queryByText('0.0%')).not.toBeInTheDocument();
     expect(screen.queryByText(/SQLSTATE/)).not.toBeInTheDocument();
   });
 });

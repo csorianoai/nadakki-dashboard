@@ -375,7 +375,7 @@ export function DashboardEjecutivoClient() {
           <Loader2 className="h-6 w-6 animate-spin" />
           <span className="text-sm">Cargando dashboard ejecutivo...</span>
         </div>
-      ) : (
+      ) : errorCarga ? null : (
         <>
           {/* S2 — KPI Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
