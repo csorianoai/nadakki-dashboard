@@ -53,6 +53,48 @@ test("negativo sin DEMO: «Sin datos todavía», ninguna cifra ni marca DEMO", a
   expect(await page.getByTestId("smart-calendar-panel").innerText()).not.toMatch(/\d/);
 });
 
+// Cuerpo con la forma de C-RE-OLA3 (CalendarEvent): registros SYNTH del tenant QA, un evento cancelado que no debe verse.
+function semanaReal() {
+  const lunes = new Date();
+  lunes.setUTCDate(lunes.getUTCDate() - ((lunes.getUTCDay() + 6) % 7) + 2);
+  const dia = lunes.toISOString().slice(0, 10);
+  const base = { tenant_id: "00000000-0000-4000-8000-0000000000a1", timezone: "UTC", all_day: false, organizer_user_id: "00000000-0000-4000-8000-000000009001",
+    created_at: "2000-01-01T00:00:00Z", updated_at: "2000-01-01T00:00:00Z" };
+  const ev = (n: number, kind: string, hh: string, status = "scheduled") =>
+    ({ ...base, id: `00000000-0000-4000-8000-00000000300${n}`, kind, status, title: `SYNTH Evento ${n}`, starts_at: `${dia}T${hh}:00Z`, ends_at: `${dia}T${hh.slice(0, 2)}:59:00Z` });
+  return { items: [ev(1, "showing", "10:00"), ev(2, "signing", "12:00"), ev(3, "open_house", "15:00"), ev(4, "meeting", "16:00", "cancelled")], next_cursor: null };
+}
+
+test("datos reales (sin DEMO): eventos del contrato, cancelados fuera y sin tenant del cliente", async ({ page }) => {
+  const pedidos: string[] = [];
+  page.on("request", (r) => { if (r.url().includes("/realestate/calendar/events")) pedidos.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/calendar\/events/, (route) => route.fulfill({ json: semanaReal() }));
+  await page.goto(`${NODEMO}/realtor/smart-calendar`);
+  await expect(page.getByTestId("cal-event")).toHaveCount(3, { timeout: 30_000 });
+  await expect(page.getByTestId("count-visita")).toHaveText("Visita · 2");
+  await expect(page.getByTestId("count-cita")).toHaveText("Cita · 1");
+  await expect(page.getByTestId("smart-calendar-panel")).toContainText("SYNTH Evento 1");
+  await expect(page.getByTestId("smart-calendar-empty")).toHaveCount(0);
+  await expect(page.getByTestId("demo-banner")).toHaveCount(0);
+  await page.getByLabel("Tipo").selectOption("cita");
+  await expect(page.getByTestId("cal-event")).toHaveCount(1);
+  expect(pedidos.length).toBeGreaterThan(0);
+  for (const p of pedidos) expect(p.toLowerCase()).not.toMatch(/x-tenant|tenant_id|tenant=/);
+});
+
+test("sin DEMO con 503 o lista vacía: sigue «Sin datos todavía»", async ({ page }) => {
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/calendar\/events/, (route) => route.fulfill({ status: 503, json: { detail: "down" } }));
+  await page.goto(`${NODEMO}/realtor/smart-calendar`);
+  await expect(page.getByTestId("smart-calendar-empty")).toContainText("Sin datos todavía", { timeout: 30_000 });
+  await expect(page.getByTestId("cal-event")).toHaveCount(0);
+  await page.route(/\/api\/v1\/realestate\/calendar\/events/, (route) => route.fulfill({ json: { items: [], next_cursor: null } }));
+  await page.reload();
+  await expect(page.getByTestId("smart-calendar-empty")).toContainText("Sin datos todavía");
+  await expect(page.getByTestId("cal-event")).toHaveCount(0);
+});
+
 test("acceso denegado (403): nada de la pantalla ni del armazón", async ({ page }) => {
   await sesion(page, 403);
   await page.goto("/realtor/smart-calendar");
