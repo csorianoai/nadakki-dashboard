@@ -146,8 +146,8 @@ for (const m of MIGRADOS) {
     const barra = (await page.getByTestId("barra-suite").boundingBox())!;
     const lateral = (await menu.boundingBox())!;
     expect(Math.round(lateral.y)).toBe(Math.round(barra.y + barra.height));
-    await expect(page.getByTestId("hueco-contexto")).toHaveCount(1);          // superadmin: el hueco existe y aloja el selector de contexto
-    await expect(page.getByTestId("hueco-contexto").getByTestId("selector-contexto")).toBeVisible();
+    await expect(page.getByTestId("hueco-contexto")).toHaveCount(1);          // superadmin: el hueco existe y está vacío
+    await expect(page.getByTestId("hueco-contexto")).toBeEmpty();
 
     await page.getByRole("button", { name: /Módulos/ }).click();
     const lista = page.getByTestId("selector-modulos-lista");
