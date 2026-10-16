@@ -51,6 +51,41 @@ test("negativo sin DEMO: «Sin datos todavía», ninguna cifra ni marca DEMO", a
   expect(await page.getByTestId("documentos-panel").innerText()).not.toMatch(/\d/);
 });
 
+const DOCS = { items: [
+  { id: "00000000-0000-4000-8000-000000006001", tenant_id: "00000000-0000-4000-8000-0000000000a1", subject_type: "listing", subject_id: "00000000-0000-4000-8000-00000000f001",
+    doc_type: "listing_agreement", status: "active", title: "SYNTH Acuerdo de listing", file_name: "acuerdo.pdf", mime_type: "application/pdf", size_bytes: 120345,
+    sha256: "0".repeat(64), retention_years: 7, retain_until: "2033-10-15", supersedes_document_id: null, registered_by_user_id: "00000000-0000-4000-8000-000000009001",
+    registered_at: "2026-10-15T11:55:00Z", uploaded_at: "2026-10-15T12:00:00Z", archived_at: null },
+  { id: "00000000-0000-4000-8000-000000006002", tenant_id: "00000000-0000-4000-8000-0000000000a1", subject_type: "operation", subject_id: "00000000-0000-4000-8000-00000000f002",
+    doc_type: "receipt", status: "pending_upload", title: "SYNTH Recibo", file_name: "recibo.pdf", mime_type: "application/pdf", size_bytes: 2048,
+    sha256: "1".repeat(64), retention_years: 7, retain_until: null, supersedes_document_id: null, registered_by_user_id: "00000000-0000-4000-8000-000000009001",
+    registered_at: "2026-10-15T11:56:00Z", uploaded_at: null, archived_at: null },
+], next_cursor: null };
+
+test("datos reales (contrato C-RE-OLA3, registros SYNTH) sin DEMO: filas, conteos y sin tenant en el cliente", async ({ page }) => {
+  const peticiones: string[] = [];
+  page.on("request", (r) => { if (/\/realestate\/documents/.test(r.url())) peticiones.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/documents/, (route) => route.fulfill({ json: DOCS }));
+  await page.goto(`${NODEMO}/realtor/documentos`);
+  await expect(page.getByTestId("doc-row")).toHaveCount(2, { timeout: 30_000 });
+  await expect(page.getByTestId("doc-row").first()).toContainText("SYNTH Acuerdo de listing");
+  await expect(page.getByTestId("count-active")).toContainText("1");
+  await expect(page.getByTestId("count-pending_upload")).toContainText("1");
+  await expect(page.getByTestId("documentos-empty")).toHaveCount(0);
+  await expect(page.getByTestId("demo-banner")).toHaveCount(0);
+  expect(peticiones.length).toBeGreaterThan(0);
+  for (const p of peticiones) expect(p.toLowerCase()).not.toMatch(/tenant/);
+});
+
+test("endpoint 404/503 sin DEMO: sigue «Sin datos todavía»", async ({ page }) => {
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/documents/, (route) => route.fulfill({ status: 503, json: { detail: "down" } }));
+  await page.goto(`${NODEMO}/realtor/documentos`);
+  await expect(page.getByTestId("documentos-empty")).toContainText("Sin datos todavía", { timeout: 30_000 });
+  await expect(page.getByTestId("doc-row")).toHaveCount(0);
+});
+
 test("acceso denegado (403): nada de la pantalla ni del armazón", async ({ page }) => {
   await sesion(page, 403);
   await page.goto("/realtor/documentos");

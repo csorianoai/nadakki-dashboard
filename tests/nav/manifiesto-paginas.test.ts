@@ -15,6 +15,7 @@ import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-n
 import { BANCO_V2_NAV } from "@/app/(forge)/credit-hub/bank-v2/_nav";
 import { NAVEGACION, PESTANAS_MARKETING, RUTAS_OCULTAS, esRutaOculta } from "@/lib/navigation";
 import { CAREER_DIRECTOR, REALTOR_CENTERS, SMART_CALENDAR } from "@/lib/realtor/centers";
+import { REALTOR_MENU } from "@/lib/realtor/menu";
 import { MANIFIESTO_PAGINAS } from "@/lib/paginas/manifiesto";
 import {
   CATEGORIAS, MODULOS, type Comprobacion, type EntradaEnlazada, type EntradaPagina, type EntradaRedirigida,
@@ -79,7 +80,7 @@ function hrefsImportables(): Record<string, Set<string>> {
   const v2 = new Set<string>(BANCO_V2_NAV.flatMap((g) => g.items.map((i) => sinQuery(i.href))));
   const dealer = new Set<string>(DEALER_NAV_GROUPS.flatMap((g) => g.items.map((i) => sinQuery(i.href))));
   const realtor = new Set<string>(
-    [...REALTOR_CENTERS, CAREER_DIRECTOR, SMART_CALENDAR].map((c) => c.href).filter((h): h is string => !!h),
+    [...REALTOR_CENTERS, CAREER_DIRECTOR, SMART_CALENDAR, ...REALTOR_MENU.flatMap((g) => g.items)].map((c) => c.href).filter((h): h is string => !!h),
   );
   return { navegacion: nav, "marketing-pestanas": pestanas, "bank-v2": v2, "dealer-nav": dealer, realtor };
 }

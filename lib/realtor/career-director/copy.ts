@@ -16,6 +16,12 @@ const es = {
   langLabel: "Idioma / Language",
   note: "Esta pantalla no filtra ni usa datos de clase protegida. El idioma preferido no limita nada.",
   states: { active: "Vigente", expiring: "Por vencer" },
+  period: "Periodo", activity: "Actividad", volume: "Volumen cerrado", achievements: "Logros",
+  volumeHint: "Un total por tipo y moneda; nunca se suman monedas ni ventas con rentas.",
+  noVolume: "Sin cierres con precio en el periodo.", noAchievements: "Ningún logro todavía.",
+  metricLabels: { closings_count: "Cierres del periodo", showings_count: "Visitas realizadas", active_listings: "Captaciones activas" } as Record<string, string>,
+  kinds: { sale: "Venta", rental: "Renta mensual" },
+  achievementLabels: { first_closing: "Primer cierre", ten_closings: "Diez cierres", first_showing: "Primera visita", hundred_showings: "Cien visitas" },
 };
 export type CareerCopy = typeof es;
 
@@ -34,6 +40,12 @@ const en: CareerCopy = {
   langLabel: "Idioma / Language",
   note: "This screen does not filter on or use protected-class data. Preferred language limits nothing.",
   states: { active: "Active", expiring: "Expiring soon" },
+  period: "Period", activity: "Activity", volume: "Closed volume", achievements: "Achievements",
+  volumeHint: "One total per type and currency; currencies and sales/rentals are never added together.",
+  noVolume: "No priced closings in the period.", noAchievements: "No achievements yet.",
+  metricLabels: { closings_count: "Closings in period", showings_count: "Showings held", active_listings: "Active listings" },
+  kinds: { sale: "Sale", rental: "Monthly rent" },
+  achievementLabels: { first_closing: "First closing", ten_closings: "Ten closings", first_showing: "First showing", hundred_showings: "One hundred showings" },
 };
 
 export const COPY: Record<Lang, CareerCopy> = { es, en };

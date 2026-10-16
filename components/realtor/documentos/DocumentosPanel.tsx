@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { COPY, DOC_STATUS_LABEL, type Lang } from "@/lib/realtor/documentos/copy";
+import { fetchDocuments } from "@/lib/realtor/documentos/api";
 import { DEMO_DOCS, DEMO_TEMPLATES } from "@/lib/realtor/documentos/demo";
 import { countByDocStatus, templateState } from "@/lib/realtor/documentos/logic";
-import { DOC_STATUSES, type OperationDoc, type Template } from "@/lib/realtor/documentos/types";
+import { API_DOC_STATUSES, DOC_STATUSES, type OperationDoc, type Template } from "@/lib/realtor/documentos/types";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
@@ -21,8 +22,15 @@ export function DocumentosPanel() {
   const demo = isDemoAllowed();
   const t = COPY[lang];
 
-  // Fuera de DEMO no hay fuente conectada: listas vacías, sin cifras inventadas.
-  const docs: readonly OperationDoc[] = demo ? DEMO_DOCS : [];
+  // Fuera de DEMO se lee C-RE-DOCUMENTOS; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
+  const [real, setReal] = useState<readonly OperationDoc[]>([]);
+  useEffect(() => {
+    if (demo || access !== "ok") return;
+    let alive = true;
+    fetchDocuments().then((r) => { if (alive) setReal(r); });
+    return () => { alive = false; };
+  }, [demo, access]);
+  const docs: readonly OperationDoc[] = demo ? DEMO_DOCS : real;
   const templates: readonly Template[] = demo ? DEMO_TEMPLATES : [];
   const counts = countByDocStatus(docs);
 
@@ -57,7 +65,7 @@ export function DocumentosPanel() {
       ) : (
         <>
           <div data-testid="status-counts" aria-label={t.statusCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {DOC_STATUSES.map((s) => (
+            {(demo ? DOC_STATUSES : API_DOC_STATUSES).map((s) => (
               <span key={s} data-testid={`count-${s}`} style={{ background: RT.calloutBg, border: `1px solid ${RT.calloutLine}`, borderRadius: 999, padding: "6px 14px", fontSize: 13, fontWeight: 700 }}>
                 {DOC_STATUS_LABEL[lang][s]} · {counts[s]}
               </span>
