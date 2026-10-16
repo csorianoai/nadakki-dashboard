@@ -50,6 +50,29 @@ export interface ConsentHistoryEvent {
   created_at: string;
 }
 
+export interface PresentConsentText {
+  /** Texto oficial tal cual lo emite el backend; el dashboard no lo transforma. */
+  text: string;
+  version: string;
+}
+
+/** El backend respondió 409 consent_channel_unavailable: el canal no entrega el enlace de verdad. */
+export class ConsentChannelUnavailableError extends Error {
+  constructor(
+    public readonly channel: string,
+    public readonly reason: string,
+    message: string
+  ) {
+    super(message);
+    this.name = "ConsentChannelUnavailableError";
+  }
+}
+
+/** Solo el estado SENT del backend cuenta como «enviado» (mock_sent o desconocido, no). */
+export function isConfirmedSent(status: unknown): boolean {
+  return status === "SENT";
+}
+
 async function parseBody(response: Response): Promise<unknown> {
   try {
     return await response.clone().json();
@@ -108,6 +131,13 @@ export class ConsentApiClient {
       });
       const body = await parseBody(response);
       if (!response.ok) {
+        const detail = body && typeof body === "object" ? (body as Record<string, unknown>).detail : null;
+        if (response.status === 409 && detail && typeof detail === "object") {
+          const d = detail as Record<string, unknown>;
+          if (d.code === "consent_channel_unavailable") {
+            throw new ConsentChannelUnavailableError(String(d.channel ?? ""), String(d.reason ?? ""), response.statusText);
+          }
+        }
         throw new Error(messageFromBody(body, response.statusText));
       }
       return body as T;
@@ -124,6 +154,13 @@ export class ConsentApiClient {
     return this.fetchJson<ConsentInitiateResponse>(`/${encodeURIComponent(applicationId)}/initiate`, {
       method: "POST",
       body: JSON.stringify({ method, ...payload }),
+      includeTenant: true,
+    });
+  }
+
+  async getPresentText(applicationId: string): Promise<PresentConsentText> {
+    return this.fetchJson<PresentConsentText>(`/${encodeURIComponent(applicationId)}/present/text`, {
+      method: "GET",
       includeTenant: true,
     });
   }
