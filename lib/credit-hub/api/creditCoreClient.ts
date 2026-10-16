@@ -147,6 +147,52 @@ export async function createDraftApplication(params: { tenantId: string }): Prom
   return normalizeApplication(raw);
 }
 
+/**
+ * Borrador del asistente en el servidor (DB-CODEX-12A, `application_payload` de la solicitud DRAFT).
+ * `expiresAt` lo fija el servidor por TTL; un borrador vencido responde 404/410 y la purga lo elimina.
+ */
+export interface ApplicationDraft {
+  formData: Record<string, unknown>;
+  expiresAt: string | null;
+}
+
+export async function saveApplicationDraft(params: {
+  tenantId: string;
+  applicationId: string;
+  formData: Record<string, unknown>;
+}): Promise<void> {
+  await creditCoreFetch(`/applications/${encodeURIComponent(params.applicationId)}/draft`, {
+    method: "PUT",
+    tenantId: params.tenantId,
+    body: JSON.stringify({ form_data: params.formData }),
+  });
+}
+
+export async function getApplicationDraft(params: {
+  tenantId: string;
+  applicationId: string;
+}): Promise<ApplicationDraft | null> {
+  const raw = await creditCoreFetch<unknown>(`/applications/${encodeURIComponent(params.applicationId)}/draft`, {
+    method: "GET",
+    tenantId: params.tenantId,
+  });
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const record = raw as Record<string, unknown>;
+  const data = record.form_data ?? record.draft;
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+  return {
+    formData: data as Record<string, unknown>,
+    expiresAt: typeof record.expires_at === "string" ? record.expires_at : null,
+  };
+}
+
+export async function deleteApplicationDraft(params: { tenantId: string; applicationId: string }): Promise<void> {
+  await creditCoreFetch(`/applications/${encodeURIComponent(params.applicationId)}/draft`, {
+    method: "DELETE",
+    tenantId: params.tenantId,
+  });
+}
+
 export async function saveApplicantApplication(params: {
   tenantId: string;
   applicationId: string;

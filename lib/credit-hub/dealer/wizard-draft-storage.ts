@@ -1,4 +1,7 @@
-/** Scoped localStorage keys for dealer wizard drafts (tenant + user isolation). */
+/**
+ * Dealer wizard drafts live on the server (DB-CODEX-12B). The browser keeps only a pointer
+ * (tenant id + application id, no personal data) in sessionStorage; form data is never written to storage.
+ */
 
 export const WIZARD_DRAFT_KEY_PREFIX = "nadakki_dealer_wizard_v1";
 
@@ -12,6 +15,71 @@ export const WIZARD_AUTOSAVE_TOAST_SESSION_KEY = "forge-dealer-wizard-autosave-f
 
 export function buildWizardDraftStorageKey(tenantId: string, userId: string): string {
   return `${WIZARD_DRAFT_KEY_PREFIX}_${tenantId}_${userId}`;
+}
+
+export const WIZARD_DRAFT_POINTER_SUFFIX = ":application-id";
+
+export interface WizardDraftPointer {
+  tenantId: string;
+  applicationId: string;
+}
+
+export function buildWizardDraftPointerKey(tenantId: string, userId: string): string {
+  return `${buildWizardDraftStorageKey(tenantId, userId)}${WIZARD_DRAFT_POINTER_SUFFIX}`;
+}
+
+export function writeWizardDraftPointer(key: string, pointer: WizardDraftPointer): void {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(pointer));
+  } catch {
+    /* the URL remains the source of truth for the current tab */
+  }
+}
+
+function parseWizardDraftPointer(raw: string | null): WizardDraftPointer | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Partial<WizardDraftPointer> | null;
+    if (parsed && typeof parsed.tenantId === "string" && typeof parsed.applicationId === "string" && parsed.applicationId) {
+      return { tenantId: parsed.tenantId, applicationId: parsed.applicationId };
+    }
+  } catch {
+    /* pointer from an older build: ignore */
+  }
+  return null;
+}
+
+export function readWizardDraftPointer(key: string): WizardDraftPointer | null {
+  try {
+    return parseWizardDraftPointer(sessionStorage.getItem(key));
+  } catch {
+    return null;
+  }
+}
+
+export function clearWizardDraftPointer(key: string): void {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Every pointer left in this tab's sessionStorage (used by logout to delete the server drafts). */
+export function listWizardDraftPointers(): WizardDraftPointer[] {
+  if (typeof window === "undefined") return [];
+  const found: WizardDraftPointer[] = [];
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (!key?.startsWith(WIZARD_DRAFT_KEY_PREFIX) || !key.endsWith(WIZARD_DRAFT_POINTER_SUFFIX)) continue;
+      const pointer = parseWizardDraftPointer(sessionStorage.getItem(key));
+      if (pointer) found.push(pointer);
+    }
+  } catch {
+    /* ignore */
+  }
+  return found;
 }
 
 /** Remove legacy global draft keys (never parse — may contain PII from another tenant). */
@@ -32,6 +100,7 @@ export function clearWizardDraftStorage(tenantId?: string | null, userId?: strin
   if (tenantId && userId) {
     try {
       localStorage.removeItem(buildWizardDraftStorageKey(tenantId, userId));
+      sessionStorage.removeItem(buildWizardDraftPointerKey(tenantId, userId));
     } catch {
       /* ignore */
     }
@@ -64,6 +133,14 @@ export function purgeAllWizardDrafts(): void {
     for (const key of keysToRemove) {
       localStorage.removeItem(key);
     }
+
+    // Punteros de borrador (sessionStorage): solo ids, pero no deben sobrevivir al logout.
+    const pointerKeys: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith(WIZARD_DRAFT_KEY_PREFIX)) pointerKeys.push(key);
+    }
+    for (const key of pointerKeys) sessionStorage.removeItem(key);
     
     sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
   } catch {
