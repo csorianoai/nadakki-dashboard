@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { COPY, type Lang } from "@/lib/realtor/marketing-ai/copy";
+import { fetchMarketingSummary, type MarketingSummary } from "@/lib/realtor/marketing-ai/api";
 import { DEMO_SUMMARIES } from "@/lib/realtor/marketing-ai/demo";
 import { GATEWAYS } from "@/lib/realtor/marketing-ai/gateways";
 import { isDemoAllowed } from "@/lib/realtor/config";
@@ -12,11 +13,45 @@ import { useRealtorAccess } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 
+function RealSummary({ t, s }: { t: (typeof COPY)[Lang]; s: MarketingSummary }) {
+  const known = s.metrics.filter((m) => m.key in t.metricLabels);
+  const row = (k: string, v: string, id?: string) => (
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 14 }}><span style={{ color: RT.muted }}>{k}</span><strong data-testid={id}>{v}</strong></div>
+  );
+  return (
+    <div data-testid="marketing-ai-real" style={{ margin: "14px 0 0", display: "flex", flexDirection: "column", gap: 8 }}>
+      {row(t.period, `${s.period.from} – ${s.period.to}`)}
+      {known.map((m) => m.value === null
+        ? <div key={m.key} style={{ fontSize: 14 }}><span style={{ color: RT.muted }}>{t.metricLabels[m.key]}</span> <strong data-testid={`no-disponible-${m.key}`}>{t.noDisponible}</strong></div>
+        : <div key={m.key}>{row(t.metricLabels[m.key], String(m.value), `metric-${m.key}`)}</div>)}
+      <h3 style={{ margin: "8px 0 0", fontFamily: FONT_DISPLAY, fontSize: 18 }}>{t.spendTitle}</h3>
+      <p style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.spendHint}</p>
+      {s.spend.map((x) => (
+        <div key={`${x.kind}-${x.currency}`} data-testid="spend-row" style={{ border: `1px solid ${RT.line}`, borderRadius: 8, padding: "8px 12px" }}>
+          <strong style={{ fontSize: 14 }}>{t.kinds[x.kind]} · {x.currency} · {x.campaigns} {t.campaignsLabel}</strong>
+          {row(t.spendLabel, x.spend ?? t.noDisponible)}
+          {row(t.budgetLabel, x.budget ?? t.noDisponible)}
+          {row(t.leadsLabel, x.leads === null ? t.noDisponible : String(x.leads))}
+          {row(t.cplLabel, x.costPerLead ?? t.noDisponible)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function MarketingAiPanel() {
   const access = useRealtorAccess();
   const [lang, setLang] = useState<Lang>("es");
   const demo = isDemoAllowed();
   const t = COPY[lang];
+  // Fuera de DEMO se lee C-RE-MARKETING-AI; sin datos (404, 503, vacío) queda «Sin datos todavía», sin cifras inventadas.
+  const [real, setReal] = useState<MarketingSummary | null>(null);
+  useEffect(() => {
+    if (demo || access !== "ok") return;
+    let alive = true;
+    fetchMarketingSummary().then((r) => { if (alive) setReal(r); });
+    return () => { alive = false; };
+  }, [demo, access]);
 
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
@@ -48,7 +83,8 @@ export function MarketingAiPanel() {
           <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.gatewaysTitle}</h2>
           <span style={{ fontSize: 13, color: RT.muted }}>{t.gatewaysNote}</span>
         </div>
-        {!demo ? (
+        {!demo && real ? <RealSummary t={t} s={real} /> : null}
+        {!demo && !real ? (
           <div data-testid="marketing-ai-empty" style={{ margin: "14px 0 0" }}>
             <strong style={{ fontSize: 16 }}>{t.empty}</strong>
             <p style={{ margin: "6px 0 0", color: RT.muted }}>{t.emptyHint}</p>
