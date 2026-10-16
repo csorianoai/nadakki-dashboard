@@ -10,12 +10,12 @@ beforeEach(() => {
   process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
 });
 
-// Reproduce e2e/realtor/visual/propietarios.spec.ts:39: el centro vivo sigue visible aunque ya no sea fila de la barra.
-it("Propietarios (fuera de la barra) se marca vivo en la miga, no como fila de la barra", async () => {
+// Decisión de César 2026-10-16: Propietarios es fila de la barra (sustituye a dashboard#835) y la miga lo nombra.
+it("Propietarios es fila viva de la barra y la miga lo nombra", async () => {
   mockApiFetch.mockResolvedValue({ status: 200 });
   render(<RealtorShell><p>contenido</p></RealtorShell>);
   const el = await screen.findByTestId("center-propietarios");
   expect(el).toHaveAttribute("data-center-state", "live");
-  expect(screen.getByTestId("shell-crumb")).toContainElement(el);
-  expect(screen.getByTestId("shell-sidebar")).not.toContainElement(el);
+  expect(screen.getByTestId("shell-sidebar")).toContainElement(el);
+  expect(screen.getByTestId("shell-crumb")).toHaveTextContent("Propietarios");
 });

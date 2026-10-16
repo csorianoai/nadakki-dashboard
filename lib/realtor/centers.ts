@@ -16,6 +16,7 @@ export type RealtorCenter = { id: string; label: string; group: string; href?: s
 export const REALTOR_CENTERS: readonly RealtorCenter[] = [
   { ...miDia, label: "Mi día", group: "HOY" },
   { ...clientes, label: "Contactos", group: "CLIENTES" },
+  { ...propietarios, label: "Propietarios", group: "CLIENTES" },
   { id: "conversaciones", label: "Conversaciones", group: "CLIENTES" },
   { ...propiedades, label: "Propiedades", group: "CLIENTES" },
   { ...operaciones, label: "Operaciones", group: "NEGOCIOS" },
@@ -24,11 +25,13 @@ export const REALTOR_CENTERS: readonly RealtorCenter[] = [
   { id: "demand-radar", label: "Mercado", group: "CRECER", href: "/realtor/demand-radar" },
   { ...resultados, label: "Resultados", group: "CRECER" },
   { ...careerDirector, label: "Career Director", group: "CRECER" },
+  { id: "alta", label: "Alta", group: "CRECER", href: "/realtor/alta" },
+  { id: "agente-web", label: "Agente web", group: "CRECER", href: "/realtor/agente-web" },
   { id: "academia", label: "Academia", group: "CRECER" },
 ];
 
-/** Centros con ruta viva que ya no son fila de la barra: se llegan desde Contactos. Sirven a la miga y al registro. */
-export const OFF_BAR_CENTERS: readonly RealtorCenter[] = [{ ...propietarios, label: "Propietarios", group: "CLIENTES" }];
+/** Centros con ruta viva que no son fila de la barra. Vacío desde la decisión de César (2026-10-16): Propietarios entró a la barra (sustituye a dashboard#835). Se conserva el export para la miga y el registro. */
+export const OFF_BAR_CENTERS: readonly RealtorCenter[] = [];
 
 /** Career Director es fila del grupo «Crecer» (ver REALTOR_CENTERS); se conserva el export por compatibilidad. Smart Calendar es el único bloque fijo. */
 export const CAREER_DIRECTOR = careerDirector;

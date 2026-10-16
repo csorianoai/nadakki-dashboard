@@ -10,16 +10,16 @@ Un único bloque fijo arriba, sin cambios: **Smart Calendar**. Career Director d
 | Grupo | Entradas |
 |---|---|
 | Hoy | Mi día (`/realtor/mi-dia`) · Bandeja del broker (solo rol `broker_supervisor`) |
-| Clientes | Contactos (`/realtor/clientes`) · Conversaciones (Pronto) · Propiedades (`/realtor/propiedades`) |
+| Clientes | Contactos (`/realtor/clientes`) · Propietarios (`/realtor/propietarios`) · Conversaciones (Pronto) · Propiedades (`/realtor/propiedades`) |
 | Negocios | Operaciones (`/realtor/operaciones`, con la Finanzas dentro) · Documentos (`/realtor/documentos`) |
-| Crecer | Marketing (`/realtor/marketing-ai`) · Mercado (`/realtor/demand-radar`) · Resultados (`/realtor/resultados`) · Career Director (`/realtor/career-director`) · Academia (Pronto) |
+| Crecer | Marketing (`/realtor/marketing-ai`) · Mercado (`/realtor/demand-radar`) · Resultados (`/realtor/resultados`) · Career Director (`/realtor/career-director`) · Alta (`/realtor/alta`) · Agente web (`/realtor/agente-web`) · Academia (Pronto) |
 
 - **Propiedades pasa a Clientes** (antes estaba en Cartera).
 - **Mercado es Demand Radar** y **Marketing es Marketing AI**: solo cambia el rótulo; ids y rutas no cambian.
 - **Contactos** es el listado unificado de clientes y propietarios con filtro de rol (lo construye O2-F-CLIENTES; absorbe al CRM).
   El propietario es un contacto con rol de propietario más `re_owner_mandates` (decisión D8).
 - Finanzas va dentro de Operaciones (la sección la construye O2-F-OPERACIONES); ya no es fila.
-- No hay bloque «Mi oficina» (decisión de César, 2026-10-14). El CRM se unifica en Contactos. Alta (`/realtor/alta`), web del agente (`/realtor/agente-web`) y zonas/permisos van en Administración › Real Estate (`/admin/real-estate`, fuera de esta zona); las rutas `/realtor/alta` y `/realtor/agente-web` siguen resolviendo.
+- No hay bloque «Mi oficina» (decisión de César, 2026-10-14). El CRM se unifica en Contactos. Alta (`/realtor/alta`), web del agente (`/realtor/agente-web`) y zonas/permisos van en Administración › Real Estate (`/admin/real-estate`, fuera de esta zona). Decisión de César 2026-10-16 (auditoría de navegación de Cowork): Propietarios, Alta y Agente web también son filas de la barra (sustituye a dashboard#835); los dos caminos conviven.
 - **«Pronto»**: marca discreta (texto pequeño y apagado) de los centros aún no construidos; no tienen ruta. Al construirse pierden la marca y ganan `href` en su `center.ts`.
 
 ## Bandeja del broker

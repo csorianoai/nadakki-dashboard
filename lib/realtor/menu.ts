@@ -27,8 +27,6 @@ export const REALTOR_MENU: readonly MenuGroup[] = build();
 /** Rutas de /realtor que no son fila de la barra, con su motivo. Las pruebas exigen que toda page.tsx esté aquí o en el menú. */
 export const OFF_MENU_ROUTES: readonly { href: string; reason: string }[] = [
   { href: "/realtor", reason: "Inicio del armazón: la barra no lo lista." },
-  { href: "/realtor/alta", reason: "Se llega desde Administración › Real Estate (/admin/real-estate)." },
-  { href: "/realtor/agente-web", reason: "Se llega desde Administración › Real Estate (/admin/real-estate)." },
   ...OFF_BAR_CENTERS.filter((c) => c.href).map((c) => ({ href: c.href as string, reason: "Se llega desde Contactos (rol de propietario)." })),
   { href: "/realtor/smart-calendar", reason: "Bloque fijo de la barra (Smart Calendar)." },
 ];
