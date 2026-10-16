@@ -17,6 +17,12 @@ const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/mi-dia.png")
 test.use({ locale: "en-US" });
 test.beforeEach(async ({ page }) => { await page.clock.setFixedTime(new Date("2026-10-12T16:00:00Z")); });
 
+const TOTAL = 7;
+let pasados = 0;
+let fallos = 0;
+test.afterEach(({}, info) => void (info.status === "passed" ? (pasados += 1) : (fallos += 1)));
+test.afterAll(() => console.log(`RESULT_O3_FIX_MIDIA=${fallos === 0 && pasados === TOTAL ? "PASS" : "FAIL"}`));
+
 async function sesion(page: Page, acceso: number) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
   await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
