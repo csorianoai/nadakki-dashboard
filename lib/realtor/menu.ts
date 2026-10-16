@@ -6,7 +6,7 @@ export const BROKER_ROLE = "broker_supervisor";
 export type MenuItem = RealtorCenter & { requiresRole?: string };
 export type MenuGroup = { id: string; label: string; items: readonly MenuItem[] };
 
-/** Bandeja del broker: entrada del bloque «Hoy», solo por rol. Ruta /realtor/broker (O3-D-BROKER). */
+/** Bandeja del broker: entrada del bloque «Hoy», solo por rol. */
 const BROKER_DESK: MenuItem = { id: "bandeja-broker", label: "Bandeja del broker", group: "HOY", href: "/realtor/broker", requiresRole: BROKER_ROLE };
 
 function build(): MenuGroup[] {

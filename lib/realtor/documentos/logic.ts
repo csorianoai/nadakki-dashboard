@@ -1,5 +1,5 @@
 import type { OperationDoc, DocStatus, Template } from "./types";
-import { DOC_STATUSES } from "./types";
+import { API_DOC_STATUSES, DOC_STATUSES } from "./types";
 
 /** Una plantilla solo es «aprobada» con el visto bueno completo del abogado de Florida; en cualquier otro caso está pendiente. */
 export function templateState(t: Template): "aprobada" | "pendiente" {
@@ -15,7 +15,7 @@ function isPastIsoDate(s: string): boolean {
 }
 
 export function countByDocStatus(list: readonly OperationDoc[]): Record<DocStatus, number> {
-  const out = Object.fromEntries(DOC_STATUSES.map((s) => [s, 0])) as Record<DocStatus, number>;
+  const out = Object.fromEntries([...DOC_STATUSES, ...API_DOC_STATUSES].map((s) => [s, 0])) as Record<DocStatus, number>;
   for (const d of list) out[d.status] += 1;
   return out;
 }
