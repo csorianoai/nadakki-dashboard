@@ -49,6 +49,46 @@ test("negativo sin DEMO: «Sin datos todavía», ninguna cifra ni marca DEMO", a
   expect(await page.getByTestId("marketing-ai-panel").innerText()).not.toMatch(/\d/);
 });
 
+const SUMMARY = {
+  period: { from: "2026-10-01", to: "2026-10-16" },
+  metrics: [
+    { key: "campaigns_running", quality: "OK", value: 3, source: "marketing-core" },
+    { key: "leads_attributed", quality: "NO_DISPONIBLE", value: null, reason: "SYNTH sin fuente" },
+    { key: "suggestions_new", quality: "OK", value: 5, source: "marketing-core" },
+  ],
+  spend: [
+    { kind: "sale", currency: "USD", campaigns: 2, spend: "800.00", budget: "1000.00", leads_attributed: 4, cost_per_lead: "200.00" },
+    { kind: "rental", currency: "ARS", campaigns: 1, spend: "150000.00", budget: null, leads_attributed: 0, cost_per_lead: null },
+  ],
+};
+
+test("datos reales (contrato C-RE-OLA3, registros SYNTH) sin DEMO: métricas, gasto por tipo y moneda y sin tenant en el cliente", async ({ page }) => {
+  const peticiones: string[] = [];
+  page.on("request", (r) => { if (/\/realestate\/marketing-ai/.test(r.url())) peticiones.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/marketing-ai\/summary/, (route) => route.fulfill({ json: SUMMARY }));
+  await page.goto(`${NODEMO}/realtor/marketing-ai`);
+  await expect(page.getByTestId("marketing-ai-real")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("metric-campaigns_running")).toHaveText("3");
+  await expect(page.getByTestId("metric-suggestions_new")).toHaveText("5");
+  await expect(page.getByTestId("no-disponible-leads_attributed")).toContainText("NO_DISPONIBLE");
+  await expect(page.getByTestId("spend-row")).toHaveCount(2);
+  await expect(page.getByTestId("marketing-ai-real")).toContainText("800.00");
+  await expect(page.getByTestId("marketing-ai-real")).toContainText("150000.00");
+  await expect(page.getByTestId("marketing-ai-empty")).toHaveCount(0);
+  await expect(page.getByTestId("demo-banner")).toHaveCount(0);
+  expect(peticiones.length).toBeGreaterThan(0);
+  for (const p of peticiones) expect(p.toLowerCase()).not.toMatch(/tenant/);
+});
+
+test("endpoint 404/503 sin DEMO: sigue «Sin datos todavía»", async ({ page }) => {
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/marketing-ai\/summary/, (route) => route.fulfill({ status: 503, json: { detail: "down" } }));
+  await page.goto(`${NODEMO}/realtor/marketing-ai`);
+  await expect(page.getByTestId("marketing-ai-empty")).toContainText("Sin datos todavía", { timeout: 30_000 });
+  await expect(page.getByTestId("marketing-ai-real")).toHaveCount(0);
+});
+
 test("acceso denegado (403): nada de la pantalla ni del armazón", async ({ page }) => {
   await sesion(page, 403);
   await page.goto("/realtor/marketing-ai");
