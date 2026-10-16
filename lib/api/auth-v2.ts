@@ -38,6 +38,8 @@ export interface LoginResponseV2 {
   tenant_info: TenantInfo;
   active_role: RoleInfo;
   mfa_required: boolean;
+  /** LoginResponseV2PwdChange: contraseña inicial, hay que cambiarla antes de entrar. */
+  must_change_password?: boolean;
 }
 
 export interface TokenPayloadV2 {

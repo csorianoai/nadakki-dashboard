@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { AuthProvider, SESSION_INIT_TIMEOUT_MS } from "@/lib/auth/auth-context";
 import { useAuth } from "@/hooks/useAuth";
 import { tokenStorage } from "@/lib/auth/token-storage";
-import { changePasswordV2, getMeV2, refreshTokenV2 } from "@/lib/api/auth-v2";
+import { changePasswordV2, getMeV2, loginV2, refreshTokenV2 } from "@/lib/api/auth-v2";
 import { goToPasswordChange } from "@/lib/auth/password-change-route";
 
 jest.mock("@/lib/api/auth-v2", () => ({
@@ -29,6 +29,7 @@ jest.mock("@/lib/auth/token-refresh", () => ({
 
 jest.mock("@/lib/auth/password-change-route", () => ({
   PASSWORD_CHANGE_REQUIRED: "PASSWORD_CHANGE_REQUIRED",
+  PASSWORD_CHANGE_ROUTE: "/cambiar-contrasena",
   goToPasswordChange: jest.fn(),
 }));
 
@@ -180,5 +181,44 @@ describe("cambio de contraseña obligatorio", () => {
     expect(r).toMatchObject({ ok: false, errorCode: "INVALID_CURRENT_PASSWORD" });
     expect(refreshMock).toHaveBeenCalledTimes(1);
     expect(result.current.mustChangePassword).toBe(true);
+  });
+
+  test("login con must_change_password=true: no autentica, navega al cambio y no manda a la Suite", async () => {
+    refreshMock.mockResolvedValue({ ok: false, status: 401 } as never);
+    const { result } = await montar();
+    (loginV2 as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      data: {
+        access_token: "access-login",
+        refresh_token: "refresh-login",
+        must_change_password: true,
+        user_info: { id: "u1", email: "usuario@qa.test" },
+        tenant_info: { id: "t-qa", display_name: "QA" },
+        active_role: { role_key: "tenant_admin", core_name: "accounting" },
+      },
+    } as never);
+    goMock.mockClear();
+
+    let r: { redirectTo?: string; mustChangePassword?: boolean } | undefined;
+    await act(async () => {
+      r = await result.current.login("usuario@qa.test", "inicial");
+    });
+
+    expect(r).toMatchObject({ redirectTo: "/cambiar-contrasena", mustChangePassword: true });
+    expect(result.current.mustChangePassword).toBe(true);
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(goMock).toHaveBeenCalledTimes(1);
+    expect(tokenStorage.getRefreshToken()).toBe("refresh-login");
+  });
+
+  test("logout limpia mustChangePassword", async () => {
+    refreshMock.mockResolvedValueOnce(REFRESH(true));
+    const { result } = await montar();
+    expect(result.current.mustChangePassword).toBe(true);
+    await act(async () => {
+      await result.current.logout();
+    });
+    expect(result.current.mustChangePassword).toBe(false);
   });
 });

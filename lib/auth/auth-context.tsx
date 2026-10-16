@@ -16,7 +16,7 @@ import {
   type RoleInfo,
 } from "@/lib/api/auth-v2";
 import { tokenStorage } from "./token-storage";
-import { PASSWORD_CHANGE_REQUIRED, goToPasswordChange } from "./password-change-route";
+import { PASSWORD_CHANGE_REQUIRED, PASSWORD_CHANGE_ROUTE, goToPasswordChange } from "./password-change-route";
 import { scheduleProactiveRefresh, cancelProactiveRefresh } from "./token-refresh";
 import { clearWizardDraftStorage } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 import { clearDealerAccessContextFully } from "@/lib/dealer/access-context";
@@ -213,7 +213,7 @@ export interface AuthContextValue {
     email: string,
     password: string,
     tenantSlug?: string,
-  ) => Promise<{ ok: boolean; error?: string; redirectTo?: string }>;
+  ) => Promise<{ ok: boolean; error?: string; redirectTo?: string; mustChangePassword?: boolean }>;
   logout: () => Promise<void>;
   switchTenant: (tenantId?: string, tenantSlug?: string) => Promise<{ ok: boolean; error?: string }>;
   /** Superadmin: fija Empresa + Vista (POST /auth/contexto), guarda los tokens nuevos y actualiza tenant/roles. */
@@ -369,6 +369,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken: result.data.access_token,
       refreshToken: result.data.refresh_token,
     });
+    if (result.data.must_change_password === true) {
+      // Contraseña inicial: sin user/tenant (no autenticado) ni refresh proactivo;
+      // se enruta al cambio y la página de login no manda a la Suite.
+      setMustChangePassword(true);
+      goToPasswordChange();
+      return { ok: true, redirectTo: PASSWORD_CHANGE_ROUTE, mustChangePassword: true };
+    }
     setUser(result.data.user_info);
     setTenant(result.data.tenant_info);
     setActiveRole(result.data.active_role);
@@ -431,6 +438,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("[auth] logout: fallo en la limpieza local", error);
       } finally {
         cancelProactiveRefresh();
+        setMustChangePassword(false);
         setUser(null);
         setTenant(null);
         setActiveRole(null);
