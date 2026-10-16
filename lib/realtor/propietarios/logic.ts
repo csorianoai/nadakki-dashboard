@@ -6,6 +6,7 @@ export function applyFilters(list: readonly OwnerRow[], f: OwnerFilters): OwnerR
 
 /** Los alquileres se muestran por mes; las ventas, el total. */
 export function formatPrice(o: Pick<OwnerRow, "role" | "priceUsd">, lang: "es" | "en"): string {
+  if (o.priceUsd === null) return "—";
   const n = o.priceUsd.toLocaleString(lang === "es" ? "es-US" : "en-US");
   return `USD ${n}${o.role === "arrendador" ? (lang === "es" ? "/mes" : "/mo") : ""}`;
 }

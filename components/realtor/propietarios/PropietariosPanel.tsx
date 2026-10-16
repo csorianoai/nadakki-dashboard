@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { AGREEMENT_LABEL, COPY, ROLE_LABEL, STAGE_LABEL, type Lang } from "@/lib/realtor/propietarios/copy";
+import { fetchOwners } from "@/lib/realtor/propietarios/api";
 import { DEMO_OWNERS } from "@/lib/realtor/propietarios/demo";
 import { applyFilters, countByRole, formatPrice } from "@/lib/realtor/propietarios/logic";
 import { AGREEMENTS, NO_FILTERS, OWNER_ROLES, type OwnerFilters, type OwnerRow } from "@/lib/realtor/propietarios/types";
@@ -36,8 +37,15 @@ export function PropietariosPanel() {
   const demo = isDemoAllowed();
   const t = COPY[lang];
 
-  // Sin backend propio en la Ola 2: fuera de DEMO la lista está vacía, sin cifras inventadas.
-  const owners: readonly OwnerRow[] = demo ? DEMO_OWNERS : [];
+  // Fuera de DEMO se lee C-RE-OLA3 (owners); sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
+  const [real, setReal] = useState<readonly OwnerRow[]>([]);
+  useEffect(() => {
+    if (demo || access !== "ok") return;
+    let alive = true;
+    fetchOwners().then((r) => { if (alive) setReal(r); });
+    return () => { alive = false; };
+  }, [demo, access]);
+  const owners: readonly OwnerRow[] = demo ? DEMO_OWNERS : real;
   const visible = useMemo(() => applyFilters(owners, filters), [owners, filters]);
   const counts = useMemo(() => countByRole(owners), [owners]);
 
@@ -89,7 +97,7 @@ export function PropietariosPanel() {
             <h2 style={{ margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.listTitle}</h2>
             {visible[0] ? (
               <p data-testid="owner-focus" style={{ margin: "0 0 18px", background: RT.ink, color: RT.white, borderRadius: 6, padding: "12px 14px", fontSize: 14 }}>
-                {visible[0].name} · {visible[0].property} · {STAGE_LABEL[lang][visible[0].stage]}
+                {[visible[0].name, visible[0].property, visible[0].stage ? STAGE_LABEL[lang][visible[0].stage!] : null].filter(Boolean).join(" · ")}
               </p>
             ) : null}
             {visible.length === 0 ? <p data-testid="propietarios-nomatch" style={{ color: RT.muted }}>{t.noMatch}</p> : (
@@ -103,11 +111,11 @@ export function PropietariosPanel() {
                       <tr key={o.id} data-testid="owner-row">
                         <td style={TD}>{o.name}</td>
                         <td style={TD}>{ROLE_LABEL[lang][o.role]}</td>
-                        <td style={TD}><strong>{o.property}</strong></td>
+                        <td style={TD}>{o.property ? <strong>{o.property}</strong> : o.propertiesCount != null ? `${o.propertiesCount} ${t.properties}` : "—"}</td>
                         <td style={TD}>{formatPrice(o, lang)}</td>
-                        <td style={TD}>{AGREEMENT_LABEL[lang][o.agreement]}</td>
-                        <td style={TD}>{STAGE_LABEL[lang][o.stage]}</td>
-                        <td style={TD}>{o.followUp[lang]}</td>
+                        <td style={TD}>{o.agreement ? AGREEMENT_LABEL[lang][o.agreement] : "—"}</td>
+                        <td style={TD}>{o.stage ? STAGE_LABEL[lang][o.stage] : "—"}</td>
+                        <td style={TD}>{o.followUp ? o.followUp[lang] : "—"}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { COPY, type CareerCopy, type Lang } from "@/lib/realtor/career-director/copy";
+import { fetchCareer, type CareerSummary } from "@/lib/realtor/career-director/api";
 import { DEMO_GOALS, DEMO_LICENSE, DEMO_SUPERVISION, METRICS } from "@/lib/realtor/career-director/demo";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
@@ -73,6 +74,34 @@ function DemoCards({ t, lang }: { t: CareerCopy; lang: Lang }) {
   );
 }
 
+function RealCards({ t, lang, c }: { t: CareerCopy; lang: Lang; c: CareerSummary }) {
+  const known = c.metrics.filter((m) => m.key in t.metricLabels);
+  return (
+    <div data-testid="career-real" style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+      <article data-testid="card-actividad" style={CARD}>
+        <h2 style={H2}>{t.activity}</h2>
+        <Row k={t.period} v={`${c.period.from} – ${c.period.to}`} />
+        {known.map((m) => m.value === null
+          ? <div key={m.key} style={{ fontSize: 14 }}><div style={{ color: RT.muted }}>{t.metricLabels[m.key]}</div><NoDisponible t={t} id={m.key} /></div>
+          : <Row key={m.key} k={t.metricLabels[m.key]} v={String(m.value)} testid={`metric-${m.key}`} />)}
+      </article>
+      <article data-testid="card-volumen" style={CARD}>
+        <h2 style={H2}>{t.volume}</h2>
+        <p style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.volumeHint}</p>
+        {c.volume.length === 0 ? <p style={{ margin: 0, fontSize: 14 }}>{t.noVolume}</p> : c.volume.map((v) => (
+          <Row key={`${v.kind}-${v.currency}`} k={`${t.kinds[v.kind]} · ${v.count}`} v={`${v.total} ${v.currency}`} testid="volume-row" />
+        ))}
+      </article>
+      <article data-testid="card-logros" style={CARD}>
+        <h2 style={H2}>{t.achievements}</h2>
+        {c.achievements.length === 0 ? <p style={{ margin: 0, fontSize: 14 }}>{t.noAchievements}</p> : c.achievements.map((a) => (
+          <Row key={a.key} k={t.achievementLabels[a.key]} v={a.earnedAt.slice(0, 10)} testid="achievement" />
+        ))}
+      </article>
+    </div>
+  );
+}
+
 function EmptyState({ t }: { t: CareerCopy }) {
   return (
     <div data-testid="career-empty" style={{ ...CARD, border: `1px dashed ${RT.lineStrong}`, maxWidth: 560 }}>
@@ -87,10 +116,18 @@ function EmptyState({ t }: { t: CareerCopy }) {
 export function CareerDirectorPanel() {
   const access = useRealtorAccess();
   const [lang, setLang] = useState<Lang>("es");
+  const demo = isDemoAllowed();
+  // Fuera de DEMO se lee C-RE-CAREER; sin datos (404, 503, vacío) queda «Sin datos todavía», sin cifras inventadas.
+  const [real, setReal] = useState<CareerSummary | null>(null);
+  useEffect(() => {
+    if (demo || access !== "ok") return;
+    let alive = true;
+    fetchCareer().then((r) => { if (alive) setReal(r); });
+    return () => { alive = false; };
+  }, [demo, access]);
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
   const t = COPY[lang];
-  const demo = isDemoAllowed();
   return (
     <section data-testid="career-director-panel" lang={lang} style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
@@ -106,7 +143,7 @@ export function CareerDirectorPanel() {
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demoBanner}</p>
       ) : null}
-      {demo ? <DemoCards t={t} lang={lang} /> : <EmptyState t={t} />}
+      {demo ? <DemoCards t={t} lang={lang} /> : real ? <RealCards t={t} lang={lang} c={real} /> : <EmptyState t={t} />}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.note}</p>
     </section>
   );

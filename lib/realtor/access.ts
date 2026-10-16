@@ -6,15 +6,21 @@ export type AccessStatus = "ok" | "sin-acceso" | "error";
 
 const DENIED = new Set([401, 403, 404]);
 
-export type AccessInfo = { status: AccessStatus; roles: readonly string[] };
+export type AccessInfo = { status: AccessStatus; roles: readonly string[]; demo: boolean };
 
-/** Roles legibles del cuerpo de /acceso. Sin cuerpo legible, lista vacía (fail-closed): nunca se deduce un rol. */
-async function readRoles(res: Response): Promise<readonly string[]> {
+/**
+ * Roles y marca `demo` legibles del cuerpo de /acceso. Sin cuerpo legible, roles vacíos y demo=false (fail-closed):
+ * nunca se deduce un rol ni un tenant DEMO. `demo` solo es true si el cuerpo trae el booleano true.
+ */
+async function readBody(res: Response): Promise<{ roles: readonly string[]; demo: boolean }> {
   try {
-    const body = (await res.json()) as { roles?: unknown };
-    return Array.isArray(body?.roles) ? body.roles.filter((r): r is string => typeof r === "string") : [];
+    const body = (await res.json()) as { roles?: unknown; demo?: unknown };
+    return {
+      roles: Array.isArray(body?.roles) ? body.roles.filter((r): r is string => typeof r === "string") : [],
+      demo: body?.demo === true,
+    };
   } catch {
-    return [];
+    return { roles: [], demo: false };
   }
 }
 
@@ -22,10 +28,10 @@ async function readRoles(res: Response): Promise<readonly string[]> {
 export async function fetchPanelAccessInfo(): Promise<AccessInfo> {
   try {
     const res = await apiFetch(ACCESS_PATH, { method: "GET", cache: "no-store" });
-    if (res.status === 200) return { status: "ok", roles: await readRoles(res) };
-    return { status: DENIED.has(res.status) ? "sin-acceso" : "error", roles: [] };
+    if (res.status === 200) return { status: "ok", ...(await readBody(res)) };
+    return { status: DENIED.has(res.status) ? "sin-acceso" : "error", roles: [], demo: false };
   } catch {
-    return { status: "error", roles: [] };
+    return { status: "error", roles: [], demo: false };
   }
 }
 

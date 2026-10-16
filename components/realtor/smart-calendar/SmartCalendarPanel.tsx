@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { COPY, DAYS, KIND_LABEL, type Lang } from "@/lib/realtor/smart-calendar/copy";
+import { fetchCalendarEvents } from "@/lib/realtor/smart-calendar/api";
 import { DEMO_EVENTS } from "@/lib/realtor/smart-calendar/demo";
 import { applyFilter, countByKind, eventsOfDay } from "@/lib/realtor/smart-calendar/logic";
 import { KINDS, type CalEvent, type CalFilter } from "@/lib/realtor/smart-calendar/types";
@@ -19,8 +20,16 @@ export function SmartCalendarPanel() {
   const demo = isDemoAllowed();
   const t = COPY[lang];
 
-  // Fuera de DEMO no hay agenda conectada: sin eventos ni cifras inventadas.
-  const events: readonly CalEvent[] = demo ? DEMO_EVENTS : [];
+  const [real, setReal] = useState<readonly CalEvent[]>([]);
+  useEffect(() => {
+    if (access !== "ok" || demo) return;
+    let alive = true;
+    fetchCalendarEvents().then((list) => { if (alive) setReal(list); });
+    return () => { alive = false; };
+  }, [access, demo]);
+
+  // Fuera de DEMO solo hay eventos del contrato; sin respuesta o lista vacía, «Sin datos todavía».
+  const events: readonly CalEvent[] = demo ? DEMO_EVENTS : real;
   const visible = applyFilter(events, filter);
   const counts = countByKind(events);
 
@@ -84,7 +93,7 @@ export function SmartCalendarPanel() {
                         style={{ border: `1px solid ${RT.line}`, borderLeft: `4px solid ${e.kind === "cita" ? RT.teal : RT.ink}`, borderRadius: 8, padding: 8, fontSize: 12 }}>
                         <strong style={{ display: "block", fontSize: 13 }}>{e.start}</strong>
                         <span style={{ display: "block", margin: "2px 0" }}>{e.title[lang]}</span>
-                        <span style={{ color: RT.muted }}>{KIND_LABEL[lang][e.kind]} · {e.place}</span>
+                        <span style={{ color: RT.muted }}>{e.place ? `${KIND_LABEL[lang][e.kind]} · ${e.place}` : KIND_LABEL[lang][e.kind]}</span>
                       </li>
                     ))}
                   </ul>

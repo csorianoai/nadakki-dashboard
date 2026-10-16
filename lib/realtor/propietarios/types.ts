@@ -11,11 +11,13 @@ export type OwnerRow = {
   id: string;
   name: string;
   role: OwnerRole;
-  property: string;
-  priceUsd: number;
-  agreement: AgreementStatus;
-  stage: ListingStage;
-  followUp: { es: string; en: string };
+  /** null: la fuente real no trae la propiedad (solo su cantidad). */
+  property: string | null;
+  propertiesCount?: number | null;
+  priceUsd: number | null;
+  agreement: AgreementStatus | null;
+  stage: ListingStage | null;
+  followUp: { es: string; en: string } | null;
 };
 
 /** Fair Housing: solo rol y estado del acuerdo. Ni idioma preferido ni clase protegida. */

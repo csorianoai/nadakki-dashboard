@@ -318,14 +318,14 @@ describe("(4) «no encontrado» con salida", () => {
   });
 });
 
-describe("Administración › Real Estate: «Pronto» hasta que exista /admin/real-estate", () => {
+describe("Administración › Real Estate: enlaza a /admin/real-estate (PS-4-ADMIN-REAL-ESTATE)", () => {
   const fila = (secs: NavSection[]) => secs.find((s) => s.id === "admin")?.children.find((i) => i.id === "adm-real-estate");
 
-  it("la ven platform_superadmin y tenant_admin (los mismos que ven Administración), sin enlace", () => {
+  it("la ven platform_superadmin y tenant_admin con href y sin pronto", () => {
     for (const r of ["platform_superadmin", "tenant_admin"]) {
       const it = fila(ver([rol(r, "platform")], []));
-      expect(it).toMatchObject({ label: "Real Estate", pronto: "/admin/real-estate" });
-      expect(it?.href).toBeUndefined();
+      expect(it).toMatchObject({ label: "Real Estate", href: "/admin/real-estate" });
+      expect(it?.pronto).toBeUndefined();
     }
   });
 
@@ -335,25 +335,26 @@ describe("Administración › Real Estate: «Pronto» hasta que exista /admin/re
     }
   });
 
-  it("no hay enlace roto: ni en el menú ni en el buscador aparece /admin/real-estate", () => {
-    const secs = ver([rol("platform_superadmin", "platform")], []);
-    expect(hrefs(secs.flatMap((s) => s.children))).not.toContain("/admin/real-estate");
-    expect(entradasBuscador(secs).some((e) => e.href.startsWith("/admin/real-estate"))).toBe(false);
+  it("el menú de Administración incluye el enlace y ninguna fila queda en «Pronto»", () => {
+    for (const r of ["platform_superadmin", "tenant_admin"]) {
+      const secs = ver([rol(r, "platform")], []);
+      expect(hrefs(secs.flatMap((s) => s.children))).toContain("/admin/real-estate");
+      expect(secs.flatMap((s) => s.children).some((i) => i.pronto)).toBe(false);
+      expect(entradasBuscador(secs).some((e) => e.href === "/admin/real-estate")).toBe(true);
+    }
   });
 
-  it("se pinta como texto con la marca «Pronto», no como enlace", () => {
+  it("se pinta como enlace, sin marca «Pronto»", () => {
     const antes = mockAuth.allRoles;
     mockAuth.allRoles = [{ core_name: "platform", role_key: "tenant_admin" }];
     mockPath = "/settings";
     try {
       render(<ForgeGlobalCoresSidebar mobileOpen={false} />);
-      const el = document.querySelector('[data-pronto="/admin/real-estate"]')!;
+      expect(document.querySelector('[data-pronto="/admin/real-estate"]')).toBeNull();
+      const el = document.querySelector('a[href="/admin/real-estate"]')!;
       expect(el).not.toBeNull();
-      expect(el.tagName).not.toBe("A");
-      expect(el).toHaveAttribute("aria-disabled", "true");
       expect(el).toHaveTextContent("Real Estate");
-      expect(el).toHaveTextContent("Pronto");
-      expect(document.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+      expect(el).not.toHaveTextContent("Pronto");
     } finally {
       mockAuth.allRoles = antes;
     }

@@ -37,7 +37,7 @@ describe("lógica", () => {
     DEMO_TEMPLATES.forEach((p) => expect(templateState(p)).toBe("pendiente"));
   });
   it("cuenta por estado y los datos sintéticos llevan SYNTH", () => {
-    expect(countByDocStatus(DEMO_DOCS)).toEqual({ borrador: 1, enviado: 1, firmado: 1 });
+    expect(countByDocStatus(DEMO_DOCS)).toMatchObject({ borrador: 1, enviado: 1, firmado: 1, pending_upload: 0, active: 0, archived: 0 });
     [...DEMO_DOCS, ...DEMO_TEMPLATES].forEach((x) => expect(x.name).toMatch(/^SYNTH/));
   });
   it("el centro está vivo en el registro", () => {

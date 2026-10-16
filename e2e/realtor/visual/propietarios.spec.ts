@@ -52,6 +52,39 @@ test("negativo sin DEMO: «Sin datos todavía», ninguna cifra ni marca DEMO", a
   expect(await page.getByTestId("propietarios-panel").innerText()).not.toMatch(/\d/);
 });
 
+const OWNERS = { items: [
+  { contact: { id: "00000000-0000-4000-8000-00000000c001", kind: "person", display_label: "SYNTH A.", source: "inbound_lead",
+      owner_user_id: "00000000-0000-4000-8000-0000000000f1", active_roles: ["landlord"], primary_points: [], created_at: "2000-01-01T00:00:00Z" },
+    owner_roles: ["landlord"], mandates_active: 1, properties_count: 2, metrics: [] },
+  { contact: { id: "00000000-0000-4000-8000-00000000c002", kind: "person", display_label: "SYNTH B.", source: "inbound_lead",
+      owner_user_id: "00000000-0000-4000-8000-0000000000f1", active_roles: ["seller"], primary_points: [], created_at: "2000-01-01T00:00:00Z" },
+    owner_roles: ["seller"], mandates_active: 0, properties_count: 1, metrics: [] },
+], next_cursor: null };
+
+test("datos reales (contrato C-RE-OLA3, registros SYNTH) sin DEMO: tabla, conteos por rol y sin tenant en el cliente", async ({ page }) => {
+  const peticiones: string[] = [];
+  page.on("request", (r) => { if (/\/realestate\/owners/.test(r.url())) peticiones.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/owners/, (route) => route.fulfill({ json: OWNERS }));
+  await page.goto(`${NODEMO}/realtor/propietarios`);
+  await expect(page.getByTestId("owner-row")).toHaveCount(2, { timeout: 30_000 });
+  await expect(page.getByTestId("owner-row").first()).toContainText("SYNTH A.");
+  await expect(page.getByTestId("count-arrendador")).toHaveText("Arrendador · 1");
+  await expect(page.getByTestId("count-vendedor")).toHaveText("Vendedor · 1");
+  await expect(page.getByTestId("propietarios-empty")).toHaveCount(0);
+  await expect(page.getByTestId("demo-banner")).toHaveCount(0);
+  expect(peticiones.length).toBeGreaterThan(0);
+  for (const p of peticiones) expect(p.toLowerCase()).not.toMatch(/tenant/);
+});
+
+test("endpoint 404/503 sin DEMO: sigue «Sin datos todavía»", async ({ page }) => {
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/owners/, (route) => route.fulfill({ status: 503, json: { detail: "down" } }));
+  await page.goto(`${NODEMO}/realtor/propietarios`);
+  await expect(page.getByTestId("propietarios-empty")).toContainText("Sin datos todavía", { timeout: 30_000 });
+  await expect(page.getByTestId("owner-row")).toHaveCount(0);
+});
+
 test("acceso denegado (403): nada de la pantalla ni del armazón", async ({ page }) => {
   await sesion(page, 403);
   await page.goto("/realtor/propietarios");

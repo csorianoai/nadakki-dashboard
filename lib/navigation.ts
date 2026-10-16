@@ -396,8 +396,8 @@ export const NAVEGACION: NavSection[] = [
       { id: "set-integrations", label: "Integraciones", href: "/settings/integrations" },
       { id: "adm-billing-root", label: "Facturación", href: "/billing", keywords: ["billing"] },
       { id: "adm-audit", label: "Auditoría", href: "/audit", keywords: ["audit"] },
-      // Ruta aprobada por César; la construye O3-D-ADMIN-REAL-ESTATE. Hasta entonces, «Pronto» y sin enlace.
-      { id: "adm-real-estate", label: "Real Estate", pronto: "/admin/real-estate", keywords: ["inmobiliaria", "realtor"] },
+      // Ruta aprobada por César; la página (O3-D-ADMIN-REAL-ESTATE) ya existe, así que la fila enlaza.
+      { id: "adm-real-estate", label: "Real Estate", href: "/admin/real-estate", keywords: ["inmobiliaria", "realtor"] },
       { id: "adm-flags", label: "Interruptores", href: "/feature-flags", superAdminOnly: true, keywords: ["feature flags"] },
     ],
   },

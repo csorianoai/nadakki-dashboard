@@ -50,6 +50,23 @@ export interface ConsentHistoryEvent {
   created_at: string;
 }
 
+/** El backend respondió 409 consent_channel_unavailable: el canal no entrega el enlace de verdad. */
+export class ConsentChannelUnavailableError extends Error {
+  constructor(
+    public readonly channel: string,
+    public readonly reason: string,
+    message: string
+  ) {
+    super(message);
+    this.name = "ConsentChannelUnavailableError";
+  }
+}
+
+/** Solo el estado SENT del backend cuenta como «enviado» (mock_sent o desconocido, no). */
+export function isConfirmedSent(status: unknown): boolean {
+  return status === "SENT";
+}
+
 async function parseBody(response: Response): Promise<unknown> {
   try {
     return await response.clone().json();
@@ -108,6 +125,13 @@ export class ConsentApiClient {
       });
       const body = await parseBody(response);
       if (!response.ok) {
+        const detail = body && typeof body === "object" ? (body as Record<string, unknown>).detail : null;
+        if (response.status === 409 && detail && typeof detail === "object") {
+          const d = detail as Record<string, unknown>;
+          if (d.code === "consent_channel_unavailable") {
+            throw new ConsentChannelUnavailableError(String(d.channel ?? ""), String(d.reason ?? ""), response.statusText);
+          }
+        }
         throw new Error(messageFromBody(body, response.statusText));
       }
       return body as T;

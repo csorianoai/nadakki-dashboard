@@ -6,13 +6,24 @@ export const BROKER_ROLE = "broker_supervisor";
 export type MenuItem = RealtorCenter & { requiresRole?: string };
 export type MenuGroup = { id: string; label: string; items: readonly MenuItem[] };
 
-/** Bandeja del broker: entrada del bloque «Hoy», solo por rol. Sin ruta de bandeja en esta base: sin href y con «Pronto». */
-const BROKER_DESK: MenuItem = { id: "bandeja-broker", label: "Bandeja del broker", group: "HOY", requiresRole: BROKER_ROLE };
+/** Bandeja del broker: entrada del bloque «Hoy», solo por rol. */
+const BROKER_DESK: MenuItem = { id: "bandeja-broker", label: "Bandeja del broker", group: "HOY", href: "/realtor/broker", requiresRole: BROKER_ROLE };
+
+/**
+ * Filas de la barra que no son centros: Alta y Agente web (decisión de César 2026-10-16, auditoría de Cowork). Viven aquí y no en
+ * REALTOR_CENTERS porque este deriva las migas de la Suite (lib/modulos/registro.ts, zona DASH-NAV), que las espera sin grupo.
+ * Entran en CRECER justo antes de Academia (el manifiesto solo las clasifica como módulo real-estate).
+ */
+const BAR_ONLY_ROWS: readonly MenuItem[] = [
+  { id: "alta", label: "Alta", group: "CRECER", href: "/realtor/alta" },
+  { id: "agente-web", label: "Agente web", group: "CRECER", href: "/realtor/agente-web" },
+];
 
 function build(): MenuGroup[] {
   const groups: MenuGroup[] = [];
   const all: MenuItem[] = [...REALTOR_CENTERS];
   all.splice(all.findIndex((c) => c.group === "HOY") + 1, 0, BROKER_DESK);
+  all.splice(all.findIndex((c) => c.id === "academia"), 0, ...BAR_ONLY_ROWS);
   for (const c of all) {
     const last = groups[groups.length - 1];
     if (last && last.label === c.group) (last.items as MenuItem[]).push(c);
@@ -27,8 +38,6 @@ export const REALTOR_MENU: readonly MenuGroup[] = build();
 /** Rutas de /realtor que no son fila de la barra, con su motivo. Las pruebas exigen que toda page.tsx esté aquí o en el menú. */
 export const OFF_MENU_ROUTES: readonly { href: string; reason: string }[] = [
   { href: "/realtor", reason: "Inicio del armazón: la barra no lo lista." },
-  { href: "/realtor/alta", reason: "Se llega desde Administración › Real Estate (/admin/real-estate)." },
-  { href: "/realtor/agente-web", reason: "Se llega desde Administración › Real Estate (/admin/real-estate)." },
   ...OFF_BAR_CENTERS.filter((c) => c.href).map((c) => ({ href: c.href as string, reason: "Se llega desde Contactos (rol de propietario)." })),
   { href: "/realtor/smart-calendar", reason: "Bloque fijo de la barra (Smart Calendar)." },
 ];

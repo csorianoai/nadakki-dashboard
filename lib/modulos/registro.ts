@@ -16,7 +16,7 @@ import {
 } from "@/components/forge/layout/forge-global-sidebar-nav";
 import type { RoleInfo } from "@/lib/api/auth-v2";
 import { ICONO_PESTANA, NAVEGACION, PESTANAS_MARKETING, PREFIJOS_MARKETING, ROLES_ADMINISTRACION, type NavItem, type NavSection } from "@/lib/navigation";
-import { ALL_CENTERS, REALTOR_CENTERS } from "@/lib/realtor/centers";
+import { ALL_CENTERS, OFF_BAR_CENTERS, REALTOR_CENTERS } from "@/lib/realtor/centers";
 import { DESCRIPCIONES } from "./descripciones";
 import type { CarcasaCore, GrupoMenu, ItemMenu, ModuloConfig } from "./tipos";
 
@@ -86,22 +86,28 @@ const deDealer: GrupoMenu[] = DEALER_NAV_GROUPS.map((g) => ({
   items: g.items.map((it) => ({ id: `dealer-${it.href}`, label: it.label, href: it.href, icono: it.icon, capability: it.capability })),
 }));
 
-/** Centros de Real Estate agrupados como su barra lateral (se leen de lib/realtor/centers.ts). */
+/**
+ * Centros de Real Estate agrupados como su barra lateral (se leen de lib/realtor/centers.ts). Los centros con ruta
+ * que no son fila (OFF_BAR_CENTERS, p. ej. Propietarios) cuelgan de su grupo real; los bloques fijos de la barra
+ * (Smart Calendar) no tienen grupo: cada uno es su propio bloque, con su rótulo, sin grupo inventado.
+ */
 const deRealtor: GrupoMenu[] = (() => {
   const porGrupo = new Map<string, ItemMenu[]>();
-  for (const c of REALTOR_CENTERS) {
+  for (const c of [...REALTOR_CENTERS, ...OFF_BAR_CENTERS]) {
     if (!c.href) continue;
     porGrupo.set(c.group, [...(porGrupo.get(c.group) ?? []), { id: `realtor-${c.id}`, label: c.label, href: c.href, sinModulo: true }]);
   }
-  const fijos: ItemMenu[] = ALL_CENTERS.filter((c) => c.href && !REALTOR_CENTERS.some((r) => r.id === c.id)).map((c) => ({
+  const enBarra = (id: string) => [...REALTOR_CENTERS, ...OFF_BAR_CENTERS].some((r) => r.id === id);
+  // El rótulo de los bloques fijos vive en la barra (ShellSidebar), no en centers.ts.
+  const rotuloFijo = (id: string) => (id === "smart-calendar" ? "Smart Calendar" : titulo(id));
+  const fijos: GrupoMenu[] = ALL_CENTERS.filter((c) => c.href && !enBarra(c.id)).map((c) => ({
     id: `realtor-${c.id}`,
-    label: c.id === "career-director" ? "Career Director" : c.id === "smart-calendar" ? "Smart Calendar" : c.id,
-    href: c.href as string,
-    sinModulo: true,
+    label: rotuloFijo(c.id),
+    items: [{ id: `realtor-${c.id}`, label: rotuloFijo(c.id), href: c.href as string, sinModulo: true }],
   }));
   return [
     ...Array.from(porGrupo, ([label, items]) => ({ id: `realtor-${label.toLowerCase().replace(/\W+/g, "-")}`, label: titulo(label), items })),
-    { id: "realtor-herramientas", label: "Herramientas", items: fijos },
+    ...fijos,
   ];
 })();
 

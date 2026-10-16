@@ -15,7 +15,7 @@ import { ShellTopBar, type RealtorView } from "./ShellTopBar";
  * las páginas siguen mostrando su aviso con el motivo. La identidad sale del token.
  */
 export function RealtorShell({ children }: { children: React.ReactNode }) {
-  const { state: access, roles } = useRealtorAccessInfo();
+  const { state: access, roles, demo: tenantDemo } = useRealtorAccessInfo();
   const pathname = usePathname();
   const [view, setView] = useState<RealtorView>("agente");
   const [demoRun, setDemoRun] = useState(0);
@@ -28,7 +28,7 @@ export function RealtorShell({ children }: { children: React.ReactNode }) {
       style={{ display: "flex", minHeight: "var(--alto-marco, 100vh)", fontFamily: FONT_BODY, color: RT.ink, background: RT.page }}>
       <ShellSidebar view={view} roles={roles} />
       <div style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <ShellTopBar center={centerForPath(pathname)} offBarId={offBar?.id} view={view} onView={setView} demo={demo}
+        <ShellTopBar center={centerForPath(pathname)} offBarId={offBar?.id} view={view} onView={setView} demo={demo} tenantDemo={tenantDemo}
           onResetDemo={() => setDemoRun((n) => n + 1)} />
         <main id="contenido" style={{ flex: "1 1 auto", minWidth: 0 }}>
           <div key={demoRun}>{children}</div>
