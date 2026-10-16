@@ -312,3 +312,22 @@ export async function acceptOffer(params: {
 
   return result;
 }
+
+export interface DocumentCompleteness {
+  total_required: number;
+  total_uploaded: number;
+  missing: string[];
+  complete: boolean;
+  pct?: number;
+}
+
+/** GET /applications/{id}/documents/completeness: lo que el servidor considera cargado (tenant del token). */
+export async function getDocumentCompleteness(params: {
+  tenantId: string;
+  applicationId: string;
+}): Promise<DocumentCompleteness> {
+  return creditCoreFetch<DocumentCompleteness>(
+    `/applications/${encodeURIComponent(params.applicationId)}/documents/completeness`,
+    { method: "GET", tenantId: params.tenantId },
+  );
+}
