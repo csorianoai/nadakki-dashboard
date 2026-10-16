@@ -78,13 +78,13 @@ it("todas las rutas actuales siguen resolviendo: cada page.tsx está en el menú
 
 it("acceso: expone los roles sin cambiar el estado; sin roles legibles, vacío", async () => {
   mockApiFetch.mockResolvedValue(ok([BROKER_ROLE, 7, null]));
-  expect(await fetchPanelAccessInfo()).toEqual({ status: "ok", roles: [BROKER_ROLE] });
+  expect(await fetchPanelAccessInfo()).toEqual({ status: "ok", roles: [BROKER_ROLE], demo: false });
   mockApiFetch.mockResolvedValue({ status: 200 });
-  expect(await fetchPanelAccessInfo()).toEqual({ status: "ok", roles: [] });
+  expect(await fetchPanelAccessInfo()).toEqual({ status: "ok", roles: [], demo: false });
   mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ roles: "broker_supervisor" }) });
   expect((await fetchPanelAccessInfo()).roles).toEqual([]);
   mockApiFetch.mockResolvedValue({ status: 403, json: async () => ({ roles: [BROKER_ROLE] }) });
-  expect(await fetchPanelAccessInfo()).toEqual({ status: "sin-acceso", roles: [] });
+  expect(await fetchPanelAccessInfo()).toEqual({ status: "sin-acceso", roles: [], demo: false });
   expect(await fetchPanelAccessStatus()).toBe("sin-acceso");
 });
 

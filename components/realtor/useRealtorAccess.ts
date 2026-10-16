@@ -5,17 +5,17 @@ import { fetchPanelAccessInfo, type AccessStatus } from "@/lib/realtor/access";
 import { isPanelFlagOn } from "@/lib/realtor/config";
 
 export type RealtorAccessState = "apagado" | "comprobando" | AccessStatus;
-export type RealtorAccessInfo = { state: RealtorAccessState; roles: readonly string[] };
+export type RealtorAccessInfo = { state: RealtorAccessState; roles: readonly string[]; demo: boolean };
 
 /** Estado y roles de /acceso en una sola petición. Sin 200 o sin roles legibles, `roles` va vacío (fail-closed). */
 export function useRealtorAccessInfo(): RealtorAccessInfo {
   const flagOn = isPanelFlagOn();
-  const [info, setInfo] = useState<RealtorAccessInfo>({ state: flagOn ? "comprobando" : "apagado", roles: [] });
+  const [info, setInfo] = useState<RealtorAccessInfo>({ state: flagOn ? "comprobando" : "apagado", roles: [], demo: false });
 
   useEffect(() => {
     if (!flagOn) return;
     let alive = true;
-    fetchPanelAccessInfo().then((r) => { if (alive) setInfo({ state: r.status, roles: r.roles }); });
+    fetchPanelAccessInfo().then((r) => { if (alive) setInfo({ state: r.status, roles: r.roles, demo: r.demo }); });
     return () => { alive = false; };
   }, [flagOn]);
 
