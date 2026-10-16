@@ -6,6 +6,8 @@ import {
   logoutV2,
   getMeV2,
   switchTenantV2,
+  fijarContextoV2,
+  type VistaContexto,
   switchRoleV2,
   refreshTokenV2,
   type UserInfo,
@@ -201,6 +203,8 @@ export interface AuthContextValue {
   ) => Promise<{ ok: boolean; error?: string; redirectTo?: string }>;
   logout: () => Promise<void>;
   switchTenant: (tenantId?: string, tenantSlug?: string) => Promise<{ ok: boolean; error?: string }>;
+  /** Superadmin: fija Empresa + Vista (POST /auth/contexto), guarda los tokens nuevos y actualiza tenant/roles. */
+  fijarContexto?: (tenantId: string, vista: VistaContexto) => Promise<{ ok: boolean; error?: string }>;
   switchRole: (coreName: string, roleKey: string) => Promise<{ ok: boolean; error?: string }>;
   refreshSession: () => Promise<void>;
 }
@@ -423,6 +427,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   };
 
+  const fijarContexto = async (tenantId: string, vista: VistaContexto) => {
+    clearWizardDraftStorage(tenant?.id, user?.id);
+    const token = tokenStorage.getAccessToken();
+    if (!token) return { ok: false, error: "Not authenticated" };
+    const result = await fijarContextoV2(token, tenantId, vista);
+    if (!result.ok || !result.data) return { ok: false, error: result.error };
+    tokenStorage.setTokens({
+      accessToken: result.data.access_token,
+      refreshToken: result.data.refresh_token,
+    });
+    setTenant(result.data.new_tenant);
+    setAllRoles(result.data.active_roles);
+    const newRole = result.data.active_roles.length > 0 ? result.data.active_roles[0] : null;
+    if (newRole) setActiveRole(newRole);
+    syncLocalStorage(result.data.new_tenant, newRole, result.data.access_token);
+    scheduleProactiveRefresh();
+    return { ok: true };
+  };
+
   const switchRole = async (coreName: string, roleKey: string) => {
     const token = tokenStorage.getAccessToken();
     if (!token) return { ok: false, error: "Not authenticated" };
@@ -462,6 +485,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     switchTenant,
+    fijarContexto,
     switchRole,
     refreshSession,
   };
