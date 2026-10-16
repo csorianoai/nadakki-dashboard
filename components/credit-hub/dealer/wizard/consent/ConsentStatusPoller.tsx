@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { CONSENT_NOTICES } from "./consent-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useConsentStatusPolling } from "@/lib/credit-hub/hooks/useConsentStatusPolling";
 
@@ -44,8 +45,9 @@ export function ConsentStatusPoller({ token, method, onComplete }: ConsentStatus
     NOT_FOUND: "text-forge-danger",
   };
 
-  const label = status ? (statusLabels[String(status)] ?? String(status)) : t.consent.polling_active;
-  const colorClass = statusColors[String(status ?? "SENT")] ?? "text-forge-text";
+  // Un estado fuera de la lista (p. ej. mock_sent) nunca se pinta como enviado.
+  const label = status ? (statusLabels[String(status)] ?? CONSENT_NOTICES.status_unknown) : t.consent.polling_active;
+  const colorClass = statusColors[String(status ?? "INITIATED")] ?? "text-forge-text-muted";
 
   return (
     <div className="mt-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-4" data-testid="consent-status-poller">

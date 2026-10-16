@@ -2,24 +2,24 @@
 
 import { useState } from "react";
 import { Camera, Hash, Mail, MessageCircle } from "lucide-react";
+import { CONSENT_NOTICES } from "./consent-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
-import { WhatsAppConsentMethod } from "./WhatsAppConsentMethod";
 import { EmailConsentMethod } from "./EmailConsentMethod";
-import { SMSOTPConsentMethod } from "./SMSOTPConsentMethod";
-import { SelfieConsentMethod } from "./SelfieConsentMethod";
-import type { RemoteConsentMethodKey } from "./consent-method-map";
+import { UNAVAILABLE_REMOTE_METHODS, type RemoteConsentMethodKey } from "./consent-method-map";
 
 interface RemoteConsentSelectorProps {
   applicationId: string;
   applicationReady: boolean;
   enabledMethods: RemoteConsentMethodKey[];
   onRemoteComplete?: (data: { method: string; auditHash?: string }) => void;
-  dealerOtpCode: string;
-  onDealerOtpCodeChange: (v: string) => void;
-  onSmsOtpSent: () => void;
-  consentsAccepted: string[];
-  fullName: string;
-  onFullNameChange: (value: string) => void;
+  /** Sin uso: SMS_OTP y Selfie están deshabilitados; se conservan para no cambiar el contrato del selector. */
+  dealerOtpCode?: string;
+  onDealerOtpCodeChange?: (v: string) => void;
+  onSmsOtpSent?: () => void;
+  consentsAccepted?: string[];
+  fullName?: string;
+  onFullNameChange?: (value: string) => void;
+  onUsePresent?: () => void;
 }
 
 export function RemoteConsentSelector({
@@ -27,12 +27,7 @@ export function RemoteConsentSelector({
   applicationReady,
   enabledMethods,
   onRemoteComplete,
-  dealerOtpCode,
-  onDealerOtpCodeChange,
-  onSmsOtpSent,
-  consentsAccepted,
-  fullName,
-  onFullNameChange,
+  onUsePresent,
 }: RemoteConsentSelectorProps) {
   const t = useTranslations();
   const [selected, setSelected] = useState<RemoteConsentMethodKey | null>(null);
@@ -62,11 +57,17 @@ export function RemoteConsentSelector({
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {visible.map((m) => (
+        {visible.map((m) => {
+          const unavailable = UNAVAILABLE_REMOTE_METHODS.has(m.key);
+          return (
           <label
             key={m.key}
-            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
-              selected === m.key ? "border-forge-primary bg-forge-primary/10" : "border-forge-border hover:border-forge-primary/40"
+            className={`flex items-start gap-3 rounded-xl border p-4 transition-colors ${
+              unavailable
+                ? "cursor-not-allowed border-forge-border opacity-60"
+                : selected === m.key
+                  ? "cursor-pointer border-forge-primary bg-forge-primary/10"
+                  : "cursor-pointer border-forge-border hover:border-forge-primary/40"
             }`}
             data-testid={`method-${m.key.toLowerCase()}`}
           >
@@ -75,6 +76,7 @@ export function RemoteConsentSelector({
               name="remote-method"
               value={m.key}
               checked={selected === m.key}
+              disabled={unavailable}
               onChange={() => setSelected(m.key)}
               className="mt-1"
             />
@@ -83,33 +85,20 @@ export function RemoteConsentSelector({
                 <m.Icon className="h-5 w-5 shrink-0 text-forge-primary" aria-hidden />
                 <span className="text-sm font-medium text-forge-text">{m.title}</span>
               </div>
-              <p className="mt-1 text-xs text-forge-text-muted">{m.desc}</p>
+              <p className="mt-1 text-xs text-forge-text-muted">{unavailable ? CONSENT_NOTICES.channel_unavailable : m.desc}</p>
             </div>
           </label>
-        ))}
+          );
+        })}
       </div>
 
-      {selected === "WHATSAPP" && (
-        <WhatsAppConsentMethod applicationId={applicationId} applicationReady={applicationReady} onComplete={onRemoteComplete} />
-      )}
       {selected === "EMAIL" && (
-        <EmailConsentMethod applicationId={applicationId} applicationReady={applicationReady} onComplete={onRemoteComplete} />
-      )}
-      {selected === "SMS_OTP" && (
-        <SMSOTPConsentMethod
+        <EmailConsentMethod
           applicationId={applicationId}
           applicationReady={applicationReady}
-          onOtpSent={onSmsOtpSent}
-          dealerOtpCode={dealerOtpCode}
-          onDealerOtpCodeChange={onDealerOtpCodeChange}
           onComplete={onRemoteComplete}
-          consentsAccepted={consentsAccepted}
-          fullName={fullName}
-          onFullNameChange={onFullNameChange}
+          onUsePresent={onUsePresent}
         />
-      )}
-      {selected === "SELFIE" && (
-        <SelfieConsentMethod applicationId={applicationId} applicationReady={applicationReady} onComplete={onRemoteComplete} />
       )}
     </div>
   );

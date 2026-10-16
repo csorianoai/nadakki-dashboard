@@ -47,7 +47,9 @@ const mockUseTenantConfig = useTenantConfig as unknown as jest.Mock;
 const mockConsentApi = {
   initiate: jest.fn(),
   acceptPresent: jest.fn(),
+  getPresentText: jest.fn(),
 };
+const OFFICIAL_TEXT = "Texto  oficial\n  {no se toca}  <b>tal cual</b>\n";
 
 const baseFields = {
   applicationId: "app-1",
@@ -84,6 +86,7 @@ describe("ConsentSection", () => {
       audit_hash: "audit-hash-1",
       consent_text_version: "v1",
     });
+    mockConsentApi.getPresentText.mockResolvedValue({ text: OFFICIAL_TEXT, version: "1.0" });
     mockUseConsentApi.mockReturnValue(mockConsentApi);
     mockUseTenantConfig.mockReturnValue({
       tenantConfig: {
@@ -131,6 +134,7 @@ describe("ConsentSection", () => {
       />
     );
 
+    await waitFor(() => expect(screen.getByTestId("present-submit")).toBeEnabled());
     await user.click(screen.getByTestId("present-submit"));
 
     await waitFor(() => {
@@ -146,5 +150,38 @@ describe("ConsentSection", () => {
       consent_accepted_at: "2026-08-30T12:00:00.000Z",
       consent_audit_hash: "audit-hash-1",
     });
+  });
+
+  it("pinta el texto oficial exactamente como lo entrega el cliente y muestra la versión 1.0", async () => {
+    render(<ConsentSectionHarness initialPresence="present" />);
+    const node = await screen.findByTestId("present-consent-text");
+    expect(node.textContent).toBe(OFFICIAL_TEXT);
+    expect(screen.getByTestId("present-consent-text-version")).toHaveTextContent("1.0");
+    expect(mockConsentApi.getPresentText).toHaveBeenCalledWith("app-1");
+  });
+
+  it("sin texto del backend no permite firmar y muestra el motivo", async () => {
+    mockConsentApi.getPresentText.mockRejectedValue(new Error("sin dato"));
+    render(
+      <ConsentSection
+        {...baseFields}
+        consent_presence="present"
+        consent_terms_accepted
+        consent_data_processing_authorization
+        consent_signature_full_name="Ana Perez"
+        onPatch={jest.fn()}
+      />
+    );
+    expect(await screen.findByTestId("present-consent-text-missing")).toHaveTextContent(/no se puede firmar/i);
+    expect(screen.getByTestId("present-submit")).toBeDisabled();
+    expect(mockConsentApi.acceptPresent).not.toHaveBeenCalled();
+  });
+
+  it("el selector remoto ofrece pasar a presencial desde el correo no disponible", async () => {
+    const user = userEvent.setup();
+    render(<ConsentSectionHarness initialPresence="remote" />);
+    expect(screen.getByTestId("remote-consent-selector")).toBeInTheDocument();
+    await user.click(screen.getByLabelText(/Sí, está aquí/i));
+    expect(screen.getByTestId("present-consent-form")).toBeInTheDocument();
   });
 });

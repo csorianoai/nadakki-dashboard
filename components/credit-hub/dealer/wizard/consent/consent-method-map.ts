@@ -14,3 +14,6 @@ export function normalizeRemoteConsentMethods(enabled: string[]): RemoteConsentM
   }
   return ORDER.filter((k) => set.has(k));
 }
+
+/** Canales que el backend no puede entregar de verdad: se muestran deshabilitados aunque el tenant los liste. */
+export const UNAVAILABLE_REMOTE_METHODS: ReadonlySet<RemoteConsentMethodKey> = new Set(["WHATSAPP", "SMS_OTP", "SELFIE"]);

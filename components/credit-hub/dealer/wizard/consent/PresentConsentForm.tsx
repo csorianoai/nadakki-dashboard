@@ -1,6 +1,7 @@
 "use client";
 
 import { WIZARD_OPTIONAL_BUREAU_NOTICE } from "@/lib/credit-hub/dealer/wizard-optional-notices";
+import { CONSENT_NOTICES } from "./consent-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 
@@ -17,6 +18,9 @@ export interface PresentConsentFormProps {
   submitting?: boolean;
   submitError?: string | null;
   getFieldError?: (key: string) => string | undefined;
+  /** Texto oficial emitido por el backend, mostrado sin transformar. null = el backend no lo emitió. */
+  consentText?: { text: string; version: string } | null;
+  consentTextLoading?: boolean;
 }
 
 function consentLabelClass(hasError: boolean): string {
@@ -38,18 +42,39 @@ export function PresentConsentForm({
   submitting = false,
   submitError,
   getFieldError,
+  consentText = null,
+  consentTextLoading = false,
 }: PresentConsentFormProps) {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
 
   const requiredConsents = termsAccepted && dataProcessingAccepted;
-  const canSubmit = requiredConsents && signatureFullName.trim().length >= 3;
+  const hasText = Boolean(consentText && consentText.text.trim());
+  const canSubmit = hasText && requiredConsents && signatureFullName.trim().length >= 3;
 
   const today = new Date().toLocaleDateString(tenantConfig?.locale ?? "es-DO");
 
   return (
     <div className="mt-4 space-y-4 border-l-2 border-forge-primary/50 pl-6" data-testid="present-consent-form">
       <p className="text-sm text-forge-text-muted">{t.consent.present_intro}</p>
+
+      {consentTextLoading ? (
+        <p className="text-xs text-forge-text-muted" role="status">{CONSENT_NOTICES.consent_text_loading}</p>
+      ) : hasText && consentText ? (
+        <div className="space-y-1" data-testid="present-consent-text-block">
+          <p className="text-xs text-forge-text-muted">
+            {CONSENT_NOTICES.consent_text_version_label} <span data-testid="present-consent-text-version">{consentText.version}</span>
+          </p>
+          <pre
+            className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-xl border border-forge-border bg-forge-surface p-3 font-sans text-xs text-forge-text"
+            data-testid="present-consent-text"
+          >{consentText.text}</pre>
+        </div>
+      ) : (
+        <p className="text-xs text-[#ef4444]" role="alert" data-testid="present-consent-text-missing">
+          {CONSENT_NOTICES.consent_text_unavailable}
+        </p>
+      )}
 
       <div className="space-y-3">
         <label className={consentLabelClass(Boolean(getFieldError?.("consent_terms_accepted")))} data-wizard-field="consent_terms_accepted">
@@ -113,9 +138,9 @@ export function PresentConsentForm({
         </p>
       </div>
 
-      {!canSubmit && (
+      {!canSubmit && !consentTextLoading && (
         <p className="text-xs text-forge-warning" role="status">
-          {!requiredConsents ? t.consent.consents_required : t.consent.signature_required}
+          {!hasText ? CONSENT_NOTICES.consent_text_unavailable : !requiredConsents ? t.consent.consents_required : t.consent.signature_required}
         </p>
       )}
 

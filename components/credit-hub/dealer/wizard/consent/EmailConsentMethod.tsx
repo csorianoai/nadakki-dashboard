@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { CONSENT_NOTICES } from "./consent-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useConsentApi } from "@/lib/credit-hub/hooks/useConsentApi";
+import { ConsentChannelUnavailableError, isConfirmedSent } from "@/lib/credit-hub/api/consent-client";
 import { ConsentStatusPoller } from "./ConsentStatusPoller";
 import { forgeToast } from "@/components/credit-hub/system/ForgeToaster";
 
@@ -12,15 +14,18 @@ interface EmailConsentMethodProps {
   applicationId: string;
   applicationReady: boolean;
   onComplete?: (data: { method: string; auditHash?: string }) => void;
+  /** Alternativa ofrecida cuando el backend marca el canal como no disponible. */
+  onUsePresent?: () => void;
 }
 
-export function EmailConsentMethod({ applicationId, applicationReady, onComplete }: EmailConsentMethodProps) {
+export function EmailConsentMethod({ applicationId, applicationReady, onComplete, onUsePresent }: EmailConsentMethodProps) {
   const t = useTranslations();
   const api = useConsentApi();
   const [email, setEmail] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const validEmail = EMAIL_RE.test(email.trim());
@@ -29,15 +34,21 @@ export function EmailConsentMethod({ applicationId, applicationReady, onComplete
     if (!validEmail || !api || submitting || !applicationReady) return;
     setSubmitting(true);
     setError(null);
+    setUnavailable(false);
     try {
       const result = await api.initiate(applicationId, "EMAIL", { email: email.trim() });
-      if (result.token) {
+      if (result.token && isConfirmedSent(result.status)) {
         setToken(result.token);
         forgeToast.success(t.consent.link_sent_success);
       } else {
         setError(t.consent.send_failed);
       }
     } catch (e) {
+      if (e instanceof ConsentChannelUnavailableError) {
+        setUnavailable(true);
+        setError(CONSENT_NOTICES.channel_unavailable_email);
+        return;
+      }
       setError(e instanceof Error ? e.message : t.consent.send_failed);
     } finally {
       setSubmitting(false);
@@ -72,6 +83,17 @@ export function EmailConsentMethod({ applicationId, applicationReady, onComplete
             <p className="text-xs text-forge-danger" role="alert">
               {error}
             </p>
+          )}
+
+          {unavailable && onUsePresent && (
+            <button
+              type="button"
+              onClick={onUsePresent}
+              className="text-xs font-medium text-forge-primary hover:underline"
+              data-testid="email-use-present"
+            >
+              {CONSENT_NOTICES.use_present_instead}
+            </button>
           )}
 
           <button
