@@ -16,7 +16,7 @@ const testidOf = (id: string) => (id === "career-director" ? "career-director" :
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/demand_radar.png");
 let fallos = 0;
 test.afterEach(({}, info) => void (info.status !== info.expectedStatus && (fallos += 1)));
-test.afterAll(() => { console.log(`RESULT_O2_REGISTRO=${fallos === 0 ? "PASS" : "FAIL"}`); console.log(`RESULT_O2_F_MENU=${fallos === 0 ? "PASS" : "FAIL"}`); });
+test.afterAll(() => { console.log(`RESULT_O2_REGISTRO=${fallos === 0 ? "PASS" : "FAIL"}`); console.log(`RESULT_O2_F_MENU=${fallos === 0 ? "PASS" : "FAIL"}`); console.log(`RESULT_O3_FIX_MENU_LATERAL=${fallos === 0 ? "PASS" : "FAIL"}`); });
 
 /** Peticiones del navegador a /acceso: para comprobar que el cliente nunca manda tenant. */
 async function sesion(page: Page, acceso: number, roles: string[] = [], vistas: string[] = []) {
@@ -37,6 +37,18 @@ async function sesion(page: Page, acceso: number, roles: string[] = [], vistas: 
   });
   await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
 }
+
+test("Propietarios, Alta y Agente web son filas vivas de la barra", async ({ page }) => {
+  await sesion(page, 200);
+  await page.goto("/realtor/demand-radar");
+  const side = page.getByTestId("shell-sidebar");
+  await expect(side).toBeVisible({ timeout: 30_000 });
+  for (const [id, href] of [["propietarios", "/realtor/propietarios"], ["alta", "/realtor/alta"], ["agente-web", "/realtor/agente-web"]]) {
+    const fila = side.getByTestId(`center-${id}`);
+    await expect(fila).toHaveAttribute("href", href);
+    await expect(fila).toHaveAttribute("data-center-state", "live");
+  }
+});
 
 test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => {
   await sesion(page, 200);
