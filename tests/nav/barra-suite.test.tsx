@@ -80,6 +80,21 @@ describe("(2) migas Inicio › Módulo › Sección › Pantalla", () => {
     expect(etiquetas("/realtor/clientes")).toEqual(["Inicio", "Realtor OS", "Clientes", "Contactos"]);
   });
 
+  test("Realtor OS: bloque fijo, centro fuera de la barra y rutas de Administración, sin grupo inventado", () => {
+    const rt = { label: "Realtor OS", href: "/realtor" };
+    const esperado: Record<string, { label: string; href: string }[]> = {
+      "/realtor/smart-calendar": [rt, { label: "Smart Calendar", href: "/realtor/smart-calendar" }],
+      "/realtor/propietarios": [rt, { label: "Clientes", href: "/realtor/clientes" }, { label: "Propietarios", href: "/realtor/propietarios" }],
+      "/realtor/alta": [rt, { label: "Alta", href: "/realtor/alta" }],
+      "/realtor/agente-web": [rt, { label: "Agente web", href: "/realtor/agente-web" }],
+    };
+    for (const [ruta, resto] of Object.entries(esperado)) {
+      const m = migasDe(ruta);
+      expect(m).toEqual([{ label: "Inicio", href: "/" }, ...resto]);
+      expect(m.map((x) => x.label)).not.toContain("Herramientas");
+    }
+  });
+
   test("detalle: la pantalla final es la propia ruta", () => {
     const m = migasDe("/credit-hub/bank-v2/solicitudes/0b1c2d3e-aaaa-bbbb-cccc-000000000001");
     expect(m.map((x) => x.label)).toEqual(["Inicio", "Banco", "Operación", "Bandeja", "Detalle"]);
