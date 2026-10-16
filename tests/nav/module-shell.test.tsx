@@ -148,23 +148,23 @@ describe("ModuleShell: barra común + menú del módulo + hueco de contexto", ()
 describe("ModuleShell: filas «Pronto» (NavItem.pronto, #837) no se pierden en el armazón", () => {
   const admin = MODULOS.find((m) => m.id === "administracion")!;
 
-  test("Administración en /settings con tenant_admin: «Real Estate» sale como texto Pronto, sin enlace", () => {
+  test("Administración en /settings con tenant_admin: «Real Estate» es un enlace, sin marca Pronto", () => {
     pathname = "/settings";
     render(conSesion(sesion("tenant_admin", ["legal"]), <ModuleShell modulo={admin}><p>contenido</p></ModuleShell>));
     const menu = screen.getByRole("complementary", { name: "Menú de Administración" });
     // «Real Estate» está en el grupo «Plataforma»; en /settings el abierto es «Cuenta».
     fireEvent.click(within(menu).getByRole("button", { name: "Plataforma" }));
-    const fila = menu.querySelector('[data-pronto="/admin/real-estate"]');
-    expect(fila).not.toBeNull();
-    expect(fila).toHaveAttribute("aria-disabled", "true");
-    expect(fila?.textContent).toContain("Real Estate");
-    expect(fila?.textContent).toContain("Pronto");
-    expect(menu.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+    const enlace = menu.querySelector('a[href="/admin/real-estate"]');
+    expect(enlace).not.toBeNull();
+    expect(enlace?.textContent).toContain("Real Estate");
+    expect(enlace?.textContent).not.toContain("Pronto");
+    expect(menu.querySelector('[data-pronto="/admin/real-estate"]')).toBeNull();
   });
 
   test("el registro conserva la fila y menuVisible la oculta a quien no ve Administración", () => {
-    const ids = admin.menu.flatMap((g) => g.items).filter((i) => i.pronto).map((i) => [i.id, i.href, i.pronto]);
-    expect(ids).toEqual([["adm-real-estate", "", "/admin/real-estate"]]);
+    const fila = admin.menu.flatMap((g) => g.items).find((i) => i.id === "adm-real-estate");
+    expect(fila).toMatchObject({ href: "/admin/real-estate" });
+    expect(fila?.pronto).toBeUndefined();
     const filas = (u: Parameters<typeof menuVisible>[1]) => menuVisible(admin, u).flatMap((g) => g.items).map((i) => i.id);
     expect(filas({ roles: [{ core_name: "x", role_key: "tenant_admin", display_name: "t" }], subscribedCores: ["legal"] } as never)).toContain("adm-real-estate");
     expect(filas({ roles: [{ core_name: "x", role_key: "banker", display_name: "b" }], subscribedCores: ["credit"] } as never)).not.toContain("adm-real-estate");
