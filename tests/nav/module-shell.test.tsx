@@ -7,7 +7,6 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import AppGate from "@/components/auth/AppGate";
 import { InicioSuite } from "@/components/shell/InicioSuite";
 import { ModuleShell } from "@/components/shell/ModuleShell";
-import { SelectorContexto } from "@/components/shell/SelectorContexto";
 import { AuthContext, type AuthContextValue } from "@/lib/auth/auth-context";
 import { MODULOS, menuVisible } from "@/lib/modulos/registro";
 
@@ -30,6 +29,7 @@ const sesion = (role_key: string, cores: string[]) =>
     user: { id: "u", email: "qa@nadakki.test" },
     tenant: { id: "t", display_name: "QA", subscribed_cores: cores },
     allRoles: [{ core_name: "x", role_key, display_name: role_key }],
+    fijarContexto: jest.fn(),
   }) as unknown as AuthContextValue;
 const conSesion = (v: AuthContextValue, ui: React.ReactNode) => <AuthContext.Provider value={v}>{ui}</AuthContext.Provider>;
 const legal = MODULOS.find((m) => m.id === "legal")!;
@@ -68,18 +68,13 @@ describe("ModuleShell: barra común + menú del módulo + hueco de contexto", ()
     expect(actuales.map((a) => a.getAttribute("href"))).toEqual(["/legal/cases/new"]);
   });
 
-  test("el hueco de contexto solo existe para platform_superadmin y no pinta nada", () => {
+  test("el hueco de contexto solo existe para platform_superadmin y pinta el selector", () => {
     const { unmount } = render(conSesion(SUPER, <ModuleShell modulo={legal}>x</ModuleShell>));
-    expect(screen.getByTestId("hueco-contexto")).toBeEmptyDOMElement();
+    expect(within(screen.getByTestId("hueco-contexto")).getByTestId("selector-contexto")).toBeInTheDocument();
     unmount();
     render(conSesion(sesion("tenant_admin", ["legal"]), <ModuleShell modulo={legal}>x</ModuleShell>));
     expect(screen.queryByTestId("hueco-contexto")).toBeNull();
-  });
-
-  test("SelectorContexto: implementación vacía que no renderiza nada (lo construye otro PR)", () => {
-    const { container } = render(<SelectorContexto />);
-    expect(container).toBeEmptyDOMElement();
-    expect(SelectorContexto()).toBeNull();
+    expect(screen.queryByTestId("selector-contexto")).toBeNull();
   });
 
   test("el selector lista solo los módulos visibles y marca el actual", () => {
