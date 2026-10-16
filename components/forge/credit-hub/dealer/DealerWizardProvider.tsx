@@ -315,8 +315,21 @@ const DOC_KEY_TO_BACKEND_TYPE: Record<string, string> = {
   other_documents: "OTRO",
 };
 
+/** Etiquetas de tipos del backend que el asistente no sube por clave propia. */
+const BACKEND_DOC_TYPE_LABELS: Record<string, string> = {
+  CEDULA_FRENTE: "Cédula (frente)",
+  CEDULA_REVERSO: "Cédula (reverso)",
+  COMPROBANTE_DOMICILIO: "Comprobante de domicilio",
+  RECIBO_NOMINA: "Recibo de nómina",
+  SELFIE: "Selfie",
+};
+
 function missingDocumentLabeler(docs: ReturnType<typeof effectiveWizardDocuments>) {
-  return (code: string) => docs.find((d) => tenantDocumentKey(d) === code)?.label ?? code;
+  // El servidor devuelve tipos de documento del backend (CEDULA_FRENTE, SELFIE…), no claves del asistente.
+  return (code: string) =>
+    docs.find((d) => tenantDocumentKey(d) === code || DOC_KEY_TO_BACKEND_TYPE[tenantDocumentKey(d)] === code)?.label ??
+    BACKEND_DOC_TYPE_LABELS[code] ??
+    code;
 }
 
 export interface PendingFileEntry {

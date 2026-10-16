@@ -133,11 +133,11 @@ describe("submitApplication: subir → completeness → despachar", () => {
   });
 
   test("(b) completeness incompleto: no despacha y lista los faltantes", async () => {
-    mockCompleteness.mockResolvedValue({ ...COMPLETE, complete: false, missing: ["pay_stubs"] });
+    mockCompleteness.mockResolvedValue({ ...COMPLETE, complete: false, missing: ["RECIBO_NOMINA", "SELFIE"] });
     const outcome = await submit();
     expect(outcome).toBeInstanceOf(Error);
     expect(mockExecute).not.toHaveBeenCalled();
-    expect(ctx.submitError).toMatch(/Faltan documentos obligatorios: .+/);
+    expect(ctx.submitError).toMatch(/Faltan documentos obligatorios: Últimas 3 nóminas o comprobantes de ingreso, Selfie\./);
     expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
   });
 
@@ -153,10 +153,10 @@ describe("submitApplication: subir → completeness → despachar", () => {
 
   test("(d) 409 documents_incomplete del backend se muestra y conserva el borrador", async () => {
     mockExecute.mockRejectedValue(
-      new CreditCoreApiError("conflict", 409, { error: "documents_incomplete", missing: ["pay_stubs"] }),
+      new CreditCoreApiError("conflict", 409, { detail: { code: "documents_incomplete", missing: ["RECIBO_NOMINA", "CEDULA_FRENTE"] } }),
     );
     expect(await submit()).toBeInstanceOf(Error);
-    expect(ctx.submitError).toMatch(/Faltan documentos obligatorios: Últimas 3 nóminas/);
+    expect(ctx.submitError).toMatch(/Faltan documentos obligatorios: Últimas 3 nóminas o comprobantes de ingreso, Cédula \(frente\)/);
     expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
   });
 
