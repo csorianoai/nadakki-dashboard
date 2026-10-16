@@ -109,6 +109,7 @@ function resolveConfiguredBackendUrl() {
     process.env.NEXT_PUBLIC_NADAKKI_API_URL,
     process.env.NEXT_PUBLIC_API_URL,
     process.env.NEXT_PUBLIC_API_BASE_URL,
+    process.env.NEXT_PUBLIC_RENDER_API_URL,
   ].find((value) => (value || "").trim());
   const url = cleanBackendUrl(configured);
   if (!url) throw new Error("No backend declared for Content-Security-Policy");
@@ -328,25 +329,8 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    // Opcion C: NO se duplica la logica de lib/config/backend-url.ts -eso
-    // reintroduciria las listas divergentes que ese modulo cierra- pero
-    // tampoco se elige produccion por defecto, que era el riesgo real.
-    // Unificarlo de verdad exige pasar este fichero a .mjs con import, y eso
-    // es un packet aparte.
-    const declarado =
-      process.env.BACKEND_URL ||
-      process.env.NEXT_PUBLIC_BACKEND_URL ||
-      process.env.NEXT_PUBLIC_NADAKKI_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      process.env.NEXT_PUBLIC_RENDER_API_URL;
-    if (!declarado) {
-      throw new Error(
-        "BACKEND_URL no declarado. Los rewrites necesitan un destino explicito; " +
-          "no se elige uno por defecto. Ver lib/config/backend-url.ts.",
-      );
-    }
-    const backendUrl = cleanBackendUrl(declarado);
+    // Misma lista y mismo orden que lib/config/backend-url.ts y la CSP (una sola fuente).
+    const backendUrl = configuredBackendUrl;
     return [
       {
         source: "/api/marketing/campaigns/launch-pilot",
@@ -370,6 +354,10 @@ const nextConfig = {
       {
         source: "/api/v1/sic/:path*",
         destination: `${backendUrl}/api/v1/sic/:path*`,
+      },
+      {
+        source: "/api/v1/spyfu/:path*",
+        destination: `${backendUrl}/api/v1/spyfu/:path*`,
       },
       {
         source: "/api/v1/auth/:path*",
