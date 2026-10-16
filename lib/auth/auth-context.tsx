@@ -9,12 +9,14 @@ import {
   fijarContextoV2,
   type VistaContexto,
   switchRoleV2,
+  changePasswordV2,
   refreshTokenV2,
   type UserInfo,
   type TenantInfo,
   type RoleInfo,
 } from "@/lib/api/auth-v2";
 import { tokenStorage } from "./token-storage";
+import { PASSWORD_CHANGE_REQUIRED, goToPasswordChange } from "./password-change-route";
 import { scheduleProactiveRefresh, cancelProactiveRefresh } from "./token-refresh";
 import { clearWizardDraftStorage } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 import { clearDealerAccessContextFully } from "@/lib/dealer/access-context";
@@ -172,6 +174,7 @@ type IntentoInit =
   | { tipo: "ok" }
   | { tipo: "sin-sesion" }
   | { tipo: "expirada" }
+  | { tipo: "cambio-contrasena" }
   | { tipo: "fallo"; mensaje: string; reintentable: boolean };
 
 export interface AuthContextValue {
@@ -194,6 +197,16 @@ export interface AuthContextValue {
    * Null en el primer intento y al terminar: el spinner no se queda mudo (W0-2).
    */
   initProgress: string | null;
+  /**
+   * El backend exige cambiar la contraseña inicial (must_change_password o
+   * error_code PASSWORD_CHANGE_REQUIRED). La sesión sigue viva: no es un fallo.
+   */
+  mustChangePassword: boolean;
+  /** Cambia la contraseña, guarda los tokens nuevos y repite /refresh + /me. */
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<{ ok: boolean; error?: string; errorCode?: string }>;
   /** Retry the session init after a failure. */
   retryInit: () => void;
   login: (
@@ -221,10 +234,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initError, setInitError] = useState<string | null>(null);
   const [initProgress, setInitProgress] = useState<string | null>(null);
   const [initAttempt, setInitAttempt] = useState(0);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
 
   const retryInit = useCallback(() => {
     setInitError(null);
     setInitProgress(null);
+    setMustChangePassword(false);
     setIsLoading(true);
     setInitAttempt((n) => n + 1);
   }, []);
@@ -251,6 +266,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           tokenStorage.clearTokens();
           clearLocalStorage();
           setInitError(MSG_EXPIRADA);
+          break;
+        }
+        if (r.tipo === "cambio-contrasena") {
+          // La sesión sigue viva (tokens intactos); solo falta la contraseña.
+          setMustChangePassword(true);
+          goToPasswordChange();
           break;
         }
         if (r.tipo !== "fallo") break;
@@ -282,6 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return { tipo: "ok" };
         if (!result.ok || !result.data) {
           if (result.status === 401) return { tipo: "expirada" };
+          if (result.errorCode === PASSWORD_CHANGE_REQUIRED) return { tipo: "cambio-contrasena" };
           console.error("[auth-init] refresh failed (sesion intacta):", result.status, result.error);
           return {
             tipo: "fallo",
@@ -293,10 +315,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           accessToken: result.data.access_token,
           refreshToken: result.data.refresh_token,
         });
+        if (result.data.must_change_password === true) return { tipo: "cambio-contrasena" };
         const me = await getMeV2(result.data.access_token);
         if (cancelled) return { tipo: "ok" };
         if (!me.ok || !me.data) {
           if (me.status === 401) return { tipo: "expirada" };
+          if (me.errorCode === PASSWORD_CHANGE_REQUIRED) return { tipo: "cambio-contrasena" };
           // Ni timeout ni 5xx de /me cierran la sesion: los tokens que acaba
           // de devolver el refresh son validos y sirven para reintentar.
           console.error("[auth-init] /me failed (sesion intacta):", me.status, me.error);
@@ -306,6 +330,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             reintentable: esTransitorio(me.status),
           };
         }
+        if (me.data.must_change_password === true) return { tipo: "cambio-contrasena" };
         setUser(me.data.user);
         setTenant(me.data.current_tenant);
         setAllRoles(me.data.active_roles);
@@ -478,7 +503,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const token = tokenStorage.getAccessToken();
+    if (!token) return { ok: false, error: "Not authenticated" };
+    const result = await changePasswordV2(token, currentPassword, newPassword);
+    if (!result.ok || !result.data) return { ok: false, error: result.error, errorCode: result.errorCode };
+    tokenStorage.setTokens({
+      accessToken: result.data.access_token,
+      refreshToken: result.data.refresh_token,
+    });
+    // Tokens nuevos sin la marca: se repite /refresh + /me y la Suite carga.
+    retryInit();
+    return { ok: true };
+  };
+
   const value: AuthContextValue = {
+    mustChangePassword,
+    changePassword,
     user,
     tenant,
     activeRole,

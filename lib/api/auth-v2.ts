@@ -55,6 +55,8 @@ export interface ApiResult<T> {
   data?: T;
   error?: string;
   status?: number;
+  /** `detail.error_code` del cuerpo de error del backend (p. ej. PASSWORD_CHANGE_REQUIRED). */
+  errorCode?: string;
 }
 
 export interface MeResponse {
@@ -62,12 +64,23 @@ export interface MeResponse {
   current_tenant: TenantInfo;
   all_tenants: TenantInfo[];
   active_roles: RoleInfo[];
+  must_change_password?: boolean;
 }
 
 export interface RefreshResponse {
   access_token: string;
   refresh_token: string;
   expires_in: number;
+  must_change_password?: boolean;
+}
+
+/** POST /api/v2/auth/change-password devuelve tokens nuevos sin la marca. */
+export interface ChangePasswordResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+  must_change_password: boolean;
 }
 
 export interface SwitchTenantResponse {
@@ -107,6 +120,15 @@ function formatHttpError(
   return `HTTP ${status}${statusText ? ` ${statusText}` : ""} — ${url}${snippet ? ` — ${snippet}` : ""}`;
 }
 
+function parseErrorCode(body: string): string | undefined {
+  try {
+    const detail = (JSON.parse(body) as { detail?: { error_code?: unknown } } | null)?.detail;
+    return typeof detail?.error_code === "string" ? detail.error_code : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function formatNetworkError(url: string, e: unknown): string {
   if (e instanceof Error && e.name === "AbortError") {
     return `Tiempo de espera agotado — ${url}`;
@@ -134,7 +156,12 @@ async function fetchApi<T>(
     });
     if (!r.ok) {
       const body = await r.text();
-      return { ok: false, status: r.status, error: formatHttpError(url, r.status, r.statusText, body) };
+      return {
+        ok: false,
+        status: r.status,
+        error: formatHttpError(url, r.status, r.statusText, body),
+        errorCode: parseErrorCode(body),
+      };
     }
     return { ok: true, data: (await r.json()) as T };
   } catch (e) {
@@ -210,6 +237,23 @@ export async function getMeV2(accessToken: string): Promise<ApiResult<MeResponse
       Authorization: `Bearer ${accessToken}`,
     },
   });
+}
+
+/** POST /api/v2/auth/change-password: el token presentado queda revocado; llegan tokens nuevos. */
+export async function changePasswordV2(
+  accessToken: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<ApiResult<ChangePasswordResponse>> {
+  return fetchApi<ChangePasswordResponse>(
+    "/api/v2/auth/change-password",
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    },
+    AUTH_LOGIN_TIMEOUT_MS,
+  );
 }
 
 export async function switchTenantV2(
