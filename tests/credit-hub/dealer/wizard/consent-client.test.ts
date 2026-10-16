@@ -5,7 +5,7 @@ function jsonResponse(status: number, body: unknown): Response {
   return res as unknown as Response;
 }
 
-describe("ConsentApiClient (canales no disponibles y texto oficial)", () => {
+describe("ConsentApiClient (canales no disponibles)", () => {
   const client = new ConsentApiClient("tenant-qa");
   const fetchMock = jest.fn();
 
@@ -29,12 +29,6 @@ describe("ConsentApiClient (canales no disponibles y texto oficial)", () => {
     const err = await client.initiate("app-1", "PRESENT", {}).catch((e) => e);
     expect(err).not.toBeInstanceOf(ConsentChannelUnavailableError);
     expect(err.message).toBe("conflicto");
-  });
-
-  it("getPresentText devuelve el texto sin transformarlo", async () => {
-    const text = "  Línea 1\n\n  {llave}  <i>x</i>\n";
-    fetchMock.mockResolvedValue(jsonResponse(200, { text, version: "1.0" }));
-    await expect(client.getPresentText("app-1")).resolves.toEqual({ text, version: "1.0" });
   });
 
   it("solo SENT cuenta como enviado", () => {

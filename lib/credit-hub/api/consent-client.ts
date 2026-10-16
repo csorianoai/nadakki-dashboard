@@ -50,12 +50,6 @@ export interface ConsentHistoryEvent {
   created_at: string;
 }
 
-export interface PresentConsentText {
-  /** Texto oficial tal cual lo emite el backend; el dashboard no lo transforma. */
-  text: string;
-  version: string;
-}
-
 /** El backend respondió 409 consent_channel_unavailable: el canal no entrega el enlace de verdad. */
 export class ConsentChannelUnavailableError extends Error {
   constructor(
@@ -154,13 +148,6 @@ export class ConsentApiClient {
     return this.fetchJson<ConsentInitiateResponse>(`/${encodeURIComponent(applicationId)}/initiate`, {
       method: "POST",
       body: JSON.stringify({ method, ...payload }),
-      includeTenant: true,
-    });
-  }
-
-  async getPresentText(applicationId: string): Promise<PresentConsentText> {
-    return this.fetchJson<PresentConsentText>(`/${encodeURIComponent(applicationId)}/present/text`, {
-      method: "GET",
       includeTenant: true,
     });
   }
