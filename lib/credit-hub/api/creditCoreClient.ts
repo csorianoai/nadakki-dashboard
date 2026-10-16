@@ -241,12 +241,41 @@ export async function processApplication(params: {
   return normalizeApplication(raw);
 }
 
+export type MultiLenderExecuteResult = {
+  offers?: unknown[];
+  status?: string;
+  application_id?: string;
+  execution_id?: string;
+  errors?: unknown[];
+};
+
+/** El backend responde HTTP 200 con status "failed"; solo completed y partial cuentan como envío exitoso. */
+export class MultiLenderExecutionError extends Error {
+  readonly executionId?: string;
+  readonly lenderErrors: unknown[];
+  constructor(result: MultiLenderExecuteResult) {
+    super(
+      "No se pudo procesar la solicitud con los prestamistas. Tu borrador se conservó; intenta enviarla de nuevo.",
+    );
+    this.name = "MultiLenderExecutionError";
+    this.executionId = result?.execution_id;
+    this.lenderErrors = Array.isArray(result?.errors) ? result.errors : [];
+  }
+}
+
+export function assertMultiLenderSucceeded(result: MultiLenderExecuteResult | null | undefined): void {
+  const status = typeof result?.status === "string" ? result.status.toLowerCase() : "";
+  if (status !== "completed" && status !== "partial") {
+    throw new MultiLenderExecutionError(result ?? {});
+  }
+}
+
 export async function executeMultiLender(params: {
   tenantId: string;
   applicationId: string;
   application: object;
   dryRun?: boolean;
-}): Promise<{ offers?: unknown[]; status?: string; application_id?: string }> {
+}): Promise<MultiLenderExecuteResult> {
   return creditCoreFetch(`/multi-lender/execute`, {
     method: "POST",
     tenantId: params.tenantId,
