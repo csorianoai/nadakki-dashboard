@@ -56,6 +56,7 @@ import {
   formateaImporteContable,
   useMonedaFuncional,
 } from "@/components/contable/monedaFuncional";
+import { ErrorConReintentar } from "@/components/contable/ErrorConReintentar";
 import { opcionPeriodo } from "@/lib/contable/periodo-nombre";
 
 // ── Constants ───────────────────────────────────────────────────────────────
@@ -174,20 +175,28 @@ export function DashboardEjecutivoClient() {
   const [loading, setLoading] = useState(true);
   const [loadingIA, setLoadingIA] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  /** Fallo de carga: se dice con su accion; el error crudo del backend no se vuelca. */
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  const [reintento, setReintento] = useState(0);
 
   // Load periodos on mount
   useEffect(() => {
     if (!tenantId) return;
+    setErrorCarga(null);
+    setLoading(true);
     void listPeriodos(tenantId, new Date().getFullYear())
       .then((p) => {
         setPeriodos(p);
         const open = p.find((x) => x.status === "open") ?? p[0];
         if (open) setPeriodoId(open.id);
+        // Sin periodos no habra segunda carga: sin esto el spinner era infinito.
+        else setLoading(false);
       })
       .catch(() => {
+        setErrorCarga("No pudimos cargar los períodos contables.");
         setLoading(false);
       });
-  }, [tenantId]);
+  }, [tenantId, reintento]);
 
   // Derive dates from selected period
   const selectedPeriodo = periodos.find((p) => p.id === periodoId);
@@ -206,6 +215,8 @@ export function DashboardEjecutivoClient() {
       getGastosMonitor(tenantId, periodoId),
     ]);
 
+    const todosFallaron = [erResult, sfResult, gmResult].every((r) => r.status === "rejected");
+    setErrorCarga(todosFallaron ? "No pudimos cargar los reportes del período." : null);
     setEstadoResultados(erResult.status === "fulfilled" ? erResult.value : null);
     setSituacionFinanciera(sfResult.status === "fulfilled" ? sfResult.value : null);
     setGastosMonitor(gmResult.status === "fulfilled" ? gmResult.value : null);
@@ -276,9 +287,21 @@ export function DashboardEjecutivoClient() {
 
   // ── Empty state ───────────────────────────────────────────────────────
 
-  const hasNoData = !loading && !er && !sf && !gm;
+  const hasNoData = !loading && !er && !sf && !gm && !errorCarga;
 
   if (!tenantId) return null;
+
+  if (errorCarga && periodos.length === 0) {
+    return (
+      <div className="space-y-6 pb-10">
+        <ErrorConReintentar
+          titulo={errorCarga}
+          detalle="Revisa tu conexión e inténtalo de nuevo. Si persiste, contacta a soporte indicando la hora del error."
+          onReintentar={() => setReintento((n) => n + 1)}
+        />
+      </div>
+    );
+  }
 
   if (hasNoData && periodos.length === 0) {
     return (
@@ -338,6 +361,14 @@ export function DashboardEjecutivoClient() {
           </Button>
         </div>
       </GlassCard>
+
+      {errorCarga && !loading && (
+        <ErrorConReintentar
+          titulo={errorCarga}
+          detalle="Revisa tu conexión e inténtalo de nuevo. Si persiste, contacta a soporte indicando la hora del error."
+          onReintentar={() => void loadReports()}
+        />
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-zinc-400">
