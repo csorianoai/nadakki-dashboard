@@ -7,6 +7,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import AppGate from "@/components/auth/AppGate";
 import { InicioSuite } from "@/components/shell/InicioSuite";
 import { ModuleShell } from "@/components/shell/ModuleShell";
+import { SelectorContexto } from "@/components/shell/SelectorContexto";
 import { AuthContext, type AuthContextValue } from "@/lib/auth/auth-context";
 import { MODULOS, menuVisible } from "@/lib/modulos/registro";
 
@@ -75,6 +76,12 @@ describe("ModuleShell: barra común + menú del módulo + hueco de contexto", ()
     render(conSesion(sesion("tenant_admin", ["legal"]), <ModuleShell modulo={legal}>x</ModuleShell>));
     expect(screen.queryByTestId("hueco-contexto")).toBeNull();
     expect(screen.queryByTestId("selector-contexto")).toBeNull();
+  });
+
+  test("SelectorContexto: implementación vacía que no renderiza nada (lo construye otro PR)", () => {
+    // Ya implementado: sin platform_superadmin sigue sin renderizar nada (guarda propia del componente).
+    const { container } = render(conSesion(sesion("tenant_admin", ["legal"]), <SelectorContexto />));
+    expect(container).toBeEmptyDOMElement();
   });
 
   test("el selector lista solo los módulos visibles y marca el actual", () => {
