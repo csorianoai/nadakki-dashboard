@@ -375,6 +375,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // try/finally: si una purga o el POST lanzan, tokens y binding del dealer
     // se borran igual (D1: sobrevivian al logout). El error se registra, no se relanza.
     try {
+      // DB-CODEX-12B: el borrador vive en el servidor; se borra ANTES de quitar los tokens (lleva el bearer).
+      try {
+        const { deleteServerWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-server");
+        await deleteServerWizardDrafts();
+      } catch (error) {
+        console.error("[auth] logout: no se pudo borrar el borrador del servidor", error);
+      }
       const { purgeAllWizardDrafts } = await import("@/lib/credit-hub/dealer/wizard-draft-storage");
       purgeAllWizardDrafts();
 
