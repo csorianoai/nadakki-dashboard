@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { fetchMiDia, type MiDia } from "@/lib/realtor/mi-dia/api";
-import { blockerText, lookup, miDiaCopy, type MiDiaCopy } from "@/lib/realtor/mi-dia/copy";
-import { DEMO_DATE, DEMO_DESK, DEMO_LEADS, DEMO_LISTINGS } from "@/lib/realtor/mi-dia/demo";
+import { blockerText, COPY, lookup, TENANT_TZ, todayText, type Lang, type MiDiaCopy } from "@/lib/realtor/mi-dia/copy";
+import { DEMO_DESK, DEMO_LEADS, DEMO_LISTINGS } from "@/lib/realtor/mi-dia/demo";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccess } from "../useRealtorAccess";
 
@@ -72,11 +72,10 @@ function Rows({ items }: { items: { id: string; main: string; sub: string }[] })
 
 export function MiDiaPanel() {
   const access = useRealtorAccess();
-  const [lang, setLang] = useState("es");
+  const [lang, setLang] = useState<Lang>("es");
   const broker = useBrokerView();
   const demo = isDemoAllowed();
   const [real, setReal] = useState<MiDia | null>(null);
-  useEffect(() => { setLang(navigator.language || "es"); }, []);
   useEffect(() => {
     if (access !== "ok" || demo) return;
     let alive = true;
@@ -85,12 +84,23 @@ export function MiDiaPanel() {
   }, [access, demo]);
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
-  const t = miDiaCopy(lang);
-  const date = new Date(`${DEMO_DATE}T12:00:00Z`).toLocaleDateString(lang, { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  const t = COPY[lang];
+  const date = todayText(t);
   return (
-    <section data-testid="mi-dia-panel" lang={lang.startsWith("en") ? "en" : "es"} style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
+    <section data-testid="mi-dia-panel" lang={lang} style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+        <p data-testid="mi-dia-date" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{date}{demo ? ` · ${t.demoRef}` : ""}</p>
+        <div role="group" aria-label={t.lang} style={{ display: "flex", gap: 6 }}>
+          {(["es", "en"] as const).map((l) => (
+            <button key={l} type="button" data-testid={`lang-${l}`} aria-pressed={lang === l} onClick={() => setLang(l)}
+              style={{ minHeight: 36, padding: "0 14px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit", fontWeight: 700,
+                border: `1px solid ${lang === l ? RT.ink : RT.lineStrong}`, background: lang === l ? RT.ink : RT.white, color: lang === l ? RT.white : RT.ink }}>
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
       <div>
-        {demo ? <p style={{ margin: 0, fontSize: 14, color: RT.muted }}>{date} · {t.demoRef}</p> : null}
         <h1 style={{ margin: "10px 0 0", fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.greeting}</h1>
         <p style={{ margin: "12px 0 0", maxWidth: 780, fontSize: 16, color: RT.muted }}>{t.intro}</p>
       </div>
@@ -135,7 +145,7 @@ export function MiDiaPanel() {
       {broker ? (
         <Section id="desk" title={t.desk} count={demo ? DEMO_DESK.length : real?.desk.count ?? undefined}>
           {!demo && real?.desk.quality === "OK" ? <Rows items={real.desk.items.map((d) => ({
-            id: d.item_id, main: lookup(t.deskKinds, d.kind, t.deskFallback), sub: new Date(d.created_at).toLocaleDateString(lang, { timeZone: "UTC" }),
+            id: d.item_id, main: lookup(t.deskKinds, d.kind, t.deskFallback), sub: new Date(d.created_at).toLocaleDateString(t.dateLocale, { timeZone: TENANT_TZ }),
           }))} /> : demo ? <Rows items={DEMO_DESK.map((d) => ({ id: d.id, main: d.title, sub: d.agent }))} /> : <NoDisponible t={t} />}
         </Section>
       ) : null}

@@ -2,7 +2,8 @@
 export const miDiaEs = {
   title: "Mi día", greeting: "Buenos días. Este es tu plan.",
   intro: "Tu agenda de hoy: lo que necesita una respuesta o un documento antes de seguir.",
-  demoRef: "fecha de referencia DEMO · fecha fija reproducible",
+  demoRef: "DEMO · fecha de hoy",
+  lang: "Idioma de la pantalla", dateLocale: "es-DO",
   demoTag: "DEMO · datos sintéticos",
   empty: "Sin datos todavía",
   emptyNote: "Cuando haya fuentes conectadas, tu agenda aparecerá aquí.",
@@ -24,10 +25,14 @@ export const miDiaEs = {
   fair: "Cumplimiento de Fair Housing: la agenda ordena por espera y requisitos, nunca por características de las personas.",
 };
 export type MiDiaCopy = typeof miDiaEs;
+export type Lang = "es" | "en";
+/** Zona horaria del tenant: GET /api/v2/auth/me no la expone; tenants.country es 'DO' (Platform Operations). */
+export const TENANT_TZ = "America/Santo_Domingo";
 export const miDiaEn: MiDiaCopy = {
   title: "My day", greeting: "Good morning. This is your plan.",
   intro: "Your agenda for today: what needs a reply or a document before moving on.",
-  demoRef: "DEMO reference date · fixed reproducible date",
+  demoRef: "DEMO · today's date",
+  lang: "Screen language", dateLocale: "en-US",
   demoTag: "DEMO · synthetic data",
   empty: "No data yet",
   emptyNote: "Once sources are connected, your agenda will show up here.",
@@ -48,6 +53,9 @@ export const miDiaEn: MiDiaCopy = {
   nextDetail: "Sorted only by waiting time and pending requirements.", nextCta: "View properties",
   fair: "Fair Housing compliance: the agenda sorts by waiting time and requirements, never by personal characteristics.",
 };
-export const miDiaCopy = (lang: string): MiDiaCopy => (lang.toLowerCase().startsWith("en") ? miDiaEn : miDiaEs);
+export const COPY: Record<Lang, MiDiaCopy> = { es: miDiaEs, en: miDiaEn };
+/** Fecha de hoy en la zona del tenant, con la locale del idioma elegido. */
+export const todayText = (t: MiDiaCopy, now: Date = new Date()): string =>
+  new Intl.DateTimeFormat(t.dateLocale, { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: TENANT_TZ }).format(now);
 export const blockerText = (t: MiDiaCopy, code: string): string => t.blockers[code] ?? t.blockerUnknown;
 export const lookup = (m: Record<string, string>, k: string, fallback: string): string => m[k] ?? fallback;

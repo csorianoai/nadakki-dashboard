@@ -3,8 +3,6 @@ export type LeadRow = { id: string; name: string; phone: string; email: string; 
 export type ListingRow = { id: string; title: string; blocker: string };
 export type DeskRow = { id: string; title: string; agent: string };
 
-export const DEMO_DATE = "2026-10-12";
-
 export const DEMO_LEADS: readonly LeadRow[] = [
   { id: "SYNTH-L1", name: "SYNTH Contacto 1", phone: "555-0101", email: "synth1@example.invalid", source: "SYNTH portal", waitingHours: 5 },
   { id: "SYNTH-L2", name: "SYNTH Contacto 2", phone: "555-0102", email: "synth2@example.invalid", source: "SYNTH web", waitingHours: 22 },
