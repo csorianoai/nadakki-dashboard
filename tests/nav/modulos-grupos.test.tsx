@@ -313,10 +313,9 @@ describe("Administración y filas «Pronto» (#837): sin enlaces a pantallas que
     return Array.from(container.querySelectorAll('a[href^="/admin/grupo/"]')).map((a) => a.getAttribute("href"));
   };
 
-  test("tenant_admin en /settings (ModuleSidebar real): ningún enlace a /admin/grupo/*; ve las filas de Cuenta y «Pronto» sin enlace", () => {
+  test("tenant_admin en /settings (ModuleSidebar real): ningún enlace a /admin/grupo/*; ve las filas de Cuenta", () => {
     expect(enlacesGrupo("tenant_admin", ["legal"], "/settings")).toEqual([]);
-    expect(document.querySelector('[data-pronto="/admin/real-estate"]')).toBeNull(); // grupo plegado: se ve al desplegarlo
-    expect(document.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+    expect(document.querySelector('a[href="/admin/real-estate"]')).toBeNull(); // grupo plegado: se ve al desplegarlo
     expect(document.querySelector('a[href="/settings"]')).not.toBeNull();
   });
 
@@ -364,16 +363,17 @@ describe("Administración y filas «Pronto» (#837): sin enlaces a pantallas que
 
   test("pestañas: una fila «Pronto» es texto (span) con aria-disabled, data-pronto y «Pronto», nunca un <a href>", () => {
     const grupo = menuVisible(admin, USUARIO).find((g) => g.id === "admin-general")!;
-    expect(grupo.items.some((i) => i.pronto)).toBe(true);
+    // Ninguna fila real está hoy en «Pronto»: se añade una sintética para ejercitar el pintado.
+    const paginas = [...grupo.items, { id: "x-pronto", label: "Futura", href: "", pronto: "/admin/futura" }];
     pathname = "/admin";
-    render(<PestanasGrupo titulo={grupo.label} paginas={grupo.items} pathname="/admin" />);
+    render(<PestanasGrupo titulo={grupo.label} paginas={paginas} pathname="/admin" />);
     const pestanas = screen.getAllByTestId("pestana-grupo");
-    const fila = pestanas.find((p) => p.getAttribute("data-pronto") === "/admin/real-estate")!;
+    const fila = pestanas.find((p) => p.getAttribute("data-pronto") === "/admin/futura")!;
     expect(fila.tagName).toBe("SPAN");
     expect(fila.hasAttribute("href")).toBe(false);
     expect(fila).toHaveAttribute("aria-disabled", "true");
     expect(fila).toHaveTextContent("Pronto");
-    expect(document.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+    expect(document.querySelector('a[href="/admin/futura"]')).toBeNull();
     pestanas.filter((p) => p !== fila).forEach((p) => expect(p.tagName).toBe("A"));
   });
 
