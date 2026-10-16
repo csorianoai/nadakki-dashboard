@@ -22,12 +22,12 @@ it("estructura aprobada: cuatro grupos, en orden, sin «Próximamente» ni Finan
   expect(REALTOR_MENU.map((g) => g.label)).toEqual(["HOY", "CLIENTES", "NEGOCIOS", "CRECER"]);
   expect(REALTOR_MENU.map((g) => g.items.map((i) => i.label))).toEqual([
     ["Mi día", "Bandeja del broker"],
-    ["Contactos", "Conversaciones", "Propiedades"],
+    ["Contactos", "Propietarios", "Conversaciones", "Propiedades"],
     ["Operaciones", "Documentos"],
-    ["Marketing", "Mercado", "Resultados", "Career Director", "Academia"],
+    ["Marketing", "Mercado", "Resultados", "Career Director", "Alta", "Agente web", "Academia"],
   ]);
   const all = REALTOR_MENU.flatMap((g) => g.items);
-  expect(all.some((i) => /finanzas|crm|mi oficina|propietarios/i.test(i.label))).toBe(false);
+  expect(all.some((i) => /finanzas|crm|mi oficina/i.test(i.label))).toBe(false);
   expect(REALTOR_MENU.some((g) => /pr[oó]ximamente/i.test(g.label))).toBe(false);
   const byId = Object.fromEntries(all.map((i) => [i.id, i]));
   expect(byId["clientes"].href).toBe("/realtor/clientes");
@@ -36,7 +36,16 @@ it("estructura aprobada: cuatro grupos, en orden, sin «Próximamente» ni Finan
   expect(byId["resultados"].href).toBe("/realtor/resultados");
   expect(byId["conversaciones"].href).toBeUndefined();
   expect(byId["career-director"].href).toBe("/realtor/career-director");
+  // Decisión de César 2026-10-16 (auditoría de navegación de Cowork): sustituye a dashboard#835 que dejaba Propietarios fuera de la barra.
+  expect(byId["propietarios"].href).toBe("/realtor/propietarios");
+  expect(byId["alta"].href).toBe("/realtor/alta");
+  expect(byId["agente-web"].href).toBe("/realtor/agente-web");
+  expect(all.some((i) => ["propietarios", "alta", "agente-web"].includes(i.id) && /pronto/i.test(i.label))).toBe(false);
   expect(byId["academia"].href).toBeUndefined();
+});
+
+it("Propietarios, Alta y Agente web aparecen sin rol", () => {
+  expect(ids([])).toEqual(expect.arrayContaining(["propietarios", "alta", "agente-web"]));
 });
 
 it("la Bandeja del broker solo aparece con el rol; otros roles no la dan", () => {
