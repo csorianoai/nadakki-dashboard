@@ -243,3 +243,45 @@ export async function switchRoleV2(
     body: JSON.stringify({ core_name: coreName, role_key: roleKey }),
   });
 }
+
+export type VistaContexto = "banco" | "concesionario" | "inmobiliaria";
+
+export interface EmpresaContexto {
+  id: string;
+  slug?: string;
+  display_name: string;
+}
+
+export interface SwitchContextoResponse extends SwitchTenantResponse {
+  contexto?: { tenant_id: string; vista: VistaContexto };
+}
+
+/** GET /api/v2/auth/contexto/empresas?q=&limite= (solo platform_superadmin). Acepta lista directa o {empresas|items}. */
+export async function listarEmpresasContextoV2(
+  accessToken: string,
+  q = "",
+  limite = 20,
+): Promise<ApiResult<EmpresaContexto[]>> {
+  const params = new URLSearchParams({ limite: String(limite) });
+  if (q.trim()) params.set("q", q.trim());
+  const r = await fetchApi<EmpresaContexto[] | { empresas?: EmpresaContexto[]; items?: EmpresaContexto[] }>(
+    `/api/v2/auth/contexto/empresas?${params.toString()}`,
+    { method: "GET", headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!r.ok || !r.data) return { ok: false, status: r.status, error: r.error };
+  const lista = Array.isArray(r.data) ? r.data : (r.data.empresas ?? r.data.items ?? []);
+  return { ok: true, data: lista };
+}
+
+/** POST /api/v2/auth/contexto: respuesta como switch-tenant más `contexto`. */
+export async function fijarContextoV2(
+  accessToken: string,
+  tenantId: string,
+  vista: VistaContexto,
+): Promise<ApiResult<SwitchContextoResponse>> {
+  return fetchApi<SwitchContextoResponse>("/api/v2/auth/contexto", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ tenant_id: tenantId, vista }),
+  });
+}
