@@ -36,12 +36,9 @@ describe("ConsentApiClient (canales no disponibles)", () => {
     for (const s of ["mock_sent", "INITIATED", "sent", "", undefined, null]) expect(isConfirmedSent(s)).toBe(false);
   });
 
-  it("getPresentText devuelve el texto del backend sin transformarlo", async () => {
-    const text = "  Texto oficial\n  línea 2  \n";
-    fetchMock.mockResolvedValue(jsonResponse(200, { consent_text: text, consent_text_version: "1.0" }));
+  it("getPresentText falla cerrado: sin petición de red y texto no disponible", async () => {
     const r = await client.getPresentText("app-1");
-    expect(r.consent_text).toBe(text);
-    expect(r.consent_text_version).toBe("1.0");
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/v2/credit/consent/app-1/present/text");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(r).toEqual({ consent_text: null, consent_text_version: null, unavailable: true });
   });
 });
