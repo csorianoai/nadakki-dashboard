@@ -488,7 +488,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     purgeLegacyGlobalWizardDraftKeys();
-  }, []);
+    if (storageKey) try { localStorage.removeItem(storageKey); } catch { /* ignore */ } // borrador legible de builds anteriores
+  }, [storageKey]);
 
   // Fresh application: forget the pointer (and delete the server draft it pointed to) and start empty.
   useEffect(() => {
