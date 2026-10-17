@@ -27,6 +27,7 @@ import {
   effectiveWizardDocuments,
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
+import { clearSubmitIdempotencyKey, getSubmitIdempotencyKey } from "@/lib/credit-hub/api/submitIdempotency";
 import { createDraftApplication, assertMultiLenderSucceeded, executeMultiLender, getApplication, getDocumentCompleteness, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
@@ -1012,12 +1013,15 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
             applicationId: appId,
             application: payload,
             dryRun: false,
+            // Misma clave en cada reintento del borrador; solo se descarta tras un éxito.
+            idempotencyKey: getSubmitIdempotencyKey(tenantId, appId),
           });
           // Falla antes de borrar el borrador: HTTP 200 con status "failed" no es éxito.
           assertMultiLenderSucceeded(execution);
         },
       });
 
+      clearSubmitIdempotencyKey(tenantId, appId);
       clearDraftStorage();
       setFormData(initialApplicationFormData);
 
