@@ -6,7 +6,7 @@ jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
   useTranslations: () => require("@/lib/credit-hub/i18n/locales/es-DO/credit-hub").CREDIT_HUB_ES_DO,
 }));
 
-jest.mock("@/lib/credit-hub/hooks/useConsentStatusPolling");
+jest.mock("@/lib/credit-hub/hooks/useConsentStatusPolling", () => ({ useConsentStatusPolling: jest.fn() }));
 
 const mockUseConsentStatusPolling = useConsentStatusPolling as jest.MockedFunction<typeof useConsentStatusPolling>;
 
