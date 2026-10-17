@@ -1,5 +1,34 @@
 {
   "root": true,
-  "extends": ["next/core-web-vitals"],
-  "ignorePatterns": ["node_modules/", "legacy/", ".next/", "coverage/", "*.config.js", "*.config.mjs"]
+  "extends": [
+    "next/core-web-vitals"
+  ],
+  "ignorePatterns": [
+    "node_modules/",
+    "legacy/",
+    ".next/",
+    "coverage/",
+    "*.config.js",
+    "*.config.mjs"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "app/(forge)/credit-hub/bank/**/*.{ts,tsx}",
+        "components/credit-hub/bank/**/*.{ts,tsx}",
+        "lib/credit-hub/hooks/useBank*.{ts,tsx}"
+      ],
+      "rules": {
+        "no-console": [
+          "error",
+          {
+            "allow": [
+              "warn",
+              "error"
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }
