@@ -246,9 +246,11 @@ export function DashboardEjecutivoClient() {
   const sf = situacionFinanciera;
   const gm = gastosMonitor;
 
+  /** Sin estado de resultados no hay cifras: se dice «Sin datos», nunca un cero inventado. */
+  const SIN_DATOS = "Sin datos";
   const margenNeto = er?.margen_neto_pct ?? 0;
-  const margenColor = margenNeto >= 20 ? "border-emerald-500/20" : margenNeto >= 10 ? "border-amber-500/20" : "border-rose-500/20";
-  const margenValueColor = margenNeto >= 20 ? "text-emerald-200" : margenNeto >= 10 ? "text-amber-200" : "text-rose-200";
+  const margenColor = !er ? "border-zinc-700/40" : margenNeto >= 20 ? "border-emerald-500/20" : margenNeto >= 10 ? "border-amber-500/20" : "border-rose-500/20";
+  const margenValueColor = !er ? "text-zinc-400" : margenNeto >= 20 ? "text-emerald-200" : margenNeto >= 10 ? "text-amber-200" : "text-rose-200";
 
   // Area chart data — build from ingresos/gastos rows or simple summary
   const areaData = er
@@ -381,7 +383,7 @@ export function DashboardEjecutivoClient() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               title="Ingresos"
-              value={importe(er?.total_ingresos ?? 0)}
+              value={er ? importe(er.total_ingresos) : SIN_DATOS}
               icon={DollarSign}
               borderColor="border-emerald-500/20"
               valueColor="text-emerald-200"
@@ -389,7 +391,7 @@ export function DashboardEjecutivoClient() {
             />
             <KpiCard
               title="Gastos"
-              value={importe(er?.total_gastos ?? 0)}
+              value={er ? importe(er.total_gastos) : SIN_DATOS}
               changePct={gm?.variacion_total_pct}
               icon={AlertTriangle}
               borderColor="border-amber-500/20"
@@ -397,14 +399,14 @@ export function DashboardEjecutivoClient() {
             />
             <KpiCard
               title="Utilidad Neta"
-              value={importe(er?.utilidad_neta ?? 0)}
+              value={er ? importe(er.utilidad_neta) : SIN_DATOS}
               icon={TrendingUp}
               borderColor="border-indigo-500/20"
               valueColor="text-indigo-200"
             />
             <KpiCard
               title="Margen Neto"
-              value={`${margenNeto.toFixed(1)}%`}
+              value={er ? `${margenNeto.toFixed(1)}%` : SIN_DATOS}
               icon={Target}
               borderColor={margenColor}
               valueColor={margenValueColor}
