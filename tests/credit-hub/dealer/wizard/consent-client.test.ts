@@ -35,4 +35,10 @@ describe("ConsentApiClient (canales no disponibles)", () => {
     expect(isConfirmedSent("SENT")).toBe(true);
     for (const s of ["mock_sent", "INITIATED", "sent", "", undefined, null]) expect(isConfirmedSent(s)).toBe(false);
   });
+
+  it("getPresentText falla cerrado: sin petición de red y texto no disponible", async () => {
+    const r = await client.getPresentText("app-1");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(r).toEqual({ consent_text: null, consent_text_version: null, unavailable: true });
+  });
 });
