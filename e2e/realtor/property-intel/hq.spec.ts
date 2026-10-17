@@ -18,7 +18,7 @@ const link = (id: string, status: string, over: Record<string, unknown> = {}) =>
 const doc = (id: string, status: string) => ({ id, status, mime_type: "application/pdf", size_bytes: 1024, property_id: HQ, property_unit_id: null, listing_id: null, retention_until: null, license_restrictions: null, created_at: T });
 const page_ = (data: unknown[]) => ({ data, next_cursor: null });
 
-type Opts = { policy?: Record<string, unknown> | number; links?: unknown[]; signals?: number; decision?: number };
+type Opts = { policy?: Record<string, unknown> | number; links?: unknown[]; signals?: number; decision?: number; all?: number };
 
 async function sesion(page: Page, o: Opts = {}) {
   const peticiones: Request[] = [];
@@ -36,6 +36,7 @@ async function sesion(page: Page, o: Opts = {}) {
   await page.route(/\/api\/v1\/realestate\/property-intel\//, (route) => {
     const u = new URL(route.request().url());
     const p = u.pathname.replace(/^.*\/property-intel/, "");
+    if (o.all) return route.fulfill({ status: o.all, json: {} });
     if (p.endsWith("/decision")) {
       if (o.decision && o.decision !== 200) return route.fulfill({ status: o.decision, json: { code: "CONFLICT", message: "no" } });
       links = links.map((l) => ((l as { id: string }).id === "l1" ? link("l1", "confirmed", { confirmed_at: T }) : l));
@@ -111,4 +112,11 @@ test("identificador no UUID no llama a nada", async ({ page }) => {
   await page.goto("/realtor/property-intel/no-es-uuid");
   await expect(page.getByTestId("pi-bad-id")).toBeVisible({ timeout: 30_000 });
   expect(reqs).toHaveLength(0);
+});
+
+test("DEMO no sustituye un 401 real del backend", async ({ page }) => {
+  await sesion(page, { all: 401 });
+  await page.goto(`/realtor/property-intel/${HQ}`);
+  await expect(page.getByTestId("pi-signals-msg")).toContainText("sesión terminó", { timeout: 30_000 });
+  await expect(page.getByTestId("demo-banner")).toHaveCount(0);
 });

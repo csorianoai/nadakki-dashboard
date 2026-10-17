@@ -65,7 +65,7 @@ export async function decideLink(id: string, decision: "confirmed" | "rejected",
   }
 }
 
-/** Registro: abre el envío de prospectos solo si el contrato ya está confirmado y con acuerdo; si no, el gate lo bloquea. */
+/** Registro: abre el envío de prospectos solo si el registro está confirmado y el servidor permite el envío (el acuerdo lo impone el servidor); si no, el gate lo bloquea. */
 export function registrationGate(p: BrokerPolicy): "open" | "blocked" | "not_required" {
   if (!p.registration_required) return "not_required";
   return p.registration_status === "confirmed" && p.prospect_submission_allowed ? "open" : "blocked";

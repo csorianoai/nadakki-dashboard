@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } 
 import { decideLink, fetchAll, registrationGate } from "@/lib/realtor/property-intel/client";
 import { HQ_DEMO, HQ_PROPERTY_ID } from "@/lib/realtor/property-intel/demo";
 import type { PiData, Section, Target } from "@/lib/realtor/property-intel/types";
+import { getAuthHeaders } from "@/lib/api/fetch-client";
 import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
@@ -39,10 +40,9 @@ export function PropertyIntelScreen({ target }: { target: Target }) {
   const [failed, setFailed] = useState(false);
 
   const load = useCallback(async () => {
-    const d = await fetchAll(target);
-    // DEMO nunca sustituye una respuesta del backend: solo si no hubo ninguna llamada (sin sesión) y es el HQ sintético.
-    const noCalls = Object.values(d).every((s) => s.state === "session_expired");
-    if (isDemoAllowed() && noCalls && target.id === HQ_PROPERTY_ID) { setDemo(true); setData(HQ_DEMO); } else setData(d);
+    // DEMO nunca sustituye una respuesta del backend (ni un 401 real): solo si no hay Bearer (no se llama) y es el HQ sintético.
+    if (!getAuthHeaders().Authorization && isDemoAllowed() && target.id === HQ_PROPERTY_ID) { setDemo(true); setData(HQ_DEMO); return; }
+    setData(await fetchAll(target));
   }, [target]);
   useEffect(() => { if (access === "ok") void load(); }, [access, load]);
 
@@ -50,6 +50,7 @@ export function PropertyIntelScreen({ target }: { target: Target }) {
 
   const decide = async (id: string, decision: "confirmed" | "rejected") => {
     const reason = window.prompt(decision === "confirmed" ? "Motivo de la confirmación" : "Motivo del rechazo") ?? "";
+    if (!reason.trim()) return;
     setBusy(id); setFailed(false);
     const ok = demo ? false : await decideLink(id, decision, reason);
     setBusy(null);
