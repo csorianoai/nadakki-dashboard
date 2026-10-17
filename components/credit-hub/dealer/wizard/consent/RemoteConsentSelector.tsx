@@ -7,7 +7,7 @@ import { WhatsAppConsentMethod } from "./WhatsAppConsentMethod";
 import { EmailConsentMethod } from "./EmailConsentMethod";
 import { SMSOTPConsentMethod } from "./SMSOTPConsentMethod";
 import { SelfieConsentMethod } from "./SelfieConsentMethod";
-import type { RemoteConsentMethodKey } from "./consent-method-map";
+import { isRemoteMethodUnavailable, type RemoteConsentMethodKey } from "./consent-method-map";
 
 interface RemoteConsentSelectorProps {
   applicationId: string;
@@ -20,6 +20,7 @@ interface RemoteConsentSelectorProps {
   consentsAccepted: string[];
   fullName: string;
   onFullNameChange: (value: string) => void;
+  onUseInPerson?: () => void;
 }
 
 export function RemoteConsentSelector({
@@ -33,6 +34,7 @@ export function RemoteConsentSelector({
   consentsAccepted,
   fullName,
   onFullNameChange,
+  onUseInPerson,
 }: RemoteConsentSelectorProps) {
   const t = useTranslations();
   const [selected, setSelected] = useState<RemoteConsentMethodKey | null>(null);
@@ -62,20 +64,30 @@ export function RemoteConsentSelector({
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {visible.map((m) => (
+        {visible.map((m) => {
+          const unavailable = isRemoteMethodUnavailable(m.key);
+          return (
           <label
             key={m.key}
-            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
-              selected === m.key ? "border-forge-primary bg-forge-primary/10" : "border-forge-border hover:border-forge-primary/40"
+            className={`flex items-start gap-3 rounded-xl border p-4 transition-colors ${
+              unavailable
+                ? "cursor-not-allowed border-forge-border opacity-60"
+                : selected === m.key
+                  ? "cursor-pointer border-forge-primary bg-forge-primary/10"
+                  : "cursor-pointer border-forge-border hover:border-forge-primary/40"
             }`}
             data-testid={`method-${m.key.toLowerCase()}`}
+            aria-disabled={unavailable}
           >
             <input
               type="radio"
               name="remote-method"
               value={m.key}
-              checked={selected === m.key}
-              onChange={() => setSelected(m.key)}
+              checked={!unavailable && selected === m.key}
+              disabled={unavailable}
+              onChange={() => {
+                if (!unavailable) setSelected(m.key);
+              }}
               className="mt-1"
             />
             <div className="min-w-0 flex-1">
@@ -84,18 +96,24 @@ export function RemoteConsentSelector({
                 <span className="text-sm font-medium text-forge-text">{m.title}</span>
               </div>
               <p className="mt-1 text-xs text-forge-text-muted">{m.desc}</p>
+              {unavailable && (
+                <p className="mt-1 text-xs text-forge-warning" data-testid={`method-${m.key.toLowerCase()}-unavailable`}>
+                  {t.consent.channel_unavailable_reason}
+                </p>
+              )}
             </div>
           </label>
-        ))}
+          );
+        })}
       </div>
 
-      {selected === "WHATSAPP" && (
+      {selected === "WHATSAPP" && !isRemoteMethodUnavailable("WHATSAPP") && (
         <WhatsAppConsentMethod applicationId={applicationId} applicationReady={applicationReady} onComplete={onRemoteComplete} />
       )}
       {selected === "EMAIL" && (
-        <EmailConsentMethod applicationId={applicationId} applicationReady={applicationReady} onComplete={onRemoteComplete} />
+        <EmailConsentMethod applicationId={applicationId} applicationReady={applicationReady} onComplete={onRemoteComplete} onUseInPerson={onUseInPerson} />
       )}
-      {selected === "SMS_OTP" && (
+      {selected === "SMS_OTP" && !isRemoteMethodUnavailable("SMS_OTP") && (
         <SMSOTPConsentMethod
           applicationId={applicationId}
           applicationReady={applicationReady}
@@ -108,7 +126,7 @@ export function RemoteConsentSelector({
           onFullNameChange={onFullNameChange}
         />
       )}
-      {selected === "SELFIE" && (
+      {selected === "SELFIE" && !isRemoteMethodUnavailable("SELFIE") && (
         <SelfieConsentMethod applicationId={applicationId} applicationReady={applicationReady} onComplete={onRemoteComplete} />
       )}
     </div>

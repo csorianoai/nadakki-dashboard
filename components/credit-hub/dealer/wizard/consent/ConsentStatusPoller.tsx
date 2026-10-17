@@ -44,8 +44,9 @@ export function ConsentStatusPoller({ token, method, onComplete }: ConsentStatus
     NOT_FOUND: "text-forge-danger",
   };
 
-  const label = status ? (statusLabels[String(status)] ?? String(status)) : t.consent.polling_active;
-  const colorClass = statusColors[String(status ?? "SENT")] ?? "text-forge-text";
+  const known = status ? Object.prototype.hasOwnProperty.call(statusLabels, String(status)) : false;
+  const label = !status ? t.consent.polling_active : known ? statusLabels[String(status)] : t.consent.status_unconfirmed;
+  const colorClass = !status || !known ? "text-forge-text-muted" : (statusColors[String(status)] ?? "text-forge-text");
 
   return (
     <div className="mt-3 rounded-xl border border-forge-border bg-forge-surface-elevated p-4" data-testid="consent-status-poller">

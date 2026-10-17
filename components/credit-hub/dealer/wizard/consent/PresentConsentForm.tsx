@@ -17,6 +17,10 @@ export interface PresentConsentFormProps {
   submitting?: boolean;
   submitError?: string | null;
   getFieldError?: (key: string) => string | undefined;
+  /** Texto oficial emitido por el backend; se pinta tal cual. Sin texto no se puede firmar. */
+  legalText?: string | null;
+  legalTextVersion?: string | null;
+  legalTextError?: string | null;
 }
 
 function consentLabelClass(hasError: boolean): string {
@@ -38,18 +42,37 @@ export function PresentConsentForm({
   submitting = false,
   submitError,
   getFieldError,
+  legalText,
+  legalTextVersion,
+  legalTextError,
 }: PresentConsentFormProps) {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
 
   const requiredConsents = termsAccepted && dataProcessingAccepted;
-  const canSubmit = requiredConsents && signatureFullName.trim().length >= 3;
+  const hasLegalText = typeof legalText === "string" && legalText.length > 0;
+  const canSubmit = hasLegalText && requiredConsents && signatureFullName.trim().length >= 3;
 
   const today = new Date().toLocaleDateString(tenantConfig?.locale ?? "es-DO");
 
   return (
     <div className="mt-4 space-y-4 border-l-2 border-forge-primary/50 pl-6" data-testid="present-consent-form">
       <p className="text-sm text-forge-text-muted">{t.consent.present_intro}</p>
+
+      {hasLegalText ? (
+        <div className="space-y-1" data-testid="present-legal-text-block">
+          <p className="text-xs text-forge-text-muted">
+            {t.consent.legal_text_version_label} <span data-testid="present-legal-text-version">{legalTextVersion}</span>
+          </p>
+          <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl border border-forge-border bg-forge-surface-elevated p-3 text-xs text-forge-text" data-testid="present-legal-text">
+            {legalText}
+          </pre>
+        </div>
+      ) : (
+        <p className="text-xs text-forge-warning" role="alert" data-testid="present-legal-text-missing">
+          {legalTextError ?? t.consent.legal_text_missing}
+        </p>
+      )}
 
       <div className="space-y-3">
         <label className={consentLabelClass(Boolean(getFieldError?.("consent_terms_accepted")))} data-wizard-field="consent_terms_accepted">
