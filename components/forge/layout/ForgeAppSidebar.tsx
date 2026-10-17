@@ -102,9 +102,9 @@ export function ForgeAppSidebar() {
         <p className="font-display text-forge-xs font-semibold uppercase tracking-wide text-forgeGray-300">
           {tenantConfig.institution_name}
         </p>
-        <p className="text-forge-sm font-medium text-forgeGray-50">Dashboard</p>
+        <p className="text-forge-sm font-medium text-forgeGray-50">Panel</p>
       </div>
-      <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Primary modules">
+      <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Módulos principales">
         {isLoading ? (
           <div className="space-y-2 p-1">
             <Skeleton className="h-10 w-full rounded-forge-sm" />

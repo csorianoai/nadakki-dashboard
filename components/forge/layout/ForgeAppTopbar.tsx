@@ -15,7 +15,7 @@ export function ForgeAppTopbar({ module }: ForgeAppTopbarProps) {
   const { tenantConfig } = useTenantConfig();
   const fromBanking = tenantConfig.institution_name?.trim();
   const fromSettings = settings.name?.trim() && settings.name !== "—" ? settings.name.trim() : "";
-  const org = fromBanking || fromSettings || "Tenant";
+  const org = fromBanking || fromSettings || "Organización";
 
   if (module === "legal") {
     return (
