@@ -11,7 +11,8 @@ const mockPush = jest.fn();
 const mockToastSuccess = jest.fn();
 const APP_ID = "app-draft-1";
 const TENANT = "tenant-qa-1";
-const DRAFT_KEY = "wizard-draft:test";
+// DB-CODEX-12B: el borrador vive en el servidor; en el navegador solo queda el puntero (ids) en sessionStorage.
+const DRAFT_KEY = "wizard-draft:test:application-id";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, replace: jest.fn() }),
@@ -42,6 +43,7 @@ jest.mock("@/components/forge", () => ({
   toast: { success: (...a: unknown[]) => mockToastSuccess(...a), error: jest.fn(), info: jest.fn() },
 }));
 jest.mock("@/lib/credit-hub/dealer/wizard-draft-storage", () => ({
+  ...jest.requireActual("@/lib/credit-hub/dealer/wizard-draft-storage"),
   buildWizardDraftStorageKey: () => "wizard-draft:test",
   purgeLegacyGlobalWizardDraftKeys: jest.fn(),
   WIZARD_AUTOSAVE_TOAST_SESSION_KEY: "autosave-toast",
@@ -67,6 +69,9 @@ jest.mock("@/lib/credit-api", () => ({ uploadDocument: jest.fn() }));
 jest.mock("@/lib/credit-hub/api/creditCoreClient", () => ({
   ...jest.requireActual("@/lib/credit-hub/api/creditCoreClient"),
   createDraftApplication: jest.fn(),
+  getApplicationDraft: jest.fn().mockResolvedValue(null),
+  saveApplicationDraft: jest.fn().mockResolvedValue(undefined),
+  deleteApplicationDraft: jest.fn().mockResolvedValue(undefined),
   getApplication: jest.fn().mockReturnValue(new Promise(() => undefined)),
   saveApplicantApplication: jest.fn().mockResolvedValue({}),
   saveVehicleApplication: jest.fn().mockResolvedValue({}),
@@ -98,7 +103,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   Object.defineProperty(globalThis, "crypto", { value: webcrypto, configurable: true });
   localStorage.clear();
-  localStorage.setItem(DRAFT_KEY, JSON.stringify({ marker: "borrador" }));
+  sessionStorage.clear();
+  sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ tenantId: TENANT, applicationId: APP_ID }));
   global.fetch = jest.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
   render(
     <DealerWizardProvider>
@@ -113,7 +119,7 @@ describe("submitApplication con executeMultiLender", () => {
     const outcome = await submit();
     expect(outcome).toBeInstanceOf(Error);
     expect((outcome as Error).message).toMatch(/No se pudo procesar la solicitud/);
-    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+    expect(sessionStorage.getItem(DRAFT_KEY)).not.toBeNull();
     expect(mockToastSuccess).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
     expect(ctx.submitError).not.toBeNull();
@@ -125,7 +131,7 @@ describe("submitApplication con executeMultiLender", () => {
     expect(await submit()).toBeInstanceOf(Error);
     mockExecute.mockResolvedValueOnce({ status: "in_progress" });
     expect(await submit()).toBeInstanceOf(Error);
-    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+    expect(sessionStorage.getItem(DRAFT_KEY)).not.toBeNull();
   });
 
   test("reintento tras failed con el mismo application_id llega al éxito", async () => {
@@ -136,13 +142,13 @@ describe("submitApplication con executeMultiLender", () => {
     expect(ok).toEqual({ application_id: APP_ID });
     expect(mockExecute).toHaveBeenCalledTimes(2);
     expect(mockExecute.mock.calls[1][0].applicationId).toBe(APP_ID);
-    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    expect(sessionStorage.getItem(DRAFT_KEY)).toBeNull();
     expect(ctx.submitError).toBeNull();
   });
 
   test.each(["completed", "partial"])("status %s no cambia el flujo", async (status) => {
     mockExecute.mockResolvedValue({ status, offers: [{ id: "o1" }] });
     expect(await submit()).toEqual({ application_id: APP_ID });
-    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    expect(sessionStorage.getItem(DRAFT_KEY)).toBeNull();
   });
 });

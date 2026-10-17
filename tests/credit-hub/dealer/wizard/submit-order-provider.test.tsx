@@ -12,7 +12,8 @@ const mockPush = jest.fn();
 const mockToastSuccess = jest.fn();
 const APP_ID = "app-draft-1";
 const TENANT = "tenant-qa-1";
-const DRAFT_KEY = "wizard-draft:test";
+// DB-CODEX-12B: el borrador vive en el servidor; en el navegador solo queda el puntero (ids) en sessionStorage.
+const DRAFT_KEY = "wizard-draft:test:application-id";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush, replace: jest.fn() }),
@@ -43,6 +44,7 @@ jest.mock("@/components/forge", () => ({
   toast: { success: (...a: unknown[]) => mockToastSuccess(...a), error: jest.fn(), info: jest.fn() },
 }));
 jest.mock("@/lib/credit-hub/dealer/wizard-draft-storage", () => ({
+  ...jest.requireActual("@/lib/credit-hub/dealer/wizard-draft-storage"),
   buildWizardDraftStorageKey: () => "wizard-draft:test",
   purgeLegacyGlobalWizardDraftKeys: jest.fn(),
   WIZARD_AUTOSAVE_TOAST_SESSION_KEY: "autosave-toast",
@@ -68,6 +70,9 @@ jest.mock("@/lib/credit-api", () => ({ uploadDocument: jest.fn() }));
 jest.mock("@/lib/credit-hub/api/creditCoreClient", () => ({
   ...jest.requireActual("@/lib/credit-hub/api/creditCoreClient"),
   createDraftApplication: jest.fn(),
+  getApplicationDraft: jest.fn().mockResolvedValue(null),
+  saveApplicationDraft: jest.fn().mockResolvedValue(undefined),
+  deleteApplicationDraft: jest.fn().mockResolvedValue(undefined),
   getApplication: jest.fn().mockReturnValue(new Promise(() => undefined)),
   saveApplicantApplication: jest.fn().mockResolvedValue({}),
   saveVehicleApplication: jest.fn().mockResolvedValue({}),
@@ -104,7 +109,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   Object.defineProperty(globalThis, "crypto", { value: webcrypto, configurable: true });
   localStorage.clear();
-  localStorage.setItem(DRAFT_KEY, JSON.stringify({ marker: "borrador" }));
+  sessionStorage.clear();
+  sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ tenantId: TENANT, applicationId: APP_ID }));
   global.fetch = jest.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
   mockUpload.mockResolvedValue({});
   mockCompleteness.mockResolvedValue(COMPLETE);
@@ -127,7 +133,7 @@ describe("submitApplication: subir → completeness → despachar", () => {
     expect(outcome).toBeInstanceOf(Error);
     expect(mockExecute).not.toHaveBeenCalled();
     expect(mockCompleteness).not.toHaveBeenCalled();
-    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+    expect(sessionStorage.getItem(DRAFT_KEY)).not.toBeNull();
     expect(ctx.pendingFiles.get("id_back")).toMatchObject({ status: "error", errorMessage: "red caída" });
     expect(ctx.pendingFiles.get("id_front")?.status).toBe("uploaded");
   });
@@ -138,7 +144,7 @@ describe("submitApplication: subir → completeness → despachar", () => {
     expect(outcome).toBeInstanceOf(Error);
     expect(mockExecute).not.toHaveBeenCalled();
     expect(ctx.submitError).toMatch(/Faltan documentos obligatorios: Últimas 3 nóminas o comprobantes de ingreso, Selfie\./);
-    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+    expect(sessionStorage.getItem(DRAFT_KEY)).not.toBeNull();
   });
 
   test("(c) orden: uploadDocument×N → completeness → executeMultiLender", async () => {
@@ -148,7 +154,7 @@ describe("submitApplication: subir → completeness → despachar", () => {
     mockExecute.mockImplementation(async () => (order.push("execute"), { status: "completed" }));
     expect(await submit()).toEqual({ application_id: APP_ID });
     expect(order).toEqual(["upload", "upload", "completeness", "execute"]);
-    expect(localStorage.getItem(DRAFT_KEY)).toBeNull();
+    expect(sessionStorage.getItem(DRAFT_KEY)).toBeNull();
   });
 
   test("(d) 409 documents_incomplete del backend se muestra y conserva el borrador", async () => {
@@ -157,7 +163,7 @@ describe("submitApplication: subir → completeness → despachar", () => {
     );
     expect(await submit()).toBeInstanceOf(Error);
     expect(ctx.submitError).toMatch(/Faltan documentos obligatorios: Últimas 3 nóminas o comprobantes de ingreso, Cédula \(frente\)/);
-    expect(localStorage.getItem(DRAFT_KEY)).not.toBeNull();
+    expect(sessionStorage.getItem(DRAFT_KEY)).not.toBeNull();
   });
 
   test("(e) reintento tras (a) sube solo los fallidos y llega al éxito", async () => {
