@@ -178,7 +178,11 @@ export async function getApplicationDraft(params: {
   });
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
-  const data = record.form_data ?? record.draft;
+  // Forma real de 12A: {data: <cuerpo del PUT = {form_data}>, saved_at, expires_at}; se aceptan también las planas.
+  const wrapped = record.data && typeof record.data === "object" && !Array.isArray(record.data)
+    ? (record.data as Record<string, unknown>)
+    : null;
+  const data = wrapped ? (wrapped.form_data ?? wrapped) : (record.form_data ?? record.draft);
   if (!data || typeof data !== "object" || Array.isArray(data)) return null;
   return {
     formData: data as Record<string, unknown>,
