@@ -36,10 +36,10 @@ describe("PdfDownloadButton", () => {
     // Wait for async
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/pdf"),
-      expect.objectContaining({ headers: { "X-Tenant-ID": "t1" } }),
-    );
+    // DASH-LEGAL L1: pasa por apiFetch, que entrega un Headers.
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toEqual(expect.stringContaining("/pdf"));
+    expect(new Headers(init.headers).get("X-Tenant-ID")).toBe("t1");
   });
 
   it("does nothing on failed fetch", async () => {

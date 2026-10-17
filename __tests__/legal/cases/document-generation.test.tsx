@@ -51,17 +51,12 @@ describe("legal-cases-api — generación de documentos (fetch)", () => {
       document_type: "denuncia_penal",
       parameters: { k: 1 },
     });
-    expect(global.fetch).toHaveBeenCalledWith(
-      "/api/legal/cases/case-1/documents/generate",
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({
-          "X-Tenant-ID": "tenant-a",
-          "Content-Type": "application/json",
-        }),
-      })
-    );
-    const opts = (global.fetch as jest.Mock).mock.calls[0][1] as { body: string };
+    // DASH-LEGAL L1: pasa por apiFetch, que entrega un Headers.
+    const [url, opts] = (global.fetch as jest.Mock).mock.calls[0] as [string, RequestInit & { body: string }];
+    expect(url).toBe("/api/legal/cases/case-1/documents/generate");
+    expect(opts.method).toBe("POST");
+    expect(new Headers(opts.headers).get("X-Tenant-ID")).toBe("tenant-a");
+    expect(new Headers(opts.headers).get("Content-Type")).toBe("application/json");
     expect(JSON.parse(opts.body)).toEqual({
       document_type: "denuncia_penal",
       parameters: { k: 1 },
@@ -74,9 +69,9 @@ describe("legal-cases-api — generación de documentos (fetch)", () => {
       text: async () => JSON.stringify({ documents: [], count: 0 }),
     });
     await fetchGeneratedDocuments("t1", "c1");
-    expect(global.fetch).toHaveBeenCalledWith("/api/legal/cases/c1/documents/generated", {
-      headers: expect.objectContaining({ "X-Tenant-ID": "t1" }),
-    });
+    const [url, init] = (global.fetch as jest.Mock).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("/api/legal/cases/c1/documents/generated");
+    expect(new Headers(init.headers).get("X-Tenant-ID")).toBe("t1");
   });
 
   it("fetchGeneratedDocument llama GET .../generated/{id}", async () => {
@@ -91,9 +86,9 @@ describe("legal-cases-api — generación de documentos (fetch)", () => {
         }),
     });
     await fetchGeneratedDocument("t1", "c1", "d1");
-    expect(global.fetch).toHaveBeenCalledWith("/api/legal/cases/c1/documents/generated/d1", {
-      headers: expect.objectContaining({ "X-Tenant-ID": "t1" }),
-    });
+    const [url, init] = (global.fetch as jest.Mock).mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("/api/legal/cases/c1/documents/generated/d1");
+    expect(new Headers(init.headers).get("X-Tenant-ID")).toBe("t1");
   });
 });
 

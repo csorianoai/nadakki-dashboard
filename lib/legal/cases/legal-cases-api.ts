@@ -17,6 +17,7 @@ import {
   normalizeStateTransitions,
 } from "@/lib/legal/cases/normalize-available-actions";
 import { LegalApiHttpError, readLegalJson } from "@/lib/legal/parse-api-error";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const LEGAL_PREFIX = "/api/legal";
 
@@ -66,14 +67,14 @@ export async function fetchCasesList(
   });
   const qs = q.toString();
   const url = `${LEGAL_PREFIX}/cases${qs ? `?${qs}` : ""}`;
-  const res = await fetch(url, { headers: tenantHeaders(tenantId) });
+  const res = await apiFetch(url, { headers: tenantHeaders(tenantId) });
   if (!res.ok) throw new Error(`Error al cargar expedientes (${res.status})`);
   const raw = await parseJson<unknown>(res);
   return normalizeListPayload(raw);
 }
 
 export async function fetchCaseDetail(tenantId: string, caseId: string): Promise<LegalCase> {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}`, {
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
   });
   if (!res.ok) throw new Error(`Error al cargar expediente (${res.status})`);
@@ -84,7 +85,7 @@ export async function fetchCaseDetail(tenantId: string, caseId: string): Promise
 }
 
 export async function createCase(tenantId: string, body: CreateCasePayload): Promise<LegalCase> {
-  const res = await fetch(`${LEGAL_PREFIX}/cases`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases`, {
     method: "POST",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -113,9 +114,10 @@ export async function postCaseAction(
   caseId: string,
   actionName: string,
   payload: Record<string, unknown> = {},
-  actorType: "human" | "agent" | "system" = "human",
+  // L2b: por HTTP solo actúa un humano; identidad_del_jwt.py veta otro actor_type (403).
+  actorType: "human" = "human",
 ): Promise<unknown> {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/actions`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/actions`, {
     method: "POST",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify({ action: actionName, actor_type: actorType, payload }),
@@ -128,7 +130,7 @@ export async function patchCaseState(
   caseId: string,
   body: { new_state: string; reason: string; legal_basis?: string },
 ): Promise<unknown> {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/state`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/state`, {
     method: "PATCH",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -140,7 +142,7 @@ export async function fetchTimeline(
   tenantId: string,
   caseId: string
 ): Promise<{ events: CaseTimelineEvent[] }> {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/events`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/events`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar línea de tiempo (${res.status})`);
@@ -150,7 +152,7 @@ export async function fetchTimeline(
 }
 
 export async function fetchDeadlines(tenantId: string, caseId: string) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/deadlines`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/deadlines`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar plazos (${res.status})`);
@@ -165,12 +167,18 @@ export async function postDeadlineOverride(
   deadlineId: string,
   body: { new_deadline_date: string; reason: string; legal_basis: string }
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/deadlines/${encodeURIComponent(deadlineId)}/override`,
     {
       method: "PATCH",
       headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      // DeadlineOverrideRequest (extra="forbid") llama override_deadline_date
+      // a la nueva fecha.
+      body: JSON.stringify({
+        override_deadline_date: body.new_deadline_date,
+        reason: body.reason,
+        legal_basis: body.legal_basis,
+      }),
     }
   );
   if (!res.ok) throw new Error(`Error al modificar plazo (${res.status})`);
@@ -178,7 +186,7 @@ export async function postDeadlineOverride(
 }
 
 export async function fetchStrategies(tenantId: string, caseId: string) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/strategies`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/strategies`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar estrategias (${res.status})`);
@@ -190,17 +198,24 @@ export async function postStrategiesSelect(
   caseId: string,
   body: { strategy_ids: string[]; rationale?: string; generate_documents_immediately?: boolean }
 ) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/strategies/select`, {
+  // L2b: StrategySelectRequest solo acepta `strategy_id`. Se envía la primera
+  // seleccionada, la misma que nombra el aviso de CaseStrategyMultiSelect.
+  const strategyId = body.strategy_ids[0];
+  if (!strategyId) throw new Error("Selecciona una estrategia.");
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/strategies/select`, {
     method: "POST",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      strategy_id: strategyId,
+      ...(body.rationale !== undefined ? { rationale: body.rationale } : {}),
+    }),
   });
   if (!res.ok) throw new Error(`Error al seleccionar estrategias (${res.status})`);
   return parseJson<unknown>(res);
 }
 
 export async function fetchDocuments(tenantId: string, caseId: string) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar documentos (${res.status})`);
@@ -214,12 +229,21 @@ export async function patchDocumentLifecycle(
   docId: string,
   body: { new_status: string; notes?: string; submitted_to_court_acuse?: string }
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(docId)}/lifecycle`,
     {
       method: "PATCH",
       headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      // DocumentLifecycleTransitionRequest (extra="forbid"): actor_type es
+      // obligatorio y por HTTP solo actua un humano; el acuse va en acuse_recibo.
+      body: JSON.stringify({
+        new_status: body.new_status,
+        actor_type: "human",
+        ...(body.notes !== undefined ? { notes: body.notes } : {}),
+        ...(body.submitted_to_court_acuse !== undefined
+          ? { acuse_recibo: body.submitted_to_court_acuse }
+          : {}),
+      }),
     }
   );
   if (!res.ok) throw new Error(`Error al actualizar documento (${res.status})`);
@@ -232,7 +256,7 @@ export async function postVerifyExtractedData(
   docId: string,
   body: Record<string, unknown>
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(docId)}/verify_extracted_data`,
     {
       method: "POST",
@@ -244,7 +268,7 @@ export async function postVerifyExtractedData(
 }
 
 export async function fetchIssues(tenantId: string, caseId: string) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/issues`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/issues`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar incidencias (${res.status})`);
@@ -254,7 +278,7 @@ export async function fetchIssues(tenantId: string, caseId: string) {
 }
 
 export async function postIssue(tenantId: string, caseId: string, body: Record<string, unknown>) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/issues`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/issues`, {
     method: "POST",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -269,7 +293,7 @@ export async function patchIssue(
   issueId: string,
   body: Record<string, unknown>
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/issues/${encodeURIComponent(issueId)}/resolve`,
     {
       method: "PATCH",
@@ -282,7 +306,7 @@ export async function patchIssue(
 }
 
 export async function fetchAuditChainVerification(tenantId: string, caseId: string) {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/audit_chain_verification`,
     { headers: tenantHeaders(tenantId) },
   );
@@ -290,7 +314,7 @@ export async function fetchAuditChainVerification(tenantId: string, caseId: stri
 }
 
 export async function fetchSnapshots(tenantId: string, caseId: string) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar versiones (${res.status})`);
@@ -303,7 +327,7 @@ export async function fetchSnapshots(tenantId: string, caseId: string) {
 }
 
 export async function fetchSnapshotDetail(tenantId: string, caseId: string, snapshotId: string) {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots/${encodeURIComponent(snapshotId)}`,
     { headers: tenantHeaders(tenantId) }
   );
@@ -311,7 +335,7 @@ export async function fetchSnapshotDetail(tenantId: string, caseId: string, snap
 }
 
 export async function fetchSnapshotVerify(tenantId: string, caseId: string) {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots/verify`,
     { headers: tenantHeaders(tenantId) }
   );
@@ -328,7 +352,7 @@ export async function fetchSnapshotDiff(
     from_id: snapshotIdA,
     to_id: snapshotIdB,
   });
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots/diff?${q.toString()}`,
     { headers: tenantHeaders(tenantId) }
   );
@@ -336,17 +360,24 @@ export async function fetchSnapshotDiff(
 }
 
 export async function postSnapshot(tenantId: string, caseId: string, body: Record<string, unknown>) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots`, {
+  // CreateSnapshotRequest exige `reason`; el portal lo envia como snapshot_reason.
+  const reason = body.reason ?? body.snapshot_reason;
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/snapshots`, {
     method: "POST",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      reason,
+      ...(body.triggered_by_event_id !== undefined
+        ? { triggered_by_event_id: body.triggered_by_event_id }
+        : {}),
+    }),
   });
   if (!res.ok) throw new Error(`Error al crear versión (${res.status})`);
   return parseJson<unknown>(res);
 }
 
 export async function fetchRisk(tenantId: string, caseId: string): Promise<RiskProfile | null> {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/risk`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/risk`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar riesgo (${res.status})`);
@@ -366,7 +397,7 @@ export async function postLock(
   caseId: string,
   body: { lock_reason: string; lock_scope: string; duration_minutes: number }
 ) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/lock`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/lock`, {
     method: "POST",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -376,7 +407,7 @@ export async function postLock(
 }
 
 export async function deleteLock(tenantId: string, caseId: string) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/lock`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/lock`, {
     method: "DELETE",
     headers: tenantHeaders(tenantId),
   });
@@ -384,7 +415,7 @@ export async function deleteLock(tenantId: string, caseId: string) {
 }
 
 export async function fetchRelated(tenantId: string, caseId: string) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/related`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/related`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar relacionados (${res.status})`);
@@ -392,7 +423,7 @@ export async function fetchRelated(tenantId: string, caseId: string) {
 }
 
 export async function postArchive(tenantId: string, caseId: string, body: Record<string, unknown> = {}) {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/archive`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/archive`, {
     method: "POST",
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -405,7 +436,7 @@ export async function ingestDocument(
   caseId: string,
   formData: FormData
 ): Promise<unknown> {
-  const res = await fetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents`, {
     method: "POST",
     headers: { "X-Tenant-ID": tenantId.trim() },
     body: formData,
@@ -419,7 +450,7 @@ export async function postGenerateDocument(
   caseId: string,
   body: GenerateDocumentRequestBody
 ): Promise<GeneratedDocumentDraftResponse> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/generate`,
     {
       method: "POST",
@@ -445,7 +476,7 @@ export async function fetchGeneratedDocuments(
   tenantId: string,
   caseId: string
 ): Promise<GeneratedDocumentsListResponse> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/generated`,
     { headers: tenantHeaders(tenantId) }
   );
@@ -465,7 +496,7 @@ export async function fetchGeneratedDocument(
   caseId: string,
   docId: string
 ): Promise<GeneratedDocumentDetail> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/generated/${encodeURIComponent(docId)}`,
     { headers: tenantHeaders(tenantId) }
   );
@@ -490,7 +521,7 @@ export async function fetchUpcomingDeadlines(
   const q = new URLSearchParams();
   q.set("horizon_days", String(horizonDays));
   if (includeAcknowledged) q.set("include_acknowledged", "true");
-  const res = await fetch(`${LEGAL_PREFIX}/deadlines/upcoming?${q.toString()}`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/deadlines/upcoming?${q.toString()}`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar plazos próximos (${res.status})`);
@@ -506,7 +537,7 @@ export async function postAcknowledgeDeadline(
   deadlineId: string,
   acknowledgedBy: string,
 ): Promise<unknown> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/deadlines/${encodeURIComponent(deadlineId)}/acknowledge`,
     {
       method: "POST",
@@ -525,7 +556,7 @@ export async function fetchDocumentVersions(
   caseId: string,
   documentId: string,
 ): Promise<{ versions: Record<string, unknown>[]; count: number; document_id: string }> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(documentId)}/versions`,
     { headers: tenantHeaders(tenantId) },
   );
@@ -542,7 +573,7 @@ export async function postDocumentVersion(
   documentId: string,
   body: { content: string; createdBy?: string; reason?: string },
 ): Promise<unknown> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents/${encodeURIComponent(documentId)}/versions`,
     {
       method: "POST",
@@ -566,7 +597,7 @@ export function getPdfExportUrl(caseId: string, documentId: string): string {
 
 /** Modo degradado: endpoint opcional; si no existe, se asume NORMAL. */
 export async function fetchDisasterMode(tenantId: string): Promise<{ level: DisasterLevel }> {
-  const res = await fetch(`${LEGAL_PREFIX}/meta/disaster-mode`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/meta/disaster-mode`, {
     method: "GET",
     headers: tenantHeaders(tenantId),
   });
@@ -615,7 +646,7 @@ export async function fetchStrategyComparison(
   caseIds: string[],
 ): Promise<StrategyComparisonResponse> {
   const ids = caseIds.filter((id) => id.trim()).join(",");
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/strategies/compare?case_ids=${encodeURIComponent(ids)}`,
     { headers: tenantHeaders(tenantId) },
   );
@@ -659,7 +690,7 @@ export interface KnowledgePackStatus {
 export async function fetchJurisdictions(
   tenantId: string,
 ): Promise<JurisdictionsResponse> {
-  const res = await fetch(`${LEGAL_PREFIX}/jurisdictions`, {
+  const res = await apiFetch(`${LEGAL_PREFIX}/jurisdictions`, {
     headers: tenantHeaders(tenantId),
   });
   if (!res.ok) throw new Error(`Error al cargar jurisdicciones (${res.status})`);
@@ -675,7 +706,7 @@ export async function fetchKnowledgePackStatus(
   tenantId: string,
   jurisdiction: string = "do",
 ): Promise<KnowledgePackStatus> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${LEGAL_PREFIX}/knowledge-pack/status?jurisdiction=${encodeURIComponent(jurisdiction)}`,
     { headers: tenantHeaders(tenantId) },
   );

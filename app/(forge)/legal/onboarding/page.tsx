@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/30";
@@ -50,7 +51,7 @@ export default function LegalOnboardingPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/legal/onboarding", {
+      const res = await apiFetch("/api/legal/onboarding", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
