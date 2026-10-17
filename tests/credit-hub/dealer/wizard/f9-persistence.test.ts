@@ -23,14 +23,15 @@ function assertServerPersistenceContract(source: string): void {
   expect(source).not.toMatch(/buildStepFields\(stepIndex\)/);
   expect(source).toMatch(/getApplication\(\{ tenantId, applicationId: consentApplicationId \}\)/);
   expect(source).toMatch(/hydrateFormFromServer\(application\.raw\)/);
-  expect(source).toMatch(/localStorage\.setItem\(applicationIdStorageKey, applicationId\)/);
+  expect(source).toMatch(/writeWizardDraftPointer\(applicationIdStorageKey, \{ tenantId, applicationId \}\)/);
+  expect(source).not.toMatch(/localStorage\.setItem/);
 }
 
 describe("F9 wizard persistence", () => {
   function assertFreshApplicationContract(source: string): void {
     expect(source).toMatch(/const startsNewApplication = searchParams\.get\("new"\) === "1"/);
     expect(source).toMatch(/if \(!applicationIdStorageKey \|\| consentApplicationId \|\| startsNewApplication\) return/);
-    expect(source).toMatch(/if \(startsNewApplication\) \{[\s\S]*localStorage\.removeItem\(storageKey\)[\s\S]*localStorage\.removeItem\(applicationIdStorageKey\)/);
+    expect(source).toMatch(/if \(!storageKey \|\| !startsNewApplication\) return;[\s\S]*clearWizardDraftPointer\(applicationIdStorageKey\)/);
   }
 
   test("new application starts clean while an application id remains a resume link", () => {
