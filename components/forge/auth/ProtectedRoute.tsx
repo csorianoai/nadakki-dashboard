@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { PASSWORD_CHANGE_ROUTE } from "@/lib/auth/password-change-route";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -12,14 +13,14 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, fallbackPath = "/login" }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, isLoading, initError, initProgress, retryInit, logout } = useAuth();
+  const { mustChangePassword, isAuthenticated, isLoading, initError, initProgress, retryInit, logout } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && !initError) {
+    if (!isLoading && !isAuthenticated && !initError && !mustChangePassword) {
       // replace: con push, Atrás volvía a la pantalla protegida y esta redirigía otra vez (bucle de historial).
       router.replace(fallbackPath);
     }
-  }, [isAuthenticated, isLoading, initError, router, fallbackPath]);
+  }, [isAuthenticated, isLoading, initError, mustChangePassword, router, fallbackPath]);
 
   if (initError) {
     return (
@@ -65,6 +66,11 @@ export function ProtectedRoute({ children, fallbackPath = "/login" }: ProtectedR
         </div>
       </div>
     );
+  }
+
+  // Contraseña inicial: sin sesión plena, pero solo el cambio de contraseña se pinta (el contexto navega allí).
+  if (mustChangePassword && !isAuthenticated) {
+    return window.location.pathname === PASSWORD_CHANGE_ROUTE ? <>{children}</> : null;
   }
 
   if (!isAuthenticated) return null;

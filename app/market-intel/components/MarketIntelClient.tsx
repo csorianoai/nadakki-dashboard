@@ -36,15 +36,15 @@ export function MarketIntelClient() {
   const [validating, setValidating] = useState(false);
   const [counselRequired, setCounselRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const refreshRuns = useCallback(async () => {
     if (!effectiveTenantId) return;
     const data = await listRuns(effectiveTenantId);
     setRuns(data);
-    if (!selectedRunId && data.length > 0) {
-      setSelectedRunId(data[0].id);
-    }
-  }, [effectiveTenantId, selectedRunId]);
+    setSelectedRunId((current) => current ?? data[0]?.id ?? null);
+  }, [effectiveTenantId]);
 
   const refreshActiveRun = useCallback(async () => {
     if (!effectiveTenantId || !selectedRunId) {
@@ -74,20 +74,24 @@ export function MarketIntelClient() {
     if (!tenantHydrated || !effectiveTenantId) return;
     setLoading(true);
     setError(null);
+    setLoadFailed(false);
     void Promise.all([
       refreshRuns(),
       listPacks(effectiveTenantId)
         .then(setPacks)
         .catch(() => setPacks([])),
     ])
-      .catch(() => setError("No se pudieron cargar las investigaciones."))
+      .catch(() => {
+        setLoadFailed(true);
+        setError("No se pudieron cargar las investigaciones. Reintente en unos segundos.");
+      })
       .finally(() => setLoading(false));
-  }, [tenantHydrated, effectiveTenantId, refreshRuns]);
+  }, [tenantHydrated, effectiveTenantId, refreshRuns, reloadKey]);
 
   useEffect(() => {
     if (!effectiveTenantId || !selectedRunId) return;
     void refreshActiveRun().catch(() =>
-      setError("No se pudo cargar la investigación seleccionada.")
+      setError("No se pudo cargar la investigación seleccionada. Elija otra o reintente.")
     );
   }, [effectiveTenantId, selectedRunId, refreshActiveRun]);
 
@@ -196,6 +200,23 @@ export function MarketIntelClient() {
         <p style={{ padding: 24, fontSize: 13, color: "var(--mee-ink-3)" }}>
           Cargando investigaciones…
         </p>
+      ) : loadFailed ? (
+        <div style={{ padding: "0 16px" }}>
+          <button type="button" onClick={() => setReloadKey((k) => k + 1)}>
+            Reintentar
+          </button>
+        </div>
+      ) : !activeRun && runs.length === 0 ? (
+        <EmptyState
+          title="Sin datos"
+          description="Este tenant aún no tiene investigaciones de mercado. Cree la primera para comenzar."
+          action={
+            <button type="button" onClick={() => void handleCreate()} disabled={creating}>
+              Crear investigación
+            </button>
+          }
+          className="flex-1"
+        />
       ) : !activeRun ? (
         <EmptyState
           title="Seleccione una investigación"

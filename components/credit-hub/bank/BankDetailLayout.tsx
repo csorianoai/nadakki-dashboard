@@ -1,5 +1,6 @@
 "use client";
 
+import { nombreOIdentificadorOculto } from "@/components/credit-hub/bank-v2/comun/nombres";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -157,10 +158,6 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
 
   const handleSubmit = useCallback(
     async (mode: DecisionMode, justif: string) => {
-      // DIAGNOSTIC: Log actual user structure to verify analyst_id path
-      console.log("[decision] user object:", user);
-      console.log("[decision] user?.id:", user?.id);
-      
       const analystId = user?.id || "";
       
       // Validación crítica: analyst_id debe ser un UUID válido
@@ -278,7 +275,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
               <div>
                 <div className="ch-eyebrow">Concesionario</div>
                 <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
-                  {String((vehicle as any).dealer ?? (vehicle as any).dealer_name ?? (vehicle as any).dealerName ?? "—")}
+                  {nombreOIdentificadorOculto((vehicle as any).dealer_name ?? (vehicle as any).dealerName ?? (vehicle as any).dealer)}
                 </div>
               </div>
               <div>

@@ -13,23 +13,6 @@ export default function BankApplicationReviewPage({ params }: { params: Promise<
   const complianceQuery = useBankCompliance(applicationId);
   const auditQuery = useBankAuditTrail(applicationId);
 
-  console.log("[BankApplicationReviewPage] DIAGNOSTIC", {
-    applicationId,
-    appQuery: {
-      isLoading: appQuery.isLoading,
-      hasData: Boolean(appQuery.data),
-      error: appQuery.error,
-    },
-    auditQuery: {
-      isLoading: auditQuery.isLoading,
-      hasData: Boolean(auditQuery.data),
-      hasEvents: Array.isArray(auditQuery.data?.events),
-      eventsLength: auditQuery.data?.events?.length ?? 0,
-      error: auditQuery.error,
-      data: auditQuery.data,
-    },
-  });
-
   if (appQuery.isLoading) return <DetailSkeleton />;
   if (appQuery.error || !appQuery.data) {
     return (

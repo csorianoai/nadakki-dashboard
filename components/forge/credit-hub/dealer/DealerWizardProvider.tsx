@@ -27,7 +27,8 @@ import {
   effectiveWizardDocuments,
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import { createDraftApplication, executeMultiLender, getApplication, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { clearSubmitIdempotencyKey, getSubmitIdempotencyKey } from "@/lib/credit-hub/api/submitIdempotency";
+import { createDraftApplication, assertMultiLenderSucceeded, executeMultiLender, getApplication, getDocumentCompleteness, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -42,6 +43,7 @@ import {
 import { toast } from "@/components/forge";
 import { forgeToastLangFromLocale, forgeWizardToasts } from "@/utils/forge-toast-copy";
 import { uploadDocument } from "@/lib/credit-api";
+import { documentsIncompleteMessage, uploadThenDispatch } from "@/lib/credit-hub/dealer/wizard-submit-documents";
 import { calculateEmploymentTenure } from "@/lib/credit/utils/employment-tenure";
 import type { UploadStatus } from "./DocumentUploadZone";
 import { dealerWizardErrorMessage } from "@/lib/credit-hub/dealer/wizard-error";
@@ -57,7 +59,6 @@ import {
 } from "@/lib/credit-hub/dealer/wizard-gates";
 import {
   getWizardSegmentValidation,
-  logPersonalReferencesDebug,
   scrollToFirstWizardError,
   wizardBlockReasonMessage,
   type WizardFieldErrors,
@@ -313,6 +314,23 @@ const DOC_KEY_TO_BACKEND_TYPE: Record<string, string> = {
   personal_references: "OTRO",
   other_documents: "OTRO",
 };
+
+/** Etiquetas de tipos del backend que el asistente no sube por clave propia. */
+const BACKEND_DOC_TYPE_LABELS: Record<string, string> = {
+  CEDULA_FRENTE: "Cédula (frente)",
+  CEDULA_REVERSO: "Cédula (reverso)",
+  COMPROBANTE_DOMICILIO: "Comprobante de domicilio",
+  RECIBO_NOMINA: "Recibo de nómina",
+  SELFIE: "Selfie",
+};
+
+function missingDocumentLabeler(docs: ReturnType<typeof effectiveWizardDocuments>) {
+  // El servidor devuelve tipos de documento del backend (CEDULA_FRENTE, SELFIE…), no claves del asistente.
+  return (code: string) =>
+    docs.find((d) => tenantDocumentKey(d) === code || DOC_KEY_TO_BACKEND_TYPE[tenantDocumentKey(d)] === code)?.label ??
+    BACKEND_DOC_TYPE_LABELS[code] ??
+    code;
+}
 
 export interface PendingFileEntry {
   file: File;
@@ -810,15 +828,6 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [storageKey]);
 
   const attemptAdvance = useCallback(async (): Promise<boolean> => {
-    if (stepIndex === DEALER_WIZARD_STEP_PATHS.length - 1) {
-      logPersonalReferencesDebug(formData.personal_references ?? []);
-      console.info("[wizard-validation] documents step", {
-        document_files_ready: formData.document_files_ready,
-        personal_references: formData.personal_references,
-        canAdvance: segmentCanAdvance(stepIndex, formData, validationConfig, t),
-        validation: validationResult,
-      });
-    }
     if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
       setShowValidationErrors(false);
       try {
@@ -983,81 +992,46 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       });
       const result = { application_id: consentApplicationId };
 
-      if (tenantId && result.application_id) {
-        await executeMultiLender({
-          tenantId,
-          applicationId: result.application_id,
-          application: payload,
-          dryRun: false,
-        });
-      }
+      const appId = result.application_id;
+      const labelForMissing = missingDocumentLabeler(requiredDocumentsList);
+      await uploadThenDispatch({
+        files: pendingFilesRef.current,
+        upload: (docKey, file) => uploadDocument(tenantId, appId, file, DOC_KEY_TO_BACKEND_TYPE[docKey] ?? "OTRO"),
+        onStatus: (docKey, status, errorMessage) =>
+          setPendingFiles((prev) => {
+            const current = prev.get(docKey);
+            if (!current) return prev;
+            const next = new Map(prev);
+            next.set(docKey, { ...current, status, errorMessage });
+            return next;
+          }),
+        getCompleteness: () => getDocumentCompleteness({ tenantId, applicationId: appId }),
+        labelForMissing,
+        dispatch: async () => {
+          const execution = await executeMultiLender({
+            tenantId,
+            applicationId: appId,
+            application: payload,
+            dryRun: false,
+            // Misma clave en cada reintento del borrador; solo se descarta tras un éxito.
+            idempotencyKey: getSubmitIdempotencyKey(tenantId, appId),
+          });
+          // Falla antes de borrar el borrador: HTTP 200 con status "failed" no es éxito.
+          assertMultiLenderSucceeded(execution);
+        },
+      });
 
+      clearSubmitIdempotencyKey(tenantId, appId);
       clearDraftStorage();
       setFormData(initialApplicationFormData);
-
-      // Upload pending document files in background (fire-and-forget)
-      const files = new Map(pendingFilesRef.current);
-      if (files.size > 0 && tenantId && result.application_id) {
-        const appId = result.application_id;
-        const tid = tenantId;
-        // Update statuses to "uploading"
-        setPendingFiles((prev) => {
-          const next = new Map(prev);
-          for (const [k, entry] of next) {
-            next.set(k, { ...entry, status: "uploading" });
-          }
-          return next;
-        });
-        // Upload each file
-        void (async () => {
-          let ok = 0;
-          let fail = 0;
-          const errors: Array<{ key: string; message: string }> = [];
-          for (const [docKey, entry] of files) {
-            const backendType = DOC_KEY_TO_BACKEND_TYPE[docKey] ?? "OTRO";
-            try {
-              await uploadDocument(tid, appId, entry.file, backendType);
-              ok++;
-              setPendingFiles((prev) => {
-                const next = new Map(prev);
-                const current = next.get(docKey);
-                if (current) {
-                  next.set(docKey, { ...current, status: "uploaded" });
-                }
-                return next;
-              });
-            } catch (err) {
-              fail++;
-              const errorMessage = err instanceof Error ? err.message : "Error desconocido al subir";
-              errors.push({ key: docKey, message: errorMessage });
-              setPendingFiles((prev) => {
-                const next = new Map(prev);
-                const current = next.get(docKey);
-                if (current) {
-                  next.set(docKey, { ...current, status: "error", errorMessage });
-                }
-                return next;
-              });
-            }
-          }
-          if (fail > 0) {
-            const firstError = errors[0];
-            toast.error(
-              `${ok} documento(s) subido(s), ${fail} con error. Primer error: ${firstError?.message || "desconocido"}`,
-              { duration: 8000 }
-            );
-          } else if (ok > 0) {
-            toast.success(`${ok} documento(s) subido(s) correctamente`, { duration: 4000 });
-          }
-        })();
-      }
 
       setIsSubmitting(false);
       return result;
     } catch (err) {
       setIsSubmitting(false);
       submitInFlightRef.current = false;
-      const msg = err instanceof Error ? err.message : t.toasts.application_failed;
+      const incomplete = documentsIncompleteMessage(err, missingDocumentLabeler(requiredDocumentsList));
+      const msg = incomplete ?? (err instanceof Error ? err.message : t.toasts.application_failed);
       setSubmitError(msg);
       throw err;
     }

@@ -9,8 +9,6 @@ import {
   UnknownIntentError,
 } from "@/types/spyfu";
 
-const BASE = "http://spyfu.test";
-
 function jsonResponse(body: unknown, status = 200) {
   const text = JSON.stringify(body);
   return Promise.resolve({
@@ -26,8 +24,6 @@ describe("SpyFuClient (fetch-mocked)", () => {
   const mockFetch = jest.fn();
 
   beforeEach(() => {
-    process.env.NEXT_PUBLIC_API_URL = BASE;
-    process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID = "tenant-a";
     client = new SpyFuClient();
     mockFetch.mockReset();
     global.fetch = mockFetch as unknown as typeof fetch;
@@ -46,14 +42,9 @@ describe("SpyFuClient (fetch-mocked)", () => {
     );
     const u = await client.getUsage("tenant-a");
     expect(u.rows_used).toBe(20);
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE}/api/v1/spyfu/usage/tenant-a`,
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          "X-Tenant-ID": "tenant-a",
-        }),
-      })
-    );
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toBe("/api/v1/spyfu/usage/tenant-a");
+    expect(new Headers((init as RequestInit).headers).get("X-Tenant-ID")).toBe("tenant-a");
   });
 
   it("maps HTTP 400 to MissingTenantError", async () => {
@@ -138,7 +129,7 @@ describe("SpyFuClient (fetch-mocked)", () => {
         meta: {},
       })
     );
-    await client.chat("hello", { countryCode: "US" });
+    await client.chat("hello", { countryCode: "US", tenantId: "tenant-a" });
     const [, init] = mockFetch.mock.calls[0];
     const body = JSON.parse((init as RequestInit).body as string);
     expect(body).toMatchObject({

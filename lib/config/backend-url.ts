@@ -32,6 +32,7 @@ export const BACKEND_URL_ENV_VARS = [
   "NEXT_PUBLIC_NADAKKI_API_URL",
   "NEXT_PUBLIC_API_URL",
   "NEXT_PUBLIC_API_BASE_URL",
+  "NEXT_PUBLIC_RENDER_API_URL",
 ] as const;
 
 export class BackendUrlNotConfiguredError extends Error {
@@ -85,6 +86,7 @@ function candidatos(): (string | undefined)[] {
     process.env.NEXT_PUBLIC_NADAKKI_API_URL,
     process.env.NEXT_PUBLIC_API_URL,
     process.env.NEXT_PUBLIC_API_BASE_URL,
+    process.env.NEXT_PUBLIC_RENDER_API_URL,
   ];
 }
 

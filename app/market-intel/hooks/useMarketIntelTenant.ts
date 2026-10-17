@@ -4,11 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 
-const DEV_FALLBACK_TENANT =
-  process.env.NODE_ENV === "development"
-    ? process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || undefined
-    : undefined;
-
 export function useMarketIntelTenant(): {
   effectiveTenantId: string | undefined;
   tenantHydrated: boolean;
@@ -28,7 +23,7 @@ export function useMarketIntelTenant(): {
 
   useEffect(() => {
     if (!tenantHydrated) return;
-    if (tid || DEV_FALLBACK_TENANT) {
+    if (tid) {
       setTimeoutError(null);
       return;
     }
@@ -38,10 +33,7 @@ export function useMarketIntelTenant(): {
     return () => clearTimeout(timer);
   }, [tenantHydrated, tid]);
 
-  const effectiveTenantId = useMemo(() => {
-    if (tid) return tid;
-    return DEV_FALLBACK_TENANT;
-  }, [tid]);
+  const effectiveTenantId = tid || undefined;
 
   const tenantError = !effectiveTenantId && tenantHydrated ? timeoutError : null;
 

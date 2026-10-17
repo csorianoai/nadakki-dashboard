@@ -26,6 +26,7 @@ import { colaPorUrgencia, primerNombre, saludo } from "./mesa";
 import { MetasDelMes } from "./MetasDelMes";
 import { TarjetaCola } from "./TarjetaCola";
 import { useKpisBanco } from "./useKpisBanco";
+import { nombreOIdentificadorOculto } from "../comun/nombres";
 
 /**
  * El backend del banco aun no declara calidad (N6 solo cubre al dealer): una
@@ -186,7 +187,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
                   <tbody>
                     {analytics.top_dealers.slice(0, 5).map((d) => (
                       <tr key={d.dealer} className="border-t border-[var(--dcc-border)]">
-                        <td className="py-2 pr-2">{d.dealer}</td>
+                        <td className="py-2 pr-2">{nombreOIdentificadorOculto(d.dealer)}</td>
                         <td className="py-2 text-right tabular-nums">{formatEntero(d.volume, formato)}</td>
                         <td className="py-2 text-right tabular-nums">{porcentaje(d.approval_rate, formato)}</td>
                       </tr>

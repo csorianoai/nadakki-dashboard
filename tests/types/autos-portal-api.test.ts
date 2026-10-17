@@ -169,6 +169,7 @@ function dashboardCalledPaths(): string[] {
     "lib/legal/hearings/hearings-api.ts",
     "lib/legal/cases/legal-cases-api.ts",
   ].map((rel) => fs.readFileSync(path.join(ROOT, rel), "utf8"));
+  const spyfuSource = fs.readFileSync(path.join(ROOT, "lib/api/spyfu-client.ts"), "utf8");
   const contableSource = fs.readFileSync(path.join(ROOT, "app/hooks/contable.ts"), "utf8");
 
   return unique([
@@ -178,6 +179,7 @@ function dashboardCalledPaths(): string[] {
       ...extractQuotedApiPaths(src),
       ...extractBacktickApiPaths(src),
     ]),
+    ...extractBacktickApiPaths(spyfuSource),
     ...extractContableSuffixes(contableSource),
     ...extractQuotedApiPaths(contableSource),
   ]).filter(isCallableRoute);

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RemoteConsentSelector } from "@/components/credit-hub/dealer/wizard/consent/RemoteConsentSelector";
 import { CREDIT_HUB_ES_DO } from "@/lib/credit-hub/i18n/locales/es-DO/credit-hub";
@@ -13,15 +13,18 @@ jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
 
 jest.mock("@/lib/credit-hub/hooks/useConsentApi", () => ({
   useConsentApi: () => ({
-    initiate: jest.fn().mockResolvedValue({ token: "mock-token", status: "SENT" }),
+    initiate: (...args: unknown[]) => mockInitiate(...args),
     accept: jest.fn().mockResolvedValue({ accepted_at: "2026-06-19T12:00:00Z", audit_hash: "hash" }),
     getStatus: jest.fn().mockResolvedValue({ status: "SENT", method: "WHATSAPP", accepted_at: null }),
   }),
 }));
 
+const mockInitiate = jest.fn();
 const noop = () => {};
 
 describe("RemoteConsentSelector", () => {
+  beforeEach(() => mockInitiate.mockReset().mockResolvedValue({ token: "mock-token", status: "SENT" }));
+
   it("renders only enabled methods", () => {
     render(
       <RemoteConsentSelector
@@ -77,7 +80,33 @@ describe("RemoteConsentSelector", () => {
         onFullNameChange={noop}
       />
     );
-    await user.click(screen.getByTestId("method-whatsapp"));
-    expect(screen.getByTestId("whatsapp-method")).toBeInTheDocument();
+    await user.click(screen.getByTestId("method-email"));
+    expect(screen.getByTestId("email-method")).toBeInTheDocument();
+  });
+
+  it("WhatsApp, SMS_OTP y Selfie están deshabilitados con su razón y no se pueden iniciar", async () => {
+    const user = userEvent.setup();
+    render(
+      <RemoteConsentSelector
+        applicationId="app-1"
+        applicationReady
+        enabledMethods={["WHATSAPP", "EMAIL", "SMS_OTP", "SELFIE"]}
+        dealerOtpCode=""
+        onDealerOtpCodeChange={noop}
+        onSmsOtpSent={noop}
+        consentsAccepted={["terms_accepted"]}
+        fullName="Test User"
+        onFullNameChange={noop}
+      />
+    );
+    for (const k of ["whatsapp", "sms_otp", "selfie"]) {
+      expect(within(screen.getByTestId(`method-${k}`)).getByRole("radio")).toBeDisabled();
+      expect(screen.getByTestId(`method-${k}-unavailable`)).toHaveTextContent(/canal no disponible/i);
+      await user.click(screen.getByTestId(`method-${k}`));
+    }
+    expect(screen.queryByTestId("whatsapp-method")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sms-otp-method")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("selfie-method")).not.toBeInTheDocument();
+    expect(mockInitiate).not.toHaveBeenCalled();
   });
 });

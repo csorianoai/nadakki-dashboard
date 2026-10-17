@@ -473,16 +473,3 @@ export function scrollToFirstWizardError(errors: WizardFieldErrors): void {
     }
   }
 }
-
-/** Debug helper: log reference validation state on documents step. */
-export function logPersonalReferencesDebug(refs: PersonalReferenceFormRow[]): void {
-  console.info("[wizard-validation] personal_references", refs.map((ref, index) => ({
-    index: index + 1,
-    nombre_completo: ref.nombre_completo,
-    direccion: ref.direccion,
-    telefono: ref.telefono,
-    digitCount: personalReferencePhoneDigitCount(ref.telefono),
-    complete: isPersonalReferenceComplete(ref),
-    errors: personalReferenceFieldErrors(ref, index),
-  })));
-}

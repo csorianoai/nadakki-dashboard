@@ -1,5 +1,6 @@
 "use client";
 
+import { nombreOIdentificadorOculto } from "../comun/nombres";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Download, Inbox, Search } from "lucide-react";
@@ -180,7 +181,7 @@ export function BandejaV2({ marca, q, page, onParams, hrefSolicitud, analistaId 
                         </Link>
                         <p className={`text-xs ${DCC_CLASSES.subtle}`}>{i.vehicle_label ?? "Vehículo sin datos"}</p>
                       </td>
-                      <td className="py-2.5 pr-3">{i.dealer_name ?? "—"}</td>
+                      <td className="py-2.5 pr-3">{nombreOIdentificadorOculto(i.dealer_name, i.dealer_id)}</td>
                       <td className="py-2.5 pr-3 text-right tabular-nums">{formatMoneda(i.requested_amount, formato) ?? "—"}</td>
                       <td className="py-2.5 pr-3 text-right tabular-nums">
                         {formatEntero(i.score, formato)}

@@ -17,6 +17,13 @@ export interface ConsentStatusResponse {
   accepted_at: string | null;
 }
 
+export interface PresentConsentTextResponse {
+  consent_text: string | null;
+  consent_text_version: string | null;
+  /** true cuando el backend no entrega el texto legal (no se puede firmar). */
+  unavailable?: boolean;
+}
+
 export interface ConsentAcceptPayload {
   otp_code?: string;
   consents_accepted: string[];
@@ -166,6 +173,15 @@ export class ConsentApiClient {
       body: JSON.stringify(payload),
       includeTenant: true,
     });
+  }
+
+  /**
+   * Texto legal del consentimiento presencial. El backend no expone ninguna ruta que lo entregue
+   * (solo GET /{token}/public en flujos remotos), así que no se hace petición: falla cerrado con
+   * «texto no disponible» y el formulario presencial no permite firmar.
+   */
+  async getPresentText(_applicationId: string): Promise<PresentConsentTextResponse> {
+    return { consent_text: null, consent_text_version: null, unavailable: true };
   }
 
   async getStatus(token: string): Promise<ConsentStatusResponse> {

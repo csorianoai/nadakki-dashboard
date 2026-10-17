@@ -7,6 +7,7 @@ import { ForgeCard } from "@/components/credit-hub/primitives/ForgeCard";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import { BankPriorityBadge } from "./BankPriorityBadge";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
+import { nombreOIdentificadorOculto } from "@/components/credit-hub/bank-v2/comun/nombres";
 
 function formatDop(value: number) {
   return new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 }).format(value || 0);
@@ -84,7 +85,7 @@ export function BankApplicationCard({
               ) : null}
             </div>
             <p className="mt-1 text-sm text-forge-text-muted">
-              {application.vehicle_label || "Producto no especificado"} · {application.dealer_name || "Dealer no especificado"}
+              {application.vehicle_label || "Producto no especificado"} · {application.dealer_name ? nombreOIdentificadorOculto(application.dealer_name) : "Dealer no especificado"}
             </p>
             <p className="mt-1 font-mono text-xs text-forge-text-muted">{application.application_id}</p>
           </div>

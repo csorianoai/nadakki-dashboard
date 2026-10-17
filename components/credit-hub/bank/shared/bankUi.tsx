@@ -12,6 +12,7 @@ import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
 import type { BankQueueSortKey } from "@/lib/credit-hub/types/bank-views";
 import { chRelTime, PRIORITY_STYLE, STATE_LABEL } from "@/lib/credit-hub/bank/bankFormat";
 import { mapBackendRiskLevel } from "@/lib/credit-hub/types/bank-views";
+import { nombreOpcional } from "@/components/credit-hub/bank-v2/comun/nombres";
 import { formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
 
 export function SectionHeader({
@@ -355,7 +356,7 @@ export function QueueTable({
                   {a.application_id}
                 </div>
               </td>
-              <td style={{ color: "var(--ch-text-2)" }}>{a.dealer_name ?? "—"}</td>
+              <td style={{ color: "var(--ch-text-2)" }}>{nombreOpcional(a.dealer_name) ?? "—"}</td>
               <td style={{ color: "var(--ch-text-2)" }}>{a.vehicle_label ?? "—"}</td>
               <td className="ch-num" data-field="amount">{chMoney(a.requested_amount)}</td>
               <td className="ch-num">
