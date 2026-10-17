@@ -6,6 +6,7 @@ module.exports = {
   roots: ["<rootDir>"],
   testMatch: [
     "**/tests/**/*.test.[jt]s?(x)",
+    "**/scripts/ci/**/*.test.[jt]s?(x)",
     "**/__tests__/legal/**/*.test.[jt]s?(x)",
     "**/__tests__/app/**/*.test.[jt]s?(x)",
   ],

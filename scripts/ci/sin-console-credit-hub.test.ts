@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-const SCRIPT = resolve(__dirname, "../../scripts/ci/sin-console-credit-hub.mjs");
+const SCRIPT = resolve(__dirname, "sin-console-credit-hub.mjs");
 const run = (cwd: string) => spawnSync(process.execPath, [SCRIPT, cwd], { encoding: "utf8" });
 
 describe("guard sin-console-credit-hub", () => {
