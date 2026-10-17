@@ -302,9 +302,8 @@ async function withConsentAuditMetadata(form: ApplicationFormData): Promise<Appl
   };
 }
 
-/** Map wizard document keys to backend document_type enum values. */
 const DRAFT_EXPIRED_NOTICE = "El borrador de esta solicitud venció y fue eliminado. Empieza el formulario de nuevo.";
-
+/** Map wizard document keys to backend document_type enum values. */
 const DOC_KEY_TO_BACKEND_TYPE: Record<string, string> = {
   id_front: "CEDULA_FRENTE",
   id_back: "CEDULA_REVERSO",
@@ -548,9 +547,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       })
       .catch((error: unknown) => {
         const status = (error as { status?: number } | null)?.status;
-        if (status === 410) {
-          expireDraft();
-        } else if (status === 404 && applicationIdStorageKey) {
+        if (status === 410) expireDraft();
+        else if (status === 404 && applicationIdStorageKey) {
           // 404 is indistinguishable from "never saved": keep whatever the server hydration or the user already put in the form.
           clearWizardDraftPointer(applicationIdStorageKey);
         }
@@ -972,8 +970,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     const id = window.setInterval(() => {
       const applicationId = autosaveApplicationIdRef.current;
       if (!applicationId) return;
-      if (JSON.stringify(formDataRef.current) === lastSavedDraftRef.current) return;
-      if (JSON.stringify(formDataRef.current) === JSON.stringify(initialApplicationFormData)) return;
+      const current = JSON.stringify(formDataRef.current);
+      if (current === lastSavedDraftRef.current || current === JSON.stringify(initialApplicationFormData)) return;
       void persistDraft(applicationId).then((ok) => {
         if (ok) {
           if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY)) {
