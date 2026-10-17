@@ -151,12 +151,12 @@ describe("el estado real del asset, para que no se declare una ruta muerta", () 
     const bytes = fs.readFileSync(path.join(process.cwd(), "public", bloque.plantilla.ruta));
     // Un .xlsx es un zip: sin la cabecera PK el navegador descargaria basura.
     expect(Array.from(bytes.subarray(0, 4))).toEqual([0x50, 0x4b, 0x03, 0x04]);
-    // Mismo blob que nadakki-ai-suite docs/autos_portal/plantillas/ (suite#1550).
+    // Blob de la plantilla corregida (leyenda salmón, 2026-10-16); cambia si se republica la plantilla.
     const blob = crypto
       .createHash("sha1")
       .update(`blob ${bytes.length}\0`)
       .update(bytes)
       .digest("hex");
-    expect(blob).toBe("b67f172f1e26adfe41694fb9ed09f6cee5744226");
+    expect(blob).toBe("0fd6b4a9c4820dc745c67a2e799cba30b961d4bb");
   });
 });

@@ -44,7 +44,8 @@ describe("bankClient.ts — claim-before-decide pattern (Audit #4.6)", () => {
 
   test("sends analyst_id in claim body", () => {
     expect(src).toContain("analyst_id: analystId");
-    expect(src).toContain("JSON.stringify({ analyst_id: analystId })");
+    // lender_code viaja junto al analyst_id solo cuando el analista lo indica.
+    expect(src).toContain("JSON.stringify({\n      analyst_id: analystId,");
   });
 
   test("reads analyst_id from params.body.analyst_id", () => {
@@ -89,9 +90,11 @@ describe("bankClient.ts — claim-before-decide pattern (Audit #4.6)", () => {
     }
   });
 
-  test("includes runtime debug logs", () => {
-    expect(src).toContain("[claim-before-decide] attempting claim");
-    expect(src).toContain("[claim-before-decide] claim succeeded");
+  test("no deja console.* en el flujo de claim (guard sin-console-credit-hub)", () => {
+    const fnStart = src.indexOf("export async function recordDecision");
+    const fnEnd = src.indexOf("\nexport ", fnStart + 1);
+    const fnBody = src.slice(fnStart, fnEnd > -1 ? fnEnd : undefined);
+    expect(fnBody).not.toMatch(/console\./);
   });
 
   test("uses same actorRole for both claim and decide", () => {

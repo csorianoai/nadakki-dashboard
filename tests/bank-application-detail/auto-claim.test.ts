@@ -27,7 +27,7 @@ describe("claimBankApplication — sends analyst_id in body (Audit #4.4)", () =>
   });
 
   test("sends analyst_id in JSON body", () => {
-    expect(src).toContain("JSON.stringify({ analyst_id: analystId })");
+    expect(src).toContain("JSON.stringify({\n      analyst_id: analystId,");
   });
 });
 
