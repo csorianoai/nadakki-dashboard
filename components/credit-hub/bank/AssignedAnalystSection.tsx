@@ -11,6 +11,8 @@ import {
   postReassignApplication,
 } from "@/lib/credit-hub/api/bankExperienceClient";
 import { isBankSupervisorRole } from "@/lib/credit-hub/bank/bankExperienceHelpers";
+import { getAssignableAnalysts } from "@/lib/credit-hub/api/asignacionClient";
+import { nombreOIdentificadorOculto, nombreOpcional } from "@/components/credit-hub/bank-v2/comun/nombres";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import type { BankApplicationClaim } from "@/lib/credit-hub/types/bankDecision";
 
@@ -46,13 +48,25 @@ export function AssignedAnalystSection({
     retry: false,
   });
 
+  const analistasQ = useQuery({
+    queryKey: ["credit-hub", "bank", "assignable-analysts", apiTenantId ?? ""],
+    queryFn: () => getAssignableAnalysts({ tenantId: apiTenantId! }),
+    enabled: !!apiTenantId && isBankSupervisorRole(roleKey) && !!claim?.analyst_id && !nombreOpcional(claim.analyst_name),
+    retry: false,
+  });
+
   if (q.error instanceof CHApiError && isBankExperienceEndpointUnavailable(q.error)) return null;
 
   const current = q.data?.current;
   const claimCurrent = claim?.analyst_id
     ? {
         analyst_id: claim.analyst_id,
-        analyst_name: claim.analyst_name ?? claim.analyst_id,
+        analyst_name: nombreOIdentificadorOculto(
+          nombreOpcional(claim.analyst_name) ??
+            (q.data?.current?.analyst_id === claim.analyst_id ? nombreOpcional(q.data.current.analyst_name) : null) ??
+            nombreOpcional(analistasQ.data?.analysts?.find((a) => a.user_id === claim.analyst_id)?.email),
+          claim.analyst_id,
+        ),
         assigned_at: claim.claimed_at ?? undefined,
       }
     : undefined;
@@ -93,7 +107,7 @@ export function AssignedAnalystSection({
         <UserCog className="h-4 w-4 text-forgeGray-500" aria-hidden />
         <div>
           <div className="ch-eyebrow">Analista asignado</div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }} data-testid="assigned-analyst-name">
+          <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }} data-testid="assigned-analyst-name" data-analyst-id={claimCurrent?.analyst_id} title={claimCurrent?.analyst_id}>
             {q.isLoading && !displayedCurrent ? "…" : displayedCurrent?.analyst_name ?? "Sin asignar"}
           </div>
         </div>
@@ -126,7 +140,7 @@ export function AssignedAnalystSection({
         <div className="w-full border-t border-forgeGray-100 pt-3" data-testid="assignment-history">
           {history.map((h, i) => (
             <div key={`${h.assigned_at}-${i}`} className="mb-2 text-sm last:mb-0">
-              <span style={{ fontWeight: 600 }}>{h.analyst_name}</span>
+              <span style={{ fontWeight: 600 }}>{nombreOIdentificadorOculto(h.analyst_name)}</span>
               <span className="text-forgeGray-500"> · {formatDate(h.assigned_at)}</span>
               {h.notes ? <p className="mt-0.5 text-forgeGray-600">{h.notes}</p> : null}
             </div>

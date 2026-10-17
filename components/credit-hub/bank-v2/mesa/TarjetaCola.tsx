@@ -1,5 +1,6 @@
 "use client";
 
+import { nombreOpcional } from "../comun/nombres";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { DCC_CLASSES } from "@/components/dcc/clases";
@@ -54,7 +55,7 @@ export function TarjetaCola({ item, formato, href }: { item: BankQueueItem; form
         <div className="min-w-[180px] flex-1">
           <p className="truncate font-semibold">{item.applicant_name ?? "Solicitante sin nombre"}</p>
           <p className={`truncate text-xs ${DCC_CLASSES.muted}`}>
-            {[item.vehicle_label, item.dealer_name].filter(Boolean).join(" · ") || "Vehículo y dealer sin datos"}
+            {[item.vehicle_label, nombreOpcional(item.dealer_name)].filter(Boolean).join(" · ") || "Vehículo y dealer sin datos"}
           </p>
         </div>
         <div className="min-w-[132px]">
