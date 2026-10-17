@@ -14,7 +14,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import {
   buildWizardDraftStorageKey,
+  clearWizardDraftPointer,
   purgeLegacyGlobalWizardDraftKeys,
+  readWizardDraftPointer,
+  writeWizardDraftPointer,
   WIZARD_AUTOSAVE_TOAST_SESSION_KEY,
 } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 import {
@@ -27,7 +30,7 @@ import {
   effectiveWizardDocuments,
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
-import { createDraftApplication, assertMultiLenderSucceeded, executeMultiLender, getApplication, getDocumentCompleteness, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { createDraftApplication, assertMultiLenderSucceeded, deleteApplicationDraft, executeMultiLender, getApplication, getApplicationDraft, saveApplicationDraft, getDocumentCompleteness, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -300,6 +303,8 @@ async function withConsentAuditMetadata(form: ApplicationFormData): Promise<Appl
 }
 
 /** Map wizard document keys to backend document_type enum values. */
+const DRAFT_EXPIRED_NOTICE = "El borrador de esta solicitud venció y fue eliminado. Empieza el formulario de nuevo.";
+
 const DOC_KEY_TO_BACKEND_TYPE: Record<string, string> = {
   id_front: "CEDULA_FRENTE",
   id_back: "CEDULA_REVERSO",
@@ -436,14 +441,18 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   formDataRef.current = formData;
   const loadedStorageKeyRef = useRef<string | null>(null);
   const loadedApplicationIdKeyRef = useRef<string | null>(null);
+  const loadedDraftApplicationIdRef = useRef<string | null>(null);
   const hydratedApplicationIdRef = useRef<string | null>(null);
 
-  // --- Pending document files (not serializable to localStorage) ---
+  // --- Pending document files (not serializable: kept in memory only, never persisted) ---
   const [pendingFiles, setPendingFiles] = useState<Map<string, PendingFileEntry>>(new Map());
   const pendingFilesRef = useRef(pendingFiles);
   pendingFilesRef.current = pendingFiles;
   const presetAppliedRef = useRef(false);
   const draftCreationRef = useRef(false);
+  const createdApplicationIdRef = useRef<string | null>(null);
+  const lastSavedDraftRef = useRef<string | null>(null);
+  const draftSaveChainRef = useRef<Promise<unknown>>(Promise.resolve());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlightRef = useRef(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -456,13 +465,13 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     if (loadedApplicationIdKeyRef.current === applicationIdStorageKey) return;
     loadedApplicationIdKeyRef.current = applicationIdStorageKey;
     try {
-      const savedApplicationId = localStorage.getItem(applicationIdStorageKey)?.trim();
+      const savedApplicationId = readWizardDraftPointer(applicationIdStorageKey)?.applicationId.trim();
       if (!savedApplicationId) return;
       const params = new URLSearchParams(searchParams.toString());
       params.set("application_id", savedApplicationId);
       router.replace(`${pathname}?${params.toString()}`);
     } catch {
-      /* localStorage can be unavailable in privacy-restricted browsers */
+      /* sessionStorage can be unavailable in privacy-restricted browsers */
     }
   }, [applicationIdStorageKey, consentApplicationId, pathname, router, searchParams, startsNewApplication]);
 
@@ -479,52 +488,69 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     purgeLegacyGlobalWizardDraftKeys();
   }, []);
 
+  // Fresh application: forget the pointer (and delete the server draft it pointed to) and start empty.
   useEffect(() => {
-    if (!storageKey) return;
+    if (!storageKey || !startsNewApplication) return;
     if (loadedStorageKeyRef.current === storageKey) return;
     loadedStorageKeyRef.current = storageKey;
+    const stale = applicationIdStorageKey ? readWizardDraftPointer(applicationIdStorageKey) : null;
+    if (applicationIdStorageKey) clearWizardDraftPointer(applicationIdStorageKey);
     try {
-      if (startsNewApplication) {
-        localStorage.removeItem(storageKey);
-        if (applicationIdStorageKey) localStorage.removeItem(applicationIdStorageKey);
-        sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
-        setFormData(initialApplicationFormData);
-        return;
-      }
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) {
-        setFormData(initialApplicationFormData);
-        return;
-      }
-      const parsed: unknown = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
-      const partial = parsed as Partial<ApplicationFormData>;
-      
-      setFormData((prev) => {
-        // Recalculate requested_amount if missing (repairs old drafts from before PR #387)
-        // This handles drafts saved with empty requested_amount when vehicle_price/down_payment exist
-        let loadedData = {
-          ...prev,
-          ...partial,
-          personal_references:
-            Array.isArray(partial.personal_references) && partial.personal_references.length > 0
-              ? partial.personal_references
-              : prev.personal_references,
-          document_files_ready: partial.document_files_ready ?? prev.document_files_ready ?? {},
-        };
-        
-        const price = Number(loadedData.vehicle_price) || 0;
-        const down = Number(loadedData.down_payment) || 0;
-        if (price > 0 && (!loadedData.requested_amount || loadedData.requested_amount === "")) {
-          loadedData.requested_amount = String(Math.max(0, price - down));
-        }
-        
-        return loadedData;
-      });
+      sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
     } catch {
       /* ignore */
     }
+    if (stale) void deleteApplicationDraft(stale).catch(() => undefined);
+    lastSavedDraftRef.current = null;
+    setFormData(initialApplicationFormData);
   }, [applicationIdStorageKey, startsNewApplication, storageKey]);
+
+  // Reopened application: the draft comes from the server (DB-CODEX-12B); nothing is read from browser storage.
+  useEffect(() => {
+    if (!tenantId || !consentApplicationId || startsNewApplication) return;
+    if (createdApplicationIdRef.current === consentApplicationId) return;
+    if (loadedDraftApplicationIdRef.current === consentApplicationId) return;
+    loadedDraftApplicationIdRef.current = consentApplicationId;
+    const expireDraft = () => {
+      if (applicationIdStorageKey) clearWizardDraftPointer(applicationIdStorageKey);
+      lastSavedDraftRef.current = null;
+      setFormData(initialApplicationFormData);
+      toast.info?.(DRAFT_EXPIRED_NOTICE, { id: "forge-dealer-draft-expired", duration: 8000 });
+    };
+    void getApplicationDraft({ tenantId, applicationId: consentApplicationId })
+      .then((draft) => {
+        if (!draft) return;
+        const expiresMs = draft.expiresAt ? Date.parse(draft.expiresAt) : NaN;
+        if (Number.isFinite(expiresMs) && expiresMs <= Date.now()) {
+          expireDraft();
+          return;
+        }
+        lastSavedDraftRef.current = JSON.stringify(draft.formData);
+        const partial = draft.formData as Partial<ApplicationFormData>;
+        setFormData((prev) => {
+          // Recalculate requested_amount if missing (repairs old drafts from before PR #387)
+          const loadedData = {
+            ...prev,
+            ...partial,
+            personal_references:
+              Array.isArray(partial.personal_references) && partial.personal_references.length > 0
+                ? partial.personal_references
+                : prev.personal_references,
+            document_files_ready: partial.document_files_ready ?? prev.document_files_ready ?? {},
+          };
+          const price = Number(loadedData.vehicle_price) || 0;
+          const down = Number(loadedData.down_payment) || 0;
+          if (price > 0 && (!loadedData.requested_amount || loadedData.requested_amount === "")) {
+            loadedData.requested_amount = String(Math.max(0, price - down));
+          }
+          return loadedData;
+        });
+      })
+      .catch((error: unknown) => {
+        const status = (error as { status?: number } | null)?.status;
+        if (status === 404 || status === 410) expireDraft();
+      });
+  }, [applicationIdStorageKey, consentApplicationId, startsNewApplication, tenantId]);
 
   useEffect(() => {
     if (!tenantId || !consentApplicationId || hydratedApplicationIdRef.current === consentApplicationId) return;
@@ -782,13 +808,9 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   );
 
   const persistApplicationId = useCallback((applicationId: string) => {
-    if (!applicationIdStorageKey) return;
-    try {
-      localStorage.setItem(applicationIdStorageKey, applicationId);
-    } catch {
-      /* the URL remains the source of truth for the current session */
-    }
-  }, [applicationIdStorageKey]);
+    if (!applicationIdStorageKey || !tenantId) return;
+    writeWizardDraftPointer(applicationIdStorageKey, { tenantId, applicationId });
+  }, [applicationIdStorageKey, tenantId]);
 
   const ensureDraftApplication = useCallback(async (): Promise<string> => {
     if (consentApplicationId) return consentApplicationId;
@@ -799,6 +821,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     draftCreationRef.current = true;
     try {
       const draft = await createDraftApplication({ tenantId });
+      createdApplicationIdRef.current = draft.application_id;
       persistApplicationId(draft.application_id);
       const params = new URLSearchParams(searchParams.toString());
       params.set("application_id", draft.application_id);
@@ -816,15 +839,57 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     void ensureDraftApplication().catch((error) => setSubmitError(dealerWizardErrorMessage(error)));
   }, [consentApplicationId, ensureDraftApplication, formData.consent_presence, stepIndex]);
 
+  /** Server draft write, serialized so an older snapshot can never land after a newer one. Resolves false on failure. */
+  const persistDraft = useCallback(
+    (applicationId: string): Promise<boolean> => {
+      if (!tenantId) return Promise.resolve(false);
+      const snapshot = formDataRef.current as unknown as Record<string, unknown>;
+      const serialized = JSON.stringify(snapshot);
+      const run = draftSaveChainRef.current.then(async () => {
+        try {
+          await saveApplicationDraft({ tenantId, applicationId, formData: snapshot });
+          lastSavedDraftRef.current = serialized;
+          return true;
+        } catch {
+          return false;
+        }
+      });
+      draftSaveChainRef.current = run;
+      return run;
+    },
+    [tenantId],
+  );
+
+  const notifyDraftSaveFailed = useCallback(
+    (retry: () => void) => {
+      const copy = forgeWizardToasts(forgeToastLangFromLocale(tenantConfig.locale));
+      toast.warning(copy.draftSaveFailed, {
+        id: "forge-dealer-autosave-error",
+        duration: 60_000,
+        action: { label: copy.retry, onClick: retry },
+      });
+    },
+    [tenantConfig.locale],
+  );
+
+  /**
+   * Saves the form to the server draft (never to browser storage). Returns true when the write was dispatched;
+   * a later failure is reported with a retry toast. Without an application yet, the draft application is created first.
+   */
   const saveDraftToStorage = useCallback((): boolean => {
-    if (!storageKey) return false;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(formDataRef.current));
-      return true;
-    } catch {
-      return false;
-    }
-  }, [storageKey]);
+    if (!tenantId || !storageKey) return false;
+    const run = async (): Promise<void> => {
+      try {
+        const applicationId = await ensureDraftApplication();
+        if (await persistDraft(applicationId)) return;
+      } catch {
+        /* reported below */
+      }
+      notifyDraftSaveFailed(() => void run());
+    };
+    void run();
+    return true;
+  }, [ensureDraftApplication, notifyDraftSaveFailed, persistDraft, storageKey, tenantId]);
 
   const attemptAdvance = useCallback(async (): Promise<boolean> => {
     if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
@@ -858,7 +923,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
             actorRole: "dealer",
           });
         }
-        saveDraftToStorage();
+        void persistDraft(applicationId);
         const next = Math.min(stepIndex + 1, DEALER_WIZARD_STEP_PATHS.length - 1);
         router.push(dealerWizardStepHref(dealerWizardStepSlugFromIndex(next), applicationId));
         return true;
@@ -870,7 +935,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     setShowValidationErrors(true);
     requestAnimationFrame(() => scrollToFirstWizardError(validationResult.errors));
     return false;
-  }, [consentApplicationId, defaultDocType, ensureDraftApplication, formData, requiredDocumentsList, router, saveDraftToStorage, stepIndex, tenantId, validationConfig, t, validationResult]);
+  }, [consentApplicationId, defaultDocType, ensureDraftApplication, formData, requiredDocumentsList, router, persistDraft, stepIndex, tenantId, validationConfig, t, validationResult]);
 
   const goNext = useCallback(async () => {
     return attemptAdvance();
@@ -882,59 +947,45 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [consentApplicationId, router, stepIndex]);
 
   const clearDraftStorage = useCallback(() => {
-    if (!storageKey) {
-      purgeLegacyGlobalWizardDraftKeys();
-      return;
-    }
+    if (applicationIdStorageKey) clearWizardDraftPointer(applicationIdStorageKey);
     try {
-      localStorage.removeItem(storageKey);
-      if (applicationIdStorageKey) localStorage.removeItem(applicationIdStorageKey);
       sessionStorage.removeItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY);
     } catch {
       /* ignore */
     }
+    lastSavedDraftRef.current = null;
     purgeLegacyGlobalWizardDraftKeys();
-  }, [applicationIdStorageKey, storageKey]);
+    // Submitted: the personal data of the server draft is no longer needed (best effort; the server TTL covers a failure).
+    if (tenantId && consentApplicationId) void deleteApplicationDraft({ tenantId, applicationId: consentApplicationId }).catch(() => undefined);
+  }, [applicationIdStorageKey, consentApplicationId, tenantId]);
 
+  // Autosave: only once the application exists (never creates one on a timer) and only when the form changed.
+  const autosaveApplicationIdRef = useRef(consentApplicationId);
+  autosaveApplicationIdRef.current = consentApplicationId;
   useEffect(() => {
-    if (!storageKey) return;
+    if (!storageKey || !tenantId) return;
     const id = window.setInterval(() => {
-      let ok = false;
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(formDataRef.current));
-        ok = true;
-      } catch {
-        ok = false;
-      }
-      const lang = forgeToastLangFromLocale(tenantConfig.locale);
-      const copy = forgeWizardToasts(lang);
-      if (ok) {
-        if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY)) {
-          sessionStorage.setItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY, "1");
-          toast.info(copy.draftSaved, {
-            duration: 2000,
-            className:
-              "border-forgeGray-100/80 bg-forgeSurface-sunken/95 text-forgeGray-600 shadow-forge-sm opacity-95 saturate-75",
-          });
+      const applicationId = autosaveApplicationIdRef.current;
+      if (!applicationId) return;
+      if (JSON.stringify(formDataRef.current) === lastSavedDraftRef.current) return;
+      if (JSON.stringify(formDataRef.current) === JSON.stringify(initialApplicationFormData)) return;
+      void persistDraft(applicationId).then((ok) => {
+        if (ok) {
+          if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY)) {
+            sessionStorage.setItem(WIZARD_AUTOSAVE_TOAST_SESSION_KEY, "1");
+            toast.info(forgeWizardToasts(forgeToastLangFromLocale(tenantConfig.locale)).draftSaved, {
+              duration: 2000,
+              className:
+                "border-forgeGray-100/80 bg-forgeSurface-sunken/95 text-forgeGray-600 shadow-forge-sm opacity-95 saturate-75",
+            });
+          }
+        } else {
+          notifyDraftSaveFailed(() => void persistDraft(applicationId));
         }
-      } else {
-        toast.warning(copy.draftSaveFailed, {
-          id: "forge-dealer-autosave-error",
-          duration: 60_000,
-          action: {
-            label: copy.retry,
-            onClick: () => {
-              const saved = saveDraftToStorage();
-              if (saved) {
-                toast.success(copy.draftSaved, { duration: 2000 });
-              }
-            },
-          },
-        });
-      }
+      });
     }, 10_000);
     return () => window.clearInterval(id);
-  }, [tenantConfig.locale, saveDraftToStorage, storageKey]);
+  }, [notifyDraftSaveFailed, persistDraft, storageKey, tenantConfig.locale, tenantId]);
 
   const submitApplication = useCallback(async () => {
     if (submitInFlightRef.current) throw new Error("La solicitud ya se está enviando");
