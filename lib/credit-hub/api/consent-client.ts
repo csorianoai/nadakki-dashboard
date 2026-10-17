@@ -17,6 +17,11 @@ export interface ConsentStatusResponse {
   accepted_at: string | null;
 }
 
+export interface PresentConsentTextResponse {
+  consent_text: string | null;
+  consent_text_version: string | null;
+}
+
 export interface ConsentAcceptPayload {
   otp_code?: string;
   consents_accepted: string[];
@@ -164,6 +169,14 @@ export class ConsentApiClient {
     return this.fetchJson<PresentConsentAcceptResponse>(`/${encodeURIComponent(applicationId)}/present/accept`, {
       method: "POST",
       body: JSON.stringify(payload),
+      includeTenant: true,
+    });
+  }
+
+  /** Texto oficial del consentimiento presencial, tal cual lo emite el backend (sin transformar). */
+  async getPresentText(applicationId: string): Promise<PresentConsentTextResponse> {
+    return this.fetchJson<PresentConsentTextResponse>(`/${encodeURIComponent(applicationId)}/present/text`, {
+      method: "GET",
       includeTenant: true,
     });
   }
