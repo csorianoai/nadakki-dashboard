@@ -76,6 +76,12 @@ describe("DealerApplicationDetailPage", () => {
     expect(push).toHaveBeenCalledWith("/autos/dealer/credito/solicitudes");
   });
 
+  test("does not expose a dealer-side AI processing action (el análisis vive en el banco)", () => {
+    renderDetail();
+    expect(screen.queryByRole("button", { name: /Procesar con inteligencia artificial/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Procesar/ })).not.toBeInTheDocument();
+  });
+
   test("renders backend events in timeline", () => {
     renderDetail({}, [{ id: "evt-1", title: "Procesada con IA", description: "Puntaje calculado", created_at: new Date().toISOString() }]);
     expect(screen.getByText("Procesada con IA")).toBeInTheDocument();
