@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { CaseList } from "@/components/legal/cases/CaseList";
-import { LegalErrorState } from "@/components/legal/LegalErrorState";
 import { useLegalCases } from "@/hooks/legal/useLegalCases";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
@@ -46,11 +45,7 @@ export default function LegalCasesListPage() {
           {m.list.create_button}
         </Link>
       </header>
-      {isError ? (
-        <LegalErrorState message={m.list.error} onRetry={() => void refetch()} />
-      ) : (
-        <CaseList cases={data?.cases ?? []} loading={isLoading} error={null} />
-      )}
+      <CaseList cases={data?.cases ?? []} loading={isLoading} error={isError} onRetry={() => void refetch()} />
     </main>
   );
 }
