@@ -12,7 +12,7 @@ import {
   useDealerWizard,
   type DealerWizardContextValue,
 } from "@/components/forge/credit-hub/dealer/DealerWizardProvider";
-import { CreditCoreApiError, getApplicationDraft, saveApplicationDraft } from "@/lib/credit-hub/api/creditCoreClient";
+import { CreditCoreApiError, getApplication, getApplicationDraft, saveApplicationDraft } from "@/lib/credit-hub/api/creditCoreClient";
 import { buildWizardDraftPointerKey, readWizardDraftPointer } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 
 const APP_ID = "app-draft-0012";
@@ -167,5 +167,23 @@ describe("borrador del asistente en el servidor", () => {
     await mount();
     expect(ctx.formData.applicant_identification).toBe("");
     expect(mockToastInfo).toHaveBeenCalledWith(expect.stringMatching(/venci/i), expect.anything());
+  });
+  test("(c) 404 del borrador tras hidratar la solicitud → se conservan los datos hidratados, sin aviso", async () => {
+    sessionStorage.setItem(
+      buildWizardDraftPointerKey(TENANT, "user-1"),
+      JSON.stringify({ tenantId: TENANT, applicationId: APP_ID }),
+    );
+    let rejectDraft: (e: unknown) => void = () => undefined;
+    mockGetDraft.mockReturnValue(new Promise((_, reject) => { rejectDraft = reject; }));
+    (getApplication as jest.Mock).mockResolvedValueOnce({
+      raw: { application_payload: { applicant: { full_name: "Nombre Hidratado Ficticio" } } },
+    });
+    await mount();
+    expect(ctx.formData.applicant_full_name).toBe("Nombre Hidratado Ficticio");
+    await act(async () => {
+      rejectDraft(new CreditCoreApiError("not found", 404));
+    });
+    expect(ctx.formData.applicant_full_name).toBe("Nombre Hidratado Ficticio");
+    expect(mockToastInfo).not.toHaveBeenCalled();
   });
 });

@@ -548,7 +548,12 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       })
       .catch((error: unknown) => {
         const status = (error as { status?: number } | null)?.status;
-        if (status === 404 || status === 410) expireDraft();
+        if (status === 410) {
+          expireDraft();
+        } else if (status === 404 && applicationIdStorageKey) {
+          // 404 is indistinguishable from "never saved": keep whatever the server hydration or the user already put in the form.
+          clearWizardDraftPointer(applicationIdStorageKey);
+        }
       });
   }, [applicationIdStorageKey, consentApplicationId, startsNewApplication, tenantId]);
 
