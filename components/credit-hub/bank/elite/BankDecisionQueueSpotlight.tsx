@@ -12,6 +12,7 @@ import { PRIORITY_STYLE } from "@/lib/credit-hub/bank/bankFormat";
 import { chMoney } from "@/lib/credit-hub/ch-base";
 import { shortFolio } from "@/lib/credit-hub/honesty/humanize-applicant";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
+import { nombreOpcional } from "@/components/credit-hub/bank-v2/comun/nombres";
 
 const SLA_HOURS = 6;
 
@@ -147,7 +148,7 @@ export function BankDecisionQueueSpotlight({
                         <div className="ch-mono font-semibold">{shortFolio(a.application_id)}</div>
                         <div style={{ fontSize: 11, color: "var(--ch-text-3)" }}>{a.applicant_name ?? "—"}</div>
                       </td>
-                      <td style={{ fontSize: 12 }}>{a.dealer_name ?? "—"}</td>
+                      <td style={{ fontSize: 12 }}>{nombreOpcional(a.dealer_name) ?? "—"}</td>
                       <td className="ch-num">{chMoney(a.requested_amount)}</td>
                       <td className="ch-num">
                         <RiskScoreChip score={a.score} />

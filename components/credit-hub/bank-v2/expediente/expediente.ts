@@ -1,4 +1,5 @@
 import { STATE_LABEL } from "@/lib/credit-hub/bank/bankFormat";
+import { nombreOpcional } from "../comun/nombres";
 import { resolveDisplayStatusLabel } from "@/lib/credit-hub/honesty/display-status";
 import type { BankReviewPayload } from "@/lib/credit-hub/types/bank-views";
 
@@ -80,7 +81,7 @@ export function datosCabecera(p: BankReviewPayload) {
     nombre: texto(a.name) ?? texto(a.full_name) ?? "Solicitante sin nombre",
     ciudad: texto(a.city),
     vehiculo,
-    dealer: texto(v.dealer) ?? texto(v.dealer_name) ?? texto(v.dealerName),
+    dealer: nombreOpcional(v.dealer_name) ?? nombreOpcional(v.dealerName) ?? nombreOpcional(v.dealer),
     monto: numero(f.requested_amount) ?? numero(p.analysis?.financed_amount),
     plazo: numero(f.term_months) ?? numero(m?.term_months),
     tasa: numero(f.requested_rate) ?? numero(m?.annual_rate),

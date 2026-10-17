@@ -19,10 +19,12 @@ export function CaseList({
   cases,
   loading,
   error,
+  onRetry,
 }: {
   cases: LegalCase[];
   loading?: boolean;
-  error?: Error | null;
+  error?: Error | boolean | null;
+  onRetry?: () => void;
 }) {
   const m = useLegalCasesMessages();
   const [state, setState] = useState<CaseState | "">("");
@@ -55,9 +57,18 @@ export function CaseList({
   }
   if (error) {
     return (
-      <p className="text-sm text-red-400" role="alert">
-        {m.list.error}
-      </p>
+      <div className="space-y-3" role="alert">
+        <p className="text-sm text-red-400">{m.list.error}</p>
+        {onRetry ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 hover:bg-zinc-800"
+          >
+            Reintentar
+          </button>
+        ) : null}
+      </div>
     );
   }
 

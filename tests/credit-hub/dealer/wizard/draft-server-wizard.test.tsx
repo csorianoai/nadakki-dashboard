@@ -12,7 +12,7 @@ import {
   useDealerWizard,
   type DealerWizardContextValue,
 } from "@/components/forge/credit-hub/dealer/DealerWizardProvider";
-import { CreditCoreApiError, getApplication, getApplicationDraft, saveApplicationDraft } from "@/lib/credit-hub/api/creditCoreClient";
+import { CreditCoreApiError, createDraftApplication, getApplication, getApplicationDraft, saveApplicationDraft } from "@/lib/credit-hub/api/creditCoreClient";
 import { buildWizardDraftPointerKey, readWizardDraftPointer } from "@/lib/credit-hub/dealer/wizard-draft-storage";
 
 const APP_ID = "app-draft-0012";
@@ -26,10 +26,13 @@ const SENTINELS = {
   monthly_income: "CENTINELA-INGRESO-3b8e",
 } as const;
 
+const mockReplace = jest.fn();
+const mockRouter = { push: jest.fn(), replace: mockReplace };
+let mockQuery = `application_id=${APP_ID}`;
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => mockRouter,
   usePathname: () => "/credit-hub/dealer/applications/new/solicitante",
-  useSearchParams: () => new URLSearchParams(`application_id=${APP_ID}`),
+  useSearchParams: () => new URLSearchParams(mockQuery),
 }));
 jest.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "user-1" } }) }));
 jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({ useTenant: () => ({ tenantId: TENANT }) }));
@@ -76,29 +79,19 @@ function Probe() {
   return null;
 }
 
-function storageDump(): string {
-  const parts: string[] = [];
-  for (const storage of [localStorage, sessionStorage]) {
-    for (let i = 0; i < storage.length; i++) {
-      const key = storage.key(i) as string;
-      parts.push(key, storage.getItem(key) ?? "");
-    }
-  }
-  return parts.join("\n");
-}
+const storageDump = () => [localStorage, sessionStorage].map((st) => Object.keys(st).concat(Object.values(st)).join("\n")).join("\n");
 
 async function mount() {
+  let view!: ReturnType<typeof render>;
   await act(async () => {
-    render(
-      <DealerWizardProvider>
-        <Probe />
-      </DealerWizardProvider>,
-    );
+    view = render(<DealerWizardProvider><Probe /></DealerWizardProvider>);
   });
+  return view;
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockQuery = `application_id=${APP_ID}`;
   jest.useFakeTimers();
   Object.defineProperty(globalThis, "crypto", { value: webcrypto, configurable: true });
   localStorage.clear();
@@ -185,5 +178,16 @@ describe("borrador del asistente en el servidor", () => {
     });
     expect(ctx.formData.applicant_full_name).toBe("Nombre Hidratado Ficticio");
     expect(mockToastInfo).not.toHaveBeenCalled();
+  });
+  test("guardar y salir sin solicitud: si el provider se desmonta, la creación no navega de vuelta", async () => {
+    mockQuery = "";
+    mockGetDraft.mockResolvedValue(null);
+    let resolveCreate: (v: { application_id: string }) => void = () => undefined;
+    (createDraftApplication as jest.Mock).mockReturnValue(new Promise((res) => { resolveCreate = res; }));
+    const view = await mount();
+    await act(async () => { ctx.saveDraftToStorage(); });
+    view.unmount();
+    await act(async () => { resolveCreate({ application_id: "app-new-1" }); });
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

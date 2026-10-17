@@ -31,6 +31,7 @@ import {
   tenantDocumentKey,
 } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { createDraftApplication, assertMultiLenderSucceeded, deleteApplicationDraft, executeMultiLender, getApplication, getApplicationDraft, saveApplicationDraft, getDocumentCompleteness, saveApplicantApplication, saveVehicleApplication } from "@/lib/credit-hub/api/creditCoreClient";
+import { clearSubmitIdempotencyKey, getSubmitIdempotencyKey } from "@/lib/credit-hub/api/submitIdempotency";
 import { patchApplicationFields } from "@/lib/credit-hub/api/operationalClient";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
@@ -449,6 +450,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   pendingFilesRef.current = pendingFiles;
   const presetAppliedRef = useRef(false);
   const draftCreationRef = useRef(false);
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   const createdApplicationIdRef = useRef<string | null>(null);
   const lastSavedDraftRef = useRef<string | null>(null);
   const draftSaveChainRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -520,10 +523,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       .then((draft) => {
         if (!draft) return;
         const expiresMs = draft.expiresAt ? Date.parse(draft.expiresAt) : NaN;
-        if (Number.isFinite(expiresMs) && expiresMs <= Date.now()) {
-          expireDraft();
-          return;
-        }
+        if (Number.isFinite(expiresMs) && expiresMs <= Date.now()) return expireDraft();
         lastSavedDraftRef.current = JSON.stringify(draft.formData);
         const partial = draft.formData as Partial<ApplicationFormData>;
         setFormData((prev) => {
@@ -548,10 +548,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       .catch((error: unknown) => {
         const status = (error as { status?: number } | null)?.status;
         if (status === 410) expireDraft();
-        else if (status === 404 && applicationIdStorageKey) {
-          // 404 is indistinguishable from "never saved": keep whatever the server hydration or the user already put in the form.
-          clearWizardDraftPointer(applicationIdStorageKey);
-        }
+        else if (status === 404 && applicationIdStorageKey) clearWizardDraftPointer(applicationIdStorageKey); // 404 = maybe never saved: keep the form
       });
   }, [applicationIdStorageKey, consentApplicationId, startsNewApplication, tenantId]);
 
@@ -826,9 +823,11 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       const draft = await createDraftApplication({ tenantId });
       createdApplicationIdRef.current = draft.application_id;
       persistApplicationId(draft.application_id);
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("application_id", draft.application_id);
-      router.replace(`${pathname}?${params.toString()}`);
+      if (mountedRef.current) { // unmounted ("Guardar y salir"): don't navigate back into the wizard
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("application_id", draft.application_id);
+        router.replace(`${pathname}?${params.toString()}`);
+      }
       return draft.application_id;
     } finally {
       draftCreationRef.current = false;
@@ -853,32 +852,19 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
           await saveApplicationDraft({ tenantId, applicationId, formData: snapshot });
           lastSavedDraftRef.current = serialized;
           return true;
-        } catch {
-          return false;
-        }
+        } catch { return false; }
       });
       draftSaveChainRef.current = run;
       return run;
     },
     [tenantId],
   );
+  const notifyDraftSaveFailed = useCallback((retry: () => void) => {
+    const copy = forgeWizardToasts(forgeToastLangFromLocale(tenantConfig.locale));
+    toast.warning(copy.draftSaveFailed, { id: "forge-dealer-autosave-error", duration: 60_000, action: { label: copy.retry, onClick: retry } });
+  }, [tenantConfig.locale]);
 
-  const notifyDraftSaveFailed = useCallback(
-    (retry: () => void) => {
-      const copy = forgeWizardToasts(forgeToastLangFromLocale(tenantConfig.locale));
-      toast.warning(copy.draftSaveFailed, {
-        id: "forge-dealer-autosave-error",
-        duration: 60_000,
-        action: { label: copy.retry, onClick: retry },
-      });
-    },
-    [tenantConfig.locale],
-  );
-
-  /**
-   * Saves the form to the server draft (never to browser storage). Returns true when the write was dispatched;
-   * a later failure is reported with a retry toast. Without an application yet, the draft application is created first.
-   */
+  // Saves to the server draft (never browser storage); true = dispatched, failure later shows a retry toast.
   const saveDraftToStorage = useCallback((): boolean => {
     if (!tenantId || !storageKey) return false;
     const run = async (): Promise<void> => {
@@ -959,7 +945,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
     lastSavedDraftRef.current = null;
     purgeLegacyGlobalWizardDraftKeys();
     // Submitted: the personal data of the server draft is no longer needed (best effort; the server TTL covers a failure).
-    if (tenantId && consentApplicationId) void deleteApplicationDraft({ tenantId, applicationId: consentApplicationId }).catch(() => undefined);
+    if (tenantId && consentApplicationId) void draftSaveChainRef.current.then(() => deleteApplicationDraft({ tenantId, applicationId: consentApplicationId })).catch(() => undefined);
   }, [applicationIdStorageKey, consentApplicationId, tenantId]);
 
   // Autosave: only once the application exists (never creates one on a timer) and only when the form changed.
@@ -1066,12 +1052,15 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
             applicationId: appId,
             application: payload,
             dryRun: false,
+            // Misma clave en cada reintento del borrador; solo se descarta tras un éxito.
+            idempotencyKey: getSubmitIdempotencyKey(tenantId, appId),
           });
           // Falla antes de borrar el borrador: HTTP 200 con status "failed" no es éxito.
           assertMultiLenderSucceeded(execution);
         },
       });
 
+      clearSubmitIdempotencyKey(tenantId, appId);
       clearDraftStorage();
       setFormData(initialApplicationFormData);
 

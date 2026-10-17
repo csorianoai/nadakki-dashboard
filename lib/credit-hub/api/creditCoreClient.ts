@@ -275,10 +275,13 @@ export async function executeMultiLender(params: {
   applicationId: string;
   application: object;
   dryRun?: boolean;
+  /** Stable per draft; the backend replays the same result for the same key. */
+  idempotencyKey?: string;
 }): Promise<MultiLenderExecuteResult> {
   return creditCoreFetch(`/multi-lender/execute`, {
     method: "POST",
     tenantId: params.tenantId,
+    ...(params.idempotencyKey ? { headers: { "Idempotency-Key": params.idempotencyKey } } : {}),
     body: JSON.stringify({
       application_id: params.applicationId,
       tenant_id: params.tenantId,
