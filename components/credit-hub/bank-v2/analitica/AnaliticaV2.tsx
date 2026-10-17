@@ -14,6 +14,7 @@ import type { MarcaDcc } from "@/lib/dcc/marca";
 import { DetalleTecnico } from "../comun/DetalleTecnico";
 import { porcentaje } from "../comun/formato";
 import { parcialSiLimite, proximamente, type NotaTecnica } from "../comun/llano";
+import { nombreOIdentificadorOculto } from "../comun/nombres";
 
 const BANDAS_SCORE = ["300-579", "580-669", "670-739", "740-799", "800-850"] as const;
 
@@ -137,10 +138,10 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
                 <tbody>
                   {ranking.map((d) => (
                     <tr key={d.dealer} className="border-t border-[var(--dcc-border)]">
-                      <td className="py-2 pr-3">{d.dealer}</td>
+                      <td className="py-2 pr-3">{nombreOIdentificadorOculto(d.dealer)}</td>
                       <td className="py-2 pr-3">
                         <span className="flex items-center gap-2">
-                          <Barra valor={d.volume} max={maxVolumen} etiqueta={`${d.dealer}: ${d.volume} solicitudes`} />
+                          <Barra valor={d.volume} max={maxVolumen} etiqueta={`${nombreOIdentificadorOculto(d.dealer)}: ${d.volume} solicitudes`} />
                           <span className="tabular-nums">{formatEntero(d.volume, f)}</span>
                         </span>
                       </td>

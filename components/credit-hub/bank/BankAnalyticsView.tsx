@@ -11,6 +11,7 @@ import type { BankAnalyticsViewProps } from "@/lib/credit-hub/types/bank-views";
 import { formatDefaultPredictionDisplay, classifyDefaultPredictionTrust } from "@/lib/credit-hub/bank/bankFormat";
 import { BankSegment } from "@/components/credit-hub/bank/shared/bankUi";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
+import { nombreOIdentificadorOculto } from "@/components/credit-hub/bank-v2/comun/nombres";
 
 const MEDAL = ["#C9A227", "#9CA3AF", "#B07A45"];
 
@@ -149,7 +150,7 @@ export function BankAnalyticsView({ analytics, portfolioHealth, dealers, isLoadi
                         </span>
                       )}
                     </td>
-                    <td style={{ fontWeight: 600 }}>{d.dealer}</td>
+                    <td style={{ fontWeight: 600 }}>{nombreOIdentificadorOculto(d.dealer)}</td>
                     <td className="ch-num">{chMoney(d.volume)}</td>
                     <td className="ch-num">{d.approved}</td>
                     <td className="ch-num">
