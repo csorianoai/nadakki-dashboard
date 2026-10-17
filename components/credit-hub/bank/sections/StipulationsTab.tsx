@@ -16,17 +16,6 @@ export function StipulationsTab({ applicationId }: { applicationId: string }) {
   const hasError = Boolean(error);
   const hasData = Array.isArray(stipulations);
 
-  console.log("[StipulationsTab] DIAGNOSTIC", {
-    applicationId,
-    apiTenantId,
-    stipulations,
-    error: error ? { message: error.message, name: error.name } : null,
-    isLoading,
-    hasError,
-    hasData,
-    rowsLength: rows.length,
-  });
-
   return (
     <CHPanelState
       isLoading={isLoading}
