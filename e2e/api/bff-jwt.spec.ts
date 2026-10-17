@@ -10,19 +10,13 @@
 import { expect, test, type Request } from "@playwright/test";
 
 import { iniciarSesionQA } from "../mapaal/sesion-qa";
+import { conFirmaAlterada } from "./jwt-firma";
 
 const BASE_URL = (process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "").replace(/\/$/, "");
 const QA_USER = process.env.QA_USER ?? "";
 const QA_PASSWORD = process.env.QA_PASSWORD ?? "";
 
 test.use({ baseURL: BASE_URL || undefined });
-
-/** Cambia el último carácter de la firma (tercer segmento) por otro distinto. */
-function conFirmaAlterada(jwt: string): string {
-  const [h, p, s = ""] = jwt.split(".");
-  const ultimo = s.slice(-1) === "A" ? "B" : "A";
-  return `${h}.${p}.${s.slice(0, -1)}${ultimo}`;
-}
 
 test("/competitor-research usa /api/v1/spyfu/* same-origin y rechaza un JWT con firma alterada", async ({ browser }) => {
   // Sin configuración no hay prueba: fallar nombrando lo que falta (un skip no imprime RESULT_PI_P0_2=PASS
