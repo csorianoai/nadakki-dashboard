@@ -92,4 +92,24 @@ describe("Dashboard ejecutivo: carga", () => {
     expect(screen.queryByText('0.0%')).not.toBeInTheDocument();
     expect(screen.queryByText(/SQLSTATE/)).not.toBeInTheDocument();
   });
+
+  it("estado de resultados no llega (404) y el resto si: KPI sin datos, nunca ceros", async () => {
+    periodos.mockResolvedValue([
+      { id: "p1", label: "2026-10", status: "open", fecha_inicio: "2026-10-01", fecha_fin: "2026-10-31" },
+    ]);
+    (getEstadoResultados as jest.Mock).mockRejectedValue(new Error("Recurso contable no encontrado"));
+    (getSituacionFinanciera as jest.Mock).mockResolvedValue({
+      activos: { total: 100, corriente: 50 },
+      pasivos: { total: 40, corriente: 20 },
+      patrimonio: { total: 60 },
+      ecuacion_cuadra: true,
+    });
+    (getGastosMonitor as jest.Mock).mockResolvedValue(null);
+    render(<DashboardEjecutivoClient />);
+    expect(await screen.findByText("Utilidad Neta")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText(/Cargando dashboard/)).not.toBeInTheDocument());
+    expect(screen.getAllByText("Sin datos")).toHaveLength(4);
+    expect(screen.queryByText("0")).not.toBeInTheDocument();
+    expect(screen.queryByText("0.0%")).not.toBeInTheDocument();
+  });
 });

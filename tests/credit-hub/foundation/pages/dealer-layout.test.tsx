@@ -50,6 +50,34 @@ jest.mock("@/lib/credit-hub/hooks/useFeatureFlag", () => ({
   useFeatureFlag: () => ({ enabled: true, loading: false }),
 }));
 
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ logout: jest.fn() }),
+}));
+
+jest.mock("@/components/credit-hub/system/CHTenantGuard", () => ({
+  CHTenantGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("@/components/credit-hub/system/CHPortalAccessGuard", () => ({
+  CHPortalAccessGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("@/components/credit-hub/shell/useChromeIdentity", () => ({
+  useChromeIdentity: () => ({ name: "Dealer User", initials: "DU", email: "dealer@example.test", role: "Dealer" }),
+}));
+
+jest.mock("@/lib/credit-hub/hooks/useNotifications", () => ({
+  useNotifications: () => ({ items: [] }),
+}));
+
+jest.mock("@/lib/credit-hub/hooks/useDealerTotalUnreadMessages", () => ({
+  useDealerTotalUnreadMessages: () => ({ applicationCounts: [], totalUnread: 0 }),
+}));
+
+jest.mock("@/lib/credit-hub/hooks/useCreditApplications", () => ({
+  useCreditApplications: () => ({ data: [] }),
+}));
+
 describe("DealerLayout", () => {
   test("renders dealer shell with navigation and children", () => {
     render(

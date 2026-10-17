@@ -1,5 +1,6 @@
 import { computeWizardCompleteness } from "@/lib/credit-hub/dealer/wizard-completeness";
 import type { ApplicationFormData } from "@/components/credit-hub/dealer/wizard/WizardContainer";
+import { INITIAL_VEHICLE_DECLARATION } from "@/lib/credit-hub/dealer/vehicle-declaration";
 import { DEFAULT_DO_REQUIRED_DOCUMENTS } from "@/lib/credit-hub/defaults/do-required-documents";
 
 const minimalT = {
@@ -94,6 +95,7 @@ const emptyForm: ApplicationFormData = {
   consent_dealer_otp_code: "",
   segment_zone: "",
   segment_vehicle_type: "",
+  ...INITIAL_VEHICLE_DECLARATION,
 };
 
 describe("wizard-completeness", () => {

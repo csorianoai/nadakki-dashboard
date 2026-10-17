@@ -7,10 +7,12 @@ import { getDefaultTenantBankingConfig, useTenantConfig } from "@/lib/credit-hub
 const push = jest.fn();
 const back = jest.fn();
 const mutateAsync = jest.fn();
+const mockSearchParams = new URLSearchParams({ application_id: "app-draft-1" });
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push, back }),
-  useSearchParams: () => new URLSearchParams(),
+  // El consentimiento presencial trabaja sobre una solicitud ya creada (application_id en la URL).
+  useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useCreateCreditApplication", () => ({
@@ -47,6 +49,23 @@ jest.mock("@/lib/credit-hub/hooks/useCatalogs", () => {
       loading: false,
     }),
   };
+});
+
+// El paso de consentimiento pide el texto legal oficial al backend antes de dejar firmar.
+jest.mock("@/lib/credit-hub/hooks/useConsentApi", () => {
+  // Objeto estable: ConsentSection lo usa como dependencia de su efecto.
+  const api = {
+    initiate: jest.fn(),
+    acceptPresent: jest.fn().mockResolvedValue({
+      consent_id: "consent-1",
+      status: "ACCEPTED",
+      accepted_at: "2026-08-30T12:00:00.000Z",
+      audit_hash: "audit-hash-1",
+      consent_text_version: "1.0",
+    }),
+    getPresentText: jest.fn().mockResolvedValue({ consent_text: "Texto oficial del consentimiento", consent_text_version: "1.0" }),
+  };
+  return { useConsentApi: () => api };
 });
 
 jest.mock("@/components/credit-hub/system/ForgeToaster", () => ({
@@ -246,11 +265,14 @@ async function advanceToConsents() {
 
 async function advanceToReview() {
   await advanceToConsents();
+  await waitFor(() => expect(screen.queryByText(/no se puede firmar/i)).not.toBeInTheDocument());
   fireEvent.click(screen.getByText(/Autorización Ley 172-13/i));
   fireEvent.click(screen.getByText(/Autorización consulta de buró/i));
   fireEvent.click(screen.getByText(/Política de tratamiento de datos/i));
   fireEvent.change(screen.getByLabelText(/Nombre completo \(firma digital\)/i), { target: { value: "Ana Pérez" } });
   fireEvent.click(screen.getByTestId("present-submit"));
+  // La aceptación presencial es asíncrona: «Siguiente» se habilita cuando el backend confirma.
+  await waitFor(() => expect(screen.getByRole("button", { name: "Siguiente" })).toBeEnabled());
   fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
   expect(await screen.findByText("Revisión final")).toBeInTheDocument();
 }
@@ -405,7 +427,7 @@ describe("WizardContainer", () => {
 
     await waitFor(
       () => {
-        expect(push).toHaveBeenCalledWith("/credit-hub/dealer/applications/app-created");
+        expect(push).toHaveBeenCalledWith("/autos/dealer/credito/solicitudes/app-created");
       },
       { timeout: 4000 }
     );

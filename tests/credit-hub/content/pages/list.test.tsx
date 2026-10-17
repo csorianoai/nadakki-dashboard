@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
+import { renderWithQuery } from "../../renderWithQuery";
 import ApplicationsListPage from "@/app/(forge)/credit-hub/dealer/applications/page";
 import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { makeApplication } from "../testData";
@@ -33,22 +34,22 @@ describe("ApplicationsListPage", () => {
   });
 
   test("filters work correctly", () => {
-    render(<ApplicationsListPage />);
+    renderWithQuery(<ApplicationsListPage />);
     fireEvent.click(screen.getByRole("button", { name: /Borrador\s*\(1\)/ }));
     expect(screen.getAllByText("Luis Gómez")[0]).toBeInTheDocument();
     expect(screen.queryByText("Ana Pérez")).not.toBeInTheDocument();
   });
 
   test("search filters by name", () => {
-    render(<ApplicationsListPage />);
-    fireEvent.change(screen.getByPlaceholderText("Buscar por nombre, marca, modelo..."), { target: { value: "ana" } });
+    renderWithQuery(<ApplicationsListPage />);
+    fireEvent.change(screen.getByPlaceholderText("Nombre, folio o vehículo…"), { target: { value: "ana" } });
     expect(screen.getAllByText("Ana Pérez")[0]).toBeInTheDocument();
     expect(screen.queryByText("Luis Gómez")).not.toBeInTheDocument();
   });
 
   test("search filters by application id", () => {
-    render(<ApplicationsListPage />);
-    fireEvent.change(screen.getByPlaceholderText("Buscar por nombre, marca, modelo..."), { target: { value: "app-2" } });
+    renderWithQuery(<ApplicationsListPage />);
+    fireEvent.change(screen.getByPlaceholderText("Nombre, folio o vehículo…"), { target: { value: "app-2" } });
     expect(screen.getAllByText("Luis Gómez")[0]).toBeInTheDocument();
     expect(screen.queryByText("Ana Pérez")).not.toBeInTheDocument();
   });
