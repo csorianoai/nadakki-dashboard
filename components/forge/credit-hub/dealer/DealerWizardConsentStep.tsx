@@ -44,8 +44,7 @@ export function DealerWizardConsentStep() {
       />
 
       <p className="text-forge-xs text-forgeGray-500">
-        Al enviar, se registra marca de tiempo ISO 8601, hash de auditoría (incluye resumen cifrado de la firma) y, cuando la red lo permite, la IP obtenida vía{" "}
-        <code className="rounded bg-forgeSurface-sunken px-1">/api/credit-hub/client-metadata</code> en el servidor.
+        Al enviar, se registra marca de tiempo ISO 8601, hash de auditoría (incluye resumen cifrado de la firma) y, cuando la red lo permite, la IP de tu conexión, obtenida en el servidor.
       </p>
       <ConsentSection
         applicationId={consentApplicationId}

@@ -13,9 +13,7 @@ import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { formatEntero, formatMonedaCompacta } from "@/lib/dcc/formato";
 import type { Calidad } from "@/lib/dcc/calidad";
 import type { MarcaDcc } from "@/lib/dcc/marca";
-import { DetalleTecnico } from "../comun/DetalleTecnico";
 import { porcentaje } from "../comun/formato";
-import { type NotaTecnica } from "../comun/llano";
 
 type Registro = Record<string, unknown>;
 const reg = (v: unknown): Registro | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Registro) : null);
@@ -69,8 +67,7 @@ function useKpi(path: string) {
 /**
  * KPIs de banco (bank-v2): Resumen y Tendencia salen de kpis/resumen y
  * kpis/tendencia (últimos 6 meses UTC), Por prestamista de kpis/lenders. Una
- * cifra sin valor se dice "Sin solicitudes evaluadas", nunca 0. El porqué de un
- * fallo va al bloque plegado "Detalle técnico".
+ * cifra sin valor se dice "Sin solicitudes evaluadas", nunca 0.
  */
 export function KpisBancoV2({ marca }: { marca: MarcaDcc }) {
   const prestamistasQ = useKpi(LENDERS_PATH);
@@ -86,10 +83,6 @@ export function KpisBancoV2({ marca }: { marca: MarcaDcc }) {
     aprobadas: numero(primero(r, ["approved", "approved_count", "accepted_offers", "approvals"])),
     monto: numero(primero(r, ["amount", "total_approved_amount", "approved_amount", "volume"])),
   }));
-  const notas: NotaTecnica[] = [];
-  if (resumenQ.isError) notas.push({ que: "Resumen", detalle: "kpis/resumen no respondió o devolvió available: false" });
-  if (tendenciaQ.isError) notas.push({ que: "Tendencia", detalle: "kpis/tendencia no respondió o devolvió available: false" });
-  if (prestamistasQ.isError) notas.push({ que: "Por prestamista", detalle: "kpis/lenders no respondió o devolvió available: false" });
 
   return (
     <DccPageMarco titulo="KPIs de banco" marca={marca}>
@@ -171,7 +164,6 @@ export function KpisBancoV2({ marca }: { marca: MarcaDcc }) {
             </table>
           )}
         </DccSeccion>
-        <DetalleTecnico notas={notas} />
       </div>
     </DccPageMarco>
   );

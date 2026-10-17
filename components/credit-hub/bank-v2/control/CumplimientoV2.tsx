@@ -12,7 +12,6 @@ import { useBankGlobalCompliance } from "@/lib/credit-hub/hooks/useBankAuditComp
 import type { Calidad } from "@/lib/dcc/calidad";
 import { formatEntero } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
-import { DetalleTecnico } from "../comun/DetalleTecnico";
 import { proximamente } from "../comun/llano";
 import { marcoRegulatorio } from "../comun/regulacion";
 import { textoSeveridad } from "../expediente/expediente";
@@ -94,12 +93,6 @@ export function CumplimientoV2({
             <SelloCalidad calidad={proximamente("El listado de solicitudes de derecho al olvido estará disponible próximamente.")} />
           </div>
         </DccSeccion>
-        <DetalleTecnico
-          notas={[
-            { que: "Derecho al olvido", detalle: "el backend aún no expone el listado RTBF" },
-            ...(c.isPartialCoverage ? [{ que: "Incidencias", detalle: "no hay listado de cumplimiento del tenant: se lee compliance/{id} de las 50 solicitudes más recientes de la cola" }] : []),
-          ]}
-        />
       </div>
     </DccPageMarco>
   );

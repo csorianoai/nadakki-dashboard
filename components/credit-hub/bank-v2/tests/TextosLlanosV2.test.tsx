@@ -7,8 +7,7 @@ import { marcaDesdeBranding } from "@/lib/dcc/marca";
 
 /**
  * AUDIT-COWORK 2/9. Lo que lee el banco (sellos, tooltips y textos para lector
- * de pantalla) va en llano; el detalle tecnico solo en el bloque plegado
- * "Detalle técnico". "parcial" solo cuando el dato es parcial de verdad.
+ * de pantalla) va en llano; el detalle tecnico no se muestra. "parcial" solo cuando el dato es parcial de verdad.
  */
 let totalAnalitica = 27;
 let colaTotal = 1;
@@ -64,7 +63,7 @@ describe("Textos llanos y 'parcial' honesto (bank-v2)", () => {
     colaTotal = 1;
   });
 
-  it("Mesa: sin textos tecnicos ni 'parcial' generico; Embudo compacto en Próximamente; detalle tecnico plegado", async () => {
+  it("Mesa: sin textos tecnicos ni 'parcial' generico; Embudo compacto en Próximamente; sin bloque de detalle tecnico", async () => {
     const { container } = pintar(<MesaDecisiones marca={marca} hrefSolicitud={(id) => `/s/${id}`} hrefBandeja="/b" hrefAnalitica="/a" />);
     expect(await screen.findAllByTestId("cola-tarjeta")).toHaveLength(1);
     await screen.findByText("Autos del Caribe");
@@ -76,12 +75,8 @@ describe("Textos llanos y 'parcial' honesto (bank-v2)", () => {
     const embudo = screen.getByTestId("mesa-salud");
     expect(embudo.querySelectorAll("[data-testid=dcc-sello][data-estado=no_disponible]")).toHaveLength(1);
     expect(embudo.textContent).not.toMatch(/→/);
-    const detalle = screen.getByTestId("detalle-tecnico");
-    expect(detalle).not.toHaveAttribute("open");
-    expect(detalle.textContent).toContain("Detalle técnico");
-    expect(detalle.textContent).toMatch(/kpis\/funnel/);
-    expect(detalle.textContent).toMatch(/sla_deadline/);
-    expect(detalle.textContent).toMatch(/avg_response_hours/);
+    expect(screen.queryByTestId("detalle-tecnico")).toBeNull();
+    expect(container.textContent).not.toMatch(/kpis\/funnel|sla_deadline|avg_response_hours/);
   });
 
   it("Mesa y Analítica: 'parcial' solo cuando el total alcanza el limite de lectura (500)", async () => {
@@ -99,7 +94,7 @@ describe("Textos llanos y 'parcial' honesto (bank-v2)", () => {
     await screen.findAllByText("Autos del Caribe");
     expect(sellos(container, "parcial")).toHaveLength(0);
     expect(lectura(container)).not.toMatch(TECNICO);
-    expect(screen.getByTestId("detalle-tecnico").textContent).toMatch(/cohort_analysis/);
+    expect(screen.queryByTestId("detalle-tecnico")).toBeNull();
   });
 
   it("Cumplimiento: sin 'parcial' si se revisaron todas; con 'parcial' en llano si la cola trae mas", async () => {
@@ -107,7 +102,7 @@ describe("Textos llanos y 'parcial' honesto (bank-v2)", () => {
     await screen.findByText("Solicitudes revisadas");
     expect(sellos(uno.container, "parcial")).toHaveLength(0);
     expect(lectura(uno.container)).not.toMatch(TECNICO);
-    expect(screen.getByTestId("detalle-tecnico").textContent).toMatch(/RTBF/);
+    expect(screen.queryByTestId("detalle-tecnico")).toBeNull();
     uno.unmount();
 
     colaTotal = 80;

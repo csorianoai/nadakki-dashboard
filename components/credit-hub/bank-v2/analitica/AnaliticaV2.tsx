@@ -11,9 +11,8 @@ import { formatDefaultPredictionDisplay } from "@/lib/credit-hub/bank/bankFormat
 import { useBankAnalytics, useBankDealersRanking, useBankPortfolioHealth } from "@/lib/credit-hub/hooks/useBankAnalytics";
 import { formatEntero, formatMonedaCompacta } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
-import { DetalleTecnico } from "../comun/DetalleTecnico";
 import { porcentaje } from "../comun/formato";
-import { parcialSiLimite, proximamente, type NotaTecnica } from "../comun/llano";
+import { parcialSiLimite, proximamente } from "../comun/llano";
 import { nombreOIdentificadorOculto } from "../comun/nombres";
 
 const BANDAS_SCORE = ["300-579", "580-669", "670-739", "740-799", "800-850"] as const;
@@ -55,13 +54,6 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
   const maxBanda = distribucion ? Math.max(0, ...BANDAS_SCORE.map((b) => distribucion[b] ?? 0)) : 0;
   // Sin sello salvo que el total informado alcance el limite de lectura (parcial de verdad).
   const limite = parcialSiLimite(a.total_applications);
-  const notas: NotaTecnica[] = [];
-  if (!formatMonedaCompacta(a.portfolio_value, f)) notas.push({ que: "Volumen aprobado", detalle: "sin portfolio_value o sin moneda en el branding" });
-  if (defaultPred.isExtreme) notas.push({ que: "Incumplimiento previsto", detalle: "predicción extrema: el motor cuenta un score ausente como 0 (regla score < 600)" });
-  if (a.avg_decision_time_hours == null) notas.push({ que: "Tiempo medio de decisión", detalle: "analytics/dashboard aún no calcula avg_decision_time_hours" });
-  if (cohortes.length === 0) notas.push({ que: "Solicitudes y aprobación por periodo", detalle: "analytics/dashboard no devolvió cohort_analysis" });
-  if (!saludQ.isError && !distribucion) notas.push({ que: "Salud del portafolio", detalle: "portfolio-health aún no expone score_distribution" });
-  if (limite) notas.push({ que: "Ranking y predicción", detalle: "el ranking toma el dealer del payload; analytics/dashboard lee como máximo 500 solicitudes" });
 
   return (
     <DccPageMarco titulo="Analítica" marca={marca}>
@@ -178,7 +170,6 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
           </DccSeccion>
         </div>
 
-        <DetalleTecnico notas={notas} />
       </div>
     </DccPageMarco>
   );
