@@ -3,7 +3,9 @@ import {
   acceptOffer,
   createApplication,
   createDraftApplication,
+  assertMultiLenderSucceeded,
   executeMultiLender,
+  MultiLenderExecutionError,
   getApplication,
   getApplicationEvents,
   getCreditHealth,
@@ -252,5 +254,25 @@ describe("creditCoreClient", () => {
     });
     const res = await acceptOffer({ tenantId, applicationId: "app-1", offerId: "off-1" });
     expect(res.ok).toBe(true);
+  });
+});
+
+describe("assertMultiLenderSucceeded", () => {
+  test("acepta completed y partial", () => {
+    expect(() => assertMultiLenderSucceeded({ status: "completed" })).not.toThrow();
+    expect(() => assertMultiLenderSucceeded({ status: "partial", offers: [] })).not.toThrow();
+  });
+
+  test("failed, vacío o desconocido lanzan error tipado con execution_id", () => {
+    expect(() => assertMultiLenderSucceeded({ status: "failed", execution_id: "e1", errors: [{}] })).toThrow(
+      MultiLenderExecutionError,
+    );
+    expect(() => assertMultiLenderSucceeded({})).toThrow(MultiLenderExecutionError);
+    expect(() => assertMultiLenderSucceeded(undefined)).toThrow(/No se pudo procesar/);
+    try {
+      assertMultiLenderSucceeded({ status: "failed", execution_id: "e1" });
+    } catch (err) {
+      expect((err as MultiLenderExecutionError).executionId).toBe("e1");
+    }
   });
 });

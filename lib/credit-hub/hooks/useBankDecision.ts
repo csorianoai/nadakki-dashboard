@@ -51,18 +51,6 @@ export function useBankAuditTrail(applicationId: string | null | undefined) {
     staleTime: 15_000,
   });
   
-  console.log("[useBankAuditTrail] QUERY RESULT", {
-    applicationId,
-    tenantId,
-    enabled: !!tenantId && !!applicationId,
-    data: queryResult.data,
-    error: queryResult.error,
-    isLoading: queryResult.isLoading,
-    hasData: Boolean(queryResult.data),
-    hasEvents: Array.isArray(queryResult.data?.events),
-    eventsCount: queryResult.data?.events?.length ?? 0,
-  });
-  
   return queryResult;
 }
 

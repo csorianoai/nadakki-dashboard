@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { ArrowLeft, Car, CheckCircle, Clock, DollarSign, FileText, Mail, Phone, User } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/credit-hub/dealer/ApplicationStatusBadge";
 import { usePersona } from "@/components/credit-hub/system/PersonaProvider";
@@ -81,22 +81,8 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
   const [acceptState, setAcceptState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [acceptError, setAcceptError] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log("[dealer-view] mount", { applicationId });
-  }, [applicationId]);
-
-  useEffect(() => {
-    if (!data) return;
-    console.log("[dealer-view] status", {
-      applicationId,
-      status: data.status,
-      decision: data.decision,
-    });
-  }, [applicationId, data?.status, data?.decision]);
-
   const handleAcceptOffer = useCallback(async () => {
     if (!tenantId || acceptState === "loading") return;
-    console.log("[dealer-view] accept attempt", { applicationId, tenantId });
     setAcceptState("loading");
     setAcceptError(null);
     try {
@@ -111,11 +97,6 @@ export function DealerApplicationStatusView({ applicationId }: { applicationId: 
         method: "POST",
         headers,
         body: JSON.stringify({ notes: "Oferta aceptada por el dealer" }),
-      });
-      console.log("[dealer-view] accept response", {
-        applicationId,
-        ok: res.ok,
-        status: res.status,
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

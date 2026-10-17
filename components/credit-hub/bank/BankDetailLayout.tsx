@@ -157,10 +157,6 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
 
   const handleSubmit = useCallback(
     async (mode: DecisionMode, justif: string) => {
-      // DIAGNOSTIC: Log actual user structure to verify analyst_id path
-      console.log("[decision] user object:", user);
-      console.log("[decision] user?.id:", user?.id);
-      
       const analystId = user?.id || "";
       
       // Validación crítica: analyst_id debe ser un UUID válido

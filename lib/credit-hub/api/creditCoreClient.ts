@@ -147,6 +147,52 @@ export async function createDraftApplication(params: { tenantId: string }): Prom
   return normalizeApplication(raw);
 }
 
+/**
+ * Borrador del asistente en el servidor (DB-CODEX-12A, `application_payload` de la solicitud DRAFT).
+ * `expiresAt` lo fija el servidor por TTL; un borrador vencido responde 404/410 y la purga lo elimina.
+ */
+export interface ApplicationDraft {
+  formData: Record<string, unknown>;
+  expiresAt: string | null;
+}
+
+export async function saveApplicationDraft(params: {
+  tenantId: string;
+  applicationId: string;
+  formData: Record<string, unknown>;
+}): Promise<void> {
+  await creditCoreFetch(`/applications/${encodeURIComponent(params.applicationId)}/draft`, {
+    method: "PUT",
+    tenantId: params.tenantId,
+    body: JSON.stringify({ form_data: params.formData }),
+  });
+}
+
+export async function getApplicationDraft(params: {
+  tenantId: string;
+  applicationId: string;
+}): Promise<ApplicationDraft | null> {
+  const raw = await creditCoreFetch<unknown>(`/applications/${encodeURIComponent(params.applicationId)}/draft`, {
+    method: "GET",
+    tenantId: params.tenantId,
+  });
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const record = raw as Record<string, unknown>;
+  const data = record.form_data ?? record.draft;
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+  return {
+    formData: data as Record<string, unknown>,
+    expiresAt: typeof record.expires_at === "string" ? record.expires_at : null,
+  };
+}
+
+export async function deleteApplicationDraft(params: { tenantId: string; applicationId: string }): Promise<void> {
+  await creditCoreFetch(`/applications/${encodeURIComponent(params.applicationId)}/draft`, {
+    method: "DELETE",
+    tenantId: params.tenantId,
+  });
+}
+
 export async function saveApplicantApplication(params: {
   tenantId: string;
   applicationId: string;
@@ -195,12 +241,41 @@ export async function processApplication(params: {
   return normalizeApplication(raw);
 }
 
+export type MultiLenderExecuteResult = {
+  offers?: unknown[];
+  status?: string;
+  application_id?: string;
+  execution_id?: string;
+  errors?: unknown[];
+};
+
+/** El backend responde HTTP 200 con status "failed"; solo completed y partial cuentan como envío exitoso. */
+export class MultiLenderExecutionError extends Error {
+  readonly executionId?: string;
+  readonly lenderErrors: unknown[];
+  constructor(result: MultiLenderExecuteResult) {
+    super(
+      "No se pudo procesar la solicitud con los prestamistas. Tu borrador se conservó; intenta enviarla de nuevo.",
+    );
+    this.name = "MultiLenderExecutionError";
+    this.executionId = result?.execution_id;
+    this.lenderErrors = Array.isArray(result?.errors) ? result.errors : [];
+  }
+}
+
+export function assertMultiLenderSucceeded(result: MultiLenderExecuteResult | null | undefined): void {
+  const status = typeof result?.status === "string" ? result.status.toLowerCase() : "";
+  if (status !== "completed" && status !== "partial") {
+    throw new MultiLenderExecutionError(result ?? {});
+  }
+}
+
 export async function executeMultiLender(params: {
   tenantId: string;
   applicationId: string;
   application: object;
   dryRun?: boolean;
-}): Promise<{ offers?: unknown[]; status?: string; application_id?: string }> {
+}): Promise<MultiLenderExecuteResult> {
   return creditCoreFetch(`/multi-lender/execute`, {
     method: "POST",
     tenantId: params.tenantId,
@@ -265,4 +340,23 @@ export async function acceptOffer(params: {
   }
 
   return result;
+}
+
+export interface DocumentCompleteness {
+  total_required: number;
+  total_uploaded: number;
+  missing: string[];
+  complete: boolean;
+  pct?: number;
+}
+
+/** GET /applications/{id}/documents/completeness: lo que el servidor considera cargado (tenant del token). */
+export async function getDocumentCompleteness(params: {
+  tenantId: string;
+  applicationId: string;
+}): Promise<DocumentCompleteness> {
+  return creditCoreFetch<DocumentCompleteness>(
+    `/applications/${encodeURIComponent(params.applicationId)}/documents/completeness`,
+    { method: "GET", tenantId: params.tenantId },
+  );
 }
