@@ -25,7 +25,21 @@ async function buscar(page: Page) {
   await page.getByRole("button", { name: "Buscar" }).click();
 }
 
+const CASOS = 5;
+const pasados = new Set<string>();
+const fallados = new Set<string>();
+
 test.describe("PI-D1 señales de mercado", () => {
+  test.afterEach(({}, testInfo) => {
+    (testInfo.status === "passed" ? pasados : fallados).add(testInfo.title);
+    if (testInfo.status !== "passed") pasados.delete(testInfo.title);
+    else fallados.delete(testInfo.title);
+  });
+
+  test.afterAll(() => {
+    if (pasados.size === CASOS && fallados.size === 0) console.log("RESULT_PI_D1=PASS");
+  });
+
   test.beforeEach(async ({ page }) => {
     await login(page);
     await page.goto("/realtor/demand-radar/senales");
