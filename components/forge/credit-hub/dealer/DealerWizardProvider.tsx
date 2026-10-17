@@ -58,7 +58,6 @@ import {
 } from "@/lib/credit-hub/dealer/wizard-gates";
 import {
   getWizardSegmentValidation,
-  logPersonalReferencesDebug,
   scrollToFirstWizardError,
   wizardBlockReasonMessage,
   type WizardFieldErrors,
@@ -828,15 +827,6 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   }, [storageKey]);
 
   const attemptAdvance = useCallback(async (): Promise<boolean> => {
-    if (stepIndex === DEALER_WIZARD_STEP_PATHS.length - 1) {
-      logPersonalReferencesDebug(formData.personal_references ?? []);
-      console.info("[wizard-validation] documents step", {
-        document_files_ready: formData.document_files_ready,
-        personal_references: formData.personal_references,
-        canAdvance: segmentCanAdvance(stepIndex, formData, validationConfig, t),
-        validation: validationResult,
-      });
-    }
     if (segmentCanAdvance(stepIndex, formData, validationConfig, t)) {
       setShowValidationErrors(false);
       try {

@@ -169,11 +169,6 @@ export async function recordDecision(params: {
   const appPath = `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}`;
 
   // Step 1: Claim (idempotent — self-retry = 200, other-analyst = 409 throw)
-  console.log("[claim-before-decide] attempting claim", {
-    applicationId: params.applicationId,
-    analystId,
-    decisionType: params.body.decision,
-  });
   await chFetch<unknown>(`${appPath}/claim`, {
     tenantId: params.tenantId,
     actorRole,
@@ -183,7 +178,6 @@ export async function recordDecision(params: {
       ...(params.body.lender_code?.trim() ? { lender_code: params.body.lender_code.trim() } : {}),
     }),
   });
-  console.log("[claim-before-decide] claim succeeded, proceeding to decide");
 
   // Step 2: Decide (app is now claimed by us)
   const backendBody = toBankDecideRequestBody(params.body);
@@ -287,19 +281,10 @@ function normalizeApplicationEvents(
 
 export async function getAuditTrail(params: { tenantId: string; applicationId: string }): Promise<BankAuditTrail> {
   const url = `/api/v2/credit/applications/${encodeURIComponent(params.applicationId)}/events`;
-  console.log("[getAuditTrail] FETCH START", { url, tenantId: params.tenantId, applicationId: params.applicationId });
   
   const result = await chFetch<ApplicationEventResponse>(url, {
     tenantId: params.tenantId,
     actorRole,
-  });
-  
-  console.log("[getAuditTrail] FETCH COMPLETE", {
-    url,
-    resultType: typeof result,
-    hasEvents: Array.isArray(result?.events),
-    eventsLength: result?.events?.length ?? 0,
-    result,
   });
   
   return normalizeApplicationEvents(result, params.applicationId);
