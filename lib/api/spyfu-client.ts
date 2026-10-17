@@ -1,4 +1,4 @@
-import { resolveBackendUrl } from "@/lib/config/backend-url";
+import { apiFetch } from "@/lib/api/fetch-client";
 import type {
   AdsResponse,
   AdHistoryData,
@@ -24,8 +24,6 @@ import {
   FeatureDisabledError as FeatureDisabledErrorClass,
 } from "@/types/spyfu";
 
-const DEFAULT_BASE = resolveBackendUrl();
-
 
 function getDetail(body: unknown): unknown {
   if (!body || typeof body !== "object") return body;
@@ -33,18 +31,9 @@ function getDetail(body: unknown): unknown {
 }
 
 export class SpyFuClient {
-  private baseUrl: string;
-  private tenantId: string;
-
-  constructor() {
-    this.baseUrl = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_BASE).replace(/\/$/, "");
-    this.tenantId = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID?.trim() || "";
-  }
-
+  /** Tenant explícito opcional; el backend lo deriva del JWT y el BFF reenvía Authorization. */
   private resolveTenant(override?: string | null): string {
-    const t = (override ?? "").trim() || this.tenantId;
-    if (!t) throw new MissingTenantError();
-    return t;
+    return (override ?? "").trim();
   }
 
   private async throwForStatus(res: Response, body: unknown): Promise<never> {
@@ -96,15 +85,15 @@ export class SpyFuClient {
   ): Promise<T> {
     const { tenantId: tenantOverride, ...reqInit } = init;
     const tenant = this.resolveTenant(tenantOverride ?? undefined);
-    const url = `${this.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+    const url = path.startsWith("/") ? path : `/${path}`;
 
     let res: Response;
     try {
-      res = await fetch(url, {
+      res = await apiFetch(url, {
         ...reqInit,
         headers: {
           "Content-Type": "application/json",
-          "X-Tenant-ID": tenant,
+          ...(tenant ? { "X-Tenant-ID": tenant } : {}),
           ...(reqInit.headers as Record<string, string>),
         },
       });
