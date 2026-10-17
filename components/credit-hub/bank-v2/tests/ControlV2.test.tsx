@@ -64,10 +64,8 @@ describe("Cumplimiento y Auditoria v2 (B6)", () => {
     const { container } = envolver(<EscalacionesV2 marca={marca} hrefSolicitud={(id) => id} />);
     expect(visible(container)).toContain("Próximamente");
     expect(visible(container)).not.toMatch(/NEXT_PUBLIC|PENDING_MANUAL_REVIEW|flag/);
-    // El nombre del flag solo dentro del bloque plegado "Detalle técnico".
-    const detalle = screen.getByTestId("detalle-tecnico");
-    expect(detalle).not.toHaveAttribute("open");
-    expect(detalle.textContent).toMatch(/NEXT_PUBLIC_/);
+    expect(screen.queryByTestId("detalle-tecnico")).toBeNull();
+    expect(container.textContent).not.toMatch(/NEXT_PUBLIC/);
   });
 
   it("vehiculos: misma consulta; anomalia en llano, sin JSON ni campos crudos", async () => {

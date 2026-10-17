@@ -71,7 +71,7 @@ describe("KPIs v2 (AUDIT-COWORK 3/9)", () => {
     expect(screen.queryByTestId("detalle-tecnico")).toBeNull();
   });
 
-  it("resumen y tendencia con available:false: sello en llano y motivo tecnico solo plegado", async () => {
+  it("resumen y tendencia con available:false: sello en llano y sin motivo tecnico en pantalla", async () => {
     resumenBody = { available: false };
     tendenciaBody = { available: false };
     const { container } = pintar();
@@ -81,13 +81,14 @@ describe("KPIs v2 (AUDIT-COWORK 3/9)", () => {
     }
     expect(container.querySelectorAll("[data-testid=dcc-kpi-valor]")).toHaveLength(0);
     expect(lectura(container)).not.toMatch(/available|backend|kpis\//);
-    expect(screen.getByTestId("detalle-tecnico").textContent).toMatch(/kpis\/resumen/);
+    expect(screen.queryByTestId("detalle-tecnico")).toBeNull();
   });
 
-  it("prestamistas con available:false: Próximamente en llano; el motivo tecnico solo plegado", async () => {
+  it("prestamistas con available:false: Próximamente en llano; el sin motivo tecnico en pantalla", async () => {
     lendersFalla = true;
     const { container } = pintar();
-    expect(await screen.findByText(/kpis\/lenders no respondió/)).toBeInTheDocument();
+    expect(await screen.findByText("Esta información estará disponible próximamente.")).toBeInTheDocument();
+    expect(screen.queryByTestId("detalle-tecnico")).toBeNull();
     expect(lectura(container)).not.toMatch(/available|backend|kpis\//);
   });
 });

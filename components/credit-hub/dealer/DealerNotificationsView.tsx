@@ -86,7 +86,7 @@ export function DealerNotificationsView({ items, isLoading, sourceUnavailable, o
           title={sourceUnavailable ? "Notificaciones no conectadas" : "Sin alertas pendientes"}
           description={
             sourceUnavailable
-              ? "Cuando el backend publique GET /api/v2/credit/notifications, las alertas aparecerán aquí."
+              ? "Las alertas de tus solicitudes aparecerán aquí cuando el servicio de notificaciones esté disponible."
               : "Las notificaciones de tus solicitudes aparecerán aquí."
           }
         />

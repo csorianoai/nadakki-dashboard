@@ -18,9 +18,8 @@ import { useMonthlyGoals } from "@/lib/credit-hub/hooks/useMonthlyGoals";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { formatEntero, formatMonedaCompacta } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
-import { DetalleTecnico } from "../comun/DetalleTecnico";
 import { porcentaje } from "../comun/formato";
-import { parcialSiLimite, proximamente, type NotaTecnica } from "../comun/llano";
+import { parcialSiLimite, proximamente } from "../comun/llano";
 import { alertasMesa } from "./alertas";
 import { colaPorUrgencia, primerNombre, saludo } from "./mesa";
 import { MetasDelMes } from "./MetasDelMes";
@@ -71,18 +70,6 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
   const nombre = primerNombre(identidad.name);
   // Sin analytics ni cola cargada no hay cifra: nunca un 0 por defecto.
   const pendientes = analytics || colaQ.data ? pendingQueueCount(analytics, items) : null;
-  const notas: NotaTecnica[] = [
-    { que: "Urgencia por SLA", detalle: "applications/queue no expone sla_deadline; se ordena por prioridad y score del motor" },
-    { que: "Salud de la cartera", detalle: "falta el endpoint de embudo (kpis/funnel) con fondeado = DESEMBOLSADO" },
-    { que: "Desembolsado", detalle: "ningún endpoint cuenta solo DESEMBOLSADO; kpis/trends suma también ofertas aceptadas" },
-    { que: "Hoy", detalle: "no hay endpoint de actividad del día de la mesa" },
-    { que: "Tarjetas de la cola", detalle: "applications/queue no trae verificación de ingresos, DTI ni la regla de política (están en el expediente)" },
-  ];
-  if (aprobacion && aprobacion.avg_response_hours == null) notas.push({ que: "Respuesta media", detalle: "kpis/approval no trae avg_response_hours" });
-  if (aprobacion && aprobacion.approved_count == null) notas.push({ que: "Aprobadas", detalle: "kpis/approval no trae approved_count" });
-  if (portafolio && (portafolio.total_approved_amount == null || !formato.currency)) notas.push({ que: "Monto aprobado", detalle: "sin total_approved_amount en kpis/portfolio o sin moneda en el branding" });
-  if (!formato.currency) notas.push({ que: "Importes", detalle: "el branding del tenant no declara moneda" });
-  if (analytics && parcialSiLimite(analytics.total_applications)) notas.push({ que: "Red de dealers", detalle: "el ranking toma el dealer del payload y analytics/dashboard lee como máximo 500 solicitudes" });
   const alertas = colaQ.data ? alertasMesa({ items, metas: metasQ.data?.goals ?? [], periodo: metasQ.data?.period ?? currentGoalsPeriod(), ahora }) : null;
   const corte = colaQ.dataUpdatedAt ? new Intl.DateTimeFormat(formato.locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(colaQ.dataUpdatedAt) : null;
 
@@ -250,7 +237,6 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
           </DccSeccion>
         </div>
 
-        <DetalleTecnico notas={notas} />
       </div>
     </DccPageMarco>
   );

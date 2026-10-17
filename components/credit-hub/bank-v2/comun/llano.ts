@@ -3,12 +3,9 @@ import type { Calidad } from "@/lib/dcc/calidad";
 /**
  * Textos del banco v2 para lo que aun no tiene dato. Lo que lee el banco (sello,
  * tooltip y lector de pantalla) es una frase llana; el detalle tecnico
- * (endpoint, campo, flag) va aparte, al bloque plegado "Detalle técnico".
+ * (endpoint, campo, flag) no se muestra: vive en comentarios de codigo.
  */
 export const PROXIMAMENTE = "Esta cifra estará disponible próximamente.";
-
-/** Una nota para el bloque "Detalle técnico": que cifra y por que falta. */
-export type NotaTecnica = { que: string; detalle: string };
 
 /** Sello "Próximamente" con motivo llano (nunca el tecnico). */
 export function proximamente(motivo: string = PROXIMAMENTE): Calidad {

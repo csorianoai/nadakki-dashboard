@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Lock, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileSections } from "@/components/credit-hub/dealer/sections/ProfileSections";
@@ -8,8 +7,8 @@ import type { DealerProfileViewProps } from "@/lib/credit-hub/types/dealer-views
 
 export function DealerProfileView({ email, institutionName, roleLabel, locale }: DealerProfileViewProps) {
   const { tenantName } = useAuth();
-  const [displayName, setDisplayName] = useState(tenantName !== "—" ? tenantName : "");
-  const [phone, setPhone] = useState("");
+  const displayName = tenantName !== "—" ? tenantName : "";
+  const phone = "";
   const resolvedEmail = email || "—";
 
   return (
@@ -29,8 +28,6 @@ export function DealerProfileView({ email, institutionName, roleLabel, locale }:
         email={resolvedEmail}
         phone={phone}
         institutionName={institutionName}
-        onDisplayNameChange={setDisplayName}
-        onPhoneChange={setPhone}
       />
 
       <div className="ch-card mt-4 p-4">
