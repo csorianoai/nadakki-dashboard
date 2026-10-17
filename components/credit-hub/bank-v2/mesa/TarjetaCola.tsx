@@ -1,6 +1,7 @@
 "use client";
 
 import { nombreOpcional } from "../comun/nombres";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { DCC_CLASSES } from "@/components/dcc/clases";
@@ -8,6 +9,7 @@ import { SelloCalidad } from "@/components/dcc/SelloCalidad";
 import { chRelTime } from "@/lib/credit-hub/bank/bankFormat";
 import { formatEntero, formatFecha, formatMoneda, type LocaleTenant } from "@/lib/dcc/formato";
 import type { BankQueueItem } from "@/lib/credit-hub/types/bankDecision";
+import { EvidenciaCola } from "./EvidenciaCola";
 import { BANDA_TEXTO, PRIORIDAD_TEXTO, RIESGO_TEXTO, iniciales, recomendacion } from "./mesa";
 
 const BOTON_BORDE =
@@ -25,22 +27,12 @@ const PRIORIDAD_ESTILO: Record<BankQueueItem["priority"], string> = {
 };
 
 /**
- * La cola no trae estas fuentes: "Próximamente" con frase llana. El detalle
- * tecnico esta en el bloque plegado de la Mesa.
- */
-const EN_EXPEDIENTE = "Pronto aquí; mientras tanto, consúltalo en el expediente.";
-const PROXIMAMENTE = [
-  ["Ingresos verificados", EN_EXPEDIENTE],
-  ["Deuda / ingreso", EN_EXPEDIENTE],
-  ["Regla de política aplicada", "Este dato estará disponible próximamente."],
-] as const;
-
-/**
  * Una solicitud pendiente: quien, que vehiculo y dealer, monto, score y banda,
  * UNA accion recomendada (de la banda del motor) y la evidencia plegada. La
  * accion abre el expediente, donde se decide con las mismas reglas de hoy.
  */
 export function TarjetaCola({ item, formato, href }: { item: BankQueueItem; formato: LocaleTenant; href: string }) {
+  const [abierta, setAbierta] = useState(false);
   const rec = recomendacion(item.approval_band);
   const monto = formatMoneda(item.requested_amount, formato);
   const banda = item.approval_band ? BANDA_TEXTO[item.approval_band.toUpperCase()] : null;
@@ -77,7 +69,7 @@ export function TarjetaCola({ item, formato, href }: { item: BankQueueItem; form
           </Link>
         </div>
       </div>
-      <details className="group rounded-lg border border-[var(--dcc-border)] bg-[var(--dcc-surface-muted)] sm:ml-[52px]">
+      <details onToggle={(e) => setAbierta(e.currentTarget.open)} className="group rounded-lg border border-[var(--dcc-border)] bg-[var(--dcc-surface-muted)] sm:ml-[52px]">
         <summary className="flex cursor-pointer list-none items-center gap-1 px-3 py-2 text-xs font-semibold text-[var(--dcc-teal-ink)]">
           <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" aria-hidden="true" />
           Ver evidencia
@@ -87,14 +79,7 @@ export function TarjetaCola({ item, formato, href }: { item: BankQueueItem; form
           <Dato k="Nivel de riesgo" v={riesgo} />
           <Dato k="Banda del motor" v={banda} />
           <Dato k="Recibida" v={recibida ? `${recibida} · ${chRelTime(item.created_at)}` : null} />
-          {PROXIMAMENTE.map(([k, motivo]) => (
-            <div key={k} className="min-w-0">
-              <dt className={DCC_CLASSES.subtle}>{k}</dt>
-              <dd className="mt-0.5">
-                <SelloCalidad calidad={{ estado: "no_disponible", motivo }} />
-              </dd>
-            </div>
-          ))}
+          {abierta ? <EvidenciaCola applicationId={item.application_id} formato={formato} /> : null}
         </dl>
       </details>
     </article>
