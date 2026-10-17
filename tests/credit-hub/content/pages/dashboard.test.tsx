@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithQuery } from "../../renderWithQuery";
 import DealerDashboardPage from "@/app/(forge)/credit-hub/dealer/page";
 import { useCreditApplications } from "@/lib/credit-hub/hooks/useCreditApplications";
 import { useCreditStats } from "@/lib/credit-hub/hooks/useCreditStats";
@@ -28,16 +29,17 @@ describe("DealerDashboardPage", () => {
 
   test("loads applications from API", () => {
     mockUseApplications.mockReturnValue({ data: [makeApplication()], isLoading: false, error: null });
-    render(<DealerDashboardPage />);
+    renderWithQuery(<DealerDashboardPage />);
     expect(mockUseApplications).toHaveBeenCalled();
-    expect(screen.getByText("Solicitudes Recientes")).toBeInTheDocument();
+    expect(screen.getByText("Solicitudes recientes")).toBeInTheDocument();
     expect(screen.getAllByText("Ana Pérez")[0]).toBeInTheDocument();
   });
 
-  test("shows empty state when no applications", () => {
+  test("shows an empty recent-applications table when there are no applications", () => {
     mockUseApplications.mockReturnValue({ data: [], isLoading: false, error: null });
-    render(<DealerDashboardPage />);
-    expect(screen.getByText("No hay solicitudes aún")).toBeInTheDocument();
+    renderWithQuery(<DealerDashboardPage />);
+    expect(screen.getByText("Solicitudes recientes")).toBeInTheDocument();
+    expect(screen.queryByText("app-1")).not.toBeInTheDocument();
   });
 
   test("renders stats from Credit Core when available", () => {
@@ -59,8 +61,8 @@ describe("DealerDashboardPage", () => {
       error: null,
       refetch: jest.fn(),
     });
-    render(<DealerDashboardPage />);
-    expect(screen.getByText("Total Solicitudes")).toBeInTheDocument();
-    expect(screen.queryByText("—")).not.toBeInTheDocument();
+    renderWithQuery(<DealerDashboardPage />);
+    expect(screen.getByText("Solicitudes activas")).toBeInTheDocument();
+    expect(screen.getByText("Enviadas a bancos")).toBeInTheDocument();
   });
 });

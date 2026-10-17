@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../renderWithQuery";
 import userEvent from "@testing-library/user-event";
 import { DealerApplicationDetailView } from "@/components/credit-hub/dealer/DealerApplicationDetailView";
 import { useApplicationOffers } from "@/lib/credit-hub/hooks/useApplicationOffers";
@@ -44,7 +45,7 @@ jest.mock("@/lib/credit-hub/api/creditCoreClient", () => ({
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({
-  useTenant: () => ({ tenantId: "t1" }),
+  useTenant: () => ({ tenantId: "t1", apiTenantId: "t1" }),
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useTenantConfig", () => ({
@@ -116,7 +117,7 @@ function setOffers(state: Partial<ReturnType<typeof useApplicationOffers>> = {})
 }
 
 function renderView() {
-  return render(
+  return renderWithQuery(
     <div className="credit-hub-forge" data-persona="dealer">
       <DealerApplicationDetailView applicationId="APP-1" />
     </div>,

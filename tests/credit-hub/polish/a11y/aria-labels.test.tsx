@@ -26,6 +26,6 @@ describe("aria labels", () => {
     render(<ApplicationsListPage />);
     const mobileFab = document.querySelector('a.fixed[aria-label="Nueva solicitud"]');
     expect(mobileFab).toBeTruthy();
-    expect(mobileFab).toHaveAttribute("href", "/credit-hub/dealer/applications/new/applicant");
+    expect(mobileFab).toHaveAttribute("href", "/autos/dealer/credito/solicitudes/nueva/solicitante?new=1");
   });
 });

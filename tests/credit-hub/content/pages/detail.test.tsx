@@ -1,11 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
+import { renderWithQuery } from "../../renderWithQuery";
 import DealerApplicationDetailPage from "@/app/(forge)/credit-hub/dealer/applications/[applicationId]/page";
 import { useCreditApplicationDetail } from "@/lib/credit-hub/hooks/useCreditApplicationDetail";
-import { useProcessCreditApplication } from "@/lib/credit-hub/hooks/useProcessCreditApplication";
+import { useApplicationOffers } from "@/lib/credit-hub/hooks/useApplicationOffers";
 import { makeApplication } from "../testData";
 
-const back = jest.fn();
-const processMutateAsync = jest.fn();
+const push = jest.fn();
 
 jest.mock("react", () => {
   const actual = jest.requireActual("react");
@@ -16,19 +16,19 @@ jest.mock("react", () => {
 });
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ back }),
+  useRouter: () => ({ push, back: jest.fn() }),
 }));
 
 jest.mock("@/lib/credit-hub/hooks/useCreditApplicationDetail", () => ({
   useCreditApplicationDetail: jest.fn(),
 }));
 
-jest.mock("@/lib/credit-hub/hooks/useProcessCreditApplication", () => ({
-  useProcessCreditApplication: jest.fn(),
+jest.mock("@/lib/credit-hub/hooks/useApplicationOffers", () => ({
+  useApplicationOffers: jest.fn(),
 }));
 
 const mockUseApplication = useCreditApplicationDetail as jest.Mock;
-const mockUseProcess = useProcessCreditApplication as jest.Mock;
+const mockUseOffers = useApplicationOffers as jest.Mock;
 
 function renderDetail(overrides = {}, events = []) {
   mockUseApplication.mockReturnValue({
@@ -38,47 +38,52 @@ function renderDetail(overrides = {}, events = []) {
     error: null,
     refetch: jest.fn(),
   });
-  render(<DealerApplicationDetailPage params={{ applicationId: "app-1" } as never} />);
+  renderWithQuery(<DealerApplicationDetailPage params={{ applicationId: "app-1" } as never} />);
 }
 
 describe("DealerApplicationDetailPage", () => {
   beforeEach(() => {
-    back.mockReset();
+    push.mockReset();
     mockUseApplication.mockReset();
-    processMutateAsync.mockReset();
-    mockUseProcess.mockReturnValue({ mutateAsync: processMutateAsync, isPending: false });
+    mockUseOffers.mockReturnValue({
+      offers: [],
+      pagination: null,
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    });
   });
 
-  test("shows tabs correctly", () => {
+  test("shows the applicant header and the main sections", () => {
     renderDetail();
-    expect(screen.getByRole("button", { name: /Resumen/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Vehículo/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Simulador/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Cronología/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ana Pérez" })).toBeInTheDocument();
+    expect(screen.getByText("Estado de tu solicitud")).toBeInTheDocument();
+    expect(screen.getByText("Cliente")).toBeInTheDocument();
+    expect(screen.getByText("Cronología")).toBeInTheDocument();
   });
 
   test("handles null vehicle data gracefully", () => {
     renderDetail({ vehicle_year: null, vehicle_make: null, vehicle_model: null, vehicle_vin: null });
-    fireEvent.click(screen.getByRole("button", { name: /Vehículo/ }));
-    expect(screen.getByText("Sin información de vehículo")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ana Pérez" })).toBeInTheDocument();
+    expect(screen.getByText(/app-1 · —/)).toBeInTheDocument();
   });
 
-  test("back button works", () => {
+  test("back button returns to the dealer applications list", () => {
     renderDetail();
-    fireEvent.click(screen.getByRole("button", { name: /Volver/ }));
-    expect(back).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /Mis solicitudes/ }));
+    expect(push).toHaveBeenCalledWith("/autos/dealer/credito/solicitudes");
   });
 
-  test("process button calls backend mutation", () => {
-    processMutateAsync.mockResolvedValue(makeApplication());
+  test("does not expose a dealer-side AI processing action (el análisis vive en el banco)", () => {
     renderDetail();
-    fireEvent.click(screen.getByRole("button", { name: /Procesar con inteligencia artificial/ }));
-    expect(processMutateAsync).toHaveBeenCalledWith("ai");
+    expect(screen.queryByRole("button", { name: /Procesar con inteligencia artificial/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Procesar/ })).not.toBeInTheDocument();
   });
 
   test("renders backend events in timeline", () => {
     renderDetail({}, [{ id: "evt-1", title: "Procesada con IA", description: "Puntaje calculado", created_at: new Date().toISOString() }]);
-    fireEvent.click(screen.getByRole("button", { name: /Cronología/ }));
     expect(screen.getByText("Procesada con IA")).toBeInTheDocument();
     expect(screen.getByText("Puntaje calculado")).toBeInTheDocument();
   });

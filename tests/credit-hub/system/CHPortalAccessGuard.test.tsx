@@ -29,11 +29,26 @@ describe("CHPortalAccessGuard", () => {
     expect(screen.queryByText("Dealer content")).not.toBeInTheDocument();
   });
 
-  test("renders children for credit_admin on dealer portal", () => {
+  test("shows 403 for credit_admin on dealer portal (solo el portal banco lo admite)", () => {
     mockUseAuth.mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
       activeRole: { role_key: "credit_admin", display_name: "Credit Admin" },
+    });
+    render(
+      <CHPortalAccessGuard portal="dealer">
+        <div>Dealer content</div>
+      </CHPortalAccessGuard>,
+    );
+    expect(screen.getByTestId("ch-portal-forbidden")).toBeInTheDocument();
+    expect(screen.queryByText("Dealer content")).not.toBeInTheDocument();
+  });
+
+  test("renders children for dealer role on dealer portal", () => {
+    mockUseAuth.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      activeRole: { role_key: "dealer", display_name: "Dealer" },
     });
     render(
       <CHPortalAccessGuard portal="dealer">
