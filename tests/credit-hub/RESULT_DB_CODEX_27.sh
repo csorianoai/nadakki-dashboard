@@ -5,7 +5,7 @@ set -u
 cd "$(dirname "$0")/../.." || exit 1
 export NEXT_PUBLIC_BACKEND_URL="${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8000}"
 export NODE_OPTIONS="--max-old-space-size=4096 ${NODE_OPTIONS:-}"
-if npm run typecheck && npx jest components/credit-hub/bank-v2 --ci --passWithNoTests=false; then
+if npm run typecheck && npx jest components/credit-hub/bank-v2 tests/nav/herramientas-bank-v2.test.tsx --ci --passWithNoTests=false; then
   echo "RESULT_DB_CODEX_27=PASS"
 else
   echo "RESULT_DB_CODEX_27=FAIL"
