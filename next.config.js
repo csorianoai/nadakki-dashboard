@@ -122,12 +122,6 @@ const nextConfig = {
   // Solo la evidencia Playwright de Realtor construye una segunda copia (sin DEMO); por defecto es .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
-  // El build de CI corre con heap de 1536 MB (superloop/dashboard_ci.sh): menos memoria en webpack y sin mapas de fuentes.
-  productionBrowserSourceMaps: false,
-  experimental: {
-    webpackMemoryOptimizations: true,
-    cpus: 1,
-  },
   images: {
     remotePatterns: [
       {
