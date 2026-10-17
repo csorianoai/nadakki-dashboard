@@ -2,6 +2,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WhatsAppConsentMethod } from "@/components/credit-hub/dealer/wizard/consent/WhatsAppConsentMethod";
 
+jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
+  useTranslations: () => require("@/lib/credit-hub/i18n/locales/es-DO/credit-hub").CREDIT_HUB_ES_DO,
+}));
+
 jest.mock("@/components/credit-hub/system/ForgeToaster", () => ({
   forgeToast: { success: jest.fn(), error: jest.fn() },
 }));

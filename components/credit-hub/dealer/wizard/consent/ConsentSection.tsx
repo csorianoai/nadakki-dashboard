@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WIZARD_OPTIONAL_BUREAU_NOTICE } from "@/lib/credit-hub/dealer/wizard-optional-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useConsentApi } from "@/lib/credit-hub/hooks/useConsentApi";
@@ -59,6 +59,31 @@ export function ConsentSection({
   const consentApi = useConsentApi();
   const [presentSubmitting, setPresentSubmitting] = useState(false);
   const [presentSubmitError, setPresentSubmitError] = useState<string | null>(null);
+
+  const [legalText, setLegalText] = useState<string | null>(null);
+  const [legalTextVersion, setLegalTextVersion] = useState<string | null>(null);
+  const [legalTextError, setLegalTextError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (consent_presence !== "present" || !applicationIdReady || !applicationId || !consentApi) return;
+    let alive = true;
+    consentApi
+      .getPresentText(applicationId)
+      .then((r) => {
+        if (!alive) return;
+        setLegalText(r.consent_text || null);
+        setLegalTextVersion(r.consent_text_version || null);
+        setLegalTextError(null);
+      })
+      .catch((e) => {
+        if (!alive) return;
+        setLegalText(null);
+        setLegalTextError(e instanceof Error ? e.message : null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [consent_presence, applicationIdReady, applicationId, consentApi]);
 
   const enabledRemote = normalizeRemoteConsentMethods(tenantConfig?.consent_methods_enabled ?? []);
 
@@ -160,6 +185,9 @@ export function ConsentSection({
           submitting={presentSubmitting}
           submitError={presentSubmitError}
           getFieldError={getFieldError}
+          legalText={legalText}
+          legalTextVersion={legalTextVersion}
+          legalTextError={legalTextError}
         />
       )}
 
@@ -217,6 +245,7 @@ export function ConsentSection({
           consentsAccepted={consentsAccepted}
           fullName={consent_signature_full_name}
           onFullNameChange={(v) => onPatch({ consent_signature_full_name: v })}
+          onUseInPerson={() => setPresence("present")}
         />
         {getFieldError?.("consent_method") ? <p className="mt-2 text-xs text-[#ef4444]" role="alert">{getFieldError("consent_method")}</p> : null}
         </div>
