@@ -374,7 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // se enruta al cambio y la página de login no manda a la Suite.
       setMustChangePassword(true);
       goToPasswordChange();
-      return { ok: true, redirectTo: PASSWORD_CHANGE_ROUTE, mustChangePassword: true };
+      return { redirectTo: PASSWORD_CHANGE_ROUTE, mustChangePassword: true, ok: true };
     }
     setUser(result.data.user_info);
     setTenant(result.data.tenant_info);
