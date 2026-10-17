@@ -32,7 +32,8 @@ export type Leida =
   | { estado: "session_expired" }
   | { estado: "hidden" }
   | { estado: "service_unavailable" }
-  | { estado: "error" };
+  | { estado: "error" }
+  | { estado: "contract_violation" };
 
 export type Enviar = (ruta: string, init?: RequestInit) => Promise<Response>;
 export type Consulta =
@@ -48,6 +49,8 @@ export function rutaConsulta(c: Consulta): string {
   return `${BASE_SIGNALS}/${c.tipo === "keyword" ? "keyword-stats" : "interest-series"}?${q.toString()}`;
 }
 
+const ESTADOS: readonly string[] = ["LIVE", "HISTORICAL", "ESTIMATED", "UNAVAILABLE"];
+
 const tieneBearer = () => Boolean(getAuthHeaders().Authorization);
 
 /** Solo GET. Sin Bearer no se envía la petición (fail-closed). Un 200 se devuelve tal cual: UNAVAILABLE no es error. */
@@ -60,7 +63,10 @@ export async function leerSenales(c: Consulta, enviar?: Enviar): Promise<Leida> 
     if (res.status === 503) return { estado: "service_unavailable" };
     if (res.status !== 200) return { estado: "error" };
     const lote = (await res.json()) as SignalBatch;
-    return Array.isArray(lote?.data) ? { estado: "ok", lote } : { estado: "error" };
+    if (!Array.isArray(lote?.data)) return { estado: "error" };
+    // data_status fuera de los cuatro del contrato (p. ej. "DEMO") es violación de contrato: no se pinta nada.
+    if (!lote.data.every((s) => ESTADOS.includes(s?.data_status) && s.provenance?.status === s.data_status)) return { estado: "contract_violation" };
+    return { estado: "ok", lote };
   } catch {
     return { estado: "error" };
   }

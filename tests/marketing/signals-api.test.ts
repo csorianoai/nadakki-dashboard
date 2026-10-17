@@ -28,6 +28,17 @@ describe("cliente de señales (C-PI)", () => {
     expect(JSON.stringify(enviar.mock.calls[0][1])).not.toMatch(/tenant/i);
     expect((await leerSenales({ tipo: "dominio", domain: "x.com" }, async () => resp(200, {}))).estado).toBe("error");
   });
+  it.each(["DEMO", "RARO"])("200 con data_status %s es contract_violation, nunca ok", async (ds) => {
+    const cuerpo = { ...lote, data: [{ ...base, data_status: ds }] };
+    expect((await leerSenales({ tipo: "dominio", domain: "x.com" }, async () => resp(200, cuerpo))).estado).toBe("contract_violation");
+  });
+  it("200 con provenance.status distinto de data_status es contract_violation", async () => {
+    const cuerpo = { ...lote, data: [{ ...base, provenance: { ...base.provenance, status: "LIVE" as const } }] };
+    expect((await leerSenales({ tipo: "dominio", domain: "x.com" }, async () => resp(200, cuerpo))).estado).toBe("contract_violation");
+  });
+  it("200 con señales válidas es ok", async () => {
+    expect((await leerSenales({ tipo: "dominio", domain: "x.com" }, async () => resp(200, { ...lote, data: [base] }))).estado).toBe("ok");
+  });
   it("sin Bearer no envía la petición", async () => {
     window.localStorage.clear();
     expect((await leerSenales({ tipo: "dominio", domain: "x.com" })).estado).toBe("session_expired");

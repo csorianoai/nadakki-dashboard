@@ -16,6 +16,7 @@ const AVISO = {
   hidden: "Las señales de mercado no están disponibles para tu organización.",
   service_unavailable: "El servicio de señales no está disponible por ahora. Inténtalo de nuevo en unos minutos.",
   error: "No se pudieron cargar las señales.",
+  contract_violation: "La respuesta del servicio no es válida. No se muestran señales.",
 } as const;
 
 type Estado = { fase: "idle" } | { fase: "cargando" } | { fase: "listo"; lectura: Leida };
