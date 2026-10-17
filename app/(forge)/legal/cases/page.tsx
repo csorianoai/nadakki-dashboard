@@ -9,16 +9,25 @@ import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 export default function LegalCasesListPage() {
   const m = useLegalCasesMessages();
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
-  const { data, isLoading, isError, error } = useLegalCases(effectiveTenantId);
+  const { data, isLoading, isError, refetch } = useLegalCases(effectiveTenantId);
 
-  if (!tenantHydrated) {
-    return <p className="text-sm text-zinc-500">Cargando tenant…</p>;
+  if (!tenantHydrated || (!effectiveTenantId && !tenantError)) {
+    return (
+      <p className="text-sm text-zinc-500" aria-live="polite">
+        {m.list.loading}
+      </p>
+    );
   }
   if (!effectiveTenantId || tenantError) {
     return (
-      <p className="text-sm text-red-400" role="alert">
-        {tenantError ?? "Tenant no disponible para expedientes"}
-      </p>
+      <div className="space-y-3" role="alert">
+        <p className="text-sm text-zinc-300">
+          No pudimos identificar tu cuenta para cargar los expedientes. Vuelve al panel Legal e inténtalo de nuevo.
+        </p>
+        <Link href="/legal" className="text-sm text-violet-400 underline">
+          Volver al panel Legal
+        </Link>
+      </div>
     );
   }
 
@@ -36,7 +45,7 @@ export default function LegalCasesListPage() {
           {m.list.create_button}
         </Link>
       </header>
-      <CaseList cases={data?.cases ?? []} loading={isLoading} error={isError ? (error as Error) : null} />
+      <CaseList cases={data?.cases ?? []} loading={isLoading} error={isError} onRetry={() => void refetch()} />
     </main>
   );
 }
