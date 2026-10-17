@@ -10,6 +10,10 @@ import BankApplicationReviewPage from "@/app/(forge)/credit-hub/bank/application
  * portal="bank"). La ruta v1 /credit-hub/bank/applications/:id redirige a bank-v2 (next.config.js),
  * por eso no se puede enlazar: esta ruta es la que las hace alcanzables, sin redirección.
  *
+ * ESTILOS: las clases ch-* de la pantalla v1 cuelgan de `.credit-hub-forge` (credit-hub.css), que en v1
+ * pone BankChShell; BancoV2Shell no, de ahi la vista sin estilos. Se aplica aqui el mismo ambito
+ * (credit-hub-forge + data-persona="bank") y la clase credit-hub-bank-portal de bank/layout.tsx.
+ *
  * FUENTE (no borrar en el PR 7 mientras esto sea así):
  *   app/(forge)/credit-hub/bank/applications/[applicationId]/page.tsx
  *   app/(forge)/credit-hub/bank/_components/BankApplicationOpsPanel.tsx
@@ -19,7 +23,7 @@ import BankApplicationReviewPage from "@/app/(forge)/credit-hub/bank/application
 export default function HerramientasExpedientePage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
   return (
-    <div>
+    <div data-testid="herramientas-portal" className="credit-hub-forge credit-hub-bank-portal" data-persona="bank">
       <Link
         href={`/credit-hub/bank-v2/solicitudes/${encodeURIComponent(applicationId)}`}
         data-testid="herramientas-volver-expediente"

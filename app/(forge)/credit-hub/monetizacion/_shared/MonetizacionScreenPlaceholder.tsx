@@ -10,7 +10,7 @@ export function MonetizacionScreenPlaceholder({ screen }: Props) {
         {screen}
       </h2>
       <p style={{ marginTop: 12, color: "var(--fm-ink-soft)", fontSize: 14 }}>
-        Pantalla en construcción · datos mock en M4/M5.
+        Esta pantalla estará disponible próximamente.
       </p>
     </section>
   );

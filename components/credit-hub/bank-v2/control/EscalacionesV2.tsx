@@ -10,14 +10,13 @@ import { chRelTime } from "@/lib/credit-hub/bank/bankFormat";
 import { useNotifications } from "@/lib/credit-hub/hooks/useNotifications";
 import { isBankPilotUiEnabled } from "@/lib/env/feature-bank-pilot-ui";
 import type { MarcaDcc } from "@/lib/dcc/marca";
-import { DetalleTecnico } from "../comun/DetalleTecnico";
 
 const CATEGORIAS = new Set(["kyc_escalated", "ocr_escalated"]);
 
 /**
  * Escalaciones KYC / OCR (bank-v2). La misma fuente y el mismo filtro que la
  * pantalla actual (notificaciones del backend), con el mismo flag. Cuando no
- * hay fuente, "Próximamente" en llano; el nombre del flag, en "Detalle técnico".
+ * hay fuente, "Próximamente" en llano.
  */
 export function EscalacionesV2({ marca, hrefSolicitud }: { marca: MarcaDcc; hrefSolicitud: (id: string) => string }) {
   const { items, isLoading, hidden } = useNotifications();
@@ -27,12 +26,8 @@ export function EscalacionesV2({ marca, hrefSolicitud }: { marca: MarcaDcc; href
     return CATEGORIAS.has(cat) || titulo.includes("escal") || titulo.includes("kyc") || titulo.includes("ocr");
   });
   const piloto = isBankPilotUiEnabled();
-  const tecnico = !piloto
-    ? "panel apagado por NEXT_PUBLIC_BANK_PILOT_UI"
-    : hidden
-      ? "notificaciones apagadas (NEXT_PUBLIC_CH_NOTIFICATIONS); no hay endpoint de listado de escalaciones"
-      : null;
-  const cuerpo = tecnico ? (
+  const apagado = !piloto || hidden;
+  const cuerpo = apagado ? (
     <DccEstado estado="no_disponible" detalle="Las escalaciones estarán disponibles próximamente." />
   ) : isLoading ? (
     <DccEstado estado="cargando" />
@@ -65,11 +60,6 @@ export function EscalacionesV2({ marca, hrefSolicitud }: { marca: MarcaDcc; href
       <DccSeccion titulo="Escalaciones KYC y OCR" icono={ShieldAlert}>
         {cuerpo}
       </DccSeccion>
-      {tecnico ? (
-        <div className="mt-[var(--dcc-gap)]">
-          <DetalleTecnico notas={[{ que: "Escalaciones", detalle: tecnico }]} />
-        </div>
-      ) : null}
     </DccPageMarco>
   );
 }

@@ -76,9 +76,9 @@ export function BankComplianceView({ issues, jurisdictionCode, institutionName, 
         )}
       </div>
 
-      <SectionHeader eyebrow="Derecho al olvido (RTBF)" title="Solicitudes de eliminación de datos" sub="Placeholder — endpoint RTBF no expuesto en MVP" />
+      <SectionHeader eyebrow="Derecho al olvido (RTBF)" title="Solicitudes de eliminación de datos" sub="Aquí se listarán las solicitudes de eliminación de datos personales." />
       <div className="ch-card" style={{ padding: 24 }}>
-        <EmptyStateRich variant="placeholder" title="RTBF próximamente" body="Las solicitudes RTBF se listarán cuando el backend exponga el endpoint correspondiente." />
+        <EmptyStateRich variant="placeholder" title="Listado de solicitudes: próximamente" body="El listado de solicitudes de eliminación de datos estará disponible próximamente." />
       </div>
     </div>
   );

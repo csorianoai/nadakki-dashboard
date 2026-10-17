@@ -6,16 +6,12 @@ export function ProfileSections({
   email,
   phone,
   institutionName,
-  onDisplayNameChange,
-  onPhoneChange,
 }: {
   locale: string;
   displayName: string;
   email: string;
   phone: string;
   institutionName: string;
-  onDisplayNameChange: (v: string) => void;
-  onPhoneChange: (v: string) => void;
 }) {
   return (
     <div className="ch-card p-4">
@@ -23,7 +19,7 @@ export function ProfileSections({
         Datos del asesor
       </h2>
       <p style={{ fontSize: 12, color: "var(--ch-text-3)", marginBottom: 16 }}>
-        Los cambios se guardan solo en esta sesión (MVP). Sincronización con backend pendiente.
+        Estos datos son de solo lectura. Para modificarlos, comunícate con el administrador de tu cuenta.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
@@ -35,7 +31,7 @@ export function ProfileSections({
             className="ch-input"
             style={{ minHeight: 44, width: "100%" }}
             value={displayName}
-            onChange={(e) => onDisplayNameChange(e.target.value)}
+            readOnly
           />
         </div>
         <div>
@@ -53,8 +49,8 @@ export function ProfileSections({
             className="ch-input"
             style={{ minHeight: 44, width: "100%" }}
             value={phone}
-            onChange={(e) => onPhoneChange(e.target.value)}
-            placeholder={locale.toLowerCase().startsWith("es") ? "Opcional" : "Optional"}
+            readOnly
+            placeholder={locale.toLowerCase().startsWith("es") ? "Sin registrar" : "Not set"}
           />
         </div>
         <div>

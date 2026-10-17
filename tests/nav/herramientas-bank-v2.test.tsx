@@ -148,6 +148,11 @@ describe("pantalla de herramientas: todos sus enlaces de ida y vuelta", () => {
     const { container } = render(conCliente(<HerramientasPage {...params()} />));
     expect(screen.getByTestId("detalle-v1")).toBeInTheDocument();
     expect(screen.getByTestId("ops-panel")).toBeInTheDocument();
+    // DB-CODEX-23: las clases ch-* solo se estilan dentro del ambito del portal del banco.
+    const portal = screen.getByTestId("herramientas-portal");
+    expect(portal).toHaveClass("credit-hub-forge", "credit-hub-bank-portal");
+    expect(portal).toHaveAttribute("data-persona", "bank");
+    expect(portal).toContainElement(screen.getByTestId("detalle-v1"));
     const volver = screen.getByTestId("herramientas-volver-expediente");
     expect(volver).toHaveAttribute("href", EXPEDIENTE);
     expect(seguir(EXPEDIENTE)).toEqual([EXPEDIENTE]);

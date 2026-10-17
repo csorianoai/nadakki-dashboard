@@ -23,7 +23,7 @@ concurrency:
 jobs:
   ci:
     name: typecheck and changedSince tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ci-8g]
     env:
       NEXT_PUBLIC_BACKEND_URL: http://backend.invalid
     steps:
@@ -220,7 +220,7 @@ jobs:
 
   next-build:
     name: next production build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ci-8g]
     timeout-minutes: 25
     env:
       NEXT_PUBLIC_BACKEND_URL: http://backend.invalid
