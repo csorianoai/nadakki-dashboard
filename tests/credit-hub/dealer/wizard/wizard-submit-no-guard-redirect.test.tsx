@@ -10,6 +10,7 @@ import {
   useDealerWizard,
   type DealerWizardContextValue,
 } from "@/components/forge/credit-hub/dealer/DealerWizardProvider";
+import { dealerWizardStepHref } from "@/components/forge/credit-hub/dealer/dealerWizardPaths";
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
@@ -102,4 +103,34 @@ test("tras un envío correcto desde /review la guarda no hace router.replace", a
   });
   await act(async () => undefined);
   expect(mockReplace).not.toHaveBeenCalled();
+});
+
+test("tras el envío, otra solicitud en el mismo Provider vuelve a tener guarda de entrada (REJECT auditor2 12:52 sobre #962)", async () => {
+  mockPathname = "/credit-hub/dealer/applications/new/review";
+  mockSearch = "application_id=app-guard-1";
+  // elemento nuevo en cada render: con el mismo objeto React no vuelve a renderizar el Provider
+  const ui = () => (
+    <DealerWizardProvider>
+      <Probe />
+    </DealerWizardProvider>
+  );
+  const { rerender } = render(ui());
+  await act(async () => undefined);
+  act(() => ctx.updateField("applicant_full_name", "Solicitud QA"));
+  await act(async () => {
+    await ctx.submitApplication();
+  });
+  await act(async () => undefined);
+  mockReplace.mockClear();
+  // Sin desmontar el Provider: «Nueva solicitud» lleva a un paso posterior con el formulario vacío.
+  mockPathname = "/credit-hub/dealer/applications/new/consent";
+  mockSearch = "new=1";
+  rerender(ui());
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 0));
+  });
+  expect(mockReplace).toHaveBeenCalled();
+  expect(mockReplace).toHaveBeenLastCalledWith(dealerWizardStepHref("applicant", ""));
+  mockPathname = "/credit-hub/dealer/applications/new/review";
+  mockSearch = "application_id=app-guard-1";
 });
