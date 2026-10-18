@@ -78,7 +78,7 @@ test.describe("EP-T3-5 admin observability dashboards", () => {
 
   test("dashboard loads histogram and comparison from /metrics", async ({ page }) => {
     await page.goto("/admin/observability/dashboard");
-    await expect(page.getByRole("heading", { name: /dashboard de observabilidad/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /panel de observabilidad/i })).toBeVisible();
     await expect(page.getByTestId("latency-histogram")).toBeVisible();
     await expect(page.getByTestId("tenant-comparison")).toBeVisible();
     await expect(page.getByText(/X-Role/i)).toBeVisible();
