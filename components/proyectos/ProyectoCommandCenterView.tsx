@@ -139,7 +139,7 @@ function nextActionPlanForState(proyectoId: string, state: string | null | undef
       description: "El proyecto ya requiere lectura ejecutiva: revisa análisis, tableros y riesgos antes del siguiente comité.",
       actions: [
         { label: "Ver análisis inmobiliario", href: `${base}/analisis`, variant: "primary" },
-        { label: "Dashboard CEO", href: "/proyectos/dashboards/ceo", variant: "secondary" },
+        { label: "Panel CEO", href: "/proyectos/dashboards/ceo", variant: "secondary" },
         { label: "Riesgos", href: `${base}/riesgos`, variant: "secondary" },
       ],
     };
@@ -165,7 +165,7 @@ function nextActionPlanForState(proyectoId: string, state: string | null | undef
       description: "El proyecto está cerrado. Revisa análisis, documentos y tableros para alimentar la siguiente decisión de inversión.",
       actions: [
         { label: "Ver análisis inmobiliario", href: `${base}/analisis`, variant: "primary" },
-        { label: "Dashboard inversionista", href: "/proyectos/dashboards/inversionista", variant: "secondary" },
+        { label: "Panel inversionista", href: "/proyectos/dashboards/inversionista", variant: "secondary" },
         { label: "Documentos", href: `${base}/documentos`, variant: "secondary" },
       ],
     };
@@ -178,7 +178,7 @@ function nextActionPlanForState(proyectoId: string, state: string | null | undef
     actions: [
       { label: "Ver análisis", href: `${base}/analisis`, variant: "primary" },
       { label: "Ver WBS", href: `${base}/wbs`, variant: "secondary" },
-      { label: "Dashboard CEO", href: "/proyectos/dashboards/ceo", variant: "secondary" },
+      { label: "Panel CEO", href: "/proyectos/dashboards/ceo", variant: "secondary" },
     ],
   };
 }

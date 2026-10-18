@@ -66,7 +66,7 @@ function splitCsv(value: string): string[] {
 
 function messageFor(error: unknown): string {
   if (error instanceof OnboardingApiError) {
-    if (error.status === 401) return "Your session expired. Sign in again before retrying.";
+    if (error.status === 401) return "Su sesión expiró. Inicie sesión de nuevo antes de reintentar.";
     if (error.status === 403) return "Platform or institution administrator permission is required.";
     if (error.status === 409) return "This institution or dealer already exists. Review its onboarding status.";
     return error.message;

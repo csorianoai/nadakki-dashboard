@@ -42,7 +42,7 @@ export function FinanceOverviewClient({ proyectoId }: { proyectoId: string }) {
   return (
     <FinanzasPageShell
       proyectoId={proyectoId}
-      title="Overview financiero"
+      title="Resumen financiero"
       description="KPIs de presupuesto, compromiso, facturación y pagos del proyecto."
       icon={<Landmark className="h-10 w-10" aria-hidden />}
     >

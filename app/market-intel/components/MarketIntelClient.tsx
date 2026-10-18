@@ -175,7 +175,7 @@ export function MarketIntelClient() {
   if (!effectiveTenantId || tenantError) {
     return (
       <p className="text-forge-sm text-forgeDanger-700" role="alert">
-        {tenantError ?? "Tenant no disponible"}
+        {tenantError ?? "Organización no disponible"}
       </p>
     );
   }
