@@ -7,6 +7,8 @@ import TenantOnboardingLayout from "@/app/(admin)/tenant-onboarding/layout";
 import { useAuth } from "@/hooks/useAuth";
 import { esSuperadminDePlataforma, SOLO_SUPERADMIN_TITULO } from "@/lib/auth/platform-staff";
 
+const mockPathname = jest.fn<string | null, []>(() => null);
+jest.mock("next/navigation", () => ({ usePathname: () => mockPathname() }));
 jest.mock("@/hooks/useAuth", () => ({ useAuth: jest.fn() }));
 jest.mock("@/components/admin/onboarding/OnboardingProvider", () => ({
   OnboardingProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -43,7 +45,30 @@ const SUPERADMIN: Rol[] = [{ core_name: "platform", role_key: "platform_superadm
 
 const PANEL = <p>Panel de Administración</p>;
 
-afterEach(() => jest.clearAllMocks());
+afterEach(() => {
+  jest.clearAllMocks();
+  mockPathname.mockReturnValue(null);
+});
+
+describe("/admin/usuarios: lo administra tambien el tenant_admin", () => {
+  test("tenant_admin ve el contenido bajo el layout de /admin", () => {
+    mockPathname.mockReturnValue("/admin/usuarios");
+    sesion(TENANT_ADMIN);
+    render(<AdminLayout>{PANEL}</AdminLayout>);
+    expect(screen.getByText("Panel de Administración")).toBeInTheDocument();
+    expect(screen.queryByTestId("solo-superadmin-denegado")).toBeNull();
+  });
+
+  test("el resto de /admin sigue negado al tenant_admin", () => {
+    for (const ruta of ["/admin/gates", "/admin/usuarios-falsos", "/admin"]) {
+      mockPathname.mockReturnValue(ruta);
+      sesion(TENANT_ADMIN);
+      const { unmount } = render(<AdminLayout>{PANEL}</AdminLayout>);
+      expect(screen.getByTestId("solo-superadmin-denegado")).toBeInTheDocument();
+      unmount();
+    }
+  });
+});
 
 const pantallas: [string, (p: { children: React.ReactNode }) => React.ReactElement][] = [
   ["/admin", AdminLayout],
