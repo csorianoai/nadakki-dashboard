@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import DemoBadge from "@/components/ui/DemoBadge";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const PLATFORMS = [
@@ -120,8 +121,8 @@ export default function ContentStudioPage() {
             {results.length > 0 ? (
               <div className="space-y-4">
                 {results?.map((result, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className="p-5 bg-white/5 border border-white/10 rounded-xl">
+                  <DemoBadge key={i}><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                    className="p-5 pt-8 bg-white/5 border border-white/10 rounded-xl">
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-400">Variante {i + 1}</span>
                       <button onClick={() => copyToClipboard(result, i)} className="p-2 hover:bg-white/10 rounded-lg">
@@ -129,7 +130,7 @@ export default function ContentStudioPage() {
                       </button>
                     </div>
                     <p className="text-white whitespace-pre-wrap">{result}</p>
-                  </motion.div>
+                  </motion.div></DemoBadge>
                 ))}
               </div>
             ) : (
