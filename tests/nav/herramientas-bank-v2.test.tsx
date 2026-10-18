@@ -163,7 +163,7 @@ describe("pantalla de herramientas: todos sus enlaces de ida y vuelta", () => {
   const RAIZ = process.cwd();
   /** Toda la pantalla v1 que se monta en /herramientas: la página, el panel de operaciones y BankDetailLayout con sus pestañas. */
   const FUENTES = [
-    "app/(forge)/credit-hub/bank/applications/[applicationId]/page.tsx",
+    "app/(forge)/credit-hub/bank-v2/solicitudes/[applicationId]/herramientas/page.tsx",
     "app/(forge)/credit-hub/bank/_components/BankApplicationOpsPanel.tsx",
     "app/credit/CreditTenantGate.tsx",
     "components/credit-hub/bank/BankDetailLayout.tsx",
