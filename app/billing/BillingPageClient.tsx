@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useCallback, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "@/lib/motion-stub";
@@ -30,9 +31,7 @@ export default function BillingPageClient() {
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/">
         {tenantId ? (
-          <span className="text-xs text-gray-500 truncate max-w-[200px]">
-            {tenantId}
-          </span>
+          <TenantLabel className="text-xs text-gray-500 truncate max-w-[200px]" />
         ) : null}
       </NavigationBar>
 

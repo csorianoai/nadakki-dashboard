@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useState } from "react";
 import { motion } from "@/lib/motion-stub";
 import { Loader2, Sparkles, Copy, CheckCircle2 } from "lucide-react";
@@ -104,7 +105,7 @@ export default function AdminSalesScriptsPage() {
           )}
           {tenantId && (
             <p className="text-sm text-gray-400 md:col-span-2">
-              Context tenant: <span className="text-white font-mono">{tenantId}</span>
+              Context tenant: <TenantLabel className="text-white" />
             </p>
           )}
           <label className="block">

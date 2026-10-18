@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import {
   createApplication,
   processApplication,
@@ -133,7 +134,7 @@ function NewApplicationForm() {
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
           Tenant:{" "}
-          <span className="font-mono text-xs">{tenantId}</span> — All
+          <TenantLabel className="text-xs" /> — All
           fields marked * are required
         </p>
       </div>

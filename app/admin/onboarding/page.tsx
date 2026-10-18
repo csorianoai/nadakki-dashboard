@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useState, useEffect } from "react";
 import { motion } from "@/lib/motion-stub";
 import {
@@ -177,7 +178,7 @@ export default function AdminOnboardingWizardPage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/admin">
-        <span className="text-xs text-gray-500">{tenantId ? `Context tenant: ${tenantId}` : "No tenant in context"}</span>
+        <span className="text-xs text-gray-500">{tenantId ? <TenantLabel prefix="Context tenant: " /> : "No tenant in context"}</span>
       </NavigationBar>
 
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">

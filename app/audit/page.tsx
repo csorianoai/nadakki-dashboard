@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useState, useEffect, useCallback } from "react";
 import { useTenant } from "@/contexts/TenantContext";
 
@@ -58,7 +59,7 @@ export default function AuditPage() {
       <h1 className="text-2xl font-bold text-slate-100 mb-6">Audit Logs</h1>
 
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <span className="text-sm text-slate-400">Tenant: {tenantId ?? "--"}</span>
+        <TenantLabel prefix="Tenant: " className="text-sm text-slate-400" />
         <button
           onClick={fetchLogs}
           disabled={loading}

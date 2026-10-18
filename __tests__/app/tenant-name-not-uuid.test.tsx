@@ -31,7 +31,7 @@ describe("TenantLabel", () => {
 });
 
 describe("pantallas corregidas no pintan UUID", () => {
-  const pages = ["admin/api-keys", "admin/billing", "admin/qa", "admin/usage", "advertising/landing-readiness"];
+  const pages = ["admin/api-keys", "admin/billing", "admin/qa", "admin/usage", "advertising/landing-readiness", "audit", "credit", "admin/sales-scripts", "admin/onboarding", "sic/multitenant-config", "agents/execute"];
   it.each(pages)("%s usa TenantLabel y no interpola tenantId en texto", (p) => {
     const src = require("fs").readFileSync(`app/${p}/page.tsx`, "utf8") as string;
     expect(src).toContain("TenantLabel");

@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useState, useEffect } from "react";
 import AgentExecuteButton from "@/components/agents/AgentExecuteButton";
 import { useTenant } from "@/contexts/TenantContext";
@@ -286,7 +287,7 @@ export default function AgentExecutePage() {
           <div className="bg-white rounded-xl p-6 max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-900 mb-2">Activar modo LIVE</h3>
             <p className="text-gray-600 mb-4">
-              ¿Activar LIVE para tenant <strong>{tenantId}</strong>? Las ejecuciones afectarán datos reales.
+              ¿Activar LIVE para tenant <strong><TenantLabel /></strong>? Las ejecuciones afectarán datos reales.
             </p>
             <div className="flex gap-3 justify-end">
               <button

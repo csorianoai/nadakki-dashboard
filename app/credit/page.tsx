@@ -1,6 +1,7 @@
 // COPIA SIN ENLACE. La viva es app/(forge)/credit-hub/**
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import {
   getCreditHealth,
   getCreditStats,
@@ -264,9 +265,7 @@ function CreditOverviewBody() {
         </div>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
           Tenant:{" "}
-          <span className="font-mono text-xs" title="X-Tenant-ID">
-            {tenantId}
-          </span>
+          <TenantLabel className="text-xs" />
           {" — "}
           Multi-tenant credit evaluation (live API).
         </p>

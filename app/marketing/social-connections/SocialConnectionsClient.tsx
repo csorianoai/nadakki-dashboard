@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useCallback, useEffect, useState, type ComponentType } from "react";
 import { motion } from "@/lib/motion-stub";
 import {
@@ -121,7 +122,7 @@ export default function SocialConnectionsClient() {
               </p>
               {tenantId ? (
                 <p className="text-sm text-gray-500 mt-2 m-0">
-                  Tenant: <span className="text-gray-300 font-mono">{tenantId}</span>
+                  Tenant: <TenantLabel className="text-gray-300" />
                 </p>
               ) : (
                 <p className="text-sm text-amber-200/90 mt-2 m-0">
