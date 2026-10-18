@@ -130,14 +130,21 @@ export async function getBillingStatus(
       d.cancelAtPeriodEnd ??
       subRec?.cancel_at_period_end;
 
+    const plan =
+      planRaw != null && String(planRaw).length ? String(planRaw) : null;
+    const subscription_status =
+      statusRaw != null && String(statusRaw).length
+        ? String(statusRaw)
+        : null;
+    const current_period_end =
+      endRaw != null && String(endRaw).length ? String(endRaw) : null;
+    // 200 sin suscripción: ausencia de datos, no estado válido.
+    if (!plan && !subscription_status && !current_period_end) return null;
+
     return {
-      plan: planRaw != null && String(planRaw).length ? String(planRaw) : null,
-      subscription_status:
-        statusRaw != null && String(statusRaw).length
-          ? String(statusRaw)
-          : null,
-      current_period_end:
-        endRaw != null && String(endRaw).length ? String(endRaw) : null,
+      plan,
+      subscription_status,
+      current_period_end,
       cancel_at_period_end:
         typeof cancelRaw === "boolean"
           ? cancelRaw
