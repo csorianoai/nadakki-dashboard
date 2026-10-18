@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const FINANZAS_TABS = [
-  { slug: "", label: "Overview" },
+  { slug: "", label: "Resumen" },
   { slug: "presupuesto", label: "Presupuesto" },
   { slug: "facturas", label: "Facturas" },
   { slug: "cotizaciones", label: "Cotizaciones" },

@@ -9,7 +9,7 @@ const MODULOS = [
   { href: "/sic/expedientes", label: "Expedientes", desc: "Listado y vista integral" },
   { href: "/sic/comite/sesiones", label: "Comité", desc: "Sesiones y votación" },
   { href: "/sic/portafolio", label: "Portafolio", desc: "Analítica de riesgo" },
-  { href: "/sic/reportes", label: "Reportes", desc: "Dashboard ejecutivo" },
+  { href: "/sic/reportes", label: "Reportes", desc: "Panel ejecutivo" },
   { href: "/sic/exportaciones", label: "Exportaciones", desc: "PDF, ZIP y paquete regulatorio" },
   { href: "/sic/auditoria", label: "Auditoría", desc: "Eventos y trazabilidad" },
   { href: "/sic/configuracion", label: "Configuración", desc: "Parámetros SIC" },
@@ -25,7 +25,7 @@ export default function SicPage() {
   const { tenantId } = useTenant();
   const tenant = tenantId;
 
-  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
+  if (!tenant) return <div className="p-6 text-zinc-500">Organización no disponible. Inicie sesión.</div>;
 
   return (
     <div className="p-6">

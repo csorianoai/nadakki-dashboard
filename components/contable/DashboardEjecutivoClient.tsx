@@ -339,7 +339,7 @@ export function DashboardEjecutivoClient() {
       <GlassCard hover={false} className="flex flex-wrap items-center justify-between gap-4 p-6">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-400/90">Contable</p>
-          <h1 className="text-2xl font-bold text-white">Dashboard Ejecutivo Financiero</h1>
+          <h1 className="text-2xl font-bold text-white">Panel Ejecutivo Financiero</h1>
           <p className="mt-1 text-sm text-zinc-400">
             Análisis completo de rendimiento financiero
             {lastUpdated && (

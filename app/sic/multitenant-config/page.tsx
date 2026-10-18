@@ -70,7 +70,7 @@ export default function SicMultitenantConfigPage() {
         {loading && (
           <div className="flex items-center gap-2 text-slate-500 py-8 justify-center">
             <Loader2 size={20} className="animate-spin" />
-            <span>Loading /api/v2/sic-mt/status…</span>
+            <span>Cargando /api/v2/sic-mt/status…</span>
           </div>
         )}
         {!loading && error && (

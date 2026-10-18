@@ -20,7 +20,7 @@ export default function SicExpedienteReplayPage() {
   const id = String(params?.id ?? "");
   const tenant = tenantId;
 
-  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
+  if (!tenant) return <div className="p-6 text-zinc-500">Organización no disponible. Inicie sesión.</div>;
 
   const [replay, setReplay] = useState<ReplayData | null>(null);
   const [expediente, setExpediente] = useState<Expediente | null>(null);

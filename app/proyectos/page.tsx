@@ -60,7 +60,7 @@ const QUICK_LINKS = [
   },
   {
     id: "ceo",
-    name: "Dashboard CEO",
+    name: "Panel CEO",
     desc: "KPI ejecutivos, salud aggregate y distribución Estados.",
     href: "/proyectos/dashboards/ceo",
     icon: Sparkles,
@@ -70,7 +70,7 @@ const QUICK_LINKS = [
   },
   {
     id: "pm",
-    name: "Dashboard PM",
+    name: "Panel PM",
     desc: "Líneas de obra, barras por fases y tabla operativa.",
     href: "/proyectos/dashboards/pm",
     icon: Building2,
@@ -80,7 +80,7 @@ const QUICK_LINKS = [
   },
   {
     id: "inv",
-    name: "Dashboard Inversionista",
+    name: "Panel Inversionista",
     desc: "Absorción, valorización, retorno proyectado.",
     href: "/proyectos/dashboards/inversionista",
     icon: FolderKanban,
