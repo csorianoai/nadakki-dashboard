@@ -109,46 +109,6 @@ function KpiCard({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-// Mock fallback expedientes for when API fails
-function mockExpedientes(): Expediente[] {
-  const base = [
-    { referencia_cliente: "CLI-001", estado_expediente: "EN_REVISION_ANALISTA", decision_actual: "APROBADO", confianza_decision: 0.85, fecha_creacion: "2025-02-25" },
-    { referencia_cliente: "CLI-002", estado_expediente: "EN_COMITE", decision_actual: "RECHAZADO", confianza_decision: 0.72, fecha_creacion: "2025-02-24" },
-    { referencia_cliente: "CLI-003", estado_expediente: "APROBADO", decision_actual: "APROBADO", confianza_decision: 0.91, fecha_creacion: "2025-02-23" },
-    { referencia_cliente: "CLI-004", estado_expediente: "EN_ANALISIS_IA", decision_actual: "Pendiente", confianza_decision: 0.65, fecha_creacion: "2025-02-26" },
-    { referencia_cliente: "CLI-005", estado_expediente: "RECHAZADO", decision_actual: "RECHAZADO", confianza_decision: 0.58, fecha_creacion: "2025-02-22" },
-    { referencia_cliente: "CLI-006", estado_expediente: "EN_VALIDACION", decision_actual: "Pendiente", confianza_decision: 0.4, fecha_creacion: "2025-02-26" },
-    { referencia_cliente: "CLI-007", estado_expediente: "EN_REVISION_ANALISTA", decision_actual: "APROBADO", confianza_decision: 0.88, fecha_creacion: "2025-02-25" },
-    { referencia_cliente: "CLI-008", estado_expediente: "REQUIERE_INFORMACION", decision_actual: "RECHAZADO", confianza_decision: 0.45, fecha_creacion: "2025-02-24" },
-  ];
-  return base.map((e, i) => ({
-    ...e,
-    expediente_id: `EXP-MOCK-${String(i + 1).padStart(4, "0")}`,
-  })) as Expediente[];
-}
-
-// Mock weekly volume (8 weeks)
-function mockWeeklyVolume() {
-  const weeks: string[] = [];
-  for (let i = 7; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i * 7);
-    weeks.push(`S${i}`);
-  }
-  return weeks.map((w, i) => ({
-    semana: w,
-    volumen: Math.floor(12 + Math.random() * 8 + i * 0.5),
-  }));
-}
-
-// Mock 12-week volume trend
-function mockVolumeTrend() {
-  return Array.from({ length: 12 }, (_, i) => ({
-    semana: `W${12 - i}`,
-    volumen: Math.floor(15 + Math.random() * 12 - i * 0.3),
-  }));
-}
-
 export default function SicReportesPage() {
   const { tenantId } = useTenant();
   const tenant = tenantId;
@@ -158,24 +118,21 @@ export default function SicReportesPage() {
   const [exportaciones, setExportaciones] = useState<Exportacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dataSource, setDataSource] = useState<"api" | "mock">("api");
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const [exps, exts] = await Promise.all([
-        fetchExpedientes(tenant).catch(() => mockExpedientes()),
+        fetchExpedientes(tenant),
         fetchExportacionesGlobal(tenant, 10).catch(() => []),
       ]);
-      setExpedientes(Array.isArray(exps) && exps.length > 0 ? exps : mockExpedientes());
+      setExpedientes(Array.isArray(exps) ? exps : []);
       setExportaciones(Array.isArray(exts) ? exts : []);
-      setDataSource(Array.isArray(exps) && exps.length > 0 ? "api" : "mock");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
-      setExpedientes(mockExpedientes());
+      setExpedientes([]);
       setExportaciones([]);
-      setDataSource("mock");
     } finally {
       setLoading(false);
     }
@@ -220,10 +177,10 @@ export default function SicReportesPage() {
           byWeek[week] = (byWeek[week] ?? 0) + 1;
         });
         const keys = Object.keys(byWeek).sort();
-        if (keys.length < 2) return mockWeeklyVolume();
+        if (keys.length < 2) return [];
         return keys.slice(-8).map((k) => ({ semana: k.slice(5), volumen: byWeek[k] }));
       })()
-    : mockWeeklyVolume();
+    : [];
 
   if (loading && expedientes.length === 0) {
     return (
@@ -232,6 +189,8 @@ export default function SicReportesPage() {
       </div>
     );
   }
+
+  const sinExpedientes = !loading && !error && expedientes.length === 0;
 
   return (
     <div className="p-6">
@@ -243,11 +202,6 @@ export default function SicReportesPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {dataSource === "mock" && (
-              <span className="text-amber-400 text-xs px-2 py-1 rounded border border-amber-500/40 bg-amber-500/10">
-                Usando datos de respaldo
-              </span>
-            )}
             <button
               onClick={loadData}
               className="flex items-center gap-2 px-3 py-1.5 rounded border border-slate-600 bg-slate-800/60 text-slate-300 text-sm hover:bg-slate-700/60"
@@ -268,6 +222,12 @@ export default function SicReportesPage() {
                 Reintentar
               </button>
             </ErrorSic>
+          </div>
+        )}
+
+        {sinExpedientes && (
+          <div className="mb-4 rounded border border-slate-700/60 bg-slate-800/40 p-4 text-sm text-slate-400">
+            Sin expedientes para este tenant: no hay datos que reportar todavía.
           </div>
         )}
 
@@ -311,7 +271,7 @@ export default function SicReportesPage() {
           <TabReporteIndividual expedientes={expedientes} tenant={tenant} loading={loading} onRetry={loadData} />
         )}
         {activeTab === "portafolio" && (
-          <TabPortafolio tenant={tenant} expedientes={expedientes} weeklyVolume={weeklyVolume} mockVolumeTrend={mockVolumeTrend} />
+          <TabPortafolio tenant={tenant} expedientes={expedientes} weeklyVolume={weeklyVolume} />
         )}
         {activeTab === "exportaciones" && (
           <TabExportaciones exportaciones={exportaciones} tenant={tenant} onRetry={loadData} />
@@ -627,16 +587,12 @@ function TabReporteIndividual({
   const riskLevel = report?.score_summary?.risk_level ?? getRiskLevel(score);
   const rulesFired = report?.score_summary?.rules_fired ?? [];
 
-  // Income breakdown: prefer backend report, then metadata, then mock
+  // Income breakdown: prefer backend report, then metadata; sin dato = vacío
   const incomeBreakdown = report?.income_report && typeof report.income_report === "object"
     ? (report.income_report as { breakdown?: { name: string; value: number }[] })?.breakdown ?? []
     : e?.metadata_json && typeof (e.metadata_json as { income_report?: unknown }).income_report === "object"
       ? (e.metadata_json as { income_report: { breakdown?: { name: string; value: number }[] } }).income_report?.breakdown ?? []
-      : [
-          { name: "Salario", value: 65 },
-          { name: "Otros ingresos", value: 20 },
-          { name: "Inversiones", value: 15 },
-        ];
+      : [];
 
   // Outlier flags: prefer backend report, then metadata
   const outlierFlags = report?.outlier_flags
@@ -914,12 +870,10 @@ function TabPortafolio({
   tenant,
   expedientes,
   weeklyVolume,
-  mockVolumeTrend,
 }: {
   tenant: string;
   expedientes: Expediente[];
   weeklyVolume: { semana: string; volumen: number }[];
-  mockVolumeTrend: () => { semana: string; volumen: number }[];
 }) {
   const [portafolio, setPortafolio] = useState<ResumenPortafolio | null>(null);
   const [portSource, setPortSource] = useState<"api" | "client">("client");
@@ -960,7 +914,7 @@ function TabPortafolio({
     ? portafolio.tendencias_volumen.map((t) => ({ semana: t.mes, volumen: t.total }))
     : expedientes.length >= 6
       ? weeklyVolume.slice(-12)
-      : mockVolumeTrend();
+      : [];
 
   // KPIs: prefer backend
   const total = portafolio?.total_expedientes ?? expedientes.length;
