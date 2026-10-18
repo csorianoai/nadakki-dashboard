@@ -218,7 +218,7 @@ export function IntelligenceView({
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <div className="seg" aria-label="Tenant / país">
+              <div className="seg" aria-label="Organización / país">
                 {Object.keys(MEE_TENANTS).map((k) => (
                   <button
                     key={k}

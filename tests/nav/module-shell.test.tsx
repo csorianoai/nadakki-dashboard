@@ -22,7 +22,8 @@ jest.mock("@/components/nav/BuscadorNavegacion", () => ({ __esModule: true, EVEN
 jest.mock("@/components/forge/auth/UserMenu", () => ({ __esModule: true, UserMenu: () => <button type="button">Usuario</button> }));
 jest.mock("@/components/forge/auth/TenantSwitcher", () => ({ __esModule: true, TenantSwitcher: () => null }));
 jest.mock("@/components/forge/layout/ProyectosFinanzasSidebarLinks", () => ({ __esModule: true, ProyectosFinanzasSidebarLinks: () => null }));
-jest.mock("@/components/realtor/useRealtorAccess", () => ({ __esModule: true, useRealtorAccess: () => "apagado" }));
+let mockRealtorAccess = "apagado";
+jest.mock("@/components/realtor/useRealtorAccess", () => ({ __esModule: true, useRealtorAccess: () => mockRealtorAccess }));
 jest.mock("@/components/ai/OnboardingAgent", () => ({ __esModule: true, default: () => null }));
 
 const sesion = (role_key: string, cores: string[]) =>
@@ -37,7 +38,7 @@ const legal = MODULOS.find((m) => m.id === "legal")!;
 const marketing = MODULOS.find((m) => m.id === "marketing")!;
 const SUPER = sesion("platform_superadmin", ["legal", "marketing", "credit"]);
 
-beforeEach(() => { window.localStorage.clear(); });
+beforeEach(() => { window.localStorage.clear(); mockRealtorAccess = "apagado"; });
 
 describe("ModuleShell: barra común + menú del módulo + hueco de contexto", () => {
   beforeEach(() => { pathname = "/legal/cases/new"; });
@@ -150,8 +151,9 @@ describe("ModuleShell: barra común + menú del módulo + hueco de contexto", ()
 describe("ModuleShell: filas «Pronto» (NavItem.pronto, #837) no se pierden en el armazón", () => {
   const admin = MODULOS.find((m) => m.id === "administracion")!;
 
-  test("Administración en /settings con tenant_admin: «Real Estate» es un enlace, sin marca Pronto", () => {
+  test("Administración en /settings con tenant_admin: «Real Estate» es un enlace, sin marca Pronto (con 200 de /acceso)", () => {
     pathname = "/settings";
+    mockRealtorAccess = "ok";
     render(conSesion(sesion("tenant_admin", ["legal"]), <ModuleShell modulo={admin}><p>contenido</p></ModuleShell>));
     const menu = screen.getByRole("complementary", { name: "Menú de Administración" });
     // «Real Estate» está en el grupo «Plataforma»; en /settings el abierto es «Cuenta».
@@ -163,12 +165,24 @@ describe("ModuleShell: filas «Pronto» (NavItem.pronto, #837) no se pierden en 
     expect(menu.querySelector('[data-pronto="/admin/real-estate"]')).toBeNull();
   });
 
+  test("PS-11-MODULOS-OPS-B (3): sin 200 de /acceso el menú de Administración no ofrece «Real Estate»", () => {
+    pathname = "/settings";
+    render(conSesion(sesion("tenant_admin", ["legal"]), <ModuleShell modulo={admin}><p>contenido</p></ModuleShell>));
+    const menu = screen.getByRole("complementary", { name: "Menú de Administración" });
+    fireEvent.click(within(menu).getByRole("button", { name: "Plataforma" }));
+    expect(menu.querySelector('a[href="/admin/usuarios"]')).not.toBeNull(); // el grupo está abierto
+    expect(menu.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+    expect(menu.querySelector('[data-pronto="/admin/real-estate"]')).toBeNull();
+  });
+
   test("el registro conserva la fila y menuVisible la oculta a quien no ve Administración", () => {
     const fila = admin.menu.flatMap((g) => g.items).find((i) => i.id === "adm-real-estate");
     expect(fila).toMatchObject({ href: "/admin/real-estate" });
     expect(fila?.pronto).toBeUndefined();
     const filas = (u: Parameters<typeof menuVisible>[1]) => menuVisible(admin, u).flatMap((g) => g.items).map((i) => i.id);
-    expect(filas({ roles: [{ core_name: "x", role_key: "tenant_admin", display_name: "t" }], subscribedCores: ["legal"] } as never)).toContain("adm-real-estate");
+    expect(filas({ roles: [{ core_name: "x", role_key: "tenant_admin", display_name: "t" }], subscribedCores: ["legal"], realtorOk: true } as never)).toContain("adm-real-estate");
+    // PS-11-MODULOS-OPS-B (3): sin 200 de /acceso la fila no se ofrece.
+    expect(filas({ roles: [{ core_name: "x", role_key: "tenant_admin", display_name: "t" }], subscribedCores: ["legal"] } as never)).not.toContain("adm-real-estate");
     expect(filas({ roles: [{ core_name: "x", role_key: "banker", display_name: "b" }], subscribedCores: ["credit"] } as never)).not.toContain("adm-real-estate");
   });
 });
