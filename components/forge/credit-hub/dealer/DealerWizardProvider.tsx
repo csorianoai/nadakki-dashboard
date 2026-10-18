@@ -364,6 +364,7 @@ export type DealerWizardContextValue = {
   defaultDocType: string;
   requiredDocumentsList: ReturnType<typeof effectiveWizardDocuments>;
   stepIndex: number;
+  isDirty: boolean;
   canAdvance: boolean;
   goNext: () => Promise<boolean>;
   goPrev: () => void;
@@ -461,6 +462,11 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const stepIndex = dealerWizardStepIndexFromPathname(pathname);
+  // Ids cuya carga de borrador/solicitud ya terminó (con éxito o no): la guarda de pasos espera a esto.
+  const [settled, setSettled] = useState({ draft: "", app: "" });
+  const markSettled = useCallback((kind: "draft" | "app", id: string) => {
+    setSettled((prev) => (prev[kind] === id ? prev : { ...prev, [kind]: id }));
+  }, []);
 
   useEffect(() => {
     if (!applicationIdStorageKey || consentApplicationId || startsNewApplication) return;
@@ -511,7 +517,10 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   // Reopened application: the draft comes from the server (DB-CODEX-12B); nothing is read from browser storage.
   useEffect(() => {
     if (!tenantId || !consentApplicationId || startsNewApplication) return;
-    if (createdApplicationIdRef.current === consentApplicationId) return;
+    if (createdApplicationIdRef.current === consentApplicationId) {
+      markSettled("draft", consentApplicationId);
+      return;
+    }
     if (loadedDraftApplicationIdRef.current === consentApplicationId) return;
     loadedDraftApplicationIdRef.current = consentApplicationId;
     const expireDraft = () => {
@@ -550,8 +559,9 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
         const status = (error as { status?: number } | null)?.status;
         if (status === 410) expireDraft();
         else if (status === 404 && applicationIdStorageKey) clearWizardDraftPointer(applicationIdStorageKey); // 404 = maybe never saved: keep the form
-      });
-  }, [applicationIdStorageKey, consentApplicationId, startsNewApplication, tenantId]);
+      })
+      .finally(() => markSettled("draft", consentApplicationId));
+  }, [applicationIdStorageKey, consentApplicationId, markSettled, startsNewApplication, tenantId]);
 
   useEffect(() => {
     if (!tenantId || !consentApplicationId || hydratedApplicationIdRef.current === consentApplicationId) return;
@@ -565,8 +575,25 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         // A server draft may be unavailable while the local draft remains usable.
-      });
-  }, [consentApplicationId, tenantId]);
+      })
+      .finally(() => markSettled("app", consentApplicationId));
+  }, [consentApplicationId, markSettled, tenantId]);
+
+  // Guarda de pasos: entrar por URL a un paso con un paso anterior inválido redirige al primero incompleto.
+  useEffect(() => {
+    if (stepIndex === 0) return;
+    if (consentApplicationId) {
+      if (settled.draft !== consentApplicationId || settled.app !== consentApplicationId) return;
+    } else if (!startsNewApplication && applicationIdStorageKey && readWizardDraftPointer(applicationIdStorageKey)) {
+      return; // el efecto del puntero añadirá application_id a la URL; se evalúa entonces
+    }
+    let first = -1;
+    for (let i = 0; i < stepIndex && first < 0; i++) {
+      if (!segmentCanAdvance(i, formData, validationConfig, t)) first = i;
+    }
+    if (first < 0) return;
+    router.replace(dealerWizardStepHref(dealerWizardStepSlugFromIndex(first), consentApplicationId));
+  }, [applicationIdStorageKey, consentApplicationId, formData, router, settled, startsNewApplication, stepIndex, t, validationConfig]);
 
   useEffect(() => {
     if (!tenantConfig.features_enabled.garante_required) return;
@@ -1099,6 +1126,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       defaultDocType,
       requiredDocumentsList,
       stepIndex,
+      isDirty,
       canAdvance,
       goNext,
       goPrev,
@@ -1138,6 +1166,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       defaultDocType,
       requiredDocumentsList,
       stepIndex,
+      isDirty,
       canAdvance,
       goNext,
       goPrev,
