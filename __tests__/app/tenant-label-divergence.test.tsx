@@ -3,44 +3,59 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { TenantLabel } from "@/components/ui/TenantLabel";
 
-const SESSION_ID = "3f2b8c1e-9a4d-4e6f-8b7a-1c2d3e4f5a6b";
-const OTHER_ID = "9c1d2e3f-4a5b-4c6d-8e7f-0a1b2c3d4e5f";
+const A = "3f2b8c1e-9a4d-4e6f-8b7a-1c2d3e4f5a6b";
+const B = "9d1e7a20-1b3c-4d5e-8f60-71829a3b4c5d";
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
-let mockAuth = { tenantId: SESSION_ID as string | null, tenantName: "Mapaal" };
-let mockCtxId: string | null = SESSION_ID;
+let mockAuth: { tenantId: string | null; tenantName: string } = { tenantId: A, tenantName: "Mapaal" };
+let mockCtxId: string | null = A;
 jest.mock("@/contexts/AuthContext", () => ({ useAuth: () => mockAuth }));
 jest.mock("@/contexts/TenantContext", () => ({ useTenant: () => ({ tenantId: mockCtxId }) }));
 
-describe("TenantLabel: el nombre solo se muestra si corresponde al id operativo", () => {
-  it("ids iguales: muestra el nombre", () => {
-    mockAuth = { tenantId: SESSION_ID, tenantName: "Mapaal" };
-    mockCtxId = SESSION_ID;
+describe("TenantLabel: nombre solo si el id coincide con la sesión", () => {
+  it("coinciden → nombre", () => {
+    mockAuth = { tenantId: A, tenantName: "Mapaal" };
+    mockCtxId = A;
     expect(render(<TenantLabel />).container.textContent).toBe("Mapaal");
   });
-  it("TenantContext apunta a otro tenant: «—», nunca el nombre de la sesión ni el UUID", () => {
-    mockAuth = { tenantId: SESSION_ID, tenantName: "Mapaal" };
-    mockCtxId = OTHER_ID;
+  it("el contexto diverge de la sesión → «—», id solo en atributos", () => {
+    mockAuth = { tenantId: A, tenantName: "Mapaal" };
+    mockCtxId = B;
     const { container } = render(<TenantLabel prefix="Tenant: " />);
     expect(container.textContent).toBe("Tenant: —");
     expect(container.textContent).not.toMatch(UUID_RE);
+    expect(container.querySelector("span")?.getAttribute("data-id")).toBe(B);
   });
-  it("prop tenantId (id real de la petición) distinto del de sesión: «—»", () => {
-    mockAuth = { tenantId: SESSION_ID, tenantName: "Mapaal" };
-    mockCtxId = SESSION_ID;
-    const { container } = render(<TenantLabel tenantId="fallback-tenant" />);
-    expect(container.textContent).toBe("—");
-  });
-  it("prop tenantId igual al de sesión: nombre, id solo en title", () => {
-    mockAuth = { tenantId: SESSION_ID, tenantName: "Mapaal" };
-    mockCtxId = OTHER_ID;
-    const { container } = render(<TenantLabel tenantId={SESSION_ID} />);
-    expect(container.textContent).toBe("Mapaal");
-    expect(container.querySelector("span")?.getAttribute("title")).toBe(SESSION_ID);
-  });
-  it("sin id operativo: «—»", () => {
-    mockAuth = { tenantId: SESSION_ID, tenantName: "Mapaal" };
+  it("sin tenant en el contexto (FALLBACK) → «—»", () => {
+    mockAuth = { tenantId: A, tenantName: "Mapaal" };
     mockCtxId = null;
     expect(render(<TenantLabel />).container.textContent).toBe("—");
+  });
+  it("id explícito: coincide → nombre; otro tenant → «—»", () => {
+    mockAuth = { tenantId: A, tenantName: "Mapaal" };
+    mockCtxId = A;
+    expect(render(<TenantLabel id={A} />).container.textContent).toBe("Mapaal");
+    expect(render(<TenantLabel id={B} />).container.textContent).toBe("—");
+  });
+});
+
+describe("pantallas: ningún id de tenant interpolado en texto visible", () => {
+  const files = [
+    "app/agents/execute/page.tsx",
+    "app/admin/config/page.tsx",
+    "app/admin/whatsapp/page.tsx",
+    "app/billing/BillingPageClient.tsx",
+    "app/credit/new/NewApplicationClient.tsx",
+    "app/marketing/social-connections/SocialConnectionsClient.tsx",
+    "components/tenants/GoogleAdsTenantReadinessCard.tsx",
+    "components/advertising/GoogleAdsIntelligencePanel.tsx",
+  ];
+  it.each(files)("%s usa TenantLabel y no pinta el id", (f) => {
+    const src = require("fs").readFileSync(f, "utf8") as string;
+    expect(src).toContain("<TenantLabel");
+    // {tenantId}, {tid}, {effectiveTenant} (con ?? opcional) como hijo JSX, no como atributo
+    expect(src).not.toMatch(/>\s*\{(tenantId|tid|effectiveTenant)( \?\?[^}]*)?\}\s*</);
+    expect(src).not.toMatch(/(tenant|Tenant|Tenant-ID): \{(tenantId|tid|effectiveTenant)\}/);
+    expect(src).not.toMatch(/^\s*\{(tenantId|tid|effectiveTenant)( \?\?[^}]*)?\}\s*$/m);
   });
 });

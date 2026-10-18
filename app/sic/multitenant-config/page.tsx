@@ -51,7 +51,7 @@ export default function SicMultitenantConfigPage() {
           <p className="text-sm text-slate-500 mt-1">
             Same-origin proxy to <code className="text-slate-600">/api/v2/sic-mt/*</code>
           </p>
-          <p className="text-xs text-slate-600 mt-1"><TenantLabel prefix="Tenant: " tenantId={effectiveTenant} /></p>
+          <p className="text-xs text-slate-600 mt-1"><TenantLabel prefix="Tenant: " id={effectiveTenant} /></p>
         </div>
         <button
           type="button"

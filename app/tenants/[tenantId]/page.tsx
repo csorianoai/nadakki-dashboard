@@ -72,7 +72,7 @@ export default function TenantDetailPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white m-0">Tenant</h1>
-          <p className="text-slate-400 m-0 text-sm"><TenantLabel tenantId={tenantId || null} /></p>
+          <p className="text-slate-400 m-0 text-sm"><TenantLabel id={tenantId || null} /></p>
         </div>
       </div>
 

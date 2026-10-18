@@ -5,6 +5,7 @@ import { motion } from "@/lib/motion-stub";
 import { Settings, Save, RefreshCw, Loader2 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useTenant } from "@/contexts/TenantContext";
 import { TenantLabel } from "@/components/ui/TenantLabel";
 
