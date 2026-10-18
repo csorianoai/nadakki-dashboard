@@ -20,7 +20,8 @@ export async function downloadDocument(id: string, filename: string): Promise<Do
     a.download = filename;
     a.rel = "noopener";
     a.click();
-    URL.revokeObjectURL(url);
+    // Diferido: revocar justo tras click() cancela la descarga en Firefox/Safari.
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
     return { ok: true };
   } catch {
     return { ok: false, reason: "error" };
