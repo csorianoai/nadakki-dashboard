@@ -8,12 +8,10 @@
  *   npx playwright test --config e2e/api/playwright.config.ts e2e/api/bff-jwt.spec.ts
  *
  * La prueba de que el BACKEND real responde 401 a un JWT con firma alterada se mide en el certificador
- * de PI-CERT-1 (paso «firma_alterada», nivel production). Aquí solo se prueba lo que es del dashboard.
+ * de PI-CERT-1 (paso «firma_alterada», nivel production). Aquí solo se prueba lo que es del dashboard (origen same-origin y aislamiento de tenant del BFF).
  */
 import { createHmac, randomBytes } from "node:crypto";
 import { expect, test, type Request } from "@playwright/test";
-
-import { conFirmaAlterada } from "./jwt-firma";
 
 const b64 = (o: object | Buffer) => Buffer.from(o instanceof Buffer ? o : JSON.stringify(o)).toString("base64url");
 
@@ -26,7 +24,7 @@ function firmarJwt(secreto: string, tenant: string): string {
   return `${cuerpo}.${b64(createHmac("sha256", secreto).update(cuerpo).digest())}`;
 }
 
-test("/competitor-research solo habla con su origen y el BFF corta un JWT de firma alterada", async ({ page, baseURL }) => {
+test("/competitor-research solo habla con su origen y el BFF aísla el tenant del JWT", async ({ page, baseURL }) => {
   test.setTimeout(120_000);
   const origen = new URL(baseURL!).origin;
   const jwt = firmarJwt(randomBytes(32).toString("hex"), "tenant-prueba-a");
@@ -78,13 +76,18 @@ test("/competitor-research solo habla con su origen y el BFF corta un JWT de fir
   expect(new URL(origen).hostname).toBe("localhost");
   expect(ajenos.filter((r) => !/\/auth\//.test(r) || !r.startsWith("backend.invalid/"))).toEqual([]);
 
-  // (b) JWT de firma alterada contra el BFF real (sin interceptar): 401/403 del BFF, nunca 200
-  const alterado = conFirmaAlterada(jwt);
-  expect(alterado).not.toBe(jwt);
-  const res = await page.request.get(`${origen}/api/v1/spyfu/api-usage`, {
-    headers: { Authorization: `Bearer ${alterado}`, "X-Tenant-ID": "tenant-prueba-b" },
-  });
-  expect([401, 403]).toContain(res.status());
+  // (b) Aislamiento de tenant del BFF: el middleware decodifica el JWT SIN verificar la firma (eso es del
+  // backend), así que esto NO prueba firma alterada. Con el mismo JWT, un X-Tenant-ID ajeno recibe 403
+  // TENANT_ISOLATION_HEADER y uno propio no lo recibe (control negativo: el BFF reenvía hacia el backend).
+  const pedir = (tenantHeader: string) =>
+    page.request.get(`${origen}/api/v1/spyfu/api-usage`, {
+      headers: { Authorization: `Bearer ${jwt}`, "X-Tenant-ID": tenantHeader },
+    });
+  const ajeno = await pedir("tenant-prueba-b");
+  expect(ajeno.status()).toBe(403);
+  expect((await ajeno.json()).code).toBe("TENANT_ISOLATION_HEADER");
+  const propio = await pedir(tenant.id);
+  expect([401, 403]).not.toContain(propio.status());
 
   console.log("RESULT_PI_P0_2=PASS");
 });

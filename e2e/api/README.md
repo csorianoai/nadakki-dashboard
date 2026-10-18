@@ -8,7 +8,8 @@ El spec no inicia sesión real: firma un JWT con un secreto efímero y dobla la 
 (`/auth/refresh`, `/auth/me`) con `page.route`. Comprueba que:
 
 1. `/competitor-research` emite sus peticiones `/api/v1/spyfu/*` solo a su mismo origen local;
-2. un JWT con la firma alterada, enviado al BFF, recibe 401/403 sin llegar a ningún backend.
+2. el BFF aísla el tenant: con el mismo JWT, un `X-Tenant-ID` ajeno recibe 403 `TENANT_ISOLATION_HEADER` y uno propio no.
+   El middleware NO verifica la firma del JWT (lo hace el backend), así que esto no es una prueba de firma alterada.
 
 ```
 NEXT_PUBLIC_RENDER_API_URL=http://backend.invalid NEXT_PUBLIC_COMPETITIVE_RESEARCH_ENABLED=true npm run build

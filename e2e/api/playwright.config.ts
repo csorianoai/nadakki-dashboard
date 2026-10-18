@@ -18,7 +18,7 @@ export default defineConfig({
     command: `npx next start -p ${PUERTO}`,
     cwd: process.cwd(),
     url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
     env: {
       NEXT_PUBLIC_RENDER_API_URL: "http://backend.invalid",
