@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * PI-D1 hermético: el dashboard se construye y arranca en un puerto local, sin backend (backend.invalid) y sin
- * credenciales. No lee QA_USER, QA_PASSWORD ni BASE_URL.
+ * credenciales ni variables de entorno de despliegue.
  */
 const PORT = Number(process.env.PI_D1_PORT ?? 3917);
 const BASE = `http://127.0.0.1:${PORT}`;
