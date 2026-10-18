@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchPanelAccess } from "@/lib/realtor/access";
+import { fetchPanelAccessInfo } from "@/lib/realtor/access";
 import { isDemoAllowed, isPanelFlagOn } from "@/lib/realtor/config";
 import { DEMO_BANNER } from "@/lib/realtor/copy";
 import {
@@ -20,15 +20,16 @@ const EMPTY: ContactForm = { name: "", email: "", message: "", consent: false };
 export function AgentSitePanel() {
   const flagOn = isPanelFlagOn();
   const [allowed, setAllowed] = useState(false);
+  const [tenantDemo, setTenantDemo] = useState(false);
   const [form, setForm] = useState<ContactForm>(EMPTY);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
-  const demoAllowed = isDemoAllowed();
+  const demoAllowed = tenantDemo && isDemoAllowed();
 
   useEffect(() => {
     if (!flagOn) return;
     let alive = true;
-    fetchPanelAccess().then((ok) => { if (alive) setAllowed(ok); });
+    fetchPanelAccessInfo().then((r) => { if (alive) { setAllowed(r.status === "ok"); setTenantDemo(r.demo); } });
     return () => { alive = false; };
   }, [flagOn]);
 

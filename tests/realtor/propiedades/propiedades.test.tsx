@@ -48,7 +48,7 @@ describe("lógica", () => {
 describe("pantalla", () => {
   it("positivo: DEMO con 200 muestra marca, lista, conteos y ficha con unidades y moneda", async () => {
     on(true);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<PropiedadesPanel />);
     expect(await screen.findByTestId("propiedades-panel")).toBeInTheDocument();
     expect(screen.getByTestId("demo-banner")).toHaveTextContent("DEMO · datos sintéticos");
@@ -68,7 +68,7 @@ describe("pantalla", () => {
 
   it("negativo: sin DEMO solo «Sin datos todavía», sin cifras ni marca DEMO", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<PropiedadesPanel />);
     expect(await screen.findByTestId("propiedades-empty")).toHaveTextContent("Sin datos todavía");
     expect(screen.queryByTestId("demo-banner")).toBeNull();
@@ -88,7 +88,7 @@ describe("pantalla", () => {
 
   it("tenant ajeno: el cliente no envía tenant y los datos de otro tenant no aparecen", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<PropiedadesPanel />);
     await screen.findByTestId("propiedades-empty");
     expect(mockApiFetch).toHaveBeenCalledTimes(1);

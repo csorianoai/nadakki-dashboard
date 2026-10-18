@@ -6,10 +6,9 @@ import { fetchProperties } from "@/lib/realtor/propiedades/api";
 import { DEMO_PROPERTIES } from "@/lib/realtor/propiedades/demo";
 import { applyFilters, countByStage, countByStatus, formatPrice } from "@/lib/realtor/propiedades/logic";
 import { NO_FILTERS, STAGES, STATUSES, TYPES, type PropFilters, type Property } from "@/lib/realtor/propiedades/types";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -30,11 +29,11 @@ function Select<T extends string>({ label, value, options, all, onChange }: {
 }
 
 export function PropiedadesPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const [filters, setFilters] = useState<PropFilters>(NO_FILTERS);
   const [selected, setSelected] = useState<string | null>(null);
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   const t = COPY[lang];
 
   // Fuera de DEMO se lee C-RE-OLA2; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.

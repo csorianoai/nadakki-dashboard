@@ -6,10 +6,9 @@ import { COPY, type Lang } from "@/lib/realtor/marketing-ai/copy";
 import { fetchMarketingSummary, type MarketingSummary } from "@/lib/realtor/marketing-ai/api";
 import { DEMO_SUMMARIES } from "@/lib/realtor/marketing-ai/demo";
 import { GATEWAYS } from "@/lib/realtor/marketing-ai/gateways";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 
@@ -40,9 +39,9 @@ function RealSummary({ t, s }: { t: (typeof COPY)[Lang]; s: MarketingSummary }) 
 }
 
 export function MarketingAiPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   const t = COPY[lang];
   // Fuera de DEMO se lee C-RE-MARKETING-AI; sin datos (404, 503, vacío) queda «Sin datos todavía», sin cifras inventadas.
   const [real, setReal] = useState<MarketingSummary | null>(null);

@@ -13,7 +13,7 @@ jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mock
 const ENV_KEYS = ["NEXT_PUBLIC_REALTOR_PANEL", "NEXT_PUBLIC_REALTOR_ALLOW_DEMO"];
 beforeEach(() => { mockApiFetch.mockReset(); ENV_KEYS.forEach((k) => delete process.env[k]); });
 
-const setAccess = (status: number) => mockApiFetch.mockResolvedValue({ status });
+const setAccess = (status: number) => mockApiFetch.mockResolvedValue({ status, json: async () => ({ demo: true }) });
 // Espera a que la promesa de acceso se resuelva y se aplique el estado: sin esto el DOM vacío sería el estado inicial.
 const settle = async () => {
   await waitFor(() => expect(mockApiFetch).toHaveBeenCalled());

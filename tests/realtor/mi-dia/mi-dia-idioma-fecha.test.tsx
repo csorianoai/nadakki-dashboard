@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { MiDiaPanel } from "@/components/realtor/mi-dia/MiDiaPanel";
 import { miDiaEn, miDiaEs } from "@/lib/realtor/mi-dia/copy";
 
-jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn().mockResolvedValue({ status: 200 }) }));
+jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn().mockResolvedValue({ status: 200, json: async () => ({ demo: true }) }) }));
 
 // 2026-10-17T03:30Z es todavía viernes 16 en Santo Domingo (UTC-4).
 beforeEach(() => {

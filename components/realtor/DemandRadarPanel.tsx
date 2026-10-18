@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { DEMO_BANNER, FAIR_HOUSING_NOTE, INTRO } from "@/lib/realtor/copy";
 import { buildDemoDataset, PILOT_FILTERS, pendingIntegrations, TABS, unavailableTabs, type TabId } from "@/lib/realtor/demo-data";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
@@ -10,7 +9,7 @@ import { FiltersBar } from "./FiltersBar";
 import { RealtorNotice } from "./RealtorNotice";
 import { SignalCard } from "./SignalCard";
 import { SignalDetail } from "./SignalDetail";
-import { useRealtorAccess } from "./useRealtorAccess";
+import { useRealtorAccessInfo } from "./useRealtorAccess";
 
 /** Hasta que exista el backend de señales, fuera de DEMO todo es UNAVAILABLE. */
 function signalsFor(filters: RadarFilters, demoAllowed: boolean): RadarSignal[] {
@@ -18,10 +17,10 @@ function signalsFor(filters: RadarFilters, demoAllowed: boolean): RadarSignal[] 
 }
 
 export function DemandRadarPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [filters, setFilters] = useState<RadarFilters>(PILOT_FILTERS);
   const [tab, setTab] = useState<TabId>("intencion");
-  const demoAllowed = isDemoAllowed();
+  const demoAllowed = demoActive;
 
   const signals = useMemo(() => signalsFor(filters, demoAllowed), [filters, demoAllowed]);
   const pending = useMemo(() => pendingIntegrations(), []);
