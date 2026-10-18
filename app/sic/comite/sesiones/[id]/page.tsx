@@ -31,7 +31,7 @@ export default function SicComiteSesionIdPage() {
   const id = String(params?.id ?? "");
   const tenant = tenantId;
 
-  if (!tenant) return <div className="p-6 text-zinc-500">Tenant no disponible. Inicie sesión.</div>;
+  if (!tenant) return <div className="p-6 text-zinc-500">Organización no disponible. Inicie sesión.</div>;
 
   const [sesion, setSesion] = useState<SesionComite | null>(null);
   const [expedientes, setExpedientes] = useState<ExpedienteEnSesion[]>([]);
