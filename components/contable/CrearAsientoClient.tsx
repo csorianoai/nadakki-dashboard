@@ -228,8 +228,8 @@ export function CrearAsientoClient() {
             />
           </div>
           <p id="asiento-moneda-ayuda" className="text-xs text-zinc-400">
-            Dejala vacia para registrar en la moneda funcional del tenant: la resuelve el backend. Solo
-            completala para un asiento en otra moneda, y entonces hace falta cotizacion oficial del dia.
+            Déjala vacia para registrar en la moneda funcional del tenant: la resuelve el backend. Solo
+            complétala para un asiento en otra moneda, y entonces hace falta cotizacion oficial del dia.
           </p>
           {monedaInvalida ? (
             <p role="alert" data-testid="asiento-moneda-invalida" className="text-xs font-semibold text-amber-300">

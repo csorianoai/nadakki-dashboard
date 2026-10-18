@@ -60,7 +60,7 @@ export default function DealerVehicleNuevoPage() {
         router.push(`/autos/dealer/inventario/${encodeURIComponent(id)}`);
         return;
       }
-      setAck("Vehículo creado. No pudimos abrir su ficha; buscalo en el inventario.");
+      setAck("Vehículo creado. No pudimos abrir su ficha; búscalo en el inventario.");
     } catch (error) {
       if (error instanceof AccessApiError) {
         setReasonCode(error.reason_code ?? `HTTP_${error.status}`);

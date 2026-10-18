@@ -226,7 +226,7 @@ describe("fecha en el formato del tenant", () => {
     fetchMock.mockClear();
     fireEvent.submit(screen.getByTestId("costo-alta-form"));
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.getByText("La fecha no es válida. Escribila como dd/mm/aaaa.")).toBeInTheDocument();
+    expect(screen.getByText("La fecha no es válida. Escríbela como dd/mm/aaaa.")).toBeInTheDocument();
   });
 });
 

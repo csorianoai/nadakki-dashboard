@@ -179,7 +179,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
       version: "v4",
       etiqueta: "Descargar plantilla de carga (Excel)",
       descripcion:
-        "Es la planilla donde listás los vehículos que Mapaal ya tenía, para cargarlos como saldos iniciales antes de empezar a operar.",
+        "Es la planilla donde listas los vehículos que Mapaal ya tenía, para cargarlos como saldos iniciales antes de empezar a operar.",
     },
   },
   {

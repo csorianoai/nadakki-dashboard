@@ -22,7 +22,7 @@ export function PasswordTokenModal({ token, onClose }: { token: string | null; o
         <h4 className="font-semibold mb-2">Contraseña temporal</h4>
         <p className="text-sm text-[var(--ch-warning-text)] mb-2">
           Es la contraseña con la que el usuario entra, no un enlace de
-          restablecimiento. No se mostrará de nuevo: copiala y entregala ahora.
+          restablecimiento. No se mostrará de nuevo: cópiala y entrégala ahora.
         </p>
         <code className="block break-all rounded bg-[var(--ch-surface-3)] p-2 text-xs">{token}</code>
         <div className="mt-3 flex gap-2">

@@ -50,7 +50,7 @@ export function UsersPanel() {
     }
     alert(
       `${hecho}, pero el backend no devolvió la contraseña temporal. ` +
-        "No se puede mostrar y el usuario queda sin acceso: restablecela de nuevo " +
+        "No se puede mostrar y el usuario queda sin acceso: restablécela de nuevo " +
         "o usa el procedimiento de emergencia.",
     );
   };
