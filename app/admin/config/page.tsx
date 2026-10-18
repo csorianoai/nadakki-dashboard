@@ -7,7 +7,6 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useTenant } from "@/contexts/TenantContext";
-import { TenantLabel } from "@/components/ui/TenantLabel";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
