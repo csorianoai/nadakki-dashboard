@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { TOKENS_AVISO_ACCESO, varDcc } from "@/components/auth/aviso-acceso";
 import { useAuth } from "@/hooks/useAuth";
 import {
   esSuperadminDePlataforma,
@@ -46,9 +47,9 @@ export function SoloSuperadminDePlataforma({
 
   if (!esSuperadminDePlataforma(allRoles)) {
     return (
-      <section data-testid="solo-superadmin-denegado" className="mx-auto max-w-xl rounded-xl bg-[var(--dcc-surface,#FFFFFF)] p-8">
-        <h1 className="text-xl font-semibold text-[var(--dcc-fg,#0B1220)]">{SOLO_SUPERADMIN_TITULO}</h1>
-        <p className="mt-2 text-sm text-[var(--dcc-fg-muted,#475467)]">{SOLO_SUPERADMIN_DETALLE}</p>
+      <section data-testid="solo-superadmin-denegado" className="mx-auto max-w-xl rounded-xl p-8" style={{ background: varDcc(TOKENS_AVISO_ACCESO.fondo) }}>
+        <h1 className="text-xl font-semibold" style={{ color: varDcc(TOKENS_AVISO_ACCESO.titulo) }}>{SOLO_SUPERADMIN_TITULO}</h1>
+        <p className="mt-2 text-sm" style={{ color: varDcc(TOKENS_AVISO_ACCESO.detalle) }}>{SOLO_SUPERADMIN_DETALLE}</p>
         <Link href="/" className="mt-4 inline-block text-sm text-[var(--dcc-teal-ink,#0F766E)] underline">
           Volver al inicio
         </Link>

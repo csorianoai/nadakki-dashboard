@@ -1,3 +1,10 @@
+jest.mock("next/navigation", () => ({ usePathname: () => null }));
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ allRoles: [{ core_name: "credit", role_key: "bank_analyst" }], isLoading: false }),
+}));
+import { render, screen } from "@testing-library/react";
+import { SoloSuperadminDePlataforma } from "@/components/auth/SoloSuperadminDePlataforma";
+import { SOLO_SUPERADMIN_DETALLE, SOLO_SUPERADMIN_TITULO } from "@/lib/auth/platform-staff";
 import { TOKENS_AVISO_ACCESO } from "@/components/auth/aviso-acceso";
 import { DCC_TOKENS, type DccTheme } from "@/lib/dcc/tokens";
 
@@ -16,5 +23,16 @@ describe("PS-11-MODULOS-OPS-B (d)", () => {
         expect((x! + 0.05) / (y! + 0.05)).toBeGreaterThanOrEqual(4.5);
       }
     }
+  });
+});
+
+describe("PS-11-MODULOS-OPS-B (d) render", () => {
+  it("el componente renderizado pinta titulo, detalle y fondo con los tokens medidos", () => {
+    render(<SoloSuperadminDePlataforma>secreto</SoloSuperadminDePlataforma>);
+    const caja = screen.getByTestId("solo-superadmin-denegado");
+    expect(caja.getAttribute("style")).toContain(TOKENS_AVISO_ACCESO.fondo);
+    expect(screen.getByText(SOLO_SUPERADMIN_TITULO).getAttribute("style")).toContain(TOKENS_AVISO_ACCESO.titulo);
+    expect(screen.getByText(SOLO_SUPERADMIN_DETALLE).getAttribute("style")).toContain(TOKENS_AVISO_ACCESO.detalle);
+    expect(caja.className).not.toMatch(/text-white|text-gray/);
   });
 });
