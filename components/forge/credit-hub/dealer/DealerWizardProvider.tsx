@@ -584,7 +584,12 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   // Guarda de pasos: entrar por URL a un paso con un paso anterior inválido redirige al primero incompleto.
   useEffect(() => {
     if (stepIndex === 0) return;
-    if (submittedApplicationIdRef.current !== null) return;
+    if (submittedApplicationIdRef.current !== null) {
+      // La exención tras un envío correcto vale SOLO para esa solicitud (review → completada). Otra solicitud o
+      // «Nueva solicitud» (new=1) en el mismo Provider vuelve a tener guarda de entrada (DB-CODEX-25, Codex 18-oct).
+      if (!startsNewApplication && submittedApplicationIdRef.current === consentApplicationId) return;
+      submittedApplicationIdRef.current = null;
+    }
     if (consentApplicationId) {
       if (settled.draft !== consentApplicationId || settled.app !== consentApplicationId) return;
     } else if (!startsNewApplication && applicationIdStorageKey && readWizardDraftPointer(applicationIdStorageKey)) {
