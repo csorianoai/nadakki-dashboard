@@ -304,7 +304,7 @@ export default function ProyectosDashboardPage() {
                 </button>
               )}
             </div>
-          ) : rows.length === 0 ? (
+          ) : isError ? null : rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
               <div className="rounded-full border border-dashed border-amber-500/35 bg-amber-500/[0.05] p-6">
                 <FolderKanban className="mx-auto h-12 w-12 text-amber-300 opacity-85" aria-hidden />
