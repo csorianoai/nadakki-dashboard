@@ -78,7 +78,7 @@ describe("las cinco reglas de carga, verbatim", () => {
 
     const bloque = screen.getByTestId("reglas-contables-costos");
     expect(bloque).toHaveTextContent("SIN IVA recuperable");
-    expect(bloque).toHaveTextContent("registrá el neto gravado cuando el IVA sea recuperable");
+    expect(bloque).toHaveTextContent("registra el neto gravado cuando el IVA sea recuperable");
     expect(bloque).toHaveTextContent("El IVA recuperable no forma parte del costo del vehículo");
   });
 

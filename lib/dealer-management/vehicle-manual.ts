@@ -247,7 +247,7 @@ export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrenc
   if (refImporte || refMoneda) {
     if (!refImporte) errors.display_price_amount = "Falta el importe de la referencia (o borrá su moneda).";
     else if (normalizaImporte(refImporte) === null) errors.display_price_amount = IMPORTE_INVALIDO;
-    else if (!precio) errors.display_price_amount = "Para cargar una referencia primero cargá el precio.";
+    else if (!precio) errors.display_price_amount = "Para cargar una referencia primero carga el precio.";
     if (!refMoneda) errors.display_price_currency = "Falta la moneda de la referencia (o borrá su importe).";
     else if (!/^[A-Z]{3}$/.test(refMoneda)) {
       errors.display_price_currency = "La moneda va con su código de 3 letras, por ejemplo USD.";
@@ -270,17 +270,17 @@ export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrenc
  */
 export const MOTIVO_EN_CAMPO: Record<string, { campo: keyof VehicleManualForm; mensaje: string }> = {
   PRICE_NOT_POSITIVE: { campo: "price_amount", mensaje: "El precio tiene que ser mayor que cero." },
-  PRICE_REQUIRED_FOR_DISPONIBLE: { campo: "price_amount", mensaje: "Cargá el precio antes de pasar a DISPONIBLE." },
+  PRICE_REQUIRED_FOR_DISPONIBLE: { campo: "price_amount", mensaje: "Carga el precio antes de pasar a DISPONIBLE." },
   PRICE_CURRENCY_NOT_FUNCTIONAL: {
     campo: "price_amount",
     mensaje: "El precio no está en la moneda oficial de tu concesionario.",
   },
   FUNCTIONAL_CURRENCY_NOT_CONFIGURED: {
     campo: "price_amount",
-    mensaje: "Tu cuenta todavía no tiene moneda oficial configurada. Pedila a soporte antes de cargar precios.",
+    mensaje: "Tu cuenta todavía no tiene moneda oficial configurada. Pídela a soporte antes de cargar precios.",
   },
   DISPLAY_PRICE_PAIR: { campo: "display_price_amount", mensaje: "Completa importe y moneda de la referencia, o ninguno." },
-  DISPLAY_PRICE_WITHOUT_PRICE: { campo: "display_price_amount", mensaje: "Para cargar una referencia primero cargá el precio." },
+  DISPLAY_PRICE_WITHOUT_PRICE: { campo: "display_price_amount", mensaje: "Para cargar una referencia primero carga el precio." },
   DISPLAY_PRICE_NOT_POSITIVE: { campo: "display_price_amount", mensaje: "La referencia tiene que ser mayor que cero." },
   DISPLAY_PRICE_SAME_CURRENCY: {
     campo: "display_price_currency",

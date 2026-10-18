@@ -184,7 +184,7 @@ export default function ImportarActivosPage() {
         </Link>
         <h1 className="mt-2 font-manrope text-2xl font-extrabold text-nk-fg">Importar planilla de activos</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Subí la plantilla oficial <code>{PLANTILLA}</code> (.xlsx o su .zip de CSV). Primero se
+          Sube la plantilla oficial <code>{PLANTILLA}</code> (.xlsx o su .zip de CSV). Primero se
           revisa sin guardar nada; después aplicás.
         </p>
         <PlantillaDescarga plantilla={plantilla} testId="import-plantilla-descargar" />

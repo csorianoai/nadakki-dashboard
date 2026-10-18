@@ -170,7 +170,7 @@ export default function DealerInventoryPage() {
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Inventario</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Tus vehículos: busca, filtrá por estado y ordená la lista.
+          Tus vehículos: busca, filtra por estado y ordena la lista.
         </p>
         {/* Con el binding, no con el dealer elegido: la eleccion vive en el estado
             de ESTA pantalla y /nuevo no la ve; sin binding seria una puerta cerrada. */}
@@ -273,7 +273,7 @@ export default function DealerInventoryPage() {
         <section data-testid="inventario-selector-dealer" className={CAJA}>
           <h2 className="font-semibold">Elige el concesionario</h2>
           <p className="mt-1 text-nk-fg-muted">
-            Tu usuario está asignado a {porElegir.length}. No se elige uno por vos: sería mostrarte el
+            Tu usuario está asignado a {porElegir.length}. No se elige uno por ti: sería mostrarte el
             inventario de otro. La elección dura esta sesión.
           </p>
           <ul className="mt-3 grid gap-2">

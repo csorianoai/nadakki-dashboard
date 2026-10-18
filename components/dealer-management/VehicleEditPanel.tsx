@@ -170,7 +170,7 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
         </div>
         {publicable && !conPrecio ? (
           <p data-testid="vehicle-publicar-falta-precio" className="text-sm text-nk-fg-muted">
-            Para pasar a Disponible primero cargá el precio y guardá.
+            Para pasar a Disponible primero carga el precio y guardá.
           </p>
         ) : null}
         {publicable && conPrecio && sinGuardar ? (

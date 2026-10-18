@@ -255,7 +255,7 @@ describe("reparacion", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.getByText("El proveedor es obligatorio en una reparación.")).toBeInTheDocument();
-    expect(screen.getByText("Subí la factura de la reparación.")).toBeInTheDocument();
+    expect(screen.getByText("Sube la factura de la reparación.")).toBeInTheDocument();
   });
 
   it("completa, va por /repair-invoices con los tres identificadores", async () => {

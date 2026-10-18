@@ -58,7 +58,7 @@ export const REGLAS_CONTABLES_BASE = "Criterio contable adoptado (RT 54 FACPCE):
 
 /** Las cinco reglas de la seccion 4, en su orden. */
 export const REGLAS_CONTABLES = [
-  "Los costos capitalizables se cargan SIN IVA recuperable: registrá el neto gravado cuando el IVA sea recuperable.",
+  "Los costos capitalizables se cargan SIN IVA recuperable: registra el neto gravado cuando el IVA sea recuperable.",
   "El IVA recuperable no forma parte del costo del vehículo.",
   "Un impuesto no recuperable sí puede integrar el costo cuando corresponda.",
   "La categoría “comisión” dentro de costos significa exclusivamente comisión de compra.",

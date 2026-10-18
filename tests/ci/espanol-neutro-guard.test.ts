@@ -2,7 +2,9 @@ import fs from "fs";
 import path from "path";
 
 /** Formas voseantes prohibidas en texto visible: un solo español neutro para todos los tenants. */
-export const VOSEO_RE = /\b(tenés|podés|querés|sabés|necesitás|ingresá|seleccioná|revisá|completá|elegí|hacé|mirá|volvé|pedile|escribinos|acá)\b/i;
+const FORMAS = "tenés|podés|querés|sabés|necesitás|ingresá|seleccioná|revisá|completá|elegí|hacé|mirá|volvé|pedile|pedila|escribinos|acá|filtrá|ordená|cargá|descargá|registrá|subí|subila|recargá|usá|reintentá|intentá|intentalo|avisá|buscá|probá|reexportá|eliminá|cerrá|creés|corregilos|vos";
+// \b de JS no reconoce vocales acentuadas como palabra: se usan límites Unicode.
+export const VOSEO_RE = new RegExp(`(?<![\\p{L}\\p{N}_])(?:${FORMAS})(?![\\p{L}\\p{N}_])`, "iu");
 
 const ROOT = path.resolve(__dirname, "../..");
 const DIRS = ["app", "components", "lib"];
@@ -36,6 +38,12 @@ describe("guard de español neutro (sin voseo)", () => {
   test("el fixture con 'tenés' hace fallar el guard", () => {
     const fixture = fs.readFileSync(path.join(ROOT, "tests/fixtures/voseo/con-voseo.txt"), "utf8");
     expect(findVoseo(fixture).length).toBeGreaterThan(0);
+  });
+
+  test("detecta imperativos agudos con vocal acentuada final", () => {
+    for (const t of ["Revisá la tabla", "Elegí uno", "Acá ves", "Volvé a entrar", "Completá el dato", "Filtrá por estado"]) {
+      expect(findVoseo(t).length).toBeGreaterThan(0);
+    }
   });
 
   test("texto neutro no dispara el guard", () => {

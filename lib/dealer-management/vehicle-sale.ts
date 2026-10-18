@@ -15,7 +15,7 @@ import { postVehicleSale } from "@/lib/dealer/vehicle-economics-write";
 export const SALE_STATUS = "vendido";
 
 export const SALE_BLOCKED_IN_EDIT_NOTE =
-  "Para vender un vehículo usá «Registrar venta». Cambiar el estado a VENDIDO desde la edición no registra la venta ni entra en contabilidad.";
+  "Para vender un vehículo usa «Registrar venta». Cambiar el estado a VENDIDO desde la edición no registra la venta ni entra en contabilidad.";
 
 /** True si el estado es "vendido", sin importar mayusculas ni espacios. */
 export function isSold(status: string | null | undefined): boolean {

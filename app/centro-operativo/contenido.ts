@@ -157,14 +157,14 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
     titulo: "Primeros pasos: primero el stock existente, después la operación normal",
     parrafos: ["El orden importa."],
     pasos: [
-      "Cargá primero todos los vehículos que Mapaal ya tenía antes de empezar a operar en Nadakki como SALDOS INICIALES.",
-      "Para esos vehículos usá is_opening=true. La contrapartida contable del inventario es 3020 — Saldos iniciales, no Proveedores. El asiento de apertura es Debe 1220 — Inventario de vehículos / Haber 3020 — Saldos iniciales.",
+      "Carga primero todos los vehículos que Mapaal ya tenía antes de empezar a operar en Nadakki como SALDOS INICIALES.",
+      "Para esos vehículos usa is_opening=true. La contrapartida contable del inventario es 3020 — Saldos iniciales, no Proveedores. El asiento de apertura es Debe 1220 — Inventario de vehículos / Haber 3020 — Saldos iniciales.",
       "Recién después de terminar y revisar esa carga inicial, empezá a registrar compras, reparaciones, otros costos, ventas, cobros y pagos de la operación normal.",
     ],
     pasosInicio: [
-      "Descargá la plantilla y cargá todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
+      "Descarga la plantilla y carga todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
       "Revisa la carga antes de aplicarla.",
-      "Después registrá compras, reparaciones, ventas, cobros y pagos del día a día.",
+      "Después registra compras, reparaciones, ventas, cobros y pagos del día a día.",
     ],
     advertencia:
       "No uses una compra ficticia para representar un vehículo que Mapaal ya poseía: eso fabricaría una deuda con un proveedor que no existe.",
@@ -186,7 +186,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
     id: "alta-vehiculo",
     titulo: "Cómo dar de alta un vehículo",
     parrafos: [
-      "Para cada vehículo cargá, como mínimo, los datos de identificación y operación que correspondan: marca, modelo, año, dominio/patente y n.º de stock interno.",
+      "Para cada vehículo carga, como mínimo, los datos de identificación y operación que correspondan: marca, modelo, año, dominio/patente y n.º de stock interno.",
     ],
     vinetas: [
       "El precio oficial en ARS es obligatorio para que el vehículo pueda quedar en estado DISPONIBLE.",
@@ -213,7 +213,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
       "Por decisión de César para Mapaal, basada en el criterio adoptado de RT 54 FACPCE:",
     ],
     vinetas: [
-      "Los costos capitalizables se cargan SIN IVA recuperable: registrá el neto gravado cuando el IVA sea recuperable.",
+      "Los costos capitalizables se cargan SIN IVA recuperable: registra el neto gravado cuando el IVA sea recuperable.",
       "El IVA recuperable no forma parte del costo del vehículo.",
       "Un impuesto no recuperable sí puede integrar el costo cuando corresponda.",
       "La categoría “comisión” dentro de costos significa exclusivamente comisión de compra.",
@@ -226,7 +226,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
     id: "venta",
     titulo: "Venta",
     parrafos: [
-      "Al vender un vehículo, registrá la venta sobre el vehículo correcto y su precio oficial en ARS. La contabilidad debe reconocer en el mismo ciclo:",
+      "Al vender un vehículo, registra la venta sobre el vehículo correcto y su precio oficial en ARS. La contabilidad debe reconocer en el mismo ciclo:",
     ],
     asientos: [
       {
@@ -259,7 +259,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
         concepto: "si entra por banco",
       },
     ],
-    advertencia: "Usá el medio real del cobro; no elijas la cuenta contable libremente.",
+    advertencia: "Usa el medio real del cobro; no elijas la cuenta contable libremente.",
   },
   {
     id: "pago",

@@ -115,7 +115,7 @@ export function validateCostForm(form: CostForm, currency: string | null): CostF
     if (!form.supplier_name.trim()) errors.supplier_name = "El proveedor es obligatorio en una reparación.";
     if (!form.invoice_number.trim()) errors.invoice_number = "El n.º de factura es obligatorio en una reparación.";
     if (!form.document_id.trim()) {
-      errors.document_id = "Subí la factura de la reparación.";
+      errors.document_id = "Sube la factura de la reparación.";
     }
   }
   return errors;
@@ -288,10 +288,10 @@ export async function uploadRepairInvoice(vehicleId: string, tenantId: string, f
 /** Un error de la API, dicho para el dealer. El codigo queda aparte, para soporte. */
 export function mensajeDeErrorCosto(error: unknown): string {
   const status = error instanceof AccessApiError ? error.status : 0;
-  if (status === 413) return "El archivo pesa más de 10 MB. Subí una versión más liviana.";
+  if (status === 413) return "El archivo pesa más de 10 MB. Sube una versión más liviana.";
   if (status === 401) return "Tu sesión venció. Vuelve a iniciar sesión e intenta de nuevo.";
   if (status === 403) return "Tu usuario no tiene permiso para registrar costos de este vehículo.";
-  if (status === 404) return "No encontramos este vehículo. Recargá la página.";
+  if (status === 404) return "No encontramos este vehículo. Recarga la página.";
   if (status === 409 || status === 422) return "El sistema rechazó los datos. Revisa monto, fecha y factura.";
   if (status >= 500) return "El servicio no respondió. Prueba de nuevo en unos minutos.";
   return "No hubo respuesta del servidor. Revisa tu conexión e intenta de nuevo.";
