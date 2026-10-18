@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import {
   esSuperadminDePlataforma,
@@ -17,9 +18,23 @@ import {
  * frontend pinte el panel a quien no le toca.
  *
  * Fail-closed: mientras la sesion carga no se pinta nada de dentro.
+ *
+ * `rutasExentas`: rutas (y sus subrutas) que la pagina protege por su cuenta
+ * con su propia lista de roles; aqui se dejan pasar sin exigir superadmin.
  */
-export function SoloSuperadminDePlataforma({ children }: { children: ReactNode }) {
+export function SoloSuperadminDePlataforma({
+  children,
+  rutasExentas = [],
+}: {
+  children: ReactNode;
+  rutasExentas?: string[];
+}) {
   const { allRoles, isLoading } = useAuth();
+  const pathname = usePathname();
+
+  if (pathname && rutasExentas.some((r) => pathname === r || pathname.startsWith(`${r}/`))) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
