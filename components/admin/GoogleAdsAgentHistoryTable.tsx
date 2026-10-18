@@ -94,7 +94,7 @@ export default function GoogleAdsAgentHistoryTable({
     <div className="overflow-x-auto">
       {error ? <p className="text-sm text-amber-200/90 mb-3 m-0">History unavailable: {error}</p> : null}
       {loading ? (
-        <p className="text-sm text-slate-500 m-0">Cargando historial…</p>
+        <p className="text-sm text-slate-500 m-0">Loading history…</p>
       ) : mapped.length === 0 ? (
         <p className="text-sm text-slate-500 m-0">No prior runs returned.</p>
       ) : (

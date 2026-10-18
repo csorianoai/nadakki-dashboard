@@ -7,7 +7,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/admin/observability/dashboard", label: "Panel" },
+  { href: "/admin/observability/dashboard", label: "Dashboard" },
   { href: "/admin/observability/audit-trail", label: "Audit trail" },
   { href: "/admin/observability/sla-monitoring", label: "SLA" },
 ];

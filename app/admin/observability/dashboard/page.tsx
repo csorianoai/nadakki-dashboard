@@ -233,7 +233,7 @@ export default function AdminObservabilityDashboardPage() {
   return (
     <>
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Panel de observabilidad</h1>
+        <h1 className="text-3xl font-bold text-white">Dashboard de observabilidad</h1>
         <p className="mt-1 max-w-3xl text-gray-400">
           Vista consolidada: métricas Prometheus en{" "}
           <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs text-gray-300">GET /metrics</code> y API JSON{" "}

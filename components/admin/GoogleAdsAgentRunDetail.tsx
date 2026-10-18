@@ -53,7 +53,7 @@ export default function GoogleAdsAgentRunDetail({ open, onClose, loading, error,
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <button type="button" className="absolute inset-0 bg-black/60" aria-label="Cerrar" onClick={onClose} />
+      <button type="button" className="absolute inset-0 bg-black/60" aria-label="Close" onClick={onClose} />
       <aside className="relative w-full max-w-lg h-full bg-slate-950 border-l border-white/10 shadow-xl flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <div>
@@ -66,7 +66,7 @@ export default function GoogleAdsAgentRunDetail({ open, onClose, loading, error,
                   : "—"}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10" aria-label="Cerrar panel">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10" aria-label="Close panel">
             <X className="w-4 h-4 text-slate-400" />
           </button>
         </div>

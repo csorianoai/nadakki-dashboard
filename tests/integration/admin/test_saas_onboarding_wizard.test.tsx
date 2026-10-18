@@ -100,7 +100,7 @@ test("renders a clear 401 session error", async () => {
   render(<SaasOnboardingWizard />);
   fillInstitution();
   fireEvent.click(screen.getByTestId("submit-onboarding"));
-  expect(await screen.findByRole("alert")).toHaveTextContent("sesión expiró");
+  expect(await screen.findByRole("alert")).toHaveTextContent("session expired");
 });
 
 test("renders a clear 409 duplicate/idempotency conflict", async () => {

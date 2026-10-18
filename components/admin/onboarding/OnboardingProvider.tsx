@@ -15,7 +15,7 @@ class OnboardingErrorBoundary extends Component<{ children: ReactNode }, { error
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     if (process.env.NODE_ENV === "development") {
-      console.error("Error de incorporación de la organización:", error, info);
+      console.error("Tenant onboarding error:", error, info);
     }
   }
 

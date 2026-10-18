@@ -98,7 +98,7 @@ const ADMIN_MODULES_BASE = [
   { id: "api-keys", name: "API Keys", icon: Key, desc: "Gestion de claves API", href: "/admin/api-keys", color: "#8b5cf6" },
   { id: "system", name: "System Info", icon: Monitor, desc: "Estado del sistema", href: "/admin/system", color: "#06b6d4" },
   { id: "qa", name: "QA Piloto", icon: Activity, desc: "Verificacion operativa del tenant", href: "/admin/qa", color: "#22c55e" },
-  { id: "tenants", name: "Multiorganización", icon: Users, desc: "Gestion de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
+  { id: "tenants", name: "Multi-Tenant", icon: Users, desc: "Gestion de clientes y permisos", href: "/tenants", color: "#3b82f6", badge: "4" },
   { id: "settings", name: "Configuracion", icon: Settings, desc: "Ajustes generales del sistema", href: "/settings", color: "#f59e0b" },
 ];
 

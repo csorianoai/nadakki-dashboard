@@ -31,7 +31,7 @@ export default function AdminWhatsAppPage() {
   const load = async () => {
     if (!tid) {
       setLoadState("error");
-      setLoadError("Falta el ID de organización (del contexto o manual).");
+      setLoadError("Tenant ID required (context or manual).");
       return;
     }
     setLoadState("loading");
@@ -107,7 +107,7 @@ export default function AdminWhatsAppPage() {
       {!tenantId && (
         <GlassCard className="p-4 mb-6">
           <label className="block max-w-md">
-            <span className="text-xs text-gray-500">ID de organización</span>
+            <span className="text-xs text-gray-500">Tenant ID</span>
             <input
               className="mt-1 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white font-mono text-sm"
               value={manualTenant}

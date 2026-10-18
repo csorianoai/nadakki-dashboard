@@ -124,7 +124,7 @@ export default function AdminOnboardingWizardPage() {
   const productsJsonValid = !form.productsJson.trim() || Boolean(parseProducts(form.productsJson));
   const canRunPreview = Boolean(form.tenant_name.trim()) && productsJsonValid;
   const previewValidationIssues = [
-    !form.tenant_name.trim() ? "El nombre de la organización es obligatorio." : null,
+    !form.tenant_name.trim() ? "Tenant name is required." : null,
     !productsJsonValid ? "Products JSON must be a valid array." : null,
   ].filter(Boolean) as string[];
 
@@ -132,7 +132,7 @@ export default function AdminOnboardingWizardPage() {
     setPreviewErr(null);
     setPreviewData(null);
     if (!form.tenant_name.trim()) {
-      setPreviewErr("El nombre de la organización es obligatorio.");
+      setPreviewErr("Tenant name is required.");
       return;
     }
     setPreviewLoading(true);
@@ -153,7 +153,7 @@ export default function AdminOnboardingWizardPage() {
     setOnboardErr(null);
     setOnboardData(null);
     if (!form.tenant_name.trim()) {
-      setOnboardErr("El nombre de la organización es obligatorio.");
+      setOnboardErr("Tenant name is required.");
       return;
     }
     setOnboardLoading(true);
@@ -181,7 +181,7 @@ export default function AdminOnboardingWizardPage() {
       </NavigationBar>
 
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Alta de organización</h1>
+        <h1 className="text-3xl font-bold text-white">Tenant onboarding</h1>
         <p className="text-gray-400 mt-1">
           Provision institutions and dealers, or continue using the existing tenant profile workflow below.
         </p>
@@ -227,10 +227,10 @@ export default function AdminOnboardingWizardPage() {
 
       {step === 1 && (
         <GlassCard className="p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Perfil de la organización</h2>
+          <h2 className="text-lg font-semibold text-white mb-4">Tenant profile</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-xs text-gray-500">Nombre de la organización *</span>
+              <span className="text-xs text-gray-500">Tenant name *</span>
               <input
                 className="mt-1 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white"
                 value={form.tenant_name}

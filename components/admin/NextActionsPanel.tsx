@@ -9,7 +9,7 @@ type NextActionsPanelProps = {
 
 export default function NextActionsPanel({
   actions,
-  title = "Próximas acciones",
+  title = "Next actions",
   emptyMessage = "No next_actions provided by backend.",
 }: NextActionsPanelProps) {
   return (
