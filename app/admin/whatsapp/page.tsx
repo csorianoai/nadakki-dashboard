@@ -5,6 +5,7 @@ import { motion } from "@/lib/motion-stub";
 import { Loader2, MessageCircle, Save, AlertTriangle, ShieldCheck } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useTenant } from "@/contexts/TenantContext";
 import { getWhatsAppConfig, postWhatsAppConfig, suiteFailure } from "@/lib/api/suiteOps";
 
@@ -151,7 +152,7 @@ export default function AdminWhatsAppPage() {
           <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
             <p className="text-sm text-gray-400 m-0">
               Status: <span className="text-white">{serverStatus || "—"}</span> · Tenant{" "}
-              <span className="font-mono text-gray-300">{tid}</span>
+              <TenantLabel className="text-gray-300" id={tid} />
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

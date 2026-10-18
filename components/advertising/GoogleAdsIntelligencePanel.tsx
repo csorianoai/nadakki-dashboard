@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, ChevronRight, Loader2, Sparkles } from "lucide-react";
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useTenant } from "@/contexts/TenantContext";
 import { apiFetch } from "@/lib/api/fetch-client";
 
@@ -153,7 +154,7 @@ export default function GoogleAdsIntelligencePanel() {
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-4 border-t border-violet-200/50 dark:border-slate-700/50 pt-4">
-          <p className="text-xs text-slate-500 font-mono">X-Tenant-ID: {effectiveTenant}</p>
+          <p className="text-xs text-slate-500 font-mono"><TenantLabel prefix="Tenant: " id={effectiveTenant} /></p>
           {loading && (
             <div className="flex items-center gap-2 text-slate-500 text-sm">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading intelligence…
