@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
-import { DecisionPanel, DetailSkeleton, RiskBand, ScoreVisual } from "@/components/credit-hub/primitives";
+import { DecisionPanel, DetailSkeleton, ScoreVisual } from "@/components/credit-hub/primitives";
 import { Asignacion } from "@/components/credit-hub/bank-v2/expediente/Asignacion";
 import { bloqueoDecision } from "@/components/credit-hub/bank-v2/expediente/decision";
 import { PrintExportActions } from "@/components/credit-hub/bank/PrintExportActions";
@@ -30,13 +30,14 @@ import { AssignedAnalystSection } from "@/components/credit-hub/bank/AssignedAna
 import { FieldWithModifiedBadge } from "@/components/credit-hub/bank/ModifiedFieldBadge";
 import { isBankNotesRole } from "@/lib/credit-hub/bank/bankExperienceHelpers";
 import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/api/operationalClient";
-import { extractDisplayStatus, formatApplicationStateLabel } from "@/lib/credit-hub/honesty/display-status";
+import { NOTA_SIN_DATO, PROXIMAMENTE, hechosComunes } from "@/components/credit-hub/bank-v2/expediente/hechos";
+import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
+import { LOCALE_POR_DEFECTO, type LocaleTenant } from "@/lib/dcc/formato";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
 import type { DecisionMode, DecisionState } from "@/lib/credit-hub/ch-types";
 import type { BankDetailLayoutProps, BankDocumentPayload, BankReviewPayload } from "@/lib/credit-hub/types/bank-views";
-import { mapBackendRiskLevel } from "@/lib/credit-hub/types/bank-views";
 import type { BankDecisionRequest, BankDecisionTerms, BankDecisionType } from "@/lib/credit-hub/types/bankDecision";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreditHubActor } from "@/lib/credit-hub/hooks/useCreditHubActor";
@@ -70,7 +71,7 @@ function modeToDecision(mode: DecisionMode): BankDecisionType {
   return "APROBADO";
 }
 
-export function BankDetailLayout({ application, compliance, audit, counterOffer }: BankDetailLayoutProps) {
+export function BankDetailLayout({ application, compliance, audit, counterOffer, formato = LOCALE_POR_DEFECTO }: BankDetailLayoutProps & { formato?: LocaleTenant }) {
   const { user } = useAuth();
   const { apiTenantId } = useTenant();
   const { can: actorCan, roleKey } = useCreditHubActor();
@@ -149,8 +150,8 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
     ["analisis", "Análisis"],
     ["documentos", `Documentos · ${docs.length}`],
     ["stipulaciones", "Estipulaciones"],
-    ["audit", "Audit"],
-    ["compliance", "Compliance"],
+    ["audit", "Auditoría"],
+    ["compliance", "Cumplimiento"],
     ["verificaciones", "Verificaciones"],
     ["mensajes", messageUnread != null && messageUnread > 0 ? `Mensajes (${messageUnread})` : "Mensajes"],
     ...(showNotesTab ? ([["notas", "Notas internas"]] as const) : []),
@@ -200,8 +201,10 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
   const pilotLabels = (payload.pilot_labels ?? {}) as PilotLabels;
   const declaracion = (payload.declaracion_vehiculo ?? null) as DeclaracionVehiculoPayload | null;
   const vehicleVin = String((vehicle as { vin?: string }).vin ?? "");
-  const rate = Number(financial.requested_rate ?? analysis?.metrics?.annual_rate ?? 17.5);
-  const term = Number(financial.term_months ?? analysis?.metrics?.term_months ?? 48);
+  // Mismos textos que el detalle v2 (hechosComunes): sin tasa ni plazo inventados.
+  const hechos = hechosComunes(payload, application.state, formato);
+  const rate = Number(financial.requested_rate ?? analysis?.metrics?.annual_rate ?? 0);
+  const term = Number(financial.term_months ?? analysis?.metrics?.term_months ?? 0);
   // F4: Never invent 0 when amount is absent — let formatter handle null
   const amount = financial.requested_amount ?? analysis?.financed_amount ?? null;
 
@@ -232,11 +235,9 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             <h1 className="ch-serif" style={{ margin: 0, fontSize: 28, letterSpacing: "-0.02em" }}>
               {applicantName}
             </h1>
-            {displayStatus ? (
-              <span className="ch-pill" style={{ color: "var(--ch-info-text)", background: "var(--ch-info-soft)", height: 24 }}>
-                {formatApplicationStateLabel(displayStatus)}
-              </span>
-            ) : null}
+            <span data-testid="herramientas-estado" className="ch-pill" style={{ color: "var(--ch-info-text)", background: "var(--ch-info-soft)", height: 24 }}>
+              {hechos.estado}
+            </span>
           </div>
           <div className="ch-mono" style={{ fontSize: 12, color: "var(--ch-text-3)", marginTop: 6 }}>
             {application.application_id}
@@ -296,14 +297,15 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
               </div>
               <FieldWithModifiedBadge
                 label="Plazo"
-                value={`${term} meses`}
+                value={hechos.plazo != null ? `${hechos.plazo} meses` : PROXIMAMENTE}
                 modified={modifiedFields.has("desired_term_months") || modifiedFields.has("term_months")}
               />
               <div>
                 <div className="ch-eyebrow">Tasa solicitada</div>
-                <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
-                  {rate}%
+                <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }} data-testid="herramientas-tasa" title={hechos.tasa == null ? NOTA_SIN_DATO.tasa : undefined}>
+                  {hechos.tasa ?? PROXIMAMENTE}
                 </div>
+                {hechos.tasa == null ? <div data-testid="herramientas-tasa-nota" style={{ fontSize: 11, color: "var(--ch-text-3)" }}>{NOTA_SIN_DATO.tasa}</div> : null}
               </div>
               <FieldWithModifiedBadge
                 label="Enganche"
@@ -314,9 +316,10 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
             {analysis ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, borderLeft: "1px solid var(--ch-line)", paddingLeft: 20 }}>
                 <ScoreVisual score={analysis.score} size={132} />
-                {analysis.risk_level != null ? (
-                  <RiskBand level={mapBackendRiskLevel(analysis.risk_level)} />
-                ) : null}
+                <div data-testid="herramientas-riesgo" title={hechos.riesgo == null ? NOTA_SIN_DATO.riesgo : undefined} style={{ fontSize: 13, fontWeight: 600 }}>
+                  Riesgo: {hechos.riesgo?.toLowerCase() ?? PROXIMAMENTE}
+                </div>
+                {hechos.riesgo == null ? <div data-testid="herramientas-riesgo-nota" style={{ fontSize: 11, color: "var(--ch-text-3)" }}>{NOTA_SIN_DATO.riesgo}</div> : null}
               </div>
             ) : null}
           </div>
@@ -389,6 +392,7 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           </div>
         </div>
 
+        {canDecide ? (
         <DecisionPanel
           amount={amount ?? 0}
           term={term}
@@ -409,6 +413,11 @@ export function BankDetailLayout({ application, compliance, audit, counterOffer 
           }}
           onSubmit={handleSubmit}
         />
+        ) : (
+          <p role="status" data-testid="decision-panel-forbidden" style={{ fontSize: 12.5, color: "var(--ch-text-3)" }}>
+            {forbiddenReason ?? "No hay decisión disponible para esta solicitud."}
+          </p>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <CounterOfferPanel applicationId={application.application_id} />
           <OfferComparePanel applicationId={application.application_id} />

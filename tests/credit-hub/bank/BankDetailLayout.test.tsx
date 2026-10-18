@@ -102,8 +102,9 @@ describe("BankDetailLayout", () => {
     });
 
     expect(screen.getByTestId("decision-panel-forbidden")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /aprobar solicitud/i })).toBeDisabled();
-    expect(screen.getByLabelText("Monto aprobado")).toHaveAttribute("readonly");
+    // PS-12: sin claim no se muestran los botones de decisión (ni los campos).
+    expect(screen.queryByRole("button", { name: /aprobar solicitud/i })).toBeNull();
+    expect(screen.queryByLabelText("Monto aprobado")).toBeNull();
     // BANK-V2-03: dice la causa real (no el rol) y ofrece asignarse.
     expect(screen.getByTestId("decision-panel-forbidden")).toHaveTextContent("no está asignada a ti");
     expect(screen.getByTestId("decision-panel-forbidden")).not.toHaveTextContent("Tu rol");
@@ -121,7 +122,7 @@ describe("BankDetailLayout", () => {
     });
 
     expect(screen.getByTestId("decision-panel-forbidden")).toBeInTheDocument();
-    expect(screen.getByLabelText("Monto aprobado")).toHaveAttribute("readonly");
+    expect(screen.queryByLabelText("Monto aprobado")).toBeNull();
     expect(screen.getByTestId("decision-panel-forbidden")).toHaveTextContent("no está asignada a ti");
     expect(screen.queryByRole("button", { name: "Asignarme" })).toBeNull();
   });
