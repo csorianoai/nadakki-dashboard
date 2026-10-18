@@ -5,6 +5,7 @@ import { motion } from "@/lib/motion-stub";
 import { CreditCard, Check, Loader2, Zap, AlertCircle } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useTenant } from "@/contexts/TenantContext";
 
 /** Same-origin; proxied via next.config rewrites */
@@ -153,7 +154,7 @@ export default function AdminBillingPage() {
     return (
       <div className="ndk-page ndk-fade-in">
         <NavigationBar backHref="/admin">
-          <span className="text-sm text-gray-400">Tenant: {tenantId}</span>
+          <TenantLabel prefix="Tenant: " className="text-sm text-gray-400" />
         </NavigationBar>
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white">Billing</h1>
@@ -173,7 +174,7 @@ export default function AdminBillingPage() {
     return (
       <div className="ndk-page ndk-fade-in">
         <NavigationBar backHref="/admin">
-          <span className="text-sm text-gray-400">Tenant: {tenantId}</span>
+          <TenantLabel prefix="Tenant: " className="text-sm text-gray-400" />
         </NavigationBar>
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white">Billing</h1>
@@ -191,7 +192,7 @@ export default function AdminBillingPage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/admin">
-        <span className="text-sm text-gray-400">Tenant: {tenantId}</span>
+        <TenantLabel prefix="Tenant: " className="text-sm text-gray-400" />
       </NavigationBar>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-3xl font-bold text-white">Billing</h1>

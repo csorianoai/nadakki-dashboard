@@ -11,6 +11,7 @@ import {
   ExternalLink,
   ChevronRight,
 } from "lucide-react";
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useTenant } from "@/contexts/TenantContext";
 import { apiFetch } from "@/lib/api/fetch-client";
 
@@ -101,7 +102,7 @@ export default function LandingReadinessPage() {
         <p className="text-sm text-slate-500 mt-1">
           Real site crawl · Message match scoring · Copy outline generation
         </p>
-        <p className="text-xs text-slate-600 mt-1 font-mono">Tenant: {effectiveTenant}</p>
+        <p className="text-xs text-slate-600 mt-1"><TenantLabel prefix="Tenant: " /></p>
       </div>
 
       <div
