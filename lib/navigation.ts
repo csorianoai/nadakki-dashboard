@@ -62,6 +62,8 @@ export type NavItem = {
   coreMatchers?: string[];
   /** Solo estos role_key (los administradores, que ven todo, también). */
   roles?: string[];
+  /** Visibilidad que decide el backend, no el rol (Real Estate: solo con 200 de /acceso; sin él la fila no se ofrece). */
+  acceso?: "realtor";
   /** Visible sin módulo contratado (Inicio). */
   sinModulo?: boolean;
   /** Palabras extra para el buscador. */
@@ -397,8 +399,9 @@ export const NAVEGACION: NavSection[] = [
       { id: "set-integrations", label: "Integraciones", href: "/settings/integrations" },
       { id: "adm-billing-root", label: "Facturación", href: "/billing", keywords: ["billing"] },
       { id: "adm-audit", label: "Auditoría", href: "/audit", keywords: ["audit"] },
-      // Ruta aprobada por César; la página (O3-D-ADMIN-REAL-ESTATE) ya existe, así que la fila enlaza.
-      { id: "adm-real-estate", label: "Real Estate", href: "/admin/real-estate", keywords: ["inmobiliaria", "realtor"] },
+      // Ruta aprobada por César; la página (O3-D-ADMIN-REAL-ESTATE) ya existe, así que la fila enlaza. Sin 200 de
+      // /acceso la página no pinta nada (fail-closed): PS-11-MODULOS-OPS-B (3) no ofrece la fila sin ese acceso.
+      { id: "adm-real-estate", label: "Real Estate", href: "/admin/real-estate", acceso: "realtor", keywords: ["inmobiliaria", "realtor"] },
       { id: "adm-flags", label: "Interruptores", href: "/feature-flags", superAdminOnly: true, keywords: ["feature flags"] },
     ],
   },

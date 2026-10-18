@@ -17,9 +17,11 @@ export function useNavegacionVisible(): { secciones: NavSection[]; showAdmin: bo
   const realtorAccess = useRealtorAccess();
   const secciones = useMemo(
     () =>
-      filterSectionsForUser(NAV_SECTIONS, allRoles, tenant?.subscribed_cores, showAdmin).filter(
-        (sec) => sec.acceso !== "realtor" || realtorAccess === "ok",
-      ),
+      filterSectionsForUser(NAV_SECTIONS, allRoles, tenant?.subscribed_cores, showAdmin)
+        .filter((sec) => sec.acceso !== "realtor" || realtorAccess === "ok")
+        // Lo mismo fila a fila (Administración › Real Estate): sin 200 de /acceso no se ofrece.
+        .map((sec) => ({ ...sec, children: sec.children.filter((i) => i.acceso !== "realtor" || realtorAccess === "ok") }))
+        .filter((sec) => sec.children.length > 0),
     [allRoles, showAdmin, tenant?.subscribed_cores, realtorAccess],
   );
   return { secciones, showAdmin };

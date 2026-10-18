@@ -47,6 +47,7 @@ function aItem(it: NavItem): ItemMenu {
     featureFlag: it.featureFlag,
     coreMatchers: it.coreMatchers,
     superAdminOnly: it.superAdminOnly,
+    acceso: it.acceso,
     sinModulo: it.sinModulo,
     keywords: it.keywords,
     descripcion: DESCRIPCIONES[it.id],
@@ -296,7 +297,9 @@ export function menuVisible(m: ModuloConfig, u: ContextoUsuario): GrupoMenu[] {
   };
   const [filtrada] = filterSectionsForUser([seccion], u.roles, u.subscribedCores, userCanAccessAdminNav(u.roles));
   const quedan = new Set((filtrada?.children ?? []).map((c) => c.id));
-  return m.menu.map((g) => ({ ...g, items: g.items.filter((i) => quedan.has(i.id)) })).filter((g) => g.items.length > 0);
+  // Misma puerta que las secciones (modulosVisibles): una fila de Real Estate solo con 200 de /acceso.
+  const pasa = (i: ItemMenu) => quedan.has(i.id) && (i.acceso !== "realtor" || u.realtorOk === true);
+  return m.menu.map((g) => ({ ...g, items: g.items.filter(pasa) })).filter((g) => g.items.length > 0);
 }
 
 // ── Grupos del menú: pantalla del grupo y pestañas ─────────────────────────────────────────────────
