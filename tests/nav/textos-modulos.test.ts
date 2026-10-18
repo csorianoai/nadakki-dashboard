@@ -13,7 +13,7 @@ const MODULOS = [
 
 /** Excepciones de esta pasada, cada una con su justificación (criterio c). */
 const EXCEPCIONES_MODULOS: { motivo: RegExp; texto: RegExp; porque: string }[] = [
-  { motivo: /«Error»|«Roles»/, texto: /^(Error|Roles)( [a-záéíóúñ]|$)/, porque: "«error» y «roles» son palabras españolas" },
+  { motivo: /«Error»|«Roles»/, texto: /^(Error|Roles)( [a-záéíóúñ]| HTTP| \$\{|$)/, porque: "«error» y «roles» son palabras españolas" },
   { motivo: /«Tenant»/, texto: /^X-Tenant-ID$/, porque: "nombre de cabecera HTTP, no se muestra" },
 ];
 

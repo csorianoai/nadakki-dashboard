@@ -623,7 +623,7 @@ export function AnalisisClient({ proyectoId }: { proyectoId: string }) {
                 Ejecuta estudio de mercado, valoración territorial y absorción de ventas con inputs editables. Si faltan datos, el agente lo reporta como parte del Missing Data Engine.
               </p>
             </div>
-            <StatusBadge status={tid ? "active" : "warning"} label={tid ? "Organización lista" : "Esperando tenant"} size="sm" pulse={false} />
+            <StatusBadge status={tid ? "active" : "warning"} label={tid ? "Organización lista" : "Esperando organización"} size="sm" pulse={false} />
           </div>
         </GlassCard>
       </motion.header>

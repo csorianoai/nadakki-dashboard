@@ -233,7 +233,7 @@ export default function AdminReadinessPage() {
               className="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-2 disabled:opacity-50"
             >
               {singleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {singleLoading ? "Cargando preparación…" : "Load readiness"}
+              {singleLoading ? "Cargando preparación…" : "Cargar preparación"}
             </button>
           </div>
           {singleErr && <p className="text-red-400 text-sm mb-4">{singleErr}</p>}
