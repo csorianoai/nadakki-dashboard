@@ -66,7 +66,7 @@ function splitCsv(value: string): string[] {
 
 function messageFor(error: unknown): string {
   if (error instanceof OnboardingApiError) {
-    if (error.status === 401) return "Your session expired. Sign in again before retrying.";
+    if (error.status === 401) return "Su sesión expiró. Inicie sesión de nuevo antes de reintentar.";
     if (error.status === 403) return "Platform or institution administrator permission is required.";
     if (error.status === 409) return "This institution or dealer already exists. Review its onboarding status.";
     return error.message;
@@ -172,11 +172,11 @@ export function SaasOnboardingWizard() {
       <div className="grid gap-3 sm:grid-cols-2" role="group" aria-label="Onboarding type">
         <button type="button" data-testid="mode-institution" aria-pressed={mode === "institution"} onClick={() => changeMode("institution")} className={`rounded-xl border p-4 text-left ${mode === "institution" ? "border-purple-400 bg-purple-500/10" : "border-white/10 bg-white/5"}`}>
           <Building2 className="mb-2 h-5 w-5 text-purple-300" />
-          <strong className="text-white">Create institution</strong>
+          <strong className="text-white">Crear institución</strong>
         </button>
         <button type="button" data-testid="mode-dealer" aria-pressed={mode === "dealer"} onClick={() => changeMode("dealer")} className={`rounded-xl border p-4 text-left ${mode === "dealer" ? "border-cyan-400 bg-cyan-500/10" : "border-white/10 bg-white/5"}`}>
           <Store className="mb-2 h-5 w-5 text-cyan-300" />
-          <strong className="text-white">Create dealer</strong>
+          <strong className="text-white">Crear concesionario</strong>
         </button>
       </div>
 
@@ -209,7 +209,7 @@ export function SaasOnboardingWizard() {
           {error ? <div role="alert" className="mb-4 flex gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-red-200"><AlertTriangle className="h-5 w-5 shrink-0" />{error}</div> : null}
           {result ? <div role="status" data-testid="onboarding-result" className={`mb-4 flex gap-2 rounded-lg border p-3 ${statusClass(result.onboarding_status)}`}><CheckCircle2 className="h-5 w-5 shrink-0" /><span><strong>{result.onboarding_status}</strong> · {result.tenant_id || result.dealer_id || result.entity_id}{result.idempotent ? " · idempotent replay" : ""}</span></div> : null}
           <button data-testid="submit-onboarding" disabled={loading} className="rounded-lg bg-purple-600 px-5 py-2.5 font-medium text-white disabled:opacity-50">
-            {loading ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Creating…</span> : `Create ${mode}`}
+            {loading ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Creando…</span> : (mode === "institution" ? "Crear institución" : "Crear concesionario")}
           </button>
           <p className="mt-3 text-xs text-gray-500">The temporary password is sent only in the authenticated request and cleared from this form after every attempt.</p>
         </div>

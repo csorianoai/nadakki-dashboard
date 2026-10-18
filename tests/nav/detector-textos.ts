@@ -48,7 +48,7 @@ export function extraerTextos(src: string): { linea: number; texto: string }[] {
   const esKeywords = (n: number) => /keywords\s*:/.test(lineas[n - 1] ?? "");
   // Rama de idioma inglés de un selector de locale: el inglés es intencional ahí.
   const esRamaIngles = (n: number) => /startsWith\(["']en["']\)/.test(lineas[n - 1] ?? "");
-  const re = /"((?:[^"\\\n]|\\.)*)"|'((?:[^'\\\n]|\\.)*)'|`((?:[^`\\$]|\\.|\$(?!\{))*)`|>([^<>{}\n]+)</g;
+  const re = /"((?:[^"\\\n]|\\.)*)"|'((?:[^'\\\n]|\\.)*)'|`((?:[^`\\$]|\\.|\$(?!\{)|\$\{(?:[^{}]|\{[^{}]*\})*\})*)`|>([^<>{}\n]+)</g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(limpio))) {
     const texto = m[1] ?? m[2] ?? m[3] ?? m[4] ?? "";

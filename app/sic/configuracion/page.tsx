@@ -102,7 +102,7 @@ export default function SicConfiguracionPage() {
 
       <div className="space-y-6">
         <Seccion
-          titulo="Configuración Multi-Tenant (v2)"
+          titulo="Configuración multiorganización (v2)"
           desc="Perfil institucional y regulatorio gestionado por /api/v2/sic-mt"
         >
           {mtLoading ? (

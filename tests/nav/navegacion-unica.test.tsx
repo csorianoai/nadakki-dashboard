@@ -224,7 +224,8 @@ jest.mock("@/hooks/useAuth", () => ({ useAuth: () => mockAuth }));
 jest.mock("@/lib/hooks/useTenantBranding", () => ({ useTenantBranding: () => ({ data: null, isPending: false }) }));
 const mockBatch = { isError: false, error: null, isPending: false, isLoading: false, data: { results: {} } };
 jest.mock("@/lib/access/hooks", () => ({ useAccessEntitlementsBatch: () => mockBatch }));
-jest.mock("@/components/realtor/useRealtorAccess", () => ({ useRealtorAccess: () => "no" }));
+let mockRealtorAccess = "no";
+jest.mock("@/components/realtor/useRealtorAccess", () => ({ useRealtorAccess: () => mockRealtorAccess }));
 
 // eslint-disable-next-line import/first
 import { ForgeGlobalCoresSidebar } from "@/components/forge/layout/ForgeGlobalCoresSidebar";
@@ -344,10 +345,11 @@ describe("Administración › Real Estate: enlaza a /admin/real-estate (PS-4-ADM
     }
   });
 
-  it("se pinta como enlace, sin marca «Pronto»", () => {
+  it("se pinta como enlace, sin marca «Pronto» (con 200 de /acceso)", () => {
     const antes = mockAuth.allRoles;
     mockAuth.allRoles = [{ core_name: "platform", role_key: "tenant_admin" }];
     mockPath = "/settings";
+    mockRealtorAccess = "ok";
     try {
       render(<ForgeGlobalCoresSidebar mobileOpen={false} />);
       expect(document.querySelector('[data-pronto="/admin/real-estate"]')).toBeNull();
@@ -355,6 +357,20 @@ describe("Administración › Real Estate: enlaza a /admin/real-estate (PS-4-ADM
       expect(el).not.toBeNull();
       expect(el).toHaveTextContent("Real Estate");
       expect(el).not.toHaveTextContent("Pronto");
+    } finally {
+      mockAuth.allRoles = antes;
+      mockRealtorAccess = "no";
+    }
+  });
+
+  it("PS-11-MODULOS-OPS-B (3): sin 200 de /acceso la barra lateral no ofrece Real Estate", () => {
+    const antes = mockAuth.allRoles;
+    mockAuth.allRoles = [{ core_name: "platform", role_key: "tenant_admin" }];
+    mockPath = "/settings";
+    try {
+      render(<ForgeGlobalCoresSidebar mobileOpen={false} />);
+      expect(document.querySelector('a[href="/admin/real-estate"]')).toBeNull();
+      expect(document.querySelector('a[href="/admin/usuarios"]')).not.toBeNull();
     } finally {
       mockAuth.allRoles = antes;
     }
