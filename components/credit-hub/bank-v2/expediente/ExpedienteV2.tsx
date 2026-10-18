@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, FileText } from "lucide-react";
+import { ArrowLeft, FolderOpen, FileText } from "lucide-react";
 import { DCC_CLASSES } from "@/components/dcc/clases";
 import { DccEstado } from "@/components/dcc/DccEstado";
 import { DccPageMarco } from "@/components/dcc/DccPageMarco";
@@ -77,17 +77,7 @@ export function ExpedienteV2({ applicationId, marca, hrefVistaActual, hrefBandej
     <DccPageMarco
       titulo={c.nombre}
       marca={marca}
-      acciones={
-        <div className="flex flex-wrap items-center gap-3">
-          <Link href={hrefBandeja} className={DCC_CLASSES.link}>
-            Volver a la bandeja
-          </Link>
-          <Link href={hrefVistaActual} className={DCC_CLASSES.quietButton}>
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            Más herramientas
-          </Link>
-        </div>
-      }
+      acciones={<AccionesExpediente hrefBandeja={hrefBandeja} hrefVistaActual={hrefVistaActual} lugar="cabecera" />}
     >
       <div className="grid gap-[var(--dcc-gap)]">
         <section aria-label="Datos de la solicitud" className={DCC_CLASSES.card}>
@@ -208,8 +198,25 @@ export function ExpedienteV2({ applicationId, marca, hrefVistaActual, hrefBandej
           ) : null}
         </div>
         {decision?.(appQ.data)}
+        <AccionesExpediente hrefBandeja={hrefBandeja} hrefVistaActual={hrefVistaActual} lugar="pie" />
       </div>
     </DccPageMarco>
+  );
+}
+
+/** Botones del detalle: primario «Abrir expediente completo» y secundario «Volver a la bandeja». Se repiten en cabecera y pie. */
+function AccionesExpediente({ hrefBandeja, hrefVistaActual, lugar }: { hrefBandeja: string; hrefVistaActual: string; lugar: "cabecera" | "pie" }) {
+  return (
+    <div data-testid={`expediente-acciones-${lugar}`} className="flex flex-wrap items-center gap-3">
+      <Link href={hrefBandeja} className={DCC_CLASSES.quietButton}>
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Volver a la bandeja
+      </Link>
+      <Link href={hrefVistaActual} data-accion="principal" aria-label="Abrir expediente completo" className={`${DCC_CLASSES.actionButton} min-h-11 px-6 text-base`}>
+        <FolderOpen className="h-5 w-5" aria-hidden="true" />
+        Abrir expediente completo
+      </Link>
+    </div>
   );
 }
 
@@ -246,23 +253,38 @@ function Hecho({ k, v, cifra }: { k: string; v: string | null; cifra?: boolean }
   );
 }
 
+const AVISO_SIN_SCORING = "Scoring no disponible para este expediente";
+
 function Resumen({ payload, formato }: { payload: BankReviewPayload; formato: LocaleTenant }) {
   const a = payload.analysis;
-  if (!a) return <DccEstado estado="no_disponible" detalle="La solicitud aún no tiene análisis del motor" />;
-  const m = a.metrics;
+  const m = a?.metrics;
+  // Solo las métricas con dato; las que no tienen fuente no se pintan.
+  const metricas: Array<{ k: string; v: string | null; cifra?: boolean }> = a
+    ? [
+        { k: "Score", v: a.score != null ? formatEntero(a.score, formato) : null, cifra: true },
+        { k: "Nivel de riesgo", v: RIESGO_TEXTO[a.risk_level] ?? null },
+        { k: "Banda del motor", v: BANDA_TEXTO[a.approval_band] ?? null },
+        { k: "Deuda / ingreso", v: porcentaje(a.dti, formato) },
+        { k: "Ingreso mensual", v: formatMoneda(m?.monthly_income, formato) },
+        { k: "Deudas mensuales", v: formatMoneda(m?.monthly_debts, formato) },
+        { k: "Cuota estimada", v: formatMoneda(a.estimated_payment, formato) },
+        { k: "Capacidad de pago", v: formatMoneda(a.payment_capacity, formato) },
+      ].filter((x) => x.v != null)
+    : [];
   return (
     <DccSeccion titulo="Resumen del motor" icono={FileText} clave>
-      <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Hecho k="Score" v={formatEntero(a.score, formato)} cifra />
-        <Hecho k="Nivel de riesgo" v={RIESGO_TEXTO[a.risk_level] ?? null} />
-        <Hecho k="Banda del motor" v={BANDA_TEXTO[a.approval_band] ?? null} />
-        <Hecho k="Deuda / ingreso" v={porcentaje(a.dti, formato)} />
-        <Hecho k="Ingreso mensual" v={formatMoneda(m?.monthly_income, formato)} />
-        <Hecho k="Deudas mensuales" v={formatMoneda(m?.monthly_debts, formato)} />
-        <Hecho k="Cuota estimada" v={formatMoneda(a.estimated_payment, formato)} />
-        <Hecho k="Capacidad de pago" v={formatMoneda(a.payment_capacity, formato)} />
-      </dl>
-      {a.positive_factors?.length || a.negative_factors?.length ? (
+      {metricas.length === 0 ? (
+        <p role="status" data-testid="aviso-sin-scoring" className={`text-sm ${DCC_CLASSES.muted}`}>
+          {AVISO_SIN_SCORING}
+        </p>
+      ) : (
+        <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {metricas.map((x) => (
+            <Hecho key={x.k} k={x.k} v={x.v} cifra={x.cifra} />
+          ))}
+        </dl>
+      )}
+      {a && (a.positive_factors?.length || a.negative_factors?.length) ? (
         <div className="mt-4 grid gap-4 text-sm md:grid-cols-2">
           <Lista titulo="A favor" items={a.positive_factors ?? []} />
           <Lista titulo="En contra" items={a.negative_factors ?? []} />
