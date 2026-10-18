@@ -22,6 +22,8 @@ export type ItemMenu = {
   featureFlag?: NavItem["featureFlag"];
   coreMatchers?: string[];
   superAdminOnly?: boolean;
+  /** NavItem.acceso: la fila solo se ofrece con la puerta propia abierta (Real Estate: ContextoUsuario.realtorOk). */
+  acceso?: NavItem["acceso"];
   sinModulo?: boolean;
   keywords?: string[];
   /** Una línea, en español, de qué hace la página (≤ 110 caracteres). La muestran las tarjetas de la pantalla del grupo. */

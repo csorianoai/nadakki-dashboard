@@ -6,6 +6,7 @@ import { DealerSuiteGate } from "@/components/dealer/DealerSuiteGate";
 import { CLASES_FUENTES_FORGE } from "@/components/shell/fuentes-forge";
 import { BuscadorNavegacion } from "@/components/nav/BuscadorNavegacion";
 import { MarcoSuite } from "@/components/nav/MarcoSuite";
+import { SinModulos } from "@/components/nav/SinModulos";
 import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
 import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
 import { grupoDePantalla, grupoDeRuta, menuVisible, modulosVisibles, tienePantallaGrupo, grupoEnlazable, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
@@ -26,7 +27,9 @@ function menuDeSuite(modulos: ModuloConfig[]): GrupoMenu[] {
         { id: "suite-notificaciones", label: "Notificaciones", href: "/notifications" },
       ],
     },
-    { id: "suite-modulos", label: "Elegir módulo", items: modulos.map((m) => ({ id: `modulo-${m.id}`, label: m.label, href: m.raiz, icono: m.icono })) },
+    ...(modulos.length > 0
+      ? [{ id: "suite-modulos", label: "Elegir módulo", items: modulos.map((m) => ({ id: `modulo-${m.id}`, label: m.label, href: m.raiz, icono: m.icono })) }]
+      : []),
   ];
 }
 
@@ -89,7 +92,7 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
               <main id="main-content" className={CLASES.contenido}>
                 {conSesion ? <TenantBrandedDocumentTitle /> : null}
                 {modulo && grupoPestanas ? <PestanasGrupo titulo={conGrupos ? grupoPestanas.label : modulo.label} paginas={grupoPestanas.items} pathname={pathname} /> : null}
-                {children}
+                {!modulo && conSesion && modulos.length === 0 && (pathname ?? "/").replace(/\/+$/, "") === "" ? <SinModulos /> : children}
               </main>
             </div>
           </div>
