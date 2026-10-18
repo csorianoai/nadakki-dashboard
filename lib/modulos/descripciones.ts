@@ -67,6 +67,7 @@ export const DESCRIPCIONES: Record<string, string> = {
   "projects-new": "Asistente de alta de un proyecto nuevo, enviado al servicio de proyectos del tenant.",
   // Administración · Plataforma
   "adm-home": "Panel de administración: agentes, tenants, registros y configuración del sistema.",
+  "adm-usuarios": "Alta, roles y baja del personal de tu organización.",
   "adm-gates": "Gates de configuración que devuelve el API; actívalos o ciérralos para el tenant.",
   "adm-network-cockpit": "Cabina de la red: vista de tenants, usuarios, finanzas y crédito de toda la plataforma.",
   "adm-real-estate": "Administración de Real Estate: llegará en breve; hoy sin pantalla, por eso no tiene enlace.",

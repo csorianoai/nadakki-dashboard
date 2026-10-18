@@ -251,7 +251,7 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
         : {
             estado: salida.estado,
             titulo: "No se pudo leer el dealer de tu sesión",
-            detalle: "Probá de nuevo en unos minutos. Si sigue igual, avisá a soporte.",
+            detalle: "Prueba de nuevo en unos minutos. Si sigue igual, avisa a soporte.",
             codigo: salida.reason_code,
           };
     }

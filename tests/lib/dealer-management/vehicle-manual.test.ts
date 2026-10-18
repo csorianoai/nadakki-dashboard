@@ -347,7 +347,7 @@ describe("precio, referencia, dominio y stock (contrato P2, backend #1545/#1564)
     expect(validateVehicleForm({ ...BASE, display_price_currency: "USD" }).display_price_amount).toMatch(/Falta el importe/);
     expect(
       validateVehicleForm({ ...BASE, display_price_amount: "10", display_price_currency: "USD" }).display_price_amount,
-    ).toMatch(/primero cargá el precio/);
+    ).toMatch(/primero carga el precio/);
     expect(
       validateVehicleForm({ ...BASE, price_amount: "1", display_price_amount: "1", display_price_currency: "ars" }, "ARS")
         .display_price_currency,

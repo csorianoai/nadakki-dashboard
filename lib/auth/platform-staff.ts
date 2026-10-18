@@ -50,7 +50,7 @@ export function esPersonalDePlataforma(roles: RolParaPlataforma[] | null | undef
 /** El texto que ve quien no es personal de plataforma. Dice el motivo, sin culpar. */
 export const SOLO_PLATAFORMA_TITULO = "Esta pantalla es de la plataforma";
 export const SOLO_PLATAFORMA_DETALLE =
-  "La administración de tenants es de Nadakki, no de tu institución. Si necesitás un cambio en tu tenant, escribinos.";
+  "La administración de tenants es de Nadakki, no de tu institución. Si necesitas un cambio en tu tenant, escríbenos.";
 
 /**
  * `true` solo si el usuario es `platform_superadmin`.

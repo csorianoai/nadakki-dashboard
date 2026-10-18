@@ -25,7 +25,7 @@ export default function ContableLibroDiarioPage() {
       >
         <p className="font-semibold text-white">El libro diario todavía no tiene pantalla.</p>
         <p className="mt-1 text-zinc-400">
-          Mientras tanto podés ver los movimientos de cada cuenta en el libro mayor, o registrar un asiento nuevo.
+          Mientras tanto puedes ver los movimientos de cada cuenta en el libro mayor, o registrar un asiento nuevo.
         </p>
         <div className="mt-3 flex flex-wrap gap-4">
           <Link href="/contable/libro-mayor" className="font-semibold text-emerald-200 underline hover:text-white">

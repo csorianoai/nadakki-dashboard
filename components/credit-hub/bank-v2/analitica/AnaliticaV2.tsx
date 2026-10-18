@@ -14,6 +14,7 @@ import type { MarcaDcc } from "@/lib/dcc/marca";
 import { porcentaje } from "../comun/formato";
 import { parcialSiLimite, proximamente } from "../comun/llano";
 import { nombreOIdentificadorOculto } from "../comun/nombres";
+import { textosKpis, useKpisBanco } from "../mesa/useKpisBanco";
 
 const BANDAS_SCORE = ["300-579", "580-669", "670-739", "740-799", "800-850"] as const;
 
@@ -37,7 +38,9 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
   const analyticsQ = useBankAnalytics();
   const dealersQ = useBankDealersRanking();
   const saludQ = useBankPortfolioHealth();
+  const kpisQ = useKpisBanco();
   const f = marca.formato;
+  const k = textosKpis(kpisQ.data, f);
   const a = analyticsQ.data;
 
   if (analyticsQ.isError) return <DccEstado estado="error" detalle="No pudimos cargar la analítica" onReintentar={() => void analyticsQ.refetch()} />;
@@ -58,24 +61,22 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
   return (
     <DccPageMarco titulo="Analítica" marca={marca}>
       <div className="grid gap-[var(--dcc-gap)]">
-        <DccSeccion titulo="Cartera · últimos 30 días" icono={Gauge} meta={`${formatEntero(a.total_applications, f)} solicitudes`}>
+        <DccSeccion titulo="Aprobación y monto" icono={Gauge} meta="agregados del banco, sin ventana fija">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-4">
-            <DccKpiTile
-              etiqueta="Volumen aprobado"
-              valor={formatMonedaCompacta(a.portfolio_value, f)}
-              calidad={formatMonedaCompacta(a.portfolio_value, f) ? null : proximamente()}
-            />
-            <DccKpiTile etiqueta="Tasa de aprobación" valor={porcentaje(a.approval_rate, f)} calidad={porcentaje(a.approval_rate, f) ? null : proximamente()} />
+            <DccKpiTile etiqueta="Ofertas pendientes" valor={k.pendientes} calidad={k.pendientes != null ? null : proximamente()} />
+            <DccKpiTile etiqueta="Tasa de aprobación" valor={k.tasa} calidad={k.tasa != null ? null : proximamente()} />
+            <DccKpiTile etiqueta="Monto aprobado" valor={k.monto} calidad={k.monto != null ? null : proximamente()} />
+            <DccKpiTile etiqueta="Tiempo medio de decisión" valor={k.tiempoMedio} unidad="h" calidad={k.tiempoMedio != null ? null : proximamente()} />
+          </div>
+        </DccSeccion>
+
+        <DccSeccion titulo="Cartera · últimos 30 días" icono={Gauge} meta={`${formatEntero(a.total_applications, f)} solicitudes`}>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-5">
             <DccKpiTile
               etiqueta="Incumplimiento previsto"
               valor={defaultPred.isExtreme ? null : porcentaje(tasaIncumplimiento, f)}
               nota={`${formatEntero(a.default_prediction.predicted_default_count, f)} ${a.default_prediction.predicted_default_count === 1 ? "caso estimado" : "casos estimados"}`}
               calidad={defaultPred.isExtreme ? proximamente() : limite}
-            />
-            <DccKpiTile
-              etiqueta="Tiempo medio de decisión"
-              valor={a.avg_decision_time_hours != null ? `${formatEntero(a.avg_decision_time_hours, f)} h` : null}
-              calidad={a.avg_decision_time_hours != null ? null : proximamente()}
             />
           </div>
         </DccSeccion>

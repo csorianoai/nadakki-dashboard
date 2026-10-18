@@ -2,7 +2,7 @@
  * El dealer del usuario sale del BACKEND. El Local Storage es solo cache.
  *
  * Contrato publicado en backend #1501 y verificado en produccion
- * (api.nadakki.com/openapi.json) y en `origin/main`:
+ * (openapi.json del backend de produccion) y en `origin/main`:
  *
  *   GET /api/v1/autos/me/dealer-context
  *   -> 200 {"assignments": [{dealer_id, organization_unit_id, dealer_name}]}

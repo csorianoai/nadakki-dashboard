@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { clearLocalStorage, getPostLoginRedirectPath } from "@/lib/auth/auth-context";
@@ -17,6 +17,7 @@ import {
   resolveVisiblePlatformTitle,
 } from "@/lib/white-label/brand-display";
 import { Skeleton } from "@/components/forge/ui/Skeleton";
+import { aterrizajeRealtor, debeProbarRealtor } from "./aterrizaje-realtor";
 import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 export default function LoginPage() {
@@ -61,6 +62,12 @@ export default function LoginPage() {
     effectiveTenantSlug.trim().length >= 2 && brandingQuery.isPending,
   );
 
+  const irA = useCallback((destino: string) => {
+    const ruta = resolveDealerManagementRedirect(destino);
+    if (!debeProbarRealtor(ruta)) { router.push(ruta); return; }
+    void aterrizajeRealtor(ruta).then((r) => router.push(r));
+  }, [router]);
+
   useEffect(() => {
     if (adminHost === null || isLoading || !isAuthenticated) return;
 
@@ -80,7 +87,7 @@ export default function LoginPage() {
     }
 
     const roles = allRoles.length > 0 ? allRoles : activeRole ? [activeRole] : [];
-    router.push(resolveDealerManagementRedirect(getPostLoginRedirectPath(roles)));
+    irA(getPostLoginRedirectPath(roles));
   }, [
     adminHost,
     isAuthenticated,
@@ -91,6 +98,7 @@ export default function LoginPage() {
     tenant?.slug,
     logout,
     router,
+    irA,
   ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,7 +118,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push(resolveDealerManagementRedirect(result.redirectTo ?? "/"));
+    irA(result.redirectTo ?? "/");
   };
 
   if (isLoading && !initError) {

@@ -31,7 +31,7 @@ export function importActivosPath(dealerId: string, modo: ImportModo): string {
 
 /** Solo la forma del fichero; version y columnas las dice la REVISION del backend. */
 export function validarArchivo(file: { name: string; size: number } | null): string | null {
-  if (!file) return "Elegí el archivo de la plantilla.";
+  if (!file) return "Elige el archivo de la plantilla.";
   if (!/\.(xlsx|zip)$/i.test(file.name.trim())) {
     return "El archivo tiene que ser la plantilla .xlsx o su .zip de CSV.";
   }
@@ -182,18 +182,18 @@ export function resumenCreados(c: ImportCreados | null): string | null {
 export const MENSAJES_INCIDENCIA: Readonly<Record<string, string>> = {
   // Del fichero entero.
   FICHERO_ILEGIBLE: "El archivo no se puede abrir como una planilla .xlsx.",
-  VERSION_INCORRECTA: "La planilla no es la versión oficial PLANTILLA_ACTIVOS_v4. Descargá la plantilla de nuevo.",
+  VERSION_INCORRECTA: "La planilla no es la versión oficial PLANTILLA_ACTIVOS_v4. Descarga la plantilla de nuevo.",
   HOJA_AUSENTE: "Falta una de las hojas de la plantilla.",
   COLUMNA_OBLIGATORIA_AUSENTE: "A la hoja le faltan columnas obligatorias de la plantilla.",
   // De una fila.
   OBLIGATORIO_VACIO: "Falta completar un dato obligatorio.",
   VALOR_FUERA_DE_LISTA: "Hay un valor que no está entre las opciones de la plantilla.",
   NO_ES_ENTERO: "Hay un dato que tiene que ser un número entero.",
-  MONTO_INVALIDO: "El monto no es válido: escribilo sin $ ni separador de miles (por ejemplo 1500000 o 1500000,50).",
+  MONTO_INVALIDO: "El monto no es válido: escríbelo sin $ ni separador de miles (por ejemplo 1500000 o 1500000,50).",
   MONTO_NO_POSITIVO: "El monto tiene que ser mayor que cero.",
-  FECHA_INVALIDA: "La fecha no es válida: usá el formato DD/MM/AAAA.",
+  FECHA_INVALIDA: "La fecha no es válida: usa el formato DD/MM/AAAA.",
   FECHA_INGRESO_FUTURA: "La fecha de ingreso al stock no puede ser posterior a hoy.",
-  PAREJA_INCOMPLETA: "Hay dos datos que van juntos: completá los dos o ninguno.",
+  PAREJA_INCOMPLETA: "Hay dos datos que van juntos: completa los dos o ninguno.",
   OBLIGATORIO_CONDICIONAL: "Falta un dato que es obligatorio por lo que marcaste en otra columna.",
   REF_REPETIDA: "La referencia del vehículo ya aparece en una fila anterior.",
   STOCK_REPETIDO: "El número de stock ya aparece en una fila anterior.",

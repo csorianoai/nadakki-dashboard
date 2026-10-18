@@ -38,7 +38,7 @@ export const MONEDA_ERROR_COPY: Record<string, string> = {
     "El tenant no tiene moneda funcional configurada. No se puede registrar un asiento hasta que la entidad legal la declare.",
   [MONEDA_ERROR_CODES.D4_MONEDA]: "La moneda debe ser un código ISO-4217 de tres letras.",
   [MONEDA_ERROR_CODES.D1_FX_QUOTE]:
-    "No hay cotización oficial para esa moneda en esa fecha. Cargá la cotización o registrá el asiento en la moneda funcional.",
+    "No hay cotización oficial para esa moneda en esa fecha. Carga la cotización o registra el asiento en la moneda funcional.",
 };
 
 /** Mismo criterio que `_iso3` del backend: tres letras, nada mas. */

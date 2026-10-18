@@ -12,6 +12,8 @@ jest.mock("@/lib/credit-hub/api/client", () => ({
     llamadas.push(path);
     if (path.includes("dealers-ranking")) return { dealers: [{ dealer: "Autos del Caribe", volume: 94, approved: 67, approval_rate: 0.71 }] };
     if (path.includes("portfolio-health")) return {};
+    if (path.includes("kpis/portfolio")) return { pending_offers: 9, total_approved_amount: 284180000 };
+    if (path.includes("kpis/approval")) return { approval_rate_pct: 61.6, avg_response_hours: null };
     return {
       applications_by_status: {}, approval_rate: 0.616, avg_decision_time_hours: null, top_dealers: [], portfolio_value: 284180000, total_applications: 352,
       default_prediction: { rule: "score_lt_600", predicted_default_count: defaultCount, predicted_default_rate: defaultCount / 352 },
@@ -31,11 +33,12 @@ function pintar() {
 describe("Analitica v2 (B5)", () => {
   beforeEach(() => (llamadas.length = 0));
 
-  it("mismas tres consultas; volumen de dealers como conteo; lo que falta, Proximamente", async () => {
+  it("tres consultas de analitica + los agregados unicos; volumen de dealers como conteo; lo que falta, Proximamente", async () => {
     const { container } = pintar();
     expect(await screen.findByText("Autos del Caribe")).toBeInTheDocument();
     expect([...new Set(llamadas.map((p) => p.split("?")[0]))].sort()).toEqual([
       "/api/v2/credit/analytics/dashboard", "/api/v2/credit/analytics/dealers-ranking", "/api/v2/credit/analytics/portfolio-health",
+      "/api/v2/credit/bank/kpis/approval", "/api/v2/credit/bank/kpis/portfolio",
     ]);
     const texto = (container.textContent ?? "").replace(/[\u00a0\u202f]/g, " ");
     expect(texto).toContain("RD$284.2 M");

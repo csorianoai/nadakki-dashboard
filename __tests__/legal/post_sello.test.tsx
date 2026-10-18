@@ -8,6 +8,7 @@ const push = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
   useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/legal/research",
 }));
 
 jest.mock("@/hooks/useLegal", () => ({
@@ -69,11 +70,14 @@ describe("Worker F — quitar guardrails restrictivos post sello", () => {
       expect(screen.getByText(/no sustituyen asesoría legal profesional/i)).toBeInTheDocument();
     });
 
-    it("pending: amber-50 + AlertTriangle + texto restrictivo", () => {
+    it("pending: no renderiza banner (banner ámbar retirado en #185)", () => {
+      // El aviso restrictivo para "pending" lo cubre DemoAcceptanceModal (alertdialog).
       mockUseKnowledgePackInfo.mockReturnValue({ info: packPending, loading: false });
       const { container } = render(<DemoBannerStrong />);
-      expect(container.querySelector(".bg-amber-50")).toBeTruthy();
-      expect(screen.getByText(/Validación pendiente/i)).toBeInTheDocument();
+      expect(container.innerHTML).toBe("");
+      expect(container.querySelector(".bg-amber-50")).toBeNull();
+      expect(container.querySelector(".bg-green-50")).toBeNull();
+      expect(screen.queryByText(/Piloto controlado/i)).not.toBeInTheDocument();
     });
   });
 
@@ -114,7 +118,7 @@ describe("Worker F — quitar guardrails restrictivos post sello", () => {
   });
 
   describe("ResearchPage", () => {
-    it("tono piloto controlado en aviso LLM (sin Fase 2 demo)", async () => {
+    it("estado vacío Papel blanco con trazabilidad y auditoría (sin Fase 2 demo)", async () => {
       sessionStorage.setItem("legal_pilot_optional_info_dismissed", "1");
       localStorage.setItem("legal_post_sello_accepted", "true");
       mockUseKnowledgePackInfo.mockReturnValue({ info: packVerified, loading: false });
@@ -128,9 +132,12 @@ describe("Worker F — quitar guardrails restrictivos post sello", () => {
       });
       render(<ResearchPage />);
       expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
-      expect(screen.getByText(/Piloto controlado:/i)).toBeInTheDocument();
+      // El aviso "Piloto controlado: … watermark" se sustituyó en el rediseño Papel blanco (#220)
+      // por el estado vacío, que declara trazabilidad verificable y metadatos de auditoría.
+      expect(screen.getByRole("heading", { name: /¿Qué necesitas consultar hoy\?/ })).toBeInTheDocument();
+      expect(screen.getByText(/trazabilidad verificable/i)).toBeInTheDocument();
+      expect(screen.getByText(/metadatos de auditoría/i)).toBeInTheDocument();
       expect(screen.queryByText(/Fase 2 — LLM operativo/i)).not.toBeInTheDocument();
-      expect(screen.getByText(/watermark/i)).toBeInTheDocument();
     });
   });
 });

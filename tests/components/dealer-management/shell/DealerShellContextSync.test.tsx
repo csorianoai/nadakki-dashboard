@@ -255,7 +255,7 @@ describe("errores del contexto", () => {
     montar();
 
     const aviso = await screen.findByTestId("dealer-context-aviso");
-    expect(aviso).toHaveTextContent("Probá de nuevo en unos minutos");
+    expect(aviso).toHaveTextContent("Prueba de nuevo en unos minutos");
     expect(aviso).not.toHaveTextContent("reason_code");
     expect(aviso.getAttribute("data-reason-code")).toBe("");
   });

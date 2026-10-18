@@ -14,6 +14,7 @@ import { formatEntero, formatMonedaCompacta } from "@/lib/dcc/formato";
 import type { Calidad } from "@/lib/dcc/calidad";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { porcentaje } from "../comun/formato";
+import { textosKpis, useKpisBanco } from "../mesa/useKpisBanco";
 
 type Registro = Record<string, unknown>;
 const reg = (v: unknown): Registro | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Registro) : null);
@@ -43,7 +44,6 @@ const valorMetrica = (m: unknown): number | null => numero(reg(m)?.value);
 const etapa = (metricas: Registro | null, k: string): number | null => valorMetrica(reg(metricas?.embudo)?.[k]);
 /** El backend da el porcentaje ya multiplicado por 100. */
 const pct = (v: number | null, f: MarcaDcc["formato"]) => (v === null ? null : porcentaje(v / 100, f));
-const horas = (v: number | null, f: MarcaDcc["formato"]) => (v === null ? null : new Intl.NumberFormat(f.locale, { maximumFractionDigits: 1 }).format(v));
 const SIN_DATOS: Calidad = { estado: "no_disponible", motivo: "Sin solicitudes evaluadas en el periodo.", delBackend: true };
 
 /**
@@ -74,7 +74,9 @@ export function KpisBancoV2({ marca }: { marca: MarcaDcc }) {
   const [desde, hasta] = [mesUtc(new Date(), MESES_TENDENCIA - 1), mesUtc(new Date(), 0)];
   const resumenQ = useKpi(RESUMEN_PATH);
   const tendenciaQ = useKpi(`/api/v2/credit/bank/kpis/tendencia?desde=${desde}&hasta=${hasta}`);
+  const agregadosQ = useKpisBanco();
   const f = marca.formato;
+  const k = textosKpis(agregadosQ.data, f);
   const rm = reg(reg(resumenQ.data)?.metricas);
   const serie = lista(tendenciaQ.data, ["serie"]).map((p) => ({ periodo: String(p.periodo ?? ""), m: reg(p.metricas) }));
   const prestamistas = lista(prestamistasQ.data, ["lenders", "items", "rows", "data", "results"]).map((r) => ({
@@ -97,9 +99,22 @@ export function KpisBancoV2({ marca }: { marca: MarcaDcc }) {
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <DccKpiTile etiqueta="Solicitudes recibidas" valor={formatEntero(etapa(rm, "recibidas"), f)} calidad={etapa(rm, "recibidas") === null ? SIN_DATOS : null} />
                 <DccKpiTile etiqueta="Ofertadas" valor={formatEntero(etapa(rm, "ofertadas"), f)} calidad={etapa(rm, "ofertadas") === null ? SIN_DATOS : null} />
-                <DccKpiTile etiqueta="Tasa de aprobación" valor={pct(valorMetrica(rm?.tasa_aprobacion), f)} calidad={valorMetrica(rm?.tasa_aprobacion) === null ? SIN_DATOS : null} />
                 <DccKpiTile etiqueta="Tasa de desembolso" valor={pct(valorMetrica(rm?.tasa_desembolso), f)} calidad={valorMetrica(rm?.tasa_desembolso) === null ? SIN_DATOS : null} />
-                <DccKpiTile etiqueta="Respuesta media" valor={horas(valorMetrica(rm?.tiempo_medio_respuesta), f)} unidad="h" calidad={valorMetrica(rm?.tiempo_medio_respuesta) === null ? SIN_DATOS : null} />
+              </div>
+            )}
+          </DccSeccion>
+          <DccSeccion titulo="Aprobación y monto" icono={Gauge} testId="kpis-agregados">
+            {agregadosQ.isError ? (
+              <SelloCalidad calidad={{ estado: "no_disponible", motivo: "Los indicadores de aprobación no respondieron; vuelve a intentarlo.", delBackend: true }} />
+            ) : agregadosQ.data === undefined ? (
+              <DccEstado estado="cargando" />
+            ) : (
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                <DccKpiTile etiqueta="Ofertas pendientes" valor={k.pendientes} calidad={k.pendientes === null ? SIN_DATOS : null} />
+                <DccKpiTile etiqueta="Tasa de aprobación" valor={k.tasa} calidad={k.tasa === null ? SIN_DATOS : null} />
+                <DccKpiTile etiqueta="Aprobadas" valor={k.aprobadas} calidad={k.aprobadas === null ? SIN_DATOS : null} />
+                <DccKpiTile etiqueta="Monto aprobado" valor={k.monto} calidad={k.monto === null ? SIN_DATOS : null} />
+                <DccKpiTile etiqueta="Respuesta media" valor={k.tiempoMedio} unidad="h" calidad={k.tiempoMedio === null ? SIN_DATOS : null} />
               </div>
             )}
           </DccSeccion>

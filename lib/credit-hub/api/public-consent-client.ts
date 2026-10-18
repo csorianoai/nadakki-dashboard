@@ -73,7 +73,7 @@ export class PublicConsentClient {
    * `/api/v2/credit/:path*` de next.config.js.
    *
    * Antes el default salia de `process.env.NEXT_PUBLIC_API_URL`, que Next hornea
-   * en el bundle. En staging quedo horneada como "https://api.nadakki.com": el
+   * en el bundle. En staging quedo horneada con el host de produccion: el
    * cliente construia una URL absoluta a un host ausente del `connect-src` del
    * CSP, el navegador cortaba el fetch antes de emitirlo y el `.catch` de la
    * pagina lo pintaba como enlace invalido. Medido: 39 requests, cero a /api/.

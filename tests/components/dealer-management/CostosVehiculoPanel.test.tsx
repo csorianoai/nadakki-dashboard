@@ -226,7 +226,7 @@ describe("fecha en el formato del tenant", () => {
     fetchMock.mockClear();
     fireEvent.submit(screen.getByTestId("costo-alta-form"));
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.getByText("La fecha no es válida. Escribila como dd/mm/aaaa.")).toBeInTheDocument();
+    expect(screen.getByText("La fecha no es válida. Escríbela como dd/mm/aaaa.")).toBeInTheDocument();
   });
 });
 
@@ -255,7 +255,7 @@ describe("reparacion", () => {
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.getByText("El proveedor es obligatorio en una reparación.")).toBeInTheDocument();
-    expect(screen.getByText("Subí la factura de la reparación.")).toBeInTheDocument();
+    expect(screen.getByText("Sube la factura de la reparación.")).toBeInTheDocument();
   });
 
   it("completa, va por /repair-invoices con los tres identificadores", async () => {
