@@ -16,6 +16,7 @@ module.exports = {
     "^next/font/local$": "<rootDir>/tests/__mocks__/nextFontLocal.js",
     "^react-pdf/dist/.*\\.css$": "<rootDir>/tests/__mocks__/styleMockEmpty.js",
   },
+  setupFiles: ["<rootDir>/tests/jest-env.js"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.tsx"],
   transform: {
     "^.+\\.(t|j)sx?$": [
