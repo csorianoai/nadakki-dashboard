@@ -96,7 +96,13 @@ export async function getBillingStatus(
         },
       }
     );
-    if (!res.ok) return null;
+    if (res.status === 404 || res.status === 204) return null;
+    if (!res.ok) {
+      throw new BillingApiError(
+        `No se pudo cargar la facturación (HTTP ${res.status}).`,
+        res.status
+      );
+    }
     const json = await res.json().catch(() => null);
     const d = unwrapRecord(json);
     if (!d) return null;
@@ -141,8 +147,9 @@ export async function getBillingStatus(
               ? false
               : null,
     };
-  } catch {
-    return null;
+  } catch (e) {
+    if (e instanceof BillingApiError) throw e;
+    throw new BillingApiError("Sin conexión con el servidor.", 0);
   }
 }
 
@@ -165,7 +172,13 @@ export async function getInvoices(
         },
       }
     );
-    if (!res.ok) return [];
+    if (res.status === 404 || res.status === 204) return [];
+    if (!res.ok) {
+      throw new BillingApiError(
+        `No se pudieron cargar las facturas (HTTP ${res.status}).`,
+        res.status
+      );
+    }
     const json = await res.json().catch(() => null);
     const d = unwrapRecord(json);
     const root = json && typeof json === "object" ? (json as Record<string, unknown>) : null;
@@ -220,8 +233,9 @@ export async function getInvoices(
         };
       })
       .filter((x): x is BillingInvoice => x != null);
-  } catch {
-    return [];
+  } catch (e) {
+    if (e instanceof BillingApiError) throw e;
+    throw new BillingApiError("Sin conexión con el servidor.", 0);
   }
 }
 
