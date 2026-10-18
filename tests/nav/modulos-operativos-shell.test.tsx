@@ -34,17 +34,16 @@ const sesion = (role_key: string, cores: string[]) =>
 const conSesion = (v: AuthContextValue, ui: React.ReactNode) => <AuthContext.Provider value={v}>{ui}</AuthContext.Provider>;
 
 describe("PS-11-MODULOS-OPS-B: lo que se ve", () => {
-  it("(a) tenant_admin: bajo /admin solo /admin/usuarios y /admin/real-estate, nunca /admin de plataforma", () => {
+  it("(a) tenant_admin con cores [platform] y sin 200 de /acceso: bajo /admin solo /admin/usuarios, nunca /admin ni /admin/real-estate", () => {
     const u = { roles: [{ core_name: "platform", role_key: "tenant_admin" }], subscribedCores: ["platform"] };
     const m = modulosVisibles(u).find((x) => x.seccion === "admin")!;
     const bajoAdmin = menuVisible(m, u).flatMap((g) => g.items.map((i) => i.href)).filter((h) => h?.startsWith("/admin"));
-    expect(bajoAdmin.sort()).toEqual(["/admin/real-estate", "/admin/usuarios"]);
+    expect(bajoAdmin).toEqual(["/admin/usuarios"]);
   });
 
-  it("(a) cada pantalla /admin que el menú ofrece al tenant_admin está eximida en app/admin/layout.tsx", () => {
+  it("(a) la guarda de superadmin de /admin no se relaja: solo /admin/usuarios está eximida en app/admin/layout.tsx", () => {
     const layout = fs.readFileSync(path.resolve(__dirname, "../../app/admin/layout.tsx"), "utf8");
-    expect(layout).toMatch(/RUTAS_EXENTAS = \[[^\]]*"\/admin\/usuarios"[^\]]*\]/);
-    expect(layout).toMatch(/RUTAS_EXENTAS = \[[^\]]*"\/admin\/real-estate"[^\]]*\]/);
+    expect(layout).toMatch(/RUTAS_EXENTAS = \["\/admin\/usuarios"\];/);
   });
 
   it("(c) operator con cores []: la Suite muestra la pantalla llana y ningún «Elegir módulo»", () => {
