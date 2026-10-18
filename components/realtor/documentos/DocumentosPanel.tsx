@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { COPY, DOC_STATUS_LABEL, type Lang } from "@/lib/realtor/documentos/copy";
+import { downloadDocument, type DownloadFailure } from "@/lib/realtor/documentos/download";
 import { fetchDocuments } from "@/lib/realtor/documentos/api";
 import { DEMO_DOCS, DEMO_TEMPLATES } from "@/lib/realtor/documentos/demo";
 import { countByDocStatus, templateState } from "@/lib/realtor/documentos/logic";
@@ -14,6 +15,36 @@ const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line
 const H2: CSSProperties = { margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 24 };
 const ROW: CSSProperties = { border: `1px solid ${RT.line}`, borderRadius: 10, padding: 14 };
 const PILL: CSSProperties = { fontSize: 12, fontWeight: 700, borderRadius: 999, padding: "3px 10px" };
+
+const DL_ERROR_KEY = { not_found: "dlNotFound", gone: "dlGone", error: "dlError" } as const;
+
+function DownloadButton({ doc, demo, lang }: { doc: OperationDoc; demo: boolean; lang: Lang }) {
+  const t = COPY[lang];
+  const [loading, setLoading] = useState(false);
+  const [failure, setFailure] = useState<DownloadFailure | null>(null);
+  const run = async () => {
+    if (demo || loading) return;
+    setLoading(true);
+    setFailure(null);
+    const r = await downloadDocument(doc.id, doc.name);
+    setLoading(false);
+    if (!r.ok) setFailure(r.reason);
+  };
+  return (
+    <span style={{ display: "block", marginTop: 10 }}>
+      <button type="button" data-testid="doc-download" disabled={demo || loading} onClick={run}
+        style={{ minHeight: 36, padding: "0 14px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, fontFamily: "inherit", fontWeight: 700, cursor: demo || loading ? "not-allowed" : "pointer" }}>
+        {demo ? t.dlDemo : loading ? t.dlLoading : t.dlButton}
+      </button>
+      {failure ? (
+        <span role="alert" data-testid="doc-download-error" style={{ display: "block", marginTop: 6, fontSize: 13, color: RT.demoText }}>
+          {t[DL_ERROR_KEY[failure]]}{" "}
+          {failure === "error" ? <button type="button" data-testid="doc-download-retry" onClick={run} style={{ fontFamily: "inherit", fontWeight: 700, cursor: "pointer" }}>{t.dlRetry}</button> : null}
+        </span>
+      ) : null}
+    </span>
+  );
+}
 
 export function DocumentosPanel() {
   const { state: access, demoActive } = useRealtorAccessInfo();
@@ -104,6 +135,7 @@ export function DocumentosPanel() {
                     <strong style={{ display: "block", fontSize: 14 }}>{d.name}</strong>
                     <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>{d.operation[lang]}</span>
                     <span style={{ ...PILL, background: RT.chipUpBg, color: RT.chipUpText }}>{DOC_STATUS_LABEL[lang][d.status]}</span>
+                    <DownloadButton doc={d} demo={demo} lang={lang} />
                   </li>
                 ))}
               </ul>
