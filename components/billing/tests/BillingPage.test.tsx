@@ -28,8 +28,8 @@ describe("Facturación: estados de carga", () => {
     expect(screen.queryByText(/No se pudo/i)).toBeNull();
   });
 
-  it("respuesta vacía (404 sin suscripción): 'Sin datos', no error", async () => {
-    mockFetch(() => res(404, { detail: "Not Found" }));
+  it("respuesta vacía (200 sin suscripción): 'Sin datos', no error", async () => {
+    mockFetch(() => res(200, {}));
     render(<BillingDashboard tenantId="t1" />);
     await waitFor(() => expect(screen.getByText(/Sin datos/i)).toBeTruthy());
     expect(screen.queryByText(/No se pudo|Error de red/i)).toBeNull();
@@ -44,8 +44,18 @@ describe("Facturación: estados de carga", () => {
     expect(screen.queryByText(/Cargando facturación/i)).toBeNull();
   });
 
+  it("ruta inexistente (404): error con Reintentar, no 'Sin datos'", async () => {
+    mockFetch(() => res(404, { detail: "Not Found" }));
+    render(<BillingDashboard tenantId="t1" />);
+    await waitFor(() => expect(screen.getByText(/Reintentar/i)).toBeTruthy());
+    expect(screen.queryByText(/Sin datos/i)).toBeNull();
+  });
+
   it("facturas: vacía muestra estado vacío, 500 muestra aviso con acción", async () => {
-    mockFetch(() => res(200, { invoices: [] }));
+    mockFetch((url) => {
+      expect(url).toContain("/api/v2/billing/invoices");
+      return res(200, []);
+    });
     const { unmount } = render(<InvoiceTable tenantId="t1" />);
     await waitFor(() => expect(screen.getByText(/Sin datos|No hay facturas/i)).toBeTruthy());
     unmount();

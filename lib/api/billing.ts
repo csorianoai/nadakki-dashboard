@@ -96,7 +96,7 @@ export async function getBillingStatus(
         },
       }
     );
-    if (res.status === 404 || res.status === 204) return null;
+    if (res.status === 204) return null;
     if (!res.ok) {
       throw new BillingApiError(
         `No se pudo cargar la facturación (HTTP ${res.status}).`,
@@ -161,7 +161,7 @@ export async function getInvoices(
   if (!tid) return [];
   try {
     const res = await fetch(
-      `/api/v1/tenants/${encodeURIComponent(tid)}/billing/invoices`,
+      `/api/v2/billing/invoices`,
       {
         ...init,
         cache: "no-store",
@@ -172,7 +172,7 @@ export async function getInvoices(
         },
       }
     );
-    if (res.status === 404 || res.status === 204) return [];
+    if (res.status === 204) return [];
     if (!res.ok) {
       throw new BillingApiError(
         `No se pudieron cargar las facturas (HTTP ${res.status}).`,
@@ -204,7 +204,9 @@ export async function getInvoices(
               ? Number(r.amount_due)
               : r.amountDue != null
                 ? Number(r.amountDue)
-                : null,
+                : r.amount != null
+                  ? Number(r.amount)
+                  : null,
           amount_paid:
             r.amount_paid != null
               ? Number(r.amount_paid)
@@ -321,7 +323,7 @@ export async function downloadInvoicePdf(
   }
 
   const res = await fetch(
-    `/api/v1/tenants/${encodeURIComponent(tid)}/billing/invoices/${encodeURIComponent(invId)}/pdf`,
+    `/api/v2/billing/invoices/${encodeURIComponent(invId)}/pdf`,
     {
       ...init,
       method: "GET",
