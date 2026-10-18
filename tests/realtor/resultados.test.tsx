@@ -12,7 +12,7 @@ beforeEach(() => {
 
 it("con DEMO: marca, embudo, tiempos y orígenes", async () => {
   process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<ResultadosPanel />);
   expect(await screen.findByTestId("demo-banner")).toHaveTextContent("DEMO · datos sintéticos");
   expect(screen.getByTestId("funnel-cierres")).toHaveTextContent("12");
@@ -22,7 +22,7 @@ it("con DEMO: marca, embudo, tiempos y orígenes", async () => {
 });
 
 it("sin DEMO: «Sin datos todavía», sin cifras ni gráficos", async () => {
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<ResultadosPanel />);
   expect(await screen.findByTestId("resultados-empty")).toHaveTextContent("Sin datos todavía");
   expect(screen.queryByTestId("demo-banner")).toBeNull();

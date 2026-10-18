@@ -6,18 +6,17 @@ import { fetchCalendarEvents } from "@/lib/realtor/smart-calendar/api";
 import { DEMO_EVENTS } from "@/lib/realtor/smart-calendar/demo";
 import { applyFilter, countByKind, eventsOfDay } from "@/lib/realtor/smart-calendar/logic";
 import { KINDS, type CalEvent, type CalFilter } from "@/lib/realtor/smart-calendar/types";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 
 export function SmartCalendarPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const [filter, setFilter] = useState<CalFilter>("todos");
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   const t = COPY[lang];
 
   const [real, setReal] = useState<readonly CalEvent[]>([]);

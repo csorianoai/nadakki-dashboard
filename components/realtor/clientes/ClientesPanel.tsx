@@ -7,10 +7,9 @@ import { fetchClients } from "@/lib/realtor/clientes/api";
 import { DEMO_CONTACTS, DEMO_JOURNEYS, DEMO_OWNERS } from "@/lib/realtor/clientes/demo";
 import { applyFilters, countByStatus, inKind, maskEmail, maskPhone, showsOwners } from "@/lib/realtor/clientes/logic";
 import { KINDS, LEAD_STATUSES, NO_FILTERS, ORIGINS, ROLES, type ClientFilters, type Contact, type ContactKind } from "@/lib/realtor/clientes/types";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -62,12 +61,12 @@ function Journey({ id, lang }: { id: string; lang: Lang }) {
 }
 
 export function ClientesPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const [kind, setKind] = useState<ContactKind>("cliente");
   const [filters, setFilters] = useState<ClientFilters>(NO_FILTERS);
   const [selected, setSelected] = useState<string | null>(null);
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   const t = COPY[lang];
 
   // Fuera de DEMO se leen los clientes reales del contrato C-RE-OLA2; sin datos (404/503, vacío) la lista queda vacía.

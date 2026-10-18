@@ -5,10 +5,9 @@ import { EvidenceCard } from "@/components/forge/ui/EvidenceCard";
 import { RealtorNotice } from "@/components/realtor/RealtorNotice";
 import { SignalCard } from "@/components/realtor/SignalCard";
 import { SignalDetail } from "@/components/realtor/SignalDetail";
-import { useRealtorAccess } from "@/components/realtor/useRealtorAccess";
+import { useRealtorAccessInfo } from "@/components/realtor/useRealtorAccess";
 import { leerSenales, type Consulta, type Leida, type MarketSignal } from "@/lib/marketing/signals/api";
 import { aRadarSignal, camposVisibles, DEMO_SIGNAL } from "@/lib/marketing/signals/view";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { DEMO_BANNER } from "@/lib/realtor/copy";
 
 const AVISO = {
@@ -22,7 +21,7 @@ const AVISO = {
 type Estado = { fase: "idle" } | { fase: "cargando" } | { fase: "listo"; lectura: Leida };
 
 export function SignalsCenter() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [tipo, setTipo] = useState<"keyword" | "interes" | "dominio">("keyword");
   const [texto, setTexto] = useState("");
   const [country, setCountry] = useState("US");
@@ -44,8 +43,9 @@ export function SignalsCenter() {
   const lectura = estado.fase === "listo" ? estado.lectura : null;
   const senales: MarketSignal[] = lectura?.estado === "ok" ? lectura.lote.data : [];
   const sel = senales.find((s) => s.signal_id === activa) ?? senales[0];
-  // DEMO solo si no se hizo ninguna llamada al backend (demo nunca sustituye a una respuesta).
-  const demo = estado.fase === "idle" && isDemoAllowed();
+  // DEMO solo con /acceso demo=true y ALLOW_DEMO=1 (demoActive, PS-10: un tenant real nunca ve demo), y solo si no se
+  // hizo ninguna llamada al backend (demo nunca sustituye a una respuesta).
+  const demo = estado.fase === "idle" && demoActive;
 
   return (
     <section data-testid="signals-center" style={{ display: "flex", flexDirection: "column", gap: 16, padding: "28px 40px 40px" }}>

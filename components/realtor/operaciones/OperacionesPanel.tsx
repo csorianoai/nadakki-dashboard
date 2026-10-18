@@ -6,10 +6,9 @@ import { DEMO_FINANCE, DEMO_OPERATIONS } from "@/lib/realtor/operaciones/demo";
 import { fetchOperations } from "@/lib/realtor/operaciones/api";
 import { applyFilters, countByStage, inStage, opportunities, unstaged } from "@/lib/realtor/operaciones/logic";
 import { KINDS, NO_FILTERS, STAGES, type OpFilters, type Operation, type StageId } from "@/lib/realtor/operaciones/types";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -35,11 +34,11 @@ function FinCard({ id, label, value, hint }: { id: string; label: string; value:
 }
 
 export function OperacionesPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const [filters, setFilters] = useState<OpFilters>(NO_FILTERS);
   const [stage, setStage] = useState<StageId>("propiedad");
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   const t = COPY[lang];
 
   // Fuera de DEMO se lee C-RE-OLA3; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.

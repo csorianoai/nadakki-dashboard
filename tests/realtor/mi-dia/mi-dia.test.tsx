@@ -24,7 +24,7 @@ it("el centro se declara vivo", () => { expect(center.href).toBe("/realtor/mi-di
 
 it("positivo: DEMO muestra marcas y datos SYNTH con teléfonos 555-01xx y correos .invalid", async () => {
   process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<MiDiaPanel />);
   expect(await screen.findByTestId("mi-dia-demo")).toHaveTextContent("DEMO · datos sintéticos");
   expect(screen.getByTestId("mi-dia-leads-count")).toHaveTextContent(String(DEMO_LEADS.length));
@@ -40,7 +40,7 @@ it("positivo: DEMO muestra marcas y datos SYNTH con teléfonos 555-01xx y correo
 });
 
 it("negativo: sin DEMO dice «Sin datos todavía», NO_DISPONIBLE y ninguna cifra", async () => {
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<MiDiaPanel />);
   expect(await screen.findByTestId("mi-dia-empty")).toHaveTextContent("Sin datos todavía");
   expect(screen.getAllByTestId("mi-dia-no-disponible").length).toBe(2);
@@ -93,7 +93,7 @@ it("un código de bloqueo desconocido no se pinta como texto técnico", () => {
 
 it("la vista Broker añade los pendientes del broker desk", async () => {
   process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   const shell = document.createElement("div");
   shell.setAttribute("data-testid", "realtor-shell");
   shell.setAttribute("data-view", "agente");
@@ -111,7 +111,7 @@ it("ES y EN tienen las mismas claves", () => {
 });
 
 it("EN: con el conmutador en inglés el texto sale en inglés", async () => {
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<MiDiaPanel />);
   fireEvent.click(await screen.findByTestId("lang-en"));
   expect(await screen.findByTestId("mi-dia-empty")).toHaveTextContent("No data yet");

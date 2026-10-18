@@ -5,7 +5,6 @@ import { leerItem, leerItems, leerMesa, leerResumen, type Leida } from "@/lib/re
 import { AGENT_LABEL, BROKERAGE_LABEL, COPY, KIND_LABEL, STATUS_LABEL, type Lang } from "@/lib/realtor/broker/copy";
 import { DEMO_DESK, DEMO_ITEMS, DEMO_SUMMARY } from "@/lib/realtor/broker/demo";
 import { AGENT_STATUSES, ITEM_KINDS, ITEM_STATUSES, type Desk, type DeskItem, type ItemKind, type ItemStatus, type Summary } from "@/lib/realtor/broker/types";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { BROKER_ROLE } from "@/lib/realtor/menu";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
@@ -23,16 +22,15 @@ const fecha = (iso: string | null | undefined, lang: Lang) => {
 
 /** Fail-closed: solo con interruptor, 200 de /acceso y el rol broker_supervisor se monta la bandeja (y se pide algo al backend). */
 export function BrokerPanel() {
-  const { state, roles } = useRealtorAccessInfo();
+  const { state, roles, demoActive } = useRealtorAccessInfo();
   if (state !== "ok") return <RealtorNotice reason={state} />;
   if (!roles.includes(BROKER_ROLE)) return <RealtorNotice reason="sin-acceso" />;
-  return <BrokerDesk />;
+  return <BrokerDesk demoOk={demoActive} />;
 }
 
 type Carga = { fase: "cargando" } | { fase: "listo"; mesa: Leida<Desk>; resumen: Leida<Summary> };
 
-function BrokerDesk() {
-  const demoOk = isDemoAllowed();
+function BrokerDesk({ demoOk }: { demoOk: boolean }) {
   const [lang, setLang] = useState<Lang>("es");
   const [carga, setCarga] = useState<Carga>({ fase: "cargando" });
   const [status, setStatus] = useState<ItemStatus | "">("");

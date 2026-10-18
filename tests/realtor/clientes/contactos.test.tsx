@@ -27,7 +27,7 @@ describe("contactos unificado", () => {
 
   it("positivo: con DEMO el filtro Propietario lista propietarios que enlazan a /realtor/propietarios", async () => {
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<ClientesPanel />);
     await screen.findByTestId("clientes-panel");
     expect(screen.queryByTestId("owner-row")).toBeNull();
@@ -44,7 +44,7 @@ describe("contactos unificado", () => {
   });
 
   it("negativo y tenant ajeno: sin DEMO no hay propietarios ni cifras, y no viaja tenant", async () => {
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<ClientesPanel />);
     await screen.findByTestId("clientes-empty");
     expect(screen.queryByTestId("owner-row")).toBeNull();
