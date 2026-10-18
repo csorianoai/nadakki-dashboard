@@ -13,7 +13,7 @@ export function statusToState(status: number): Exclude<Section<never>["state"], 
   return "error";
 }
 
-/** Sin Bearer no se envía la petición (fail-closed). No se manda X-Tenant-ID: lo pone el BFF. */
+/** Sin Bearer no se envía la petición (fail-closed). El cliente no manda el tenant: lo pone el BFF a partir del token. */
 async function read<T>(path: string, pick: (j: unknown) => T | null): Promise<Section<T>> {
   if (!getAuthHeaders().Authorization) return { state: "session_expired" };
   try {
