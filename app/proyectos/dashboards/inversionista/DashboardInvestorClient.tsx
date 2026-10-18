@@ -132,7 +132,7 @@ export function DashboardInvestorClient() {
       </NavigationBar>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-10">
-        <h1 className="text-3xl font-extrabold text-white">Dashboard inversionista</h1>
+        <h1 className="text-3xl font-extrabold text-white">Panel inversionista</h1>
         <p className="mt-2 text-sm text-zinc-400">Modelados ilustrativos derivados del dataset vivo (`viability`, presupuestos modelo).</p>
       </motion.div>
 

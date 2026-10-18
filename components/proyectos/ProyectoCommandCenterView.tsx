@@ -153,7 +153,7 @@ function nextActionPlanForState(proyectoId: string, state: string | null | undef
       actions: [
         { label: "Revisar riesgos", href: `${base}/riesgos`, variant: "primary" },
         { label: "Ver análisis", href: `${base}/analisis`, variant: "secondary" },
-        { label: "Dashboard PM", href: "/proyectos/dashboards/pm", variant: "secondary" },
+        { label: "Panel PM", href: "/proyectos/dashboards/pm", variant: "secondary" },
       ],
     };
   }
