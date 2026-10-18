@@ -1,6 +1,6 @@
 "use client";
 
-import { TenantLabel } from "@/components/ui/TenantLabel";
+import { TenantLabel, hideUuids } from "@/components/ui/TenantLabel";
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
@@ -82,7 +82,7 @@ export default function SicMultitenantConfigPage() {
         )}
         {!loading && !error && data != null && (
           <pre className="text-xs text-slate-300 overflow-auto max-h-[70vh] whitespace-pre-wrap break-words">
-            {JSON.stringify(data, null, 2)}
+            {JSON.stringify(data, hideUuids, 2)}
           </pre>
         )}
       </div>

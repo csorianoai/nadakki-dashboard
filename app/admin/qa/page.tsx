@@ -5,7 +5,7 @@ import { motion } from "@/lib/motion-stub";
 import { CheckCircle, XCircle, Loader2, RefreshCw, Play, AlertTriangle } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import { TenantLabel } from "@/components/ui/TenantLabel";
+import { TenantLabel, hideUuids } from "@/components/ui/TenantLabel";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   getAuthMetaStatus,
@@ -204,7 +204,7 @@ export default function AdminQAPage() {
                     Ver JSON completo
                   </summary>
                   <pre className="mt-2 p-3 rounded bg-black/30 text-xs overflow-auto max-h-60">
-                    {JSON.stringify(agentResult, null, 2)}
+                    {JSON.stringify(agentResult, hideUuids, 2)}
                   </pre>
                 </details>
               </div>

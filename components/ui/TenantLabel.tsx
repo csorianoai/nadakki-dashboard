@@ -5,6 +5,9 @@ import { useTenant } from "@/contexts/TenantContext";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Replacer de JSON.stringify para volcados visibles: un UUID se pinta «—» (PS-8). */
+export const hideUuids = (_k: string, v: unknown) => (typeof v === "string" && UUID_RE.test(v) ? "—" : v);
+
 /**
  * Nombre visible del tenant; nunca el UUID (el id queda solo en title/data-id).
  * `id` es el tenant sobre el que opera la pantalla (por defecto el del TenantContext).

@@ -1,6 +1,6 @@
 "use client";
 
-import { TenantLabel } from "@/components/ui/TenantLabel";
+import { TenantLabel, hideUuids } from "@/components/ui/TenantLabel";
 import { useState, useEffect } from "react";
 import { motion } from "@/lib/motion-stub";
 import {
@@ -368,7 +368,7 @@ export default function AdminOnboardingWizardPage() {
           </p>
           {previewData ? (
             <pre className="text-xs text-gray-300 bg-black/30 p-4 rounded-lg overflow-auto max-h-80 overflow-x-auto">
-              {JSON.stringify(previewData, null, 2)}
+              {JSON.stringify(previewData, hideUuids, 2)}
             </pre>
           ) : (
             <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-gray-400">
@@ -448,7 +448,7 @@ export default function AdminOnboardingWizardPage() {
             Backend response captured successfully. Review formatted output before starting another run.
           </p>
           <pre className="text-xs text-gray-300 bg-black/30 p-4 rounded-lg overflow-auto max-h-96">
-            {JSON.stringify(onboardData, null, 2)}
+            {JSON.stringify(onboardData, hideUuids, 2)}
           </pre>
           <div className="flex gap-3 mt-6">
             <button

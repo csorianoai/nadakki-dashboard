@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, ChevronRight, Loader2, Sparkles } from "lucide-react";
-import { TenantLabel } from "@/components/ui/TenantLabel";
+import { TenantLabel, hideUuids } from "@/components/ui/TenantLabel";
 import { useTenant } from "@/contexts/TenantContext";
 import { apiFetch } from "@/lib/api/fetch-client";
 
@@ -225,7 +225,7 @@ export default function GoogleAdsIntelligencePanel() {
                   Raw: modules/status
                 </h3>
                 <pre className="text-xs bg-slate-900/80 text-slate-300 p-3 rounded-lg overflow-auto max-h-40 border border-slate-700/50">
-                  {JSON.stringify(modulesPayload, null, 2)}
+                  {JSON.stringify(modulesPayload, hideUuids, 2)}
                 </pre>
               </div>
               <div>
@@ -233,7 +233,7 @@ export default function GoogleAdsIntelligencePanel() {
                   Raw: evaluate-fit
                 </h3>
                 <pre className="text-xs bg-slate-900/80 text-slate-300 p-3 rounded-lg overflow-auto max-h-40 border border-slate-700/50">
-                  {JSON.stringify(fitPayload, null, 2)}
+                  {JSON.stringify(fitPayload, hideUuids, 2)}
                 </pre>
               </div>
             </>

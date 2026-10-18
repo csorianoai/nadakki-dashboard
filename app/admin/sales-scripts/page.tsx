@@ -1,6 +1,6 @@
 "use client";
 
-import { TenantLabel } from "@/components/ui/TenantLabel";
+import { TenantLabel, hideUuids } from "@/components/ui/TenantLabel";
 import { useState } from "react";
 import { motion } from "@/lib/motion-stub";
 import { Loader2, Sparkles, Copy, CheckCircle2 } from "lucide-react";
@@ -239,7 +239,7 @@ export default function AdminSalesScriptsPage() {
 
       {data && !strategy && (
         <GlassCard className="p-4 mt-4">
-          <pre className="text-xs text-gray-400 overflow-auto">{JSON.stringify(data, null, 2)}</pre>
+          <pre className="text-xs text-gray-400 overflow-auto">{JSON.stringify(data, hideUuids, 2)}</pre>
         </GlassCard>
       )}
     </div>
