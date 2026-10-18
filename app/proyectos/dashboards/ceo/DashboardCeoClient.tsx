@@ -118,7 +118,7 @@ export function DashboardCeoClient() {
       </NavigationBar>
 
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-        <h1 className="text-3xl font-extrabold text-white">Dashboard CEO</h1>
+        <h1 className="text-3xl font-extrabold text-white">Panel CEO</h1>
         <p className="mt-2 max-w-2xl text-sm text-zinc-400">
           Paneles pulsando con tus obras NADAKKI-demo: presiones de budget, dispersión estado y radial de vitalidad modelo.
         </p>

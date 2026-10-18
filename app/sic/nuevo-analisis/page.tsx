@@ -57,7 +57,7 @@ export default function SicNuevoAnalisisPage() {
       }
       setError("El servidor no retornó un ID de expediente");
     } catch (err) {
-      console.error("Create case failed:", err);
+      console.error("No se pudo crear el caso:", err);
       setError("No se pudo conectar al servidor");
     } finally {
       setLoading(false);

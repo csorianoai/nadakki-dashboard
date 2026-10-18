@@ -26,6 +26,13 @@ describe("detector de textos visibles", () => {
   });
 });
 
+describe("plantillas con ${…}", () => {
+  test("una plantilla con interpolación no se come el resto del fichero", () => {
+    const fuente = "const u = `${base}/x`;\nconst v = { label: \"Dashboard CEO\" };\nconst t = `y`;";
+    expect(detectarEnFuente(fuente).map((x) => x.motivo)).toContain("inglés: «Dashboard»");
+  });
+});
+
 describe("Suite corregida", () => {
   test("menú, carcasa y migas sin hallazgos", () => {
     const h = detectarEnRutas(RUTAS_PASADA_1);

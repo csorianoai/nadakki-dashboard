@@ -33,7 +33,7 @@ export function SicBarraContexto() {
         <span className="text-slate-500">Rol:</span>
         <span className="text-slate-300">{role ?? "—"}</span>
         <span className="text-slate-600">|</span>
-        <span className="text-slate-500">Tenant:</span>
+        <span className="text-slate-500">Organización:</span>
         <span className="text-slate-300 font-mono">{displayTenant}</span>
         <span className="text-slate-600">|</span>
         <span className={`px-2 py-0.5 rounded border ${MODO_BADGE[MODO] ?? "bg-slate-600/30 text-slate-400"}`}>
