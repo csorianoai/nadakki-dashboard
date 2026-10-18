@@ -5,6 +5,7 @@ import { FileText, Wand2, Calendar, FolderOpen, ArrowRight } from "lucide-react"
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
+import DemoBadge from "@/components/ui/DemoBadge";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const MODULES = [
@@ -22,12 +23,12 @@ export default function ContentPage() {
           <div><h1 className="text-3xl font-bold text-white">Content Hub</h1><p className="text-gray-400">Creacion y gestion de contenido</p></div>
         </div>
       </motion.div>
-      <div className="grid grid-cols-4 gap-6 mb-8">
+      <DemoBadge className="mb-8"><div className="grid grid-cols-4 gap-6">
         <StatCard value="1,250" label="Contenidos" icon={<FileText className="w-6 h-6 text-purple-400" />} color="#8b5cf6" />
         <StatCard value="89" label="Este Mes" icon={<Calendar className="w-6 h-6 text-green-400" />} color="#22c55e" />
         <StatCard value="4" label="Pendientes" icon={<Wand2 className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
         <StatCard value="98%" label="Engagement" icon={<FolderOpen className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-      </div>
+      </div></DemoBadge>
       <div className="grid grid-cols-2 gap-6">
         {MODULES?.map((m, i) => (
           <motion.div key={m.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
