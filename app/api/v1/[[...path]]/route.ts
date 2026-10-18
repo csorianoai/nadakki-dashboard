@@ -40,6 +40,25 @@ function upstreamError(res: Response, text: string): NextResponse {
   });
 }
 
+/**
+ * Cabeceras de la respuesta del backend que el navegador necesita para una descarga
+ * (PS-15-DOCS-DESCARGA-B). Sin Content-Disposition el fichero pierde su nombre.
+ * Content-Length solo cuando el cuerpo viaja sin recodificar y sin Content-Encoding
+ * (fetch ya lo descomprimio y la longitud del backend no seria la de estos bytes).
+ */
+function cabecerasDescarga(res: Response, conLongitud: boolean): Headers {
+  const out = new Headers();
+  for (const nombre of ["Content-Type", "Content-Disposition", "Cache-Control"]) {
+    const valor = res.headers.get(nombre);
+    if (valor) out.set(nombre, valor);
+  }
+  const longitud = res.headers.get("Content-Length");
+  if (conLongitud && longitud && !res.headers.get("Content-Encoding")) {
+    out.set("Content-Length", longitud);
+  }
+  return out;
+}
+
 async function proxyRequest(
   req: NextRequest,
   path: string[],
@@ -82,6 +101,13 @@ async function proxyRequest(
     if (res.ok && (res.status === 204 || res.status === 205)) {
       return new NextResponse(null, { status: res.status });
     }
+    const contentType = res.headers.get("Content-Type") || "";
+    const esTexto = contentType.includes("application/json") || contentType.startsWith("text/");
+    if (res.ok && !esTexto) {
+      // Bytes, no texto: `res.text()` cambiaba cada byte no UTF-8 por U+FFFD y rompia el PDF.
+      const bytes = await res.arrayBuffer();
+      return new NextResponse(bytes, { status: res.status, headers: cabecerasDescarga(res, true) });
+    }
     const text = await res.text().catch(() => "");
 
     const isRunsPath =
@@ -101,14 +127,13 @@ async function proxyRequest(
       }
       return upstreamError(res, text);
     }
-    const contentType = res.headers.get("Content-Type") || "";
     if (contentType.includes("application/json")) {
       const json = text ? JSON.parse(text) : null;
       return NextResponse.json(json, { status: res.status });
     }
     return new NextResponse(text, {
       status: res.status,
-      headers: { "Content-Type": contentType },
+      headers: cabecerasDescarga(res, false),
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
