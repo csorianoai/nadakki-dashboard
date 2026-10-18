@@ -1,21 +1,20 @@
-# e2e/api — evidencia contra un despliegue
+# e2e/api — evidencia hermética del BFF
 
-`bff-jwt.spec.ts` (PI-P0-2) no levanta servidor: prueba un despliegue real. Para que imprima
-`RESULT_PI_P0_2=PASS` el job que lo ejecuta necesita TODO esto:
+`bff-jwt.spec.ts` (PI-P0-2) no necesita despliegue, credenciales ni backend. `playwright.config.ts` arranca
+`next start` (hay que haber hecho `next build` antes) con `NEXT_PUBLIC_RENDER_API_URL=http://backend.invalid` y
+`NEXT_PUBLIC_COMPETITIVE_RESEARCH_ENABLED=true`, y fija `baseURL` local (puerto `BFF_JWT_PORT`, 3107 por defecto).
 
-| Requisito | Detalle |
-|---|---|
-| `BASE_URL` (o `PLAYWRIGHT_BASE_URL`) | Despliegue del dashboard construido con `NEXT_PUBLIC_COMPETITIVE_RESEARCH_ENABLED=true` |
-| `QA_USER` / `QA_PASSWORD` | Usuario del tenant QA (nunca usuarios reales) |
-| Backend alcanzable | El despliegue debe poder llegar al backend, que es quien verifica la firma y responde 401 |
+El spec no inicia sesión real: firma un JWT con un secreto efímero y dobla la inicialización de sesión
+(`/auth/refresh`, `/auth/me`) con `page.route`. Comprueba que:
 
-Sin alguna de estas piezas el spec falla nombrando la que falta. Un runner con solo PostgreSQL
-efímero no puede dar PASS: ningún cambio de código lo arregla.
+1. `/competitor-research` emite sus peticiones `/api/v1/spyfu/*` solo a su mismo origen local;
+2. un JWT con la firma alterada, enviado al BFF, recibe 401/403 sin llegar a ningún backend.
 
 ```
-BASE_URL=... QA_USER=... QA_PASSWORD=... \
+NEXT_PUBLIC_RENDER_API_URL=http://backend.invalid NEXT_PUBLIC_COMPETITIVE_RESEARCH_ENABLED=true npm run build
 npx playwright test --config e2e/api/playwright.config.ts e2e/api/bff-jwt.spec.ts
 ```
 
-La parte hermética (el BFF reenvía `Authorization` alterado y devuelve el 401 del backend) vive en
-`tests/api/bff-spyfu-jwt-firma.test.ts` y corre en CI normal.
+La prueba de que el BACKEND real responde 401 a una firma alterada se mide en el certificador de PI-CERT-1
+(paso «firma_alterada», nivel production). La parte de reenvío de `Authorization` vive en
+`tests/api/bff-spyfu-jwt-firma.test.ts`.
