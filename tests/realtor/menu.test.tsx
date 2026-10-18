@@ -97,11 +97,20 @@ it("positivo: con el rol, la barra muestra la Bandeja con enlace a /realtor/brok
 });
 
 it("negativo: sin rol no hay Bandeja; el selector simulado Broker no la concede", async () => {
-  mockApiFetch.mockResolvedValue(ok([]));
+  process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ ok: true, roles: [], demo: true }) });
   render(<RealtorShell><p>x</p></RealtorShell>);
   await screen.findByTestId("shell-sidebar");
   screen.getByTestId("view-broker").click();
   await waitFor(() => expect(screen.getByTestId("view-broker")).toHaveAttribute("aria-pressed", "true"));
+  expect(screen.queryByTestId("center-bandeja-broker")).toBeNull();
+});
+
+it("sin demo activo no existe el selector simulado ni la Bandeja", async () => {
+  mockApiFetch.mockResolvedValue(ok([]));
+  render(<RealtorShell><p>x</p></RealtorShell>);
+  await screen.findByTestId("shell-sidebar");
+  expect(screen.queryByTestId("view-broker")).toBeNull();
   expect(screen.queryByTestId("center-bandeja-broker")).toBeNull();
 });
 
