@@ -54,7 +54,7 @@ export default function AdminActivationPage() {
       <NavigationBar backHref="/admin" />
 
       <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Tenant activation</h1>
+        <h1 className="text-3xl font-bold text-white">Activación de organización</h1>
         <p className="text-gray-400 mt-1 max-w-2xl">
           Runs <code className="text-gray-500">POST /api/v1/tenants/activate</code> — dry-run pipeline checks and readiness
           scoring. Requires <code className="text-gray-500">data/tenants/&lt;id&gt;/profile.json</code> on the server.
@@ -64,7 +64,7 @@ export default function AdminActivationPage() {
       <GlassCard className="p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4 md:items-end">
           <label className="flex-1 block">
-            <span className="text-xs text-gray-500">Tenant ID</span>
+            <span className="text-xs text-gray-500">ID de organización</span>
             <input
               className="mt-1 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white font-mono text-sm"
               value={inputId}

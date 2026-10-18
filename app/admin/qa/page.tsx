@@ -94,7 +94,7 @@ export default function AdminQAPage() {
       ) : (
         <div className="space-y-6">
           <GlassCard className="p-6">
-            <h2 className="text-lg font-bold text-white mb-4">Tenant activo</h2>
+            <h2 className="text-lg font-bold text-white mb-4">Organización activa</h2>
             <p className="text-gray-300 font-mono">{tenantId}</p>
           </GlassCard>
 
