@@ -455,6 +455,8 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
   const createdApplicationIdRef = useRef<string | null>(null);
   const lastSavedDraftRef = useRef<string | null>(null);
+  // Tras un envío correcto formData se vacía: la guarda de pasos no debe expulsar de /review ni de la pantalla de completada.
+  const submittedApplicationIdRef = useRef<string | null>(null);
   const draftSaveChainRef = useRef<Promise<unknown>>(Promise.resolve());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlightRef = useRef(false);
@@ -582,6 +584,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   // Guarda de pasos: entrar por URL a un paso con un paso anterior inválido redirige al primero incompleto.
   useEffect(() => {
     if (stepIndex === 0) return;
+    if (submittedApplicationIdRef.current !== null) return;
     if (consentApplicationId) {
       if (settled.draft !== consentApplicationId || settled.app !== consentApplicationId) return;
     } else if (!startsNewApplication && applicationIdStorageKey && readWizardDraftPointer(applicationIdStorageKey)) {
@@ -1089,6 +1092,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
       });
 
       clearSubmitIdempotencyKey(tenantId, appId);
+      submittedApplicationIdRef.current = appId;
       clearDraftStorage();
       setFormData(initialApplicationFormData);
 
