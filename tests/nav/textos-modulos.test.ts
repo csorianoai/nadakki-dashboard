@@ -7,9 +7,8 @@ import fs from "fs";
 import path from "path";
 import { detectarEnRutas, type Hallazgo } from "./detector-textos";
 
-// PARTE 1/3: admin se añade en la parte 3/3, cuando sus textos estén traducidos.
 const MODULOS = [
-  "proyectos", "contable", "market-intel", "billing", "content", "leads", "notifications", "sic", "settings",
+  "proyectos", "contable", "market-intel", "billing", "content", "leads", "notifications", "sic", "settings", "admin",
 ];
 
 /** Excepciones de esta pasada, cada una con su justificación (criterio c). */
