@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { EvidenceCard } from "@/components/forge/ui/EvidenceCard";
 import { RealtorNotice } from "@/components/realtor/RealtorNotice";
@@ -9,6 +10,7 @@ import { useRealtorAccessInfo } from "@/components/realtor/useRealtorAccess";
 import { leerSenales, type Consulta, type Leida, type MarketSignal } from "@/lib/marketing/signals/api";
 import { aRadarSignal, camposVisibles, DEMO_SIGNAL } from "@/lib/marketing/signals/view";
 import { DEMO_BANNER } from "@/lib/realtor/copy";
+import { propertyIntelHref } from "./propertyIntelHref";
 
 const AVISO = {
   session_expired: "Tu sesión expiró. Vuelve a iniciar sesión.",
@@ -45,6 +47,7 @@ export function SignalsCenter() {
   const sel = senales.find((s) => s.signal_id === activa) ?? senales[0];
   // DEMO solo con /acceso demo=true y ALLOW_DEMO=1 (demoActive, PS-10: un tenant real nunca ve demo), y solo si no se
   // hizo ninguna llamada al backend (demo nunca sustituye a una respuesta).
+  const piHref = sel ? propertyIntelHref(sel.values) : null;
   const demo = estado.fase === "idle" && demoActive;
 
   return (
@@ -87,6 +90,7 @@ export function SignalsCenter() {
               </ul>
             }
           />
+          {piHref ? <Link data-testid="pi-link" href={piHref}>Ver inteligencia de la propiedad</Link> : null}
           <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
             {senales.map((s) => (
               <button key={s.signal_id} type="button" data-testid="signal-pick" onClick={() => setActiva(s.signal_id)}
