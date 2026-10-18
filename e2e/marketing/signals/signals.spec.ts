@@ -1,10 +1,10 @@
 /**
- * PI-D1 — Mercado › Señales. Inicia sesión con el usuario QA (QA_USER, QA_PASSWORD, QA_TENANT_SLUG) en BASE_URL,
- * SOLO tenant QA. Las respuestas de /api/v1/market-signals se sustituyen por datos SINTÉTICOS del tenant QA
+ * PI-D1 — Mercado › Señales, HERMÉTICO: sin login real, sin credenciales y sin red al backend. La sesión es un JWT de
+ * prueba firmado con un secreto efímero de este proceso (nunca válido en ningún entorno). /acceso y las respuestas de /api/v1/market-signals se sustituyen por datos SINTÉTICOS del tenant QA
  * (page.route) para fijar cada estado: datos, vacío, 401 y 404 sin entitlement.
  */
 import { expect, test, type Page } from "@playwright/test";
-import { login } from "../../bank-v2/login";
+import { createHmac, randomBytes } from "node:crypto";
 
 const TENANT_QA = "9a9a0001-0000-4000-8000-000000000001";
 const META = { cost_cents: 0, cached: false, provider_status: "configured", budget: { period: "month", currency: "USD", cap_cents: 0, consumed_cents: 0, remaining_cents: 0 }, schema_version: 1 };
@@ -15,6 +15,12 @@ const sintetica = (over: Record<string, unknown>) => ({
   data_status: "ESTIMATED", evidence_tier: "estimado", unavailable_reason: null, coverage: 0.5, uncertainty: null,
   provenance: { source: "spyfu", as_of: "2026-10-01", status: "ESTIMATED", confidence: "low", method: "SYNTH" }, ...over,
 });
+
+const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
+function jwtDePrueba(): string {
+  const cuerpo = `${b64({ alg: "HS256", typ: "JWT" })}.${b64({ sub: "synth-user", tenant_id: TENANT_QA, exp: Math.floor(Date.now() / 1000) + 3600 })}`;
+  return `${cuerpo}.${createHmac("sha256", randomBytes(32)).update(cuerpo).digest("base64url")}`;
+}
 
 const SENALES = /\/api\/v1\/market-signals\//;
 async function responder(page: Page, status: number, body?: unknown) {
@@ -41,7 +47,21 @@ test.describe("PI-D1 señales de mercado", () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    const jwt = jwtDePrueba();
+    await page.addInitScript(() => window.localStorage.setItem("nadakki_refresh_token_v2", "synth-refresh"));
+    const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*" };
+    const json = (cuerpo: unknown) => ({ status: 200, headers: CORS, contentType: "application/json", body: JSON.stringify(cuerpo) });
+    await page.route(/\/api\/v2\/auth\/(refresh|me)/, (r) => {
+      if (r.request().method() === "OPTIONS") return r.fulfill({ status: 204, headers: CORS });
+      if (/refresh/.test(r.request().url())) return r.fulfill(json({ access_token: jwt, refresh_token: "synth-refresh", expires_in: 3600 }));
+      const tenant = { id: TENANT_QA, slug: "qa", display_name: "QA", subscribed_cores: ["realestate"], is_demo: false };
+      return r.fulfill(json({
+        user: { id: "synth-user", email: "synth@example.invalid", is_active: true, mfa_enabled: false }, current_tenant: tenant, all_tenants: [tenant],
+        active_roles: [{ core_name: "realestate", role_key: "admin", display_name: "Admin" }],
+      }));
+    });
+    await page.route(/\/api\/v1\/realestate\/acceso/, (r) =>
+      r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ roles: ["agent"], demo: false }) }));
     await page.goto("/realtor/demand-radar/senales");
     await expect(page.getByTestId("signals-center")).toBeVisible();
   });
