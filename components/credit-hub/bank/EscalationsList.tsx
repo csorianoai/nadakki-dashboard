@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useNotifications } from "@/lib/credit-hub/hooks/useNotifications";
 import { isBankPilotUiEnabled } from "@/lib/env/feature-bank-pilot-ui";
+import { etiquetaRevisionManual } from "@/components/credit-hub/bank/etiquetas-es";
 import { chRelTimeDealer } from "@/lib/credit-hub/dealer/dealerFormat";
 
 const ESCALATION_CATEGORIES = new Set(["kyc_escalated", "ocr_escalated", "KYC_ESCALATED", "OCR_ESCALATED"]);
@@ -44,7 +45,7 @@ export function EscalationsList() {
             <div className="font-medium text-forgeGray-900">{row.title}</div>
             {row.body ? <div className="text-forgeGray-600">{row.body}</div> : null}
             <div className="flex flex-wrap items-center gap-2 text-forge-xs text-forgeGray-500">
-              <span>PENDING_MANUAL_REVIEW</span>
+              <span>{etiquetaRevisionManual("PENDING_MANUAL_REVIEW")}</span>
               {row.at ? <span>{chRelTimeDealer(row.at)}</span> : null}
               {appId ? (
                 <Link href={`/credit-hub/bank/applications/${appId}`} className="text-forgeBrand-700 underline">
