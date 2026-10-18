@@ -143,7 +143,7 @@ export default function AdminAuditPage() {
           </GlassCard>
 
           <GlassCard className="p-6">
-            <h2 className="text-lg text-white font-semibold mb-3">Tenant Isolation</h2>
+            <h2 className="text-lg text-white font-semibold mb-3">Aislamiento por organización</h2>
             <span className={`inline-flex rounded-full px-2.5 py-1 text-xs border ${rlsActive ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" : "bg-rose-500/15 text-rose-200 border-rose-500/30"}`}>
               rls_active: {rlsActive ? "true" : "false"}
             </span>
