@@ -96,7 +96,7 @@ function Resultado({ resultado, testId }: { resultado: ImportResultado; testId: 
           <p className="font-semibold">
             {deArchivo.length > 0
               ? "El archivo no se puede leer como la plantilla oficial. Ninguna fila se carga."
-              : `Hay ${resultado.errores.length} error(es). Corregilos en la planilla y volvé a revisar: no se carga nada a medias.`}
+              : `Hay ${resultado.errores.length} error(es). Corrígelos en la planilla y vuelve a revisar: no se carga nada a medias.`}
           </p>
           <ul className="mt-2 list-disc pl-5">
             {resultado.errores.map((e, i) => (
@@ -184,8 +184,8 @@ export default function ImportarActivosPage() {
         </Link>
         <h1 className="mt-2 font-manrope text-2xl font-extrabold text-nk-fg">Importar planilla de activos</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Subí la plantilla oficial <code>{PLANTILLA}</code> (.xlsx o su .zip de CSV). Primero se
-          revisa sin guardar nada; después aplicás.
+          Sube la plantilla oficial <code>{PLANTILLA}</code> (.xlsx o su .zip de CSV). Primero se
+          revisa sin guardar nada; después aplicas.
         </p>
         <PlantillaDescarga plantilla={plantilla} testId="import-plantilla-descargar" />
       </header>
@@ -206,7 +206,7 @@ export default function ImportarActivosPage() {
       ) : access.error || !access.data ? (
         <section role="alert" data-testid="import-error-acceso" data-reason-code={codigoDe(access.error)} className={CAJA}>
           <p className="font-semibold">No se pudo verificar el acceso al importador.</p>
-          <p className="mt-1 text-nk-fg-muted">Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.</p>
+          <p className="mt-1 text-nk-fg-muted">Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte.</p>
           <DetalleTecnico>
             <code>{codigoDe(access.error)}</code>
           </DetalleTecnico>
@@ -221,7 +221,7 @@ export default function ImportarActivosPage() {
         >
           <p className="font-semibold">El importador no está disponible para tu usuario.</p>
           <p className="mt-1 text-nk-fg-muted">
-            Tu usuario no tiene habilitada esta función. Pedile a quien administra tu cuenta que la active.
+            Tu usuario no tiene habilitada esta función. Pide a quien administra tu cuenta que la active.
           </p>
           <DetalleTecnico>
             Falta <code>{denegada}</code> · <code>{access.data.results[denegada]?.reason_code ?? "—"}</code>
@@ -231,7 +231,7 @@ export default function ImportarActivosPage() {
         <p className="animate-pulse text-sm text-nk-fg-muted">Verificando tus concesionarios…</p>
       ) : !dealerId && porElegir.length > 1 ? (
         <section data-testid="import-selector-dealer" className={CAJA}>
-          <p className="font-semibold">Elegí el concesionario al que se carga la planilla.</p>
+          <p className="font-semibold">Elige el concesionario al que se carga la planilla.</p>
           <ul className="mt-3 grid gap-2">
             {porElegir.map((a) => (
               <li key={a.dealerId}>
@@ -290,7 +290,7 @@ export default function ImportarActivosPage() {
           {revisar.error && !(revisar.error instanceof ImportRechazado) ? (
             <section role="alert" data-testid="import-error" data-reason-code={codigoDe(revisar.error)} className={CAJA}>
               <p className="font-semibold">No se pudo revisar el archivo.</p>
-              <p className="mt-1 text-nk-fg-muted">Probá de nuevo; si sigue igual, avisá a soporte.</p>
+              <p className="mt-1 text-nk-fg-muted">Prueba de nuevo; si sigue igual, avisa a soporte.</p>
               <DetalleTecnico>
                 <code>{codigoDe(revisar.error)}</code>
               </DetalleTecnico>
@@ -304,7 +304,7 @@ export default function ImportarActivosPage() {
             ) : (
               <section role="alert" data-testid="import-aplicar-error" data-reason-code={codigoDe(aplicar.error)} className={CAJA}>
                 <p className="font-semibold">No se aplicó la planilla.</p>
-                <p className="mt-1 text-nk-fg-muted">Podés reintentar: no duplica.</p>
+                <p className="mt-1 text-nk-fg-muted">Puedes reintentar: no duplica.</p>
                 <DetalleTecnico>
                   <code>{codigoDe(aplicar.error)}</code>
                 </DetalleTecnico>

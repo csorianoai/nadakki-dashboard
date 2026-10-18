@@ -15,7 +15,7 @@ import { postVehicleSale } from "@/lib/dealer/vehicle-economics-write";
 export const SALE_STATUS = "vendido";
 
 export const SALE_BLOCKED_IN_EDIT_NOTE =
-  "Para vender un vehículo usá «Registrar venta». Cambiar el estado a VENDIDO desde la edición no registra la venta ni entra en contabilidad.";
+  "Para vender un vehículo usa «Registrar venta». Cambiar el estado a VENDIDO desde la edición no registra la venta ni entra en contabilidad.";
 
 /** True si el estado es "vendido", sin importar mayusculas ni espacios. */
 export function isSold(status: string | null | undefined): boolean {
@@ -43,10 +43,10 @@ export function validateSaleForm(form: SaleForm, currency: string | null): SaleF
     errors.currency = "Falta la moneda del concesionario. No se registra la venta con una moneda inventada.";
   }
   if (normalizaImporte(form.sale_price_amount) === null) {
-    errors.sale_price_amount = "Escribí el precio de venta, mayor que cero (por ejemplo 18.500.000,50).";
+    errors.sale_price_amount = "Escribe el precio de venta, mayor que cero (por ejemplo 18.500.000,50).";
   }
   if (!form.sold_at.trim() || Number.isNaN(Date.parse(form.sold_at))) {
-    errors.sold_at = "Indicá la fecha y hora de la venta.";
+    errors.sold_at = "Indica la fecha y hora de la venta.";
   }
   return errors;
 }

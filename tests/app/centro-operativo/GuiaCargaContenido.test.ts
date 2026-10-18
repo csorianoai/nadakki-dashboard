@@ -115,7 +115,7 @@ describe("las reglas contables de la guia estan completas", () => {
   it('"Otros" conserva su advertencia: no es un cajon de sastre', () => {
     const otros = GUIA.tiposCosto.find((t) => t.id === "otros");
     expect(otros?.descripcion).toContain("directamente atribuibles al vehículo");
-    expect(otros?.descripcion).toContain("Evitá usar");
+    expect(otros?.descripcion).toContain("Evita usar");
     expect(otros?.descripcion).toContain("categoría genérica por comodidad");
   });
 

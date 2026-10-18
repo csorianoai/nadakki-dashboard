@@ -116,7 +116,7 @@ export function getEmptyCoreReason(
 
 export function getEmptyCoreMessage(reason: EmptyCoreReason): string {
   if (reason === "unverified") {
-    return `${ACCESS_UNVERIFIED_MESSAGE}. No es que no tengas el módulo: no se pudo comprobar. Reintentá o avisá a soporte.`;
+    return `${ACCESS_UNVERIFIED_MESSAGE}. No es que no tengas el módulo: no se pudo comprobar. Reintenta o avisa a soporte.`;
   }
   if (reason === "plan") {
     return "Módulo no disponible en tu plan. Contacta a tu administrador para upgrade.";

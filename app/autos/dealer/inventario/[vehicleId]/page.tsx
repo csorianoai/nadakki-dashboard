@@ -76,7 +76,7 @@ function VehicleFicha({
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo leer el vehículo</h2>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          No pudimos abrir la ficha de este vehículo. Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.
+          No pudimos abrir la ficha de este vehículo. Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte.
         </p>
         <DetalleTecnico>
           <code>{query.error.reason_code ?? `HTTP_${query.error.status}`}</code>
@@ -182,7 +182,7 @@ export default function DealerVehicleEconomicsPage() {
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
           <p className="mt-1 text-sm text-nk-fg-muted">
-            No pudimos confirmar tu permiso para ver este vehículo. Probá de nuevo en unos minutos.
+            No pudimos confirmar tu permiso para ver este vehículo. Prueba de nuevo en unos minutos.
           </p>
           <DetalleTecnico>
             <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
@@ -219,7 +219,7 @@ export default function DealerVehicleEconomicsPage() {
         </section>
       ) : !dealerId ? (
         <p role="alert" className="text-sm text-nk-fg-muted">
-          No se pudo identificar tu concesionario. Volvé a iniciar sesión.
+          No se pudo identificar tu concesionario. Vuelve a iniciar sesión.
         </p>
       ) : (
         <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} />

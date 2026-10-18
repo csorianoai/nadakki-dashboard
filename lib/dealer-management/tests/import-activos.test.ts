@@ -52,7 +52,7 @@ describe("validarArchivo", () => {
   });
 
   it("rechaza sin archivo, otra extension o vacio", () => {
-    expect(validarArchivo(null)).toMatch(/Elegí/);
+    expect(validarArchivo(null)).toMatch(/Elige/);
     expect(validarArchivo({ name: "stock.csv", size: 10 })).toMatch(/\.xlsx/);
     expect(validarArchivo({ name: "stock.xls", size: 10 })).toMatch(/\.xlsx/);
     expect(validarArchivo({ name: "p.xlsx", size: 0 })).toMatch(/vacío/);

@@ -63,4 +63,16 @@ describe("DealerModuleGrid authority", () => {
     expect(screen.getByTestId("dealer-module-legal")).toHaveAttribute("data-allowed", "false");
     expect(screen.getByTestId("dealer-module-legal")).toHaveTextContent("Sin paquete jurídico Argentina");
   });
+  test("branding es-DO/DOP muestra texto neutro y sin ARS", async () => {
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/v1/access/entitlements/batch")) return jsonResponse({ results: {} });
+      if (url.includes("/api/v2/tenants/tenant-a/branding")) return jsonResponse({ display_name: "Dealer DO", currency: "DOP", locale: "es-DO" });
+      return jsonResponse({}, 404);
+    });
+    render(<DealerModuleGrid />, { wrapper: wrapper(testClient()) });
+    await waitFor(() => expect(screen.getByText(/Aquí ves a qué módulos/)).toBeInTheDocument());
+    expect(screen.getByText(/tienes acceso/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/ARS|Acá|tenés|pedile/);
+  });
 });

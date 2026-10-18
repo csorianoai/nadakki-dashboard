@@ -160,9 +160,9 @@ describe("el texto sale del archivo de datos de D9, no del componente", () => {
     const lista = await screen.findByTestId("dealer-primeros-pasos-lista");
     const items = within(lista).getAllByRole("listitem").map((li) => li.textContent);
     expect(items).toEqual([
-      "Descargá la plantilla y cargá todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
-      "Revisá la carga antes de aplicarla.",
-      "Después registrá compras, reparaciones, ventas, cobros y pagos del día a día.",
+      "Descarga la plantilla y carga todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
+      "Revisa la carga antes de aplicarla.",
+      "Después registra compras, reparaciones, ventas, cobros y pagos del día a día.",
     ]);
     expect(items).toEqual(BLOQUE.pasosInicio);
   });

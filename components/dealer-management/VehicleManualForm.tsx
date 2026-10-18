@@ -249,7 +249,7 @@ export function VehicleManualForm({
           data-reason-code={errorReasonCode}
           className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg"
         >
-          No se pudo guardar el vehículo. Revisá los datos e intentá de nuevo.
+          No se pudo guardar el vehículo. Revisa los datos e intenta de nuevo.
           <DetalleTecnico>
             <span className="block">Código para soporte: {errorReasonCode}</span>
           </DetalleTecnico>

@@ -550,7 +550,7 @@ export function ForgeGlobalCoresSidebar({ mobileOpen, onNavigate }: ForgeGlobalC
               <p className="text-xs font-semibold text-amber-200">{ACCESS_UNVERIFIED_MESSAGE}</p>
               <p className="mt-1 text-[11px] leading-snug text-amber-200/80">
                 El menú está vacío porque no se pudo comprobar tu acceso, no porque no tengas módulos.
-                Reintentá o avisá a soporte.
+                Reintenta o avisa a soporte.
               </p>
             </div>
           ) : null}

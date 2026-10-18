@@ -38,7 +38,7 @@ export const BACKEND_URL_ENV_VARS = [
 export class BackendUrlNotConfiguredError extends Error {
   constructor() {
     super(
-      "No hay backend declarado. Definí una de: " +
+      "No hay backend declarado. Define una de: " +
         BACKEND_URL_ENV_VARS.join(", ") +
         ". No se elige un destino por defecto: apuntar a producción sin " +
         "declararlo es cómo se escriben datos reales desde un entorno de prueba."

@@ -1,7 +1,7 @@
 /**
  * Formato de cifras con el locale y la moneda del TENANT, nunca fijos.
  * La ficha lo marca explicitamente: Excursions muestra "$82,554" en en-US;
- * Mapaal debe ver "$ 82.554,00" en es-AR/ARS.
+ * un tenant con otro locale y moneda ve su propio formato (p. ej. "$ 82.554,00" si su branding es es-AR/ARS).
  */
 
 export type LocaleTenant = { locale: string; currency: string | null };

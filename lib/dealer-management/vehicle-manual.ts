@@ -192,7 +192,7 @@ export function validateVehicleForm(
   }
 
   if (!VEHICLE_CONDITIONS.some((item) => item.value === form.condition)) {
-    errors.condition = "Elegí una condición.";
+    errors.condition = "Elige una condición.";
   }
 
   Object.assign(errors, validatePriceAndPlate(form, functionalCurrency));
@@ -234,7 +234,7 @@ export function paisDeLocale(locale: string | null | undefined): string {
   return /^[A-Za-z]{2}$/.test(region) ? region.toUpperCase() : "";
 }
 
-const IMPORTE_INVALIDO = "Ingresá un importe mayor que cero, por ejemplo 18500000,50.";
+const IMPORTE_INVALIDO = "Ingresa un importe mayor que cero, por ejemplo 18500000,50.";
 
 /** Las reglas de pareja del contrato P2, con el mensaje junto a su campo. */
 export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrency: string | null): VehicleFormErrors {
@@ -245,10 +245,10 @@ export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrenc
   const refImporte = form.display_price_amount.trim();
   const refMoneda = form.display_price_currency.trim().toUpperCase();
   if (refImporte || refMoneda) {
-    if (!refImporte) errors.display_price_amount = "Falta el importe de la referencia (o borrá su moneda).";
+    if (!refImporte) errors.display_price_amount = "Falta el importe de la referencia (o borra su moneda).";
     else if (normalizaImporte(refImporte) === null) errors.display_price_amount = IMPORTE_INVALIDO;
-    else if (!precio) errors.display_price_amount = "Para cargar una referencia primero cargá el precio.";
-    if (!refMoneda) errors.display_price_currency = "Falta la moneda de la referencia (o borrá su importe).";
+    else if (!precio) errors.display_price_amount = "Para cargar una referencia primero carga el precio.";
+    if (!refMoneda) errors.display_price_currency = "Falta la moneda de la referencia (o borra su importe).";
     else if (!/^[A-Z]{3}$/.test(refMoneda)) {
       errors.display_price_currency = "La moneda va con su código de 3 letras, por ejemplo USD.";
     } else if (functionalCurrency && refMoneda === functionalCurrency.trim().toUpperCase()) {
@@ -258,7 +258,7 @@ export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrenc
 
   if (form.plate.trim()) {
     const pais = form.plate_country.trim();
-    if (!pais) errors.plate_country = "Indicá el país del dominio.";
+    if (!pais) errors.plate_country = "Indica el país del dominio.";
     else if (!/^[A-Za-z]{2}$/.test(pais)) errors.plate_country = "El país va con su código de 2 letras, por ejemplo AR.";
   }
   return errors;
@@ -270,24 +270,24 @@ export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrenc
  */
 export const MOTIVO_EN_CAMPO: Record<string, { campo: keyof VehicleManualForm; mensaje: string }> = {
   PRICE_NOT_POSITIVE: { campo: "price_amount", mensaje: "El precio tiene que ser mayor que cero." },
-  PRICE_REQUIRED_FOR_DISPONIBLE: { campo: "price_amount", mensaje: "Cargá el precio antes de pasar a DISPONIBLE." },
+  PRICE_REQUIRED_FOR_DISPONIBLE: { campo: "price_amount", mensaje: "Carga el precio antes de pasar a DISPONIBLE." },
   PRICE_CURRENCY_NOT_FUNCTIONAL: {
     campo: "price_amount",
     mensaje: "El precio no está en la moneda oficial de tu concesionario.",
   },
   FUNCTIONAL_CURRENCY_NOT_CONFIGURED: {
     campo: "price_amount",
-    mensaje: "Tu cuenta todavía no tiene moneda oficial configurada. Pedila a soporte antes de cargar precios.",
+    mensaje: "Tu cuenta todavía no tiene moneda oficial configurada. Pídela a soporte antes de cargar precios.",
   },
-  DISPLAY_PRICE_PAIR: { campo: "display_price_amount", mensaje: "Completá importe y moneda de la referencia, o ninguno." },
-  DISPLAY_PRICE_WITHOUT_PRICE: { campo: "display_price_amount", mensaje: "Para cargar una referencia primero cargá el precio." },
+  DISPLAY_PRICE_PAIR: { campo: "display_price_amount", mensaje: "Completa importe y moneda de la referencia, o ninguno." },
+  DISPLAY_PRICE_WITHOUT_PRICE: { campo: "display_price_amount", mensaje: "Para cargar una referencia primero carga el precio." },
   DISPLAY_PRICE_NOT_POSITIVE: { campo: "display_price_amount", mensaje: "La referencia tiene que ser mayor que cero." },
   DISPLAY_PRICE_SAME_CURRENCY: {
     campo: "display_price_currency",
     mensaje: "La referencia tiene que estar en otra moneda que el precio.",
   },
   DISPLAY_PRICE_CURRENCY_INVALID: { campo: "display_price_currency", mensaje: "Esa moneda no es válida." },
-  PLATE_PAIR: { campo: "plate", mensaje: "Completá dominio y país, o ninguno." },
+  PLATE_PAIR: { campo: "plate", mensaje: "Completa dominio y país, o ninguno." },
   PLATE_COUNTRY_INVALID: { campo: "plate_country", mensaje: "Ese país no es válido para el dominio." },
   STOCK_NUMBER_TAKEN: { campo: "stock_number", mensaje: "Ese número de stock ya lo tiene otro vehículo." },
 };

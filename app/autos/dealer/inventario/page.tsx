@@ -170,7 +170,7 @@ export default function DealerInventoryPage() {
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Inventario</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Tus vehículos: buscá, filtrá por estado y ordená la lista.
+          Tus vehículos: busca, filtra por estado y ordena la lista.
         </p>
         {/* Con el binding, no con el dealer elegido: la eleccion vive en el estado
             de ESTA pantalla y /nuevo no la ve; sin binding seria una puerta cerrada. */}
@@ -209,8 +209,8 @@ export default function DealerInventoryPage() {
           >
             <p className="font-semibold">No se pudo verificar el acceso al inventario.</p>
             <p className="mt-1 text-nk-fg-muted">
-              No pudimos confirmar si tu usuario tiene permiso para ver el inventario. Probá de nuevo en unos
-              minutos; si sigue igual, avisá a soporte.
+              No pudimos confirmar si tu usuario tiene permiso para ver el inventario. Prueba de nuevo en unos
+              minutos; si sigue igual, avisa a soporte.
             </p>
             <DetalleTecnico>
               {errorDeAcceso.reason_code ? (
@@ -224,13 +224,13 @@ export default function DealerInventoryPage() {
       ) : access.error ? (
         <section role="alert" data-testid="inventario-error-red" className={CAJA}>
           <p className="font-semibold">No se pudo verificar el acceso al inventario.</p>
-          <p className="mt-1 text-nk-fg-muted">No pudimos conectarnos para revisar tus permisos. Probá de nuevo.</p>
+          <p className="mt-1 text-nk-fg-muted">No pudimos conectarnos para revisar tus permisos. Prueba de nuevo.</p>
         </section>
       ) : !decision ? (
         <section role="alert" data-testid="inventario-sin-decision" data-allowed="false" className={CAJA}>
           <p className="font-semibold">Inventario no disponible.</p>
           <p className="mt-1 text-nk-fg-muted">
-            No pudimos confirmar si tu usuario puede ver el inventario. Probá de nuevo o avisá a soporte.
+            No pudimos confirmar si tu usuario puede ver el inventario. Prueba de nuevo o avisa a soporte.
           </p>
           <DetalleTecnico>
             Sin decisión de acceso para <code>{CAPABILITY}</code>.
@@ -249,7 +249,7 @@ export default function DealerInventoryPage() {
           >
             <p className="font-semibold">Inventario no disponible.</p>
             <p className="mt-1 text-nk-fg-muted">
-              Tu usuario no tiene acceso al inventario. Si creés que es un error, pedile a quien administra tu
+              Tu usuario no tiene acceso al inventario. Si crees que es un error, pide a quien administra tu
               cuenta que revise tus permisos.
             </p>
             <DetalleTecnico>
@@ -262,7 +262,7 @@ export default function DealerInventoryPage() {
       ) : binding === null && asignaciones.error ? (
         <section role="alert" data-testid="inventario-asignaciones-error" className={CAJA}>
           <p className="font-semibold">No se pudo leer tus concesionarios.</p>
-          <p className="mt-1 text-nk-fg-muted">Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.</p>
+          <p className="mt-1 text-nk-fg-muted">Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte.</p>
           {asignaciones.error instanceof AccessApiError && asignaciones.error.reason_code ? (
             <DetalleTecnico>
               <code>{asignaciones.error.reason_code}</code>
@@ -271,9 +271,9 @@ export default function DealerInventoryPage() {
         </section>
       ) : hayQueElegir ? (
         <section data-testid="inventario-selector-dealer" className={CAJA}>
-          <h2 className="font-semibold">Elegí el concesionario</h2>
+          <h2 className="font-semibold">Elige el concesionario</h2>
           <p className="mt-1 text-nk-fg-muted">
-            Tu usuario está asignado a {porElegir.length}. No se elige uno por vos: sería mostrarte el
+            Tu usuario está asignado a {porElegir.length}. No se elige uno por ti: sería mostrarte el
             inventario de otro. La elección dura esta sesión.
           </p>
           <ul className="mt-3 grid gap-2">
@@ -295,8 +295,8 @@ export default function DealerInventoryPage() {
         <section role="status" data-testid="inventario-sin-dealer" className={CAJA}>
           <p className="font-semibold">No se pudo identificar el dealer de tu sesión.</p>
           <p className="mt-1 text-nk-fg-muted">
-            Tenés el permiso, pero falta el dealer con el que pedir el inventario. Volvé a iniciar sesión o
-            avisá a soporte.
+            Tienes el permiso, pero falta el dealer con el que pedir el inventario. Vuelve a iniciar sesión o
+            avisa a soporte.
           </p>
         </section>
       ) : inventory.isPending || inventory.isLoading ? (
@@ -315,7 +315,7 @@ export default function DealerInventoryPage() {
           <p className="font-semibold">No se pudo cargar el inventario privado.</p>
           {inventory.error instanceof AccessApiError ? (
             <>
-              <p className="mt-1 text-nk-fg-muted">Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.</p>
+              <p className="mt-1 text-nk-fg-muted">Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte.</p>
               <DetalleTecnico>
                 <code>{inventory.error.reason_code ?? `HTTP_${inventory.error.status}`}</code>
               </DetalleTecnico>

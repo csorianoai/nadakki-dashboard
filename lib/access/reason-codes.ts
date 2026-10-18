@@ -34,7 +34,7 @@ export const ACCESS_UNVERIFIABLE_REASONS = new Set([
 export const ACCESS_UNVERIFIED_MESSAGE = "No se pudieron verificar tus accesos";
 
 export const ACCESS_UNVERIFIED_DETAIL =
-  "El menú está vacío porque no se pudo comprobar tu acceso, no porque no tengas módulos. Reintentá o avisá a soporte.";
+  "El menú está vacío porque no se pudo comprobar tu acceso, no porque no tengas módulos. Reintenta o avisa a soporte.";
 
 export function isAccessUnverified(reasonCode: string | null | undefined): boolean {
   const valor = reasonCode?.trim().toLowerCase() ?? "";
