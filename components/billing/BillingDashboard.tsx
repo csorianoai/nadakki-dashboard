@@ -51,13 +51,8 @@ export default function BillingDashboard({
     try {
       const s = await getBillingStatus(tid);
       setStatus(s);
-      if (!s) {
-        setError(
-          "No se pudo cargar el estado de facturación. Comprueba el tenant y el API."
-        );
-      }
     } catch {
-      setError("Error de red al cargar facturación.");
+      setError("No pudimos cargar tu facturación por ahora.");
       setStatus(null);
     } finally {
       setLoading(false);
@@ -95,8 +90,21 @@ export default function BillingDashboard({
           <p className="text-red-200 text-sm m-0 flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             {error}
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="ml-2 underline"
+            >
+              Reintentar
+            </button>
           </p>
         </GlassCard>
+      ) : null}
+
+      {!error && !status ? (
+        <p className="text-gray-400 text-sm m-0">
+          Sin datos: este tenant todavía no tiene una suscripción registrada.
+        </p>
       ) : null}
 
       <GlassCard className="p-6 border-white/10">
