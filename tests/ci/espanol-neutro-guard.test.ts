@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 /** Formas voseantes prohibidas en texto visible: un solo español neutro para todos los tenants. */
-const FORMAS = "tenés|podés|querés|sabés|necesitás|ingresá|seleccioná|revisá|completá|elegí|hacé|mirá|volvé|pedile|pedila|escribinos|acá|filtrá|ordená|cargá|descargá|registrá|subí|subila|recargá|usá|reintentá|intentá|intentalo|avisá|buscá|probá|reexportá|eliminá|cerrá|creés|corregilos|vos";
+const FORMAS = "tenés|podés|querés|sabés|necesitás|ingresá|seleccioná|revisá|completá|elegí|hacé|mirá|volvé|pedile|pedila|escribinos|acá|filtrá|ordená|cargá|descargá|registrá|subí|subila|recargá|usá|reintentá|intentá|intentalo|avisá|buscá|probá|reexportá|eliminá|cerrá|creés|corregilos|vos|guardá|arrastrá|borrá|indicá|escribí|evitá|separá|empezá|verificá|documentá|dejá|definí|tené|poné|decí|mandá|abrí|esperá|seguí|entrá|activá|asigná|marcá|copiá|generá|actualizá|agregá|ajustá|confirmá|cambiá|configurá|corregí|cargá";
 // \b de JS no reconoce vocales acentuadas como palabra: se usan límites Unicode.
 export const VOSEO_RE = new RegExp(`(?<![\\p{L}\\p{N}_])(?:${FORMAS})(?![\\p{L}\\p{N}_])`, "iu");
 
@@ -41,7 +41,7 @@ describe("guard de español neutro (sin voseo)", () => {
   });
 
   test("detecta imperativos agudos con vocal acentuada final", () => {
-    for (const t of ["Revisá la tabla", "Elegí uno", "Acá ves", "Volvé a entrar", "Completá el dato", "Filtrá por estado"]) {
+    for (const t of ["Revisá la tabla", "Elegí uno", "Acá ves", "Volvé a entrar", "Completá el dato", "Filtrá por estado", "Guardá los cambios", "Indicá la fecha", "Escribí el precio", "Evitá usar", "Definí una de"]) {
       expect(findVoseo(t).length).toBeGreaterThan(0);
     }
   });

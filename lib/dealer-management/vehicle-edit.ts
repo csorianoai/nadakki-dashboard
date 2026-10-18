@@ -41,7 +41,7 @@ export function formDeFicha(ficha: DealerVehicleStatusRow): VehicleManualForm {
   };
 }
 
-const NO_SE_BORRA = "Una vez cargado no se puede dejar vacío; escribí el valor correcto.";
+const NO_SE_BORRA = "Una vez cargado no se puede dejar vacío; escribe el valor correcto.";
 
 /**
  * Las reglas del alta mas una propia de la edicion: el contrato no permite

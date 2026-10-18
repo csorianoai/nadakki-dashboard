@@ -245,10 +245,10 @@ export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrenc
   const refImporte = form.display_price_amount.trim();
   const refMoneda = form.display_price_currency.trim().toUpperCase();
   if (refImporte || refMoneda) {
-    if (!refImporte) errors.display_price_amount = "Falta el importe de la referencia (o borrá su moneda).";
+    if (!refImporte) errors.display_price_amount = "Falta el importe de la referencia (o borra su moneda).";
     else if (normalizaImporte(refImporte) === null) errors.display_price_amount = IMPORTE_INVALIDO;
     else if (!precio) errors.display_price_amount = "Para cargar una referencia primero carga el precio.";
-    if (!refMoneda) errors.display_price_currency = "Falta la moneda de la referencia (o borrá su importe).";
+    if (!refMoneda) errors.display_price_currency = "Falta la moneda de la referencia (o borra su importe).";
     else if (!/^[A-Z]{3}$/.test(refMoneda)) {
       errors.display_price_currency = "La moneda va con su código de 3 letras, por ejemplo USD.";
     } else if (functionalCurrency && refMoneda === functionalCurrency.trim().toUpperCase()) {
@@ -258,7 +258,7 @@ export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrenc
 
   if (form.plate.trim()) {
     const pais = form.plate_country.trim();
-    if (!pais) errors.plate_country = "Indicá el país del dominio.";
+    if (!pais) errors.plate_country = "Indica el país del dominio.";
     else if (!/^[A-Za-z]{2}$/.test(pais)) errors.plate_country = "El país va con su código de 2 letras, por ejemplo AR.";
   }
   return errors;

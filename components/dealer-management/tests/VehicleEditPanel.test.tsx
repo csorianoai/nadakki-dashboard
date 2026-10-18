@@ -49,7 +49,7 @@ beforeEach(() => {
 it("sin precio guardado no ofrece publicar y dice que falta", () => {
   render(<VehicleEditPanel ficha={BASE} context={CONTEXT} onSaved={onSaved} />);
   expect(screen.queryByTestId("vehicle-publicar")).toBeNull();
-  expect(screen.getByTestId("vehicle-publicar-falta-precio")).toHaveTextContent("primero cargá el precio");
+  expect(screen.getByTestId("vehicle-publicar-falta-precio")).toHaveTextContent("primero carga el precio");
 });
 
 it("con precio en BORRADOR publica con un PATCH de solo status y avisa", async () => {
@@ -106,7 +106,7 @@ it("con el precio borrado sin guardar no publica: boton deshabilitado y aviso vi
 
   expect(screen.getByTestId("vehicle-publicar")).toBeDisabled();
   expect(screen.getByTestId("vehicle-publicar-sin-guardar")).toHaveTextContent(
-    "Guardá los cambios antes de pasar a Disponible.",
+    "Guarda los cambios antes de pasar a Disponible.",
   );
   fireEvent.click(screen.getByTestId("vehicle-publicar"));
   expect(fetchMock).not.toHaveBeenCalled();

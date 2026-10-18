@@ -189,7 +189,7 @@ export function DocumentUploadZone({
       >
         <FileUp className="h-6 w-6 text-forgeGray-400" />
         <p className="text-forge-xs text-forgeGray-500">
-          Arrastrá un archivo aquí o usa los botones
+          Arrastra un archivo aquí o usa los botones
         </p>
         <p className="text-[11px] text-forgeGray-400">JPG, PNG, WEBP o PDF — máx. 10 MB</p>
       </div>

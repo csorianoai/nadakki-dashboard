@@ -135,7 +135,7 @@ const TIPOS_COSTO_MAPAAL: TipoCosto[] = [
     id: "otros",
     nombre: "Otros",
     descripcion:
-      "sólo para costos directamente atribuibles al vehículo que no encajen correctamente en las categorías anteriores. Evitá usar “Otros” como categoría genérica por comodidad.",
+      "sólo para costos directamente atribuibles al vehículo que no encajen correctamente en las categorías anteriores. Evita usar “Otros” como categoría genérica por comodidad.",
   },
 ];
 
@@ -159,7 +159,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
     pasos: [
       "Carga primero todos los vehículos que Mapaal ya tenía antes de empezar a operar en Nadakki como SALDOS INICIALES.",
       "Para esos vehículos usa is_opening=true. La contrapartida contable del inventario es 3020 — Saldos iniciales, no Proveedores. El asiento de apertura es Debe 1220 — Inventario de vehículos / Haber 3020 — Saldos iniciales.",
-      "Recién después de terminar y revisar esa carga inicial, empezá a registrar compras, reparaciones, otros costos, ventas, cobros y pagos de la operación normal.",
+      "Recién después de terminar y revisar esa carga inicial, empieza a registrar compras, reparaciones, otros costos, ventas, cobros y pagos de la operación normal.",
     ],
     pasosInicio: [
       "Descarga la plantilla y carga todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
@@ -195,7 +195,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
       "No reemplaces el precio oficial en ARS por una referencia en dólares.",
     ],
     advertencia:
-      "Antes de marcar un vehículo como DISPONIBLE, verificá que el precio oficial ARS, el dominio y el n.º de stock sean correctos.",
+      "Antes de marcar un vehículo como DISPONIBLE, verifica que el precio oficial ARS, el dominio y el n.º de stock sean correctos.",
   },
   {
     id: "costos",
@@ -220,7 +220,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
       "Las comisiones de venta no aumentan el costo del vehículo: son gasto de venta y deben tratarse fuera del costo del inventario.",
     ],
     advertencia:
-      "Si un comprobante mezcla conceptos, separá el importe que realmente corresponde al costo capitalizable antes de cargarlo.",
+      "Si un comprobante mezcla conceptos, separa el importe que realmente corresponde al costo capitalizable antes de cargarlo.",
   },
   {
     id: "venta",
@@ -300,7 +300,7 @@ const MAPAAL: ContenidoCentroOperativo = {
   cuentasIntro: "El plan operativo inicial de Mapaal tiene 8 cuentas:",
   cuentas: CUENTAS_MAPAAL,
   reglaFinal:
-    "Primero documentá correctamente el hecho real —vehículo, costo, venta, cobro o pago— y dejá que el sistema derive la cuenta contable prevista. No inventes cuentas, monedas, proveedores ni importes para “hacer cuadrar” una operación.",
+    "Primero documenta correctamente el hecho real —vehículo, costo, venta, cobro o pago— y deja que el sistema derive la cuenta contable prevista. No inventes cuentas, monedas, proveedores ni importes para “hacer cuadrar” una operación.",
 };
 
 /**
