@@ -28,7 +28,7 @@ function DownloadButton({ doc, demo, lang }: { doc: OperationDoc; demo: boolean;
     setFailure(null);
     const r = await downloadDocument(doc.id, doc.name);
     setLoading(false);
-    if (!r.ok) setFailure(r.reason);
+    if ("reason" in r) setFailure(r.reason);
   };
   return (
     <span style={{ display: "block", marginTop: 10 }}>
