@@ -135,7 +135,7 @@ export default function AdminSystemPage() {
                 <span className="text-white">{dbStatus.provider ?? "—"}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-white/10">
-                <span className="text-gray-400">Tenant count</span>
+                <span className="text-gray-400">Cantidad de organizaciones</span>
                 <span className="text-white">{dbStatus.tenant_count ?? "—"}</span>
               </div>
               {dbStatus.tables && dbStatus.tables.length > 0 && (

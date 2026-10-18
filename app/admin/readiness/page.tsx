@@ -218,7 +218,7 @@ export default function AdminReadinessPage() {
         <GlassCard className="p-6">
           <div className="flex flex-col md:flex-row gap-4 md:items-end mb-6">
             <label className="flex-1 block">
-              <span className="text-xs text-gray-500">Tenant ID</span>
+              <span className="text-xs text-gray-500">ID de organización</span>
               <input
                 className="mt-1 w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white font-mono text-sm"
                 value={manualId}
@@ -233,7 +233,7 @@ export default function AdminReadinessPage() {
               className="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-2 disabled:opacity-50"
             >
               {singleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {singleLoading ? "Loading readiness…" : "Load readiness"}
+              {singleLoading ? "Cargando preparación…" : "Cargar preparación"}
             </button>
           </div>
           {singleErr && <p className="text-red-400 text-sm mb-4">{singleErr}</p>}
@@ -312,7 +312,7 @@ export default function AdminReadinessPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-gray-500 border-b border-white/10">
-                        <th className="py-2 pr-4">Tenant</th>
+                        <th className="py-2 pr-4">Organización</th>
                         <th className="py-2 pr-4">Status</th>
                         <th className="py-2">Score</th>
                       </tr>

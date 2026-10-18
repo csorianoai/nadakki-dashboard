@@ -127,7 +127,7 @@ export default function AdminConfigPage() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-400 text-sm mb-2">Tenant</label>
+            <label className="block text-gray-400 text-sm mb-2">Organización</label>
             <div className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white">
               {tenantId ?? "—"}
             </div>
