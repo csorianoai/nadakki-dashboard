@@ -26,7 +26,7 @@ describe("Content Hub: datos fijos con badge DEMO", () => {
     const posts = Array.from(marks).filter((m) =>
       ["Post de producto", "Thread educativo", "Caso de éxito"].includes(m.getAttribute("title") ?? ""),
     );
-    // Solo se ven si el mes actual es el de los datos fijos; el badge debe existir siempre.
+    // Las publicaciones fijas se pintan en cualquier mes; el badge debe existir siempre.
     expect(container.querySelector("[data-demo]")).not.toBeNull();
     posts.forEach((p) => expect(insideDemo(p as HTMLElement)).toBe(true));
   });

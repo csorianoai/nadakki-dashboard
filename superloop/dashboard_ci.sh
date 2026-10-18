@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Evidencia DB-CODEX-26B: guard de español neutro + grid con branding es-DO.
+# Evidencia PS-6-DEMO-CONTENT-HUB: datos fijos de Content Hub llevan badge DEMO.
 set -euo pipefail
-npx jest tests/ci/espanol-neutro-guard.test.ts tests/components/dealer-management/DealerModuleGrid.test.tsx
-echo "RESULT_DB_CODEX_26B=PASS"
+npx jest tests/app/content/demo-badge.test.tsx
+echo "RESULT_PS_6_DEMO_CONTENT_HUB=PASS"
