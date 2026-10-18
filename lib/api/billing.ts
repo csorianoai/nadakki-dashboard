@@ -96,7 +96,13 @@ export async function getBillingStatus(
         },
       }
     );
-    if (!res.ok) return null;
+    if (res.status === 204) return null;
+    if (!res.ok) {
+      throw new BillingApiError(
+        `No se pudo cargar la facturación (HTTP ${res.status}).`,
+        res.status
+      );
+    }
     const json = await res.json().catch(() => null);
     const d = unwrapRecord(json);
     if (!d) return null;
@@ -124,14 +130,21 @@ export async function getBillingStatus(
       d.cancelAtPeriodEnd ??
       subRec?.cancel_at_period_end;
 
+    const plan =
+      planRaw != null && String(planRaw).length ? String(planRaw) : null;
+    const subscription_status =
+      statusRaw != null && String(statusRaw).length
+        ? String(statusRaw)
+        : null;
+    const current_period_end =
+      endRaw != null && String(endRaw).length ? String(endRaw) : null;
+    // 200 sin suscripción: ausencia de datos, no estado válido.
+    if (!plan && !subscription_status && !current_period_end) return null;
+
     return {
-      plan: planRaw != null && String(planRaw).length ? String(planRaw) : null,
-      subscription_status:
-        statusRaw != null && String(statusRaw).length
-          ? String(statusRaw)
-          : null,
-      current_period_end:
-        endRaw != null && String(endRaw).length ? String(endRaw) : null,
+      plan,
+      subscription_status,
+      current_period_end,
       cancel_at_period_end:
         typeof cancelRaw === "boolean"
           ? cancelRaw
@@ -141,8 +154,9 @@ export async function getBillingStatus(
               ? false
               : null,
     };
-  } catch {
-    return null;
+  } catch (e) {
+    if (e instanceof BillingApiError) throw e;
+    throw new BillingApiError("Sin conexión con el servidor.", 0);
   }
 }
 
@@ -154,7 +168,7 @@ export async function getInvoices(
   if (!tid) return [];
   try {
     const res = await fetch(
-      `/api/v1/tenants/${encodeURIComponent(tid)}/billing/invoices`,
+      `/api/v2/billing/invoices`,
       {
         ...init,
         cache: "no-store",
@@ -165,7 +179,13 @@ export async function getInvoices(
         },
       }
     );
-    if (!res.ok) return [];
+    if (res.status === 204) return [];
+    if (!res.ok) {
+      throw new BillingApiError(
+        `No se pudieron cargar las facturas (HTTP ${res.status}).`,
+        res.status
+      );
+    }
     const json = await res.json().catch(() => null);
     const d = unwrapRecord(json);
     const root = json && typeof json === "object" ? (json as Record<string, unknown>) : null;
@@ -191,7 +211,9 @@ export async function getInvoices(
               ? Number(r.amount_due)
               : r.amountDue != null
                 ? Number(r.amountDue)
-                : null,
+                : r.amount != null
+                  ? Number(r.amount)
+                  : null,
           amount_paid:
             r.amount_paid != null
               ? Number(r.amount_paid)
@@ -220,8 +242,9 @@ export async function getInvoices(
         };
       })
       .filter((x): x is BillingInvoice => x != null);
-  } catch {
-    return [];
+  } catch (e) {
+    if (e instanceof BillingApiError) throw e;
+    throw new BillingApiError("Sin conexión con el servidor.", 0);
   }
 }
 
@@ -307,7 +330,7 @@ export async function downloadInvoicePdf(
   }
 
   const res = await fetch(
-    `/api/v1/tenants/${encodeURIComponent(tid)}/billing/invoices/${encodeURIComponent(invId)}/pdf`,
+    `/api/v2/billing/invoices/${encodeURIComponent(invId)}/pdf`,
     {
       ...init,
       method: "GET",

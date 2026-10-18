@@ -52,6 +52,7 @@ export default function InvoiceTable({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<BillingInvoice[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [pdfBusyId, setPdfBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -64,11 +65,13 @@ export default function InvoiceTable({
     }
     setLoading(true);
     setError(null);
+    setLoadFailed(false);
     try {
       const list = await getInvoices(tid);
       setRows(list);
     } catch {
-      setError("Error de red al cargar facturas.");
+      setError("No pudimos cargar las facturas por ahora.");
+      setLoadFailed(true);
       setRows([]);
     } finally {
       setLoading(false);
@@ -119,6 +122,15 @@ export default function InvoiceTable({
           <p className="text-amber-100 text-sm m-0 flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             {error}
+            {loadFailed ? (
+              <button
+                type="button"
+                onClick={() => void load()}
+                className="ml-2 underline"
+              >
+                Reintentar
+              </button>
+            ) : null}
           </p>
         </GlassCard>
       ) : null}
@@ -131,7 +143,7 @@ export default function InvoiceTable({
           </div>
         ) : rows.length === 0 ? (
           <div className="py-12 px-6 text-center text-gray-400 text-sm">
-            No hay facturas visibles todavía. Tras pagos exitosos en Stripe,
+            Sin datos: no hay facturas visibles todavía. Tras pagos exitosos en Stripe,
             aparecerán aquí cuando el API las exponga.
           </div>
         ) : (
