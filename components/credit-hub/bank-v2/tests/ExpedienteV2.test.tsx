@@ -44,7 +44,7 @@ it("expediente v2: mismos endpoints, sin UUID, RFC ni tasa inventada; bitacora e
   expect(container.textContent).toContain("RD$2,150,000.00");
   expect(container.textContent).toContain("31\u00a0%");
   expect(container.textContent).not.toMatch(/17[.,]5|XAXX|RFC|7f3c1a10|Estado legado/);
-  expect(screen.getByRole("link", { name: /Más herramientas/ })).toHaveAttribute("href", "/actual");
+  for (const l of screen.getAllByRole("link", { name: "Abrir expediente completo" })) expect(l).toHaveAttribute("href", "/actual");
   fireEvent.click(screen.getByRole("tab", { name: "Bitácora" }));
   expect(await screen.findByText("Reclamada por un analista")).toBeInTheDocument();
   expect(screen.getByText("Usuario del banco")).toBeInTheDocument();

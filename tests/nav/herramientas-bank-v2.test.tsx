@@ -25,6 +25,7 @@ const ID = "APP-42";
 const EXPEDIENTE = `/credit-hub/bank-v2/solicitudes/${ID}`;
 const HERRAMIENTAS = `${EXPEDIENTE}/herramientas`;
 const BANDEJA = "/credit-hub/bank-v2/solicitudes";
+const BANDEJA_BOTON = "/credit-hub/bank-v2"; // «Volver a la bandeja» del detalle (DB-CODEX-27)
 
 jest.mock("next/link", () => ({
   __esModule: true,
@@ -122,20 +123,20 @@ describe("expediente bank-v2 -> «Más herramientas»", () => {
   it("apunta a la ruta nueva dentro de bank-v2 (no a la ruta v1 que redirige de vuelta)", async () => {
     const { container } = render(conCliente(<ExpedienteV2Page {...params()} />));
     await screen.findByRole("heading", { name: "Marisol Reyes" });
-    expect(screen.getByRole("link", { name: /Más herramientas/ })).toHaveAttribute("href", HERRAMIENTAS);
+    for (const a of screen.getAllByRole("link", { name: "Abrir expediente completo" })) expect(a).toHaveAttribute("href", HERRAMIENTAS);
     expect(hrefsDe(container).filter((h) => h.startsWith("/credit-hub/bank/"))).toEqual([]);
   });
 
-  it("ningún enlace del expediente acaba en un bucle; «Más herramientas» llega SIN redirección", async () => {
+  it("ningún enlace del expediente acaba en un bucle; «Abrir expediente completo» llega SIN redirección", async () => {
     const { container } = render(conCliente(<ExpedienteV2Page {...params()} />));
     await screen.findByRole("heading", { name: "Marisol Reyes" });
     const hrefs = internos(hrefsDe(container));
-    expect(hrefs).toEqual(expect.arrayContaining([HERRAMIENTAS, BANDEJA]));
+    expect(hrefs).toEqual(expect.arrayContaining([HERRAMIENTAS, BANDEJA_BOTON]));
     for (const h of hrefs) expect(() => seguir(h)).not.toThrow();
     // Ningún enlace del expediente puede devolver al propio expediente (el bucle del defecto).
     for (const h of hrefs) expect([h, seguir(h).pop()]).not.toEqual([h, EXPEDIENTE]);
     expect(seguir(HERRAMIENTAS)).toEqual([HERRAMIENTAS]);
-    expect(seguir(BANDEJA)).toEqual([BANDEJA]);
+    expect(seguir(BANDEJA_BOTON)).toEqual([BANDEJA_BOTON]);
   });
 
   it("la ruta v1 SÍ redirige al expediente (por eso no servía de enlace)", () => {
