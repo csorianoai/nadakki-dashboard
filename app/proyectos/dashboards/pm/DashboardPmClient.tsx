@@ -103,7 +103,7 @@ export function DashboardPmClient() {
       </NavigationBar>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-10">
-        <h1 className="text-3xl font-extrabold text-white">Panel de Project Manager</h1>
+        <h1 className="text-3xl font-extrabold text-white">Panel del gerente de proyecto</h1>
         <p className="mt-2 text-sm text-zinc-400">Lentes operativos: burndown presupuesto, barras por fases y tabla de obra crítica.</p>
       </motion.div>
 
