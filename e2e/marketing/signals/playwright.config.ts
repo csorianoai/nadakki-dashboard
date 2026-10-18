@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
@@ -17,6 +18,8 @@ export default defineConfig({
   use: { baseURL: BASE, trace: "on-first-retry", screenshot: "only-on-failure", serviceWorkers: "block" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
+    // next start busca .next en el cwd: por defecto sería el directorio del config.
+    cwd: resolve(__dirname, "../../.."),
     command: `npm run build && npx next start -p ${PORT} -H 127.0.0.1`,
     url: `${BASE}/login`,
     timeout: 900_000,
