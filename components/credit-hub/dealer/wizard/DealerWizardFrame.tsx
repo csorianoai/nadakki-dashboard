@@ -22,7 +22,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();
-  const { stepIndex, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig, attemptAdvance, blockReason, fieldErrors, showValidationErrors, consentApplicationId } = useDealerWizard();
+  const { stepIndex, isDirty, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError, formData, validationConfig, attemptAdvance, blockReason, fieldErrors, showValidationErrors, consentApplicationId } = useDealerWizard();
   const [exitOpen, setExitOpen] = useState(false);
 
   const completeness = useMemo(
@@ -97,7 +97,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
           <DataTruthBadge level="REAL" />
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 14 }}>
-          <button type="button" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ minHeight: 44 }} onClick={() => setExitOpen(true)}>
+          <button type="button" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ minHeight: 44 }} onClick={() => (isDirty ? setExitOpen(true) : router.push("/autos/dealer/credito"))}>
             ← Volver al panel
           </button>
           <Link href="/autos/dealer/credito/solicitudes" className="ch-btn ch-btn-ghost ch-btn-sm" style={{ textDecoration: "none", minHeight: 44 }}>
@@ -189,7 +189,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
               ¿Guardar borrador y salir?
             </h2>
             <p style={{ fontSize: 13, color: "var(--ch-text-3)", marginTop: 10, lineHeight: 1.5 }}>
-              Tu progreso se guarda en este dispositivo cada 10 segundos y al confirmar.
+              Tienes cambios sin guardar en esta solicitud. Guárdalos como borrador para retomarlos o sal para descartarlos.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end", marginTop: 18 }}>
               <button type="button" className="ch-btn ch-btn-ghost" onClick={() => setExitOpen(false)}>
