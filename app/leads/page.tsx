@@ -6,6 +6,15 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import DemoPanel from "@/components/leads/DemoPanel";
+import { DEMO_KPIS } from "@/lib/leads/demo-data";
+
+const KPI_ICONS = {
+  total: <Users className="w-6 h-6 text-blue-400" />,
+  hot: <TrendingUp className="w-6 h-6 text-red-400" />,
+  conv: <Target className="w-6 h-6 text-green-400" />,
+  score: <Filter className="w-6 h-6 text-yellow-400" />,
+};
 
 const MODULES = [
   { id: "scoring", name: "Lead Scoring", desc: "Puntuacion automatica con IA", href: "/leads/scoring", color: "#22c55e" },
@@ -29,12 +38,13 @@ export default function LeadsPage() {
           </div>
         </div>
       </motion.div>
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        <StatCard value="1,234" label="Total Leads" icon={<Users className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-        <StatCard value="234" label="Hot Leads" icon={<TrendingUp className="w-6 h-6 text-red-400" />} color="#ef4444" />
-        <StatCard value="87%" label="Conversion" icon={<Target className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value="4.2" label="Avg Score" icon={<Filter className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
-      </div>
+      <DemoPanel>
+        <div className="grid grid-cols-4 gap-6 mb-8">
+          {DEMO_KPIS.map((k) => (
+            <StatCard key={k.key} value={k.value} label={k.label} icon={KPI_ICONS[k.key as keyof typeof KPI_ICONS]} color={k.color} />
+          ))}
+        </div>
+      </DemoPanel>
       <div className="grid grid-cols-2 gap-6">
         {MODULES?.map((m, i) => (
           <motion.div key={m.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
