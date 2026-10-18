@@ -161,7 +161,7 @@ describe("el texto sale del archivo de datos de D9, no del componente", () => {
     const items = within(lista).getAllByRole("listitem").map((li) => li.textContent);
     expect(items).toEqual([
       "Descargá la plantilla y cargá todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
-      "Revisá la carga antes de aplicarla.",
+      "Revisa la carga antes de aplicarla.",
       "Después registrá compras, reparaciones, ventas, cobros y pagos del día a día.",
     ]);
     expect(items).toEqual(BLOQUE.pasosInicio);

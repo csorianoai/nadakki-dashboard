@@ -114,7 +114,7 @@ export default function DealerFinanzasPage() {
             </>
           ) : (
             <>
-              Los costos y el margen de cada unidad solo los ve el personal autorizado. Pedile acceso al administrador de tu concesionario.
+              Los costos y el margen de cada unidad solo los ve el personal autorizado. Pide acceso al administrador de tu concesionario.
             </>
           )}
           {noVerificado || denyReason ? (
@@ -145,7 +145,7 @@ export default function DealerFinanzasPage() {
                   data-testid="finanzas-vehiculo"
                   className="mt-1 min-h-11 w-full max-w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg"
                 >
-                  <option value="">Elegí una unidad…</option>
+                  <option value="">Elige una unidad…</option>
                   {(inventory.data ?? []).map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
                       {[vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" ") || vehicle.id}
@@ -165,7 +165,7 @@ export default function DealerFinanzasPage() {
             <CostosVehiculoPanel vehicleId={vehicleId} tenantId={context.tenantId} locale={locale} />
           ) : (
             <p data-testid="finanzas-sin-vehiculo" className="text-sm text-nk-fg-muted">
-              Elegí una unidad para ver sus costos.
+              Elige una unidad para ver sus costos.
             </p>
           )}
         </>

@@ -20,7 +20,7 @@ export function PaginaNoEncontrada({ detalle }: { detalle?: string }) {
         <p className="text-sm font-semibold text-violet-500">Error 404</p>
         <h1 className="mt-2 text-2xl font-bold text-zinc-100">No encontramos esta página</h1>
         <p className="mt-2 text-sm text-zinc-400">
-          {detalle ?? "La dirección no existe o ya no está disponible. Usá el menú de la izquierda o buscá con Ctrl+K."}
+          {detalle ?? "La dirección no existe o ya no está disponible. Usá el menú de la izquierda o busca con Ctrl+K."}
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <button

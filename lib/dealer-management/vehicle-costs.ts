@@ -101,7 +101,7 @@ export function validateCostForm(form: CostForm, currency: string | null): CostF
   if (!currency) errors.currency = "Falta configurar la moneda de tu concesionario. No se puede registrar el costo.";
 
   const type = form.cost_type.trim();
-  if (!COST_TYPE_CHECK.has(type)) errors.cost_type = "Elegí un tipo de costo del catálogo.";
+  if (!COST_TYPE_CHECK.has(type)) errors.cost_type = "Elige un tipo de costo del catálogo.";
 
   const amount = montoNormalizado(form.amount);
   if (!amount) errors.amount = "El monto es obligatorio.";
@@ -289,10 +289,10 @@ export async function uploadRepairInvoice(vehicleId: string, tenantId: string, f
 export function mensajeDeErrorCosto(error: unknown): string {
   const status = error instanceof AccessApiError ? error.status : 0;
   if (status === 413) return "El archivo pesa más de 10 MB. Subí una versión más liviana.";
-  if (status === 401) return "Tu sesión venció. Volvé a iniciar sesión e intentá de nuevo.";
+  if (status === 401) return "Tu sesión venció. Vuelve a iniciar sesión e intenta de nuevo.";
   if (status === 403) return "Tu usuario no tiene permiso para registrar costos de este vehículo.";
   if (status === 404) return "No encontramos este vehículo. Recargá la página.";
-  if (status === 409 || status === 422) return "El sistema rechazó los datos. Revisá monto, fecha y factura.";
-  if (status >= 500) return "El servicio no respondió. Probá de nuevo en unos minutos.";
-  return "No hubo respuesta del servidor. Revisá tu conexión e intentá de nuevo.";
+  if (status === 409 || status === 422) return "El sistema rechazó los datos. Revisa monto, fecha y factura.";
+  if (status >= 500) return "El servicio no respondió. Prueba de nuevo en unos minutos.";
+  return "No hubo respuesta del servidor. Revisa tu conexión e intenta de nuevo.";
 }

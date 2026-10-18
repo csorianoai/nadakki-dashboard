@@ -19,7 +19,7 @@ import { localeDeTenant, type LocaleTenant } from "@/lib/dealer-management/forma
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 
 export const SIN_MONEDA_FUNCIONAL =
-  "Todavía no se configuró la moneda de tu concesionaria, por eso no mostramos los importes. Pedile a quien administra tu cuenta que la cargue.";
+  "Todavía no se configuró la moneda de tu concesionaria, por eso no mostramos los importes. Pide a quien administra tu cuenta que la cargue.";
 
 /**
  * El codigo que `formateaMoneda` LANZA cuando no hay moneda

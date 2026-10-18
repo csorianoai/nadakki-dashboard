@@ -31,7 +31,7 @@ export function importActivosPath(dealerId: string, modo: ImportModo): string {
 
 /** Solo la forma del fichero; version y columnas las dice la REVISION del backend. */
 export function validarArchivo(file: { name: string; size: number } | null): string | null {
-  if (!file) return "Elegí el archivo de la plantilla.";
+  if (!file) return "Elige el archivo de la plantilla.";
   if (!/\.(xlsx|zip)$/i.test(file.name.trim())) {
     return "El archivo tiene que ser la plantilla .xlsx o su .zip de CSV.";
   }
@@ -193,7 +193,7 @@ export const MENSAJES_INCIDENCIA: Readonly<Record<string, string>> = {
   MONTO_NO_POSITIVO: "El monto tiene que ser mayor que cero.",
   FECHA_INVALIDA: "La fecha no es válida: usá el formato DD/MM/AAAA.",
   FECHA_INGRESO_FUTURA: "La fecha de ingreso al stock no puede ser posterior a hoy.",
-  PAREJA_INCOMPLETA: "Hay dos datos que van juntos: completá los dos o ninguno.",
+  PAREJA_INCOMPLETA: "Hay dos datos que van juntos: completa los dos o ninguno.",
   OBLIGATORIO_CONDICIONAL: "Falta un dato que es obligatorio por lo que marcaste en otra columna.",
   REF_REPETIDA: "La referencia del vehículo ya aparece en una fila anterior.",
   STOCK_REPETIDO: "El número de stock ya aparece en una fila anterior.",

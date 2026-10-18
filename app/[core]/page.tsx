@@ -58,7 +58,7 @@ export default function CorePage() {
   }, [coreId]);
 
   if (!coreConfig) {
-    return <PaginaNoEncontrada detalle={`No existe un módulo llamado «${coreId}». Elegí uno del menú o buscá con Ctrl+K.`} />;
+    return <PaginaNoEncontrada detalle={`No existe un módulo llamado «${coreId}». Elige uno del menú o busca con Ctrl+K.`} />;
   }
 
   const agentCount = coreData?.total || coreConfig.agentCount;

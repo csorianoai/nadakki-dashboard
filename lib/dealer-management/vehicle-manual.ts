@@ -192,7 +192,7 @@ export function validateVehicleForm(
   }
 
   if (!VEHICLE_CONDITIONS.some((item) => item.value === form.condition)) {
-    errors.condition = "Elegí una condición.";
+    errors.condition = "Elige una condición.";
   }
 
   Object.assign(errors, validatePriceAndPlate(form, functionalCurrency));
@@ -234,7 +234,7 @@ export function paisDeLocale(locale: string | null | undefined): string {
   return /^[A-Za-z]{2}$/.test(region) ? region.toUpperCase() : "";
 }
 
-const IMPORTE_INVALIDO = "Ingresá un importe mayor que cero, por ejemplo 18500000,50.";
+const IMPORTE_INVALIDO = "Ingresa un importe mayor que cero, por ejemplo 18500000,50.";
 
 /** Las reglas de pareja del contrato P2, con el mensaje junto a su campo. */
 export function validatePriceAndPlate(form: VehicleManualForm, functionalCurrency: string | null): VehicleFormErrors {
@@ -279,7 +279,7 @@ export const MOTIVO_EN_CAMPO: Record<string, { campo: keyof VehicleManualForm; m
     campo: "price_amount",
     mensaje: "Tu cuenta todavía no tiene moneda oficial configurada. Pedila a soporte antes de cargar precios.",
   },
-  DISPLAY_PRICE_PAIR: { campo: "display_price_amount", mensaje: "Completá importe y moneda de la referencia, o ninguno." },
+  DISPLAY_PRICE_PAIR: { campo: "display_price_amount", mensaje: "Completa importe y moneda de la referencia, o ninguno." },
   DISPLAY_PRICE_WITHOUT_PRICE: { campo: "display_price_amount", mensaje: "Para cargar una referencia primero cargá el precio." },
   DISPLAY_PRICE_NOT_POSITIVE: { campo: "display_price_amount", mensaje: "La referencia tiene que ser mayor que cero." },
   DISPLAY_PRICE_SAME_CURRENCY: {
@@ -287,7 +287,7 @@ export const MOTIVO_EN_CAMPO: Record<string, { campo: keyof VehicleManualForm; m
     mensaje: "La referencia tiene que estar en otra moneda que el precio.",
   },
   DISPLAY_PRICE_CURRENCY_INVALID: { campo: "display_price_currency", mensaje: "Esa moneda no es válida." },
-  PLATE_PAIR: { campo: "plate", mensaje: "Completá dominio y país, o ninguno." },
+  PLATE_PAIR: { campo: "plate", mensaje: "Completa dominio y país, o ninguno." },
   PLATE_COUNTRY_INVALID: { campo: "plate_country", mensaje: "Ese país no es válido para el dominio." },
   STOCK_NUMBER_TAKEN: { campo: "stock_number", mensaje: "Ese número de stock ya lo tiene otro vehículo." },
 };

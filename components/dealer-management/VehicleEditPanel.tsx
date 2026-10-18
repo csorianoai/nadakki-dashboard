@@ -181,7 +181,7 @@ export function VehicleEditPanel({ ficha, context, onSaved }: VehicleEditPanelPr
       </form>
       {codigo && !motivo ? (
         <div role="alert" data-testid="vehicle-edit-error" data-reason-code={codigo} className="text-sm text-nk-fg">
-          No se pudo guardar. Revisá los datos e intentá de nuevo.
+          No se pudo guardar. Revisa los datos e intenta de nuevo.
           <DetalleTecnico>
             <span className="block">Código para soporte: {codigo}</span>
           </DetalleTecnico>

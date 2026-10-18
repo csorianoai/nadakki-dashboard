@@ -59,19 +59,19 @@ const POR_MOTIVO: Record<string, [PhotoErrorKind, string]> = {
   empty_file: ["otro_archivo", "El archivo está vacío."],
   file_too_large: ["reintentar", "La foto supera el tamaño máximo (10 MB)."],
   max_photos_reached: ["tope", "Este vehículo ya tiene el máximo de fotos."],
-  metadata_strip_failed: ["reexportar", "No pudimos procesar la foto. Volvé a exportarla y subila de nuevo."],
+  metadata_strip_failed: ["reexportar", "No pudimos procesar la foto. Vuelve a exportarla y súbela de nuevo."],
   storage_error: ["reintentar", "No pudimos guardar la foto ahora mismo. Intentalo de nuevo."],
   media_storage_unconfigured: ["despliegue", "Las fotos no están configuradas en este entorno."],
   not_found: ["no_es_tuyo", "Este vehículo no es de tu concesionario o ya no existe."],
 };
 
 export const PHOTO_ERROR_HINT: Record<PhotoErrorKind, string> = {
-  otro_archivo: "Elegí otro archivo.",
+  otro_archivo: "Elige otro archivo.",
   reexportar: "Reexportá la misma foto desde la cámara o el teléfono.",
-  reintentar: "Podés reintentar.",
+  reintentar: "Puedes reintentar.",
   tope: "Eliminá una foto antes de subir otra.",
-  despliegue: "No es un problema tuyo: avisá a soporte.",
-  no_es_tuyo: "Volvé al inventario.",
+  despliegue: "No es un problema tuyo: avisa a soporte.",
+  no_es_tuyo: "Vuelve al inventario.",
   otro: "",
 };
 

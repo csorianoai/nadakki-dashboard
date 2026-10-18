@@ -57,7 +57,7 @@ export function DealerVehicleEconomicsPanel({ vehicleId, locale }: { vehicleId: 
       >
         <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudieron leer el margen y los días en stock</h2>
         <p className="mt-1 text-sm text-nk-fg-muted">
-          Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.
+          Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte.
         </p>
         <details className="mt-1 text-xs text-nk-fg-muted break-words">
           <summary className="cursor-pointer">Detalle técnico</summary>

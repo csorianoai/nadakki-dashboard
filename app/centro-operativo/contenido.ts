@@ -163,7 +163,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
     ],
     pasosInicio: [
       "Descargá la plantilla y cargá todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
-      "Revisá la carga antes de aplicarla.",
+      "Revisa la carga antes de aplicarla.",
       "Después registrá compras, reparaciones, ventas, cobros y pagos del día a día.",
     ],
     advertencia:
@@ -293,7 +293,7 @@ const MAPAAL: ContenidoCentroOperativo = {
   tenant: "mapaal",
   titulo: "Guía de carga y operación inicial de Mapaal",
   entrada:
-    "Qué hacer, en qué orden, y qué reglas contables están detrás. Si una pantalla te dice que algo falta, acá está por qué.",
+    "Qué hacer, en qué orden, y qué reglas contables están detrás. Si una pantalla te dice que algo falta, aquí está por qué.",
   bloques: BLOQUES_MAPAAL,
   tiposCostoIntro: "Tipos de costo:",
   tiposCosto: TIPOS_COSTO_MAPAAL,
