@@ -13,7 +13,7 @@ beforeEach(() => {
 });
 
 it("con 200 pinta el armazón; sin DEMO no hay píldora ni reinicio ni pie", async () => {
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<RealtorShell><p>contenido</p></RealtorShell>);
   expect(await screen.findByTestId("shell-sidebar")).toBeInTheDocument();
   expect(screen.getByText("contenido")).toBeInTheDocument();
@@ -24,7 +24,7 @@ it("con 200 pinta el armazón; sin DEMO no hay píldora ni reinicio ni pie", asy
 
 it("con DEMO encendido aparecen píldora, reinicio y pie", async () => {
   process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<RealtorShell><p>contenido</p></RealtorShell>);
   expect(await screen.findByTestId("demo-pill")).toBeInTheDocument();
   expect(screen.getByTestId("demo-reset")).toBeInTheDocument();
@@ -47,7 +47,7 @@ it("con el interruptor apagado no pregunta al backend ni pinta el armazón", () 
 });
 
 it("los centros sin href dicen «Próximamente» según el registro y el filtro busca por nombre", async () => {
-  mockApiFetch.mockResolvedValue({ status: 200 });
+  mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<RealtorShell><p>contenido</p></RealtorShell>);
   await screen.findByTestId("shell-sidebar");
   for (const c of REALTOR_CENTERS) {

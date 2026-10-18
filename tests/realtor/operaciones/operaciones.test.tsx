@@ -41,7 +41,7 @@ describe("lógica", () => {
 describe("pantalla", () => {
   it("positivo: DEMO con 200 muestra marca, etapas con conteos y oportunidades; solo llama a /acceso sin tenant", async () => {
     on(true);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<OperacionesPanel />);
     expect(await screen.findByTestId("operaciones-panel")).toBeInTheDocument();
     expect(screen.getByTestId("demo-banner")).toHaveTextContent("DEMO · datos sintéticos");
@@ -62,7 +62,7 @@ describe("pantalla", () => {
 
   it("Finanzas: con DEMO muestra comisión, reparto y cierres; sin DEMO no pinta ninguna cifra", async () => {
     on(true);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     const { unmount } = render(<OperacionesPanel />);
     await screen.findByTestId("operaciones-panel");
     const fin = screen.getByTestId("fin-section");
@@ -79,7 +79,7 @@ describe("pantalla", () => {
 
   it("negativo: sin DEMO solo «Sin datos todavía», sin cifras ni marca DEMO", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<OperacionesPanel />);
     expect(await screen.findByTestId("operaciones-empty")).toHaveTextContent("Sin datos todavía");
     expect(screen.queryByTestId("demo-banner")).toBeNull();
@@ -99,7 +99,7 @@ describe("pantalla", () => {
 
   it("tenant ajeno: el cliente no envía tenant (ni cabecera ni parámetro) y los datos de otro tenant no aparecen", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<OperacionesPanel />);
     await screen.findByTestId("operaciones-empty");
     expect(mockApiFetch).toHaveBeenCalledTimes(1);
@@ -111,7 +111,7 @@ describe("pantalla", () => {
 
   it("tenant ajeno con DEMO: solo se pintan datos SYNTH propios del demo y la petición sigue sin tenant", async () => {
     on(true);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<OperacionesPanel />);
     await screen.findByTestId("operaciones-panel");
     expect(mockApiFetch).toHaveBeenCalledTimes(1);

@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { COPY, ORIGIN_LABEL, STAGE_LABEL, type Lang } from "@/lib/realtor/resultados/copy";
 import { DEMO_RESULTADOS, FUNNEL_STAGES, ORIGINS } from "@/lib/realtor/resultados/demo";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 
@@ -24,10 +23,10 @@ function Bar({ label, value, max, text, testid }: { label: string; value: number
 
 /** Resultados: embudo, tiempos y orígenes. Sin API propia (solo /acceso): fuera de DEMO no hay cifras ni gráficos. */
 export function ResultadosPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const t = COPY[lang];
-  const data = isDemoAllowed() ? DEMO_RESULTADOS : null;
+  const data = demoActive ? DEMO_RESULTADOS : null;
 
   if (access !== "ok") return <RealtorNotice reason={access} />;
 

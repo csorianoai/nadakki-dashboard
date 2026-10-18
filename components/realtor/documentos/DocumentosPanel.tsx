@@ -6,10 +6,9 @@ import { fetchDocuments } from "@/lib/realtor/documentos/api";
 import { DEMO_DOCS, DEMO_TEMPLATES } from "@/lib/realtor/documentos/demo";
 import { countByDocStatus, templateState } from "@/lib/realtor/documentos/logic";
 import { API_DOC_STATUSES, DOC_STATUSES, type OperationDoc, type Template } from "@/lib/realtor/documentos/types";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const H2: CSSProperties = { margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 24 };
@@ -17,9 +16,9 @@ const ROW: CSSProperties = { border: `1px solid ${RT.line}`, borderRadius: 10, p
 const PILL: CSSProperties = { fontSize: 12, fontWeight: 700, borderRadius: 999, padding: "3px 10px" };
 
 export function DocumentosPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   const t = COPY[lang];
 
   // Fuera de DEMO se lee C-RE-DOCUMENTOS; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.

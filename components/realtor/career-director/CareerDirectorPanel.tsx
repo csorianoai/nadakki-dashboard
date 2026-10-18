@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { COPY, type CareerCopy, type Lang } from "@/lib/realtor/career-director/copy";
 import { fetchCareer, type CareerSummary } from "@/lib/realtor/career-director/api";
 import { DEMO_GOALS, DEMO_LICENSE, DEMO_SUPERVISION, METRICS } from "@/lib/realtor/career-director/demo";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: React.CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 14, padding: 20, display: "flex", flexDirection: "column", gap: 10 };
 const H2: React.CSSProperties = { margin: 0, fontFamily: FONT_DISPLAY, fontSize: 22, fontWeight: 700 };
@@ -114,9 +113,9 @@ function EmptyState({ t }: { t: CareerCopy }) {
 
 /** Centro Career Director: licencia y vencimiento, supervisión y metas. Fail-closed; fuera de DEMO no inventa cifras. */
 export function CareerDirectorPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   // Fuera de DEMO se lee C-RE-CAREER; sin datos (404, 503, vacío) queda «Sin datos todavía», sin cifras inventadas.
   const [real, setReal] = useState<CareerSummary | null>(null);
   useEffect(() => {

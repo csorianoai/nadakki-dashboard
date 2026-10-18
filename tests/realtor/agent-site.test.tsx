@@ -21,7 +21,7 @@ const settle = async () => {
 describe("web del agente", () => {
   it("positivo: 200 muestra DEMO, brokerage licenciada junto al contacto, aviso y consentimiento", async () => {
     turnOn();
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<AgentSitePanel />);
     expect(await screen.findByTestId("agent-site-panel")).toBeInTheDocument();
     expect(screen.getByTestId("demo-banner")).toBeInTheDocument();
@@ -37,7 +37,7 @@ describe("web del agente", () => {
 
   it("negativo: sin consentimiento no se envía y se muestra el error", async () => {
     turnOn();
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<AgentSitePanel />);
     await screen.findByTestId("agent-site-panel");
     fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Ana" } });
@@ -51,7 +51,7 @@ describe("web del agente", () => {
 
   it("con consentimiento el envío se rotula UNAVAILABLE, nunca como enviado", async () => {
     turnOn();
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<AgentSitePanel />);
     await screen.findByTestId("agent-site-panel");
     fireEvent.change(screen.getByLabelText("Nombre"), { target: { value: "Ana" } });
@@ -72,7 +72,7 @@ describe("web del agente", () => {
   });
 
   it("apagado por defecto: no consulta al backend y nunca envía tenant_id", async () => {
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     const { container } = render(<AgentSitePanel />);
     expect(container).toBeEmptyDOMElement();
     expect(mockApiFetch).not.toHaveBeenCalled();
@@ -84,7 +84,7 @@ describe("web del agente", () => {
 
   it("sin DEMO la web se rotula UNAVAILABLE y no se inventa contenido", async () => {
     process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<AgentSitePanel />);
     expect(await screen.findByTestId("site-unavailable")).toBeInTheDocument();
     expect(screen.queryByTestId("contact-data")).toBeNull();

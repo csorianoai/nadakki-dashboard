@@ -41,7 +41,7 @@ describe("lógica", () => {
 describe("pantalla", () => {
   it("regresión: «Rol» por subcadena casa con select y con el contenedor de conteos; el selector exacto solo con el select", async () => {
     on(true);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<PropietariosPanel />);
     await screen.findByTestId("propietarios-panel");
     // Playwright getByLabel("Rol") compara por subcadena sin mayúsculas: dos elementos (strict mode violation).
@@ -53,7 +53,7 @@ describe("pantalla", () => {
   });
   it("positivo: DEMO con 200 muestra marca, tabla y conteos; filtra y cambia de idioma", async () => {
     on(true);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<PropietariosPanel />);
     expect(await screen.findByTestId("propietarios-panel")).toBeInTheDocument();
     expect(screen.getByTestId("demo-banner")).toHaveTextContent("DEMO · datos sintéticos");
@@ -72,7 +72,7 @@ describe("pantalla", () => {
 
   it("negativo: sin DEMO solo «Sin datos todavía», sin cifras ni marca DEMO", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<PropietariosPanel />);
     expect(await screen.findByTestId("propietarios-empty")).toHaveTextContent("Sin datos todavía");
     expect(screen.queryByTestId("demo-banner")).toBeNull();
@@ -92,7 +92,7 @@ describe("pantalla", () => {
 
   it("tenant ajeno: el cliente no envía tenant y los datos de otro tenant no aparecen", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<PropietariosPanel />);
     await screen.findByTestId("propietarios-empty");
     await waitFor(() => expect(mockApiFetch).toHaveBeenCalledTimes(2));

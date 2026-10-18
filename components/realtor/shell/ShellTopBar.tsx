@@ -35,6 +35,8 @@ export function ShellTopBar({ center, offBarId, view, onView, demo, tenantDemo =
           </span>
         ) : null}
         <div style={{ marginLeft: "auto", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+          {demo ? (
+            <>
           <span id="vista-nota" style={{ fontSize: 12, color: RT.muted }}>Vista simulada</span>
           <div role="group" aria-label="Vista activa (simulada, sin permisos reales)" aria-describedby="vista-nota"
             style={{ display: "flex", border: `1px solid ${RT.lineStrong}`, borderRadius: 8, overflow: "hidden" }}>
@@ -46,6 +48,8 @@ export function ShellTopBar({ center, offBarId, view, onView, demo, tenantDemo =
               </button>
             ))}
           </div>
+            </>
+          ) : null}
           {demo ? (
             <>
               <span data-testid="demo-pill" style={{ background: RT.demoBg, color: RT.demoText, padding: "7px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700 }}>

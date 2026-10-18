@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { AGREEMENT_LABEL, COPY, ROLE_LABEL, STAGE_LABEL, type Lang } from "@/lib/realtor/propietarios/copy";
 import { fetchOwners } from "@/lib/realtor/propietarios/api";
 import { DEMO_OWNERS } from "@/lib/realtor/propietarios/demo";
@@ -9,7 +8,7 @@ import { applyFilters, countByRole, formatPrice } from "@/lib/realtor/propietari
 import { AGREEMENTS, NO_FILTERS, OWNER_ROLES, type OwnerFilters, type OwnerRow } from "@/lib/realtor/propietarios/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22, minHeight: 640 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -31,10 +30,10 @@ function Select<T extends string>({ label, value, options, all, onChange }: {
 }
 
 export function PropietariosPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const [filters, setFilters] = useState<OwnerFilters>(NO_FILTERS);
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   const t = COPY[lang];
 
   // Fuera de DEMO se lee C-RE-OLA3 (owners); sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.

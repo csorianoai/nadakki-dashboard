@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { centerForPath, OFF_BAR_CENTERS } from "@/lib/realtor/centers";
 import { FONT_BODY, RT } from "@/lib/realtor/tokens";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
@@ -15,13 +14,12 @@ import { ShellTopBar, type RealtorView } from "./ShellTopBar";
  * las páginas siguen mostrando su aviso con el motivo. La identidad sale del token.
  */
 export function RealtorShell({ children }: { children: React.ReactNode }) {
-  const { state: access, roles, demo: tenantDemo } = useRealtorAccessInfo();
+  const { state: access, roles, demo: tenantDemo, demoActive: demo } = useRealtorAccessInfo();
   const pathname = usePathname();
   const [view, setView] = useState<RealtorView>("agente");
   const [demoRun, setDemoRun] = useState(0);
   if (access !== "ok") return <>{children}</>;
 
-  const demo = isDemoAllowed();
   const offBar = OFF_BAR_CENTERS.find((c) => c.href && pathname?.startsWith(c.href));
   return (
     <div data-testid="realtor-shell" data-view={view}

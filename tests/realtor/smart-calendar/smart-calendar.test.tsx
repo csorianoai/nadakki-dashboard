@@ -39,7 +39,7 @@ describe("lógica", () => {
 describe("pantalla", () => {
   it("positivo: DEMO con 200 muestra marca, 7 días, eventos y filtro por tipo; solo llama a /acceso", async () => {
     on(true);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<SmartCalendarPanel />);
     expect(await screen.findByTestId("smart-calendar-panel")).toBeInTheDocument();
     expect(screen.getByTestId("demo-banner")).toHaveTextContent("DEMO · datos sintéticos");
@@ -57,7 +57,7 @@ describe("pantalla", () => {
 
   it("negativo: sin DEMO solo «Sin datos todavía», sin cifras ni marca DEMO", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<SmartCalendarPanel />);
     expect(await screen.findByTestId("smart-calendar-empty")).toHaveTextContent("Sin datos todavía");
     expect(screen.queryByTestId("demo-banner")).toBeNull();
@@ -77,7 +77,7 @@ describe("pantalla", () => {
 
   it("tenant ajeno: el cliente no envía tenant y los datos de otro tenant no aparecen", async () => {
     on(false);
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<SmartCalendarPanel />);
     await screen.findByTestId("smart-calendar-empty");
     await waitFor(() => expect(mockApiFetch.mock.calls.some(([u]) => String(u).includes("/calendar/events"))).toBe(true));

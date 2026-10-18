@@ -5,10 +5,9 @@ import { decideLink, fetchAll, registrationGate } from "@/lib/realtor/property-i
 import { HQ_DEMO, HQ_PROPERTY_ID } from "@/lib/realtor/property-intel/demo";
 import type { PiData, Section, Target } from "@/lib/realtor/property-intel/types";
 import { getAuthHeaders } from "@/lib/api/fetch-client";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const BTN: CSSProperties = { minHeight: 36, padding: "0 14px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontWeight: 700, cursor: "pointer" };
@@ -33,7 +32,7 @@ function Block<T>({ id, title, s, children }: { id: string; title: string; s: Se
 }
 
 export function PropertyIntelScreen({ target }: { target: Target }) {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [data, setData] = useState<PiData | null>(null);
   const [demo, setDemo] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -41,9 +40,9 @@ export function PropertyIntelScreen({ target }: { target: Target }) {
 
   const load = useCallback(async () => {
     // DEMO nunca sustituye una respuesta del backend (ni un 401 real): solo si no hay Bearer (no se llama) y es el HQ sintético.
-    if (!getAuthHeaders().Authorization && isDemoAllowed() && target.id === HQ_PROPERTY_ID) { setDemo(true); setData(HQ_DEMO); return; }
+    if (!getAuthHeaders().Authorization && demoActive && target.id === HQ_PROPERTY_ID) { setDemo(true); setData(HQ_DEMO); return; }
     setData(await fetchAll(target));
-  }, [target]);
+  }, [target, demoActive]);
   useEffect(() => { if (access === "ok") void load(); }, [access, load]);
 
   if (access !== "ok") return <RealtorNotice reason={access} />;

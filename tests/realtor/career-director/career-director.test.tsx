@@ -17,7 +17,7 @@ beforeEach(() => {
 const open = (demo: boolean, status = 200) => {
   process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
   if (demo) process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-  mockApiFetch.mockResolvedValue({ status });
+  mockApiFetch.mockResolvedValue({ status, json: async () => ({ demo: true }) });
   return render(<CareerDirectorPanel />);
 };
 
@@ -58,7 +58,7 @@ describe("Career Director", () => {
   });
 
   it("interruptor apagado: no pregunta al backend ni pinta nada", () => {
-    mockApiFetch.mockResolvedValue({ status: 200 });
+    mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<CareerDirectorPanel />);
     expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", "apagado");
     expect(mockApiFetch).not.toHaveBeenCalled();

@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { isDemoAllowed } from "@/lib/realtor/config";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { fetchMiDia, type MiDia } from "@/lib/realtor/mi-dia/api";
 import { blockerText, COPY, lookup, TENANT_TZ, todayText, type Lang, type MiDiaCopy } from "@/lib/realtor/mi-dia/copy";
 import { DEMO_DESK, DEMO_LEADS, DEMO_LISTINGS } from "@/lib/realtor/mi-dia/demo";
 import { RealtorNotice } from "../RealtorNotice";
-import { useRealtorAccess } from "../useRealtorAccess";
+import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const card = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 10, padding: 20 } as const;
 
@@ -71,10 +70,10 @@ function Rows({ items }: { items: { id: string; main: string; sub: string }[] })
 }
 
 export function MiDiaPanel() {
-  const access = useRealtorAccess();
+  const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const broker = useBrokerView();
-  const demo = isDemoAllowed();
+  const demo = demoActive;
   const [real, setReal] = useState<MiDia | null>(null);
   useEffect(() => {
     if (access !== "ok" || demo) return;
