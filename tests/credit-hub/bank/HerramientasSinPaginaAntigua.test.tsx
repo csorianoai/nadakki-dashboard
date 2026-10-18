@@ -7,7 +7,7 @@ import HerramientasPage from "@/app/(forge)/credit-hub/bank-v2/solicitudes/[appl
 const ID = "APP-12B";
 const RUTA = path.join(process.cwd(), "app/(forge)/credit-hub/bank-v2/solicitudes/[applicationId]/herramientas/page.tsx");
 
-jest.mock("next/link", () => ({ __esModule: true, default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
+jest.mock("next/link", () => ({ __esModule: true, default: ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => <a href={href} {...rest}>{children}</a> }));
 jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({ useTenant: () => ({ apiTenantId: "t-1", tenantId: "t-1", loading: false }) }));
 jest.mock("@/app/(forge)/credit-hub/bank-v2/BancoV2Shell", () => ({
   useMarcaBanco: () => jest.requireActual("@/lib/dcc/marca").marcaDesdeBranding({ locale: "es-DO", currency: "DOP" }, "banco"),
