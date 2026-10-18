@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Evidencia PS-5-CARGA-PROYECTOS: panel /proyectos sin carga infinita ni error crudo.
+# Evidencia PS-6-DEMO-SIC-REPORTES: /sic/reportes sin datos de demostración disfrazados.
 set -euo pipefail
-npx jest tests/app/proyectos/panel-carga.test.tsx
-echo "RESULT_PS_5_CARGA_PROYECTOS=PASS"
+npx jest tests/app/sic/reportes-demo.test.tsx
+echo "RESULT_PS_6_DEMO_SIC_REPORTES=PASS"
