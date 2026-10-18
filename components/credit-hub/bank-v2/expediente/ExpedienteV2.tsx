@@ -10,17 +10,17 @@ import { DccPageMarco } from "@/components/dcc/DccPageMarco";
 import { DccSeccion } from "@/components/dcc/DccSeccion";
 import { SelloCalidad } from "@/components/dcc/SelloCalidad";
 import { getAuditTrail } from "@/lib/credit-hub/api/bankClient";
-import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import { useBankApplication, useBankCompliance } from "@/lib/credit-hub/hooks/useBankDecision";
 import { chKeys } from "@/lib/credit-hub/hooks/queryKeys";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import type { BankDocumentPayload, BankReviewPayload } from "@/lib/credit-hub/types/bank-views";
 import type { BankReviewApplication } from "@/lib/credit-hub/types/bankDecision";
 import { formatEntero, formatMoneda, type LocaleTenant } from "@/lib/dcc/formato";
-import { porcentaje, puntosPorcentuales } from "../comun/formato";
+import { porcentaje } from "../comun/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
-import { BANDA_TEXTO, RIESGO_TEXTO } from "../mesa/mesa";
-import { datosCabecera, estadoDocumento, textoActor, textoDecision, textoEstado, textoEvento, textoSeveridad } from "./expediente";
+import { BANDA_TEXTO } from "../mesa/mesa";
+import { datosCabecera, estadoDocumento, textoActor, textoDecision, textoEvento, textoSeveridad } from "./expediente";
+import { NOTA_SIN_DATO, PROXIMAMENTE, hechosComunes } from "./hechos";
 
 type Pestana = "resumen" | "documentos" | "cumplimiento" | "bitacora";
 const PESTANAS: Array<[Pestana, string]> = [
@@ -69,7 +69,8 @@ export function ExpedienteV2({ applicationId, marca, hrefVistaActual, hrefBandej
 
   const payload = appQ.data.application_payload as BankReviewPayload;
   const c = datosCabecera(payload);
-  const estado = textoEstado(extractDisplayStatus(payload.expediente_meta), appQ.data.state);
+  const hechos = hechosComunes(payload, appQ.data.state, f);
+  const estado = hechos.estado;
   const docs = (Array.isArray(payload.documents) ? payload.documents : []) as BankDocumentPayload[];
   const issues = cumplimientoQ.data?.issues ?? [];
 
@@ -90,16 +91,14 @@ export function ExpedienteV2({ applicationId, marca, hrefVistaActual, hrefBandej
             </span>
             {c.ciudad ? <span className={`text-xs ${DCC_CLASSES.subtle}`}>{c.ciudad}</span> : null}
           </div>
-          <dl className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <dl className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-7">
             <Hecho k="Vehículo" v={c.vehiculo} />
             <Hecho k="Dealer" v={c.dealer} />
             <Hecho k="Monto solicitado" v={formatMoneda(c.monto, f)} cifra />
             <Hecho k="Plazo" v={c.plazo != null ? `${formatEntero(c.plazo, f)} meses` : null} />
-            <Hecho
-              k="Tasa solicitada"
-              v={puntosPorcentuales(c.tasa, f)}
-            />
+            <Hecho k="Tasa solicitada" v={hechos.tasa} nota={NOTA_SIN_DATO.tasa} testid="expediente-tasa" />
             <Hecho k="Inicial" v={formatMoneda(c.inicial, f)} />
+            <Hecho k="Riesgo" v={hechos.riesgo} nota={NOTA_SIN_DATO.riesgo} testid="expediente-riesgo" />
           </dl>
         </section>
 
@@ -235,12 +234,17 @@ function fechaHora(iso: string, f: LocaleTenant): string {
       }).format(d);
 }
 
-function Hecho({ k, v, cifra }: { k: string; v: string | null; cifra?: boolean }) {
+function Hecho({ k, v, cifra, nota, testid }: { k: string; v: string | null; cifra?: boolean; nota?: string; testid?: string }) {
   return (
     <div className="min-w-0">
       <dt className={`text-[11px] font-semibold uppercase tracking-[0.06em] ${DCC_CLASSES.subtle}`}>{k}</dt>
       <dd className={`mt-1 ${cifra ? `${DCC_CLASSES.cifra} text-base` : "font-medium"}`}>
-        {v ?? (
+        {v == null && nota ? (
+          <span data-testid={testid}>
+            {PROXIMAMENTE}
+            <span className={`block text-[11px] font-normal ${DCC_CLASSES.subtle}`}>{nota}</span>
+          </span>
+        ) : v ?? (
           <SelloCalidad
             calidad={{
               estado: "no_disponible",
@@ -262,7 +266,7 @@ function Resumen({ payload, formato }: { payload: BankReviewPayload; formato: Lo
   const metricas: Array<{ k: string; v: string | null; cifra?: boolean }> = a
     ? [
         { k: "Score", v: a.score != null ? formatEntero(a.score, formato) : null, cifra: true },
-        { k: "Nivel de riesgo", v: RIESGO_TEXTO[a.risk_level] ?? null },
+        { k: "Nivel de riesgo", v: hechosComunes(payload, null, formato).riesgo },
         { k: "Banda del motor", v: BANDA_TEXTO[a.approval_band] ?? null },
         { k: "Deuda / ingreso", v: porcentaje(a.dti, formato) },
         { k: "Ingreso mensual", v: formatMoneda(m?.monthly_income, formato) },
