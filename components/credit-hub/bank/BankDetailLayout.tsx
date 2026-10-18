@@ -32,7 +32,8 @@ import { isBankNotesRole } from "@/lib/credit-hub/bank/bankExperienceHelpers";
 import { getEditHistory, modifiedFieldKeysFromHistory } from "@/lib/credit-hub/api/operationalClient";
 import { NOTA_SIN_DATO, PROXIMAMENTE, hechosComunes } from "@/components/credit-hub/bank-v2/expediente/hechos";
 import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
-import { LOCALE_POR_DEFECTO, type LocaleTenant } from "@/lib/dcc/formato";
+import { marcaDesdeBranding } from "@/lib/dcc/marca";
+import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
 import { useBankDecision } from "@/lib/credit-hub/hooks/useBankDecision";
@@ -71,7 +72,8 @@ function modeToDecision(mode: DecisionMode): BankDecisionType {
   return "APROBADO";
 }
 
-export function BankDetailLayout({ application, compliance, audit, counterOffer, formato = LOCALE_POR_DEFECTO }: BankDetailLayoutProps & { formato?: LocaleTenant }) {
+export function BankDetailLayout({ application, compliance, audit, counterOffer }: BankDetailLayoutProps) {
+  const formato = marcaDesdeBranding(useTenantBranding().data, "banco").formato;
   const { user } = useAuth();
   const { apiTenantId } = useTenant();
   const { can: actorCan, roleKey } = useCreditHubActor();

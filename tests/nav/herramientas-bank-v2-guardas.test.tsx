@@ -32,13 +32,9 @@ jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({ useTenant: () => ({ apiTe
 jest.mock("@/lib/hooks/useTenantBranding", () => ({
   useTenantBranding: () => ({ data: { display_name: "Banco Ejemplo", logo_url: null, locale: "es-DO", currency: "DOP" } }),
 }));
-jest.mock("@/components/credit-hub/bank/BankDetailLayout", () => ({ BankDetailLayout: () => <p>HERRAMIENTAS V1 VISIBLES</p> }));
-jest.mock("@/app/credit/CreditTenantGate", () => ({ CreditTenantGate: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-jest.mock("@/app/(forge)/credit-hub/bank/_components/BankApplicationOpsPanel", () => ({ BankApplicationOpsPanel: () => null }));
-jest.mock("@/lib/credit-hub/hooks/useBankDecision", () => ({
-  useBankApplication: () => ({ isLoading: false, error: null, data: { application_id: "APP-42", application_payload: {} } }),
-  useBankCompliance: () => ({ data: undefined, isLoading: false }),
-  useBankAuditTrail: () => ({ data: undefined }),
+jest.mock("@/app/(forge)/credit-hub/bank/applications/[applicationId]/page", () => ({
+  __esModule: true,
+  default: () => <p>HERRAMIENTAS V1 VISIBLES</p>,
 }));
 
 const resuelto = <T,>(v: T): Promise<T> => Object.assign(Promise.resolve(v), { status: "fulfilled", value: v }) as Promise<T>;

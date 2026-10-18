@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ExpedienteV2Page from "@/app/(forge)/credit-hub/bank-v2/solicitudes/[applicationId]/page";
-import HerramientasPage from "@/app/(forge)/credit-hub/bank-v2/solicitudes/[applicationId]/herramientas/page";
+import BankApplicationReviewPage from "@/app/(forge)/credit-hub/bank/applications/[applicationId]/page";
 
 const ID = "APP-12";
 let respuesta: Record<string, unknown> = {};
@@ -10,6 +10,7 @@ jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({ useTenant: () => ({ apiTe
 jest.mock("@/app/(forge)/credit-hub/bank-v2/BancoV2Shell", () => ({
   useMarcaBanco: () => jest.requireActual("@/lib/dcc/marca").marcaDesdeBranding({ locale: "es-DO", currency: "DOP" }, "banco"),
 }));
+jest.mock("@/lib/hooks/useTenantBranding", () => ({ useTenantBranding: () => ({ data: { locale: "es-DO", currency: "DOP" } }) }));
 jest.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: { id: "analista-1" } }) }));
 jest.mock("@/lib/credit-hub/hooks/useCreditHubActor", () => ({ useCreditHubActor: () => ({ can: () => true, roleKey: "bank_analyst" }) }));
 jest.mock("@/app/credit/CreditTenantGate", () => ({ CreditTenantGate: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
@@ -51,7 +52,7 @@ it("(a)+(d) con la misma respuesta, detalle y /herramientas muestran mismo estad
   expect(v2).toContain("12.25 %");
   expect(v2).toMatch(/Riesgo.*Medio/);
   cleanup();
-  const h = await textoPantalla(<HerramientasPage params={params} />);
+  const h = await textoPantalla(<BankApplicationReviewPage params={params} />);
   expect(h).toContain("12.25 %");
   expect(h).toMatch(/Riesgo: medio/);
   expect(screen.getByTestId("herramientas-estado").textContent).toBe("En revisión");
@@ -67,7 +68,7 @@ it("(b)+(c) sin tasa ni riesgo: «Próximamente» con la misma nota en los dos s
   expect(v2).toContain(NOTA_SIN_DATO.tasa);
   expect(v2).toContain(NOTA_SIN_DATO.riesgo);
   cleanup();
-  const h = await textoPantalla(<HerramientasPage params={params} />);
+  const h = await textoPantalla(<BankApplicationReviewPage params={params} />);
   expect(h).toContain("Próximamente");
   expect(screen.getByTestId("herramientas-tasa-nota").textContent).toBe(NOTA_SIN_DATO.tasa);
   expect(screen.getByTestId("herramientas-riesgo-nota").textContent).toBe(NOTA_SIN_DATO.riesgo);
