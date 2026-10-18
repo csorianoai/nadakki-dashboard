@@ -5,6 +5,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
+/** Datos de demostración fijos: no hay endpoint de notificaciones del tenant. Cada uno se muestra con badge DEMO. */
 const NOTIFICATIONS = [
   { id: 1, title: "Campana completada", desc: "Black Friday 2024 finalizo con exito", time: "Hace 2 horas", read: false },
   { id: 2, title: "Nuevo lead caliente", desc: "Carlos Garcia - Score 95", time: "Hace 5 horas", read: false },
@@ -12,11 +13,18 @@ const NOTIFICATIONS = [
   { id: 4, title: "Alerta de engagement", desc: "Post viral en Instagram +500%", time: "Hace 2 dias", read: true },
 ];
 
+function DemoBadge() {
+  return <span className="mr-2 rounded bg-amber-500/20 px-1.5 py-0.5 text-xs font-bold text-amber-300">DEMO</span>;
+}
+
 export default function NotificationsPage() {
   const unread = NOTIFICATIONS.filter(n => !n.read).length;
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/"><StatusBadge status={unread > 0 ? "warning" : "active"} label={unread + " sin leer"} size="lg" /></NavigationBar>
+      <div data-testid="notifications-demo-banner" role="note" className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+        <DemoBadge /> Panel sin backend vivo: estas notificaciones son ejemplos de demostración y no pertenecen a tu organización.
+      </div>
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-xl bg-yellow-500/20 border border-yellow-500/30"><Bell className="w-8 h-8 text-yellow-400" /></div>
@@ -25,11 +33,11 @@ export default function NotificationsPage() {
       </motion.div>
       <div className="space-y-3">
         {NOTIFICATIONS?.map((n, i) => (
-          <motion.div key={n.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
+          <motion.div key={n.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} data-testid="notification-item">
             <GlassCard className={`p-4 ${!n.read ? "border-l-2 border-l-yellow-500" : ""}`}>
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="flex items-center gap-2"><h3 className="font-bold text-white">{n.title}</h3>{!n.read && <div className="w-2 h-2 rounded-full bg-yellow-500" />}</div>
+                  <div className="flex items-center gap-2"><DemoBadge /><h3 className="font-bold text-white">{n.title}</h3>{!n.read && <div className="w-2 h-2 rounded-full bg-yellow-500" />}</div>
                   <p className="text-sm text-gray-400 mt-1">{n.desc}</p>
                   <p className="text-xs text-gray-500 mt-2">{n.time}</p>
                 </div>
