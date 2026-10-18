@@ -91,7 +91,9 @@ const QUICK_LINKS = [
 ] as const;
 
 export default function ProyectosDashboardPage() {
-  const { data: proyectos, isPending, isError, error, refetch } = useProyectos();
+  const { data: proyectos, isPending: queryPending, fetchStatus, isError, error, refetch } = useProyectos();
+  // Consulta inactiva (sin tenant activo) queda "pending" para siempre: no es carga.
+  const isPending = queryPending && fetchStatus !== "idle";
   const health = useProyectoHealth();
   const [loadingSlow, setLoadingSlow] = useState(false);
 
@@ -200,7 +202,7 @@ export default function ProyectosDashboardPage() {
 
       {health.isError ? (
         <div className="mb-8 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-          {(health.error as Error | null)?.message ?? "Salud Projects API sin respuesta"}
+          El indicador de salud de Proyectos no respondió. Los datos de la cartera no dependen de él; reintenta en unos momentos.
         </div>
       ) : null}
 
@@ -266,7 +268,7 @@ export default function ProyectosDashboardPage() {
           ) : (
             <>
               <StatusBadge status="error" label="/health" size="md" pulse={false} />
-              <p className="text-xs text-zinc-500">{health.error?.message ?? "Sin respuesta estable"}</p>
+              <p className="text-xs text-zinc-500">Sin respuesta estable</p>
             </>
           )}
         </GlassCard>
@@ -308,7 +310,8 @@ export default function ProyectosDashboardPage() {
                 <FolderKanban className="mx-auto h-12 w-12 text-amber-300 opacity-85" aria-hidden />
               </div>
               <div>
-                <p className="text-lg font-semibold text-white">Aún sin planos cargados para este lienzo.</p>
+                <p className="text-lg font-semibold text-white">Sin datos</p>
+                <p className="mt-1 text-sm text-zinc-300">Aún sin planos cargados para este lienzo.</p>
                 <p className="mt-2 max-w-lg text-sm text-zinc-500">
                   Sembramos la API con tu tenant — si la cuadrícula sigue vacía, valida políticas IAM. Mientras llegan los proyectos puedes lanzar nuevos footprints.
                 </p>
