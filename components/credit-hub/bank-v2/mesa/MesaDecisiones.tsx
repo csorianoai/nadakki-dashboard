@@ -9,14 +9,13 @@ import { DccPageMarco } from "@/components/dcc/DccPageMarco";
 import { DccSeccion } from "@/components/dcc/DccSeccion";
 import { SelloCalidad } from "@/components/dcc/SelloCalidad";
 import { useChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
-import { pendingQueueCount } from "@/lib/credit-hub/bank/bankFormat";
 import { isChPanelLoading } from "@/lib/credit-hub/hooks/chQueryPanel";
 import { useBankAnalytics } from "@/lib/credit-hub/hooks/useBankAnalytics";
 import { useBankQueue } from "@/lib/credit-hub/hooks/useBankQueue";
 import { currentGoalsPeriod } from "@/lib/credit-hub/api/goalsClient";
 import { useMonthlyGoals } from "@/lib/credit-hub/hooks/useMonthlyGoals";
 import { useTenant } from "@/lib/credit-hub/hooks/useTenant";
-import { formatEntero, formatMonedaCompacta } from "@/lib/dcc/formato";
+import { formatEntero } from "@/lib/dcc/formato";
 import type { MarcaDcc } from "@/lib/dcc/marca";
 import { porcentaje } from "../comun/formato";
 import { parcialSiLimite, proximamente } from "../comun/llano";
@@ -24,7 +23,7 @@ import { alertasMesa } from "./alertas";
 import { colaPorUrgencia, primerNombre, saludo } from "./mesa";
 import { MetasDelMes } from "./MetasDelMes";
 import { TarjetaCola } from "./TarjetaCola";
-import { useKpisBanco } from "./useKpisBanco";
+import { textosKpis, useKpisBanco } from "./useKpisBanco";
 import { nombreOIdentificadorOculto } from "../comun/nombres";
 
 /**
@@ -48,7 +47,7 @@ export type MesaProps = {
 
 /**
  * Mesa de decisiones (bank-v2). Mismas consultas que la Mesa actual: la cola
- * de la Bandeja, analytics/dashboard a 30 dias y kpis/portfolio + approval.
+ * de la Bandeja, analytics/dashboard a 30 dias (solo dealers) y los agregados de useKpisBanco.
  * Lo que el backend no expone (SLA, embudo, desembolsado, actividad del dia)
  * queda en "Próximamente" con una frase llana; el detalle tecnico, plegado.
  */
@@ -65,11 +64,9 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
   const cola = colaPorUrgencia(items);
   const altas = cola.filter((i) => i.priority === "ALTA").length;
   const analytics = analyticsQ.data;
-  const { portafolio, aprobacion } = kpisQ.data ?? {};
+  const k = textosKpis(kpisQ.data, formato);
   const cargandoCola = isChPanelLoading(colaQ, !!apiTenantId);
   const nombre = primerNombre(identidad.name);
-  // Sin analytics ni cola cargada no hay cifra: nunca un 0 por defecto.
-  const pendientes = analytics || colaQ.data ? pendingQueueCount(analytics, items) : null;
   const alertas = colaQ.data ? alertasMesa({ items, metas: metasQ.data?.goals ?? [], periodo: metasQ.data?.period ?? currentGoalsPeriod(), ahora }) : null;
   const corte = colaQ.dataUpdatedAt ? new Intl.DateTimeFormat(formato.locale, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(colaQ.dataUpdatedAt) : null;
 
@@ -193,26 +190,26 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
 
         <DccSeccion titulo="Indicadores" icono={Gauge} testId="mesa-kpis">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3 xl:grid-cols-6">
-            <DccKpiTile etiqueta="Solicitudes pendientes" valor={formatEntero(pendientes, formato)} calidad={pendientes != null ? null : proximamente()} />
-            <DccKpiTile etiqueta="Tasa de aprobación · 30 d" valor={porcentaje(analytics?.approval_rate, formato)} calidad={analytics ? null : proximamente()} />
+            <DccKpiTile etiqueta="Ofertas pendientes" valor={k.pendientes} calidad={k.pendientes != null ? null : proximamente()} />
+            <DccKpiTile etiqueta="Tasa de aprobación" valor={k.tasa} calidad={k.tasa != null ? null : proximamente()} />
             <DccKpiTile
               etiqueta="Respuesta media"
-              valor={aprobacion?.avg_response_hours != null ? new Intl.NumberFormat(formato.locale, { maximumFractionDigits: 1 }).format(aprobacion.avg_response_hours) : null}
+              valor={k.tiempoMedio}
               unidad="h"
               nota="Sin SLA configurado para comparar"
-              calidad={aprobacion?.avg_response_hours != null ? null : proximamente()}
+              calidad={k.tiempoMedio != null ? null : proximamente()}
             />
             <DccKpiTile
               etiqueta="Aprobadas"
-              valor={formatEntero(aprobacion?.approved_count, formato)}
-              nota={aprobacion?.declined_count != null ? `${formatEntero(aprobacion.declined_count, formato)} rechazadas` : null}
-              calidad={aprobacion?.approved_count != null ? null : proximamente()}
+              valor={k.aprobadas}
+              nota={k.rechazadas != null ? `${k.rechazadas} rechazadas` : null}
+              calidad={k.aprobadas != null ? null : proximamente()}
             />
             <DccKpiTile
               etiqueta="Monto aprobado"
-              valor={formatMonedaCompacta(portafolio?.total_approved_amount, formato)}
-              nota={portafolio?.accepted_offers != null ? `${formatEntero(portafolio.accepted_offers, formato)} ofertas aceptadas` : null}
-              calidad={portafolio?.total_approved_amount != null && formato.currency ? null : proximamente()}
+              valor={k.monto}
+              nota={k.ofertasAceptadas != null ? `${k.ofertasAceptadas} ofertas aceptadas` : null}
+              calidad={k.monto != null ? null : proximamente()}
             />
             <DccKpiTile etiqueta="Desembolsado" valor={null} calidad={proximamente()} />
           </div>
