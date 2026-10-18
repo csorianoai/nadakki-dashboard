@@ -15,7 +15,7 @@ export default function AdminTenantDetailPage() {
       <NavigationBar backHref="/tenants" />
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="m-0 text-2xl font-bold text-white">Tenant</h1>
+          <h1 className="m-0 text-2xl font-bold text-white">Organización</h1>
           <p className="m-0 font-mono text-sm text-slate-400">{id || "—"}</p>
         </div>
         {COCKPIT_CONSOLIDATION_FLAGS.COCKPIT_CONSOLIDATION_ENABLED && id ? (
