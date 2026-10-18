@@ -25,7 +25,8 @@ jest.mock("@/components/nav/BuscadorNavegacion", () => ({ __esModule: true, EVEN
 jest.mock("@/components/forge/auth/UserMenu", () => ({ __esModule: true, UserMenu: () => <button type="button">Usuario</button> }));
 jest.mock("@/components/forge/auth/TenantSwitcher", () => ({ __esModule: true, TenantSwitcher: () => null }));
 jest.mock("@/components/forge/layout/ProyectosFinanzasSidebarLinks", () => ({ __esModule: true, ProyectosFinanzasSidebarLinks: () => null }));
-jest.mock("@/components/realtor/useRealtorAccess", () => ({ __esModule: true, useRealtorAccess: () => "apagado" }));
+// Superadmin con todas las puertas abiertas (Real Estate incluido): lo mismo que USUARIO.realtorOk.
+jest.mock("@/components/realtor/useRealtorAccess", () => ({ __esModule: true, useRealtorAccess: () => "ok" }));
 
 const sesion = (role_key: string, cores: string[]) =>
   ({
@@ -35,7 +36,7 @@ const sesion = (role_key: string, cores: string[]) =>
   }) as unknown as AuthContextValue;
 const SUPER = sesion("platform_superadmin", ["legal", "marketing", "credit"]);
 const conSesion = (ui: React.ReactNode) => <AuthContext.Provider value={SUPER}>{ui}</AuthContext.Provider>;
-const USUARIO: ContextoUsuario = { roles: SUPER.allRoles, subscribedCores: SUPER.tenant?.subscribed_cores };
+const USUARIO: ContextoUsuario = { roles: SUPER.allRoles, subscribedCores: SUPER.tenant?.subscribed_cores, realtorOk: true };
 const mod = (id: string) => MODULOS.find((m) => m.id === id)!;
 const conShell = MODULOS.filter((m) => m.carcasa === "comun");
 const hrefs = (xs: { href: string }[]) => xs.map((x) => x.href);
