@@ -40,6 +40,8 @@ export const OFF_MENU_ROUTES: readonly { href: string; reason: string }[] = [
   { href: "/realtor", reason: "Inicio del armazón: la barra no lo lista." },
   ...OFF_BAR_CENTERS.filter((c) => c.href).map((c) => ({ href: c.href as string, reason: "Se llega desde Contactos (rol de propietario)." })),
   { href: "/realtor/smart-calendar", reason: "Bloque fijo de la barra (Smart Calendar)." },
+  { href: "/realtor/demand-radar/senales", reason: "Subpágina de Mercado (Señales de mercado): oculta sin entitlement y, por ahora, solo se abre por URL." },
+  { href: "/realtor/property-intel/[propertyId]", reason: "Ficha de detalle de una propiedad o unidad: se abre por URL con su identificador, no es un destino de la barra." },
 ];
 
 /** Grupos visibles: oculta lo que exige un rol que no se tiene (fail-closed) y filtra por nombre. */

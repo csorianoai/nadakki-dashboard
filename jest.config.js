@@ -12,9 +12,11 @@ module.exports = {
   ],
   modulePathIgnorePatterns: ["<rootDir>/legacy/"],
   moduleNameMapper: {
+    // Las hojas de estilo van primero para que "^@/(.*)$" no las resuelva
+    // como modulos JS (p. ej. import "@/styles/legal-research-papel-blanco.css").
+    "\\.(css|scss|sass|less)$": "<rootDir>/tests/__mocks__/styleMockEmpty.js",
     "^@/(.*)$": "<rootDir>/$1",
     "^next/font/local$": "<rootDir>/tests/__mocks__/nextFontLocal.js",
-    "^react-pdf/dist/.*\\.css$": "<rootDir>/tests/__mocks__/styleMockEmpty.js",
   },
   setupFiles: ["<rootDir>/tests/jest-env.js"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.tsx"],

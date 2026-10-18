@@ -75,7 +75,8 @@ describe("DeadlineNotificationBanner", () => {
     });
     wrap(<DeadlineNotificationBanner />);
     expect(screen.getByTestId("deadline-notification-banner")).toBeInTheDocument();
-    expect(screen.getByText("1 plazo próximo a vencer")).toBeInTheDocument();
+    // Plazo perentorio a <=3 dias: el banner escala a "atención inmediata" (#187).
+    expect(screen.getByText("1 plazo requiere atención inmediata")).toBeInTheDocument();
     expect(screen.getByText(/Pérez v\. García/)).toBeInTheDocument();
   });
 
@@ -95,7 +96,45 @@ describe("DeadlineNotificationBanner", () => {
       isLoading: false,
     });
     wrap(<DeadlineNotificationBanner />);
+    expect(screen.getByText("2 plazos requieren atención inmediata")).toBeInTheDocument();
+  });
+
+  it("uses 'próximo a vencer' wording for a single non-peremptory deadline", () => {
+    const inFive = new Date();
+    inFive.setDate(inFive.getDate() + 5);
+    const dl = {
+      ...DL_BASE,
+      effective_deadline_date: inFive.toISOString().slice(0, 10),
+      is_peremptory: false,
+    };
+    mockUseUpcoming.mockReturnValue({
+      data: { deadlines: [dl], count: 1, horizon_days: 7 },
+      isLoading: false,
+    });
+    wrap(<DeadlineNotificationBanner />);
+    expect(screen.getByText("1 plazo próximo a vencer")).toBeInTheDocument();
+    expect(screen.queryByText(/atención inmediata/)).not.toBeInTheDocument();
+  });
+
+  it("uses 'próximos a vencer' wording for multiple non-peremptory deadlines", () => {
+    const inFive = new Date();
+    inFive.setDate(inFive.getDate() + 5);
+    const dateStr = inFive.toISOString().slice(0, 10);
+    const dl1 = { ...DL_BASE, effective_deadline_date: dateStr, is_peremptory: false };
+    const dl2 = {
+      ...DL_BASE,
+      deadline_id: "dl-002",
+      case_title: "Caso B",
+      effective_deadline_date: dateStr,
+      is_peremptory: false,
+    };
+    mockUseUpcoming.mockReturnValue({
+      data: { deadlines: [dl1, dl2], count: 2, horizon_days: 7 },
+      isLoading: false,
+    });
+    wrap(<DeadlineNotificationBanner />);
     expect(screen.getByText("2 plazos próximos a vencer")).toBeInTheDocument();
+    expect(screen.queryByText(/atención inmediata/)).not.toBeInTheDocument();
   });
 
   it("shows peremptory label", () => {

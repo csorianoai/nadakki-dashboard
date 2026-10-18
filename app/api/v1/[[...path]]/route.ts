@@ -13,7 +13,7 @@ const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
  * `detail` del backend dejaba de ser un campo para pasar a ser texto plano
  * dentro de `details`:
  *
- *   directo  api.nadakki.com/api/v1/contable/fiscal/documents
+ *   directo  <backend de produccion>/api/v1/contable/fiscal/documents
  *            {"detail":"missing_auth"}
  *   proxy    dashboard.nadakki.com/api/v1/contable/fiscal/documents
  *            {"error":"Upstream error 401","details":"{\"detail\":\"missing_auth\"}"}
