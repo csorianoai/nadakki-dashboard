@@ -135,7 +135,7 @@ const TIPOS_COSTO_MAPAAL: TipoCosto[] = [
     id: "otros",
     nombre: "Otros",
     descripcion:
-      "sólo para costos directamente atribuibles al vehículo que no encajen correctamente en las categorías anteriores. Evitá usar “Otros” como categoría genérica por comodidad.",
+      "sólo para costos directamente atribuibles al vehículo que no encajen correctamente en las categorías anteriores. Evita usar “Otros” como categoría genérica por comodidad.",
   },
 ];
 
@@ -157,14 +157,14 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
     titulo: "Primeros pasos: primero el stock existente, después la operación normal",
     parrafos: ["El orden importa."],
     pasos: [
-      "Cargá primero todos los vehículos que Mapaal ya tenía antes de empezar a operar en Nadakki como SALDOS INICIALES.",
-      "Para esos vehículos usá is_opening=true. La contrapartida contable del inventario es 3020 — Saldos iniciales, no Proveedores. El asiento de apertura es Debe 1220 — Inventario de vehículos / Haber 3020 — Saldos iniciales.",
-      "Recién después de terminar y revisar esa carga inicial, empezá a registrar compras, reparaciones, otros costos, ventas, cobros y pagos de la operación normal.",
+      "Carga primero todos los vehículos que Mapaal ya tenía antes de empezar a operar en Nadakki como SALDOS INICIALES.",
+      "Para esos vehículos usa is_opening=true. La contrapartida contable del inventario es 3020 — Saldos iniciales, no Proveedores. El asiento de apertura es Debe 1220 — Inventario de vehículos / Haber 3020 — Saldos iniciales.",
+      "Recién después de terminar y revisar esa carga inicial, empieza a registrar compras, reparaciones, otros costos, ventas, cobros y pagos de la operación normal.",
     ],
     pasosInicio: [
-      "Descargá la plantilla y cargá todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
-      "Revisá la carga antes de aplicarla.",
-      "Después registrá compras, reparaciones, ventas, cobros y pagos del día a día.",
+      "Descarga la plantilla y carga todos los vehículos que ya tenías, marcando 'stock inicial = SÍ' y completando la fecha de ingreso de cada uno (así el sistema calcula los días en stock).",
+      "Revisa la carga antes de aplicarla.",
+      "Después registra compras, reparaciones, ventas, cobros y pagos del día a día.",
     ],
     advertencia:
       "No uses una compra ficticia para representar un vehículo que Mapaal ya poseía: eso fabricaría una deuda con un proveedor que no existe.",
@@ -179,14 +179,14 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
       version: "v4",
       etiqueta: "Descargar plantilla de carga (Excel)",
       descripcion:
-        "Es la planilla donde listás los vehículos que Mapaal ya tenía, para cargarlos como saldos iniciales antes de empezar a operar.",
+        "Es la planilla donde listas los vehículos que Mapaal ya tenía, para cargarlos como saldos iniciales antes de empezar a operar.",
     },
   },
   {
     id: "alta-vehiculo",
     titulo: "Cómo dar de alta un vehículo",
     parrafos: [
-      "Para cada vehículo cargá, como mínimo, los datos de identificación y operación que correspondan: marca, modelo, año, dominio/patente y n.º de stock interno.",
+      "Para cada vehículo carga, como mínimo, los datos de identificación y operación que correspondan: marca, modelo, año, dominio/patente y n.º de stock interno.",
     ],
     vinetas: [
       "El precio oficial en ARS es obligatorio para que el vehículo pueda quedar en estado DISPONIBLE.",
@@ -195,7 +195,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
       "No reemplaces el precio oficial en ARS por una referencia en dólares.",
     ],
     advertencia:
-      "Antes de marcar un vehículo como DISPONIBLE, verificá que el precio oficial ARS, el dominio y el n.º de stock sean correctos.",
+      "Antes de marcar un vehículo como DISPONIBLE, verifica que el precio oficial ARS, el dominio y el n.º de stock sean correctos.",
   },
   {
     id: "costos",
@@ -213,20 +213,20 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
       "Por decisión de César para Mapaal, basada en el criterio adoptado de RT 54 FACPCE:",
     ],
     vinetas: [
-      "Los costos capitalizables se cargan SIN IVA recuperable: registrá el neto gravado cuando el IVA sea recuperable.",
+      "Los costos capitalizables se cargan SIN IVA recuperable: registra el neto gravado cuando el IVA sea recuperable.",
       "El IVA recuperable no forma parte del costo del vehículo.",
       "Un impuesto no recuperable sí puede integrar el costo cuando corresponda.",
       "La categoría “comisión” dentro de costos significa exclusivamente comisión de compra.",
       "Las comisiones de venta no aumentan el costo del vehículo: son gasto de venta y deben tratarse fuera del costo del inventario.",
     ],
     advertencia:
-      "Si un comprobante mezcla conceptos, separá el importe que realmente corresponde al costo capitalizable antes de cargarlo.",
+      "Si un comprobante mezcla conceptos, separa el importe que realmente corresponde al costo capitalizable antes de cargarlo.",
   },
   {
     id: "venta",
     titulo: "Venta",
     parrafos: [
-      "Al vender un vehículo, registrá la venta sobre el vehículo correcto y su precio oficial en ARS. La contabilidad debe reconocer en el mismo ciclo:",
+      "Al vender un vehículo, registra la venta sobre el vehículo correcto y su precio oficial en ARS. La contabilidad debe reconocer en el mismo ciclo:",
     ],
     asientos: [
       {
@@ -259,7 +259,7 @@ const BLOQUES_MAPAAL: BloqueGuia[] = [
         concepto: "si entra por banco",
       },
     ],
-    advertencia: "Usá el medio real del cobro; no elijas la cuenta contable libremente.",
+    advertencia: "Usa el medio real del cobro; no elijas la cuenta contable libremente.",
   },
   {
     id: "pago",
@@ -293,14 +293,14 @@ const MAPAAL: ContenidoCentroOperativo = {
   tenant: "mapaal",
   titulo: "Guía de carga y operación inicial de Mapaal",
   entrada:
-    "Qué hacer, en qué orden, y qué reglas contables están detrás. Si una pantalla te dice que algo falta, acá está por qué.",
+    "Qué hacer, en qué orden, y qué reglas contables están detrás. Si una pantalla te dice que algo falta, aquí está por qué.",
   bloques: BLOQUES_MAPAAL,
   tiposCostoIntro: "Tipos de costo:",
   tiposCosto: TIPOS_COSTO_MAPAAL,
   cuentasIntro: "El plan operativo inicial de Mapaal tiene 8 cuentas:",
   cuentas: CUENTAS_MAPAAL,
   reglaFinal:
-    "Primero documentá correctamente el hecho real —vehículo, costo, venta, cobro o pago— y dejá que el sistema derive la cuenta contable prevista. No inventes cuentas, monedas, proveedores ni importes para “hacer cuadrar” una operación.",
+    "Primero documenta correctamente el hecho real —vehículo, costo, venta, cobro o pago— y deja que el sistema derive la cuenta contable prevista. No inventes cuentas, monedas, proveedores ni importes para “hacer cuadrar” una operación.",
 };
 
 /**

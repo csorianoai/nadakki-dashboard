@@ -35,7 +35,7 @@ export const AYUDA_POR_TIPO_DE_COSTO: Record<string, string> = {
   commission:
     "Comisión de compra: comisión pagada para adquirir el vehículo. Es costo del inventario.",
   other:
-    "Otros: sólo para costos directamente atribuibles al vehículo que no encajen correctamente en las categorías anteriores. Evitá usar “Otros” como categoría genérica por comodidad.",
+    "Otros: sólo para costos directamente atribuibles al vehículo que no encajen correctamente en las categorías anteriores. Evita usar “Otros” como categoría genérica por comodidad.",
 };
 
 /** Cierre de la seccion 3 de la guia. */
@@ -58,7 +58,7 @@ export const REGLAS_CONTABLES_BASE = "Criterio contable adoptado (RT 54 FACPCE):
 
 /** Las cinco reglas de la seccion 4, en su orden. */
 export const REGLAS_CONTABLES = [
-  "Los costos capitalizables se cargan SIN IVA recuperable: registrá el neto gravado cuando el IVA sea recuperable.",
+  "Los costos capitalizables se cargan SIN IVA recuperable: registra el neto gravado cuando el IVA sea recuperable.",
   "El IVA recuperable no forma parte del costo del vehículo.",
   "Un impuesto no recuperable sí puede integrar el costo cuando corresponda.",
   "La categoría “comisión” dentro de costos significa exclusivamente comisión de compra.",
@@ -67,4 +67,4 @@ export const REGLAS_CONTABLES = [
 
 /** Cierre de la seccion 4 de la guia. */
 export const REGLAS_CONTABLES_CIERRE =
-  "Si un comprobante mezcla conceptos, separá el importe que realmente corresponde al costo capitalizable antes de cargarlo.";
+  "Si un comprobante mezcla conceptos, separa el importe que realmente corresponde al costo capitalizable antes de cargarlo.";

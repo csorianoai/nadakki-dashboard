@@ -146,7 +146,7 @@ export function CostosVehiculoPanel({
     const datos = { ...form, incurred_at: iso ?? "" };
     const found = validateCostForm(datos, locale.currency);
     if (fecha.trim() && !iso) {
-      found.incurred_at = `La fecha no es válida. Escribila como ${patronFecha(locale)}.`;
+      found.incurred_at = `La fecha no es válida. Escríbela como ${patronFecha(locale)}.`;
     }
     setErrors(found);
     if (Object.keys(found).length > 0) return;
@@ -364,7 +364,7 @@ export function CostosVehiculoPanel({
               <span className="block text-xs text-nk-fg-muted">
                 {form.is_opening
                   ? "Stock que ya tenías: el costo se registra como saldo inicial (3020), no como compra nueva."
-                  : "Tildalo si este vehículo ya estaba en stock. Si no, se registra como compra nueva (2010 — Proveedores)."}
+                  : "Márcalo si este vehículo ya estaba en stock. Si no, se registra como compra nueva (2010 — Proveedores)."}
               </span>
             </span>
           </label>

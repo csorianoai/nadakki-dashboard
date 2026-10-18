@@ -40,7 +40,7 @@ export const FISCAL_DISPATCH_CODES = {
 export const ARCA_TITULO = "Facturación electrónica: se gestiona en ARCA";
 
 export const ARCA_DETALLE =
-  "Para un tenant de Argentina, los comprobantes electrónicos se emiten en ARCA. Esta plataforma no los genera y no hay nada que configurar acá.";
+  "Para un tenant de Argentina, los comprobantes electrónicos se emiten en ARCA. Esta plataforma no los genera y no hay nada que configurar aquí.";
 
 export type EstadoFiscal =
   /** El paquete fiscal RD esta operativo: NCF y DGII 606/607. */

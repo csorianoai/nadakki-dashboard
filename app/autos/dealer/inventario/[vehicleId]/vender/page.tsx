@@ -63,7 +63,7 @@ export default function DealerVehicleSalePage() {
         <p className="animate-pulse text-sm text-nk-fg-muted">Cargando acceso…</p>
       ) : !allowed ? (
         <p role="alert" data-testid="venta-bloqueada" className="text-sm text-nk-fg">
-          No tenés permiso para registrar ventas.
+          No tienes permiso para registrar ventas.
         </p>
       ) : (
         <form onSubmit={submit} className="space-y-3 rounded-r-sm border border-nk-border bg-nk-surface p-4" data-testid="venta-form">
@@ -92,7 +92,7 @@ export default function DealerVehicleSalePage() {
           {errors.currency ? <p role="alert" data-testid="venta-sin-moneda" className="text-sm text-nk-fg">{errors.currency}</p> : null}
           {venta.isError ? (
             <p role="alert" data-testid="venta-error" className="text-sm text-nk-fg">
-              No se pudo registrar la venta. Probá de nuevo en unos minutos; si sigue igual, avisá a soporte.
+              No se pudo registrar la venta. Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte.
               <DetalleTecnico>
                 <code>{reason}</code>
               </DetalleTecnico>

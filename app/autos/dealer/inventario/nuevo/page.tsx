@@ -60,7 +60,7 @@ export default function DealerVehicleNuevoPage() {
         router.push(`/autos/dealer/inventario/${encodeURIComponent(id)}`);
         return;
       }
-      setAck("Vehículo creado. No pudimos abrir su ficha; buscalo en el inventario.");
+      setAck("Vehículo creado. No pudimos abrir su ficha; búscalo en el inventario.");
     } catch (error) {
       if (error instanceof AccessApiError) {
         setReasonCode(error.reason_code ?? `HTTP_${error.status}`);
@@ -89,7 +89,7 @@ export default function DealerVehicleNuevoPage() {
 
       {!context ? (
         <div role="alert" data-testid="nuevo-sin-contexto" className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg">
-          No podés cargar vehículos todavía: no pudimos identificar tu concesionario.
+          No puedes cargar vehículos todavía: no pudimos identificar tu concesionario.
           <DetalleTecnico>
             <code>{resolveDealerAccessContext().reason_code}</code>
           </DetalleTecnico>
@@ -108,7 +108,7 @@ export default function DealerVehicleNuevoPage() {
           }
           className="rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg"
         >
-          Tu usuario no puede cargar vehículos. Si creés que es un error, pedile a quien administra tu cuenta que
+          Tu usuario no puede cargar vehículos. Si crees que es un error, pide a quien administra tu cuenta que
           revise tus permisos.
           <DetalleTecnico>
             <code>

@@ -123,7 +123,7 @@ export default function DealerVehicleRegisterPage() {
         >
           <h2 className="font-manrope text-lg font-bold text-nk-fg">No se pudo verificar el acceso</h2>
           <p className="mt-1 text-sm text-nk-fg-muted">
-            No pudimos confirmar tu permiso para registrar. Probá de nuevo en unos minutos.
+            No pudimos confirmar tu permiso para registrar. Prueba de nuevo en unos minutos.
           </p>
           <DetalleTecnico>
             <code>{access.error.reason_code ?? `HTTP_${access.error.status}`}</code>
@@ -163,7 +163,7 @@ export default function DealerVehicleRegisterPage() {
         <div data-testid="dealer-register-ready" className="space-y-6">
           {formError ? (
             <div role="alert" data-testid="dealer-register-post-error" className="text-sm text-nk-fg">
-              No se pudo guardar el registro. Revisá los datos y probá de nuevo; si sigue igual, avisá a soporte.
+              No se pudo guardar el registro. Revisa los datos y prueba de nuevo; si sigue igual, avisa a soporte.
               <DetalleTecnico>
                 <code>{formError.reason_code}</code>
               </DetalleTecnico>

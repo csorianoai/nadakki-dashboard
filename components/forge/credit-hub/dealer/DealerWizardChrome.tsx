@@ -15,7 +15,7 @@ const STEP_LABELS = ["1 Solicitante", "2 Consentimiento", "3 Vehículo", "4 Revi
 export function DealerWizardChrome({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { tenantConfig } = useTenantConfig();
-  const { stepIndex, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError } = useDealerWizard();
+  const { stepIndex, isDirty, goNext, goPrev, saveDraftToStorage, submitApplication, canAdvance, isSubmitting, submitError } = useDealerWizard();
   const [exitOpen, setExitOpen] = useState(false);
 
   const handleExitConfirm = () => {
@@ -48,7 +48,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
             <button
               type="button"
               className="text-left text-forge-xs font-medium text-forgeBrand-600 underline-offset-2 hover:underline"
-              onClick={() => setExitOpen(true)}
+              onClick={() => (isDirty ? setExitOpen(true) : router.push("/credit-hub/dealer"))}
             >
               ← Volver al panel
             </button>
@@ -115,7 +115,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
         open={exitOpen}
         onClose={() => setExitOpen(false)}
         title="¿Guardar borrador y salir?"
-        description="Tu progreso se guarda en este dispositivo cada 10 segundos y al confirmar."
+        description="Tienes cambios sin guardar en esta solicitud."
         footer={
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setExitOpen(false)}>
@@ -131,8 +131,7 @@ export function DealerWizardChrome({ children }: { children: React.ReactNode }) 
         }
       >
         <p className="text-forge-sm text-forgeGray-600">
-          Si sales sin guardar, los datos no enviados pueden perderse en otro navegador o dispositivo. Usa &quot;Guardar borrador y salir&quot; para
-          volcar ahora en el almacenamiento local.
+          Si sales sin guardar, los cambios de esta solicitud se descartan. Usa &quot;Guardar borrador y salir&quot; para conservarlos.
         </p>
       </Modal>
     </div>
