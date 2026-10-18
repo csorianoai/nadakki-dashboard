@@ -49,22 +49,22 @@ describe("SIC › Reportes", () => {
   it("(c) con respuesta vacía muestra ausencia explícita y ningún literal de demostración", async () => {
     mockFetchExp.mockResolvedValue([]);
     const { container } = render(<SicReportesPage />);
-    await waitFor(() => expect(screen.getByText(/Sin expedientes/i)).toBeTruthy());
-    expect(container.textContent).not.toMatch(/CLI-00\d|EXP-MOCK/);
+    await waitFor(() => expect(screen.getByText(/no hay datos que reportar/i)).toBeTruthy());
+    expect(container.textContent).not.toMatch(/CLI-00\d|EXP-MOCK|Salario|Inversiones/);
   });
 
   it("(d) con error muestra mensaje y no datos inventados", async () => {
     mockFetchExp.mockRejectedValue(new Error("fallo 500"));
     const { container } = render(<SicReportesPage />);
     await waitFor(() => expect(screen.getByText(/fallo 500/)).toBeTruthy());
-    expect(container.textContent).not.toMatch(/CLI-00\d|EXP-MOCK|datos de respaldo/i);
+    expect(container.textContent).not.toMatch(/CLI-00\d|EXP-MOCK|Salario|Inversiones|datos de respaldo/i);
   });
 
   it("(a) todo literal de demostración renderizado lleva badge DEMO", async () => {
     mockFetchExp.mockResolvedValue([]);
     const { container } = render(<SicReportesPage />);
-    await waitFor(() => expect(screen.getByText(/Sin expedientes/i)).toBeTruthy());
-    const demoLiteral = /CLI-00\d|EXP-MOCK/;
+    await waitFor(() => expect(screen.getByText(/no hay datos que reportar/i)).toBeTruthy());
+    const demoLiteral = /CLI-00\d|EXP-MOCK|Salario|Inversiones/;
     const walk = (el: Element): void => {
       if (demoLiteral.test(el.textContent || "")) {
         expect(el.closest("[data-demo]") || el.querySelector("[data-demo]")).toBeTruthy();
