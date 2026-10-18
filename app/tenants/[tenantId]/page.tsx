@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Building2 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import GoogleAdsTenantReadinessCard from "@/components/tenants/GoogleAdsTenantReadinessCard";
 import {
   getGoogleAdsTenantReadiness,
@@ -71,7 +72,7 @@ export default function TenantDetailPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white m-0">Tenant</h1>
-          <p className="text-slate-400 m-0 text-sm font-mono">{tenantId || "—"}</p>
+          <p className="text-slate-400 m-0 text-sm"><TenantLabel tenantId={tenantId || null} /></p>
         </div>
       </div>
 

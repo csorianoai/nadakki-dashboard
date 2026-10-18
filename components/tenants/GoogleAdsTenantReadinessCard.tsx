@@ -2,6 +2,7 @@
 
 import { Loader2, RefreshCw } from "lucide-react";
 import GlassCard from "@/components/ui/GlassCard";
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import {
   campaignStatusClass,
   overallBadgeClass,
@@ -170,7 +171,7 @@ export default function GoogleAdsTenantReadinessCard({
             </details>
           ) : null}
 
-          <p className="text-[10px] text-slate-600 m-0 font-mono">tenant: {tenantId}</p>
+          <p className="text-[10px] text-slate-600 m-0">Tenant: <TenantLabel tenantId={tenantId} /></p>
         </div>
       ) : (
         <p className="text-sm text-slate-500 mt-4 m-0">No readiness data.</p>

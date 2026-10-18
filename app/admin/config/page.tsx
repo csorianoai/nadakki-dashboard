@@ -6,6 +6,7 @@ import { Settings, Save, RefreshCw, Loader2 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
+import { TenantLabel } from "@/components/ui/TenantLabel";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
@@ -129,7 +130,7 @@ export default function AdminConfigPage() {
           <div className="mb-6">
             <label className="block text-gray-400 text-sm mb-2">Organización</label>
             <div className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white">
-              {tenantId ?? "—"}
+              <TenantLabel />
             </div>
           </div>
 
