@@ -163,7 +163,7 @@ describe("pantalla de herramientas: todos sus enlaces de ida y vuelta", () => {
   const RAIZ = process.cwd();
   /** Toda la pantalla v1 que se monta en /herramientas: la página, el panel de operaciones y BankDetailLayout con sus pestañas. */
   const FUENTES = [
-    "app/(forge)/credit-hub/bank/applications/[applicationId]/page.tsx",
+    "app/(forge)/credit-hub/bank-v2/solicitudes/[applicationId]/herramientas/page.tsx",
     "app/(forge)/credit-hub/bank/_components/BankApplicationOpsPanel.tsx",
     "app/credit/CreditTenantGate.tsx",
     "components/credit-hub/bank/BankDetailLayout.tsx",
@@ -181,12 +181,13 @@ describe("pantalla de herramientas: todos sus enlaces de ida y vuelta", () => {
   function destinos(fuente: string): string[] {
     const texto = fs.readFileSync(path.join(RAIZ, fuente), "utf8");
     const out: string[] = [];
-    for (const m of texto.matchAll(/(?:href\s*=\s*\{?\s*|\.(?:push|replace)\(\s*|redirect\(\s*)["'`](\/[^"'`]*)["'`]/g)) out.push(m[1]!);
+    for (const m of texto.matchAll(/(?:href\s*=\s*\{?\s*|\.(?:push|replace)\(\s*|redirect\(\s*)["'`](\/[^"'`]*)["'`]/g)) out.push(m[1]!.replace("${encodeURIComponent(applicationId)}", ID));
     return out;
   }
   /** Destinos conocidos y trazados; si alguien añade un enlace nuevo a la pantalla v1 este test obliga a trazarlo. */
   const TRAZADOS: Record<string, string> = {
     "/credit-hub/bank/applications": BANDEJA, // BankDetailLayout «Volver a la bandeja» (307 -> bandeja)
+    [EXPEDIENTE]: EXPEDIENTE, // herramientas «Volver al expediente»: enlace de vuelta explícito, directo (sin redirección)
     "/tenants": "/tenants", // CreditTenantGate «elegir tenant»
   };
 
@@ -202,6 +203,6 @@ describe("pantalla de herramientas: todos sus enlaces de ida y vuelta", () => {
   it.each(Object.entries(TRAZADOS))("%s acaba en %s: nunca en el expediente sin haber mostrado las herramientas", (href, final) => {
     const cadena = seguir(href);
     expect(cadena[cadena.length - 1]).toBe(final);
-    expect(cadena[cadena.length - 1]).not.toMatch(/^\/credit-hub\/bank-v2\/solicitudes\/[^/]+$/);
+    if (href !== EXPEDIENTE) expect(cadena[cadena.length - 1]).not.toMatch(/^\/credit-hub\/bank-v2\/solicitudes\/[^/]+$/);
   });
 });
