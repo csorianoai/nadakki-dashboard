@@ -4,14 +4,9 @@ import { Target, TrendingUp, Users, Star } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import DemoPanel from "@/components/leads/DemoPanel";
+import { DEMO_LEADS } from "@/lib/leads/demo-data";
 
-const LEADS = [
-  { name: "Carlos Garcia", company: "Tech Solutions", score: 92, status: "hot" },
-  { name: "Maria Lopez", company: "Startup Inc", score: 85, status: "warm" },
-  { name: "Juan Perez", company: "Corp MX", score: 78, status: "warm" },
-  { name: "Ana Martinez", company: "Fintech Pro", score: 95, status: "hot" },
-  { name: "Roberto Silva", company: "Digital Agency", score: 65, status: "cold" },
-];
 
 const COLORS = { hot: "#ef4444", warm: "#f59e0b", cold: "#3b82f6" };
 
@@ -25,8 +20,9 @@ export default function LeadsScoringPage() {
           <div><h1 className="text-3xl font-bold text-white">Lead Scoring</h1><p className="text-gray-400">Puntuacion automatica con IA</p></div>
         </div>
       </motion.div>
+      <DemoPanel>
       <div className="space-y-4">
-        {LEADS?.map((lead, i) => (
+        {DEMO_LEADS.map((lead, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
             <GlassCard className="p-5">
               <div className="flex items-center justify-between">
@@ -43,6 +39,7 @@ export default function LeadsScoringPage() {
           </motion.div>
         ))}
       </div>
+      </DemoPanel>
     </div>
   );
 }
