@@ -381,7 +381,8 @@ export const NAVEGACION: NavSection[] = [
     coreMatchers: [],
     children: [
       { id: "adm-home", label: "Panel de administración", href: "/admin", superAdminOnly: true },
-      { id: "adm-gates", label: "Usuarios y roles", href: "/admin/gates", superAdminOnly: true },
+      { id: "adm-usuarios", label: "Usuarios y roles", href: "/admin/usuarios", roles: [...ROLES_ADMINISTRACION], keywords: ["personal", "permisos"] },
+      { id: "adm-gates", label: "Compuertas", href: "/admin/gates", superAdminOnly: true },
       {
         id: "adm-network-cockpit",
         label: "Cabina de la red",

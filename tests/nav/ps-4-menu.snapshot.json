@@ -67,6 +67,7 @@
  "projects-hub/projects-new|/proyectos/new|",
  "real-estate/realtor-home|/realtor|",
  "admin/adm-home|/admin|",
+ "admin/adm-usuarios|/admin/usuarios|",
  "admin/adm-gates|/admin/gates|",
  "admin/adm-network-cockpit|/cockpit|",
  "admin/set-home|/settings|",
