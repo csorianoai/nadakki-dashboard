@@ -1,5 +1,6 @@
 "use client";
 
+import { etiquetaCondicionVehiculo } from "@/components/credit-hub/bank/etiquetas-es";
 import { Car, DollarSign, FileText, Fingerprint, Gauge } from "lucide-react";
 import { EvidenceGrid } from "@/components/credit-hub/primitives";
 import { chMoney, chMoneyExact } from "@/lib/credit-hub/ch-base";
@@ -305,7 +306,7 @@ export function AnalysisTab({ payload }: { payload: BankReviewPayload }) {
             <div>
               <div className="ch-eyebrow">Condición</div>
               <div style={{ fontSize: 13, marginTop: 4, textTransform: "capitalize" }}>
-                {displayValue(payload.vehicle?.condition ?? payload.vehicle?.condicion)}
+                {displayValue(payload.vehicle?.condition ?? payload.vehicle?.condicion, etiquetaCondicionVehiculo)}
               </div>
             </div>
             <div>
