@@ -17,6 +17,13 @@ const resumenOk = {
   },
 };
 jest.mock("@/lib/credit-hub/hooks/useTenant", () => ({ useTenant: () => ({ apiTenantId: "t-1", tenantId: "t-1", loading: false }) }));
+// Los agregados (tasa, pendientes, monto, tiempo medio) salen del hook unico, no de kpis/resumen.
+jest.mock("@/lib/credit-hub/api/client", () => ({
+  ...jest.requireActual("@/lib/credit-hub/api/client"),
+  chFetch: jest.fn(async (path: string) =>
+    path.includes("kpis/portfolio") ? { pending_offers: 5, total_approved_amount: 1500000 } : { approval_rate_pct: 61.7, approved_count: 74, avg_response_hours: 4.5 },
+  ),
+}));
 jest.mock("@/lib/api/fetch-client", () => ({
   apiFetch: jest.fn(async (path: string, init: { headers: Record<string, string> }) => {
     llamadas.push({ path, tenant: init.headers["X-Tenant-ID"] });
@@ -59,7 +66,7 @@ describe("KPIs v2 (AUDIT-COWORK 3/9)", () => {
     const resumen = await screen.findByTestId("kpis-resumen");
     await screen.findByText("61.7 %");
     expect(resumen.textContent).toContain("120");
-    expect(resumen.textContent).toContain("4.5");
+    expect(screen.getByTestId("kpis-agregados").textContent).toContain("4.5");
     // Tasa de desembolso sin valor: sin cifra ni 0, con motivo llano.
     expect(resumen.textContent).not.toMatch(/\b0 %/);
     expect(resumen.textContent).toContain("Sin solicitudes evaluadas");
@@ -79,7 +86,8 @@ describe("KPIs v2 (AUDIT-COWORK 3/9)", () => {
     for (const id of ["kpis-resumen", "kpis-tendencia"]) {
       expect((await screen.findByTestId(id)).querySelector("[data-testid=dcc-sello][data-estado=no_disponible]")).not.toBeNull();
     }
-    expect(container.querySelectorAll("[data-testid=dcc-kpi-valor]")).toHaveLength(0);
+    // Solo los mosaicos del resumen y la tendencia (los agregados salen de otro endpoint).
+    expect(screen.getByTestId("kpis-resumen").querySelectorAll("[data-testid=dcc-kpi-valor]")).toHaveLength(0);
     expect(lectura(container)).not.toMatch(/available|backend|kpis\//);
     expect(screen.queryByTestId("detalle-tecnico")).toBeNull();
   });
