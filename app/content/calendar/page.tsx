@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import DemoBadge from "@/components/ui/DemoBadge";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -74,7 +75,7 @@ export default function ContentCalendarPage() {
         </div>
       </motion.div>
 
-      <GlassCard className="p-6">
+      <DemoBadge><GlassCard className="p-6">
         <div className="flex items-center justify-between mb-6">
           <button onClick={prevMonth} className="p-2 hover:bg-white/10 rounded-lg">
             <ChevronLeft className="w-5 h-5 text-gray-400" />
@@ -127,7 +128,7 @@ export default function ContentCalendarPage() {
             </div>
           ))}
         </div>
-      </GlassCard>
+      </GlassCard></DemoBadge>
     </div>
   );
 }
