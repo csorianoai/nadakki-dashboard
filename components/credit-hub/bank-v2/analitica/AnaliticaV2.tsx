@@ -61,18 +61,23 @@ export function AnaliticaV2({ marca }: { marca: MarcaDcc }) {
   return (
     <DccPageMarco titulo="Analítica" marca={marca}>
       <div className="grid gap-[var(--dcc-gap)]">
-        <DccSeccion titulo="Cartera · últimos 30 días" icono={Gauge} meta={`${formatEntero(a.total_applications, f)} solicitudes`}>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-5">
-            <DccKpiTile etiqueta="Solicitudes pendientes" valor={k.pendientes} calidad={k.pendientes != null ? null : proximamente()} />
+        <DccSeccion titulo="Aprobación y monto" icono={Gauge} meta="agregados del banco, sin ventana fija">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-4">
+            <DccKpiTile etiqueta="Ofertas pendientes" valor={k.pendientes} calidad={k.pendientes != null ? null : proximamente()} />
             <DccKpiTile etiqueta="Tasa de aprobación" valor={k.tasa} calidad={k.tasa != null ? null : proximamente()} />
             <DccKpiTile etiqueta="Monto aprobado" valor={k.monto} calidad={k.monto != null ? null : proximamente()} />
+            <DccKpiTile etiqueta="Tiempo medio de decisión" valor={k.tiempoMedio} unidad="h" calidad={k.tiempoMedio != null ? null : proximamente()} />
+          </div>
+        </DccSeccion>
+
+        <DccSeccion titulo="Cartera · últimos 30 días" icono={Gauge} meta={`${formatEntero(a.total_applications, f)} solicitudes`}>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-5">
             <DccKpiTile
               etiqueta="Incumplimiento previsto"
               valor={defaultPred.isExtreme ? null : porcentaje(tasaIncumplimiento, f)}
               nota={`${formatEntero(a.default_prediction.predicted_default_count, f)} ${a.default_prediction.predicted_default_count === 1 ? "caso estimado" : "casos estimados"}`}
               calidad={defaultPred.isExtreme ? proximamente() : limite}
             />
-            <DccKpiTile etiqueta="Tiempo medio de decisión" valor={k.tiempoMedio} unidad="h" calidad={k.tiempoMedio != null ? null : proximamente()} />
           </div>
         </DccSeccion>
 

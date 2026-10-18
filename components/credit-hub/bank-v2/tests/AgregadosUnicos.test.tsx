@@ -28,7 +28,7 @@ jest.mock("@/lib/credit-hub/api/client", () => ({
 }));
 
 const marca = marcaDesdeBranding({ locale: "es-DO", currency: "DOP" }, "banco");
-const ETIQUETAS = ["Solicitudes pendientes", "Tasa de aprobación", "Monto aprobado"];
+const ETIQUETAS = ["Ofertas pendientes", "Tasa de aprobación", "Monto aprobado"];
 
 function montar(pantalla: "mesa" | "indicadores" | "analitica") {
   const ui =
@@ -64,7 +64,7 @@ describe("Agregados unicos del banco (DB-CODEX-24B)", () => {
       expect(lecturas.map((l) => l[e])).toEqual([lecturas[0][e], lecturas[0][e], lecturas[0][e]]);
       expect(lecturas[0][e]).toBeTruthy();
     }
-    expect(lecturas[0]).toMatchObject({ "Solicitudes pendientes": "37", "Tasa de aprobación": "61.7 %", "Monto aprobado": "RD$284.2 M" });
+    expect(lecturas[0]).toMatchObject({ "Ofertas pendientes": "37", "Tasa de aprobación": "61.7 %", "Monto aprobado": "RD$284.2 M" });
   });
 
   it("(b) ninguna pide analytics/dashboard para esos campos: sus cifras no aparecen", async () => {
@@ -82,6 +82,18 @@ describe("Agregados unicos del banco (DB-CODEX-24B)", () => {
     expect(llamadas).not.toContain("/api/v2/credit/analytics/dashboard");
     // Una sola queryKey: los agregados se piden una vez por pantalla.
     expect(llamadas.filter((p) => p.endsWith("kpis/approval"))).toHaveLength(1);
+  });
+
+  it("(e) rotulo coherente: 'Ofertas pendientes' sin periodo inventado en las tres pantallas", async () => {
+    for (const p of PANTALLAS) {
+      const { unmount, container } = montar(p);
+      await screen.findByText("61.7 %");
+      const texto = container.textContent ?? "";
+      expect(texto).toContain("Ofertas pendientes");
+      expect(texto).not.toContain("Solicitudes pendientes");
+      expect(texto).not.toMatch(/Tasa de aprobación · 30 d/);
+      unmount();
+    }
   });
 
   it("(c) sin datos no aparece ningun 0 en los mosaicos", async () => {

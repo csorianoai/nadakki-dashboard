@@ -9,19 +9,16 @@ import { porcentaje } from "../comun/formato";
 export type KpisPortafolio = { total_applications?: number; accepted_offers?: number; pending_offers?: number; total_approved_amount?: number };
 export type KpisAprobacion = { approval_rate_pct?: number; avg_response_hours?: number | null; approved_count?: number; declined_count?: number };
 
-/** Ventana unica de los agregados del banco: las tres pantallas leen la misma. */
-export const VENTANA_KPIS = "30d";
-
 /**
  * UNICA fuente de pendientes, aprobadas, tasa, monto aprobado y tiempo medio
- * del banco (Mesa, Indicadores y Analitica). Una sola queryKey y la misma
- * ventana; analytics/dashboard queda solo para top_dealers y cohortes. Lo que
+ * del banco (Mesa, Indicadores y Analitica). Una sola queryKey, sin
+ * ventana (los endpoints no la reciben); analytics/dashboard queda solo para top_dealers y cohortes. Lo que
  * no llega queda undefined: nunca se convierte en 0.
  */
 export function useKpisBanco() {
   const { apiTenantId } = useTenant();
   return useQuery({
-    queryKey: ["bank-v2", "kpis", apiTenantId, VENTANA_KPIS],
+    queryKey: ["bank-v2", "kpis", apiTenantId],
     queryFn: async () => {
       const opciones = { tenantId: apiTenantId!, actorRole: "bank_admin" as const };
       const [portafolio, aprobacion] = await Promise.all([

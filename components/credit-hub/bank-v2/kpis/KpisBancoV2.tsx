@@ -110,7 +110,7 @@ export function KpisBancoV2({ marca }: { marca: MarcaDcc }) {
               <DccEstado estado="cargando" />
             ) : (
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                <DccKpiTile etiqueta="Solicitudes pendientes" valor={k.pendientes} calidad={k.pendientes === null ? SIN_DATOS : null} />
+                <DccKpiTile etiqueta="Ofertas pendientes" valor={k.pendientes} calidad={k.pendientes === null ? SIN_DATOS : null} />
                 <DccKpiTile etiqueta="Tasa de aprobación" valor={k.tasa} calidad={k.tasa === null ? SIN_DATOS : null} />
                 <DccKpiTile etiqueta="Aprobadas" valor={k.aprobadas} calidad={k.aprobadas === null ? SIN_DATOS : null} />
                 <DccKpiTile etiqueta="Monto aprobado" valor={k.monto} calidad={k.monto === null ? SIN_DATOS : null} />

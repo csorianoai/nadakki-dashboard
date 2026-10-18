@@ -190,7 +190,7 @@ export function MesaDecisiones({ marca, hrefSolicitud, hrefBandeja, hrefAnalitic
 
         <DccSeccion titulo="Indicadores" icono={Gauge} testId="mesa-kpis">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3 xl:grid-cols-6">
-            <DccKpiTile etiqueta="Solicitudes pendientes" valor={k.pendientes} calidad={k.pendientes != null ? null : proximamente()} />
+            <DccKpiTile etiqueta="Ofertas pendientes" valor={k.pendientes} calidad={k.pendientes != null ? null : proximamente()} />
             <DccKpiTile etiqueta="Tasa de aprobación" valor={k.tasa} calidad={k.tasa != null ? null : proximamente()} />
             <DccKpiTile
               etiqueta="Respuesta media"
