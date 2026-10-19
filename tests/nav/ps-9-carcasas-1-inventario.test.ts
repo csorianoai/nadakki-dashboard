@@ -28,15 +28,16 @@ function importadores(patron: RegExp, propio: string): string[] {
 }
 
 describe("PS-9-CARCASAS-1: inventario de importadores de las carcasas de Credit Hub", () => {
-  test("ChAppShell lo importan solo BankChShell y DealerChShell", () => {
+  test("ChAppShell lo importan BankChShell, DealerChShell y la vista previa de diseño", () => {
     expect(importadores(/credit-hub\/shell\/ChAppShell["']/, "ChAppShell.tsx")).toEqual([
+      "app/(forge)/credit-hub/_design/shell-preview/ShellPreviewClient.tsx",
       "components/credit-hub/bank/BankChShell.tsx",
       "components/credit-hub/dealer/DealerChShell.tsx",
     ]);
   });
 
   test("ForgeCreditHubAppShell solo se monta desde el layout de Credit Hub (vía el índice de forge)", () => {
-    expect(importadores(/ForgeCreditHubAppShell/, "ForgeCreditHubAppShell.tsx").filter((f) => f.startsWith("app/"))).toEqual([
+    expect(importadores(/import[^;]*ForgeCreditHubAppShell/, "ForgeCreditHubAppShell.tsx").filter((f) => f.startsWith("app/"))).toEqual([
       "app/(forge)/credit-hub/CreditHubLayoutClient.tsx",
     ]);
   });
