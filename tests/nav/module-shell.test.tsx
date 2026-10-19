@@ -222,3 +222,13 @@ describe("AppGate: qué rutas usan ModuleShell", () => {
   });
 });
 
+test("el menú de Suite conserva enlaces locales con la sesión simulada de CI", () => {
+  pathname = "/";
+  render(conSesion(SUPER, <ModuleShell modulo={null}><p>contenido</p></ModuleShell>));
+  fireEvent.click(screen.getByRole("button", { name: "Abrir el menú del módulo" }));
+  const menu = within(screen.getByRole("complementary", { name: "Menú de Suite" }));
+  expect(menu.getAllByRole("link").length).toBeGreaterThan(2);
+  expect(menu.getByRole("link", { name: "Inicio", exact: true })).toHaveAttribute("href", "/");
+  expect(menu.getByRole("link", { name: "Crédito", exact: true })).toHaveAttribute("href", "/credit-hub");
+});
+

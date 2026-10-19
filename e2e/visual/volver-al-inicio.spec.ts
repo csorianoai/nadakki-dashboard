@@ -119,12 +119,15 @@ for (const m of MOVIL) {
         barraBajo: barra.bottom,
         cajones: cajones.map(({ a, r }) => ({
           top: r.top,
+          items: a.querySelectorAll("a[href]").length,
           tapado: !a.contains(document.elementFromPoint(r.left + 20, r.top + 6)),
         })),
       };
     });
+    console.info("MOBILE_MENU_MEASURE", m.ruta, JSON.stringify(medida));
     expect(medida.cajones.length).toBeGreaterThan(0);
     for (const c of medida.cajones) {
+      expect(c.items).toBeGreaterThan(0);
       expect(c.top).toBeGreaterThanOrEqual(medida.barraBajo - 1);
       expect(c.tapado).toBe(false);
     }
