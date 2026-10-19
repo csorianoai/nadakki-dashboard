@@ -21,6 +21,8 @@ export const COPY = {
     library: "Biblioteca de plantillas", colName: "Plantilla", colType: "Tipo", colStatus: "Estado",
     lang: "Idioma de la pantalla",
     fairHousing: "Cumplimiento de Fair Housing: esta pantalla no usa ningún dato ni filtro de clase protegida.",
+    dlButton: "Descargar", dlLoading: "Descargando…", dlDemo: "Descargar: no disponible en demo", dlRetry: "Reintentar",
+    dlNotFound: "Este documento no se encuentra.", dlGone: "Este documento fue retirado y ya no está disponible.", dlError: "No se pudo descargar el documento. Inténtalo de nuevo.",
   },
   en: {
     title: "Your transaction documents",
@@ -40,6 +42,8 @@ export const COPY = {
     library: "Template library", colName: "Template", colType: "Type", colStatus: "Status",
     lang: "Screen language",
     fairHousing: "Fair Housing compliance: this screen uses no protected-class data or filter.",
+    dlButton: "Download", dlLoading: "Downloading…", dlDemo: "Download: not available in demo", dlRetry: "Retry",
+    dlNotFound: "This document could not be found.", dlGone: "This document was withdrawn and is no longer available.", dlError: "The document could not be downloaded. Please try again.",
   },
 } as const;
 
