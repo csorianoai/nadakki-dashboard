@@ -82,6 +82,20 @@ async function proxyRequest(
     if (res.ok && (res.status === 204 || res.status === 205)) {
       return new NextResponse(null, { status: res.status });
     }
+    const contentType = res.headers.get("Content-Type") || "";
+    // Una respuesta correcta que no es JSON ni texto (PDF, imagen...) viaja como bytes:
+    // pasarla por `text()` reinterpreta los bytes >= 0x80 como UTF-8 y la corrompe.
+    if (res.ok && contentType && !/^(application\/json|text\/)/i.test(contentType.trim())) {
+      const buf = await res.arrayBuffer();
+      const out: Record<string, string> = { "Content-Type": contentType };
+      for (const h of ["Content-Disposition", "Cache-Control"]) {
+        const v = res.headers.get(h);
+        if (v) out[h] = v;
+      }
+      const len = res.headers.get("Content-Length");
+      if (len && !res.headers.get("Content-Encoding")) out["Content-Length"] = len;
+      return new NextResponse(buf, { status: res.status, headers: out });
+    }
     const text = await res.text().catch(() => "");
 
     const isRunsPath =
@@ -101,7 +115,6 @@ async function proxyRequest(
       }
       return upstreamError(res, text);
     }
-    const contentType = res.headers.get("Content-Type") || "";
     if (contentType.includes("application/json")) {
       const json = text ? JSON.parse(text) : null;
       return NextResponse.json(json, { status: res.status });
