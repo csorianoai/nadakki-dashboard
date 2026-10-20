@@ -18,6 +18,11 @@ jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   ),
 }));
 
+jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({
+  GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="forge-shell">{children}</div>
+  ),
+}));
 
 jest.mock("@/lib/credit-hub/i18n/useTranslations", () => ({
   useTranslations: () => require("@/lib/credit-hub/i18n/locales/es-DO/credit-hub").CREDIT_HUB_ES_DO,
