@@ -24,7 +24,7 @@ if ! npx jest "${INTEGRADAS[@]}" --ci; then
   echo "RESULT_PS_9_CARCASAS_2=FAIL"
   exit 1
 fi
-if npx jest tests/nav tests/dealer tests/components/dealer-management components/dcc components/credit-hub/bank-v2 "app/(forge)/credit-hub/bank-v2" --ci; then
+if npx jest tests/nav tests/dealer tests/components/dealer-management components/dcc components/credit-hub/bank-v2 'app/\(forge\)/credit-hub/bank-v2' --ci; then
   echo "RESULT_PS_9_CARCASAS_2=PASS"
 else
   echo "RESULT_PS_9_CARCASAS_2=FAIL"
