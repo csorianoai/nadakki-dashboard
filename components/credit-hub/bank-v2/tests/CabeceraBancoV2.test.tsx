@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { Inbox, LayoutDashboard } from "lucide-react";
 import { BuscadorBanco, opcionesBuscador } from "@/components/credit-hub/bank-v2/cabecera/BuscadorBanco";
 import { CampanaBanco } from "@/components/credit-hub/bank-v2/cabecera/CampanaBanco";
-import type { DccNavGroup } from "@/components/dcc/shell/DccShell";
+import type { DccNavGroup } from "@/app/(forge)/credit-hub/bank-v2/_nav";
 
 /** AUDIT-COWORK 8/9: buscador ⌘K y campana en la barra superior del banco v2. */
 const GRUPOS: DccNavGroup[] = [

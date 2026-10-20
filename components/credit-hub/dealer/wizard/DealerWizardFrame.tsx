@@ -88,7 +88,7 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
   const displayBlockReason = blockReason ?? (!canAdvance && stepIndex < DEALER_WIZARD_STEP_PATHS.length - 1 ? "Completa los campos obligatorios para continuar." : null);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 120px)", paddingBottom: 88 }} data-testid="dealer-wizard-frame">
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 120px)" }} data-testid="dealer-wizard-frame">
       <header style={{ borderBottom: "1px solid var(--ch-line)", padding: "12px 0 16px", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
           <span className="ch-eyebrow" style={{ color: "var(--ch-dealer-accent-text)" }}>
@@ -122,12 +122,13 @@ export function DealerWizardFrame({ children }: { children: ReactNode }) {
 
       <main style={{ flex: 1, maxWidth: 720, width: "100%", margin: "0 auto" }}>{children}</main>
 
+      {/* sticky, no fixed: con error y aviso la barra crece y, fija, tapaba el botón Confirmar en pantallas bajas. */}
       <div
+        data-testid="dealer-wizard-actions"
         style={{
-          position: "fixed",
-          left: 0,
-          right: 0,
+          position: "sticky",
           bottom: 0,
+          marginTop: 16,
           zIndex: 30,
           borderTop: "1px solid var(--ch-line)",
           background: "var(--ch-surface)",

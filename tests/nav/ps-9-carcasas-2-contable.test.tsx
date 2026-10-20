@@ -1,5 +1,5 @@
 /**
- * PS-9-CARCASAS-2 PARTE=5/6, prueba integrada: la Contabilidad que abre el menú del dealer (/contable/**, la única
+ * PS-9-CARCASAS-2 PARTE=5/7, prueba integrada: la Contabilidad que abre el menú del dealer (/contable/**, la única
  * pantalla de la Suite que enlaza) ya no pinta el chrome viejo del dealer bajo la barra de la Suite. Para un usuario
  * de dealer, AppGate + ContableChrome = ModuleShell del módulo Concesionarios (UNA barra, el menú del dealer filtrado
  * por el plan) con DealerShell sin menú ni barra propios; para el resto, la Suite como antes, también con UNA barra.

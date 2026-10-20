@@ -38,6 +38,7 @@ import { extractOfferValidUntil, OfferValidityBadge } from "@/components/credit-
 import { extractDisplayStatus } from "@/lib/credit-hub/honesty/display-status";
 import { isCounterOffer, isDealerRejectedOffer } from "@/lib/credit-hub/dealer/offer-actions";
 import { SimulatedOfferNotice, offerTruthLevel } from "@/components/credit-hub/elite/OfferComparisonCard";
+import { displayMonthlyPayment } from "@/lib/credit-hub/dealer/offer-payment";
 import type { RiskLevel } from "@/lib/credit-hub/ch-types";
 const SELECTABLE_OFFER_STATUSES = new Set(["pending", "approved", "counter_offer"]);
 
@@ -102,12 +103,17 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
   const { tenantConfig } = useTenantConfig();
   const { application: data, events, isLoading, error, refetch } = useCreditApplicationDetail(applicationId);
   const {
-    offers,
+    offers: allOffers,
     isLoading: offersLoading,
     isError: offersError,
     error: offersErrorObj,
     refetch: refetchOffers,
   } = useApplicationOffers(applicationId);
+  // Una decisión simulada (adaptador de prueba) no es una oferta de banco: va aparte y no se acepta.
+  // Una contraoferta sí: la decidió un banco aunque la fila naciera en el despacho simulado (ronda 3).
+  const isSimulatedOnly = (o: CreditOffer) => o.simulated === true && !isCounterOffer(o);
+  const offers = allOffers.filter((o) => !isSimulatedOnly(o));
+  const simulatedOffers = allOffers.filter(isSimulatedOnly);
   const [acceptingOfferId, setAcceptingOfferId] = useState<string | null>(null);
   const [acceptState, setAcceptState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [acceptError, setAcceptError] = useState<string | null>(null);
@@ -340,6 +346,7 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                 offer.status === "declined" ||
                 (hasAcceptedOffer && !isAccepted);
               const isCounter = isCounterOffer(offer);
+              const payment = displayMonthlyPayment(offer);
               const canSelect =
                 canAcceptOffer &&
                 !hasAcceptedOffer &&
@@ -432,8 +439,13 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
                     <div>
                       <div className="ch-eyebrow">Cuota mensual</div>
                       <div className="ch-mono" style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>
-                        {offer.monthly_payment != null ? chMoneyExact(offer.monthly_payment, currencyPrefix) : "—"}
+                        {payment.value != null ? chMoneyExact(payment.value, currencyPrefix) : "—"}
                       </div>
+                      {payment.mismatch && payment.reported != null ? (
+                        <div style={{ fontSize: 11, color: "var(--ch-warning-text)", marginTop: 2 }} data-testid={`offer-payment-note-${offer.id}`}>
+                          Calculada por amortización: la cuota informada ({chMoneyExact(payment.reported, currencyPrefix)}) no cuadra con monto, tasa y plazo.
+                        </div>
+                      ) : null}
                     </div>
                     {offer.total_cost != null ? (
                       <div className="col-span-2">
@@ -505,6 +517,20 @@ export function DealerApplicationDetailView({ applicationId }: DealerApplication
               {acceptError}
             </p>
           ) : null}
+        </div>
+      ) : null}
+
+      {!offersLoading && !offersError && simulatedOffers.length > 0 ? (
+        <div className="ch-card mb-4 p-[18px]" data-testid="offers-simulated-section">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+            <h2 className="ch-serif" style={{ margin: 0, fontSize: 15 }}>Simulaciones (no son ofertas de un banco)</h2>
+            <DataTruthBadge level="DEMO" />
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "var(--ch-text-3)" }}>
+            {simulatedOffers.map((offer) => (
+              <li key={offer.id}>{offer.lender_display_name || lenderLabel(offer.lender_code)}: decisión simulada del entorno de prueba; no se puede aceptar.</li>
+            ))}
+          </ul>
         </div>
       ) : null}
 

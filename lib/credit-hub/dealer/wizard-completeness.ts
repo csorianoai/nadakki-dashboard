@@ -53,7 +53,7 @@ function filledRatio(slug: DealerWizardStepSlug, data: ApplicationFormData): num
       isFilled(data.monthly_income),
     ];
   } else if (slug === "consent") {
-    checks = [data.consent_terms_accepted, data.consent_data_processing_authorization];
+    checks = [data.consent_terms_accepted, data.consent_bureau_authorization, data.consent_data_processing_authorization];
   } else if (slug === "vehicle") {
     checks = [isFilled(data.vehicle_make), isFilled(data.vehicle_model), isFilled(data.vehicle_price), isFilled(data.requested_amount)];
   } else {

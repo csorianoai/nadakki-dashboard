@@ -58,9 +58,15 @@ export function defaultDocumentTypeForCountry(
   return map[code] ?? primaryId ?? "CEDULA";
 }
 
+/** Fecha de la base sin zona («2026-10-20 09:00:00»): es UTC; el navegador la leería como hora local. */
+function parseServerDate(iso: string): Date {
+  const s = iso.trim().replace(" ", "T");
+  return new Date(/T.*(Z|[+-]\d{2}:?\d{2})$/.test(s) || !s.includes("T") ? s : `${s}Z`);
+}
+
 export function chRelTimeDealer(iso: string | null | undefined, now = new Date()): string {
   if (!iso) return "—";
-  const d = new Date(iso);
+  const d = parseServerDate(iso);
   if (Number.isNaN(d.getTime())) return "—";
   const m = Math.round((now.getTime() - d.getTime()) / 60000);
   if (m < 1) return "ahora";

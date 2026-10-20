@@ -611,7 +611,7 @@ export function stepIsValid(
     return docsOk && refsOk;
   }
   if (step === 5) {
-    const base = data.consent_terms_accepted && data.consent_data_processing_authorization;
+    const base = data.consent_terms_accepted && data.consent_bureau_authorization && data.consent_data_processing_authorization;
     if (!base) return false;
     if (data.consent_presence === "present") {
       return data.consent_signature_full_name.trim().length >= 3 && data.consent_present_confirmed;

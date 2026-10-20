@@ -1,6 +1,6 @@
 "use client";
 
-import { WIZARD_OPTIONAL_BUREAU_NOTICE } from "@/lib/credit-hub/dealer/wizard-optional-notices";
+import { WIZARD_BUREAU_REQUIRED_NOTICE } from "@/lib/credit-hub/dealer/wizard-optional-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 
@@ -49,7 +49,7 @@ export function PresentConsentForm({
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
 
-  const requiredConsents = termsAccepted && dataProcessingAccepted;
+  const requiredConsents = termsAccepted && bureauAccepted && dataProcessingAccepted;
   const hasLegalText = typeof legalText === "string" && legalText.length > 0;
   const canSubmit = hasLegalText && requiredConsents && signatureFullName.trim().length >= 3;
 
@@ -94,9 +94,9 @@ export function PresentConsentForm({
             onChange={(e) => onBureauChange(e.target.checked)}
             className="mt-1"
           />
-          <span>{t.consent.consent_buro_label}</span>
+          <span>{t.consent.consent_buro_label} *</span>
         </label>
-        <p className="text-xs text-forge-text-muted">{WIZARD_OPTIONAL_BUREAU_NOTICE}</p>
+        <p className="text-xs text-forge-text-muted">{WIZARD_BUREAU_REQUIRED_NOTICE}</p>
         {getFieldError?.("consent_bureau_authorization") ? (
           <p className="text-xs text-[#ef4444]" role="alert">{getFieldError("consent_bureau_authorization")}</p>
         ) : null}
@@ -152,7 +152,7 @@ export function PresentConsentForm({
         {submitting ? t.consent.public.submitting : t.common.confirm}
       </button>
       {submitError ? (
-        <p className="text-xs text-[#ef4444]" role="alert">
+        <p className="text-xs text-[#ef4444]" role="alert" data-testid="present-submit-error">
           {submitError}
         </p>
       ) : null}

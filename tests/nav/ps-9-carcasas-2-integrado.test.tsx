@@ -1,8 +1,8 @@
 /**
- * PS-9-CARCASAS-2 PARTE=3/5, prueba integrada: el Dealer OS (/autos/dealer/**) y el Centro Operativo
+ * PS-9-CARCASAS-2 PARTE=3/7, prueba integrada: el Dealer OS (/autos/dealer/**) y el Centro Operativo
  * (/centro-operativo) abren sobre ModuleShell. AppGate + el layout REAL del dealer (DealerShell) = UNA sola barra (la
- * del armazón común), el menú del módulo Concesionarios filtrado por el plan (capability, PARTE 1/5) y sin el menú,
- * la barra ni la paleta propios del dealer (PARTE 2/5), con las acciones del dealer en el contenido. Falla sin
+ * del armazón común), el menú del módulo Concesionarios filtrado por el plan (capability, PARTE 1/7) y sin el menú,
+ * la barra ni la paleta propios del dealer (PARTE 2/7), con las acciones del dealer en el contenido. Falla sin
  * cualquiera de las tres partes. (a) una sola barra; (b) menú del registro (fuente del dealer) y migas de lib/migas.
  */
 import { render, screen, within } from "@testing-library/react";

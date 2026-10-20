@@ -6,8 +6,9 @@ export const WIZARD_OPTIONAL_ID_DOC_NOTICE =
 export const WIZARD_OPTIONAL_BANK_STATEMENTS_NOTICE =
   "Documento opcional — no hay verificación automática de estados financieros en este entorno.";
 
-export const WIZARD_OPTIONAL_BUREAU_NOTICE =
-  "Opcional — la consulta a buró de crédito no está activa en este entorno (DataCrédito / TransUnion).";
+/** DECISION_CESAR (DB-CODEX-16, ronda 3): la autorización de buró es obligatoria para firmar. */
+export const WIZARD_BUREAU_REQUIRED_NOTICE =
+  "La autorización de consulta a buró es obligatoria para firmar el consentimiento.";
 
 export function wizardDocumentOptionalNotice(key: string): string | null {
   if (key === "id_front" || key === "id_back") return WIZARD_OPTIONAL_ID_DOC_NOTICE;
