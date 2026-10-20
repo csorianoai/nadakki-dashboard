@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import OnboardingAgent from "@/components/ai/OnboardingAgent";
 import { DealerShell } from "@/components/dealer-management/shell/DealerShell";
-import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
 import { MarcoSuite } from "@/components/nav/MarcoSuite";
 import { ModuleShell } from "@/components/shell/ModuleShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +11,7 @@ import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
 import { MODULOS } from "@/lib/modulos/registro";
 
 const CONCESIONARIOS = MODULOS.find((m) => m.id === "concesionarios") ?? null;
+const CONTABILIDAD = MODULOS.find((m) => m.id === "contabilidad") ?? null;
 
 /**
  * Chrome de /contable/*: el del dealer para un usuario de dealer, el de la Suite
@@ -25,8 +25,8 @@ const CONCESIONARIOS = MODULOS.find((m) => m.id === "concesionarios") ?? null;
  *
  * PS-9-CARCASAS-2: el usuario de dealer la ve en el armazón común con el módulo
  * Concesionarios (ModuleShell: su barra y el menú del dealer, filtrado por plan),
- * con DealerShell dentro (sincronización, avisos y acciones); el resto, la Suite
- * bajo la barra de MarcoSuite. Cada rama pinta UNA barra: por eso MarcoSuite va
+ * con DealerShell dentro (sincronización, avisos y acciones); el resto, el módulo
+ * Contabilidad en el mismo armazón (PS-9-CARCASAS-3). Cada rama pinta UNA barra: por eso MarcoSuite va
  * aquí y no en AppGate.
  *
  * Solo cambia el chrome. Los permisos no se tocan: el menu del dealer filtra por
@@ -75,13 +75,12 @@ export function ContableChrome({ children }: { children: ReactNode }) {
   }
 
   if (contexto.isError) {
-    console.warn("[contable-chrome] dealer-context fallo; se pinta la Suite:", contexto.error);
+    console.warn("[contable-chrome] dealer-context fallo; se pinta el módulo Contabilidad:", contexto.error);
   }
+  // PS-9-CARCASAS-3: quien no es dealer (o si la consulta falla) ve el módulo Contabilidad en el armazón común.
   return (
     <>
-      <MarcoSuite>
-        <GlobalForgeAppShell>{children}</GlobalForgeAppShell>
-      </MarcoSuite>
+      <ModuleShell modulo={CONTABILIDAD}>{children}</ModuleShell>
       <OnboardingAgent />
     </>
   );

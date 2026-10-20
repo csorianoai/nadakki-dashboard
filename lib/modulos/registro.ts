@@ -193,7 +193,10 @@ export const MODULOS: ModuloConfig[] = [
     seccion: "contable-hub",
     menu: desdeSeccion("contable-hub", "Contabilidad"),
     acento: "#fbbf24",
-    carcasa: "propia",
+    // PS-9-CARCASAS-3: quien no es dealer abre Contabilidad sobre ModuleShell (antes GlobalForgeAppShell); el dealer, sobre
+    // Concesionarios (ContableChrome). Sin pantallas /contable/grupo: no existen.
+    carcasa: "comun",
+    sinPantallaGrupo: true,
   },
   {
     id: "legal",
