@@ -53,6 +53,8 @@ export type CarcasaCore = {
 export type ModuloConfig = {
   /** Las pantallas de grupo del módulo caen bajo una guarda de superadmin: solo ese rol las ve o las enlaza. */
   pantallaGrupoSoloSuperadmin?: boolean;
+  /** El módulo usa ModuleShell pero no tiene páginas `<raiz>/grupo/<id>` (Crédito): el menú se queda en grupos plegables. */
+  sinPantallaGrupo?: boolean;
   id: string;
   label: string;
   icono: LucideIcon;
