@@ -39,7 +39,7 @@ describe("D2b guion vs app", () => {
     expect(gate).toContain(`"${TESTIDS.suiteVerificando}"`);
     expect(gate).toContain(`"${TESTIDS.suiteRedirigiendo}"`);
     expect(gate).toContain("router.replace(DEALER_MANAGEMENT_ROOT)");
-    expect(fuente("components/forge/layout/GlobalForgeAppShell.tsx")).toContain("<DealerSuiteGate>");
+    expect(fuente("components/shell/ModuleShell.tsx")).toContain("DealerSuiteGate");
   });
 
   it("los textos que el spec busca para detectar la Suite existen en la Suite", () => {

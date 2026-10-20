@@ -5,10 +5,11 @@ let pathname = "/credit-hub/dealer";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => pathname,
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
 
 // AppGate wraps protected content in the global Forge shell (ProtectedRoute +
-// GlobalForgeAppShell). Mock the real collaborators it uses today — the legacy
+// ModuleShell). Mock the real collaborators it uses today — the legacy
 // components/layout/DashboardLayout shell is no longer referenced by AppGate, so
 // this test no longer depends on it.
 jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
@@ -16,11 +17,15 @@ jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({
+
+jest.mock("@/components/dealer/DealerSuiteGate", () => ({
   __esModule: true,
-  GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="forge-shell">{children}</div>
-  ),
+  DealerSuiteGate: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  isDealerReachableSuitePath: (p: string) => p.startsWith("/contable"),
+}));
+
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ isLoading: false, isAuthenticated: true, user: { id: "u" }, allRoles: [{ role_key: "platform_superadmin", core_name: "platform", display_name: "Administrador" }] }),
 }));
 
 jest.mock("@/components/ai/OnboardingAgent", () => ({
@@ -29,21 +34,21 @@ jest.mock("@/components/ai/OnboardingAgent", () => ({
 }));
 
 describe("AppGate shell isolation", () => {
-  test("wraps modern credit-hub routes in the global Forge shell", () => {
+  test("credit-hub dealer portal keeps its own chrome: only the Suite bar, no module shell", () => {
     pathname = "/credit-hub/dealer";
     render(<AppGate>Forge Portal</AppGate>);
 
     expect(screen.getByText("Forge Portal")).toBeInTheDocument();
-    expect(screen.getByTestId("forge-shell")).toBeInTheDocument();
+    expect(screen.queryByTestId("module-shell")).not.toBeInTheDocument();
     expect(screen.getByTestId("bot-widget")).toBeInTheDocument();
   });
 
-  test("wraps other app routes in the same global Forge shell", () => {
+  test("wraps other app routes in the common ModuleShell", () => {
     pathname = "/sic";
     render(<AppGate>SIC Portal</AppGate>);
 
     expect(screen.getByText("SIC Portal")).toBeInTheDocument();
-    expect(screen.getByTestId("forge-shell")).toBeInTheDocument();
+    expect(screen.getByTestId("module-shell")).toBeInTheDocument();
     expect(screen.getByTestId("bot-widget")).toBeInTheDocument();
   });
 

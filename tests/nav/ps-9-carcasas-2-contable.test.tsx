@@ -17,7 +17,6 @@ jest.mock("next/navigation", () => ({
   useSelectedLayoutSegments: () => [],
 }));
 jest.mock("@/components/forge/auth/ProtectedRoute", () => ({ __esModule: true, ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
-jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({ __esModule: true, GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="forge-shell">{children}</div> }));
 jest.mock("@/components/dealer/DealerSuiteGate", () => ({ __esModule: true, DealerSuiteGate: ({ children }: { children: React.ReactNode }) => <>{children}</>, isDealerReachableSuitePath: (p: string) => p.startsWith("/contable") }));
 const contextoDealer = jest.fn();
 jest.mock("@/lib/dealer/dealer-context-api", () => ({ fetchMyDealerContext: () => contextoDealer() }));
@@ -109,9 +108,10 @@ describe("Contabilidad del dealer sobre ModuleShell", () => {
     pathname = "/contable/libro-mayor";
     contextoDealer.mockResolvedValue([]);
     pintar(<AppGate><p>libro mayor</p></AppGate>);
-    await waitFor(() => expect(screen.getByTestId("forge-shell")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId("module-shell")).toBeInTheDocument());
     expect(screen.getAllByTestId("barra-suite")).toHaveLength(1);
-    expect(screen.queryByTestId("module-shell")).toBeNull();
+    // PS-9-CARCASAS-3: la Suite es ModuleShell con el menú de su módulo (Contabilidad), no el de Concesionarios.
+    expect(screen.getByTestId("module-shell")).not.toHaveAttribute("data-modulo", "concesionarios");
     sinChromeViejo();
   });
 
