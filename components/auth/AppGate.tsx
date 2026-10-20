@@ -84,7 +84,12 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
   }
 
-  // Armazón común de módulos (PR 6a): Marketing, Legal, Proyectos, Administración y Crédito (Credit Hub, PS-9-CARCASAS-1) abren su espacio con su
+  // Exclude /credit/* paths from GlobalForgeAppShell
+  if (pathname === "/credit" || pathname.startsWith("/credit/")) {
+    return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
+  }
+
+  // Armazón común de módulos (PR 6a): Marketing, Legal, Proyectos y Administración abren su espacio con su
   // propio menú lateral; la portada y las notificaciones son la Suite (menú = elegir módulo). Los cores con
   // carcasa propia (arriba) y las rutas sin módulo siguen como estaban.
   const sinSlash = pathname.replace(/\/+$/, "") || "/";

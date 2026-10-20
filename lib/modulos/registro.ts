@@ -149,12 +149,14 @@ export const MODULOS: ModuloConfig[] = [
     acento: "#34d399",
     carcasa: "comun",
     sinPantallaGrupo: true,
-    // PS-9-CARCASAS-1: Credit Hub y el panel legado del banco (ChAppShell) ya usan ModuleShell; conservan su carcasa
-    // bank-v2 (DccShell), el portal del concesionario (DealerChShell), el cockpit, Monetización (MonetizacionShell) y SIC.
-    propias: [BANCO_V2_RAIZ, "/credit-hub/dealer", "/credit-hub/admin", "/credit-hub/monetizacion", "/sic", "/market-intel"],
+    // PS-9-CARCASAS-1 (parte 1): la portada de Credit Hub y sus pantallas (ForgeCreditHubAppShell) ya usan ModuleShell. Siguen con
+    // carcasa propia hasta que su layout se migre: bank-v2 (DccShell), banco v1 y /credit/* (BankChShell/ChAppShell), el portal del
+    // concesionario (DealerChShell), el cockpit, Monetización (MonetizacionShell) y SIC.
+    propias: [BANCO_V2_RAIZ, "/credit-hub/bank", "/credit", "/credit-hub/dealer", "/credit-hub/admin", "/credit-hub/monetizacion", "/sic", "/market-intel"],
     compartidas: ["/autos/dealer/credito"],
     carcasas: [
       { prefijos: [BANCO_V2_RAIZ], modulo: { label: "Banco", href: BANCO_V2_RAIZ }, grupos: BANCO_V2_NAV.map((g) => ({ label: g.label, items: g.items.map((i) => ({ label: i.label, href: i.href })) })) },
+      { prefijos: ["/credit-hub/bank"], modulo: { label: "Banco", href: "/credit-hub/bank" }, grupos: [] },
       { prefijos: ["/credit-hub/dealer"], modulo: { label: "Crédito del concesionario", href: "/credit-hub/dealer" }, grupos: [] },
     ],
   },

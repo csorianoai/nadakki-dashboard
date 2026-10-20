@@ -1,10 +1,11 @@
 /**
- * PS-9-CARCASAS-1 (parte 1, registro + AppGate): Crédito (Credit Hub) abre sobre ModuleShell. (a) una sola barra, sin la carcasa vieja
- * (ChAppShell / ForgeCreditHubAppShell) encima; (b) menú y migas salen de lib/navigation.ts. Dealer, bank-v2 (DccShell),
- * Cockpit de crédito y Monetización conservan su carcasa y NO se tocan en esta parte.
+ * PS-9-CARCASAS-1 (parte 1, registro + layout de Credit Hub): la portada de Crédito abre sobre ModuleShell. (a) una sola barra, sin
+ * ForgeCreditHubAppShell encima (se monta AppGate con el layout real); (b) menú y migas salen de lib/navigation.ts. Banco v1 y /credit/*
+ * (ChAppShell), dealer, bank-v2 (DccShell), cockpit y Monetización conservan su carcasa propia y NO se migran en esta parte.
  */
 import { render, screen } from "@testing-library/react";
 import AppGate from "@/components/auth/AppGate";
+import { CreditHubLayoutClient } from "@/app/(forge)/credit-hub/CreditHubLayoutClient";
 import { AuthContext, type AuthContextValue } from "@/lib/auth/auth-context";
 import { migasDe } from "@/lib/migas";
 import { MODULOS, menuVisible, moduloDeRuta, tienePantallaGrupo, usaCarcasaComun } from "@/lib/modulos/registro";
@@ -42,6 +43,7 @@ jest.mock("@/lib/credit-hub/hooks/useNotifications", () => ({ __esModule: true, 
 jest.mock("@/components/credit-hub/shell/useChromeIdentity", () => ({ __esModule: true, useChromeIdentity: () => ({ name: "QA", initials: "Q", email: "qa@nadakki.test", role: "Banco" }) }));
 jest.mock("@/hooks/useAuth", () => ({ __esModule: true, useAuth: () => ({ logout: jest.fn() }) }));
 jest.mock("@/components/forge/layout/ForgeCreditHubSidebar", () => ({ __esModule: true, ForgeCreditHubSidebar: () => <nav data-testid="forge-credit-hub-sidebar" /> }));
+jest.mock("@/components/forge/layout/ForgeCommandPaletteContext", () => ({ __esModule: true, ForgeCommandPaletteProvider: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 
 const sesion = (cores: string[]) =>
   ({
@@ -54,20 +56,25 @@ const conSesion = (ui: React.ReactNode) => <AuthContext.Provider value={sesion([
 const credito = MODULOS.find((m) => m.id === "credito")!;
 
 describe("(a) las rutas de Crédito renderizan ModuleShell, una sola barra", () => {
-  test.each(["/credit-hub", "/credit-hub/activacion", "/credit/dashboard"])("%s: AppGate -> ModuleShell del módulo crédito", (ruta) => {
+  test.each(["/credit-hub", "/credit-hub/activacion"])("%s: AppGate + layout real -> un solo ModuleShell, sin carcasa vieja", (ruta) => {
     pathname = ruta;
-    render(conSesion(<AppGate><p>pantalla</p></AppGate>));
+    render(conSesion(<AppGate><CreditHubLayoutClient><p>pantalla</p></CreditHubLayoutClient></AppGate>));
     expect(screen.getAllByTestId("barra-suite")).toHaveLength(1);
     expect(screen.getByTestId("module-shell")).toHaveAttribute("data-modulo", "credito");
     expect(screen.queryByTestId("forge-shell")).toBeNull();
+    expect(screen.queryByTestId("forge-credit-hub-sidebar")).toBeNull();
+    expect(screen.getAllByRole("complementary")).toHaveLength(1);
     expect(screen.getByRole("complementary", { name: "Menú de Crédito" })).toBeInTheDocument();
+    expect(screen.getByText("pantalla")).toBeInTheDocument();
   });
 
   test("las rutas con carcasa propia (dealer, bank-v2, cockpit de crédito, monetización, SIC) no cambian", () => {
     for (const r of ["/credit-hub/dealer", "/credit-hub/dealer/applications", "/credit-hub/bank-v2", "/credit-hub/admin", "/credit-hub/monetizacion/dashboard", "/sic", "/market-intel"]) {
       expect(usaCarcasaComun(r)).toBe(false);
     }
-    for (const r of ["/credit-hub", "/credit-hub/bank", "/credit-hub/bank/applications", "/credit/dashboard"]) expect(usaCarcasaComun(r)).toBe(true);
+    // Banco v1 y /credit/* pintan aún ChAppShell (BankChShell): migrarlos exige tocar su layout (parte B); hasta entonces, sin doble barra.
+    for (const r of ["/credit-hub/bank", "/credit-hub/bank/applications", "/credit/dashboard"]) expect(usaCarcasaComun(r)).toBe(false);
+    for (const r of ["/credit-hub", "/credit-hub/activacion"]) expect(usaCarcasaComun(r)).toBe(true);
   });
 
   test("sin pantalla de grupo: /credit-hub/grupo/<id> no existe como ruta", () => {
@@ -85,10 +92,10 @@ describe("(b) menú y migas de Crédito salen de lib/navigation.ts", () => {
     expect(del.length).toBeGreaterThan(2);
     for (const it of del) expect(ids.has(it.id)).toBe(true);
   });
-  test("las migas de /credit-hub/bank/... cuelgan de la sección de navigation.ts, no de un menú vacío del banco", () => {
-    const migas = migasDe("/credit-hub/bank/applications");
+  test("las migas de /credit-hub/activacion cuelgan de la sección de navigation.ts", () => {
+    const migas = migasDe("/credit-hub/activacion");
     expect(migas[0]!.href).toBe("/");
     expect(migas[1]!.label).toBe(seccion.label);
-    expect(moduloDeRuta("/credit-hub/bank/applications")?.id).toBe("credito");
+    expect(moduloDeRuta("/credit-hub/activacion")?.id).toBe("credito");
   });
 });
