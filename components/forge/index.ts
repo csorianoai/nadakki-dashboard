@@ -29,7 +29,6 @@ export * from "./ui/ConsentCapture";
 export * from "./layout/Sidebar";
 export * from "./layout/Topbar";
 export * from "./layout/creditHubPersonaFromSegments";
-export * from "./layout/ForgeCreditHubAppShell";
 export * from "./layout/ForgeAppShell";
 export * from "./layout/ForgeAppSidebar";
 export * from "./layout/ForgeAppTopbar";
