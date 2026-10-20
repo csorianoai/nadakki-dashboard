@@ -51,14 +51,11 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Panel del dealer: autenticado, pero con su propio chrome. Fuera del
-  // GlobalForgeAppShell, que es el que pinta la barra "Suite operativa" con
-  // todos los hubs y se apilaba sobre el menu del dealer.
-  //
-  // Incluye el Centro Operativo, que es la guia de carga del dealer y se lee
-  // dentro de su panel (decision de Cesar, D9).
+  // Panel del dealer y Centro Operativo (D9): sobre el armazón común (PS-9-CARCASAS-2), con el menú del módulo
+  // Concesionarios. Su layout sigue montando DealerShell, que dentro de ModuleShell no pinta menú ni barra propios.
+  // Va antes que nada: el Centro Operativo no puede recaer en la Suite (GlobalForgeAppShell).
   if (isDealerChromePath(pathname)) {
-    return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
+    return <ProtectedRoute><ModuleShell modulo={moduloDeRuta(pathname)}>{children}</ModuleShell></ProtectedRoute>;
   }
 
   // Contabilidad: la abre el menu del dealer. Un usuario de dealer la ve dentro
@@ -84,7 +81,8 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
   }
 
-  // Armazón común de módulos (PR 6a): Marketing, Legal, Proyectos, Administración y Crédito (Credit Hub, PS-9-CARCASAS-1) abren su espacio con su
+  // Armazón común de módulos (PR 6a): Marketing, Legal, Proyectos, Administración, Crédito (Credit Hub, PS-9-CARCASAS-1) y Concesionarios
+  // (Dealer OS y Centro Operativo, PS-9-CARCASAS-2: su layout sigue montando DealerShell, sin menú ni barra propios) abren su espacio con su
   // propio menú lateral; la portada y las notificaciones son la Suite (menú = elegir módulo). Los cores con
   // carcasa propia (arriba) y las rutas sin módulo siguen como estaban.
   const sinSlash = pathname.replace(/\/+$/, "") || "/";
