@@ -52,7 +52,7 @@ const sesion = (cores: string[]) =>
   }) as unknown as AuthContextValue;
 const conSesion = (ui: React.ReactNode) => <AuthContext.Provider value={sesion(["credit"])}>{ui}</AuthContext.Provider>;
 // Testigos de las carcasas viejas: si alguien las pinta, aparecen en el DOM.
-jest.mock("@/components/forge/layout/ForgeCreditHubAppShell", () => ({ __esModule: true, ForgeCreditHubAppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="carcasa-vieja-forge-credit-hub">{children}</div> }));
+// ForgeCreditHubAppShell ya no existe (PARTE 3/3): lo comprueba ps-9-carcasas-1-retirada.test.ts.
 jest.mock("@/components/credit-hub/shell/ChAppShell", () => ({ __esModule: true, ChAppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="carcasa-vieja-ch-app-shell">{children}</div> }));
 
 
