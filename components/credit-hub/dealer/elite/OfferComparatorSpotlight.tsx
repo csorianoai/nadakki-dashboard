@@ -111,7 +111,7 @@ export function OfferComparatorSpotlight({ applications, currency }: { applicati
         </div>
       ) : isError || offers.length === 0 ? (
         <div className="ch-card p-4">
-          <DataTruthBadge level="DEMO" />
+          <DataTruthBadge level="NONE" />
           <p style={{ marginTop: 8, fontSize: 13, color: "var(--ch-text-3)" }}>
             Sin ofertas visibles aún — envía la solicitud a bancos o abre el expediente.
           </p>

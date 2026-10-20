@@ -75,10 +75,16 @@ export function DealerPipelineRail({
           <h2 className="ch-serif" style={{ margin: 0, fontSize: 19 }}>
             Pipeline de solicitudes
           </h2>
-          <DataTruthBadge level={summary ? "REAL" : "DEMO"} />
+          <DataTruthBadge level={summary ? "REAL" : "NONE"} />
           <span style={{ fontSize: 12, color: "var(--ch-text-3)" }}>Mes en curso · conversión por etapa</span>
         </div>
         <div className="ch-card" style={{ padding: "16px 18px" }}>
+          {!summary ? (
+            <p data-testid="dealer-pipeline-unavailable" style={{ margin: 0, fontSize: 12.5, color: "var(--ch-text-3)" }}>
+              No disponible: el resumen del pipeline no respondió.
+            </p>
+          ) : (
+          <>
           <div className="space-y-3">
             {stages.map((stage) => (
               <div key={stage.key} className="flex items-center gap-3">
@@ -96,20 +102,26 @@ export function DealerPipelineRail({
             {pullThrough != null ? `${pullThrough}% pull-through de enviadas a fondeadas` : "Pull-through disponible con display_status"}
             {closeRate != null ? ` · ${closeRate}% cierre aceptada→fondeo` : ""}
           </p>
+          </>
+          )}
         </div>
       </div>
 
       <aside className="space-y-2">
+        {/* Documentos y estipulaciones no tienen fuente en este panel: «No disponible», nunca una cifra de ejemplo. */}
         {[
-          { n: pendingOffers.length, label: "Ofertas por decidir", demo: false },
-          { n: Math.min(pendingOffers.length + 2, 5), label: "Documentos solicitados", demo: true },
-          { n: Math.min(pendingOffers.length + 3, 7), label: "Estipulaciones pendientes", demo: true },
-          { n: pendingOffers.length ? 1 : 0, label: "Mejor oferta abierta", demo: false },
+          { n: pendingOffers.length as number | null, label: "Ofertas por decidir" },
+          { n: null, label: "Documentos solicitados" },
+          { n: null, label: "Estipulaciones pendientes" },
+          { n: pendingOffers.length ? 1 : 0, label: "Mejor oferta abierta" },
         ].map((item) => (
           <div key={item.label} className="ch-card" style={{ padding: "12px 14px" }}>
-            <div className="ch-mono text-xl font-bold">{item.n}</div>
+            {item.n == null ? (
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ch-text-3)" }}>No disponible</div>
+            ) : (
+              <div className="ch-mono text-xl font-bold">{item.n}</div>
+            )}
             <div style={{ fontSize: 12, color: "var(--ch-text-2)" }}>{item.label}</div>
-            {item.demo ? <div style={{ marginTop: 4 }}><DataTruthBadge level="DEMO" /></div> : null}
           </div>
         ))}
 

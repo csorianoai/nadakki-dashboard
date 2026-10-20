@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useMemo } from "react";
 import type { CreditApplication } from "@/lib/credit-hub/types/creditCore";
 import type { BankRankingRow } from "@/lib/credit-hub/types/analytics";
-import { AreaChart } from "@/components/credit-hub/bank/shared/bankUi";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { AlertCard } from "@/components/credit-hub/elite/AlertCard";
 import { humanizeApplicant, shortFolio } from "@/lib/credit-hub/honesty/humanize-applicant";
@@ -24,11 +23,6 @@ export function DealerTrendsAlerts({
   pipelineAmountLabel: string;
   banks?: BankRankingRow[];
 }) {
-  const approvalSeries = useMemo(() => {
-    const base = approvalRate != null ? approvalRate * 100 : 67;
-    return [base - 4, base - 2, base - 1, base, base + 1, base, base];
-  }, [approvalRate]);
-
   const pendingOffers = applications.filter((a) => ["offered", "counter_offer"].includes(a.status));
   const drafts = applications.filter((a) => a.status === "draft").length;
 
@@ -43,16 +37,6 @@ export function DealerTrendsAlerts({
         href: dealerDetailHref(pendingOffers[0].application_id),
       });
     }
-    list.push({
-      severity: "medium",
-      title: "Documentos solicitados",
-      body: "Bancos esperan comprobantes en solicitudes activas",
-    });
-    list.push({
-      severity: "medium",
-      title: "Meta de volumen en riesgo",
-      body: "67% alcanzado con 8 días restantes (objetivos DEMO)",
-    });
     if (drafts > 0) {
       list.push({
         severity: "low",
@@ -72,18 +56,16 @@ export function DealerTrendsAlerts({
           <h2 className="ch-serif" style={{ margin: 0, fontSize: 19 }}>
             Desempeño en el tiempo
           </h2>
-          <DataTruthBadge level="DEMO" />
+          <DataTruthBadge level="NONE" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
           <div className="ch-card p-4">
             <div className="ch-card-title mb-1">Tasa de aprobación {approvalRate != null ? `${Math.round(approvalRate * 100)}%` : "—"}</div>
-            <div className="ch-card-sub mb-3">Serie diaria ilustrativa</div>
-            <AreaChart data={approvalSeries} color="var(--ch-success)" />
+            <div className="ch-card-sub" data-testid="dealer-trend-approval-unavailable">Serie diaria: No disponible</div>
           </div>
           <div className="ch-card p-4">
             <div className="ch-card-title mb-1">Valor del pipeline {pipelineAmountLabel}</div>
-            <div className="ch-card-sub mb-3">Mensual · en evaluación</div>
-            <AreaChart data={[18, 20, 22, 21, 24, 24.6]} color="var(--ch-warning)" />
+            <div className="ch-card-sub" data-testid="dealer-trend-pipeline-unavailable">Serie mensual: No disponible</div>
           </div>
         </div>
         <div className="ch-card p-4">
