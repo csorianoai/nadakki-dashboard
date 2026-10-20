@@ -48,9 +48,6 @@ jest.mock("@/components/credit-hub/shell/useChromeIdentity", () => ({ __esModule
 const mockLogout = jest.fn(async () => undefined);
 jest.mock("@/hooks/useAuth", () => ({ __esModule: true, useAuth: () => ({ user: { id: "u", email: "banco@nadakki.test", name: "Laura Méndez" }, activeRole: { role_key: "bank_analyst", display_name: "Analista" }, logout: mockLogout }) }));
 jest.mock("@/components/forge/layout/ForgeCreditHubSidebar", () => ({ __esModule: true, ForgeCreditHubSidebar: () => <nav data-testid="forge-credit-hub-sidebar" /> }));
-// Testigos de lo que NO debe aparecer: el menú y la barra propios de DccShell.
-jest.mock("@/components/dcc/shell/DccShellSidebar", () => ({ __esModule: true, DccShellSidebar: () => <nav data-testid="carcasa-vieja-dcc-sidebar" /> }));
-jest.mock("@/components/dcc/shell/DccShellTopbar", () => ({ __esModule: true, DccShellTopbar: () => <header data-testid="carcasa-vieja-dcc-topbar" /> }));
 
 const sesion = {
   user: { id: "u", email: "banco@nadakki.test" },
