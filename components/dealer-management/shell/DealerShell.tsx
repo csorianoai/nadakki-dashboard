@@ -73,8 +73,8 @@ export function DealerShell({ children }: { children: ReactNode }) {
     <AutosAuthProvider>
       {/* El tema SI se recuerda al recargar (a diferencia del colapso de la
           barra): el primer render sigue en claro y la preferencia se aplica
-          en un efecto de layout; ver DccThemeContext. Clave propia del dealer:
-          el banco v2 usa la suya. */}
+          en un efecto de layout; ver DccThemeContext. La clave solo la usa
+          este shell: DccShell sigue en memoria. */}
       <DccThemeProvider storageKey={DEALER_THEME_STORAGE_KEY}>
         <DealerShellChrome>{children}</DealerShellChrome>
       </DccThemeProvider>

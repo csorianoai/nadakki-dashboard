@@ -66,15 +66,26 @@ const TIPOGRAFIA_BANCO = [
 
 /**
  * PS-9-CARCASAS-2: la barra, el menú, las migas y el usuario son los del armazón común. Del chrome del banco quedan el
- * tema (recordado con su clave), la tipografía y, en una franja del contenido, el buscador, la
- * campana y el conmutador de tema.
+ * tema (recordado con su clave), la tipografía y, en una franja del contenido, la marca del banco con la firma de Credit
+ * Hub, el buscador, la campana y el conmutador de tema.
  */
-function BancoV2Contenido({ children }: { children: ReactNode }) {
+function BancoV2Contenido({ marca, children }: { marca: MarcaDcc; children: ReactNode }) {
   const router = useRouter();
   return (
     <DccThemeProvider storageKey={BANCO_V2_THEME_STORAGE_KEY} conmutadorEnChrome>
       <BancoV2Tema>
-        <div data-testid="banco-acciones" className="mb-4 flex items-center justify-end gap-2">
+        <div data-testid="banco-acciones" className="mb-4 flex items-center gap-2">
+          {/* Marca del banco (branding del tenant) y firma del producto, como las pintaba DccShell en su barra lateral. */}
+          <div className="mr-auto flex min-w-0 items-center gap-2.5">
+            {marca.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- logo del tenant, URL externa del branding (como en DccShell)
+              <img src={marca.logoUrl} alt="" className="h-7 w-7 shrink-0 rounded object-contain" />
+            ) : null}
+            <div className="min-w-0 leading-tight">
+              {marca.nombre ? <p data-testid="banco-marca" className="truncate text-sm font-semibold">{marca.nombre}</p> : null}
+              {marca.plataforma ? <p data-testid="banco-firma" className="truncate text-[11px] text-[var(--dcc-fg-subtle)]">{marca.plataforma}</p> : null}
+            </div>
+          </div>
           <BuscadorBanco grupos={BANCO_V2_NAV} hrefBandeja={`${BANCO_V2_RAIZ}/solicitudes`} onIr={(href) => router.push(href)} />
           <CampanaBanco hrefSolicitud={(id) => `${BANCO_V2_RAIZ}/solicitudes/${encodeURIComponent(id)}`} onIr={(href) => router.push(href)} />
           <ConmutadorTema />
@@ -120,7 +131,7 @@ function BancoV2Chrome({ children }: { children: ReactNode }) {
   const marca = marcaDesdeBranding(branding.data, "banco");
   return (
     <MarcaBancoContext.Provider value={marca}>
-      <BancoV2Contenido>{children}</BancoV2Contenido>
+      <BancoV2Contenido marca={marca}>{children}</BancoV2Contenido>
     </MarcaBancoContext.Provider>
   );
 }

@@ -1,8 +1,5 @@
-import { BarChart3, Car, ClipboardCheck, Gauge, History, Inbox, LayoutDashboard, ShieldAlert, SlidersHorizontal, type LucideIcon } from "lucide-react";
-
-/** Pantalla y grupo del menú del banco: los leen el buscador del banco y las migas (lib/modulos). */
-export type DccNavItem = { id: string; label: string; href: string; icon: LucideIcon };
-export type DccNavGroup = { label: string; items: DccNavItem[] };
+import { BarChart3, Car, ClipboardCheck, Gauge, History, Inbox, LayoutDashboard, ShieldAlert, SlidersHorizontal } from "lucide-react";
+import type { DccNavGroup } from "@/components/dcc/shell/DccShell";
 
 /** Raiz del panel del banco rediseñado. */
 export const BANCO_V2_RAIZ = "/credit-hub/bank-v2";

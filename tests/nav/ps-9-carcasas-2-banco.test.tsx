@@ -46,7 +46,7 @@ jest.mock("@/lib/credit-hub/hooks/useNotifications", () => ({ __esModule: true, 
 jest.mock("@/components/credit-hub/shell/useChromeIdentity", () => ({ __esModule: true, useChromeIdentity: () => ({ name: "QA", initials: "Q", email: "qa@nadakki.test", role: "Banco" }) }));
 jest.mock("@/hooks/useAuth", () => ({ __esModule: true, useAuth: () => ({ logout: jest.fn() }) }));
 jest.mock("@/components/forge/layout/ForgeCreditHubSidebar", () => ({ __esModule: true, ForgeCreditHubSidebar: () => <nav data-testid="forge-credit-hub-sidebar" /> }));
-// DccShell (menú y barra propios) ya no existe: lo fija ps-9-carcasas-2-retirada.test.ts (PARTE 7/7).
+// DccShell (menú y barra propios) ya no existe: lo fija ps-9-carcasas-2-retirada.test.ts (PARTE 7/7, que borra DccShell).
 
 // Un analista del banco (rol bank*), no superadmin: el menú de Crédito se filtra por rol.
 const sesion = {

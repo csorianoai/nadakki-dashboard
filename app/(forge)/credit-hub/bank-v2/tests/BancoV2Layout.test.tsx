@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import BancoV2Layout from "@/app/(forge)/credit-hub/bank-v2/layout";
 import { BankChShell } from "@/components/credit-hub/bank/BankChShell";
+import { ModuleShell } from "@/components/shell/ModuleShell";
+import { AuthContext, type AuthContextValue } from "@/lib/auth/auth-context";
+import { MODULOS } from "@/lib/modulos/registro";
 
 /**
  * bank-v2 usa LAS MISMAS guardias que /credit-hub/bank (BankChShell), sin
@@ -41,6 +44,23 @@ jest.mock("@/lib/credit-hub/hooks/useNotifications", () => ({
   useNotifications: () => ({ items: [], unreadCount: 0, hidden: true }),
 }));
 
+// El armazón común que monta AppGate en /credit-hub/bank-v2 (PS-9-CARCASAS-2): su barra y su menú, con la sesión del rol.
+jest.mock("@/components/dealer/DealerSuiteGate", () => ({ __esModule: true, DealerSuiteGate: ({ children }: { children: ReactNode }) => <>{children}</>, isDealerReachableSuitePath: () => false }));
+jest.mock("@/components/white-label/TenantBrandedDocumentTitle", () => ({ __esModule: true, TenantBrandedDocumentTitle: () => null }));
+jest.mock("@/components/nav/BuscadorNavegacion", () => ({ __esModule: true, EVENTO_ABRIR_BUSCADOR: "nadakki:abrir-buscador", BuscadorNavegacion: () => null }));
+jest.mock("@/components/forge/auth/UserMenu", () => ({ __esModule: true, UserMenu: () => <button type="button">Usuario</button> }));
+jest.mock("@/components/forge/auth/TenantSwitcher", () => ({ __esModule: true, TenantSwitcher: () => null }));
+jest.mock("@/components/forge/layout/ProyectosFinanzasSidebarLinks", () => ({ __esModule: true, ProyectosFinanzasSidebarLinks: () => null }));
+jest.mock("@/components/realtor/useRealtorAccess", () => ({ __esModule: true, useRealtorAccess: () => "apagado" }));
+const CREDITO = MODULOS.find((m) => m.id === "credito")!;
+const conSuite = (ui: ReactNode) => (
+  <AuthContext.Provider
+    value={{ user: { id: "u" }, tenant: { id: sesion.tenant, subscribed_cores: ["credit"] }, allRoles: [{ core_name: "credit", role_key: sesion.rol ?? "", display_name: "Rol" }], fijarContexto: jest.fn() } as unknown as AuthContextValue}
+  >
+    <ModuleShell modulo={CREDITO}>{ui}</ModuleShell>
+  </AuthContext.Provider>
+);
+
 const Hijo = () => <p>contenido del banco</p>;
 function pintar(shell: "actual" | "v2"): { html: string; texto: string } {
   const arbol: ReactNode =
@@ -71,28 +91,33 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
   });
 
   it.each(["bank_analyst", "bank_admin", "compliance_officer", "credit_admin", "tenant_admin"])(
-    "rol %s: entra, con el buscador y el tema del banco (la barra y el menú son de ModuleShell, PS-9-CARCASAS-2)",
+    "rol %s: entra, con la marca del banco, la firma de Credit Hub y la mesa activa en el menú (ModuleShell, PS-9-CARCASAS-2)",
     (rol) => {
       sesion = { tenant: "t-1", autenticado: true, rol };
       render(
-        <BancoV2Layout>
-          <Hijo />
-        </BancoV2Layout>,
+        conSuite(
+          <BancoV2Layout>
+            <Hijo />
+          </BancoV2Layout>,
+        ),
       );
       expect(screen.getByText("contenido del banco")).toBeInTheDocument();
-      expect(screen.getByTestId("banco-buscador")).toBeInTheDocument();
-      expect(screen.getByTestId("banco-tema")).toBeInTheDocument();
+      expect(screen.getByTestId("banco-marca")).toHaveTextContent("Banco Ejemplo");
+      expect(screen.getByTestId("banco-firma")).toHaveTextContent("con Nadakki Credit Hub");
+      expect(screen.getByRole("link", { name: "Mesa de decisiones (banco)" })).toHaveAttribute("aria-current", "page");
     },
   );
 
   it("el menu no enlaza pantallas del portal dealer (D-B5)", () => {
     sesion = { tenant: "t-1", autenticado: true, rol: "bank_analyst" };
     render(
-      <BancoV2Layout>
-        <Hijo />
-      </BancoV2Layout>,
+      conSuite(
+        <BancoV2Layout>
+          <Hijo />
+        </BancoV2Layout>,
+      ),
     );
-    const hrefs = screen.queryAllByRole("link").map((a) => a.getAttribute("href") ?? "");
+    const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
     expect(hrefs.filter((h) => h.includes("/dealer"))).toEqual([]);
   });
 });
