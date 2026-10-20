@@ -4,6 +4,8 @@
 # PASS exige primero las pruebas integradas (AppGate + layouts REALES del Dealer OS, el Centro Operativo, la Contabilidad
 # del dealer y bank-v2 = UNA barra, la de ModuleShell, sin el menú ni la barra de DealerShell o DccShell); si falta un
 # fichero o falla, FAIL sin mirar el resto.
+# DECISION_CESAR 20-oct 10:46 (#2067): incluye YA la prueba (d) de la retirada (ps-9-carcasas-2-retirada.test.ts, la trae
+# la PARTE 7/7): hasta que entre, este RESULT da FAIL; solo puede dar PASS con las 7 partes. Nada de PASS parcial.
 set -u
 cd "$(dirname "$0")/../.." || exit 1
 INTEGRADAS=(
@@ -12,6 +14,8 @@ INTEGRADAS=(
   tests/nav/ps-9-carcasas-2-integrado.test.tsx
   tests/nav/ps-9-carcasas-2-banco.test.tsx
   tests/nav/ps-9-carcasas-2-contable.test.tsx
+  tests/nav/ps-9-carcasas-2-dealer-sin-bucle.test.tsx
+  tests/nav/ps-9-carcasas-2-retirada.test.ts
 )
 for f in "${INTEGRADAS[@]}"; do
   if [ ! -f "$f" ]; then
