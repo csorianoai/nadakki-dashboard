@@ -3,7 +3,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { DCC_CLASSES } from "@/components/dcc/clases";
-import type { DccNavGroup } from "@/app/(forge)/credit-hub/bank-v2/_nav";
+import type { DccNavGroup } from "@/components/dcc/shell/DccShell";
 
 type Opcion = { id: string; etiqueta: string; grupo: string; href: string };
 
