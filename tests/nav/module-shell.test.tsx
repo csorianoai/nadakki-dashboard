@@ -14,7 +14,6 @@ import { MODULOS, menuVisible } from "@/lib/modulos/registro";
 let pathname = "/legal/cases/new";
 jest.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => ({ replace: jest.fn(), push: jest.fn() }) }));
 jest.mock("@/components/forge/auth/ProtectedRoute", () => ({ __esModule: true, ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
-jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({ __esModule: true, GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="forge-shell">{children}</div> }));
 jest.mock("@/components/dealer/DealerSuiteGate", () => ({ __esModule: true, DealerSuiteGate: ({ children }: { children: React.ReactNode }) => <>{children}</>, isDealerReachableSuitePath: (p: string) => p.startsWith("/contable") }));
 jest.mock("@/components/dealer/ContableChrome", () => ({ __esModule: true, ContableChrome: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
 jest.mock("@/components/white-label/TenantBrandedDocumentTitle", () => ({ __esModule: true, TenantBrandedDocumentTitle: () => null }));
@@ -222,8 +221,13 @@ describe("AppGate: qué rutas usan ModuleShell", () => {
     expect(modulo(r)).toBe("propia");
   });
 
-  test.each([["/sic"], ["/credit-hub/dealer"], ["/credit-hub/admin"], ["/agents"], ["/ruta/que/nadie/conoce"]])("%s sigue en GlobalForgeAppShell (Crédito: sus layouts ocultan el chrome global)", (r) => {
-    expect(modulo(r)).toBe("global");
+  // PS-9-CARCASAS-3: ya no hay respaldo GlobalForgeAppShell. Sin módulo, la Suite; /credit-hub/dealer, solo la barra.
+  test.each([["/sic", "credito"], ["/credit-hub/admin", "credito"], ["/agents", "suite"], ["/ruta/que/nadie/conoce", "suite"]])("%s -> ModuleShell (%s)", (r, esperado) => {
+    expect(modulo(r)).toBe(esperado);
+  });
+
+  test("/credit-hub/dealer conserva su chrome propio (solo la barra de MarcoSuite)", () => {
+    expect(modulo("/credit-hub/dealer")).toBe("propia");
   });
 });
 

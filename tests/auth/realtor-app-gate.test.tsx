@@ -10,10 +10,6 @@ jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
 }));
 
-jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({
-  __esModule: true,
-  GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="forge-shell">{children}</div>,
-}));
 
 jest.mock("@/components/ai/OnboardingAgent", () => ({ __esModule: true, default: () => <div data-testid="bot-widget" /> }));
 
@@ -30,13 +26,13 @@ describe("AppGate: Realtor OS con su propio armazón", () => {
   test("una ruta que solo empieza por la palabra (/realtors) sigue en el armazón genérico", () => {
     pathname = "/realtors";
     render(<AppGate>Otra</AppGate>);
-    expect(screen.getByTestId("forge-shell")).toBeInTheDocument();
+    expect(screen.getByTestId("module-shell")).toBeInTheDocument();
   });
 
   test("el resto de la Suite sigue en el armazón genérico", () => {
     pathname = "/sic";
     render(<AppGate>SIC</AppGate>);
-    expect(screen.getByTestId("forge-shell")).toBeInTheDocument();
+    expect(screen.getByTestId("module-shell")).toBeInTheDocument();
     expect(screen.getByTestId("protected")).toBeInTheDocument();
   });
 });

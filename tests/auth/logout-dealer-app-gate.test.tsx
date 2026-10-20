@@ -47,15 +47,6 @@ jest.mock("@/components/ai/OnboardingAgent", () => ({
   default: () => null,
 }));
 
-// El shell real envuelve su chrome en DealerSuiteGate; aqui solo el gate.
-jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => {
-  const { DealerSuiteGate } = jest.requireActual("@/components/dealer/DealerSuiteGate");
-  return {
-    GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => (
-      <DealerSuiteGate>{children}</DealerSuiteGate>
-    ),
-  };
-});
 
 import LogoutPage from "@/app/(public)/logout/page";
 import AppGate from "@/components/auth/AppGate";

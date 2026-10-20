@@ -33,10 +33,9 @@ jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   ),
 }));
 
-jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({
-  GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="suite-operativa">{children}</div>
-  ),
+
+jest.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ isLoading: false, isAuthenticated: true, allRoles: [{ role_key: "platform_superadmin", core_name: "platform", display_name: "Administrador" }] }),
 }));
 
 jest.mock("@/components/ai/OnboardingAgent", () => ({
@@ -89,14 +88,14 @@ describe("AppGate: la barra Suite operativa no entra en el panel del dealer", ()
     expect(screen.queryByTestId("suite-operativa")).toBeNull();
   });
 
-  it("en una ruta de hub cualquiera el shell global sigue montandose", () => {
-    pathname = "/credit-hub/dealer";
+  it("en una ruta de hub cualquiera el armazón común sigue montandose", () => {
+    pathname = "/credit-hub/admin";
     render(
       <AppGate>
         <p>contenido</p>
       </AppGate>,
     );
-    expect(screen.getByTestId("suite-operativa")).toBeInTheDocument();
+    expect(screen.getByTestId("module-shell")).toBeInTheDocument();
   });
 
   it("/autos/dealership no es el panel y no se le quita el shell", () => {
@@ -106,7 +105,7 @@ describe("AppGate: la barra Suite operativa no entra en el panel del dealer", ()
         <p>contenido</p>
       </AppGate>,
     );
-    expect(screen.getByTestId("suite-operativa")).toBeInTheDocument();
+    expect(screen.getByTestId("module-shell")).toBeInTheDocument();
   });
 });
 
