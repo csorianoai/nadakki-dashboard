@@ -19,6 +19,7 @@ const STATUS: Record<string, { label: string; c: string; bg: string; Icon: typeo
   declined: { label: "Rechazada", c: "var(--ch-danger-text)", bg: "var(--ch-danger-soft)", Icon: X },
   offered: { label: "Contraoferta", c: "var(--ch-warning-text)", bg: "var(--ch-warning-soft)", Icon: RefreshCw },
   counter_offer: { label: "Contraoferta", c: "var(--ch-warning-text)", bg: "var(--ch-warning-soft)", Icon: RefreshCw },
+  conditioned: { label: "Condicionada", c: "var(--ch-warning-text)", bg: "var(--ch-warning-soft)", Icon: RefreshCw },
 };
 
 export function DealerStatusBadge({ status, size = "md" }: { status: string; size?: "md" | "lg" }) {

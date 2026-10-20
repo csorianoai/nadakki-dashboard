@@ -159,7 +159,8 @@ export function normalizeApplication(raw: unknown): CreditApplication {
     } else if (decision === "rejected") {
       status = "rejected";
     } else if (decision === "conditioned") {
-      status = "conditioned";
+      // Contraoferta del banco: el estado sigue en BANK_COMPLETE, pero el dealer debe verla como tal (DB-CODEX-16 c).
+      status = bankDecisionStr?.toUpperCase() === "CONTRA_OFERTA" ? "counter_offer" : "conditioned";
     }
   }
 
