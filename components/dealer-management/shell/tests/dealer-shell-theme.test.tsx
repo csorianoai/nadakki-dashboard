@@ -136,7 +136,7 @@ describe("El panel del dealer recuerda el tema al recargar", () => {
     expect(screen.getByTestId("sonda")).toHaveTextContent("light");
   });
 
-  it("sin storageKey (DccShell y demas) no lee ni escribe Local Storage", () => {
+  it("sin storageKey no lee ni escribe Local Storage", () => {
     window.localStorage.setItem(CLAVE, "dark");
     const lee = jest.spyOn(Storage.prototype, "getItem");
     const escribe = jest.spyOn(Storage.prototype, "setItem");
@@ -152,12 +152,10 @@ describe("El panel del dealer recuerda el tema al recargar", () => {
     expect(escribe).not.toHaveBeenCalled();
   });
 
-  it("el DealerShell pasa SU clave; DccShell (banco v2) solo usa la que le da su llamador", () => {
+  it("el DealerShell pasa SU clave; el banco v2 (BancoV2Shell, sin DccShell desde PS-9-CARCASAS-2) pasa la suya", () => {
     expect(SHELL[0]).toContain("<DccThemeProvider storageKey={DEALER_THEME_STORAGE_KEY}>");
-    const dccShell = readFileSync(join(__dirname, "..", "..", "..", "dcc", "shell", "DccShell.tsx"), "utf8");
-    expect(dccShell).toContain("<DccThemeProvider storageKey={props.temaStorageKey} conmutadorEnChrome>");
-    expect(dccShell).not.toContain("DEALER_THEME_STORAGE_KEY");
     const bancoV2 = readFileSync(join(__dirname, "..", "..", "..", "..", "app", "(forge)", "credit-hub", "bank-v2", "BancoV2Shell.tsx"), "utf8");
+    expect(bancoV2).toContain("<DccThemeProvider storageKey={BANCO_V2_THEME_STORAGE_KEY} conmutadorEnChrome>");
     expect(bancoV2).not.toContain(DEALER_THEME_STORAGE_KEY);
   });
 });
