@@ -13,7 +13,8 @@
  * que SIGUEN apareciendo en la vitrina publica: quitarlas de todas partes
  * romperia el marketplace, que es donde esas barras si corresponden.
  */
-import { render, screen } from "@testing-library/react";
+import { render as renderRTL, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import AppGate from "@/components/auth/AppGate";
 import { TopNav } from "@/components/nav/TopNav";
@@ -60,6 +61,11 @@ jest.mock("@/components/system/TenantProvider", () => ({
 jest.mock("@/components/shopper/ShopperProvider", () => ({
   useShopper: () => ({ newMatchCount: 0, profile: null }),
 }));
+
+// Como en la app (providers raíz): con PS-9-CARCASAS-2 el menú del Dealer OS pide el lote de acceso
+// (capability) desde ModuleShell, que usa react-query. Lo que estos casos afirman no cambia.
+const render = (ui: React.ReactElement) =>
+  renderRTL(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider>);
 
 describe("AppGate: la barra Suite operativa no entra en el panel del dealer", () => {
   it("bajo /autos/dealer protege la ruta pero no monta el shell global de cores", () => {

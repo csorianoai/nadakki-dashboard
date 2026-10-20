@@ -17,6 +17,8 @@ import { syncDealerContextFromBackend } from "@/lib/dealer/dealer-context-api";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { esAdministrador, esCreditoDelDealer, SALIDA_ADMIN_SIN_DEALER } from "./dealer-sin-asignacion";
 import { DEALER_NAV_CAPABILITY_KEYS, visibleDealerNavGroups } from "./dealer-nav";
+import { useDentroDeModuleShell } from "@/components/shell/ModuleShell";
+import { DealerAcciones, DealerAvisoAcceso } from "./DealerAcciones";
 import { DealerCommandPalette } from "./DealerCommandPalette";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
@@ -82,6 +84,11 @@ export function DealerShell({ children }: { children: ReactNode }) {
 
 function DealerShellChrome({ children }: { children: ReactNode }) {
   const theme = useDccThemeContext()?.theme ?? "light";
+  /**
+   * PS-9-CARCASAS-2: con el armazón común alrededor (AppGate -> ModuleShell), el menú, la barra, las migas y el
+   * buscador Ctrl+K son los de la Suite. Aquí quedan solo lo del dealer: sincronización, avisos, tema y acciones.
+   */
+  const dentro = useDentroDeModuleShell();
   const [mobileNav, setMobileNav] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -190,8 +197,9 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
     [failClosed, results],
   );
 
-  // Atajo global de la paleta. Cmd+K en mac, Ctrl+K en el resto.
+  // Atajo global de la paleta. Cmd+K en mac, Ctrl+K en el resto. Dentro de ModuleShell el atajo es de su buscador.
   useEffect(() => {
+    if (dentro) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -200,7 +208,7 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [dentro]);
 
   /**
    * Mientras la sincronizacion esta en vuelo no se pinta ningun hijo. Y ninguno
@@ -280,6 +288,60 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
     [groups],
   );
 
+  const contenido = (
+    <>
+      {sincronizando ? (
+        <p data-testid="dealer-context-verificando" className="animate-pulse text-sm text-[var(--nav-fg-muted)]">
+          Verificando
+        </p>
+      ) : avisoDeContexto && !adminEnCredito ? (
+        <section
+          role="alert"
+          data-testid="dealer-context-aviso"
+          data-estado={avisoDeContexto.estado}
+          data-reason-code={avisoDeContexto.codigo ?? ""}
+          className="rounded-xl border border-[var(--dcc-border-strong)] bg-[var(--dcc-partial-bg)] p-4 text-sm text-[var(--dcc-partial-fg)]"
+        >
+          <p className="font-semibold">{avisoDeContexto.titulo}</p>
+          {avisoDeContexto.detalle ? (
+            <p className="mt-1 text-[var(--dcc-partial-fg)]">{avisoDeContexto.detalle}</p>
+          ) : null}
+          {adminSinDealer ? (
+            <Link
+              href={SALIDA_ADMIN_SIN_DEALER.href}
+              data-testid="dealer-context-salida-admin"
+              className="mt-3 inline-block font-semibold underline"
+            >
+              {SALIDA_ADMIN_SIN_DEALER.label}
+            </Link>
+          ) : null}
+          {avisoDeContexto.codigo ? (
+            <DetalleTecnico>
+              <p>Código para soporte: {avisoDeContexto.codigo}</p>
+            </DetalleTecnico>
+          ) : null}
+        </section>
+      ) : (
+        children
+      )}
+    </>
+  );
+
+  if (dentro) {
+    return (
+      <div
+        data-portal="dealer"
+        data-dcc-theme={theme}
+        style={dealerShellThemeStyle(theme)}
+        className={`${dealerFontVariables} min-w-0 bg-[var(--bg)] text-[var(--fg)] antialiased`}
+      >
+        <DealerAcciones canPublish={allows("autos.inventory.create")} canSeeNotifications={allows("credit.applications.view")} />
+        {unverifiedReason ? <DealerAvisoAcceso reasonCode={unverifiedReason} /> : null}
+        {contenido}
+      </div>
+    );
+  }
+
   return (
     <div
       data-portal="dealer"
@@ -311,40 +373,7 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
         {/* Contenedor, no <main>: cada pagina del dealer ya aporta su propio
             landmark <main>, y anidarlos seria HTML invalido. */}
         <div id="dealer-main" className="min-w-0 flex-1 px-4 py-5 sm:px-5 lg:px-6 lg:py-6">
-          {sincronizando ? (
-            <p data-testid="dealer-context-verificando" className="animate-pulse text-sm text-[var(--nav-fg-muted)]">
-              Verificando
-            </p>
-          ) : avisoDeContexto && !adminEnCredito ? (
-            <section
-              role="alert"
-              data-testid="dealer-context-aviso"
-              data-estado={avisoDeContexto.estado}
-              data-reason-code={avisoDeContexto.codigo ?? ""}
-              className="rounded-xl border border-[var(--dcc-border-strong)] bg-[var(--dcc-partial-bg)] p-4 text-sm text-[var(--dcc-partial-fg)]"
-            >
-              <p className="font-semibold">{avisoDeContexto.titulo}</p>
-              {avisoDeContexto.detalle ? (
-                <p className="mt-1 text-[var(--dcc-partial-fg)]">{avisoDeContexto.detalle}</p>
-              ) : null}
-              {adminSinDealer ? (
-                <Link
-                  href={SALIDA_ADMIN_SIN_DEALER.href}
-                  data-testid="dealer-context-salida-admin"
-                  className="mt-3 inline-block font-semibold underline"
-                >
-                  {SALIDA_ADMIN_SIN_DEALER.label}
-                </Link>
-              ) : null}
-              {avisoDeContexto.codigo ? (
-                <DetalleTecnico>
-                  <p>Código para soporte: {avisoDeContexto.codigo}</p>
-                </DetalleTecnico>
-              ) : null}
-            </section>
-          ) : (
-            children
-          )}
+          {contenido}
         </div>
       </div>
 
