@@ -17,7 +17,6 @@ jest.mock("next/navigation", () => ({
   usePathname: () => pathname,
   useRouter: () => ({ replace, push: jest.fn() }),
   useSelectedLayoutSegments: () => [],
-  useSearchParams: () => new URLSearchParams(),
 }));
 // La sesión que lee el ProtectedRoute REAL: autenticada y sin cambio de contraseña pendiente.
 jest.mock("@/hooks/useAuth", () => ({
@@ -76,10 +75,5 @@ test.each(RUTAS)("%s: sin dealer se pinta la Suite y el contenido, sin redirecci
   expect(screen.getAllByTestId("barra-suite")).toHaveLength(1);
   expect(replace).not.toHaveBeenCalled();
 });
+// El menú de la Suite en una ruta sin módulo lo comprueba ps-9-carcasas-3-sin-modulo.test.tsx.
 
-test("sin dealer, una ruta sin módulo trae el menú de la Suite (lo que daba la barra lateral de GlobalForgeAppShell)", async () => {
-  fetchMock.mockResolvedValue([]);
-  pintar("/agents");
-  expect(await screen.findByText("contenido")).toBeInTheDocument();
-  expect(screen.getByRole("complementary", { name: "Menú de Suite" })).toBeInTheDocument();
-});
