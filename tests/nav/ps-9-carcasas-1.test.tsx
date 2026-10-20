@@ -63,11 +63,11 @@ describe("(a) las rutas de Crédito renderizan ModuleShell, una sola barra", () 
     expect(screen.getByRole("complementary", { name: "Menú de Crédito" })).toBeInTheDocument();
   });
 
-  test("las rutas con carcasa propia (dealer, bank-v2, cockpit de crédito, monetización, SIC) no cambian", () => {
-    for (const r of ["/credit-hub/dealer", "/credit-hub/dealer/applications", "/credit-hub/bank-v2", "/credit-hub/admin", "/credit-hub/monetizacion/dashboard", "/sic", "/market-intel"]) {
+  test("las rutas con carcasa propia (portal dealer, cockpit de crédito, monetización, SIC) no cambian; bank-v2 pasa a la común en PS-9-CARCASAS-2", () => {
+    for (const r of ["/credit-hub/dealer", "/credit-hub/dealer/applications", "/credit-hub/admin", "/credit-hub/monetizacion/dashboard", "/sic", "/market-intel"]) {
       expect(usaCarcasaComun(r)).toBe(false);
     }
-    for (const r of ["/credit-hub", "/credit-hub/bank", "/credit-hub/bank/applications", "/credit/dashboard"]) expect(usaCarcasaComun(r)).toBe(true);
+    for (const r of ["/credit-hub", "/credit-hub/bank", "/credit-hub/bank/applications", "/credit/dashboard", "/credit-hub/bank-v2"]) expect(usaCarcasaComun(r)).toBe(true);
   });
 
   test("sin pantalla de grupo: /credit-hub/grupo/<id> no existe como ruta", () => {

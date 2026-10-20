@@ -22,6 +22,8 @@ jest.mock("@/components/nav/BuscadorNavegacion", () => ({ __esModule: true, EVEN
 jest.mock("@/components/forge/auth/UserMenu", () => ({ __esModule: true, UserMenu: () => <button type="button">Usuario</button> }));
 jest.mock("@/components/forge/auth/TenantSwitcher", () => ({ __esModule: true, TenantSwitcher: () => null }));
 jest.mock("@/components/forge/layout/ProyectosFinanzasSidebarLinks", () => ({ __esModule: true, ProyectosFinanzasSidebarLinks: () => null }));
+// PS-9-CARCASAS-2: el menú de Concesionarios lleva capability y ModuleShell pide el lote de acceso (red): aquí, vacío.
+jest.mock("@/lib/access/hooks", () => ({ __esModule: true, useAccessEntitlementsBatch: () => ({ isPending: false, isLoading: false, isError: false, error: null, data: { results: {} } }) }));
 let mockRealtorAccess = "apagado";
 jest.mock("@/components/realtor/useRealtorAccess", () => ({ __esModule: true, useRealtorAccess: () => mockRealtorAccess }));
 jest.mock("@/components/ai/OnboardingAgent", () => ({ __esModule: true, default: () => null }));
@@ -212,13 +214,15 @@ describe("AppGate: qué rutas usan ModuleShell", () => {
     ["/", "suite"], ["/notifications", "suite"], ["/marketing/campaigns", "marketing"], ["/workflows", "marketing"],
     ["/legal/cases", "legal"], ["/proyectos/portafolio", "proyectos"], ["/admin/gates", "administracion"], ["/settings", "administracion"],
     ["/credit-hub", "credito"], ["/credit-hub/activacion", "credito"], ["/credit/dashboard", "credito"],   // PS-9-CARCASAS-1
+    ["/autos/dealer", "concesionarios"], ["/autos/dealer/inventario", "concesionarios"], ["/centro-operativo", "concesionarios"],   // PS-9-CARCASAS-2
+    ["/credit-hub/bank-v2", "credito"], ["/credit-hub/bank-v2/solicitudes", "credito"],   // PS-9-CARCASAS-2 PARTE 4/5
   ])("%s -> ModuleShell (%s)", (r, esperado) => expect(modulo(r)).toBe(esperado));
 
-  test.each([["/autos/dealer"], ["/realtor"], ["/cockpit"], ["/contable/resumen"]])("%s conserva su carcasa propia (solo la barra de MarcoSuite)", (r) => {
+  test.each([["/realtor"], ["/cockpit"], ["/contable/resumen"]])("%s conserva su carcasa propia (solo la barra de MarcoSuite)", (r) => {
     expect(modulo(r)).toBe("propia");
   });
 
-  test.each([["/sic"], ["/credit-hub/bank-v2"], ["/credit-hub/dealer"], ["/credit-hub/admin"], ["/agents"], ["/ruta/que/nadie/conoce"]])("%s sigue en GlobalForgeAppShell (Crédito: sus layouts ocultan el chrome global)", (r) => {
+  test.each([["/sic"], ["/credit-hub/dealer"], ["/credit-hub/admin"], ["/agents"], ["/ruta/que/nadie/conoce"]])("%s sigue en GlobalForgeAppShell (Crédito: sus layouts ocultan el chrome global)", (r) => {
     expect(modulo(r)).toBe("global");
   });
 });

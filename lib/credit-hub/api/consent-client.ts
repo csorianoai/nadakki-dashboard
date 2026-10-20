@@ -24,10 +24,27 @@ export interface PresentConsentTextResponse {
   unavailable?: boolean;
 }
 
+/** Llaves del texto RD v1.0 que rellena quien firma (las de servidor las pone el backend). */
+export const PRESENT_TEXT_CLIENT_FIELDS = [
+  "NOMBRE_TITULAR",
+  "CEDULA",
+  "NOMBRE_CONCESIONARIO",
+  "VEHICULO",
+  "LISTA_ENTIDADES",
+  "CONTACTO_DERECHOS",
+  "LUGAR",
+  "FECHA",
+] as const;
+
+export type PresentTextField = (typeof PRESENT_TEXT_CLIENT_FIELDS)[number];
+export type PresentTextFields = Record<PresentTextField, string>;
+
 export interface ConsentAcceptPayload {
   otp_code?: string;
   consents_accepted: string[];
   full_name: string;
+  /** Mismos datos con los que se pidió el texto presencial: el backend rellena y firma ese texto. */
+  texto_campos?: PresentTextFields;
 }
 
 export interface ConsentAcceptResponse {
@@ -67,6 +84,28 @@ export class ConsentChannelUnavailableError extends Error {
     super(message);
     this.name = "ConsentChannelUnavailableError";
   }
+}
+
+/** Error HTTP del backend de consentimiento; conserva el código de `detail.code` cuando lo hay. */
+export class ConsentApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+    public readonly code: string | null,
+    public readonly missing: string[]
+  ) {
+    super(message);
+    this.name = "ConsentApiError";
+  }
+}
+
+function base64UrlJson(value: unknown): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let bin = "";
+  bytes.forEach((b) => {
+    bin += String.fromCharCode(b);
+  });
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 /** Solo el estado SENT del backend cuenta como «enviado» (mock_sent o desconocido, no). */
@@ -139,7 +178,13 @@ export class ConsentApiClient {
             throw new ConsentChannelUnavailableError(String(d.channel ?? ""), String(d.reason ?? ""), response.statusText);
           }
         }
-        throw new Error(messageFromBody(body, response.statusText));
+        const d = detail && typeof detail === "object" ? (detail as Record<string, unknown>) : null;
+        throw new ConsentApiError(
+          response.status,
+          messageFromBody(body, response.statusText),
+          d && typeof d.code === "string" ? d.code : null,
+          d && Array.isArray(d.missing) ? d.missing.map(String) : []
+        );
       }
       return body as T;
     } finally {
@@ -176,12 +221,23 @@ export class ConsentApiClient {
   }
 
   /**
-   * Texto legal del consentimiento presencial. El backend no expone ninguna ruta que lo entregue
-   * (solo GET /{token}/public en flujos remotos), así que no se hace petición: falla cerrado con
-   * «texto no disponible» y el formulario presencial no permite firmar.
+   * Sin los datos del documento no hay texto que pedir: falla cerrado sin petición.
+   * El texto real lo trae `fetchPresentText` con esos datos.
    */
   async getPresentText(_applicationId: string): Promise<PresentConsentTextResponse> {
     return { consent_text: null, consent_text_version: null, unavailable: true };
+  }
+
+  /**
+   * Texto RD v1.0 rellenado para el evento PRESENT pendiente. Los datos del titular viajan en la
+   * cabecera X-Consent-Fields (JSON base64url), nunca en la URL, como exige el backend.
+   */
+  async fetchPresentText(applicationId: string, campos: PresentTextFields): Promise<PresentConsentTextResponse> {
+    return this.fetchJson<PresentConsentTextResponse>(`/${encodeURIComponent(applicationId)}/present/text`, {
+      method: "GET",
+      includeTenant: true,
+      headers: { "X-Consent-Fields": base64UrlJson(campos) },
+    });
   }
 
   async getStatus(token: string): Promise<ConsentStatusResponse> {

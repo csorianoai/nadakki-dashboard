@@ -63,8 +63,7 @@ export function DealerKpiStrip({
   const approved = summary?.applications_by_display_status?.APPROVED ?? 0;
   const closeRate = approved + funded > 0 ? Math.round((funded / (approved + funded)) * 100) : null;
 
-  const demoTrend = [3, 4, 5, 6, 7, 8];
-
+  // Sin serie histórica real: ninguna tarjeta dibuja mini-tendencias ilustrativas (DB-CODEX-16 paso 9).
   const cards = useMemo(
     () => [
       {
@@ -73,9 +72,7 @@ export function DealerKpiStrip({
         truth: "REAL" as const,
         delta: { direction: "up" as const, label: `+${Math.max(weekCount, 0)} en pipeline` },
         icon: Activity,
-        trendDemo: true,
         trendColor: "var(--ch-text-3)",
-        trendValues: [...demoTrend, active || 1],
       },
       {
         label: "Enviadas a bancos",
@@ -83,7 +80,6 @@ export function DealerKpiStrip({
         truth: "REAL" as const,
         delta: { direction: "up" as const, label: `+${weekCount} esta semana` },
         icon: Send,
-        trendDemo: true,
         trendColor: "var(--ch-info)",
       },
       {
@@ -92,7 +88,6 @@ export function DealerKpiStrip({
         truth: summary ? ("REAL" as const) : ("ROADMAP" as const),
         delta: offersTotal ? { direction: "up" as const, label: "de tus bancos" } : undefined,
         icon: Zap,
-        trendDemo: !summary,
         trendColor: "var(--ch-warning)",
       },
       {
@@ -100,19 +95,16 @@ export function DealerKpiStrip({
         value: approvalPct ?? "—",
         unit: approvalPct != null ? "%" : undefined,
         truth: "REAL" as const,
-        delta: approvalPct != null ? { direction: "up" as const, label: "objetivo 62%" } : undefined,
         icon: Percent,
         accent: true,
-        trendDemo: true,
         trendColor: "var(--ch-success)",
       },
       {
         label: "Tiempo a 1ª oferta",
         value: avgTimeToOffer(banks),
-        truth: banks?.length ? ("REAL" as const) : ("DEMO" as const),
+        truth: banks?.length ? ("REAL" as const) : ("NONE" as const),
         delta: banks?.length ? { direction: "down" as const, label: "promedio ranking" } : undefined,
         icon: Clock,
-        trendDemo: !banks?.length,
         trendColor: "var(--ch-info)",
       },
       {
@@ -122,26 +114,23 @@ export function DealerKpiStrip({
         truth: "REAL" as const,
         delta: { direction: "up" as const, label: "en evaluación" },
         icon: Banknote,
-        trendDemo: true,
         trendColor: "var(--ch-warning)",
       },
       {
         label: "Tasa de cierre",
         value: closeRate ?? "—",
         unit: closeRate != null ? "%" : undefined,
-        truth: summary ? ("REAL" as const) : ("DEMO" as const),
+        truth: summary ? ("REAL" as const) : ("NONE" as const),
         delta: closeRate != null ? { direction: "up" as const, label: "aceptada→fondeada" } : undefined,
         icon: Target,
-        trendDemo: !summary,
         trendColor: "var(--ch-success)",
       },
       {
         label: "APR promedio obtenido",
         value: avgAprFromBanks(banks),
-        truth: banks?.length ? ("REAL" as const) : ("DEMO" as const),
+        truth: banks?.length ? ("REAL" as const) : ("NONE" as const),
         delta: banks?.length ? { direction: "down" as const, label: "mejor para cliente" } : undefined,
         icon: TrendingUp,
-        trendDemo: !banks?.length,
         trendColor: "var(--ch-info)",
       },
     ],

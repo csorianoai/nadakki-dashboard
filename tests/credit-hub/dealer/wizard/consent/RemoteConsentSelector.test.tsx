@@ -65,7 +65,7 @@ describe("RemoteConsentSelector", () => {
     expect(screen.getByTestId("method-selfie")).toBeInTheDocument();
   });
 
-  it("shows method-specific component on selection", async () => {
+  it("Email está deshabilitado (staging sin proveedor real, DB-CODEX-16 paso 4) y no abre su formulario", async () => {
     const user = userEvent.setup();
     render(
       <RemoteConsentSelector
@@ -80,8 +80,10 @@ describe("RemoteConsentSelector", () => {
         onFullNameChange={noop}
       />
     );
+    expect(within(screen.getByTestId("method-email")).getByRole("radio")).toBeDisabled();
+    expect(screen.getByTestId("method-email-unavailable")).toHaveTextContent(/canal no disponible/i);
     await user.click(screen.getByTestId("method-email"));
-    expect(screen.getByTestId("email-method")).toBeInTheDocument();
+    expect(screen.queryByTestId("email-method")).not.toBeInTheDocument();
   });
 
   it("WhatsApp, SMS_OTP y Selfie están deshabilitados con su razón y no se pueden iniciar", async () => {

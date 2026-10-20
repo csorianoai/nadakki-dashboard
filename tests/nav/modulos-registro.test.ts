@@ -3,7 +3,7 @@
  * (nunca copiados), moduloDeRuta, y visibilidad idéntica a la del menú lateral de la Suite (mismo filtro).
  */
 import { NAV_SECTIONS, filterSectionsForUser, userCanAccessAdminNav } from "@/components/forge/layout/forge-global-sidebar-nav";
-import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-nav";
+import { DEALER_NAV_GROUPS, isDealerNavItemOpenable } from "@/components/dealer-management/shell/dealer-nav";
 import type { RoleInfo } from "@/lib/api/auth-v2";
 import { MODULOS, itemActivo, menuVisible, moduloDeRuta, modulosVisibles, sinQuery, usaCarcasaComun } from "@/lib/modulos/registro";
 import { NAVEGACION, PESTANAS_MARKETING } from "@/lib/navigation";
@@ -66,7 +66,8 @@ describe("(2) el menú se DERIVA, no se copia", () => {
 
   test("Marketing sale de las pestañas; Dealer OS de DEALER_NAV_GROUPS; Real Estate de sus centros", () => {
     expect(hrefs(modulo("marketing"))).toEqual(PESTANAS_MARKETING.flatMap((p) => p.paginas.map((g) => g.href)));
-    expect(hrefs(modulo("concesionarios"))).toEqual(DEALER_NAV_GROUPS.flatMap((g) => g.items.map((i) => i.href)));
+    // PS-9-CARCASAS-2: con la MISMA regla que el menú propio del dealer (visibleDealerNavGroups): solo lo que se abre desde el panel.
+    expect(hrefs(modulo("concesionarios"))).toEqual(DEALER_NAV_GROUPS.flatMap((g) => g.items.filter((i) => isDealerNavItemOpenable(i.href)).map((i) => i.href)));
     const centros = REALTOR_CENTERS.filter((c) => c.href).map((c) => c.href);
     for (const c of centros) expect(hrefs(modulo("real-estate"))).toContain(c);
   });
@@ -93,8 +94,8 @@ describe("(3) moduloDeRuta: gana el prefijo más largo", () => {
   });
 
   test("qué rutas usan ModuleShell", () => {
-    for (const r of ["/marketing/campaigns", "/legal/cases", "/proyectos", "/admin", "/settings"]) expect(usaCarcasaComun(r)).toBe(true);
-    for (const r of ["/", "/cockpit", "/credit-hub/bank-v2", "/sic", "/autos/dealer", "/realtor", "/contable/resumen", "/agents"]) expect(usaCarcasaComun(r)).toBe(false);
+    for (const r of ["/marketing/campaigns", "/legal/cases", "/proyectos", "/admin", "/settings", "/autos/dealer", "/centro-operativo", "/credit-hub/bank-v2"]) expect(usaCarcasaComun(r)).toBe(true);   // dealer y bank-v2: PS-9-CARCASAS-2
+    for (const r of ["/", "/cockpit", "/sic", "/realtor", "/contable/resumen", "/agents"]) expect(usaCarcasaComun(r)).toBe(false);
   });
 
   test("item activo: el de href más específico", () => {
