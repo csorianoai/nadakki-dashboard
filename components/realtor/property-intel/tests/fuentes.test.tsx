@@ -42,14 +42,34 @@ it("pinta cada fuente con su estado, cifras, margen y procedencia; UNAVAILABLE c
   expect(screen.queryByText(/DEMO/)).toBeNull();
 });
 
-it("permisos LIVE: número en el radio y ventana", async () => {
+it("permisos LIVE: área medida, reparto por ScopeofWork, obra nueva por coste y atribución CC BY 4.0", async () => {
   const live = { ...PERM, provider_status: "configured", data_status: "LIVE", unavailable_reason: null, detail: null,
-    values: { permits_issued: 37, radius_m: 800 }, window: { start: "2025-10-20", end: "2026-10-20" }, provenance: { provider: "City of Miami Open Data" } };
+    geo: { area: "Edgewater", envelope: [-80.1935, 25.7935, -80.183, 25.811] }, window: { start: "2025-10-20", end: "2026-10-20" },
+    provenance: { provider: "City of Miami Open Data", attribution: "City of Miami (CC BY 4.0)" },
+    values: { permits_issued: 1082, scope_of_work: [{ scope: "SYNTH REPAIR", count: 900 }, { scope: "SYNTH NEW", count: 40 }],
+      new_construction: { scopes: ["SYNTH NEW"], count: 40, top_by_cost: [{ permit_number: "BD-SYNTH-1", scope_of_work: "SYNTH NEW",
+        property_type: "SYNTH", total_cost: 90000000, issued_date: "2026-01-01", status: "SYNTH" }] } } };
   api({ [`${B}/acs`]: res(200, ACS), [`${B}/miami-permits`]: res(200, live), [`${B}/dor`]: res(200, DOR) });
   render(<FuentesZona propertyId={P} />);
   const perm = await screen.findByTestId("pi-src-city_of_miami_building_permits");
-  expect(perm).toHaveTextContent("Permisos emitidos en 800 m37");
-  expect(perm).toHaveTextContent("2025-10-20 → 2026-10-20");
+  expect(perm).toHaveTextContent("Permisos emitidos (12 meses)1,082");
+  expect(perm).toHaveTextContent("Edgewater · 2025-10-20 → 2026-10-20");
+  expect(perm).toHaveTextContent("City of Miami (CC BY 4.0)");
+  expect(within(perm).getAllByTestId("pi-src-scope").map((n) => n.textContent)).toEqual(["SYNTH REPAIR · 900", "SYNTH NEW · 40"]);
+  expect(within(perm).getByTestId("pi-src-new-count")).toHaveTextContent("Obra nueva (SYNTH NEW): 40");
+  expect(within(perm).getByTestId("pi-src-new-row")).toHaveTextContent("BD-SYNTH-1 · SYNTH NEW · 90,000,000 USD · 2026-01-01 · SYNTH");
+});
+
+it("permisos sin filtro de obra nueva: lo dice, sin inventar la lista", async () => {
+  const live = { ...PERM, provider_status: "configured", data_status: "LIVE", unavailable_reason: null,
+    detail: "Sin MIAMI_PERMITS_NEW_WORK_SCOPES: elige en scope_of_work los valores de obra nueva.",
+    geo: { area: "Edgewater" }, provenance: { attribution: "City of Miami (CC BY 4.0)" },
+    values: { permits_issued: 10, scope_of_work: [], new_construction: null } };
+  api({ [`${B}/acs`]: res(200, ACS), [`${B}/miami-permits`]: res(200, live), [`${B}/dor`]: res(200, DOR) });
+  render(<FuentesZona propertyId={P} />);
+  const perm = await screen.findByTestId("pi-src-city_of_miami_building_permits");
+  expect(perm).toHaveTextContent("Sin MIAMI_PERMITS_NEW_WORK_SCOPES");
+  expect(within(perm).queryByTestId("pi-src-new-row")).toBeNull();
 });
 
 it("respuesta sin sobre válido o error HTTP → no se inventa nada; 404 oculta; sin sesión no llama", async () => {

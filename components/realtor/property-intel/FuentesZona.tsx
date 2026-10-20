@@ -14,7 +14,7 @@ const LABELS: Record<string, [string, boolean]> = {
   population: ["Población", false], median_age: ["Edad mediana", false], median_household_income: ["Ingreso mediano del hogar", true],
   median_home_value: ["Valor mediano de vivienda", true], housing_units: ["Viviendas", false], occupied_units: ["Viviendas ocupadas", false],
   owner_occupied_units: ["En propiedad", false], renter_occupied_units: ["En alquiler", false], median_gross_rent: ["Renta bruta mediana", true],
-  permits_issued: ["Permisos emitidos en 800 m", false], parcels: ["Parcelas", false], residential_units: ["Unidades residenciales", false],
+  permits_issued: ["Permisos emitidos (12 meses)", false], parcels: ["Parcelas", false], residential_units: ["Unidades residenciales", false],
   median_just_value: ["Mediana del valor justo", true], sales_24m: ["Ventas (24 meses)", false], median_sale_price_24m: ["Mediana de venta (24 meses)", true],
 };
 const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v.toLocaleString("en-US", { maximumFractionDigits: 1 }) : null);
@@ -31,10 +31,34 @@ function cifra(v: unknown, money: boolean): string {
 
 function procedencia(s: SourceEnvelope): string {
   const p = s.provenance;
-  const quien = [p.provider, p.year ?? p.roll_year].filter((x) => x !== undefined && x !== null).join(" ");
-  const donde = s.geo.zcta ? `ZCTA ${s.geo.zcta}` : s.geo.zip5 ? `CP ${s.geo.zip5}` : null;
+  const quien = [p.attribution ?? p.provider, p.year ?? p.roll_year].filter((x) => x !== undefined && x !== null).join(" ");
+  const g = s.geo;
+  const donde = g.zcta ? `ZCTA ${g.zcta}` : g.zip5 ? `CP ${g.zip5}` : g.area ? String(g.area) : g.radius_m ? `${g.radius_m} m` : null;
   const cuando = s.window.start && s.window.end ? `${s.window.start} → ${s.window.end}` : (s.window.label as string | undefined) ?? null;
-  return [s.evidence_tier === "estimado" ? "Estimado" : "Observado", quien || null, donde, cuando].filter(Boolean).join(" · ");
+  return [s.evidence_tier === "estimado" ? "Estimado" : "Observado", quien || null, [donde, cuando].filter(Boolean).join(" · ") || null]
+    .filter(Boolean).join(" · ");
+}
+
+type Escala = { scope: unknown; count: unknown };
+type Nueva = { scopes: string[]; count: number; top_by_cost: Record<string, unknown>[] };
+
+/** Permisos: reparto por ScopeofWork y obra nueva por coste, solo si vienen en el sobre. */
+function Permisos({ v }: { v: Record<string, unknown> }) {
+  const escala = Array.isArray(v.scope_of_work) ? (v.scope_of_work as Escala[]) : [];
+  const nueva = v.new_construction && typeof v.new_construction === "object" ? (v.new_construction as Nueva) : null;
+  return (
+    <>
+      {escala.length ? <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{escala.map((e, i) => <li key={i} data-testid="pi-src-scope">{String(e.scope ?? "—")} · {n(e.count) ?? "—"}</li>)}</ul> : null}
+      {nueva ? (
+        <>
+          <p data-testid="pi-src-new-count" style={{ margin: "8px 0 0", fontWeight: 600 }}>Obra nueva ({nueva.scopes.join(", ")}): {n(nueva.count) ?? "—"}</p>
+          <ol style={{ margin: "4px 0 0", paddingLeft: 18 }}>{nueva.top_by_cost.map((r, i) => (
+            <li key={i} data-testid="pi-src-new-row">{[r.permit_number, r.scope_of_work, n(r.total_cost) !== null ? `${n(r.total_cost)} USD` : null, r.issued_date, r.status].filter((x) => x !== null && x !== undefined && x !== "").join(" · ")}</li>
+          ))}</ol>
+        </>
+      ) : null}
+    </>
+  );
 }
 
 function Fuente({ k, s }: { k: SourceKey; s: Section<SourceEnvelope> }) {
@@ -55,6 +79,8 @@ function Fuente({ k, s }: { k: SourceKey; s: Section<SourceEnvelope> }) {
           {filas.map(([key, v]) => [<dt key={`${key}-k`} style={{ color: RT.muted }}>{LABELS[key][0]}</dt>, <dd key={`${key}-v`} style={{ margin: 0, fontWeight: 600 }}>{cifra(v, LABELS[key][1])}</dd>])}
         </dl>
       )}
+      {e.data_status !== "UNAVAILABLE" && e.detail ? <p style={{ margin: "8px 0 0", fontSize: 13 }}>{e.detail}</p> : null}
+      {k === "miami-permits" && e.data_status !== "UNAVAILABLE" ? <Permisos v={e.values} /> : null}
       <p style={{ margin: "8px 0 0", fontSize: 12, color: RT.muted }}>{procedencia(e)}{e.uncertainty ? ` · ${e.uncertainty}` : ""}</p>
     </section>
   );
