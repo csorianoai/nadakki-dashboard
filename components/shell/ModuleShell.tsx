@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Fragment, useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { DealerSuiteGate } from "@/components/dealer/DealerSuiteGate";
 import { CLASES_FUENTES_FORGE } from "@/components/shell/fuentes-forge";
 import { BuscadorNavegacion } from "@/components/nav/BuscadorNavegacion";
@@ -10,6 +10,7 @@ import { SinModulos } from "@/components/nav/SinModulos";
 import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
 import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
 import { grupoDePantalla, grupoDeRuta, menuVisible, modulosVisibles, tienePantallaGrupo, grupoEnlazable, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
+import { capacidadesDe, ConCapacidades } from "./capacidades";
 import { CLASES } from "./clases";
 import { ModuleSidebar } from "./ModuleSidebar";
 import { ModuleTopBar } from "./ModuleTopBar";
@@ -31,6 +32,15 @@ function menuDeSuite(modulos: ModuloConfig[]): GrupoMenu[] {
       ? [{ id: "suite-modulos", label: "Elegir módulo", items: modulos.map((m) => ({ id: `modulo-${m.id}`, label: m.label, href: m.raiz, icono: m.icono })) }]
       : []),
   ];
+}
+
+/**
+ * Lo que está dentro de ModuleShell lo sabe (PS-9-CARCASAS-2): la carcasa de un core migrado (DealerShell) deja de
+ * pintar su propia barra y su propio menú cuando ya la envuelve el armazón común, y se queda con lo demás.
+ */
+const DentroDeModuleShell = createContext(false);
+export function useDentroDeModuleShell(): boolean {
+  return useContext(DentroDeModuleShell);
 }
 
 /** Turquesa de las tarjetas y pestañas: el matiz del turquesa de DCC (lib/dcc/tokens.ts, --dcc-teal), que no es un token global. */
@@ -56,13 +66,30 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
   useEffect(() => setCajon(false), [pathname]);
 
   const modulos = useMemo(() => modulosVisibles(usuario), [usuario]);
-  const grupos = useMemo(() => (modulo ? menuVisible(modulo, usuario) : menuDeSuite(modulos)), [modulo, modulos, usuario]);
-  // Pestañas: las páginas del grupo de la pantalla actual; en un módulo sin grupos (menú plano), todas las suyas.
-  // La pantalla del grupo (tarjetas) no lleva pestañas: ya muestra todas las páginas.
-  const conGrupos = modulo ? tienePantallaGrupo(modulo, grupos, esSuperadmin) : false;
-  const enPantallaGrupo = modulo ? grupoDePantalla(modulo, grupos, pathname) !== null : false;
-  const grupoPestanas = !modulo || enPantallaGrupo ? null : conGrupos ? grupoDeRuta(grupos, pathname) : (grupos.filter(grupoEnlazable).length === 1 ? grupos.find(grupoEnlazable)! : null);
+  const todos = useMemo(() => (modulo ? menuVisible(modulo, usuario) : menuDeSuite(modulos)), [modulo, modulos, usuario]);
+  // Items con capability (Dealer OS): solo con permiso explícito del lote de acceso. Sin capabilities no se pide nada.
+  const claves = useMemo(() => capacidadesDe(todos), [todos]);
   const Puerta = conSesion ? DealerSuiteGate : Fragment;
+
+  const cuerpo = (grupos: GrupoMenu[]) => {
+    // Pestañas: las páginas del grupo de la pantalla actual; en un módulo sin grupos (menú plano), todas las suyas.
+    // La pantalla del grupo (tarjetas) no lleva pestañas: ya muestra todas las páginas.
+    const conGrupos = modulo ? tienePantallaGrupo(modulo, grupos, esSuperadmin) : false;
+    const enPantallaGrupo = modulo ? grupoDePantalla(modulo, grupos, pathname) !== null : false;
+    const grupoPestanas = !modulo || enPantallaGrupo ? null : conGrupos ? grupoDeRuta(grupos, pathname) : (grupos.filter(grupoEnlazable).length === 1 ? grupos.find(grupoEnlazable)! : null);
+    return (
+      <div className={CLASES.cuerpo}>
+        <ModuleSidebar titulo={modulo?.label ?? "Suite"} moduloId={modulo?.id ?? null} grupos={grupos} pathname={pathname} abierto={cajon} onCerrar={cerrar} plano={!modulo} modulo={conGrupos ? modulo : null} />
+        <div className={CLASES.columna}>
+          <main id="main-content" className={CLASES.contenido}>
+            {conSesion ? <TenantBrandedDocumentTitle /> : null}
+            {modulo && grupoPestanas ? <PestanasGrupo titulo={conGrupos ? grupoPestanas.label : modulo.label} paginas={grupoPestanas.items} pathname={pathname} /> : null}
+            {!modulo && conSesion && modulos.length === 0 && (pathname ?? "/").replace(/\/+$/, "") === "" ? <SinModulos /> : children}
+          </main>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <MarcoSuite
@@ -86,16 +113,9 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
           style={modulo ? ({ ["--acento-modulo" as string]: modulo.acento, ["--turquesa-modulo" as string]: TURQUESA_MODULO } as CSSProperties) : undefined}
         >
           <a href="#main-content" className={CLASES.saltar}>Saltar al contenido</a>
-          <div className={CLASES.cuerpo}>
-            <ModuleSidebar titulo={modulo?.label ?? "Suite"} moduloId={modulo?.id ?? null} grupos={grupos} pathname={pathname} abierto={cajon} onCerrar={cerrar} plano={!modulo} modulo={conGrupos ? modulo : null} />
-            <div className={CLASES.columna}>
-              <main id="main-content" className={CLASES.contenido}>
-                {conSesion ? <TenantBrandedDocumentTitle /> : null}
-                {modulo && grupoPestanas ? <PestanasGrupo titulo={conGrupos ? grupoPestanas.label : modulo.label} paginas={grupoPestanas.items} pathname={pathname} /> : null}
-                {!modulo && conSesion && modulos.length === 0 && (pathname ?? "/").replace(/\/+$/, "") === "" ? <SinModulos /> : children}
-              </main>
-            </div>
-          </div>
+          <DentroDeModuleShell.Provider value>
+            {claves.length > 0 ? <ConCapacidades claves={claves} grupos={todos}>{cuerpo}</ConCapacidades> : cuerpo(todos)}
+          </DentroDeModuleShell.Provider>
           {conSesion ? <BuscadorNavegacion /> : null}
         </div>
       </Puerta>
