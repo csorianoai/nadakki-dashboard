@@ -13,6 +13,7 @@ INTEGRADAS=(
   tests/nav/ps-9-carcasas-2-dealer-dentro.test.tsx
   tests/nav/ps-9-carcasas-2-integrado.test.tsx
   tests/nav/ps-9-carcasas-2-banco.test.tsx
+  tests/nav/ps-9-carcasas-2-banco-shell.test.tsx
   tests/nav/ps-9-carcasas-2-contable.test.tsx
   tests/nav/ps-9-carcasas-2-dealer-sin-bucle.test.tsx
   tests/nav/ps-9-carcasas-2-retirada.test.ts
