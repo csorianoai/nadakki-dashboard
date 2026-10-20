@@ -30,10 +30,6 @@ jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   __esModule: true,
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
 }));
-jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({
-  __esModule: true,
-  GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => <div data-testid="forge-shell">{children}</div>,
-}));
 jest.mock("@/components/dealer/ContableChrome", () => ({
   __esModule: true,
   // PS-9-CARCASAS-2: la barra de /contable la pinta ContableChrome (MarcoSuite o ModuleShell), no AppGate.
@@ -42,6 +38,7 @@ jest.mock("@/components/dealer/ContableChrome", () => ({
     return <MarcoSuite><div>{children}</div></MarcoSuite>;
   },
 }));
+jest.mock("@/components/dealer/DealerSuiteGate", () => ({ __esModule: true, DealerSuiteGate: ({ children }: { children: React.ReactNode }) => <>{children}</>, isDealerReachableSuitePath: (p: string) => p.startsWith("/contable") }));
 jest.mock("@/components/ai/OnboardingAgent", () => ({ __esModule: true, default: () => null }));
 
 const ROOT = process.cwd();

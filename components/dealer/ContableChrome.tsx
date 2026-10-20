@@ -1,15 +1,15 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import OnboardingAgent from "@/components/ai/OnboardingAgent";
 import { DealerShell } from "@/components/dealer-management/shell/DealerShell";
-import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
 import { MarcoSuite } from "@/components/nav/MarcoSuite";
 import { ModuleShell } from "@/components/shell/ModuleShell";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchMyDealerContext } from "@/lib/dealer/dealer-context-api";
-import { MODULOS } from "@/lib/modulos/registro";
+import { moduloDeRuta, MODULOS } from "@/lib/modulos/registro";
 
 const CONCESIONARIOS = MODULOS.find((m) => m.id === "concesionarios") ?? null;
 
@@ -25,8 +25,8 @@ const CONCESIONARIOS = MODULOS.find((m) => m.id === "concesionarios") ?? null;
  *
  * PS-9-CARCASAS-2: el usuario de dealer la ve en el armazón común con el módulo
  * Concesionarios (ModuleShell: su barra y el menú del dealer, filtrado por plan),
- * con DealerShell dentro (sincronización, avisos y acciones); el resto, la Suite
- * bajo la barra de MarcoSuite. Cada rama pinta UNA barra: por eso MarcoSuite va
+ * con DealerShell dentro (sincronización, avisos y acciones); el resto, el mismo armazón
+ * con el menú de su módulo (PS-9-CARCASAS-3, ya sin GlobalForgeAppShell). Cada rama pinta UNA barra: por eso MarcoSuite va
  * aquí y no en AppGate.
  *
  * Solo cambia el chrome. Los permisos no se tocan: el menu del dealer filtra por
@@ -42,6 +42,7 @@ const CONCESIONARIOS = MODULOS.find((m) => m.id === "concesionarios") ?? null;
  *   navegacion entre pantallas contables.
  */
 export function ContableChrome({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const contexto = useQuery({
@@ -79,9 +80,7 @@ export function ContableChrome({ children }: { children: ReactNode }) {
   }
   return (
     <>
-      <MarcoSuite>
-        <GlobalForgeAppShell>{children}</GlobalForgeAppShell>
-      </MarcoSuite>
+      <ModuleShell modulo={moduloDeRuta(pathname)}>{children}</ModuleShell>
       <OnboardingAgent />
     </>
   );

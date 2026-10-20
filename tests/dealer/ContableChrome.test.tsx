@@ -31,11 +31,6 @@ jest.mock("@/components/forge/auth/ProtectedRoute", () => ({
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
 }));
 
-jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({
-  GlobalForgeAppShell: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="suite-operativa">{children}</div>
-  ),
-}));
 
 jest.mock("@/components/dealer-management/shell/DealerShell", () => ({
   DealerShell: ({ children }: { children: React.ReactNode }) => <div data-testid="dealer-shell">{children}</div>,
@@ -94,7 +89,7 @@ test("tambien en /contable", async () => {
 test("un usuario sin asignacion de dealer sigue viendo la Suite, como antes", async () => {
   fetchMock.mockResolvedValue([]);
   montar();
-  expect(await screen.findByTestId("suite-operativa")).toHaveTextContent("libro mayor");
+  expect(await screen.findByTestId("module-shell")).toHaveTextContent("libro mayor");
   expect(screen.getByTestId("onboarding-agent")).toBeInTheDocument();
   expect(screen.queryByTestId("dealer-shell")).toBeNull();
 });
@@ -102,20 +97,23 @@ test("un usuario sin asignacion de dealer sigue viendo la Suite, como antes", as
 test("si la consulta falla se pinta la Suite: no deja a nadie sin menu", async () => {
   fetchMock.mockRejectedValue(new Error("502"));
   montar();
-  expect(await screen.findByTestId("suite-operativa")).toBeInTheDocument();
+  expect(await screen.findByTestId("module-shell")).toBeInTheDocument();
   expect(screen.queryByTestId("dealer-shell")).toBeNull();
 });
 
 test("fuera de /contable no se consulta: el resto de la Suite no cambia", () => {
-  pathname = "/credit-hub/dealer";
+  pathname = "/agents";
+  fetchMock.mockResolvedValue([]);
   montar();
-  expect(screen.getByTestId("suite-operativa")).toBeInTheDocument();
-  expect(fetchMock).not.toHaveBeenCalled();
+  expect(screen.getByTestId("module-shell")).toBeInTheDocument();
+  // PS-9-CARCASAS-3: ModuleShell trae DealerSuiteGate (una consulta); ContableChrome no añade otra.
+  expect(fetchMock.mock.calls.length).toBeLessThanOrEqual(1);
 });
 
 test("/contabilidad no es /contable", () => {
   pathname = "/contabilidad";
+  fetchMock.mockResolvedValue([]);
   montar();
-  expect(screen.getByTestId("suite-operativa")).toBeInTheDocument();
-  expect(fetchMock).not.toHaveBeenCalled();
+  expect(screen.getByTestId("module-shell")).toBeInTheDocument();
+  expect(fetchMock.mock.calls.length).toBeLessThanOrEqual(1);
 });

@@ -3,13 +3,14 @@
 import { usePathname } from "next/navigation";
 import OnboardingAgent from "@/components/ai/OnboardingAgent";
 import { ProtectedRoute } from "@/components/forge/auth/ProtectedRoute";
-import { GlobalForgeAppShell } from "@/components/forge/layout/GlobalForgeAppShell";
 import { isAutosConsumerPublicPath, isDealerChromePath } from "@/lib/autos-portal/routes";
 import { ContableChrome } from "@/components/dealer/ContableChrome";
-import { isDealerReachableSuitePath } from "@/components/dealer/DealerSuiteGate";
+import { DealerSuiteGate, isDealerReachableSuitePath } from "@/components/dealer/DealerSuiteGate";
 import { MarcoSuite } from "@/components/nav/MarcoSuite";
 import { InicioSuite } from "@/components/shell/InicioSuite";
 import { ModuleShell } from "@/components/shell/ModuleShell";
+import { isForgeMonetizacionEnabled } from "@/lib/env/feature-forge-monetizacion";
+import { isMonetizacionPath } from "@/lib/credit-hub/monetizacion/routes";
 import { moduloDeRuta, usaCarcasaComun } from "@/lib/modulos/registro";
 
 function getEffectivePathname(pathname: string | null): string {
@@ -96,12 +97,23 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Portales de Credit Hub con chrome propio (menú y barra de su módulo): solo la barra de MarcoSuite, sin la Suite debajo.
+  if (pathname.startsWith("/credit-hub/dealer") || (isMonetizacionPath(pathname) && isForgeMonetizacionEnabled())) {
+    return (
+      <ProtectedRoute>
+        <>
+          <MarcoSuite><DealerSuiteGate>{children}</DealerSuiteGate></MarcoSuite>
+          <OnboardingAgent />
+        </>
+      </ProtectedRoute>
+    );
+  }
+
+  // Resto (PS-9-CARCASAS-3): también sobre ModuleShell, con el menú de su módulo o, sin módulo, el de la Suite.
   return (
     <ProtectedRoute>
       <>
-        <MarcoSuite>
-          <GlobalForgeAppShell>{children}</GlobalForgeAppShell>
-        </MarcoSuite>
+        <ModuleShell modulo={moduloDeRuta(pathname)}>{children}</ModuleShell>
         <OnboardingAgent />
       </>
     </ProtectedRoute>
