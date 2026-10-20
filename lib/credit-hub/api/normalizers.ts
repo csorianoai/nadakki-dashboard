@@ -289,7 +289,8 @@ export function normalizeEvent(raw: unknown): CreditEvent {
   const record = isRecord(raw) ? raw : {};
   const id = pickString(record, ["id", "event_id", "eventId"], `${Date.now()}`);
   const type = pickString(record, ["type", "event_type", "eventType"], "event");
-  const createdAt = pickDate(record, ["created_at", "createdAt", "timestamp", "time"]);
+  // El backend emite `emitted_at`; sin fecha se deja vacía (se muestra «—»), nunca «ahora» (DB-CODEX-16 ronda 3).
+  const createdAt = pickString(record, ["created_at", "createdAt", "emitted_at", "timestamp", "time"]);
 
   return {
     id,

@@ -7,6 +7,7 @@ import type { DashboardSummaryPayload } from "@/lib/credit-hub/types/analytics";
 import { DataTruthBadge } from "@/components/credit-hub/honesty/DataTruthBadge";
 import { humanizeApplicant, shortFolio } from "@/lib/credit-hub/honesty/humanize-applicant";
 import { dealerDetailHref } from "@/lib/credit-hub/dealer/dealerFormat";
+import { hasOffersPendingDecision } from "@/lib/credit-hub/dealer/dealer-pipeline-metrics";
 
 interface Stage {
   key: string;
@@ -55,7 +56,7 @@ export function DealerPipelineRail({
   const stages = useMemo(() => buildStages(counts), [counts]);
   const max = Math.max(...stages.map((s) => s.count), 1);
 
-  const pendingOffers = applications.filter((a) => ["offered", "counter_offer", "approved"].includes(a.status));
+  const pendingOffers = applications.filter(hasOffersPendingDecision);
   const drafts = applications.filter((a) => a.status === "draft").length;
 
   const pullThrough =
@@ -108,12 +109,12 @@ export function DealerPipelineRail({
       </div>
 
       <aside className="space-y-2">
-        {/* Documentos y estipulaciones no tienen fuente en este panel: «No disponible», nunca una cifra de ejemplo. */}
+        {/* Documentos, estipulaciones y mejor oferta no tienen fuente en este panel: «No disponible», nunca una cifra inventada. */}
         {[
           { n: pendingOffers.length as number | null, label: "Ofertas por decidir" },
           { n: null, label: "Documentos solicitados" },
           { n: null, label: "Estipulaciones pendientes" },
-          { n: pendingOffers.length ? 1 : 0, label: "Mejor oferta abierta" },
+          { n: null, label: "Mejor oferta abierta" },
         ].map((item) => (
           <div key={item.label} className="ch-card" style={{ padding: "12px 14px" }}>
             {item.n == null ? (

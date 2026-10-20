@@ -84,6 +84,8 @@ type OfferOverrides = Partial<{
   term_months: number | null;
   monthly_payment: number | null;
   status: string;
+  simulated: boolean | null;
+  lender_display_name: string;
 }>;
 
 function makeOffer(overrides: OfferOverrides = {}) {
@@ -250,5 +252,40 @@ describe("DealerApplicationDetailView", () => {
     // No selectable buttons remain once an offer is accepted.
     expect(screen.queryByTestId("offer-accept-off-1")).not.toBeInTheDocument();
     expect(screen.queryByTestId("offer-accept-off-2")).not.toBeInTheDocument();
+  });
+
+  // Ronda 3 de Cowork (20-oct), detalle de LISTA: la oferta «Mock - DECISION SIMULADA» no se presenta como real.
+  test("una oferta simulada va aparte, sin aceptar, y el exchange de bancos reales no lleva DEMO", () => {
+    setOffers({
+      offers: [
+        makeOffer({ id: "off-real", lender_code: "banco_popular" }),
+        makeOffer({ id: "off-mock", lender_code: "mock", lender_display_name: "Mock - DECISION SIMULADA", simulated: true }),
+      ],
+    });
+    renderView();
+    const exchange = screen.getByTestId("offers-section");
+    expect(exchange.querySelector('[data-truth="DEMO"]')).toBeNull();
+    expect(exchange).not.toHaveTextContent("Mock - DECISION SIMULADA");
+    const sim = screen.getByTestId("offers-simulated-section");
+    expect(sim).toHaveTextContent("Mock - DECISION SIMULADA");
+    expect(screen.queryByTestId("offer-accept-off-mock")).not.toBeInTheDocument();
+    expect(screen.getByTestId("offer-accept-off-real")).toBeInTheDocument();
+  });
+
+  test("una contraoferta del banco sigue en el exchange aunque la fila venga del despacho simulado", () => {
+    setOffers({ offers: [makeOffer({ id: "off-co", status: "counter_offer", simulated: true })] });
+    renderView();
+    expect(screen.getByTestId("offers-section")).toBeInTheDocument();
+    expect(screen.queryByTestId("offers-simulated-section")).not.toBeInTheDocument();
+  });
+
+  test("la cuota que no cuadra con monto, tasa y plazo se sustituye por la de amortización y se avisa", () => {
+    setOffers({
+      offers: [makeOffer({ id: "off-1", amount_approved: 480000, interest_rate_apr: 17, term_months: 48, monthly_payment: 13358 })],
+    });
+    renderView();
+    const exchange = screen.getByTestId("offers-section");
+    expect(exchange.textContent).toMatch(/13,85\d/);
+    expect(screen.getByTestId("offer-payment-note-off-1")).toHaveTextContent(/no cuadra/i);
   });
 });
