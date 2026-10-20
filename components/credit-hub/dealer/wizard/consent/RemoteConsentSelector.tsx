@@ -9,6 +9,9 @@ import { SMSOTPConsentMethod } from "./SMSOTPConsentMethod";
 import { SelfieConsentMethod } from "./SelfieConsentMethod";
 import { isRemoteMethodUnavailable, type RemoteConsentMethodKey } from "./consent-method-map";
 
+// El texto del locale ofrece «correo», que también está deshabilitado (DB-CODEX-16, ronda 3).
+const CHANNEL_UNAVAILABLE_REASON = "Canal no disponible: usa el consentimiento presencial.";
+
 interface RemoteConsentSelectorProps {
   applicationId: string;
   applicationReady: boolean;
@@ -98,7 +101,7 @@ export function RemoteConsentSelector({
               <p className="mt-1 text-xs text-forge-text-muted">{m.desc}</p>
               {unavailable && (
                 <p className="mt-1 text-xs text-forge-warning" data-testid={`method-${m.key.toLowerCase()}-unavailable`}>
-                  {t.consent.channel_unavailable_reason}
+                  {CHANNEL_UNAVAILABLE_REASON}
                 </p>
               )}
             </div>

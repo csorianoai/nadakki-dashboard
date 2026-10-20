@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WIZARD_OPTIONAL_BUREAU_NOTICE } from "@/lib/credit-hub/dealer/wizard-optional-notices";
+import { WIZARD_BUREAU_REQUIRED_NOTICE } from "@/lib/credit-hub/dealer/wizard-optional-notices";
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useConsentApi } from "@/lib/credit-hub/hooks/useConsentApi";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/credit-hub/api/consent-client";
 import { PresentConsentDocumentFields } from "./PresentConsentDocumentFields";
 import { PresentConsentForm } from "./PresentConsentForm";
+import { consentCodesAccepted, consentIncompleteMessage } from "@/lib/credit-hub/dealer/wizard-consent-codes";
 import { RemoteConsentSelector } from "./RemoteConsentSelector";
 import { normalizeRemoteConsentMethods } from "./consent-method-map";
 
@@ -159,10 +160,11 @@ export function ConsentSection({
   };
 
   // Build consents_accepted list from checked checkboxes for SMS OTP accept()
-  const consentsAccepted: string[] = [];
-  if (consent_bureau_authorization) consentsAccepted.push("bureau_authorization");
-  if (consent_terms_accepted) consentsAccepted.push("terms_accepted");
-  if (consent_data_processing_authorization) consentsAccepted.push("data_processing_authorization");
+  const consentsAccepted = consentCodesAccepted({
+    terms: consent_terms_accepted,
+    bureau: consent_bureau_authorization,
+    dataProcessing: consent_data_processing_authorization,
+  });
 
   const confirmPresentConsent = async () => {
     if (!applicationIdReady || !applicationId || !consentApi) {
@@ -191,7 +193,11 @@ export function ConsentSection({
         consent_audit_hash: accepted.audit_hash,
       });
     } catch (error) {
-      setPresentSubmitError(error instanceof Error ? error.message : t.consent.public.generic_submit_error);
+      if (error instanceof ConsentApiError && error.code === "consent_incomplete") {
+        setPresentSubmitError(consentIncompleteMessage(error.missing));
+      } else {
+        setPresentSubmitError(error instanceof Error ? error.message : t.consent.public.generic_submit_error);
+      }
     } finally {
       setPresentSubmitting(false);
     }
@@ -276,9 +282,9 @@ export function ConsentSection({
                 onChange={(e) => onPatch({ consent_bureau_authorization: e.target.checked })}
                 className="mt-1"
               />
-              <span>{t.consent.consent_buro_label}</span>
+              <span>{t.consent.consent_buro_label} *</span>
             </label>
-            <p className="text-xs text-forge-text-muted">{WIZARD_OPTIONAL_BUREAU_NOTICE}</p>
+            <p className="text-xs text-forge-text-muted">{WIZARD_BUREAU_REQUIRED_NOTICE}</p>
             {getFieldError?.("consent_bureau_authorization") ? <p className="text-xs text-[#ef4444]" role="alert">{getFieldError("consent_bureau_authorization")}</p> : null}
             <label className={`flex items-start gap-3 rounded-xl border bg-forge-surface-elevated p-3 text-sm text-forge-text ${getFieldError?.("consent_data_processing_authorization") ? "border-[#ef4444]" : "border-forge-border"}`} data-wizard-field="consent_data_processing_authorization">
               <input

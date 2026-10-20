@@ -16,6 +16,7 @@ const config = {
 const allValid: ApplicationFormData = {
   ...filledApplicantForm,
   consent_terms_accepted: true,
+  consent_bureau_authorization: true,
   consent_data_processing_authorization: true,
   consent_signature_full_name: "Ana Prueba",
   consent_present_confirmed: true,

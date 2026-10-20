@@ -1,5 +1,6 @@
 "use client";
 
+import { wizardApplicationIdFromParams } from "@/lib/credit-hub/dealer/wizard-application-id";
 import {
   createContext,
   useCallback,
@@ -397,7 +398,7 @@ export function DealerWizardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const startsNewApplication = searchParams.get("new") === "1";
-  const consentApplicationId = startsNewApplication ? "" : searchParams.get("application_id")?.trim() ?? "";
+  const consentApplicationId = wizardApplicationIdFromParams(searchParams);
   const consentApplicationIdReady = Boolean(consentApplicationId);
   const { tenantConfig } = useTenantConfig();
   const t = useTranslations();

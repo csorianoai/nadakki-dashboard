@@ -111,4 +111,23 @@ describe("RemoteConsentSelector", () => {
     expect(screen.queryByTestId("selfie-method")).not.toBeInTheDocument();
     expect(mockInitiate).not.toHaveBeenCalled();
   });
+
+  it("la razón de los canales deshabilitados no ofrece el correo (también está deshabilitado)", () => {
+    render(
+      <RemoteConsentSelector
+        applicationId="app-1"
+        applicationReady
+        enabledMethods={["WHATSAPP", "EMAIL", "SMS_OTP", "SELFIE"]}
+        dealerOtpCode=""
+        onDealerOtpCodeChange={noop}
+        onSmsOtpSent={noop}
+        consentsAccepted={["LEY_172_13"]}
+        fullName="Test User"
+        onFullNameChange={noop}
+      />
+    );
+    for (const k of ["whatsapp", "email", "sms_otp", "selfie"]) {
+      expect(screen.getByTestId(`method-${k}-unavailable`)).not.toHaveTextContent(/correo/i);
+    }
+  });
 });
