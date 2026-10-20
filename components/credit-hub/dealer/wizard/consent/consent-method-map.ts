@@ -15,8 +15,11 @@ export function normalizeRemoteConsentMethods(enabled: string[]): RemoteConsentM
   return ORDER.filter((k) => set.has(k));
 }
 
-/** Canales que el backend no entrega de verdad (DB-CODEX-4A): se muestran deshabilitados aunque el tenant los liste. */
-const UNAVAILABLE_METHODS: ReadonlySet<RemoteConsentMethodKey> = new Set(["WHATSAPP", "SMS_OTP", "SELFIE"]);
+/**
+ * Canales que el backend no entrega de verdad (DB-CODEX-4A): se muestran deshabilitados aunque el tenant los liste.
+ * EMAIL también (DB-CODEX-16 paso 4, «email cerrado»): sin proveedor real el backend responde 409 consent_channel_unavailable.
+ */
+const UNAVAILABLE_METHODS: ReadonlySet<RemoteConsentMethodKey> = new Set(["WHATSAPP", "EMAIL", "SMS_OTP", "SELFIE"]);
 
 export function isRemoteMethodUnavailable(key: RemoteConsentMethodKey): boolean {
   return UNAVAILABLE_METHODS.has(key);

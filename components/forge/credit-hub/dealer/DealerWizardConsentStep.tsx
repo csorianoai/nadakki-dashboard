@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import type { ApplicationFormData } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { tenantDocumentKey } from "@/components/credit-hub/dealer/wizard/WizardContainer";
 import { ConsentSection, type ConsentWizardPatch } from "@/components/credit-hub/dealer/wizard/consent/ConsentSection";
@@ -10,6 +11,17 @@ import { useDealerWizard } from "./DealerWizardProvider";
 export function DealerWizardConsentStep() {
   const { formData, patchForm, consentApplicationId, consentApplicationIdReady, requiredDocumentsList, getFieldError, blockReason, showValidationErrors } = useDealerWizard();
   const summary = buildConsentDocumentsSummary(formData, requiredDocumentsList, tenantDocumentKey);
+  // Llaves del texto v1.0 que el asistente ya conoce; el resto lo completa el concesionario.
+  const presentTextPrefill = useMemo(
+    () => ({
+      NOMBRE_TITULAR: formData.applicant_full_name,
+      CEDULA: formData.applicant_identification,
+      VEHICULO: [formData.vehicle_make, formData.vehicle_model, formData.vehicle_year].filter(Boolean).join(" "),
+      LUGAR: formData.applicant_city,
+      FECHA: new Date().toLocaleDateString("es-DO"),
+    }),
+    [formData.applicant_full_name, formData.applicant_identification, formData.vehicle_make, formData.vehicle_model, formData.vehicle_year, formData.applicant_city]
+  );
 
   return (
     <div className="space-y-4">
@@ -62,6 +74,7 @@ export function DealerWizardConsentStep() {
         consent_dealer_otp_code={formData.consent_dealer_otp_code}
         onPatch={(patch: ConsentWizardPatch) => patchForm(patch as Partial<ApplicationFormData>)}
         getFieldError={getFieldError}
+        presentTextPrefill={presentTextPrefill}
       />
       {showValidationErrors && blockReason ? (
         <p className="text-forge-sm text-[#ef4444]" role="alert">{blockReason}</p>
