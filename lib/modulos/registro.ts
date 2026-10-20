@@ -159,9 +159,10 @@ export const MODULOS: ModuloConfig[] = [
     acento: "#34d399",
     carcasa: "comun",
     sinPantallaGrupo: true,
-    // PS-9-CARCASAS-1: Credit Hub y el panel legado del banco (ChAppShell) ya usan ModuleShell; conservan su carcasa
-    // bank-v2 (DccShell), el portal del concesionario (DealerChShell), el cockpit, Monetización (MonetizacionShell) y SIC.
-    propias: [BANCO_V2_RAIZ, "/credit-hub/dealer", "/credit-hub/admin", "/credit-hub/monetizacion", "/sic", "/market-intel"],
+    // PS-9-CARCASAS-1: Credit Hub y el panel legado del banco (ChAppShell) ya usan ModuleShell; PS-9-CARCASAS-2: también
+    // bank-v2 (BancoV2Shell sin el menú ni la barra de DccShell). Conservan su carcasa el portal del concesionario
+    // (DealerChShell), el cockpit, Monetización (MonetizacionShell) y SIC.
+    propias: ["/credit-hub/dealer", "/credit-hub/admin", "/credit-hub/monetizacion", "/sic", "/market-intel"],
     compartidas: ["/autos/dealer/credito"],
     carcasas: [
       { prefijos: [BANCO_V2_RAIZ], modulo: { label: "Banco", href: BANCO_V2_RAIZ }, grupos: BANCO_V2_NAV.map((g) => ({ label: g.label, items: g.items.map((i) => ({ label: i.label, href: i.href })) })) },

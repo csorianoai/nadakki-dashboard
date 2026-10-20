@@ -94,8 +94,8 @@ describe("(3) moduloDeRuta: gana el prefijo más largo", () => {
   });
 
   test("qué rutas usan ModuleShell", () => {
-    for (const r of ["/marketing/campaigns", "/legal/cases", "/proyectos", "/admin", "/settings", "/autos/dealer", "/centro-operativo"]) expect(usaCarcasaComun(r)).toBe(true);   // dealer: PS-9-CARCASAS-2
-    for (const r of ["/", "/cockpit", "/credit-hub/bank-v2", "/sic", "/realtor", "/contable/resumen", "/agents"]) expect(usaCarcasaComun(r)).toBe(false);
+    for (const r of ["/marketing/campaigns", "/legal/cases", "/proyectos", "/admin", "/settings", "/autos/dealer", "/centro-operativo", "/credit-hub/bank-v2"]) expect(usaCarcasaComun(r)).toBe(true);   // dealer y bank-v2: PS-9-CARCASAS-2
+    for (const r of ["/", "/cockpit", "/sic", "/realtor", "/contable/resumen", "/agents"]) expect(usaCarcasaComun(r)).toBe(false);
   });
 
   test("item activo: el de href más específico", () => {
