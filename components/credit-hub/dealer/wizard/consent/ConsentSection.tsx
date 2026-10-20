@@ -5,6 +5,13 @@ import { WIZARD_OPTIONAL_BUREAU_NOTICE } from "@/lib/credit-hub/dealer/wizard-op
 import { useTranslations } from "@/lib/credit-hub/i18n/useTranslations";
 import { useConsentApi } from "@/lib/credit-hub/hooks/useConsentApi";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import {
+  ConsentApiError,
+  PRESENT_TEXT_CLIENT_FIELDS,
+  type PresentTextField,
+  type PresentTextFields,
+} from "@/lib/credit-hub/api/consent-client";
+import { PresentConsentDocumentFields } from "./PresentConsentDocumentFields";
 import { PresentConsentForm } from "./PresentConsentForm";
 import { RemoteConsentSelector } from "./RemoteConsentSelector";
 import { normalizeRemoteConsentMethods } from "./consent-method-map";
@@ -39,6 +46,15 @@ interface ConsentSectionProps {
   consent_dealer_otp_code: string;
   onPatch: (patch: ConsentWizardPatch) => void;
   getFieldError?: (key: string) => string | undefined;
+  /** Datos del asistente con los que se precargan las llaves del texto v1.0 (editables). */
+  presentTextPrefill?: Partial<PresentTextFields>;
+}
+
+/** Sin evento PRESENT pendiente: hay que iniciarlo antes de pedir el texto. */
+const PRESENT_NEEDS_INITIATE = new Set(["consent_present_not_initiated", "consent_present_not_pending"]);
+
+function camposFrom(prefill: Partial<PresentTextFields> | undefined): PresentTextFields {
+  return Object.fromEntries(PRESENT_TEXT_CLIENT_FIELDS.map((k) => [k, prefill?.[k] ?? ""])) as PresentTextFields;
 }
 
 export function ConsentSection({
@@ -53,6 +69,7 @@ export function ConsentSection({
   consent_dealer_otp_code,
   onPatch,
   getFieldError,
+  presentTextPrefill,
 }: ConsentSectionProps) {
   const t = useTranslations();
   const { tenantConfig } = useTenantConfig();
@@ -63,27 +80,64 @@ export function ConsentSection({
   const [legalText, setLegalText] = useState<string | null>(null);
   const [legalTextVersion, setLegalTextVersion] = useState<string | null>(null);
   const [legalTextError, setLegalTextError] = useState<string | null>(null);
+  const [legalTextLoading, setLegalTextLoading] = useState(false);
+  const [campos, setCampos] = useState<PresentTextFields>(() => camposFrom(presentTextPrefill));
+  // Datos con los que se emitió el texto mostrado: se firma con exactamente estos.
+  const [loadedCampos, setLoadedCampos] = useState<PresentTextFields | null>(null);
 
+  // El borrador del asistente puede hidratarse después: solo rellena llaves aún vacías.
   useEffect(() => {
-    if (consent_presence !== "present" || !applicationIdReady || !applicationId || !consentApi) return;
-    let alive = true;
-    consentApi
-      .getPresentText(applicationId)
-      .then((r) => {
-        if (!alive) return;
-        setLegalText(r.consent_text || null);
-        setLegalTextVersion(r.consent_text_version || null);
-        setLegalTextError(null);
-      })
-      .catch((e) => {
-        if (!alive) return;
-        setLegalText(null);
+    setCampos((prev) => {
+      const vacias = PRESENT_TEXT_CLIENT_FIELDS.filter((k) => !prev[k].trim() && presentTextPrefill?.[k]);
+      if (vacias.length === 0) return prev;
+      const next = { ...prev };
+      for (const k of vacias) next[k] = presentTextPrefill?.[k] as string;
+      return next;
+    });
+  }, [presentTextPrefill]);
+
+  const changeCampo = (key: PresentTextField, value: string) => {
+    setCampos((prev) => ({ ...prev, [key]: value }));
+    setLegalText(null);
+    setLegalTextVersion(null);
+    setLoadedCampos(null);
+    onPatch({ consent_present_confirmed: false });
+  };
+
+  const loadPresentText = async () => {
+    if (!applicationIdReady || !applicationId || !consentApi) {
+      setLegalTextError(t.consent.application_id_required);
+      return;
+    }
+    const pedidos = { ...campos };
+    setLegalTextLoading(true);
+    setLegalTextError(null);
+    try {
+      let r;
+      try {
+        r = await consentApi.fetchPresentText(applicationId, pedidos);
+      } catch (e) {
+        const needsInitiate =
+          e instanceof ConsentApiError && (e.status === 404 || (e.code !== null && PRESENT_NEEDS_INITIATE.has(e.code)));
+        if (!needsInitiate) throw e;
+        await consentApi.initiate(applicationId, "PRESENT", {});
+        r = await consentApi.fetchPresentText(applicationId, pedidos);
+      }
+      setLegalText(r.consent_text || null);
+      setLegalTextVersion(r.consent_text_version || null);
+      setLoadedCampos(r.consent_text ? pedidos : null);
+    } catch (e) {
+      setLegalText(null);
+      setLoadedCampos(null);
+      if (e instanceof ConsentApiError && e.code === "consent_text_incomplete") {
+        setLegalTextError(`${t.consent.legal_text_missing} Faltan: ${e.missing.join(", ")}.`);
+      } else {
         setLegalTextError(e instanceof Error ? e.message : null);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [consent_presence, applicationIdReady, applicationId, consentApi]);
+      }
+    } finally {
+      setLegalTextLoading(false);
+    }
+  };
 
   const enabledRemote = normalizeRemoteConsentMethods(tenantConfig?.consent_methods_enabled ?? []);
 
@@ -115,14 +169,20 @@ export function ConsentSection({
       setPresentSubmitError(t.consent.application_id_required);
       return;
     }
+    if (!loadedCampos) {
+      setPresentSubmitError(t.consent.legal_text_missing);
+      return;
+    }
 
     setPresentSubmitting(true);
     setPresentSubmitError(null);
     try {
-      await consentApi.initiate(applicationId, "PRESENT", {});
+      // El evento PRESENT ya se inició al cargar el texto: reiniciarlo cambiaría su identificador
+      // y el texto firmado dejaría de ser el que vio el titular.
       const accepted = await consentApi.acceptPresent(applicationId, {
         consents_accepted: consentsAccepted,
         full_name: consent_signature_full_name.trim(),
+        texto_campos: loadedCampos,
       });
       onPatch({
         consent_present_confirmed: true,
@@ -170,6 +230,10 @@ export function ConsentSection({
           </label>
         </div>
       </fieldset>
+
+      {consent_presence === "present" && (
+        <PresentConsentDocumentFields campos={campos} onChange={changeCampo} onLoad={loadPresentText} loading={legalTextLoading} />
+      )}
 
       {consent_presence === "present" && (
         <PresentConsentForm
