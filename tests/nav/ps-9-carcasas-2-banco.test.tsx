@@ -116,6 +116,14 @@ describe("bank-v2 sobre ModuleShell", () => {
     expect(hrefs.filter((h) => h.startsWith("/credit-hub/bank-v2")).sort()).toEqual([...delBanco].sort());
   });
 
+  test("el menú marca como activa la pantalla en curso (Bandeja del banco)", () => {
+    pathname = "/credit-hub/bank-v2/solicitudes";
+    pintar();
+    const menu = within(screen.getByRole("complementary", { name: "Menú de Crédito" }));
+    expect(menu.getByRole("link", { name: "Bandeja del banco" })).toHaveAttribute("aria-current", "page");
+    expect(menu.getByRole("link", { name: "Mesa de decisiones (banco)" })).not.toHaveAttribute("aria-current");
+  });
+
   test("lo que DccShell enlazaba y lib/navigation.ts no lista (Escalaciones) sigue en el buscador del banco", () => {
     pathname = "/credit-hub/bank-v2/solicitudes";
     pintar();

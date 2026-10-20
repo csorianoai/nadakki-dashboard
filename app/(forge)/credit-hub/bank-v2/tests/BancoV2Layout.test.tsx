@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import BancoV2Layout from "@/app/(forge)/credit-hub/bank-v2/layout";
+import { useMarcaBanco } from "@/app/(forge)/credit-hub/bank-v2/BancoV2Shell";
 import { BankChShell } from "@/components/credit-hub/bank/BankChShell";
 
 /**
@@ -42,6 +43,15 @@ jest.mock("@/lib/credit-hub/hooks/useNotifications", () => ({
 }));
 
 const Hijo = () => <p>contenido del banco</p>;
+function MarcaFirma() {
+  const m = useMarcaBanco();
+  return (
+    <>
+      <p data-testid="marca-banco">{m.nombre}</p>
+      <p data-testid="firma-banco">{m.plataforma}</p>
+    </>
+  );
+}
 function pintar(shell: "actual" | "v2"): { html: string; texto: string } {
   const arbol: ReactNode =
     shell === "actual" ? <BankChShell><Hijo /></BankChShell> : <BancoV2Layout><Hijo /></BancoV2Layout>;
@@ -71,15 +81,18 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
   });
 
   it.each(["bank_analyst", "bank_admin", "compliance_officer", "credit_admin", "tenant_admin"])(
-    "rol %s: entra, con el buscador y el tema del banco (la barra y el menú son de ModuleShell, PS-9-CARCASAS-2)",
+    "rol %s: entra, con la marca del banco, la firma de Credit Hub, el buscador y el tema (barra y menú son de ModuleShell; ver ps-9-carcasas-2-banco)",
     (rol) => {
       sesion = { tenant: "t-1", autenticado: true, rol };
       render(
         <BancoV2Layout>
           <Hijo />
+          <MarcaFirma />
         </BancoV2Layout>,
       );
       expect(screen.getByText("contenido del banco")).toBeInTheDocument();
+      expect(screen.getByTestId("marca-banco")).toHaveTextContent("Banco Ejemplo");
+      expect(screen.getByTestId("firma-banco")).toHaveTextContent("con Nadakki Credit Hub");
       expect(screen.getByTestId("banco-buscador")).toBeInTheDocument();
       expect(screen.getByTestId("banco-tema")).toBeInTheDocument();
     },
