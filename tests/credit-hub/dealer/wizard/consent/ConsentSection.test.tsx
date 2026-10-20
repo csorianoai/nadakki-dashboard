@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { ConsentSection, type ConsentWizardPatch } from "@/components/credit-hub/dealer/wizard/consent/ConsentSection";
 import { useConsentApi } from "@/lib/credit-hub/hooks/useConsentApi";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
+import { ConsentApiError } from "@/lib/credit-hub/api/consent-client";
 
 jest.mock("@/components/credit-hub/system/ForgeToaster", () => ({
   forgeToast: { success: jest.fn(), error: jest.fn() },
@@ -51,6 +52,18 @@ const mockConsentApi = {
   initiate: jest.fn(),
   acceptPresent: jest.fn(),
   getPresentText: jest.fn(),
+  fetchPresentText: jest.fn(),
+};
+
+const PREFILL = {
+  NOMBRE_TITULAR: "Ana Perez",
+  CEDULA: "000-0000000-0",
+  NOMBRE_CONCESIONARIO: "Concesionario Prueba",
+  VEHICULO: "Toyota Corolla 2022",
+  LISTA_ENTIDADES: "Entidad A",
+  CONTACTO_DERECHOS: "derechos@example.invalid",
+  LUGAR: "Santo Domingo",
+  FECHA: "20/10/2026",
 };
 
 const LEGAL_TEXT = "  Texto oficial\n  {{tal cual}}  línea 2\n";
@@ -90,7 +103,8 @@ describe("ConsentSection", () => {
       audit_hash: "audit-hash-1",
       consent_text_version: "v1",
     });
-    mockConsentApi.getPresentText.mockResolvedValue({ consent_text: LEGAL_TEXT, consent_text_version: "1.0" });
+    mockConsentApi.getPresentText.mockResolvedValue({ consent_text: null, consent_text_version: null, unavailable: true });
+    mockConsentApi.fetchPresentText.mockResolvedValue({ consent_text: LEGAL_TEXT, consent_text_version: "1.0" });
     mockUseConsentApi.mockReturnValue(mockConsentApi);
     mockUseTenantConfig.mockReturnValue({
       tenantConfig: {
@@ -122,32 +136,33 @@ describe("ConsentSection", () => {
     expect(screen.getByTestId("remote-consent-selector")).toBeInTheDocument();
   });
 
-  it("initiates and accepts present consent when confirming the in-person form", async () => {
+  const signedProps = {
+    ...baseFields,
+    consent_presence: "present" as const,
+    consent_bureau_authorization: true,
+    consent_terms_accepted: true,
+    consent_data_processing_authorization: true,
+    consent_signature_full_name: "Ana Perez",
+  };
+
+  it("carga el texto oficial v1.0 con los datos del documento y firma con esos mismos texto_campos, sin reiniciar el evento", async () => {
     const user = userEvent.setup();
     const onPatch = jest.fn();
+    render(<ConsentSection {...signedProps} presentTextPrefill={PREFILL} onPatch={onPatch} />);
 
-    render(
-      <ConsentSection
-        {...baseFields}
-        consent_presence="present"
-        consent_bureau_authorization
-        consent_terms_accepted
-        consent_data_processing_authorization
-        consent_signature_full_name="Ana Perez"
-        onPatch={onPatch}
-      />
-    );
-
+    expect(screen.getByTestId("present-submit")).toBeDisabled();
+    await user.click(screen.getByTestId("present-load-text"));
     await screen.findByTestId("present-legal-text");
-    await user.click(screen.getByTestId("present-submit"));
+    expect(mockConsentApi.fetchPresentText).toHaveBeenCalledWith("app-1", PREFILL);
 
-    await waitFor(() => {
-      expect(mockConsentApi.initiate).toHaveBeenCalledWith("app-1", "PRESENT", {});
-    });
+    await user.click(screen.getByTestId("present-submit"));
+    await waitFor(() => expect(mockConsentApi.acceptPresent).toHaveBeenCalled());
     expect(mockConsentApi.acceptPresent).toHaveBeenCalledWith("app-1", {
       consents_accepted: ["bureau_authorization", "terms_accepted", "data_processing_authorization"],
       full_name: "Ana Perez",
+      texto_campos: PREFILL,
     });
+    expect(mockConsentApi.initiate).not.toHaveBeenCalled();
     expect(onPatch).toHaveBeenCalledWith({
       consent_present_confirmed: true,
       consent_method: "PRESENT",
@@ -156,36 +171,66 @@ describe("ConsentSection", () => {
     });
   });
 
-  it("pinta el texto legal exactamente como lo entrega el cliente y muestra la versión 1.0", async () => {
-    render(<ConsentSectionHarness initialPresence="present" />);
+  it("sin evento PRESENT pendiente lo inicia una vez y vuelve a pedir el texto", async () => {
+    const user = userEvent.setup();
+    mockConsentApi.fetchPresentText
+      .mockRejectedValueOnce(new ConsentApiError(409, "Conflict", "consent_present_not_initiated", []))
+      .mockResolvedValueOnce({ consent_text: LEGAL_TEXT, consent_text_version: "1.0" });
+    render(<ConsentSection {...signedProps} presentTextPrefill={PREFILL} onPatch={jest.fn()} />);
+
+    await user.click(screen.getByTestId("present-load-text"));
+    await screen.findByTestId("present-legal-text");
+    expect(mockConsentApi.initiate).toHaveBeenCalledTimes(1);
+    expect(mockConsentApi.initiate).toHaveBeenCalledWith("app-1", "PRESENT", {});
+    expect(mockConsentApi.fetchPresentText).toHaveBeenCalledTimes(2);
+  });
+
+  it("pinta el texto legal exactamente como lo entrega el backend y muestra la versión 1.0", async () => {
+    const user = userEvent.setup();
+    render(<ConsentSection {...signedProps} presentTextPrefill={PREFILL} onPatch={jest.fn()} />);
+    await user.click(screen.getByTestId("present-load-text"));
     const node = await screen.findByTestId("present-legal-text");
     expect(node.textContent).toBe(LEGAL_TEXT);
     expect(screen.getByTestId("present-legal-text-version")).toHaveTextContent("1.0");
   });
 
-  it("sin texto del backend no permite firmar y muestra el motivo", async () => {
-    mockConsentApi.getPresentText.mockResolvedValue({ consent_text: null, consent_text_version: null });
-    render(
-      <ConsentSection
-        {...baseFields}
-        consent_presence="present"
-        consent_terms_accepted
-        consent_data_processing_authorization
-        consent_signature_full_name="Ana Perez"
-        onPatch={jest.fn()}
-      />
-    );
-    expect(await screen.findByTestId("present-legal-text-missing")).toBeInTheDocument();
+  it("con datos del documento incompletos no pide el texto ni permite firmar", () => {
+    render(<ConsentSection {...signedProps} presentTextPrefill={{ NOMBRE_TITULAR: "Ana Perez" }} onPatch={jest.fn()} />);
+    expect(screen.getByTestId("present-load-text")).toBeDisabled();
+    expect(screen.getByTestId("present-legal-text-missing")).toBeInTheDocument();
+    expect(screen.getByTestId("present-submit")).toBeDisabled();
+    expect(mockConsentApi.fetchPresentText).not.toHaveBeenCalled();
+  });
+
+  it("cambiar un dato después de cargar el texto obliga a cargarlo de nuevo", async () => {
+    const user = userEvent.setup();
+    render(<ConsentSection {...signedProps} presentTextPrefill={PREFILL} onPatch={jest.fn()} />);
+    await user.click(screen.getByTestId("present-load-text"));
+    await screen.findByTestId("present-legal-text");
+    expect(screen.getByTestId("present-submit")).toBeEnabled();
+
+    await user.type(screen.getByTestId("present-field-LUGAR"), "x");
+    expect(screen.queryByTestId("present-legal-text")).not.toBeInTheDocument();
     expect(screen.getByTestId("present-submit")).toBeDisabled();
   });
 
-  it("con todos los métodos habilitados WhatsApp, SMS y Selfie quedan deshabilitados y PRESENT sigue operativo", async () => {
+  it("un 409 consent_text_incomplete nombra los datos que faltan y no permite firmar", async () => {
+    const user = userEvent.setup();
+    mockConsentApi.fetchPresentText.mockRejectedValue(
+      new ConsentApiError(409, "Conflict", "consent_text_incomplete", ["LISTA_ENTIDADES"])
+    );
+    render(<ConsentSection {...signedProps} presentTextPrefill={PREFILL} onPatch={jest.fn()} />);
+    await user.click(screen.getByTestId("present-load-text"));
+    expect(await screen.findByTestId("present-legal-text-missing")).toHaveTextContent(/LISTA_ENTIDADES/);
+    expect(screen.getByTestId("present-submit")).toBeDisabled();
+  });
+
+  it("con todos los métodos habilitados WhatsApp, Email, SMS y Selfie quedan deshabilitados y PRESENT sigue operativo", async () => {
     const user = userEvent.setup();
     render(<ConsentSectionHarness initialPresence="remote" />);
-    for (const k of ["whatsapp", "sms_otp", "selfie"]) {
+    for (const k of ["whatsapp", "email", "sms_otp", "selfie"]) {
       expect(within(screen.getByTestId(`method-${k}`)).getByRole("radio")).toBeDisabled();
     }
-    expect(within(screen.getByTestId("method-email")).getByRole("radio")).toBeEnabled();
     await user.click(screen.getByLabelText(/Sí, está aquí/i));
     expect(screen.getByTestId("present-consent-form")).toBeInTheDocument();
     expect(mockConsentApi.initiate).not.toHaveBeenCalled();

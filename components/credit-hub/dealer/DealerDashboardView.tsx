@@ -100,12 +100,12 @@ export function DealerDashboardView({
           isLoading={summarySlowLoading}
           isUnavailable={summaryUnavailable}
           unavailableTitle="Resumen de pipeline no conectado"
-          unavailableDescription="El endpoint /credit/dashboard/summary no está disponible en este entorno. Las métricas de pipeline usan datos locales o DEMO."
+          unavailableDescription="El endpoint /credit/dashboard/summary no está disponible en este entorno. Las métricas de pipeline se muestran como «No disponible»."
           loadingLabel="Cargando resumen de pipeline… (el servicio puede estar despertando)"
         >
           {summaryQuery.isError && !summaryUnavailable ? (
             <p style={{ fontSize: 11, color: "var(--ch-text-3)", marginBottom: 8 }}>
-              Resumen agregado no disponible — mostrando pipeline con datos locales (DEMO).
+              Resumen agregado no disponible — las métricas del pipeline se muestran como «No disponible».
             </p>
           ) : null}
           <DealerPipelineRail summary={summary} applications={applications} currency={currency} />

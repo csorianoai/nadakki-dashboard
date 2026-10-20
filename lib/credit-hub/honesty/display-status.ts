@@ -48,6 +48,8 @@ export const SERVER_DISPLAY_STATUS_LABELS: Record<string, string> = {
   DISBURSED: "Desembolsada",
   OFFERS_RECEIVED: "Ofertas recibidas · pendiente de revisión",
   BANK_COMPLETE: "Banco completado",
+  // metrics.derive_display_status: APPROVED agrupa ofertas aprobadas Y contraofertas; no es una aprobación.
+  APPROVED: "Con ofertas",
   COMPLETED: "Completada",
   FAILED: "Fallida",
   EXPIRED: "Expirada",
@@ -120,9 +122,10 @@ export function resolveDisplayStatus(
   if (s === "draft" || raw === "DRAFT") return "DRAFT";
   if (["approved", "approved_with_stipulations"].includes(s)) return "APPROVED";
   if (["rejected", "declined"].includes(s) || raw === "FAILED") return "REJECTED";
+  // Antes que FUNDED: una contraoferta sigue en BANK_COMPLETE y no está «Completada» (DB-CODEX-16 c).
+  if (["offered", "counter_offer", "conditioned"].includes(s) || raw === "OFFER_SELECTED") return "OFFERED";
   if (["processed", "completed"].includes(s) || ["COMPLETED", "BANK_COMPLETE"].includes(raw))
     return "FUNDED";
-  if (["offered", "counter_offer"].includes(s) || raw === "OFFER_SELECTED") return "OFFERED";
   if (ACTIVE_STATUSES.has(s) || ["RECEIVED", "AI_ANALYSIS", "AI_COMPLETE", "BANK_SUBMITTED", "HYBRID_IN_PROGRESS", "SENT_TO_BANKS", "DOCUMENTS_PENDING"].includes(raw))
     return "ACTIVE";
   return "LEGACY";

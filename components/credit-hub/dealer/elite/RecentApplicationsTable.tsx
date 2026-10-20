@@ -52,7 +52,7 @@ export function RecentApplicationsTable({ apps, currency }: { apps: CreditApplic
                   <td className="ch-num">{h.amountLabel}</td>
                   <td className="ch-num">{banksColumn(app)}</td>
                   <td>
-                    <DisplayStatusPill status={app.status} />
+                    <DisplayStatusPill status={app.status} displayStatus={app.display_status} />
                   </td>
                   <td style={{ fontSize: 12, color: "var(--ch-text-3)" }}>{chRelTimeDealer(app.updated_at)}</td>
                 </tr>
