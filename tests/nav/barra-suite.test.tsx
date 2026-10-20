@@ -18,6 +18,8 @@ import { NAVEGACION, PESTANAS_MARKETING } from "@/lib/navigation";
 import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-nav";
 
 let pathname = "/";
+// PS-9-CARCASAS-2: el Dealer OS va sobre ModuleShell y su menú lleva capability: ModuleShell pide el lote de acceso (red).
+jest.mock("@/lib/access/hooks", () => ({ __esModule: true, useAccessEntitlementsBatch: () => ({ isPending: false, isLoading: false, isError: false, error: null, data: { results: {} } }) }));
 jest.mock("next/navigation", () => ({ usePathname: () => pathname, useRouter: () => ({ replace: jest.fn(), push: jest.fn() }) }));
 // La barra lee el rol de la sesión (Inicio por rol); aquí, superadmin: su aterrizaje es "/" (ver retorno-inicio-por-rol.test.tsx).
 jest.mock("@/hooks/useAuth", () => ({

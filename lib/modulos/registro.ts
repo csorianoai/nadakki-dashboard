@@ -8,7 +8,7 @@
  */
 import { BookOpen, Building2, Car, Landmark, Megaphone, Scale, Settings } from "lucide-react";
 import { BANCO_V2_NAV, BANCO_V2_RAIZ } from "@/app/(forge)/credit-hub/bank-v2/_nav";
-import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-nav";
+import { DEALER_NAV_GROUPS, isDealerNavItemOpenable } from "@/components/dealer-management/shell/dealer-nav";
 import {
   NAV_SECTIONS,
   filterSectionsForUser,
@@ -81,11 +81,18 @@ const deMarketing: GrupoMenu[] = PESTANAS_MARKETING.map((p) => ({
   }),
 }));
 
+/**
+ * Menú del Dealer OS: el de su carcasa (DEALER_NAV_GROUPS), con las MISMAS reglas que visibleDealerNavGroups: solo
+ * enlaces que se abren desde el panel (no rebotan) y la capability del plan, que aplica ModuleShell (PS-9-CARCASAS-2).
+ * `sinModulo`: el dealer nunca se filtró por cores del tenant, solo por el plan; su menú no pasa por ese filtro.
+ */
 const deDealer: GrupoMenu[] = DEALER_NAV_GROUPS.map((g) => ({
   id: `dealer-${g.id}`,
   label: g.label,
-  items: g.items.map((it) => ({ id: `dealer-${it.href}`, label: it.label, href: it.href, icono: it.icon, capability: it.capability })),
-}));
+  items: g.items
+    .filter((it) => isDealerNavItemOpenable(it.href))
+    .map((it) => ({ id: `dealer-${it.href}`, label: it.label, href: it.href, icono: it.icon, capability: it.capability, sinModulo: true })),
+})).filter((g) => g.items.length > 0);
 
 /**
  * Centros de Real Estate agrupados como su barra lateral (se leen de lib/realtor/centers.ts). Los centros con ruta
@@ -128,7 +135,10 @@ export const MODULOS: ModuloConfig[] = [
     seccion: "concesionarios",
     menu: deDealer,
     acento: "#38bdf8",
-    carcasa: "propia",
+    // PS-9-CARCASAS-2: el Dealer OS y el Centro Operativo abren sobre ModuleShell; DealerShell ya no pinta su menú ni su
+    // barra (los da el armazón) y conserva sincronización, avisos, tema y acciones. Sin pantallas /grupo: no existen.
+    carcasa: "comun",
+    sinPantallaGrupo: true,
     compartidas: ["/contable", "/marketing/campaigns"],
     carcasas: [{ prefijos: ["/autos/dealer", "/centro-operativo"], modulo: { label: "Dealer OS", href: "/autos/dealer" }, grupos: sinIconos(deDealer) }],
   },
