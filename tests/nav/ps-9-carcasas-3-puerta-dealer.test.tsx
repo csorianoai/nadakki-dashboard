@@ -75,5 +75,4 @@ test.each(RUTAS)("%s: sin dealer se pinta la Suite y el contenido, sin redirecci
   expect(screen.getAllByTestId("barra-suite")).toHaveLength(1);
   expect(replace).not.toHaveBeenCalled();
 });
-// El menú de la Suite en una ruta sin módulo lo comprueba ps-9-carcasas-3-sin-modulo.test.tsx.
 
