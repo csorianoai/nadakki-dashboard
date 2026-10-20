@@ -13,7 +13,7 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/",
   useSearchParams: () => new URLSearchParams(),
 }));
-jest.mock("@/components/ui/NavigationBar", () => ({ __esModule: true, default: () => null }));
+jest.mock("@/components/ui/NavigationBar", () => ({ __esModule: true, default: ({ children }: any) => <div>{children}</div> }));
 jest.mock("@/lib/api/qa", () => ({
   getAuthMetaStatus: jest.fn().mockResolvedValue({}),
   getAuthGoogleStatus: jest.fn().mockResolvedValue({}),
