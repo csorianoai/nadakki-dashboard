@@ -1,5 +1,5 @@
 /**
- * PS-9-CARCASAS-2 PARTE=4/5, prueba integrada: el panel del banco (/credit-hub/bank-v2/**) abre sobre ModuleShell.
+ * PS-9-CARCASAS-2 PARTE=4/7, prueba integrada: el panel del banco (/credit-hub/bank-v2/**) abre sobre ModuleShell.
  * AppGate + el layout REAL de Credit Hub + el de bank-v2 (BancoV2Shell) = UNA sola barra (la del armazón común), el
  * menú del módulo Crédito sacado de lib/navigation.ts (con todas las pantallas del banco, también Escalaciones) y sin
  * el menú ni la barra de DccShell; el buscador, la campana y el tema del banco siguen a la vista, en el contenido.
@@ -46,9 +46,7 @@ jest.mock("@/lib/credit-hub/hooks/useNotifications", () => ({ __esModule: true, 
 jest.mock("@/components/credit-hub/shell/useChromeIdentity", () => ({ __esModule: true, useChromeIdentity: () => ({ name: "QA", initials: "Q", email: "qa@nadakki.test", role: "Banco" }) }));
 jest.mock("@/hooks/useAuth", () => ({ __esModule: true, useAuth: () => ({ logout: jest.fn() }) }));
 jest.mock("@/components/forge/layout/ForgeCreditHubSidebar", () => ({ __esModule: true, ForgeCreditHubSidebar: () => <nav data-testid="forge-credit-hub-sidebar" /> }));
-// Testigos de lo que NO debe aparecer: el menú y la barra propios de DccShell.
-jest.mock("@/components/dcc/shell/DccShellSidebar", () => ({ __esModule: true, DccShellSidebar: () => <nav data-testid="carcasa-vieja-dcc-sidebar" /> }));
-jest.mock("@/components/dcc/shell/DccShellTopbar", () => ({ __esModule: true, DccShellTopbar: () => <header data-testid="carcasa-vieja-dcc-topbar" /> }));
+// DccShell (menú y barra propios) ya no existe: lo fija ps-9-carcasas-2-retirada.test.ts (PARTE 7/7).
 
 // Un analista del banco (rol bank*), no superadmin: el menú de Crédito se filtra por rol.
 const sesion = {
@@ -86,8 +84,7 @@ describe("bank-v2 sobre ModuleShell", () => {
     expect(screen.getAllByTestId("barra-suite")).toHaveLength(1);
     expect(screen.getByTestId("module-shell")).toHaveAttribute("data-modulo", "credito");
     expect(screen.queryByTestId("forge-shell")).toBeNull();
-    expect(screen.queryByTestId("carcasa-vieja-dcc-sidebar")).toBeNull();
-    expect(screen.queryByTestId("carcasa-vieja-dcc-topbar")).toBeNull();
+    expect(document.querySelector("[data-dcc-shell]")).toBeNull();
     expect(screen.getByText("pantalla del banco")).toBeInTheDocument();
     expect(screen.getByTestId("marca-banco")).toBeInTheDocument();
   });

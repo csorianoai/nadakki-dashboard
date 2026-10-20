@@ -1,5 +1,5 @@
 /**
- * PS-9-CARCASAS-2 PARTE=1/5: ModuleShell aplica `capability` (catálogo 097) a los items del menú, como hacía la
+ * PS-9-CARCASAS-2 PARTE=1/7: ModuleShell aplica `capability` (catálogo 097) a los items del menú, como hacía la
  * carcasa propia del dealer (DealerShell): sin permiso explícito no se pinta (fail-closed), y los items sin
  * capability siempre se ven. Además expone useDentroDeModuleShell(), que la parte 2/5 usa para que la carcasa de
  * un core no pinte su propia barra y su propio menú cuando ya la envuelve ModuleShell.
