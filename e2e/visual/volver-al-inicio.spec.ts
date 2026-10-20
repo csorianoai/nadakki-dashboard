@@ -22,11 +22,13 @@ const CORES = [
   "/marketing/campaigns",
   "/legal",
   "/admin",
+  "/credit-hub",
 ];
 const MIGRADOS = [
   { ruta: "/marketing/campaigns", modulo: "marketing", menu: "Menú de Marketing" },
   { ruta: "/legal", modulo: "legal", menu: "Menú de Legal" },
   { ruta: "/admin", modulo: "administracion", menu: "Menú de Administración" },
+  { ruta: "/credit-hub", modulo: "credito", menu: "Menú de Crédito" },     // PS-9-CARCASAS-1: Credit Hub sobre ModuleShell
 ];
 
 async function sesion(page: Page) {

@@ -38,7 +38,8 @@ const SUPER = sesion("platform_superadmin", ["legal", "marketing", "credit"]);
 const conSesion = (ui: React.ReactNode) => <AuthContext.Provider value={SUPER}>{ui}</AuthContext.Provider>;
 const USUARIO: ContextoUsuario = { roles: SUPER.allRoles, subscribedCores: SUPER.tenant?.subscribed_cores, realtorOk: true };
 const mod = (id: string) => MODULOS.find((m) => m.id === id)!;
-const conShell = MODULOS.filter((m) => m.carcasa === "comun");
+// Con pantalla de grupo (tarjetas con descripción por página): Crédito usa ModuleShell pero no tiene `<raiz>/grupo/<id>` (PS-9-CARCASAS-1).
+const conShell = MODULOS.filter((m) => m.carcasa === "comun" && !m.sinPantallaGrupo);
 const hrefs = (xs: { href: string }[]) => xs.map((x) => x.href);
 
 beforeEach(() => { window.localStorage.clear(); });
