@@ -9,6 +9,7 @@ import { MarcoSuite } from "@/components/nav/MarcoSuite";
 import { SinModulos } from "@/components/nav/SinModulos";
 import { TenantBrandedDocumentTitle } from "@/components/white-label/TenantBrandedDocumentTitle";
 import { forgeAppDataTenantAttribute } from "@/lib/credit-hub/forge-test-tenant-override";
+import { isDealerChromePath } from "@/lib/autos-portal/routes";
 import { grupoDePantalla, grupoDeRuta, menuVisible, modulosVisibles, tienePantallaGrupo, grupoEnlazable, type GrupoMenu, type ModuloConfig } from "@/lib/modulos/registro";
 import { capacidadesDe, ConCapacidades } from "./capacidades";
 import { CLASES } from "./clases";
@@ -69,7 +70,10 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
   const todos = useMemo(() => (modulo ? menuVisible(modulo, usuario) : menuDeSuite(modulos)), [modulo, modulos, usuario]);
   // Items con capability (Dealer OS): solo con permiso explícito del lote de acceso. Sin capabilities no se pide nada.
   const claves = useMemo(() => capacidadesDe(todos), [todos]);
-  const Puerta = conSesion ? DealerSuiteGate : Fragment;
+  // DealerSuiteGate saca al dealer de la Suite hacia su panel. El panel del dealer (/autos/dealer/**, /centro-operativo)
+  // también abre en ModuleShell (PS-9-CARCASAS-2): ahí la puerta lo mandaría a donde ya está, en bucle («Llevándote a tu
+  // panel…» para siempre en staging, César 20-oct). En su propio panel no hay puerta.
+  const Puerta = conSesion && !isDealerChromePath(pathname) ? DealerSuiteGate : Fragment;
 
   const cuerpo = (grupos: GrupoMenu[]) => {
     // Pestañas: las páginas del grupo de la pantalla actual; en un módulo sin grupos (menú plano), todas las suyas.
