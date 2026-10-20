@@ -41,7 +41,7 @@ export function ActiveApplicationsTable({
                 {h.amountLabel}
               </td>
               <td style={{ padding: "12px 14px" }}>
-                <DisplayStatusPill status={app.status} />
+                <DisplayStatusPill status={app.status} displayStatus={app.display_status} />
               </td>
               <td style={{ padding: "12px 14px", color: "var(--ch-text-3)", fontSize: 12 }}>
                 {chRelTimeDealer(app.updated_at)}
