@@ -89,7 +89,9 @@ export type NavSection = {
 export const ROLES_ADMINISTRACION = ["platform_superadmin", "tenant_admin"] as const;
 
 /** Roles del banco y del concesionario dentro de Crédito. */
-const ROLES_BANCO = ["credit_admin", "banker", "bank*"];
+// Los del portal del banco (lib/credit-hub/auth/portal-access.ts, BANK_PORTAL_ROLES): compliance_officer entra en bank-v2 y
+// DccShell le enseñaba sus pantallas; en ModuleShell las enseña este menú (PS-9-CARCASAS-2).
+const ROLES_BANCO = ["credit_admin", "banker", "bank*", "compliance_officer"];
 const ROLES_DEALER = ["dealer*"];
 
 // ── Marketing: una entrada en el menú y seis pestañas dentro ──────────────────────────────────────────

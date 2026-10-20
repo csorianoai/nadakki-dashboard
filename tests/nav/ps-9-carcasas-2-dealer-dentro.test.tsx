@@ -1,5 +1,5 @@
 /**
- * PS-9-CARCASAS-2 PARTE=2/5: dentro de ModuleShell, DealerShell NO pinta su menú, su barra ni su paleta (eso lo da el
+ * PS-9-CARCASAS-2 PARTE=2/7: dentro de ModuleShell, DealerShell NO pinta su menú, su barra ni su paleta (eso lo da el
  * armazón común), pero conserva lo que es del dealer: la sincronización del dealer de la sesión, los avisos, el tema
  * DCC del contenido (data-portal="dealer") y sus acciones (tema, notificaciones y Publicar, con los MISMOS permisos
  * que tenía su barra), y el aviso «No se pudieron verificar tus accesos» que antes iba en su menú. Fuera de
