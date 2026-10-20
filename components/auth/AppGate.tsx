@@ -63,9 +63,7 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
   if (isDealerReachableSuitePath(pathname)) {
     return (
       <ProtectedRoute>
-        <MarcoSuite>
-          <ContableChrome>{children}</ContableChrome>
-        </MarcoSuite>
+        <ContableChrome>{children}</ContableChrome>
       </ProtectedRoute>
     );
   }
