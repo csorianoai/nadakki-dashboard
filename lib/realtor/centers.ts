@@ -23,6 +23,8 @@ export const REALTOR_CENTERS: readonly RealtorCenter[] = [
   { ...documentos, label: "Documentos", group: "NEGOCIOS" },
   { ...marketingAi, label: "Marketing", group: "CRECER" },
   { id: "demand-radar", label: "Mercado", group: "CRECER", href: "/realtor/demand-radar" },
+  // PI-2 PI-VISIBLE (DECISION_CESAR 2026-10-20 en #2159): índice de propiedades del tenant con enlace a su ficha.
+  { id: "property-intel", label: "Inteligencia de propiedad", group: "CRECER", href: "/realtor/property-intel" },
   { ...resultados, label: "Resultados", group: "CRECER" },
   { ...careerDirector, label: "Career Director", group: "CRECER" },
   { id: "academia", label: "Academia", group: "CRECER" },
