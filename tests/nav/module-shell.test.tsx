@@ -211,13 +211,14 @@ describe("AppGate: qué rutas usan ModuleShell", () => {
   test.each([
     ["/", "suite"], ["/notifications", "suite"], ["/marketing/campaigns", "marketing"], ["/workflows", "marketing"],
     ["/legal/cases", "legal"], ["/proyectos/portafolio", "proyectos"], ["/admin/gates", "administracion"], ["/settings", "administracion"],
+    ["/credit-hub", "credito"], ["/credit-hub/activacion", "credito"], ["/credit/dashboard", "credito"],   // PS-9-CARCASAS-1
   ])("%s -> ModuleShell (%s)", (r, esperado) => expect(modulo(r)).toBe(esperado));
 
   test.each([["/autos/dealer"], ["/realtor"], ["/cockpit"], ["/contable/resumen"]])("%s conserva su carcasa propia (solo la barra de MarcoSuite)", (r) => {
     expect(modulo(r)).toBe("propia");
   });
 
-  test.each([["/sic"], ["/credit-hub"], ["/credit-hub/bank-v2"], ["/agents"], ["/ruta/que/nadie/conoce"]])("%s sigue en GlobalForgeAppShell (Crédito: sus layouts ocultan el chrome global)", (r) => {
+  test.each([["/sic"], ["/credit-hub/bank-v2"], ["/credit-hub/dealer"], ["/credit-hub/admin"], ["/agents"], ["/ruta/que/nadie/conoce"]])("%s sigue en GlobalForgeAppShell (Crédito: sus layouts ocultan el chrome global)", (r) => {
     expect(modulo(r)).toBe("global");
   });
 });
