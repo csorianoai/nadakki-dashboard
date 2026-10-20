@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
+import { usePathname, useSelectedLayoutSegments } from "next/navigation";
 import "./forge-globals.css";
 import "@/app/credit-hub/credit-hub.css";
 import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHubI18nBootstrap";
 import { DemoModeBanner } from "@/components/forge/ui/DemoModeBanner";
-import { ForgeCreditHubAppShell } from "@/components/forge";
+import { PersonaProvider } from "@/components/credit-hub/system/PersonaProvider";
+import { CHFeatureFlagBanner } from "@/components/credit-hub/system/CHFeatureFlagBanner";
+import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
+import { ForgeToaster } from "@/components/forge/ui/Toast";
+import { creditHubPersonaFromLayoutSegments } from "@/components/forge/layout/creditHubPersonaFromSegments";
+import { ForgeCommandPaletteProvider } from "@/components/forge/layout/ForgeCommandPaletteContext";
 import { useTenantConfig } from "@/lib/credit-hub/hooks/useTenantConfig";
 import { isMonetizacionPath } from "@/lib/credit-hub/monetizacion/routes";
 import { isForgeMonetizacionEnabled } from "@/lib/env/feature-forge-monetizacion";
@@ -15,6 +20,22 @@ function CreditHubDemoBannerGate({ active }: { active: boolean }) {
   const { tenantConfig } = useTenantConfig();
   if (!active) return null;
   return <DemoModeBanner isDemo={tenantConfig.is_demo === true} />;
+}
+
+/** Contenido de Credit Hub bajo ModuleShell (barra y menú son los de la Suite): persona, guarda del tenant y paleta. */
+function CreditHubContenido({ children }: { children: ReactNode }) {
+  const persona = creditHubPersonaFromLayoutSegments(useSelectedLayoutSegments());
+  return (
+    <PersonaProvider persona={persona}>
+      <div className="flex min-h-0 flex-1 flex-col bg-forgeSurface-page text-forgeGray-800" data-portal={persona}>
+        <CHFeatureFlagBanner />
+        <CHTenantGuard>
+          <ForgeCommandPaletteProvider>{children}</ForgeCommandPaletteProvider>
+        </CHTenantGuard>
+        <ForgeToaster />
+      </div>
+    </PersonaProvider>
+  );
 }
 
 export function CreditHubLayoutClient({ children }: { children: React.ReactNode }) {
@@ -50,7 +71,7 @@ export function CreditHubLayoutClient({ children }: { children: React.ReactNode 
     <>
       <CreditHubI18nBootstrap />
       <CreditHubDemoBannerGate active={isChPortal} />
-      {isChPortal ? children : isAdminCockpit ? children : <ForgeCreditHubAppShell>{children}</ForgeCreditHubAppShell>}
+      {isChPortal ? children : isAdminCockpit ? children : <CreditHubContenido>{children}</CreditHubContenido>}
     </>
   );
 }

@@ -5,7 +5,12 @@ let pathname = "/credit-hub";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => pathname,
+  useSelectedLayoutSegments: () => [],
 }));
+jest.mock("@/components/credit-hub/system/CHTenantGuard", () => ({ CHTenantGuard: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
+jest.mock("@/components/credit-hub/system/CHFeatureFlagBanner", () => ({ CHFeatureFlagBanner: () => null }));
+jest.mock("@/components/forge/layout/ForgeCommandPaletteContext", () => ({ ForgeCommandPaletteProvider: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
+jest.mock("@/components/forge/ui/Toast", () => ({ ForgeToaster: () => null }));
 
 jest.mock("@/app/(forge)/credit-hub/forge-globals.css", () => ({}));
 jest.mock("@/app/credit-hub/credit-hub.css", () => ({}));
@@ -52,7 +57,8 @@ describe("CreditHubLayoutClient — monetización portal bypass", () => {
 
     render(<CreditHubLayoutClient>Content</CreditHubLayoutClient>);
 
-    expect(screen.getByTestId("ch-forge-shell")).toBeInTheDocument();
+    // PS-9-CARCASAS-1: el menú lo pone ModuleShell/AppGate; aquí queda el contenido de Credit Hub (persona), no un portal a pantalla completa.
+    expect(screen.getByText("Content").closest("[data-portal]")).not.toBeNull();
     expect(document.documentElement.getAttribute("data-ch-portal-full")).toBeNull();
   });
 
