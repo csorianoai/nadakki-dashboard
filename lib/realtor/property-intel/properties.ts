@@ -6,9 +6,11 @@ import type { Section } from "./types";
 const BASE = "/api/v1/realestate/properties";
 const PAGE_LIMIT = 200;
 const MAX_PAGES = 5;
+/** Calle del detalle (DECISION_CESAR 2026-10-20, #2159): una lectura por propiedad, con tope. */
+const MAX_DETAILS = 50;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export type PiProperty = { id: string; address: string; type: string; units: number };
+export type PiProperty = { id: string; address: string; street: string | null; type: string; units: number };
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -28,7 +30,20 @@ export function mapProperty(p: unknown): PiProperty | null {
   const address = addressLabel(p.address);
   if (!id || !UUID.test(id) || !address) return null;
   const units = Number.isInteger(p.unit_count) ? (p.unit_count as number) : 0;
-  return { id, address, type: str(p.property_type) ?? "other", units };
+  return { id, address, street: null, type: str(p.property_type) ?? "other", units };
+}
+
+/** La lista no trae calle (C-RE-OLA2); el detalle sí. Si el detalle falla, queda la zona: nunca se inventa. */
+async function fetchStreet(id: string): Promise<string | null> {
+  try {
+    const res = await apiFetch(`${BASE}/${encodeURIComponent(id)}`, { method: "GET", cache: "no-store" });
+    if (!res?.ok) return null;
+    const j: unknown = await res.json();
+    const a = isObj(j) && isObj(j.address) ? j.address : null;
+    return a ? [str(a.street_line_1), str(a.street_line_2)].filter((x): x is string => x !== null).join(", ") || null : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Sigue next_cursor hasta MAX_PAGES. Sin Bearer no se llama (fail-closed). */
@@ -54,5 +69,6 @@ export async function fetchPiProperties(): Promise<Section<PiProperty[]>> {
   } catch {
     return { state: "error" };
   }
-  return { state: "ok", data: out };
+  const streets = await Promise.all(out.slice(0, MAX_DETAILS).map((p) => fetchStreet(p.id)));
+  return { state: "ok", data: out.map((p, i) => ({ ...p, street: streets[i] ?? null })) };
 }

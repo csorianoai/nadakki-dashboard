@@ -36,6 +36,24 @@ it("(b) id no UUID: «Identificador no válido», sin navegar ni llamar a la API
 });
 
 describe("PI-VISIBLE: índice con las propiedades del tenant", () => {
+  it("DECISION_CESAR 20-oct: muestra la calle del detalle; si el detalle falla, solo la zona", async () => {
+    mockAuth.mockReturnValue({ Authorization: "Bearer t" });
+    mockApiFetch.mockImplementation(async (url: string) => {
+      if (url.startsWith("/api/v1/realestate/properties?")) return res(200, { items: [
+        { id: ID, address: { country: "US", region: "FL", city: "Miami", zone: "Edgewater" }, property_type: "condo", unit_count: 3 },
+        { id: P2, address: { country: "US", city: "Miami" }, property_type: "land", unit_count: 0 },
+      ], next_cursor: null });
+      if (url === `/api/v1/realestate/properties/${ID}`) return res(200, { id: ID, address: { country: "US", city: "Miami", street_line_1: "SYNTH 1 Ave" } });
+      return res(500);
+    });
+    render(<PropertyIntelIndexPage />);
+    const rows = await screen.findAllByTestId("pi-index-row");
+    await screen.findByText(/SYNTH 1 Ave/);
+    expect(rows[0]).toHaveTextContent("SYNTH 1 Ave · Edgewater, Miami, FL, US");
+    expect(rows[1]).toHaveTextContent("Miami, US");
+    expect(rows[1]).not.toHaveTextContent("·  ·");
+  });
+
   it("lista cada propiedad con su dirección (hasta zona) y enlace a su ficha; sin tenant en la petición", async () => {
     mockAuth.mockReturnValue({ Authorization: "Bearer t" });
     mockApiFetch.mockResolvedValue(res(200, { items: [

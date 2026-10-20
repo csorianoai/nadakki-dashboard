@@ -46,7 +46,7 @@ export function PropertyIntelIndex() {
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
             {list.data.map((p) => (
               <li key={p.id} data-testid="pi-index-row" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "baseline" }}>
-                <strong>{p.address}</strong>
+                <strong>{p.street ? `${p.street} · ${p.address}` : p.address}</strong>
                 <span>{TYPE_LABEL[p.type] ?? p.type} · {p.units} {p.units === 1 ? "unidad" : "unidades"}</span>
                 <Link href={`/realtor/property-intel/${p.id}`} aria-label={`Abrir ficha de ${p.address}`}>Abrir ficha</Link>
               </li>
