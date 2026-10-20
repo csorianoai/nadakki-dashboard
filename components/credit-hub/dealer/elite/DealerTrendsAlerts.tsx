@@ -9,6 +9,7 @@ import { AlertCard } from "@/components/credit-hub/elite/AlertCard";
 import { humanizeApplicant, shortFolio } from "@/lib/credit-hub/honesty/humanize-applicant";
 import { dealerDetailHref } from "@/lib/credit-hub/dealer/dealerFormat";
 import { lenderDisplayName } from "@/lib/credit-hub/dealer/lender-display";
+import { hasOffersPendingDecision } from "@/lib/credit-hub/dealer/dealer-pipeline-metrics";
 
 export function DealerTrendsAlerts({
   applications,
@@ -23,7 +24,7 @@ export function DealerTrendsAlerts({
   pipelineAmountLabel: string;
   banks?: BankRankingRow[];
 }) {
-  const pendingOffers = applications.filter((a) => ["offered", "counter_offer"].includes(a.status));
+  const pendingOffers = applications.filter(hasOffersPendingDecision);
   const drafts = applications.filter((a) => a.status === "draft").length;
 
   const alerts = useMemo(() => {

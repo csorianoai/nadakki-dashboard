@@ -54,6 +54,18 @@ export function applicationsThisWeek(apps: CreditApplication[], now = new Date()
   }).length;
 }
 
+const OFFER_PENDING_STATUSES = new Set(["offered", "counter_offer", "approved", "approved_with_stipulations"]);
+// metrics.derive_display_status: APPROVED = hay oferta aprobada o contraoferta y ninguna aceptada.
+const OFFER_PENDING_DISPLAY = new Set(["APPROVED", "OFFERS_AVAILABLE", "OFFERS_RECEIVED"]);
+
+/**
+ * Solicitud con ofertas por decidir. Las filas de GET /applications no traen payload: una contraoferta
+ * llega como state BANK_COMPLETE + display_status APPROVED, así que el status solo no basta (1b, ronda 3).
+ */
+export function hasOffersPendingDecision(app: CreditApplication): boolean {
+  return OFFER_PENDING_STATUSES.has(app.status) || OFFER_PENDING_DISPLAY.has((app.display_status ?? "").toUpperCase());
+}
+
 export function activeApplicationsFromList(apps: CreditApplication[]): CreditApplication[] {
   return apps.filter((a) => isPipelineActiveDisplay(a.status));
 }

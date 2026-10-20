@@ -48,7 +48,8 @@ export function DealerDashboardView({
     [applications],
   );
 
-  const weekCount = applicationsThisWeek(applications);
+  // Solo lo que está en el pipeline: los borradores de la semana no son «+N en pipeline» (ronda 3).
+  const weekCount = applicationsThisWeek(activeApps);
   const pipelineAmount = useMemo(
     () => activeApps.reduce((sum, a) => sum + Number(a.requested_amount || 0), 0),
     [activeApps],
