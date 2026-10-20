@@ -7,6 +7,7 @@ import type { PiData, Section, Target } from "@/lib/realtor/property-intel/types
 import { getAuthHeaders } from "@/lib/api/fetch-client";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
+import { FuentesZona } from "./FuentesZona";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
@@ -72,6 +73,7 @@ export function PropertyIntelScreen({ target }: { target: Target }) {
               <div key={id}><dt style={{ fontSize: 12, color: RT.muted }}>{k}</dt><dd data-testid={id} style={{ margin: 0, fontWeight: 700 }}>{v}</dd></div>
             ))}
           </dl>
+          {target.kind === "property_id" && !demo ? <FuentesZona propertyId={target.id} /> : null}
           <Block id="signals" title="Señales de mercado" s={data.signals}>
             {(rows) => <ul style={{ margin: 0, paddingLeft: 18 }}>{rows.map((r) => <li key={r.id} data-testid="signal-row">{r.signal_type} · {r.observed_at.slice(0, 10)}</li>)}</ul>}
           </Block>
