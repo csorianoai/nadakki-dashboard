@@ -71,7 +71,7 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
   });
 
   it.each(["bank_analyst", "bank_admin", "compliance_officer", "credit_admin", "tenant_admin"])(
-    "rol %s: entra, con la marca del banco y la firma de Credit Hub",
+    "rol %s: entra, con el buscador, la campana y el tema del banco (la barra y el menú son de ModuleShell, PS-9-CARCASAS-2)",
     (rol) => {
       sesion = { tenant: "t-1", autenticado: true, rol };
       render(
@@ -80,9 +80,9 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
         </BancoV2Layout>,
       );
       expect(screen.getByText("contenido del banco")).toBeInTheDocument();
-      expect(screen.getByTestId("dcc-shell-marca")).toHaveTextContent("Banco Ejemplo");
-      expect(screen.getByTestId("dcc-shell-firma")).toHaveTextContent("con Nadakki Credit Hub");
-      expect(screen.getByRole("link", { name: "Mesa de decisiones" })).toHaveAttribute("aria-current", "page");
+      expect(screen.getByTestId("banco-buscador")).toBeInTheDocument();
+      expect(screen.getByTestId("banco-campana")).toBeInTheDocument();
+      expect(screen.getByTestId("banco-tema")).toBeInTheDocument();
     },
   );
 
@@ -93,7 +93,7 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
         <Hijo />
       </BancoV2Layout>,
     );
-    const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
+    const hrefs = screen.queryAllByRole("link").map((a) => a.getAttribute("href") ?? "");
     expect(hrefs.filter((h) => h.includes("/dealer"))).toEqual([]);
   });
 });
