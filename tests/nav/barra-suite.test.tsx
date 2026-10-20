@@ -36,7 +36,11 @@ jest.mock("@/components/forge/layout/GlobalForgeAppShell", () => ({
 }));
 jest.mock("@/components/dealer/ContableChrome", () => ({
   __esModule: true,
-  ContableChrome: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  // PS-9-CARCASAS-2: la barra de /contable la pinta ContableChrome (MarcoSuite o ModuleShell), no AppGate.
+  ContableChrome: ({ children }: { children: React.ReactNode }) => {
+    const { MarcoSuite } = jest.requireActual("@/components/nav/MarcoSuite");
+    return <MarcoSuite><div>{children}</div></MarcoSuite>;
+  },
 }));
 jest.mock("@/components/ai/OnboardingAgent", () => ({ __esModule: true, default: () => null }));
 
