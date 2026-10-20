@@ -379,6 +379,10 @@ function consentStepErrors(
     errors.consent_terms_accepted = WIZARD_ERROR_REQUIRED;
     summaries.push(`${section}: falta aceptación de términos`);
   }
+  if (!data.consent_bureau_authorization) {
+    errors.consent_bureau_authorization = WIZARD_ERROR_REQUIRED;
+    summaries.push(`${section}: falta autorización de buró`);
+  }
   if (!data.consent_data_processing_authorization) {
     errors.consent_data_processing_authorization = WIZARD_ERROR_REQUIRED;
     summaries.push(`${section}: falta autorización de datos`);

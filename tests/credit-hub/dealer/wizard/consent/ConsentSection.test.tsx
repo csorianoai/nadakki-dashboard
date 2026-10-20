@@ -158,7 +158,7 @@ describe("ConsentSection", () => {
     await user.click(screen.getByTestId("present-submit"));
     await waitFor(() => expect(mockConsentApi.acceptPresent).toHaveBeenCalled());
     expect(mockConsentApi.acceptPresent).toHaveBeenCalledWith("app-1", {
-      consents_accepted: ["bureau_authorization", "terms_accepted", "data_processing_authorization"],
+      consents_accepted: ["LEY_172_13", "BURO", "DATA_POLICY"],
       full_name: "Ana Perez",
       texto_campos: PREFILL,
     });
@@ -234,5 +234,33 @@ describe("ConsentSection", () => {
     await user.click(screen.getByLabelText(/Sí, está aquí/i));
     expect(screen.getByTestId("present-consent-form")).toBeInTheDocument();
     expect(mockConsentApi.initiate).not.toHaveBeenCalled();
+  });
+
+  // Ronda 3 de Cowork (20-oct): present/accept daba 409 consent_incomplete missing [LEY_172_13, BURO, DATA_POLICY].
+  it("si la firma falla, el usuario ve qué autorizaciones faltan", async () => {
+    const user = userEvent.setup();
+    mockConsentApi.acceptPresent.mockRejectedValue(
+      new ConsentApiError(409, "Conflict", "consent_incomplete", ["BURO"])
+    );
+    render(<ConsentSection {...signedProps} presentTextPrefill={PREFILL} onPatch={jest.fn()} />);
+    await user.click(screen.getByTestId("present-load-text"));
+    await screen.findByTestId("present-legal-text");
+    await user.click(screen.getByTestId("present-submit"));
+    const alert = await screen.findByTestId("present-submit-error");
+    expect(alert).toHaveTextContent(/buró/i);
+    expect(alert).not.toHaveTextContent(/^Conflict$/);
+  });
+
+  it("buró es obligatorio: sin marcarlo no se puede firmar y la pantalla no dice «opcional»", async () => {
+    const user = userEvent.setup();
+    render(
+      <ConsentSection {...signedProps} consent_bureau_authorization={false} presentTextPrefill={PREFILL} onPatch={jest.fn()} />
+    );
+    await user.click(screen.getByTestId("present-load-text"));
+    await screen.findByTestId("present-legal-text");
+    expect(screen.getByTestId("present-submit")).toBeDisabled();
+    const form = screen.getByTestId("present-consent-form");
+    expect(form).not.toHaveTextContent(/opcional/i);
+    expect(form).toHaveTextContent(/buró[^.]*obligatori/i);
   });
 });
