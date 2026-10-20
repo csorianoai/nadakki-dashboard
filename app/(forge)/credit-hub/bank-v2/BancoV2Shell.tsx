@@ -1,25 +1,24 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Moon, Sun } from "lucide-react";
 import { BuscadorBanco } from "@/components/credit-hub/bank-v2/cabecera/BuscadorBanco";
 import { CampanaBanco } from "@/components/credit-hub/bank-v2/cabecera/CampanaBanco";
 import { CHTenantGuard } from "@/components/credit-hub/system/CHTenantGuard";
 import { CHPortalAccessGuard } from "@/components/credit-hub/system/CHPortalAccessGuard";
-import { useChromeIdentity, type ChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
+import type { ChromeIdentity } from "@/components/credit-hub/shell/useChromeIdentity";
 import { DccThemeProvider, useDccThemeContext } from "@/components/dcc/DccThemeContext";
 import { DCC_CLASSES } from "@/components/dcc/clases";
-import { DccShell, itemActivo, type DccUsuario } from "@/components/dcc/shell/DccShell";
 import { dccFontVariables } from "@/components/dcc/shell/DccFonts";
-import { useDentroDeModuleShell } from "@/components/shell/ModuleShell";
-import { useAuth } from "@/hooks/useAuth";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { marcaDesdeBranding, type MarcaDcc } from "@/lib/dcc/marca";
 import { dccThemeStyle } from "@/lib/dcc/tokens";
 import { BANCO_V2_NAV, BANCO_V2_RAIZ } from "./_nav";
 
 const MarcaBancoContext = createContext<MarcaDcc | null>(null);
+
+export type DccUsuario = { nombre: string; rol: string; iniciales: string };
 
 /** Clave de Local Storage del tema del banco v2 (solo "light" | "dark"), como la del dealer. */
 export const BANCO_V2_THEME_STORAGE_KEY = "nadakki-banco-v2-theme";
@@ -42,9 +41,9 @@ export function useMarcaBanco(): MarcaDcc {
 }
 
 /**
- * Chrome de bank-v2. Las guardias son LAS MISMAS que BankChShell, en el mismo
- * orden: CHTenantGuard y CHPortalAccessGuard portal="bank". Un rol no
- * bancario ve el mismo rechazo que en /credit-hub/bank.
+ * Lo de bank-v2 dentro del armazón común (AppGate -> ModuleShell, PS-9-CARCASAS-2): barra, menú, migas y usuario
+ * son los de la Suite. Las guardias son LAS MISMAS que BankChShell, en el mismo orden: CHTenantGuard y
+ * CHPortalAccessGuard portal="bank". Un rol no bancario ve el mismo rechazo que en /credit-hub/bank.
  */
 export function BancoV2Shell({ children }: { children: ReactNode }) {
   return (
@@ -66,8 +65,8 @@ const TIPOGRAFIA_BANCO = [
 ].join(" ");
 
 /**
- * PS-9-CARCASAS-2: dentro de ModuleShell la barra, el menú, las migas y el usuario son los del armazón común. Del chrome
- * del banco quedan el tema (recordado con su clave), la tipografía y, en una franja del contenido, el buscador, la
+ * PS-9-CARCASAS-2: la barra, el menú, las migas y el usuario son los del armazón común. Del chrome del banco quedan el
+ * tema (recordado con su clave), la tipografía y, en una franja del contenido, el buscador, la
  * campana y el conmutador de tema.
  */
 function BancoV2Contenido({ children }: { children: ReactNode }) {
@@ -117,50 +116,11 @@ function ConmutadorTema() {
 }
 
 function BancoV2Chrome({ children }: { children: ReactNode }) {
-  const dentro = useDentroDeModuleShell();
-  const pathname = usePathname() ?? BANCO_V2_RAIZ;
-  const router = useRouter();
-  const { logout } = useAuth();
-  const identidad = useChromeIdentity();
   const branding = useTenantBranding();
   const marca = marcaDesdeBranding(branding.data, "banco");
-
-  if (dentro) {
-    return (
-      <MarcaBancoContext.Provider value={marca}>
-        <BancoV2Contenido>{children}</BancoV2Contenido>
-      </MarcaBancoContext.Provider>
-    );
-  }
-
-  const activo = itemActivo(BANCO_V2_NAV, pathname, BANCO_V2_RAIZ);
-  const item = BANCO_V2_NAV.flatMap((g) => g.items).find((i) => i.id === activo);
-
-  const salir = async () => {
-    await logout();
-    router.push("/login");
-  };
-
   return (
     <MarcaBancoContext.Provider value={marca}>
-      <DccShell
-        firma={marca.plataforma ?? ""}
-        marca={{ nombre: marca.nombre, logoUrl: marca.logoUrl }}
-        grupos={BANCO_V2_NAV}
-        activo={activo}
-        migas={[{ label: "Banco", href: BANCO_V2_RAIZ }, ...(item ? [{ label: item.label }] : [])]}
-        usuario={usuarioCabecera(identidad)}
-        onSalir={() => void salir()}
-        temaStorageKey={BANCO_V2_THEME_STORAGE_KEY}
-        extrasCabecera={
-          <>
-            <BuscadorBanco grupos={BANCO_V2_NAV} hrefBandeja={`${BANCO_V2_RAIZ}/solicitudes`} onIr={(href) => router.push(href)} />
-            <CampanaBanco hrefSolicitud={(id) => `${BANCO_V2_RAIZ}/solicitudes/${encodeURIComponent(id)}`} onIr={(href) => router.push(href)} />
-          </>
-        }
-      >
-        {children}
-      </DccShell>
+      <BancoV2Contenido>{children}</BancoV2Contenido>
     </MarcaBancoContext.Provider>
   );
 }

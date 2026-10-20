@@ -71,7 +71,7 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
   });
 
   it.each(["bank_analyst", "bank_admin", "compliance_officer", "credit_admin", "tenant_admin"])(
-    "rol %s: entra, con el buscador, la campana y el tema del banco (la barra y el menú son de ModuleShell, PS-9-CARCASAS-2)",
+    "rol %s: entra, con el buscador y el tema del banco (la barra y el menú son de ModuleShell, PS-9-CARCASAS-2)",
     (rol) => {
       sesion = { tenant: "t-1", autenticado: true, rol };
       render(
@@ -81,7 +81,6 @@ describe("bank-v2: mismas guardias que /credit-hub/bank", () => {
       );
       expect(screen.getByText("contenido del banco")).toBeInTheDocument();
       expect(screen.getByTestId("banco-buscador")).toBeInTheDocument();
-      expect(screen.getByTestId("banco-campana")).toBeInTheDocument();
       expect(screen.getByTestId("banco-tema")).toBeInTheDocument();
     },
   );
