@@ -7,11 +7,13 @@ import { DEMO_PROPERTIES } from "@/lib/realtor/propiedades/demo";
 import { applyFilters, countByStage, countByStatus, formatPrice } from "@/lib/realtor/propiedades/logic";
 import { NO_FILTERS, STAGES, STATUSES, TYPES, type PropFilters, type Property } from "@/lib/realtor/propiedades/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { PropiedadForm } from "./PropiedadForm";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
+const BTN: CSSProperties = { minHeight: 44, padding: "0 18px", borderRadius: 8, border: `1px solid ${RT.teal}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontWeight: 700, cursor: "pointer" };
 const PILL: CSSProperties = { background: RT.calloutBg, border: `1px solid ${RT.calloutLine}`, borderRadius: 999, padding: "6px 14px", fontSize: 13, fontWeight: 700 };
 
 function Select<T extends string>({ label, value, options, all, onChange }: {
@@ -38,12 +40,15 @@ export function PropiedadesPanel() {
 
   // Fuera de DEMO se lee C-RE-OLA2; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
   const [real, setReal] = useState<readonly Property[]>([]);
+  const [reload, setReload] = useState(0);
+  const [form, setForm] = useState<"new" | "edit" | null>(null);
+  const [saved, setSaved] = useState(false);
   useEffect(() => {
     if (demo || access !== "ok") return;
     let alive = true;
     fetchProperties().then((r) => { if (alive) setReal(r); });
     return () => { alive = false; };
-  }, [demo, access]);
+  }, [demo, access, reload]);
   const props: readonly Property[] = demo ? DEMO_PROPERTIES : real;
   const visible = useMemo(() => applyFilters(props, filters), [props, filters]);
   const byStatus = useMemo(() => countByStatus(props), [props]);
@@ -73,6 +78,14 @@ export function PropiedadesPanel() {
           ))}
         </div>
       </div>
+      {!demo ? (
+        <div><button type="button" data-testid="propiedad-new" style={BTN} onClick={() => { setSaved(false); setForm("new"); }}>{t.newProperty}</button></div>
+      ) : null}
+      {saved ? <p role="status" data-testid="propiedad-saved" style={{ margin: 0, fontWeight: 700, color: RT.chipUpText }}>{t.saved}</p> : null}
+      {form ? (
+        <PropiedadForm key={form === "edit" ? current?.propertyId : "new"} propertyId={form === "edit" ? current?.propertyId : undefined} lang={lang} onCancel={() => setForm(null)}
+          onSaved={() => { setForm(null); setSaved(true); setReload((n) => n + 1); }} />
+      ) : null}
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
       ) : null}
@@ -140,6 +153,7 @@ export function PropiedadesPanel() {
                       {current.units.map((u) => (<li key={u.label}>{u.label} · {u.beds} {t.beds} · {u.baths} {t.baths}</li>))}
                     </ul>
                   )}
+                  {current.propertyId && !demo ? <button type="button" data-testid="propiedad-edit" style={{ ...BTN, marginTop: 14 }} onClick={() => { setSaved(false); setForm("edit"); }}>{t.editProperty}</button> : null}
                 </>
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}
             </div>
