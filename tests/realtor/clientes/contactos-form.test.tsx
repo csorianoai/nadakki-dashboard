@@ -51,7 +51,7 @@ describe("formulario de contacto (alta)", () => {
     expect(w.url).toBe("/api/v1/realestate/contacts");
     expect(w.body).toEqual({ kind: "person", display_name: "Ana Pérez", display_label: "Ana P.", role: "buyer" });
     expect(JSON.stringify(w)).not.toMatch(/tenant|owner_user/i);
-    expect(await screen.findByText("Ana P.")).toBeInTheDocument();
+    expect(await screen.findByTestId("contact-row")).toHaveTextContent("Ana P.");
   });
 
   it("422 de validación: el error queda visible junto al campo y el formulario sigue abierto", async () => {
