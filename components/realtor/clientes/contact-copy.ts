@@ -1,5 +1,5 @@
-import type { Lang } from "./copy";
-import type { ContactKindKey, ContactRoleKey } from "./write";
+import type { Lang } from "@/lib/realtor/clientes/copy";
+import type { ContactKindKey, ContactRoleKey } from "./contact-write";
 
 export const FORM_COPY = {
   es: {

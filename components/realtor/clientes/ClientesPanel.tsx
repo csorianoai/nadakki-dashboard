@@ -9,7 +9,7 @@ import { applyFilters, countByStatus, inKind, maskEmail, maskPhone, showsOwners 
 import { KINDS, LEAD_STATUSES, NO_FILTERS, ORIGINS, ROLES, type ClientFilters, type Contact, type ContactKind } from "@/lib/realtor/clientes/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { ContactForm } from "./ContactForm";
-import { FORM_COPY } from "@/lib/realtor/clientes/copy-form";
+import { FORM_COPY } from "./contact-copy";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 

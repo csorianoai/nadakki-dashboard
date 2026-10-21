@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/fetch-client";
-import type { ClientRole, Contact } from "./types";
+import type { ClientRole, Contact } from "@/lib/realtor/clientes/types";
 
 /** Escritura de contactos (ROP-P1-CONTACTOS-API). Tenant y propietario salen del token en el servidor: el cliente nunca los envía. */
 export const CONTACTS_PATH = "/api/v1/realestate/contacts";

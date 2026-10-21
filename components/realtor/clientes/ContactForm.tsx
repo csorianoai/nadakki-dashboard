@@ -2,9 +2,9 @@
 
 import { useState, type CSSProperties } from "react";
 import type { Lang } from "@/lib/realtor/clientes/copy";
-import { API_ROLE_LABEL, FORM_COPY, KIND_OPTIONS } from "@/lib/realtor/clientes/copy-form";
+import { API_ROLE_LABEL, FORM_COPY, KIND_OPTIONS } from "./contact-copy";
 import type { Contact } from "@/lib/realtor/clientes/types";
-import { CONTACT_KINDS, CONTACT_ROLES, EMPTY_DRAFT, apiRoleOf, saveContact, type ContactDraft } from "@/lib/realtor/clientes/write";
+import { CONTACT_KINDS, CONTACT_ROLES, EMPTY_DRAFT, apiRoleOf, saveContact, type ContactDraft } from "./contact-write";
 import { RT } from "@/lib/realtor/tokens";
 
 const INPUT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
