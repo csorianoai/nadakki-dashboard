@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { COPY, KIND_LABEL, STAGE_LABEL, type Lang } from "@/lib/realtor/operaciones/copy";
 import { DEMO_FINANCE, DEMO_OPERATIONS } from "@/lib/realtor/operaciones/demo";
 import { fetchOperations } from "@/lib/realtor/operaciones/api";
@@ -8,6 +9,7 @@ import { applyFilters, countByStage, inStage, opportunities, unstaged } from "@/
 import { KINDS, NO_FILTERS, STAGES, type OpFilters, type Operation, type StageId } from "@/lib/realtor/operaciones/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
+import { OperacionGestion } from "./OperacionGestion";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
@@ -33,12 +35,22 @@ function FinCard({ id, label, value, hint }: { id: string; label: string; value:
   );
 }
 
+// useSearchParams exige Suspense en el App Router; vive aquí para que page.tsx no cambie.
 export function OperacionesPanel() {
+  return (
+    <Suspense fallback={null}>
+      <OperacionesContenido />
+    </Suspense>
+  );
+}
+
+function OperacionesContenido() {
   const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const [filters, setFilters] = useState<OpFilters>(NO_FILTERS);
   const [stage, setStage] = useState<StageId>("propiedad");
   const demo = demoActive;
+  const query = useSearchParams();
   const t = COPY[lang];
 
   // Fuera de DEMO se lee C-RE-OLA3; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
@@ -78,6 +90,8 @@ export function OperacionesPanel() {
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
       ) : null}
+
+      {!demo ? <OperacionGestion ops={real} initialPropertyId={query?.get("property_id") ?? ""} initialContactId={query?.get("contact_id") ?? ""} /> : null}
 
       {ops.length === 0 ? (
         <div data-testid="operaciones-empty" style={CARD}>
