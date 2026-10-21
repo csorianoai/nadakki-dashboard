@@ -94,7 +94,7 @@ describe("formulario Programar visita", () => {
     route({ status: 201 });
     await user.click(screen.getByTestId("visit-confirm-overlap"));
     await waitFor(() => expect(screen.getByTestId("visit-ok")).toBeInTheDocument());
-    expect(JSON.parse(posts()[0][1].body).allow_overlap).toBe(true);
+    expect(JSON.parse(posts()[1][1].body).allow_overlap).toBe(true);
   });
 
   it("422: muestra el error y no marca éxito; datos incompletos ni llegan al backend", async () => {
