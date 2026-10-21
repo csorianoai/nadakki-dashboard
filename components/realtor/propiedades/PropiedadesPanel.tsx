@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { COPY, STAGE_LABEL, STATUS_LABEL, TYPE_LABEL, type Lang } from "@/lib/realtor/propiedades/copy";
 import { fetchProperties } from "@/lib/realtor/propiedades/api";
@@ -154,6 +155,7 @@ export function PropiedadesPanel() {
                     </ul>
                   )}
                   {current.propertyId && !demo ? <button type="button" data-testid="propiedad-edit" style={{ ...BTN, marginTop: 14 }} onClick={() => { setSaved(false); setForm("edit"); }}>{t.editProperty}</button> : null}
+                  {current.propertyId && !demo ? <Link href={`/realtor/operaciones?property_id=${encodeURIComponent(current.propertyId)}`} data-testid="propiedad-abrir-operacion" style={{ ...BTN, marginTop: 14, marginLeft: 10, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Abrir operación</Link> : null}
                 </>
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}
             </div>
