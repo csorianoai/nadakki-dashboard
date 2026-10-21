@@ -12,6 +12,8 @@ export const STAGES: readonly Stage[] = ["acquire", "cma", "agreement", "prepare
 export type Unit = { label: string; beds: number; baths: number };
 export type Property = {
   id: string;
+  /** Id de la propiedad (re_properties); en DEMO no existe y no se edita. */
+  propertyId?: string;
   address: string;
   type: PropType;
   status: PropStatus;
