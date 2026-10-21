@@ -78,6 +78,7 @@ describe("formulario Programar visita", () => {
     const sent = JSON.parse(init.body);
     expect(sent).toMatchObject({ kind: "showing", property_id: P1, contact_id: C1, title: FORM.title });
     expect(JSON.stringify(init)).not.toMatch(/tenant/i);
+    expect(sent).not.toHaveProperty("operation_id");
   });
 
   it("409 solape: pide confirmar y solo reintenta con allow_overlap tras confirmar", async () => {

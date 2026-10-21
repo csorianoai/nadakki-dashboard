@@ -10,7 +10,7 @@ export type VisitResult = { ok: true } | { ok: false; reason: "conflict" | "inva
 
 export type VisitBody = {
   kind: "showing"; title: string; starts_at: string; ends_at: string; timezone: string;
-  property_id: string; contact_id: string; operation_id: string; reminders: number[]; allow_overlap?: true;
+  property_id: string; contact_id: string; operation_id?: string; reminders: number[]; allow_overlap?: true;
 };
 
 /** `datetime-local` (hora de pared del navegador) → instante UTC con «Z», como exige el contrato. */
@@ -26,21 +26,20 @@ export function validVisit(f: VisitForm): boolean {
   return !!f.title.trim() && UUID.test(f.propertyId.trim()) && UUID.test(f.contactId.trim()) && !!s && !!e && e > s;
 }
 
-export function buildVisitBody(f: VisitForm, timezone: string, operationId: string, allowOverlap = false): VisitBody {
+export function buildVisitBody(f: VisitForm, timezone: string, operationId?: string, allowOverlap = false): VisitBody {
   return {
     kind: "showing", title: f.title.trim(), starts_at: toUtc(f.startsAt) ?? "", ends_at: toUtc(f.endsAt) ?? "", timezone,
-    property_id: f.propertyId.trim(), contact_id: f.contactId.trim(), operation_id: operationId, reminders: REMINDERS_MIN,
+    property_id: f.propertyId.trim(), contact_id: f.contactId.trim(), reminders: REMINDERS_MIN,
+    ...(operationId ? { operation_id: operationId } : {}),
     ...(allowOverlap ? { allow_overlap: true as const } : {}),
   };
 }
 
-const newOperationId = (): string => globalThis.crypto.randomUUID();
-
-/** `operationId` estable entre el intento y el reintento tras 409 (idempotencia del alta). */
+/** `operationId` es la referencia a una operación inmobiliaria real (re_operations), NO una clave de idempotencia: solo se envía si viene dado y es uuid. */
 export async function createVisit(f: VisitForm, opts: { allowOverlap?: boolean; operationId?: string } = {}): Promise<VisitResult> {
-  if (!validVisit(f)) return { ok: false, reason: "invalid" };
+  if (!validVisit(f) || (opts.operationId && !UUID.test(opts.operationId))) return { ok: false, reason: "invalid" };
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  const body = buildVisitBody(f, tz, opts.operationId ?? newOperationId(), opts.allowOverlap);
+  const body = buildVisitBody(f, tz, opts.operationId, opts.allowOverlap);
   try {
     const res = await apiFetch(VISIT_PATH, {
       method: "POST", cache: "no-store",

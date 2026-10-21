@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import type { Lang } from "@/lib/realtor/smart-calendar/copy";
 import { createVisit, validVisit, type VisitForm as Fields } from "./visit";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
@@ -37,21 +37,18 @@ export function VisitForm({ lang, onCreated }: { lang: Lang; onCreated: () => vo
   });
   const [status, setStatus] = useState<Status>("idle");
   const [busy, setBusy] = useState(false);
-  const opId = useRef<string | null>(null);
 
   const set = (k: keyof Fields) => (e: { target: { value: string } }) => {
-    opId.current = null;
     setStatus("idle");
     setF((p) => ({ ...p, [k]: e.target.value }));
   };
 
   const send = async (allowOverlap: boolean) => {
     if (!validVisit(f)) { setStatus("invalid"); return; }
-    opId.current ??= globalThis.crypto.randomUUID();
     setBusy(true);
-    const r = await createVisit(f, { allowOverlap, operationId: opId.current });
+    const r = await createVisit(f, { allowOverlap });
     setBusy(false);
-    if (r.ok === true) { opId.current = null; setF((p) => ({ ...EMPTY, propertyId: p.propertyId, contactId: p.contactId })); setStatus("ok"); onCreated(); return; }
+    if (r.ok === true) { setF((p) => ({ ...EMPTY, propertyId: p.propertyId, contactId: p.contactId })); setStatus("ok"); onCreated(); return; }
     setStatus(r.reason);
   };
 
