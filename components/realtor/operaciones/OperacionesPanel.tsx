@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { COPY, KIND_LABEL, STAGE_LABEL, type Lang } from "@/lib/realtor/operaciones/copy";
 import { DEMO_FINANCE, DEMO_OPERATIONS } from "@/lib/realtor/operaciones/demo";
 import { fetchOperations } from "@/lib/realtor/operaciones/api";
@@ -35,7 +35,16 @@ function FinCard({ id, label, value, hint }: { id: string; label: string; value:
   );
 }
 
+// useSearchParams exige Suspense en el App Router; vive aquí para que page.tsx no cambie.
 export function OperacionesPanel() {
+  return (
+    <Suspense fallback={null}>
+      <OperacionesContenido />
+    </Suspense>
+  );
+}
+
+function OperacionesContenido() {
   const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const [filters, setFilters] = useState<OpFilters>(NO_FILTERS);
