@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SmartCalendarPanel } from "@/components/realtor/smart-calendar/SmartCalendarPanel";
-import { buildVisitBody, createVisit, VISIT_PATH } from "@/lib/realtor/smart-calendar/visit";
+import { buildVisitBody, createVisit, VISIT_PATH } from "@/components/realtor/smart-calendar/visit";
 
 const mockApiFetch = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a), getAuthHeaders: () => ({}) }));
