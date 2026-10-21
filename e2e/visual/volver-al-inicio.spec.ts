@@ -99,7 +99,9 @@ for (const core of CORES) {
  */
 const MOVIL = [
   { ruta: "/", boton: "Abrir el menú" },
-  { ruta: "/autos/dealer", boton: "Abrir menú" },
+  // PS-9-CARCASAS-2: el dealer vive dentro de ModuleShell; su menú es el del armazón («Abrir el menú del módulo»),
+  // ya no el de DealerTopbar («Abrir menú»), que DealerShell deja de montar dentro del armazón.
+  { ruta: "/autos/dealer", boton: "Abrir el menú" },
   // bank-v2 no está aquí: con la sesión simulada (todas las APIs devuelven {}) su contenido cae al «Algo salió mal»
   // del módulo también en escritorio y no pinta el menú. Su cajón (DccShellSidebar) lo cubre la comprobación
   // estática de tests/nav/barra-suite.test.tsx; no se ha medido en navegador.
@@ -145,8 +147,20 @@ for (const m of MIGRADOS) {
     await expect(page.getByTestId("module-shell")).toHaveAttribute("data-modulo", m.modulo);
     const menu = page.getByRole("complementary", { name: m.menu });
     await expect(menu).toBeVisible();
-    expect(await menu.getByRole("link").count()).toBeGreaterThan(2);
     await expect(menu.locator('a[aria-current="page"]')).toHaveCount(1);
+    // El menú es un acordeón (un grupo abierto a la vez, ModuleSidebar): se cuentan los enlaces del grupo abierto y los
+    // de cada grupo plegado al desplegarlo. Al final se vuelve al grupo de la pantalla actual.
+    let enlaces = await menu.getByRole("link").count();
+    // Ids estables antes de tocar nada: al desplegar uno, el abierto se pliega y cambia qué botones están plegados.
+    const plegados = await menu.locator('button[aria-controls^="grupo-"][aria-expanded="false"]:not([aria-label])')
+      .evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-controls")!));
+    for (const id of plegados) {
+      await menu.locator(`button[aria-controls="${id}"]:not([aria-label])`).click();
+      enlaces += await menu.locator(`[id="${id}"]`).getByRole("link").count();
+    }
+    expect(enlaces).toBeGreaterThan(2);
+    if (plegados.length) await page.goto(m.ruta);
+    await expect(page.getByTestId("barra-suite")).toBeVisible({ timeout: 30_000 });
     // la barra y el menú no se tapan: el menú arranca justo debajo de la barra
     const barra = (await page.getByTestId("barra-suite").boundingBox())!;
     const lateral = (await menu.boundingBox())!;
