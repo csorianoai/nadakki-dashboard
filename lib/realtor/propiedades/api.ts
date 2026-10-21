@@ -73,5 +73,8 @@ async function fetchAll(path: string): Promise<unknown[]> {
 
 export async function fetchProperties(): Promise<Property[]> {
   const [properties, listings] = await Promise.all([fetchAll("/properties"), fetchAll("/listings")]);
-  return mapProperties(properties, listings);
+  // mapProperties no cambia (contrato probado); el id de propiedad, que la edición necesita, se añade aquí desde el listing.
+  const propertyOf = new Map<string, string>();
+  for (const l of listings) if (isObj(l) && str(l.id) && str(l.property_id)) propertyOf.set(l.id as string, l.property_id as string);
+  return mapProperties(properties, listings).map((p) => ({ ...p, propertyId: propertyOf.get(p.id) }));
 }
