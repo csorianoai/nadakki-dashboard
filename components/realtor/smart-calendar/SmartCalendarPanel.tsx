@@ -7,6 +7,7 @@ import { DEMO_EVENTS } from "@/lib/realtor/smart-calendar/demo";
 import { applyFilter, countByKind, eventsOfDay } from "@/lib/realtor/smart-calendar/logic";
 import { KINDS, type CalEvent, type CalFilter } from "@/lib/realtor/smart-calendar/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { VisitForm } from "./VisitForm";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
@@ -20,12 +21,13 @@ export function SmartCalendarPanel() {
   const t = COPY[lang];
 
   const [real, setReal] = useState<readonly CalEvent[]>([]);
+  const [reload, setReload] = useState(0);
   useEffect(() => {
     if (access !== "ok" || demo) return;
     let alive = true;
     fetchCalendarEvents().then((list) => { if (alive) setReal(list); });
     return () => { alive = false; };
-  }, [access, demo]);
+  }, [access, demo, reload]);
 
   // Fuera de DEMO solo hay eventos del contrato; sin respuesta o lista vacía, «Sin datos todavía».
   const events: readonly CalEvent[] = demo ? DEMO_EVENTS : real;
@@ -54,6 +56,8 @@ export function SmartCalendarPanel() {
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
       ) : null}
+
+      {demo ? null : <VisitForm lang={lang} onCreated={() => setReload((n) => n + 1)} />}
 
       {events.length === 0 ? (
         <div data-testid="smart-calendar-empty" style={CARD}>
