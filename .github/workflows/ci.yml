@@ -240,8 +240,9 @@ jobs:
 
       # Captura de las pantallas principales (portada, /admin, /social) sobre este mismo build: fondo oscuro
       # continuo y texto legible (e2e/visual). La portada salió a producción con media página ilegible.
+      # Sin --with-deps: el runner autoalojado no tiene sudo sin terminal (falló con «a password is required»).
       - name: Chromium para Playwright
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Pantallas principales (Playwright)
         env:
