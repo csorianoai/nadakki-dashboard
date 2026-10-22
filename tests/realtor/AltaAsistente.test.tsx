@@ -29,11 +29,12 @@ describe("AltaAsistente", () => {
     expect(f).not.toHaveBeenCalled();
   });
 
-  it("negativo: sin 200 de acceso no se muestra el panel", async () => {
+  it("negativo: sin 200 de acceso no se muestra el panel, solo un aviso", async () => {
     const f = servidor(403, () => json({}));
     const { container } = render(<AltaAsistente enviar={f} encendido demo={false} />);
-    await waitFor(() => expect(f).toHaveBeenCalled());
-    expect(container).toBeEmptyDOMElement();
+    expect(await screen.findByTestId("alta-sin-acceso")).toBeInTheDocument();
+    expect(container.querySelector("input")).toBeNull();
+    expect(screen.queryByTestId("realtor-alta")).toBeNull();
   });
 
   it("positivo: con acceso 200 completa el alta y la agenda sale UNAVAILABLE", async () => {
