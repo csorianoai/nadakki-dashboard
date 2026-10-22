@@ -31,7 +31,7 @@ const rutas = (l: Llamada[]) => l.map((c) => `${c.m} ${c.r.split("?")[0]}`);
 
 describe("alta sobre la cadena del backend", () => {
   it("el numero de licencia no tiene que ser UUID", () => {
-    expect(validar(datos, "agent", true).licencia).toBeUndefined();
+    expect(validar(datos).licencia).toBeUndefined();
     expect(validar({ ...datos, licencia: "" }).licencia).toBe(true);
     expect(validar({ ...datos, licencia: "x".repeat(65) }).licencia).toBe(true);
   });
