@@ -1,13 +1,18 @@
 import { apiFetch } from "@/lib/api/fetch-client";
+import { textos, type Idioma } from "@/lib/realtor/textos";
 
 /** Tipos y rutas de C-RE-ALTA 1.0.0 (congelado). El tenant NUNCA viaja desde aqui. */
 export const BASE_ALTA = "/api/v1/realestate/alta";
 
 export type Perfil = { owner_person_id: string; jurisdiction_code: string; default_language: string; kind: "agent" | "brokerage" };
 export type Revision = { check: string; passed: boolean };
-export type Resultado = { agente_id: string; marca_id: string; revisiones: Revision[]; demo: boolean };
+export type Resultado = {
+  agente_id: string; marca_id: string; revisiones: Revision[]; demo: boolean;
+  licencia_id?: string; licencia_estado?: string;
+};
 export type Datos = {
   licencia: string;
+  tipoLicencia: string;
   nombre: string;
   broker: { usar: boolean; razonSocial: string; nombre: string };
   marca: { nombre: string; slug: string; frase: string };
@@ -16,11 +21,11 @@ export type Datos = {
 export type Errores = Partial<Record<"licencia" | "nombre" | "razonSocial" | "marcaNombre" | "slug", true>>;
 export type Enviar = (ruta: string, init?: RequestInit) => Promise<Response>;
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SLUG = /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/;
 
 export const DATOS_VACIOS: Datos = {
   licencia: "",
+  tipoLicencia: "fl-sales",
   nombre: "",
   broker: { usar: false, razonSocial: "", nombre: "" },
   marca: { nombre: "", slug: "", frase: "" },
@@ -30,7 +35,8 @@ export const DATOS_VACIOS: Datos = {
 /** Con `kind` ausente se trata como agente: el contrato prohibe la firma en kind=agent. */
 export function validar(d: Datos, kind: Perfil["kind"] = "agent"): Errores {
   const e: Errores = {};
-  if (!UUID.test(d.licencia.trim())) e.licencia = true;
+  const n = d.licencia.trim();
+  if (n.length < 1 || n.length > 64) e.licencia = true;
   if (!d.nombre.trim()) e.nombre = true;
   if (kind === "brokerage" && (!d.broker.razonSocial.trim() || !d.broker.nombre.trim())) e.razonSocial = true;
   if (!d.marca.nombre.trim()) e.marcaNombre = true;
@@ -74,20 +80,29 @@ function clave(paso: string, base: string, cuerpo: unknown): string {
   return `${base}:${paso}:${h.toString(36)}`;
 }
 
-/** Firma del propio tenant (solo kind=brokerage): se lee y, si aun no existe (404), se crea. */
-async function asegurarFirma(d: Datos, perfil: Perfil, base: string, enviar: Enviar): Promise<string> {
-  try {
-    return (await llamar<{ id: string }>(enviar, "GET", "/brokerage")).id;
-  } catch (e) {
-    if (!(e instanceof ErrorAlta) || e.estado !== 404) throw e;
-  }
-  const cuerpo = { legal_name: d.broker.razonSocial.trim(), display_name: d.broker.nombre.trim(), jurisdiction_code: perfil.jurisdiction_code };
-  return (await llamar<{ id: string }>(enviar, "POST", "/brokerage", cuerpo, clave("broker", base, cuerpo))).id;
+/** Firma del propio tenant (solo kind=brokerage): solo se lee. Crearla (POST /brokerage) queda fuera del alta P0. */
+async function leerFirma(enviar: Enviar): Promise<string> {
+  return (await llamar<{ id: string }>(enviar, "GET", "/brokerage")).id;
 }
 
-/** Alta completa: firma (solo kind=brokerage) -> agente -> licencia -> marca -> revision. Un fallo corta todo. */
+type Agente = { id: string; person_id?: string; license_id?: string | null };
+export type Licencia = { id: string; status: string };
+
+/** Recupera el agente del titular (listAgents, tenant del JWT); la lista se pagina por cursor. */
+async function buscarAgente(persona: string, enviar: Enviar): Promise<Agente | undefined> {
+  let cursor = "";
+  for (let i = 0; i < 20; i++) {
+    const r = await llamar<{ items: Agente[]; next_cursor?: string | null }>(enviar, "GET", `/agents?limit=200${cursor}`);
+    const hallado = r.items.find((a) => a.person_id === persona);
+    if (hallado || !r.next_cursor) return hallado;
+    cursor = `&cursor=${encodeURIComponent(r.next_cursor)}`;
+  }
+  return undefined;
+}
+
+/** Alta: agente (recupera el existente) -> licencia por numero (pendiente) -> marca -> revision. Un fallo corta todo. */
 export async function enviarAlta(d: Datos, perfil: Perfil, base: string, enviar: Enviar = apiFetch): Promise<Resultado> {
-  const brokerageId = perfil.kind === "brokerage" ? await asegurarFirma(d, perfil, base, enviar) : undefined;
+  const brokerageId = perfil.kind === "brokerage" ? await leerFirma(enviar) : undefined;
   const cuerpoAgente = {
     person_id: perfil.owner_person_id,
     display_name: d.nombre.trim(),
@@ -95,9 +110,29 @@ export async function enviarAlta(d: Datos, perfil: Perfil, base: string, enviar:
     language: d.idioma,
     ...(brokerageId ? { brokerage_id: brokerageId } : {}),
   };
-  const agente = await llamar<{ id: string }>(enviar, "POST", "/agents", cuerpoAgente, clave("agente", base, cuerpoAgente));
-  const cuerpoLicencia = { license_id: d.licencia.trim() };
-  await llamar(enviar, "PUT", `/agents/${encodeURIComponent(agente.id)}/license`, cuerpoLicencia, clave("licencia", base, cuerpoLicencia));
+  let agente = await buscarAgente(perfil.owner_person_id, enviar);
+  if (!agente) {
+    try {
+      agente = await llamar<Agente>(enviar, "POST", "/agents", cuerpoAgente, clave("agente", base, cuerpoAgente));
+    } catch (e) {
+      if (!(e instanceof ErrorAlta) || e.estado !== 409) throw e;
+      agente = await buscarAgente(perfil.owner_person_id, enviar);   // lo creo otro (runbook, otra pestana)
+      if (!agente) throw e;
+    }
+  }
+  let licencia: Licencia | undefined;
+  if (!agente.license_id) {
+    const cuerpoLicencia = {
+      holder_person_id: perfil.owner_person_id,
+      jurisdiction_code: perfil.jurisdiction_code,
+      license_type: d.tipoLicencia.trim(),
+      license_number: d.licencia.trim(),
+      ...(brokerageId ? { brokerage_id: brokerageId } : {}),
+    };
+    licencia = await llamar<Licencia>(enviar, "POST", "/licenses", cuerpoLicencia, clave("licencia", base, cuerpoLicencia));
+    const vinculo = { license_id: licencia.id };
+    await llamar(enviar, "PUT", `/agents/${encodeURIComponent(agente.id)}/license`, vinculo, clave("vinculo", base, vinculo));
+  }
   const cuerpoMarca = {
     owner_kind: "agent",
     owner_id: agente.id,
@@ -108,7 +143,34 @@ export async function enviarAlta(d: Datos, perfil: Perfil, base: string, enviar:
   };
   const marca = await llamar<{ id: string }>(enviar, "POST", "/brands", cuerpoMarca, clave("marca", base, cuerpoMarca));
   const r = await llamar<{ checks: Revision[] }>(enviar, "GET", `/agents/${encodeURIComponent(agente.id)}/readiness`);
-  return { agente_id: agente.id, marca_id: marca.id, revisiones: r.checks, demo: false };
+  return {
+    agente_id: agente.id, marca_id: marca.id, revisiones: r.checks, demo: false,
+    licencia_id: licencia?.id ?? agente.license_id ?? undefined, licencia_estado: licencia?.status,
+  };
+}
+
+/** Solo el broker supervisor o el propietario pueden (el servidor lo decide: 403 para el resto). Nunca automatica. */
+export const verificarLicencia = (id: string, outcome: "verified" | "rejected", enviar: Enviar = apiFetch) =>
+  llamar<Licencia>(enviar, "PUT", `/licenses/${encodeURIComponent(id)}/verification`, { outcome });
+
+const MENSAJES: Record<Idioma, Record<number, string>> = {
+  es: {
+    403: "No tienes permiso para esta acción. Pide acceso al propietario o al broker supervisor.",
+    404: "No encontramos ese registro en tu cuenta.",
+    409: "Ya existe un registro igual (agente o licencia). Revisa lo registrado antes de repetir.",
+    422: "Algún dato no es válido. Corrígelo y vuelve a enviar.",
+  },
+  en: {
+    403: "You do not have permission for this action. Ask the owner or the supervising broker for access.",
+    404: "We could not find that record in your account.",
+    409: "An identical record (agent or license) already exists. Review what is registered before retrying.",
+    422: "Some data is not valid. Fix it and submit again.",
+  },
+};
+
+/** Mensaje propio para 403, 404, 409 y 422; cualquier otro estado, el generico. */
+export function mensajeError(estado: number, idioma: Idioma): string {
+  return MENSAJES[idioma][estado] ?? textos(idioma).errorGeneral;
 }
 
 /** Sin backend vivo: nada sale de la pantalla y el resultado va marcado DEMO. */

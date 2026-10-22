@@ -13,7 +13,7 @@ function servidor(acceso: number, resto: (ruta: string) => Promise<Response>) {
 }
 
 function llenar() {
-  fireEvent.change(screen.getByLabelText(/Código de la licencia/), { target: { value: LIC } });
+  fireEvent.change(screen.getByLabelText(/Número de licencia/), { target: { value: LIC } });
   fireEvent.change(screen.getByLabelText("Nombre del agente"), { target: { value: "Ana Prueba" } });
   fireEvent.click(screen.getByText("Siguiente"));
   fireEvent.click(screen.getByText("Siguiente"));
@@ -39,7 +39,9 @@ describe("AltaAsistente", () => {
   it("positivo: con acceso 200 completa el alta y la agenda sale UNAVAILABLE", async () => {
     const f = servidor(200, (r) => {
       if (r.endsWith("/tenant/profile")) return json(PERFIL);
+      if (r.includes("/agents?")) return json({ items: [] });
       if (r.endsWith("/agents")) return json({ id: "ag-1" }, 201);
+      if (r.endsWith("/licenses")) return json({ id: LIC, status: "pending_verification" }, 201);
       if (r.endsWith("/license")) return json({});
       if (r.endsWith("/brands")) return json({ id: "br-1" }, 201);
       return json({ checks: [{ check: "license_verified", passed: false }] });
@@ -108,7 +110,7 @@ describe("AltaAsistente", () => {
     const f = servidor(200, (r) => (r.endsWith("/tenant/profile") ? json(PERFIL) : json({})));
     render(<AltaAsistente enviar={f} encendido demo={false} />);
     await screen.findByTestId("realtor-alta");
-    fireEvent.change(screen.getByLabelText(/Código de la licencia/), { target: { value: LIC } });
+    fireEvent.change(screen.getByLabelText(/Número de licencia/), { target: { value: LIC } });
     fireEvent.change(screen.getByLabelText("Nombre del agente"), { target: { value: "Ana Prueba" } });
     fireEvent.click(screen.getByText("Siguiente"));
     await screen.findByTestId("alta-sin-firma");
@@ -119,7 +121,7 @@ describe("AltaAsistente", () => {
     const f = servidor(200, (r) => (r.endsWith("/tenant/profile") ? json({ ...PERFIL, kind: "brokerage" }) : json({ id: "x" }, 201)));
     render(<AltaAsistente enviar={f} encendido demo={false} />);
     await screen.findByTestId("realtor-alta");
-    fireEvent.change(screen.getByLabelText(/Código de la licencia/), { target: { value: LIC } });
+    fireEvent.change(screen.getByLabelText(/Número de licencia/), { target: { value: LIC } });
     fireEvent.change(screen.getByLabelText("Nombre del agente"), { target: { value: "Ana Prueba" } });
     fireEvent.click(screen.getByText("Siguiente"));
     expect(await screen.findByLabelText("Razón social del broker")).toBeInTheDocument();
