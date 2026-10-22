@@ -208,6 +208,7 @@ export function ClientesPanel() {
                 </dl>
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}
               {current && !demo ? <button type="button" data-testid="contact-edit" style={{ ...btn, marginTop: 14 }} onClick={() => { setSaved(false); setForm("edit"); }}>{ft.edit}</button> : null}
+              {current && !demo ? <Link href={`/realtor/operaciones?contact_id=${encodeURIComponent(current.id)}`} data-testid="contact-abrir-operacion" style={{ ...btn, marginTop: 14, marginLeft: 10, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Abrir operación</Link> : null}
               {current && DEMO_JOURNEYS[current.id] ? <Journey id={current.id} lang={lang} /> : null}
               <p style={{ margin: "16px 0 0", fontSize: 12, color: RT.muted }}>{t.masked}</p>
             </div>
