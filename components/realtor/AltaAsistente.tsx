@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LicenciaVerificar } from "@/components/realtor/LicenciaVerificar";
+import { apiFetch } from "@/lib/api/fetch-client";
 import { consultarAcceso } from "@/lib/realtor/acceso";
 import { isDemoAllowed, isPanelFlagOn } from "@/lib/realtor/config";
 import {
-  DATOS_VACIOS, altaDemo, enviarAlta, leerPerfil, validar,
+  BASE_ALTA, DATOS_VACIOS, ErrorAlta, altaDemo, enviarAlta, leerPerfil, mensajeError, validar,
   type Datos, type Enviar, type Errores, type Perfil, type Resultado,
 } from "@/lib/realtor/alta";
 import { textos, type Idioma } from "@/lib/realtor/textos";
 import { FONT_BODY, FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+
+const SIN_ACCESO = {
+  es: "No tienes acceso al alta de agentes en esta cuenta. Pide acceso al propietario o al broker supervisor.",
+  en: "You do not have access to agent onboarding on this account. Ask the owner or the supervising broker for access.",
+};
 
 const CAMPO: React.CSSProperties = {
   display: "block", width: "100%", minHeight: 44, marginTop: 4, padding: "0 12px", borderRadius: 8,
@@ -35,13 +42,13 @@ export type AltaProps = {
 };
 
 export function AltaAsistente({ enviar, demo = isDemoAllowed(), encendido = isPanelFlagOn() }: AltaProps) {
-  const [acceso, setAcceso] = useState(false);
+  const [acceso, setAcceso] = useState<boolean | null>(null);
   const [idioma, setIdioma] = useState<Idioma>("es");
   const [paso, setPaso] = useState(0);
   const [datos, setDatos] = useState<Datos>(DATOS_VACIOS);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [errores, setErrores] = useState<Errores>({});
-  const [falla, setFalla] = useState(false);
+  const [falla, setFalla] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [intento] = useState(() => `alta-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
@@ -52,21 +59,26 @@ export function AltaAsistente({ enviar, demo = isDemoAllowed(), encendido = isPa
     let vivo = true;
     (async () => {
       const ok = await consultarAcceso(enviar);
-      if (!vivo || !ok) return;
-      setAcceso(true);
+      if (!vivo) return;
+      setAcceso(ok);
+      if (!ok) return;
       if (demo) return;
       try {
         const p = await leerPerfil(enviar);
         if (vivo) setPerfil(p);
-      } catch {
-        if (vivo) setFalla(true);
+      } catch (e) {
+        if (vivo) setFalla(mensajeError(e instanceof ErrorAlta ? e.estado : 0, idioma));
       }
     })();
     return () => { vivo = false; };
   }, [encendido, enviar, demo]);
 
   // Fail-closed: sin interruptor o sin 200 de acceso no se pinta nada.
-  if (!encendido || !acceso) return null;
+  if (!encendido || acceso === null) return null;
+  if (!acceso) {
+    // Sin acceso: aviso visible, nunca pagina en blanco y sin ningun dato.
+    return <p role="status" data-testid="alta-sin-acceso" style={{ margin: 24, fontSize: 14, color: RT.muted }}>{idioma === "es" ? SIN_ACCESO.es : SIN_ACCESO.en}</p>;
+  }
 
   const cambiar = (parche: Partial<Datos>) => setDatos((d) => ({ ...d, ...parche }));
   const pasos = t.pasos.length;
@@ -78,18 +90,29 @@ export function AltaAsistente({ enviar, demo = isDemoAllowed(), encendido = isPa
       setPaso(e.licencia || e.nombre ? 0 : e.razonSocial ? 1 : 2);
       return;
     }
-    setFalla(false);
+    setFalla(null);
     if (demo) { setResultado(altaDemo()); setPaso(3); return; }
-    if (!perfil) { setFalla(true); return; }
+    if (!perfil) { setFalla(t.errorGeneral); return; }
     setOcupado(true);
     try {
       setResultado(await enviarAlta({ ...datos, idioma }, perfil, intento, enviar));
       setPaso(3);
-    } catch {
-      setFalla(true);
+    } catch (e) {
+      setFalla(mensajeError(e instanceof ErrorAlta ? e.estado : 0, idioma));
     } finally {
       setOcupado(false);
     }
+  }
+
+  /** Tras verificar, se vuelve a pedir el readiness real (nada se marca "listo" en el cliente). */
+  async function refrescar() {
+    if (!resultado || resultado.demo) return;
+    try {
+      const res = await (enviar ?? apiFetch)(`${BASE_ALTA}/agents/${encodeURIComponent(resultado.agente_id)}/readiness`, { method: "GET" });
+      if (!res.ok) return;
+      const r = (await res.json()) as { checks: Resultado["revisiones"] };
+      setResultado((x) => (x ? { ...x, revisiones: r.checks } : x));
+    } catch { /* se queda el ultimo readiness conocido */ }
   }
 
   const campo = (id: string, etiqueta: string, valor: string, set: (v: string) => void, malo?: boolean) => (
@@ -115,7 +138,7 @@ export function AltaAsistente({ enviar, demo = isDemoAllowed(), encendido = isPa
         <p style={{ margin: "12px 0 0", fontSize: 14, color: RT.muted }} aria-live="polite">
           {t.paso} {paso + 1} {t.de} {pasos}: {t.pasos[paso]}
         </p>
-        {falla ? <p role="alert" data-testid="alta-error" style={{ margin: "12px 0 0", borderRadius: 8, border: `1px solid ${RT.chipDownText}`, background: RT.chipDownBg, color: RT.chipDownText, padding: 12, fontSize: 14 }}>{t.errorGeneral}</p> : null}
+        {falla ? <p role="alert" data-testid="alta-error" style={{ margin: "12px 0 0", borderRadius: 8, border: `1px solid ${RT.chipDownText}`, background: RT.chipDownBg, color: RT.chipDownText, padding: 12, fontSize: 14 }}>{falla}</p> : null}
 
         <div style={{ marginTop: 16 }}>
           {paso === 0 && (
@@ -153,6 +176,15 @@ export function AltaAsistente({ enviar, demo = isDemoAllowed(), encendido = isPa
                     <li key={r.check}>{t.revisiones[r.check] ?? t.otraRevision}: {r.passed ? t.listo : t.pendiente}</li>
                   ))}
                 </ul>
+              ) : null}
+              {resultado && !resultado.demo && resultado.licencia_id && resultado.licencia_estado ? (
+                <LicenciaVerificar
+                  licenciaId={resultado.licencia_id}
+                  estado={resultado.licencia_estado}
+                  idioma={idioma}
+                  enviar={enviar}
+                  alVerificar={refrescar}
+                />
               ) : null}
             </Tarjeta>
           )}
