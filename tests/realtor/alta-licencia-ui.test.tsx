@@ -102,7 +102,7 @@ describe("AltaAsistente + licencia", () => {
   });
 
   it("sin acceso: aviso visible (nunca pagina en blanco) y ningun formulario", async () => {
-    const f = servidor({ "GET /acceso": () => respuesta({}, 403) });
+    const f = servidor({ "GET /api/v1/realestate/acceso": () => respuesta({}, 403) });
     const { container } = render(<AltaAsistente enviar={f} encendido demo={false} />);
     expect(await screen.findByTestId("alta-sin-acceso")).toBeInTheDocument();
     expect(container).not.toBeEmptyDOMElement();
