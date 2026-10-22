@@ -10,7 +10,7 @@ for f in components/realtor/LicenciaVerificar.tsx tests/realtor/alta-licencia-ui
     exit 1
   fi
 done
-if npx tsc --noEmit -p . \
+if node --max-old-space-size=4096 node_modules/typescript/bin/tsc --noEmit -p . \
   && npx jest tests/realtor/alta-cadena.test.ts tests/realtor/alta.test.ts tests/realtor/AltaAsistente.test.tsx tests/realtor/alta-licencia-ui.test.tsx --ci; then
   echo "RESULT_ROP_P0_ALTA_UI=PASS"
 else
