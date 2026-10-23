@@ -10,9 +10,9 @@ const CONTACTS = { items: [{ id: "c1", display_label: "María P." }] };
 const PROPS = { items: [{ id: "p1", address: { street_line_1: "Calle 1", city: "Santo Domingo", country: "DO" } }] };
 
 /** Responde por ruta; el POST de owners devuelve `postStatus`. */
-function route(postStatus: number) {
+function route(postStatus: number, demo = false) {
   mockApiFetch.mockImplementation(async (url: string, init?: { method?: string }) => {
-    if (/\/acceso/.test(url)) return json(200, {});
+    if (/\/acceso/.test(url)) return json(200, demo ? { demo: true } : {});
     if (/\/contacts/.test(url)) return json(200, CONTACTS);
     if (/\/properties/.test(url)) return json(200, PROPS);
     if (/\/owners/.test(url) && init?.method === "POST") return json(postStatus, {});
@@ -75,9 +75,9 @@ describe("alta del mandato · negativos primero", () => {
 
   it("en DEMO no hay alta (datos sintéticos)", async () => {
     process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO = "1";
-    route(201);
+    route(201, true);
     render(<PropietariosPanel />);
-    await screen.findByTestId("propietarios-panel");
+    await screen.findByTestId("demo-banner");
     expect(screen.queryByTestId("mandate-open")).toBeNull();
   });
 
