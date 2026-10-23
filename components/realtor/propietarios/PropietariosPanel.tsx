@@ -7,6 +7,8 @@ import { DEMO_OWNERS } from "@/lib/realtor/propietarios/demo";
 import { applyFilters, countByRole, formatPrice } from "@/lib/realtor/propietarios/logic";
 import { AGREEMENTS, NO_FILTERS, OWNER_ROLES, type OwnerFilters, type OwnerRow } from "@/lib/realtor/propietarios/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { MANDATE_COPY } from "./mandate-copy";
+import { MandateForm } from "./MandateForm";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
@@ -38,12 +40,14 @@ export function PropietariosPanel() {
 
   // Fuera de DEMO se lee C-RE-OLA3 (owners); sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
   const [real, setReal] = useState<readonly OwnerRow[]>([]);
+  const [reload, setReload] = useState(0);
+  const [adding, setAdding] = useState(false);
   useEffect(() => {
     if (demo || access !== "ok") return;
     let alive = true;
     fetchOwners().then((r) => { if (alive) setReal(r); });
     return () => { alive = false; };
-  }, [demo, access]);
+  }, [demo, access, reload]);
   const owners: readonly OwnerRow[] = demo ? DEMO_OWNERS : real;
   const visible = useMemo(() => applyFilters(owners, filters), [owners, filters]);
   const counts = useMemo(() => countByRole(owners), [owners]);
@@ -68,6 +72,15 @@ export function PropietariosPanel() {
           ))}
         </div>
       </div>
+      {!demo ? (
+        <div>
+          <button type="button" data-testid="mandate-open" aria-expanded={adding} onClick={() => setAdding((a) => !a)}
+            style={{ minHeight: 40, padding: "0 18px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, border: `1px solid ${RT.ink}`, background: RT.white, color: RT.ink }}>
+            {MANDATE_COPY[lang].open}
+          </button>
+        </div>
+      ) : null}
+      {!demo && adding ? <MandateForm lang={lang} onSaved={() => setReload((n) => n + 1)} onClose={() => setAdding(false)} /> : null}
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
       ) : null}
