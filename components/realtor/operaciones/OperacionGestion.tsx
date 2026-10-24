@@ -3,7 +3,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import type { Operation } from "@/lib/realtor/operaciones/types";
-import { fetchDetail, fetchTemplates, openOperation, sendToReview, setMilestone, uploadDocument, type Detail, type Result } from "./escritura";
+import { closeOperation, fetchDetail, fetchTemplates, openOperation, sendToReview, setMilestone, uploadDocument, type CloseOutcome, type Detail, type Result } from "./escritura";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const FIELD: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -13,8 +13,12 @@ const DOC_TYPES = ["lease_agreement", "disclosure", "inspection_report", "apprai
 const DOC_LABEL: Record<(typeof DOC_TYPES)[number], string> = { lease_agreement: "Contrato de alquiler", disclosure: "Declaración", inspection_report: "Inspección", appraisal: "Tasación", title_deed: "Título", receipt: "Recibo", other: "Otro" };
 const STATUS_ES: Record<string, string> = { pending: "pendiente", in_progress: "en curso", done: "hecha", skipped: "omitida", blocked: "bloqueada" };
 
+const OUTCOMES: readonly CloseOutcome[] = ["closed_won", "closed_lost", "cancelled"];
+const OUTCOME_LABEL: Record<CloseOutcome, string> = { closed_won: "Cerrada ganada", closed_lost: "Cerrada perdida", cancelled: "Cancelada" };
+const CLOSED = ["closed_won", "closed_lost", "cancelled"];
+
 const errorText = (r: { ok: boolean; status?: number }, conflict: string) =>
-  r.status === 409 ? conflict : r.status === 422 ? "Datos inválidos: revisa los campos." : r.status === 401 || r.status === 403 ? "No tienes permiso para esta acción." : "No se pudo completar la acción. Inténtalo de nuevo.";
+  r.status === 409 ? conflict : r.status === 422 ? "Datos inválidos: revisa los campos." : r.status === 401 || r.status === 403 ? "No tienes permiso para esta acción." : r.status === 404 ? "La operación no existe." : "No se pudo completar la acción. Inténtalo de nuevo.";
 
 /** Abrir la operación (desde propiedad/prospecto), avanzar etapas, subir documentos y enviarla a revisión. */
 export function OperacionGestion({ ops, initialPropertyId = "", initialContactId = "" }: { ops: readonly Operation[]; initialPropertyId?: string; initialContactId?: string }) {
@@ -28,6 +32,8 @@ export function OperacionGestion({ ops, initialPropertyId = "", initialContactId
   const [file, setFile] = useState<File | null>(null);
   const [docType, setDocType] = useState<string>(DOC_TYPES[0]);
   const [msg, setMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const [outcome, setOutcome] = useState<CloseOutcome>("closed_won");
+  const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -113,6 +119,17 @@ export function OperacionGestion({ ops, initialPropertyId = "", initialContactId
             </label>
             <button type="button" style={BTN} disabled={busy || !file} onClick={() => file && run(() => uploadDocument(detail.id, file, docType, file.name.slice(0, 200)), "Documento subido.", "No se pudo registrar el documento.")}>Subir documento</button>
           </div>
+          {!CLOSED.includes(detail.status) ? (
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+              <label style={LABEL}>Resultado del cierre
+                <select style={FIELD} value={outcome} onChange={(e) => setOutcome(e.target.value as CloseOutcome)}>
+                  {OUTCOMES.map((o) => (<option key={o} value={o}>{OUTCOME_LABEL[o]}</option>))}
+                </select>
+              </label>
+              <label style={LABEL}>Motivo (opcional)<input style={FIELD} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} /></label>
+              <button type="button" style={BTN} disabled={busy} onClick={() => run(() => closeOperation(detail.id, outcome, reason), "Operación cerrada.", "No se puede cerrar: hay etapas obligatorias sin completar o la revisión del broker está pendiente o devuelta.", detail.id)}>Cerrar operación</button>
+            </div>
+          ) : null}
           <div><button type="button" style={BTN} disabled={busy} onClick={() => run(() => sendToReview(detail.id), "Enviada a revisión del broker.", "Ya hay una revisión pendiente para esta operación.")}>Enviar a revisión</button></div>
         </div>
       ) : null}
