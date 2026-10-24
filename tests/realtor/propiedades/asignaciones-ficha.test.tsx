@@ -27,7 +27,7 @@ beforeEach(() => {
     if (path === `${BASE}/listings`) return ok({ items: [{ id: "L1", property_id: PID, status: "active", list_price: { amount: "100000", currency: "USD" } }], next_cursor: null });
     if (path === `${BASE}/contacts`) return ok({ items: [{ id: CID, display_label: "Ana P." }], next_cursor: null });
     if (path === `${BASE}/properties/${PID}/contacts`) return ok({ items: assigned ? [{ id: AID, contact_id: CID, property_id: PID, assigned_at: "2026-10-20T10:00:00Z" }] : [] });
-    if (path === `${BASE}/contacts/${CID}/properties` && method === "POST") return ok({}, postStatus);
+    if (path === `${BASE}/contacts/${CID}/properties` && method === "POST") { if (postStatus < 400) assigned = true; return ok({}, postStatus); }
     if (path === `${BASE}/contacts/${CID}/properties/${AID}` && method === "DELETE") { if (deleteStatus < 400) assigned = false; return ok({}, deleteStatus); }
     return ok({ items: [], next_cursor: null });
   }) as unknown as typeof fetch;
