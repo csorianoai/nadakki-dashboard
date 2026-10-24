@@ -8,6 +8,7 @@ import { DEMO_PROPERTIES } from "@/lib/realtor/propiedades/demo";
 import { applyFilters, countByStage, countByStatus, formatPrice } from "@/lib/realtor/propiedades/logic";
 import { NO_FILTERS, STAGES, STATUSES, TYPES, type PropFilters, type Property } from "@/lib/realtor/propiedades/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { AsignacionesSection } from "./AsignacionesSection";
 import { PropiedadForm } from "./PropiedadForm";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
@@ -156,6 +157,7 @@ export function PropiedadesPanel() {
                   )}
                   {current.propertyId && !demo ? <button type="button" data-testid="propiedad-edit" style={{ ...BTN, marginTop: 14 }} onClick={() => { setSaved(false); setForm("edit"); }}>{t.editProperty}</button> : null}
                   {current.propertyId && !demo ? <Link href={`/realtor/operaciones?property_id=${encodeURIComponent(current.propertyId)}`} data-testid="propiedad-abrir-operacion" style={{ ...BTN, marginTop: 14, marginLeft: 10, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Abrir operación</Link> : null}
+                  {current.propertyId && !demo ? <AsignacionesSection key={current.propertyId} propertyId={current.propertyId} /> : null}
                 </>
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}
             </div>
