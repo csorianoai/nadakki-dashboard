@@ -8,7 +8,7 @@ export type Section<T> = { quality: Quality; count: number | null; items: T[] };
 export type LeadItem = { lead_id: string; channel: string; intent: string; status: string; received_at: string; waiting_hours: number };
 export type ListingItem = { listing_id: string; stage_key: string; blocking_count: number };
 export type DeskItem = { item_id: string; kind: string; created_at: string };
-export type VisitItem = { visit_id: string; listing_id: string; scheduled_at: string; status: string };
+export type VisitItem = { event_id: string; title: string; starts_at: string; property_id: string | null };
 export type MiDia = {
   scope: "agent" | "supervisor";
   leads: Section<LeadItem>;
@@ -35,8 +35,8 @@ const isDesk = (i: unknown): i is DeskItem =>
   isObj(i) && typeof i.item_id === "string" && typeof i.kind === "string" && typeof i.created_at === "string";
 
 const isVisit = (i: unknown): i is VisitItem =>
-  isObj(i) && typeof i.visit_id === "string" && typeof i.listing_id === "string"
-  && typeof i.scheduled_at === "string" && typeof i.status === "string";
+  isObj(i) && typeof i.event_id === "string" && typeof i.title === "string" && typeof i.starts_at === "string"
+  && (i.property_id === null || typeof i.property_id === "string");
 
 const SIN_FUENTE: Section<never> = { quality: "NO_DISPONIBLE", count: null, items: [] };
 

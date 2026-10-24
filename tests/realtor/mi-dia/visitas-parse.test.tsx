@@ -2,7 +2,7 @@ import { hasData, parseMiDia } from "@/lib/realtor/mi-dia/api";
 import { miDiaEn, miDiaEs } from "@/lib/realtor/mi-dia/copy";
 
 const okSec = (items: unknown[]) => ({ quality: "OK", count: items.length, items });
-const visit = (over: Record<string, unknown> = {}) => ({ visit_id: "SYNTH-V1", listing_id: "SYNTH-P1", scheduled_at: "2000-01-01T15:30:00Z", status: "scheduled", ...over });
+const visit = (over: Record<string, unknown> = {}) => ({ event_id: "SYNTH-E1", title: "Visita SYNTH", starts_at: "2000-01-01T15:30:00Z", property_id: "SYNTH-P1", ...over });
 const body = (visitas: unknown) => ({
   generated_at: "2000-01-01T00:00:00Z", scope: "agent",
   leads_sin_primera_respuesta: okSec([]),
@@ -22,8 +22,17 @@ describe("parseMiDia · visitas del día", () => {
     expect(parseMiDia(body("x"))).toBeNull();
   });
   it("descarta filas incompletas", () => {
-    const d = parseMiDia(body(okSec([visit(), { visit_id: "SYNTH-V2" }])));
+    const d = parseMiDia(body(okSec([visit(), { event_id: "SYNTH-E2" }])));
     expect(d?.visitas.items).toHaveLength(1);
+  });
+  it("property_id null (evento sin propiedad) se conserva", () => {
+    const d = parseMiDia(body(okSec([visit({ property_id: null })])));
+    expect(d?.visitas.items).toHaveLength(1);
+  });
+  it("fila con la forma antigua (visit_id/listing_id/scheduled_at/status) se descarta", () => {
+    const old = { visit_id: "SYNTH-V1", listing_id: "SYNTH-P1", scheduled_at: "2000-01-01T15:30:00Z", status: "scheduled" };
+    const d = parseMiDia(body(okSec([old])));
+    expect(d?.visitas.items).toEqual([]);
   });
   it("solo visitas ya cuenta como datos", () => {
     const d = parseMiDia(body(okSec([visit()])));
@@ -31,7 +40,6 @@ describe("parseMiDia · visitas del día", () => {
   });
 });
 
-it("ES y EN: mismas claves de visitas", () => {
-  expect(Object.keys(miDiaEn.visitStatus).sort()).toEqual(Object.keys(miDiaEs.visitStatus).sort());
+it("ES y EN: títulos de visitas distintos", () => {
   expect(miDiaEn.visits).not.toBe(miDiaEs.visits);
 });
