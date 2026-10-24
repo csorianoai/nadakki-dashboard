@@ -74,3 +74,12 @@ export async function uploadDocument(opId: string, file: File, docType: string, 
 export async function sendToReview(opId: string): Promise<Result> {
   return done((await send(`${BASE}/broker-desk/items`, "POST", JSON.stringify({ operation_id: opId }))).status, [201]);
 }
+
+export type CloseOutcome = "closed_won" | "closed_lost" | "cancelled";
+
+/** POST /operations/{id}/close (ROP-G7-CIERRE-API): el agente responsable cierra su operación; el tenant sale del token. */
+export async function closeOperation(opId: string, outcome: CloseOutcome, reason: string): Promise<Result> {
+  const body: Obj = { outcome };
+  if (reason.trim()) body.reason = reason.trim();
+  return done((await send(`${OPERATIONS_PATH}/${encodeURIComponent(opId)}/close`, "POST", JSON.stringify(body))).status, [200]);
+}
