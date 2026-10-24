@@ -141,7 +141,7 @@ describe("positivo: persiste tras recargar", () => {
     const ev = await open();
     expect(ev).toHaveTextContent("10:00");
     await move(ev, "2026-11-03T14:30", "2026-11-03T15:15");
-    await within(ev).findByTestId("visit-action-ok");
+    await screen.findByTestId("visit-action-ok");
     expect(JSON.parse(writes()[0][1].body)).toMatchObject({ starts_at: new Date("2026-11-03T14:30").toISOString() });
     expect(writes()[0][1].method).toBe("PATCH");
     expect(String(writes()[0][0])).toBe(`/api/v1/realestate/calendar/events/${V1}`);
