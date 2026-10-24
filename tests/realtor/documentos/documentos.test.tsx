@@ -88,7 +88,7 @@ describe("pantalla", () => {
     await screen.findByTestId("documentos-empty");
     expect(screen.queryByText(/OtroTenant/)).toBeNull();
     // El generador también lee /operations en la lista vacía: exactamente 1 llamada a /documents y NINGUNA con tenant.
-    await waitFor(() => expect(mockApiFetch.mock.calls.length).toBeGreaterThanOrEqual(1));
+    await waitFor(() => expect(mockApiFetch.mock.calls.filter(([u]) => String(u).includes("/documents"))).toHaveLength(1));
     expect(mockApiFetch.mock.calls.filter(([u]) => String(u).includes("/documents"))).toHaveLength(1);
     for (const [url, init] of mockApiFetch.mock.calls) {
       expect(String(url)).not.toMatch(/tenant/i);

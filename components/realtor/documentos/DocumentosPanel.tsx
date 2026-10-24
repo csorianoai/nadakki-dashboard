@@ -66,6 +66,7 @@ export function DocumentosPanel() {
   const docs: readonly OperationDoc[] = demo ? DEMO_DOCS : real;
   const templates: readonly Template[] = demo ? DEMO_TEMPLATES : [];
   const counts = countByDocStatus(docs);
+  const isEmpty = docs.length === 0 && templates.length === 0;
 
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
@@ -90,22 +91,21 @@ export function DocumentosPanel() {
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
       ) : null}
 
-      {docs.length === 0 && templates.length === 0 ? (
+      {isEmpty ? (
         <div data-testid="documentos-empty" style={CARD}>
           <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.empty}</h2>
           <p style={{ margin: "10px 0 0", color: RT.muted }}>{t.emptyHint}</p>
-          <GenerateControls demo={demo} lang={lang} onGenerated={reload} />
         </div>
       ) : (
-        <>
-          <div data-testid="status-counts" aria-label={t.statusCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+        <div data-testid="status-counts" aria-label={t.statusCounts} style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {(demo ? DOC_STATUSES : API_DOC_STATUSES).map((s) => (
               <span key={s} data-testid={`count-${s}`} style={{ background: RT.calloutBg, border: `1px solid ${RT.calloutLine}`, borderRadius: 999, padding: "6px 14px", fontSize: 13, fontWeight: 700 }}>
                 {DOC_STATUS_LABEL[lang][s]} · {counts[s]}
               </span>
             ))}
           </div>
-          <div data-testid="generator-row" style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 1fr) minmax(300px, 1fr)", alignItems: "start" }}>
+      )}
+          <div data-testid="generator-row" style={{ display: "grid", gap: 20, gridTemplateColumns: isEmpty ? "minmax(300px, 1fr)" : "minmax(300px, 1fr) minmax(300px, 1fr)", alignItems: "start" }}>
             <div style={CARD}>
               <h2 style={H2}>{t.genTitle}</h2>
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
@@ -119,6 +119,7 @@ export function DocumentosPanel() {
               <GenerateControls demo={demo} lang={lang} onGenerated={reload} />
               <p style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.aiNote}</p>
             </div>
+            {!isEmpty ? (
             <div style={CARD}>
               <h2 style={H2}>{t.draftTitle} <span style={{ ...PILL, background: RT.calloutBg, color: RT.muted, fontSize: 11, textTransform: "uppercase" }}>{t.notGenerated}</span></h2>
               <p data-testid="doc-note" style={{ margin: "0 0 18px", padding: "14px 18px", border: `1px dashed ${RT.lineStrong}`, borderRadius: 8, color: RT.muted, fontSize: 14 }}>{t.noDraft}</p>
@@ -126,7 +127,9 @@ export function DocumentosPanel() {
               <p style={{ margin: "10px 0", fontSize: 14 }}>{t.brokerApproval} <span style={{ ...PILL, background: RT.calloutBg, color: RT.muted }}>{t.notRequested}</span></p>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: RT.demoText }}>{t.notLegal}</p>
             </div>
+            ) : null}
           </div>
+      {!isEmpty ? (
           <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 3fr) minmax(300px, 2fr)", alignItems: "start" }}>
             <div style={CARD}>
               <h2 style={H2}>{t.docsTitle}</h2>
@@ -160,8 +163,7 @@ export function DocumentosPanel() {
               <p style={{ margin: "16px 0 0", fontSize: 12, color: RT.muted }}>{t.tplNote}</p>
             </div>
           </div>
-        </>
-      )}
+      ) : null}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.fairHousing}</p>
     </section>
   );
