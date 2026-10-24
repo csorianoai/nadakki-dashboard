@@ -10,7 +10,7 @@ jest.mock("@/lib/api/fetch-client", () => ({
 }));
 
 const okSec = (items: unknown[]) => ({ quality: "OK", count: items.length, items });
-const visit = (over: Record<string, unknown> = {}) => ({ visit_id: "SYNTH-V1", listing_id: "SYNTH-P1", scheduled_at: "2000-01-01T15:30:00Z", status: "scheduled", ...over });
+const visit = (over: Record<string, unknown> = {}) => ({ event_id: "SYNTH-E1", title: "Visita SYNTH uno", starts_at: "2000-01-01T15:30:00Z", property_id: "SYNTH-P1", ...over });
 const body = (visitas: unknown) => ({
   generated_at: "2000-01-01T00:00:00Z", scope: "agent",
   leads_sin_primera_respuesta: okSec([]),
@@ -59,14 +59,13 @@ describe("MiDiaPanel · visitas del día", () => {
     expect(JSON.stringify(call).toLowerCase()).not.toMatch(/tenant/);
   });
   it("positivo: pinta las visitas con hora y cuenta", async () => {
-    route({ status: 200, body: body(okSec([visit(), visit({ visit_id: "SYNTH-V2", status: "confirmed" })])) });
+    route({ status: 200, body: body(okSec([visit(), visit({ event_id: "SYNTH-E2", title: "Visita SYNTH dos" })])) });
     render(<MiDiaPanel />);
     await settle();
     const sec = await screen.findByTestId("mi-dia-visitas");
     await waitFor(() => expect(screen.getByTestId("mi-dia-visitas-count")).toHaveTextContent("2"));
     expect(sec.querySelectorAll('[data-testid="mi-dia-row"]')).toHaveLength(2);
-    expect(sec).toHaveTextContent(miDiaEs.visitStatus.confirmed);
-    expect(sec).not.toHaveTextContent("scheduled");
+    expect(sec).toHaveTextContent("Visita SYNTH dos");
   });
   it("positivo: sección sin visitas con quality OK muestra el vacío de visitas", async () => {
     route({ status: 200, body: { ...body(okSec([])), leads_sin_primera_respuesta: okSec([{ lead_id: "SYNTH-1", channel: "web", intent: "rent", status: "new", received_at: "2000-01-01T00:00:00Z", waiting_hours: 1 }]) } });
