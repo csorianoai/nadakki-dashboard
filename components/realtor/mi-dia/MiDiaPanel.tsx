@@ -145,9 +145,9 @@ export function MiDiaPanel() {
         {!demo && real?.visitas.quality === "OK" ? (real.visitas.items.length === 0 ? (
           <p data-testid="mi-dia-visitas-empty" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{t.visitsEmpty}</p>
         ) : <Rows items={real.visitas.items.map((v) => ({
-          id: v.visit_id,
-          main: new Date(v.scheduled_at).toLocaleTimeString(t.dateLocale, { hour: "2-digit", minute: "2-digit", timeZone: TENANT_TZ }),
-          sub: lookup(t.visitStatus, v.status, t.visitFallback),
+          id: v.event_id,
+          main: new Date(v.starts_at).toLocaleTimeString(t.dateLocale, { hour: "2-digit", minute: "2-digit", timeZone: TENANT_TZ }),
+          sub: v.title,
         }))} />) : <NoDisponible t={t} />}
       </Section>
       {broker ? (
