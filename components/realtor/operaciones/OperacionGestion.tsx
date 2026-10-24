@@ -92,6 +92,18 @@ export function OperacionGestion({ ops, initialPropertyId = "", initialContactId
               </li>
             ))}
           </ol>
+          <div data-testid="historial-etapas" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <h3 style={{ margin: 0, fontSize: 18 }}>Historial de etapas</h3>
+            {detail.events.length === 0 ? <p style={{ margin: 0, fontSize: 13, color: RT.muted }}>Sin cambios registrados.</p> : (
+              <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13 }}>
+                {detail.events.map((e, i) => (
+                  <li key={`${e.milestoneId}-${e.at}-${i}`}>
+                    {detail.milestones.find((m) => m.id === e.milestoneId)?.label}: {STATUS_ES[e.from] ?? e.from} → {STATUS_ES[e.to] ?? e.to} · por {e.actor.slice(0, 8)} · <time dateTime={e.at}>{new Date(e.at).toLocaleString("es")}</time>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
             <label style={LABEL}>Archivo<input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
             <label style={LABEL}>Tipo de documento
