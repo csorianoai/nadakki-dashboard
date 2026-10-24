@@ -94,6 +94,7 @@ export function DocumentosPanel() {
         <div data-testid="documentos-empty" style={CARD}>
           <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.empty}</h2>
           <p style={{ margin: "10px 0 0", color: RT.muted }}>{t.emptyHint}</p>
+          <GenerateControls demo={demo} lang={lang} onGenerated={reload} />
         </div>
       ) : (
         <>
