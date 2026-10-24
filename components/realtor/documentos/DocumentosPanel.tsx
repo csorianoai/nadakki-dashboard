@@ -8,6 +8,7 @@ import { DEMO_DOCS, DEMO_TEMPLATES } from "@/lib/realtor/documentos/demo";
 import { countByDocStatus, templateState } from "@/lib/realtor/documentos/logic";
 import { API_DOC_STATUSES, DOC_STATUSES, type OperationDoc, type Template } from "@/lib/realtor/documentos/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { GenerateControls } from "./GenerateControls";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
@@ -16,7 +17,7 @@ const H2: CSSProperties = { margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSi
 const ROW: CSSProperties = { border: `1px solid ${RT.line}`, borderRadius: 10, padding: 14 };
 const PILL: CSSProperties = { fontSize: 12, fontWeight: 700, borderRadius: 999, padding: "3px 10px" };
 
-const DL_ERROR_KEY = { not_found: "dlNotFound", gone: "dlGone", error: "dlError" } as const;
+const DL_ERROR_KEY = { forbidden: "forbidden", not_found: "dlNotFound", gone: "dlGone", error: "dlError" } as const;
 
 function DownloadButton({ doc, demo, lang }: { doc: OperationDoc; demo: boolean; lang: Lang }) {
   const t = COPY[lang];
@@ -54,12 +55,14 @@ export function DocumentosPanel() {
 
   // Fuera de DEMO se lee C-RE-DOCUMENTOS; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
   const [real, setReal] = useState<readonly OperationDoc[]>([]);
+  const [reloadKey, setReloadKey] = useState(0);
+  const reload = () => setReloadKey((k) => k + 1);
   useEffect(() => {
     if (demo || access !== "ok") return;
     let alive = true;
     fetchDocuments().then((r) => { if (alive) setReal(r); });
     return () => { alive = false; };
-  }, [demo, access]);
+  }, [demo, access, reloadKey]);
   const docs: readonly OperationDoc[] = demo ? DEMO_DOCS : real;
   const templates: readonly Template[] = demo ? DEMO_TEMPLATES : [];
   const counts = countByDocStatus(docs);
@@ -112,10 +115,7 @@ export function DocumentosPanel() {
                   </li>
                 ))}
               </ul>
-              <div style={{ display: "flex", gap: 10, margin: "16px 0 12px" }}>
-                <button type="button" disabled data-testid="generate-doc" style={{ minHeight: 44, padding: "0 16px", borderRadius: 8, border: `1px dashed ${RT.lineStrong}`, background: RT.calloutBg, fontFamily: "inherit", fontWeight: 700 }}>{t.genBlocked}</button>
-                <span style={{ minHeight: 44, padding: "0 16px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, display: "inline-flex", alignItems: "center", fontWeight: 700 }}>{t.toOps}</span>
-              </div>
+              <GenerateControls demo={demo} lang={lang} onGenerated={reload} />
               <p style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.aiNote}</p>
             </div>
             <div style={CARD}>
