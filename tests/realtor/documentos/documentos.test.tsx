@@ -6,7 +6,7 @@ import { countByDocStatus, templateState } from "@/lib/realtor/documentos/logic"
 import { REALTOR_CENTERS } from "@/lib/realtor/centers";
 
 const mockApiFetch = jest.fn();
-jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a) }));
+jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a), getAuthHeaders: () => ({}) }));
 
 beforeEach(() => {
   mockApiFetch.mockReset();
