@@ -7,6 +7,9 @@ import { DEMO_EVENTS } from "@/lib/realtor/smart-calendar/demo";
 import { applyFilter, countByKind, eventsOfDay } from "@/lib/realtor/smart-calendar/logic";
 import { KINDS, type CalEvent, type CalFilter } from "@/lib/realtor/smart-calendar/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { VisitActions } from "./VisitActions";
+import { VisitForm } from "./VisitForm";
+import { fetchOpenVisits, type VisitMeta } from "./visit-actions";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
@@ -20,12 +23,16 @@ export function SmartCalendarPanel() {
   const t = COPY[lang];
 
   const [real, setReal] = useState<readonly CalEvent[]>([]);
+  const [openVisits, setOpenVisits] = useState<Record<string, VisitMeta>>({});
+  const [actionOk, setActionOk] = useState(false);
+  const [reload, setReload] = useState(0);
   useEffect(() => {
     if (access !== "ok" || demo) return;
     let alive = true;
     fetchCalendarEvents().then((list) => { if (alive) setReal(list); });
+    fetchOpenVisits().then((m) => { if (alive) setOpenVisits(m); });
     return () => { alive = false; };
-  }, [access, demo]);
+  }, [access, demo, reload]);
 
   // Fuera de DEMO solo hay eventos del contrato; sin respuesta o lista vacía, «Sin datos todavía».
   const events: readonly CalEvent[] = demo ? DEMO_EVENTS : real;
@@ -53,6 +60,12 @@ export function SmartCalendarPanel() {
       </div>
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
+      ) : null}
+
+      {demo ? null : <VisitForm lang={lang} onCreated={() => setReload((n) => n + 1)} />}
+
+      {actionOk ? (
+        <p role="status" data-testid="visit-action-ok" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{lang === "es" ? "Cambio guardado." : "Change saved."}</p>
       ) : null}
 
       {events.length === 0 ? (
@@ -93,6 +106,9 @@ export function SmartCalendarPanel() {
                         <strong style={{ display: "block", fontSize: 13 }}>{e.start}</strong>
                         <span style={{ display: "block", margin: "2px 0" }}>{e.title[lang]}</span>
                         <span style={{ color: RT.muted }}>{e.place ? `${KIND_LABEL[lang][e.kind]} · ${e.place}` : KIND_LABEL[lang][e.kind]}</span>
+                        {!demo && e.kind === "visita" && openVisits[e.id] ? (
+                          <VisitActions id={e.id} meta={openVisits[e.id]} lang={lang} onStart={() => setActionOk(false)} onDone={() => { setActionOk(true); setReload((n) => n + 1); }} />
+                        ) : null}
                       </li>
                     ))}
                   </ul>

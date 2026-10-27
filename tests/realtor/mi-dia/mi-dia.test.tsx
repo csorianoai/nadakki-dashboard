@@ -43,7 +43,7 @@ it("negativo: sin DEMO dice «Sin datos todavía», NO_DISPONIBLE y ninguna cifr
   mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
   render(<MiDiaPanel />);
   expect(await screen.findByTestId("mi-dia-empty")).toHaveTextContent("Sin datos todavía");
-  expect(screen.getAllByTestId("mi-dia-no-disponible").length).toBe(2);
+  expect(screen.getAllByTestId("mi-dia-no-disponible").length).toBe(3);
   expect(screen.queryByTestId("mi-dia-demo")).toBeNull();
   expect(screen.queryByTestId("mi-dia-row")).toBeNull();
   expect(screen.queryByTestId("mi-dia-leads-count")).toBeNull();

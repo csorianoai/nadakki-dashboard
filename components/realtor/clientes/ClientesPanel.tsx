@@ -8,6 +8,9 @@ import { DEMO_CONTACTS, DEMO_JOURNEYS, DEMO_OWNERS } from "@/lib/realtor/cliente
 import { applyFilters, countByStatus, inKind, maskEmail, maskPhone, showsOwners } from "@/lib/realtor/clientes/logic";
 import { KINDS, LEAD_STATUSES, NO_FILTERS, ORIGINS, ROLES, type ClientFilters, type Contact, type ContactKind } from "@/lib/realtor/clientes/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { AsignacionPanel } from "./AsignacionPanel";
+import { ContactForm } from "./ContactForm";
+import { FORM_COPY } from "./contact-copy";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
@@ -71,12 +74,16 @@ export function ClientesPanel() {
 
   // Fuera de DEMO se leen los clientes reales del contrato C-RE-OLA2; sin datos (404/503, vacío) la lista queda vacía.
   const [real, setReal] = useState<readonly Contact[]>([]);
+  const [reload, setReload] = useState(0);
+  // Formulario de contacto (solo datos reales): "new" = alta, "edit" = edición del contacto elegido.
+  const [form, setForm] = useState<"new" | "edit" | null>(null);
+  const [saved, setSaved] = useState(false);
   useEffect(() => {
     if (demo || access !== "ok") return;
     let alive = true;
     fetchClients().then((list) => { if (alive) setReal(list); });
     return () => { alive = false; };
-  }, [demo, access]);
+  }, [demo, access, reload]);
   const contacts: readonly Contact[] = demo ? DEMO_CONTACTS : real;
   const owners = demo ? DEMO_OWNERS : [];
   const inTab = useMemo(() => contacts.filter((c) => inKind(c, kind)), [contacts, kind]);
@@ -88,6 +95,8 @@ export function ClientesPanel() {
 
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
+  const ft = FORM_COPY[lang];
+  const btn: CSSProperties = { ...SELECT, minHeight: 44, padding: "0 18px", fontWeight: 700, cursor: "pointer" };
   const set = (patch: Partial<ClientFilters>) => setFilters((f) => ({ ...f, ...patch }));
   return (
     <section data-testid="clientes-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
@@ -108,6 +117,17 @@ export function ClientesPanel() {
       </div>
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
+      ) : null}
+
+      {!demo ? (
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button type="button" data-testid="contact-new" style={btn} onClick={() => { setSaved(false); setForm("new"); }}>{ft.newContact}</button>
+          {saved ? <p role="status" data-testid="contact-saved" style={{ margin: 0, fontSize: 14, fontWeight: 700, color: RT.chipUpText }}>{ft.saved}</p> : null}
+        </div>
+      ) : null}
+      {form && !demo && (form === "new" || current) ? (
+        <ContactForm key={form === "edit" ? current?.id : "new"} contact={form === "edit" ? current : undefined} lang={lang} onCancel={() => setForm(null)}
+          onSaved={() => { setForm(null); setSaved(true); setReload((n) => n + 1); }} />
       ) : null}
 
       <div role="group" aria-label={t.kindLabel} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -188,6 +208,9 @@ export function ClientesPanel() {
                   <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.status}</dt><dd style={{ margin: 0, fontWeight: 700 }}>{current.leadStatus ? STATUS_LABEL[lang][current.leadStatus] : t.none}</dd></div>
                 </dl>
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}
+              {current && !demo ? <button type="button" data-testid="contact-edit" style={{ ...btn, marginTop: 14 }} onClick={() => { setSaved(false); setForm("edit"); }}>{ft.edit}</button> : null}
+              {current && !demo ? <Link href={`/realtor/operaciones?contact_id=${encodeURIComponent(current.id)}`} data-testid="contact-abrir-operacion" style={{ ...btn, marginTop: 14, marginLeft: 10, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Abrir operación</Link> : null}
+              {current && !demo ? <AsignacionPanel contactId={current.id} lang={lang} /> : null}
               {current && DEMO_JOURNEYS[current.id] ? <Journey id={current.id} lang={lang} /> : null}
               <p style={{ margin: "16px 0 0", fontSize: 12, color: RT.muted }}>{t.masked}</p>
             </div>

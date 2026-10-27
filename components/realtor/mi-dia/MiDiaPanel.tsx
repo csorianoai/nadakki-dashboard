@@ -141,6 +141,15 @@ export function MiDiaPanel() {
           id: l.listing_id, main: `${t.stage} ${l.stage_key}`, sub: `${l.blocking_count} ${t.blockingReqs}`,
         }))} /> : demo ? <Rows items={DEMO_LISTINGS.map((l) => ({ id: l.id, main: l.title, sub: blockerText(t, l.blocker) }))} /> : <NoDisponible t={t} />}
       </Section>
+      <Section id="visitas" title={t.visits} count={demo ? undefined : real?.visitas.count ?? undefined}>
+        {!demo && real?.visitas.quality === "OK" ? (real.visitas.items.length === 0 ? (
+          <p data-testid="mi-dia-visitas-empty" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{t.visitsEmpty}</p>
+        ) : <Rows items={real.visitas.items.map((v) => ({
+          id: v.event_id,
+          main: new Date(v.starts_at).toLocaleTimeString(t.dateLocale, { hour: "2-digit", minute: "2-digit", timeZone: TENANT_TZ }),
+          sub: v.title,
+        }))} />) : <NoDisponible t={t} />}
+      </Section>
       {broker ? (
         <Section id="desk" title={t.desk} count={demo ? DEMO_DESK.length : real?.desk.count ?? undefined}>
           {!demo && real?.desk.quality === "OK" ? <Rows items={real.desk.items.map((d) => ({

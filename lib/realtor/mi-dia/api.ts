@@ -8,11 +8,13 @@ export type Section<T> = { quality: Quality; count: number | null; items: T[] };
 export type LeadItem = { lead_id: string; channel: string; intent: string; status: string; received_at: string; waiting_hours: number };
 export type ListingItem = { listing_id: string; stage_key: string; blocking_count: number };
 export type DeskItem = { item_id: string; kind: string; created_at: string };
+export type VisitItem = { event_id: string; title: string; starts_at: string; property_id: string | null };
 export type MiDia = {
   scope: "agent" | "supervisor";
   leads: Section<LeadItem>;
   listings: Section<ListingItem>;
   desk: Section<DeskItem>;
+  visitas: Section<VisitItem>;
 };
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -32,18 +34,26 @@ const isListing = (i: unknown): i is ListingItem =>
 const isDesk = (i: unknown): i is DeskItem =>
   isObj(i) && typeof i.item_id === "string" && typeof i.kind === "string" && typeof i.created_at === "string";
 
+const isVisit = (i: unknown): i is VisitItem =>
+  isObj(i) && typeof i.event_id === "string" && typeof i.title === "string" && typeof i.starts_at === "string"
+  && (i.property_id === null || typeof i.property_id === "string");
+
+const SIN_FUENTE: Section<never> = { quality: "NO_DISPONIBLE", count: null, items: [] };
+
 /** Cuerpo del contrato → vista. Cualquier forma inesperada devuelve null (fail-closed: «Sin datos todavía»). */
 export function parseMiDia(body: unknown): MiDia | null {
   if (!isObj(body) || (body.scope !== "agent" && body.scope !== "supervisor")) return null;
   const leads = section(body.leads_sin_primera_respuesta, isLead);
   const listings = section(body.listings_con_requisitos_bloqueantes, isListing);
   const desk = section(body.broker_desk_pendientes, isDesk);
-  return leads && listings && desk ? { scope: body.scope, leads, listings, desk } : null;
+  // ROP-G5-MIDIA-VISITAS-API: si el servidor aún no envía la sección, es NO_DISPONIBLE (nunca visitas inventadas).
+  const visitas = body.visitas_del_dia === undefined ? SIN_FUENTE : section(body.visitas_del_dia, isVisit);
+  return leads && listings && desk && visitas ? { scope: body.scope, leads, listings, desk, visitas } : null;
 }
 
 /** true si alguna sección trae registros reales. Con todo vacío o no disponible, la pantalla queda en «Sin datos todavía». */
 export function hasData(d: MiDia): boolean {
-  return [d.leads, d.listings, d.desk].some((s) => s.quality === "OK" && s.items.length > 0);
+  return [d.leads, d.listings, d.desk, d.visitas].some((s) => s.quality === "OK" && s.items.length > 0);
 }
 
 /** 404, 503, red caída, cuerpo inválido o sin registros → null. */
