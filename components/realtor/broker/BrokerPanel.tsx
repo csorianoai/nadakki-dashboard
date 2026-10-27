@@ -9,6 +9,8 @@ import { BROKER_ROLE } from "@/lib/realtor/menu";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
+import { QaDesk } from "./QaDesk";
+import { QA_ROLE } from "./qa-client";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const H2: CSSProperties = { margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 24 };
@@ -20,12 +22,13 @@ const fecha = (iso: string | null | undefined, lang: Lang) => {
   return d && !Number.isNaN(d.getTime()) ? d.toLocaleDateString(lang === "es" ? "es" : "en", { timeZone: "UTC" }) : "—";
 };
 
-/** Fail-closed: solo con interruptor, 200 de /acceso y el rol broker_supervisor se monta la bandeja (y se pide algo al backend). */
+/** Fail-closed: solo con interruptor, 200 de /acceso y el rol broker_supervisor (o qa_reviewer, solo QA) se monta la bandeja (y se pide algo al backend). */
 export function BrokerPanel() {
   const { state, roles, demoActive } = useRealtorAccessInfo();
   if (state !== "ok") return <RealtorNotice reason={state} />;
-  if (!roles.includes(BROKER_ROLE)) return <RealtorNotice reason="sin-acceso" />;
-  return <BrokerDesk demoOk={demoActive} />;
+  if (roles.includes(BROKER_ROLE)) return <BrokerDesk demoOk={demoActive} />;
+  if (roles.includes(QA_ROLE)) return <QaDesk />;
+  return <RealtorNotice reason="sin-acceso" />;
 }
 
 const AVISO_ID = { razon: "decision-reason-required", conflicto: "decision-conflict", prohibido: "decision-forbidden", invalido: "decision-invalid", "no-existe": "decision-error", error: "decision-error" } as const;
