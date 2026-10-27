@@ -4,9 +4,15 @@ import { join } from "node:path";
 import { MiDiaPanel } from "@/components/realtor/mi-dia/MiDiaPanel";
 import { miDiaEn, miDiaEs } from "@/lib/realtor/mi-dia/copy";
 
-jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn().mockResolvedValue({ status: 200, json: async () => ({ demo: true }) }) }));
+// Traslado ROP-UX-HORA-TENANT: la zona ya no es Santo Domingo fija; sale del perfil del tenant. Aquí el perfil es DO
+// (jurisdiction_code "DO"), de modo que las afirmaciones de Santo Domingo siguen idénticas con el navegador en UTC.
+jest.mock("@/lib/api/fetch-client", () => ({
+  apiFetch: jest.fn(async (path: string) => path === "/api/v1/realestate/alta/tenant/profile"
+    ? { ok: true, status: 200, json: async () => ({ owner_person_id: "6f1c2a9e-4b7d-4e2a-9c1f-3d5e7a9b1c20", jurisdiction_code: "DO", default_language: "es", kind: "agent" }) }
+    : { status: 200, json: async () => ({ demo: true }) }),
+}));
 
-// 2026-10-17T03:30Z es todavía viernes 16 en Santo Domingo (UTC-4).
+// 2026-10-17T03:30Z es todavía viernes 16 en Santo Domingo (UTC-4); en UTC (el navegador de las pruebas) ya es sábado 17.
 beforeEach(() => {
   jest.useFakeTimers({ doNotFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "queueMicrotask", "nextTick", "setImmediate"] });
   jest.setSystemTime(new Date("2026-10-17T03:30:00Z"));
@@ -16,7 +22,8 @@ beforeEach(() => {
 });
 afterEach(() => { jest.useRealTimers(); jest.restoreAllMocks(); });
 
-const flush = () => act(async () => { await Promise.resolve(); await Promise.resolve(); });
+// Espera también a que llegue el perfil del tenant (acceso → perfil → zona).
+const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 0)); await new Promise((r) => setTimeout(r, 0)); });
 
 it("(a) navegador en inglés: el panel arranca en español con la fecha de hoy en la zona del tenant", async () => {
   render(<MiDiaPanel />);
