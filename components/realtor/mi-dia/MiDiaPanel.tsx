@@ -44,7 +44,7 @@ function NoDisponible({ texto, cta, href }: { texto: string; cta?: string; href?
     <p data-testid="mi-dia-no-disponible" data-quality="NO_DISPONIBLE" style={{ margin: 0, fontSize: 15, color: RT.muted, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 14px" }}>
       <span>{texto}</span>
       {cta && href ? (
-        <Link href={href} style={{ color: RT.teal, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>{cta}</Link>
+        <Link href={href} style={{ display: "inline-flex", alignItems: "center", minHeight: 44, color: RT.teal, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>{cta}</Link>
       ) : null}
     </p>
   );
