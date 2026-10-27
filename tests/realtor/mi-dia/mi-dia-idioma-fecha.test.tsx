@@ -23,7 +23,8 @@ it("(a) navegador en inglés: el panel arranca en español con la fecha de hoy e
   await flush();
   const panel = await screen.findByTestId("mi-dia-panel");
   expect(panel).toHaveAttribute("lang", "es");
-  expect(panel).toHaveTextContent(miDiaEs.greeting);
+  // 23:30 en Santo Domingo: el saludo es de noche (ROP-UX-QUICKFIX).
+  expect(panel).toHaveTextContent(miDiaEs.greetingEvening);
   expect(screen.getByTestId("mi-dia-date")).toHaveTextContent("viernes, 16 de octubre de 2026");
 });
 
@@ -32,7 +33,7 @@ it("(b) el conmutador pasa a inglés y la fecha sigue en el día 16", async () =
   await flush();
   fireEvent.click(await screen.findByTestId("lang-en"));
   expect(screen.getByTestId("mi-dia-panel")).toHaveAttribute("lang", "en");
-  expect(screen.getByTestId("mi-dia-panel")).toHaveTextContent(miDiaEn.greeting);
+  expect(screen.getByTestId("mi-dia-panel")).toHaveTextContent(miDiaEn.greetingEvening);
   expect(screen.getByTestId("mi-dia-date")).toHaveTextContent("Friday, October 16, 2026");
   fireEvent.click(screen.getByTestId("lang-es"));
   expect(screen.getByTestId("mi-dia-panel")).toHaveAttribute("lang", "es");

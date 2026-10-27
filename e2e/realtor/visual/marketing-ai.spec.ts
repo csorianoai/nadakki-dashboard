@@ -71,7 +71,8 @@ test("datos reales (contrato C-RE-OLA3, registros SYNTH) sin DEMO: métricas, ga
   await expect(page.getByTestId("marketing-ai-real")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("metric-campaigns_running")).toHaveText("3");
   await expect(page.getByTestId("metric-suggestions_new")).toHaveText("5");
-  await expect(page.getByTestId("no-disponible-leads_attributed")).toContainText("NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-leads_attributed")).toHaveAttribute("data-quality", "NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-leads_attributed")).toContainText("Sin datos todavía");
   await expect(page.getByTestId("spend-row")).toHaveCount(2);
   await expect(page.getByTestId("marketing-ai-real")).toContainText("800.00");
   await expect(page.getByTestId("marketing-ai-real")).toContainText("150000.00");
