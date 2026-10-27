@@ -125,17 +125,17 @@ describe("1 · navegación de semana", () => {
     await mount();
     expect(await screen.findAllByTestId("cal-event")).toHaveLength(2);
     // La semana siguiente tarda: su respuesta queda pendiente.
-    let soltar: (v: unknown) => void = () => {};
+    const pendientes: ((v: unknown) => void)[] = [];
     mockApiFetch.mockImplementation(async (url: string) => {
       if (String(url).includes("/acceso")) return { status: 200, json: async () => ({ demo: false }) };
-      return new Promise((r) => { soltar = r; });
+      return new Promise((r) => { pendientes.push(r); });
     });
     await userEvent.setup().click(screen.getByRole("button", { name: "Semana siguiente" }));
     expect(screen.getByTestId("week-range")).toHaveTextContent("2–8 nov 2026");
     expect(screen.queryAllByTestId("cal-event")).toHaveLength(0);
     expect(screen.queryByTestId("smart-calendar-empty")).toBeNull();
     expect(screen.getByTestId("week-loading")).toHaveTextContent("Cargando la semana…");
-    await act(async () => { soltar({ status: 200, json: async () => ({ items: [], next_cursor: null }) }); });
+    await act(async () => { pendientes.forEach((r) => r({ status: 200, json: async () => ({ items: [], next_cursor: null }) })); });
     expect(await screen.findByTestId("smart-calendar-empty")).toBeInTheDocument();
     expect(screen.queryByTestId("week-loading")).toBeNull();
   });

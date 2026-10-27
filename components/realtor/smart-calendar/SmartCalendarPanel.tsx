@@ -46,7 +46,8 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
   const weekKey = monday.getTime();
   const dates = weekDates(monday);
 
-  const [real, setReal] = useState<readonly CalEvent[]>([]);
+  // Cada lista recuerda de qué semana es: al cambiar de semana no se pintan los eventos de la anterior bajo otras fechas.
+  const [real, setReal] = useState<{ week: number | null; list: readonly CalEvent[] }>({ week: null, list: [] });
   const [openVisits, setOpenVisits] = useState<Record<string, VisitMeta>>({});
   const [actionOk, setActionOk] = useState(false);
   const [reload, setReload] = useState(0);
@@ -54,7 +55,7 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
     if (access !== "ok" || demo) return;
     let alive = true;
     const from = new Date(weekKey);
-    fetchCalendarEvents(from).then((list) => { if (alive) setReal(list); });
+    fetchCalendarEvents(from).then((list) => { if (alive) setReal({ week: weekKey, list }); });
     fetchOpenVisits(from).then((m) => { if (alive) setOpenVisits(m); });
     return () => { alive = false; };
   }, [access, demo, reload, weekKey]);
@@ -71,7 +72,8 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
   const openDrawer = (from: HTMLElement) => { opener.current = from; setDrawer(true); };
 
   // Fuera de DEMO solo hay eventos del contrato; sin respuesta o lista vacía, «Sin datos todavía». DEMO solo en la semana actual.
-  const events: readonly CalEvent[] = demo ? (offset === 0 ? DEMO_EVENTS : []) : real;
+  const loadingWeek = !demo && real.week !== weekKey;
+  const events: readonly CalEvent[] = demo ? (offset === 0 ? DEMO_EVENTS : []) : loadingWeek ? [] : real.list;
   const visible = applyFilter(events, filter);
   const counts = countByKind(events);
   const nowText = hhmm(clock);
@@ -122,7 +124,9 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
         <p role="status" data-testid="visit-action-ok" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{lang === "es" ? "Cambio guardado." : "Change saved."}</p>
       ) : null}
 
-      {events.length === 0 ? (
+      {loadingWeek ? (
+        <p role="status" aria-busy="true" data-testid="week-loading" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{t.loadingWeek}</p>
+      ) : events.length === 0 ? (
         <div data-testid="smart-calendar-empty" style={CARD}>
           <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.empty}</h2>
           <p style={{ margin: "10px 0 0", color: RT.muted, fontSize: 14 }}>{t.emptyHint}</p>
