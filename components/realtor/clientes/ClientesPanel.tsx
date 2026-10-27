@@ -11,6 +11,7 @@ import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { AsignacionPanel } from "./AsignacionPanel";
 import { ContactForm } from "./ContactForm";
 import { FORM_COPY } from "./contact-copy";
+import { TextoRecortado } from "../TextoRecortado";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
@@ -173,7 +174,7 @@ export function ClientesPanel() {
                     <button type="button" data-testid="contact-row" aria-pressed={current?.id === c.id} onClick={() => setSelected(c.id)}
                       style={{ width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit", color: RT.ink, background: RT.white, borderRadius: 10, padding: 14,
                         border: `${current?.id === c.id ? 2 : 1}px solid ${current?.id === c.id ? RT.teal : RT.line}` }}>
-                      <strong style={{ display: "block", fontSize: 14 }}>{c.name}</strong>
+                      <TextoRecortado texto={c.name} style={{ fontSize: 14, fontWeight: 700 }} />
                       <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>{c.summary[lang]}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, background: RT.chipUpBg, color: RT.chipUpText, borderRadius: 999, padding: "3px 10px" }}>
                         {c.leadStatus ? STATUS_LABEL[lang][c.leadStatus] : t.none}
@@ -185,7 +186,7 @@ export function ClientesPanel() {
                   <li key={o.id}>
                     <Link href="/realtor/propietarios" data-testid="owner-row" aria-label={`${t.ownerRow}: ${o.name}`}
                       style={{ display: "block", textDecoration: "none", color: RT.ink, background: RT.white, borderRadius: 10, padding: 14, border: `1px solid ${RT.line}` }}>
-                      <strong style={{ display: "block", fontSize: 14 }}>{o.name}</strong>
+                      <TextoRecortado texto={o.name} style={{ fontSize: 14, fontWeight: 700 }} />
                       <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>
                         {OWNER_ROLE_LABEL[lang][o.ownerRole]} · {o.mandates.length} {t.mandates}
                       </span>

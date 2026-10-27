@@ -21,7 +21,7 @@ function RealSummary({ t, s }: { t: (typeof COPY)[Lang]; s: MarketingSummary }) 
     <div data-testid="marketing-ai-real" style={{ margin: "14px 0 0", display: "flex", flexDirection: "column", gap: 8 }}>
       {row(t.period, `${s.period.from} – ${s.period.to}`)}
       {known.map((m) => m.value === null
-        ? <div key={m.key} style={{ fontSize: 14 }}><span style={{ color: RT.muted }}>{t.metricLabels[m.key]}</span> <strong data-testid={`no-disponible-${m.key}`}>{t.noDisponible}</strong></div>
+        ? <div key={m.key} style={{ fontSize: 14 }}><span style={{ color: RT.muted }}>{t.metricLabels[m.key]}</span> <strong data-testid={`no-disponible-${m.key}`} data-quality="NO_DISPONIBLE">{t.noDisponible}</strong></div>
         : <div key={m.key}>{row(t.metricLabels[m.key], String(m.value), `metric-${m.key}`)}</div>)}
       <h3 style={{ margin: "8px 0 0", fontFamily: FONT_DISPLAY, fontSize: 18 }}>{t.spendTitle}</h3>
       <p style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.spendHint}</p>
