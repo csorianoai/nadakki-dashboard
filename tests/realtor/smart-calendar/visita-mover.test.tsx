@@ -45,9 +45,14 @@ const open = async () => {
   const ev = (await screen.findAllByTestId("cal-event")).find((e) => e.getAttribute("data-kind") === "visita")!;
   return ev;
 };
+/** F2: las acciones viven en el menú «…» de la tarjeta; Mover abre su formulario en un panel lateral de la misma tarjeta. */
+const action = async (ev: HTMLElement, testId: string, user = userEvent.setup()) => {
+  await user.click(within(ev).getByTestId("visit-menu"));
+  await user.click(within(ev).getByTestId(testId));
+  return user;
+};
 const move = async (ev: HTMLElement, start = "2026-11-03T10:00", end = "2026-11-03T10:45") => {
-  const user = userEvent.setup();
-  await user.click(within(ev).getByTestId("visit-move"));
+  const user = await action(ev, "visit-move");
   fireEvent.change(within(ev).getByLabelText("Nuevo inicio"), { target: { value: start } });
   fireEvent.change(within(ev).getByLabelText("Nuevo fin"), { target: { value: end } });
   await user.click(within(ev).getByTestId("visit-move-submit"));
@@ -89,7 +94,7 @@ describe("negativos: seguimiento", () => {
   it.each([[403, "denied"], [404, "notfound"], [409, "conflict"], [422, "invalid"]])("POST followup %i → %s", async (status, reason) => {
     serve({ status });
     const ev = await open();
-    await userEvent.setup().click(within(ev).getByTestId("followup-completed"));
+    await action(ev, "followup-completed");
     const err = await within(ev).findByTestId("visit-action-error");
     expect(err).toHaveAttribute("data-reason", reason);
     expect(screen.queryByTestId("visit-action-ok")).toBeNull();
@@ -100,6 +105,7 @@ describe("negativos: seguimiento", () => {
     serve();
     render(<SmartCalendarPanel />);
     await screen.findAllByTestId("cal-event");
+    expect(screen.queryByTestId("visit-menu")).toBeNull();
     expect(screen.queryByTestId("visit-move")).toBeNull();
     expect(screen.queryByTestId("followup-completed")).toBeNull();
   });
@@ -109,11 +115,13 @@ describe("negativos: seguimiento", () => {
     mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     const { unmount } = render(<SmartCalendarPanel />);
     await screen.findByTestId("demo-banner");
+    expect(screen.queryByTestId("visit-menu")).toBeNull();
     expect(screen.queryByTestId("visit-move")).toBeNull();
     unmount();
     mockApiFetch.mockResolvedValue({ status: 403 });
     render(<SmartCalendarPanel />);
     await waitFor(() => expect(screen.getByTestId("realtor-notice")).not.toHaveAttribute("data-reason", "comprobando"));
+    expect(screen.queryByTestId("visit-menu")).toBeNull();
     expect(screen.queryByTestId("visit-move")).toBeNull();
     expect(writes()).toHaveLength(0);
   });
@@ -151,13 +159,15 @@ describe("positivo: persiste tras recargar", () => {
   it("seguimiento: tras registrar, la visita pasa a final y deja de ofrecer acciones, también al recargar", async () => {
     serve();
     const ev = await open();
-    await userEvent.setup().click(within(ev).getByTestId("followup-completed"));
-    await waitFor(() => expect(screen.queryByTestId("followup-completed")).toBeNull());
+    await action(ev, "followup-completed");
+    await waitFor(() => expect(screen.queryByTestId("visit-menu")).toBeNull());
+    expect(screen.queryByTestId("followup-completed")).toBeNull();
     expect(JSON.parse(writes()[0][1].body)).toEqual({ outcome: "completed" });
     expect(writes()[0][1].method).toBe("POST");
     expect(String(writes()[0][0])).toBe(`/api/v1/realestate/calendar/events/${V1}/followup`);
     render(<SmartCalendarPanel />);
     await waitFor(() => expect(screen.getAllByTestId("cal-event").length).toBeGreaterThan(0));
+    expect(screen.queryByTestId("visit-menu")).toBeNull();
     expect(screen.queryByTestId("followup-completed")).toBeNull();
   });
 });
