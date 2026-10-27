@@ -3,7 +3,8 @@
 import { useState, type CSSProperties } from "react";
 import type { Lang } from "@/lib/realtor/smart-calendar/copy";
 import { createVisit, validVisit, type VisitForm as Fields } from "./visit";
-import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { RT } from "@/lib/realtor/tokens";
+import { CONTROL_BORDER } from "./styles";
 
 const VISIT_COPY = {
   es: {
@@ -21,13 +22,16 @@ const VISIT_COPY = {
 } as const;
 
 const EMPTY: Fields = { title: "", startsAt: "", endsAt: "", propertyId: "", contactId: "" };
-const INPUT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
-const LABEL: CSSProperties = { display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: RT.muted };
+const INPUT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${CONTROL_BORDER}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
+const LABEL: CSSProperties = { display: "flex", flexDirection: "column", gap: 4, fontSize: 13, fontWeight: 600, color: RT.ink };
 const BTN: CSSProperties = { minHeight: 40, padding: "0 16px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, border: `1px solid ${RT.ink}`, background: RT.ink, color: RT.white };
 
 type Status = "idle" | "ok" | "conflict" | "invalid" | "denied" | "error";
 
-/** Programar visita. Propiedad y contacto pueden venir de la ficha (`?property_id=&contact_id=`). */
+/**
+ * Programar visita, dentro del panel lateral del centro (el título lo pinta el panel). Propiedad y contacto pueden venir
+ * de la ficha (`?property_id=&contact_id=`).
+ */
 export function VisitForm({ lang, onCreated }: { lang: Lang; onCreated: () => void }) {
   const t = VISIT_COPY[lang];
   // Solo se monta tras comprobar el acceso (ya en el cliente): leer la URL aquí no desajusta la hidratación.
@@ -54,15 +58,14 @@ export function VisitForm({ lang, onCreated }: { lang: Lang; onCreated: () => vo
 
   return (
     <form data-testid="visit-form" aria-label={t.title} onSubmit={(e) => { e.preventDefault(); void send(false); }}
-      style={{ background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
-      <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 20 }}>{t.title}</h2>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+      style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <label style={LABEL}>{t.name}<input style={INPUT} value={f.title} onChange={set("title")} /></label>
         <label style={LABEL}>{t.start}<input style={INPUT} type="datetime-local" value={f.startsAt} onChange={set("startsAt")} /></label>
         <label style={LABEL}>{t.end}<input style={INPUT} type="datetime-local" value={f.endsAt} onChange={set("endsAt")} /></label>
         <label style={LABEL}>{t.property}<input style={INPUT} value={f.propertyId} onChange={set("propertyId")} /></label>
         <label style={LABEL}>{t.contact}<input style={INPUT} value={f.contactId} onChange={set("contactId")} /></label>
-        <button type="submit" data-testid="visit-submit" disabled={busy} style={BTN}>{t.submit}</button>
+        <button type="submit" data-testid="visit-submit" disabled={busy} style={{ ...BTN, alignSelf: "flex-start" }}>{t.submit}</button>
       </div>
       {status === "ok" ? <p role="status" data-testid="visit-ok" style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{t.ok}</p> : null}
       {status === "conflict" ? (

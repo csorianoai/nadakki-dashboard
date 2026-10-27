@@ -63,7 +63,11 @@ describe("pantalla", () => {
     expect(screen.queryByTestId("demo-banner")).toBeNull();
     expect(screen.queryByTestId("cal-event")).toBeNull();
     expect(screen.queryByTestId("kind-counts")).toBeNull();
-    expect(screen.getByTestId("smart-calendar-panel").textContent).not.toMatch(/\d/);
+    // Ninguna cifra fuera del rótulo de fechas de la semana (que no es un dato del backend).
+    const panel = screen.getByTestId("smart-calendar-panel").cloneNode(true) as HTMLElement;
+    panel.querySelector('[data-testid="week-range"]')?.remove();
+    expect(panel.textContent).not.toMatch(/\d/);
+    expect(screen.getByTestId("week-range").textContent).toMatch(/^\d{1,2}( \S+)?( \d{4})? ?– ?\d{1,2} \S+ \d{4}$/);
   });
 
   it.each([401, 403, 404, 500])("acceso denegado (%s): nada de la pantalla", async (status) => {
