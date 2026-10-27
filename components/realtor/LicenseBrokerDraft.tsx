@@ -96,7 +96,7 @@ export function LicenseBrokerDraft({
           : (agentStatus ? t.agentStates[agentStatus] ?? t.pending : t.pending)}</p>
       <p className={styles.note}>{isLicense ? t.noVerification : t.noApproval}</p>
       {!available && <p role={availability === "error" ? "alert" : "status"}>{
-        availability === "UNAVAILABLE" ? "UNAVAILABLE · " + t.unavailable : t[availability as "loading" | "empty" | "error"]
+        availability === "UNAVAILABLE" ? t.unavailable : t[availability as "loading" | "empty" | "error"]
       }{!isLicense && supervisionRequired === undefined ? " " + t.missingPack : ""}</p>}
       {available && <form noValidate onSubmit={e => { e.preventDefault(); setReviewed(validate()); }}>
         <div className={styles.fields}>

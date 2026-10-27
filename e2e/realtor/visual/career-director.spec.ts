@@ -38,7 +38,8 @@ test("positivo: DEMO con sus marcas, licencia, supervisión, metas y NO_DISPONIB
   await expect(page.getByTestId("card-licencia")).toContainText("SYNTH-SL-0100");
   await expect(page.getByTestId("card-supervision")).toContainText("555-0100");
   await expect(page.getByTestId("goal")).toHaveCount(2);
-  await expect(page.getByTestId("no-disponible-meta-cierres")).toContainText("NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-meta-cierres")).toHaveAttribute("data-quality", "NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-meta-cierres")).toContainText("Sin datos todavía");
   await expect(page.getByTestId("career-director")).toHaveAttribute("href", "/realtor/career-director");
   await expect(page.getByTestId("career-director")).not.toContainText("Próximamente");
   await page.getByTestId("lang-toggle").click();
@@ -82,7 +83,8 @@ test("datos reales (contrato C-RE-OLA3, registros SYNTH) sin DEMO: métricas, vo
   await expect(page.getByTestId("career-real")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("metric-closings_count")).toHaveText("3");
   await expect(page.getByTestId("metric-showings_count")).toHaveText("12");
-  await expect(page.getByTestId("no-disponible-active_listings")).toContainText("NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-active_listings")).toHaveAttribute("data-quality", "NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-active_listings")).toContainText("Sin datos todavía");
   await expect(page.getByTestId("volume-row")).toHaveCount(2);
   await expect(page.getByTestId("card-volumen")).toContainText("410000.00 USD");
   await expect(page.getByTestId("card-volumen")).toContainText("450000.00 ARS");

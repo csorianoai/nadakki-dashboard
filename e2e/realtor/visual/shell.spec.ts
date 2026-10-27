@@ -97,7 +97,9 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
     else await expect(page.getByTestId(id)).toContainText("Próximamente");
   }
 
-  await expect(page.getByTestId("shell-crumb")).toContainText("Mercado");
+  // Miga única (ROP-UX-QUICKFIX): la de la Suite nombra el centro y el armazón ya no pinta la suya.
+  await expect(page.getByTestId("barra-suite-migas")).toContainText("Mercado");
+  await expect(page.getByTestId("shell-crumb")).toHaveCount(0);
   await expect(page.getByTestId("view-agente")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("view-broker").click();
   await expect(page.getByTestId("view-broker")).toHaveAttribute("aria-pressed", "true");

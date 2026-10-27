@@ -11,6 +11,7 @@ import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { AsignacionesSection } from "./AsignacionesSection";
 import { PropiedadForm } from "./PropiedadForm";
 import { RealtorNotice } from "../RealtorNotice";
+import { TextoRecortado } from "../TextoRecortado";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
@@ -127,7 +128,7 @@ export function PropiedadesPanel() {
                         border: `${current?.id === p.id ? 2 : 1}px solid ${current?.id === p.id ? RT.teal : RT.line}` }}>
                       <span aria-hidden="true" style={{ display: "block", height: 96, background: RT.calloutBg }} />
                       <span style={{ display: "block", padding: "18px 18px 20px" }}>
-                        <strong style={{ display: "block", fontFamily: FONT_DISPLAY, fontSize: 18 }}>{p.address}</strong>
+                        <TextoRecortado texto={p.address} lineas={2} style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 700 }} />
                         <span style={{ display: "block", fontSize: 14, color: RT.muted, margin: "8px 0 10px" }}>
                           {TYPE_LABEL[lang][p.type]}{p.stage ? ` · ${STAGE_LABEL[lang][p.stage]}` : ""}
                         </span>

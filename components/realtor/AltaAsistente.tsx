@@ -169,7 +169,7 @@ export function AltaAsistente({ enviar, demo = isDemoAllowed(), encendido = isPa
           )}
           {paso === 3 && (
             <Tarjeta titulo={t.agendaTitulo}>
-              <p data-testid="agenda-unavailable" style={{ margin: 0, fontSize: 14 }}><strong>{t.unavailable}</strong>. {t.agendaNota}</p>
+              <p data-testid="agenda-unavailable" data-quality="UNAVAILABLE" style={{ margin: 0, fontSize: 14 }}><strong>{t.unavailable}</strong>. {t.agendaNota}</p>
               {resultado ? (
                 <ul style={{ marginTop: 12, fontSize: 14 }} aria-label={t.pendientes}>
                   {resultado.revisiones.map((r) => (
