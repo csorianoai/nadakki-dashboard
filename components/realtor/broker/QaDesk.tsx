@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { leerItem, leerItems, type Leida } from "@/lib/realtor/broker/client";
 import type { DeskItem } from "@/lib/realtor/broker/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
-import { qaDecidir, qaHistorial, type QaDecision, type QaEntrada, type QaMotivoFallo } from "./qa-client";
+import { QA_KINDS, qaDecidir, qaHistorial, type QaDecision, type QaEntrada, type QaMotivoFallo } from "./qa-client";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const BTN: CSSProperties = { minHeight: 40, padding: "0 16px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 };
@@ -14,18 +14,16 @@ const TXT = {
   title: "Revisión QA",
   intro: "Decisiones de prueba del piloto: no aprueban ni rechazan nada de verdad.",
   items: "Solicitudes", empty: "Sin solicitudes todavía", error: "No pudimos cargar las solicitudes.",
-  reason: "Motivo de tu decisión QA", approve: "Aprobar", ret: "Devolver", reject: "Rechazar (TEST)", sending: "Enviando…",
+  approve: "Aprobar", ret: "Devolver", reject: "Rechazar (TEST)", sending: "Enviando…",
   history: "Historial QA", noHistory: "Sin decisiones QA todavía", historyError: "No pudimos cargar el historial QA.",
   close: "Cerrar", noSubject: "Sin descripción",
-  required: "Escribe el motivo antes de decidir.",
   conflict: "Esta solicitud ya cambió de estado. Recarga la lista.",
   forbidden: "No puedes hacer decisiones QA sobre esta solicitud.",
   invalid: "La decisión QA no es válida. La solicitud sigue igual.",
   failed: "No pudimos registrar la decisión QA. Inténtalo de nuevo.",
 } as const;
-const DECISION_TXT: Record<QaDecision, string> = { approved: "Aprobada", returned: "Devuelta", rejected: "Rechazada (TEST)" };
-const AVISO: Record<"razon" | QaMotivoFallo, { id: string; txt: string }> = {
-  razon: { id: "qa-reason-required", txt: TXT.required },
+const DECISION_TXT: Record<QaDecision, string> = { approve: "Aprobada", return: "Devuelta", reject: "Rechazada (TEST)" };
+const AVISO: Record<QaMotivoFallo, { id: string; txt: string }> = {
   conflicto: { id: "qa-conflict", txt: TXT.conflict },
   prohibido: { id: "qa-forbidden", txt: TXT.forbidden },
   invalido: { id: "qa-invalid", txt: TXT.invalid },
@@ -33,21 +31,24 @@ const AVISO: Record<"razon" | QaMotivoFallo, { id: string; txt: string }> = {
   error: { id: "qa-error", txt: TXT.failed },
 };
 
-/** Solo se monta para el rol qa_reviewer (BrokerPanel decide). Todo lo que envía va marcado QA y sin tenant. */
+/** Solo se monta con qa_reviewer=true de /acceso (BrokerPanel decide). Solo revisiones; nada legal; sin tenant. */
 export function QaDesk() {
   const [items, setItems] = useState<readonly DeskItem[]>([]);
   const [lista, setLista] = useState<"cargando" | "ok" | "vacio" | "error">("cargando");
   const [abierto, setAbierto] = useState<{ id: string; item: Leida<DeskItem> | null } | null>(null);
   const [historial, setHistorial] = useState<Leida<readonly QaEntrada[]> | null>(null);
-  const [razon, setRazon] = useState("");
-  const [aviso, setAviso] = useState<"razon" | QaMotivoFallo | null>(null);
+  const [aviso, setAviso] = useState<QaMotivoFallo | null>(null);
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
     let vivo = true;
     leerItems({}).then((r) => {
       if (!vivo) return;
-      if (r.estado === "ok") { setItems(r.datos.items); setLista(r.datos.items.length ? "ok" : "vacio"); } else setLista(r.estado === "vacio" ? "vacio" : "error");
+      if (r.estado === "ok") {
+        const revisiones = r.datos.items.filter((i) => QA_KINDS.includes(i.kind as string));
+        setItems(revisiones);
+        setLista(revisiones.length ? "ok" : "vacio");
+      } else setLista(r.estado === "vacio" ? "vacio" : "error");
     });
     return () => { vivo = false; };
   }, []);
@@ -59,7 +60,6 @@ export function QaDesk() {
   const abrir = async (id: string) => {
     setAbierto({ id, item: null });
     setHistorial(null);
-    setRazon("");
     setAviso(null);
     void cargarHistorial(id);
     const item = await leerItem(id);
@@ -67,16 +67,15 @@ export function QaDesk() {
   };
 
   const decidir = async (id: string, d: QaDecision) => {
-    if (!razon.trim()) { setAviso("razon"); return; }
     setEnviando(true);
     setAviso(null);
-    const r = await qaDecidir(id, d, razon);
+    const r = await qaDecidir(id, d);
     setEnviando(false);
     if (r.estado !== "ok") { setAviso(r.motivo); return; }
-    const nuevo = r.datos;
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...nuevo } : i)));
-    setAbierto((a) => (a && a.id === id ? { id, item: { estado: "ok", datos: nuevo } } : a));
-    setRazon("");
+    // Sin efecto legal: el estado del item es el que devuelve el backend (sigue pending), no la decision QA.
+    const status = r.datos.item_status as DeskItem["status"];
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
+    setAbierto((a) => (a && a.id === id && a.item?.estado === "ok" ? { id, item: { estado: "ok", datos: { ...a.item.datos, status } } } : a));
     void cargarHistorial(id);
   };
 
@@ -103,23 +102,18 @@ export function QaDesk() {
       {abierto ? (
         <div data-testid="item-detail" role="dialog" aria-label={TXT.title} style={CARD}>
           <p style={{ margin: "0 0 10px", fontWeight: 700 }}>{abierto.item?.estado === "ok" ? abierto.item.datos.subject_label || TXT.noSubject : "…"}</p>
-          <label style={{ fontSize: 13, display: "flex", flexDirection: "column", gap: 6 }}>{TXT.reason}
-            <textarea data-testid="qa-reason" rows={3} value={razon} disabled={enviando} maxLength={500}
-              onChange={(e) => { setRazon(e.target.value); if (aviso === "razon") setAviso(null); }}
-              style={{ borderRadius: 8, border: `1px solid ${RT.lineStrong}`, padding: 10, fontFamily: "inherit" }} />
-          </label>
           {aviso ? <p role="alert" data-testid={AVISO[aviso].id} style={{ margin: "10px 0 0", fontSize: 13 }}>{AVISO[aviso].txt}</p> : null}
           <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-            <button type="button" data-testid="qa-approve" disabled={enviando} onClick={() => void decidir(abierto.id, "approved")} style={{ ...BTN, background: RT.ink, color: RT.white }}>{enviando ? TXT.sending : TXT.approve}</button>
-            <button type="button" data-testid="qa-return" disabled={enviando} onClick={() => void decidir(abierto.id, "returned")} style={BTN}>{TXT.ret}</button>
-            <button type="button" data-testid="qa-reject" disabled={enviando} onClick={() => void decidir(abierto.id, "rejected")} style={BTN}>{TXT.reject}</button>
+            <button type="button" data-testid="qa-approve" disabled={enviando} onClick={() => void decidir(abierto.id, "approve")} style={{ ...BTN, background: RT.ink, color: RT.white }}>{enviando ? TXT.sending : TXT.approve}</button>
+            <button type="button" data-testid="qa-return" disabled={enviando} onClick={() => void decidir(abierto.id, "return")} style={BTN}>{TXT.ret}</button>
+            <button type="button" data-testid="qa-reject" disabled={enviando} onClick={() => void decidir(abierto.id, "reject")} style={BTN}>{TXT.reject}</button>
           </div>
           <div data-testid="qa-history" style={{ marginTop: 16 }}>
             <h3 style={{ margin: "0 0 8px", fontSize: 16 }}>{TXT.history}</h3>
             {historial === null ? null : historial.estado === "error" ? <p role="alert">{TXT.historyError}</p>
               : historial.estado === "vacio" || historial.datos.length === 0 ? <p style={{ color: RT.muted }}>{TXT.noHistory}</p> : (
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14 }}>
-                  {historial.datos.map((e, n) => <li key={`${e.decided_at}-${n}`}>{DECISION_TXT[e.decision] ?? e.decision} · {e.reason} · {e.decided_at.slice(0, 10)}</li>)}
+                  {historial.datos.map((e, n) => <li key={`${e.at}-${n}`}>{DECISION_TXT[e.qa_decision] ?? e.qa_decision} · {String(e.at).slice(0, 10)}</li>)}
                 </ul>
               )}
           </div>
