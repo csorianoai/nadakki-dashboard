@@ -42,7 +42,7 @@ describe("QA del broker: negativos primero", () => {
     ["un rol llamado qa_reviewer no basta", ["qa_reviewer"], false],
   ] as const)("%s: sin panel QA, aviso sin-acceso y ninguna peticion qa-*", async (_n, roles, qa) => {
     montar({ roles: [...roles], qa });
-    await waitFor(() => expect(screen.getByTestId("realtor-notice")).toHaveAttribute("data-reason", "sin-acceso"));
+    expect(await screen.findByTestId("realtor-notice")).toHaveAttribute("data-reason", "sin-acceso");
     expect(screen.queryByTestId("qa-panel")).toBeNull();
     expect(screen.queryByTestId("qa-label")).toBeNull();
     expect(llamo(/qa-/)).toBe(false);
