@@ -84,6 +84,8 @@ describe("móvil: el selector de tenant (y el de contexto del superadmin) siguen
     expect(mas).toHaveAttribute("aria-expanded", "true");
     const panel = screen.getByTestId("barra-mas-panel");
     expect(mas).toHaveAttribute("aria-controls", panel.id);
+    // «Más» está en el borde derecho: entre md y lg el panel se ancla a la derecha (a 768 px, anclado a la izquierda llegaba a 817).
+    expect(clases(panel)).toEqual(expect.arrayContaining(["md:left-auto", "md:right-0"]));
     expect(within(panel).getByTestId("tenant-switcher")).toHaveTextContent("Soriano Realty");
   });
 

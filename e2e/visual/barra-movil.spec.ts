@@ -70,13 +70,15 @@ for (const ancho of ANCHOS) {
       expect(Math.abs(centro(ultima) - centro(b))).toBeLessThanOrEqual(2);
       expect(Math.abs(centro(ultima) - centro(inicio))).toBeLessThanOrEqual(2);
 
-      // Atrás y Adelante visibles y dentro.
-      await expect(page.getByTestId("barra-suite-atras")).toBeVisible();
-      await expect(page.getByTestId("barra-suite-adelante")).toBeVisible();
+      // Atrás y Adelante desde md (768); a 390 no caben con los objetivos táctiles de 44 px (app/globals.css).
+      for (const id of ["barra-suite-atras", "barra-suite-adelante"]) {
+        if (ancho >= 768) await expect(page.getByTestId(id)).toBeVisible();
+        else await expect(page.getByTestId(id)).toBeHidden();
+      }
 
       const mas = page.getByRole("button", { name: "Más opciones de la barra" });
-      if (ancho < 768) {
-        // Móvil: el selector de tenant se alcanza por «Más» y su panel no sale del viewport.
+      if (ancho < 1024) {
+        // Por debajo de lg: el selector de tenant se alcanza por «Más» y su panel no sale del viewport.
         await mas.click();
         const panel = page.getByTestId("barra-mas-panel");
         await expect(panel).toBeVisible();
