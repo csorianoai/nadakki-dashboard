@@ -24,7 +24,8 @@ const fecha = (iso: string | null | undefined, lang: Lang) => {
 
 /**
  * Fail-closed: solo con interruptor y 200 de /acceso. broker_supervisor -> bandeja legal de siempre. Si no, el panel
- * QA solo con qa_reviewer=true de /acceso (regla del servidor; no es un rol); cualquier otra cosa -> sin-acceso.
+ * QA solo con qa_reviewer=true de /acceso (regla del servidor; no es un rol); cualquier otra cosa -> sin-rol-broker (tiene
+ * Real Estate, le falta el rol de broker: no se le dice que no tiene acceso a Real Estate).
  */
 export function BrokerPanel() {
   const { state, roles, demoActive } = useRealtorAccessInfo();
@@ -41,7 +42,7 @@ function QaOSinAcceso() {
     return () => { vivo = false; };
   }, []);
   if (qa === null) return <RealtorNotice reason="comprobando" />;
-  return qa ? <QaDesk /> : <RealtorNotice reason="sin-acceso" />;
+  return qa ? <QaDesk /> : <RealtorNotice reason="sin-rol-broker" />;
 }
 
 const AVISO_ID = { razon: "decision-reason-required", conflicto: "decision-conflict", prohibido: "decision-forbidden", invalido: "decision-invalid", "no-existe": "decision-error", error: "decision-error" } as const;

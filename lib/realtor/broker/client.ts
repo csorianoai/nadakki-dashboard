@@ -8,12 +8,27 @@ export const BASE_BROKER = "/api/v1/realestate/broker-desk";
 export type Leida<T> = { estado: "ok"; datos: T } | { estado: "vacio" } | { estado: "error" };
 export type Enviar = (ruta: string, init?: RequestInit) => Promise<Response>;
 
-async function leer<T>(ruta: string, enviar: Enviar): Promise<Leida<T>> {
+/**
+ * Forma mínima de cada respuesta (ROP-UX-ROUTING): un 200 que no la cumple es «error», no datos. Antes se confiaba en el
+ * cuerpo (`as T`) y un 200 incompleto reventaba la pantalla (TypeError al leer `.length` o `pending_by_kind`).
+ */
+const esObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const esTxt = (v: unknown) => typeof v === "string";
+export const esMesa = (v: unknown): v is Desk => esObj(v) && esTxt(v.id) && esTxt(v.brokerage_id) && esTxt(v.created_at);
+export const esItem = (v: unknown): v is DeskItem => esObj(v) && esTxt(v.id) && esTxt(v.kind) && esTxt(v.status) && esTxt(v.created_at);
+export const esResumen = (v: unknown): v is Summary =>
+  esObj(v) && esTxt(v.brokerage_status) && esObj(v.pending_by_kind) && esObj(v.agents_by_status) &&
+  Array.isArray(v.supervised_agent_counts) && v.supervised_agent_counts.every((s) => esObj(s) && typeof s.active_supervised === "number");
+export const esPagina = (v: unknown): v is ItemsPage =>
+  esObj(v) && Array.isArray(v.items) && v.items.every(esItem) && (v.next_cursor === null || esTxt(v.next_cursor));
+
+async function leer<T>(ruta: string, enviar: Enviar, forma: (v: unknown) => v is T): Promise<Leida<T>> {
   try {
     const res = await enviar(ruta, { method: "GET", cache: "no-store" });
     if (res.status === 404 || res.status === 503) return { estado: "vacio" };
     if (res.status !== 200) return { estado: "error" };
-    return { estado: "ok", datos: (await res.json()) as T };
+    const cuerpo: unknown = await res.json();
+    return forma(cuerpo) ? { estado: "ok", datos: cuerpo } : { estado: "error" };
   } catch {
     return { estado: "error" };
   }
@@ -30,10 +45,10 @@ export function rutaItems(f: Filtros): string {
   return `${BASE_BROKER}/items?${q.toString()}`;
 }
 
-export const leerMesa = (e: Enviar = apiFetch) => leer<Desk>(BASE_BROKER, e);
-export const leerResumen = (e: Enviar = apiFetch) => leer<Summary>(`${BASE_BROKER}/summary`, e);
-export const leerItems = (f: Filtros, e: Enviar = apiFetch) => leer<ItemsPage>(rutaItems(f), e);
-export const leerItem = (id: string, e: Enviar = apiFetch) => leer<DeskItem>(`${BASE_BROKER}/items/${encodeURIComponent(id)}`, e);
+export const leerMesa = (e: Enviar = apiFetch) => leer<Desk>(BASE_BROKER, e, esMesa);
+export const leerResumen = (e: Enviar = apiFetch) => leer<Summary>(`${BASE_BROKER}/summary`, e, esResumen);
+export const leerItems = (f: Filtros, e: Enviar = apiFetch) => leer<ItemsPage>(rutaItems(f), e, esPagina);
+export const leerItem = (id: string, e: Enviar = apiFetch) => leer<DeskItem>(`${BASE_BROKER}/items/${encodeURIComponent(id)}`, e, esItem);
 
 export type Decision = "approved" | "rejected";
 export type MotivoFallo = "prohibido" | "no-existe" | "conflicto" | "invalido" | "error";
@@ -51,7 +66,7 @@ export async function decidir(id: string, decision: Decision, reason: string, en
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ decision, reason: motivo }),
     });
-    if (res.status === 200) return { estado: "ok", datos: (await res.json()) as DeskItem };
+    if (res.status === 200) { const d: unknown = await res.json(); return esItem(d) ? { estado: "ok", datos: d } : { estado: "error", motivo: "error" }; }
     return { estado: "error", motivo: MOTIVO[res.status] ?? "error" };
   } catch {
     return { estado: "error", motivo: "error" };

@@ -25,6 +25,8 @@ export const ACCESS_NOTICE = {
   apagado: "Real Estate no está activado en este entorno.",
   comprobando: "Comprobando tu acceso a Real Estate…",
   "sin-acceso": "Tu usuario no tiene acceso a Real Estate en esta organización. Pide acceso a un administrador.",
+  // Tiene Real Estate, pero no el rol de broker (ROP-UX-ROUTING): no decir «sin acceso a Real Estate».
+  "sin-rol-broker": "La Bandeja del broker es solo para el broker del brokerage. Tu rol en Real Estate no la incluye; si la necesitas, pide el rol de broker a un administrador.",
   error: "No se pudo comprobar tu acceso a Real Estate (error de red o del servidor). Vuelve a intentarlo en unos minutos.",
 } as const;
 
