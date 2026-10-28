@@ -73,8 +73,16 @@ for (const ancho of ANCHOS) {
       const visible = Math.min(ultima.x + ultima.width, lista.x + lista.width) - Math.max(ultima.x, lista.x);
       expect(visible, `última miga visible a ${ancho} px`).toBeGreaterThanOrEqual(40);
       const centro = (c: { y: number; height: number }) => c.y + c.height / 2;
-      expect(Math.abs(centro(ultima) - centro(b))).toBeLessThanOrEqual(2);
-      expect(Math.abs(centro(ultima) - centro(inicio))).toBeLessThanOrEqual(2);
+      // Se centra el TEXTO de la miga (su Range), no la caja del enlace: con el mínimo global de 44 px la caja medía 44 px en
+      // una barra de 40 y quedaba «centrada» mientras el texto iba pegado arriba (medido: texto en y=9, barra en y=20).
+      const texto = await page.getByTestId("barra-suite-migas").getByRole("link").last().evaluate((a) => {
+        const r = document.createRange();
+        r.selectNodeContents(a);
+        const t = r.getBoundingClientRect();
+        return { y: t.top, height: t.height };
+      });
+      expect(Math.abs(centro(texto) - centro(b)), `texto de la miga a ${ancho} px`).toBeLessThanOrEqual(2);
+      expect(Math.abs(centro(texto) - centro(inicio)), `texto de la miga frente al logotipo/Inicio a ${ancho} px`).toBeLessThanOrEqual(2);
 
       // Atrás y Adelante desde md (768); a 390 no caben con los objetivos táctiles de 44 px (app/globals.css).
       for (const id of ["barra-suite-atras", "barra-suite-adelante"]) {
