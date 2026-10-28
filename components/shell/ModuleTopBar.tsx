@@ -26,7 +26,7 @@ export type ModuleTopBarProps = {
 };
 
 /**
- * «Más opciones de la barra» (solo por debajo de md): lo que en escritorio va en la barra y en móvil no cabe, el selector de
+ * «Más opciones de la barra» (solo por debajo de lg): lo que en escritorio va en la barra y en móvil no cabe, el selector de
  * tenant y, solo para superadmin, el selector Empresa/Vista. Reutiliza esos mismos componentes; se cierra con Escape (y
  * devuelve el foco), con un clic fuera o al abrir otro desplegable (que hace ese mismo clic fuera).
  */
@@ -56,7 +56,7 @@ function MenuMas({ esSuperadmin }: { esSuperadmin: boolean }) {
   }, [abierto]);
 
   return (
-    <div ref={raiz} className="relative shrink-0 md:hidden">
+    <div ref={raiz} className="relative shrink-0 lg:hidden">
       <button
         ref={boton}
         type="button"
@@ -84,7 +84,7 @@ function MenuMas({ esSuperadmin }: { esSuperadmin: boolean }) {
 /**
  * Barra superior COMÚN de todos los módulos: BarraSuite (logotipo e Inicio, Atrás/Adelante, migas) más el
  * selector de módulos, Ctrl+K, notificaciones, el hueco del selector Empresa/Vista (solo superadmin) y el
- * menú de usuario. Reutiliza los componentes existentes; no crea otros. En móvil (<md) el selector de tenant y el
+ * menú de usuario. Reutiliza los componentes existentes; no crea otros. Por debajo de lg el selector de tenant y el
  * de Empresa/Vista pasan al menú «Más» (solo si hay tenant o es superadmin) y el menú de usuario va compacto.
  *
  * ROP-UX-F3-FIX: las acciones llevan TOKENS_PANEL_BARRA (los paneles de tenant y usuario se pintan con tokens `--forge-*` que
@@ -124,7 +124,7 @@ export function ModuleTopBar({ modulos, actual, onMenu, menuAbierto, conSesion, 
       derecha={
         conSesion ? (
           <div ref={acciones} className={CLASES.acciones} style={TOKENS_PANEL_BARRA} data-testid="barra-acciones">
-            <button type="button" data-testid="barra-buscar" aria-label="Buscar una pantalla (Ctrl+K)" title="Buscar una pantalla (Ctrl+K)" onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCADOR))} className={`${CLASES.botonIcono} md:w-auto md:px-2`}>
+            <button type="button" data-testid="barra-buscar" aria-label="Buscar una pantalla (Ctrl+K)" title="Buscar una pantalla (Ctrl+K)" onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCADOR))} className={`${CLASES.botonIcono} lg:w-auto lg:px-2`}>
               <Search aria-hidden className="h-4 w-4" />
               <kbd className={CLASES.tecla}>Ctrl K</kbd>
             </button>
@@ -132,11 +132,11 @@ export function ModuleTopBar({ modulos, actual, onMenu, menuAbierto, conSesion, 
               <Bell aria-hidden className="h-4 w-4" />
             </Link>
             {esSuperadmin ? (
-              <div data-testid="hueco-contexto" className="hidden md:block md:empty:hidden">
+              <div data-testid="hueco-contexto" className="hidden lg:block lg:empty:hidden">
                 <SelectorContexto />
               </div>
             ) : null}
-            <div className="hidden md:block"><TenantSwitcher /></div>
+            <div className="hidden lg:block"><TenantSwitcher /></div>
             {hayMas ? <MenuMas esSuperadmin={esSuperadmin} /> : null}
             {/* UserMenu (forge) trae px-3 py-1.5 y un avatar de 32 px: aquí se compacta su botón para que no se corte en móvil. */}
             <div data-testid="barra-usuario" className="flex shrink-0 items-center [&>div>button]:px-1 [&>div>button]:py-0 md:[&>div>button]:px-3">

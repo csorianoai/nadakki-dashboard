@@ -65,9 +65,10 @@ const BOTON =
 const BOTON_INICIO = `${BOTON.replace("px-2", "w-7 justify-center px-0")} sm:w-auto sm:px-2`;
 /**
  * Atrás/Adelante: borde zinc-500 (#71717a) sobre la barra zinc-950 (#09090b) ≈ 4,2:1 (WCAG 1.4.11 pide ≥3:1). Deshabilitado:
- * borde discontinuo y atenuado, distinto del activo sin depender solo del color.
+ * borde discontinuo y atenuado, distinto del activo sin depender solo del color. Solo desde md: a 390 px, con el mínimo de
+ * 44 px por botón de app/globals.css, no caben junto a las acciones (en móvil queda el gesto «atrás» del sistema).
  */
-const BOTON_HISTORIAL = `${BOTON.replace("px-2", "w-7 justify-center px-0")} border border-zinc-500 disabled:border-dashed disabled:border-zinc-700`;
+const BOTON_HISTORIAL = `${BOTON.replace("inline-flex", "hidden md:inline-flex").replace("px-2", "w-7 justify-center px-0")} border border-zinc-500 disabled:border-dashed disabled:border-zinc-700`;
 
 export type BarraSuiteProps = {
   /** Antes del logotipo (botón del menú en móvil). */

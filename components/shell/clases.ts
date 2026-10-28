@@ -20,7 +20,7 @@ export const CLASES = {
   desplegable: "absolute left-0 top-full z-[70] mt-1 w-64 rounded-md border border-zinc-800 bg-zinc-950 p-1 shadow-xl max-md:fixed max-md:inset-x-2 max-md:top-10 max-md:w-auto",
   desplegableItem: "flex items-center gap-2 rounded px-2 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400",
   desplegableActivo: "bg-zinc-800 text-white",
-  tecla: "hidden rounded border border-zinc-700 px-1 text-[10px] text-zinc-400 md:inline",
+  tecla: "hidden rounded border border-zinc-700 px-1 text-[10px] text-zinc-400 lg:inline",
   acciones: "ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1",
 
   /** Menú lateral del módulo. */
