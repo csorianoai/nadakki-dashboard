@@ -59,13 +59,20 @@ describe("formulario Programar visita", () => {
     fireEvent.change(screen.getByLabelText("Inicio"), { target: { value: FORM.startsAt } });
     fireEvent.change(screen.getByLabelText("Fin"), { target: { value: FORM.endsAt } });
   };
+  /** F2: el formulario vive en el panel lateral que abre el botón «Programar visita» de la cabecera. */
+  const openForm = async () => {
+    await userEvent.setup().click(await screen.findByTestId("visit-open"));
+    return screen.findByTestId("visit-form");
+  };
 
   it("crea la visita con 201: un POST con las puertas reales, refresca y avisa", async () => {
     route({ status: 201 });
     window.history.pushState({}, "", `/realtor/smart-calendar?property_id=${P1}&contact_id=${C1}`);
     render(<SmartCalendarPanel />);
+    // Con propiedad y contacto en la URL (viene de una ficha) el panel lateral se abre solo.
     const form = await screen.findByTestId("visit-form");
     expect(form).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toContainElement(form);
     expect(screen.getByLabelText("Propiedad")).toHaveValue(P1);
     expect(screen.getByLabelText("Contacto")).toHaveValue(C1);
     const user = userEvent.setup();
@@ -84,7 +91,7 @@ describe("formulario Programar visita", () => {
   it("409 solape: pide confirmar y solo reintenta con allow_overlap tras confirmar", async () => {
     route({ status: 409 });
     render(<SmartCalendarPanel />);
-    await screen.findByTestId("visit-form");
+    await openForm();
     const user = userEvent.setup();
     await user.type(screen.getByLabelText("Propiedad"), P1);
     await user.type(screen.getByLabelText("Contacto"), C1);
@@ -101,7 +108,7 @@ describe("formulario Programar visita", () => {
   it("422: muestra el error y no marca éxito; datos incompletos ni llegan al backend", async () => {
     route({ status: 422 });
     render(<SmartCalendarPanel />);
-    await screen.findByTestId("visit-form");
+    await openForm();
     const user = userEvent.setup();
     await user.click(screen.getByTestId("visit-submit"));
     expect(screen.getByTestId("visit-error")).toBeInTheDocument();
@@ -121,11 +128,13 @@ describe("formulario Programar visita", () => {
     const { unmount } = render(<SmartCalendarPanel />);
     await screen.findByTestId("demo-banner");
     expect(screen.queryByTestId("visit-form")).toBeNull();
+    expect(screen.queryByTestId("visit-open")).toBeNull();
     unmount();
     mockApiFetch.mockResolvedValue({ status: 403 });
     render(<SmartCalendarPanel />);
     await waitFor(() => expect(screen.getByTestId("realtor-notice")).not.toHaveAttribute("data-reason", "comprobando"));
     expect(screen.queryByTestId("visit-form")).toBeNull();
+    expect(screen.queryByTestId("visit-open")).toBeNull();
     expect(posts()).toHaveLength(0);
   });
 });

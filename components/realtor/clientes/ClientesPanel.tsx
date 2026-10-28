@@ -8,8 +8,10 @@ import { DEMO_CONTACTS, DEMO_JOURNEYS, DEMO_OWNERS } from "@/lib/realtor/cliente
 import { applyFilters, countByStatus, inKind, maskEmail, maskPhone, showsOwners } from "@/lib/realtor/clientes/logic";
 import { KINDS, LEAD_STATUSES, NO_FILTERS, ORIGINS, ROLES, type ClientFilters, type Contact, type ContactKind } from "@/lib/realtor/clientes/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { AsignacionPanel } from "./AsignacionPanel";
 import { ContactForm } from "./ContactForm";
 import { FORM_COPY } from "./contact-copy";
+import { TextoRecortado } from "../TextoRecortado";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
@@ -172,7 +174,7 @@ export function ClientesPanel() {
                     <button type="button" data-testid="contact-row" aria-pressed={current?.id === c.id} onClick={() => setSelected(c.id)}
                       style={{ width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit", color: RT.ink, background: RT.white, borderRadius: 10, padding: 14,
                         border: `${current?.id === c.id ? 2 : 1}px solid ${current?.id === c.id ? RT.teal : RT.line}` }}>
-                      <strong style={{ display: "block", fontSize: 14 }}>{c.name}</strong>
+                      <TextoRecortado texto={c.name} style={{ fontSize: 14, fontWeight: 700 }} />
                       <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>{c.summary[lang]}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, background: RT.chipUpBg, color: RT.chipUpText, borderRadius: 999, padding: "3px 10px" }}>
                         {c.leadStatus ? STATUS_LABEL[lang][c.leadStatus] : t.none}
@@ -184,7 +186,7 @@ export function ClientesPanel() {
                   <li key={o.id}>
                     <Link href="/realtor/propietarios" data-testid="owner-row" aria-label={`${t.ownerRow}: ${o.name}`}
                       style={{ display: "block", textDecoration: "none", color: RT.ink, background: RT.white, borderRadius: 10, padding: 14, border: `1px solid ${RT.line}` }}>
-                      <strong style={{ display: "block", fontSize: 14 }}>{o.name}</strong>
+                      <TextoRecortado texto={o.name} style={{ fontSize: 14, fontWeight: 700 }} />
                       <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>
                         {OWNER_ROLE_LABEL[lang][o.ownerRole]} · {o.mandates.length} {t.mandates}
                       </span>
@@ -209,6 +211,7 @@ export function ClientesPanel() {
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}
               {current && !demo ? <button type="button" data-testid="contact-edit" style={{ ...btn, marginTop: 14 }} onClick={() => { setSaved(false); setForm("edit"); }}>{ft.edit}</button> : null}
               {current && !demo ? <Link href={`/realtor/operaciones?contact_id=${encodeURIComponent(current.id)}`} data-testid="contact-abrir-operacion" style={{ ...btn, marginTop: 14, marginLeft: 10, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Abrir operación</Link> : null}
+              {current && !demo ? <AsignacionPanel contactId={current.id} lang={lang} /> : null}
               {current && DEMO_JOURNEYS[current.id] ? <Journey id={current.id} lang={lang} /> : null}
               <p style={{ margin: "16px 0 0", fontSize: 12, color: RT.muted }}>{t.masked}</p>
             </div>

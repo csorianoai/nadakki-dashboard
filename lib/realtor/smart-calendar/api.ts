@@ -51,12 +51,19 @@ export function mapEvents(items: readonly unknown[]): CalEvent[] {
     if (!id || !title || !kind || !startsAt || !tz || !STATUSES.has(String(e.status))) continue;
     const wall = wallClock(startsAt, tz);
     if (!wall) continue;
-    out.push({ id, day: wall.day, start: e.all_day === true ? "00:00" : wall.start, title: { es: title, en: title }, kind, place: "" });
+    const allDay = e.all_day === true;
+    const endsAt = str(e.ends_at);
+    const endWall = !allDay && endsAt ? wallClock(endsAt, tz) : null;
+    // El contrato solo trae property_id/contact_id (uuid), sin nombre ni dirección: `place` queda vacío, no se inventa.
+    out.push({
+      id, day: wall.day, start: allDay ? "00:00" : wall.start, ...(endWall ? { end: endWall.start } : {}),
+      title: { es: title, en: title }, kind, place: "",
+    });
   }
   return out;
 }
 
-/** Sigue next_cursor hasta MAX_PAGES. 404, 503, cuerpo ilegible o fallo de red → lista vacía («Sin datos todavía»). */
+/** `now` es cualquier fecha de la semana que se quiere ver (la navegación pasa el lunes de la semana elegida). Sigue next_cursor hasta MAX_PAGES. 404, 503, cuerpo ilegible o fallo de red → lista vacía («Sin datos todavía»). */
 export async function fetchCalendarEvents(now: Date = new Date()): Promise<CalEvent[]> {
   const { from, to } = weekRange(now);
   const items: unknown[] = [];

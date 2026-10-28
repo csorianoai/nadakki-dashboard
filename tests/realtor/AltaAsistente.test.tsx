@@ -52,7 +52,10 @@ describe("AltaAsistente", () => {
     expect(screen.queryByTestId("badge-demo")).toBeNull();
     llenar();
     fireEvent.click(screen.getByText("Enviar alta"));
-    expect(await screen.findByTestId("agenda-unavailable")).toHaveTextContent("UNAVAILABLE");
+    const agenda = await screen.findByTestId("agenda-unavailable");
+    expect(agenda).toHaveAttribute("data-quality", "UNAVAILABLE");
+    expect(agenda).toHaveTextContent("Todavía no disponible");
+    expect(agenda.textContent).not.toMatch(/UNAVAILABLE/);
     expect(screen.getByText(/Licencia verificada: Pendiente/)).toBeInTheDocument();
   });
 

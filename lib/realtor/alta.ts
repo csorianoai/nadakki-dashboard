@@ -4,7 +4,8 @@ import { textos, type Idioma } from "@/lib/realtor/textos";
 /** Tipos y rutas de C-RE-ALTA 1.0.0 (congelado). El tenant NUNCA viaja desde aqui. */
 export const BASE_ALTA = "/api/v1/realestate/alta";
 
-export type Perfil = { owner_person_id: string; jurisdiction_code: string; default_language: string; kind: "agent" | "brokerage" };
+/** `timezone` no está en C-RE-ALTA 1.0.0: si el backend lo añade, lib/realtor/tenant-tz.ts lo usa antes que jurisdiction_code. */
+export type Perfil = { owner_person_id: string; jurisdiction_code: string; default_language: string; kind: "agent" | "brokerage"; timezone?: string };
 export type Revision = { check: string; passed: boolean };
 export type Resultado = {
   agente_id: string; marca_id: string; revisiones: Revision[]; demo: boolean;

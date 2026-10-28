@@ -97,7 +97,9 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
     else await expect(page.getByTestId(id)).toContainText("Próximamente");
   }
 
-  await expect(page.getByTestId("shell-crumb")).toContainText("Mercado");
+  // Miga única (ROP-UX-QUICKFIX): la de la Suite nombra el centro y el armazón ya no pinta la suya.
+  await expect(page.getByTestId("barra-suite-migas")).toContainText("Mercado");
+  await expect(page.getByTestId("shell-crumb")).toHaveCount(0);
   await expect(page.getByTestId("view-agente")).toHaveAttribute("aria-pressed", "true");
   await page.getByTestId("view-broker").click();
   await expect(page.getByTestId("view-broker")).toHaveAttribute("aria-pressed", "true");
@@ -193,4 +195,43 @@ test("captura a 1440×900 de /realtor/demand-radar frente a la referencia DL10A"
   }, { a: shot.toString("base64"), b: readFileSync(REF).toString("base64") });
   console.log(`DIFF_MEDIA=${(diff * 100).toFixed(2)}%`);
   expect(diff).toBeLessThanOrEqual(THRESHOLD);
+});
+
+// ROP-UX-NAV-MOVIL: por debajo de 768 px la barra de centros es un cajón; a 768 px sigue la barra fija.
+test("a 390 px: sin barra fija, el panel ocupa el ancho, sin scroll horizontal, y el cajón abre y cierra", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await sesion(page, 200, [BROKER_ROLE]);
+  await page.goto("/realtor/demand-radar");
+  const boton = page.getByRole("button", { name: "Menú de centros" });
+  await expect(boton).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("shell-sidebar")).toHaveCount(0);
+  await expect(page.getByTestId("demand-radar-panel")).toBeVisible();
+  const ancho = await page.evaluate(() => ({
+    vista: document.documentElement.clientWidth,
+    pagina: document.documentElement.scrollWidth,
+    main: document.querySelector("main#contenido")!.getBoundingClientRect().width,
+    panel: document.querySelector('[data-testid="demand-radar-panel"]')!.getBoundingClientRect().width,
+  }));
+  expect(ancho.pagina).toBeLessThanOrEqual(ancho.vista);
+  expect(ancho.main).toBeGreaterThanOrEqual(ancho.vista - 1);
+  expect(ancho.panel).toBeGreaterThanOrEqual(ancho.vista - 48);
+
+  await boton.click();
+  const cajon = page.getByRole("dialog", { name: "Menú de centros" });
+  await expect(cajon).toBeVisible();
+  await expect(cajon.getByTestId("shell-sidebar")).toBeVisible();
+  await expect(cajon.getByTestId("center-bandeja-broker")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(cajon).toHaveCount(0);
+  await expect(boton).toBeFocused();
+});
+
+test("a 768 px sigue la barra fija de 288 px y no hay botón de cajón", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await sesion(page, 200);
+  await page.goto("/realtor/demand-radar");
+  const side = page.getByTestId("shell-sidebar");
+  await expect(side).toBeVisible({ timeout: 30_000 });
+  expect((await side.boundingBox())!.width).toBe(288);
+  await expect(page.getByRole("button", { name: "Menú de centros" })).toHaveCount(0);
 });

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { fetchMiDia, type MiDia } from "@/lib/realtor/mi-dia/api";
-import { blockerText, COPY, lookup, TENANT_TZ, todayText, type Lang, type MiDiaCopy } from "@/lib/realtor/mi-dia/copy";
+import { blockerText, COPY, greetingFor, lookup, todayText, type Lang } from "@/lib/realtor/mi-dia/copy";
 import { DEMO_DESK, DEMO_LEADS, DEMO_LISTINGS } from "@/lib/realtor/mi-dia/demo";
+import { useTenantTimeZone } from "@/lib/realtor/tenant-tz";
 import { RealtorNotice } from "../RealtorNotice";
+import { TextoRecortado } from "../TextoRecortado";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const card = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 10, padding: 20 } as const;
@@ -37,11 +39,14 @@ function Section({ id, title, count, children }: { id: string; title: string; co
   );
 }
 
-function NoDisponible({ t }: { t: MiDiaCopy }) {
+/** Sección sin fuente: texto humano y, si hay dónde, una acción dentro de Realtor. data-quality conserva el estado del contrato. */
+function NoDisponible({ texto, cta, href }: { texto: string; cta?: string; href?: string }) {
   return (
-    <p data-testid="mi-dia-no-disponible" style={{ margin: 0, fontSize: 14, color: RT.muted }}>
-      <strong style={{ background: RT.page, border: `1px solid ${RT.lineStrong}`, borderRadius: 6, padding: "2px 8px", marginRight: 8, fontSize: 12 }}>{t.unavailable}</strong>
-      {t.unavailableNote}
+    <p data-testid="mi-dia-no-disponible" data-quality="NO_DISPONIBLE" style={{ margin: 0, fontSize: 15, color: RT.muted, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 14px" }}>
+      <span>{texto}</span>
+      {cta && href ? (
+        <Link href={href} style={{ display: "inline-flex", alignItems: "center", minHeight: 44, color: RT.teal, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3 }}>{cta}</Link>
+      ) : null}
     </p>
   );
 }
@@ -61,8 +66,8 @@ function Rows({ items }: { items: { id: string; main: string; sub: string }[] })
     <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
       {items.map((r) => (
         <li key={r.id} data-testid="mi-dia-row" style={{ border: `1px solid ${RT.line}`, borderLeft: `4px solid ${RT.teal}`, borderRadius: 8, padding: "10px 14px" }}>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>{r.main}</div>
-          <div style={{ fontSize: 13, color: RT.muted }}>{r.sub}</div>
+          <TextoRecortado texto={r.main} style={{ fontWeight: 700, fontSize: 15 }} />
+          <TextoRecortado texto={r.sub} style={{ fontSize: 13, color: RT.muted }} />
         </li>
       ))}
     </ul>
@@ -75,6 +80,8 @@ export function MiDiaPanel() {
   const broker = useBrokerView();
   const demo = demoActive;
   const [real, setReal] = useState<MiDia | null>(null);
+  // Fecha, saludo y horas en la zona del tenant (deducida del perfil); sin perfil, la del navegador.
+  const tz = useTenantTimeZone(access === "ok");
   useEffect(() => {
     if (access !== "ok" || demo) return;
     let alive = true;
@@ -84,7 +91,7 @@ export function MiDiaPanel() {
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
   const t = COPY[lang];
-  const date = todayText(t);
+  const date = todayText(t, tz);
   return (
     <section data-testid="mi-dia-panel" lang={lang} style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
@@ -100,7 +107,7 @@ export function MiDiaPanel() {
         </div>
       </div>
       <div>
-        <h1 style={{ margin: "10px 0 0", fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.greeting}</h1>
+        <h1 style={{ margin: "10px 0 0", fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{greetingFor(t, tz)}</h1>
         <p style={{ margin: "12px 0 0", maxWidth: 780, fontSize: 16, color: RT.muted }}>{t.intro}</p>
       </div>
       {demo ? (
@@ -134,18 +141,27 @@ export function MiDiaPanel() {
           id: l.lead_id,
           main: `${lookup(t.channels, l.channel, t.leadFallback)} · ${lookup(t.intents, l.intent, l.intent)}`,
           sub: `${t.waiting} ${Math.round(l.waiting_hours * 10) / 10}${t.hours}`,
-        }))} /> : demo ? <Rows items={DEMO_LEADS.map((l) => ({ id: l.id, main: l.name, sub: `${l.source} · ${l.phone} · ${l.email} · ${t.waiting} ${l.waitingHours}${t.hours}` }))} /> : <NoDisponible t={t} />}
+        }))} /> : demo ? <Rows items={DEMO_LEADS.map((l) => ({ id: l.id, main: l.name, sub: `${l.source} · ${l.phone} · ${l.email} · ${t.waiting} ${l.waitingHours}${t.hours}` }))} /> : <NoDisponible texto={t.noLeads} cta={t.noLeadsCta} href="/realtor/clientes" />}
       </Section>
       <Section id="listings" title={t.listings} count={demo ? DEMO_LISTINGS.length : real?.listings.count ?? undefined}>
         {!demo && real?.listings.quality === "OK" ? <Rows items={real.listings.items.map((l) => ({
           id: l.listing_id, main: `${t.stage} ${l.stage_key}`, sub: `${l.blocking_count} ${t.blockingReqs}`,
-        }))} /> : demo ? <Rows items={DEMO_LISTINGS.map((l) => ({ id: l.id, main: l.title, sub: blockerText(t, l.blocker) }))} /> : <NoDisponible t={t} />}
+        }))} /> : demo ? <Rows items={DEMO_LISTINGS.map((l) => ({ id: l.id, main: l.title, sub: blockerText(t, l.blocker) }))} /> : <NoDisponible texto={t.noListings} cta={t.noListingsCta} href="/realtor/propiedades" />}
+      </Section>
+      <Section id="visitas" title={t.visits} count={demo ? undefined : real?.visitas.count ?? undefined}>
+        {!demo && real?.visitas.quality === "OK" ? (real.visitas.items.length === 0 ? (
+          <p data-testid="mi-dia-visitas-empty" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{t.visitsEmpty}</p>
+        ) : <Rows items={real.visitas.items.map((v) => ({
+          id: v.event_id,
+          main: new Date(v.starts_at).toLocaleTimeString(t.dateLocale, { hour: "2-digit", minute: "2-digit", timeZone: tz }),
+          sub: v.title,
+        }))} />) : <NoDisponible texto={t.noVisits} cta={t.noVisitsCta} href="/realtor/smart-calendar" />}
       </Section>
       {broker ? (
         <Section id="desk" title={t.desk} count={demo ? DEMO_DESK.length : real?.desk.count ?? undefined}>
           {!demo && real?.desk.quality === "OK" ? <Rows items={real.desk.items.map((d) => ({
-            id: d.item_id, main: lookup(t.deskKinds, d.kind, t.deskFallback), sub: new Date(d.created_at).toLocaleDateString(t.dateLocale, { timeZone: TENANT_TZ }),
-          }))} /> : demo ? <Rows items={DEMO_DESK.map((d) => ({ id: d.id, main: d.title, sub: d.agent }))} /> : <NoDisponible t={t} />}
+            id: d.item_id, main: lookup(t.deskKinds, d.kind, t.deskFallback), sub: new Date(d.created_at).toLocaleDateString(t.dateLocale, { timeZone: tz }),
+          }))} /> : demo ? <Rows items={DEMO_DESK.map((d) => ({ id: d.id, main: d.title, sub: d.agent }))} /> : <NoDisponible texto={t.noDesk} />}
         </Section>
       ) : null}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.fair}</p>

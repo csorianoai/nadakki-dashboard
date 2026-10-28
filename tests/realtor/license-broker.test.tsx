@@ -37,7 +37,8 @@ describe("Licencia y Broker: componentes aislados", () => {
   });
   it("defaults to unavailable and handles missing catalog/pack", () => {
     const { rerender } = render(<LicenseBrokerDraft />);
-    expect(screen.getByRole("status")).toHaveTextContent("UNAVAILABLE");
+    expect(screen.getByRole("status")).toHaveTextContent("Esta capacidad no está disponible.");
+    expect(screen.getByRole("status").textContent).not.toMatch(/UNAVAILABLE/);
     rerender(<LicenseBrokerDraft {...props} jurisdictions={[]} />);
     expect(screen.getByRole("status")).toHaveTextContent("No hay opciones");
     rerender(<LicenseBrokerDraft {...props} initialStep="broker" />);

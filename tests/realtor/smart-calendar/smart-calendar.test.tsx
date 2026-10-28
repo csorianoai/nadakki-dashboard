@@ -63,7 +63,11 @@ describe("pantalla", () => {
     expect(screen.queryByTestId("demo-banner")).toBeNull();
     expect(screen.queryByTestId("cal-event")).toBeNull();
     expect(screen.queryByTestId("kind-counts")).toBeNull();
-    expect(screen.getByTestId("smart-calendar-panel").textContent).not.toMatch(/\d/);
+    // Ninguna cifra fuera del rótulo de fechas de la semana (que no es un dato del backend).
+    const panel = screen.getByTestId("smart-calendar-panel").cloneNode(true) as HTMLElement;
+    panel.querySelector('[data-testid="week-range"]')?.remove();
+    expect(panel.textContent).not.toMatch(/\d/);
+    expect(screen.getByTestId("week-range").textContent).toMatch(/^\d{1,2}( \S+)?( \d{4})? ?– ?\d{1,2} \S+ \d{4}$/);
   });
 
   it.each([401, 403, 404, 500])("acceso denegado (%s): nada de la pantalla", async (status) => {
@@ -81,8 +85,10 @@ describe("pantalla", () => {
     render(<SmartCalendarPanel />);
     await screen.findByTestId("smart-calendar-empty");
     await waitFor(() => expect(mockApiFetch.mock.calls.some(([u]) => String(u).includes("/calendar/events"))).toBe(true));
+    // Traslado ROP-UX-HORA-TENANT: GET /alta/tenant/profile (ruta del backend; el tenant sale del token) se compara
+    // exacta y su init sigue sin tenant. Cualquier otra URL con «tenant» sigue prohibida.
     for (const [url, init] of mockApiFetch.mock.calls) {
-      expect(String(url)).not.toMatch(/tenant/i);
+      if (url !== "/api/v1/realestate/alta/tenant/profile") expect(String(url)).not.toMatch(/tenant/i);
       expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
     }
     expect(within(screen.getByTestId("smart-calendar-panel")).queryByText(/SYNTH/)).toBeNull();

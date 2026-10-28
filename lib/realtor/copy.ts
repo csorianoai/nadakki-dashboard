@@ -1,7 +1,7 @@
 import type { DataStatus } from "./types";
 
 export const STATUS_LABEL: Record<DataStatus, string> = {
-  LIVE: "LIVE", HISTORICAL: "HISTORICAL", ESTIMATED: "ESTIMATED", DEMO: "DEMO", UNAVAILABLE: "UNAVAILABLE",
+  LIVE: "LIVE", HISTORICAL: "HISTORICAL", ESTIMATED: "ESTIMATED", DEMO: "DEMO", UNAVAILABLE: "Sin datos",
 };
 
 export const STATUS_EXPLAIN: Record<DataStatus, string> = {

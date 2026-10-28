@@ -5,7 +5,8 @@ import { OPERATIONS_PATH } from "@/lib/realtor/operaciones/api";
 const BASE = "/api/v1/realestate";
 export type Result = { ok: true } | { ok: false; status: number };
 export type Milestone = { id: string; label: string; position: number; required: boolean; status: string };
-export type Detail = { id: string; status: string; milestones: Milestone[] };
+export type MilestoneEvent = { milestoneId: string; from: string; to: string; actor: string; at: string };
+export type Detail = { id: string; status: string; milestones: Milestone[]; events: MilestoneEvent[] };
 export type OpenInput = { propertyId: string; templateId: string; contactId?: string; price?: string; currency?: string };
 
 type Obj = Record<string, unknown>;
@@ -49,7 +50,13 @@ export async function fetchDetail(id: string): Promise<Detail | null> {
     .filter((m): m is Obj => isObj(m) && typeof m.id === "string" && typeof m.label === "string" && typeof m.status === "string")
     .map((m) => ({ id: m.id as string, label: m.label as string, position: Number(m.position) || 0, required: m.required === true, status: m.status as string }))
     .sort((a, c) => a.position - c.position);
-  return { id, status: String(b.operation.status), milestones };
+  const ids = new Set(milestones.map((m) => m.id));
+  const raw: unknown[] = Array.isArray(b.milestone_events) ? b.milestone_events : [];
+  const events = raw
+    .filter((e): e is Obj => isObj(e) && [e.milestone_id, e.from_status, e.to_status, e.actor_user_id, e.occurred_at].every((v) => typeof v === "string" && v !== "") && ids.has(e.milestone_id as string) && !Number.isNaN(Date.parse(e.occurred_at as string)))
+    .map((e) => ({ milestoneId: e.milestone_id as string, from: e.from_status as string, to: e.to_status as string, actor: e.actor_user_id as string, at: e.occurred_at as string }))
+    .sort((a, c) => Date.parse(a.at) - Date.parse(c.at));
+  return { id, status: String(b.operation.status), milestones, events };
 }
 
 export async function setMilestone(opId: string, milestoneId: string, status: string, skipReason?: string): Promise<Result> {
@@ -66,4 +73,13 @@ export async function uploadDocument(opId: string, file: File, docType: string, 
 
 export async function sendToReview(opId: string): Promise<Result> {
   return done((await send(`${BASE}/broker-desk/items`, "POST", JSON.stringify({ operation_id: opId }))).status, [201]);
+}
+
+export type CloseOutcome = "closed_won" | "closed_lost" | "cancelled";
+
+/** POST /operations/{id}/close (ROP-G7-CIERRE-API): el agente responsable cierra su operación; el tenant sale del token. */
+export async function closeOperation(opId: string, outcome: CloseOutcome, reason: string): Promise<Result> {
+  const body: Obj = { outcome };
+  if (reason.trim()) body.reason = reason.trim();
+  return done((await send(`${OPERATIONS_PATH}/${encodeURIComponent(opId)}/close`, "POST", JSON.stringify(body))).status, [200]);
 }
