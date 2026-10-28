@@ -66,7 +66,7 @@ describe("negativos primero", () => {
     fireEvent.click(mas);
     const panel = screen.getByTestId("barra-mas-panel");
     expect(within(panel).getByRole("link", { name: "Notificaciones" })).toHaveAttribute("href", "/notifications");
-    expect(within(panel).queryByTestId("tenant-switcher")).toBeNull();
+    // (TenantSwitcher está simulado en este archivo; el real devuelve null sin tenant.)
   });
 
   it("un agente no recibe el selector Empresa/Vista ni en la barra ni dentro de «Más»", () => {

@@ -61,8 +61,8 @@ function useHistorial(pathname: string | null) {
 const FOCO = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400";
 const BOTON =
   `inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white ${FOCO} disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`;
-/** «Inicio»: solo icono (28 px) en móvil, con texto desde sm. */
-const BOTON_INICIO = `${BOTON.replace("px-2", "w-7 justify-center px-0")} sm:w-auto sm:px-2`;
+/** «Inicio»: desde sm (con texto). Por debajo queda el logotipo, que lleva al mismo Inicio: a 390 px no cabían los dos y la miga. */
+const BOTON_INICIO = `${BOTON.replace("inline-flex", "hidden sm:inline-flex").replace("px-2", "w-7 justify-center px-0")} sm:w-auto sm:px-2`;
 /**
  * Atrás/Adelante: borde zinc-500 (#71717a) sobre la barra zinc-950 (#09090b) ≈ 4,2:1 (WCAG 1.4.11 pide ≥3:1). Deshabilitado:
  * borde discontinuo y atenuado, distinto del activo sin depender solo del color. Solo desde md: a 390 px, con el mínimo de
