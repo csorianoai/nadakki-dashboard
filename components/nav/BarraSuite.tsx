@@ -125,9 +125,10 @@ export function BarraSuite({ antes, despues, derecha }: BarraSuiteProps = {}) {
               <Link
                 href={i === 0 ? inicio : m.href}
                 aria-current={ultima ? "page" : undefined}
-                className={`block truncate rounded px-1 py-0.5 leading-5 hover:bg-zinc-800 hover:text-white ${FOCO} ${ultima ? "font-medium text-zinc-100" : ""}`}
+                className={`flex min-w-0 items-center rounded px-1 py-0.5 hover:bg-zinc-800 hover:text-white ${FOCO} ${ultima ? "font-medium text-zinc-100" : ""}`}
               >
-                {m.label}
+                {/* El enlace mide 44 px (mínimo de app/globals.css) en una barra de 40: centra el texto en vez de dejarlo arriba. */}
+                <span className="truncate leading-5">{m.label}</span>
               </Link>
             </li>
           );
