@@ -135,3 +135,33 @@ describe("Esc cierra los paneles de tenant y usuario y devuelve el foco", () => 
     expect(document.activeElement).toBe(buscar);
   });
 });
+
+// Auditoría Cowork B3 (staging 7dcc6c6): F3-FIX dio por resuelto Esc, pero el buscador Ctrl K no devolvía el foco.
+describe("Esc en el buscador (Ctrl K) devuelve el foco a donde estaba", () => {
+  const conBuscador = () => con(<><ModuleTopBar modulos={MODULOS} actual="real-estate" conSesion esSuperadmin={false} /><BuscadorNavegacion /><button type="button">fuera</button></>);
+  const esc = () => fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+
+  it("abierto con el botón de la barra: Esc cierra y el foco vuelve al botón", async () => {
+    render(conBuscador());
+    const boton = screen.getByTestId("barra-buscar");
+    boton.focus();
+    fireEvent.click(boton);
+    expect(await screen.findByPlaceholderText("Buscar una pantalla…")).toBeInTheDocument();
+    esc();
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    expect(screen.queryByPlaceholderText("Buscar una pantalla…")).toBeNull();
+    expect(document.activeElement).toBe(boton);
+  });
+
+  it("abierto con Ctrl+K desde otro control: Esc cierra y el foco vuelve a ese control", async () => {
+    render(conBuscador());
+    const fuera = screen.getByRole("button", { name: "fuera" });
+    fuera.focus();
+    fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    expect(await screen.findByPlaceholderText("Buscar una pantalla…")).toBeInTheDocument();
+    esc();
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    expect(screen.queryByPlaceholderText("Buscar una pantalla…")).toBeNull();
+    expect(document.activeElement).toBe(fuera);
+  });
+});
