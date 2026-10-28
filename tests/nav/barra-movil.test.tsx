@@ -139,7 +139,7 @@ describe("cabe a 390 px: elementos compactos y que no encogen", () => {
     expect(clases(enMas)).toContain("md:hidden");
   });
 
-  it("«Inicio» es solo icono en móvil, con aria-label y el texto visible desde sm", () => {
+  it("«Inicio» es solo icono por debajo de lg, con aria-label y el texto visible desde lg", () => {
     render(barra(AGENTE));
     const inicio = screen.getByTestId("barra-suite-inicio");
     expect(inicio).toHaveAttribute("aria-label", "Inicio");

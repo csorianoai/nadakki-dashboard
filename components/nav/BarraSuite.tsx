@@ -61,8 +61,9 @@ function useHistorial(pathname: string | null) {
 const FOCO = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400";
 const BOTON =
   `inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white ${FOCO} disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`;
-/** «Inicio»: desde sm (con texto). Por debajo queda el logotipo, que lleva al mismo Inicio: a 390 px no cabían los dos y la miga. */
-const BOTON_INICIO = `${BOTON.replace("inline-flex", "hidden sm:inline-flex").replace("px-2", "w-7 justify-center px-0")} sm:w-auto sm:px-2`;
+/** «Inicio»: icono desde sm y texto desde lg (como «Nadakki»). Por debajo de sm queda el logotipo, que lleva al mismo Inicio: medido,
+ * a 390 px la última miga quedaba en 2 px y a 768 px en 8 px visibles. */
+const BOTON_INICIO = `${BOTON.replace("inline-flex", "hidden sm:inline-flex").replace("px-2", "w-7 justify-center px-0")} lg:w-auto lg:px-2`;
 /**
  * Atrás/Adelante: borde zinc-500 (#71717a) sobre la barra zinc-950 (#09090b) ≈ 4,2:1 (WCAG 1.4.11 pide ≥3:1). Deshabilitado:
  * borde discontinuo y atenuado, distinto del activo sin depender solo del color. Solo desde md: a 390 px, con el mínimo de
@@ -101,11 +102,11 @@ export function BarraSuite({ antes, despues, derecha }: BarraSuiteProps = {}) {
       {antes}
       <Link href={inicio} data-testid="barra-suite-logo" aria-label="Nadakki: ir a mi Inicio" className={`inline-flex shrink-0 items-center gap-2 rounded-md px-1 py-1 hover:bg-zinc-800 sm:mr-1 sm:px-1.5 ${FOCO}`}>
         <span aria-hidden className="grid h-6 w-6 place-items-center rounded bg-amber-500 text-[13px] font-bold text-zinc-950">N</span>
-        <span className="hidden text-sm font-semibold tracking-tight sm:inline">Nadakki</span>
+        <span className="hidden text-sm font-semibold tracking-tight lg:inline">Nadakki</span>
       </Link>
       <Link href={inicio} data-testid="barra-suite-inicio" aria-label="Inicio" className={BOTON_INICIO}>
         <Home aria-hidden className="h-4 w-4" />
-        <span className="hidden sm:inline">Inicio</span>
+        <span className="hidden lg:inline">Inicio</span>
       </Link>
       <button type="button" data-testid="barra-suite-atras" aria-label="Atrás" title="Atrás" disabled={!atras} onClick={() => window.history.back()} className={BOTON_HISTORIAL}>
         <ArrowLeft aria-hidden className="h-4 w-4" />
