@@ -73,10 +73,10 @@ describe("negativos primero", () => {
 });
 
 describe("móvil: el selector de tenant (y el de contexto del superadmin) siguen alcanzables por «Más»", () => {
-  it("«Más» solo se ve por debajo de md, tiene aria-label y aria-expanded, y abre un panel con el selector de tenant", () => {
+  it("«Más» solo se ve por debajo de lg, tiene aria-label y aria-expanded, y abre un panel con el selector de tenant", () => {
     render(barra(AGENTE));
     const mas = screen.getByRole("button", MAS);
-    expect(clases(mas.parentElement)).toContain("md:hidden");
+    expect(clases(mas.parentElement)).toContain("lg:hidden");
     expect(mas).toHaveAttribute("aria-expanded", "false");
     expect(mas).toHaveAttribute("aria-haspopup", "true");
     expect(clases(mas)).toContain("focus-visible:outline");
@@ -99,12 +99,12 @@ describe("móvil: el selector de tenant (y el de contexto del superadmin) siguen
     expect(screen.queryByTestId("barra-mas-panel")).toBeNull();
   });
 
-  it("en escritorio el selector de tenant sigue en la barra (hidden md:block) y el hueco de contexto también se oculta en móvil", () => {
+  it("desde lg el selector de tenant sigue en la barra (hidden lg:block) y el hueco de contexto también se oculta por debajo", () => {
     render(barra(SUPER, true));
     const acciones = screen.getByTestId("barra-acciones");
     const slot = within(acciones).getByTestId("tenant-switcher").parentElement;
-    expect(clases(slot)).toEqual(expect.arrayContaining(["hidden", "md:block"]));
-    expect(clases(screen.getByTestId("hueco-contexto"))).toEqual(expect.arrayContaining(["hidden", "md:block"]));
+    expect(clases(slot)).toEqual(expect.arrayContaining(["hidden", "lg:block"]));
+    expect(clases(screen.getByTestId("hueco-contexto"))).toEqual(expect.arrayContaining(["hidden", "lg:block"]));
   });
 
   it("superadmin: dentro de «Más» también está su selector Empresa/Vista, fuera del hueco (que sigue siendo uno)", () => {
@@ -148,10 +148,21 @@ describe("cabe a 390 px: elementos compactos y que no encogen", () => {
     expect(clases(usuario)).toEqual(expect.arrayContaining(["[&>div>button]:px-1", "md:[&>div>button]:px-3"]));
   });
 
-  it("la tecla «Ctrl K» del buscador solo aparece desde md (el botón es de icono en móvil)", () => {
+  it("la tecla «Ctrl K» del buscador solo aparece desde lg (el botón es de icono por debajo)", () => {
     render(barra(AGENTE));
     const buscar = screen.getByTestId("barra-buscar");
-    expect(clases(buscar.querySelector("kbd"))).toEqual(expect.arrayContaining(["hidden", "md:inline"]));
+    expect(clases(buscar.querySelector("kbd"))).toEqual(expect.arrayContaining(["hidden", "lg:inline"]));
+    expect(clases(buscar)).toEqual(expect.arrayContaining(["lg:w-auto", "lg:px-2"]));
+  });
+
+  // Medido a 390 px con la regla global de 44 px por botón (app/globals.css): logotipo, Inicio, Atrás, Adelante y Módulos
+  // (242 px) más buscar, notificaciones, «Más» y usuario (182 px) no caben. En móvil queda el gesto «atrás» del sistema.
+  it("Atrás y Adelante solo se ven desde md (en móvil no caben con los objetivos táctiles de 44 px)", () => {
+    render(barra(AGENTE));
+    for (const id of ["barra-suite-atras", "barra-suite-adelante"]) {
+      expect(clases(screen.getByTestId(id))).toEqual(expect.arrayContaining(["hidden", "md:inline-flex"]));
+      expect(clases(screen.getByTestId(id))).not.toContain("inline-flex");
+    }
   });
 });
 
