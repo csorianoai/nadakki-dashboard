@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEv
 import { COPY as SC_COPY, type Lang } from "@/lib/realtor/smart-calendar/copy";
 import { RT } from "@/lib/realtor/tokens";
 import { Drawer } from "./Drawer";
-import { CONTROL_BORDER } from "./styles";
 import { followUpVisit, moveVisit, type ActionResult, type Outcome, type VisitMeta } from "./visit-actions";
 
 const COPY = {
@@ -27,7 +26,7 @@ const COPY = {
 } as const;
 
 const OUTCOMES: readonly Outcome[] = ["confirmed", "completed", "no_show"];
-const INPUT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${CONTROL_BORDER}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
+const INPUT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.control}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
 const LABEL: CSSProperties = { display: "flex", flexDirection: "column", gap: 4, fontSize: 13, fontWeight: 600, color: RT.ink };
 const BTN: CSSProperties = { minHeight: 40, padding: "0 16px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 14, border: `1px solid ${RT.ink}`, background: RT.white, color: RT.ink };
 const PRIMARY: CSSProperties = { ...BTN, background: RT.ink, color: RT.white };
@@ -141,14 +140,14 @@ export function VisitActions({ id, meta, lang, label, onStart, onDone }: { id: s
         aria-controls={open ? menuId : undefined} disabled={busy}
         onClick={() => (open ? closeMenu(false) : openMenu())}
         onKeyDown={(e) => { if (e.key === "ArrowDown" && !open) { e.preventDefault(); openMenu(); } }}
-        style={{ position: "absolute", top: 6, right: 6, width: 28, height: 28, borderRadius: 8, border: `1px solid ${CONTROL_BORDER}`,
+        style={{ position: "absolute", top: 6, right: 6, width: 28, height: 28, borderRadius: 8, border: `1px solid ${RT.control}`,
           background: RT.white, color: RT.ink, cursor: "pointer", fontSize: 18, lineHeight: 1, fontFamily: "inherit", padding: 0 }}>
         <span aria-hidden="true">⋯</span>
       </button>
       {open ? (
         <ul ref={menu} id={menuId} role="menu" aria-label={ui.menu} onKeyDown={onMenuKey}
           style={{ ...pos, zIndex: 50, margin: 0, padding: "6px 0", listStyle: "none", minWidth: 168, background: RT.white,
-            border: `1px solid ${CONTROL_BORDER}`, borderRadius: 10, boxShadow: "0 10px 24px rgba(19, 32, 43, 0.16)" }}>
+            border: `1px solid ${RT.control}`, borderRadius: 10, boxShadow: "0 10px 24px rgba(19, 32, 43, 0.16)" }}>
           {(["move", ...OUTCOMES] as const).map((k) => (
             <li key={k} role="none">
               <button type="button" role="menuitem" tabIndex={-1} className="sc-menuitem" data-testid={k === "move" ? "visit-move" : `followup-${k}`}

@@ -1,3 +1,5 @@
+import { horaEn } from "@/lib/realtor/tenant-tz";
+
 /** Textos de Mi día en ES (por defecto) y EN. Sin términos técnicos. */
 export const miDiaEs = {
   title: "Mi día",
@@ -30,8 +32,6 @@ export const miDiaEs = {
 };
 export type MiDiaCopy = typeof miDiaEs;
 export type Lang = "es" | "en";
-/** Zona horaria del tenant: GET /api/v2/auth/me no la expone; tenants.country es 'DO' (Platform Operations). */
-export const TENANT_TZ = "America/Santo_Domingo";
 export const miDiaEn: MiDiaCopy = {
   title: "My day",
   greetingMorning: "Good morning. This is your plan.", greetingAfternoon: "Good afternoon. This is your plan.", greetingEvening: "Good evening. This is your plan.",
@@ -62,13 +62,13 @@ export const miDiaEn: MiDiaCopy = {
   fair: "Fair Housing compliance: the agenda sorts by waiting time and requirements, never by personal characteristics.",
 };
 export const COPY: Record<Lang, MiDiaCopy> = { es: miDiaEs, en: miDiaEn };
-/** Fecha de hoy en la zona del tenant, con la locale del idioma elegido. */
-export const todayText = (t: MiDiaCopy, now: Date = new Date()): string =>
-  new Intl.DateTimeFormat(t.dateLocale, { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: TENANT_TZ }).format(now);
+/** Fecha de hoy en la zona del tenant `tz` (useTenantTimeZone, lib/realtor/tenant-tz.ts), con la locale del idioma elegido. */
+export const todayText = (t: MiDiaCopy, tz: string, now: Date = new Date()): string =>
+  new Intl.DateTimeFormat(t.dateLocale, { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: tz }).format(now);
 export const blockerText = (t: MiDiaCopy, code: string): string => t.blockers[code] ?? t.blockerUnknown;
 export const lookup = (m: Record<string, string>, k: string, fallback: string): string => m[k] ?? fallback;
-/** Saludo según la hora en la zona del tenant: mañana 05:00–11:59, tarde 12:00–18:59, noche el resto (mismos cortes que la Mesa de crédito). */
-export function greetingFor(t: MiDiaCopy, now: Date = new Date()): string {
-  const h = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: TENANT_TZ }).format(now));
+/** Saludo según la hora en la zona del tenant `tz`: mañana 05:00–11:59, tarde 12:00–18:59, noche el resto (mismos cortes que la Mesa de crédito). */
+export function greetingFor(t: MiDiaCopy, tz: string, now: Date = new Date()): string {
+  const h = horaEn(now, tz);
   return h >= 5 && h < 12 ? t.greetingMorning : h >= 12 && h < 19 ? t.greetingAfternoon : t.greetingEvening;
 }

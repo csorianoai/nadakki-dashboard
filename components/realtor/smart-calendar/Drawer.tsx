@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { FONT_BODY, FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
-import { CONTROL_BORDER } from "./styles";
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 
@@ -58,7 +57,7 @@ export function Drawer({ title, subtitle, closeLabel, onClose, returnFocus, test
             {subtitle ? <p style={{ margin: "6px 0 0", fontSize: 13, color: RT.muted, overflowWrap: "anywhere" }}>{subtitle}</p> : null}
           </div>
           <button type="button" aria-label={closeLabel} onClick={onClose}
-            style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 8, border: `1px solid ${CONTROL_BORDER}`, background: RT.white,
+            style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 8, border: `1px solid ${RT.control}`, background: RT.white,
               color: RT.ink, cursor: "pointer", fontSize: 20, lineHeight: 1, fontFamily: "inherit" }}>
             <span aria-hidden="true">×</span>
           </button>

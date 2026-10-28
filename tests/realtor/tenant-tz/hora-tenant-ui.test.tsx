@@ -31,7 +31,12 @@ const route = (p: Perfil) =>
   });
 const profileCalls = () => mockApiFetch.mock.calls.filter(([u]) => u === PROFILE_PATH);
 
-const prevTZ = process.env.TZ;
+// Navegador en otra zona: Jest aísla process.env (cambiar TZ aquí no mueve la del proceso). Se simula la zona que el
+// navegador informa; los getters locales se cubren corriendo este archivo con TZ=Europe/Madrid y TZ=Asia/Tokyo.
+const RESOLVED = Intl.DateTimeFormat.prototype.resolvedOptions;
+const navegador = (tz: string) => jest.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+  .mockImplementation(function (this: Intl.DateTimeFormat) { return { ...RESOLVED.call(this), timeZone: tz }; });
+
 beforeEach(() => {
   mockApiFetch.mockReset();
   miDia = null;
@@ -40,7 +45,7 @@ beforeEach(() => {
   delete process.env.NEXT_PUBLIC_REALTOR_ALLOW_DEMO;
   window.history.pushState({}, "", "/realtor");
 });
-afterEach(() => { jest.useRealTimers(); process.env.TZ = prevTZ; });
+afterEach(() => { jest.useRealTimers(); jest.restoreAllMocks(); });
 
 const at = (iso: string) => {
   jest.useFakeTimers({ doNotFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "queueMicrotask", "nextTick", "setImmediate"] });
@@ -54,7 +59,7 @@ const heading = () => screen.getByRole("heading", { level: 1 });
 
 describe("Mi día · negativos: sin perfil → zona del navegador", () => {
   it.each([404, 503])("perfil %i con navegador en Madrid: 12:30Z son 13:30 en Madrid → «Buenas tardes» (Santo Domingo diría «Buenos días»)", async (status) => {
-    process.env.TZ = "Europe/Madrid";
+    navegador("Europe/Madrid");
     at("2026-01-15T12:30:00Z");
     route(status);
     render(<MiDiaPanel />);
@@ -64,7 +69,7 @@ describe("Mi día · negativos: sin perfil → zona del navegador", () => {
   });
 
   it("jurisdicción desconocida con navegador en UTC: 23:30Z → «Buenas noches» de UTC, fecha del 15", async () => {
-    process.env.TZ = "UTC";
+    navegador("UTC");
     at("2026-01-15T23:30:00Z");
     route("US-TX");
     render(<MiDiaPanel />);
@@ -84,7 +89,7 @@ describe("Mi día · negativos: sin perfil → zona del navegador", () => {
 
 describe("Mi día · tenant US-FL (America/New_York)", () => {
   it.each(["UTC", "Europe/Madrid"])("verano, navegador %s: 2026-07-15T12:30Z son 08:30 EDT → «Buenos días», 15 de julio", async (tz) => {
-    process.env.TZ = tz;
+    navegador(tz);
     at("2026-07-15T12:30:00Z");
     route("US-FL");
     render(<MiDiaPanel />);
@@ -98,7 +103,7 @@ describe("Mi día · tenant US-FL (America/New_York)", () => {
     ["2026-01-15T23:30:00Z", miDiaEs.greetingAfternoon, "jueves, 15 de enero de 2026"], // 18:30 EST (19:30 en Santo Domingo sería noche)
     ["2026-01-16T03:30:00Z", miDiaEs.greetingEvening, "jueves, 15 de enero de 2026"],   // 22:30 EST, todavía jueves 15
   ])("invierno %s → %s", async (iso, saludo, fecha) => {
-    process.env.TZ = "Europe/Madrid";
+    navegador("Europe/Madrid");
     at(iso);
     route("US-FL");
     render(<MiDiaPanel />);
@@ -108,7 +113,7 @@ describe("Mi día · tenant US-FL (America/New_York)", () => {
   });
 
   it("la hora de las visitas de hoy va en la zona del tenant (EN también)", async () => {
-    process.env.TZ = "UTC";
+    navegador("UTC");
     at("2026-07-15T12:30:00Z");
     miDia = {
       generated_at: "2026-07-15T12:30:00Z", scope: "agent",
@@ -119,9 +124,9 @@ describe("Mi día · tenant US-FL (America/New_York)", () => {
     render(<MiDiaPanel />);
     await settle();
     const sec = await screen.findByTestId("mi-dia-visitas");
-    await waitFor(() => expect(within(sec).getAllByTestId("mi-dia-row")[0]).toHaveTextContent("14:00"));
+    await waitFor(() => expect(within(sec).getAllByTestId("mi-dia-row")[0]).toHaveTextContent(/^02:00\s?p\.\s?m\./)); // 18:00Z = 14:00 EDT (es-DO, 12 h)
     act(() => { screen.getByTestId("lang-en").click(); });
-    expect(within(screen.getByTestId("mi-dia-visitas")).getAllByTestId("mi-dia-row")[0]).toHaveTextContent("02:00 PM");
+    expect(within(screen.getByTestId("mi-dia-visitas")).getAllByTestId("mi-dia-row")[0]).toHaveTextContent(/^02:00\sPM/);
   });
 });
 
@@ -134,7 +139,7 @@ describe("Smart Calendar · «hoy» y «ahora» en la zona del tenant", () => {
   const todayCol = () => screen.getAllByTestId("day-col").find((c) => c.getAttribute("aria-current") === "date");
 
   it("negativo: perfil 404 con navegador en Madrid → «ahora» de Madrid", async () => {
-    process.env.TZ = "Europe/Madrid";
+    navegador("Europe/Madrid");
     events = [ev("2026-07-15T14:00:00Z", "2026-07-15T14:45:00Z")];
     route(404);
     render(<SmartCalendarPanel now={new Date("2026-07-15T12:30:00Z")} />);
@@ -143,7 +148,7 @@ describe("Smart Calendar · «hoy» y «ahora» en la zona del tenant", () => {
   });
 
   it.each(["UTC", "Europe/Madrid"])("verano, navegador %s: la línea de ahora dice 08:30 y hoy es el miércoles 15; el evento sigue a las 10:00", async (tz) => {
-    process.env.TZ = tz;
+    navegador(tz);
     events = [ev("2026-07-15T14:00:00Z", "2026-07-15T14:45:00Z")];
     route("US-FL");
     render(<SmartCalendarPanel now={new Date("2026-07-15T12:30:00Z")} />);
@@ -155,7 +160,7 @@ describe("Smart Calendar · «hoy» y «ahora» en la zona del tenant", () => {
   });
 
   it("cambio de día, navegador en UTC: 2026-01-16T03:30Z → hoy es el jueves 15 y la línea dice 22:30", async () => {
-    process.env.TZ = "UTC";
+    navegador("UTC");
     events = [ev("2026-01-15T15:00:00Z", "2026-01-15T15:45:00Z")];
     route("US-FL");
     render(<SmartCalendarPanel now={new Date("2026-01-16T03:30:00Z")} />);
@@ -166,7 +171,7 @@ describe("Smart Calendar · «hoy» y «ahora» en la zona del tenant", () => {
   });
 
   it("domingo por la noche en Miami (lunes en UTC): la semana actual sigue siendo la del domingo", async () => {
-    process.env.TZ = "UTC";
+    navegador("UTC");
     events = [ev("2026-01-18T15:00:00Z", "2026-01-18T15:45:00Z")];
     route("US-FL");
     render(<SmartCalendarPanel now={new Date("2026-01-19T03:30:00Z")} />);

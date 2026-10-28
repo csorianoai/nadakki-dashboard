@@ -14,10 +14,13 @@ const PERFIL = { owner_person_id: "6f1c2a9e-4b7d-4e2a-9c1f-3d5e7a9b1c20", defaul
 const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
 const PROFILE_PATH = "/api/v1/realestate/alta/tenant/profile";
 
+// Navegador en otra zona: Jest aísla process.env, así que cambiar TZ aquí no mueve la zona del proceso. Se simula lo que
+// el navegador informa (Intl…resolvedOptions().timeZone); los getters locales se cubren corriendo la suite con TZ=… (ver PR).
+const RESOLVED = Intl.DateTimeFormat.prototype.resolvedOptions;
 const conTZ = async (tz: string, fn: () => void | Promise<void>) => {
-  const prev = process.env.TZ;
-  process.env.TZ = tz;
-  try { await fn(); } finally { process.env.TZ = prev; }
+  const spy = jest.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+    .mockImplementation(function (this: Intl.DateTimeFormat) { return { ...RESOLVED.call(this), timeZone: tz }; });
+  try { await fn(); } finally { spy.mockRestore(); }
 };
 
 beforeEach(() => mockApiFetch.mockReset());
