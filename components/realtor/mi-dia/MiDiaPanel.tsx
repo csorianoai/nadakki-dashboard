@@ -153,7 +153,7 @@ export function MiDiaPanel() {
           <p data-testid="mi-dia-visitas-empty" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{t.visitsEmpty}</p>
         ) : <Rows items={real.visitas.items.map((v) => ({
           id: v.event_id,
-          main: new Date(v.starts_at).toLocaleTimeString(t.dateLocale, { hour: "2-digit", minute: "2-digit", timeZone: tz }),
+          main: new Date(v.starts_at).toLocaleTimeString(t.dateLocale, { hour: "numeric", minute: "2-digit", timeZone: tz }),
           sub: v.title,
         }))} />) : <NoDisponible texto={t.noVisits} cta={t.noVisitsCta} href="/realtor/smart-calendar" />}
       </Section>
