@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CommandPalette, type CommandPaletteGroup } from "@/components/forge/ui/CommandPalette";
 import { useNavegacionVisible } from "@/components/forge/layout/useNavegacionVisible";
+import { TOKENS_PANEL_BARRA } from "@/components/shell/tokens-panel-barra";
 import { entradasBuscador } from "@/lib/navigation";
 
 export const EVENTO_ABRIR_BUSCADOR = "nadakki:abrir-buscador";
@@ -44,14 +45,18 @@ export function BuscadorNavegacion() {
     return [...porSeccion.values()];
   }, [secciones, router]);
 
+  // ROP-UX-F3-FIX: el diálogo se pinta con tokens `--forge-*`, que fuera de `.forge-app` (Realtor) no existen; mismos valores que
+  // los paneles de la barra, con fondo opaco. `contents`: el envoltorio no crea caja propia.
   return (
-    <CommandPalette
-      open={open}
-      onOpenChange={setOpen}
-      groups={groups}
-      keyboardShortcut={!enCreditHub}
-      placeholder="Buscar una pantalla…"
-      emptyMessage="No hay pantallas con ese nombre."
-    />
+    <div className="contents" style={TOKENS_PANEL_BARRA}>
+      <CommandPalette
+        open={open}
+        onOpenChange={setOpen}
+        groups={groups}
+        keyboardShortcut={!enCreditHub}
+        placeholder="Buscar una pantalla…"
+        emptyMessage="No hay pantallas con ese nombre."
+      />
+    </div>
   );
 }
