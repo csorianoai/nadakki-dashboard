@@ -105,7 +105,9 @@ test("con el rol broker_supervisor la Bandeja del broker aparece en «Hoy»; el 
   const hoy = REALTOR_MENU[0].items.map((i) => i.label);
   expect(hoy).toContain("Bandeja del broker");
   await expect(side.getByTestId("center-bandeja-broker")).toBeVisible();
-  await expect(side.getByTestId("center-bandeja-broker")).toContainText("Pronto");
+  // Centro vivo desde O3-D-BROKER: enlaza a /realtor/broker y ya no lleva «Pronto».
+  await expect(side.getByTestId("center-bandeja-broker")).toHaveAttribute("href", "/realtor/broker");
+  await expect(side.getByTestId("center-bandeja-broker")).not.toContainText("Pronto");
 });
 
 test("negativo: sin el rol no hay Bandeja aunque se elija la vista Broker", async ({ page }) => {

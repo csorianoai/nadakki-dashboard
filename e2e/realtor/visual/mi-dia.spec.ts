@@ -41,7 +41,8 @@ test("negativo: sin DEMO, «Sin datos todavía», NO_DISPONIBLE y ninguna cifra"
   await page.goto(`${NODEMO}/realtor/mi-dia`);
   await expect(page.getByTestId("mi-dia-panel")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("mi-dia-empty")).toContainText("Sin datos todavía");
-  await expect(page.getByTestId("mi-dia-no-disponible")).toHaveCount(2);
+  // Leads, listings y Visitas de hoy (#1077): las tres sin fuente.
+  await expect(page.getByTestId("mi-dia-no-disponible")).toHaveCount(3);
   await expect(page.getByTestId("mi-dia-row")).toHaveCount(0);
   await expect(page.getByTestId("mi-dia-demo")).toHaveCount(0);
   await expect(page.getByTestId("demo-pill")).toHaveCount(0);
@@ -67,7 +68,7 @@ const MI_DIA_REAL = {
 test("datos reales (sin DEMO): filas del contrato, sección sin fuente en NO_DISPONIBLE y sin tenant del cliente", async ({ page }) => {
   const pedidos: string[] = [];
   page.on("request", (r) => { if (r.url().includes("/api/v1/realestate/mi-dia")) pedidos.push(`${r.url()} ${JSON.stringify(r.headers())}`); });
-  await sesion(page, 200);
+  await sesion(page, 200, { roles: ["broker_supervisor"] });
   await page.route(/\/api\/v1\/realestate\/mi-dia/, (route) => route.fulfill({ json: MI_DIA_REAL }));
   await page.goto(`${NODEMO}/realtor/mi-dia`);
   await expect(page.getByTestId("mi-dia-panel")).toBeVisible({ timeout: 30_000 });
@@ -77,8 +78,8 @@ test("datos reales (sin DEMO): filas del contrato, sección sin fuente en NO_DIS
   await expect(page.getByTestId("mi-dia-listings").getByTestId("mi-dia-no-disponible")).toHaveCount(1);
   await expect(page.getByTestId("mi-dia-empty")).toHaveCount(0);
   await expect(page.getByTestId("mi-dia-demo")).toHaveCount(0);
-  await expect(page.getByTestId("mi-dia-desk")).toHaveCount(0);
-  await page.getByTestId("view-broker").click();
+  // Sin DEMO no hay selector de vista: los pendientes del broker los abre el rol broker_supervisor de /acceso.
+  await expect(page.getByTestId("view-broker")).toHaveCount(0);
   await expect(page.getByTestId("mi-dia-desk")).toContainText("Activación de agente");
   expect(pedidos.length).toBeGreaterThan(0);
   for (const p of pedidos) expect(p.toLowerCase()).not.toMatch(/x-tenant|tenant_id|tenant=/);
