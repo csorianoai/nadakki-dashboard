@@ -4,7 +4,6 @@ import { useState, type CSSProperties } from "react";
 import type { Lang } from "@/lib/realtor/smart-calendar/copy";
 import { createVisit, validVisit, type VisitForm as Fields } from "./visit";
 import { RT } from "@/lib/realtor/tokens";
-import { CONTROL_BORDER } from "./styles";
 
 const VISIT_COPY = {
   es: {
@@ -22,7 +21,7 @@ const VISIT_COPY = {
 } as const;
 
 const EMPTY: Fields = { title: "", startsAt: "", endsAt: "", propertyId: "", contactId: "" };
-const INPUT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${CONTROL_BORDER}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
+const INPUT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.control}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
 const LABEL: CSSProperties = { display: "flex", flexDirection: "column", gap: 4, fontSize: 13, fontWeight: 600, color: RT.ink };
 const BTN: CSSProperties = { minHeight: 40, padding: "0 16px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, border: `1px solid ${RT.ink}`, background: RT.ink, color: RT.white };
 

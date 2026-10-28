@@ -85,8 +85,10 @@ describe("pantalla", () => {
     render(<SmartCalendarPanel />);
     await screen.findByTestId("smart-calendar-empty");
     await waitFor(() => expect(mockApiFetch.mock.calls.some(([u]) => String(u).includes("/calendar/events"))).toBe(true));
+    // Traslado ROP-UX-HORA-TENANT: GET /alta/tenant/profile (ruta del backend; el tenant sale del token) se compara
+    // exacta y su init sigue sin tenant. Cualquier otra URL con «tenant» sigue prohibida.
     for (const [url, init] of mockApiFetch.mock.calls) {
-      expect(String(url)).not.toMatch(/tenant/i);
+      if (url !== "/api/v1/realestate/alta/tenant/profile") expect(String(url)).not.toMatch(/tenant/i);
       expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
     }
     expect(within(screen.getByTestId("smart-calendar-panel")).queryByText(/SYNTH/)).toBeNull();

@@ -172,7 +172,9 @@ test("tenant ajeno: ninguna petición del cliente lleva tenant", async ({ page }
   await page.goto("/realtor/smart-calendar");
   await expect(page.getByTestId("smart-calendar-panel")).toBeVisible({ timeout: 30_000 });
   expect(peticiones.length).toBeGreaterThan(0);
-  for (const p of peticiones) expect(p.toLowerCase()).not.toMatch(/tenant/);
+  // Traslado ROP-UX-HORA-TENANT: GET /alta/tenant/profile es ruta del backend (el tenant sale del token); se quita
+  // solo esa ruta exacta antes de buscar «tenant». Cabeceras y cualquier otra URL siguen igual de vigiladas.
+  for (const p of peticiones) expect(p.toLowerCase().replace("/api/v1/realestate/alta/tenant/profile ", " ")).not.toMatch(/tenant/);
 });
 
 test("captura a 1440×900 de /realtor/smart-calendar (DEMO) frente a la referencia DL10A", async ({ page }, info) => {

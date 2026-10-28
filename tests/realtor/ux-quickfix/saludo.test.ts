@@ -1,6 +1,11 @@
 import { greetingFor, miDiaEn, miDiaEs } from "@/lib/realtor/mi-dia/copy";
+import { ZONA_DO } from "@/lib/realtor/tenant-tz";
 
-/** ROP-UX-QUICKFIX: el saludo de Mi día sigue la hora del tenant (America/Santo_Domingo, UTC-4), no dice siempre «Buenos días». */
+/**
+ * ROP-UX-QUICKFIX: el saludo de Mi día sigue la hora del tenant, no dice siempre «Buenos días».
+ * Traslado ROP-UX-HORA-TENANT: la zona ya no es fija; estos cortes se fijan para un tenant DO (America/Santo_Domingo,
+ * UTC-4) pasando su zona explícitamente. Mismos instantes y mismas franjas que antes.
+ */
 describe("saludo según la hora del tenant", () => {
   it.each([
     ["2026-10-27T08:59:00Z", "noche"],      // 04:59
@@ -14,8 +19,8 @@ describe("saludo según la hora del tenant", () => {
     const now = new Date(iso);
     const es = { mañana: miDiaEs.greetingMorning, tarde: miDiaEs.greetingAfternoon, noche: miDiaEs.greetingEvening }[franja];
     const en = { mañana: miDiaEn.greetingMorning, tarde: miDiaEn.greetingAfternoon, noche: miDiaEn.greetingEvening }[franja];
-    expect(greetingFor(miDiaEs, now)).toBe(es);
-    expect(greetingFor(miDiaEn, now)).toBe(en);
+    expect(greetingFor(miDiaEs, ZONA_DO, now)).toBe(es);
+    expect(greetingFor(miDiaEn, ZONA_DO, now)).toBe(en);
   });
   it("los tres saludos existen en ES y EN y son distintos", () => {
     expect(miDiaEs.greetingMorning).toBe("Buenos días. Este es tu plan.");

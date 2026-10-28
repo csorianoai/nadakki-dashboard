@@ -12,5 +12,5 @@ DL10A no tiene pantalla propia para este botón: la referencia visual es la de M
 - Tarjeta (`EventCard.tsx`): inicio–fin (`end` sale de `ends_at`), título a 2 líneas con `title=`, tipo con color y rótulo. El contrato solo trae `property_id`/`contact_id` (uuid): no se pinta línea de propiedad ni contacto.
 - Acciones de visita en un menú «…» (`VisitActions.tsx`, teclado/Escape/clic fuera). Mover y «Programar visita» en un panel lateral modal (`Drawer.tsx`).
 - No se reutilizan `components/ui/sheet.tsx` ni `components/ui/dropdown-menu.tsx` (Radix + Tailwind con estilo de cristal oscuro, portal, sin `aria-modal`, nunca usados en Realtor): el menú y el panel son locales y usan RT.
-- Bordes de control `#7A8A98` (3,55:1; `styles.ts`), foco visible 3 px RT.teal. Semana con scroll propio (columnas ≥146 px) y lista vertical a ≤480 px.
+- Bordes de control `RT.control` (#6B7B89, 4,36:1; `lib/realtor/tokens.ts`), foco visible 3 px RT.teal. Semana con scroll propio (columnas ≥146 px) y lista vertical a ≤480 px.
 - Fuera de F2 (F5): rejilla horaria por duración, vistas Día/Agenda, solapes en subcolumnas.

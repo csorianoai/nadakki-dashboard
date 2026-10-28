@@ -7,10 +7,11 @@ import { DEMO_EVENTS } from "@/lib/realtor/smart-calendar/demo";
 import { applyFilter, countByKind, eventsOfDay } from "@/lib/realtor/smart-calendar/logic";
 import { KINDS, type CalEvent, type CalFilter } from "@/lib/realtor/smart-calendar/types";
 import { formatWeekRange, hhmm, nowSlot, sameDay, weekDates, weekStart } from "@/lib/realtor/smart-calendar/week";
+import { relojEn, useTenantTimeZone } from "@/lib/realtor/tenant-tz";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { Drawer } from "./Drawer";
 import { EventCard } from "./EventCard";
-import { CONTROL_BORDER, SC_CSS } from "./styles";
+import { SC_CSS } from "./styles";
 import { VisitActions } from "./VisitActions";
 import { VisitForm } from "./VisitForm";
 import { fetchOpenVisits, type VisitMeta } from "./visit-actions";
@@ -21,7 +22,7 @@ const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line
 const PRIMARY: CSSProperties = { minHeight: 40, padding: "0 18px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 14,
   border: `1px solid ${RT.ink}`, background: RT.ink, color: RT.white, whiteSpace: "nowrap" };
 const SECONDARY: CSSProperties = { minHeight: 36, padding: "0 14px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: 14,
-  border: `1px solid ${CONTROL_BORDER}`, background: RT.white, color: RT.ink };
+  border: `1px solid ${RT.control}`, background: RT.white, color: RT.ink };
 /** Línea de «ahora»: RT.chipDownText (#8A2418) destaca sobre el fondo de hoy y lleva texto blanco con contraste alto. */
 const NOW_COLOR = RT.chipDownText;
 const TICK_MS = 30_000;
@@ -41,8 +42,12 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
     return () => clearInterval(id);
   }, [now]);
 
+  // «Hoy», la línea de ahora y la semana actual van en la zona del tenant (deducida del perfil; sin perfil, la del
+  // navegador). `wall` es esa hora de pared como fecha local, para reutilizar week.ts. Cada evento sigue en su `timezone`.
+  const tz = useTenantTimeZone(access === "ok");
+  const wall = relojEn(clock, tz);
   const [offset, setOffset] = useState(0);
-  const monday = weekStart(clock, offset);
+  const monday = weekStart(wall, offset);
   const weekKey = monday.getTime();
   const dates = weekDates(monday);
 
@@ -76,7 +81,7 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
   const events: readonly CalEvent[] = demo ? (offset === 0 ? DEMO_EVENTS : []) : loadingWeek ? [] : real.list;
   const visible = applyFilter(events, filter);
   const counts = countByKind(events);
-  const nowText = hhmm(clock);
+  const nowText = hhmm(wall);
 
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
@@ -100,7 +105,7 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
             {(["es", "en"] as const).map((l) => (
               <button key={l} type="button" data-testid={`lang-${l}`} aria-pressed={lang === l} onClick={() => setLang(l)}
                 style={{ minHeight: 36, padding: "0 14px", borderRadius: 999, cursor: "pointer", fontFamily: "inherit", fontWeight: 700,
-                  border: `1px solid ${lang === l ? RT.ink : CONTROL_BORDER}`, background: lang === l ? RT.ink : RT.white, color: lang === l ? RT.white : RT.ink }}>
+                  border: `1px solid ${lang === l ? RT.ink : RT.control}`, background: lang === l ? RT.ink : RT.white, color: lang === l ? RT.white : RT.ink }}>
                 {l.toUpperCase()}
               </button>
             ))}
@@ -140,7 +145,7 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
             <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13, fontWeight: 600, color: RT.ink }}>
               {t.fKind}
               <select aria-label={t.fKind} value={filter} onChange={(e) => setFilter(e.target.value as CalFilter)}
-                style={{ minHeight: 40, borderRadius: 8, border: `1px solid ${CONTROL_BORDER}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" }}>
+                style={{ minHeight: 40, borderRadius: 8, border: `1px solid ${RT.control}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" }}>
                 <option value="todos">{t.all}</option>
                 {KINDS.map((k) => (<option key={k} value={k}>{KIND_LABEL[lang][k]}</option>))}
               </select>
@@ -157,7 +162,7 @@ export function SmartCalendarPanel({ now }: { now?: Date } = {}) {
             <div data-testid="week-grid" className="sc-grid">
               {dates.map((date, day) => {
                 const list = eventsOfDay(visible, day);
-                const isToday = sameDay(date, clock);
+                const isToday = sameDay(date, wall);
                 const slot = isToday ? nowSlot(list, nowText) : -1;
                 const nowLine = (
                   <li key="now" data-testid="now-line" aria-hidden="true" style={{ display: "flex", alignItems: "center", gap: 6 }}>

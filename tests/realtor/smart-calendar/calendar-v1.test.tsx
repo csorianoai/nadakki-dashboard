@@ -12,6 +12,7 @@ const mockApiFetch = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => mockApiFetch(...a), getAuthHeaders: () => ({}) }));
 
 const TZ = "America/New_York";
+const PROFILE_PATH = "/api/v1/realestate/alta/tenant/profile";
 // Martes 27 oct 2026, 11:00 hora local del navegador.
 const NOW = new Date(2026, 9, 27, 11, 0);
 const V1 = "00000000-0000-4000-8000-00000000b001";
@@ -115,7 +116,11 @@ describe("negativos", () => {
     await user.click(within(ev2).getByTestId("followup-confirmed"));
     await waitFor(() => expect(writes()).toHaveLength(2));
     expect(JSON.parse(writes()[1][1].body)).toEqual({ outcome: "confirmed" });
-    for (const [url, init] of mockApiFetch.mock.calls) expect(`${url} ${JSON.stringify(init ?? {})}`).not.toMatch(/tenant/i);
+    // Traslado ROP-UX-HORA-TENANT: la única ruta con «tenant» es GET /alta/tenant/profile del backend (el tenant sale
+    // del token); su ruta se compara exacta y su init sigue sin tenant. Todo lo demás, igual que antes.
+    for (const [url, init] of mockApiFetch.mock.calls) {
+      expect(`${url === PROFILE_PATH ? "" : url} ${JSON.stringify(init ?? {})}`).not.toMatch(/tenant/i);
+    }
   });
 });
 
@@ -396,11 +401,15 @@ describe("8 · responsive, foco y contraste", () => {
     expect(css).toMatch(/\.sc-grid\{[^}]*grid-template-columns:repeat\(7,minmax\(146px,1fr\)\)/);
     expect(css).toMatch(/@media \(max-width:480px\)\{[^@]*\.sc-grid\{[^}]*display:flex;flex-direction:column/);
     expect(css).toMatch(/:focus-visible\{outline:3px solid #0B6E78/i);
-    // Borde de control: #7A8A98 (3,55:1 sobre blanco). RT.lineStrong (#B8C4CE, 1,78:1) no se usa en controles.
+    // Borde de control: RT.control (#6B7B89, 4,36:1 sobre blanco; ROP-UX-HORA-TENANT unifica el antiguo #7A8A98 local).
+    // RT.lineStrong (#B8C4CE, 1,78:1) no se usa en controles.
     for (const el of [screen.getByLabelText("Tipo"), screen.getByRole("button", { name: "Semana siguiente" }), screen.getByTestId("lang-en")]) {
       expect(el.style.border.toLowerCase()).not.toContain("rgb(184, 196, 206)");
     }
-    expect(screen.getByLabelText("Tipo").style.border).toContain("rgb(122, 138, 152)");
+    expect(screen.getByLabelText("Tipo").style.border).toContain("rgb(107, 123, 137)");
+    for (const el of [screen.getByRole("button", { name: "Semana siguiente" }), screen.getByTestId("lang-en")]) {
+      expect(el.style.border).toContain("rgb(107, 123, 137)");
+    }
   });
 
   it("la hora de ahora avanza sola cada minuto sin recargar", async () => {

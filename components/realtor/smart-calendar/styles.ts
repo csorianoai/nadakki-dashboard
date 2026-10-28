@@ -1,12 +1,6 @@
 import { RT } from "@/lib/realtor/tokens";
 
 /**
- * Borde de los controles de esta zona: #7A8A98 da 3,55:1 sobre blanco (WCAG 1.4.11 pide ≥3:1).
- * RT.lineStrong (#B8C4CE) da 1,78:1 y no llega; no se cambia lib/realtor/tokens.ts (fuera de la zona).
- */
-export const CONTROL_BORDER = "#7A8A98";
-
-/**
  * Hoja de estilo del centro (prefijo .sc, sin tocar estilos globales): foco visible de 3 px RT.teal,
  * semana con scroll horizontal propio (columnas ≥146 px, ~150 px a 768 px) y lista vertical de días a ≤480 px.
  */
