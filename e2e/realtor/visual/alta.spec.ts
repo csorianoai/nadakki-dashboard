@@ -18,7 +18,7 @@ test("hitos del asistente: título, pasos y DEMO rotulado", async ({ page }) => 
   await expect(page.getByTestId("realtor-alta")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Alta del agente");
   await expect(page.getByTestId("badge-demo")).toBeVisible();
-  await expect(page.getByLabel("Código de la licencia registrada")).toBeVisible();
+  await expect(page.getByLabel("Número de licencia")).toBeVisible();
 });
 
 test("captura a 1440×900 de /realtor/alta (DEMO, paso 1) frente a la referencia DL10A", async ({ page }, info) => {
