@@ -2,14 +2,14 @@ import { test, expect, type Page } from "@playwright/test";
 
 /**
  * ROP-UX-NAV-MOVIL-BARRA: la barra COMÚN (BarraSuite + ModuleTopBar) cabe a 390, 768 y 1280 px en /realtor y en dos módulos
- * de ModuleShell (Legal y Marketing): ningún elemento visible de la barra sale del viewport, la página no tiene scroll
+ * de ModuleShell (Marketing y Proyectos): ningún elemento visible de la barra sale del viewport, la página no tiene scroll
  * horizontal, las migas están centradas en la altura de la barra (con «Inicio») y en móvil el selector de tenant se alcanza
  * por «Más opciones de la barra». Mismo arranque simulado que volver-al-inicio.spec.ts, con un agente/administrador de
  * tenant (no superadmin) de «Soriano Realty». Necesita build (`next start`): job «visual».
  */
 const B = process.env.VISUAL_BACKEND ?? "http://backend.invalid";
 const ANCHOS = [390, 768, 1280];
-const RUTAS = ["/realtor", "/legal/cases", "/marketing/campaigns"];
+const RUTAS = ["/realtor", "/marketing/campaigns", "/proyectos"];
 
 async function sesion(page: Page) {
   await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
@@ -18,7 +18,7 @@ async function sesion(page: Page) {
   await page.route("**/branding**", (route) => route.fulfill({ json: branding }));
   await page.route(`${B}/api/v2/auth/refresh`, (route) =>
     route.fulfill({ json: { access_token: "a.b.c", refresh_token: "r", expires_in: 3600 } }));
-  const tenant = { id: "t1", slug: "soriano-realty", display_name: "Soriano Realty", subscribed_cores: ["real_estate", "legal", "marketing"] };
+  const tenant = { id: "t1", slug: "soriano-realty", display_name: "Soriano Realty", subscribed_cores: ["real_estate", "legal", "marketing", "projects"] };
   await page.route(`${B}/api/v2/auth/me`, (route) =>
     route.fulfill({ json: {
       user: { id: "u1", email: "cesar.soriano@sorianorealty.com", name: "César Soriano", is_active: true, mfa_enabled: false },

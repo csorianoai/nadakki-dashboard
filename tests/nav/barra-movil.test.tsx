@@ -229,16 +229,17 @@ describe("la medida en navegador existe (e2e/visual/barra-movil.spec.ts)", () =>
   });
 });
 
-describe("la misma barra en dos módulos de ModuleShell (Legal y Marketing), no solo en Realtor", () => {
+describe("la misma barra en módulos de ModuleShell (Legal, Marketing y Proyectos), no solo en Realtor", () => {
   const ADMIN_TENANT = {
     user: { id: "u2", email: "cesar.soriano@sorianorealty.com" },
-    tenant: { id: "t1", display_name: "Soriano Realty", subscribed_cores: ["legal", "marketing", "real_estate"] },
+    tenant: { id: "t1", display_name: "Soriano Realty", subscribed_cores: ["legal", "marketing", "projects", "real_estate"] },
     allRoles: [{ core_name: "platform", role_key: "tenant_admin", display_name: "Administrador" }],
     fijarContexto: jest.fn(),
   } as unknown as AuthContextValue;
   const CASOS = [
     { id: "legal", ruta: "/legal/cases/new", migas: 3 },
     { id: "marketing", ruta: "/marketing/campaigns", migas: 3 },
+    { id: "proyectos", ruta: "/proyectos", migas: 2 },
   ];
 
   it.each(CASOS)("$id ($ruta): «Más» con el tenant, migas reducidas, Inicio de icono con aria-label, sin selector de contexto", ({ id, ruta, migas }) => {
@@ -268,7 +269,7 @@ describe("la misma barra en dos módulos de ModuleShell (Legal y Marketing), no 
 
 describe("el spec e2e cubre los dos módulos de ModuleShell a 390 px", () => {
   const spec = fs.readFileSync(path.join(process.cwd(), "e2e/visual/barra-movil.spec.ts"), "utf8");
-  it("rutas de Legal y Marketing además de /realtor", () => {
-    for (const r of ['"/realtor"', '"/legal/cases"', '"/marketing/campaigns"']) expect(spec).toContain(r);
+  it("rutas de Marketing y Proyectos además de /realtor", () => {
+    for (const r of ['"/realtor"', '"/marketing/campaigns"', '"/proyectos"']) expect(spec).toContain(r);
   });
 });
