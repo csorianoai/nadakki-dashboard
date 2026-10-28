@@ -45,8 +45,17 @@ let compartida: { token: string; desde: number; respuesta: Promise<AccessInfo> }
  * comparte una sola petición por token durante VIGENCIA_MS: un token nuevo (refresh, otro usuario) pregunta de nuevo.
  * Un error no se comparte una vez resuelto, y sin token cada llamada pregunta por su cuenta.
  */
+/** El access token en memoria; si no se puede leer, null: entonces no se comparte nada (cada llamada pregunta). */
+function tokenActual(): string | null {
+  try {
+    return tokenStorage.getAccessToken();
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPanelAccessInfo(): Promise<AccessInfo> {
-  const token = tokenStorage.getAccessToken();
+  const token = tokenActual();
   if (!token) return pedirAcceso();
   const ahora = Date.now();
   if (compartida && compartida.token === token && ahora - compartida.desde < VIGENCIA_MS) return compartida.respuesta;
