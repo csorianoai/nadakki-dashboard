@@ -58,10 +58,15 @@ describe("negativos primero", () => {
     expect(screen.queryByTestId("tenant-switcher")).toBeNull();
   });
 
-  it("con sesión pero sin tenant y sin superadmin: no aparece un «Más» vacío (nada nuevo para quien no tiene qué elegir)", () => {
+  it("con sesión pero sin tenant y sin superadmin: «Más» solo por debajo de md y solo con Notificaciones (nunca vacío)", () => {
     render(barra(sesion("agent", false)));
     expect(screen.getByTestId("barra-acciones")).toBeInTheDocument();
-    expect(screen.queryByRole("button", MAS)).toBeNull();
+    const mas = screen.getByRole("button", MAS);
+    expect(clases(mas.parentElement)).toContain("md:hidden");
+    fireEvent.click(mas);
+    const panel = screen.getByTestId("barra-mas-panel");
+    expect(within(panel).getByRole("link", { name: "Notificaciones" })).toHaveAttribute("href", "/notifications");
+    expect(within(panel).queryByTestId("tenant-switcher")).toBeNull();
   });
 
   it("un agente no recibe el selector Empresa/Vista ni en la barra ni dentro de «Más»", () => {
@@ -120,6 +125,20 @@ describe("móvil: el selector de tenant (y el de contexto del superadmin) siguen
 });
 
 describe("cabe a 390 px: elementos compactos y que no encogen", () => {
+  // Medido a 390 px: con el logotipo y «Inicio» (los dos llevan al mismo Inicio) la última miga se quedaba en 2 px en los
+  // módulos de ModuleShell. Por debajo de sm queda el logotipo («Nadakki: ir a mi Inicio») y la campana pasa a «Más».
+  it("por debajo de sm «Inicio» se oculta (el logotipo lleva al mismo sitio) y la campana va dentro de «Más» por debajo de md", () => {
+    render(barra(AGENTE));
+    expect(clases(screen.getByTestId("barra-suite-inicio"))).toEqual(expect.arrayContaining(["hidden", "sm:inline-flex"]));
+    expect(clases(screen.getByTestId("barra-suite-inicio"))).not.toContain("inline-flex");
+    expect(screen.getByTestId("barra-suite-logo")).toHaveAttribute("aria-label", "Nadakki: ir a mi Inicio");
+    expect(clases(screen.getByTestId("barra-notificaciones"))).toEqual(expect.arrayContaining(["hidden", "md:inline-flex"]));
+    fireEvent.click(screen.getByRole("button", MAS));
+    const enMas = within(screen.getByTestId("barra-mas-panel")).getByRole("link", { name: "Notificaciones" });
+    expect(enMas).toHaveAttribute("href", "/notifications");
+    expect(clases(enMas)).toContain("md:hidden");
+  });
+
   it("«Inicio» es solo icono en móvil, con aria-label y el texto visible desde sm", () => {
     render(barra(AGENTE));
     const inicio = screen.getByTestId("barra-suite-inicio");

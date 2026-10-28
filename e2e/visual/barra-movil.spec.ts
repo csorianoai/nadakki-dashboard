@@ -65,7 +65,10 @@ for (const ancho of ANCHOS) {
       // Migas centradas en la altura de la barra, igual que «Inicio».
       const b = (await barra.boundingBox())!;
       const ultima = (await page.getByTestId("barra-suite-migas").getByRole("link").last().boundingBox())!;
-      const inicio = (await page.getByTestId("barra-suite-inicio").boundingBox())!;
+      // Por debajo de sm «Inicio» se oculta y queda el logotipo (mismo destino): se centra contra el que se vea.
+      const inicio = (await page.getByTestId(ancho >= 640 ? "barra-suite-inicio" : "barra-suite-logo").boundingBox())!;
+      // La última miga se lee: al menos 40 px de ancho (a 390 px se quedaba en 2 px en Marketing y Proyectos).
+      expect(ultima.width, `última miga a ${ancho} px`).toBeGreaterThanOrEqual(40);
       const centro = (c: { y: number; height: number }) => c.y + c.height / 2;
       expect(Math.abs(centro(ultima) - centro(b))).toBeLessThanOrEqual(2);
       expect(Math.abs(centro(ultima) - centro(inicio))).toBeLessThanOrEqual(2);
@@ -83,6 +86,7 @@ for (const ancho of ANCHOS) {
         const panel = page.getByTestId("barra-mas-panel");
         await expect(panel).toBeVisible();
         await expect(panel).toContainText("Soriano Realty");
+        if (ancho < 768) await expect(panel.getByRole("link", { name: "Notificaciones" })).toBeVisible();
         const p = (await panel.boundingBox())!;
         expect(p.x).toBeGreaterThanOrEqual(0);
         expect(p.x + p.width).toBeLessThanOrEqual(ancho + 0.5);
