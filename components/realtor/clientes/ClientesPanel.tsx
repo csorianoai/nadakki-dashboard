@@ -14,6 +14,7 @@ import { FORM_COPY } from "./contact-copy";
 import { TextoRecortado } from "../TextoRecortado";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
+import { DosColumnas } from "@/components/realtor/layout/DosColumnas";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -101,7 +102,7 @@ export function ClientesPanel() {
   const set = (patch: Partial<ClientFilters>) => setFilters((f) => ({ ...f, ...patch }));
   return (
     <section data-testid="clientes-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.title}</h1>
           <p style={{ margin: "14px 0 0", maxWidth: 780, fontSize: 16, lineHeight: 1.45, color: RT.muted }}>{t.intro}</p>
@@ -163,7 +164,7 @@ export function ClientesPanel() {
               </span>
             ))}
           </div>}
-          <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 4fr) minmax(360px, 7fr)", alignItems: "start" }}>
+          <DosColumnas testId="clientes-columnas" columnas={[{ peso: 4, minimo: 300 }, { peso: 7, minimo: 360 }]}>
             <div style={CARD}>
               <h2 style={{ margin: "0 0 10px", fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.listTitle}</h2>
               <p style={{ margin: "0 0 14px", fontSize: 15, lineHeight: 1.45, color: RT.muted }}>{t.listHint}</p>
@@ -215,7 +216,7 @@ export function ClientesPanel() {
               {current && DEMO_JOURNEYS[current.id] ? <Journey id={current.id} lang={lang} /> : null}
               <p style={{ margin: "16px 0 0", fontSize: 12, color: RT.muted }}>{t.masked}</p>
             </div>
-          </div>
+          </DosColumnas>
         </>
       )}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.fairHousing}</p>

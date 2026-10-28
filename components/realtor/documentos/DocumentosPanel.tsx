@@ -11,6 +11,7 @@ import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { GenerateControls } from "./GenerateControls";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
+import { DosColumnas } from "@/components/realtor/layout/DosColumnas";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const H2: CSSProperties = { margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 24 };
@@ -72,7 +73,7 @@ export function DocumentosPanel() {
 
   return (
     <section data-testid="documentos-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.title}</h1>
           <p style={{ margin: "14px 0 0", maxWidth: 780, fontSize: 16, lineHeight: 1.45, color: RT.muted }}>{t.intro}</p>
@@ -105,7 +106,7 @@ export function DocumentosPanel() {
             ))}
           </div>
       )}
-          <div data-testid="generator-row" style={{ display: "grid", gap: 20, gridTemplateColumns: isEmpty ? "minmax(300px, 1fr)" : "minmax(300px, 1fr) minmax(300px, 1fr)", alignItems: "start" }}>
+          <DosColumnas testId="generator-row" columnas={[{ peso: 1, minimo: 300 }, { peso: 1, minimo: 300 }]}>
             <div style={CARD}>
               <h2 style={H2}>{t.genTitle}</h2>
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
@@ -128,9 +129,9 @@ export function DocumentosPanel() {
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: RT.demoText }}>{t.notLegal}</p>
             </div>
             ) : null}
-          </div>
+          </DosColumnas>
       {!isEmpty ? (
-          <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 3fr) minmax(300px, 2fr)", alignItems: "start" }}>
+          <DosColumnas testId="documentos-columnas" columnas={[{ peso: 3, minimo: 300 }, { peso: 2, minimo: 300 }]}>
             <div style={CARD}>
               <h2 style={H2}>{t.docsTitle}</h2>
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -162,7 +163,7 @@ export function DocumentosPanel() {
               </ul>
               <p style={{ margin: "16px 0 0", fontSize: 12, color: RT.muted }}>{t.tplNote}</p>
             </div>
-          </div>
+          </DosColumnas>
       ) : null}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.fairHousing}</p>
     </section>

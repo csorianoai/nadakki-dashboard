@@ -94,7 +94,7 @@ export function MiDiaPanel() {
   const date = todayText(t, tz);
   return (
     <section data-testid="mi-dia-panel" lang={lang} style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <p data-testid="mi-dia-date" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{date}{demo ? ` · ${t.demoRef}` : ""}</p>
         <div role="group" aria-label={t.lang} style={{ display: "flex", gap: 6 }}>
           {(["es", "en"] as const).map((l) => (

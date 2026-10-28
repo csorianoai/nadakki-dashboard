@@ -11,6 +11,7 @@ import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
 import { OperacionGestion } from "./OperacionGestion";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
+import { DosColumnas } from "@/components/realtor/layout/DosColumnas";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -72,7 +73,7 @@ function OperacionesContenido() {
 
   return (
     <section data-testid="operaciones-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.title}</h1>
           <p style={{ margin: "14px 0 0", maxWidth: 820, fontSize: 16, lineHeight: 1.45, color: RT.muted }}>{t.intro}</p>
@@ -120,7 +121,7 @@ function OperacionesContenido() {
               </li>
             ))}
           </ol>
-          <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(320px, 3fr) minmax(280px, 2fr)", alignItems: "start" }}>
+          <DosColumnas testId="operaciones-columnas" columnas={[{ peso: 3, minimo: 320 }, { peso: 2, minimo: 280 }]}>
             <div data-testid="stage-panel" style={CARD}>
               <h2 style={{ margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 22 }}>{STAGE_LABEL[lang][stage]} · {t.listTitle}</h2>
               {inCurrent.length === 0 ? <p data-testid="stage-empty" style={{ margin: 0, color: RT.muted }}>{t.noneInStage}</p> : (
@@ -146,7 +147,7 @@ function OperacionesContenido() {
               </ul>
             </div>
             </div>
-          </div>
+          </DosColumnas>
           {demo ? (
           <section data-testid="fin-section" aria-label={t.finTitle} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.finTitle}</h2>
