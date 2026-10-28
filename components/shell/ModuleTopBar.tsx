@@ -72,7 +72,7 @@ function MenuMas({ esSuperadmin }: { esSuperadmin: boolean }) {
         <MoreHorizontal aria-hidden className="h-4 w-4" />
       </button>
       {abierto ? (
-        <div id={id} role="group" aria-label="Más opciones" data-testid="barra-mas-panel" className={`${CLASES.desplegable} flex flex-col items-start gap-1`}>
+        <div id={id} role="group" aria-label="Más opciones" data-testid="barra-mas-panel" className={`${CLASES.desplegable} flex flex-col items-start gap-1 md:left-auto md:right-0`}>
           <TenantSwitcher />
           {esSuperadmin ? <SelectorContexto /> : null}
         </div>
