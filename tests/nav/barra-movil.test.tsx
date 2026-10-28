@@ -144,7 +144,10 @@ describe("cabe a 390 px: elementos compactos y que no encogen", () => {
     const inicio = screen.getByTestId("barra-suite-inicio");
     expect(inicio).toHaveAttribute("aria-label", "Inicio");
     expect(inicio).toHaveTextContent("Inicio");
-    expect(clases(within(inicio).getByText("Inicio"))).toEqual(expect.arrayContaining(["hidden", "sm:inline"]));
+    // Los textos «Inicio» y «Nadakki» solo desde lg: a 768 px la última miga se quedaba en 8 px visibles (medido).
+    expect(clases(within(inicio).getByText("Inicio"))).toEqual(expect.arrayContaining(["hidden", "lg:inline"]));
+    expect(clases(inicio)).toEqual(expect.arrayContaining(["lg:w-auto", "lg:px-2"]));
+    expect(clases(within(screen.getByTestId("barra-suite-logo")).getByText("Nadakki"))).toEqual(expect.arrayContaining(["hidden", "lg:inline"]));
   });
 
   it("los controles de la barra no encogen (shrink-0); solo las migas ceden espacio (min-w-0 flex-1)", () => {
