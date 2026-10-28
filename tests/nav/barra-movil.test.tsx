@@ -191,14 +191,14 @@ describe("cabe a 390 px: elementos compactos y que no encogen", () => {
 });
 
 describe("migas: solo la última en móvil y centradas en la altura de la barra en todos los anchos", () => {
-  it("con cuatro niveles, en móvil solo queda visible la última (las demás hidden md:flex) y su chevron se oculta", () => {
+  it("con cuatro niveles, por debajo de lg solo queda visible la última (las demás hidden lg:flex) y su chevron se oculta", () => {
     render(<BarraSuite />);
     const items = within(screen.getByTestId("barra-suite-migas")).getAllByRole("listitem");
     expect(items).toHaveLength(4);
-    for (const li of items.slice(0, -1)) expect(clases(li)).toEqual(expect.arrayContaining(["hidden", "md:flex"]));
+    for (const li of items.slice(0, -1)) expect(clases(li)).toEqual(expect.arrayContaining(["hidden", "lg:flex"]));
     const ultima = items[items.length - 1]!;
     expect(clases(ultima)).not.toContain("hidden");
-    expect(clases(ultima.querySelector("svg"))).toEqual(expect.arrayContaining(["hidden", "md:block"]));
+    expect(clases(ultima.querySelector("svg"))).toEqual(expect.arrayContaining(["hidden", "lg:block"]));
   });
 
   it("una sola miga (la portada) sigue visible en móvil", () => {
@@ -286,7 +286,7 @@ describe("la misma barra en módulos de ModuleShell (Legal, Marketing y Proyecto
     expect(within(b).getByRole("button", { name: "Abrir el menú del módulo" })).toHaveAttribute("aria-label");
     const items = within(screen.getByTestId("barra-suite-migas")).getAllByRole("listitem");
     expect(items.length).toBe(migas);
-    for (const li of items.slice(0, -1)) expect(clases(li)).toEqual(expect.arrayContaining(["hidden", "md:flex"]));
+    for (const li of items.slice(0, -1)) expect(clases(li)).toEqual(expect.arrayContaining(["hidden", "lg:flex"]));
     expect(clases(items[items.length - 1]!)).not.toContain("hidden");
     fireEvent.click(within(b).getByRole("button", MAS));
     expect(within(screen.getByTestId("barra-mas-panel")).getByTestId("tenant-switcher")).toHaveTextContent("Soriano Realty");
