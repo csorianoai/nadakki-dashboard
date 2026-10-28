@@ -28,9 +28,15 @@ describe("PS-6 Content Hub: datos de demostracion con badge DEMO", () => {
   });
 
   it("no consume la API: no hay endpoint de lectura, nada se presenta como dato del tenant", () => {
-    const spy = jest.spyOn(global as any, "fetch").mockImplementation(() => Promise.reject(new Error("no")));
-    render(<ContentPage />);
-    expect(spy).not.toHaveBeenCalled();
-    spy.mockRestore();
+    const g = global as any;
+    const original = g.fetch;
+    const spy = jest.fn(() => Promise.reject(new Error("no")));
+    g.fetch = spy;
+    try {
+      render(<ContentPage />);
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      g.fetch = original;
+    }
   });
 });
