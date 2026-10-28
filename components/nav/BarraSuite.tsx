@@ -84,7 +84,8 @@ export type BarraSuiteProps = {
  * Barra fija de la Suite, encima de TODAS las carcasas (Suite, Credit Hub, Dealer OS, Realtor OS, Cockpit,
  * Contabilidad, Crédito): logotipo, «Inicio» y la primera miga llevan al aterrizaje del rol (login), Atrás y Adelante usan el
  * historial del navegador y las migas muestran Inicio › Módulo › Sección › Pantalla con enlace en cada nivel.
- * Móvil (ROP-UX-NAV-MOVIL-BARRA): «Inicio» solo icono, solo la última miga (desde md, todas) y controles que no encogen;
+ * Estrecho (ROP-UX-NAV-MOVIL-BARRA): por debajo de sm, el logotipo sin «Inicio»; por debajo de lg, solo la última miga y sin los
+ * textos «Nadakki» e «Inicio». Los controles no encogen (mínimo de 44 px de app/globals.css);
  * las migas son lo único que cede ancho y van centradas en el alto de la barra.
  */
 export function BarraSuite({ antes, despues, derecha }: BarraSuiteProps = {}) {
@@ -119,8 +120,8 @@ export function BarraSuite({ antes, despues, derecha }: BarraSuiteProps = {}) {
         {migas.map((m, i) => {
           const ultima = i === migas.length - 1;
           return (
-            <li key={`${m.href}-${i}`} className={`h-full min-w-0 items-center gap-1 ${ultima ? "flex" : "hidden md:flex"}`}>
-              {i > 0 ? <ChevronRight aria-hidden className={`h-3.5 w-3.5 shrink-0 text-zinc-600 ${ultima ? "hidden md:block" : ""}`} /> : null}
+            <li key={`${m.href}-${i}`} className={`h-full min-w-0 items-center gap-1 ${ultima ? "flex" : "hidden lg:flex"}`}>
+              {i > 0 ? <ChevronRight aria-hidden className={`h-3.5 w-3.5 shrink-0 text-zinc-600 ${ultima ? "hidden lg:block" : ""}`} /> : null}
               <Link
                 href={i === 0 ? inicio : m.href}
                 aria-current={ultima ? "page" : undefined}
