@@ -67,8 +67,11 @@ for (const ancho of ANCHOS) {
       const ultima = (await page.getByTestId("barra-suite-migas").getByRole("link").last().boundingBox())!;
       // Por debajo de sm «Inicio» se oculta y queda el logotipo (mismo destino): se centra contra el que se vea.
       const inicio = (await page.getByTestId(ancho >= 640 ? "barra-suite-inicio" : "barra-suite-logo").boundingBox())!;
-      // La última miga se lee: al menos 40 px de ancho (a 390 px se quedaba en 2 px en Marketing y Proyectos).
-      expect(ultima.width, `última miga a ${ancho} px`).toBeGreaterThanOrEqual(40);
+      // La última miga se lee: al menos 40 px VISIBLES, recortando su caja con la de la lista (que tiene overflow-hidden).
+      // Medido: a 390 px se quedaba en 2 px en Marketing y Proyectos, y a 768 px en 8 px (la caja del enlace era más ancha).
+      const lista = (await page.getByTestId("barra-suite-migas").boundingBox())!;
+      const visible = Math.min(ultima.x + ultima.width, lista.x + lista.width) - Math.max(ultima.x, lista.x);
+      expect(visible, `última miga visible a ${ancho} px`).toBeGreaterThanOrEqual(40);
       const centro = (c: { y: number; height: number }) => c.y + c.height / 2;
       expect(Math.abs(centro(ultima) - centro(b))).toBeLessThanOrEqual(2);
       expect(Math.abs(centro(ultima) - centro(inicio))).toBeLessThanOrEqual(2);
