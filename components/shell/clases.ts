@@ -13,12 +13,15 @@ export const CLASES = {
 
   /** Barra superior: botones, desplegables y chips. */
   boton: "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 disabled:cursor-not-allowed disabled:opacity-40",
+  /** Botón solo icono (28 px, no encoge) de la barra; con `md:` vuelve a llevar texto donde hace falta. */
+  botonIcono: "inline-flex h-7 w-7 shrink-0 items-center justify-center gap-1.5 rounded-md text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400",
   botonActivo: "bg-zinc-800 text-white",
-  desplegable: "absolute left-0 top-full z-[70] mt-1 w-64 rounded-md border border-zinc-800 bg-zinc-950 p-1 shadow-xl",
+  /** En móvil (<md) el desplegable se ancla al viewport bajo la barra (top-10) para no salirse por la derecha. */
+  desplegable: "absolute left-0 top-full z-[70] mt-1 w-64 rounded-md border border-zinc-800 bg-zinc-950 p-1 shadow-xl max-md:fixed max-md:inset-x-2 max-md:top-10 max-md:w-auto",
   desplegableItem: "flex items-center gap-2 rounded px-2 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400",
   desplegableActivo: "bg-zinc-800 text-white",
   tecla: "hidden rounded border border-zinc-700 px-1 text-[10px] text-zinc-400 md:inline",
-  acciones: "ml-auto flex shrink-0 items-center gap-1",
+  acciones: "ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1",
 
   /** Menú lateral del módulo. */
   lateral: "fixed bottom-0 left-0 top-10 z-50 flex w-72 max-w-[85vw] shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100 transition-[transform,width] duration-200 motion-reduce:transition-none lg:static lg:z-auto lg:translate-x-0",
