@@ -209,13 +209,17 @@ describe("migas: solo la última en móvil y centradas en la altura de la barra 
     expect(clases(items[0]!)).not.toContain("hidden");
   });
 
-  it("alineación: la lista ocupa todo el alto y centra; cada miga centra; el enlace es un bloque de línea fija", () => {
+  // El mínimo global de 44 px (app/globals.css) hacía al enlace más alto que la barra (40 px): siendo `block`, su texto quedaba
+  // arriba (medido en y=9 con la barra en y=20). El enlace centra su contenido y el texto, dentro de un span, conserva el truncado.
+  it("alineación: la lista ocupa todo el alto y centra; cada miga centra; el enlace centra su texto, que trunca", () => {
     render(<BarraSuite />);
     const ol = screen.getByTestId("barra-suite-migas");
     expect(clases(ol)).toEqual(expect.arrayContaining(["flex", "self-stretch", "items-center"]));
     for (const li of within(ol).getAllByRole("listitem")) expect(clases(li)).toEqual(expect.arrayContaining(["h-full", "items-center"]));
     for (const a of within(ol).getAllByRole("link")) {
-      expect(clases(a)).toEqual(expect.arrayContaining(["block", "truncate", "leading-5", "focus-visible:outline"]));
+      expect(clases(a)).toEqual(expect.arrayContaining(["flex", "items-center", "min-w-0", "focus-visible:outline"]));
+      expect(clases(a)).not.toContain("block");
+      expect(clases(a.querySelector("span"))).toEqual(expect.arrayContaining(["truncate", "leading-5"]));
     }
   });
 });
