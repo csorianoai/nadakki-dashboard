@@ -1,5 +1,7 @@
 import localFont from "next/font/local";
+import type { Metadata } from "next";
 import { RealtorShell } from "@/components/realtor/shell/RealtorShell";
+import { TITULO_REALTOR } from "@/lib/realtor/titulos";
 
 const plex = localFont({
   src: [
@@ -18,6 +20,9 @@ const grotesk = localFont({
   variable: "--rt-font-display",
   display: "swap",
 });
+
+/** META-TITULOS: sin esto cada pantalla heredaba «Plataforma de crédito» del layout raíz. */
+export const metadata: Metadata = { title: TITULO_REALTOR };
 
 export default function RealtorLayout({ children }: { children: React.ReactNode }) {
   return (

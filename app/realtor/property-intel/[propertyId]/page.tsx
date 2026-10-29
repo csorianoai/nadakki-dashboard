@@ -1,4 +1,8 @@
 import { PropertyIntelScreen } from "@/components/realtor/property-intel/PropertyIntelScreen";
+import type { Metadata } from "next";
+import { tituloRealtor } from "@/lib/realtor/titulos";
+
+export const metadata: Metadata = { title: tituloRealtor("/realtor/property-intel/[propertyId]") };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
