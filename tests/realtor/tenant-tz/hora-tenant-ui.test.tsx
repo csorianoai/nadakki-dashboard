@@ -124,9 +124,9 @@ describe("Mi día · tenant US-FL (America/New_York)", () => {
     render(<MiDiaPanel />);
     await settle();
     const sec = await screen.findByTestId("mi-dia-visitas");
-    await waitFor(() => expect(within(sec).getAllByTestId("mi-dia-row")[0]).toHaveTextContent(/^02:00\s?p\.\s?m\./)); // 18:00Z = 14:00 EDT (es-DO, 12 h)
+    await waitFor(() => expect(within(sec).getAllByTestId("mi-dia-row")[0]).toHaveTextContent(/^2:00\s?p\.\s?m\./)); // 18:00Z = 14:00 EDT (es-DO, 12 h, sin cero delante: I18N)
     act(() => { screen.getByTestId("lang-en").click(); });
-    expect(within(screen.getByTestId("mi-dia-visitas")).getAllByTestId("mi-dia-row")[0]).toHaveTextContent(/^02:00\sPM/);
+    expect(within(screen.getByTestId("mi-dia-visitas")).getAllByTestId("mi-dia-row")[0]).toHaveTextContent(/^2:00\sPM/);
   });
 });
 
