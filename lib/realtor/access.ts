@@ -35,15 +35,20 @@ async function pedirAcceso(): Promise<AccessInfo> {
   }
 }
 
-/** Vigencia de una respuesta compartida. Un cambio de roles en el backend tarda como mucho esto en verse. */
-const VIGENCIA_MS = 30_000;
+/**
+ * Vigencia de una respuesta compartida: basta para que menú, armazón y panel de una misma carga compartan una petición.
+ * Si el backend revoca un permiso sin cambiar el token, la interfaz tarda como mucho esto en verlo (el backend lo
+ * aplica ya en cada petición de datos: esto solo decide qué se pinta).
+ */
+const VIGENCIA_MS = 10_000;
 let compartida: { token: string; desde: number; respuesta: Promise<AccessInfo> } | null = null;
 
 /**
  * Estado y roles de /acceso. La identidad sale del token: el cliente no envía nada más.
  * Menú, armazón y panel preguntan a la vez en cada carga (RENDIMIENTO-CARGA: de 3 a 7 peticiones). Con sesión se
- * comparte una sola petición por token durante VIGENCIA_MS: un token nuevo (refresh, otro usuario) pregunta de nuevo.
- * Un error no se comparte una vez resuelto, y sin token cada llamada pregunta por su cuenta.
+ * comparte una sola petición por token durante VIGENCIA_MS. Login, refresh, cambio de tenant, de vista o de rol y cambio
+ * de contraseña ponen un token nuevo (lib/auth/auth-context.tsx), así que preguntan de nuevo; cerrar sesión borra el
+ * token y con él lo guardado. Un error no se comparte una vez resuelto, y sin token cada llamada pregunta por su cuenta.
  */
 /** El access token en memoria; si no se puede leer, null: entonces no se comparte nada (cada llamada pregunta). */
 function tokenActual(): string | null {
@@ -56,7 +61,10 @@ function tokenActual(): string | null {
 
 export async function fetchPanelAccessInfo(): Promise<AccessInfo> {
   const token = tokenActual();
-  if (!token) return pedirAcceso();
+  if (!token) {
+    compartida = null; // sesión cerrada (clearTokens): no queda nada guardado de la anterior
+    return pedirAcceso();
+  }
   const ahora = Date.now();
   if (compartida && compartida.token === token && ahora - compartida.desde < VIGENCIA_MS) return compartida.respuesta;
   const respuesta = pedirAcceso();
