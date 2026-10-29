@@ -52,13 +52,13 @@ it("token nuevo (refresh o cambio de usuario): se vuelve a preguntar", async () 
   expect(llamadasAcceso()).toBe(2);
 });
 
-it("pasada la vigencia (30 s) se vuelve a preguntar; antes, no", async () => {
+it("pasada la vigencia (10 s) se vuelve a preguntar; antes, no", async () => {
   jest.useFakeTimers({ now: new Date("2026-10-28T12:00:00Z") });
   await fetchPanelAccessInfo();
-  jest.setSystemTime(new Date("2026-10-28T12:00:29Z"));
+  jest.setSystemTime(new Date("2026-10-28T12:00:09Z"));
   await fetchPanelAccessInfo();
   expect(llamadasAcceso()).toBe(1);
-  jest.setSystemTime(new Date("2026-10-28T12:00:31Z"));
+  jest.setSystemTime(new Date("2026-10-28T12:00:11Z"));
   await fetchPanelAccessInfo();
   expect(llamadasAcceso()).toBe(2);
 });
@@ -89,4 +89,57 @@ it("fail-closed intacto: un 403 compartido sigue siendo sin-acceso para todos", 
   expect(a).toEqual({ status: "sin-acceso", roles: [], demo: false });
   expect(b).toEqual(a);
   expect(llamadasAcceso()).toBe(1);
+});
+
+// César (29-oct): la caché tiene que vaciarse al cerrar sesión y no servir nada tras cambiar de tenant, de rol o de
+// usuario. Cada caso reproduce lo que hace lib/auth/auth-context.tsx: logout → tokenStorage.clearTokens() (:433);
+// switchTenant (:457), fijarContexto (:476), switchRole (:494), refresh y login → tokenStorage.setTokens(token nuevo).
+describe("la caché de /acceso sigue a la sesión", () => {
+  const respuesta = (roles: string[], status = 200) => ({ status, json: async () => ({ ok: true, roles, demo: false }) });
+
+  it("cerrar sesión la vacía: aunque vuelva el mismo token, se pregunta de nuevo", async () => {
+    const mismo = tokenStorage.getAccessToken()!;
+    await fetchPanelAccessInfo();
+    tokenStorage.clearTokens();                       // logout (auth-context.tsx:433)
+    await fetchPanelAccessInfo();                     // cualquier pantalla tras el logout
+    tokenStorage.setTokens({ accessToken: mismo, refreshToken: "r" });
+    await fetchPanelAccessInfo();
+    expect(llamadasAcceso()).toBe(3);
+  });
+
+  it("cambiar de tenant (switchTenant/fijarContexto ponen un token nuevo): no se sirve el acceso del tenant anterior", async () => {
+    mockApiFetch.mockResolvedValueOnce(respuesta(["broker_supervisor"]));
+    expect((await fetchPanelAccessInfo()).roles).toEqual(["broker_supervisor"]);
+    tokenStorage.setTokens({ accessToken: `tenant-b.${token}`, refreshToken: "r" });
+    mockApiFetch.mockResolvedValueOnce({ status: 403, json: async () => ({}) });
+    expect(await fetchPanelAccessInfo()).toEqual({ status: "sin-acceso", roles: [], demo: false });
+  });
+
+  it("cambiar de rol (switchRole pone un token nuevo): se leen los roles nuevos", async () => {
+    mockApiFetch.mockResolvedValueOnce(respuesta(["agent"]));
+    expect((await fetchPanelAccessInfo()).roles).toEqual(["agent"]);
+    tokenStorage.setTokens({ accessToken: `rol-broker.${token}`, refreshToken: "r" });
+    mockApiFetch.mockResolvedValueOnce(respuesta(["broker_supervisor"]));
+    expect((await fetchPanelAccessInfo()).roles).toEqual(["broker_supervisor"]);
+  });
+
+  it("cambiar de usuario (logout + login de otro): el segundo no ve los roles del primero", async () => {
+    mockApiFetch.mockResolvedValueOnce(respuesta(["broker_supervisor"]));
+    await fetchPanelAccessInfo();
+    tokenStorage.clearTokens();
+    tokenStorage.setTokens({ accessToken: `otro-usuario.${token}`, refreshToken: "r" });
+    mockApiFetch.mockResolvedValueOnce(respuesta(["agent"]));
+    expect((await fetchPanelAccessInfo()).roles).toEqual(["agent"]);
+  });
+
+  it("límite documentado: si el backend revoca el acceso con el MISMO token, la interfaz tarda como mucho la vigencia en verlo", async () => {
+    jest.useFakeTimers({ now: new Date("2026-10-29T12:00:00Z") });
+    mockApiFetch.mockResolvedValueOnce(respuesta(["broker_supervisor"]));
+    expect((await fetchPanelAccessInfo()).status).toBe("ok");
+    mockApiFetch.mockResolvedValue({ status: 403, json: async () => ({}) });   // revocado en el backend
+    jest.setSystemTime(new Date("2026-10-29T12:00:09Z"));
+    expect((await fetchPanelAccessInfo()).status).toBe("ok");                // aún dentro de la ventana
+    jest.setSystemTime(new Date("2026-10-29T12:00:11Z"));
+    expect((await fetchPanelAccessInfo()).status).toBe("sin-acceso");        // pasada la ventana
+  });
 });
