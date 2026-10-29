@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { leerItem, leerItems, type Leida } from "@/lib/realtor/broker/client";
 import type { DeskItem } from "@/lib/realtor/broker/types";
+import { STATUS_LABEL } from "@/lib/realtor/broker/copy";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { QA_KINDS, qaDecidir, qaHistorial, type QaDecision, type QaEntrada, type QaMotivoFallo } from "./qa-client";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
+const APAGADO: CSSProperties = { opacity: 0.5, cursor: "not-allowed" };
 const BTN: CSSProperties = { minHeight: 40, padding: "0 16px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 };
 
 const TXT = {
@@ -16,12 +18,22 @@ const TXT = {
   items: "Solicitudes", empty: "Sin solicitudes todavía", error: "No pudimos cargar las solicitudes.",
   approve: "Aprobar", ret: "Devolver", reject: "Rechazar (TEST)", sending: "Enviando…",
   history: "Historial QA", noHistory: "Sin decisiones QA todavía", historyError: "No pudimos cargar el historial QA.",
-  close: "Cerrar", noSubject: "Sin descripción",
+  close: "Cerrar",
+  cerrada: "Ya la decidió el broker: no admite decisiones QA.", brokerDecision: "Decisión del broker",
   conflict: "Esta solicitud ya cambió de estado. Recarga la lista.",
   forbidden: "No puedes hacer decisiones QA sobre esta solicitud.",
   invalid: "La decisión QA no es válida. La solicitud sigue igual.",
   failed: "No pudimos registrar la decisión QA. Inténtalo de nuevo.",
 } as const;
+/** Tipos de revisión que lista el modo QA (QA_KINDS). */
+const KIND_TXT: Record<string, string> = { operation_review: "Revisión de operación", document_review: "Revisión de documento" };
+const fecha = (iso: string | null | undefined) => {
+  const d = iso ? new Date(iso) : null;
+  return d && !Number.isNaN(d.getTime()) ? d.toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "";
+};
+/** Sin `subject_label` la solicitud se nombra por su tipo y la fecha en que se pidió, nunca «Sin descripción». */
+const titulo = (i: DeskItem) => i.subject_label || [KIND_TXT[i.kind as string] ?? "Revisión", fecha(i.created_at)].filter(Boolean).join(" · ");
+const estado = (s: string) => STATUS_LABEL.es[s as DeskItem["status"]] ?? s;
 const DECISION_TXT: Record<QaDecision, string> = { approve: "Aprobada", return: "Devuelta", reject: "Rechazada (TEST)" };
 const AVISO: Record<QaMotivoFallo, { id: string; txt: string }> = {
   conflicto: { id: "qa-conflict", txt: TXT.conflict },
@@ -76,8 +88,14 @@ export function QaDesk() {
     const status = r.datos.item_status as DeskItem["status"];
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     setAbierto((a) => (a && a.id === id && a.item?.estado === "ok" ? { id, item: { estado: "ok", datos: { ...a.item.datos, status } } } : a));
-    void cargarHistorial(id);
+    // El POST ya trae el historial actualizado: se usa ese; solo sin él se vuelve a leer.
+    if (Array.isArray(r.datos.qa_decisions)) setHistorial({ estado: "ok", datos: r.datos.qa_decisions });
+    else void cargarHistorial(id);
   };
+
+  // El detalle leído o, mientras llega, la fila de la lista. QA solo decide revisiones pending (backend: 409 si no).
+  const datos = abierto ? (abierto.item?.estado === "ok" ? abierto.item.datos : items.find((i) => i.id === abierto.id) ?? null) : null;
+  const cerrada = !!datos && datos.status !== "pending";
 
   return (
     <section data-testid="qa-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
@@ -92,8 +110,10 @@ export function QaDesk() {
           {items.map((i) => (
             <li key={i.id}>
               <button type="button" data-testid="item-row" data-status={i.status} onClick={() => void abrir(i.id)}
-                style={{ ...BTN, width: "100%", textAlign: "left", fontWeight: 400, padding: 14, minHeight: 0 }}>
-                <strong>{i.subject_label || TXT.noSubject}</strong> · {i.status}
+                aria-current={abierto?.id === i.id ? "true" : undefined}
+                style={{ ...BTN, width: "100%", textAlign: "left", fontWeight: 400, padding: 14, minHeight: 0,
+                  ...(abierto?.id === i.id ? { borderColor: RT.ink, boxShadow: `inset 4px 0 0 ${RT.teal}` } : {}) }}>
+                <strong>{titulo(i)}</strong> · {estado(i.status)}
               </button>
             </li>
           ))}
@@ -101,12 +121,20 @@ export function QaDesk() {
       </div>
       {abierto ? (
         <div data-testid="item-detail" role="dialog" aria-label={TXT.title} style={CARD}>
-          <p style={{ margin: "0 0 10px", fontWeight: 700 }}>{abierto.item?.estado === "ok" ? abierto.item.datos.subject_label || TXT.noSubject : "…"}</p>
+          <p style={{ margin: "0 0 10px", fontWeight: 700 }}>{datos ? `${titulo(datos)} · ${estado(datos.status)}` : "…"}</p>
+          {datos && cerrada ? (
+            <>
+              <p data-testid="qa-cerrada" style={{ margin: "0 0 6px", fontSize: 14 }}>{TXT.cerrada}</p>
+              <p data-testid="broker-decision" style={{ margin: 0, fontSize: 14, color: RT.muted }}>
+                {[`${TXT.brokerDecision}: ${estado(datos.status)}`, fecha(datos.decided_at), datos.decision_reason].filter(Boolean).join(" · ")}
+              </p>
+            </>
+          ) : null}
           {aviso ? <p role="alert" data-testid={AVISO[aviso].id} style={{ margin: "10px 0 0", fontSize: 13 }}>{AVISO[aviso].txt}</p> : null}
           <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-            <button type="button" data-testid="qa-approve" disabled={enviando} onClick={() => void decidir(abierto.id, "approve")} style={{ ...BTN, background: RT.ink, color: RT.white }}>{enviando ? TXT.sending : TXT.approve}</button>
-            <button type="button" data-testid="qa-return" disabled={enviando} onClick={() => void decidir(abierto.id, "return")} style={BTN}>{TXT.ret}</button>
-            <button type="button" data-testid="qa-reject" disabled={enviando} onClick={() => void decidir(abierto.id, "reject")} style={BTN}>{TXT.reject}</button>
+            <button type="button" data-testid="qa-approve" disabled={enviando || cerrada} onClick={() => void decidir(abierto.id, "approve")} style={{ ...BTN, background: RT.ink, color: RT.white, ...(cerrada ? APAGADO : {}) }}>{enviando ? TXT.sending : TXT.approve}</button>
+            <button type="button" data-testid="qa-return" disabled={enviando || cerrada} onClick={() => void decidir(abierto.id, "return")} style={{ ...BTN, ...(cerrada ? APAGADO : {}) }}>{TXT.ret}</button>
+            <button type="button" data-testid="qa-reject" disabled={enviando || cerrada} onClick={() => void decidir(abierto.id, "reject")} style={{ ...BTN, ...(cerrada ? APAGADO : {}) }}>{TXT.reject}</button>
           </div>
           <div data-testid="qa-history" style={{ marginTop: 16 }}>
             <h3 style={{ margin: "0 0 8px", fontSize: 16 }}>{TXT.history}</h3>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CommandPalette, type CommandPaletteGroup } from "@/components/forge/ui/CommandPalette";
 import { useNavegacionVisible } from "@/components/forge/layout/useNavegacionVisible";
@@ -23,12 +23,25 @@ export function BuscadorNavegacion() {
   const { secciones } = useNavegacionVisible();
   const enCreditHub = pathname === "/credit-hub" || pathname.startsWith("/credit-hub/");
 
+  // Se abre sin Dialog.Trigger (atajo o evento), así que el diálogo no sabe adónde devolver el foco: se guarda el control
+  // que lo tenía al abrir y se le devuelve al cerrar (Esc, clic fuera o elegir), si sigue en la página.
+  const origen = useRef<HTMLElement | null>(null);
+  const cambiar = useCallback((abierto: boolean) => {
+    if (abierto) origen.current = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+    setOpen(abierto);
+    if (!abierto) {
+      const el = origen.current;
+      origen.current = null;
+      if (el) setTimeout(() => { if (el.isConnected) el.focus(); }, 0);
+    }
+  }, []);
+
   // El botón de la barra superior lo abre con este evento (no comparte estado con el buscador).
   useEffect(() => {
-    const abrir = () => setOpen(true);
+    const abrir = () => cambiar(true);
     window.addEventListener(EVENTO_ABRIR_BUSCADOR, abrir);
     return () => window.removeEventListener(EVENTO_ABRIR_BUSCADOR, abrir);
-  }, []);
+  }, [cambiar]);
 
   const groups: CommandPaletteGroup[] = useMemo(() => {
     const porSeccion = new Map<string, CommandPaletteGroup>();
@@ -51,7 +64,7 @@ export function BuscadorNavegacion() {
     <div className="contents" style={TOKENS_PANEL_BARRA}>
       <CommandPalette
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={cambiar}
         groups={groups}
         keyboardShortcut={!enCreditHub}
         placeholder="Buscar una pantalla…"

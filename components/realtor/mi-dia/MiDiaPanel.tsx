@@ -9,6 +9,7 @@ import { DEMO_DESK, DEMO_LEADS, DEMO_LISTINGS } from "@/lib/realtor/mi-dia/demo"
 import { useTenantTimeZone } from "@/lib/realtor/tenant-tz";
 import { RealtorNotice } from "../RealtorNotice";
 import { TextoRecortado } from "../TextoRecortado";
+import { BROKER_ROLE } from "@/lib/realtor/menu";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const card = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 10, padding: 20 } as const;
@@ -75,10 +76,12 @@ function Rows({ items }: { items: { id: string; main: string; sub: string }[] })
 }
 
 export function MiDiaPanel() {
-  const { state: access, demoActive } = useRealtorAccessInfo();
+  const { state: access, demoActive, roles } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
-  const broker = useBrokerView();
+  const vistaBroker = useBrokerView();
   const demo = demoActive;
+  // Con DEMO manda la vista simulada del armazón; con datos reales, el rol del backend (el selector solo existe con DEMO).
+  const broker = demo ? vistaBroker : roles.includes(BROKER_ROLE);
   const [real, setReal] = useState<MiDia | null>(null);
   // Fecha, saludo y horas en la zona del tenant (deducida del perfil); sin perfil, la del navegador.
   const tz = useTenantTimeZone(access === "ok");
@@ -94,7 +97,7 @@ export function MiDiaPanel() {
   const date = todayText(t, tz);
   return (
     <section data-testid="mi-dia-panel" lang={lang} style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <p data-testid="mi-dia-date" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{date}{demo ? ` · ${t.demoRef}` : ""}</p>
         <div role="group" aria-label={t.lang} style={{ display: "flex", gap: 6 }}>
           {(["es", "en"] as const).map((l) => (
@@ -153,7 +156,7 @@ export function MiDiaPanel() {
           <p data-testid="mi-dia-visitas-empty" style={{ margin: 0, fontSize: 14, color: RT.muted }}>{t.visitsEmpty}</p>
         ) : <Rows items={real.visitas.items.map((v) => ({
           id: v.event_id,
-          main: new Date(v.starts_at).toLocaleTimeString(t.dateLocale, { hour: "2-digit", minute: "2-digit", timeZone: tz }),
+          main: new Date(v.starts_at).toLocaleTimeString(t.dateLocale, { hour: "numeric", minute: "2-digit", timeZone: tz }),
           sub: v.title,
         }))} />) : <NoDisponible texto={t.noVisits} cta={t.noVisitsCta} href="/realtor/smart-calendar" />}
       </Section>

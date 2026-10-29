@@ -1,11 +1,12 @@
 import { test, expect, type Page, type Request } from "@playwright/test";
+import { sesion as sesionBase } from "../sesion";
 
 /**
  * O3-D-BROKER: /realtor/broker con respuestas simuladas según C-RE-ALTA (G2-BROKER-DESK). Solo lectura.
- * 3110 = build con DEMO; 3111 = build sin DEMO. El filtro por rol es del cliente, no una barrera del servidor.
+ * Corre con la config común de e2e/realtor: 3100 = build con DEMO; 3101 = build sin DEMO. El filtro por rol es del
+ * cliente, no una barrera del servidor.
  */
-const B = "http://backend.invalid";
-const NODEMO = "http://127.0.0.1:3111";
+const NODEMO = "http://127.0.0.1:3101";
 const BROKER = "broker_supervisor";
 
 const DESK = { id: "d1", tenant_id: "t1", brokerage_id: "b1", created_at: "2026-01-05T12:00:00Z" };
@@ -26,19 +27,7 @@ type Opts = { acceso?: number; roles?: string[]; desk?: number; items?: unknown[
 async function sesion(page: Page, o: Opts = {}) {
   const peticiones: Request[] = [];
   page.on("request", (r) => { if (r.url().includes("/broker-desk")) peticiones.push(r); });
-  await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/api/v2/auth/refresh`, (route) =>
-    route.fulfill({ json: { access_token: "a.b.c", refresh_token: "r", expires_in: 3600 } }));
-  const tenant = { id: "t1", slug: "qa", display_name: "QA", subscribed_cores: ["real_estate"] };
-  await page.route(`${B}/api/v2/auth/me`, (route) =>
-    route.fulfill({ json: {
-      user: { id: "u1", email: "qa@nadakki.test", name: "QA", is_active: true, mfa_enabled: false },
-      current_tenant: tenant, all_tenants: [tenant], active_roles: [],
-    } }));
-  const acceso = o.acceso ?? 200;
-  await page.route(/\/api\/v1\/realestate\/acceso/, (route) =>
-    route.fulfill({ status: acceso, json: acceso === 200 ? { ok: true, roles: o.roles ?? [BROKER] } : { detail: "forbidden" } }));
+  await sesionBase(page, o.acceso ?? 200, { roles: o.roles ?? [BROKER] });
   const desk = o.desk ?? 200;
   const lista = o.items ?? [];
   await page.route(/\/api\/v1\/realestate\/broker-desk/, (route) => {
@@ -57,7 +46,6 @@ async function sesion(page: Page, o: Opts = {}) {
     const f = lista.find((i) => (i as { id: string }).id === id);
     return route.fulfill(f ? { json: f } : { status: 404, json: { detail: "no" } });
   });
-  await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
   return peticiones;
 }
 

@@ -1,15 +1,15 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ALL_CENTERS } from "../../../lib/realtor/centers";
 import { BROKER_ROLE, REALTOR_MENU, visibleMenu } from "../../../lib/realtor/menu";
+import { sesion } from "../sesion";
 
 /**
  * Armazón de Realtor OS (DL10A): hitos del diseño con /acceso a 200 y a 403 (fail-closed) y comparación visual
  * de /realtor/demand-radar con la referencia del prototipo. El umbral y su porqué están en UMBRAL.md.
  */
 
-const B = "http://backend.invalid";
 const THRESHOLD = 0.12;
 /** Misma regla que ShellSidebar: Career Director conserva su testid histórico (career-director.spec.ts). */
 const testidOf = (id: string) => (id === "career-director" ? "career-director" : `center-${id}`);
@@ -18,25 +18,6 @@ let fallos = 0;
 test.afterEach(({}, info) => void (info.status !== info.expectedStatus && (fallos += 1)));
 test.afterAll(() => { console.log(`RESULT_O2_REGISTRO=${fallos === 0 ? "PASS" : "FAIL"}`); console.log(`RESULT_O2_F_MENU=${fallos === 0 ? "PASS" : "FAIL"}`); console.log(`RESULT_O3_FIX_PLATFORM_OPS_DEMO_UI=${fallos === 0 ? "PASS" : "FAIL"}`); console.log(`RESULT_O3_FIX_MENU_LATERAL=${fallos === 0 ? "PASS" : "FAIL"}`); });
 
-/** Peticiones del navegador a /acceso: para comprobar que el cliente nunca manda tenant. */
-async function sesion(page: Page, acceso: number, roles: string[] = [], vistas: string[] = [], demo?: unknown) {
-  await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/api/v2/auth/refresh`, (route) =>
-    route.fulfill({ json: { access_token: "a.b.c", refresh_token: "r", expires_in: 3600 } }));
-  const tenant = { id: "t1", slug: "qa", display_name: "QA", subscribed_cores: ["real_estate"] };
-  await page.route(`${B}/api/v2/auth/me`, (route) =>
-    route.fulfill({ json: {
-      user: { id: "u1", email: "qa@nadakki.test", name: "QA", is_active: true, mfa_enabled: false },
-      current_tenant: tenant, all_tenants: [tenant], active_roles: [],
-    } }));
-  await page.route(/\/api\/v1\/realestate\/acceso/, (route) =>
-    {
-    vistas.push(`${route.request().url()} ${route.request().postData() ?? ""} ${JSON.stringify(route.request().headers())}`);
-    return route.fulfill({ status: acceso, json: acceso === 200 ? { ok: true, roles, ...(demo === undefined ? {} : { demo }) } : { detail: "forbidden" } });
-  });
-  await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
-}
 
 test("Propietarios, Alta y Agente web son filas vivas de la barra", async ({ page }) => {
   await sesion(page, 200);
@@ -51,13 +32,13 @@ test("Propietarios, Alta y Agente web son filas vivas de la barra", async ({ pag
 });
 
 test("demo:true en /acceso muestra el aviso de tenant DEMO; con demo:false no", async ({ page }) => {
-  await sesion(page, 200, [], [], true);
+  await sesion(page, 200, { demo: true });
   await page.goto("/realtor/demand-radar");
   await expect(page.getByTestId("shell-sidebar")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("tenant-demo")).toContainText("Tenant DEMO");
   await expect(page.getByTestId("tenant-demo")).toBeVisible();
   const otra = await page.context().newPage();
-  await sesion(otra, 200, [], [], false);
+  await sesion(otra, 200, { demo: false });
   await otra.goto("/realtor/demand-radar");
   await expect(otra.getByTestId("shell-sidebar")).toBeVisible({ timeout: 30_000 });
   await expect(otra.getByTestId("tenant-demo")).toHaveCount(0);
@@ -117,18 +98,20 @@ test("con 200 de /acceso se pinta el armazón del diseño", async ({ page }) => 
 });
 
 test("con el rol broker_supervisor la Bandeja del broker aparece en «Hoy»; el selector Broker no la concede", async ({ page }) => {
-  await sesion(page, 200, [BROKER_ROLE]);
+  await sesion(page, 200, { roles: [BROKER_ROLE] });
   await page.goto("/realtor/demand-radar");
   const side = page.getByTestId("shell-sidebar");
   await expect(side).toBeVisible({ timeout: 30_000 });
   const hoy = REALTOR_MENU[0].items.map((i) => i.label);
   expect(hoy).toContain("Bandeja del broker");
   await expect(side.getByTestId("center-bandeja-broker")).toBeVisible();
-  await expect(side.getByTestId("center-bandeja-broker")).toContainText("Pronto");
+  // Centro vivo desde O3-D-BROKER: enlaza a /realtor/broker y ya no lleva «Pronto».
+  await expect(side.getByTestId("center-bandeja-broker")).toHaveAttribute("href", "/realtor/broker");
+  await expect(side.getByTestId("center-bandeja-broker")).not.toContainText("Pronto");
 });
 
 test("negativo: sin el rol no hay Bandeja aunque se elija la vista Broker", async ({ page }) => {
-  await sesion(page, 200, ["agent"]);
+  await sesion(page, 200, { roles: ["agent"] });
   await page.goto("/realtor/demand-radar");
   await expect(page.getByTestId("shell-sidebar")).toBeVisible({ timeout: 30_000 });
   await page.getByTestId("view-broker").click();
@@ -138,7 +121,7 @@ test("negativo: sin el rol no hay Bandeja aunque se elija la vista Broker", asyn
 
 test("tenant ajeno: la petición a /acceso no lleva tenant del cliente", async ({ page }) => {
   const vistas: string[] = [];
-  await sesion(page, 200, [BROKER_ROLE], vistas);
+  await sesion(page, 200, { roles: [BROKER_ROLE], vistas });
   await page.goto("/realtor/demand-radar");
   await expect(page.getByTestId("shell-sidebar")).toBeVisible({ timeout: 30_000 });
   expect(vistas.length).toBeGreaterThan(0);
@@ -200,7 +183,7 @@ test("captura a 1440×900 de /realtor/demand-radar frente a la referencia DL10A"
 // ROP-UX-NAV-MOVIL: por debajo de 768 px la barra de centros es un cajón; a 768 px sigue la barra fija.
 test("a 390 px: sin barra fija, el panel ocupa el ancho, sin scroll horizontal, y el cajón abre y cierra", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await sesion(page, 200, [BROKER_ROLE]);
+  await sesion(page, 200, { roles: [BROKER_ROLE] });
   await page.goto("/realtor/demand-radar");
   const boton = page.getByRole("button", { name: "Menú de centros" });
   await expect(boton).toBeVisible({ timeout: 30_000 });
