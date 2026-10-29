@@ -12,15 +12,17 @@ const activacion = { id: "a1", kind: "agent_activation", subject_label: "Agente"
 const res = (status: number, body: unknown = {}) => ({ status, json: async () => body });
 const hist = [{ qa_decision: "return", reviewer_user_id: "u-paula", at: "2026-10-27T13:09:48Z" }];
 
-type Montaje = { roles: string[]; qa: unknown; post?: { status: number; body: unknown } };
-function montar({ roles, qa, post }: Montaje) {
+type Item = { id: string; kind: string; subject_label: string | null; status: string; created_at: string; decided_at?: string | null; decision_reason?: string | null };
+type Montaje = { roles: string[]; qa: unknown; post?: { status: number; body: unknown }; items?: Item[]; historial?: unknown[] };
+function montar({ roles, qa, post, items = [revision, activacion], historial = hist }: Montaje) {
   process.env.NEXT_PUBLIC_REALTOR_PANEL = "1";
   mockApiFetch.mockImplementation(async (ruta: string, init?: RequestInit) => {
     if (init?.method === "POST") return res(post?.status ?? 200, post?.body ?? {});
     if (/\/acceso$/.test(ruta)) return res(200, { allowed: true, roles, demo: false, ...(qa === undefined ? {} : { qa_reviewer: qa }) });
-    if (/\/qa-decisions$/.test(ruta)) return res(200, { item_id: "p1", item_status: "pending", legal_effect: false, test: true, qa_decisions: hist });
-    if (/\/items\/p1$/.test(ruta)) return res(200, revision);
-    if (/\/items\?/.test(ruta)) return res(200, { items: [revision, activacion], next_cursor: null });
+    if (/\/qa-decisions$/.test(ruta)) return res(200, { item_id: "p1", item_status: "pending", legal_effect: false, test: true, qa_decisions: historial });
+    const uno = items.find((i) => new RegExp(`/items/${i.id}$`).test(ruta));
+    if (uno) return res(200, uno);
+    if (/\/items\?/.test(ruta)) return res(200, { items, next_cursor: null });
     if (/\/broker-desk$/.test(ruta)) return res(200, { id: "d1", brokerage_id: "b1", created_at: "2026-10-01T00:00:00Z" });
     if (/\/summary$/.test(ruta)) return res(200, { brokerage_status: "active", pending_by_kind: {}, agents_by_status: {}, supervised_agent_counts: [], generated_at: "2026-10-27T00:00:00Z" });
     return res(404);
@@ -101,4 +103,65 @@ describe("QA del broker: Paula-QA (qa_reviewer true)", () => {
       expect(llamo(/\/items\/p1\/decision$/)).toBe(false);
       await waitFor(() => expect(screen.getAllByTestId("item-row")[0]).toHaveAttribute("data-status", "pending"));
     });
+});
+
+// PANEL-QA (auditoría Cowork B3, staging 7dcc6c6): solicitudes sin título, estados en inglés, botones activos en filas
+// ya decididas, historial vacío en una decidida y sin indicar cuál está abierta.
+describe("QA del broker: el panel se entiende", () => {
+  const sinTitulo: Item = { id: "p2", kind: "document_review", subject_label: null, status: "pending", created_at: "2026-10-20T15:00:00Z" };
+  const decidida: Item = { id: "p3", kind: "operation_review", subject_label: "Cierre SYNTH", status: "approved", created_at: "2026-10-18T10:00:00Z", decided_at: "2026-10-21T09:00:00Z", decision_reason: "Documentación completa" };
+
+  it("una solicitud sin título se nombra por su tipo y su fecha, nunca «Sin descripción»", async () => {
+    montar({ roles: ["agent"], qa: true, items: [sinTitulo] });
+    const fila = (await screen.findAllByTestId("item-row"))[0];
+    expect(fila).toHaveTextContent("Revisión de documento · 20 oct 2026");
+    expect(fila).not.toHaveTextContent("Sin descripción");
+    await userEvent.click(fila);
+    expect(await screen.findByTestId("item-detail")).toHaveTextContent("Revisión de documento · 20 oct 2026");
+  });
+
+  it("los estados salen en español en la fila y en el detalle", async () => {
+    montar({ roles: ["agent"], qa: true, items: [revision, decidida] });
+    const filas = await screen.findAllByTestId("item-row");
+    expect(filas[0]).toHaveTextContent("Pendiente");
+    expect(filas[1]).toHaveTextContent("Aprobada");
+    for (const f of filas) expect(f.textContent).not.toMatch(/\b(pending|approved|rejected|cancelled)\b/);
+  });
+
+  it("negativo: en una solicitud ya decidida los tres botones están desactivados, se dice por qué y no se envía nada", async () => {
+    montar({ roles: ["agent"], qa: true, items: [decidida], historial: [] });
+    await userEvent.click((await screen.findAllByTestId("item-row"))[0]);
+    await screen.findByTestId("item-detail");
+    for (const b of ["qa-approve", "qa-return", "qa-reject"]) expect(screen.getByTestId(b)).toBeDisabled();
+    expect(screen.getByTestId("qa-cerrada")).toHaveTextContent("Ya la decidió el broker: no admite decisiones QA.");
+    await userEvent.click(screen.getByTestId("qa-approve"));
+    expect(posts()).toHaveLength(0);
+  });
+
+  it("una decidida muestra la decisión del broker aunque no tenga historial QA", async () => {
+    montar({ roles: ["agent"], qa: true, items: [decidida], historial: [] });
+    await userEvent.click((await screen.findAllByTestId("item-row"))[0]);
+    expect(await screen.findByTestId("broker-decision")).toHaveTextContent("Decisión del broker: Aprobada · 21 oct 2026 · Documentación completa");
+    expect(await screen.findByTestId("qa-history")).toHaveTextContent("Sin decisiones QA todavía");
+  });
+
+  it("tras decidir, el historial es el que devuelve el POST (no se queda vacío si la relectura llega vacía)", async () => {
+    const ahora = [{ qa_decision: "approve", reviewer_user_id: "u-paula", at: "2026-10-28T12:00:00Z" }];
+    montar({ roles: ["agent"], qa: true, items: [revision], historial: [], post: { status: 200, body: { item_id: "p1", qa_decision: "approve", item_status: "pending", legal_effect: false, test: true, qa_decisions: ahora } } });
+    await abrir();
+    expect(await screen.findByTestId("qa-history")).toHaveTextContent("Sin decisiones QA todavía");
+    await userEvent.click(screen.getByTestId("qa-approve"));
+    await waitFor(() => expect(screen.getByTestId("qa-history")).toHaveTextContent("Aprobada · 2026-10-28"));
+  });
+
+  it("la fila abierta se marca (aria-current) y solo ella; al cerrar, ninguna", async () => {
+    montar({ roles: ["agent"], qa: true, items: [revision, sinTitulo] });
+    const filas = await screen.findAllByTestId("item-row");
+    await userEvent.click(filas[1]);
+    await screen.findByTestId("item-detail");
+    expect(screen.getAllByTestId("item-row")[1]).toHaveAttribute("aria-current", "true");
+    expect(screen.getAllByTestId("item-row")[0]).not.toHaveAttribute("aria-current");
+    await userEvent.click(screen.getByTestId("detail-close"));
+    for (const f of screen.getAllByTestId("item-row")) expect(f).not.toHaveAttribute("aria-current");
+  });
 });
