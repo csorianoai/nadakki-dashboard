@@ -306,27 +306,27 @@ export const VehicleCard = memo(function VehicleCard({
         </div>
 
         {vehicle.dealerName ? (
-        <div className="flex items-center gap-2 pt-1">
-          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-r-sm bg-nk-surface-2 text-[9px] font-bold text-nk-fg-muted">
-            {vehicle.dealerName
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((w) => w[0])
-              .join("")
-              .toUpperCase()}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-nk-fg">
-              {vehicle.dealerName} | {vehicle.loc}
-            </p>
-            {vehicle.rating != null && vehicle.reviews != null ? (
-              <p className="flex items-center gap-1 text-[11px] text-nk-fg-subtle">
-                <Star className="h-3 w-3 fill-nk-warning text-nk-warning" aria-hidden />
-                {vehicle.rating.toFixed(1)} ({vehicle.reviews} ventas)
+          <div className="flex items-center gap-2 pt-1">
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-r-sm bg-nk-surface-2 text-[9px] font-bold text-nk-fg-muted">
+              {vehicle.dealerName
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join("")
+                .toUpperCase()}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-nk-fg">
+                {vehicle.dealerName} | {vehicle.loc}
               </p>
-            ) : null}
+              {typeof vehicle.rating === "number" && typeof vehicle.reviews === "number" ? (
+                <p className="flex items-center gap-1 text-[11px] text-nk-fg-subtle">
+                  <Star className="h-3 w-3 fill-nk-warning text-nk-warning" aria-hidden />
+                  {vehicle.rating.toFixed(1)} ({vehicle.reviews} ventas)
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
         ) : null}
 
         <div className="mt-auto flex gap-2 pt-2">
