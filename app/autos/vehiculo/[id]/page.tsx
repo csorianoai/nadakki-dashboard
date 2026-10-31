@@ -8,7 +8,6 @@ import { Gallery } from "@/components/vdp/Gallery";
 import { VehicleHeader } from "@/components/vdp/VehicleHeader";
 import { AddToCartButton } from "@/components/autos/AddToCartButton";
 import { MatchScore } from "@/components/vdp/MatchScore";
-import { TrustChips } from "@/components/vdp/TrustChips";
 import { SpecTabs } from "@/components/vdp/SpecTabs";
 import { PriceEvaluation } from "@/components/vdp/PriceEvaluation";
 import { PaymentCalculator } from "@/components/vdp/PaymentCalculator";
@@ -118,7 +117,6 @@ export default function AutosVehiculoDetailPage() {
             <AddToCartButton vehicle={vehicle} vehicleRefId={id} className="mt-2" />
             <div className="flex flex-wrap items-center gap-4">
               <MatchScore match={vehicle.match} />
-              <TrustChips />
             </div>
             <PriceEvaluation vehicle={vehicle} />
             <SpecTabs vehicle={vehicle} />
