@@ -124,17 +124,6 @@ export function agrupar<T extends { total: number }>(
 
 export const hrefVehiculo = (id: string) => `/autos/dealer/inventario/${encodeURIComponent(id)}`;
 
-export function hrefCuenta(codigo: string, rango: Rango): string {
-  const q = new URLSearchParams({ cuenta: codigo });
-  if (rango.desde) q.set("desde", rango.desde);
-  if (rango.hasta) q.set("hasta", rango.hasta);
-  return `/contable/libro-mayor?${q.toString()}`;
-}
-
-/** Un mes "YYYY-MM" como rango del libro mayor: del 1 al ultimo dia. */
-export function hrefMes(mes: string): string {
-  const [a, m] = mes.split("-").map(Number);
-  const ultimo = new Date(a, m, 0).getDate();
-  const q = new URLSearchParams({ desde: `${mes}-01`, hasta: `${mes}-${dos(ultimo)}` });
-  return `/contable/libro-mayor?${q.toString()}`;
-}
+// Cuenta y mes NO enlazan a /contable/libro-mayor: esa pantalla no lee query params
+// (elige la primera cuenta/periodo) y mostraria un saldo ajeno. Se filtran dentro de la
+// propia pantalla con `onElegir` de BarrasAnalisis.

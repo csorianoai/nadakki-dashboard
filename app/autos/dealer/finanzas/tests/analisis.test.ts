@@ -4,7 +4,6 @@
  */
 import {
   agrupar,
-  hrefCuenta,
   hrefVehiculo,
   parseCostos,
   parseGastos,
@@ -96,11 +95,5 @@ describe("agrupar", () => {
 describe("enlaces al detalle", () => {
   it("vehiculo va a su ficha", () => {
     expect(hrefVehiculo("a b")).toBe("/autos/dealer/inventario/a%20b");
-  });
-  it("cuenta va al libro mayor con el periodo", () => {
-    expect(hrefCuenta("5101", { desde: "2026-08-01", hasta: "2026-10-31" })).toBe(
-      "/contable/libro-mayor?cuenta=5101&desde=2026-08-01&hasta=2026-10-31",
-    );
-    expect(hrefCuenta("5101", {})).toBe("/contable/libro-mayor?cuenta=5101");
   });
 });
