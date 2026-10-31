@@ -15,7 +15,7 @@ import {
   getCategoryActiveSummary,
 } from "@/components/search/filter-category-summary";
 import { HoverTooltip } from "@/components/ui/HoverTooltip";
-import { fmtRD } from "@/lib/format";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import { clearAllFilters } from "@/lib/search-filters";
 import { AI_SIGNAL_OPTIONS, type AiSignal, type FilterState } from "@/lib/search-types";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,7 @@ export function FilterPanel({
   onChange: (next: FilterState) => void;
   className?: string;
 }) {
+  const fmt = useFmtPrecio();
   const [openCategory, setOpenCategory] = useState<FilterCategoryId | null>(null);
   const [draft, setDraft] = useState<FilterState>(state);
 
@@ -89,8 +90,8 @@ export function FilterPanel({
             <h3 className="font-manrope text-xs font-bold text-brand">PaymentSearch</h3>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[12px]">
-                <span className="text-nk-fg-muted">Puedo pagar hasta RD$/mes</span>
-                <span className="font-bold tabular-nums text-brand">{fmtRD(state.maxMonthly)}</span>
+                <span className="text-nk-fg-muted">Puedo pagar hasta por mes</span>
+                <span className="font-bold tabular-nums text-brand">{fmt(state.maxMonthly)}</span>
               </div>
               <Slider
                 min={12_000}
@@ -104,7 +105,7 @@ export function FilterPanel({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[12px]">
                 <span className="text-nk-fg-muted">Inicial disponible</span>
-                <span className="font-bold tabular-nums text-brand">{fmtRD(state.initial)}</span>
+                <span className="font-bold tabular-nums text-brand">{state.initial > 0 ? fmt(state.initial) : "Sin inicial"}</span>
               </div>
               <Slider
                 min={0}
@@ -128,7 +129,7 @@ export function FilterPanel({
 
           <nav className="space-y-0.5 py-1">
             {FILTER_CATEGORIES.map((cat) => {
-              const active = getCategoryActiveSummary(state, cat.id);
+              const active = getCategoryActiveSummary(state, cat.id, fmt);
               const Icon = cat.icon;
               return (
                 <div

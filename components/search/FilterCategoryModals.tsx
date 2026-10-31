@@ -363,7 +363,7 @@ export function FilterCategoryModals({
             <div className="grid grid-cols-2 gap-3">
               <Input
                 type="number"
-                placeholder="Desde RD$"
+                placeholder="Precio mínimo"
                 value={draft.minPrice ?? ""}
                 onChange={(e) =>
                   patch({ minPrice: e.target.value ? Number(e.target.value) : undefined })
@@ -371,7 +371,7 @@ export function FilterCategoryModals({
               />
               <Input
                 type="number"
-                placeholder="Hasta RD$"
+                placeholder="Precio máximo"
                 value={draft.maxPrice ?? ""}
                 onChange={(e) =>
                   patch({ maxPrice: e.target.value ? Number(e.target.value) : undefined })
