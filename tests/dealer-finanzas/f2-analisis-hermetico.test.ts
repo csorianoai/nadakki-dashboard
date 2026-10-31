@@ -25,6 +25,10 @@ describe("F2: evidencia hermetica", () => {
   });
 
   it("el spec intercepta /api antes de navegar", () => {
-    expect(spec.indexOf("await simularBackend(page, externas)")).toBeLessThan(spec.indexOf("await page.goto("));
+    const iSim = spec.indexOf("await simularBackend(page, externas)");
+    const iGoto = spec.indexOf("await page.goto(");
+    expect(iSim).toBeGreaterThanOrEqual(0);
+    expect(iGoto).toBeGreaterThanOrEqual(0);
+    expect(iSim).toBeLessThan(iGoto);
   });
 });
