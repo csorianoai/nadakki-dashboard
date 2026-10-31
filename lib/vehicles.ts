@@ -17,11 +17,14 @@ export interface Vehicle {
   match: number;
   grad: string;
   verified: boolean;
-  rating: number;
-  reviews: number;
+  /** Datos del vendedor: solo si el backend los trae. Nunca se inventan. */
+  rating?: number;
+  reviews?: number;
   featuresLine: string;
-  dealerName: string;
-  avgResp: string;
+  dealerName?: string;
+  avgResp?: string;
+  /** Id real del backend (puede ser UUID); el enlace publico lo usa. */
+  refId?: string;
 }
 
 const DEALERS = ["AutoMundo RD", "Motores del Este", "Autos del Cibao", "Caribe Motors"] as const;
