@@ -10,6 +10,7 @@
  * error, o sin alguna de las dos claves, no se pinta el panel.
  */
 
+import Link from "next/link";
 import { DetalleTecnico } from "../inventario/DetalleTecnico";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -91,6 +92,14 @@ export default function DealerFinanzasPage() {
         <p className="mt-1 text-sm text-nk-fg-muted">
           Costos de cada unidad y su total acumulado, en la moneda de tu concesionario.
         </p>
+        <nav aria-label="Análisis" className="mt-2 flex gap-4 text-sm">
+          <Link href="/autos/dealer/finanzas/analisis-costos" data-testid="link-analisis-costos" className="underline">
+            Análisis de costos
+          </Link>
+          <Link href="/autos/dealer/finanzas/analisis-gastos" data-testid="link-analisis-gastos" className="underline">
+            Análisis de gastos
+          </Link>
+        </nav>
       </header>
 
       {!context ? (
