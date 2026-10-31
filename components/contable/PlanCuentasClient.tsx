@@ -56,7 +56,7 @@ function TreeRow({
         <td className="px-4 py-2">{node.nombre}</td>
         <td className="px-4 py-2"><TipoCuentaBadge tipo={node.tipo_cuenta} /></td>
         <td className="px-4 py-2"><NaturalezaBadge naturaleza={node.naturaleza} /></td>
-        <td className="px-4 py-2 text-xs text-zinc-500">{node.activa ? "Activa" : "Inactiva"}</td>
+        <td className="px-4 py-2 text-xs text-zinc-400">{node.activa ? "Activa" : "Inactiva"}</td>
         <td className="px-4 py-2">
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" onClick={() => onEdit(node)}>Editar</Button>
@@ -182,12 +182,12 @@ export function PlanCuentasClient() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Cargando plan de cuentas…</p>
+        <p className="text-sm text-zinc-400">Cargando plan de cuentas…</p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-white/10">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.03] text-left text-[10px] uppercase text-zinc-500">
+              <tr className="border-b border-white/10 bg-white/[0.03] text-left text-[10px] uppercase text-zinc-400">
                 <th className="px-4 py-3">Código</th>
                 <th className="px-4 py-3">Nombre</th>
                 <th className="px-4 py-3">Tipo</th>
