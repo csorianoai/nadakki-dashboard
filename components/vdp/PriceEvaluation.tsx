@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
-import { fmtRD } from "@/lib/format";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import { getPriceConfidence, type PriceConfidenceResult } from "@/lib/api/ai-features";
 import type { Vehicle } from "@/lib/vehicles";
 
@@ -17,13 +17,17 @@ function calcRangesLocal(price: number): PriceConfidenceResult {
 }
 
 export function PriceEvaluation({ vehicle }: { vehicle: Vehicle }) {
+  const fmt = useFmtPrecio();
   const [data, setData] = useState<PriceConfidenceResult>(() =>
     calcRangesLocal(vehicle.price),
   );
 
   useEffect(() => {
-    void getPriceConfidence(vehicle.id, vehicle.price).then(setData);
-  }, [vehicle.id, vehicle.price]);
+    void getPriceConfidence(vehicle.refId ?? vehicle.id, vehicle.price).then(setData);
+  }, [vehicle.id, vehicle.refId, vehicle.price]);
+
+  // Sin datos reales de mercado no se muestra el bloque (antes: rangos +-% y 47 muestras inventados).
+  if (!data.fromBackend || vehicle.price <= 0) return null;
 
   const { lo, mid, hi, top, pos, pctBetter } = data;
 
@@ -48,15 +52,15 @@ export function PriceEvaluation({ vehicle }: { vehicle: Vehicle }) {
         >
           <div className="h-full w-0.5 bg-brand" />
           <span className="mt-1 whitespace-nowrap rounded bg-brand px-2 py-0.5 text-[10px] font-bold text-white">
-            {fmtRD(mid)}
+            {fmt(mid)}
           </span>
         </div>
       </div>
 
       <div className="mb-4 flex justify-between text-[10px] font-semibold uppercase tracking-wide text-nk-fg-muted">
-        <span>{fmtRD(lo)}</span>
-        <span>{fmtRD(hi)}</span>
-        <span>{fmtRD(top)}</span>
+        <span>{fmt(lo)}</span>
+        <span>{fmt(hi)}</span>
+        <span>{fmt(top)}</span>
       </div>
 
       <p className="text-sm leading-relaxed text-nk-fg">

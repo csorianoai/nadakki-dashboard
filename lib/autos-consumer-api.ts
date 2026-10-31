@@ -15,7 +15,7 @@ export class AutosApiError extends Error {
   }
 }
 
-function getTenantId(): string {
+export function getTenantId(): string {
   if (typeof window !== "undefined") {
     const stored = window.localStorage.getItem("nadakki_tenant_id");
     if (stored) return stored;

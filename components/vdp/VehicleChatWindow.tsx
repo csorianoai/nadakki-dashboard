@@ -5,7 +5,6 @@ import { X } from "lucide-react";
 import { TypingIndicator } from "@/components/concierge/TypingIndicator";
 import { VehicleChatMessage } from "@/components/vdp/VehicleChatMessage";
 import { sendVehicleChatMessage } from "@/lib/api/vehicle-chat";
-import { buildWhatsAppEscalation } from "@/lib/vehicle-chat/mock-responses";
 import type { Vehicle } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
 
@@ -109,24 +108,12 @@ export function VehicleChatWindow({
             role: "bot",
             text: "Voy a contactar al dealer para que te responda personalmente.",
           },
-          {
-            id: `sys2-${Date.now()}`,
-            role: "system",
-            text: `🔔 Contactando a ${vehicle.dealerName} vía WhatsApp…`,
-          },
         ]);
       }
     },
     [typing, userMsgCount, sessionId, vehicle, escalated],
   );
 
-  const summary = messages
-    .filter((m) => m.role !== "system")
-    .slice(-6)
-    .map((m) => `${m.role === "user" ? "Yo" : "AI"}: ${m.text}`)
-    .join("\n");
-
-  const waLink = `https://wa.me/18095551234?text=${buildWhatsAppEscalation(vehicle, summary)}`;
 
   if (!open) return null;
 
@@ -150,7 +137,7 @@ export function VehicleChatWindow({
             AI del {vehicle.year} {vehicle.make} {vehicle.model}
           </p>
           <p className="text-xs text-nk-fg-muted">
-            {vehicle.dealerName} · En línea
+            {vehicle.dealerName ? `${vehicle.dealerName} · ` : ""}En línea
           </p>
         </div>
         <button
@@ -181,16 +168,6 @@ export function VehicleChatWindow({
               </button>
             ))}
           </div>
-        ) : null}
-        {escalated ? (
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-full bg-green-600 px-4 py-2.5 text-sm font-bold text-white"
-          >
-            Continuar por WhatsApp
-          </a>
         ) : null}
         <div ref={bottomRef} />
       </div>
