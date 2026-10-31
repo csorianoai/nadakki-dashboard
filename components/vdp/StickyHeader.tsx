@@ -2,7 +2,8 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fmtRD } from "@/lib/format";
+import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import { SaveButton } from "@/components/vehicle/SaveButton";
 import { VEHICLES_SEED, type Vehicle } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export function StickyHeader({
   navIndex: number;
   navTotal: number;
 }) {
+  const fmt = useFmtPrecio();
   return (
     <div
       className={cn(
@@ -49,7 +51,7 @@ export function StickyHeader({
           </p>
         </div>
         <p className="font-manrope text-lg font-bold tabular-nums text-brand">
-          {fmtRD(vehicle.price)}
+          {fmt(vehicle.price)}
         </p>
 
         <div className="flex items-center rounded-r-sm border border-nk-border">
@@ -91,12 +93,12 @@ export function useVdpNavigation(currentId: number) {
 
   const goPrev = () => {
     const prevIdx = idx <= 0 ? pool.length - 1 : idx - 1;
-    window.location.href = `/autos/vehiculo/${pool[prevIdx]!.id}`;
+    window.location.href = publicVehicleHref(pool[prevIdx]!);
   };
 
   const goNext = () => {
     const nextIdx = idx >= pool.length - 1 ? 0 : idx + 1;
-    window.location.href = `/autos/vehiculo/${pool[nextIdx]!.id}`;
+    window.location.href = publicVehicleHref(pool[nextIdx]!);
   };
 
   return { navIndex, navTotal, goPrev, goNext };
