@@ -54,7 +54,7 @@ export function StickyHeader({
           {fmt(vehicle.price)}
         </p>
 
-        {navTotal > 0 ? (
+        {navTotal > 0 && !vehicle.refId ? (
           <div className="flex items-center rounded-r-sm border border-nk-border">
             <button
               type="button"
