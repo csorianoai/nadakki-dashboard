@@ -1,17 +1,26 @@
 /**
  * Playwright diagnostic spec for Stipulations tab
  * Captures all console logs, network activity, and page errors
- * when clicking Stipulations tab in production.
+ * when clicking Stipulations tab (target: PLAYWRIGHT_BASE_URL, default http://localhost:3000).
  */
 
 import { test, expect } from '@playwright/test';
 
-const PROD_URL = 'https://dashboard.nadakki.com';
-const EMAIL = 'analista@test-piloto-02.com';
-const PASSWORD = 'TestPiloto2026!Seguro';
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
+// Credenciales de prueba: solo desde el entorno (nombres en .env.e2e.example). Nunca escribirlas en este archivo.
+function requireEnv(...names: string[]): Record<string, string> {
+  const missing = names.filter((n) => !process.env[n]);
+  if (missing.length > 0) {
+    throw new Error(
+      `Faltan credenciales de prueba: ${missing.join(", ")}. Defínelas en tu entorno (nombres en .env.e2e.example); no se hace ninguna petición sin ellas.`
+    );
+  }
+  return Object.fromEntries(names.map((n) => [n, process.env[n] as string]));
+}
 const APPLICATION_ID = '6a68b243-567b-493d-9b7d-68fd048eb62d';
 
-test('capture stipulations diagnostic logs from production', async ({ page }) => {
+test('capture stipulations diagnostic logs', async ({ page }) => {
+  const { QA_BANK_EMAIL: EMAIL, QA_BANK_PASSWORD: PASSWORD } = requireEnv('QA_BANK_EMAIL', 'QA_BANK_PASSWORD');
   // Capture all console logs
   page.on('console', (msg) => {
     console.log('[BROWSER]', msg.text());
@@ -44,9 +53,9 @@ test('capture stipulations diagnostic logs from production', async ({ page }) =>
   console.log('STARTING DIAGNOSTIC CAPTURE - STIPULATIONS TAB');
   console.log('='.repeat(80));
 
-  // Navigate to production login
-  console.log('[TEST] Navigating to production login...');
-  await page.goto(`${PROD_URL}/auth/login`, { waitUntil: 'domcontentloaded' });
+  // Navigate to login
+  console.log('[TEST] Navigating to login...');
+  await page.goto(`${BASE_URL}/auth/login`, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('input[type="email"], input[name="email"]', { timeout: 10000 });
 
   // Fill login form
@@ -74,7 +83,7 @@ test('capture stipulations diagnostic logs from production', async ({ page }) =>
   // Navigate to application detail
   console.log('[TEST] Navigating to application detail...');
   const cacheBuster = Date.now();
-  const detailUrl = `${PROD_URL}/credit-hub/bank/applications/${APPLICATION_ID}?__v=${cacheBuster}`;
+  const detailUrl = `${BASE_URL}/credit-hub/bank/applications/${APPLICATION_ID}?__v=${cacheBuster}`;
   await page.goto(detailUrl, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(5000);
 

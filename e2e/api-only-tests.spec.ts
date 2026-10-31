@@ -13,13 +13,22 @@
 
 import { test, expect } from "@playwright/test";
 
-const BACKEND = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.nadakki.com";
+const BACKEND = process.env.QA_API_BASE || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 
-// Use test-piloto-02 credentials (verified by execution)
-const BANK_EMAIL = "analista@test-piloto-02.com";
-const BANK_PASSWORD = "TestPiloto2026!Seguro";
-const DEALER_EMAIL = "dealer.qa@test-piloto-02.com";
-const DEALER_PASSWORD = "DealerQA2026!Seguro";
+// Credenciales de prueba: solo desde el entorno (nombres en .env.e2e.example). Nunca escribirlas en este archivo.
+function requireEnv(...names: string[]): Record<string, string> {
+  const missing = names.filter((n) => !process.env[n]);
+  if (missing.length > 0) {
+    throw new Error(
+      `Faltan credenciales de prueba: ${missing.join(", ")}. Defínelas en tu entorno (nombres en .env.e2e.example); no se hace ninguna petición sin ellas.`
+    );
+  }
+  return Object.fromEntries(names.map((n) => [n, process.env[n] as string]));
+}
+let BANK_EMAIL: string;
+let BANK_PASSWORD: string;
+let DEALER_EMAIL: string;
+let DEALER_PASSWORD: string;
 
 let bankToken: string;
 let dealerToken: string;
@@ -30,6 +39,11 @@ let APPLICATION_ID: string;
 test.describe("API-only Operational Flow", () => {
   
   test.beforeAll(async () => {
+    const creds = requireEnv("QA_BANK_EMAIL", "QA_BANK_PASSWORD", "QA_DEALER_EMAIL", "QA_DEALER_PASSWORD");
+    BANK_EMAIL = creds.QA_BANK_EMAIL;
+    BANK_PASSWORD = creds.QA_BANK_PASSWORD;
+    DEALER_EMAIL = creds.QA_DEALER_EMAIL;
+    DEALER_PASSWORD = creds.QA_DEALER_PASSWORD;
     // Step 1: Dealer login to create fresh application
     const dealerLoginResponse = await fetch(`${BACKEND}/api/v2/auth/login`, {
       method: "POST",

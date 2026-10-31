@@ -5,10 +5,18 @@
 
 import { chromium } from '@playwright/test';
 
-const BANK_EMAIL = 'analista@test-piloto-02.com';
-const BANK_PASSWORD = 'TestPiloto2026!Seguro';
+// Credenciales de prueba: solo desde el entorno (nombres en .env.e2e.example). Nunca escribirlas en este archivo.
+function requireEnv(...names) {
+  const missing = names.filter((n) => !process.env[n]);
+  if (missing.length > 0) {
+    console.error(`Faltan credenciales de prueba: ${missing.join(', ')}. Defínelas en tu entorno (nombres en .env.e2e.example); no se hace ninguna petición sin ellas.`);
+    process.exit(1);
+  }
+  return Object.fromEntries(names.map((n) => [n, process.env[n]]));
+}
+const { QA_BANK_EMAIL: BANK_EMAIL, QA_BANK_PASSWORD: BANK_PASSWORD } = requireEnv('QA_BANK_EMAIL', 'QA_BANK_PASSWORD');
 const APPLICATION_ID = '6a68b243-567b-493d-9b7d-68fd048eb62d';
-const LOCAL_URL = 'http://localhost:3000';
+const LOCAL_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
 
 async function main() {
   console.log('[DIAGNOSTIC] Starting browser...');

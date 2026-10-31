@@ -1,5 +1,12 @@
 // FASE 1: Medir qué devuelve el backend para expediente/full
-const BACKEND = "https://api.nadakki.com";
+// Credenciales de prueba: solo desde el entorno (nombres en .env.e2e.example). Nunca escribirlas en este archivo.
+const REQUIRED = ["QA_DEALER_EMAIL", "QA_DEALER_PASSWORD", "QA_BANK_EMAIL", "QA_BANK_PASSWORD"];
+const missing = REQUIRED.filter((n) => !process.env[n]);
+if (missing.length > 0) {
+  console.error(`Faltan credenciales de prueba: ${missing.join(", ")}. Defínelas en tu entorno (nombres en .env.e2e.example); no se hace ninguna petición sin ellas.`);
+  process.exit(1);
+}
+const BACKEND = process.env.QA_API_BASE || "http://localhost:3000";
 
 // Step 1: Login as dealer and create full application
 console.log("=== STEP 1: Dealer login ===");
@@ -7,8 +14,8 @@ const dealerLoginRes = await fetch(`${BACKEND}/api/v2/auth/login`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    email: "dealer.qa@test-piloto-02.com",
-    password: "DealerQA2026!Seguro"
+    email: process.env.QA_DEALER_EMAIL,
+    password: process.env.QA_DEALER_PASSWORD
   }),
 });
 
@@ -122,8 +129,8 @@ const analystLoginRes = await fetch(`${BACKEND}/api/v2/auth/login`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    email: "analista@test-piloto-02.com",
-    password: "TestPiloto2026!Seguro"
+    email: process.env.QA_BANK_EMAIL,
+    password: process.env.QA_BANK_PASSWORD
   }),
 });
 

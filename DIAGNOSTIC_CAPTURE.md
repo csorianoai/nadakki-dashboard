@@ -9,9 +9,7 @@ Dev server is running at: http://localhost:3000
 3. Navigate to Console tab
 4. Navigate to: http://localhost:3000/auth/login
 
-5. Login with:
-   - Email: `analista@test-piloto-02.com`
-   - Password: `TestPiloto2026!Seguro`
+5. Inicia sesión con el usuario de prueba del banco. Las credenciales no se guardan en este archivo: están en las variables de entorno `QA_BANK_EMAIL` y `QA_BANK_PASSWORD` (nombres en `.env.e2e.example`).
 
 6. After login, navigate to:
    http://localhost:3000/credit-hub/bank/applications/6a68b243-567b-493d-9b7d-68fd048eb62d
