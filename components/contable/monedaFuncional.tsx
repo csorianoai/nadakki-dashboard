@@ -68,7 +68,7 @@ export function MonedaFuncionalNota({ locale }: { locale: LocaleTenant }) {
     );
   }
   return (
-    <p data-testid="contable-moneda-funcional" className="mb-3 text-xs uppercase tracking-wide text-zinc-500">
+    <p data-testid="contable-moneda-funcional" className="mb-3 text-xs uppercase tracking-wide text-zinc-400">
       Moneda funcional: {locale.currency}
     </p>
   );
