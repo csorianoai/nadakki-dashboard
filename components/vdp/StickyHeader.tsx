@@ -91,7 +91,8 @@ export function useVdpNavigation(currentId: number) {
   const pool = VEHICLES_SEED;
   const idx = pool.findIndex((v) => v.id === currentId);
   const navIndex = idx >= 0 ? idx + 1 : 1;
-  const navTotal = 400;
+  // Solo hay navegacion (semilla) si el vehiculo actual es de la semilla; con datos reales del backend no se inventa un "N / 400".
+  const navTotal = idx >= 0 ? 400 : 0;
 
   const goPrev = () => {
     const prevIdx = idx <= 0 ? pool.length - 1 : idx - 1;

@@ -107,7 +107,7 @@ export default function AutosVehiculoDetailPage() {
         onPrev={goPrev}
         onNext={goNext}
         navIndex={navIndex}
-        navTotal={demoMode ? navTotal : 0}
+        navTotal={navTotal}
       />
 
       <div className="mx-auto max-w-[1440px] px-[22px] py-6 pb-24">
@@ -130,7 +130,7 @@ export default function AutosVehiculoDetailPage() {
             </div>
             <PriceEvaluation vehicle={vehicle} />
             <SpecTabs vehicle={vehicle} />
-            {demoMode ? <SimilarVehicles vehicle={vehicle} /> : null}
+            <SimilarVehicles vehicle={vehicle} />
           </div>
 
           <div className="w-full min-w-[280px] flex-[1_1_320px] max-w-[370px] space-y-4">
