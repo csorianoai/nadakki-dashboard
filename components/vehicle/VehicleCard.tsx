@@ -313,10 +313,10 @@ export const VehicleCard = memo(function VehicleCard({
               <p className="truncate text-xs font-semibold text-nk-fg">
                 {vehicle.dealerName} | {vehicle.loc}
               </p>
-              {typeof vehicle.rating === "number" ? (
+              {typeof vehicle.rating === "number" && typeof vehicle.reviews === "number" ? (
                 <p className="flex items-center gap-1 text-[11px] text-nk-fg-subtle">
                   <Star className="h-3 w-3 fill-nk-warning text-nk-warning" aria-hidden />
-                  {vehicle.rating.toFixed(1)} ({vehicle.reviews ?? 0} ventas)
+                  {vehicle.rating.toFixed(1)} ({vehicle.reviews} ventas)
                 </p>
               ) : null}
             </div>

@@ -18,5 +18,7 @@ describe.each(["grid", "list"] as const)("VehicleCard %s sin datos de vendedor",
   it("no lanza y no pinta vendedor ni valoracion", () => {
     const { container } = render(<VehicleCard vehicle={v} variant={variant} />);
     expect(container.textContent).not.toMatch(/ventas|undefined/);
+    // sin vendedor no debe quedar un separador huerfano junto a la ubicacion
+    expect(container.textContent).not.toMatch(/(^|\s)·\s*Cordoba|Cordoba\s*·(\s|$)/);
   });
 });
