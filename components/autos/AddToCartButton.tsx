@@ -6,7 +6,7 @@ import { ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/components/autos/CartProvider";
 import { useTenant } from "@/components/system/TenantProvider";
 import { Button } from "@/components/ui/button";
-import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
+import { fmtRD } from "@/lib/format";
 import { getVehicleImaginUrl } from "@/lib/vehicle-images";
 import type { Vehicle } from "@/lib/vehicles";
 
@@ -92,7 +92,6 @@ export function CartVehicleCard({
   image: string;
   onRemove: () => void;
 }) {
-  const fmt = useFmtPrecio();
   return (
     <article className="flex gap-4 rounded-r border border-nk-border bg-nk-surface p-3 shadow-nk-sm">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -104,7 +103,7 @@ export function CartVehicleCard({
         >
           {name}
         </Link>
-        <p className="mt-1 text-sm font-bold tabular-nums text-brand">{fmt(price)}</p>
+        <p className="mt-1 text-sm font-bold tabular-nums text-brand">{fmtRD(price)}</p>
         <Button type="button" variant="outline" size="sm" className="mt-2" onClick={onRemove}>
           Quitar
         </Button>

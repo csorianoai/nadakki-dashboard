@@ -2,7 +2,7 @@
 
 import { Sparkles, TrendingDown } from "lucide-react";
 import { FixedModal } from "@/components/system/ModalRoot";
-import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
+import { fmtRD } from "@/lib/format";
 import type { Vehicle } from "@/lib/vehicles";
 
 function computeBelowMarketPct(vehicle: Vehicle): number {
@@ -38,7 +38,6 @@ export function PriceAnalysisModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const fmt = useFmtPrecio();
   const belowPct = computeBelowMarketPct(vehicle);
   const similar = similarCount(vehicle);
   const timeline = priceTimeline(vehicle);
@@ -52,7 +51,7 @@ export function PriceAnalysisModal({
       icon={<Sparkles className="h-5 w-5 text-brand" aria-hidden />}
       subtitle={
         <>
-          {vehicle.year} {vehicle.make} {vehicle.model} · {fmt(vehicle.price)}
+          {vehicle.year} {vehicle.make} {vehicle.model} · {fmtRD(vehicle.price)}
         </>
       }
       footer={

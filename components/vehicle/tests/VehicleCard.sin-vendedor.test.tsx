@@ -5,9 +5,6 @@ import { VehicleCard } from "@/components/vehicle/VehicleCard";
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
 jest.mock("@/components/vehicle/SaveButton", () => ({ SaveButton: () => null }));
 jest.mock("@/components/vehicle/QualityBadge", () => ({ QualityBadge: () => null }));
-jest.mock("@/lib/autos-portal/moneda-publica", () => ({
-  useFmtPrecio: () => (n: number) => `ARS ${n}`,
-}));
 jest.mock("@/components/vehicle/PrecioJustoBadge", () => ({ PrecioJustoBadge: () => null }));
 
 // Vehiculo como lo produce el mapper sin semillas: sin vendedor, rating ni reviews.

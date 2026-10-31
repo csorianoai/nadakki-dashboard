@@ -164,7 +164,7 @@ export default function SearchFiltersPanel({
 
             <div>
               <label className="block text-xs text-gray-400 mb-1">
-                Precio mínimo
+                Precio mín (RD$)
               </label>
               <input
                 type="number"
@@ -182,7 +182,7 @@ export default function SearchFiltersPanel({
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">
-                Precio máximo
+                Precio máx (RD$)
               </label>
               <input
                 type="number"

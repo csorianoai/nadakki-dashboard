@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { memo, useCallback } from "react";
 import { Camera, Fuel, Gauge, MapPin, Settings2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fmtKm } from "@/lib/format";
-import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
-import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
+import { fmtKm, fmtRD, fmtUS } from "@/lib/format";
 import { cuota, priceStatus } from "@/lib/finance";
 import { photoCount, type Vehicle } from "@/lib/vehicles";
 import { QualityBadge } from "@/components/vehicle/QualityBadge";
@@ -66,10 +64,9 @@ export const VehicleCard = memo(function VehicleCard({
   variant?: VehicleCardVariant;
 }) {
   const router = useRouter();
-  const fmt = useFmtPrecio();
   const status = priceStatus(vehicle.badge, vehicle.match);
-  const monthly = vehicle.price > 0 ? Math.round(cuota(vehicle.price, 20, 60)) : 0;
-  const href = publicVehicleHref(vehicle);
+  const monthly = Math.round(cuota(vehicle.price, 20, 60));
+  const href = `/autos/vehiculo/${vehicle.id}`;
   const photos = photoCount(vehicle.id);
 
   const navigate = useCallback(() => router.push(href), [router, href]);
@@ -106,7 +103,7 @@ export const VehicleCard = memo(function VehicleCard({
             {vehicle.year} {vehicle.make} {vehicle.model}
           </h4>
           <p className="font-manrope text-base font-extrabold tabular-nums text-nk-fg">
-            {fmt(vehicle.price)}
+            {fmtRD(vehicle.price)}
           </p>
           <p className="text-xs leading-snug text-nk-fg-muted">
             {fmtKm(vehicle.km)} · {vehicle.trans}
@@ -183,8 +180,9 @@ export const VehicleCard = memo(function VehicleCard({
         <div className="vehicle-card-actions flex min-w-0 flex-col gap-2 md:items-stretch">
           <div>
             <p className="font-manrope text-[22px] font-extrabold tabular-nums text-nk-fg">
-              {fmt(vehicle.price)}
+              {fmtRD(vehicle.price)}
             </p>
+            <p className="text-sm text-nk-fg-muted">{fmtUS(vehicle.price)}</p>
           </div>
           <div className="flex flex-wrap gap-1.5">
             <QualityBadge status={status} />
@@ -205,11 +203,9 @@ export const VehicleCard = memo(function VehicleCard({
               </Link>
             </Button>
           </div>
-          {monthly > 0 ? (
-            <p className="text-sm font-semibold tabular-nums text-brand">
-              {fmt(monthly)}/mes · 60 meses · 13.5% APR
-            </p>
-          ) : null}
+          <p className="text-sm font-semibold tabular-nums text-brand">
+            {fmtRD(monthly)}/mes · 60 meses · 13.5% APR
+          </p>
         </div>
       </article>
     );
@@ -276,16 +272,14 @@ export const VehicleCard = memo(function VehicleCard({
 
           <div className="flex flex-wrap items-center gap-2 pt-0.5">
             <p className="font-manrope text-[22px] font-extrabold tabular-nums text-nk-fg">
-              {fmt(vehicle.price)}
+              {fmtRD(vehicle.price)}
             </p>
             <QualityBadge status={status} />
           </div>
 
-          {monthly > 0 ? (
-            <p className="text-sm font-semibold tabular-nums text-brand">
-              {fmt(monthly)}/mes · 60 meses · 13.5% APR
-            </p>
-          ) : null}
+          <p className="text-sm font-semibold tabular-nums text-brand">
+            {fmtRD(monthly)}/mes · 60 meses · 13.5% APR
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
