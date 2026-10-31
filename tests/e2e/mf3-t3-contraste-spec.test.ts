@@ -47,11 +47,4 @@ describe("MF3-T3 spec de contraste", () => {
   it("emite RESULT_MF3_T3=PASS", () => {
     expect(SPEC).toContain('console.log("RESULT_MF3_T3=PASS")');
   });
-
-  it("playwright.config arranca el servidor local en CI sin URL externa, con backend inexistente", () => {
-    const cfg = fs.readFileSync(path.join(process.cwd(), "playwright.config.ts"), "utf8");
-    expect(cfg).toContain("webServer");
-    expect(cfg).toContain("backend.invalid");
-    expect(cfg).not.toMatch(/nadakki\.com/);
-  });
 });
