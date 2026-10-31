@@ -43,9 +43,7 @@ export async function searchVehiclesConsumer(
       const local = sortVehicles(filterVehicles(VEHICLES_SEED, state), state.sort);
       return { vehicles: local, total: local.length, fromBackend: false };
     }
-    const vehicles = res.vehicles.map((v, i) =>
-      mapBackendVehicle(v, VEHICLES_SEED[i % VEHICLES_SEED.length]?.id ?? i + 1),
-    );
+    const vehicles = res.vehicles.map((v) => mapBackendVehicle(v));
     return { vehicles, total: res.total ?? vehicles.length, fromBackend: true };
   } catch (error) {
     console.warn("Backend down, using mock", error);
