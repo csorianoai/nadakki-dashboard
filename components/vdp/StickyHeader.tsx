@@ -2,7 +2,8 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fmtRD } from "@/lib/format";
+import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import { SaveButton } from "@/components/vehicle/SaveButton";
 import { VEHICLES_SEED, type Vehicle } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export function StickyHeader({
   navIndex: number;
   navTotal: number;
 }) {
+  const fmt = useFmtPrecio();
   return (
     <div
       className={cn(
@@ -49,30 +51,32 @@ export function StickyHeader({
           </p>
         </div>
         <p className="font-manrope text-lg font-bold tabular-nums text-brand">
-          {fmtRD(vehicle.price)}
+          {fmt(vehicle.price)}
         </p>
 
-        <div className="flex items-center rounded-r-sm border border-nk-border">
-          <button
-            type="button"
-            onClick={onPrev}
-            className="inline-flex h-9 items-center px-2 text-nk-fg-muted hover:bg-nk-surface-2"
-            aria-label="Anterior"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="border-x border-nk-border px-3 text-xs font-semibold tabular-nums text-nk-fg-muted">
-            {navIndex} de {navTotal}
-          </span>
-          <button
-            type="button"
-            onClick={onNext}
-            className="inline-flex h-9 items-center px-2 text-nk-fg-muted hover:bg-nk-surface-2"
-            aria-label="Siguiente"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        {navTotal > 0 && !vehicle.refId ? (
+          <div className="flex items-center rounded-r-sm border border-nk-border">
+            <button
+              type="button"
+              onClick={onPrev}
+              className="inline-flex h-9 items-center px-2 text-nk-fg-muted hover:bg-nk-surface-2"
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="border-x border-nk-border px-3 text-xs font-semibold tabular-nums text-nk-fg-muted">
+              {navIndex} de {navTotal}
+            </span>
+            <button
+              type="button"
+              onClick={onNext}
+              className="inline-flex h-9 items-center px-2 text-nk-fg-muted hover:bg-nk-surface-2"
+              aria-label="Siguiente"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
 
         <SaveButton saved={saved ?? false} onToggle={onSaveToggle ?? (() => undefined)} />
         <Button variant="brand" size="sm" className="shrink-0">
@@ -87,16 +91,17 @@ export function useVdpNavigation(currentId: number) {
   const pool = VEHICLES_SEED;
   const idx = pool.findIndex((v) => v.id === currentId);
   const navIndex = idx >= 0 ? idx + 1 : 1;
-  const navTotal = 400;
+  // Solo hay navegacion (semilla) si el vehiculo actual es de la semilla; con datos reales del backend no se inventa un "N / 400".
+  const navTotal = idx >= 0 ? 400 : 0;
 
   const goPrev = () => {
     const prevIdx = idx <= 0 ? pool.length - 1 : idx - 1;
-    window.location.href = `/autos/vehiculo/${pool[prevIdx]!.id}`;
+    window.location.href = publicVehicleHref(pool[prevIdx]!);
   };
 
   const goNext = () => {
     const nextIdx = idx >= pool.length - 1 ? 0 : idx + 1;
-    window.location.href = `/autos/vehiculo/${pool[nextIdx]!.id}`;
+    window.location.href = publicVehicleHref(pool[nextIdx]!);
   };
 
   return { navIndex, navTotal, goPrev, goNext };
