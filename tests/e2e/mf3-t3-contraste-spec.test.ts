@@ -28,9 +28,30 @@ describe("MF3-T3 spec de contraste", () => {
     expect(SPEC).toContain("level: 1, name: p.titulo");
   });
 
-  it("solo usa credenciales QA del entorno y emite RESULT_MF3_T3=PASS", () => {
-    expect(SPEC).toContain("process.env.QA_USER");
-    expect(SPEC).toContain("process.env.QA_PASSWORD");
+  it("es hermetico: servidor local, sesion y backend interceptados, sin credenciales ni red real", () => {
+    expect(SPEC).not.toContain("QA_PASSWORD");
+    expect(SPEC).not.toContain("iniciarSesionQA");
+    expect(SPEC).not.toMatch(/falta BASE_URL/);
+    expect(SPEC).toContain("context.route");
+    expect(SPEC).toContain("nadakki_refresh_token_v2");
+    expect(SPEC).toContain("/api/v2/auth/me");
+    expect(SPEC).toContain("/api/v1/contable/");
+  });
+
+  it("un test comprueba que ninguna llamada sale hacia api.nadakki.com ni queda sin interceptar", () => {
+    expect(SPEC).toContain("api.nadakki.com");
+    expect(SPEC).toContain("sin fixture");
+    expect(SPEC).toContain("externas");
+  });
+
+  it("emite RESULT_MF3_T3=PASS", () => {
     expect(SPEC).toContain('console.log("RESULT_MF3_T3=PASS")');
+  });
+
+  it("playwright.config arranca el servidor local en CI sin URL externa, con backend inexistente", () => {
+    const cfg = fs.readFileSync(path.join(process.cwd(), "playwright.config.ts"), "utf8");
+    expect(cfg).toContain("webServer");
+    expect(cfg).toContain("backend.invalid");
+    expect(cfg).not.toMatch(/nadakki\.com/);
   });
 });
