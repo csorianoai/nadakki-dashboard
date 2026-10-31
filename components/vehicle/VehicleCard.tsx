@@ -173,7 +173,7 @@ export const VehicleCard = memo(function VehicleCard({
           </div>
           <p className="flex items-center gap-1 text-[13px] text-nk-fg-muted">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            {vehicle.dealerName} · {vehicle.loc}
+            {[vehicle.dealerName, vehicle.loc].filter(Boolean).join(" · ")}
           </p>
         </div>
 
@@ -299,25 +299,29 @@ export const VehicleCard = memo(function VehicleCard({
           <PrecioJustoBadge vehicle={vehicle} />
         </div>
 
-        <div className="flex items-center gap-2 pt-1">
-          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-r-sm bg-nk-surface-2 text-[9px] font-bold text-nk-fg-muted">
-            {vehicle.dealerName
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((w) => w[0])
-              .join("")
-              .toUpperCase()}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-nk-fg">
-              {vehicle.dealerName} | {vehicle.loc}
-            </p>
-            <p className="flex items-center gap-1 text-[11px] text-nk-fg-subtle">
-              <Star className="h-3 w-3 fill-nk-warning text-nk-warning" aria-hidden />
-              {vehicle.rating.toFixed(1)} ({vehicle.reviews} ventas)
-            </p>
+        {vehicle.dealerName ? (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-r-sm bg-nk-surface-2 text-[9px] font-bold text-nk-fg-muted">
+              {vehicle.dealerName
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join("")
+                .toUpperCase()}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-nk-fg">
+                {vehicle.dealerName} | {vehicle.loc}
+              </p>
+              {typeof vehicle.rating === "number" && typeof vehicle.reviews === "number" ? (
+                <p className="flex items-center gap-1 text-[11px] text-nk-fg-subtle">
+                  <Star className="h-3 w-3 fill-nk-warning text-nk-warning" aria-hidden />
+                  {vehicle.rating.toFixed(1)} ({vehicle.reviews} ventas)
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="mt-auto flex gap-2 pt-2">
           <Button variant="brand" className="min-h-11 flex-1 hover:brightness-110" asChild>
