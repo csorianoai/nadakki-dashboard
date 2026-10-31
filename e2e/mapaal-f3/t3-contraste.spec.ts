@@ -2,19 +2,90 @@
  * MF3-T3 — Contabilidad: Plan de cuentas, Libro mayor, Asientos y Balance legibles.
  *
  * Mide el contraste REAL (color calculado del texto contra el primer fondo opaco de sus ancestros) de todo texto
- * visible en las 4 pantallas, en tema claro y oscuro, y exige >= 4.5:1. Solo lectura, tenant QA.
+ * visible en las 4 pantallas, en tema claro y oscuro, y exige >= 4.5:1. Solo lectura.
+ *
+ * Hermetico: corre contra el servidor LOCAL (playwright.config.ts lo levanta en CI con backend `backend.invalid`).
+ * La sesion y TODA llamada al backend se interceptan (context.route) con datos fijos del tenant QA; lo externo se
+ * aborta y se anota. Un test comprueba que nada sale hacia api.nadakki.com ni queda sin fixture.
  *
  *   npx playwright test e2e/mapaal-f3/t3-contraste.spec.ts --reporter=line
  */
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
-import { iniciarSesionQA } from "../mapaal/sesion-qa";
+const TENANT = { id: "00000000-0000-4000-8000-0000000000a1", slug: "mapaal-qa", display_name: "Mapaal QA", subscribed_cores: ["contable"], is_demo: false };
+const USER = { id: "u-qa", email: "qa@example.invalid", name: "QA", is_active: true, mfa_enabled: false };
+const ROL = { core_name: "contable", role_key: "tenant_admin", display_name: "Administrador" };
+const TOKEN = "e2e.fixture.token";
+const TS = "2026-01-01T00:00:00Z";
+const CUENTAS = [
+  ["c1", "1000", "Activos", "activo", "deudora", null, 1],
+  ["c2", "1010", "Caja", "activo", "deudora", "c1", 2],
+  ["c3", "2000", "Pasivos", "pasivo", "acreedora", null, 1],
+  ["c4", "4010", "Ingresos por ventas", "ingreso", "acreedora", null, 1],
+].map(([id, codigo, nombre, tipo_cuenta, naturaleza, cuenta_padre_id, nivel]) => ({
+  id, tenant_id: TENANT.id, codigo, nombre, tipo_cuenta, naturaleza, cuenta_padre_id, nivel, activa: true, created_at: TS, updated_at: TS,
+}));
+const PERIODOS = [1, 2].map((n) => ({
+  id: `p${n}`, tenant_id: TENANT.id, fiscal_year: new Date().getFullYear(), period_number: n, status: "open",
+  start_date: `${new Date().getFullYear()}-0${n}-01`, end_date: `${new Date().getFullYear()}-0${n}-28`,
+}));
+const MAYOR = {
+  cuenta_id: "c2", cuenta_codigo: "1010", cuenta_nombre: "Caja", periodo_id: "p1", saldo_inicial: 1000, saldo_final: 1500,
+  movimientos: [{ id: "m1", asiento_id: "a1", numero_asiento: "AS-0001", fecha: "2026-01-05", descripcion: "Venta al contado", debe_base: 500, haber_base: 0, saldo_acumulado: 1500 }],
+};
+const BALANCE = {
+  periodo_id: "p1", fiscal_year: new Date().getFullYear(), label: "Periodo 1",
+  rows: [
+    { cuenta_id: "c2", codigo: "1010", nombre: "Caja", tipo_cuenta: "activo", total_debe: 1500, total_haber: 0, saldo: 1500 },
+    { cuenta_id: "c4", codigo: "4010", nombre: "Ingresos por ventas", tipo_cuenta: "ingreso", total_debe: 0, total_haber: 1500, saldo: -1500 },
+  ],
+  totals: { total_debe: 1500, total_haber: 1500, cuadra: true },
+};
 
-const BASE_URL = (process.env.BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "").replace(/\/$/, "");
-const QA_USER = process.env.QA_USER ?? "";
-const QA_PASSWORD = process.env.QA_PASSWORD ?? "";
+/** Fixtures por ruta (sin el origen). Lo que no esta aqui se anota como "sin fixture" y responde 404. */
+function fixtureDe(pathname: string, metodo: string): unknown | undefined {
+  if (pathname === "/api/v2/auth/refresh") return { access_token: TOKEN, refresh_token: "rt-fixture", expires_in: 3600 };
+  if (pathname === "/api/v2/auth/me")
+    return { user: USER, current_tenant: TENANT, all_tenants: [TENANT], active_roles: [ROL] };
+  if (/^\/api\/v2\/tenants\/[^/]+\/branding$/.test(pathname)) return { currency: "DOP", locale: "es-DO" };
+  if (pathname === "/api/v2/auth/logout") return {};
+  if (metodo !== "GET") return undefined;
+  if (pathname === "/api/v1/autos/me/dealer-context") return { assignments: [] };
+  if (pathname === "/api/v1/contable/fiscal/documents") return [];
+  if (pathname === "/api/v1/contable/plan-cuentas") return CUENTAS;
+  if (pathname === "/api/v1/contable/periodos") return PERIODOS;
+  if (pathname === "/api/v1/contable/mayor") return MAYOR;
+  if (pathname === "/api/v1/contable/balance-comprobacion") return BALANCE;
+  return undefined;
+}
 
-test.use({ baseURL: BASE_URL || undefined });
+type Registro = { externas: string[]; sinFixture: string[] };
+
+/** Intercepta TODO el trafico del contexto: lo local que no es /api pasa; /api y backend.invalid con fixtures; lo demas se aborta. */
+async function interceptarBackend(context: BrowserContext, origenLocal: string): Promise<Registro> {
+  const reg: Registro = { externas: [], sinFixture: [] };
+  await context.route("**/*", async (route) => {
+    const url = new URL(route.request().url());
+    const esLocal = url.origin === origenLocal;
+    const esBackendFalso = url.hostname === "backend.invalid";
+    if (esLocal && !url.pathname.startsWith("/api/")) return route.continue();
+    if (!esLocal && !esBackendFalso) {
+      reg.externas.push(url.origin + url.pathname);
+      return route.abort("blockedbyclient");
+    }
+    const cuerpo = fixtureDe(url.pathname, route.request().method());
+    if (cuerpo === undefined) {
+      reg.sinFixture.push(`${route.request().method()} ${url.pathname}`);
+      return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ detail: "sin fixture" }) });
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(cuerpo) });
+  });
+  return reg;
+}
+
+async function sesionQA(context: BrowserContext): Promise<void> {
+  await context.addInitScript(() => window.localStorage.setItem("nadakki_refresh_token_v2", "rt-fixture"));
+}
 
 const PANTALLAS = [
   { nombre: "Plan de cuentas", ruta: "/contable/plan-cuentas", titulo: "Plan de cuentas", listo: null },
@@ -117,15 +188,13 @@ async function peoresContrastes(page: Page): Promise<{ revisados: number; contro
 }
 
 test.describe("MF3-T3 contable legible", () => {
-  test.beforeAll(() => {
-    expect(BASE_URL, "falta BASE_URL").not.toBe("");
-    expect(QA_USER, "falta QA_USER").not.toBe("");
-    expect(QA_PASSWORD, "falta QA_PASSWORD").not.toBe("");
-  });
-
-  test("Plan de cuentas, Libro mayor, Asientos y Balance >= 4.5:1 en claro y oscuro", async ({ browser }) => {
+  test("Plan de cuentas, Libro mayor, Asientos y Balance >= 4.5:1 en claro y oscuro", async ({ browser, baseURL }) => {
     test.setTimeout(300_000);
-    const page = await iniciarSesionQA(browser, { baseUrl: BASE_URL, usuario: QA_USER, clave: QA_PASSWORD });
+    const origen = new URL(baseURL!).origin;
+    const context = await browser.newContext({ baseURL });
+    const reg = await interceptarBackend(context, origen);
+    await sesionQA(context);
+    const page = await context.newPage();
 
     for (const tema of ["light", "dark"] as const) {
       await page.emulateMedia({ colorScheme: tema });
@@ -149,6 +218,22 @@ test.describe("MF3-T3 contable legible", () => {
       }
       expect(camposTema, `(${tema}) ningun campo revisado en las 4 pantallas`).toBeGreaterThan(0);
     }
+    expect(reg.externas, "llamadas externas (api.nadakki.com u otro host) durante las 4 pantallas").toEqual([]);
+    expect(reg.sinFixture, "llamadas al backend sin fixture").toEqual([]);
+    await context.close();
     console.log("RESULT_MF3_T3=PASS");
+  });
+
+  test("ninguna llamada sale hacia api.nadakki.com: se aborta y queda anotada", async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ baseURL });
+    const reg = await interceptarBackend(context, new URL(baseURL!).origin);
+    // about:blank no tiene CSP: la peticion llega a la red y es el interceptor quien la aborta y la anota.
+    const page = await context.newPage();
+    const resultado = await page.evaluate(() =>
+      fetch("https://api.nadakki.com/api/v2/auth/me").then(() => "salio", () => "bloqueada"),
+    );
+    expect(resultado).toBe("bloqueada");
+    expect(reg.externas).toEqual(["https://api.nadakki.com/api/v2/auth/me"]);
+    await context.close();
   });
 });
