@@ -18,7 +18,7 @@ import {
 import { countResults } from "@/lib/search-facet-counts";
 import { clearAllFilters } from "@/lib/search-filters";
 import type { FilterState } from "@/lib/search-types";
-import { fmtRD } from "@/lib/format";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import { cn } from "@/lib/utils";
 
 export function FiltersBottomSheet({
@@ -34,6 +34,7 @@ export function FiltersBottomSheet({
   onChange: (next: FilterState) => void;
   onApply: () => void;
 }) {
+  const fmt = useFmtPrecio();
   const [openCategory, setOpenCategory] = useState<FilterCategoryId | null>(null);
   const [draft, setDraft] = useState<FilterState>(state);
   const resultCount = countResults(state);
@@ -66,8 +67,8 @@ export function FiltersBottomSheet({
               <h3 className="font-manrope text-sm font-bold text-brand">PaymentSearch</h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-nk-fg-muted">Puedo pagar hasta RD$/mes</span>
-                  <span className="font-bold tabular-nums text-brand">{fmtRD(state.maxMonthly)}</span>
+                  <span className="text-nk-fg-muted">Puedo pagar hasta por mes</span>
+                  <span className="font-bold tabular-nums text-brand">{fmt(state.maxMonthly)}</span>
                 </div>
                 <Slider
                   min={12_000}
@@ -88,7 +89,7 @@ export function FiltersBottomSheet({
 
             <nav className="divide-y divide-nk-border">
               {FILTER_CATEGORIES.map((cat) => {
-                const active = getCategoryActiveSummary(state, cat.id);
+                const active = getCategoryActiveSummary(state, cat.id, fmt);
                 const Icon = cat.icon;
                 return (
                   <button

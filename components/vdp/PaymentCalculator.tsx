@@ -5,7 +5,7 @@ import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { calculateFinance } from "@/lib/api/finance";
-import { fmtRD } from "@/lib/format";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import { SaveButton } from "@/components/vehicle/SaveButton";
 import { FinancingLeadButton } from "@/components/autos/FinancingLeadButton";
 import type { Vehicle } from "@/lib/vehicles";
@@ -31,6 +31,7 @@ export function PaymentCalculator({
   saved?: boolean;
   onSaveToggle?: () => void;
 }) {
+  const fmt = useFmtPrecio();
   const [bankIdx, setBankIdx] = useState(0);
   const [downPct, setDownPct] = useState(20);
   const [term, setTerm] = useState<number>(60);
@@ -62,7 +63,7 @@ export function PaymentCalculator({
     <aside className="sticky top-[82px] space-y-4">
       <div className="rounded-r border border-nk-border bg-nk-surface p-5 shadow-nk-md">
         <p className="font-manrope text-[34px] font-extrabold tabular-nums text-brand">
-          {fmtRD(monthly)}
+          {fmt(monthly)}
         </p>
         <p className="text-sm text-nk-fg-muted">
           a {term} meses · {(rate * 100).toFixed(1)}% anual
@@ -131,11 +132,11 @@ export function PaymentCalculator({
         <dl className="mt-5 space-y-2 border-t border-nk-border pt-4 text-sm">
           <div className="flex justify-between">
             <dt className="text-nk-fg-muted">Monto a financiar</dt>
-            <dd className="font-semibold tabular-nums">{fmtRD(financed)}</dd>
+            <dd className="font-semibold tabular-nums">{fmt(financed)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-nk-fg-muted">Precio vehículo</dt>
-            <dd className="font-semibold tabular-nums">{fmtRD(vehicle.price)}</dd>
+            <dd className="font-semibold tabular-nums">{fmt(vehicle.price)}</dd>
           </div>
         </dl>
 
