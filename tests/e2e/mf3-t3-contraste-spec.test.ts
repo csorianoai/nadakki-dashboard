@@ -21,6 +21,13 @@ describe("MF3-T3 spec de contraste", () => {
     expect(SPEC).toContain("ratio < 4.5");
   });
 
+  it("mide el texto de los campos (valor, opcion elegida, placeholder) y espera el h1 concreto", () => {
+    expect(SPEC).toContain("selectedOptions");
+    expect(SPEC).toContain("::placeholder");
+    expect(SPEC).toContain("camposTema");
+    expect(SPEC).toContain("level: 1, name: p.titulo");
+  });
+
   it("solo usa credenciales QA del entorno y emite RESULT_MF3_T3=PASS", () => {
     expect(SPEC).toContain("process.env.QA_USER");
     expect(SPEC).toContain("process.env.QA_PASSWORD");

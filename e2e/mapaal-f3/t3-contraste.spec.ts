@@ -17,15 +17,16 @@ const QA_PASSWORD = process.env.QA_PASSWORD ?? "";
 test.use({ baseURL: BASE_URL || undefined });
 
 const PANTALLAS = [
-  { nombre: "Plan de cuentas", ruta: "/contable/plan-cuentas" },
-  { nombre: "Libro mayor", ruta: "/contable/libro-mayor" },
-  { nombre: "Asientos", ruta: "/contable/asientos/nuevo" },
-  { nombre: "Balance", ruta: "/contable/balance" }, // redirige a balance-comprobacion
+  { nombre: "Plan de cuentas", ruta: "/contable/plan-cuentas", titulo: "Plan de cuentas", listo: null },
+  { nombre: "Libro mayor", ruta: "/contable/libro-mayor", titulo: "Libro mayor", listo: null },
+  // "Crear asiento" tambien es el h1 del estado "Cargando catalogo"; la descripcion final lo distingue.
+  { nombre: "Asientos", ruta: "/contable/asientos/nuevo", titulo: "Crear asiento", listo: "Doble partida" },
+  { nombre: "Balance", ruta: "/contable/balance", titulo: "Balance de comprobación", listo: null }, // redirige a balance-comprobacion
 ] as const;
 
 type Malo = { contraste: number; color: string; fondo: string; etiqueta: string; texto: string };
 
-async function peoresContrastes(page: Page): Promise<{ revisados: number; malos: Malo[] }> {
+async function peoresContrastes(page: Page): Promise<{ revisados: number; controles: number; malos: Malo[] }> {
   return page.evaluate(() => {
     const parse = (s: string) => {
       const m = s.match(/[\d.]+/g)!.map(Number);
@@ -60,7 +61,44 @@ async function peoresContrastes(page: Page): Promise<{ revisados: number; malos:
     };
     const malos: Malo[] = [];
     let revisados = 0;
+    let controles = 0;
     const visto = new Set<string>();
+    const medir = (el: Element, fgStr: string, texto: string, etiqueta: string) => {
+      const fg = parse(fgStr);
+      const bg = fondoDe(el);
+      const fgOpaco = {
+        r: fg.r * fg.a + bg.r * (1 - fg.a),
+        g: fg.g * fg.a + bg.g * (1 - fg.a),
+        b: fg.b * fg.a + bg.b * (1 - fg.a),
+      };
+      const [a, b] = [lum(fgOpaco), lum(bg)].sort((x, y) => y - x);
+      const ratio = (a + 0.05) / (b + 0.05);
+      revisados++;
+      const clave = `${etiqueta}|${fgStr}|${bg.r}|${bg.g}|${bg.b}|${texto.slice(0, 20)}`;
+      if (ratio < 4.5 && !visto.has(clave)) {
+        visto.add(clave);
+        malos.push({ contraste: Math.round(ratio * 100) / 100, color: fgStr, fondo: `rgb(${bg.r | 0},${bg.g | 0},${bg.b | 0})`, etiqueta, texto: texto.slice(0, 40) });
+      }
+    };
+    // Campos: el texto que el usuario ve dentro (valor, opcion elegida, placeholder) no son nodos de texto hijos.
+    for (const el of Array.from(document.body.querySelectorAll("input:not([type=hidden]):not([type=checkbox]):not([type=radio]), textarea, select"))) {
+      const cs = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      if (cs.display === "none" || cs.visibility === "hidden" || r.width === 0 || r.height === 0) continue;
+      if ((el as HTMLInputElement).disabled) continue;
+      const tag = el.tagName.toLowerCase();
+      const valor =
+        tag === "select"
+          ? ((el as HTMLSelectElement).selectedOptions[0]?.text ?? "")
+          : (el as HTMLInputElement | HTMLTextAreaElement).value;
+      if (valor.trim()) {
+        controles++;
+        medir(el, cs.color, valor, tag);
+      } else if ((el as HTMLInputElement).placeholder) {
+        controles++;
+        medir(el, getComputedStyle(el, "::placeholder").color, (el as HTMLInputElement).placeholder, `${tag}::placeholder`);
+      }
+    }
     for (const el of Array.from(document.body.querySelectorAll("*"))) {
       const propio = Array.from(el.childNodes)
         .filter((n) => n.nodeType === 3)
@@ -72,23 +110,9 @@ async function peoresContrastes(page: Page): Promise<{ revisados: number; malos:
       const r = el.getBoundingClientRect();
       if (cs.display === "none" || cs.visibility === "hidden" || r.width === 0 || r.height === 0) continue;
       if (el.closest("[disabled], option, script, style, noscript, nextjs-portal")) continue;
-      const fg = parse(cs.color);
-      const bg = fondoDe(el);
-      const fgOpaco = {
-        r: fg.r * fg.a + bg.r * (1 - fg.a),
-        g: fg.g * fg.a + bg.g * (1 - fg.a),
-        b: fg.b * fg.a + bg.b * (1 - fg.a),
-      };
-      const [a, b] = [lum(fgOpaco), lum(bg)].sort((x, y) => y - x);
-      const ratio = (a + 0.05) / (b + 0.05);
-      revisados++;
-      const clave = `${el.tagName}|${cs.color}|${cs.backgroundColor}|${propio.slice(0, 20)}`;
-      if (ratio < 4.5 && !visto.has(clave)) {
-        visto.add(clave);
-        malos.push({ contraste: Math.round(ratio * 100) / 100, color: cs.color, fondo: `rgb(${bg.r|0},${bg.g|0},${bg.b|0})`, etiqueta: el.tagName.toLowerCase(), texto: propio.slice(0, 40) });
-      }
+      medir(el, cs.color, propio, el.tagName.toLowerCase());
     }
-    return { revisados, malos };
+    return { revisados, controles, malos };
   });
 }
 
@@ -105,6 +129,7 @@ test.describe("MF3-T3 contable legible", () => {
 
     for (const tema of ["light", "dark"] as const) {
       await page.emulateMedia({ colorScheme: tema });
+      let camposTema = 0;
       for (const p of PANTALLAS) {
         await test.step(`${p.nombre} (${tema})`, async () => {
           await page.goto(p.ruta);
@@ -113,13 +138,16 @@ test.describe("MF3-T3 contable legible", () => {
             document.documentElement.classList.toggle("dark", t === "dark");
             document.documentElement.setAttribute("data-theme", t);
           }, tema);
-          await expect(page.locator("h1").first()).toBeVisible({ timeout: 45_000 });
+          await expect(page.getByRole("heading", { level: 1, name: p.titulo })).toBeVisible({ timeout: 45_000 });
+          if (p.listo) await expect(page.getByText(p.listo).first()).toBeVisible({ timeout: 45_000 });
           await page.waitForLoadState("networkidle").catch(() => {});
-          const { revisados, malos } = await peoresContrastes(page);
+          const { revisados, controles, malos } = await peoresContrastes(page);
           expect(revisados, `${p.nombre}: no se reviso ningun texto`).toBeGreaterThan(5);
+          camposTema += controles;
           expect(malos, `${p.nombre} (${tema}) tiene texto con contraste < 4.5:1`).toEqual([]);
         });
       }
+      expect(camposTema, `(${tema}) ningun campo revisado en las 4 pantallas`).toBeGreaterThan(0);
     }
     console.log("RESULT_MF3_T3=PASS");
   });
