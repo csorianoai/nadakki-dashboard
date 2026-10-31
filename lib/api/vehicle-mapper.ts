@@ -20,7 +20,8 @@ function displayId(raw: string): number {
   return h + 1000;
 }
 
-export function mapBackendVehicle(v: BackendVehicle): ConsumerVehicle {
+// El 2.º argumento (semilla) se ignora: ya no se inventan datos. Se acepta solo por compatibilidad con llamadores previos.
+export function mapBackendVehicle(v: BackendVehicle, _legacySeed?: number): ConsumerVehicle {
   const refId = String(v.id);
   const id = displayId(refId);
   const trans = v.transmission ?? "";

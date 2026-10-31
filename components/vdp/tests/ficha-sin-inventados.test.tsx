@@ -17,7 +17,7 @@ jest.mock("next/navigation", () => ({
 }));
 jest.mock("@/lib/loading", () => ({ MIN_LOADING_MS: 0 }));
 jest.mock("@/lib/api/vehicles", () => ({
-  getVehicleConsumer: async () => ({ vehicle: mapBackendVehicle(backend), fromBackend: true }),
+  getVehicleConsumer: async () => ({ vehicle: mapBackendVehicle(backend, 9001), fromBackend: true }),
 }));
 const stub = (n: string) => ({ [n]: () => null });
 jest.mock("@/components/vdp/Breadcrumb", () => stub("VdpBreadcrumb"));
