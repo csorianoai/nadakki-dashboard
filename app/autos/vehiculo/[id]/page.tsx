@@ -24,6 +24,16 @@ import { getVehicleConsumer } from "@/lib/api/vehicles";
 import { MIN_LOADING_MS } from "@/lib/loading";
 import type { Vehicle } from "@/lib/vehicles";
 
+/**
+ * El backend no entrega vendedor, valoraciones ni tiempo de respuesta, y el mapper
+ * (lib/) los siembra con valores inventados. Hasta que PARTE 2 elimine esas semillas,
+ * la ficha los descarta aqui para que las guardas de los componentes se activen.
+ */
+function sinDatosDeVendedorInventados(v: Vehicle | undefined): Vehicle | undefined {
+  if (!v) return v;
+  return { ...v, dealerName: "", avgResp: "", rating: undefined, reviews: undefined } as unknown as Vehicle;
+}
+
 export default function AutosVehiculoDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -50,7 +60,7 @@ export default function AutosVehiculoDetailPage() {
       const wait = Math.max(0, MIN_LOADING_MS - elapsed);
       window.setTimeout(() => {
         if (!cancelled) {
-          setVehicle(res.vehicle);
+          setVehicle(sinDatosDeVendedorInventados(res.vehicle));
           setDemoMode(!res.fromBackend);
           setLoading(false);
         }
