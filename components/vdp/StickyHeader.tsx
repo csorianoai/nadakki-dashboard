@@ -54,27 +54,29 @@ export function StickyHeader({
           {fmt(vehicle.price)}
         </p>
 
-        <div className="flex items-center rounded-r-sm border border-nk-border">
-          <button
-            type="button"
-            onClick={onPrev}
-            className="inline-flex h-9 items-center px-2 text-nk-fg-muted hover:bg-nk-surface-2"
-            aria-label="Anterior"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="border-x border-nk-border px-3 text-xs font-semibold tabular-nums text-nk-fg-muted">
-            {navIndex} de {navTotal}
-          </span>
-          <button
-            type="button"
-            onClick={onNext}
-            className="inline-flex h-9 items-center px-2 text-nk-fg-muted hover:bg-nk-surface-2"
-            aria-label="Siguiente"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        {navTotal > 0 ? (
+          <div className="flex items-center rounded-r-sm border border-nk-border">
+            <button
+              type="button"
+              onClick={onPrev}
+              className="inline-flex h-9 items-center px-2 text-nk-fg-muted hover:bg-nk-surface-2"
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="border-x border-nk-border px-3 text-xs font-semibold tabular-nums text-nk-fg-muted">
+              {navIndex} de {navTotal}
+            </span>
+            <button
+              type="button"
+              onClick={onNext}
+              className="inline-flex h-9 items-center px-2 text-nk-fg-muted hover:bg-nk-surface-2"
+              aria-label="Siguiente"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
 
         <SaveButton saved={saved ?? false} onToggle={onSaveToggle ?? (() => undefined)} />
         <Button variant="brand" size="sm" className="shrink-0">
