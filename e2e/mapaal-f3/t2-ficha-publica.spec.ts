@@ -93,6 +93,14 @@ test("listado y ficha: moneda del tenant, sin datos inventados, mismo vehiculo",
 
   // Prohibida la red hacia api.nadakki.com: ninguna peticion salio hacia alli.
   expect(red.apiNadakki).toEqual([]);
+
+  // Ficha directa (sin pasar por el listado): tambien sin red hacia api.nadakki.com.
+  await page.goto(`/autos/vehiculo/${VEHICULO.id}`);
+  await expect(page.locator("h1")).toHaveText(titulo, { timeout: 30_000 });
+  expect(red.apiNadakki).toEqual([]);
+
+  // PASS solo tras TODAS las aserciones.
+  console.log("RESULT_MF3_T2=PASS");
 });
 
 test("sin red hacia api.nadakki.com: todo el backend esta interceptado", async ({ page }) => {
@@ -102,6 +110,4 @@ test("sin red hacia api.nadakki.com: todo el backend esta interceptado", async (
   await page.goto(`/autos/vehiculo/${VEHICULO.id}`);
   await expect(page.locator("h1")).toBeVisible({ timeout: 30_000 });
   expect(red.apiNadakki).toHaveLength(0);
-
-  console.log("RESULT_MF3_T2=PASS");
 });
