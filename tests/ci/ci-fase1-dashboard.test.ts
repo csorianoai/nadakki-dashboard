@@ -17,10 +17,13 @@ const WORKFLOW = fs.readFileSync(path.join(RAIZ, ".github/workflows/ci-fase1-das
 // Sin comentarios: las reglas se aplican al YAML, no a lo que dice un comentario.
 const CODIGO = WORKFLOW.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n");
 
+// El guard de red parchea modulos de Node (net, dns, dgram) de forma global: en el proceso de jest se sustituye por un papel;
+// su comportamiento real se prueba en tests/ci/ci-fase1-red-loopback.test.ts con procesos hijos.
+jest.mock("../../e2e/fase1/_solo-loopback.cjs", () => ({ instalado: true }), { virtual: true });
+
 function cargarConfig(env: Record<string, string | undefined> = {}) {
-  const previo: Record<string, string | undefined> = {};
+  const entornoPrevio = { ...process.env };   // la config toca process.env (proxies, NODE_OPTIONS): se restaura entero
   for (const k of Object.keys(env)) {
-    previo[k] = process.env[k];
     if (env[k] === undefined) delete process.env[k];
     else process.env[k] = env[k];
   }
@@ -29,10 +32,8 @@ function cargarConfig(env: Record<string, string | undefined> = {}) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require("../../playwright.config.fase1").default;
   } finally {
-    for (const k of Object.keys(previo)) {
-      if (previo[k] === undefined) delete process.env[k];
-      else process.env[k] = previo[k];
-    }
+    for (const k of Object.keys(process.env)) if (!(k in entornoPrevio)) delete process.env[k];
+    Object.assign(process.env, entornoPrevio);
   }
 }
 
@@ -62,13 +63,30 @@ describe("workflow ci-fase1-dashboard", () => {
   test("orden: build, navegador, playwright con la config de fase 1 y git diff --exit-code al final", () => {
     const build = CODIGO.indexOf("run: npm run build");
     const chromium = CODIGO.indexOf("npx playwright install chromium");
+    const canario = CODIGO.indexOf("run: node e2e/fase1/_canario-red.cjs");
     const pw = CODIGO.indexOf("npx playwright test -c playwright.config.fase1.ts");
     const diff = CODIGO.lastIndexOf("run: git diff --exit-code");
     expect(build).toBeGreaterThan(-1);
     expect(build).toBeLessThan(chromium);
-    expect(chromium).toBeLessThan(pw);
+    expect(chromium).toBeLessThan(canario);
+    expect(canario).toBeGreaterThan(-1);
+    expect(canario).toBeLessThan(pw);
     expect(pw).toBeLessThan(diff);
     expect(CODIGO.trimEnd().endsWith("run: git diff --exit-code")).toBe(true);
+  });
+});
+
+describe("workflow ci-fase1-dashboard: credenciales y red", () => {
+  test("actions/checkout no deja credenciales en el .git del runner (persist-credentials: false)", () => {
+    expect(CODIGO).toMatch(/uses: actions\/checkout@v4\s*\n\s*with:\s*\n\s*persist-credentials: false/);
+  });
+
+  test("el entorno del job no declara proxies", () => {
+    expect(CODIGO).not.toMatch(/\b(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|http_proxy|https_proxy|all_proxy)\b/);
+  });
+
+  test("hay un canario de red de Node en el job, con la version de Node del job", () => {
+    expect(CODIGO).toMatch(/- name: Canario de red[^\n]*\n\s*run: node e2e\/fase1\/_canario-red\.cjs/);
   });
 });
 
@@ -97,6 +115,26 @@ describe("playwright.config.fase1", () => {
     expect(cfg.webServer.env.NEXT_PUBLIC_API_URL).toBe("http://backend.invalid");
     expect(cfg.webServer.env.NEXT_PUBLIC_BACKEND_URL).toBe("http://backend.invalid");
     expect(cfg.use.baseURL).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+  });
+
+  test("rechaza la variable aunque este vacia: se mira si EXISTE, no su valor", () => {
+    expect(() => cargarConfig({ PLAYWRIGHT_BASE_URL: "" })).toThrow(/hermetic|hermet/i);
+    expect(() => cargarConfig({ BASE_URL: "" })).toThrow(/hermetic|hermet/i);
+    expect(() => cargarConfig({ PLAYWRIGHT_BASE_URL: "   " })).toThrow(/hermetic|hermet/i);
+  });
+
+  test("el servidor y Playwright arrancan SIN proxies en el entorno", () => {
+    const proxies = { HTTP_PROXY: "http://p:3128", HTTPS_PROXY: "http://p:3128", ALL_PROXY: "http://p:3128",
+                      http_proxy: "http://p:3128", https_proxy: "http://p:3128", all_proxy: "http://p:3128" };
+    const cfg = cargarConfig({ ...proxies, PLAYWRIGHT_BASE_URL: undefined, BASE_URL: undefined });
+    for (const k of Object.keys(proxies)) expect(Object.keys(cfg.webServer.env)).not.toContain(k);
+  });
+
+  test("next start y los workers heredan el guard de red por NODE_OPTIONS, y sin telemetria", () => {
+    const cfg = cargarConfig({ NODE_OPTIONS: "--max-old-space-size=2048", PLAYWRIGHT_BASE_URL: undefined, BASE_URL: undefined });
+    expect(cfg.webServer.env.NODE_OPTIONS).toMatch(/--require=\S*e2e\/fase1\/_solo-loopback\.cjs/);
+    expect(cfg.webServer.env.NODE_OPTIONS).toContain("--max-old-space-size=2048");   // se anade, no se pisa
+    expect(cfg.webServer.env.NEXT_TELEMETRY_DISABLED).toBe("1");
   });
 
   test("rechaza una URL externa: esta puerta nunca apunta a un backend real", () => {
