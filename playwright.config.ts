@@ -28,9 +28,9 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: LOCAL_CI
     ? {
-        command: `npm run build && npx next start -p ${PUERTO_LOCAL}`,
+        command: `npx next dev --webpack -p ${PUERTO_LOCAL}`,
         url: `${URL_LOCAL}/login`,
-        timeout: 1_800_000,
+        timeout: 300_000,
         reuseExistingServer: false,
         env: { BACKEND_URL: BACKEND_FALSO, NEXT_PUBLIC_API_URL: BACKEND_FALSO },
       }
