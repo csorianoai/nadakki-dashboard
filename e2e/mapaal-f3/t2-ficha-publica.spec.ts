@@ -94,6 +94,9 @@ test("listado y ficha: moneda del tenant, sin datos inventados, mismo vehiculo",
   // Prohibida la red hacia api.nadakki.com: ninguna peticion salio hacia alli.
   expect(red.apiNadakki).toEqual([]);
 
+  // Con `next dev` (servidor local de CI) una recarga/compilacion en vuelo aborta el goto siguiente: esperar a que se aquiete.
+  await page.waitForLoadState("networkidle");
+
   // Ficha directa (sin pasar por el listado): tambien sin red hacia api.nadakki.com.
   await page.goto(`/autos/vehiculo/${VEHICULO.id}`);
   await expect(page.locator("h1")).toHaveText(titulo, { timeout: 30_000 });
