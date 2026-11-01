@@ -124,8 +124,11 @@ test("F2: los totales de las dos pantallas son los del endpoint de F1 y las barr
   await page.goto(RUTAS.costos.pantalla);
   await expect(page.getByTestId("analisis-total")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByTestId("costos-vehiculo")).toHaveCount(2);
-  await page.getByTestId("costos-vehiculo").first().getByRole("link").click();
-  await expect(page).toHaveURL(/\/autos\/dealer\/inventario\/veh-qa-1/);
+  const enlace = page.getByTestId("costos-vehiculo").first().getByRole("link");
+  await expect(enlace).toHaveAttribute("href", /\/autos\/dealer\/inventario\/veh-qa-1/);
+  await enlace.click();
+  // Con `next dev` la ficha se compila al primer acceso: 5 s (valor por defecto) no alcanza en frio.
+  await expect(page).toHaveURL(/\/autos\/dealer\/inventario\/veh-qa-1/, { timeout: 90_000 });
 
   // Prohibida la red hacia api.nadakki.com (y cualquier origen externo).
   expect(externas, "peticiones hacia nadakki.com (prohibidas)").toEqual([]);

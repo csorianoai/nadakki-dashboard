@@ -31,4 +31,10 @@ describe("F2: evidencia hermetica", () => {
     expect(iGoto).toBeGreaterThanOrEqual(0);
     expect(iSim).toBeLessThan(iGoto);
   });
+
+  it("la navegacion a la ficha espera lo que tarda `next dev` en compilarla en frio (>5 s)", () => {
+    const m = spec.match(/toHaveURL\(\/[^\n]*veh-qa-1[^\n]*\{\s*timeout:\s*([\d_]+)/);
+    expect(m).not.toBeNull();
+    expect(Number((m as RegExpMatchArray)[1].replace(/_/g, ""))).toBeGreaterThanOrEqual(30000);
+  });
 });
