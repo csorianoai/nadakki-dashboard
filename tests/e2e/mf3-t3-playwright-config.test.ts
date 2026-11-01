@@ -17,3 +17,14 @@ describe("playwright.config hermetico en CI", () => {
     expect(CFG).not.toMatch(/nadakki\.com/);
   });
 });
+
+describe("playwright.config: puerto local sin colision entre corridas (regresion MF3-T3)", () => {
+  // Causa: un `next start` huerfano de una corrida anterior (muerta con 137) seguia en el puerto fijo 3109 y la
+  // siguiente evidencia fallaba con "http://127.0.0.1:3109/login is already used" sin llegar a medir nada.
+  it("no fija el puerto 3109 como unico valor", () => {
+    expect(CFG).not.toMatch(/\?\?\s*3109\b/);
+  });
+  it("publica el puerto elegido en process.env para que los workers calculen la misma baseURL", () => {
+    expect(CFG).toMatch(/process\.env\.PLAYWRIGHT_LOCAL_PORT\s*=/);
+  });
+});
