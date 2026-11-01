@@ -84,6 +84,10 @@ describe("playwright.config.fase1", () => {
     const cfg = cargarConfig({ PLAYWRIGHT_BASE_URL: undefined, BASE_URL: undefined });
     const args: string[] = cfg.use.launchOptions.args;
     expect(args).toContain("--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1");
+    // Sin proxy: con un proxy en el entorno (HTTPS_PROXY) Chromium le pasa el CONNECT y es el PROXY quien resuelve el
+    // host, asi que host-resolver-rules no bloquea nada. Medido: sin esto el error era ERR_TUNNEL_CONNECTION_FAILED;
+    // con --no-proxy-server, ERR_NAME_NOT_RESOLVED.
+    expect(args).toContain("--no-proxy-server");
   });
 
   test("el servidor local arranca con el backend falso", () => {
