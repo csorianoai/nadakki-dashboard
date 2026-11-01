@@ -60,6 +60,18 @@ async function interceptarBackend(page: Page): Promise<Red> {
   return red;
 }
 
+// `next dev` (servidor local de CI) compila cada ruta en frio, y en paralelo dos workers se pisan: serial, con margen
+// y con las rutas precalentadas (peticion directa al servidor, sin navegador ni backend) antes del primer test.
+test.describe.configure({ mode: "serial" });
+test.setTimeout(150_000);
+const NAV = { timeout: 60_000 };
+test.beforeAll(async ({ request }) => {
+  test.setTimeout(240_000);
+  for (const ruta of ["/autos/vehiculos?view=list", `/autos/vehiculo/${VEHICULO.id}`]) {
+    await request.get(ruta, { timeout: 200_000, failOnStatusCode: false }).catch(() => undefined);
+  }
+});
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript((t) => window.localStorage.setItem("nadakki_tenant_id", t), TENANT);
 });
@@ -68,7 +80,7 @@ test("listado y ficha: moneda del tenant, sin datos inventados, mismo vehiculo",
   const red = await interceptarBackend(page);
   await page.goto("/autos/vehiculos?view=list");
   const card = page.locator("[data-vehicle-id]").first();
-  await expect(card).toBeVisible({ timeout: 30_000 });
+  await expect(card).toBeVisible({ timeout: 60_000 });
 
   const listText = (await page.locator("main, body").first().innerText()) ?? "";
   for (const re of PROHIBIDO) expect(listText).not.toMatch(re);
@@ -81,8 +93,8 @@ test("listado y ficha: moneda del tenant, sin datos inventados, mismo vehiculo",
   expect(href).toContain(`/autos/vehiculo/${VEHICULO.id}`);
   await link.click();
 
-  await expect(page).toHaveURL(new RegExp(`/autos/vehiculo/${VEHICULO.id}`));
-  await expect(page.locator("h1")).toHaveText(titulo, { timeout: 30_000 });
+  await expect(page).toHaveURL(new RegExp(`/autos/vehiculo/${VEHICULO.id}`), NAV);
+  await expect(page.locator("h1")).toHaveText(titulo, { timeout: 60_000 });
   const fichaText = await page.locator("body").innerText();
   for (const re of PROHIBIDO) expect(fichaText).not.toMatch(re);
   await expect(page.getByText(MONEDA).first()).toBeVisible();
@@ -99,7 +111,7 @@ test("listado y ficha: moneda del tenant, sin datos inventados, mismo vehiculo",
 
   // Ficha directa (sin pasar por el listado): tambien sin red hacia api.nadakki.com.
   await page.goto(`/autos/vehiculo/${VEHICULO.id}`);
-  await expect(page.locator("h1")).toHaveText(titulo, { timeout: 30_000 });
+  await expect(page.locator("h1")).toHaveText(titulo, { timeout: 60_000 });
   expect(red.apiNadakki).toEqual([]);
 
   // PASS solo tras TODAS las aserciones.
@@ -109,8 +121,9 @@ test("listado y ficha: moneda del tenant, sin datos inventados, mismo vehiculo",
 test("sin red hacia api.nadakki.com: todo el backend esta interceptado", async ({ page }) => {
   const red = await interceptarBackend(page);
   await page.goto("/autos/vehiculos?view=list");
-  await expect(page.locator("[data-vehicle-id]").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("[data-vehicle-id]").first()).toBeVisible({ timeout: 60_000 });
+  await page.waitForLoadState("networkidle");
   await page.goto(`/autos/vehiculo/${VEHICULO.id}`);
-  await expect(page.locator("h1")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("h1")).toBeVisible({ timeout: 60_000 });
   expect(red.apiNadakki).toHaveLength(0);
 });
