@@ -99,11 +99,24 @@ describe("guard de red e2e/fase1/_solo-loopback.cjs", () => {
     }
   }, T);
 
+  test("cargado solo con require() (como hace la config), el guard se propaga a los hijos de Node por NODE_OPTIONS", async () => {
+    const up = await servidor("127.0.0.2");
+    try {
+      const hijo = ESCENARIOS["net.connect"].replace(/"/g, '\\"');
+      const codigo = `require(${JSON.stringify(GUARD)});require("child_process").spawn(process.execPath,["-e","${hijo}"],{stdio:"inherit"})`;
+      const r = await correr(process.execPath, ["-e", codigo], { H: "127.0.0.2", P: String(up.port) });   // sin NODE_OPTIONS en el padre
+      expect(r.out).toContain("ERR ERR_EGRESS_BLOCKED");
+      expect(up.hits()).toBe(0);
+    } finally {
+      await up.cerrar();
+    }
+  }, T);
+
   test("NO sobre-bloquea: 127.0.0.1, localhost, ::1 y un socket unix siguen funcionando", async () => {
     const lo = await servidor("127.0.0.1");
     const sock = path.join(os.tmpdir(), `solo-loopback-${process.pid}.sock`);
     try { fs.unlinkSync(sock); } catch { /* no existia */ }
-    const unix = net.createServer((c) => c.end("x"));
+    const unix = net.createServer((c) => { c.on("error", () => undefined); c.end("x"); });
     await new Promise<void>((ok) => unix.listen(sock, ok));
     try {
       for (const h of ["127.0.0.1", "localhost"]) {
@@ -113,6 +126,10 @@ describe("guard de red e2e/fase1/_solo-loopback.cjs", () => {
       const u = await correr(process.execPath, ["-e", `const s=require("net").connect(process.env.S);s.on("connect",()=>{console.log("REACHED");s.destroy()});s.on("error",e=>console.log("ERR "+e.code))`],
         { S: sock, NODE_OPTIONS: `--require=${GUARD}` });
       expect(u.out).toContain("REACHED");
+      // net trata {path, host} como socket unix y descarta host: el guard no debe bloquearlo por el host
+      const ph = await correr(process.execPath, ["-e", `const s=require("net").connect({path:process.env.S,host:"example.invalid"});s.on("connect",()=>{console.log("REACHED");s.destroy()});s.on("error",e=>console.log("ERR "+e.code))`],
+        { S: sock, NODE_OPTIONS: `--require=${GUARD}` });
+      expect(ph.out).toContain("REACHED");
     } finally {
       await lo.cerrar();
       await new Promise<void>((ok) => unix.close(() => ok()));

@@ -28,6 +28,8 @@ jobs:
       NEXT_PUBLIC_BACKEND_URL: http://backend.invalid
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -42,6 +44,11 @@ jobs:
 
       - name: Chromium para Playwright
         run: npx playwright install chromium
+
+      # La red de TODO lo que corre aqui (navegador, Node de Playwright y next start) queda limitada a 127.0.0.1: el guard
+      # e2e/fase1/_solo-loopback.cjs. Este canario lo comprueba en esta maquina y con el Node de este job antes de los specs.
+      - name: Canario de red (Node)
+        run: node e2e/fase1/_canario-red.cjs
 
       - name: e2e/fase1 (Playwright, backend interceptado)
         run: npx playwright test -c playwright.config.fase1.ts

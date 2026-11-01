@@ -21,6 +21,8 @@ const CODIGO = WORKFLOW.split("\n").filter((l) => !l.trim().startsWith("#")).joi
 // su comportamiento real se prueba en tests/ci/ci-fase1-red-loopback.test.ts con procesos hijos.
 jest.mock("../../e2e/fase1/_solo-loopback.cjs", () => ({ instalado: true }), { virtual: true });
 
+let entornoTrasCargar: NodeJS.ProcessEnv = {};
+
 function cargarConfig(env: Record<string, string | undefined> = {}) {
   const entornoPrevio = { ...process.env };   // la config toca process.env (proxies, NODE_OPTIONS): se restaura entero
   for (const k of Object.keys(env)) {
@@ -30,7 +32,9 @@ function cargarConfig(env: Record<string, string | undefined> = {}) {
   try {
     jest.resetModules();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require("../../playwright.config.fase1").default;
+    const cfg = require("../../playwright.config.fase1").default;
+    entornoTrasCargar = { ...process.env };   // lo que ven Playwright (main y workers) y, por herencia, next start
+    return cfg;
   } finally {
     for (const k of Object.keys(process.env)) if (!(k in entornoPrevio)) delete process.env[k];
     Object.assign(process.env, entornoPrevio);
@@ -127,7 +131,10 @@ describe("playwright.config.fase1", () => {
     const proxies = { HTTP_PROXY: "http://p:3128", HTTPS_PROXY: "http://p:3128", ALL_PROXY: "http://p:3128",
                       http_proxy: "http://p:3128", https_proxy: "http://p:3128", all_proxy: "http://p:3128" };
     const cfg = cargarConfig({ ...proxies, PLAYWRIGHT_BASE_URL: undefined, BASE_URL: undefined });
-    for (const k of Object.keys(proxies)) expect(Object.keys(cfg.webServer.env)).not.toContain(k);
+    for (const k of Object.keys(proxies)) {
+      expect(Object.keys(cfg.webServer.env)).not.toContain(k);
+      expect(Object.keys(entornoTrasCargar)).not.toContain(k);   // borrados del entorno de Playwright y de sus hijos
+    }
   });
 
   test("next start y los workers heredan el guard de red por NODE_OPTIONS, y sin telemetria", () => {
