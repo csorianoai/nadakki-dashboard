@@ -11,7 +11,10 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const EXTERNA = (process.env.PLAYWRIGHT_BASE_URL || process.env.BASE_URL || "").trim();
 const LOCAL_CI = !!process.env.CI && !EXTERNA;
-const PUERTO_LOCAL = Number(process.env.PLAYWRIGHT_LOCAL_PORT ?? 3109);
+// Puerto distinto por corrida (3200-3999, segun el pid): un `next start` huerfano de una corrida muerta no bloquea la siguiente.
+// Se publica en process.env para que los workers (que recargan este fichero) calculen la misma baseURL.
+if (!process.env.PLAYWRIGHT_LOCAL_PORT) process.env.PLAYWRIGHT_LOCAL_PORT = String(3200 + (process.pid % 800));
+const PUERTO_LOCAL = Number(process.env.PLAYWRIGHT_LOCAL_PORT);
 const URL_LOCAL = `http://127.0.0.1:${PUERTO_LOCAL}`;
 const BACKEND_FALSO = "http://backend.invalid";
 
