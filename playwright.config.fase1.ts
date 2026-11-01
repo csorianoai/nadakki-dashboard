@@ -6,7 +6,8 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * Tres capas, para que ninguna llamada llegue a un backend real aunque un spec se olvide de interceptarla:
  *  1. El backend declarado es `backend.invalid` (no resuelve) para el servidor y para el build.
- *  2. El navegador no resuelve ningun host salvo 127.0.0.1 (--host-resolver-rules): lo que un spec no intercepte con
+ *  2. El navegador va SIN proxy (--no-proxy-server: con un proxy en el entorno el que resuelve es el proxy) y no resuelve
+ *     ningun host salvo 127.0.0.1 (--host-resolver-rules): lo que un spec no intercepte con
  *     page.route / context.route falla de inmediato en vez de salir a la red. Lo interceptado no necesita DNS.
  *  3. Esta config se NIEGA a arrancar con PLAYWRIGHT_BASE_URL o BASE_URL: no hay modo de apuntarla a un entorno real.
  */
@@ -34,7 +35,7 @@ export default defineConfig({
     baseURL: URL_LOCAL,
     trace: "on-first-retry",
     launchOptions: {
-      args: ["--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1"],
+      args: ["--no-proxy-server", "--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1"],
       ...(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {}),
     },
   },
