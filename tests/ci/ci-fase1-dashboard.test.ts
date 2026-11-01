@@ -6,6 +6,12 @@
 import fs from "fs";
 import path from "path";
 
+// Playwright prohibe cargarse dos veces en un proceso: la config se evalua aqui con un defineConfig de papel.
+jest.mock("@playwright/test", () => ({
+  defineConfig: (c: unknown) => c,
+  devices: { "Desktop Chrome": { viewport: { width: 1280, height: 720 } } },
+}));
+
 const RAIZ = path.resolve(__dirname, "../..");
 const WORKFLOW = fs.readFileSync(path.join(RAIZ, ".github/workflows/ci-fase1-dashboard.yml"), "utf8");
 // Sin comentarios: las reglas se aplican al YAML, no a lo que dice un comentario.
