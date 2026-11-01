@@ -187,9 +187,19 @@ async function peoresContrastes(page: Page): Promise<{ revisados: number; contro
   });
 }
 
+// `next dev` (servidor local de CI) compila cada ruta en frio y dos workers se pisan: serial y con las 4 rutas
+// precalentadas (peticion directa al servidor, sin navegador ni backend) antes del primer test.
+test.describe.configure({ mode: "serial" });
+test.beforeAll(async ({ request }) => {
+  test.setTimeout(600_000);
+  for (const ruta of ["/contable/plan-cuentas", "/contable/libro-mayor", "/contable/asientos/nuevo", "/contable/balance-comprobacion"]) {
+    await request.get(ruta, { timeout: 200_000, failOnStatusCode: false }).catch(() => undefined);
+  }
+});
+
 test.describe("MF3-T3 contable legible", () => {
   test("Plan de cuentas, Libro mayor, Asientos y Balance >= 4.5:1 en claro y oscuro", async ({ browser, baseURL }) => {
-    test.setTimeout(300_000);
+    test.setTimeout(480_000);
     const origen = new URL(baseURL!).origin;
     const context = await browser.newContext({ baseURL });
     const reg = await interceptarBackend(context, origen);
@@ -207,8 +217,8 @@ test.describe("MF3-T3 contable legible", () => {
             document.documentElement.classList.toggle("dark", t === "dark");
             document.documentElement.setAttribute("data-theme", t);
           }, tema);
-          await expect(page.getByRole("heading", { level: 1, name: p.titulo })).toBeVisible({ timeout: 45_000 });
-          if (p.listo) await expect(page.getByText(p.listo).first()).toBeVisible({ timeout: 45_000 });
+          await expect(page.getByRole("heading", { level: 1, name: p.titulo })).toBeVisible({ timeout: 60_000 });
+          if (p.listo) await expect(page.getByText(p.listo).first()).toBeVisible({ timeout: 60_000 });
           await page.waitForLoadState("networkidle").catch(() => {});
           const { revisados, controles, malos } = await peoresContrastes(page);
           expect(revisados, `${p.nombre}: no se reviso ningun texto`).toBeGreaterThan(5);
