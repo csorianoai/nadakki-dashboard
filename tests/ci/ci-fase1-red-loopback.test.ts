@@ -267,6 +267,10 @@ const PATRONES: Array<[Hallazgo, RegExp]> = [
   ["process por corchetes (no env)", /\bprocess\s*\[(?!\s*["'`]env["'`]\s*\])/],
   ["process sin acceso directo", /(?<![.\w$"'`/-])process\b(?!\s*\.)(?!\s*\[)(?![\w$"'`-])/],
   ["executablePath", /\bexecutablePath\b/],
+  // `test.use({ launchOptions: { args: [] } })` sustituye entero el launchOptions de la config (Playwright fusiona `use` de
+  // forma superficial) y Chromium arranca SIN --host-resolver-rules ni --no-proxy-server (hallazgo del auditor2, 3.ª vuelta).
+  // Solo la config puede fijar launchOptions.
+  ["launchOptions", /\blaunchOptions\b/],
 ];
 
 function detectar(texto: string): Hallazgo[] {
@@ -369,6 +373,7 @@ describe("e2e/fase1: ningun fichero crea procesos, hilos ni enlaces nativos (rie
       ['const p = process; p.binding("tcp_wrap");', "process sin acceso directo"],
       ['const { binding } = process;', "process sin acceso directo"],
       ['f(process);', "process sin acceso directo"],
+      ['test.use({ launchOptions: { args: [] } });', "launchOptions"],
       ['test.use({ launchOptions: { executablePath: "/usr/bin/curl" } });', "executablePath"],
       ['const u = "http://backend.invalid"; require("child_process");', "child_process"],   // codigo detras de una URL
     ];
