@@ -214,3 +214,134 @@ describe("specs de e2e/fase1: sin URLs absolutas que no sean locales", () => {
     expect(hosts.filter((h) => !PERMITIDOS.has(h.replace(/:\d+$/, "")))).toEqual(["api.nadakki.com"]);
   });
 });
+
+// ── Barrera estatica contra procesos que no son Node (decision de Cesar, 2-nov) ────────────────────────────────────────
+// El guard de red (_solo-loopback.cjs) solo ve codigo de Node. Un spec que lance `curl` con child_process arrancaria un
+// proceso que NO lo carga y llegaria a un host externo. Riesgo residual ACEPTADO (B-14 de la adenda): el cierre total es
+// aislamiento de red a nivel del SO en los runners ci-8g. Mientras tanto, esta barrera hace fallar a cualquier fichero de
+// e2e/fase1/** y de tests/e2e/fase1-*.test.ts que cree procesos, hilos o enlaces nativos. Sin comentarios quitados a
+// proposito: quitarlos con una regex dejaria pasar codigo detras de una URL («http://...»); es preferible un falso positivo.
+type Hallazgo = string;
+
+const PATRONES: Array<[Hallazgo, RegExp]> = [
+  ["child_process", /\bchild_process\b/],
+  ["worker_threads", /\bworker_threads\b/],
+  ["process.binding", /\bprocess\s*(?:\.\s*binding\b|\[\s*["'`]binding["'`]\s*\])/],
+  ["process.dlopen", /\bprocess\s*\.\s*dlopen\b/],
+  ["exec/execFile/execSync/execFileSync/spawn/spawnSync/fork (llamada suelta)", /(?<![.\w$])(?:exec|execFile|execSync|execFileSync|spawn|spawnSync|fork)\s*\(/],
+  ["execFile/execSync/execFileSync/spawn/spawnSync/fork (metodo)", /\.\s*(?:execFile|execSync|execFileSync|spawn|spawnSync|fork)\s*\(/],
+  ["eval", /\beval\s*\(/],
+  ["Function()", /\b(?:new\s+)?Function\s*\(/],
+  ["require no literal", /\brequire\s*\(\s*[^"'`\s)]/],
+  ["import() no literal", /\bimport\s*\(\s*[^"'`\s)]/],
+];
+
+function detectar(texto: string): Hallazgo[] {
+  return PATRONES.filter(([, re]) => re.test(texto)).map(([nombre]) => nombre);
+}
+
+// El canario NECESITA lanzar procesos de Node (el control sin guard y el hijo con guard). Unica excepcion, con limites.
+const EXENTO = "e2e/fase1/_canario-red.cjs";
+const PERMITIDO_AL_EXENTO = new Set(["child_process", "exec/execFile/execSync/execFileSync/spawn/spawnSync/fork (llamada suelta)"]);
+
+function ficherosFase1(raiz: string = RAIZ): string[] {
+  const salida: string[] = [];
+  const recorrer = (dir: string) => {
+    if (!fs.existsSync(dir)) return;
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) recorrer(p);
+      else if (/\.(ts|tsx|js|mjs|cjs)$/.test(e.name)) salida.push(path.relative(raiz, p).split(path.sep).join("/"));
+    }
+  };
+  recorrer(path.join(raiz, "e2e/fase1"));
+  const dirTests = path.join(raiz, "tests/e2e");
+  if (fs.existsSync(dirTests)) {
+    for (const n of fs.readdirSync(dirTests)) if (/^fase1-[^/]*\.test\.ts$/.test(n)) salida.push(`tests/e2e/${n}`);
+  }
+  return salida.sort();
+}
+
+describe("e2e/fase1: ningun fichero crea procesos, hilos ni enlaces nativos (riesgo residual B-14)", () => {
+  test("ficheros de e2e/fase1/** y tests/e2e/fase1-*.test.ts, salvo el canario, sin ninguna construccion prohibida", () => {
+    const malos: string[] = [];
+    for (const f of ficherosFase1()) {
+      if (f === EXENTO) continue;
+      const h = detectar(fs.readFileSync(path.join(RAIZ, f), "utf8"));
+      if (h.length) malos.push(`${f}: ${h.join(", ")}`);
+    }
+    expect(malos).toEqual([]);
+  });
+
+  test("el canario solo puede lanzar `process.execPath` con execFile: nada mas de la lista", () => {
+    const texto = fs.readFileSync(path.join(RAIZ, EXENTO), "utf8");
+    const extra = detectar(texto).filter((h) => !PERMITIDO_AL_EXENTO.has(h));
+    expect(extra).toEqual([]);
+    const llamadas = [...texto.matchAll(/(?<![.\w$])execFile\s*\(\s*([^,)]*)/g)].map((m) => m[1].trim());
+    expect(llamadas.length).toBeGreaterThan(0);
+    expect(llamadas.every((c) => c === "process.execPath")).toBe(true);
+    expect(texto).not.toMatch(/["'`]curl["'`]|["'`]wget["'`]|["'`]sh["'`]|["'`]bash["'`]/);
+  });
+
+  test("el guard no menciona ni usa nada de la lista (tampoco en comentarios)", () => {
+    expect(detectar(fs.readFileSync(path.join(RAIZ, "e2e/fase1/_solo-loopback.cjs"), "utf8"))).toEqual([]);
+  });
+
+  test("el escaner ve los ficheros de ambos sitios", () => {
+    const f = ficherosFase1();
+    expect(f).toContain("e2e/fase1/_solo-loopback.cjs");
+    expect(f).toContain(EXENTO);
+  });
+
+  test("el escaner encuentra los specs de ambos sitios en una raiz de prueba (y solo esos)", () => {
+    const raiz = fs.mkdtempSync(path.join(os.tmpdir(), "fase1-escaner-"));
+    try {
+      for (const f of ["e2e/fase1/a.spec.ts", "e2e/fase1/sub/b.spec.ts", "e2e/fase1/_guard.cjs", "tests/e2e/fase1-centinela.test.ts",
+        "tests/e2e/fase1-otro.test.ts", "tests/e2e/otra-cosa.test.ts", "tests/e2e/fase1/x.test.ts", "e2e/otra/z.spec.ts", "e2e/fase1/nota.md"]) {
+        fs.mkdirSync(path.dirname(path.join(raiz, f)), { recursive: true });
+        fs.writeFileSync(path.join(raiz, f), "x");
+      }
+      expect(ficherosFase1(raiz)).toEqual(["e2e/fase1/_guard.cjs", "e2e/fase1/a.spec.ts", "e2e/fase1/sub/b.spec.ts",
+        "tests/e2e/fase1-centinela.test.ts", "tests/e2e/fase1-otro.test.ts"]);
+    } finally {
+      fs.rmSync(raiz, { recursive: true, force: true });
+    }
+  });
+
+  test("el detector muerde: cada construccion prohibida se detecta", () => {
+    const casos: Array<[string, string]> = [
+      ['import { execSync } from "child_process";', "child_process"],
+      ['const cp = require("node:child_process");', "child_process"],
+      ['const m = await import("node:child_process");', "child_process"],
+      ['import { Worker } from "worker_threads";', "worker_threads"],
+      ['process.binding("tcp_wrap");', "process.binding"],
+      ['process["binding"]("tcp_wrap");', "process.binding"],
+      ['process.dlopen(m, "/tmp/x.node");', "process.dlopen"],
+      ['await exec("curl https://example.com");', "exec/execFile/execSync/execFileSync/spawn/spawnSync/fork (llamada suelta)"],
+      ['execFile("curl", ["https://example.com"]);', "exec/execFile/execSync/execFileSync/spawn/spawnSync/fork (llamada suelta)"],
+      ['spawn("sh", ["-c", "curl x"]);', "exec/execFile/execSync/execFileSync/spawn/spawnSync/fork (llamada suelta)"],
+      ['fork("./otro.js");', "exec/execFile/execSync/execFileSync/spawn/spawnSync/fork (llamada suelta)"],
+      ['cp.spawn("curl", []);', "execFile/execSync/execFileSync/spawn/spawnSync/fork (metodo)"],
+      ['eval("1+1");', "eval"],
+      ['new Function("return 1")();', "Function()"],
+      ['require(nombre);', "require no literal"],
+      ['await import(ruta);', "import() no literal"],
+      ['const u = "http://backend.invalid"; require("child_process");', "child_process"],   // codigo detras de una URL
+    ];
+    for (const [codigo, esperado] of casos) expect(detectar(codigo)).toContain(esperado);
+  });
+
+  test("el detector no da falsos positivos con codigo normal de un spec", () => {
+    const limpio = `
+      import { test, expect } from "@playwright/test";
+      const re = /marketing\\/(\\w+)/;
+      test("x", async ({ page }) => {
+        const m = re.exec(page.url());
+        await page.goto("/marketing");
+        const exec_time = 1, forked = 2, spawned = [].map((x) => x);
+        await expect(page.locator("a")).toBeVisible();
+        const mod = require("fs");
+      });`;
+    expect(detectar(limpio)).toEqual([]);
+  });
+});

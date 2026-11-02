@@ -6,7 +6,8 @@
  * app/api/v2/[[...path]]). Se instala en el proceso con require() y en sus hijos de Node por NODE_OPTIONS.
  *
  * Que NO cubre (aislamiento de red del SO si lo cubriria; aqui no hay Docker en ci-8g y unshare depende de AppArmor):
- * procesos que no son Node (un spec que lance `curl` con child_process), addons nativos y process.binding.
+ * procesos que no son Node (un spec que lance `curl` desde un proceso hijo), addons nativos y las APIs internas de enlace.
+ * La barrera que lo acota es estatica: tests/ci/ci-fase1-red-loopback.test.ts rechaza esas construcciones (riesgo residual B-14).
  *
  * Fail-closed: un destino que no se puede clasificar como local se bloquea. No resuelve nombres antes de decidir.
  */
