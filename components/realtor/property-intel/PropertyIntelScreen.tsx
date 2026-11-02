@@ -8,6 +8,7 @@ import { getAuthHeaders } from "@/lib/api/fetch-client";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
+import { FuentesZona } from "./FuentesZona";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const BTN: CSSProperties = { minHeight: 36, padding: "0 14px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontWeight: 700, cursor: "pointer" };
@@ -72,6 +73,7 @@ export function PropertyIntelScreen({ target }: { target: Target }) {
               <div key={id}><dt style={{ fontSize: 12, color: RT.muted }}>{k}</dt><dd data-testid={id} style={{ margin: 0, fontWeight: 700 }}>{v}</dd></div>
             ))}
           </dl>
+          {target.kind === "property_id" && !demo ? <FuentesZona propertyId={target.id} /> : null}
           <Block id="signals" title="Señales de mercado" s={data.signals}>
             {(rows) => <ul style={{ margin: 0, paddingLeft: 18 }}>{rows.map((r) => <li key={r.id} data-testid="signal-row">{r.signal_type} · {r.observed_at.slice(0, 10)}</li>)}</ul>}
           </Block>
