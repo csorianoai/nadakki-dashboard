@@ -3,7 +3,7 @@
  * Canario de red de la puerta de la fase 1 (G2). Corre en el job, con el Node del job, ANTES de Playwright, y comprueba
  * en esa maquina que el guard (_solo-loopback.cjs) hace lo que dice:
  *   0. control: sin guard, un hijo de Node SI llega a un upstream en 127.0.0.2 (si no, el canario no prueba nada);
- *   1. con guard, http.get y fetch a ese upstream se bloquean y el upstream no recibe nada;
+ *   1. con guard, http.get, fetch y http.get con lookup propio a ese upstream se bloquean y el upstream no recibe nada;
  *   2. con guard, 127.0.0.1 sigue funcionando (el guard no sobre-bloquea).
  * 127.0.0.2 es loopback pero no 127.0.0.1: existe en cualquier Linux sin configurar nada. Sale con 1 si algo falla.
  */
@@ -18,6 +18,9 @@ const u = "http://" + process.env.H + ":" + process.env.P + "/";
 Promise.all([
   new Promise((ok) => http.get(u, (r) => { r.resume(); t("HTTP")(null); ok(); }).on("error", (e) => { t("HTTP")(e); ok(); })),
   fetch(u).then(() => t("FETCH")(null), t("FETCH")),
+  // host «localhost» con un lookup propio que devuelve 127.0.0.2: sin guard llega, con guard no
+  new Promise((ok) => http.get({ host: "localhost", port: +process.env.P, lookup: (h, o, cb) => (o && o.all ? cb(null, [{ address: process.env.H, family: 4 }]) : cb(null, process.env.H, 4)) },
+    (r) => { r.resume(); t("LOOKUP")(null); ok(); }).on("error", (e) => { t("LOOKUP")(e); ok(); })),
 ]);
 const http = require("node:http");`.replace('const http = require("node:http");', "");
 
@@ -43,10 +46,10 @@ function hijo(host, port, conGuard) {
   const fallos = [];
   try {
     const control = await hijo("127.0.0.2", ajeno.port, false);
-    if (!/HTTP OK/.test(control) || !/FETCH OK/.test(control)) fallos.push(`control: sin guard no se llega al upstream (${control.trim()})`);
+    if (!/HTTP OK/.test(control) || !/FETCH OK/.test(control) || !/LOOKUP OK/.test(control)) fallos.push(`control: sin guard no se llega al upstream (${control.trim()})`);
     const antes = ajeno.hits();
     const bloqueado = await hijo("127.0.0.2", ajeno.port, true);
-    if (!/HTTP ERR_EGRESS_BLOCKED/.test(bloqueado) || !/FETCH ERR_EGRESS_BLOCKED/.test(bloqueado)) fallos.push(`con guard NO se bloquea 127.0.0.2: ${bloqueado.trim()}`);
+    if (!/HTTP ERR_EGRESS_BLOCKED/.test(bloqueado) || !/FETCH ERR_EGRESS_BLOCKED/.test(bloqueado) || !/LOOKUP ERR_EGRESS_BLOCKED/.test(bloqueado)) fallos.push(`con guard NO se bloquea 127.0.0.2: ${bloqueado.trim()}`);
     if (ajeno.hits() !== antes) fallos.push("el upstream recibio una peticion con el guard activo");
     const local = await hijo("127.0.0.1", propio.port, true);
     if (!/HTTP OK/.test(local) || !/FETCH OK/.test(local)) fallos.push(`con guard 127.0.0.1 deja de funcionar: ${local.trim()}`);

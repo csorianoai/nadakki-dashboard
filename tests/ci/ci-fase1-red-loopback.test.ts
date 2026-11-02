@@ -47,6 +47,9 @@ const ESCENARIOS: Record<string, string> = {
   "net.connect": `const s=require("net").connect(+process.env.P,process.env.H);s.on("connect",()=>{console.log("REACHED");s.destroy()});s.on("error",e=>console.log("ERR "+e.code))`,
   "http.get": `require("http").get({host:process.env.H,port:+process.env.P},r=>{console.log("REACHED");r.resume()}).on("error",e=>console.log("ERR "+e.code))`,
   "fetch (undici)": `fetch("http://"+process.env.H+":"+process.env.P+"/").then(()=>console.log("REACHED"),e=>console.log("ERR "+((e.cause&&e.cause.code)||e.code)))`,
+  // Un `lookup` propio decide la IP de un nombre sin pasar por dns.*: con host «localhost» el destino real es 127.0.0.2.
+  "http.get con lookup propio": `require("http").get({host:"localhost",port:+process.env.P,lookup:(h,o,cb)=>o&&o.all?cb(null,[{address:"127.0.0.2",family:4}]):cb(null,"127.0.0.2",4)},r=>{console.log("REACHED");r.resume()}).on("error",e=>console.log("ERR "+e.code))`,
+  "net.connect con lookup propio": `const s=require("net").connect({host:"localhost",port:+process.env.P,lookup:(h,o,cb)=>o&&o.all?cb(null,[{address:"127.0.0.2",family:4}]):cb(null,"127.0.0.2",4)});s.on("connect",()=>{console.log("REACHED");s.destroy()});s.on("error",e=>console.log("ERR "+e.code))`,
   "https.request": `require("https").request({host:process.env.H,port:+process.env.P,rejectUnauthorized:false},()=>console.log("REACHED")).on("error",e=>console.log("ERR "+e.code)).end()`,
 };
 
@@ -78,6 +81,27 @@ describe("guard de red e2e/fase1/_solo-loopback.cjs", () => {
       { NODE_OPTIONS: `--require=${GUARD}` });
     expect(r.out).toContain("DNS ERR_EGRESS_BLOCKED");
     expect(r.out).toContain("HTTP ERR_EGRESS_BLOCKED");
+  }, T);
+
+  test("dns.Resolver y dns.promises.Resolver no consultan nombres que no son locales", async () => {
+    const r = await correr(process.execPath, ["-e",
+      `const d=require("dns");new d.Resolver().resolve4("example.com",e=>console.log("CB "+(e&&e.code)));
+new d.promises.Resolver().resolve4("example.com").then(()=>console.log("PR OK"),e=>console.log("PR "+e.code));
+try{new d.Resolver().reverse("8.8.8.8",e=>console.log("REV "+(e&&e.code)))}catch(e){console.log("REV "+e.code)}`],
+      { NODE_OPTIONS: `--require=${GUARD}` });
+    expect(r.out).toContain("CB ERR_EGRESS_BLOCKED");
+    expect(r.out).toContain("PR ERR_EGRESS_BLOCKED");
+    expect(r.out).toContain("REV ERR_EGRESS_BLOCKED");
+  }, T);
+
+  test("un lookup propio con una IP local literal sigue funcionando (el guard no sobre-bloquea)", async () => {
+    const lo = await servidor("127.0.0.1");
+    try {
+      const r = await nodeConGuard(`require("net").connect({host:"127.0.0.1",port:+process.env.P,lookup:(h,o,cb)=>cb(null,"127.0.0.1",4)}).on("connect",function(){console.log("REACHED");this.destroy()}).on("error",e=>console.log("ERR "+e.code))`, "127.0.0.1", lo.port);
+      expect(r.out).toContain("REACHED");
+    } finally {
+      await lo.cerrar();
+    }
   }, T);
 
   test("bloquea UDP a un host que no es 127.0.0.1 (dgram)", async () => {
@@ -232,8 +256,17 @@ const PATRONES: Array<[Hallazgo, RegExp]> = [
   ["execFile/execSync/execFileSync/spawn/spawnSync/fork (metodo)", /\.\s*(?:execFile|execSync|execFileSync|spawn|spawnSync|fork)\s*\(/],
   ["eval", /\beval\s*\(/],
   ["Function()", /\b(?:new\s+)?Function\s*\(/],
-  ["require no literal", /\brequire\s*\(\s*[^"'`\s)]/],
-  ["import() no literal", /\bimport\s*\(\s*[^"'`\s)]/],
+  // Solo se admite un literal COMPLETO como unico argumento: `require("a" + "b")`, `import("a" + x)` y plantillas con ${} fallan.
+  ["require/import no literal", /\b(?:require|import)\s*\(\s*(?!\)|(?:"[^"\n\\]*"|'[^'\n\\]*'|`[^`$\n\\]*`)\s*[,)])/],
+  // Un literal con escapes («child_pro\x63ess») esconde el nombre al patron de child_process.
+  ["require/import con escapes", /\b(?:require|import)\s*\(\s*["'`][^"'`\n]*\\/],
+  // cp["spawn"](...), cp["exec"+""](...): acceso por corchetes a los lanzadores.
+  ["lanzador por corchetes", /\[\s*["'`](?:exec|execFile|execSync|execFileSync|spawn|spawnSync|fork)["'`]\s*\]\s*\(/],
+  // `process` solo se usa como process.X; `process[...]` (salvo env), `const p = process`, `{ binding } = process` o pasarlo
+  // como argumento permiten llegar a binding/dlopen con nombres calculados.
+  ["process por corchetes (no env)", /\bprocess\s*\[(?!\s*["'`]env["'`]\s*\])/],
+  ["process sin acceso directo", /(?<![.\w$"'`/-])process\b(?!\s*\.)(?!\s*\[)(?![\w$"'`-])/],
+  ["executablePath", /\bexecutablePath\b/],
 ];
 
 function detectar(texto: string): Hallazgo[] {
@@ -324,8 +357,19 @@ describe("e2e/fase1: ningun fichero crea procesos, hilos ni enlaces nativos (rie
       ['cp.spawn("curl", []);', "execFile/execSync/execFileSync/spawn/spawnSync/fork (metodo)"],
       ['eval("1+1");', "eval"],
       ['new Function("return 1")();', "Function()"],
-      ['require(nombre);', "require no literal"],
-      ['await import(ruta);', "import() no literal"],
+      ['require(nombre);', "require/import no literal"],
+      ['await import(ruta);', "require/import no literal"],
+      ['require("child"+"_process");', "require/import no literal"],
+      ['await import("child"+"_process");', "require/import no literal"],
+      ['require(`child${"_"}process`);', "require/import no literal"],
+      ['require("child_pro\\x63ess");', "require/import con escapes"],
+      ['cp["spawn"]("curl", []);', "lanzador por corchetes"],
+      ['cp[\'execFile\']("curl");', "lanzador por corchetes"],
+      ['process["bind"+"ing"]("tcp_wrap");', "process por corchetes (no env)"],
+      ['const p = process; p.binding("tcp_wrap");', "process sin acceso directo"],
+      ['const { binding } = process;', "process sin acceso directo"],
+      ['f(process);', "process sin acceso directo"],
+      ['test.use({ launchOptions: { executablePath: "/usr/bin/curl" } });', "executablePath"],
       ['const u = "http://backend.invalid"; require("child_process");', "child_process"],   // codigo detras de una URL
     ];
     for (const [codigo, esperado] of casos) expect(detectar(codigo)).toContain(esperado);
@@ -341,6 +385,8 @@ describe("e2e/fase1: ningun fichero crea procesos, hilos ni enlaces nativos (rie
         const exec_time = 1, forked = 2, spawned = [].map((x) => x);
         await expect(page.locator("a")).toBeVisible();
         const mod = require("fs");
+        const h = process.env.HOME, e = process["env"].X, q = await import("node:path");
+        const nota = "el proceso termina"; // la palabra suelta fuera de codigo es un falso positivo conocido: se escribe «proceso»
       });`;
     expect(detectar(limpio)).toEqual([]);
   });

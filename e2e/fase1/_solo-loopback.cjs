@@ -38,7 +38,7 @@ if (!globalThis[ID]) {
   // hay que mirar dentro del array, o toda conexion creada por net.connect/http/fetch pasaria sin clasificar.
   const destino = (args) => {
     const a = Array.isArray(args[0]) ? args[0][0] : args[0];
-    if (a !== null && typeof a === "object") return { path: a.path, host: a.host };
+    if (a !== null && typeof a === "object") return { path: a.path, host: a.host, lookup: a.lookup };
     if (typeof a === "string" && !/^\d+$/.test(a)) return { path: a };
     return { host: typeof args[1] === "string" ? args[1] : undefined };
   };
@@ -48,8 +48,13 @@ if (!globalThis[ID]) {
     // Como net: solo un `path` con texto es un socket unix. http.Agent manda `path: null` en conexiones TCP, y tomar
     // «path definido» por «socket unix» deja pasar cualquier http.get (hallado al probar el canario).
     const ipc = typeof d.path === "string" && d.path !== "";
-    if (!ipc && !permitido(d.host)) {
-      const err = bloqueo(d.host);
+    // Un `lookup` propio (opcion de net/http/undici) decide a que IP va un nombre SIN pasar por dns.*: con host «localhost» y
+    // un lookup que devuelve 127.0.0.2 (o una IP publica) el destino real no es el que se ve. Solo se admite con una IP
+    // local literal, donde no se llama.
+    const literal = d.host !== undefined && ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(limpio(d.host));
+    const lookupAjeno = !ipc && d.lookup !== undefined && d.lookup !== null && !literal;
+    if (!ipc && (lookupAjeno || !permitido(d.host))) {
+      const err = bloqueo(lookupAjeno ? `${d.host} con lookup propio` : d.host);
       process.nextTick(() => this.destroy(err));
       return this;
     }
@@ -82,6 +87,16 @@ if (!globalThis[ID]) {
     "resolveSrv", "resolveTxt", "resolvePtr", "resolveNaptr", "resolveSoa", "reverse"]) {
     envolver(dns, n);
     if (dns.promises) envolverPromesa(dns.promises, n);
+  }
+
+  // dns.Resolver y dns.promises.Resolver hablan con un servidor DNS por UDP/TCP propio: sus consultas por nombre tambien se cortan.
+  for (const R of [dns.Resolver, dns.promises && dns.promises.Resolver]) {
+    if (!R || !R.prototype) continue;
+    const esPromesa = R === (dns.promises && dns.promises.Resolver);
+    for (const n of ["resolve", "resolve4", "resolve6", "resolveAny", "resolveCname", "resolveMx", "resolveNs", "resolveSrv",
+      "resolveTxt", "resolvePtr", "resolveNaptr", "resolveSoa", "resolveCaa", "reverse"]) {
+      (esPromesa ? envolverPromesa : envolver)(R.prototype, n);
+    }
   }
 
   // UDP: send() y connect() con una direccion que no sea local.
