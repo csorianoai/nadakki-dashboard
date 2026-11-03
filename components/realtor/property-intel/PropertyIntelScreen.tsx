@@ -7,6 +7,7 @@ import type { PiData, Section, Target } from "@/lib/realtor/property-intel/types
 import { getAuthHeaders } from "@/lib/api/fetch-client";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
+import { CargaManual } from "./CargaManual";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
@@ -104,6 +105,7 @@ export function PropertyIntelScreen({ target }: { target: Target }) {
                 : <p style={{ margin: 0 }}>Este proyecto no exige registro.</p>}
             </section>
           ) : null}
+          {target.kind === "property_id" && !demo ? <CargaManual propertyId={target.id} /> : null}
         </>
       )}
     </section>
