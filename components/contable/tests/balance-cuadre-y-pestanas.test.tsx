@@ -25,7 +25,6 @@ jest.mock("@/components/contable/ContablePageShell", () => ({
   ContablePageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 jest.mock("sonner", () => ({ toast: { error: jest.fn() } }));
-jest.mock("@/lib/contable/capacidad", () => ({ useContableAsientoAllowed: () => true }));
 jest.mock("next/navigation", () => ({ usePathname: () => "/contable/estado-resultados" }));
 
 const periodosMock = listPeriodos as jest.MockedFunction<typeof listPeriodos>;

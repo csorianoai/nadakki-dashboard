@@ -15,7 +15,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useContableAsientoAllowed } from "@/lib/contable/capacidad";
 
 const TABS = [
   { slug: "resumen", label: "Resumen", icon: LayoutDashboard },
@@ -33,15 +32,13 @@ const TABS = [
 export function ContableSubNav() {
   const pathname = usePathname();
   const base = "/contable";
-  const puedeCrearAsiento = useContableAsientoAllowed();
-  const tabs = TABS.filter((t) => t.slug !== "asientos/nuevo" || puedeCrearAsiento);
 
   return (
     <nav
       aria-label="Sub-navegación contable"
       className="mb-6 flex gap-2 overflow-x-auto border-b border-white/10 pb-3 scrollbar-thin scrollbar-thumb-zinc-700"
     >
-      {tabs.map(({ slug, label, icon: Icon }) => {
+      {TABS.map(({ slug, label, icon: Icon }) => {
         const href = `${base}/${slug}`;
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
