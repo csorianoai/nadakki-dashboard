@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
@@ -50,7 +51,7 @@ export default function SicMultitenantConfigPage() {
           <p className="text-sm text-slate-500 mt-1">
             Same-origin proxy to <code className="text-slate-600">/api/v2/sic-mt/*</code>
           </p>
-          <p className="text-xs text-slate-600 mt-1 font-mono">Tenant: {effectiveTenant}</p>
+          <p className="text-xs text-slate-600 mt-1 font-mono"><TenantLabel prefix="Tenant: " id={effectiveTenant} /></p>
         </div>
         <button
           type="button"

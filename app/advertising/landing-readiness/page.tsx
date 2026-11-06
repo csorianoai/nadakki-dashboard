@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useState } from "react";
 import {
   Globe,
@@ -101,7 +102,7 @@ export default function LandingReadinessPage() {
         <p className="text-sm text-slate-500 mt-1">
           Real site crawl · Message match scoring · Copy outline generation
         </p>
-        <p className="text-xs text-slate-600 mt-1 font-mono">Tenant: {effectiveTenant}</p>
+        <p className="text-xs text-slate-600 mt-1 font-mono"><TenantLabel prefix="Tenant: " id={effectiveTenant} /></p>
       </div>
 
       <div

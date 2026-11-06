@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "@/lib/motion-stub";
 import { BarChart3, List, Loader2, RefreshCw, AlertCircle } from "lucide-react";
@@ -82,7 +83,7 @@ export default function AdminUsagePage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/admin">
-        <span className="text-sm text-gray-400">Tenant: {tenantId || "—"}</span>
+        <TenantLabel prefix="Tenant: " className="text-sm text-gray-400" />
         <button
           type="button"
           onClick={() => fetchUsage(true)}
