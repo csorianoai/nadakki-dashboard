@@ -27,7 +27,7 @@ function CardPhoto({
 }: {
   vehicle: Vehicle;
   status: ReturnType<typeof priceStatus>;
-  photos: number;
+  photos?: number;
   saved: boolean;
   onSaveToggle?: () => void;
   aspectClass: string;
@@ -44,10 +44,12 @@ function CardPhoto({
       <div className="absolute right-2 top-2 md:right-3 md:top-3">
         <SaveButton saved={saved} onToggle={onSaveToggle ?? (() => undefined)} />
       </div>
-      <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--fg)_55%,transparent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--surface)] backdrop-blur-sm md:bottom-3 md:right-3">
-        <Camera className="h-3 w-3" aria-hidden />
-        {photos}
-      </span>
+      {photos ? (
+        <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--fg)_55%,transparent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--surface)] backdrop-blur-sm md:bottom-3 md:right-3">
+          <Camera className="h-3 w-3" aria-hidden />
+          {photos}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -70,7 +72,7 @@ export const VehicleCard = memo(function VehicleCard({
   const status = priceStatus(vehicle.badge, vehicle.match);
   const monthly = vehicle.price > 0 ? Math.round(cuota(vehicle.price, 20, 60)) : 0;
   const href = publicVehicleHref(vehicle);
-  const photos = photoCount(vehicle.id);
+  const photos = photoCount(vehicle);
 
   const navigate = useCallback(() => router.push(href), [router, href]);
   const prefetch = useCallback(() => router.prefetch(href), [router, href]);
@@ -188,11 +190,6 @@ export const VehicleCard = memo(function VehicleCard({
           </div>
           <div className="flex flex-wrap gap-1.5">
             <QualityBadge status={status} />
-            {vehicle.match != null && (
-              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
-                {vehicle.match}% match
-              </span>
-            )}
             <PrecioJustoBadge vehicle={vehicle} />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
@@ -291,11 +288,6 @@ export const VehicleCard = memo(function VehicleCard({
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {vehicle.match != null && (
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
-              {vehicle.match}% match
-            </span>
-          )}
           {(vehicle.id === 3 || vehicle.id === 7) && (
             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
               Recién publicado

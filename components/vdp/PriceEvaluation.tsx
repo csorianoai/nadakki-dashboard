@@ -13,7 +13,7 @@ function calcRangesLocal(price: number): PriceConfidenceResult {
   const top = Math.round((price * 1.135) / 1000) * 1000;
   const pos = ((mid - lo) / (top - lo)) * 100;
   const pctBetter = Math.round(((hi - mid) / hi) * 100);
-  return { lo, mid, hi, top, pos, pctBetter, sampleCount: 47, fromBackend: false };
+  return { lo, mid, hi, top, pos, pctBetter, sampleCount: 0, fromBackend: false };
 }
 
 export function PriceEvaluation({ vehicle }: { vehicle: Vehicle }) {
@@ -67,9 +67,9 @@ export function PriceEvaluation({ vehicle }: { vehicle: Vehicle }) {
         Este precio es <strong>{pctBetter}% mejor</strong> que el promedio del mercado.
       </p>
       <p className="mt-2 text-xs leading-relaxed text-nk-fg-muted">
-        Basado en {data.sampleCount} {vehicle.make} {vehicle.model} {vehicle.year} vendidos en RD
-        últimos 90 días. Datos verificados con importaciones DGII + desembolsos Nadakki +
-        Credicefi.
+        {data.sampleCount > 0
+          ? `Basado en ${data.sampleCount} ${vehicle.make} ${vehicle.model} ${vehicle.year} comparables.`
+          : null}
       </p>
     </section>
   );
