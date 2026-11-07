@@ -3,8 +3,7 @@
 import { autosFetch } from "@/lib/autos-consumer-api";
 import { backendVehicleToConsumer, mapBackendVehicle } from "@/lib/api/vehicle-mapper";
 import type { FilterState } from "@/lib/search-types";
-import { filterVehicles, sortVehicles } from "@/lib/search-filters";
-import { VEHICLES_SEED, getVehicleById, type Vehicle } from "@/lib/vehicles";
+import { getVehicleById, type Vehicle } from "@/lib/vehicles";
 import type { VehicleSearchResult } from "@/types/autos";
 
 function filtersToPayload(state: FilterState) {
@@ -40,15 +39,13 @@ export async function searchVehiclesConsumer(
       body: JSON.stringify(filtersToPayload(state)),
     });
     if (!res?.vehicles?.length) {
-      const local = sortVehicles(filterVehicles(VEHICLES_SEED, state), state.sort);
-      return { vehicles: local, total: local.length, fromBackend: false };
+      return { vehicles: [], total: 0, fromBackend: true };
     }
     const vehicles = res.vehicles.map((v) => mapBackendVehicle(v));
     return { vehicles, total: res.total ?? vehicles.length, fromBackend: true };
   } catch (error) {
-    console.warn("Backend down, using mock", error);
-    const local = sortVehicles(filterVehicles(VEHICLES_SEED, state), state.sort);
-    return { vehicles: local, total: local.length, fromBackend: false };
+    console.warn("Backend down", error);
+    return { vehicles: [], total: 0, fromBackend: false };
   }
 }
 

@@ -28,6 +28,8 @@ export interface Vehicle {
   condition: string;
   price_rd?: number | null;
   price_usd?: number | null;
+  price_amount?: number | null;
+  price_currency?: string | null;
   description?: string | null;
   province?: string | null;
   municipality?: string | null;
