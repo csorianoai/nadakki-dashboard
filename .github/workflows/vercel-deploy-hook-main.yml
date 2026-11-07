@@ -8,6 +8,9 @@ on:
   push:
     branches:
       - main
+    # apps/** son proyectos de Vercel separados (p. ej. apps/sites-engine): un push que solo los toca no redespliega el panel.
+    paths-ignore:
+      - 'apps/**'
   workflow_dispatch:
 
 permissions: {}
