@@ -49,7 +49,7 @@ describe("F4A-5 mapper: precio real", () => {
 });
 
 describe("F4A-5 busqueda sin resultados", () => {
-  const state = { query: "zzz", brands: [], types: [], fuels: [], trans: [], provinces: [], pageSize: 20, sort: "relevance" } as unknown as FilterState;
+  const state = { query: "", brands: [], types: [], fuels: [], trans: [], provinces: [], pageSize: 20, sort: "relevance" } as unknown as FilterState;
 
   it("0 resultados -> lista vacia, sin coches de demostracion", async () => {
     autosFetch.mockResolvedValueOnce({ vehicles: [], total: 0 });
@@ -59,9 +59,10 @@ describe("F4A-5 busqueda sin resultados", () => {
   });
 
   it("error de red -> lista vacia", async () => {
-    jest.spyOn(console, "warn").mockImplementation(() => {});
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
     autosFetch.mockRejectedValueOnce(new Error("down"));
     const r = await searchVehiclesConsumer(state);
+    warn.mockRestore();
     expect(r.vehicles).toEqual([]);
   });
 });
