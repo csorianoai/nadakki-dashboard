@@ -241,3 +241,26 @@ test("el menú de Suite conserva enlaces locales con la sesión simulada de CI",
   expect(menu.getByRole("link", { name: "Crédito", exact: true })).toHaveAttribute("href", "/credit-hub");
 });
 
+
+// e2e/visual/volver-al-inicio.spec.ts depende de esto: el menú es un acordeón (los grupos plegados se abren por su
+// botón aria-controls="grupo-<id>") y el dealer, dentro de ModuleShell, abre el cajón con «Abrir el menú del módulo».
+test("Crédito en /credit-hub: abriendo los grupos plegados aparecen más de 2 enlaces; el dealer usa el cajón del armazón", () => {
+  pathname = "/credit-hub";
+  const credito = MODULOS.find((m) => m.id === "credito")!;
+  const { container, unmount } = render(conSesion(SUPER, <ModuleShell modulo={credito}>x</ModuleShell>));
+  const menu = screen.getByRole("complementary", { name: /Menú de/ });
+  expect(menu.querySelectorAll('a[aria-current="page"]')).toHaveLength(1);
+  let enlaces = within(menu).getAllByRole("link").length;
+  const plegados = Array.from(menu.querySelectorAll<HTMLButtonElement>('button[aria-controls^="grupo-"][aria-expanded="false"]:not([aria-label])'))
+    .map((b) => b.getAttribute("aria-controls")!);
+  expect(plegados.length).toBeGreaterThan(0);
+  for (const id of plegados) {
+    fireEvent.click(menu.querySelector(`button[aria-controls="${id}"]:not([aria-label])`)!);
+    enlaces += within(container.querySelector<HTMLElement>(`[id="${id}"]`)!).getAllByRole("link").length;
+  }
+  expect(enlaces).toBeGreaterThan(2);
+  unmount();
+  pathname = "/autos/dealer";
+  render(conSesion(SUPER, <ModuleShell modulo={MODULOS.find((m) => m.id === "concesionarios")!}>x</ModuleShell>));
+  expect(screen.getByRole("button", { name: "Abrir el menú del módulo" })).toBeInTheDocument();
+});

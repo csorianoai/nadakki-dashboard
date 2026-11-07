@@ -241,7 +241,7 @@ jobs:
       # Captura de las pantallas principales (portada, /admin, /social) sobre este mismo build: fondo oscuro
       # continuo y texto legible (e2e/visual). La portada salió a producción con media página ilegible.
       - name: Chromium para Playwright
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Pantallas principales (Playwright)
         env:

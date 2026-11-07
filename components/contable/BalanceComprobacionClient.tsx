@@ -101,7 +101,7 @@ export function BalanceComprobacionClient() {
       <MonedaFuncionalNota locale={moneda} />
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Calculando balance…</p>
+        <p className="text-sm text-zinc-400">Calculando balance…</p>
       ) : report ? (
         <div className="space-y-4">
           {cuadra ? (
@@ -117,7 +117,7 @@ export function BalanceComprobacionClient() {
           <div className="overflow-x-auto rounded-xl border border-white/10">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-white/10 bg-white/[0.03] text-left text-[10px] uppercase text-zinc-500">
+                <tr className="border-b border-white/10 bg-white/[0.03] text-left text-[10px] uppercase text-zinc-400">
                   <th className="px-4 py-3">Código</th>
                   <th className="px-4 py-3">Cuenta</th>
                   <th className="px-4 py-3 text-right">Debe</th>

@@ -123,14 +123,14 @@ export function LibroMayorClient() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-zinc-500">Actualizando…</p>
+            <p className="text-sm text-zinc-400">Actualizando…</p>
           ) : (report?.movimientos?.length ?? 0) === 0 ? (
-            <p className="text-sm text-zinc-500">Sin movimientos posteados en este periodo.</p>
+            <p className="text-sm text-zinc-400">Sin movimientos posteados en este periodo.</p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="min-w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/[0.03] text-left text-[10px] uppercase text-zinc-500">
+                  <tr className="border-b border-white/10 bg-white/[0.03] text-left text-[10px] uppercase text-zinc-400">
                     <th className="px-4 py-3">Fecha</th>
                     <th className="px-4 py-3">Asiento</th>
                     <th className="px-4 py-3">Descripción</th>

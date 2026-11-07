@@ -2,6 +2,8 @@ import { VehicleCard } from "@/components/vehicle/VehicleCard";
 import { VEHICLES_SEED, type Vehicle } from "@/lib/vehicles";
 
 export function SimilarVehicles({ vehicle }: { vehicle: Vehicle }) {
+  // Vehiculo real del backend (refId): los similares serian de la semilla, o sea inventados.
+  if (vehicle.refId) return null;
   const similar = VEHICLES_SEED.filter(
     (v) => v.id !== vehicle.id && v.type === vehicle.type && v.loc === vehicle.loc,
   ).slice(0, 3);

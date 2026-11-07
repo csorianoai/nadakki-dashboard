@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { fmtRD } from "@/lib/format";
+import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import { cuota } from "@/lib/finance";
 import type { Vehicle } from "@/lib/vehicles";
 
@@ -22,6 +23,7 @@ export function ResultsMap({
   vehicles: Vehicle[];
   loading: boolean;
 }) {
+  const fmt = useFmtPrecio();
   if (loading) {
     return (
       <div className="relative aspect-[16/10] animate-nkShimmer rounded-r border border-nk-border bg-nk-surface-2" />
@@ -48,11 +50,11 @@ export function ResultsMap({
           return (
             <Link
               key={vehicle.id}
-              href={`/autos/vehiculo/${vehicle.id}`}
+              href={publicVehicleHref(vehicle)}
               className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-brand bg-nk-surface px-2 py-1 text-[10px] font-bold text-brand shadow-nk-md transition hover:scale-110"
               style={{ top: pos.top, left: pos.left }}
             >
-              {fmtRD(monthly)}/mes
+              {fmt(monthly)}/mes
             </Link>
           );
         })}
