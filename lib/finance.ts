@@ -22,10 +22,9 @@ export function isEligible(
 
 export function priceStatus(
   badge: string | undefined,
-  match: number | undefined,
-): "excelente" | "justo" | "sobre" | null {
-  if (badge == null && match == null) return null;
+  match: number,
+): "excelente" | "justo" | "sobre" {
   if (badge?.includes("Excelente")) return "excelente";
-  if (match != null && match < 80) return "sobre";
+  if (match < 80) return "sobre";
   return "justo";
 }

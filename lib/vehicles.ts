@@ -8,15 +8,13 @@ export interface Vehicle {
   model: string;
   year: number;
   price: number;
-  /** Moneda ISO del precio (ARS, DOP…), solo si el backend la devuelve. */
-  currency?: string;
   loc: string;
   type: VehicleType;
   km: number;
   trans: string;
   fuel: string;
-  badge?: string;
-  match?: number;
+  badge: string;
+  match: number;
   grad: string;
   verified: boolean;
   /** Datos del vendedor: solo si el backend los trae. Nunca se inventan. */

@@ -66,11 +66,11 @@ function matchesCondicion(vehicle: Vehicle, condicion: string[]): boolean {
     if (c === "Nuevo") return vehicle.year >= 2023 && vehicle.km < 5_000;
     if (c === "Usado") return true;
     if (c === "Certificado") {
-      return vehicle.year >= 2023 || vehicle.badge?.includes("Certificado");
+      return vehicle.year >= 2023 || vehicle.badge.includes("Certificado");
     }
     if (c === "Con daños reportados") return false;
     if (c === "Certificado Nadakki") {
-      return vehicle.year >= 2023 || vehicle.badge?.includes("Certificado");
+      return vehicle.year >= 2023 || vehicle.badge.includes("Certificado");
     }
     return true;
   });
@@ -104,7 +104,7 @@ function matchesAiSignals(vehicle: Vehicle, signals: FilterState["aiSignals"]): 
   const status = priceStatus(vehicle.badge, vehicle.match);
   return signals.every((s) => {
     if (s === "precio-justo") return status !== "sobre";
-    if (s === "match85") return (vehicle.match ?? 0) >= 85;
+    if (s === "match85") return vehicle.match >= 85;
     if (s === "historial" || s === "sin-fraude") return vehicle.verified;
     return true;
   });
@@ -119,7 +119,7 @@ function matchesYearRange(vehicle: Vehicle, state: FilterState): boolean {
 
 function matchesPriceBadges(vehicle: Vehicle, badges: string[]): boolean {
   if (!badges.length) return true;
-  return badges.some((b) => (vehicle.badge ?? "").toLowerCase().includes(b.toLowerCase().slice(0, 6)));
+  return badges.some((b) => vehicle.badge.toLowerCase().includes(b.toLowerCase().slice(0, 6)));
 }
 
 function matchesPublished(vehicle: Vehicle, publishedSince: string): boolean {

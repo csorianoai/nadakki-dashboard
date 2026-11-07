@@ -188,11 +188,9 @@ export const VehicleCard = memo(function VehicleCard({
           </div>
           <div className="flex flex-wrap gap-1.5">
             <QualityBadge status={status} />
-            {vehicle.match != null && (
-              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
-                {vehicle.match}% match
-              </span>
-            )}
+            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
+              {vehicle.match}% match
+            </span>
             <PrecioJustoBadge vehicle={vehicle} />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
@@ -291,11 +289,9 @@ export const VehicleCard = memo(function VehicleCard({
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {vehicle.match != null && (
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
-              {vehicle.match}% match
-            </span>
-          )}
+          <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
+            {vehicle.match}% match
+          </span>
           {(vehicle.id === 3 || vehicle.id === 7) && (
             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
               Recién publicado
