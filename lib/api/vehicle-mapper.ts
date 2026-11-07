@@ -48,6 +48,7 @@ export function mapBackendVehicle(v: BackendVehicle, _legacySeed?: number): Cons
     grad: GRADS[id % GRADS.length]!,
     verified: false,
     featuresLine: [trans, fuel].filter(Boolean).join(" · ").toUpperCase(),
+    ...(v.photo_count != null && v.photo_count > 0 ? { photoCount: v.photo_count } : {}),
   };
 }
 

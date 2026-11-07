@@ -96,7 +96,7 @@ export function VehicleChatWindow({
 
       const res = await sendVehicleChatMessage(vehicle, trimmed, sessionId);
       setSessionId(res.sessionId ?? sessionId);
-      setMessages((m) => [...m, { id: `b-${Date.now()}`, role: "bot", text: res.message }]);
+      setMessages((m) => [...m, { id: `b-${Date.now()}`, role: "bot", text: res.message || "El asistente no está disponible por ahora. Contacta al vendedor." }]);
       setTyping(false);
 
       if (nextCount >= 3 && !escalated) {
