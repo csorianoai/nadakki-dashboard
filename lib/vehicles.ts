@@ -27,6 +27,8 @@ export interface Vehicle {
   avgResp?: string;
   /** Id real del backend (puede ser UUID); el enlace publico lo usa. */
   refId?: string;
+  /** Numero REAL de fotos de la unidad (solo si el backend lo trae). */
+  photoCount?: number;
 }
 
 const DEALERS = ["AutoMundo RD", "Motores del Este", "Autos del Cibao", "Caribe Motors"] as const;
@@ -244,8 +246,10 @@ export function getVehicleById(id: number | string): Vehicle | undefined {
   return VEHICLES_SEED.find((v) => v.id === n);
 }
 
-export function photoCount(id: number): number {
-  return 18 + (id * 3) % 12;
+/** Fotos reales de la unidad; undefined si no se conoce (nunca se inventa). */
+export function photoCount(vehicle: Pick<Vehicle, "photoCount">): number | undefined {
+  const n = vehicle.photoCount;
+  return typeof n === "number" && Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
 }
 
 export const BODY_TYPES = [
