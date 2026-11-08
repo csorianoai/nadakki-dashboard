@@ -162,4 +162,20 @@ describe("Mi web / Propiedades: formulario", () => {
     expect((await screen.findByTestId("guardado")).textContent).toMatch(/ejemplo/i);
     expect(f.mock.calls.every((c) => String(c[0]).endsWith("/sites"))).toBe(true);
   });
+  test("caracteristica solo-EN: el error queda en el campo ES con role=alert y aria-describedby, sin POST (WCAG 3.3.1)", async () => {
+    route({ ...okLists });
+    render(<App />);
+    await screen.findByTestId("form-propiedad");
+    type("titulo-es", "Casa nueva");
+    type("slug", "casa-nueva");
+    fireEvent.click(screen.getByTestId("agregar-caracteristica"));
+    type("caracteristica-0-en", "Pool");
+    fireEvent.click(screen.getByTestId("guardar"));
+    const err = await screen.findByTestId("error-caracteristica-0-es");
+    expect(err.getAttribute("role")).toBe("alert");
+    const input = screen.getByTestId("caracteristica-0-es");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(input.getAttribute("aria-describedby")).toContain(err.id);
+    expect(sent("POST")).toHaveLength(0);
+  });
 });
