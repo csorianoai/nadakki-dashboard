@@ -4,6 +4,7 @@
  */
 
 import type { SuiteResult } from "@/lib/api/suiteOps";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const BASE = "";
 
@@ -55,7 +56,7 @@ export async function getGoogleAdsTenantReadiness(
   tenantId: string
 ): Promise<SuiteResult<GoogleAdsTenantReadinessPayload>> {
   try {
-    const res = await fetch(
+    const res = await apiFetch(
       `${BASE}/api/v1/tenants/${encodeURIComponent(tenantId)}/google-ads/readiness`,
       { cache: "no-store", headers: { Accept: "application/json", ...tenantHeaders(tenantId) } }
     );
@@ -81,7 +82,7 @@ export async function refreshGoogleAdsTenantReadiness(
   tenantId: string
 ): Promise<SuiteResult<GoogleAdsTenantReadinessPayload>> {
   try {
-    const res = await fetch(
+    const res = await apiFetch(
       `${BASE}/api/v1/tenants/${encodeURIComponent(tenantId)}/google-ads/readiness/refresh`,
       {
         method: "POST",
