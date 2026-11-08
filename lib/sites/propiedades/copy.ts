@@ -27,6 +27,7 @@ export const PRO: Record<string, Bi> = {
   errOpenTitle: { es: "No pudimos abrir la propiedad", en: "We could not open the listing" },
   errOpenBody: { es: "No se pudo cargar la propiedad. No se muestra ningún dato.", en: "The listing could not be loaded. No data is shown." },
   back: { es: "← Volver a las propiedades", en: "← Back to listings" },
+  leave: { es: "Hay cambios sin guardar. ¿Salir de todos modos?", en: "You have unsaved changes. Leave anyway?" },
   formNew: { es: "Nueva propiedad", en: "New listing" },
   formEdit: { es: "Editar propiedad", en: "Edit listing" },
   pubState: { es: "Estado de publicación", en: "Publication status" },
