@@ -64,7 +64,7 @@ describe("Mi web / Resumen", () => {
     expect(screen.getByTestId("version").textContent).toContain("7");
     expect(screen.getByTestId("ultima-publicacion").textContent).toMatch(/2026/);
     expect(screen.getByTestId("gate").textContent).toMatch(/advertencias/i);
-    expect(screen.getByTestId("bloqueos").textContent).toContain("2");
+    expect((await screen.findByTestId("bloqueos")).textContent).toContain("2");
     expect((screen.getByTestId("ir-publicar") as HTMLAnchorElement).getAttribute("href")).toBe(`/mi-web/publicar?sitio=${SITE_A}`);
     expect(screen.queryByTestId("badge-demo")).toBeNull();
     expect(screen.getByText(/saltar al contenido/i)).toBeTruthy();
@@ -147,7 +147,7 @@ describe("Mi web / Resumen", () => {
     const sel = (await screen.findByLabelText(/sitio/i)) as HTMLSelectElement;
     expect(sel.tagName).toBe("SELECT");
     expect(Array.from(sel.options).map((o) => o.value)).toEqual([SITE_A, SITE_B]);
-    expect(screen.getByTestId("ir-publicar").getAttribute("href")).toContain(`sitio=${SITE_A}`);
+    expect((await screen.findByTestId("ir-publicar")).getAttribute("href")).toContain(`sitio=${SITE_A}`);
   });
 
   test("ES/EN: alternar cambia los textos y 'es' es el respaldo", async () => {
