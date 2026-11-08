@@ -95,6 +95,7 @@ function collection<T, C extends object, U extends object>(name: string) {
   };
 }
 const L = collection<Listing, ListingCreate, ListingUpdate>("listings");
+export const getListing = (siteId: string, id: string) => get<Listing>(() => `${sp(siteId)}/listings/${seg(id)}`);
 export const listListings = L.list, createListing = L.create, updateListing = L.update;
 const D = collection<Development, DevelopmentCreate, DevelopmentUpdate>("developments");
 export const listDevelopments = D.list, createDevelopment = D.create, updateDevelopment = D.update;
