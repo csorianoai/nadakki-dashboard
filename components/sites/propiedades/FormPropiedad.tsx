@@ -28,9 +28,7 @@ export function FormPropiedad({ siteId, listingId }: { siteId: string | null; li
   const [form, setForm] = useState<PForm>(nuevoForm());
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [g, setG] = useState<Guardado>({ k: "ninguno" });
-  const [zonas, setZonas] = useState<Opciones>({ k: "cargando" });
-  const [edifs, setEdifs] = useState<Opciones>({ k: "cargando" });
-  const [devs, setDevs] = useState<Opciones>({ k: "cargando" });
+  const [zonas, setZonas] = useState<Opciones>({ k: "cargando" }), [edifs, setEdifs] = useState<Opciones>({ k: "cargando" }), [devs, setDevs] = useState<Opciones>({ k: "cargando" });
   const [medios, setMedios] = useState<MediaAsset[] | null>(null);
   const clave = useRef<{ body: string; key: string } | null>(null);
   const base = c.k === "ok" ? c.base : null;
@@ -51,9 +49,7 @@ export function FormPropiedad({ siteId, listingId }: { siteId: string | null; li
     const cargar = (fn: (s: string) => Promise<{ items: Item[] }>, set: (o: Opciones) => void, nombre: (i: Item) => string) =>
       fn(siteId).then((r) => vivo && set({ k: "ok", items: r.items.map((i) => ({ id: i.id, label: nombre(i) || i.slug })) }), () => vivo && set({ k: "no" }));
     const txt = (v: unknown) => (typeof v === "string" ? v : v && typeof (v as I18nText).es === "string" ? pick(v as I18nText, lang) : "");
-    cargar(listZones, setZonas, (i) => txt(i.name));
-    cargar(listBuildings, setEdifs, (i) => txt(i.name));
-    cargar(listDevelopments, setDevs, (i) => txt(i.name));
+    cargar(listZones, setZonas, (i) => txt(i.name)); cargar(listBuildings, setEdifs, (i) => txt(i.name)); cargar(listDevelopments, setDevs, (i) => txt(i.name));
     listMedia(siteId).then((r) => vivo && setMedios(r.items.filter((m) => m.status === "approved")), () => vivo && setMedios([]));
     return () => { vivo = false; };
   }, [demo, siteId, lang]);

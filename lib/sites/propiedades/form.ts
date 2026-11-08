@@ -8,10 +8,8 @@ export interface PForm {
   title: Bi2; desc: Bi2; slug: string; kind: "property" | "generic"; zone: string; building: string; dev: string;
   features: Bi2[]; featured: boolean; lat: string; lng: string; attrs: Par[]; media: string[];
 }
-export type PErr = "obligatorio" | "patron" | "geo" | "max";
-export type PErrores = Record<string, PErr>;
-export const MAX_FEATURES = 100;
-export const MAX_MEDIA = 60;
+export type PErr = "obligatorio" | "patron" | "geo" | "max"; export type PErrores = Record<string, PErr>;
+export const MAX_FEATURES = 100, MAX_MEDIA = 60;
 
 const vacio = (s: string) => s.trim() === "";
 const bi = (t?: Partial<I18nText>): Bi2 => ({ es: t?.es ?? "", en: t?.en ?? "" });
