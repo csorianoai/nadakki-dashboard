@@ -9,13 +9,11 @@ import { VehicleHeader } from "@/components/vdp/VehicleHeader";
 import { AddToCartButton } from "@/components/autos/AddToCartButton";
 import { SpecTabs } from "@/components/vdp/SpecTabs";
 import { PriceEvaluation } from "@/components/vdp/PriceEvaluation";
-import { PaymentCalculator } from "@/components/vdp/PaymentCalculator";
 import { ContactSeller } from "@/components/vdp/ContactSeller";
 import { TradeIn } from "@/components/vdp/TradeIn";
 import { StickyHeader, useVdpNavigation } from "@/components/vdp/StickyHeader";
 import { SimilarVehicles } from "@/components/vdp/SimilarVehicles";
 import { FinancingBridgeStatus } from "@/components/vdp/FinancingBridgeStatus";
-import { VehicleChatWidget } from "@/components/vdp/VehicleChatWidget";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
 import { AutosErrorBoundary } from "@/components/system/AutosErrorBoundary";
 import { VehicleCardSkeleton } from "@/components/vehicle/VehicleCardSkeleton";
@@ -130,18 +128,11 @@ export default function AutosVehiculoDetailPage() {
           </div>
 
           <div className="w-full min-w-[280px] flex-[1_1_320px] max-w-[370px] space-y-4">
-            <PaymentCalculator
-              vehicle={vehicle}
-              vehicleRefId={id}
-              saved={saved}
-              onSaveToggle={() => setSaved((s) => !s)}
-            />
             <ContactSeller vehicle={vehicle} />
             <TradeIn />
           </div>
         </div>
       </div>
-      <VehicleChatWidget vehicle={vehicle} />
     </AutosErrorBoundary>
   );
 }

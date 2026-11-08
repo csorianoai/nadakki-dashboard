@@ -5,10 +5,6 @@ import { PopularBrands } from "@/components/marketing/PopularBrands";
 import { PathCards } from "@/components/marketing/PathCards";
 import { ValueProps } from "@/components/marketing/ValueProps";
 import { FeaturedVehicles } from "@/components/marketing/FeaturedVehicles";
-import { BankPartners } from "@/components/marketing/BankPartners";
-import { ApprovalComparator } from "@/components/marketing/ApprovalComparator";
-import { TrustBar } from "@/components/marketing/TrustBar";
-import { Testimonials } from "@/components/marketing/Testimonials";
 import { PopularSearches } from "@/components/marketing/PopularSearches";
 import { PersonalShopperSection } from "@/components/shopper/PersonalShopperSection";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
@@ -23,10 +19,6 @@ export default function AutosLandingPage() {
       <PathCards />
       <ValueProps />
       <FeaturedVehicles />
-      <BankPartners />
-      <ApprovalComparator />
-      <TrustBar />
-      <Testimonials />
       <PopularSearches />
       <PersonalShopperSection />
       <SiteFooter />
