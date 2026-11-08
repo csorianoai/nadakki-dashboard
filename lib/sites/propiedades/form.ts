@@ -44,10 +44,9 @@ export function validar(f: PForm, o?: PForm): PErrores {
     if (num(f.lat, 90) === null) e.lat = "geo";
     if (num(f.lng, 180) === null) e.lng = "geo";
   }
-  const hay = f.features.filter((x) => !vacio(x.es) || !vacio(x.en));
   if (f.features.length > MAX_FEATURES) e.caracteristicas = "max";
-  f.features.forEach((x, i) => { if (vacio(x.es) && !vacio(x.en)) e[`caracteristica-es-${i}`] = "obligatorio"; });
-  if (hay.length > MAX_FEATURES || f.media.length > MAX_MEDIA) e.medios = "max";
+  f.features.forEach((x, i) => { if (vacio(x.es) && !vacio(x.en)) e[`caracteristica-${i}-es`] = "obligatorio"; });
+  if (f.media.length > MAX_MEDIA) e.medios = "max";
   return e;
 }
 
