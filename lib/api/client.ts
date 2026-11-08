@@ -20,6 +20,11 @@ export type FetchWithFallbackOptions<T> = {
   tenantId?: string | null;
   fallbackData: T;
   signal?: AbortSignal;
+  /**
+   * Tope de espera. Sin el, una peticion colgada dejaba el panel en «Cargando…» para siempre
+   * (el hook no pasa `signal` y aqui no hay reintento). Al vencer devuelve el fallback con error "Timeout".
+   */
+  timeoutMs?: number;
   headers?: Record<string, string>;
   init?: Omit<RequestInit, "headers" | "signal"> & { headers?: Record<string, string> };
 };
@@ -32,11 +37,14 @@ function resolveFetchUrl(url: string): string | null {
   return null;
 }
 
+/** Mayor que el tope del BFF para GET (20 s), para que el cliente vea primero su 504 con cuerpo. */
+export const FETCH_TIMEOUT_MS_DEFAULT = 25_000;
+
 export async function fetchWithFallback<T>(
   url: string,
   options: FetchWithFallbackOptions<T>
 ): Promise<FetchWithFallbackResult<T>> {
-  const { tenantId, fallbackData, signal, headers: extraHeaders, init } = options;
+  const { tenantId, fallbackData, signal, headers: extraHeaders, init, timeoutMs = FETCH_TIMEOUT_MS_DEFAULT } = options;
   const fb = fallbackData;
 
   const resolved = resolveFetchUrl(url);
@@ -47,6 +55,18 @@ export async function fetchWithFallback<T>(
       error: "Invalid fetch URL",
       status: null,
     };
+  }
+
+  const ctl = new AbortController();
+  let vencio = false;
+  const reloj = setTimeout(() => {
+    vencio = true;
+    ctl.abort();
+  }, timeoutMs);
+  const onAbortExterno = () => ctl.abort();
+  if (signal) {
+    if (signal.aborted) ctl.abort();
+    else signal.addEventListener("abort", onAbortExterno, { once: true });
   }
 
   try {
@@ -70,7 +90,7 @@ export async function fetchWithFallback<T>(
     const response = await fetch(resolved, {
       method: "GET",
       ...init,
-      signal,
+      signal: ctl.signal,
       headers,
     });
 
@@ -88,6 +108,9 @@ export async function fetchWithFallback<T>(
     return { data, source: "live", error: null, status };
   } catch (e) {
     const name = (e as Error)?.name;
+    if (vencio) {
+      return { data: fb, source: "fallback", error: "Timeout", status: null };
+    }
     if (name === "AbortError") {
       return {
         data: fb,
@@ -102,5 +125,8 @@ export async function fetchWithFallback<T>(
       error: (e as Error)?.message ?? String(e),
       status: null,
     };
+  } finally {
+    clearTimeout(reloj);
+    signal?.removeEventListener("abort", onAbortExterno);
   }
 }
