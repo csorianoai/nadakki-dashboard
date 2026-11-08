@@ -23,7 +23,7 @@ type H = Record<string, () => Response>;
 function route(h: H) {
   f.mockImplementation(async (url: string, init?: { method?: string }) => {
     const u = url.split("?")[0];
-    if (u.endsWith("/api/v1/sites/sites")) return resp({ items: [siteOk], next_cursor: null });
+    if (u.endsWith("/api/v1/sites/sites")) return h.sites ? h.sites() : resp({ items: [siteOk], next_cursor: null });
     const key = `${init?.method ?? "GET"} ${u.replace(/^.*\/sites\/[^/]+/, "")}`;
     const fn = h[key];
     if (!fn) throw new Error(`url inesperada ${key}`);
