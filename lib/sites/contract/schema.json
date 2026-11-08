@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://contracts.nadakki.example/C-SITES-ADMIN-API/1.0.0/schema.json", "title": "C-SITES-ADMIN-API - tipos de la API administrativa de Sites",
+  "description": "Cuerpos de entrada y vistas minimas de salida de la API admin. Las entidades completas estan en C-SITES-DATA (no se usa $ref entre contratos: x-contract-ref). Los cuerpos de entrada excluyen todo campo readOnly de DATA, incluido tenant_id.",
+  "x-contract": {"id": "C-SITES-ADMIN-API", "version": "1.0.0", "status": "proposed"}, "x-contract-uses": [{"id": "C-SITES-DATA", "version": "1.0.0"}],
+  "$defs": {
+    "Site": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Site", "description": "Vista minima; el resto de campos esta en C-SITES-DATA.", "required": ["id", "tenant_id", "vertical", "name", "status", "content_version"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId", "readOnly": true}, "vertical": {"$ref": "#/$defs/Vertical", "readOnly": true}, "name": {"$ref": "#/$defs/I18nText"},
+        "status": {"$ref": "#/$defs/SiteStatus", "readOnly": true}, "content_version": {"type": "integer", "minimum": 0, "readOnly": true}
+      },
+      "additionalProperties": true
+    },
+    "Uuid": {"type": "string", "format": "uuid"},
+    "TenantId": {
+      "$ref": "#/$defs/Uuid", "readOnly": true,
+      "description": "Tenant propietario. Lo fija el servidor: del claim tenant_id del JWT (API admin) o del site_id firmado (API publica). Nunca lo envia el cliente; un valor enviado se rechaza con 422 TENANT_FIELD_FORBIDDEN."
+    },
+    "Vertical": {"type": "string", "pattern": "^[a-z_]{2,32}$", "description": "realestate | dealer | legal | ..."},
+    "I18nText": {
+      "type": "object", "additionalProperties": false, "description": "i18n {es,en}; 'es' obligatorio, 'en' opcional salvo que se indique I18nTextStrict.", "required": ["es"],
+      "properties": {"es": {"type": "string", "minLength": 1, "maxLength": 5000}, "en": {"type": "string", "minLength": 1, "maxLength": 5000}}
+    },
+    "SiteStatus": {"type": "string", "enum": ["draft", "in_review", "published", "suspended"]},
+    "Page": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Page", "description": "Vista minima; el resto de campos esta en C-SITES-DATA.", "required": ["id", "tenant_id", "vertical", "site_id", "page_key", "status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId", "readOnly": true}, "vertical": {"$ref": "#/$defs/Vertical", "readOnly": true, "description": "Heredado del sitio."},
+        "site_id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "page_key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,47}$"}, "status": {"type": "string", "enum": ["draft", "published"], "readOnly": true}
+      },
+      "additionalProperties": true
+    },
+    "Listing": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Listing", "description": "Vista minima; el resto de campos esta en C-SITES-DATA.",
+      "required": ["id", "tenant_id", "vertical", "site_id", "slug", "publish_state"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId", "readOnly": true}, "vertical": {"$ref": "#/$defs/Vertical", "readOnly": true, "description": "Heredado del sitio."},
+        "site_id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "slug": {"$ref": "#/$defs/Slug"},
+        "publish_state": {"type": "string", "enum": ["draft", "published", "withdrawn"], "readOnly": true, "description": "Solo cambia via POST publish/unpublish del PublicationGate."}
+      },
+      "additionalProperties": true
+    },
+    "Slug": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 96},
+    "Development": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Development", "description": "Vista minima; el resto de campos esta en C-SITES-DATA.",
+      "required": ["id", "tenant_id", "vertical", "site_id", "slug", "authorized", "publish_state"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId", "readOnly": true}, "vertical": {"$ref": "#/$defs/Vertical", "readOnly": true, "description": "Heredado del sitio."},
+        "site_id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "slug": {"$ref": "#/$defs/Slug"}, "authorized": {"type": "boolean", "readOnly": true, "description": "Escribe solo staff (nunca cliente ni IA)."},
+        "publish_state": {"type": "string", "enum": ["draft", "published", "withdrawn"], "readOnly": true, "description": "Solo cambia via POST publish/unpublish del PublicationGate."}
+      },
+      "additionalProperties": true
+    },
+    "Zone": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Zone", "description": "Vista minima; el resto de campos esta en C-SITES-DATA.", "required": ["id", "tenant_id", "vertical", "site_id", "slug", "publish_state"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId", "readOnly": true}, "vertical": {"$ref": "#/$defs/Vertical", "readOnly": true, "description": "Heredado del sitio."},
+        "site_id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "slug": {"$ref": "#/$defs/Slug"},
+        "publish_state": {"type": "string", "enum": ["draft", "published", "withdrawn"], "readOnly": true, "description": "Solo cambia via POST publish/unpublish del PublicationGate."}
+      },
+      "additionalProperties": true
+    },
+    "Building": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Building", "description": "Vista minima; el resto de campos esta en C-SITES-DATA.",
+      "required": ["id", "tenant_id", "vertical", "site_id", "slug", "publish_state"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId", "readOnly": true}, "vertical": {"$ref": "#/$defs/Vertical", "readOnly": true, "description": "Heredado del sitio."},
+        "site_id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "slug": {"$ref": "#/$defs/Slug"},
+        "publish_state": {"type": "string", "enum": ["draft", "published", "withdrawn"], "readOnly": true, "description": "Solo cambia via POST publish/unpublish del PublicationGate."}
+      },
+      "additionalProperties": true
+    },
+    "MediaAsset": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/MediaAsset", "description": "Vista minima; el resto de campos esta en C-SITES-DATA.",
+      "required": ["id", "tenant_id", "vertical", "alt", "permission_type", "permission_date", "acquired_on", "status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId", "readOnly": true}, "vertical": {"$ref": "#/$defs/Vertical", "readOnly": true, "description": "Heredado del sitio."},
+        "alt": {"$ref": "#/$defs/I18nTextStrict"}, "permission_type": {"type": "string", "enum": ["own", "developer", "owner", "stock"]}, "permission_date": {"$ref": "#/$defs/Date"},
+        "acquired_on": {"$ref": "#/$defs/Date", "description": "Fecha de descarga/captura. En el DDL de E1 es acquired_on (el brief decia acquired_date)."},
+        "status": {"type": "string", "enum": ["pending", "approved", "rejected", "revoked"], "readOnly": true}
+      },
+      "additionalProperties": true
+    },
+    "I18nTextStrict": {
+      "type": "object", "additionalProperties": false, "required": ["es", "en"], "properties": {"es": {"type": "string", "minLength": 1, "maxLength": 5000}, "en": {"type": "string", "minLength": 1, "maxLength": 5000}}
+    },
+    "Date": {"type": "string", "format": "date"},
+    "SiteTemplate": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/SiteTemplate", "required": ["id", "vertical", "name", "version"],
+      "properties": {"id": {"type": "string", "minLength": 1, "maxLength": 64}, "vertical": {"$ref": "#/$defs/Vertical"}, "name": {"$ref": "#/$defs/I18nTextStrict"}, "version": {"type": "integer", "minimum": 1}},
+      "additionalProperties": true
+    },
+    "ComplianceRule": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/ComplianceRule", "required": ["rule_id", "severity", "version", "text_summary"],
+      "properties": {
+        "rule_id": {"type": "string", "pattern": "^[A-Z]{2,5}-[A-Z0-9]{2,6}-[0-9]{3}$"}, "severity": {"$ref": "#/$defs/Severity"}, "version": {"type": "integer", "minimum": 1}, "text_summary": {"$ref": "#/$defs/I18nText"}
+      },
+      "additionalProperties": true
+    },
+    "Severity": {"type": "string", "enum": ["block", "warn", "info"]},
+    "ComplianceEvaluation": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/ComplianceEvaluation", "required": ["id", "site_id", "trigger", "result", "findings", "created_at"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "site_id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "trigger": {"type": "string", "enum": ["publish", "ai_output", "idx_import", "template_change", "scheduled"]},
+        "result": {"type": "string", "enum": ["pass", "warn", "block"]}, "findings": {"type": "array", "items": {"$ref": "#/$defs/Violation"}}, "created_at": {"$ref": "#/$defs/Timestamp"}
+      },
+      "additionalProperties": true
+    },
+    "Violation": {
+      "type": "object", "additionalProperties": false, "description": "Elemento de la lista 422 del PublicationGate.", "required": ["rule_id", "severity", "message", "field"],
+      "properties": {
+        "rule_id": {"type": "string", "pattern": "^[A-Z]{2,5}-[A-Z0-9]{2,6}-[0-9]{3}$"}, "severity": {"$ref": "#/$defs/Severity"}, "message": {"type": "string"},
+        "field": {"type": "string", "description": "Ruta JSON del dato u origen del HTML, p. ej. pages[home].body[3]."}
+      }
+    },
+    "Timestamp": {"type": "string", "format": "date-time", "description": "RFC 3339, UTC."},
+    "ComplianceOverride": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/ComplianceOverride", "required": ["id", "rule_id", "expires_at"],
+      "properties": {"id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "rule_id": {"type": "string", "pattern": "^[A-Z]{2,5}-[A-Z0-9]{2,6}-[0-9]{3}$"}, "expires_at": {"$ref": "#/$defs/Timestamp"}},
+      "additionalProperties": true
+    },
+    "LegalProfile": {
+      "type": "object", "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/LegalProfile", "required": ["state", "brokerage_legal_name", "agent_registered_last_name", "license_no", "verification_status"],
+      "properties": {
+        "state": {"type": "string", "pattern": "^[A-Z]{2}-[A-Z0-9]{1,3}$", "description": "Jurisdiccion, p. ej. US-FL."}, "brokerage_legal_name": {"type": "string", "minLength": 1, "maxLength": 200},
+        "agent_registered_last_name": {"type": "string", "minLength": 1, "maxLength": 120}, "license_no": {"type": "string", "minLength": 1, "maxLength": 64},
+        "verification_status": {"type": "string", "enum": ["pending_verification", "verified", "rejected", "expired"]}
+      },
+      "additionalProperties": true
+    },
+    "SiteFields": {
+      "type": "object", "description": "Campos editables (sin readOnly de DATA: ni tenant_id ni estados). Base de Create y Update.",
+      "properties": {
+        "template_id": {"type": "string", "minLength": 1, "maxLength": 64}, "brand_profile_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "name": {"$ref": "#/$defs/I18nText"},
+        "languages": {"type": "array", "items": {"$ref": "#/$defs/Lang"}, "minItems": 1, "uniqueItems": true}, "default_language": {"$ref": "#/$defs/Lang"}, "theme": {"type": "object"}, "contact": {"$ref": "#/$defs/SiteContact"}
+      }
+    },
+    "Lang": {"type": "string", "enum": ["es", "en"]},
+    "SiteContact": {
+      "type": "object", "additionalProperties": false, "description": "Contacto PUBLICO del sitio (nunca privado).",
+      "properties": {"phone": {"$ref": "#/$defs/Phone"}, "whatsapp": {"$ref": "#/$defs/Phone"}, "email": {"$ref": "#/$defs/Email"}, "address": {"type": "string", "minLength": 1, "maxLength": 300}}
+    },
+    "Phone": {"type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$", "description": "E.164."}, "Email": {"type": "string", "format": "email", "maxLength": 254},
+    "SiteCreate": {
+      "allOf": [{"$ref": "#/$defs/SiteFields"}], "required": ["template_id", "name"], "unevaluatedProperties": false,
+      "description": "vertical se deriva de la plantilla; tenant lo fija el servidor. Update no admite status, compliance, content_version ni datos legales."
+    },
+    "SiteUpdate": {"allOf": [{"$ref": "#/$defs/SiteFields"}], "minProperties": 1, "unevaluatedProperties": false, "description": "Parcial (JSON Merge Patch); campo desconocido o prohibido: 422."},
+    "PageFields": {
+      "type": "object", "description": "Campos editables (sin readOnly de DATA: ni tenant_id ni estados). Base de Create y Update.",
+      "properties": {
+        "page_key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,47}$"},
+        "slug": {"type": "object", "additionalProperties": false, "required": ["es"], "properties": {"es": {"$ref": "#/$defs/Slug"}, "en": {"$ref": "#/$defs/Slug"}}}, "title": {"$ref": "#/$defs/I18nText"},
+        "meta_description": {"$ref": "#/$defs/I18nText"}, "body": {"type": "array", "items": {"$ref": "#/$defs/Block"}, "maxItems": 200}, "sort_order": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Block": {
+      "type": "object", "additionalProperties": false, "required": ["block_id", "type"],
+      "properties": {
+        "block_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "type": {
+          "type": "string", "pattern": "^(?!legal_)[a-z][a-z0-9_.-]{0,63}$", "description": "El prefijo `legal_` esta reservado: esos bloques (corretaje, EHO, licencia) los inyecta el renderizador y no se pueden poner ni quitar."
+        },
+        "data": {"type": "object"}, "i18n": {"type": "object", "additionalProperties": {"$ref": "#/$defs/I18nText"}}
+      }
+    },
+    "PageCreate": {"allOf": [{"$ref": "#/$defs/PageFields"}], "required": ["page_key", "slug", "title"], "unevaluatedProperties": false},
+    "PageUpdate": {"allOf": [{"$ref": "#/$defs/PageFields"}], "minProperties": 1, "unevaluatedProperties": false, "description": "Parcial (JSON Merge Patch); campo desconocido o prohibido: 422."},
+    "ListingFields": {
+      "type": "object", "description": "Campos editables (sin readOnly de DATA: ni tenant_id ni estados). Base de Create y Update.",
+      "properties": {
+        "listing_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "item_kind": {"type": "string", "enum": ["property", "generic"]}, "vertical_attrs": {"type": "object"}, "slug": {"$ref": "#/$defs/Slug"},
+        "title": {"$ref": "#/$defs/I18nText"}, "description": {"$ref": "#/$defs/I18nText"}, "features": {"type": "array", "items": {"$ref": "#/$defs/I18nText"}, "maxItems": 100},
+        "zone_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "building_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "development_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]},
+        "geo": {"oneOf": [{"$ref": "#/$defs/GeoPoint"}, {"type": "null"}]}, "featured": {"type": "boolean"},
+        "media": {"type": "array", "items": {"$ref": "#/$defs/Uuid"}, "maxItems": 60, "description": "Ids ordenados de MediaAsset approved; uno no aprobado es violacion al publicar."}
+      }
+    },
+    "GeoPoint": {
+      "type": "object", "additionalProperties": false, "required": ["lat", "lng"], "properties": {"lat": {"type": "number", "minimum": -90, "maximum": 90}, "lng": {"type": "number", "minimum": -180, "maximum": 180}}
+    },
+    "ListingCreate": {"allOf": [{"$ref": "#/$defs/ListingFields"}], "required": ["slug", "title"], "unevaluatedProperties": false},
+    "ListingUpdate": {"allOf": [{"$ref": "#/$defs/ListingFields"}], "minProperties": 1, "unevaluatedProperties": false, "description": "Parcial (JSON Merge Patch); campo desconocido o prohibido: 422."},
+    "DevelopmentFields": {
+      "type": "object", "description": "Campos editables (sin readOnly de DATA: ni tenant_id ni estados). Base de Create y Update.",
+      "properties": {
+        "slug": {"$ref": "#/$defs/Slug"}, "name": {"type": "string", "minLength": 1, "maxLength": 200}, "project_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "description": {"$ref": "#/$defs/I18nText"},
+        "area": {"type": "string", "minLength": 1, "maxLength": 120}, "zone_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]},
+        "address": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "line1": {"type": "string", "minLength": 1, "maxLength": 200}, "city": {"type": "string", "minLength": 1, "maxLength": 120}, "region": {"type": "string", "minLength": 1, "maxLength": 120},
+            "postal_code": {"type": "string", "minLength": 1, "maxLength": 20}, "country": {"type": "string", "pattern": "^[A-Z]{2}$"}
+          }
+        },
+        "dev_type": {"type": "string", "minLength": 1, "maxLength": 60}, "status": {"type": "string", "minLength": 1, "maxLength": 60}, "delivery_year": {"type": "integer", "minimum": 1900, "maximum": 2200},
+        "price_from": {"$ref": "#/$defs/DecimalString"}, "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}, "developer": {"type": "string", "minLength": 1, "maxLength": 200},
+        "units": {"type": "array", "items": {"type": "object"}, "maxItems": 500}, "amenities": {"type": "array", "items": {"$ref": "#/$defs/I18nText"}, "maxItems": 100},
+        "media": {"type": "array", "items": {"$ref": "#/$defs/Uuid"}, "maxItems": 60}, "geo": {"oneOf": [{"$ref": "#/$defs/GeoPoint"}, {"type": "null"}]}
+      }
+    },
+    "DecimalString": {"type": "string", "pattern": "^[0-9]{1,18}(\\.[0-9]{1,8})?$", "description": "Decimal exacto no negativo como cadena; nunca float."},
+    "DevelopmentCreate": {"allOf": [{"$ref": "#/$defs/DevelopmentFields"}], "required": ["slug", "name"], "unevaluatedProperties": false},
+    "DevelopmentUpdate": {"allOf": [{"$ref": "#/$defs/DevelopmentFields"}], "minProperties": 1, "unevaluatedProperties": false, "description": "Parcial (JSON Merge Patch); campo desconocido o prohibido: 422."},
+    "ZoneFields": {
+      "type": "object", "description": "Campos editables (sin readOnly de DATA: ni tenant_id ni estados). Base de Create y Update.",
+      "properties": {
+        "slug": {"$ref": "#/$defs/Slug"}, "name": {"$ref": "#/$defs/I18nText"}, "lead": {"$ref": "#/$defs/I18nText"}, "body": {"$ref": "#/$defs/I18nText"},
+        "price_range": {"type": "object", "additionalProperties": false, "properties": {"min": {"$ref": "#/$defs/Money"}, "max": {"$ref": "#/$defs/Money"}}},
+        "schools": {"type": "array", "items": {"type": "object"}, "maxItems": 50}, "distances": {"type": "array", "items": {"type": "object"}, "maxItems": 50},
+        "photo_asset_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "source": {"type": "string", "minLength": 1, "maxLength": 200}, "source_date": {"$ref": "#/$defs/Date"}
+      }
+    },
+    "Money": {
+      "type": "object", "additionalProperties": false, "required": ["amount", "currency"], "properties": {"amount": {"$ref": "#/$defs/DecimalString"}, "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}}
+    },
+    "ZoneCreate": {"allOf": [{"$ref": "#/$defs/ZoneFields"}], "required": ["slug", "name"], "unevaluatedProperties": false},
+    "ZoneUpdate": {"allOf": [{"$ref": "#/$defs/ZoneFields"}], "minProperties": 1, "unevaluatedProperties": false, "description": "Parcial (JSON Merge Patch); campo desconocido o prohibido: 422."},
+    "BuildingFields": {
+      "type": "object", "description": "Campos editables (sin readOnly de DATA: ni tenant_id ni estados). Base de Create y Update.",
+      "properties": {
+        "slug": {"$ref": "#/$defs/Slug"}, "name": {"type": "string", "minLength": 1, "maxLength": 200}, "zone_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "summary": {"$ref": "#/$defs/I18nText"},
+        "hoa": {"type": "object"}, "rules": {"type": "object"}, "structural": {"type": "object"}, "data_source": {"type": "string", "minLength": 1, "maxLength": 200}, "data_date": {"$ref": "#/$defs/Date"}
+      }
+    },
+    "BuildingCreate": {"allOf": [{"$ref": "#/$defs/BuildingFields"}], "required": ["slug", "name"], "unevaluatedProperties": false},
+    "BuildingUpdate": {"allOf": [{"$ref": "#/$defs/BuildingFields"}], "minProperties": 1, "unevaluatedProperties": false, "description": "Parcial (JSON Merge Patch); campo desconocido o prohibido: 422."},
+    "MediaFields": {
+      "type": "object",
+      "properties": {
+        "alt": {"$ref": "#/$defs/I18nTextStrict"}, "source": {"type": "string", "minLength": 1, "maxLength": 200, "description": "Promotora, Propietario, Propia, banco de stock..."},
+        "source_url": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 500}, {"type": "null"}]}, "author": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 200}, {"type": "null"}]},
+        "license": {"type": "string", "minLength": 1, "maxLength": 200}, "permission_type": {"type": "string", "enum": ["own", "developer", "owner", "stock"]},
+        "permission_granted_by": {"type": "string", "minLength": 1, "maxLength": 200}, "permission_scope": {"type": "string", "minLength": 1, "maxLength": 200},
+        "permission_evidence": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 500}, {"type": "null"}]}, "permission_date": {"$ref": "#/$defs/Date"},
+        "acquired_on": {"$ref": "#/$defs/Date", "description": "Fecha de descarga/captura. En el DDL de E1 es acquired_on (el brief decia acquired_date)."}
+      }
+    },
+    "MediaCreate": {
+      "allOf": [{"$ref": "#/$defs/MediaFields"}, {"if": {"properties": {"permission_type": {"enum": ["developer", "owner"]}}, "required": ["permission_type"]}, "then": {"required": ["permission_evidence"], "properties": {"permission_evidence": {"type": "string", "minLength": 1, "maxLength": 500}}}}],
+      "required": ["upload_id", "alt", "source", "license", "permission_type", "permission_granted_by", "permission_scope", "permission_date", "acquired_on"], "properties": {"upload_id": {"$ref": "#/$defs/Uuid"}},
+      "unevaluatedProperties": false, "description": "Registro de permiso: sin source/permiso/fechas -> 422 IMAGE_PERMISSION_REQUIRED."
+    },
+    "MediaUpdate": {"allOf": [{"$ref": "#/$defs/MediaFields"}], "minProperties": 1, "unevaluatedProperties": false, "description": "Solo en pending o rejected; una imagen approved se revoca y se registra de nuevo."},
+    "MediaPresignRequest": {
+      "type": "object", "additionalProperties": false, "required": ["mime_type", "size_bytes", "sha256"],
+      "properties": {
+        "mime_type": {"type": "string", "pattern": "^image/(jpeg|png|webp|avif)$"}, "size_bytes": {"type": "integer", "minimum": 1, "maximum": 26214400}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "MediaPresign": {
+      "type": "object", "additionalProperties": false, "description": "URL de subida de un solo uso emitida por Nadakki; el cliente nunca ve el almacen.", "required": ["upload_id", "upload_url", "method", "expires_at"],
+      "properties": {
+        "upload_id": {"$ref": "#/$defs/Uuid"}, "upload_url": {"type": "string", "format": "uri"}, "method": {"type": "string", "enum": ["PUT"]}, "headers": {"type": "object", "additionalProperties": {"type": "string"}},
+        "expires_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+    "MediaRevoke": {"type": "object", "additionalProperties": false, "required": ["reason"], "properties": {"reason": {"type": "string", "enum": ["permission_withdrawn", "dmca", "staff_review", "owner_request"]}}},
+    "PublishRequest": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "description": "Sin id con kind=site: todo el sitio.", "required": ["kind"],
+            "properties": {"kind": {"type": "string", "enum": ["site", "page", "listing", "development", "zone", "building"]}, "id": {"$ref": "#/$defs/Uuid"}}
+          },
+          "minItems": 1, "maxItems": 100, "description": "Por defecto, todo el sitio."
+        },
+        "note": {"type": "string", "minLength": 1, "maxLength": 500}
+      }
+    },
+    "PublishResult": {
+      "type": "object", "additionalProperties": false, "required": ["site_id", "status", "content_version", "evaluation_id", "warnings"],
+      "properties": {
+        "site_id": {"$ref": "#/$defs/Uuid"}, "status": {"$ref": "#/$defs/SiteStatus"}, "content_version": {"type": "integer", "minimum": 0}, "evaluation_id": {"$ref": "#/$defs/Uuid"},
+        "published_at": {"oneOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}, "warnings": {"type": "array", "items": {"$ref": "#/$defs/Violation"}},
+        "pending_manual_rules": {"type": "array", "items": {"type": "string"}, "description": "Reglas manuales sin aprobar: status=in_review (202)."}
+      }
+    },
+    "ReadinessReport": {
+      "type": "object", "additionalProperties": false, "description": "Simulacro: NO persiste evaluacion ni cambia estado; el gate real es publish.", "required": ["site_id", "ready", "blocking", "warnings", "info", "evaluated_at"],
+      "properties": {
+        "site_id": {"$ref": "#/$defs/Uuid"}, "ready": {"type": "boolean"}, "blocking": {"type": "array", "items": {"$ref": "#/$defs/Violation"}}, "warnings": {"type": "array", "items": {"$ref": "#/$defs/Violation"}},
+        "info": {"type": "array", "items": {"$ref": "#/$defs/Violation"}}, "evaluated_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+    "OverrideCreate": {
+      "type": "object", "additionalProperties": false, "required": ["rule_id", "justification", "expires_at"],
+      "properties": {
+        "rule_id": {"type": "string", "pattern": "^[A-Z]{2,5}-[A-Z0-9]{2,6}-[0-9]{3}$"},
+        "target": {
+          "oneOf": [
+            {
+              "type": "object", "additionalProperties": false, "required": ["kind", "id"],
+              "properties": {"kind": {"type": "string", "enum": ["site", "page", "listing", "development", "zone", "building"]}, "id": {"$ref": "#/$defs/Uuid"}}
+            },
+            {"type": "null"}
+          ]
+        },
+        "justification": {"type": "string", "minLength": 10, "maxLength": 1000}, "expires_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+    "LegalProfileInput": {
+      "type": "object", "additionalProperties": false, "description": "verified_by/verified_at los pone el servidor con el JWT de staff.",
+      "required": ["state", "vertical", "brokerage_legal_name", "agent_registered_last_name", "license_no", "verification_status"],
+      "properties": {
+        "state": {"type": "string", "pattern": "^[A-Z]{2}-[A-Z0-9]{1,3}$", "description": "Jurisdiccion, p. ej. US-FL."}, "vertical": {"$ref": "#/$defs/Vertical"},
+        "brokerage_legal_name": {"type": "string", "minLength": 1, "maxLength": 200}, "dba": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 200}, {"type": "null"}]},
+        "agent_registered_last_name": {"type": "string", "minLength": 1, "maxLength": 120}, "license_no": {"type": "string", "minLength": 1, "maxLength": 64},
+        "license_expires_on": {"oneOf": [{"$ref": "#/$defs/Date"}, {"type": "null"}]}, "team_name_approved": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 120}, {"type": "null"}]},
+        "dmca_agent_ref": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 120}, {"type": "null"}]}, "verification_status": {"type": "string", "enum": ["pending_verification", "verified", "rejected", "expired"]},
+        "verified_source": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 300}, {"type": "null"}]}
+      }
+    },
+    "DevelopmentAuthorization": {
+      "type": "object", "additionalProperties": false, "required": ["authorized", "authorization_evidence"],
+      "properties": {"authorized": {"type": "boolean"}, "authorization_evidence": {"type": "string", "minLength": 1, "maxLength": 500}}
+    },
+    "Problem": {
+      "type": "object", "required": ["type", "title", "status", "code"], "description": "RFC 9457 (application/problem+json) + `code` estable.",
+      "properties": {
+        "type": {"type": "string", "format": "uri-reference"}, "title": {"type": "string"}, "status": {"type": "integer", "minimum": 400, "maximum": 599}, "detail": {"type": "string"}, "instance": {"type": "string"},
+        "code": {
+          "type": "string",
+          "enum": ["UNAUTHENTICATED", "FORBIDDEN", "TENANT_MISMATCH", "TENANT_FIELD_FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "CONFLICT", "IDEMPOTENCY_KEY_REUSED", "RATE_LIMITED", "PUBLISH_BLOCKED", "OVERRIDE_NOT_ALLOWED", "LEGAL_FIELD_STAFF_ONLY", "RESERVED_BLOCK_TYPE", "IMAGE_PERMISSION_REQUIRED"],
+          "description": "Estable dentro de 1.x."
+        },
+        "errors": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["field", "message"], "properties": {"field": {"type": "string"}, "message": {"type": "string"}}}},
+        "violations": {"type": "array", "items": {"$ref": "#/$defs/Violation"}, "description": "Solo en 422 de publicacion: lista completa del PublicationGate."}
+      }
+    },
+    "SitePublishedPayload": {
+      "type": "object", "additionalProperties": false, "required": ["site_id", "content_version", "evaluation_id", "published_at"],
+      "properties": {
+        "site_id": {"$ref": "#/$defs/Uuid"}, "content_version": {"type": "integer", "minimum": 1}, "evaluation_id": {"$ref": "#/$defs/Uuid"}, "published_at": {"$ref": "#/$defs/Timestamp"},
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "description": "Sin id con kind=site: todo el sitio.", "required": ["kind"],
+            "properties": {"kind": {"type": "string", "enum": ["site", "page", "listing", "development", "zone", "building"]}, "id": {"$ref": "#/$defs/Uuid"}}
+          }
+        }
+      }
+    },
+    "SiteUnpublishedPayload": {
+      "type": "object", "additionalProperties": false, "required": ["site_id", "content_version", "unpublished_at"],
+      "properties": {
+        "site_id": {"$ref": "#/$defs/Uuid"}, "content_version": {"type": "integer", "minimum": 1}, "unpublished_at": {"$ref": "#/$defs/Timestamp"},
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "description": "Sin id con kind=site: todo el sitio.", "required": ["kind"],
+            "properties": {"kind": {"type": "string", "enum": ["site", "page", "listing", "development", "zone", "building"]}, "id": {"$ref": "#/$defs/Uuid"}}
+          }
+        },
+        "reason": {"type": "string", "minLength": 1, "maxLength": 500}
+      }
+    },
+    "LegalProfileUpdatedPayload": {
+      "type": "object", "additionalProperties": false, "description": "Sin valores legales en la carga, solo nombres de campo.", "required": ["verification_status", "changed_fields", "updated_at"],
+      "properties": {
+        "verification_status": {"type": "string", "enum": ["pending_verification", "verified", "rejected", "expired"]}, "changed_fields": {"type": "array", "items": {"type": "string"}}, "updated_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+    "EventEnvelope": {
+      "type": "object", "additionalProperties": false, "description": "Sobre comun Sites. El consumidor filtra por tenant_id y deduplica por idempotency_key (al-menos-una-vez).",
+      "required": ["event_id", "event_name", "event_version", "tenant_id", "occurred_at", "idempotency_key", "payload"],
+      "properties": {
+        "event_id": {"$ref": "#/$defs/Uuid"}, "event_name": {"type": "string", "pattern": "^sites\\.[a-z_]+\\.[a-z_]+$"}, "event_version": {"type": "integer", "minimum": 1}, "tenant_id": {"$ref": "#/$defs/TenantId"},
+        "site_id": {"$ref": "#/$defs/Uuid"}, "occurred_at": {"$ref": "#/$defs/Timestamp"}, "idempotency_key": {"type": "string", "minLength": 8, "maxLength": 128},
+        "actor_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "payload": {"type": "object", "description": "El $def indicado por `payload` en events.yaml. Unico nombre de campo permitido."}
+      }
+    }
+  }
+}
