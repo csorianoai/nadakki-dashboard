@@ -2,12 +2,18 @@
 
 import { tokenStorage } from "@/lib/auth/token-storage";
 import { refreshAccessToken, isTokenExpiringSoon } from "@/lib/auth/token-refresh";
+import { topeClienteMs } from "@/lib/api/timeouts";
 
 export type ApiFetchInit = RequestInit & {
   /** Skip Bearer injection (e.g. legacy `/api/v1/auth/login` before tokens exist). */
   skipAuthHeaders?: boolean;
   /** Skip retry-on-401 logic (used internally to prevent recursion). */
   _isRetry?: boolean;
+  /**
+   * Tope de espera HASTA RECIBIR LA RESPUESTA (no corta la lectura del cuerpo, asi una descarga larga en curso sigue).
+   * Por defecto lo decide lib/api/timeouts.ts segun metodo, ruta y cuerpo; `0` lo desactiva.
+   */
+  timeoutMs?: number;
 };
 
 /** Resolve browser API paths through the same-origin BFF. */
@@ -38,7 +44,7 @@ export function getAuthHeaders(): Record<string, string> {
  * If the retry also fails, returns the 401 response without looping.
  */
 export async function apiFetch(path: string, init: ApiFetchInit = {}): Promise<Response> {
-  const { skipAuthHeaders, _isRetry, ...fetchInit } = init;
+  const { skipAuthHeaders, _isRetry, timeoutMs, ...fetchInit } = init;
 
   // Layer 1 (proactive): if token is about to expire, refresh before the request
   if (!skipAuthHeaders && !_isRetry && isTokenExpiringSoon(30)) {
@@ -60,11 +66,47 @@ export async function apiFetch(path: string, init: ApiFetchInit = {}): Promise<R
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(url, {
-    ...fetchInit,
-    headers,
-    credentials: fetchInit.credentials ?? "include",
-  });
+  const metodo = (fetchInit.method ?? "GET").toUpperCase();
+  const tope = timeoutMs ?? topeClienteMs(metodo, url, body);
+  const ctl = new AbortController();
+  let vencio = false;
+  const reloj =
+    tope > 0
+      ? setTimeout(() => {
+          vencio = true;
+          ctl.abort();
+        }, tope)
+      : null;
+  const externa = fetchInit.signal;
+  const alAbortarExterna = () => ctl.abort();
+  if (externa) {
+    if (externa.aborted) ctl.abort();
+    else externa.addEventListener("abort", alAbortarExterna, { once: true });
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...fetchInit,
+      headers,
+      signal: ctl.signal,
+      credentials: fetchInit.credentials ?? "include",
+    });
+  } catch (e) {
+    if (vencio) {
+      // 504 sintetico, con la misma forma que el del BFF: los llamadores ya comprueban `res.ok`/`res.status`.
+      // En una escritura el servidor PUDO completarla: la pantalla no debe reintentar a ciegas.
+      return new Response(
+        JSON.stringify({ error: "client_timeout", timeout_ms: tope, maybe_completed: !["GET", "HEAD"].includes(metodo) }),
+        { status: 504, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    throw e;
+  } finally {
+    // La cabecera ya llego (o fallo): una descarga larga en curso no debe morir por este temporizador.
+    if (reloj) clearTimeout(reloj);
+    externa?.removeEventListener("abort", alAbortarExterna);
+  }
 
   // Layer 2 (reactive): retry once on 401 with a refreshed token
   if (response.status === 401 && !skipAuthHeaders && !_isRetry) {

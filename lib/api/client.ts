@@ -6,6 +6,7 @@
  */
 
 import { tokenStorage } from "@/lib/auth/token-storage";
+import { MS_LECTURA_CLIENTE, topeClienteMs } from "@/lib/api/timeouts";
 
 export type FetchSource = "live" | "fallback";
 
@@ -37,14 +38,15 @@ function resolveFetchUrl(url: string): string | null {
   return null;
 }
 
-/** Mayor que el tope del BFF para GET (20 s), para que el cliente vea primero su 504 con cuerpo. */
-export const FETCH_TIMEOUT_MS_DEFAULT = 25_000;
+/** Mayor que el tope del BFF para GET (20 s), para que el cliente vea primero su 504 con cuerpo. Ver lib/api/timeouts.ts. */
+export const FETCH_TIMEOUT_MS_DEFAULT = MS_LECTURA_CLIENTE;
 
 export async function fetchWithFallback<T>(
   url: string,
   options: FetchWithFallbackOptions<T>
 ): Promise<FetchWithFallbackResult<T>> {
-  const { tenantId, fallbackData, signal, headers: extraHeaders, init, timeoutMs = FETCH_TIMEOUT_MS_DEFAULT } = options;
+  const { tenantId, fallbackData, signal, headers: extraHeaders, init } = options;
+  const timeoutMs = options.timeoutMs ?? topeClienteMs((init?.method as string | undefined) ?? "GET", url, init?.body);
   const fb = fallbackData;
 
   const resolved = resolveFetchUrl(url);
