@@ -6,8 +6,8 @@ import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import type { Vehicle } from "@/lib/vehicles";
 
 function computeBelowMarketPct(vehicle: Vehicle): number {
-  if (vehicle.badge.includes("Excelente")) return 8 + (vehicle.id % 4);
-  if (vehicle.match >= 90) return 5 + (vehicle.id % 3);
+  if (vehicle.badge?.includes("Excelente")) return 8 + (vehicle.id % 4);
+  if ((vehicle.match ?? 0) >= 90) return 5 + (vehicle.id % 3);
   return 3 + (vehicle.id % 2);
 }
 

@@ -26,6 +26,11 @@ export function mapBackendVehicle(v: BackendVehicle, _legacySeed?: number): Cons
   const id = displayId(refId);
   const trans = v.transmission ?? "";
   const fuel = v.fuel_type ?? "";
+  // Precio real del backend (price_amount + price_currency); price_rd es solo el campo legado en DOP.
+  const amount = v.price_amount != null && v.price_amount > 0 ? v.price_amount : 0;
+  const legacy = v.price_rd != null && v.price_rd > 0 ? v.price_rd : 0;
+  const price = amount || legacy;
+  const currency = amount ? v.price_currency || undefined : legacy ? "DOP" : undefined;
 
   return {
     id,
@@ -33,17 +38,17 @@ export function mapBackendVehicle(v: BackendVehicle, _legacySeed?: number): Cons
     make: v.make,
     model: v.model,
     year: v.year,
-    price: v.price_rd && v.price_rd > 0 ? v.price_rd : 0,
+    price,
+    ...(price > 0 && currency ? { currency } : {}),
     loc: v.province ?? "",
     type: (v.body_type as ConsumerVehicle["type"]) ?? "SUV",
     km: v.mileage_km ?? 0,
     trans,
     fuel,
-    badge: "Precio justo",
-    match: 82,
     grad: GRADS[id % GRADS.length]!,
     verified: false,
     featuresLine: [trans, fuel].filter(Boolean).join(" · ").toUpperCase(),
+    ...(v.photo_count != null && v.photo_count > 0 ? { photoCount: v.photo_count } : {}),
   };
 }
 
