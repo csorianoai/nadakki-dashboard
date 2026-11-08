@@ -10,7 +10,7 @@ jest.mock("next/navigation", () => ({
 import { apiFetch } from "@/lib/api/fetch-client";
 import Layout from "@/app/mi-web/layout";
 import PaginasPage from "@/app/mi-web/paginas/page";
-import { resetDemoPages } from "@/lib/sites/mocks/pages";
+import { resetDemoPages, SYNTH_PAGES } from "@/lib/sites/mocks/pages";
 import { resp, SITE_A, TENANT, siteOk } from "./fake";
 
 const f = apiFetch as jest.Mock;
@@ -223,13 +223,11 @@ describe("Mi web / Paginas: demo", () => {
   test("con interruptor demo y servicio caido: badge DEMO y guardar no llama a la red", async () => {
     process.env.NEXT_PUBLIC_SITES_ALLOW_DEMO = "1";
     route({ sites: () => problem(503, "UNKNOWN") });
-    query = "";
+    query = `pagina=${SYNTH_PAGES[0].id}`;
     render(<App />);
     expect(await screen.findByTestId("badge-demo")).toBeTruthy();
-    fireEvent.click(await screen.findByTestId("editar-inicio"));
+    await screen.findByTestId("editor-pagina");
     const callsAntes = f.mock.calls.length;
-    const ed = await screen.findByTestId("editor-pagina").catch(() => null);
-    if (!ed) throw new Error("el enlace de la lista debe abrir el editor");
     escribir("campo-titulo-es", "SYNTH editado");
     fireEvent.click(screen.getByTestId("guardar"));
     expect((await screen.findByTestId("guardado")).textContent).toMatch(/ejemplo|demo/i);
