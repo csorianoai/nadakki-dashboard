@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { API_BASE } from "@/lib/api/base";
-import { tokenStorage } from "@/lib/auth/token-storage";
+import { apiFetch } from "@/lib/api/fetch-client";
 import { useTenant } from "@/contexts/TenantContext";
 
 export type EstadoGoogleAds = "connected" | "expired" | "not_connected" | "unknown";
@@ -10,13 +9,8 @@ export type EstadoGoogleAds = "connected" | "expired" | "not_connected" | "unkno
 /** Cualquier valor fuera de los cuatro exactos (o respuesta rara) es "unknown". */
 export function normalizarEstado(body: unknown): EstadoGoogleAds {
   if (!body || typeof body !== "object") return "unknown";
-  const s = (body as Record<string, unknown>).status;
+  const s = (body as Record<string, unknown>).connection_status;
   return s === "connected" || s === "expired" || s === "not_connected" ? s : "unknown";
-}
-
-function cabeceras(): Record<string, string> {
-  const token = tokenStorage.getAccessToken();
-  return { Accept: "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 }
 
 export default function ConectarGoogleAds({
@@ -38,8 +32,8 @@ export default function ConectarGoogleAds({
     let vivo = true;
     (async () => {
       try {
-        const r = await fetch(`${API_BASE}/auth/google/status/${encodeURIComponent(tenantId)}`, {
-          headers: cabeceras(),
+        const r = await apiFetch(`/auth/google/status/${encodeURIComponent(tenantId)}`, {
+          headers: { Accept: "application/json" },
         });
         const body = r.ok ? await r.json().catch(() => null) : null;
         if (vivo) setEstado(normalizarEstado(body));
@@ -57,8 +51,8 @@ export default function ConectarGoogleAds({
     setBusy(true);
     setError(null);
     try {
-      const r = await fetch(`${API_BASE}/auth/google/connect/${encodeURIComponent(tenantId)}`, {
-        headers: cabeceras(),
+      const r = await apiFetch(`/auth/google/connect/${encodeURIComponent(tenantId)}`, {
+        headers: { Accept: "application/json" },
       });
       const body = r.ok ? await r.json().catch(() => null) : null;
       const url = body && typeof body.authorization_url === "string" ? body.authorization_url : "";
