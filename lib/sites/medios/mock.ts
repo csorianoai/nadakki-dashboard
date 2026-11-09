@@ -4,3 +4,5 @@ import type { MediaAsset } from "../types";
 let almacen: MediaAsset[] = [];
 export function saveDemoMedia(m: MediaAsset): void { almacen = almacen.some((x) => x.id === m.id) ? almacen.map((x) => (x.id === m.id ? m : x)) : [...almacen, m]; }
 export function resetDemoMedia(): void { almacen = []; }
+
+export const listDemoMedia = (): MediaAsset[] => [...almacen];

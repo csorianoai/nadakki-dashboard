@@ -1,4 +1,4 @@
-import type { MediaCreate, MediaUpdate, PermissionType } from "../types";
+import type { MediaAsset, MediaCreate, MediaUpdate, PermissionType } from "../types";
 
 export const MAX_BYTES = 26214400;
 export const MIMES = ["image/jpeg", "image/png", "image/webp", "image/avif"] as const;
@@ -54,6 +54,16 @@ function campos(f: MForm): MediaUpdate {
   return b;
 }
 export const paraCrear = (f: MForm, uploadId: string): MediaCreate => ({ upload_id: uploadId, ...campos(f) }) as MediaCreate;
+/** Cuerpo de edicion de metadatos (sin upload_id). */
+export const paraActualizar = (f: MForm): MediaUpdate => campos(f);
+/** Formulario de edicion precargado desde el medio guardado. */
+export function desdeMedio(m: MediaAsset): MForm {
+  const s = (k: string) => (typeof m[k] === "string" ? (m[k] as string) : "");
+  return {
+    altEs: m.alt?.es ?? "", altEn: m.alt?.en === m.alt?.es ? "" : (m.alt?.en ?? ""), source: s("source"), license: s("license"), ptype: m.permission_type,
+    grantedBy: s("permission_granted_by"), scope: s("permission_scope"), pdate: m.permission_date, acquired: m.acquired_on, evidence: s("permission_evidence"),
+  };
+}
 export async function sha256Hex(file: Blob): Promise<string> {
   const buf = await (file as { arrayBuffer: () => Promise<ArrayBuffer> }).arrayBuffer();
   const h = await globalThis.crypto.subtle.digest("SHA-256", new Uint8Array(buf));
