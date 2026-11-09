@@ -4,6 +4,10 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 jest.mock("@/contexts/TenantContext", () => ({
   useTenant: () => ({ tenantId: "tenant-sesion" }),
 }));
+jest.mock("@/lib/auth/token-refresh", () => ({
+  refreshAccessToken: jest.fn(async () => false),
+  isTokenExpiringSoon: () => false,
+}));
 jest.mock("@/lib/auth/token-storage", () => ({
   tokenStorage: { getAccessToken: () => "TOKEN-DE-PRUEBA" },
 }));
@@ -25,13 +29,13 @@ beforeEach(() => {
 });
 
 const casos: [string, any, RegExp, string | null][] = [
-  ["connected", resp(200, { status: "connected" }), /Conectado/, null],
-  ["expired", resp(200, { status: "expired" }), /venci/, "Reconectar"],
-  ["not_connected", resp(200, { status: "not_connected" }), /^Conectar Google Ads$/, "Conectar Google Ads"],
-  ["unknown", resp(200, { status: "unknown" }), /No pudimos comprobar/, null],
-  ["valor raro", resp(200, { status: "activo" }), /No pudimos comprobar/, null],
+  ["connected", resp(200, { connected: true, connection_status: "connected" }), /Conectado/, null],
+  ["expired", resp(200, { connection_status: "expired" }), /venci/, "Reconectar"],
+  ["not_connected", resp(200, { connection_status: "not_connected" }), /^Conectar Google Ads$/, "Conectar Google Ads"],
+  ["unknown", resp(200, { connection_status: "unknown" }), /No pudimos comprobar/, null],
+  ["valor raro", resp(200, { connection_status: "activo" }), /No pudimos comprobar/, null],
   ["cuerpo raro", resp(200, "texto"), /No pudimos comprobar/, null],
-  ["sin status (backend viejo)", resp(200, { google: { connected: true }, scope: "adwords" }), /No pudimos comprobar/, null],
+  ["solo connected=true sin connection_status", resp(200, { connected: true, scope: "adwords" }), /No pudimos comprobar/, null],
   ["500", resp(500, {}), /No pudimos comprobar/, null],
 ];
 
@@ -42,9 +46,11 @@ describe("estado de la conexion", () => {
     expect(await screen.findByText(texto)).toBeTruthy();
     if (boton) expect(screen.getByRole("button", { name: boton })).toBeTruthy();
     else expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.queryByText("Reconectar")).toBe(boton === "Reconectar" ? screen.queryByText("Reconectar") : null);
+    if (boton === "Reconectar") expect(screen.getByRole("button", { name: "Reconectar" })).toBeTruthy();
+    else expect(screen.queryByRole("button", { name: "Reconectar" })).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toBe("/auth/google/status/tenant-sesion");
-    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer TOKEN-DE-PRUEBA");
+    expect(fetchMock.mock.calls[0][1].headers.get("Authorization")).toBe("Bearer TOKEN-DE-PRUEBA");
   });
 
   it("fallo de red -> unknown sin Reconectar", async () => {
@@ -58,19 +64,20 @@ describe("estado de la conexion", () => {
 describe("clic en conectar", () => {
   it("pide authorization_url con Authorization y la abre", async () => {
     fetchMock
-      .mockResolvedValueOnce(resp(200, { status: "not_connected" }))
+      .mockResolvedValueOnce(resp(200, { connection_status: "not_connected" }))
       .mockResolvedValueOnce(resp(200, { authorization_url: "https://accounts.google.com/o/oauth2/x" }));
     render(<ConectarGoogleAds navegar={assign} />);
     fireEvent.click(await screen.findByRole("button", { name: "Conectar Google Ads" }));
     await waitFor(() => expect(assign).toHaveBeenCalledWith("https://accounts.google.com/o/oauth2/x"));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     const [url, init] = fetchMock.mock.calls[1];
     expect(url).toBe("/auth/google/connect/tenant-sesion");
-    expect(init.headers.Authorization).toBe("Bearer TOKEN-DE-PRUEBA");
+    expect(init.headers.get("Authorization")).toBe("Bearer TOKEN-DE-PRUEBA");
   });
 
   it("error 500 -> mensaje llano y no abre nada", async () => {
     fetchMock
-      .mockResolvedValueOnce(resp(200, { status: "expired" }))
+      .mockResolvedValueOnce(resp(200, { connection_status: "expired" }))
       .mockResolvedValueOnce(resp(500, { detail: "boom" }));
     render(<ConectarGoogleAds navegar={assign} />);
     fireEvent.click(await screen.findByRole("button", { name: "Reconectar" }));
@@ -81,7 +88,7 @@ describe("clic en conectar", () => {
   it("no imprime ni guarda el token", async () => {
     const logs = [jest.spyOn(console, "log"), jest.spyOn(console, "error"), jest.spyOn(console, "warn")];
     fetchMock
-      .mockResolvedValueOnce(resp(200, { status: "not_connected" }))
+      .mockResolvedValueOnce(resp(200, { connection_status: "not_connected" }))
       .mockResolvedValueOnce(resp(500, {}));
     const { container } = render(<ConectarGoogleAds navegar={assign} />);
     fireEvent.click(await screen.findByRole("button", { name: "Conectar Google Ads" }));
