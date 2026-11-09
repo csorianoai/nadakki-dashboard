@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildBffUpstreamHeaders, resolveBffTenantId } from "@/lib/api/bff-proxy-headers";
 import { resolveBackendUrl } from "@/lib/config/backend-url";
+import { topeBffMs } from "@/lib/api/timeouts";
 
 const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
 
@@ -40,13 +41,6 @@ function upstreamError(res: Response, text: string): NextResponse {
   });
 }
 
-/**
- * Tope de espera del backend para lecturas (GET/HEAD). Antes `fetch` esperaba sin limite: una peticion que el backend no contestaba
- * dejaba la funcion colgada hasta el limite de Vercel y la pantalla en «Cargando…». Las escrituras y las subidas NO llevan tope
- * aqui (un reporte o una foto grande pueden tardar mas).
- */
-const UPSTREAM_GET_TIMEOUT_MS = 20_000;
-
 async function proxyRequest(
   req: NextRequest,
   path: string[],
@@ -72,15 +66,17 @@ async function proxyRequest(
   const query = url.search;
   const target = `${BACKEND_URL}/api/v1/${pathStr}${query}`;
   const tenantId = resolveBffTenantId(req);
+  // Topes en lib/api/timeouts.ts: lecturas 20 s, reportes/descargas/documentos 120 s, escrituras y subidas sin tope aqui.
+  const topeMs = topeBffMs(method, pathStr);
   const controlador = new AbortController();
   let vencio = false;
   const reloj =
-    method === "GET" || method === "HEAD"
-      ? setTimeout(() => {
+    topeMs === null
+      ? null
+      : setTimeout(() => {
           vencio = true;
           controlador.abort();
-        }, UPSTREAM_GET_TIMEOUT_MS)
-      : null;
+        }, topeMs);
 
   try {
     const headers = buildBffUpstreamHeaders(req, method, tenantId);
@@ -92,7 +88,7 @@ async function proxyRequest(
       if (body.byteLength > 0) init.body = body;
     }
 
-    if (method === "GET" || method === "HEAD") {
+    if (topeMs !== null) {
       init.signal = controlador.signal;
     }
     const res = await fetch(target, { ...init, cache: "no-store" });
@@ -145,7 +141,7 @@ async function proxyRequest(
   } catch (e: unknown) {
     if (vencio) {
       return NextResponse.json(
-        { error: "upstream_timeout", timeout_ms: UPSTREAM_GET_TIMEOUT_MS },
+        { error: "upstream_timeout", timeout_ms: topeMs },
         { status: 504, headers: { "Cache-Control": "no-store" } }
       );
     }
