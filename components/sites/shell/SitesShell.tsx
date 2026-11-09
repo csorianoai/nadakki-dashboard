@@ -75,7 +75,7 @@ export function SitesShell({ children }: { children: React.ReactNode }) {
 
   return (
     <SitesContext.Provider value={ctx}>
-      <div style={{ background: ST.page, color: ST.ink, fontFamily: FONT, fontSize: SIZE.fontBase, minHeight: "100%" }}>
+      <div data-testid="mi-web-raiz" style={{ background: ST.page, color: ST.ink, fontFamily: FONT, fontSize: SIZE.fontBase, minHeight: "100%" }}>
         <a href="#contenido" className="sx-skip sx-focus">{t("skip")}</a>
         <header style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: SIZE.gap, padding: `${SIZE.gap}px ${SIZE.pad}px`, background: ST.white, borderBottom: `1px solid ${ST.line}` }}>
           <strong style={{ fontSize: SIZE.fontSub }}>{t("brand")}</strong>
